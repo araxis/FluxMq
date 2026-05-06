@@ -44,6 +44,7 @@ Chronological progress record.
 - Created private GitHub repository: `https://github.com/araxis/FluxMq`.
 - Added `origin` remote and pushed `main`.
 - Verified remote visibility is private and default branch is `main`.
+- Added initial `README.md` with project vision, status, architecture direction, build commands, and links to memory docs.
 
 ## Current Next Step
 
