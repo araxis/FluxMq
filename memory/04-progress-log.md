@@ -45,6 +45,13 @@ Chronological progress record.
 - Added `origin` remote and pushed `main`.
 - Verified remote visibility is private and default branch is `main`.
 - Added initial `README.md` with project vision, status, architecture direction, build commands, and links to memory docs.
+- Created initial UI mockup assets under `design/ui-mockups/`:
+  - `01-main-workspace.png`
+  - `02-payload-debugger.png`
+  - `03-observability-replay.png`
+- Added `design/ui-mockups/render_fluxmq_mockups.py` to regenerate the mockups deterministically.
+- Added `design/ui-mockups/README.md` describing the UI direction.
+- Installed Pillow locally for Python-based mockup rendering.
 
 ## Current Next Step
 
