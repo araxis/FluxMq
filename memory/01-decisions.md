@@ -68,3 +68,25 @@ Reasoning:
 - A classic `.sln` restored, built, and tested reliably.
 
 Status: Accepted.
+
+### 2026-05-06 - Support both dark and light themes
+
+Decision: FluxMQ will support both dark and light UI themes. Neither is the canonical mode.
+
+Reasoning:
+- Theme support (dark and light) is a baseline expectation for a desktop app, not a differentiating design choice.
+- Calling it out in copy or docs implies it is optional or notable, which it is not.
+- The IDE-like, operational character of the UI is the relevant design statement, not the color scheme.
+
+Status: Accepted.
+
+### 2026-05-06 - Use a static mockup image as the README top banner
+
+Decision: Use `design/ui-mockups/01-main-workspace.png` as the static banner at the top of the README. The animated GIF remains in the Visual Direction / Intro Animation section below.
+
+Reasoning:
+- A static image loads instantly and is always visible on any Markdown renderer.
+- The GIF adds value lower in the page where motion is appropriate, but a banner should be immediate.
+- Keeping both means first-time readers get a quick visual impression, then an animated walkthrough further down.
+
+Status: Accepted.
