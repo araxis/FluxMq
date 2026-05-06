@@ -36,7 +36,11 @@ Chronological progress record.
 - Replaced the empty generated `.slnx` with a classic `.sln`.
 - Added a root `.gitignore`.
 - Verified `dotnet restore`, `dotnet build`, and `dotnet test` all pass.
+- Initialized a local Git repository on branch `main`.
+- Created the initial commit: `11f00d1 Initial FluxMQ scaffold`.
+- Checked GitHub profile through the connected GitHub app: `araxis`.
+- Confirmed no existing `FluxMq` repository was found under that profile through repository search.
 
 ## Current Next Step
 
-Define the first core domain models and MQTT session abstractions.
+Create the GitHub remote repository, push `main`, then define the first core domain models and MQTT session abstractions.
