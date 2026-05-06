@@ -1,0 +1,29 @@
+# Build output
+bin/
+obj/
+
+# User-specific IDE files
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# .NET
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+coverage/
+
+# Rider
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# FluxMQ local runtime data
+*.db
+*.log
