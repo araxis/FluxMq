@@ -5,6 +5,7 @@
   "scripts": {
     "preview": "remotion preview src/index.ts",
     "render": "remotion render src/index.ts FluxMqIntro out/fluxmq-intro.mp4",
+    "render:gif": "remotion render src/index.ts FluxMqIntro out/fluxmq-intro.gif --codec=gif --scale=0.5 --every-nth-frame=2",
     "still": "remotion still src/index.ts FluxMqIntro out/fluxmq-intro-poster.png --frame=230"
   },
   "dependencies": {
