@@ -46,7 +46,11 @@ FluxMQ is aiming for a dark, IDE-like desktop workspace: dense, operational, and
 
 ### Intro Animation
 
-[Watch the FluxMQ intro animation](design/intro-animation/out/fluxmq-intro.mp4)
+<video src="design/intro-animation/out/fluxmq-intro.mp4" controls width="100%" poster="design/intro-animation/out/fluxmq-intro-poster.png">
+  Watch the FluxMQ intro animation: design/intro-animation/out/fluxmq-intro.mp4
+</video>
+
+[Open the FluxMQ intro animation](design/intro-animation/out/fluxmq-intro.mp4)
 
 ![FluxMQ intro poster](design/intro-animation/out/fluxmq-intro-poster.png)
 
