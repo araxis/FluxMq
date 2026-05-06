@@ -52,6 +52,11 @@ Chronological progress record.
 - Added `design/ui-mockups/render_fluxmq_mockups.py` to regenerate the mockups deterministically.
 - Added `design/ui-mockups/README.md` describing the UI direction.
 - Installed Pillow locally for Python-based mockup rendering.
+- Installed Node.js LTS for Remotion work.
+- Created a Remotion intro animation under `design/intro-animation/`.
+- Rendered intro outputs:
+  - `design/intro-animation/out/fluxmq-intro.mp4`
+  - `design/intro-animation/out/fluxmq-intro-poster.png`
 
 ## Current Next Step
 

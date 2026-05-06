@@ -17,6 +17,9 @@ TestResults/
 *.coveragexml
 coverage/
 
+# JavaScript
+node_modules/
+
 # Rider
 .idea/
 
