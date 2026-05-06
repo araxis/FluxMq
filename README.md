@@ -40,6 +40,34 @@ MQTTnet Client
 
 Formal external plugins are planned later. The first implementation will use internal modules for payload inspection, observability, and replay so the extension contracts can mature naturally.
 
+## Visual Direction
+
+FluxMQ is aiming for a dark, IDE-like desktop workspace: dense, operational, and optimized for repeated debugging work rather than a marketing-style interface.
+
+### Intro Animation
+
+[Watch the FluxMQ intro animation](design/intro-animation/out/fluxmq-intro.mp4)
+
+![FluxMQ intro poster](design/intro-animation/out/fluxmq-intro-poster.png)
+
+The Remotion source is in [`design/intro-animation`](design/intro-animation).
+
+### UI Mockups
+
+Primary MQTT operations workspace:
+
+![FluxMQ main workspace mockup](design/ui-mockups/01-main-workspace.png)
+
+Payload inspection and message diffing:
+
+![FluxMQ payload debugger mockup](design/ui-mockups/02-payload-debugger.png)
+
+Observability and replay timeline:
+
+![FluxMQ observability replay mockup](design/ui-mockups/03-observability-replay.png)
+
+The mockup source is in [`design/ui-mockups`](design/ui-mockups).
+
 ## Repository Layout
 
 ```text

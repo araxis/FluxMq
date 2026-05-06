@@ -57,6 +57,7 @@ Chronological progress record.
 - Rendered intro outputs:
   - `design/intro-animation/out/fluxmq-intro.mp4`
   - `design/intro-animation/out/fluxmq-intro-poster.png`
+- Updated the root `README.md` with the UI mockups, intro poster, and intro animation link.
 
 ## Current Next Step
 
