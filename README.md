@@ -1,5 +1,9 @@
 # FluxMQ
 
+<p align="center">
+  <img src="design/intro-animation/out/fluxmq-intro.gif" alt="FluxMQ intro animation" width="100%">
+</p>
+
 FluxMQ is a next-generation MQTT debugging and observability platform built as a cross-platform desktop application.
 
 The long-term goal is to go beyond a passive MQTT client and provide a focused tool for:
@@ -42,19 +46,13 @@ Formal external plugins are planned later. The first implementation will use int
 
 ## Visual Direction
 
-FluxMQ is aiming for a dark, IDE-like desktop workspace: dense, operational, and optimized for repeated debugging work rather than a marketing-style interface.
+FluxMQ is aiming for an IDE-like desktop workspace: dense, operational, and optimized for repeated debugging work rather than a marketing-style interface.
 
 ### Intro Animation
 
-<video src="design/intro-animation/out/fluxmq-intro.mp4" controls width="100%" poster="design/intro-animation/out/fluxmq-intro-poster.png">
-  Watch the FluxMQ intro animation: design/intro-animation/out/fluxmq-intro.mp4
-</video>
+![FluxMQ intro animation](design/intro-animation/out/fluxmq-intro.gif)
 
-[Open the FluxMQ intro animation](design/intro-animation/out/fluxmq-intro.mp4)
-
-![FluxMQ intro poster](design/intro-animation/out/fluxmq-intro-poster.png)
-
-The Remotion source is in [`design/intro-animation`](design/intro-animation).
+The Remotion source is in [`design/intro-animation`](design/intro-animation). The original MP4 is at [`design/intro-animation/out/fluxmq-intro.mp4`](design/intro-animation/out/fluxmq-intro.mp4).
 
 ### UI Mockups
 
