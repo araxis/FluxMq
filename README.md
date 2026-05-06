@@ -1,7 +1,7 @@
 # FluxMQ
 
 <p align="center">
-  <img src="design/intro-animation/out/fluxmq-intro.gif" alt="FluxMQ intro animation" width="100%">
+  <img src="design/ui-mockups/01-main-workspace.png" alt="FluxMQ workspace" width="100%">
 </p>
 
 FluxMQ is a next-generation MQTT debugging and observability platform built as a cross-platform desktop application.
@@ -52,23 +52,13 @@ FluxMQ is aiming for an IDE-like desktop workspace: dense, operational, and opti
 
 ![FluxMQ intro animation](design/intro-animation/out/fluxmq-intro.gif)
 
-The Remotion source is in [`design/intro-animation`](design/intro-animation). The original MP4 is at [`design/intro-animation/out/fluxmq-intro.mp4`](design/intro-animation/out/fluxmq-intro.mp4).
-
-### UI Mockups
-
-Primary MQTT operations workspace:
-
-![FluxMQ main workspace mockup](design/ui-mockups/01-main-workspace.png)
-
-Payload inspection and message diffing:
+### Mockups
 
 ![FluxMQ payload debugger mockup](design/ui-mockups/02-payload-debugger.png)
 
 Observability and replay timeline:
 
 ![FluxMQ observability replay mockup](design/ui-mockups/03-observability-replay.png)
-
-The mockup source is in [`design/ui-mockups`](design/ui-mockups).
 
 ## Repository Layout
 
