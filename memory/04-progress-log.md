@@ -60,6 +60,17 @@ Chronological progress record.
 - Updated the root `README.md` with the UI mockups, intro poster, and intro animation link.
 - Changed the intro animation README section to use an HTML `<video controls>` block with a fallback link.
 
+- Converted the intro animation from MP4 to GIF using Remotion's built-in GIF codec:
+  - Output: `design/intro-animation/out/fluxmq-intro.gif` (960×540, 15 fps, 5.8 MB).
+  - Render parameters: `--codec=gif --scale=0.5 --every-nth-frame=2`.
+  - Added `render:gif` npm script to `design/intro-animation/package.json`.
+- Replaced the unplayable `<video>` embed in the README with a `![img]` GIF embed (GitHub does not render `<video>`).
+- Added `design/ui-mockups/01-main-workspace.png` as a full-width static banner at the very top of the README.
+- Removed "dark" from the Visual Direction description: FluxMQ supports both dark and light themes; it is not a defining characteristic worth calling out.
+- Trimmed README noise: removed the Remotion/MP4 attribution line, the `### UI Mockups` section header, and the `Primary MQTT operations workspace:` caption.
+- Merged PR #1 (`claude/frosty-bose-2c2756`): GIF banner + video embed fix.
+- Opened PR #2 (`readme-banner-cleanup`): static mockup banner + README cleanup.
+
 ## Current Next Step
 
 Define the first core domain models and MQTT session abstractions.
