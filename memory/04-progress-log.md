@@ -40,7 +40,11 @@ Chronological progress record.
 - Created the initial commit: `11f00d1 Initial FluxMQ scaffold`.
 - Checked GitHub profile through the connected GitHub app: `araxis`.
 - Confirmed no existing `FluxMq` repository was found under that profile through repository search.
+- Used GitHub CLI from `C:\Program Files\GitHub CLI\gh.exe`.
+- Created private GitHub repository: `https://github.com/araxis/FluxMq`.
+- Added `origin` remote and pushed `main`.
+- Verified remote visibility is private and default branch is `main`.
 
 ## Current Next Step
 
-Create the GitHub remote repository, push `main`, then define the first core domain models and MQTT session abstractions.
+Define the first core domain models and MQTT session abstractions.
