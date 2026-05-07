@@ -80,6 +80,44 @@ Reasoning:
 
 Status: Accepted.
 
+### 2026-05-07 - Visual pipeline editor with Blazor.Diagrams + JSON config + hot reload
+
+Decision: Pipeline topologies will be user-defined via a visual drag-and-drop editor (Blazor.Diagrams), serialized to JSON, stored in LiteDB, and executed as live Dataflow networks. Pipeline changes must be hot-reloadable — no stop/start required.
+
+Concept:
+```
+Blazor.Diagrams canvas (user drags nodes, draws connections)
+  ↕ serialize / deserialize
+PipelineDefinition (JSON: nodes + connections + per-node config)
+  ↕ stored in LiteDB
+PipelineBuilder
+  → instantiates Dataflow blocks by node type
+  → links them according to connections
+  → produces a running MqttPipeline
+```
+
+Node library (`FluxMq.Modules.*`):
+- Each module registers one or more node types.
+- A node type declares: display name, input/output port descriptors, configurable properties (with schema for the UI property panel).
+- Examples: TopicFilter, JsonDecoder, StorageSink, MetricsSink, ReplaySink, UiProjectionSink.
+
+Hot-reload requirement:
+- When node config changes: update the block's behaviour in-place (delegate swap) without touching the rest of the graph.
+- When a connection is added/removed: patch only the affected link in the Dataflow graph; do not drain or restart unaffected blocks.
+- In-flight messages in unaffected blocks must not be dropped during a patch.
+- Some structural changes (e.g. removing the entry-point block) may require a brief coordinated pause; this is acceptable but must be explicit and fast.
+- The `PipelineBuilder` must therefore support two modes: `Build` (cold start) and `Patch(delta)` (hot update from a diff of two `PipelineDefinition` versions).
+
+Architectural constraints for module authors:
+- Block processing logic must be wrapped in a replaceable delegate so config-only changes can hot-swap without recreating the Dataflow block.
+- Blocks must be disposable and must complete cleanly when unlinked.
+
+When to introduce:
+- Not before Stage 4 (Payload Inspector). At that point the module contracts will have been exercised enough to know what node metadata needs to express.
+- Module contracts written from Stage 2 onwards must be designed with this in mind.
+
+Status: Planned — target Stage 8.
+
 ### 2026-05-07 - MqttConnectionManager uses a session factory for testability
 
 Decision: `MqttConnectionManager` accepts a `Func<MqttConnectionProfile, IMqttSession>` factory instead of hard-coding `new MqttSession(profile)`.

@@ -92,6 +92,13 @@ Chronological progress record.
   - Reconnect hook (Polly) left as a comment in `OnSessionStateChanged`.
   - 6 new connection manager tests using `FakeMqttSession` (no broker required). 21 tests total passing.
 
+- Decided on visual pipeline editor direction (Stage 8):
+  - Blazor.Diagrams for drag-and-drop topology editing.
+  - `PipelineDefinition` JSON model persisted in LiteDB.
+  - `PipelineBuilder` with cold `Build` and hot `Patch` modes.
+  - Hot-reload requirement: config changes and link changes apply in-place without stopping unaffected blocks or dropping in-flight messages.
+  - Module contracts from Stage 2 onwards must be designed with node metadata (ports, configurable properties) in mind.
+
 ## Current Next Steps
 
 - Polly reconnect policy wired into `MqttConnectionManager.OnSessionStateChanged`.
