@@ -90,3 +90,26 @@ Goals:
 
 Deliverable:
 - External extensibility foundation.
+
+## Stage 8 - Visual Pipeline Editor
+
+Goals:
+- Define `IPipelineNode` abstraction: display name, port descriptors, configurable properties with schema.
+- Define `PipelineDefinition` JSON model (nodes + connections + per-node config).
+- Implement `PipelineBuilder.Build(definition)` — cold-start Dataflow graph from JSON.
+- Implement `PipelineBuilder.Patch(current, next)` — hot-reload: diff two definitions and apply only changed links/config without stopping unaffected blocks or dropping in-flight messages.
+- Integrate Blazor.Diagrams as the visual canvas in `FluxMq.UI`.
+- Node palette (available block types from registered modules).
+- Property panel (edit selected node's config; triggers hot-reload on save).
+- Persist pipeline definitions in LiteDB.
+- Load/switch between saved pipeline definitions at runtime.
+
+Hot-reload constraints:
+- Config-only change on a node: delegate swap in-place, block stays running.
+- Add connection: link new target block to existing source, no interruption.
+- Remove connection: unlink target, complete it cleanly, no effect on remaining targets.
+- Structural changes (e.g. remove entry-point block): coordinated brief pause, explicit and fast.
+
+Deliverable:
+- Users can build, save, and live-edit message pipeline topologies visually.
+- Pipeline changes take effect immediately without stopping the session.
