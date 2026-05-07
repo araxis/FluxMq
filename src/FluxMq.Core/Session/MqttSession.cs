@@ -104,7 +104,8 @@ public sealed class MqttSession : IMqttSession
             : MqttSessionState.Disconnected;
 
         SetState(next);
-        _channel.Writer.TryComplete();
+        // Do NOT complete the channel here — reconnect will resume message flow.
+        // Channel is only completed on intentional disconnect or dispose.
         return Task.CompletedTask;
     }
 

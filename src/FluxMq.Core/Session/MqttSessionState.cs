@@ -6,5 +6,6 @@ public enum MqttSessionState
     Connecting,
     Connected,
     Disconnecting,
+    Reconnecting,
     Faulted
 }
