@@ -1,0 +1,50 @@
+@* Recursive component — renders one TopicNode and its children when expanded. *@
+
+<div class="topic-node" style="padding-left: @(Node.Depth * 16)px">
+
+    <div class="topic-node-row" @onclick="Toggle">
+
+        <span class="topic-node-chevron">
+            @if (Node.HasChildren)
+            {
+                <MudIcon Icon="@(_expanded ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
+                         Size="Size.Small" />
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Circle" Size="Size.Small" Style="opacity:0.2" />
+            }
+        </span>
+
+        <MudText Typo="Typo.body2" Class="topic-node-name">@Node.Name</MudText>
+
+        <MudChip T="string" Size="Size.Small" Color="Color.Default" Class="ml-2 topic-node-count">
+            @Node.MessageCount
+        </MudChip>
+
+        @if (Node.LastActivity != default)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="ml-2 topic-node-time">
+                @Node.LastActivity.ToLocalTime().ToString("HH:mm:ss.fff")
+            </MudText>
+        }
+
+    </div>
+
+    @if (_expanded && Node.HasChildren)
+    {
+        @foreach (var child in Node.Children.Values.OrderBy(n => n.Name))
+        {
+            <TopicTreeNode Node="child" />
+        }
+    }
+
+</div>
+
+@code {
+    [Parameter, EditorRequired] public TopicNode Node { get; set; } = null!;
+
+    private bool _expanded;
+
+    private void Toggle() => _expanded = !_expanded;
+}

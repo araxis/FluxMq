@@ -107,6 +107,15 @@ Chronological progress record.
   - `BuildDefaultReconnectPipeline()` is the production default; tests inject `InstantRetry` (zero delay, 5 attempts).
   - 23 tests passing (16 core, 6 pipeline, 1 storage).
 
+- Implemented Stage 2 — Topic Explorer MVP:
+  - `FluxMq.Core/TopicIndex`: `TopicNode` (thread-safe, immutable record of a topic segment), `ITopicIndex`, `TopicIndex` (ConcurrentDictionary tree, BFS flatten for Search).
+  - `TopicIndex.Changed` event fires per message; documented as high-frequency — consumers must throttle.
+  - `FluxMq.UI`: removed scaffold placeholders; added MudBlazor 9.4.0; updated `_Imports.razor`.
+  - Two Blazor components:
+    - `TopicTreeView.razor` — search input + tree/flat-list toggle; 250ms timer-based throttle for `StateHasChanged`.
+    - `TopicTreeNode.razor` — recursive expand/collapse node with name, message count, last activity timestamp.
+  - 12 new `TopicIndex` tests; 35 tests total passing.
+
 ## Current Next Step
 
-Stage 2 — Topic Explorer MVP: build topic index from incoming messages, render topic tree in Blazor.
+Stage 3 — LiteDB persistence: store connection profiles, record sessions, store envelopes.
