@@ -80,6 +80,22 @@ Reasoning:
 
 Status: Accepted.
 
+### 2026-05-07 - Use TPL Dataflow for the message pipeline in FluxMq.Pipeline
+
+Decision: Replace the hand-rolled `MessagePipeline` + `IMessageProcessor` with TPL Dataflow blocks (`BufferBlock` → `BroadcastBlock` → consumer `ActionBlock`s).
+
+Reasoning:
+- The pipeline topology is a graph (fan-out to topic index, storage, metrics, UI state), not a simple sequential list — Dataflow expresses this naturally.
+- Dataflow provides backpressure, per-block parallelism, completion/fault propagation, and filtered linking out of the box.
+- `FluxMq.Core` is unchanged — `MqttSession` still produces `Channel<MqttEnvelope>`. Dataflow is strictly a `FluxMq.Pipeline` concern.
+
+Design:
+- `MqttPipeline` feeds the channel into a `BufferBlock` (bounded, absorbs bursts).
+- `BufferBlock` links to `BroadcastBlock` with identity clone (`MqttEnvelope` is immutable).
+- Consumers call `pipeline.LinkTo(actionBlock)` or access `pipeline.Output` directly for filtered linking.
+
+Status: Accepted.
+
 ### 2026-05-06 - Use a static mockup image as the README top banner
 
 Decision: Use `design/ui-mockups/01-main-workspace.png` as the static banner at the top of the README. The animated GIF remains in the Visual Direction / Intro Animation section below.
