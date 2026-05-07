@@ -10,6 +10,8 @@ public interface IMqttSession : IAsyncDisposable
     MqttSessionState State { get; }
     ChannelReader<MqttEnvelope> Messages { get; }
 
+    event EventHandler<MqttSessionState>? StateChanged;
+
     Task ConnectAsync(CancellationToken ct = default);
     Task DisconnectAsync(CancellationToken ct = default);
     Task SubscribeAsync(string topicFilter, MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce, CancellationToken ct = default);
