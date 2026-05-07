@@ -83,6 +83,16 @@ Chronological progress record.
   - `pipeline.LinkTo(block)` for simple sinks; `pipeline.Output` for filtered linking.
   - 15 tests passing (8 core, 6 pipeline, 1 storage placeholder).
 
-## Current Next Step
+- Added connection state management:
+  - `IMqttSession.StateChanged` event — fires on every state transition.
+  - `MqttSession` wires `IMqttClient.DisconnectedAsync` to detect unexpected drops; sets `Faulted` if exception present, `Disconnected` otherwise.
+  - `SetState` helper centralises all state writes and event firing.
+  - `SessionStateChangedEventArgs` — carries session ID, profile, and new state.
+  - `IMqttConnectionManager` / `MqttConnectionManager` — creates, tracks, and disposes sessions; forwards `StateChanged`; uses injected factory for testability.
+  - Reconnect hook (Polly) left as a comment in `OnSessionStateChanged`.
+  - 6 new connection manager tests using `FakeMqttSession` (no broker required). 21 tests total passing.
 
-Stage 2 — Topic Explorer MVP: build topic index from incoming messages, render topic tree in Blazor.
+## Current Next Steps
+
+- Polly reconnect policy wired into `MqttConnectionManager.OnSessionStateChanged`.
+- Stage 2 — Topic Explorer MVP: build topic index from incoming messages, render topic tree in Blazor.

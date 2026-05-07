@@ -15,6 +15,8 @@ public sealed class MqttSession : IMqttSession
     public MqttSessionState State => _state;
     public ChannelReader<MqttEnvelope> Messages => _channel.Reader;
 
+    public event EventHandler<MqttSessionState>? StateChanged;
+
     public MqttSession(MqttConnectionProfile profile)
     {
         Profile = profile;
@@ -25,11 +27,12 @@ public sealed class MqttSession : IMqttSession
         });
         _client = new MqttClientFactory().CreateMqttClient();
         _client.ApplicationMessageReceivedAsync += OnMessageReceivedAsync;
+        _client.DisconnectedAsync += OnClientDisconnectedAsync;
     }
 
     public async Task ConnectAsync(CancellationToken ct = default)
     {
-        _state = MqttSessionState.Connecting;
+        SetState(MqttSessionState.Connecting);
         try
         {
             var builder = new MqttClientOptionsBuilder()
@@ -45,20 +48,20 @@ public sealed class MqttSession : IMqttSession
                 builder = builder.WithTlsOptions(o => o.UseTls());
 
             await _client.ConnectAsync(builder.Build(), ct);
-            _state = MqttSessionState.Connected;
+            SetState(MqttSessionState.Connected);
         }
         catch
         {
-            _state = MqttSessionState.Faulted;
+            SetState(MqttSessionState.Faulted);
             throw;
         }
     }
 
     public async Task DisconnectAsync(CancellationToken ct = default)
     {
-        _state = MqttSessionState.Disconnecting;
+        SetState(MqttSessionState.Disconnecting);
         await _client.DisconnectAsync(cancellationToken: ct);
-        _state = MqttSessionState.Disconnected;
+        SetState(MqttSessionState.Disconnected);
         _channel.Writer.TryComplete();
     }
 
@@ -89,6 +92,22 @@ public sealed class MqttSession : IMqttSession
         await _client.PublishAsync(message, ct);
     }
 
+    // Fired by MQTTnet on any disconnect — intentional or unexpected.
+    // Reconnect policy (Polly) will hook here in a future step.
+    private Task OnClientDisconnectedAsync(MqttClientDisconnectedEventArgs args)
+    {
+        if (_state is MqttSessionState.Disconnecting or MqttSessionState.Disconnected)
+            return Task.CompletedTask;
+
+        var next = args.Exception is not null
+            ? MqttSessionState.Faulted
+            : MqttSessionState.Disconnected;
+
+        SetState(next);
+        _channel.Writer.TryComplete();
+        return Task.CompletedTask;
+    }
+
     private Task OnMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs args)
     {
         var msg = args.ApplicationMessage;
@@ -96,22 +115,27 @@ public sealed class MqttSession : IMqttSession
         using var ms = new MemoryStream((int)seq.Length);
         foreach (var segment in seq)
             ms.Write(segment.Span);
-        var payload = ms.ToArray();
 
-        var envelope = new MqttEnvelope
+        _channel.Writer.TryWrite(new MqttEnvelope
         {
             Topic = msg.Topic,
-            Payload = payload,
+            Payload = ms.ToArray(),
             QualityOfService = msg.QualityOfServiceLevel,
             Retain = msg.Retain
-        };
-        _channel.Writer.TryWrite(envelope);
+        });
         return Task.CompletedTask;
+    }
+
+    private void SetState(MqttSessionState state)
+    {
+        _state = state;
+        StateChanged?.Invoke(this, state);
     }
 
     public async ValueTask DisposeAsync()
     {
         _client.ApplicationMessageReceivedAsync -= OnMessageReceivedAsync;
+        _client.DisconnectedAsync -= OnClientDisconnectedAsync;
         if (_client.IsConnected)
             await _client.DisconnectAsync();
         _client.Dispose();

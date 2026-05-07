@@ -80,6 +80,28 @@ Reasoning:
 
 Status: Accepted.
 
+### 2026-05-07 - MqttConnectionManager uses a session factory for testability
+
+Decision: `MqttConnectionManager` accepts a `Func<MqttConnectionProfile, IMqttSession>` factory instead of hard-coding `new MqttSession(profile)`.
+
+Reasoning:
+- Allows tests to inject `FakeMqttSession` without a live broker.
+- The default factory (`profile => new MqttSession(profile)`) keeps production behaviour unchanged.
+- This is also the natural seam where Polly reconnect logic will be introduced — the factory or the manager's `ConnectAsync` wraps the call in a retry policy.
+
+Status: Accepted.
+
+### 2026-05-07 - Reconnect policy deferred to next step (Polly)
+
+Decision: Reconnect on unexpected disconnect is not implemented yet. A comment in `MqttConnectionManager.OnSessionStateChanged` marks the exact extension point.
+
+Reasoning:
+- Polly is the agreed library for retry/reconnect.
+- Getting the state notification pipeline right first (this step) is a prerequisite.
+- The seam is clear: `OnSessionStateChanged` detects `Faulted`/`Disconnected` from an unexpected drop; Polly retry wraps `session.ConnectAsync` on next step.
+
+Status: Deferred — next step.
+
 ### 2026-05-07 - Use TPL Dataflow for the message pipeline in FluxMq.Pipeline
 
 Decision: Replace the hand-rolled `MessagePipeline` + `IMessageProcessor` with TPL Dataflow blocks (`BufferBlock` → `BroadcastBlock` → consumer `ActionBlock`s).
