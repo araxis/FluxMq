@@ -99,7 +99,14 @@ Chronological progress record.
   - Hot-reload requirement: config changes and link changes apply in-place without stopping unaffected blocks or dropping in-flight messages.
   - Module contracts from Stage 2 onwards must be designed with node metadata (ports, configurable properties) in mind.
 
-## Current Next Steps
+- Implemented Polly reconnect in `MqttConnectionManager`:
+  - Added `MqttSessionState.Reconnecting` — surfaced to UI on each retry attempt.
+  - `MqttSession.OnClientDisconnectedAsync` no longer completes the channel on unexpected drops — channel stays open so reconnect resumes message flow seamlessly.
+  - `MqttConnectionManager` schedules a background reconnect task on `Faulted` or unexpected `Disconnected`; uses an injectable `ResiliencePipeline` (default: exponential backoff 1s → 30s with jitter, infinite retries).
+  - `DisconnectAsync` and `RemoveAsync` cancel any in-progress reconnect before acting.
+  - `BuildDefaultReconnectPipeline()` is the production default; tests inject `InstantRetry` (zero delay, 5 attempts).
+  - 23 tests passing (16 core, 6 pipeline, 1 storage).
 
-- Polly reconnect policy wired into `MqttConnectionManager.OnSessionStateChanged`.
-- Stage 2 — Topic Explorer MVP: build topic index from incoming messages, render topic tree in Blazor.
+## Current Next Step
+
+Stage 2 — Topic Explorer MVP: build topic index from incoming messages, render topic tree in Blazor.

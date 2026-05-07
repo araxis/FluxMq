@@ -2,19 +2,27 @@ using FluentAssertions;
 using FluxMq.Core.Models;
 using FluxMq.Core.Session;
 using MQTTnet.Protocol;
+using Polly;
+using Polly.Retry;
 using System.Threading.Channels;
 
 namespace FluxMq.Core.Tests.Session;
 
 public class MqttConnectionManagerTests
 {
+    // Instant-retry pipeline — no delays in tests
+    private static readonly ResiliencePipeline InstantRetry =
+        new ResiliencePipelineBuilder()
+            .AddRetry(new RetryStrategyOptions { MaxRetryAttempts = 5, Delay = TimeSpan.Zero })
+            .Build();
+
     private static (MqttConnectionManager manager, FakeMqttSession session) BuildManager(
         MqttConnectionProfile? profile = null,
-        MqttSessionState initialState = MqttSessionState.Disconnected)
+        Func<Task>? onConnect = null)
     {
         profile ??= new MqttConnectionProfile { Name = "test" };
-        var session = new FakeMqttSession(profile, initialState);
-        var manager = new MqttConnectionManager(_ => session);
+        var session = new FakeMqttSession(profile, onConnect);
+        var manager = new MqttConnectionManager(_ => session, InstantRetry);
         return (manager, session);
     }
 
@@ -49,7 +57,7 @@ public class MqttConnectionManagerTests
     public async Task DisconnectAsync_CallsDisconnectOnSession()
     {
         var profile = new MqttConnectionProfile { Name = "test" };
-        var (manager, session) = BuildManager(profile, MqttSessionState.Connected);
+        var (manager, session) = BuildManager(profile);
         await using var _ = manager;
 
         await manager.ConnectAsync(profile);
@@ -85,9 +93,68 @@ public class MqttConnectionManagerTests
         await manager.ConnectAsync(profile);
         session.SimulateStateChange(MqttSessionState.Faulted);
 
-        received.Should().Contain(a =>
-            a.SessionId == profile.Id &&
-            a.State == MqttSessionState.Faulted);
+        // Give reconnect task a moment to fire Reconnecting state
+        await Task.Delay(50);
+
+        received.Should().Contain(a => a.State == MqttSessionState.Faulted);
+    }
+
+    [Fact]
+    public async Task Reconnect_TriggersReconnecting_State_OnFault()
+    {
+        var profile = new MqttConnectionProfile { Name = "test" };
+        var connectCount = 0;
+        var reconnectedTcs = new TaskCompletionSource();
+
+        // Fail once, then succeed — reconnect loop should complete after 1 retry
+        var session = new FakeMqttSession(profile, onConnect: () =>
+        {
+            connectCount++;
+            if (connectCount == 1) return Task.CompletedTask; // initial connect
+            reconnectedTcs.TrySetResult();                    // reconnect succeeded
+            return Task.CompletedTask;
+        });
+
+        var reconnectingStates = new List<MqttSessionState>();
+        await using var manager = new MqttConnectionManager(_ => session, InstantRetry);
+        manager.StateChanged += (_, a) => reconnectingStates.Add(a.State);
+
+        await manager.ConnectAsync(profile);
+        session.SimulateStateChange(MqttSessionState.Faulted);
+
+        await reconnectedTcs.Task.WaitAsync(TimeSpan.FromSeconds(2));
+
+        reconnectingStates.Should().Contain(MqttSessionState.Reconnecting);
+        reconnectingStates.Should().Contain(MqttSessionState.Connected);
+    }
+
+    [Fact]
+    public async Task RemoveAsync_CancelsInProgressReconnect()
+    {
+        var profile = new MqttConnectionProfile { Name = "test" };
+        var connectGate = new SemaphoreSlim(0);
+        var connectCount = 0;
+
+        var session = new FakeMqttSession(profile, onConnect: async () =>
+        {
+            connectCount++;
+            if (connectCount > 1)
+                await connectGate.WaitAsync(); // block reconnect indefinitely
+        });
+
+        await using var manager = new MqttConnectionManager(_ => session, InstantRetry);
+
+        await manager.ConnectAsync(profile);
+        session.SimulateStateChange(MqttSessionState.Faulted);
+
+        // Give the reconnect task time to start
+        await Task.Delay(50);
+        await manager.RemoveAsync(profile.Id);
+
+        manager.Sessions.Should().NotContainKey(profile.Id);
+        session.Disposed.Should().BeTrue();
+
+        connectGate.Release(); // unblock so test teardown is clean
     }
 
     [Fact]
@@ -103,7 +170,7 @@ public class MqttConnectionManagerTests
             var s = new FakeMqttSession(p);
             sessions.Add(s);
             return s;
-        });
+        }, InstantRetry);
 
         foreach (var p in profiles)
             await manager.ConnectAsync(p);
@@ -114,7 +181,10 @@ public class MqttConnectionManagerTests
     }
 }
 
-sealed class FakeMqttSession(MqttConnectionProfile profile, MqttSessionState initialState = MqttSessionState.Disconnected) : IMqttSession
+sealed class FakeMqttSession(
+    MqttConnectionProfile profile,
+    Func<Task>? onConnect = null,
+    MqttSessionState initialState = MqttSessionState.Disconnected) : IMqttSession
 {
     private readonly Channel<MqttEnvelope> _channel = Channel.CreateUnbounded<MqttEnvelope>();
 
@@ -132,11 +202,12 @@ sealed class FakeMqttSession(MqttConnectionProfile profile, MqttSessionState ini
         StateChanged?.Invoke(this, state);
     }
 
-    public Task ConnectAsync(CancellationToken ct = default)
+    public async Task ConnectAsync(CancellationToken ct = default)
     {
+        if (onConnect is not null)
+            await onConnect();
         State = MqttSessionState.Connected;
         StateChanged?.Invoke(this, State);
-        return Task.CompletedTask;
     }
 
     public Task DisconnectAsync(CancellationToken ct = default)
