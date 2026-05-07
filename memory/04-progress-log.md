@@ -71,6 +71,18 @@ Chronological progress record.
 - Merged PR #1 (`claude/frosty-bose-2c2756`): GIF banner + video embed fix.
 - Opened PR #2 (`readme-banner-cleanup`): static mockup banner + README cleanup.
 
+## 2026-05-07
+
+- Implemented Stage 1 — core MQTT session and pipeline foundation (PR #4):
+  - `FluxMq.Core`: `MqttConnectionProfile`, `MqttEnvelope`, `MqttSessionState`, `IMqttSession`, `MqttSession` (MQTTnet wrapper, messages → bounded `Channel<MqttEnvelope>`).
+  - `FluxMq.Pipeline`: initial `IMessageProcessor` + `MessagePipeline` (sequential fan-out).
+  - 13 tests passing.
+- Replaced sequential pipeline with TPL Dataflow (PR #5):
+  - Removed `IMessageProcessor` and `MessagePipeline`.
+  - Added `MqttPipeline`: `BufferBlock` → `BroadcastBlock` → consumer `ActionBlock`s.
+  - `pipeline.LinkTo(block)` for simple sinks; `pipeline.Output` for filtered linking.
+  - 15 tests passing (8 core, 6 pipeline, 1 storage placeholder).
+
 ## Current Next Step
 
-Define the first core domain models and MQTT session abstractions.
+Stage 2 — Topic Explorer MVP: build topic index from incoming messages, render topic tree in Blazor.
