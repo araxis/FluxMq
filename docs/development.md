@@ -29,11 +29,13 @@ dotnet build src\FluxMq.App\FluxMq.App.csproj
   /FluxMq.App       MAUI Blazor Hybrid shell
   /FluxMq.Core      domain models, MQTT session, topic index, payload inspection
   /FluxMq.Pipeline  Dataflow pipeline and concrete flow components
+  /FluxMq.Replay    recorded session replay orchestration
   /FluxMq.Storage   LiteDB persistence
   /FluxMq.UI        reusable Blazor UI components
 /tests
   /FluxMq.Core.Tests
   /FluxMq.Pipeline.Tests
+  /FluxMq.Replay.Tests
   /FluxMq.Storage.Tests
 /docs
   contributor and Wiki-ready documentation

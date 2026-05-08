@@ -53,6 +53,17 @@ Responsibilities:
 - flow error events
 - replay source behavior
 
+### FluxMq.Replay
+
+Recorded session replay orchestration.
+
+Responsibilities:
+
+- load stored session messages through storage repositories
+- convert stored messages into MQTT envelopes
+- create configured replay source components
+- keep replay orchestration separate from both storage and primitive pipeline components
+
 ### FluxMq.Storage
 
 LiteDB persistence.

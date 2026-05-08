@@ -67,11 +67,13 @@ Observability and replay timeline:
   /FluxMq.App
   /FluxMq.Core
   /FluxMq.Pipeline
+  /FluxMq.Replay
   /FluxMq.Storage
   /FluxMq.UI
 /tests
   /FluxMq.Core.Tests
   /FluxMq.Pipeline.Tests
+  /FluxMq.Replay.Tests
   /FluxMq.Storage.Tests
 /docs
 /memory
