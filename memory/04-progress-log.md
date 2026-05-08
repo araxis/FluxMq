@@ -116,6 +116,19 @@ Chronological progress record.
     - `TopicTreeNode.razor` — recursive expand/collapse node with name, message count, last activity timestamp.
   - 12 new `TopicIndex` tests; 35 tests total passing.
 
+## 2026-05-08
+
+- Implemented Stage 3 — LiteDB persistence:
+  - `FluxDbContext`: wraps `ILiteDatabase`, exposes typed `ILiteCollection<T>` properties for all three domains; EnsureIndexes on `SessionId`, `Topic`, and `ProfileId`; accepts injected `ILiteDatabase` for test isolation.
+  - `StoredSession` model: `Id`, `ProfileId`, `ProfileName`, `StartedAt`, `EndedAt`; static `From(MqttConnectionProfile)` factory.
+  - `StoredMessage` model: `Id`, `SessionId`, `Topic`, `Payload` (byte[]), `ReceivedAt`, `QualityOfService`, `Retain`; static `From(sessionId, envelope)` factory and `ToEnvelope()` round-trip method.
+  - Three repository interface + LiteDB implementation pairs:
+    - `IConnectionProfileRepository` / `LiteDbConnectionProfileRepository` — `Get`, `GetAll`, `Save` (upsert), `Delete`.
+    - `ISessionRepository` / `LiteDbSessionRepository` — `Start` (insert), `End` (update EndedAt), `Get`, `GetAll` (ordered desc by StartedAt), `Delete`.
+    - `IMessageRepository` / `LiteDbMessageRepository` — `Add`, `AddBatch` (bulk insert), `GetBySession` (ordered asc by ReceivedAt), `GetByTopic`, `CountBySession`.
+  - 19 tests across three test classes, all using `new LiteDatabase(":memory:")` — no file I/O, fully isolated per class.
+  - All 19 tests passing (54 total in solution).
+
 ## Current Next Step
 
-Stage 3 — LiteDB persistence: store connection profiles, record sessions, store envelopes.
+Stage 4 — Payload Inspector: JSON / hex / raw display panel for selected messages.
