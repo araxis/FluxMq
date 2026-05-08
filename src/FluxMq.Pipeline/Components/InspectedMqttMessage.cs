@@ -1,0 +1,6 @@
+using FluxMq.Core.Models;
+using FluxMq.Core.Payloads;
+
+namespace FluxMq.Pipeline.Components;
+
+public sealed record InspectedMqttMessage(MqttEnvelope Envelope, PayloadInspectionResult Payload);

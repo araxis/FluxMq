@@ -1,0 +1,70 @@
+@implements IDisposable
+@inject ITopicIndex TopicIndex
+
+<div class="topic-tree-view">
+
+    <MudTextField T="string"
+                  @bind-Value="_filter"
+                  Placeholder="Filter topics…"
+                  Immediate="true"
+                  Clearable="true"
+                  Variant="Variant.Outlined"
+                  Margin="Margin.Dense"
+                  Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.Search"
+                  Class="mb-2" />
+
+    <div class="topic-tree-nodes">
+        @if (string.IsNullOrWhiteSpace(_filter))
+        {
+            @foreach (var root in TopicIndex.Roots.Values.OrderBy(n => n.Name))
+            {
+                <TopicTreeNode Node="root" />
+            }
+        }
+        else
+        {
+            @foreach (var node in TopicIndex.Search(_filter).OrderBy(n => n.FullPath))
+            {
+                <div class="topic-node-flat">
+                    <MudText Typo="Typo.body2" Class="topic-path">@node.FullPath</MudText>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Default" Class="ml-2">@node.MessageCount</MudChip>
+                    @if (node.LastActivity != default)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="ml-2">
+                            @node.LastActivity.ToLocalTime().ToString("HH:mm:ss.fff")
+                        </MudText>
+                    }
+                </div>
+            }
+        }
+    </div>
+
+</div>
+
+@code {
+    private string _filter = string.Empty;
+    private volatile bool _pendingUpdate;
+    private Timer? _refreshTimer;
+
+    protected override void OnInitialized()
+    {
+        TopicIndex.Changed += OnIndexChanged;
+
+        // Throttle UI refreshes — at most once per 250 ms
+        _refreshTimer = new Timer(_ =>
+        {
+            if (!_pendingUpdate) return;
+            _pendingUpdate = false;
+            InvokeAsync(StateHasChanged);
+        }, null, TimeSpan.FromMilliseconds(250), TimeSpan.FromMilliseconds(250));
+    }
+
+    private void OnIndexChanged(object? sender, EventArgs e) => _pendingUpdate = true;
+
+    public void Dispose()
+    {
+        _refreshTimer?.Dispose();
+        TopicIndex.Changed -= OnIndexChanged;
+    }
+}
