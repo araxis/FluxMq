@@ -73,6 +73,7 @@ Observability and replay timeline:
   /FluxMq.Core.Tests
   /FluxMq.Pipeline.Tests
   /FluxMq.Storage.Tests
+/docs
 /memory
 ```
 
@@ -103,6 +104,18 @@ Start here:
 - [Architecture Plan](memory/02-architecture-plan.md)
 - [Roadmap](memory/03-roadmap.md)
 - [Progress Log](memory/04-progress-log.md)
+
+## Documentation
+
+Developer and architecture documentation is tracked in `docs/`.
+
+Start here:
+
+- [Documentation Index](docs/README.md)
+- [Architecture](docs/architecture.md)
+- [Fork Flow](docs/fork-flow.md)
+- [Flow Errors](docs/flow-errors.md)
+- [Replay](docs/replay.md)
 
 ## License
 
