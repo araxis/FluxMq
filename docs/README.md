@@ -8,6 +8,7 @@ This folder contains project documentation intended for contributors and future 
 - [Local Development](development.md)
 - [Architecture](architecture.md)
 - [Fork Flow](fork-flow.md)
+- [Flow Components](flow-components.md)
 - [Flow Errors](flow-errors.md)
 - [Replay](replay.md)
 - [Wiki Index](wiki-index.md)

@@ -116,6 +116,7 @@ Start here:
 - [Documentation Index](docs/README.md)
 - [Architecture](docs/architecture.md)
 - [Fork Flow](docs/fork-flow.md)
+- [Flow Components](docs/flow-components.md)
 - [Flow Errors](docs/flow-errors.md)
 - [Replay](docs/replay.md)
 

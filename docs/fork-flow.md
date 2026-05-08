@@ -36,6 +36,8 @@ flowchart LR
 
 ## Current Concrete Components
 
+See [Flow Components](flow-components.md) for behavior diagrams and sample usage.
+
 ### ConnectionStateTriggerComponent
 
 Broadcasts MQTT connection state changes as flow events.
