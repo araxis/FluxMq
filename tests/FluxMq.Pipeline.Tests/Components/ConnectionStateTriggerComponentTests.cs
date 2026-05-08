@@ -55,7 +55,9 @@ public sealed class ConnectionStateTriggerComponentTests
             .WithMessage("state stream failed");
         await errorSink.Completion;
 
-        errors.Should().ContainSingle().Which.Message.Should().Be("Connection state trigger faulted.");
+        var error = errors.Should().ContainSingle().Subject;
+        error.Code.Should().Be(FlowErrorCode.NodeFaulted);
+        error.Message.Should().Be("Connection state trigger faulted.");
     }
 
     private sealed class FakeConnectionManager : IMqttConnectionManager

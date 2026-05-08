@@ -46,7 +46,7 @@ public sealed class TopicFilterComponent : IFlowNode
 
     public void Fault(Exception exception)
     {
-        PublishError("Topic filter faulted.", exception);
+        PublishError(FlowErrorCode.NodeFaulted, "Topic filter faulted.", exception);
         ((IDataflowBlock)_block).Fault(exception);
     }
 
@@ -60,7 +60,7 @@ public sealed class TopicFilterComponent : IFlowNode
         }
         catch (Exception exception)
         {
-            PublishError("Topic filter predicate failed.", exception, envelope.Topic);
+            PublishError(FlowErrorCode.ProcessingFailed, "Topic filter predicate failed.", exception, envelope.Topic);
             yield break;
         }
 
@@ -70,11 +70,12 @@ public sealed class TopicFilterComponent : IFlowNode
         }
     }
 
-    private void PublishError(string message, Exception exception, string? context = null)
+    private void PublishError(FlowErrorCode code, string message, Exception exception, string? context = null)
     {
         _errors.Post(new FlowError
         {
             NodeId = Id,
+            Code = code,
             Message = message,
             Exception = exception,
             Context = context

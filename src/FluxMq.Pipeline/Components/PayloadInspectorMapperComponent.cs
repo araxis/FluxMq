@@ -42,7 +42,7 @@ public sealed class PayloadInspectorMapperComponent : IFlowNode
 
     public void Fault(Exception exception)
     {
-        PublishError("Payload inspector mapper faulted.", exception);
+        PublishError(FlowErrorCode.NodeFaulted, "Payload inspector mapper faulted.", exception);
         ((IDataflowBlock)_block).Fault(exception);
     }
 
@@ -54,16 +54,17 @@ public sealed class PayloadInspectorMapperComponent : IFlowNode
         }
         catch (Exception exception)
         {
-            PublishError("Payload inspection failed.", exception, envelope.Topic);
+            PublishError(FlowErrorCode.ProcessingFailed, "Payload inspection failed.", exception, envelope.Topic);
             return new InspectedMqttMessage(envelope, PayloadInspector.Inspect([]));
         }
     }
 
-    private void PublishError(string message, Exception exception, string? context = null)
+    private void PublishError(FlowErrorCode code, string message, Exception exception, string? context = null)
     {
         _errors.Post(new FlowError
         {
             NodeId = Id,
+            Code = code,
             Message = message,
             Exception = exception,
             Context = context
