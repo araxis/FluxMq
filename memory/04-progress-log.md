@@ -1,0 +1,139 @@
+# FluxMQ Progress Log
+
+Chronological progress record.
+
+## 2026-05-06
+
+- Read the initial FluxMQ proposal.
+- Chose to treat the proposal as a product north star, not a fixed architecture.
+- Agreed that LiteDB is a good first storage database.
+- Decided to prioritize the message/session pipeline before formal external plugins.
+- Created the `memory` folder for project continuity.
+- Renamed the original proposal to `FluxMQ-Platform-Proposal.md`.
+- Added project memory files:
+  - `00-index.md`
+  - `01-decisions.md`
+  - `02-architecture-plan.md`
+  - `03-roadmap.md`
+  - `04-progress-log.md`
+- Created the initial .NET solution scaffold:
+  - `FluxMq.App`
+  - `FluxMq.Core`
+  - `FluxMq.Pipeline`
+  - `FluxMq.Storage`
+  - `FluxMq.UI`
+  - `FluxMq.Core.Tests`
+  - `FluxMq.Pipeline.Tests`
+  - `FluxMq.Storage.Tests`
+- Added initial package references:
+  - MQTTnet in `FluxMq.Core`
+  - LiteDB in `FluxMq.Storage`
+  - MudBlazor in `FluxMq.App`
+  - FluentAssertions in test projects
+- Wired MudBlazor into the MAUI Blazor app.
+- Normalized projects to .NET 10 target frameworks because the MAUI Blazor template generated `net10.0` targets.
+- Limited the first MAUI target to Windows desktop.
+- Replaced the empty generated `.slnx` with a classic `.sln`.
+- Added a root `.gitignore`.
+- Verified `dotnet restore`, `dotnet build`, and `dotnet test` all pass.
+- Initialized a local Git repository on branch `main`.
+- Created the initial commit: `11f00d1 Initial FluxMQ scaffold`.
+- Checked GitHub profile through the connected GitHub app: `araxis`.
+- Confirmed no existing `FluxMq` repository was found under that profile through repository search.
+- Used GitHub CLI from `C:\Program Files\GitHub CLI\gh.exe`.
+- Created private GitHub repository: `https://github.com/araxis/FluxMq`.
+- Added `origin` remote and pushed `main`.
+- Verified remote visibility is private and default branch is `main`.
+- Added initial `README.md` with project vision, status, architecture direction, build commands, and links to memory docs.
+- Created initial UI mockup assets under `design/ui-mockups/`:
+  - `01-main-workspace.png`
+  - `02-payload-debugger.png`
+  - `03-observability-replay.png`
+- Added `design/ui-mockups/render_fluxmq_mockups.py` to regenerate the mockups deterministically.
+- Added `design/ui-mockups/README.md` describing the UI direction.
+- Installed Pillow locally for Python-based mockup rendering.
+- Installed Node.js LTS for Remotion work.
+- Created a Remotion intro animation under `design/intro-animation/`.
+- Rendered intro outputs:
+  - `design/intro-animation/out/fluxmq-intro.mp4`
+  - `design/intro-animation/out/fluxmq-intro-poster.png`
+- Updated the root `README.md` with the UI mockups, intro poster, and intro animation link.
+- Changed the intro animation README section to use an HTML `<video controls>` block with a fallback link.
+
+- Converted the intro animation from MP4 to GIF using Remotion's built-in GIF codec:
+  - Output: `design/intro-animation/out/fluxmq-intro.gif` (960×540, 15 fps, 5.8 MB).
+  - Render parameters: `--codec=gif --scale=0.5 --every-nth-frame=2`.
+  - Added `render:gif` npm script to `design/intro-animation/package.json`.
+- Replaced the unplayable `<video>` embed in the README with a `![img]` GIF embed (GitHub does not render `<video>`).
+- Added `design/ui-mockups/01-main-workspace.png` as a full-width static banner at the very top of the README.
+- Removed "dark" from the Visual Direction description: FluxMQ supports both dark and light themes; it is not a defining characteristic worth calling out.
+- Trimmed README noise: removed the Remotion/MP4 attribution line, the `### UI Mockups` section header, and the `Primary MQTT operations workspace:` caption.
+- Merged PR #1: GIF banner + video embed fix.
+- Opened PR #2 (`readme-banner-cleanup`): static mockup banner + README cleanup.
+
+## 2026-05-07
+
+- Implemented Stage 1 — core MQTT session and pipeline foundation (PR #4):
+  - `FluxMq.Core`: `MqttConnectionProfile`, `MqttEnvelope`, `MqttSessionState`, `IMqttSession`, `MqttSession` (MQTTnet wrapper, messages → bounded `Channel<MqttEnvelope>`).
+  - `FluxMq.Pipeline`: initial `IMessageProcessor` + `MessagePipeline` (sequential fan-out).
+  - 13 tests passing.
+- Replaced sequential pipeline with TPL Dataflow (PR #5):
+  - Removed `IMessageProcessor` and `MessagePipeline`.
+  - Added `MqttPipeline`: `BufferBlock` → `BroadcastBlock` → consumer `ActionBlock`s.
+  - `pipeline.LinkTo(block)` for simple sinks; `pipeline.Output` for filtered linking.
+  - 15 tests passing (8 core, 6 pipeline, 1 storage placeholder).
+
+- Added connection state management:
+  - `IMqttSession.StateChanged` event — fires on every state transition.
+  - `MqttSession` wires `IMqttClient.DisconnectedAsync` to detect unexpected drops; sets `Faulted` if exception present, `Disconnected` otherwise.
+  - `SetState` helper centralises all state writes and event firing.
+  - `SessionStateChangedEventArgs` — carries session ID, profile, and new state.
+  - `IMqttConnectionManager` / `MqttConnectionManager` — creates, tracks, and disposes sessions; forwards `StateChanged`; uses injected factory for testability.
+  - Reconnect hook (Polly) left as a comment in `OnSessionStateChanged`.
+  - 6 new connection manager tests using `FakeMqttSession` (no broker required). 21 tests total passing.
+
+- Decided on visual pipeline editor direction (Stage 8):
+  - Blazor.Diagrams for drag-and-drop topology editing.
+  - `PipelineDefinition` JSON model persisted in LiteDB.
+  - `PipelineBuilder` with cold `Build` and hot `Patch` modes.
+  - Hot-reload requirement: config changes and link changes apply in-place without stopping unaffected blocks or dropping in-flight messages.
+  - Module contracts from Stage 2 onwards must be designed with node metadata (ports, configurable properties) in mind.
+
+- Implemented Polly reconnect in `MqttConnectionManager`:
+  - Added `MqttSessionState.Reconnecting` — surfaced to UI on each retry attempt.
+  - `MqttSession.OnClientDisconnectedAsync` no longer completes the channel on unexpected drops — channel stays open so reconnect resumes message flow seamlessly.
+  - `MqttConnectionManager` schedules a background reconnect task on `Faulted` or unexpected `Disconnected`; uses an injectable `ResiliencePipeline` (default: exponential backoff 1s → 30s with jitter, infinite retries).
+  - `DisconnectAsync` and `RemoveAsync` cancel any in-progress reconnect before acting.
+  - `BuildDefaultReconnectPipeline()` is the production default; tests inject `InstantRetry` (zero delay, 5 attempts).
+  - 23 tests passing (16 core, 6 pipeline, 1 storage).
+
+- Implemented Stage 2 — Topic Explorer MVP:
+  - `FluxMq.Core/TopicIndex`: `TopicNode` (thread-safe, immutable record of a topic segment), `ITopicIndex`, `TopicIndex` (ConcurrentDictionary tree, BFS flatten for Search).
+  - `TopicIndex.Changed` event fires per message; documented as high-frequency — consumers must throttle.
+  - `FluxMq.UI`: removed scaffold placeholders; added MudBlazor 9.4.0; updated `_Imports.razor`.
+  - Two Blazor components:
+    - `TopicTreeView.razor` — search input + tree/flat-list toggle; 250ms timer-based throttle for `StateHasChanged`.
+    - `TopicTreeNode.razor` — recursive expand/collapse node with name, message count, last activity timestamp.
+  - 12 new `TopicIndex` tests; 35 tests total passing.
+
+## 2026-05-08
+
+- Implemented Stage 3 — LiteDB persistence:
+  - `FluxDbContext`: wraps `ILiteDatabase`, exposes typed `ILiteCollection<T>` properties for all three domains; EnsureIndexes on `SessionId`, `Topic`, and `ProfileId`; accepts injected `ILiteDatabase` for test isolation.
+  - `StoredSession` model: `Id`, `ProfileId`, `ProfileName`, `StartedAt`, `EndedAt`; static `From(MqttConnectionProfile)` factory.
+  - `StoredMessage` model: `Id`, `SessionId`, `Topic`, `Payload` (byte[]), `ReceivedAt`, `QualityOfService`, `Retain`; static `From(sessionId, envelope)` factory and `ToEnvelope()` round-trip method.
+  - Three repository interface + LiteDB implementation pairs:
+    - `IConnectionProfileRepository` / `LiteDbConnectionProfileRepository` — `Get`, `GetAll`, `Save` (upsert), `Delete`.
+    - `ISessionRepository` / `LiteDbSessionRepository` — `Start` (insert), `End` (update EndedAt), `Get`, `GetAll` (ordered desc by StartedAt), `Delete`.
+    - `IMessageRepository` / `LiteDbMessageRepository` — `Add`, `AddBatch` (bulk insert), `GetBySession` (ordered asc by ReceivedAt), `GetByTopic`, `CountBySession`.
+  - 19 tests across three test classes, all using `new LiteDatabase(":memory:")` — no file I/O, fully isolated per class.
+  - All 19 tests passing (54 total in solution).
+
+- Fixed LiteDB session indexing:
+  - `FluxDbContext` now indexes `StoredSession.ProfileId` by field name instead of an expression.
+  - Reason: LiteDB's expression mapper does not resolve the strongly typed `ConnectionProfileId` member correctly in this index expression.
+  - Verified with `dotnet test FluxMq.sln`: 53 tests passing.
+
+## Current Next Step
+
+Stage 4 — Payload Inspector: JSON / hex / raw display panel for selected messages.
