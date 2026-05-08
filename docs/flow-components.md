@@ -165,6 +165,38 @@ await replay.StartAsync();
 - `speed = 2` replays twice as fast.
 - delay behavior is injectable for deterministic tests.
 
+## MQTT Publish Sink
+
+`MqttPublishSinkComponent` publishes incoming MQTT messages through an active session.
+
+### Behavior
+
+```mermaid
+flowchart LR
+    In["Input: MqttEnvelope"] --> Sink["MqttPublishSinkComponent"]
+    Sink --> Session["IMqttSession.PublishAsync"]
+    Sink -->|publish failure| Errors["Errors: FlowError code 2000"]
+```
+
+### Usage
+
+```csharp
+var publishSink = new MqttPublishSinkComponent(session);
+
+source.LinkTo(publishSink.Input, new DataflowLinkOptions
+{
+    PropagateCompletion = true
+});
+
+publishSink.Errors.LinkTo(errorSink);
+```
+
+### Failure Behavior
+
+If publishing fails for one message, the sink publishes a `FlowError` with the topic in `Context` and continues processing later messages.
+
+The component preserves publish order by default. Higher parallelism is available through the constructor, but ordered single-message publishing should remain the default for replay and deterministic flow behavior.
+
 ## Recorded Session Replay Factory
 
 `RecordedSessionReplayFactory` creates replay sources from stored sessions.
@@ -227,6 +259,36 @@ mapper.Errors.LinkTo(errorSink);
 await replay.StartAsync();
 ```
 
+This flow replays a recorded session back through an MQTT session.
+
+```mermaid
+flowchart LR
+    Factory["RecordedSessionReplayFactory"] --> Replay["ReplaySourceComponent"]
+    Replay --> Filter["TopicFilterComponent"]
+    Filter --> Publish["MqttPublishSinkComponent"]
+    Replay --> ErrorLog["Error Log"]
+    Filter --> ErrorLog
+    Publish --> ErrorLog
+```
+
+Equivalent code shape:
+
+```csharp
+var replay = replayFactory.Create(sessionId);
+var filter = TopicFilterComponent.Prefix("factory/");
+var publishSink = new MqttPublishSinkComponent(session);
+
+replay.Output.LinkTo(filter.Input, new DataflowLinkOptions { PropagateCompletion = true });
+filter.Output.LinkTo(publishSink.Input, new DataflowLinkOptions { PropagateCompletion = true });
+
+replay.Errors.LinkTo(errorSink);
+filter.Errors.LinkTo(errorSink);
+publishSink.Errors.LinkTo(errorSink);
+
+await replay.StartAsync();
+await publishSink.Completion;
+```
+
 ## Future Component Types
 
 Likely near-term additions:
@@ -234,7 +296,6 @@ Likely near-term additions:
 - dynamic expression mapper
 - JSONata mapper
 - condition/router component
-- MQTT publish sink
 - storage sink
 - metrics sink
 
