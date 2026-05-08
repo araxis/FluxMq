@@ -1,3 +1,4 @@
+using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using Polly;
 using Polly.Retry;
@@ -9,10 +10,10 @@ public sealed class MqttConnectionManager : IMqttConnectionManager
 {
     private readonly Func<MqttConnectionProfile, IMqttSession> _sessionFactory;
     private readonly ResiliencePipeline _reconnectPipeline;
-    private readonly ConcurrentDictionary<Guid, IMqttSession> _sessions = new();
-    private readonly ConcurrentDictionary<Guid, CancellationTokenSource> _reconnectCts = new();
+    private readonly ConcurrentDictionary<ConnectionProfileId, IMqttSession> _sessions = new();
+    private readonly ConcurrentDictionary<ConnectionProfileId, CancellationTokenSource> _reconnectCts = new();
 
-    public IReadOnlyDictionary<Guid, IMqttSession> Sessions => _sessions;
+    public IReadOnlyDictionary<ConnectionProfileId, IMqttSession> Sessions => _sessions;
 
     public event EventHandler<SessionStateChangedEventArgs>? StateChanged;
 
@@ -52,19 +53,19 @@ public sealed class MqttConnectionManager : IMqttConnectionManager
         return session;
     }
 
-    public async Task DisconnectAsync(Guid sessionId, CancellationToken ct = default)
+    public async Task DisconnectAsync(ConnectionProfileId profileId, CancellationToken ct = default)
     {
-        await CancelReconnectAsync(sessionId);
+        await CancelReconnectAsync(profileId);
 
-        if (_sessions.TryGetValue(sessionId, out var session))
+        if (_sessions.TryGetValue(profileId, out var session))
             await session.DisconnectAsync(ct);
     }
 
-    public async Task RemoveAsync(Guid sessionId, CancellationToken ct = default)
+    public async Task RemoveAsync(ConnectionProfileId profileId, CancellationToken ct = default)
     {
-        await CancelReconnectAsync(sessionId);
+        await CancelReconnectAsync(profileId);
 
-        if (!_sessions.TryRemove(sessionId, out var session))
+        if (!_sessions.TryRemove(profileId, out var session))
             return;
 
         session.StateChanged -= OnSessionStateChanged;
@@ -92,7 +93,6 @@ public sealed class MqttConnectionManager : IMqttConnectionManager
     private void ScheduleReconnect(IMqttSession session)
     {
         var cts = new CancellationTokenSource();
-        // Replace any existing reconnect attempt for this session
         if (_reconnectCts.TryRemove(session.Profile.Id, out var old))
         {
             old.Cancel();
@@ -106,7 +106,6 @@ public sealed class MqttConnectionManager : IMqttConnectionManager
             {
                 await _reconnectPipeline.ExecuteAsync(async ct =>
                 {
-                    // Surface each attempt as Reconnecting so the UI can show it
                     StateChanged?.Invoke(this, new SessionStateChangedEventArgs(
                         session.Profile.Id, session.Profile, MqttSessionState.Reconnecting));
 
@@ -122,9 +121,9 @@ public sealed class MqttConnectionManager : IMqttConnectionManager
         });
     }
 
-    private async Task CancelReconnectAsync(Guid sessionId)
+    private async Task CancelReconnectAsync(ConnectionProfileId profileId)
     {
-        if (_reconnectCts.TryRemove(sessionId, out var cts))
+        if (_reconnectCts.TryRemove(profileId, out var cts))
         {
             await cts.CancelAsync();
             cts.Dispose();

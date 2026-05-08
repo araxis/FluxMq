@@ -1,4 +1,5 @@
 using FluentAssertions;
+using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Storage;
 using FluxMq.Storage.Repositories;
@@ -54,7 +55,7 @@ public class ConnectionProfileRepositoryTests : IDisposable
     [Fact]
     public void Get_ReturnsNull_ForUnknownId()
     {
-        _repo.Get(Guid.NewGuid()).Should().BeNull();
+        _repo.Get(ConnectionProfileId.New()).Should().BeNull();
     }
 
     [Fact]
@@ -72,7 +73,7 @@ public class ConnectionProfileRepositoryTests : IDisposable
     [Fact]
     public void Delete_ReturnsFalse_ForUnknownId()
     {
-        _repo.Delete(Guid.NewGuid()).Should().BeFalse();
+        _repo.Delete(ConnectionProfileId.New()).Should().BeFalse();
     }
 
     public void Dispose() => _ctx.Dispose();

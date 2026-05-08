@@ -1,8 +1,10 @@
+using FluxMq.Core.Ids;
+
 namespace FluxMq.Core.Models;
 
 public sealed record MqttConnectionProfile
 {
-    public Guid Id { get; init; } = Guid.NewGuid();
+    public ConnectionProfileId Id { get; init; } = ConnectionProfileId.New();
     public string Name { get; init; } = string.Empty;
     public string Host { get; init; } = "localhost";
     public int Port { get; init; } = 1883;

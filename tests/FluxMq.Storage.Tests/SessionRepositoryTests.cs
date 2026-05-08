@@ -1,4 +1,5 @@
 using FluentAssertions;
+using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Storage;
 using FluxMq.Storage.Repositories;
@@ -24,7 +25,7 @@ public class SessionRepositoryTests : IDisposable
 
         var session = _repo.Start(profile);
 
-        session.Id.Should().NotBeEmpty();
+        session.Id.Should().NotBe(SessionId.Empty);
         session.ProfileId.Should().Be(profile.Id);
         session.ProfileName.Should().Be("broker-a");
         session.StartedAt.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(2));
@@ -54,7 +55,7 @@ public class SessionRepositoryTests : IDisposable
     [Fact]
     public void End_DoesNotThrow_ForUnknownId()
     {
-        var act = () => _repo.End(Guid.NewGuid());
+        var act = () => _repo.End(SessionId.New());
         act.Should().NotThrow();
     }
 

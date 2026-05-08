@@ -1,4 +1,5 @@
 using FluentAssertions;
+using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Session;
 using MQTTnet.Protocol;

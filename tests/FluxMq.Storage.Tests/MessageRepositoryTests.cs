@@ -1,4 +1,5 @@
 using FluentAssertions;
+using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Storage;
 using FluxMq.Storage.Repositories;
@@ -11,7 +12,7 @@ public class MessageRepositoryTests : IDisposable
 {
     private readonly FluxDbContext _ctx = new(new LiteDatabase(":memory:"));
     private readonly LiteDbMessageRepository _repo;
-    private readonly Guid _sessionId = Guid.NewGuid();
+    private readonly SessionId _sessionId = SessionId.New();
 
     public MessageRepositoryTests() =>
         _repo = new LiteDbMessageRepository(_ctx);
@@ -49,7 +50,7 @@ public class MessageRepositoryTests : IDisposable
     [Fact]
     public void GetBySession_ReturnsOnlyThatSessionsMessages()
     {
-        var otherId = Guid.NewGuid();
+        var otherId = SessionId.New();
         _repo.Add(_sessionId, Envelope("a/b"));
         _repo.Add(otherId, Envelope("c/d"));
 
@@ -61,7 +62,7 @@ public class MessageRepositoryTests : IDisposable
     public void GetByTopic_ReturnsMatchingMessages_AcrossSessions()
     {
         _repo.Add(_sessionId, Envelope("sensors/temp"));
-        _repo.Add(Guid.NewGuid(), Envelope("sensors/temp"));
+        _repo.Add(SessionId.New(), Envelope("sensors/temp"));
         _repo.Add(_sessionId, Envelope("sensors/humidity"));
 
         _repo.GetByTopic("sensors/temp").Should().HaveCount(2);
@@ -88,7 +89,7 @@ public class MessageRepositoryTests : IDisposable
     {
         _repo.Add(_sessionId, Envelope("a"));
         _repo.Add(_sessionId, Envelope("b"));
-        _repo.Add(Guid.NewGuid(), Envelope("c"));
+        _repo.Add(SessionId.New(), Envelope("c"));
 
         _repo.CountBySession(_sessionId).Should().Be(2);
     }

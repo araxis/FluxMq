@@ -1,3 +1,4 @@
+using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Storage.Models;
 using LiteDB;
@@ -25,7 +26,23 @@ public sealed class FluxDbContext : IDisposable
     public FluxDbContext(ILiteDatabase database)
     {
         _db = database;
+        RegisterMappers();
         EnsureIndexes();
+    }
+
+    private void RegisterMappers()
+    {
+        _db.Mapper.RegisterType<ConnectionProfileId>(
+            serialize: id => new BsonValue(id.Value),
+            deserialize: bson => new ConnectionProfileId(bson.AsGuid));
+
+        _db.Mapper.RegisterType<SessionId>(
+            serialize: id => new BsonValue(id.Value),
+            deserialize: bson => new SessionId(bson.AsGuid));
+
+        _db.Mapper.RegisterType<MessageId>(
+            serialize: id => new BsonValue(id.Value),
+            deserialize: bson => new MessageId(bson.AsGuid));
     }
 
     private void EnsureIndexes()
