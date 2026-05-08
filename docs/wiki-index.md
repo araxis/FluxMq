@@ -9,6 +9,7 @@ Suggested Wiki pages:
 - Local Development
 - Architecture
 - Fork Flow
+- Flow Components
 - Flow Errors
 - Replay
 - Roadmap
@@ -22,9 +23,10 @@ Recommended reading order:
 1. Project Overview
 2. Architecture
 3. Fork Flow
-4. Flow Errors
-5. Replay
-6. Local Development
+4. Flow Components
+5. Flow Errors
+6. Replay
+7. Local Development
 
 ## Maintenance
 

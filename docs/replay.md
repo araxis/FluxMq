@@ -68,9 +68,9 @@ sequenceDiagram
 
 ## Storage Integration
 
-The current replay source works with `MqttEnvelope`.
+The replay source works with `MqttEnvelope`.
 
-Storage integration should stay outside the source component:
+Storage integration stays outside the source component:
 
 ```text
 IMessageRepository.GetBySession(sessionId)
@@ -80,11 +80,19 @@ IMessageRepository.GetBySession(sessionId)
 
 This keeps `FluxMq.Pipeline` independent from `FluxMq.Storage`.
 
+`FluxMq.Replay` owns this orchestration through `RecordedSessionReplayFactory`.
+
+```mermaid
+flowchart LR
+    Repository["IMessageRepository"] --> Factory["RecordedSessionReplayFactory"]
+    Factory --> Convert["StoredMessage.ToEnvelope"]
+    Convert --> Source["ReplaySourceComponent"]
+```
+
 ## Next Replay Steps
 
 Likely next components:
 
-- replay session loader service
 - replay publish sink
 - replay UI controls
 - speed control UI

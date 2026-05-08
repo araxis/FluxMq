@@ -74,6 +74,7 @@
     <ItemGroup>
       <ProjectReference Include="..\FluxMq.Core\FluxMq.Core.csproj" />
       <ProjectReference Include="..\FluxMq.Pipeline\FluxMq.Pipeline.csproj" />
+      <ProjectReference Include="..\FluxMq.Replay\FluxMq.Replay.csproj" />
       <ProjectReference Include="..\FluxMq.Storage\FluxMq.Storage.csproj" />
       <ProjectReference Include="..\FluxMq.UI\FluxMq.UI.csproj" />
     </ItemGroup>

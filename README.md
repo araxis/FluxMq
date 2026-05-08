@@ -67,11 +67,13 @@ Observability and replay timeline:
   /FluxMq.App
   /FluxMq.Core
   /FluxMq.Pipeline
+  /FluxMq.Replay
   /FluxMq.Storage
   /FluxMq.UI
 /tests
   /FluxMq.Core.Tests
   /FluxMq.Pipeline.Tests
+  /FluxMq.Replay.Tests
   /FluxMq.Storage.Tests
 /docs
 /memory
@@ -114,6 +116,7 @@ Start here:
 - [Documentation Index](docs/README.md)
 - [Architecture](docs/architecture.md)
 - [Fork Flow](docs/fork-flow.md)
+- [Flow Components](docs/flow-components.md)
 - [Flow Errors](docs/flow-errors.md)
 - [Replay](docs/replay.md)
 
