@@ -134,6 +134,15 @@ Chronological progress record.
   - Reason: LiteDB's expression mapper does not resolve the strongly typed `ConnectionProfileId` member correctly in this index expression.
   - Verified with `dotnet test FluxMq.sln`: 53 tests passing.
 
+- Implemented Stage 4 — Payload Inspector:
+  - Added `PayloadInspector` in `FluxMq.Core` for JSON, XML, Base64, plain text, binary, and empty payload detection.
+  - Added payload metadata and hex dump generation.
+  - Added `PayloadInspectorPanel` in `FluxMq.UI` with formatted, raw, hex, and metadata tabs.
+  - Replaced the default home page with a simple MQTT message inspection workspace preview.
+  - Added 6 payload inspector tests covering JSON, XML, Base64, text, binary, and empty payloads.
+  - Verified `dotnet test FluxMq.sln`: 59 tests passing.
+  - Verified `dotnet build src\FluxMq.App\FluxMq.App.csproj`: build passing.
+
 ## Current Next Step
 
-Stage 4 — Payload Inspector: JSON / hex / raw display panel for selected messages.
+Stage 5 — Replay MVP: recorded session playback with relative timing and speed control.
