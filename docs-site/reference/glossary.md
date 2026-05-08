@@ -1,0 +1,29 @@
+# Glossary
+
+## Broker
+
+The MQTT server that receives published messages and distributes them to subscribers.
+
+## Connection Profile
+
+Saved broker connection settings.
+
+## Fork Flow
+
+A configurable FluxMQ pipeline made from sources, triggers, filters, mappers, routers, and sinks.
+
+## MQTT Envelope
+
+The FluxMQ runtime shape for an MQTT message and its metadata.
+
+## Recording Session
+
+A stored sequence of MQTT messages captured during a debugging session.
+
+## Replay Source
+
+A flow component that emits recorded MQTT messages in timestamp order.
+
+## Sink
+
+A flow endpoint that writes, publishes, stores, or projects incoming data.

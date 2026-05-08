@@ -76,6 +76,7 @@ Observability and replay timeline:
   /FluxMq.Replay.Tests
   /FluxMq.Storage.Tests
 /docs
+/docs-site
 /memory
 ```
 
@@ -111,9 +112,12 @@ Start here:
 
 Developer and architecture documentation is tracked in `docs/`.
 
+User-facing documentation is tracked in `docs-site/` and published as a static GitHub Pages site.
+
 Start here:
 
 - [Documentation Index](docs/README.md)
+- [Documentation Strategy](docs/documentation-strategy.md)
 - [Architecture](docs/architecture.md)
 - [Fork Flow](docs/fork-flow.md)
 - [Flow Components](docs/flow-components.md)
