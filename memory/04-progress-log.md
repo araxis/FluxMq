@@ -150,6 +150,11 @@ Chronological progress record.
   - Added a minimal `IFlowNode` lifecycle surface with typed `FlowNodeId`.
   - Added component tests for message flow, typed node IDs, completion, and fault behavior.
 
+- Recorded Fork Flow failure isolation rule:
+  - Component exceptions and recoverable processing failures should become typed flow error events.
+  - Flow nodes should eventually expose an error output port.
+  - A failed node must not terminate the running application.
+
 ## Current Next Step
 
 Continue Fork Flow foundation through concrete components, then use the resulting shape to guide Stage 5 replay components.
