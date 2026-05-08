@@ -166,3 +166,20 @@ Reasoning:
 - Keeping both means first-time readers get a quick visual impression, then an animated walkthrough further down.
 
 Status: Accepted.
+
+### 2026-05-08 - Explore concrete Dataflow components before formal flow contracts
+
+Decision: Build a small set of concrete Dataflow-backed components before defining shared flow contracts.
+
+Reasoning:
+- FluxMQ's user-defined Fork Flow model should grow from real working components, not from premature abstractions.
+- Repositories, connection managers, UI components, and storage contexts remain normal services.
+- Only behaviors that participate in configurable event movement should become flow components.
+- Concrete components can expose typed `Input` and `Output` blocks first; repeated patterns will tell us later what contracts, descriptors, and config models are actually needed.
+
+Initial concrete components:
+- Connection state trigger.
+- Topic filter.
+- Payload inspector mapper.
+
+Status: Accepted.

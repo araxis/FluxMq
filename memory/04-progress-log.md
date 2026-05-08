@@ -143,6 +143,12 @@ Chronological progress record.
   - Verified `dotnet test FluxMq.sln`: 59 tests passing.
   - Verified `dotnet build src\FluxMq.App\FluxMq.App.csproj`: build passing.
 
+- Started Fork Flow foundation with concrete Dataflow-backed components:
+  - Added a connection state trigger component that broadcasts connection state changes.
+  - Added a topic filter component backed by `TransformManyBlock`.
+  - Added a payload inspector mapper component backed by `TransformBlock`.
+  - Added component tests without introducing shared flow contracts yet.
+
 ## Current Next Step
 
-Stage 5 — Replay MVP: recorded session playback with relative timing and speed control.
+Continue Fork Flow foundation through concrete components, then use the resulting shape to guide Stage 5 replay components.
