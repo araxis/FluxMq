@@ -89,11 +89,26 @@ flowchart LR
     Convert --> Source["ReplaySourceComponent"]
 ```
 
+## Replay To MQTT
+
+Recorded sessions can be replayed back through an MQTT session by linking the replay source to `MqttPublishSinkComponent`.
+
+```mermaid
+flowchart LR
+    Repository["IMessageRepository"] --> Factory["RecordedSessionReplayFactory"]
+    Factory --> Replay["ReplaySourceComponent"]
+    Replay --> Publish["MqttPublishSinkComponent"]
+    Publish --> Broker["MQTT broker"]
+    Replay --> Errors["Error sink"]
+    Publish --> Errors
+```
+
+The replay source controls timing. The publish sink owns broker publishing and converts publish exceptions into `FlowError` values, so one failed publish does not stop the rest of the replay.
+
 ## Next Replay Steps
 
 Likely next components:
 
-- replay publish sink
 - replay UI controls
 - speed control UI
 - pause/resume support

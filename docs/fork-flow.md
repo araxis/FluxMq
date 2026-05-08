@@ -54,6 +54,10 @@ Maps `MqttEnvelope` into `InspectedMqttMessage`.
 
 Replays ordered `MqttEnvelope` values with relative timing and speed control.
 
+### MqttPublishSinkComponent
+
+Publishes `MqttEnvelope` values through an MQTT session and reports publish failures through the error port.
+
 ## Flow Node Lifecycle
 
 Flow nodes expose TPL Dataflow lifecycle behavior:
