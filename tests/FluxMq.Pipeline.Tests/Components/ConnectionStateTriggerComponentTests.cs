@@ -43,13 +43,21 @@ public sealed class ConnectionStateTriggerComponentTests
     {
         var manager = new FakeConnectionManager();
         using var component = new ConnectionStateTriggerComponent(manager);
+        var errors = new List<FlowError>();
+        var errorSink = new ActionBlock<FlowError>(errors.Add);
         var failure = new InvalidOperationException("state stream failed");
 
+        component.Errors.LinkTo(errorSink, new DataflowLinkOptions { PropagateCompletion = true });
         component.Fault(failure);
         var act = async () => await component.Completion;
 
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("state stream failed");
+        await errorSink.Completion;
+
+        var error = errors.Should().ContainSingle().Subject;
+        error.Code.Should().Be(FlowErrorCodes.NodeFaulted);
+        error.Message.Should().Be("Connection state trigger faulted.");
     }
 
     private sealed class FakeConnectionManager : IMqttConnectionManager

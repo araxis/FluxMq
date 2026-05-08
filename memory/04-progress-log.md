@@ -155,6 +155,13 @@ Chronological progress record.
   - Flow nodes should eventually expose an error output port.
   - A failed node must not terminate the running application.
 
+- Implemented first flow error ports:
+  - Added `FlowError` with typed `FlowNodeId`, message, optional exception, timestamp, and context.
+  - Added plain numeric `FlowErrorCodes` constants for stable error routing.
+  - Added `Errors` output to `IFlowNode`.
+  - Topic filter predicate failures now publish error events and continue processing later messages.
+  - Mapper/filter error ports remain open until pending work drains during completion.
+
 ## Current Next Step
 
 Continue Fork Flow foundation through concrete components, then use the resulting shape to guide Stage 5 replay components.

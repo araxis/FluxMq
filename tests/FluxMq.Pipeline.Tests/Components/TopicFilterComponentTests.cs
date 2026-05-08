@@ -33,12 +33,77 @@ public sealed class TopicFilterComponentTests
     public async Task Fault_CompletesWithFailure()
     {
         var component = new TopicFilterComponent(_ => true);
+        var errors = new List<FlowError>();
+        var errorSink = new ActionBlock<FlowError>(errors.Add);
         var failure = new InvalidOperationException("filter failed");
 
+        component.Errors.LinkTo(errorSink, new DataflowLinkOptions { PropagateCompletion = true });
         component.Fault(failure);
         var act = async () => await component.Completion;
 
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("filter failed");
+        await errorSink.Completion;
+
+        var error = errors.Should().ContainSingle().Subject;
+        error.Code.Should().Be(FlowErrorCodes.NodeFaulted);
+        error.Message.Should().Be("Topic filter faulted.");
+    }
+
+    [Fact]
+    public async Task PredicateFailure_PublishesErrorAndKeepsCompleting()
+    {
+        var component = new TopicFilterComponent(message =>
+        {
+            if (message.Topic == "bad/topic")
+            {
+                throw new InvalidOperationException("bad predicate");
+            }
+
+            return true;
+        });
+
+        var received = new List<string>();
+        var errors = new List<FlowError>();
+        var sink = new ActionBlock<MqttEnvelope>(message => received.Add(message.Topic));
+        var errorSink = new ActionBlock<FlowError>(errors.Add);
+
+        component.Output.LinkTo(sink, new DataflowLinkOptions { PropagateCompletion = true });
+        component.Errors.LinkTo(errorSink, new DataflowLinkOptions { PropagateCompletion = true });
+
+        component.Input.Post(new MqttEnvelope { Topic = "good/topic", Payload = [] });
+        component.Input.Post(new MqttEnvelope { Topic = "bad/topic", Payload = [] });
+        component.Input.Post(new MqttEnvelope { Topic = "next/topic", Payload = [] });
+        component.Input.Complete();
+
+        await component.Completion;
+        component.Complete();
+        await Task.WhenAll(sink.Completion, errorSink.Completion);
+
+        received.Should().Equal("good/topic", "next/topic");
+        var error = errors.Should().ContainSingle().Subject;
+        error.NodeId.Should().Be(component.Id);
+        error.Code.Should().Be(FlowErrorCodes.ProcessingFailed);
+        error.Message.Should().Be("Topic filter predicate failed.");
+        error.Context.Should().Be("bad/topic");
+    }
+
+    [Fact]
+    public async Task Complete_KeepsErrorPortOpenUntilPendingMessagesDrain()
+    {
+        var component = new TopicFilterComponent(_ => throw new InvalidOperationException("late failure"));
+        var errors = new List<FlowError>();
+        var errorSink = new ActionBlock<FlowError>(errors.Add);
+
+        component.Errors.LinkTo(errorSink, new DataflowLinkOptions { PropagateCompletion = true });
+
+        component.Input.Post(new MqttEnvelope { Topic = "late/topic", Payload = [] });
+        component.Complete();
+
+        await Task.WhenAll(component.Completion, errorSink.Completion);
+
+        var error = errors.Should().ContainSingle().Subject;
+        error.Code.Should().Be(FlowErrorCodes.ProcessingFailed);
+        error.Context.Should().Be("late/topic");
     }
 }

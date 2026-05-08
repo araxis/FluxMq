@@ -50,4 +50,25 @@ public sealed class PayloadInspectorMapperComponentTests
 
         component.Completion.IsCompletedSuccessfully.Should().BeTrue();
     }
+
+    [Fact]
+    public async Task Fault_PublishesError()
+    {
+        var component = new PayloadInspectorMapperComponent();
+        var errors = new List<FlowError>();
+        var errorSink = new ActionBlock<FlowError>(errors.Add);
+        var failure = new InvalidOperationException("inspect failed");
+
+        component.Errors.LinkTo(errorSink, new DataflowLinkOptions { PropagateCompletion = true });
+        component.Fault(failure);
+
+        var act = async () => await component.Completion;
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("inspect failed");
+        await errorSink.Completion;
+
+        var error = errors.Should().ContainSingle().Subject;
+        error.Code.Should().Be(FlowErrorCodes.NodeFaulted);
+        error.Message.Should().Be("Payload inspector mapper faulted.");
+    }
 }

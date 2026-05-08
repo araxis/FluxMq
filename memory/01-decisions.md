@@ -194,6 +194,7 @@ Reasoning:
 - FluxMQ is a desktop tool that should remain usable even when a flow component, decoder, mapper, sink, or user-defined configuration fails.
 - Component failures are operational data; they should be observable, routeable, and inspectable in Fork Flow.
 - Each flow component should eventually expose an error output port for internal exceptions and recoverable processing failures.
+- Flow errors should include stable plain numeric codes so dynamic components can route errors without depending on exception types or message text.
 - The app shell and flow supervisor must isolate failed components so one node cannot terminate the running application.
 - Truly unrecoverable node failures may stop that node, but the supervisor still converts the failure into flow state and an error event.
 
