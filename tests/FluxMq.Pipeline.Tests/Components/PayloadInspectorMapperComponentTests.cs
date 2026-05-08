@@ -68,7 +68,7 @@ public sealed class PayloadInspectorMapperComponentTests
         await errorSink.Completion;
 
         var error = errors.Should().ContainSingle().Subject;
-        error.Code.Should().Be(FlowErrorCode.NodeFaulted);
+        error.Code.Should().Be(FlowErrorCodes.NodeFaulted);
         error.Message.Should().Be("Payload inspector mapper faulted.");
     }
 }

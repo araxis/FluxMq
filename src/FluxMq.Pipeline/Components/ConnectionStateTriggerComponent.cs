@@ -32,7 +32,7 @@ public sealed class ConnectionStateTriggerComponent : IFlowNode, IDisposable
         }
         catch (Exception exception)
         {
-            PublishError(FlowErrorCode.ProcessingFailed, "Connection state could not be published.", exception, e.ProfileName());
+            PublishError(FlowErrorCodes.ProcessingFailed, "Connection state could not be published.", exception, e.ProfileName());
         }
     }
 
@@ -46,14 +46,14 @@ public sealed class ConnectionStateTriggerComponent : IFlowNode, IDisposable
     public void Fault(Exception exception)
     {
         _connectionManager.StateChanged -= OnStateChanged;
-        PublishError(FlowErrorCode.NodeFaulted, "Connection state trigger faulted.", exception);
+        PublishError(FlowErrorCodes.NodeFaulted, "Connection state trigger faulted.", exception);
         ((IDataflowBlock)_output).Fault(exception);
         _errors.Complete();
     }
 
     public void Dispose() => Complete();
 
-    private void PublishError(FlowErrorCode code, string message, Exception exception, string? context = null)
+    private void PublishError(int code, string message, Exception exception, string? context = null)
     {
         _errors.Post(new FlowError
         {

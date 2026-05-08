@@ -46,7 +46,7 @@ public sealed class TopicFilterComponentTests
         await errorSink.Completion;
 
         var error = errors.Should().ContainSingle().Subject;
-        error.Code.Should().Be(FlowErrorCode.NodeFaulted);
+        error.Code.Should().Be(FlowErrorCodes.NodeFaulted);
         error.Message.Should().Be("Topic filter faulted.");
     }
 
@@ -83,7 +83,7 @@ public sealed class TopicFilterComponentTests
         received.Should().Equal("good/topic", "next/topic");
         var error = errors.Should().ContainSingle().Subject;
         error.NodeId.Should().Be(component.Id);
-        error.Code.Should().Be(FlowErrorCode.ProcessingFailed);
+        error.Code.Should().Be(FlowErrorCodes.ProcessingFailed);
         error.Message.Should().Be("Topic filter predicate failed.");
         error.Context.Should().Be("bad/topic");
     }
@@ -103,7 +103,7 @@ public sealed class TopicFilterComponentTests
         await Task.WhenAll(component.Completion, errorSink.Completion);
 
         var error = errors.Should().ContainSingle().Subject;
-        error.Code.Should().Be(FlowErrorCode.ProcessingFailed);
+        error.Code.Should().Be(FlowErrorCodes.ProcessingFailed);
         error.Context.Should().Be("late/topic");
     }
 }

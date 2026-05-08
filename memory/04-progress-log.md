@@ -157,7 +157,7 @@ Chronological progress record.
 
 - Implemented first flow error ports:
   - Added `FlowError` with typed `FlowNodeId`, message, optional exception, timestamp, and context.
-  - Added typed numeric `FlowErrorCode` values for stable error routing.
+  - Added plain numeric `FlowErrorCodes` constants for stable error routing.
   - Added `Errors` output to `IFlowNode`.
   - Topic filter predicate failures now publish error events and continue processing later messages.
   - Mapper/filter error ports remain open until pending work drains during completion.

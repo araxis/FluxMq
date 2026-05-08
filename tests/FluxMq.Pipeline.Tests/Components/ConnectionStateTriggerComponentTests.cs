@@ -56,7 +56,7 @@ public sealed class ConnectionStateTriggerComponentTests
         await errorSink.Completion;
 
         var error = errors.Should().ContainSingle().Subject;
-        error.Code.Should().Be(FlowErrorCode.NodeFaulted);
+        error.Code.Should().Be(FlowErrorCodes.NodeFaulted);
         error.Message.Should().Be("Connection state trigger faulted.");
     }
 
