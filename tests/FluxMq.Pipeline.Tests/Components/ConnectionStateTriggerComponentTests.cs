@@ -14,7 +14,8 @@ public sealed class ConnectionStateTriggerComponentTests
     public async Task Output_BroadcastsConnectionStateChanges()
     {
         var manager = new FakeConnectionManager();
-        using var component = new ConnectionStateTriggerComponent(manager);
+        var nodeId = FlowNodeId.New();
+        using var component = new ConnectionStateTriggerComponent(manager, nodeId);
         var received = new List<SessionStateChangedEventArgs>();
         var sink = new ActionBlock<SessionStateChangedEventArgs>(received.Add);
 
@@ -33,6 +34,22 @@ public sealed class ConnectionStateTriggerComponentTests
         await sink.Completion;
 
         received.Should().ContainSingle().Which.State.Should().Be(MqttSessionState.Connected);
+        component.Id.Should().Be(nodeId);
+        component.Completion.IsCompletedSuccessfully.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Fault_CompletesWithFailure()
+    {
+        var manager = new FakeConnectionManager();
+        using var component = new ConnectionStateTriggerComponent(manager);
+        var failure = new InvalidOperationException("state stream failed");
+
+        component.Fault(failure);
+        var act = async () => await component.Completion;
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("state stream failed");
     }
 
     private sealed class FakeConnectionManager : IMqttConnectionManager

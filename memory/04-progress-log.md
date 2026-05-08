@@ -147,7 +147,8 @@ Chronological progress record.
   - Added a connection state trigger component that broadcasts connection state changes.
   - Added a topic filter component backed by `TransformManyBlock`.
   - Added a payload inspector mapper component backed by `TransformBlock`.
-  - Added component tests without introducing shared flow contracts yet.
+  - Added a minimal `IFlowNode` lifecycle surface with typed `FlowNodeId`.
+  - Added component tests for message flow, typed node IDs, completion, and fault behavior.
 
 ## Current Next Step
 

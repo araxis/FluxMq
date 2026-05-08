@@ -1,4 +1,5 @@
 using FluentAssertions;
+using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Pipeline.Components;
 using System.Threading.Tasks.Dataflow;
@@ -24,5 +25,20 @@ public sealed class TopicFilterComponentTests
         await sink.Completion;
 
         received.Should().Equal("factory/line-1", "factory/line-2");
+        component.Id.Should().NotBe(FlowNodeId.Empty);
+        component.Completion.IsCompletedSuccessfully.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Fault_CompletesWithFailure()
+    {
+        var component = new TopicFilterComponent(_ => true);
+        var failure = new InvalidOperationException("filter failed");
+
+        component.Fault(failure);
+        var act = async () => await component.Completion;
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("filter failed");
     }
 }

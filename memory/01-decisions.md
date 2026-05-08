@@ -176,6 +176,8 @@ Reasoning:
 - Repositories, connection managers, UI components, and storage contexts remain normal services.
 - Only behaviors that participate in configurable event movement should become flow components.
 - Concrete components can expose typed `Input` and `Output` blocks first; repeated patterns will tell us later what contracts, descriptors, and config models are actually needed.
+- Flow components should expose Dataflow lifecycle behavior (`Complete`, `Fault`, `Completion`) so Fork Flow execution can propagate completion and failure consistently.
+- Flow nodes use `FlowNodeId`, a typed identifier, rather than primitive IDs.
 
 Initial concrete components:
 - Connection state trigger.

@@ -1,5 +1,6 @@
 using System.Text;
 using FluentAssertions;
+using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Payloads;
 using FluxMq.Pipeline.Components;
@@ -13,7 +14,8 @@ public sealed class PayloadInspectorMapperComponentTests
     [Fact]
     public async Task Output_MapsEnvelopeToInspectedMessage()
     {
-        var component = new PayloadInspectorMapperComponent();
+        var nodeId = FlowNodeId.New();
+        var component = new PayloadInspectorMapperComponent(nodeId);
         var received = new List<InspectedMqttMessage>();
         var sink = new ActionBlock<InspectedMqttMessage>(received.Add);
 
@@ -32,5 +34,20 @@ public sealed class PayloadInspectorMapperComponentTests
         var message = received.Should().ContainSingle().Subject;
         message.Envelope.Topic.Should().Be("factory/status");
         message.Payload.Format.Should().Be(PayloadFormat.Json);
+        component.Id.Should().Be(nodeId);
+        component.Completion.IsCompletedSuccessfully.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Complete_CompletesInputAndOutput()
+    {
+        var component = new PayloadInspectorMapperComponent();
+        var sink = new ActionBlock<InspectedMqttMessage>(_ => { });
+        component.Output.LinkTo(sink, new DataflowLinkOptions { PropagateCompletion = true });
+
+        component.Complete();
+        await Task.WhenAll(component.Completion, sink.Completion);
+
+        component.Completion.IsCompletedSuccessfully.Should().BeTrue();
     }
 }
