@@ -11,6 +11,7 @@ This folder contains project documentation intended for contributors and future 
 - [Flow Components](flow-components.md)
 - [Flow Errors](flow-errors.md)
 - [Replay](replay.md)
+- [Documentation Strategy](documentation-strategy.md)
 - [Wiki Index](wiki-index.md)
 
 ## Documentation Principles
@@ -18,4 +19,5 @@ This folder contains project documentation intended for contributors and future 
 - Keep documents practical and tied to the current implementation.
 - Prefer clear operational examples over abstract descriptions.
 - Update public docs when behavior, contracts, or workflows change.
+- Keep user-facing documentation in `docs-site/`.
 - Keep planning details in `memory/`; keep durable project knowledge in `docs/`.

@@ -19,6 +19,7 @@ coverage/
 
 # JavaScript
 node_modules/
+docs-site/.vitepress/dist/
 
 # Rider
 .idea/
