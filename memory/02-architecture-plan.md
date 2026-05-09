@@ -56,6 +56,8 @@ Responsibilities:
 - Decode/enrichment hooks.
 - Filtering and drop rules.
 - Backpressure strategy.
+- Flow application definition model.
+- Future host-independent flow application runtime.
 
 ### FluxMq.Storage
 
@@ -141,6 +143,24 @@ MQTTnet Client
   -> Blazor UI State
   -> Optional OpenTelemetry export
 ```
+
+## Flow Application Runtime Direction
+
+Fork Flow should grow a host-independent runtime layer in `FluxMq.Pipeline` or a closely related class library.
+
+Responsibilities:
+- Load and validate `FlowApplicationDefinition`.
+- Own shared resource lifetime.
+- Start, stop, and observe named workflows.
+- Coordinate reloads by validating the next definition before applying changes.
+- Patch unaffected graph parts in place where possible.
+- Convert component failures into flow errors instead of allowing them to escape the runtime boundary.
+
+Expected hosts:
+- desktop app shell
+- console runner
+- service process
+- command/tool integrations
 
 ## Core Domain Types
 

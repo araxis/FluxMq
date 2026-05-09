@@ -98,15 +98,19 @@ Deliverable:
 ## Stage 8 - Visual Pipeline Editor
 
 Goals:
+- Define a config-first `FlowApplicationDefinition` model with shared resources and object-shaped workflows.
+- Support natural receiving-port links such as `Input: "source.Output"` and link objects such as `{ "From": "source.Output", "When": "condition" }`.
+- Validate definitions before runtime graph construction.
+- Introduce a host-independent flow application runtime class-library boundary.
+- Let the runtime own shared resources, named workflow lifecycle, reload coordination, and component error supervision.
 - Define `IPipelineNode` abstraction: display name, port descriptors, configurable properties with schema.
-- Define `PipelineDefinition` JSON model (nodes + connections + per-node config).
-- Implement `PipelineBuilder.Build(definition)` — cold-start Dataflow graph from JSON.
-- Implement `PipelineBuilder.Patch(current, next)` — hot-reload: diff two definitions and apply only changed links/config without stopping unaffected blocks or dropping in-flight messages.
+- Implement cold-start graph construction from `FlowApplicationDefinition`.
+- Implement reload patching: diff two application definitions and apply only changed links/config/resources when safe.
 - Integrate Blazor.Diagrams as the visual canvas in `FluxMq.UI`.
 - Node palette (available block types from registered modules).
 - Property panel (edit selected node's config; triggers hot-reload on save).
-- Persist pipeline definitions in LiteDB.
-- Load/switch between saved pipeline definitions at runtime.
+- Persist flow application definitions in LiteDB.
+- Load/switch between saved flow application definitions at runtime.
 
 Hot-reload constraints:
 - Config-only change on a node: delegate swap in-place, block stays running.
