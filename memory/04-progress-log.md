@@ -206,6 +206,10 @@ Chronological progress record.
 - Added `IFlowStartable` and runtime start ordering so shared resources start before workflow nodes.
 - Converted startup failures into structured host errors.
 - Updated runtime disposal ordering so workflow nodes are disposed before shared resources.
+- Added `mqtt.message-source` to runtime factory registrations as the first service-backed resource component.
+- Added `MqttSubscription` and config parsing for message source profile/subscriptions/qos in flow definitions.
+- Added runtime tests proving message source resource startup, subscription, and downstream delivery through workflow links.
+- Added runtime validation tests for missing message source subscriptions.
 - Replaced CLI hand-rolled argument parsing with `Spectre.Console.Cli` command/settings handlers.
 - Removed parser-only CLI code and parser-specific tests.
 - Kept CLI execution contracts stable by routing Spectre command handlers into the existing runner and result renderers.
@@ -214,4 +218,4 @@ Chronological progress record.
 
 ## Current Next Step
 
-Continue the alpha path by adding the first concrete service-backed resource registration behind the runtime factory and start lifecycle boundary.
+Continue the alpha path by introducing an explicit shared MQTT connection resource (`mqtt.connection`) and letting message source and publish sink reuse it across workflows.
