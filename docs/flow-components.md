@@ -264,6 +264,38 @@ If publishing fails for one message, the sink publishes a `FlowError` with the t
 
 The component preserves publish order by default. Higher parallelism is available through the constructor, but ordered single-message publishing should remain the default for replay and deterministic flow behavior.
 
+## MQTT Recording Sink
+
+`MqttRecordingSinkComponent` stores incoming MQTT messages for a recording session.
+
+This component lives in `FluxMq.Replay` because it bridges flow nodes with storage repositories. `FluxMq.Pipeline` stays independent from storage.
+
+### Behavior
+
+```mermaid
+flowchart LR
+    In["Input: MqttEnvelope"] --> Sink["MqttRecordingSinkComponent"]
+    Sink --> Repository["IMessageRepository.Add"]
+    Sink -->|record failure| Errors["Errors: FlowError code 2000"]
+```
+
+### Usage
+
+```csharp
+var recordingSink = new MqttRecordingSinkComponent(messageRepository, sessionId);
+
+source.Output.LinkTo(recordingSink.Input, new DataflowLinkOptions
+{
+    PropagateCompletion = true
+});
+
+recordingSink.Errors.LinkTo(errorSink);
+```
+
+### Failure Behavior
+
+If a message cannot be stored, the sink publishes a `FlowError` with the topic in `Context` and continues recording later messages.
+
 ## Recorded Session Replay Factory
 
 `RecordedSessionReplayFactory` creates replay sources from stored sessions.
@@ -335,6 +367,17 @@ flowchart LR
     Inspector --> ErrorLog
 ```
 
+This flow records selected live traffic.
+
+```mermaid
+flowchart LR
+    Source["MqttMessageSourceComponent"] --> Filter["TopicFilterComponent"]
+    Filter --> Record["MqttRecordingSinkComponent"]
+    Source --> ErrorLog["Error Log"]
+    Filter --> ErrorLog
+    Record --> ErrorLog
+```
+
 This flow replays a recorded session back through an MQTT session.
 
 ```mermaid
@@ -371,7 +414,6 @@ Likely near-term additions:
 
 - dynamic expression mapper
 - JSONata mapper
-- storage sink
 - metrics sink
 
 Dynamic expression components should use `FlowError.Code` for routing and diagnostics instead of relying on exception message text.

@@ -28,6 +28,10 @@ A flow component that reads live messages from an active MQTT session.
 
 A stored sequence of MQTT messages captured during a debugging session.
 
+## Recording Sink
+
+A flow component that stores incoming MQTT messages for a recording session.
+
 ## Replay Source
 
 A flow component that emits recorded MQTT messages in timestamp order.

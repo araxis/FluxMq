@@ -22,3 +22,13 @@ Recorded session
 ```
 
 Use a topic filter when the recording contains traffic that should not be replayed.
+
+## Recording Flow Shape
+
+```text
+MQTT message source
+  -> Topic filter
+  -> Recording sink
+```
+
+The recording sink writes MQTT messages into local storage for the active recording session.

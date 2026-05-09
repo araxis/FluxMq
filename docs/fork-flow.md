@@ -66,6 +66,10 @@ Replays ordered `MqttEnvelope` values with relative timing and speed control.
 
 Publishes `MqttEnvelope` values through an MQTT session and reports publish failures through the error port.
 
+### MqttRecordingSinkComponent
+
+Stores `MqttEnvelope` values through `IMessageRepository` for a recording session.
+
 ## Flow Node Lifecycle
 
 Flow nodes expose TPL Dataflow lifecycle behavior:
