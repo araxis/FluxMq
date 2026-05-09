@@ -16,7 +16,7 @@ Suggested Wiki pages:
 
 ## Home
 
-FluxMQ is a desktop platform for MQTT debugging, observability, recording, replay, and configurable message flows.
+FluxMQ is a workflow-runtime platform for MQTT debugging, observability, recording, replay, and configurable message flows.
 
 Recommended reading order:
 

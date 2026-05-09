@@ -4,7 +4,7 @@
   <img src="design/ui-mockups/01-main-workspace.png" alt="FluxMQ workspace" width="100%">
 </p>
 
-FluxMQ is a next-generation MQTT debugging and observability platform built as a cross-platform desktop application.
+FluxMQ is a next-generation MQTT debugging and observability platform built around a host-independent workflow runtime.
 
 The long-term goal is to go beyond a passive MQTT client and provide a focused tool for:
 
@@ -20,13 +20,11 @@ FluxMQ is in early foundation work.
 
 Current state:
 
-- .NET MAUI Blazor Hybrid app scaffold.
-- Windows desktop target for the first development phase.
 - Core project structure in place.
 - MQTTnet selected for MQTT integration.
 - LiteDB selected for local-first storage.
-- MudBlazor wired into the app shell.
 - Initial test projects created for core, pipeline, and storage layers.
+- Fork Flow application definition and cold-start runtime builder in place.
 - Project memory and planning files tracked in `memory/`.
 
 ## Architecture Direction
@@ -37,9 +35,9 @@ FluxMQ will be built around the message/session flow first:
 MQTTnet Client
   -> MqttSession
   -> Channel<MqttEnvelope>
-  -> Message Pipeline
+  -> Flow Application Runtime
   -> Storage / Metrics / Topic Index
-  -> Blazor UI State
+  -> UI Projection / Host Integration
 ```
 
 Formal external plugins are planned later. The first implementation will use internal modules for payload inspection, observability, and replay so the extension contracts can mature naturally.
@@ -64,7 +62,6 @@ Observability and replay timeline:
 
 ```text
 /src
-  /FluxMq.App
   /FluxMq.Core
   /FluxMq.Pipeline
   /FluxMq.Replay
@@ -82,9 +79,7 @@ Observability and replay timeline:
 
 ## Requirements
 
-- Windows for the current MAUI desktop target.
 - .NET SDK compatible with the repo's `global.json`.
-- .NET MAUI Windows workload.
 
 The current development environment uses .NET 11 preview SDK to build .NET 10 projects.
 

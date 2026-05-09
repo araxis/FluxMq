@@ -57,7 +57,7 @@ Reasoning:
 - Keeping the first target Windows-only makes the scaffold buildable immediately.
 - Cross-platform targets can be reintroduced after the Windows desktop core is useful.
 
-Status: Accepted.
+Status: Superseded by the 2026-05-09 workflow application host decision.
 
 ### 2026-05-06 - Use classic `.sln` instead of `.slnx`
 
@@ -191,11 +191,11 @@ Status: Accepted.
 Decision: Runtime component failures should be converted into typed flow error events instead of escaping as unhandled exceptions.
 
 Reasoning:
-- FluxMQ is a desktop tool that should remain usable even when a flow component, decoder, mapper, sink, or user-defined configuration fails.
+- FluxMQ is a workflow-runtime tool that should remain usable even when a flow component, decoder, mapper, sink, or user-defined configuration fails.
 - Component failures are operational data; they should be observable, routeable, and inspectable in Fork Flow.
 - Each flow component should eventually expose an error output port for internal exceptions and recoverable processing failures.
 - Flow errors should include stable plain numeric codes so dynamic components can route errors without depending on exception types or message text.
-- The app shell and flow supervisor must isolate failed components so one node cannot terminate the running application.
+- The host shell and flow supervisor must isolate failed components so one node cannot terminate the running application.
 - Truly unrecoverable node failures may stop that node, but the supervisor still converts the failure into flow state and an error event.
 
 Status: Accepted.
@@ -259,5 +259,17 @@ Reasoning:
 - Typed runtime ports catch incompatible links during build before any workflow starts.
 - Build failures should be structured results for ordinary definition and registration mistakes.
 - Completion should start from graph entry nodes so Dataflow completion propagates through linked graphs in order.
+
+Status: Accepted.
+
+### 2026-05-09 - Remove the early Blazor shell and reserve FluxMq.App for the workflow application host
+
+Decision: Remove the early Blazor shell from the current solution. Keep `FluxMq.App` reserved for a later application builder and workflow runtime host instead of keeping a placeholder UI app.
+
+Reasoning:
+- The current foundation work is centered on the runtime, definitions, components, storage, replay, and reusable UI pieces.
+- A placeholder shell creates misleading architecture pressure before the runtime host shape is clear.
+- The eventual `FluxMq.App` should compose and control flow applications, including loading, lifecycle, and reload behavior.
+- Keeping the solution focused on libraries makes the runtime easier to test and package.
 
 Status: Accepted.

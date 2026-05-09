@@ -57,7 +57,7 @@ Expected behavior:
 
 - recoverable processing failure: publish `FlowError`, continue when possible
 - explicit node fault: publish `FlowError`, fault that node
-- app shell: remains alive
+- host shell: remains alive
 - future supervisor: observes node state and error events
 
 ```mermaid
@@ -67,7 +67,7 @@ flowchart LR
     Node -->|recoverable failure| Error["Error Port"]
     Error --> Supervisor["Flow Supervisor"]
     Supervisor --> State["Node Health / UI State"]
-    Node -. "does not terminate" .-> App["App Shell"]
+    Node -. "does not terminate" .-> Host["Host Shell"]
 ```
 
 ## Example JSON Shape

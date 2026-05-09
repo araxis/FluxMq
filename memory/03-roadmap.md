@@ -6,13 +6,12 @@ This is the staged implementation plan.
 
 Goals:
 - Create solution and project structure.
-- Add MAUI Blazor Hybrid app.
 - Add core class libraries.
 - Add baseline tests where practical.
-- Add package references for MQTTnet, LiteDB, and MudBlazor.
+- Add package references for MQTTnet and LiteDB.
 
 Deliverable:
-- Empty but runnable app shell.
+- Buildable core library solution.
 
 ## Stage 1 - Core MQTT Session
 
@@ -111,6 +110,9 @@ Goals:
 - Property panel (edit selected node's config; triggers hot-reload on save).
 - Persist flow application definitions in LiteDB.
 - Load/switch between saved flow application definitions at runtime.
+
+Application host note:
+- `FluxMq.App` is reserved for the later workflow application host and builder. It should not be reintroduced as a generic placeholder shell.
 
 Hot-reload constraints:
 - Config-only change on a node: delegate swap in-place, block stays running.
