@@ -59,7 +59,9 @@ trigger.Output.LinkTo(stateSink, new DataflowLinkOptions
 
 ```mermaid
 flowchart LR
-    Session["IMqttSession.Messages"] --> Source["MqttMessageSourceComponent"]
+    Session["IMqttSession"] --> Connect["Connect + Subscribe"]
+    Connect --> Source["MqttMessageSourceComponent"]
+    Session --> Source
     Source --> Out["Output: MqttEnvelope"]
     Source -->|reader failure| Errors["Errors: FlowError code 2000"]
 ```
@@ -67,7 +69,13 @@ flowchart LR
 ### Usage
 
 ```csharp
-var source = new MqttMessageSourceComponent(session);
+var source = new MqttMessageSourceComponent(
+    session,
+    subscriptions:
+    [
+        new MqttSubscription("factory/#", MqttQualityOfServiceLevel.AtMostOnce)
+    ],
+    connectOnStart: true);
 
 source.Output.LinkTo(filter.Input, new DataflowLinkOptions
 {
@@ -77,6 +85,36 @@ source.Output.LinkTo(filter.Input, new DataflowLinkOptions
 source.Errors.LinkTo(errorSink);
 
 await source.StartAsync();
+```
+
+### Flow Definition
+
+Registered node type: `mqtt.message-source`
+
+Ports:
+
+- `Output`: `MqttEnvelope`
+- `Errors`: `FlowError`
+
+```json
+{
+  "resources": {
+    "source": {
+      "type": "mqtt.message-source",
+      "configuration": {
+        "profile": {
+          "name": "local-broker",
+          "host": "localhost",
+          "port": 1883
+        },
+        "subscriptions": [
+          "factory/#",
+          { "topicFilter": "telemetry/#", "qos": "AtLeastOnce" }
+        ]
+      }
+    }
+  }
+}
 ```
 
 ### Failure Behavior

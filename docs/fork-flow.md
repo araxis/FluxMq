@@ -139,16 +139,23 @@ Example JSON shape:
 ```json
 {
   "resources": {
-    "broker": {
-      "type": "mqtt.connection"
+    "source": {
+      "type": "mqtt.message-source",
+      "configuration": {
+        "profile": {
+          "name": "local-broker",
+          "host": "localhost",
+          "port": 1883
+        },
+        "subscriptions": [
+          "factory/#",
+          { "topicFilter": "telemetry/#", "qos": 1 }
+        ]
+      }
     }
   },
   "workflows": {
     "observeTraffic": {
-      "source": {
-        "type": "mqtt.message-source",
-        "Connection": "broker.Output"
-      },
       "metrics": {
         "type": "mqtt.metrics-sink",
         "Input": "source.Output"
@@ -283,8 +290,13 @@ The first runtime builder slice is intentionally small. `FlowApplicationRuntimeB
 - completes only entry nodes so Dataflow completion propagates through linked graphs in order
 - disposes workflow nodes before shared resources
 
-The first concrete registrations are intentionally limited to components with stable construction and no external service dependency:
+The first concrete registrations now include one service-backed source plus stable no-service sinks/mappers:
 
+- `mqtt.message-source`
+  - Resource-style source node.
+  - Reads from an `IMqttSession` channel and auto-starts connection/subscriptions.
+  - `Output`: `MqttEnvelope`
+  - `Errors`: `FlowError`
 - `mqtt.payload-inspector`
   - `Input`: `MqttEnvelope`
   - `Output`: `InspectedMqttMessage`
@@ -312,7 +324,37 @@ registry.Register(new FlowNodeType("example.resource"), context =>
 
 Producer or service-backed nodes that need explicit start work should implement `IFlowStartable`. Startup failures are converted into host build errors instead of escaping through the CLI or host shell.
 
-Both registered components currently accept optional configuration:
+Current configuration shape for `mqtt.message-source`:
+
+```json
+{
+  "type": "mqtt.message-source",
+  "configuration": {
+    "profile": {
+      "name": "local-broker",
+      "host": "localhost",
+      "port": 1883,
+      "keepAliveSeconds": 30,
+      "cleanStart": true
+    },
+    "subscriptions": [
+      "factory/#",
+      { "topicFilter": "telemetry/#", "qos": "AtLeastOnce" }
+    ],
+    "boundedCapacity": 1000
+  }
+}
+```
+
+`subscriptions` supports:
+
+- string shorthand (`"factory/#"`)
+- array of strings
+- array of objects (`topicFilter` + optional `qos`)
+
+`qos` supports `0|1|2` or `AtMostOnce|AtLeastOnce|ExactlyOnce`.
+
+Other registered components currently accept optional configuration:
 
 ```json
 {

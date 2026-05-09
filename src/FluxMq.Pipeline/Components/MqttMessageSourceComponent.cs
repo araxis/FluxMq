@@ -11,16 +11,25 @@ public sealed class MqttMessageSourceComponent : IFlowNode, IFlowStartable, IAsy
     private readonly BufferBlock<MqttEnvelope> _output;
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly CancellationTokenSource _cts = new();
+    private readonly IReadOnlyList<MqttSubscription> _subscriptions;
+    private readonly bool _connectOnStart;
+    private readonly bool _disposeSessionOnDispose;
     private Task? _producerTask;
     private int _started;
 
     public MqttMessageSourceComponent(
         IMqttSession session,
+        IEnumerable<MqttSubscription>? subscriptions = null,
+        bool connectOnStart = false,
+        bool disposeSessionOnDispose = false,
         FlowNodeId? id = null,
         int boundedCapacity = 1000)
     {
         Id = id ?? FlowNodeId.New();
         _session = session ?? throw new ArgumentNullException(nameof(session));
+        _subscriptions = subscriptions?.ToArray() ?? [];
+        _connectOnStart = connectOnStart;
+        _disposeSessionOnDispose = disposeSessionOnDispose;
         _errors = new BroadcastBlock<FlowError>(static error => error);
         _output = new BufferBlock<MqttEnvelope>(new DataflowBlockOptions
         {
@@ -43,11 +52,11 @@ public sealed class MqttMessageSourceComponent : IFlowNode, IFlowStartable, IAsy
     {
         if (Interlocked.Exchange(ref _started, 1) == 1)
         {
-            return _producerTask ?? Completion;
+            return Task.CompletedTask;
         }
 
         _producerTask = RunAsync(ct);
-        return _producerTask;
+        return Task.CompletedTask;
     }
 
     public void Complete()
@@ -79,6 +88,11 @@ public sealed class MqttMessageSourceComponent : IFlowNode, IFlowStartable, IAsy
         }
 
         await Completion.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+        if (_disposeSessionOnDispose)
+        {
+            await _session.DisposeAsync().ConfigureAwait(false);
+        }
+
         _cts.Dispose();
     }
 
@@ -89,6 +103,11 @@ public sealed class MqttMessageSourceComponent : IFlowNode, IFlowStartable, IAsy
 
         try
         {
+            if (_connectOnStart)
+            {
+                await ConnectAndSubscribeAsync(ct).ConfigureAwait(false);
+            }
+
             await foreach (var message in _session.Messages.ReadAllAsync(ct).ConfigureAwait(false))
             {
                 if (!await _output.SendAsync(message, ct).ConfigureAwait(false))
@@ -107,6 +126,19 @@ public sealed class MqttMessageSourceComponent : IFlowNode, IFlowStartable, IAsy
         {
             PublishError(FlowErrorCodes.ProcessingFailed, "MQTT message source failed.", exception, _session.Profile.Name);
             _output.Complete();
+        }
+    }
+
+    private async Task ConnectAndSubscribeAsync(CancellationToken ct)
+    {
+        if (_session.State is not MqttSessionState.Connected and not MqttSessionState.Connecting)
+        {
+            await _session.ConnectAsync(ct).ConfigureAwait(false);
+        }
+
+        foreach (var subscription in _subscriptions)
+        {
+            await _session.SubscribeAsync(subscription.TopicFilter, subscription.QualityOfService, ct).ConfigureAwait(false);
         }
     }
 

@@ -97,7 +97,7 @@ public sealed class MqttMessageSourceComponentTests
     [Fact]
     public async Task Fault_PublishesErrorAndFaultsCompletion()
     {
-        var component = new MqttMessageSourceComponent(new FakeMqttSession(), FlowNodeId.New());
+        var component = new MqttMessageSourceComponent(new FakeMqttSession(), id: FlowNodeId.New());
         var errors = new List<FlowError>();
         var errorSink = new ActionBlock<FlowError>(errors.Add);
         var failure = new InvalidOperationException("message source faulted");
@@ -129,6 +129,41 @@ public sealed class MqttMessageSourceComponentTests
             .WithMessage("source failed");
     }
 
+    [Fact]
+    public async Task StartAsync_ConnectsAndSubscribesWhenConfigured()
+    {
+        var session = new FakeMqttSession();
+        var component = new MqttMessageSourceComponent(
+            session,
+            subscriptions:
+            [
+                new MqttSubscription("factory/#", MqttQualityOfServiceLevel.AtLeastOnce)
+            ],
+            connectOnStart: true);
+
+        var producer = component.StartAsync();
+        session.CompleteMessages();
+        await producer;
+
+        session.ConnectCalls.Should().Be(1);
+        session.Subscriptions.Should().ContainSingle(subscription =>
+            subscription.TopicFilter == "factory/#" &&
+            subscription.QualityOfService == MqttQualityOfServiceLevel.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task DisposeAsync_DisposesOwnedSession()
+    {
+        var session = new FakeMqttSession();
+        var component = new MqttMessageSourceComponent(
+            session,
+            disposeSessionOnDispose: true);
+
+        await component.DisposeAsync();
+
+        session.DisposeCalls.Should().Be(1);
+    }
+
     private static MqttEnvelope Message(string topic) => new()
     {
         Topic = topic,
@@ -138,10 +173,14 @@ public sealed class MqttMessageSourceComponentTests
     private sealed class FakeMqttSession : IMqttSession
     {
         private readonly Channel<MqttEnvelope> _messages = Channel.CreateUnbounded<MqttEnvelope>();
+        private readonly List<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService)> _subscriptions = [];
 
         public MqttConnectionProfile Profile { get; } = new() { Name = "test" };
-        public MqttSessionState State { get; private set; } = MqttSessionState.Connected;
+        public MqttSessionState State { get; private set; } = MqttSessionState.Disconnected;
         public ChannelReader<MqttEnvelope> Messages => _messages.Reader;
+        public int ConnectCalls { get; private set; }
+        public int DisposeCalls { get; private set; }
+        public IReadOnlyList<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService)> Subscriptions => _subscriptions;
 
         public event EventHandler<MqttSessionState>? StateChanged
         {
@@ -159,11 +198,34 @@ public sealed class MqttMessageSourceComponentTests
             _messages.Writer.Complete(exception);
         }
 
-        public Task ConnectAsync(CancellationToken ct = default) => Task.CompletedTask;
-        public Task DisconnectAsync(CancellationToken ct = default) => Task.CompletedTask;
-        public Task SubscribeAsync(string topicFilter, MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce, CancellationToken ct = default) => Task.CompletedTask;
+        public Task ConnectAsync(CancellationToken ct = default)
+        {
+            ConnectCalls++;
+            State = MqttSessionState.Connected;
+            return Task.CompletedTask;
+        }
+
+        public Task DisconnectAsync(CancellationToken ct = default)
+        {
+            State = MqttSessionState.Disconnected;
+            _messages.Writer.TryComplete();
+            return Task.CompletedTask;
+        }
+
+        public Task SubscribeAsync(string topicFilter, MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce, CancellationToken ct = default)
+        {
+            _subscriptions.Add((topicFilter, qos));
+            return Task.CompletedTask;
+        }
+
         public Task UnsubscribeAsync(string topicFilter, CancellationToken ct = default) => Task.CompletedTask;
         public Task PublishAsync(string topic, byte[] payload, MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce, bool retain = false, CancellationToken ct = default) => Task.CompletedTask;
-        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+
+        public ValueTask DisposeAsync()
+        {
+            DisposeCalls++;
+            _messages.Writer.TryComplete();
+            return ValueTask.CompletedTask;
+        }
     }
 }

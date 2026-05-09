@@ -2,10 +2,13 @@ using FluentAssertions;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Payloads;
+using FluxMq.Core.Session;
 using FluxMq.Pipeline.Components;
 using FluxMq.Pipeline.Definitions;
 using FluxMq.Pipeline.Runtime;
+using MQTTnet.Protocol;
 using System.Text.Json;
+using System.Threading.Channels;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Pipeline.Tests.Runtime;
@@ -19,6 +22,7 @@ public sealed class PipelineComponentFactoryTests
             .RegisterPipelineComponentFactories();
 
         registry.Factories.Keys.Should().BeEquivalentTo([
+            PipelineFlowNodeTypes.MessageSource,
             PipelineFlowNodeTypes.PayloadInspector,
             PipelineFlowNodeTypes.MetricsSink
         ]);
@@ -111,6 +115,101 @@ public sealed class PipelineComponentFactoryTests
         sink!.Values.Should().HaveCount(2);
         sink.Values[^1].MessageCount.Should().Be(2);
         sink.Values[^1].TotalPayloadBytes.Should().Be(5);
+    }
+
+    [Fact]
+    public async Task MessageSourceFactory_StartsSessionAndFeedsWorkflowNodes()
+    {
+        FakeMqttSession? session = null;
+        TestSinkNode<MqttMetricsSnapshot>? sink = null;
+
+        var builder = new FlowApplicationRuntimeBuilder(new FlowRuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories(_ =>
+            {
+                session = new FakeMqttSession();
+                return session;
+            })
+            .Register(new FlowNodeType("test.snapshot-sink"), (name, _) =>
+            {
+                sink = new TestSinkNode<MqttMetricsSnapshot>();
+                return SinkNode(name, sink);
+            }));
+
+        var result = builder.Build(new FlowApplicationDefinition
+        {
+            Resources =
+            {
+                ["source"] = new FlowNodeDefinition
+                {
+                    Type = PipelineFlowNodeTypes.MessageSource,
+                    Configuration =
+                    {
+                        ["profile"] = JsonDocument.Parse("""{"name":"factory-source","host":"localhost","port":1883}""").RootElement.Clone(),
+                        ["subscriptions"] = JsonDocument.Parse("""["factory/#"]""").RootElement.Clone()
+                    }
+                }
+            },
+            Workflows =
+            {
+                ["flow"] = new()
+                {
+                    ["metrics"] = NodeWithPort(PipelineFlowNodeTypes.MetricsSink, "Input", "\"source.Output\""),
+                    ["sink"] = NodeWithPort("test.snapshot-sink", "Input", "\"metrics.Snapshots\"")
+                }
+            }
+        });
+
+        result.IsSuccess.Should().BeTrue();
+        using var runtime = result.Runtime!;
+
+        await runtime.StartAsync();
+
+        session.Should().NotBeNull();
+        session!.ConnectCalls.Should().Be(1);
+        session.Subscriptions.Should().ContainSingle(subscription =>
+            subscription.TopicFilter == "factory/#" &&
+            subscription.QualityOfService == MqttQualityOfServiceLevel.AtMostOnce);
+
+        await session.WriteAsync(new MqttEnvelope
+        {
+            Topic = "factory/one",
+            Payload = [1, 2, 3]
+        });
+
+        session.CompleteMessages();
+        await runtime.Completion;
+
+        sink!.Values.Should().NotBeEmpty();
+        sink.Values[^1].MessageCount.Should().Be(1);
+        sink.Values[^1].TotalPayloadBytes.Should().Be(3);
+    }
+
+    [Fact]
+    public void MessageSourceFactory_ReturnsBuildErrorWhenSubscriptionsMissing()
+    {
+        var builder = new FlowApplicationRuntimeBuilder(new FlowRuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories());
+
+        var result = builder.Build(new FlowApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new()
+                {
+                    ["source"] = new FlowNodeDefinition
+                    {
+                        Type = PipelineFlowNodeTypes.MessageSource,
+                        Configuration =
+                        {
+                            ["profile"] = JsonDocument.Parse("""{"name":"factory-source"}""").RootElement.Clone()
+                        }
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().Contain(error => error.Message.Contains("subscriptions"));
     }
 
     [Fact]
@@ -230,6 +329,59 @@ public sealed class PipelineComponentFactoryTests
         {
             ((IDataflowBlock)_input).Fault(exception);
             _errors.Complete();
+        }
+    }
+
+    private sealed class FakeMqttSession : IMqttSession
+    {
+        private readonly Channel<MqttEnvelope> _messages = Channel.CreateUnbounded<MqttEnvelope>();
+        private readonly List<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService)> _subscriptions = [];
+
+        public MqttConnectionProfile Profile { get; } = new() { Name = "factory-test" };
+        public MqttSessionState State { get; private set; } = MqttSessionState.Disconnected;
+        public ChannelReader<MqttEnvelope> Messages => _messages.Reader;
+        public int ConnectCalls { get; private set; }
+        public IReadOnlyList<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService)> Subscriptions => _subscriptions;
+
+        public event EventHandler<MqttSessionState>? StateChanged
+        {
+            add { }
+            remove { }
+        }
+
+        public Task ConnectAsync(CancellationToken ct = default)
+        {
+            ConnectCalls++;
+            State = MqttSessionState.Connected;
+            return Task.CompletedTask;
+        }
+
+        public Task DisconnectAsync(CancellationToken ct = default)
+        {
+            State = MqttSessionState.Disconnected;
+            _messages.Writer.TryComplete();
+            return Task.CompletedTask;
+        }
+
+        public Task SubscribeAsync(string topicFilter, MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce, CancellationToken ct = default)
+        {
+            _subscriptions.Add((topicFilter, qos));
+            return Task.CompletedTask;
+        }
+
+        public Task UnsubscribeAsync(string topicFilter, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task PublishAsync(string topic, byte[] payload, MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce, bool retain = false, CancellationToken ct = default)
+            => Task.CompletedTask;
+
+        public Task WriteAsync(MqttEnvelope message) => _messages.Writer.WriteAsync(message).AsTask();
+
+        public void CompleteMessages() => _messages.Writer.TryComplete();
+
+        public ValueTask DisposeAsync()
+        {
+            _messages.Writer.TryComplete();
+            return ValueTask.CompletedTask;
         }
     }
 }

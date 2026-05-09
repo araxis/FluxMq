@@ -323,3 +323,16 @@ Reasoning:
 - `run` should exercise the host lifecycle only; message production, resource ownership, and service integrations should remain inside registered runtime components and resources.
 
 Status: Accepted.
+
+### 2026-05-09 - Register mqtt.message-source as the first service-backed runtime resource
+
+Decision: Add `mqtt.message-source` to `RegisterPipelineComponentFactories` as the first service-backed runtime registration, with explicit profile and subscription configuration parsing.
+
+Reasoning:
+- The runtime lifecycle path for resource start/dispose should be exercised by a real component, not only no-service components.
+- Message ingestion needs a config-first path that can run under `FlowApplicationHost` and `FluxMq.Cli`.
+- `mqtt.message-source` is a natural first service-backed registration because it already encapsulates session message streaming behavior.
+- Factory-level parsing gives clear build errors for invalid `profile`, `subscriptions`, or `qos` values before runtime start.
+- Keeping a session factory parameter on registration preserves deterministic testability while production stays on `MqttSession`.
+
+Status: Accepted.

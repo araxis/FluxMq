@@ -84,16 +84,23 @@ Each workflow is an object. Each node is a property inside that workflow object.
 ```json
 {
   "resources": {
-    "broker": {
-      "type": "mqtt.connection"
+    "source": {
+      "type": "mqtt.message-source",
+      "configuration": {
+        "profile": {
+          "name": "local-broker",
+          "host": "localhost",
+          "port": 1883
+        },
+        "subscriptions": [
+          "factory/#",
+          { "topicFilter": "telemetry/#", "qos": 1 }
+        ]
+      }
     }
   },
   "workflows": {
     "observeTraffic": {
-      "source": {
-        "type": "mqtt.message-source",
-        "Connection": "broker.Output"
-      },
       "metrics": {
         "type": "mqtt.metrics-sink",
         "Input": "source.Output"
@@ -125,10 +132,18 @@ The first runtime builder can create registered node types and link compatible t
 
 The first registered runtime component types are:
 
+- `mqtt.message-source`: resource-style source that starts an MQTT session, subscribes to configured topics, emits `MqttEnvelope` on `Output`, and publishes `FlowError` on `Errors`.
 - `mqtt.payload-inspector`: `Input` receives `MqttEnvelope`, `Output` publishes `InspectedMqttMessage`, and `Errors` publishes `FlowError`.
 - `mqtt.metrics-sink`: `Input` receives `MqttEnvelope`, `Snapshots` publishes `MqttMetricsSnapshot`, and `Errors` publishes `FlowError`.
 
-These were chosen first because they have stable constructors and do not need external services or expression configuration.
+Source configuration supports:
+
+- `profile` object (`name` required; host/port/clientId/useTls/username/password/keepAliveSeconds/cleanStart optional)
+- `subscriptions` as string, array of strings, or array of objects
+- `qos` per subscription as `0|1|2` or `AtMostOnce|AtLeastOnce|ExactlyOnce`
+- optional `boundedCapacity`
+
+The mapper and metrics nodes were chosen first because they have stable constructors and do not need external services or expression configuration.
 
 The first host boundary can build and control a configured flow application from this section:
 
