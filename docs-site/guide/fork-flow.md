@@ -65,6 +65,8 @@ MQTT message source
 
 The same flow application definition should eventually be editable through configuration and through a drag-and-drop interface.
 
+FluxMQ now uses the .NET configuration system as the first loading path for flow application definitions. A JSON file can provide `FluxMq:FlowApplication`, and future hosts can layer command-line values, environment values, saved settings, or UI-produced definitions through the same configuration model.
+
 ## Application Definition Shape
 
 A Fork Flow application definition describes shared resources, workflows, nodes, and links. It is the configuration package the future runtime will load regardless of whether FluxMQ is hosted by the desktop app, a console runner, or another tool process.
@@ -127,6 +129,24 @@ The first registered runtime component types are:
 - `mqtt.metrics-sink`: `Input` receives `MqttEnvelope`, `Snapshots` publishes `MqttMetricsSnapshot`, and `Errors` publishes `FlowError`.
 
 These were chosen first because they have stable constructors and do not need external services or expression configuration.
+
+The first host boundary can build and control a configured flow application from this section:
+
+```json
+{
+  "FluxMq": {
+    "FlowApplication": {
+      "workflows": {
+        "observe": {
+          "metrics": {
+            "type": "mqtt.metrics-sink"
+          }
+        }
+      }
+    }
+  }
+}
+```
 
 Reloading will be owned by the runtime layer. The UI can edit and save definitions, but the runtime is responsible for validating the next definition, keeping unaffected resources alive, patching workflow graphs, and reporting reload failures.
 

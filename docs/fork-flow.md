@@ -225,6 +225,34 @@ Runtime graph construction is intentionally separate and will come after this de
 
 The runtime boundary is a host-independent class library direction. A desktop app, console runner, Windows service, or tool host should all be able to load the same `FlowApplicationDefinition`.
 
+The first application host boundary is `FluxMq.App`. It is a class library, not a UI project. `FlowApplicationHost` currently:
+
+- reads `FluxMq:FlowApplication` through the .NET configuration system
+- converts the configuration tree into `FlowApplicationDefinition`
+- builds a runtime with `FlowApplicationRuntimeBuilder`
+- exposes build results and host state
+- starts and stops the current runtime
+
+Example appsettings shape:
+
+```json
+{
+  "FluxMq": {
+    "FlowApplication": {
+      "workflows": {
+        "observe": {
+          "metrics": {
+            "type": "mqtt.metrics-sink"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+The JSON file is only one provider. The host boundary should continue to accept normal .NET configuration so CLI arguments, environment values, persisted settings, and UI-generated definitions can converge on the same runtime path.
+
 The first runtime builder slice is intentionally small. `FlowApplicationRuntimeBuilder`:
 
 - validates a `FlowApplicationDefinition`

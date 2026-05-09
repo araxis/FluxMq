@@ -285,3 +285,26 @@ Reasoning:
 - Predicate-driven and service-backed nodes should be registered after their configuration schemas and resource lifetime rules are clearer.
 
 Status: Accepted.
+
+### 2026-05-09 - Load alpha flow definitions through .NET configuration
+
+Decision: Use the .NET configuration system as the first definition-loading boundary for the workflow application host.
+
+Reasoning:
+- JSON files are the simplest alpha input, but they should not become a custom loading mechanism.
+- The same host path can later compose file, environment, command-line, LiteDB-backed, and UI-produced values.
+- Keeping loading at the configuration boundary makes `FluxMq.Cli` natural without coupling the runtime to command-line parsing.
+- `FluxMq.App` remains a class-library host boundary responsible for composition and lifecycle rather than a desktop UI project.
+
+Status: Accepted.
+
+### 2026-05-09 - Keep FluxMq.Cli lightweight at first
+
+Decision: Add `FluxMq.Cli` later as a thin host over `FluxMq.App`, not as a separate runtime path.
+
+Reasoning:
+- CLI support will be important for validating, running, inspecting, and automating flow applications.
+- The first slice should avoid heavy CLI feature work until the host boundary is stable.
+- CLI commands should call the same application host used by desktop or service hosts.
+
+Status: Planned.

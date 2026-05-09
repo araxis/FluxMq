@@ -10,6 +10,7 @@ Build FluxMQ around the message/session flow first. Treat plugins as a future fo
 
 ```text
 /src
+  /FluxMq.App
   /FluxMq.Core
   /FluxMq.Pipeline
   /FluxMq.Storage
@@ -26,12 +27,15 @@ Build FluxMQ around the message/session flow first. Treat plugins as a future fo
 
 ### FluxMq.App
 
-Future workflow application host and builder.
+Workflow application host boundary.
 
 Initial status:
-- Not part of the current solution.
-- Add after the runtime host boundary is clear.
-- Responsible later for composing flow applications, loading definitions, controlling lifecycle, and coordinating reloads.
+- Part of the current solution as a class library.
+- Loads `FlowApplicationDefinition` from .NET configuration.
+- Builds runtimes through registered factories.
+- Controls basic lifecycle with build, start, and stop.
+- Holds the future reload coordination boundary.
+- Should remain host-independent so desktop, CLI, service, and tool hosts can use the same runtime path.
 
 ### FluxMq.Core
 
@@ -161,7 +165,7 @@ Current first slice:
 - Build failures are returned as structured errors instead of escaping through ordinary definition mistakes.
 
 Expected hosts:
-- future application host
+- `FluxMq.App`
 - console runner
 - service process
 - command/tool integrations
