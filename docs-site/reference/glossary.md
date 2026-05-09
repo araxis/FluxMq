@@ -16,6 +16,10 @@ A configurable FluxMQ pipeline made from sources, triggers, filters, mappers, ro
 
 The FluxMQ runtime shape for an MQTT message and its metadata.
 
+## MQTT Message Source
+
+A flow component that reads live messages from an active MQTT session.
+
 ## Recording Session
 
 A stored sequence of MQTT messages captured during a debugging session.
