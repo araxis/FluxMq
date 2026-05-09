@@ -181,4 +181,6 @@ The initial CLI command is intentionally limited:
 dotnet run --project src/FluxMq.Cli -- validate --config samples/flow-applications/metrics-only.json
 ```
 
-It validates the configured flow application through `FluxMq.App` and reports host, definition, and runtime build errors.
+It validates the configured flow application through `FluxMq.App` and reports host, definition, and runtime build errors. The default text output is meant for people. `--output json` is the first automation-friendly format for scripts, CI pipelines, and other tools.
+
+CLI command execution should stay separate from output rendering. That keeps the command result model stable while allowing future rich terminal views to be added without changing the host boundary.

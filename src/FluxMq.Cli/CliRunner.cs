@@ -62,48 +62,52 @@ public sealed class CliRunner
             sectionName: options.SectionName);
 
         var result = host.Build();
-        if (result.IsSuccess)
-        {
-            var runtime = result.RuntimeBuild!.Runtime!;
-            _output.WriteLine($"Flow application is valid. Workflows: {runtime.Workflows.Count}. Resources: {runtime.Resources.Count}.");
-            return (int)CliExitCode.Success;
-        }
+        var commandResult = CreateValidateResult(result);
+        var output = options.OutputFormat == CliOutputFormat.Json ? _output : commandResult.IsValid ? _output : _error;
+        ValidateFlowResultRenderer.Write(commandResult, options.OutputFormat, output);
 
-        _error.WriteLine("Flow application is invalid.");
+        return commandResult.IsValid ? (int)CliExitCode.Success : (int)CliExitCode.ValidationError;
+    }
+
+    private static ValidateFlowCommandResult CreateValidateResult(FlowApplicationHostBuildResult result)
+    {
+        var diagnostics = new List<ValidateFlowDiagnostic>();
         foreach (var error in result.Errors)
         {
-            _error.WriteLine($"Host error {error.Code}: {error.Message}");
+            diagnostics.Add(new ValidateFlowDiagnostic("host", error.Code.ToString(), error.Message));
         }
 
         if (result.RuntimeBuild is not null)
         {
             foreach (var error in result.RuntimeBuild.Validation.Errors)
             {
-                _error.WriteLine($"Definition error {error.Code}: {error.Message}");
+                diagnostics.Add(new ValidateFlowDiagnostic("definition", error.Code.ToString(), error.Message));
             }
 
             foreach (var error in result.RuntimeBuild.Errors)
             {
-                var location = FormatLocation(error.WorkflowName, error.NodeName?.Value, error.PortName?.Value);
-                _error.WriteLine($"Runtime error {error.Code}{location}: {error.Message}");
+                diagnostics.Add(new ValidateFlowDiagnostic(
+                    "runtime",
+                    error.Code.ToString(),
+                    error.Message,
+                    error.WorkflowName,
+                    error.NodeName?.Value,
+                    error.PortName?.Value));
             }
         }
 
-        return (int)CliExitCode.ValidationError;
-    }
+        var runtime = result.RuntimeBuild?.Runtime;
 
-    private static string FormatLocation(string? workflowName, string? nodeName, string? portName)
-    {
-        var parts = new[] { workflowName, nodeName, portName }
-            .Where(part => !string.IsNullOrWhiteSpace(part))
-            .ToArray();
-
-        return parts.Length == 0 ? "" : $" [{string.Join(".", parts)}]";
+        return new ValidateFlowCommandResult(
+            result.IsSuccess,
+            runtime?.Workflows.Count ?? 0,
+            runtime?.Resources.Count ?? 0,
+            diagnostics);
     }
 
     private static void WriteUsage(ICliOutput output)
     {
         output.WriteLine("Usage:");
-        output.WriteLine("  fluxmq validate --config <path> [--section <name>]");
+        output.WriteLine("  fluxmq validate --config <path> [--section <name>] [--output text|json]");
     }
 }

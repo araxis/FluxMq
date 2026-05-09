@@ -103,6 +103,12 @@ Validate the first sample flow application:
 dotnet run --project src\FluxMq.Cli -- validate --config samples\flow-applications\metrics-only.json
 ```
 
+Use JSON output when the command is consumed by scripts or CI:
+
+```powershell
+dotnet run --project src\FluxMq.Cli -- validate --config samples\flow-applications\metrics-only.json --output json
+```
+
 ## Project Memory
 
 Planning, decisions, roadmap, and progress are tracked in `memory/`.

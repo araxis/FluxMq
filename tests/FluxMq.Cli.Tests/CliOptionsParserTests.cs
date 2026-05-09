@@ -9,7 +9,7 @@ public sealed class CliOptionsParserTests
     public void TryParse_ReadsValidateOptions()
     {
         var parsed = CliOptionsParser.TryParse(
-            ["validate", "--config", "flow.json", "--section", "Custom:Flow"],
+            ["validate", "--config", "flow.json", "--section", "Custom:Flow", "--output", "json"],
             out var options,
             out var error);
 
@@ -18,6 +18,7 @@ public sealed class CliOptionsParserTests
         options.Command.Should().Be("validate");
         options.ConfigurationPath.Should().Be("flow.json");
         options.SectionName.Should().Be("Custom:Flow");
+        options.OutputFormat.Should().Be(CliOutputFormat.Json);
     }
 
     [Fact]
@@ -27,5 +28,14 @@ public sealed class CliOptionsParserTests
 
         parsed.Should().BeFalse();
         error.Should().Contain("--config");
+    }
+
+    [Fact]
+    public void TryParse_RejectsUnknownOutputFormat()
+    {
+        var parsed = CliOptionsParser.TryParse(["validate", "--config", "flow.json", "--output", "xml"], out _, out var error);
+
+        parsed.Should().BeFalse();
+        error.Should().Contain("Output format");
     }
 }

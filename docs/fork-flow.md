@@ -259,6 +259,12 @@ The first CLI alpha command validates a configured flow application:
 dotnet run --project src/FluxMq.Cli -- validate --config samples/flow-applications/metrics-only.json
 ```
 
+For automation, the same validation command can emit structured output:
+
+```powershell
+dotnet run --project src/FluxMq.Cli -- validate --config samples/flow-applications/metrics-only.json --output json
+```
+
 The first runtime builder slice is intentionally small. `FlowApplicationRuntimeBuilder`:
 
 - validates a `FlowApplicationDefinition`

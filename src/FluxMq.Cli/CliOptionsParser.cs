@@ -6,7 +6,7 @@ public static class CliOptionsParser
     {
         ArgumentNullException.ThrowIfNull(args);
 
-        options = new CliOptions("", null, CliOptions.DefaultSectionName);
+        options = new CliOptions("", null, CliOptions.DefaultSectionName, CliOutputFormat.Text);
         error = null;
 
         if (args.Length == 0)
@@ -30,6 +30,7 @@ public static class CliOptionsParser
 
         string? configurationPath = null;
         var sectionName = CliOptions.DefaultSectionName;
+        var outputFormat = CliOutputFormat.Text;
 
         for (var index = 1; index < args.Length; index++)
         {
@@ -54,6 +55,21 @@ public static class CliOptionsParser
 
                     break;
 
+                case "-o":
+                case "--output":
+                    if (!TryReadValue(args, ref index, current, out var outputValue, out error))
+                    {
+                        return false;
+                    }
+
+                    if (!TryParseOutputFormat(outputValue, out outputFormat))
+                    {
+                        error = $"Output format '{outputValue}' is not supported. Use 'text' or 'json'.";
+                        return false;
+                    }
+
+                    break;
+
                 default:
                     error = $"Unknown option '{current}'.";
                     return false;
@@ -66,7 +82,7 @@ public static class CliOptionsParser
             return false;
         }
 
-        options = new CliOptions(command, configurationPath, sectionName);
+        options = new CliOptions(command, configurationPath, sectionName, outputFormat);
         return true;
     }
 
@@ -94,5 +110,23 @@ public static class CliOptionsParser
         }
 
         return true;
+    }
+
+    private static bool TryParseOutputFormat(string value, out CliOutputFormat outputFormat)
+    {
+        if (string.Equals(value, "text", StringComparison.OrdinalIgnoreCase))
+        {
+            outputFormat = CliOutputFormat.Text;
+            return true;
+        }
+
+        if (string.Equals(value, "json", StringComparison.OrdinalIgnoreCase))
+        {
+            outputFormat = CliOutputFormat.Json;
+            return true;
+        }
+
+        outputFormat = CliOutputFormat.Text;
+        return false;
     }
 }

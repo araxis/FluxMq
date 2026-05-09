@@ -22,6 +22,8 @@ The first command-line surface validates a flow application definition through t
 dotnet run --project src/FluxMq.Cli -- validate --config samples/flow-applications/metrics-only.json
 ```
 
+Use `--output json` when validation results need to be consumed by a script or CI pipeline.
+
 ## Documentation Scope
 
 This site explains user-facing workflows. Developer architecture, implementation notes, and design decisions live in the repository developer documentation.

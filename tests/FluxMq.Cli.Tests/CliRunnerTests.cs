@@ -1,5 +1,6 @@
 using FluentAssertions;
 using FluxMq.Cli;
+using System.Text.Json;
 
 namespace FluxMq.Cli.Tests;
 
@@ -69,6 +70,79 @@ public sealed class CliRunnerTests
         output.Lines.Should().BeEmpty();
         error.Lines.Should().Contain(line => line.Contains("Flow application is invalid."));
         error.Lines.Should().Contain(line => line.Contains("boundedCapacity"));
+    }
+
+    [Fact]
+    public void Run_WritesJsonToStdoutForValidFlowConfiguration()
+    {
+        using var temp = TemporaryJsonFile(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "workflows": {
+                    "observe": {
+                      "metrics": {
+                        "type": "mqtt.metrics-sink"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """);
+
+        var output = new TestOutput();
+        var error = new TestOutput();
+        var runner = new CliRunner(output, error);
+
+        var exitCode = runner.Run(["validate", "--config", temp.Path, "--output", "json"]);
+
+        exitCode.Should().Be((int)CliExitCode.Success);
+        error.Lines.Should().BeEmpty();
+
+        using var document = JsonDocument.Parse(string.Join(Environment.NewLine, output.Lines));
+        document.RootElement.GetProperty("isValid").GetBoolean().Should().BeTrue();
+        document.RootElement.GetProperty("workflowCount").GetInt32().Should().Be(1);
+        document.RootElement.GetProperty("resourceCount").GetInt32().Should().Be(0);
+        document.RootElement.GetProperty("diagnostics").GetArrayLength().Should().Be(0);
+    }
+
+    [Fact]
+    public void Run_WritesJsonToStdoutForInvalidFlowConfiguration()
+    {
+        using var temp = TemporaryJsonFile(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "workflows": {
+                    "observe": {
+                      "inspect": {
+                        "type": "mqtt.payload-inspector",
+                        "configuration": {
+                          "boundedCapacity": 0
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """);
+
+        var output = new TestOutput();
+        var error = new TestOutput();
+        var runner = new CliRunner(output, error);
+
+        var exitCode = runner.Run(["validate", "--config", temp.Path, "--output", "json"]);
+
+        exitCode.Should().Be((int)CliExitCode.ValidationError);
+        error.Lines.Should().BeEmpty();
+
+        using var document = JsonDocument.Parse(string.Join(Environment.NewLine, output.Lines));
+        document.RootElement.GetProperty("isValid").GetBoolean().Should().BeFalse();
+        document.RootElement.GetProperty("diagnostics")[0].GetProperty("message").GetString().Should().Contain("boundedCapacity");
     }
 
     [Fact]

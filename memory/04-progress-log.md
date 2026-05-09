@@ -199,6 +199,7 @@ Chronological progress record.
 - Added `FluxMq.App.Tests` covering configuration loading, runtime build, stop completion, missing configuration, and invalid component configuration.
 - Added `FluxMq.Cli` as the first thin command-line host over `FluxMq.App`.
 - Added `validate --config <path>` to validate a flow application configuration through the application host.
+- Added `--output json` for machine-readable validation results while keeping text output as the default.
 - Added `samples/flow-applications/metrics-only.json` as the first alpha validation sample.
 
 ## Current Next Step
