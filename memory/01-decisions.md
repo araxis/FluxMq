@@ -39,10 +39,11 @@ Status: Accepted.
 
 ### 2026-05-09 - Give runtime factories placement context
 
-Decision: Runtime node factories receive `FlowRuntimeNodeFactoryContext` and the runtime disposes workflow nodes before shared resources.
+Decision: Runtime node factories receive `FlowRuntimeNodeFactoryContext`, runtime start calls `IFlowStartable` resources before workflow nodes, and runtime disposal releases workflow nodes before shared resources.
 
 Reasoning:
 - Service-backed resources need to know when they are declared as shared resources instead of ordinary workflow nodes.
+- Service-backed resources must be started before dependent workflow nodes begin producing or consuming messages.
 - Resource lifetime should outlive dependent workflow nodes during shutdown.
 - The builder should keep construction generic and let registered factories enforce resource-specific placement rules.
 

@@ -5,7 +5,7 @@ using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Pipeline.Components;
 
-public sealed class MqttMessageSourceComponent : IFlowNode, IAsyncDisposable
+public sealed class MqttMessageSourceComponent : IFlowNode, IFlowStartable, IAsyncDisposable
 {
     private readonly IMqttSession _session;
     private readonly BufferBlock<MqttEnvelope> _output;

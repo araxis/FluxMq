@@ -28,6 +28,19 @@ public sealed class FlowApplicationRuntime : IAsyncDisposable, IDisposable
 
     public Task Completion => Task.WhenAll(Nodes.Select(node => node.Node.Completion));
 
+    public async Task StartAsync(CancellationToken cancellationToken = default)
+    {
+        foreach (var resource in Resources.Values)
+        {
+            await StartNodeAsync(resource, cancellationToken).ConfigureAwait(false);
+        }
+
+        foreach (var node in WorkflowNodes())
+        {
+            await StartNodeAsync(node, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
     public void Complete()
     {
         foreach (var node in _entryNodes)
@@ -86,4 +99,12 @@ public sealed class FlowApplicationRuntime : IAsyncDisposable, IDisposable
 
     private IEnumerable<FlowRuntimeNode> WorkflowNodes()
         => Workflows.Values.SelectMany(workflow => workflow.Values);
+
+    private static async Task StartNodeAsync(FlowRuntimeNode node, CancellationToken cancellationToken)
+    {
+        if (node.Node is IFlowStartable startable)
+        {
+            await startable.StartAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
 }

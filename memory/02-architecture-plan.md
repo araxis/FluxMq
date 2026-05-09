@@ -162,6 +162,7 @@ Current first slice:
 - `FlowApplicationRuntimeBuilder` performs cold-start graph construction.
 - Runtime node factories create concrete nodes outside the builder and receive context about resource vs workflow placement.
 - Typed runtime ports prevent accidental links between incompatible value types.
+- `IFlowStartable` resources start before workflow nodes.
 - Workflow nodes are disposed before shared resources.
 - Build failures are returned as structured errors instead of escaping through ordinary definition mistakes.
 

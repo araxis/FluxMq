@@ -276,6 +276,7 @@ The first runtime builder slice is intentionally small. `FlowApplicationRuntimeB
 - validates a `FlowApplicationDefinition`
 - creates runtime nodes through registered factories
 - passes factory context so registrations know whether they are building a shared resource or a workflow node
+- starts `IFlowStartable` resources before workflow nodes
 - links workflow ports through typed input/output port adapters
 - supports shared resources as link sources
 - returns build errors for validation, missing factories, missing ports, type mismatches, and link failures
@@ -308,6 +309,8 @@ registry.Register(new FlowNodeType("example.resource"), context =>
     return CreateRuntimeNode(context.Name, context.Definition);
 });
 ```
+
+Producer or service-backed nodes that need explicit start work should implement `IFlowStartable`. Startup failures are converted into host build errors instead of escaping through the CLI or host shell.
 
 Both registered components currently accept optional configuration:
 

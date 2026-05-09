@@ -147,6 +147,42 @@ public sealed class FlowApplicationHostTests
             .Which.Message.Should().Be("completion failed");
     }
 
+    [Fact]
+    public async Task StartAsync_ConvertsStartFailureToHostError()
+    {
+        var builder = new FlowApplicationRuntimeBuilder(new FlowRuntimeNodeFactoryRegistry()
+            .Register(new FlowNodeType("test.start-fails"), (name, _) =>
+                FlowRuntimeNode.Create(name, new StartFailingNode())));
+
+        await using var host = new FlowApplicationHost(
+            BuildConfiguration(
+                """
+                {
+                  "FluxMq": {
+                    "FlowApplication": {
+                      "workflows": {
+                        "observe": {
+                          "start": {
+                            "type": "test.start-fails"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+                """),
+            builder);
+
+        var result = await host.StartAsync();
+
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle()
+            .Which.Code.Should().Be(FlowApplicationHostBuildErrorCode.StartFailed);
+        host.State.Should().Be(FlowApplicationHostState.Faulted);
+        host.LastException.Should().BeOfType<InvalidOperationException>()
+            .Which.Message.Should().Be("start failed");
+    }
+
     private static IConfiguration BuildConfiguration(string json)
         => new ConfigurationBuilder()
             .AddJsonStream(new MemoryStream(Encoding.UTF8.GetBytes(json)))
@@ -172,5 +208,21 @@ public sealed class FlowApplicationHostTests
             _completion.SetException(exception);
             _errors.Complete();
         }
+    }
+
+    private sealed class StartFailingNode : IFlowNode, IFlowStartable
+    {
+        private readonly BufferBlock<FlowError> _errors = new();
+
+        public FlowNodeId Id { get; } = FlowNodeId.New();
+        public ISourceBlock<FlowError> Errors => _errors;
+        public Task Completion => Task.CompletedTask;
+
+        public Task StartAsync(CancellationToken cancellationToken = default)
+            => Task.FromException(new InvalidOperationException("start failed"));
+
+        public void Complete() => _errors.Complete();
+
+        public void Fault(Exception exception) => _errors.Complete();
     }
 }

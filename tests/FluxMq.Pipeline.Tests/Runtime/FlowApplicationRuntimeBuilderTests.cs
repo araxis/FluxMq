@@ -235,6 +235,36 @@ public sealed class FlowApplicationRuntimeBuilderTests
         disposalOrder.Should().Equal("workflow", "resource");
     }
 
+    [Fact]
+    public async Task StartAsync_StartsResourcesBeforeWorkflowNodes()
+    {
+        var startOrder = new List<string>();
+        var builder = new FlowApplicationRuntimeBuilder(new FlowRuntimeNodeFactoryRegistry()
+            .Register(new FlowNodeType("test.resource"), (name, _) => StartableNode(name, "resource", startOrder))
+            .Register(new FlowNodeType("test.workflow"), (name, _) => StartableNode(name, "workflow", startOrder)));
+
+        var result = builder.Build(new FlowApplicationDefinition
+        {
+            Resources =
+            {
+                ["shared"] = Node("test.resource")
+            },
+            Workflows =
+            {
+                ["flow"] = new()
+                {
+                    ["worker"] = Node("test.workflow")
+                }
+            }
+        });
+
+        result.IsSuccess.Should().BeTrue();
+
+        await result.Runtime!.StartAsync();
+
+        startOrder.Should().Equal("resource", "workflow");
+    }
+
     private static FlowRuntimeNode SourceNode(FlowNodeName name, TestSourceNode node)
         => FlowRuntimeNode.Create(
             name,
@@ -264,6 +294,9 @@ public sealed class FlowApplicationRuntimeBuilderTests
 
     private static FlowRuntimeNode DisposableNode(FlowNodeName name, string label, List<string> disposalOrder)
         => FlowRuntimeNode.Create(name, new TestDisposableNode(label, disposalOrder));
+
+    private static FlowRuntimeNode StartableNode(FlowNodeName name, string label, List<string> startOrder)
+        => FlowRuntimeNode.Create(name, new TestStartableNode(label, startOrder));
 
     private static FlowNodeDefinition Node(string type) => new()
     {
@@ -355,5 +388,32 @@ public sealed class FlowApplicationRuntimeBuilderTests
         public void Fault(Exception exception) => _errors.Complete();
 
         public void Dispose() => _disposalOrder.Add(_label);
+    }
+
+    private sealed class TestStartableNode : IFlowNode, IFlowStartable
+    {
+        private readonly string _label;
+        private readonly List<string> _startOrder;
+        private readonly BufferBlock<FlowError> _errors = new();
+
+        public TestStartableNode(string label, List<string> startOrder)
+        {
+            _label = label;
+            _startOrder = startOrder;
+        }
+
+        public FlowNodeId Id { get; } = FlowNodeId.New();
+        public ISourceBlock<FlowError> Errors => _errors;
+        public Task Completion => Task.CompletedTask;
+
+        public Task StartAsync(CancellationToken cancellationToken = default)
+        {
+            _startOrder.Add(_label);
+            return Task.CompletedTask;
+        }
+
+        public void Complete() => _errors.Complete();
+
+        public void Fault(Exception exception) => _errors.Complete();
     }
 }

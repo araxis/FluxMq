@@ -77,13 +77,36 @@ public sealed class FlowApplicationHost : IAsyncDisposable, IDisposable
     }
 
     public FlowApplicationHostBuildResult Start()
+        => StartAsync().GetAwaiter().GetResult();
+
+    public async Task<FlowApplicationHostBuildResult> StartAsync(CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
 
         var result = Build();
         if (result.IsSuccess)
         {
-            State = FlowApplicationHostState.Running;
+            try
+            {
+                await _runtime!.StartAsync(cancellationToken).ConfigureAwait(false);
+                State = FlowApplicationHostState.Running;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                State = FlowApplicationHostState.Faulted;
+                LastException = exception;
+                LastBuildResult = FlowApplicationHostBuildResult.FromHostError(
+                    new FlowApplicationHostBuildError(
+                        FlowApplicationHostBuildErrorCode.StartFailed,
+                        $"Flow application start failed: {exception.Message}",
+                        exception));
+
+                return LastBuildResult;
+            }
         }
 
         return result;

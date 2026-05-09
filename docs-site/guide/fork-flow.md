@@ -162,7 +162,7 @@ The same file can be started through the command-line host lifecycle:
 dotnet run --project src/FluxMq.Cli -- run --config samples/flow-applications/metrics-only.json --duration-ms 1000
 ```
 
-Runtime factories can now tell whether they are building a shared resource or a workflow node. This matters for service-backed resources because workflow nodes are stopped and disposed before shared resources.
+Runtime factories can now tell whether they are building a shared resource or a workflow node. Startable resources are started before workflow nodes, and workflow nodes are stopped and disposed before shared resources.
 
 Reloading will be owned by the runtime layer. The UI can edit and save definitions, but the runtime is responsible for validating the next definition, keeping unaffected resources alive, patching workflow graphs, and reporting reload failures.
 
