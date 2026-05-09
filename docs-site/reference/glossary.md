@@ -8,6 +8,10 @@ The MQTT server that receives published messages and distributes them to subscri
 
 Saved broker connection settings.
 
+## Condition Router
+
+A flow component that sends each incoming message to one of two branches.
+
 ## Fork Flow
 
 A configurable FluxMQ pipeline made from sources, triggers, filters, mappers, routers, and sinks.

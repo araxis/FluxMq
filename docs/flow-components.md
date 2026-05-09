@@ -116,6 +116,41 @@ filter.Output.LinkTo(next.Input, new DataflowLinkOptions
 
 If the predicate throws, the component publishes a `FlowError` and drops that message. Later messages continue processing.
 
+## MQTT Condition Router
+
+`MqttConditionRouterComponent` routes each MQTT message to one of two output ports.
+
+Use it when non-matching messages should continue through a separate branch instead of being dropped.
+
+### Behavior
+
+```mermaid
+flowchart LR
+    In["Input: MqttEnvelope"] --> Router["MqttConditionRouterComponent"]
+    Router -->|condition true| True["WhenTrue: MqttEnvelope"]
+    Router -->|condition false| False["WhenFalse: MqttEnvelope"]
+    Router -->|predicate failure| Errors["Errors: FlowError code 2000"]
+```
+
+### Usage
+
+```csharp
+var router = MqttConditionRouterComponent.TopicPrefix("factory/");
+
+source.Output.LinkTo(router.Input, new DataflowLinkOptions
+{
+    PropagateCompletion = true
+});
+
+router.WhenTrue.LinkTo(factorySink, new DataflowLinkOptions { PropagateCompletion = true });
+router.WhenFalse.LinkTo(otherSink, new DataflowLinkOptions { PropagateCompletion = true });
+router.Errors.LinkTo(errorSink);
+```
+
+### Failure Behavior
+
+If the predicate throws, the component publishes a `FlowError` and drops that message. Later messages continue routing.
+
 ## Payload Inspector Mapper
 
 `PayloadInspectorMapperComponent` maps raw MQTT messages into inspected payload messages.
@@ -287,6 +322,19 @@ mapper.Errors.LinkTo(errorSink);
 await source.StartAsync();
 ```
 
+This flow branches live traffic into two paths.
+
+```mermaid
+flowchart LR
+    Source["MqttMessageSourceComponent"] --> Router["MqttConditionRouterComponent"]
+    Router -->|factory topics| Inspector["PayloadInspectorMapperComponent"]
+    Router -->|other topics| Metrics["Metrics Sink"]
+    Inspector --> Ui["Payload UI Sink"]
+    Source --> ErrorLog["Error Log"]
+    Router --> ErrorLog
+    Inspector --> ErrorLog
+```
+
 This flow replays a recorded session back through an MQTT session.
 
 ```mermaid
@@ -323,7 +371,6 @@ Likely near-term additions:
 
 - dynamic expression mapper
 - JSONata mapper
-- condition/router component
 - storage sink
 - metrics sink
 
