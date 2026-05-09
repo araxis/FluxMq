@@ -234,6 +234,31 @@ The first runtime builder slice is intentionally small. `FlowApplicationRuntimeB
 - returns build errors for validation, missing factories, missing ports, type mismatches, and link failures
 - completes only entry nodes so Dataflow completion propagates through linked graphs in order
 
+The first concrete registrations are intentionally limited to components with stable construction and no external service dependency:
+
+- `mqtt.payload-inspector`
+  - `Input`: `MqttEnvelope`
+  - `Output`: `InspectedMqttMessage`
+  - `Errors`: `FlowError`
+- `mqtt.metrics-sink`
+  - `Input`: `MqttEnvelope`
+  - `Snapshots`: `MqttMetricsSnapshot`
+  - `Errors`: `FlowError`
+
+Register them with `RegisterPipelineComponentFactories()` on `FlowRuntimeNodeFactoryRegistry`.
+
+Both registered components currently accept optional configuration:
+
+```json
+{
+  "configuration": {
+    "boundedCapacity": 1000
+  }
+}
+```
+
+Predicate-driven components such as topic filters and condition routers are not registered yet because their expression/configuration model needs deliberate design first.
+
 The wider runtime controller should later own:
 
 - application definition loading

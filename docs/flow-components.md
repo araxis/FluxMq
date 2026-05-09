@@ -180,6 +180,25 @@ mapper.Output.LinkTo(uiSink, new DataflowLinkOptions
 });
 ```
 
+### Flow Definition
+
+Registered node type: `mqtt.payload-inspector`
+
+Ports:
+
+- `Input`: `MqttEnvelope`
+- `Output`: `InspectedMqttMessage`
+- `Errors`: `FlowError`
+
+```json
+{
+  "inspect": {
+    "type": "mqtt.payload-inspector",
+    "Input": "source.Output"
+  }
+}
+```
+
 ### Output
 
 `InspectedMqttMessage` contains:
@@ -323,6 +342,25 @@ source.Output.LinkTo(metrics.Input, new DataflowLinkOptions
 
 metrics.Snapshots.LinkTo(metricsUiSink);
 metrics.Errors.LinkTo(errorSink);
+```
+
+### Flow Definition
+
+Registered node type: `mqtt.metrics-sink`
+
+Ports:
+
+- `Input`: `MqttEnvelope`
+- `Snapshots`: `MqttMetricsSnapshot`
+- `Errors`: `FlowError`
+
+```json
+{
+  "metrics": {
+    "type": "mqtt.metrics-sink",
+    "Input": "source.Output"
+  }
+}
 ```
 
 ### Snapshot
