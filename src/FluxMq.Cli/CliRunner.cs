@@ -1,6 +1,9 @@
 using FluxMq.App;
+using FluxMq.Cli.Commands;
 using FluxMq.Pipeline.Runtime;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Spectre.Console.Cli;
 
 namespace FluxMq.Cli;
 
@@ -20,27 +23,25 @@ public sealed class CliRunner
 
     public async Task<int> RunAsync(string[] args, CancellationToken cancellationToken = default)
     {
-        if (!CliOptionsParser.TryParse(args, out var options, out var parseError))
-        {
-            _error.WriteLine(parseError!);
-            WriteUsage(_error);
-            return (int)CliExitCode.UsageError;
-        }
+        var services = new ServiceCollection();
+        services.AddSingleton(this);
 
-        if (options.Command is "-h" or "--help")
+        using var registrar = new CliTypeRegistrar(services);
+        var app = new CommandApp(registrar);
+        app.Configure(config =>
         {
-            WriteUsage(_output);
-            return (int)CliExitCode.Success;
-        }
+            config.SetApplicationName("fluxmq");
+            config.AddCommand<ValidateCliCommand>(CliOptions.ValidateCommand);
+            config.AddCommand<RunCliCommand>(CliOptions.RunCommand);
+        });
 
         try
         {
-            if (string.Equals(options.Command, CliOptions.ValidateCommand, StringComparison.OrdinalIgnoreCase))
-            {
-                return Validate(options);
-            }
-
-            return await RunFlow(options, cancellationToken).ConfigureAwait(false);
+            return await app.RunAsync(args, cancellationToken).ConfigureAwait(false);
+        }
+        catch (CommandParseException)
+        {
+            return (int)CliExitCode.UsageError;
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -49,7 +50,7 @@ public sealed class CliRunner
         }
     }
 
-    private int Validate(CliOptions options)
+    internal int Validate(CliOptions options)
     {
         if (!TryBuildHost(options, out var host, out var exitCode))
         {
@@ -67,7 +68,7 @@ public sealed class CliRunner
         }
     }
 
-    private async Task<int> RunFlow(CliOptions options, CancellationToken cancellationToken)
+    internal async Task<int> RunFlow(CliOptions options, CancellationToken cancellationToken)
     {
         if (!TryBuildHost(options, out var host, out var exitCode))
         {
@@ -181,13 +182,6 @@ public sealed class CliRunner
             runtime?.Workflows.Count ?? 0,
             runtime?.Resources.Count ?? 0,
             diagnostics);
-    }
-
-    private static void WriteUsage(ICliOutput output)
-    {
-        output.WriteLine("Usage:");
-        output.WriteLine("  fluxmq validate --config <path> [--section <name>] [--output text|json]");
-        output.WriteLine("  fluxmq run --config <path> [--section <name>] [--duration-ms <milliseconds>] [--output text|json]");
     }
 
     private static async Task<string> WaitForRunExit(TimeSpan? duration, CancellationToken cancellationToken)

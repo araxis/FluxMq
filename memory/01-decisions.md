@@ -319,7 +319,7 @@ Reasoning:
 - The first slice should avoid heavy CLI feature work until the host boundary is stable.
 - CLI commands should call the same application host used by desktop or service hosts.
 - The CLI should be automation-first: stable exit codes, predictable standard streams, and JSON output for tools and CI.
-- Rich terminal output can be added later through a proper CLI library, while command execution stays separated from output rendering.
+- Use `Spectre.Console.Cli` for command parsing and command dispatch, while keeping command execution separated from output rendering.
 - `run` should exercise the host lifecycle only; message production, resource ownership, and service integrations should remain inside registered runtime components and resources.
 
 Status: Accepted.
