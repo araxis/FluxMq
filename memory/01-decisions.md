@@ -273,3 +273,15 @@ Reasoning:
 - Keeping the solution focused on libraries makes the runtime easier to test and package.
 
 Status: Accepted.
+
+### 2026-05-09 - Register only stable no-service pipeline components first
+
+Decision: Start concrete runtime factory registrations with `mqtt.payload-inspector` and `mqtt.metrics-sink`.
+
+Reasoning:
+- Both components have stable constructor needs and typed port surfaces.
+- Neither requires external service lifetime management.
+- This lets real flow definitions build through the runtime without forcing unstable expression, predicate, connection, storage, replay, or publish configuration contracts.
+- Predicate-driven and service-backed nodes should be registered after their configuration schemas and resource lifetime rules are clearer.
+
+Status: Accepted.

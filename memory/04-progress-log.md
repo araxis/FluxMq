@@ -189,7 +189,11 @@ Chronological progress record.
   - structured build errors for missing factories, missing ports, type mismatches, and link failures
   - entry-node completion so Dataflow graphs drain in link order
 - Removed the early Blazor shell from the current solution. `FluxMq.App` is now reserved for a later workflow application host and builder, after the runtime host boundary is clearer.
+- Added the first concrete pipeline component factory registrations:
+  - `mqtt.payload-inspector`
+  - `mqtt.metrics-sink`
+- Added runtime tests proving registered components can be linked through flow definitions and that invalid component configuration becomes a structured build error.
 
 ## Current Next Step
 
-Continue Fork Flow foundation by adding concrete component factory registrations for a small supported subset of flow application definitions.
+Continue Fork Flow foundation by adding the next stable runtime registration boundary: either service-backed resource factories for MQTT sessions or expression-backed filter/router configuration, depending on which design is ready to make explicit.

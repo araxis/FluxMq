@@ -28,6 +28,10 @@ The future host-independent runtime layer that loads a flow application definiti
 
 The cold-start builder that validates a flow application definition, creates registered runtime nodes, links compatible typed ports, and returns build errors when the graph cannot be constructed.
 
+## Runtime Node Factory
+
+A registered constructor that turns a node definition into a runtime node with typed input and output ports.
+
 ## MQTT Envelope
 
 The FluxMQ runtime shape for an MQTT message and its metadata.
