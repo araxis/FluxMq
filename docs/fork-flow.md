@@ -42,6 +42,10 @@ See [Flow Components](flow-components.md) for behavior diagrams and sample usage
 
 Broadcasts MQTT connection state changes as flow events.
 
+### MqttMessageSourceComponent
+
+Reads live MQTT messages from a session and broadcasts them as `MqttEnvelope` values.
+
 ### TopicFilterComponent
 
 Filters `MqttEnvelope` messages using a predicate.

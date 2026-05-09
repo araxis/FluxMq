@@ -51,6 +51,38 @@ trigger.Output.LinkTo(stateSink, new DataflowLinkOptions
 - Use this when a flow should react to connection lifecycle events.
 - Example downstream nodes: state router, notification sink, UI state projection.
 
+## MQTT Message Source
+
+`MqttMessageSourceComponent` converts an active MQTT session message channel into a flow source.
+
+### Behavior
+
+```mermaid
+flowchart LR
+    Session["IMqttSession.Messages"] --> Source["MqttMessageSourceComponent"]
+    Source --> Out["Output: MqttEnvelope"]
+    Source -->|reader failure| Errors["Errors: FlowError code 2000"]
+```
+
+### Usage
+
+```csharp
+var source = new MqttMessageSourceComponent(session);
+
+source.Output.LinkTo(filter.Input, new DataflowLinkOptions
+{
+    PropagateCompletion = true
+});
+
+source.Errors.LinkTo(errorSink);
+
+await source.StartAsync();
+```
+
+### Failure Behavior
+
+If the session reader fails, the component publishes a `FlowError` and completes its output. The application host decides whether to reconnect, rebuild the flow, or surface the failure to the user.
+
 ## Topic Filter
 
 `TopicFilterComponent` forwards only matching MQTT messages.
@@ -225,15 +257,14 @@ var replay = factory.Create(sessionId, new RecordedSessionReplayOptions
 
 ## Sample Flow
 
-This flow replays a recorded session, filters it, inspects payloads, and projects results to UI.
+This flow reads a live MQTT session, filters it, inspects payloads, and projects results to UI.
 
 ```mermaid
 flowchart LR
-    Factory["RecordedSessionReplayFactory"] --> Replay["ReplaySourceComponent"]
-    Replay --> Filter["TopicFilterComponent"]
+    Source["MqttMessageSourceComponent"] --> Filter["TopicFilterComponent"]
     Filter --> Mapper["PayloadInspectorMapperComponent"]
     Mapper --> Ui["Payload UI Sink"]
-    Replay --> ErrorLog["Error Log"]
+    Source --> ErrorLog["Error Log"]
     Filter --> ErrorLog
     Mapper --> ErrorLog
 ```
@@ -241,22 +272,19 @@ flowchart LR
 Equivalent code shape:
 
 ```csharp
-var replay = replayFactory.Create(sessionId, new RecordedSessionReplayOptions
-{
-    Speed = 2
-});
+var source = new MqttMessageSourceComponent(session);
 var filter = TopicFilterComponent.Prefix("factory/");
 var mapper = new PayloadInspectorMapperComponent();
 
-replay.Output.LinkTo(filter.Input, new DataflowLinkOptions { PropagateCompletion = true });
+source.Output.LinkTo(filter.Input, new DataflowLinkOptions { PropagateCompletion = true });
 filter.Output.LinkTo(mapper.Input, new DataflowLinkOptions { PropagateCompletion = true });
 mapper.Output.LinkTo(payloadUiSink, new DataflowLinkOptions { PropagateCompletion = true });
 
-replay.Errors.LinkTo(errorSink);
+source.Errors.LinkTo(errorSink);
 filter.Errors.LinkTo(errorSink);
 mapper.Errors.LinkTo(errorSink);
 
-await replay.StartAsync();
+await source.StartAsync();
 ```
 
 This flow replays a recorded session back through an MQTT session.

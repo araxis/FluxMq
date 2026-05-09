@@ -162,6 +162,17 @@ Chronological progress record.
   - Topic filter predicate failures now publish error events and continue processing later messages.
   - Mapper/filter error ports remain open until pending work drains during completion.
 
+## 2026-05-09
+
+- Added a static documentation site under `docs-site/` using VitePress for user-facing GitHub Pages documentation.
+- Kept `docs/` as developer and future Wiki-oriented documentation.
+- Added `docs/documentation-strategy.md` to define the split between developer docs and user docs.
+- Added a GitHub Pages workflow for the docs site and a Dependabot configuration for docs-site packages and GitHub Actions.
+- Updated the Pages workflow to `actions/configure-pages@v6` and ignored local VitePress cache output.
+- Started the next Fork Flow component after replay and publish support: live MQTT message source.
+- Added `MqttMessageSourceComponent` to bridge `IMqttSession.Messages` into Dataflow-backed Fork Flow graphs.
+- Added tests for message order, reader completion, reader failure conversion to `FlowError`, clean completion, and explicit fault behavior.
+
 ## Current Next Step
 
-Continue Fork Flow foundation through concrete components, then use the resulting shape to guide Stage 5 replay components.
+Continue Fork Flow foundation with routing and condition components, then use the repeated component shape to guide configuration-driven flow definitions.

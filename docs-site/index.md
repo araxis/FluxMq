@@ -15,6 +15,7 @@ The documentation site is for people using the application. Contributor and arch
 ## Core Workflows
 
 - Connect to an MQTT broker.
+- Read live MQTT messages from an active session.
 - Observe topic activity in real time.
 - Record message sessions.
 - Replay recorded traffic.

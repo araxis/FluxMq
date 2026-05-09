@@ -15,7 +15,7 @@ source or trigger
 Record and inspect messages:
 
 ```text
-MQTT source
+MQTT message source
   -> Topic filter
   -> Payload inspector
   -> UI projection
@@ -40,3 +40,11 @@ Connection state trigger
 ## Design Goal
 
 The same flow definition should eventually be editable through configuration and through a drag-and-drop interface.
+
+## Current Building Blocks
+
+- MQTT message source: reads live messages from an active session.
+- Replay source: emits messages from a stored recording.
+- Topic filter: forwards only matching messages.
+- Payload inspector: converts raw payloads into readable inspection results.
+- MQTT publish sink: publishes messages through an active session.
