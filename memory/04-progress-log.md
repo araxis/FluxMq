@@ -188,6 +188,7 @@ Chronological progress record.
   - workflow and shared resource linking
   - structured build errors for missing factories, missing ports, type mismatches, and link failures
   - entry-node completion so Dataflow graphs drain in link order
+- Removed the early Blazor shell from the current solution. `FluxMq.App` is now reserved for a later workflow application host and builder, after the runtime host boundary is clearer.
 
 ## Current Next Step
 

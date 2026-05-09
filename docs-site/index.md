@@ -1,6 +1,6 @@
 # FluxMQ
 
-FluxMQ is a desktop workspace for MQTT debugging, observability, recording, and replay.
+FluxMQ is a workflow-runtime workspace for MQTT debugging, observability, recording, and replay.
 
 The documentation site is for people using the application. Contributor and architecture material stays in the repository developer documentation.
 

@@ -1,12 +1,11 @@
 # Project Overview
 
-FluxMQ is a desktop platform for MQTT debugging, observability, recording, and replay.
+FluxMQ is a workflow-runtime platform for MQTT debugging, observability, recording, and replay.
 
 The product direction is to move beyond a passive MQTT client. FluxMQ should help developers and operators inspect topic activity, decode payloads, record real sessions, replay traffic, and build configurable message flows.
 
 ## Current Capabilities
 
-- Windows desktop MAUI Blazor Hybrid shell.
 - MQTT session model and connection manager.
 - TPL Dataflow-based message pipeline foundation.
 - Topic index and topic tree UI components.
@@ -23,7 +22,7 @@ The product direction is to move beyond a passive MQTT client. FluxMQ should hel
 
 ## Product Shape
 
-FluxMQ is designed as an operational desktop workspace:
+FluxMQ is designed as an operational workspace:
 
 - dense and inspectable
 - built around live and recorded MQTT traffic

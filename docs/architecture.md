@@ -12,21 +12,10 @@ flowchart LR
     Pipeline --> Payloads["Payload Inspection"]
     Pipeline --> Replay["Replay"]
     Pipeline --> Telemetry["Optional OpenTelemetry Export"]
-    Pipeline --> UI["Blazor UI State"]
+    Pipeline --> UI["UI Projection / Host Integration"]
 ```
 
 ## Projects
-
-### FluxMq.App
-
-MAUI Blazor Hybrid shell.
-
-Responsibilities:
-
-- app startup
-- dependency composition
-- platform lifecycle
-- main Blazor host
 
 ### FluxMq.Core
 
@@ -79,7 +68,7 @@ Responsibilities:
 
 ### FluxMq.UI
 
-Reusable Blazor components.
+Reusable UI components.
 
 Responsibilities:
 
@@ -150,7 +139,7 @@ Runtime graph building, component factories, schema metadata, and hot reload rem
 
 ## Flow Application Runtime Direction
 
-The long-term runtime should be packaged as a class library that can be hosted by the desktop app, a console runner, a service process, or command/tool integrations.
+The long-term runtime should be packaged as a class library that can be hosted by a future FluxMQ application host, a console runner, a service process, or command/tool integrations.
 
 The runtime controller should sit above individual workflow graphs and below the host shell:
 

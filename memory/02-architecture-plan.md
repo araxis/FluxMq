@@ -10,7 +10,6 @@ Build FluxMQ around the message/session flow first. Treat plugins as a future fo
 
 ```text
 /src
-  /FluxMq.App
   /FluxMq.Core
   /FluxMq.Pipeline
   /FluxMq.Storage
@@ -27,13 +26,12 @@ Build FluxMQ around the message/session flow first. Treat plugins as a future fo
 
 ### FluxMq.App
 
-MAUI and Blazor Hybrid app shell.
+Future workflow application host and builder.
 
-Responsibilities:
-- App startup and dependency injection composition.
-- Window/app lifecycle.
-- Main layout.
-- Platform-specific services.
+Initial status:
+- Not part of the current solution.
+- Add after the runtime host boundary is clear.
+- Responsible later for composing flow applications, loading definitions, controlling lifecycle, and coordinating reloads.
 
 ### FluxMq.Core
 
@@ -138,9 +136,9 @@ Initial status:
 MQTTnet Client
   -> MqttSession
   -> Channel<MqttEnvelope>
-  -> Message Pipeline
+  -> Flow Application Runtime
   -> Storage / Metrics / Topic Index
-  -> Blazor UI State
+  -> UI Projection / Host Integration
   -> Optional OpenTelemetry export
 ```
 
@@ -163,7 +161,7 @@ Current first slice:
 - Build failures are returned as structured errors instead of escaping through ordinary definition mistakes.
 
 Expected hosts:
-- desktop app shell
+- future application host
 - console runner
 - service process
 - command/tool integrations

@@ -1,6 +1,6 @@
 # Getting Started
 
-FluxMQ is in early foundation work. The first supported development target is Windows desktop.
+FluxMQ is in early foundation work. The current repository focuses on the core MQTT, storage, flow component, and workflow runtime libraries.
 
 ## What FluxMQ Helps With
 
