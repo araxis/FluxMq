@@ -1,0 +1,36 @@
+html,
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #080d16;
+    color: #e9effb;
+}
+
+a {
+    color: #87a9ff;
+}
+
+.btn:focus,
+.btn:active:focus,
+.form-control:focus,
+.form-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(69, 126, 255, 0.25);
+}
+
+.form-control {
+    background: #0b111c;
+    border-color: #2d3a52;
+    color: #e9effb;
+}
+
+.form-control:focus {
+    background: #0b111c;
+    border-color: #5e7ec6;
+    color: #ffffff;
+}
+
+.table-dark {
+    --bs-table-bg: #0d1421;
+    --bs-table-border-color: #243149;
+}

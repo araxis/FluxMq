@@ -18,6 +18,7 @@ dotnet test FluxMq.sln --no-build
 
 ```text
 /src
+  /FluxMq.Studio    runnable alpha UI host for flow definition editing and runtime control
   /FluxMq.Core      domain models, MQTT session, topic index, payload inspection
   /FluxMq.Pipeline  Dataflow pipeline and concrete flow components
   /FluxMq.Replay    recorded session replay orchestration
@@ -57,3 +58,18 @@ npm run build --prefix docs-site
 
 - Use `docs/` for durable project documentation.
 - Use `memory/` for working decisions, progress, and planning continuity.
+
+## Alpha UI Host
+
+Run the alpha workspace UI:
+
+```powershell
+dotnet run --project src/FluxMq.Studio
+```
+
+The workspace currently supports:
+
+- editing a flow application JSON definition
+- validating through `FlowApplicationHost`
+- starting and stopping the runtime
+- reviewing host, definition, and runtime diagnostics

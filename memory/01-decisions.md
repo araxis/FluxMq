@@ -324,6 +324,18 @@ Reasoning:
 
 Status: Accepted.
 
+### 2026-05-09 - Add a runnable alpha UI host over the shared runtime path
+
+Decision: Introduce `FluxMq.Studio` as a runnable web UI host that edits and executes flow definitions through `FluxMq.App` (`FlowApplicationHost`) instead of creating a separate UI-only runtime path.
+
+Reasoning:
+- The alpha release needs a usable UI, not only component libraries and command-line commands.
+- Validate, run, stop, and diagnostics should use exactly the same host/runtime path as the CLI to avoid behavior drift.
+- A thin UI host unblocks workflow design and operational feedback before drag-and-drop editor work.
+- This keeps the runtime architecture host-independent while making the product usable early.
+
+Status: Accepted.
+
 ### 2026-05-09 - Register mqtt.message-source as the first service-backed runtime resource
 
 Decision: Add `mqtt.message-source` to `RegisterPipelineComponentFactories` as the first service-backed runtime registration, with explicit profile and subscription configuration parsing.

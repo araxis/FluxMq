@@ -210,6 +210,17 @@ Chronological progress record.
 - Added `MqttSubscription` and config parsing for message source profile/subscriptions/qos in flow definitions.
 - Added runtime tests proving message source resource startup, subscription, and downstream delivery through workflow links.
 - Added runtime validation tests for missing message source subscriptions.
+- Added `FluxMq.Studio` as a runnable alpha UI host project (`net10.0` Blazor Web App).
+- Wired the Studio workspace to `FluxMq.App` through a scoped host service so validate/run/stop uses the same runtime path as CLI.
+- Added an alpha workflow workspace page with:
+  - definition JSON editor
+  - sample loading and formatting
+  - section selection
+  - validate, run, and stop controls
+  - runtime state and operation summaries
+  - structured diagnostics table (host, definition, runtime scopes)
+- Updated Studio shell/layout to an operational workspace style and removed template navigation noise.
+- Verified with `dotnet build FluxMq.sln -m:1` and `dotnet test FluxMq.sln -m:1`.
 - Replaced CLI hand-rolled argument parsing with `Spectre.Console.Cli` command/settings handlers.
 - Removed parser-only CLI code and parser-specific tests.
 - Kept CLI execution contracts stable by routing Spectre command handlers into the existing runner and result renderers.
@@ -218,4 +229,4 @@ Chronological progress record.
 
 ## Current Next Step
 
-Continue the alpha path by introducing an explicit shared MQTT connection resource (`mqtt.connection`) and letting message source and publish sink reuse it across workflows.
+Continue the alpha path by introducing an explicit shared MQTT connection resource (`mqtt.connection`) and wiring source/publish nodes to reuse it, then expose resource selection and profile persistence in the Studio workspace.

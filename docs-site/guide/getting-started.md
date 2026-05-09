@@ -14,9 +14,23 @@ FluxMQ is in early foundation work. The current repository focuses on the core M
 
 FluxMQ is designed as a focused desktop workspace, closer to an IDE than a dashboard. The goal is to make repeated debugging work fast, visible, and reliable.
 
-## Current Alpha Entry Point
+## Current Alpha Entry Points
 
-The first command-line surface validates a flow application definition through the same host boundary planned for future app surfaces:
+The first runnable UI workspace:
+
+```sh
+dotnet run --project src/FluxMq.Studio
+```
+
+The Studio workspace currently supports:
+
+- editing a flow application definition JSON
+- loading a starter sample
+- validating the definition
+- starting and stopping the runtime
+- reviewing diagnostics from host, definition, and runtime layers
+
+The command-line surface validates the same definitions through the same host boundary:
 
 ```sh
 dotnet run --project src/FluxMq.Cli -- validate --config samples/flow-applications/metrics-only.json

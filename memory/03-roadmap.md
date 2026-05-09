@@ -116,6 +116,7 @@ Application host note:
 - `FluxMq.App` is now the class-library workflow application host boundary.
 - It should not become a generic placeholder UI shell.
 - `FluxMq.Cli` is a thin host over `FluxMq.App`; the first commands validate and run flow application configuration with text and JSON output.
+- `FluxMq.Studio` is now the runnable alpha UI host over the same `FluxMq.App` runtime path for definition editing, validate/run/stop, and diagnostics.
 
 Hot-reload constraints:
 - Config-only change on a node: delegate swap in-place, block stays running.

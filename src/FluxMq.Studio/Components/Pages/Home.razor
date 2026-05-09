@@ -1,0 +1,265 @@
+@page "/"
+@using FluxMq.App
+@using FluxMq.Studio.Runtime
+@inject FlowStudioHostService HostService
+
+<PageTitle>FluxMQ Studio</PageTitle>
+
+<div class="workspace-shell">
+    <header class="workspace-header">
+        <div>
+            <h1>FluxMQ Studio</h1>
+            <p>Configuration-first workflow runtime workspace.</p>
+        </div>
+        <div class="status-cluster">
+            <span class="@GetStateBadgeClass(_state)">State: @_state</span>
+            <span class="@(_lastResult?.IsSuccess == true ? "status-badge success" : "status-badge warning")">
+                Last operation: @_lastOperation
+            </span>
+        </div>
+    </header>
+
+    <section class="workspace-grid">
+        <div class="panel panel-editor">
+            <div class="panel-header">
+                <h2>Flow Definition</h2>
+                <div class="panel-header-actions">
+                    <button class="btn btn-outline-secondary btn-sm" @onclick="LoadSample">Load Sample</button>
+                    <button class="btn btn-outline-secondary btn-sm" @onclick="FormatJson">Format</button>
+                </div>
+            </div>
+            <textarea class="definition-editor"
+                      spellcheck="false"
+                      @bind="_definitionJson"
+                      @bind:event="oninput"></textarea>
+        </div>
+
+        <div class="panel panel-controls">
+            <h2>Runtime Controls</h2>
+
+            <div class="mb-3">
+                <label class="form-label" for="sectionName">Section Name</label>
+                <input id="sectionName" class="form-control" @bind="_sectionName" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="durationMs">Auto Stop (ms)</label>
+                <input id="durationMs" class="form-control" type="number" min="1" @bind="_durationMilliseconds" />
+            </div>
+
+            <div class="control-buttons">
+                <button class="btn btn-primary" disabled="@_busy" @onclick="Validate">Validate</button>
+                <button class="btn btn-success" disabled="@_busy" @onclick="Run">Run</button>
+                <button class="btn btn-danger" disabled="@_busy" @onclick="Stop">Stop</button>
+            </div>
+
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="summary-label">Workflows</div>
+                    <div class="summary-value">@(_lastResult?.WorkflowCount ?? 0)</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Resources</div>
+                    <div class="summary-value">@(_lastResult?.ResourceCount ?? 0)</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Diagnostics</div>
+                    <div class="summary-value">@(_diagnostics.Count)</div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(_message))
+            {
+                <div class="result-message">@_message</div>
+            }
+        </div>
+    </section>
+
+    <section class="panel panel-diagnostics">
+        <div class="panel-header">
+            <h2>Diagnostics</h2>
+            <button class="btn btn-outline-secondary btn-sm" @onclick="ClearDiagnostics">Clear</button>
+        </div>
+        @if (_diagnostics.Count == 0)
+        {
+            <div class="empty-state">No diagnostics.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-dark table-sm diagnostics-table">
+                    <thead>
+                        <tr>
+                            <th>Scope</th>
+                            <th>Code</th>
+                            <th>Message</th>
+                            <th>Workflow</th>
+                            <th>Node</th>
+                            <th>Port</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var diagnostic in _diagnostics)
+                        {
+                            <tr>
+                                <td>@diagnostic.Scope</td>
+                                <td>@diagnostic.Code</td>
+                                <td>@diagnostic.Message</td>
+                                <td>@(diagnostic.Workflow ?? "-")</td>
+                                <td>@(diagnostic.Node ?? "-")</td>
+                                <td>@(diagnostic.Port ?? "-")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</div>
+
+@code {
+    private string _sectionName = FlowApplicationConfigurationLoader.DefaultSectionName;
+    private string _definitionJson = SampleDefinition;
+    private bool _busy;
+    private string _message = "";
+    private string _lastOperation = "none";
+    private FlowApplicationHostState _state = FlowApplicationHostState.Empty;
+    private FlowStudioResult? _lastResult;
+    private int _durationMilliseconds;
+    private readonly List<FlowStudioDiagnostic> _diagnostics = [];
+
+    private async Task Validate()
+    {
+        await Execute(async token =>
+        {
+            var result = await HostService.ValidateAsync(_definitionJson, _sectionName, token).ConfigureAwait(false);
+            ApplyResult(result, "Validation completed.");
+        }).ConfigureAwait(false);
+    }
+
+    private async Task Run()
+    {
+        await Execute(async token =>
+        {
+            var runResult = await HostService.RunAsync(_definitionJson, _sectionName, token).ConfigureAwait(false);
+            ApplyResult(runResult, runResult.IsSuccess ? "Application is running." : "Run failed.");
+
+            if (!runResult.IsSuccess || _durationMilliseconds <= 0)
+            {
+                return;
+            }
+
+            using var stopCts = new CancellationTokenSource(TimeSpan.FromMilliseconds(_durationMilliseconds));
+            try
+            {
+                await Task.Delay(Timeout.InfiniteTimeSpan, stopCts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected when timer expires.
+            }
+
+            var stopResult = await HostService.StopAsync(token).ConfigureAwait(false);
+            ApplyResult(stopResult, "Auto stop elapsed.");
+        }).ConfigureAwait(false);
+    }
+
+    private async Task Stop()
+    {
+        await Execute(async token =>
+        {
+            var result = await HostService.StopAsync(token).ConfigureAwait(false);
+            ApplyResult(result, "Application stopped.");
+        }).ConfigureAwait(false);
+    }
+
+    private async Task Execute(Func<CancellationToken, Task> operation)
+    {
+        if (_busy)
+        {
+            return;
+        }
+
+        _busy = true;
+        _message = "Working...";
+        StateHasChanged();
+
+        try
+        {
+            await operation(CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _message = $"Operation failed: {exception.Message}";
+            _state = FlowApplicationHostState.Faulted;
+        }
+        finally
+        {
+            _busy = false;
+            await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+        }
+    }
+
+    private void LoadSample()
+    {
+        _definitionJson = SampleDefinition;
+    }
+
+    private void FormatJson()
+    {
+        try
+        {
+            using var parsed = System.Text.Json.JsonDocument.Parse(_definitionJson);
+            _definitionJson = System.Text.Json.JsonSerializer.Serialize(parsed.RootElement, new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+            _message = "JSON formatted.";
+        }
+        catch (Exception exception)
+        {
+            _message = $"JSON format failed: {exception.Message}";
+        }
+    }
+
+    private void ClearDiagnostics()
+    {
+        _diagnostics.Clear();
+    }
+
+    private void ApplyResult(FlowStudioResult result, string successMessage)
+    {
+        _lastResult = result;
+        _state = result.State;
+        _lastOperation = result.Operation;
+        _diagnostics.Clear();
+        _diagnostics.AddRange(result.Diagnostics);
+        _message = result.IsSuccess ? successMessage : "Operation failed. See diagnostics.";
+    }
+
+    private static string GetStateBadgeClass(FlowApplicationHostState state)
+        => state switch
+        {
+            FlowApplicationHostState.Running => "status-badge success",
+            FlowApplicationHostState.Faulted => "status-badge error",
+            FlowApplicationHostState.Stopped => "status-badge warning",
+            _ => "status-badge neutral"
+        };
+
+    private const string SampleDefinition =
+"""
+{
+  "FluxMq": {
+    "FlowApplication": {
+      "workflows": {
+        "observe": {
+          "metrics": {
+            "type": "mqtt.metrics-sink"
+          }
+        }
+      }
+    }
+  }
+}
+""";
+}

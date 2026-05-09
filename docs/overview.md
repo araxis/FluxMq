@@ -20,6 +20,7 @@ The product direction is to move beyond a passive MQTT client. FluxMQ should hel
 - Flow error ports with stable numeric error codes.
 - Metrics snapshots for flow observability.
 - Initial Fork Flow application definition model and validation.
+- Runnable alpha UI host (`FluxMq.Studio`) for definition editing, validate/run/stop control, and diagnostics.
 
 ## Product Shape
 
