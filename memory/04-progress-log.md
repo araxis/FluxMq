@@ -206,6 +206,11 @@ Chronological progress record.
 - Added `IFlowStartable` and runtime start ordering so shared resources start before workflow nodes.
 - Converted startup failures into structured host errors.
 - Updated runtime disposal ordering so workflow nodes are disposed before shared resources.
+- Replaced CLI hand-rolled argument parsing with `Spectre.Console.Cli` command/settings handlers.
+- Removed parser-only CLI code and parser-specific tests.
+- Kept CLI execution contracts stable by routing Spectre command handlers into the existing runner and result renderers.
+- Added a lightweight DI-backed type registrar for command activation.
+- Verified with `dotnet test tests/FluxMq.Cli.Tests/FluxMq.Cli.Tests.csproj` and `dotnet test FluxMq.sln`.
 
 ## Current Next Step
 

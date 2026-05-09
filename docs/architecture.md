@@ -193,4 +193,4 @@ dotnet run --project src/FluxMq.Cli -- run --config samples/flow-applications/me
 
 The current `run` command is a host lifecycle path: load, build, start, wait for cancellation or a bounded duration, and stop cleanly. Message-producing and service-backed behavior should come from registered components and resources rather than special CLI code.
 
-CLI command execution should stay separate from output rendering. That keeps the command result model stable while allowing future rich terminal views to be added without changing the host boundary.
+CLI command execution should stay separate from output rendering. The command layer now uses `Spectre.Console.Cli` for parsing and dispatch, while result rendering stays in dedicated renderers for stable automation output.
