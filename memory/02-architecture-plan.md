@@ -156,6 +156,12 @@ Responsibilities:
 - Patch unaffected graph parts in place where possible.
 - Convert component failures into flow errors instead of allowing them to escape the runtime boundary.
 
+Current first slice:
+- `FlowApplicationRuntimeBuilder` performs cold-start graph construction.
+- Runtime node factories create concrete nodes outside the builder.
+- Typed runtime ports prevent accidental links between incompatible value types.
+- Build failures are returned as structured errors instead of escaping through ordinary definition mistakes.
+
 Expected hosts:
 - desktop app shell
 - console runner

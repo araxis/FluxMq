@@ -119,6 +119,8 @@ A component-level `When` can provide the default condition for links that do not
 
 Validation catches broken node references, malformed links, empty ports, and duplicate links before the flow runs.
 
+The first runtime builder can create registered node types and link compatible typed ports from the definition. If a node type or port is missing, or two ports carry incompatible value types, the build returns errors instead of starting a partial flow.
+
 Reloading will be owned by the runtime layer. The UI can edit and save definitions, but the runtime is responsible for validating the next definition, keeping unaffected resources alive, patching workflow graphs, and reporting reload failures.
 
 ## Current Building Blocks

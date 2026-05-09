@@ -165,3 +165,5 @@ flowchart TD
 ```
 
 The host asks the runtime to load, start, stop, or reload an application definition. The runtime validates the next definition, owns shared resource lifetime, starts workflows, propagates completion, converts component failures into flow errors, and applies reloads without making the UI shell responsible for graph mechanics.
+
+The first implemented slice is cold-start graph building. `FlowApplicationRuntimeBuilder` creates runtime nodes through a factory registry and links declared ports through typed port adapters. It deliberately does not hard-code component construction into the builder; concrete component registrations can evolve as component configuration schemas become stable.
