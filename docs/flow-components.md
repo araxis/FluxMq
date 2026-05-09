@@ -300,6 +300,8 @@ If a message cannot be stored, the sink publishes a `FlowError` with the topic i
 
 `MqttMetricsSinkComponent` tracks operational counters from incoming MQTT messages and broadcasts immutable snapshots.
 
+These snapshots are local flow data. Planned OpenTelemetry support should export selected observability signals later without making this component depend on external collectors.
+
 ### Behavior
 
 ```mermaid
@@ -459,3 +461,5 @@ Likely near-term additions:
 - JSONata mapper
 
 Dynamic expression components should use `FlowError.Code` for routing and diagnostics instead of relying on exception message text.
+
+OpenTelemetry support is planned as an observability export layer, not as a replacement for local flow components.

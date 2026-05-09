@@ -76,9 +76,13 @@ Goals:
 - Payload size distribution.
 - Topic activity overview.
 - Basic silence/spike indicators.
+- Internal metrics snapshots for UI projection.
+- Planned OpenTelemetry export for selected runtime signals.
 
 Deliverable:
 - First operational dashboard.
+
+OpenTelemetry is not required for the MVP dashboard. It should be introduced after the internal metric model is stable enough to define safe names, units, attributes, and cardinality limits.
 
 ## Stage 7 - Formal Plugin Runtime
 

@@ -28,6 +28,10 @@ A flow component that reads live messages from an active MQTT session.
 
 A flow component that tracks counters from MQTT messages and publishes metric snapshots.
 
+## OpenTelemetry
+
+A planned optional integration for exporting selected FluxMQ metrics, traces, and diagnostic events to external observability tools.
+
 ## Recording Session
 
 A stored sequence of MQTT messages captured during a debugging session.

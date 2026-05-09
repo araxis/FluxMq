@@ -199,3 +199,23 @@ Reasoning:
 - Truly unrecoverable node failures may stop that node, but the supervisor still converts the failure into flow state and an error event.
 
 Status: Accepted.
+
+### 2026-05-09 - Plan OpenTelemetry as an observability export layer
+
+Decision: Add OpenTelemetry support later as an instrumentation and export layer for FluxMQ runtime activity.
+
+Reasoning:
+- FluxMQ should expose useful internal metrics in the app even when no external telemetry collector is configured.
+- Flow components such as `MqttMetricsSinkComponent` should remain local, deterministic, and useful for UI projections.
+- OpenTelemetry should complement those components by exporting selected counters, traces, and diagnostic events to external tools.
+- The integration should not become a required runtime dependency for basic desktop use.
+- OpenTelemetry naming and cardinality need deliberate design before implementation, especially around MQTT topics, sessions, profiles, flow nodes, and error codes.
+
+Initial scope:
+- Message throughput and payload-size metrics.
+- Session lifecycle events.
+- Flow node processing counts and error counts.
+- Replay and recording operation spans.
+- Optional exporter configuration from app settings.
+
+Status: Planned.
