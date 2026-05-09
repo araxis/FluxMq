@@ -88,12 +88,12 @@ Concept:
 ```
 Blazor.Diagrams canvas (user drags nodes, draws connections)
   ↕ serialize / deserialize
-PipelineDefinition (JSON: nodes + connections + per-node config)
+FlowApplicationDefinition (JSON: resources + workflows + per-node config)
   ↕ stored in LiteDB
-PipelineBuilder
+Flow application runtime
   → instantiates Dataflow blocks by node type
-  → links them according to connections
-  → produces a running MqttPipeline
+  → links them according to receiving-port links
+  → produces running workflow graphs
 ```
 
 Node library (`FluxMq.Modules.*`):
@@ -106,7 +106,7 @@ Hot-reload requirement:
 - When a connection is added/removed: patch only the affected link in the Dataflow graph; do not drain or restart unaffected blocks.
 - In-flight messages in unaffected blocks must not be dropped during a patch.
 - Some structural changes (e.g. removing the entry-point block) may require a brief coordinated pause; this is acceptable but must be explicit and fast.
-- The `PipelineBuilder` must therefore support two modes: `Build` (cold start) and `Patch(delta)` (hot update from a diff of two `PipelineDefinition` versions).
+- The flow application runtime must therefore support two modes: `Build` (cold start) and `Patch(delta)` (hot update from a diff of two `FlowApplicationDefinition` versions).
 
 Architectural constraints for module authors:
 - Block processing logic must be wrapped in a replaceable delegate so config-only changes can hot-swap without recreating the Dataflow block.
@@ -217,5 +217,34 @@ Initial scope:
 - Flow node processing counts and error counts.
 - Replay and recording operation spans.
 - Optional exporter configuration from app settings.
+
+Status: Planned.
+
+### 2026-05-09 - Start Fork Flow configuration with application definitions and validation
+
+Decision: Introduce an object-shaped Fork Flow application definition model before building the runtime graph builder.
+
+Reasoning:
+- Users should eventually be able to define Fork Flow through configuration and through the visual editor.
+- The top-level model should represent one runnable application package with shared resources and multiple named workflows.
+- Hand-authored config is more natural when workflows and nodes are named object properties instead of arrays.
+- Shared resources such as broker connections and databases should live outside workflow objects so multiple workflows can reference them.
+- Port links should live on the receiving component port, for example `Input: "source.Output"`.
+- Ports should support one link, multiple links, and link objects with conditional routing metadata.
+- Validation should catch broken graph references before runtime graph construction starts.
+- Component factories, schemas, hot reload, and visual editor metadata should come after this definition shape proves useful.
+- This keeps the project config-first without prematurely forcing every component into a heavy contract system.
+
+Status: Accepted.
+
+### 2026-05-09 - Keep flow application runtime host-independent
+
+Decision: The future flow application runtime should be a class-library boundary that can run under the desktop app, a console runner, a service process, or command/tool hosts.
+
+Reasoning:
+- Reloading is a runtime concern, not a UI concern.
+- The runtime should own application definition loading, validation, shared resource lifetime, workflow start/stop, completion propagation, reload coordination, and component error supervision.
+- Hosts should call runtime APIs instead of knowing graph construction or patching details.
+- Packaging the runtime independently keeps later command-line and service hosting natural.
 
 Status: Planned.

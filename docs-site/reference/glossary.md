@@ -16,6 +16,14 @@ A flow component that sends each incoming message to one of two branches.
 
 A configurable FluxMQ pipeline made from sources, triggers, filters, mappers, routers, and sinks.
 
+## Flow Application Definition
+
+A configuration model that describes one runnable FluxMQ application: shared resources, named workflows, node properties, and receiving-port links before runtime graphs are built.
+
+## Flow Application Runtime
+
+The future host-independent runtime layer that loads a flow application definition, owns shared resources, starts workflows, coordinates reloads, and supervises lifecycle and errors.
+
 ## MQTT Envelope
 
 The FluxMQ runtime shape for an MQTT message and its metadata.

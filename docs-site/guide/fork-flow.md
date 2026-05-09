@@ -63,7 +63,63 @@ MQTT message source
 
 ## Design Goal
 
-The same flow definition should eventually be editable through configuration and through a drag-and-drop interface.
+The same flow application definition should eventually be editable through configuration and through a drag-and-drop interface.
+
+## Application Definition Shape
+
+A Fork Flow application definition describes shared resources, workflows, nodes, and links. It is the configuration package the future runtime will load regardless of whether FluxMQ is hosted by the desktop app, a console runner, or another tool process.
+
+```text
+Flow application definition
+  -> resources
+  -> workflows
+     -> nodes
+        -> receiving port links
+```
+
+Each workflow is an object. Each node is a property inside that workflow object.
+
+```json
+{
+  "resources": {
+    "broker": {
+      "type": "mqtt.connection"
+    }
+  },
+  "workflows": {
+    "observeTraffic": {
+      "source": {
+        "type": "mqtt.message-source",
+        "Connection": "broker.Output"
+      },
+      "metrics": {
+        "type": "mqtt.metrics-sink",
+        "Input": "source.Output"
+      }
+    }
+  }
+}
+```
+
+Links are declared on receiving ports. A port can accept one link, many links, or link objects with a condition.
+
+```json
+{
+  "Input": [
+    "source.Output",
+    {
+      "From": "replay.Output",
+      "When": "topic.startsWith('factory/')"
+    }
+  ]
+}
+```
+
+A component-level `When` can provide the default condition for links that do not specify one.
+
+Validation catches broken node references, malformed links, empty ports, and duplicate links before the flow runs.
+
+Reloading will be owned by the runtime layer. The UI can edit and save definitions, but the runtime is responsible for validating the next definition, keeping unaffected resources alive, patching workflow graphs, and reporting reload failures.
 
 ## Current Building Blocks
 

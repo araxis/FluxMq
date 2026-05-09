@@ -94,8 +94,8 @@ Chronological progress record.
 
 - Decided on visual pipeline editor direction (Stage 8):
   - Blazor.Diagrams for drag-and-drop topology editing.
-  - `PipelineDefinition` JSON model persisted in LiteDB.
-  - `PipelineBuilder` with cold `Build` and hot `Patch` modes.
+  - Flow application definition JSON model persisted in LiteDB.
+  - Flow application runtime with cold `Build` and hot `Patch` modes.
   - Hot-reload requirement: config changes and link changes apply in-place without stopping unaffected blocks or dropping in-flight messages.
   - Module contracts from Stage 2 onwards must be designed with node metadata (ports, configurable properties) in mind.
 
@@ -179,7 +179,9 @@ Chronological progress record.
 - Added `MqttMetricsSinkComponent` and `MqttMetricsSnapshot` in `FluxMq.Pipeline` for observability projections.
 - Added tests for snapshot updates, empty metrics, processing failure conversion to `FlowError`, and explicit fault behavior.
 - Recorded OpenTelemetry as a planned observability export layer, separate from local flow metrics and UI projections.
+- Added the initial config-first Fork Flow application definition model with object-shaped workflows, shared resources, typed node types, typed port names, string/object link parsing, default link conditions, JSON serialization options, and validation for missing graph references.
+- Recorded the future flow application runtime as a host-independent class-library boundary responsible for loading definitions, owning resources, controlling workflow lifecycle, coordinating reloads, and supervising component errors.
 
 ## Current Next Step
 
-Continue Fork Flow foundation with UI projection components or initial configuration-driven flow definitions.
+Continue Fork Flow foundation by introducing a runtime builder for a small supported subset of flow application definitions.

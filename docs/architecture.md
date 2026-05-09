@@ -130,3 +130,38 @@ flowchart TD
     C --> D["Stable contracts"]
     D --> E["Future plugin runtime"]
 ```
+
+## Fork Flow Definition Direction
+
+Fork Flow is moving toward configuration-driven graph definitions.
+
+The first definition layer describes a host-independent flow application in an object model:
+
+- shared resources
+- named workflows
+- nodes as workflow object properties
+- node types
+- receiving-port links
+- per-node configuration payloads
+
+Validation runs before graph construction and catches broken references, empty names, empty node types, malformed links, and duplicate links.
+
+Runtime graph building, component factories, schema metadata, and hot reload remain separate steps. This keeps the definition model useful without prematurely forcing all components into a large abstraction.
+
+## Flow Application Runtime Direction
+
+The long-term runtime should be packaged as a class library that can be hosted by the desktop app, a console runner, a service process, or command/tool integrations.
+
+The runtime controller should sit above individual workflow graphs and below the host shell:
+
+```mermaid
+flowchart TD
+    Host["Host shell"] --> Runtime["Flow application runtime"]
+    Runtime --> Definition["FlowApplicationDefinition"]
+    Runtime --> Resources["Shared resources"]
+    Runtime --> Workflows["Running workflows"]
+    Runtime --> Reload["Reload coordinator"]
+    Runtime --> Supervision["Lifecycle and error supervision"]
+```
+
+The host asks the runtime to load, start, stop, or reload an application definition. The runtime validates the next definition, owns shared resource lifetime, starts workflows, propagates completion, converts component failures into flow errors, and applies reloads without making the UI shell responsible for graph mechanics.

@@ -109,10 +109,137 @@ Example:
 - `FlowError.NodeId` is a typed internal identity.
 - `FlowError.Code` is a plain integer because it is public protocol data.
 
+## Flow Application Definition Model
+
+Fork Flow now has an initial config-first application definition model. The top-level definition represents one runnable FluxMQ application package: shared resources plus one or more named workflows.
+
+Current definition types:
+
+- `FlowApplicationDefinition`
+- `FlowNodeDefinition`
+- `FlowNodeType`
+- `FlowPortName`
+- `FlowPortReference`
+- `FlowLinkDefinition`
+
+Definitions are object-shaped for hand-authored configuration:
+
+```mermaid
+flowchart LR
+    Definition["FlowApplicationDefinition"] --> Resources["Resources"]
+    Definition --> Workflows["Workflows"]
+    Workflows --> Workflow["Workflow object"]
+    Workflow --> Node["Node property"]
+    Node --> Port["Receiving port"]
+    Port --> Link["Link string or object"]
+```
+
+Example JSON shape:
+
+```json
+{
+  "resources": {
+    "broker": {
+      "type": "mqtt.connection"
+    }
+  },
+  "workflows": {
+    "observeTraffic": {
+      "source": {
+        "type": "mqtt.message-source",
+        "Connection": "broker.Output"
+      },
+      "metrics": {
+        "type": "mqtt.metrics-sink",
+        "Input": "source.Output"
+      }
+    }
+  }
+}
+```
+
+The node name is the property name inside the workflow object. Links are declared on the receiving port.
+
+Shared resources live beside workflows so several workflows can reference the same connection, database, or other long-lived service definition.
+
+Single link shorthand:
+
+```json
+{
+  "Input": "source.Output"
+}
+```
+
+Multiple links:
+
+```json
+{
+  "Input": ["source.Output", "replay.Output"]
+}
+```
+
+Conditional link object:
+
+```json
+{
+  "Input": {
+    "From": "source.Output",
+    "When": "topic.startsWith('factory/')"
+  }
+}
+```
+
+Default condition for all links on a component:
+
+```json
+{
+  "type": "mqtt.recording-sink",
+  "When": "payload.size > 0",
+  "Input": [
+    "source.Output",
+    {
+      "From": "replay.Output",
+      "When": "topic.startsWith('factory/')"
+    }
+  ]
+}
+```
+
+If a link has its own `When`, it wins. Otherwise the component-level `When` applies.
+
+`FlowApplicationDefinitionValidator` currently checks:
+
+- at least one workflow exists
+- workflow names are not empty
+- workflows are not empty
+- node and resource names are not empty
+- node types are not empty
+- links use valid `node.port` references
+- link source nodes exist in the current workflow or shared resources
+- target and source ports are not empty
+- duplicate links are rejected
+
+Runtime graph construction is intentionally separate and will come after this definition shape is exercised.
+
+## Application Runtime Direction
+
+The future runtime boundary should be a host-independent class library. A desktop app, console runner, Windows service, or tool host should all be able to load the same `FlowApplicationDefinition`.
+
+The runtime controller should own:
+
+- application definition loading and validation
+- shared resource lifetime
+- workflow start, stop, and completion
+- reload coordination
+- graph build and patch operations
+- component error supervision
+
+Hot reload should belong to this runtime layer, not to the UI shell. The UI can request a reload, but the runtime decides how to validate the next definition, preserve unaffected resources, patch links, and report failures.
+
 ## Contracts
 
 The current code intentionally avoids a large contract system.
 
 The rule is:
 
-Build concrete components first. Extract formal descriptors, config schemas, and factories only after repeated patterns are clear.
+Build concrete components first. Add small definition and validation primitives next. Extract formal descriptors, config schemas, and factories only after repeated patterns are clear.

@@ -19,6 +19,7 @@ The product direction is to move beyond a passive MQTT client. FluxMQ should hel
   - replay source
 - Flow error ports with stable numeric error codes.
 - Metrics snapshots for flow observability.
+- Initial Fork Flow application definition model and validation.
 
 ## Product Shape
 
@@ -37,4 +38,6 @@ OpenTelemetry support is planned later for exporting selected runtime metrics, t
 
 ## Current Development Phase
 
-The project is still in foundation work. Core runtime pieces are being built before the full drag-and-drop Fork Flow editor. This keeps the runtime honest: the visual editor will represent real executable flow definitions, not a separate UI-only model.
+The project is still in foundation work. Core runtime pieces are being built before the full drag-and-drop Fork Flow editor. This keeps the runtime honest: the visual editor will represent real executable flow application definitions, not a separate UI-only model.
+
+Fork Flow now has an initial application definition model with shared resources and named workflows. Runtime graph construction, reload control, and visual editing are still planned work.
