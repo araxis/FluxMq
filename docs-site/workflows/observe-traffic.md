@@ -27,3 +27,5 @@ The metrics sink tracks:
 ## Notes
 
 Metrics are a projection of live traffic. They do not store messages and do not change the messages flowing through other branches.
+
+OpenTelemetry export is planned for a later version. Local metrics will continue to work without an external collector.

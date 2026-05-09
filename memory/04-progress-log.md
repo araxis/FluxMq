@@ -178,6 +178,7 @@ Chronological progress record.
 - Added tests for recording order, repository failure conversion to `FlowError`, continued processing after failed writes, and explicit fault behavior.
 - Added `MqttMetricsSinkComponent` and `MqttMetricsSnapshot` in `FluxMq.Pipeline` for observability projections.
 - Added tests for snapshot updates, empty metrics, processing failure conversion to `FlowError`, and explicit fault behavior.
+- Recorded OpenTelemetry as a planned observability export layer, separate from local flow metrics and UI projections.
 
 ## Current Next Step
 

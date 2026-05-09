@@ -98,6 +98,13 @@ Responsibilities:
 - Payload size statistics.
 - Topic activity.
 - Silence/spike detection later.
+- OpenTelemetry instrumentation and export later.
+
+OpenTelemetry direction:
+- Local app metrics remain available without external infrastructure.
+- OpenTelemetry exports selected runtime signals to external collectors when configured.
+- MQTT topic labels must be designed carefully to avoid high-cardinality telemetry by default.
+- Flow node IDs and numeric flow error codes are suitable telemetry dimensions because they are stable runtime identifiers.
 
 ### FluxMq.Modules.Replay
 
@@ -132,6 +139,7 @@ MQTTnet Client
   -> Message Pipeline
   -> Storage / Metrics / Topic Index
   -> Blazor UI State
+  -> Optional OpenTelemetry export
 ```
 
 ## Core Domain Types

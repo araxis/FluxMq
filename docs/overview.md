@@ -18,6 +18,7 @@ The product direction is to move beyond a passive MQTT client. FluxMQ should hel
   - payload inspector mapper
   - replay source
 - Flow error ports with stable numeric error codes.
+- Metrics snapshots for flow observability.
 
 ## Product Shape
 
@@ -27,6 +28,12 @@ FluxMQ is designed as an operational desktop workspace:
 - built around live and recorded MQTT traffic
 - friendly to high-throughput debugging
 - extensible through internal components first, later through stable plugin contracts
+
+## Observability Direction
+
+FluxMQ will keep local observability useful inside the desktop app first.
+
+OpenTelemetry support is planned later for exporting selected runtime metrics, traces, and diagnostics to external tooling. It should remain optional and should not replace the local metrics used by the UI.
 
 ## Current Development Phase
 

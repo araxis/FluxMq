@@ -11,6 +11,7 @@ flowchart LR
     Pipeline --> TopicIndex["Topic Index"]
     Pipeline --> Payloads["Payload Inspection"]
     Pipeline --> Replay["Replay"]
+    Pipeline --> Telemetry["Optional OpenTelemetry Export"]
     Pipeline --> UI["Blazor UI State"]
 ```
 
@@ -52,6 +53,7 @@ Responsibilities:
 - lifecycle behavior
 - flow error events
 - replay source behavior
+- local metrics projection components
 
 ### FluxMq.Replay
 
@@ -84,6 +86,24 @@ Responsibilities:
 - topic tree
 - payload inspector panel
 - future replay and observability UI pieces
+
+## Observability Direction
+
+FluxMQ has two observability layers:
+
+- Local flow metrics for the desktop app.
+- Planned OpenTelemetry export for external monitoring tools.
+
+Local metrics must work without external infrastructure. Components such as `MqttMetricsSinkComponent` provide deterministic metric snapshots for UI projection and Fork Flow composition.
+
+OpenTelemetry should be added later as an optional export layer. It should publish selected counters, traces, and diagnostic events without replacing local flow components.
+
+Design constraints:
+
+- Keep OpenTelemetry optional.
+- Avoid raw MQTT topic values as high-cardinality attributes by default.
+- Prefer stable dimensions such as flow node ID, connection profile ID, session ID, and numeric flow error code.
+- Define metric names, units, and attribute cardinality before adding exporters.
 
 ## Current Architectural Rule
 
