@@ -172,7 +172,9 @@ Chronological progress record.
 - Started the next Fork Flow component after replay and publish support: live MQTT message source.
 - Added `MqttMessageSourceComponent` to bridge `IMqttSession.Messages` into Dataflow-backed Fork Flow graphs.
 - Added tests for message order, reader completion, reader failure conversion to `FlowError`, clean completion, and explicit fault behavior.
+- Added `MqttConditionRouterComponent` to route `MqttEnvelope` values into true/false branches.
+- Added tests for topic-prefix routing, predicate failure conversion to `FlowError`, pending-error completion, and explicit fault behavior.
 
 ## Current Next Step
 
-Continue Fork Flow foundation with routing and condition components, then use the repeated component shape to guide configuration-driven flow definitions.
+Continue Fork Flow foundation with storage/recording sink components, then use the repeated component shape to guide configuration-driven flow definitions.

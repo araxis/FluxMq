@@ -50,6 +50,10 @@ Reads live MQTT messages from a session and broadcasts them as `MqttEnvelope` va
 
 Filters `MqttEnvelope` messages using a predicate.
 
+### MqttConditionRouterComponent
+
+Routes `MqttEnvelope` messages to `WhenTrue` or `WhenFalse` output ports.
+
 ### PayloadInspectorMapperComponent
 
 Maps `MqttEnvelope` into `InspectedMqttMessage`.

@@ -6,7 +6,7 @@ Flows are built from sources, triggers, filters, mappers, routers, and sinks.
 
 ```text
 source or trigger
-  -> filter or mapper
+  -> filter, router, or mapper
   -> sink or projection
 ```
 
@@ -37,6 +37,14 @@ Connection state trigger
   -> Notification sink
 ```
 
+Branch live traffic:
+
+```text
+MQTT message source
+  -> Condition router
+  -> Matching branch / non-matching branch
+```
+
 ## Design Goal
 
 The same flow definition should eventually be editable through configuration and through a drag-and-drop interface.
@@ -46,5 +54,6 @@ The same flow definition should eventually be editable through configuration and
 - MQTT message source: reads live messages from an active session.
 - Replay source: emits messages from a stored recording.
 - Topic filter: forwards only matching messages.
+- Condition router: sends each message to a true or false branch.
 - Payload inspector: converts raw payloads into readable inspection results.
 - MQTT publish sink: publishes messages through an active session.
