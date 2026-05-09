@@ -79,7 +79,10 @@ public sealed class FlowApplicationRuntimeBuilder
 
             try
             {
-                nodes.Add(nodeName, factory(nodeName, definition.Value));
+                nodes.Add(nodeName, factory(new FlowRuntimeNodeFactoryContext(
+                    nodeName,
+                    definition.Value,
+                    workflowName)));
             }
             catch (Exception exception)
             {

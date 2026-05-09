@@ -174,6 +174,97 @@ public sealed class FlowApplicationRuntimeBuilderTests
         result.Errors.Should().ContainSingle(error => error.Code == FlowApplicationRuntimeBuildErrorCode.PortTypeMismatch);
     }
 
+    [Fact]
+    public void Build_PassesResourceAndWorkflowContextToFactories()
+    {
+        var contexts = new List<FlowRuntimeNodeFactoryContext>();
+        var builder = new FlowApplicationRuntimeBuilder(new FlowRuntimeNodeFactoryRegistry()
+            .Register(new FlowNodeType("test.node"), context =>
+            {
+                contexts.Add(context);
+                return SourceNode(context.Name, new TestSourceNode());
+            }));
+
+        var result = builder.Build(new FlowApplicationDefinition
+        {
+            Resources =
+            {
+                ["shared"] = Node("test.node")
+            },
+            Workflows =
+            {
+                ["flow"] = new()
+                {
+                    ["source"] = Node("test.node")
+                }
+            }
+        });
+
+        result.IsSuccess.Should().BeTrue();
+        contexts.Should().ContainSingle(context => context.Name.Value == "shared" && context.IsResource && context.WorkflowName == null);
+        contexts.Should().ContainSingle(context => context.Name.Value == "source" && !context.IsResource && context.WorkflowName == "flow");
+    }
+
+    [Fact]
+    public void Dispose_DisposesWorkflowNodesBeforeSharedResources()
+    {
+        var disposalOrder = new List<string>();
+        var builder = new FlowApplicationRuntimeBuilder(new FlowRuntimeNodeFactoryRegistry()
+            .Register(new FlowNodeType("test.resource"), (name, _) => DisposableNode(name, "resource", disposalOrder))
+            .Register(new FlowNodeType("test.workflow"), (name, _) => DisposableNode(name, "workflow", disposalOrder)));
+
+        var result = builder.Build(new FlowApplicationDefinition
+        {
+            Resources =
+            {
+                ["shared"] = Node("test.resource")
+            },
+            Workflows =
+            {
+                ["flow"] = new()
+                {
+                    ["worker"] = Node("test.workflow")
+                }
+            }
+        });
+
+        result.IsSuccess.Should().BeTrue();
+
+        result.Runtime!.Dispose();
+
+        disposalOrder.Should().Equal("workflow", "resource");
+    }
+
+    [Fact]
+    public async Task StartAsync_StartsResourcesBeforeWorkflowNodes()
+    {
+        var startOrder = new List<string>();
+        var builder = new FlowApplicationRuntimeBuilder(new FlowRuntimeNodeFactoryRegistry()
+            .Register(new FlowNodeType("test.resource"), (name, _) => StartableNode(name, "resource", startOrder))
+            .Register(new FlowNodeType("test.workflow"), (name, _) => StartableNode(name, "workflow", startOrder)));
+
+        var result = builder.Build(new FlowApplicationDefinition
+        {
+            Resources =
+            {
+                ["shared"] = Node("test.resource")
+            },
+            Workflows =
+            {
+                ["flow"] = new()
+                {
+                    ["worker"] = Node("test.workflow")
+                }
+            }
+        });
+
+        result.IsSuccess.Should().BeTrue();
+
+        await result.Runtime!.StartAsync();
+
+        startOrder.Should().Equal("resource", "workflow");
+    }
+
     private static FlowRuntimeNode SourceNode(FlowNodeName name, TestSourceNode node)
         => FlowRuntimeNode.Create(
             name,
@@ -200,6 +291,12 @@ public sealed class FlowApplicationRuntimeBuilderTests
             [
                 new FlowInputPort<string>(new FlowPortName("Input"), node.Input)
             ]);
+
+    private static FlowRuntimeNode DisposableNode(FlowNodeName name, string label, List<string> disposalOrder)
+        => FlowRuntimeNode.Create(name, new TestDisposableNode(label, disposalOrder));
+
+    private static FlowRuntimeNode StartableNode(FlowNodeName name, string label, List<string> startOrder)
+        => FlowRuntimeNode.Create(name, new TestStartableNode(label, startOrder));
 
     private static FlowNodeDefinition Node(string type) => new()
     {
@@ -268,5 +365,55 @@ public sealed class FlowApplicationRuntimeBuilderTests
             ((IDataflowBlock)_input).Fault(exception);
             _errors.Complete();
         }
+    }
+
+    private sealed class TestDisposableNode : IFlowNode, IDisposable
+    {
+        private readonly string _label;
+        private readonly List<string> _disposalOrder;
+        private readonly BufferBlock<FlowError> _errors = new();
+
+        public TestDisposableNode(string label, List<string> disposalOrder)
+        {
+            _label = label;
+            _disposalOrder = disposalOrder;
+        }
+
+        public FlowNodeId Id { get; } = FlowNodeId.New();
+        public ISourceBlock<FlowError> Errors => _errors;
+        public Task Completion => Task.CompletedTask;
+
+        public void Complete() => _errors.Complete();
+
+        public void Fault(Exception exception) => _errors.Complete();
+
+        public void Dispose() => _disposalOrder.Add(_label);
+    }
+
+    private sealed class TestStartableNode : IFlowNode, IFlowStartable
+    {
+        private readonly string _label;
+        private readonly List<string> _startOrder;
+        private readonly BufferBlock<FlowError> _errors = new();
+
+        public TestStartableNode(string label, List<string> startOrder)
+        {
+            _label = label;
+            _startOrder = startOrder;
+        }
+
+        public FlowNodeId Id { get; } = FlowNodeId.New();
+        public ISourceBlock<FlowError> Errors => _errors;
+        public Task Completion => Task.CompletedTask;
+
+        public Task StartAsync(CancellationToken cancellationToken = default)
+        {
+            _startOrder.Add(_label);
+            return Task.CompletedTask;
+        }
+
+        public void Complete() => _errors.Complete();
+
+        public void Fault(Exception exception) => _errors.Complete();
     }
 }

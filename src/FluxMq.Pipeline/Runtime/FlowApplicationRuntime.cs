@@ -28,6 +28,19 @@ public sealed class FlowApplicationRuntime : IAsyncDisposable, IDisposable
 
     public Task Completion => Task.WhenAll(Nodes.Select(node => node.Node.Completion));
 
+    public async Task StartAsync(CancellationToken cancellationToken = default)
+    {
+        foreach (var resource in Resources.Values)
+        {
+            await StartNodeAsync(resource, cancellationToken).ConfigureAwait(false);
+        }
+
+        foreach (var node in WorkflowNodes())
+        {
+            await StartNodeAsync(node, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
     public void Complete()
     {
         foreach (var node in _entryNodes)
@@ -58,7 +71,12 @@ public sealed class FlowApplicationRuntime : IAsyncDisposable, IDisposable
             link.Dispose();
         }
 
-        foreach (var disposable in Nodes.Select(node => node.Node).OfType<IDisposable>())
+        foreach (var disposable in WorkflowNodes().Select(node => node.Node).OfType<IDisposable>())
+        {
+            disposable.Dispose();
+        }
+
+        foreach (var disposable in Resources.Values.Select(node => node.Node).OfType<IDisposable>())
         {
             disposable.Dispose();
         }
@@ -68,9 +86,25 @@ public sealed class FlowApplicationRuntime : IAsyncDisposable, IDisposable
     {
         Dispose();
 
-        foreach (var disposable in Nodes.Select(node => node.Node).OfType<IAsyncDisposable>())
+        foreach (var disposable in WorkflowNodes().Select(node => node.Node).OfType<IAsyncDisposable>())
         {
             await disposable.DisposeAsync().ConfigureAwait(false);
+        }
+
+        foreach (var disposable in Resources.Values.Select(node => node.Node).OfType<IAsyncDisposable>())
+        {
+            await disposable.DisposeAsync().ConfigureAwait(false);
+        }
+    }
+
+    private IEnumerable<FlowRuntimeNode> WorkflowNodes()
+        => Workflows.Values.SelectMany(workflow => workflow.Values);
+
+    private static async Task StartNodeAsync(FlowRuntimeNode node, CancellationToken cancellationToken)
+    {
+        if (node.Node is IFlowStartable startable)
+        {
+            await startable.StartAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }

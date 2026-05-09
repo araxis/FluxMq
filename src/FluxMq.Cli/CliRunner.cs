@@ -76,7 +76,7 @@ public sealed class CliRunner
 
         await using (var flowHost = host ?? throw new InvalidOperationException("Host was not created."))
         {
-            var startResult = flowHost.Start();
+            var startResult = await flowHost.StartAsync(cancellationToken).ConfigureAwait(false);
             var validationResult = CreateValidateResult(startResult);
             if (!validationResult.IsValid)
             {

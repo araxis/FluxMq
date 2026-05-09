@@ -202,7 +202,11 @@ Chronological progress record.
 - Added `--output json` for machine-readable validation results while keeping text output as the default.
 - Added `samples/flow-applications/metrics-only.json` as the first alpha validation sample.
 - Added `run --config <path>` as the first command-line host lifecycle path with cancellation, optional bounded duration, text output, and JSON output.
+- Added `FlowRuntimeNodeFactoryContext` so node factories can distinguish shared resources from workflow nodes.
+- Added `IFlowStartable` and runtime start ordering so shared resources start before workflow nodes.
+- Converted startup failures into structured host errors.
+- Updated runtime disposal ordering so workflow nodes are disposed before shared resources.
 
 ## Current Next Step
 
-Continue the alpha path by adding the next stable runtime registration boundary for service-backed resources, then use the CLI run path to exercise it without adding host-specific behavior.
+Continue the alpha path by adding the first concrete service-backed resource registration behind the runtime factory and start lifecycle boundary.

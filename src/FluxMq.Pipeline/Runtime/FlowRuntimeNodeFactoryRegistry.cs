@@ -20,6 +20,15 @@ public sealed class FlowRuntimeNodeFactoryRegistry
         return this;
     }
 
+    public FlowRuntimeNodeFactoryRegistry Register(
+        FlowNodeType type,
+        Func<FlowNodeName, FlowNodeDefinition, FlowRuntimeNode> factory)
+    {
+        ArgumentNullException.ThrowIfNull(factory);
+
+        return Register(type, context => factory(context.Name, context.Definition));
+    }
+
     public bool TryGetFactory(FlowNodeType type, out FlowRuntimeNodeFactory factory)
         => _factories.TryGetValue(type, out factory!);
 }
