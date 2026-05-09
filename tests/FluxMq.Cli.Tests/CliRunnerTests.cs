@@ -159,6 +159,113 @@ public sealed class CliRunnerTests
         error.Lines.Should().Contain(line => line.Contains("Configuration file was not found"));
     }
 
+    [Fact]
+    public async Task RunAsync_StartsAndStopsValidFlowConfiguration()
+    {
+        using var temp = TemporaryJsonFile(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "workflows": {
+                    "observe": {
+                      "metrics": {
+                        "type": "mqtt.metrics-sink"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """);
+
+        var output = new TestOutput();
+        var error = new TestOutput();
+        var runner = new CliRunner(output, error);
+
+        var exitCode = await runner.RunAsync(["run", "--config", temp.Path, "--duration-ms", "1"]);
+
+        exitCode.Should().Be((int)CliExitCode.Success);
+        error.Lines.Should().BeEmpty();
+        output.Lines.Should().Contain(line => line.Contains("Flow application is running."));
+        output.Lines.Should().Contain(line => line.Contains("Flow application stopped."));
+    }
+
+    [Fact]
+    public async Task RunAsync_WritesJsonToStdoutForRunCommand()
+    {
+        using var temp = TemporaryJsonFile(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "workflows": {
+                    "observe": {
+                      "metrics": {
+                        "type": "mqtt.metrics-sink"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """);
+
+        var output = new TestOutput();
+        var error = new TestOutput();
+        var runner = new CliRunner(output, error);
+
+        var exitCode = await runner.RunAsync(["run", "--config", temp.Path, "--duration-ms", "1", "--output", "json"]);
+
+        exitCode.Should().Be((int)CliExitCode.Success);
+        error.Lines.Should().BeEmpty();
+
+        using var document = JsonDocument.Parse(string.Join(Environment.NewLine, output.Lines));
+        document.RootElement.GetProperty("started").GetBoolean().Should().BeTrue();
+        document.RootElement.GetProperty("workflowCount").GetInt32().Should().Be(1);
+        document.RootElement.GetProperty("resourceCount").GetInt32().Should().Be(0);
+        document.RootElement.GetProperty("exitReason").GetString().Should().Be("duration elapsed");
+        document.RootElement.GetProperty("hostState").GetString().Should().Be("Stopped");
+    }
+
+    [Fact]
+    public async Task RunAsync_WritesRunJsonShapeWhenStartValidationFails()
+    {
+        using var temp = TemporaryJsonFile(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "workflows": {
+                    "observe": {
+                      "inspect": {
+                        "type": "mqtt.payload-inspector",
+                        "configuration": {
+                          "boundedCapacity": 0
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """);
+
+        var output = new TestOutput();
+        var error = new TestOutput();
+        var runner = new CliRunner(output, error);
+
+        var exitCode = await runner.RunAsync(["run", "--config", temp.Path, "--duration-ms", "1", "--output", "json"]);
+
+        exitCode.Should().Be((int)CliExitCode.ValidationError);
+        error.Lines.Should().BeEmpty();
+
+        using var document = JsonDocument.Parse(string.Join(Environment.NewLine, output.Lines));
+        document.RootElement.GetProperty("started").GetBoolean().Should().BeFalse();
+        document.RootElement.GetProperty("exitReason").GetString().Should().Be("validation failed");
+        document.RootElement.GetProperty("diagnostics")[0].GetProperty("message").GetString().Should().Contain("boundedCapacity");
+    }
+
     private static TemporaryFile TemporaryJsonFile(string content)
     {
         var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");

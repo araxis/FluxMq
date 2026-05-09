@@ -156,6 +156,12 @@ dotnet run --project src/FluxMq.Cli -- validate --config samples/flow-applicatio
 
 For automation, add `--output json` to receive structured validation results on standard output.
 
+The same file can be started through the command-line host lifecycle:
+
+```sh
+dotnet run --project src/FluxMq.Cli -- run --config samples/flow-applications/metrics-only.json --duration-ms 1000
+```
+
 Reloading will be owned by the runtime layer. The UI can edit and save definitions, but the runtime is responsible for validating the next definition, keeping unaffected resources alive, patching workflow graphs, and reporting reload failures.
 
 ## Current Building Blocks

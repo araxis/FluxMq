@@ -6,7 +6,7 @@ public static class CliOptionsParser
     {
         ArgumentNullException.ThrowIfNull(args);
 
-        options = new CliOptions("", null, CliOptions.DefaultSectionName, CliOutputFormat.Text);
+        options = new CliOptions("", null, CliOptions.DefaultSectionName, CliOutputFormat.Text, null);
         error = null;
 
         if (args.Length == 0)
@@ -22,7 +22,9 @@ public static class CliOptionsParser
             return true;
         }
 
-        if (!string.Equals(command, CliOptions.ValidateCommand, StringComparison.OrdinalIgnoreCase))
+        var isValidate = string.Equals(command, CliOptions.ValidateCommand, StringComparison.OrdinalIgnoreCase);
+        var isRun = string.Equals(command, CliOptions.RunCommand, StringComparison.OrdinalIgnoreCase);
+        if (!isValidate && !isRun)
         {
             error = $"Unknown command '{command}'.";
             return false;
@@ -31,6 +33,7 @@ public static class CliOptionsParser
         string? configurationPath = null;
         var sectionName = CliOptions.DefaultSectionName;
         var outputFormat = CliOutputFormat.Text;
+        TimeSpan? runDuration = null;
 
         for (var index = 1; index < args.Length; index++)
         {
@@ -70,6 +73,20 @@ public static class CliOptionsParser
 
                     break;
 
+                case "--duration-ms":
+                    if (!TryReadValue(args, ref index, current, out var durationValue, out error))
+                    {
+                        return false;
+                    }
+
+                    if (!TryParseDuration(durationValue, out runDuration))
+                    {
+                        error = $"Duration '{durationValue}' is not supported. Use a positive whole number of milliseconds.";
+                        return false;
+                    }
+
+                    break;
+
                 default:
                     error = $"Unknown option '{current}'.";
                     return false;
@@ -82,7 +99,13 @@ public static class CliOptionsParser
             return false;
         }
 
-        options = new CliOptions(command, configurationPath, sectionName, outputFormat);
+        if (runDuration is not null && !isRun)
+        {
+            error = "Option '--duration-ms' is only supported by the run command.";
+            return false;
+        }
+
+        options = new CliOptions(command, configurationPath, sectionName, outputFormat, runDuration);
         return true;
     }
 
@@ -127,6 +150,18 @@ public static class CliOptionsParser
         }
 
         outputFormat = CliOutputFormat.Text;
+        return false;
+    }
+
+    private static bool TryParseDuration(string value, out TimeSpan? duration)
+    {
+        if (int.TryParse(value, out var milliseconds) && milliseconds > 0)
+        {
+            duration = TimeSpan.FromMilliseconds(milliseconds);
+            return true;
+        }
+
+        duration = null;
         return false;
     }
 }

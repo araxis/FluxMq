@@ -201,7 +201,8 @@ Chronological progress record.
 - Added `validate --config <path>` to validate a flow application configuration through the application host.
 - Added `--output json` for machine-readable validation results while keeping text output as the default.
 - Added `samples/flow-applications/metrics-only.json` as the first alpha validation sample.
+- Added `run --config <path>` as the first command-line host lifecycle path with cancellation, optional bounded duration, text output, and JSON output.
 
 ## Current Next Step
 
-Continue the alpha path by adding either `FluxMq.Cli run` for the existing no-service flow subset or the next stable runtime registration boundary for service-backed resources.
+Continue the alpha path by adding the next stable runtime registration boundary for service-backed resources, then use the CLI run path to exercise it without adding host-specific behavior.

@@ -109,6 +109,12 @@ Use JSON output when the command is consumed by scripts or CI:
 dotnet run --project src\FluxMq.Cli -- validate --config samples\flow-applications\metrics-only.json --output json
 ```
 
+Run the same flow application for a bounded smoke test:
+
+```powershell
+dotnet run --project src\FluxMq.Cli -- run --config samples\flow-applications\metrics-only.json --duration-ms 1000
+```
+
 ## Project Memory
 
 Planning, decisions, roadmap, and progress are tracked in `memory/`.

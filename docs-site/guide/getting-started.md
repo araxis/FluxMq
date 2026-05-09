@@ -24,6 +24,12 @@ dotnet run --project src/FluxMq.Cli -- validate --config samples/flow-applicatio
 
 Use `--output json` when validation results need to be consumed by a script or CI pipeline.
 
+To exercise the same definition through the runtime host lifecycle:
+
+```sh
+dotnet run --project src/FluxMq.Cli -- run --config samples/flow-applications/metrics-only.json --duration-ms 1000
+```
+
 ## Documentation Scope
 
 This site explains user-facing workflows. Developer architecture, implementation notes, and design decisions live in the repository developer documentation.
