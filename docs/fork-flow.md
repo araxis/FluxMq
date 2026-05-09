@@ -70,6 +70,10 @@ Publishes `MqttEnvelope` values through an MQTT session and reports publish fail
 
 Stores `MqttEnvelope` values through `IMessageRepository` for a recording session.
 
+### MqttMetricsSinkComponent
+
+Tracks message counters and broadcasts `MqttMetricsSnapshot` values for observability views.
+
 ## Flow Node Lifecycle
 
 Flow nodes expose TPL Dataflow lifecycle behavior:

@@ -176,7 +176,9 @@ Chronological progress record.
 - Added tests for topic-prefix routing, predicate failure conversion to `FlowError`, pending-error completion, and explicit fault behavior.
 - Added `MqttRecordingSinkComponent` in `FluxMq.Replay` so recording can remain a flow component without making `FluxMq.Pipeline` depend on storage.
 - Added tests for recording order, repository failure conversion to `FlowError`, continued processing after failed writes, and explicit fault behavior.
+- Added `MqttMetricsSinkComponent` and `MqttMetricsSnapshot` in `FluxMq.Pipeline` for observability projections.
+- Added tests for snapshot updates, empty metrics, processing failure conversion to `FlowError`, and explicit fault behavior.
 
 ## Current Next Step
 
-Continue Fork Flow foundation with metrics or UI projection sinks, then use the repeated component shape to guide configuration-driven flow definitions.
+Continue Fork Flow foundation with UI projection components or initial configuration-driven flow definitions.

@@ -24,6 +24,10 @@ The FluxMQ runtime shape for an MQTT message and its metadata.
 
 A flow component that reads live messages from an active MQTT session.
 
+## Metrics Sink
+
+A flow component that tracks counters from MQTT messages and publishes metric snapshots.
+
 ## Recording Session
 
 A stored sequence of MQTT messages captured during a debugging session.

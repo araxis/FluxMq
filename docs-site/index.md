@@ -11,6 +11,7 @@ The documentation site is for people using the application. Contributor and arch
 - [Recording](guide/recording.md)
 - [Replay](guide/replay.md)
 - [Fork Flow](guide/fork-flow.md)
+- [Observe Traffic](workflows/observe-traffic.md)
 
 ## Core Workflows
 
@@ -19,4 +20,5 @@ The documentation site is for people using the application. Contributor and arch
 - Observe topic activity in real time.
 - Record message sessions.
 - Replay recorded traffic.
+- Observe message counters and topic activity.
 - Build Fork Flow pipelines from sources, filters, mappers, and sinks.

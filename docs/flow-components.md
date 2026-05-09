@@ -296,6 +296,47 @@ recordingSink.Errors.LinkTo(errorSink);
 
 If a message cannot be stored, the sink publishes a `FlowError` with the topic in `Context` and continues recording later messages.
 
+## MQTT Metrics Sink
+
+`MqttMetricsSinkComponent` tracks operational counters from incoming MQTT messages and broadcasts immutable snapshots.
+
+### Behavior
+
+```mermaid
+flowchart LR
+    In["Input: MqttEnvelope"] --> Sink["MqttMetricsSinkComponent"]
+    Sink --> Snapshot["Snapshots: MqttMetricsSnapshot"]
+    Sink -->|processing failure| Errors["Errors: FlowError code 2000"]
+```
+
+### Usage
+
+```csharp
+var metrics = new MqttMetricsSinkComponent();
+
+source.Output.LinkTo(metrics.Input, new DataflowLinkOptions
+{
+    PropagateCompletion = true
+});
+
+metrics.Snapshots.LinkTo(metricsUiSink);
+metrics.Errors.LinkTo(errorSink);
+```
+
+### Snapshot
+
+`MqttMetricsSnapshot` contains:
+
+- message count
+- total payload bytes
+- minimum payload bytes
+- maximum payload bytes
+- retained message count
+- unique topic count
+- last topic
+- last received timestamp
+- average payload bytes
+
 ## Recorded Session Replay Factory
 
 `RecordedSessionReplayFactory` creates replay sources from stored sessions.
@@ -360,11 +401,13 @@ This flow branches live traffic into two paths.
 flowchart LR
     Source["MqttMessageSourceComponent"] --> Router["MqttConditionRouterComponent"]
     Router -->|factory topics| Inspector["PayloadInspectorMapperComponent"]
-    Router -->|other topics| Metrics["Metrics Sink"]
+    Router -->|other topics| Metrics["MqttMetricsSinkComponent"]
     Inspector --> Ui["Payload UI Sink"]
+    Metrics --> MetricsUi["Metrics UI Sink"]
     Source --> ErrorLog["Error Log"]
     Router --> ErrorLog
     Inspector --> ErrorLog
+    Metrics --> ErrorLog
 ```
 
 This flow records selected live traffic.
@@ -414,6 +457,5 @@ Likely near-term additions:
 
 - dynamic expression mapper
 - JSONata mapper
-- metrics sink
 
 Dynamic expression components should use `FlowError.Code` for routing and diagnostics instead of relying on exception message text.
