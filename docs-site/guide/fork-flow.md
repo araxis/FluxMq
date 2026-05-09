@@ -21,6 +21,14 @@ MQTT message source
   -> UI projection
 ```
 
+Record selected messages:
+
+```text
+MQTT message source
+  -> Topic filter
+  -> Recording sink
+```
+
 Replay selected traffic:
 
 ```text
@@ -57,3 +65,4 @@ The same flow definition should eventually be editable through configuration and
 - Condition router: sends each message to a true or false branch.
 - Payload inspector: converts raw payloads into readable inspection results.
 - MQTT publish sink: publishes messages through an active session.
+- Recording sink: stores messages for a recording session.

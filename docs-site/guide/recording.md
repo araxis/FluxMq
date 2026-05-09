@@ -22,3 +22,13 @@ Recording captures MQTT messages into local storage so a session can be inspecte
 ## Notes
 
 Recordings are local-first. This keeps debugging data available without requiring a hosted backend.
+
+## Flow Shape
+
+```text
+MQTT message source
+  -> Optional topic filter
+  -> Recording sink
+```
+
+The recording sink stores each incoming message for the selected recording session. If storing one message fails, the failure is reported as a flow error and later messages can continue recording.
