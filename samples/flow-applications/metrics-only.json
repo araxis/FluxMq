@@ -1,0 +1,13 @@
+{
+  "FluxMq": {
+    "FlowApplication": {
+      "workflows": {
+        "observe": {
+          "metrics": {
+            "type": "mqtt.metrics-sink"
+          }
+        }
+      }
+    }
+  }
+}

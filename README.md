@@ -23,8 +23,10 @@ Current state:
 - Core project structure in place.
 - MQTTnet selected for MQTT integration.
 - LiteDB selected for local-first storage.
-- Initial test projects created for core, pipeline, and storage layers.
+- Test projects created for core, pipeline, replay, storage, app host, and CLI layers.
 - Fork Flow application definition and cold-start runtime builder in place.
+- `FluxMq.App` host boundary can load `FluxMq:FlowApplication` through .NET configuration.
+- `FluxMq.Cli` can validate a flow application JSON file.
 - Project memory and planning files tracked in `memory/`.
 
 ## Architecture Direction
@@ -62,12 +64,16 @@ Observability and replay timeline:
 
 ```text
 /src
+  /FluxMq.App
+  /FluxMq.Cli
   /FluxMq.Core
   /FluxMq.Pipeline
   /FluxMq.Replay
   /FluxMq.Storage
   /FluxMq.UI
 /tests
+  /FluxMq.App.Tests
+  /FluxMq.Cli.Tests
   /FluxMq.Core.Tests
   /FluxMq.Pipeline.Tests
   /FluxMq.Replay.Tests
@@ -89,6 +95,18 @@ The current development environment uses .NET 11 preview SDK to build .NET 10 pr
 dotnet restore FluxMq.sln
 dotnet build FluxMq.sln --no-restore
 dotnet test FluxMq.sln --no-build
+```
+
+Validate the first sample flow application:
+
+```powershell
+dotnet run --project src\FluxMq.Cli -- validate --config samples\flow-applications\metrics-only.json
+```
+
+Use JSON output when the command is consumed by scripts or CI:
+
+```powershell
+dotnet run --project src\FluxMq.Cli -- validate --config samples\flow-applications\metrics-only.json --output json
 ```
 
 ## Project Memory

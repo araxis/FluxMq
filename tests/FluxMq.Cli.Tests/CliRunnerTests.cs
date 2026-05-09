@@ -1,0 +1,195 @@
+using FluentAssertions;
+using FluxMq.Cli;
+using System.Text.Json;
+
+namespace FluxMq.Cli.Tests;
+
+public sealed class CliRunnerTests
+{
+    [Fact]
+    public void Run_ReturnsSuccessForValidFlowConfiguration()
+    {
+        using var temp = TemporaryJsonFile(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "workflows": {
+                    "observe": {
+                      "metrics": {
+                        "type": "mqtt.metrics-sink"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """);
+
+        var output = new TestOutput();
+        var error = new TestOutput();
+        var runner = new CliRunner(output, error);
+
+        var exitCode = runner.Run(["validate", "--config", temp.Path]);
+
+        exitCode.Should().Be((int)CliExitCode.Success);
+        output.Lines.Should().ContainSingle(line => line.Contains("Flow application is valid."));
+        error.Lines.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Run_ReturnsValidationErrorForInvalidFlowConfiguration()
+    {
+        using var temp = TemporaryJsonFile(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "workflows": {
+                    "observe": {
+                      "inspect": {
+                        "type": "mqtt.payload-inspector",
+                        "configuration": {
+                          "boundedCapacity": 0
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """);
+
+        var output = new TestOutput();
+        var error = new TestOutput();
+        var runner = new CliRunner(output, error);
+
+        var exitCode = runner.Run(["validate", "--config", temp.Path]);
+
+        exitCode.Should().Be((int)CliExitCode.ValidationError);
+        output.Lines.Should().BeEmpty();
+        error.Lines.Should().Contain(line => line.Contains("Flow application is invalid."));
+        error.Lines.Should().Contain(line => line.Contains("boundedCapacity"));
+    }
+
+    [Fact]
+    public void Run_WritesJsonToStdoutForValidFlowConfiguration()
+    {
+        using var temp = TemporaryJsonFile(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "workflows": {
+                    "observe": {
+                      "metrics": {
+                        "type": "mqtt.metrics-sink"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """);
+
+        var output = new TestOutput();
+        var error = new TestOutput();
+        var runner = new CliRunner(output, error);
+
+        var exitCode = runner.Run(["validate", "--config", temp.Path, "--output", "json"]);
+
+        exitCode.Should().Be((int)CliExitCode.Success);
+        error.Lines.Should().BeEmpty();
+
+        using var document = JsonDocument.Parse(string.Join(Environment.NewLine, output.Lines));
+        document.RootElement.GetProperty("isValid").GetBoolean().Should().BeTrue();
+        document.RootElement.GetProperty("workflowCount").GetInt32().Should().Be(1);
+        document.RootElement.GetProperty("resourceCount").GetInt32().Should().Be(0);
+        document.RootElement.GetProperty("diagnostics").GetArrayLength().Should().Be(0);
+    }
+
+    [Fact]
+    public void Run_WritesJsonToStdoutForInvalidFlowConfiguration()
+    {
+        using var temp = TemporaryJsonFile(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "workflows": {
+                    "observe": {
+                      "inspect": {
+                        "type": "mqtt.payload-inspector",
+                        "configuration": {
+                          "boundedCapacity": 0
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """);
+
+        var output = new TestOutput();
+        var error = new TestOutput();
+        var runner = new CliRunner(output, error);
+
+        var exitCode = runner.Run(["validate", "--config", temp.Path, "--output", "json"]);
+
+        exitCode.Should().Be((int)CliExitCode.ValidationError);
+        error.Lines.Should().BeEmpty();
+
+        using var document = JsonDocument.Parse(string.Join(Environment.NewLine, output.Lines));
+        document.RootElement.GetProperty("isValid").GetBoolean().Should().BeFalse();
+        document.RootElement.GetProperty("diagnostics")[0].GetProperty("message").GetString().Should().Contain("boundedCapacity");
+    }
+
+    [Fact]
+    public void Run_ReturnsUsageErrorWhenConfigurationFileIsMissing()
+    {
+        var output = new TestOutput();
+        var error = new TestOutput();
+        var runner = new CliRunner(output, error);
+
+        var exitCode = runner.Run(["validate", "--config", Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".json")]);
+
+        exitCode.Should().Be((int)CliExitCode.UsageError);
+        output.Lines.Should().BeEmpty();
+        error.Lines.Should().Contain(line => line.Contains("Configuration file was not found"));
+    }
+
+    private static TemporaryFile TemporaryJsonFile(string content)
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
+        File.WriteAllText(path, content);
+        return new TemporaryFile(path);
+    }
+
+    private sealed class TestOutput : ICliOutput
+    {
+        private readonly List<string> _lines = [];
+
+        public IReadOnlyList<string> Lines => _lines;
+
+        public void WriteLine(string message) => _lines.Add(message);
+    }
+
+    private sealed class TemporaryFile : IDisposable
+    {
+        public TemporaryFile(string path)
+        {
+            Path = path;
+        }
+
+        public string Path { get; }
+
+        public void Dispose()
+        {
+            if (File.Exists(Path))
+            {
+                File.Delete(Path);
+            }
+        }
+    }
+}

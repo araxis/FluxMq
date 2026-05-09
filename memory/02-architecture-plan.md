@@ -166,7 +166,7 @@ Current first slice:
 
 Expected hosts:
 - `FluxMq.App`
-- console runner
+- `FluxMq.Cli`
 - service process
 - command/tool integrations
 
