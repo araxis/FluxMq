@@ -26,7 +26,8 @@ export default {
         text: 'Workflows',
         items: [
           { text: 'Record And Replay', link: '/workflows/record-and-replay' },
-          { text: 'Inspect Payloads', link: '/workflows/inspect-payloads' }
+          { text: 'Inspect Payloads', link: '/workflows/inspect-payloads' },
+          { text: 'Observe Traffic', link: '/workflows/observe-traffic' }
         ]
       },
       {

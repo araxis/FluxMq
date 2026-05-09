@@ -53,6 +53,14 @@ MQTT message source
   -> Matching branch / non-matching branch
 ```
 
+Observe traffic:
+
+```text
+MQTT message source
+  -> Metrics sink
+  -> UI projection
+```
+
 ## Design Goal
 
 The same flow definition should eventually be editable through configuration and through a drag-and-drop interface.
@@ -66,3 +74,4 @@ The same flow definition should eventually be editable through configuration and
 - Payload inspector: converts raw payloads into readable inspection results.
 - MQTT publish sink: publishes messages through an active session.
 - Recording sink: stores messages for a recording session.
+- Metrics sink: tracks counters and broadcasts metric snapshots.
