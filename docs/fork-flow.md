@@ -265,6 +265,12 @@ For automation, the same validation command can emit structured output:
 dotnet run --project src/FluxMq.Cli -- validate --config samples/flow-applications/metrics-only.json --output json
 ```
 
+The first `run` command exercises the same host lifecycle and stops after a bounded duration:
+
+```powershell
+dotnet run --project src/FluxMq.Cli -- run --config samples/flow-applications/metrics-only.json --duration-ms 1000
+```
+
 The first runtime builder slice is intentionally small. `FlowApplicationRuntimeBuilder`:
 
 - validates a `FlowApplicationDefinition`

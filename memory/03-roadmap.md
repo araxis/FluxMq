@@ -115,7 +115,7 @@ Goals:
 Application host note:
 - `FluxMq.App` is now the class-library workflow application host boundary.
 - It should not become a generic placeholder UI shell.
-- `FluxMq.Cli` is a thin host over `FluxMq.App`; the first command validates flow application configuration with text and JSON output.
+- `FluxMq.Cli` is a thin host over `FluxMq.App`; the first commands validate and run flow application configuration with text and JSON output.
 
 Hot-reload constraints:
 - Config-only change on a node: delegate swap in-place, block stays running.
