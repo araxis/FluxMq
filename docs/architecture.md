@@ -66,6 +66,18 @@ Responsibilities:
 - stored messages
 - repository layer
 
+### FluxMq.App
+
+Host-independent workflow application boundary.
+
+Responsibilities:
+
+- load flow application definitions from .NET configuration
+- build runtimes through registered factories
+- expose start and stop lifecycle
+- keep the future reload boundary outside UI shells
+- provide the composition point for desktop, console, service, and tool hosts
+
 ### FluxMq.UI
 
 Reusable UI components.
@@ -156,3 +168,9 @@ flowchart TD
 The host asks the runtime to load, start, stop, or reload an application definition. The runtime validates the next definition, owns shared resource lifetime, starts workflows, propagates completion, converts component failures into flow errors, and applies reloads without making the UI shell responsible for graph mechanics.
 
 The first implemented slice is cold-start graph building. `FlowApplicationRuntimeBuilder` creates runtime nodes through a factory registry and links declared ports through typed port adapters. It deliberately does not hard-code component construction into the builder; concrete component registrations can evolve as component configuration schemas become stable.
+
+`FluxMq.App` now provides the first host boundary. `FlowApplicationHost` reads a `FlowApplicationDefinition` from .NET configuration, builds a runtime, exposes current state, starts the runtime boundary, and completes it on stop. The current default configuration section is `FluxMq:FlowApplication`.
+
+Definition sources should remain configuration providers. A JSON file is the first alpha path, but the same host can later accept environment values, command-line values, LiteDB-backed providers, or UI-produced configuration without changing the runtime model.
+
+`FluxMq.Cli` is planned as a lightweight host over the same `FluxMq.App` boundary. The first CLI slice should stay small, but it is an important future surface for running, validating, inspecting, and automating flow applications.

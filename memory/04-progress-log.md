@@ -193,7 +193,11 @@ Chronological progress record.
   - `mqtt.payload-inspector`
   - `mqtt.metrics-sink`
 - Added runtime tests proving registered components can be linked through flow definitions and that invalid component configuration becomes a structured build error.
+- Reintroduced `FluxMq.App` as a class-library workflow application host boundary.
+- Added `FlowApplicationConfigurationLoader` to load `FluxMq:FlowApplication` through .NET configuration.
+- Added `FlowApplicationHost` with build, start, stop, state, and structured host build errors.
+- Added `FluxMq.App.Tests` covering configuration loading, runtime build, stop completion, missing configuration, and invalid component configuration.
 
 ## Current Next Step
 
-Continue Fork Flow foundation by adding the next stable runtime registration boundary: either service-backed resource factories for MQTT sessions or expression-backed filter/router configuration, depending on which design is ready to make explicit.
+Continue the alpha host path by adding either a lightweight `FluxMq.Cli` validation/run shell over `FluxMq.App` or the next stable runtime registration boundary for service-backed resources.

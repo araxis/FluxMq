@@ -101,6 +101,7 @@ Goals:
 - Support natural receiving-port links such as `Input: "source.Output"` and link objects such as `{ "From": "source.Output", "When": "condition" }`.
 - Validate definitions before runtime graph construction.
 - Introduce a host-independent flow application runtime class-library boundary.
+- Load the first alpha definitions through the .NET configuration system.
 - Let the runtime own shared resources, named workflow lifecycle, reload coordination, and component error supervision.
 - Define `IPipelineNode` abstraction: display name, port descriptors, configurable properties with schema.
 - Implement cold-start graph construction from `FlowApplicationDefinition`. Initial builder slice is in place with registered factories, typed port adapters, shared resource links, and structured build errors.
@@ -112,7 +113,9 @@ Goals:
 - Load/switch between saved flow application definitions at runtime.
 
 Application host note:
-- `FluxMq.App` is reserved for the later workflow application host and builder. It should not be reintroduced as a generic placeholder shell.
+- `FluxMq.App` is now the class-library workflow application host boundary.
+- It should not become a generic placeholder UI shell.
+- `FluxMq.Cli` should later remain a thin host over `FluxMq.App`.
 
 Hot-reload constraints:
 - Config-only change on a node: delegate swap in-place, block stays running.
