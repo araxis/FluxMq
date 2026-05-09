@@ -58,7 +58,12 @@ public sealed class FlowApplicationRuntime : IAsyncDisposable, IDisposable
             link.Dispose();
         }
 
-        foreach (var disposable in Nodes.Select(node => node.Node).OfType<IDisposable>())
+        foreach (var disposable in WorkflowNodes().Select(node => node.Node).OfType<IDisposable>())
+        {
+            disposable.Dispose();
+        }
+
+        foreach (var disposable in Resources.Values.Select(node => node.Node).OfType<IDisposable>())
         {
             disposable.Dispose();
         }
@@ -68,9 +73,17 @@ public sealed class FlowApplicationRuntime : IAsyncDisposable, IDisposable
     {
         Dispose();
 
-        foreach (var disposable in Nodes.Select(node => node.Node).OfType<IAsyncDisposable>())
+        foreach (var disposable in WorkflowNodes().Select(node => node.Node).OfType<IAsyncDisposable>())
+        {
+            await disposable.DisposeAsync().ConfigureAwait(false);
+        }
+
+        foreach (var disposable in Resources.Values.Select(node => node.Node).OfType<IAsyncDisposable>())
         {
             await disposable.DisposeAsync().ConfigureAwait(false);
         }
     }
+
+    private IEnumerable<FlowRuntimeNode> WorkflowNodes()
+        => Workflows.Values.SelectMany(workflow => workflow.Values);
 }

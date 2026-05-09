@@ -160,8 +160,9 @@ Responsibilities:
 
 Current first slice:
 - `FlowApplicationRuntimeBuilder` performs cold-start graph construction.
-- Runtime node factories create concrete nodes outside the builder.
+- Runtime node factories create concrete nodes outside the builder and receive context about resource vs workflow placement.
 - Typed runtime ports prevent accidental links between incompatible value types.
+- Workflow nodes are disposed before shared resources.
 - Build failures are returned as structured errors instead of escaping through ordinary definition mistakes.
 
 Expected hosts:

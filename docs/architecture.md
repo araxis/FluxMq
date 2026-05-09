@@ -169,6 +169,8 @@ The host asks the runtime to load, start, stop, or reload an application definit
 
 The first implemented slice is cold-start graph building. `FlowApplicationRuntimeBuilder` creates runtime nodes through a factory registry and links declared ports through typed port adapters. It deliberately does not hard-code component construction into the builder; concrete component registrations can evolve as component configuration schemas become stable.
 
+Factory calls receive a `FlowRuntimeNodeFactoryContext` with the node name, node definition, optional workflow name, and `IsResource`. That gives service-backed registrations enough information to distinguish shared resources from workflow nodes without adding host-specific code. Runtime disposal now releases workflow nodes before shared resources so long-lived connections, stores, or sessions can remain available while dependent workflow nodes shut down.
+
 `FluxMq.App` now provides the first host boundary. `FlowApplicationHost` reads a `FlowApplicationDefinition` from .NET configuration, builds a runtime, exposes current state, starts the runtime boundary, and completes it on stop. The current default configuration section is `FluxMq:FlowApplication`.
 
 Definition sources should remain configuration providers. A JSON file is the first alpha path, but the same host can later accept environment values, command-line values, LiteDB-backed providers, or UI-produced configuration without changing the runtime model.

@@ -104,7 +104,7 @@ Goals:
 - Load the first alpha definitions through the .NET configuration system.
 - Let the runtime own shared resources, named workflow lifecycle, reload coordination, and component error supervision.
 - Define `IPipelineNode` abstraction: display name, port descriptors, configurable properties with schema.
-- Implement cold-start graph construction from `FlowApplicationDefinition`. Initial builder slice is in place with registered factories, typed port adapters, shared resource links, and structured build errors.
+- Implement cold-start graph construction from `FlowApplicationDefinition`. Initial builder slice is in place with registered factories, factory placement context, typed port adapters, shared resource links, lifecycle disposal ordering, and structured build errors.
 - Implement reload patching: diff two application definitions and apply only changed links/config/resources when safe.
 - Integrate Blazor.Diagrams as the visual canvas in `FluxMq.UI`.
 - Node palette (available block types from registered modules).

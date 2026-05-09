@@ -275,10 +275,12 @@ The first runtime builder slice is intentionally small. `FlowApplicationRuntimeB
 
 - validates a `FlowApplicationDefinition`
 - creates runtime nodes through registered factories
+- passes factory context so registrations know whether they are building a shared resource or a workflow node
 - links workflow ports through typed input/output port adapters
 - supports shared resources as link sources
 - returns build errors for validation, missing factories, missing ports, type mismatches, and link failures
 - completes only entry nodes so Dataflow completion propagates through linked graphs in order
+- disposes workflow nodes before shared resources
 
 The first concrete registrations are intentionally limited to components with stable construction and no external service dependency:
 
@@ -292,6 +294,20 @@ The first concrete registrations are intentionally limited to components with st
   - `Errors`: `FlowError`
 
 Register them with `RegisterPipelineComponentFactories()` on `FlowRuntimeNodeFactoryRegistry`.
+
+Factories that need lifecycle context can use the context-aware registration shape:
+
+```csharp
+registry.Register(new FlowNodeType("example.resource"), context =>
+{
+    if (!context.IsResource)
+    {
+        throw new InvalidOperationException("This node type must be declared as a shared resource.");
+    }
+
+    return CreateRuntimeNode(context.Name, context.Definition);
+});
+```
 
 Both registered components currently accept optional configuration:
 
