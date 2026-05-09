@@ -148,6 +148,12 @@ The first host boundary can build and control a configured flow application from
 }
 ```
 
+The first CLI command validates this shape from a JSON file:
+
+```sh
+dotnet run --project src/FluxMq.Cli -- validate --config samples/flow-applications/metrics-only.json
+```
+
 Reloading will be owned by the runtime layer. The UI can edit and save definitions, but the runtime is responsible for validating the next definition, keeping unaffected resources alive, patching workflow graphs, and reporting reload failures.
 
 ## Current Building Blocks

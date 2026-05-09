@@ -300,11 +300,11 @@ Status: Accepted.
 
 ### 2026-05-09 - Keep FluxMq.Cli lightweight at first
 
-Decision: Add `FluxMq.Cli` later as a thin host over `FluxMq.App`, not as a separate runtime path.
+Decision: Add `FluxMq.Cli` as a thin host over `FluxMq.App`, not as a separate runtime path.
 
 Reasoning:
 - CLI support will be important for validating, running, inspecting, and automating flow applications.
 - The first slice should avoid heavy CLI feature work until the host boundary is stable.
 - CLI commands should call the same application host used by desktop or service hosts.
 
-Status: Planned.
+Status: Accepted.

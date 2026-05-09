@@ -197,7 +197,10 @@ Chronological progress record.
 - Added `FlowApplicationConfigurationLoader` to load `FluxMq:FlowApplication` through .NET configuration.
 - Added `FlowApplicationHost` with build, start, stop, state, and structured host build errors.
 - Added `FluxMq.App.Tests` covering configuration loading, runtime build, stop completion, missing configuration, and invalid component configuration.
+- Added `FluxMq.Cli` as the first thin command-line host over `FluxMq.App`.
+- Added `validate --config <path>` to validate a flow application configuration through the application host.
+- Added `samples/flow-applications/metrics-only.json` as the first alpha validation sample.
 
 ## Current Next Step
 
-Continue the alpha host path by adding either a lightweight `FluxMq.Cli` validation/run shell over `FluxMq.App` or the next stable runtime registration boundary for service-backed resources.
+Continue the alpha path by adding either `FluxMq.Cli run` for the existing no-service flow subset or the next stable runtime registration boundary for service-backed resources.

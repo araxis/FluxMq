@@ -174,3 +174,11 @@ The first implemented slice is cold-start graph building. `FlowApplicationRuntim
 Definition sources should remain configuration providers. A JSON file is the first alpha path, but the same host can later accept environment values, command-line values, LiteDB-backed providers, or UI-produced configuration without changing the runtime model.
 
 `FluxMq.Cli` is planned as a lightweight host over the same `FluxMq.App` boundary. The first CLI slice should stay small, but it is an important future surface for running, validating, inspecting, and automating flow applications.
+
+The initial CLI command is intentionally limited:
+
+```powershell
+dotnet run --project src/FluxMq.Cli -- validate --config samples/flow-applications/metrics-only.json
+```
+
+It validates the configured flow application through `FluxMq.App` and reports host, definition, and runtime build errors.

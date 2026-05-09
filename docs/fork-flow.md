@@ -253,6 +253,12 @@ Example appsettings shape:
 
 The JSON file is only one provider. The host boundary should continue to accept normal .NET configuration so CLI arguments, environment values, persisted settings, and UI-generated definitions can converge on the same runtime path.
 
+The first CLI alpha command validates a configured flow application:
+
+```powershell
+dotnet run --project src/FluxMq.Cli -- validate --config samples/flow-applications/metrics-only.json
+```
+
 The first runtime builder slice is intentionally small. `FlowApplicationRuntimeBuilder`:
 
 - validates a `FlowApplicationDefinition`
