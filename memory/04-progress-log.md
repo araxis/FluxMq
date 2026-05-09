@@ -181,7 +181,14 @@ Chronological progress record.
 - Recorded OpenTelemetry as a planned observability export layer, separate from local flow metrics and UI projections.
 - Added the initial config-first Fork Flow application definition model with object-shaped workflows, shared resources, typed node types, typed port names, string/object link parsing, default link conditions, JSON serialization options, and validation for missing graph references.
 - Recorded the future flow application runtime as a host-independent class-library boundary responsible for loading definitions, owning resources, controlling workflow lifecycle, coordinating reloads, and supervising component errors.
+- Added the first cold-start runtime builder slice:
+  - factory registry for runtime node creation
+  - typed input/output runtime port adapters
+  - application definition validation before build
+  - workflow and shared resource linking
+  - structured build errors for missing factories, missing ports, type mismatches, and link failures
+  - entry-node completion so Dataflow graphs drain in link order
 
 ## Current Next Step
 
-Continue Fork Flow foundation by introducing a runtime builder for a small supported subset of flow application definitions.
+Continue Fork Flow foundation by adding concrete component factory registrations for a small supported subset of flow application definitions.

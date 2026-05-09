@@ -248,3 +248,16 @@ Reasoning:
 - Packaging the runtime independently keeps later command-line and service hosting natural.
 
 Status: Planned.
+
+### 2026-05-09 - Build runtime graphs through registered factories and typed ports
+
+Decision: The first cold-start flow application runtime builder uses registered node factories and typed runtime port adapters instead of hard-coding component construction into the builder.
+
+Reasoning:
+- Component configuration schemas are not stable enough yet to bake concrete construction into the runtime core.
+- Factories let the builder stay focused on validation, node creation orchestration, graph linking, and lifecycle shape.
+- Typed runtime ports catch incompatible links during build before any workflow starts.
+- Build failures should be structured results for ordinary definition and registration mistakes.
+- Completion should start from graph entry nodes so Dataflow completion propagates through linked graphs in order.
+
+Status: Accepted.

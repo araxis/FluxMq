@@ -40,4 +40,4 @@ OpenTelemetry support is planned later for exporting selected runtime metrics, t
 
 The project is still in foundation work. Core runtime pieces are being built before the full drag-and-drop Fork Flow editor. This keeps the runtime honest: the visual editor will represent real executable flow application definitions, not a separate UI-only model.
 
-Fork Flow now has an initial application definition model with shared resources and named workflows. Runtime graph construction, reload control, and visual editing are still planned work.
+Fork Flow now has an initial application definition model with shared resources and named workflows. The first cold-start runtime builder can create registered nodes and link typed ports from that definition. Reload control and visual editing are still planned work.

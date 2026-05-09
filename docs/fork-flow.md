@@ -223,16 +223,25 @@ Runtime graph construction is intentionally separate and will come after this de
 
 ## Application Runtime Direction
 
-The future runtime boundary should be a host-independent class library. A desktop app, console runner, Windows service, or tool host should all be able to load the same `FlowApplicationDefinition`.
+The runtime boundary is a host-independent class library direction. A desktop app, console runner, Windows service, or tool host should all be able to load the same `FlowApplicationDefinition`.
 
-The runtime controller should own:
+The first runtime builder slice is intentionally small. `FlowApplicationRuntimeBuilder`:
 
-- application definition loading and validation
-- shared resource lifetime
-- workflow start, stop, and completion
+- validates a `FlowApplicationDefinition`
+- creates runtime nodes through registered factories
+- links workflow ports through typed input/output port adapters
+- supports shared resources as link sources
+- returns build errors for validation, missing factories, missing ports, type mismatches, and link failures
+- completes only entry nodes so Dataflow completion propagates through linked graphs in order
+
+The wider runtime controller should later own:
+
+- application definition loading
+- shared resource lifetime beyond a single cold build
+- workflow start, stop, and completion supervision
 - reload coordination
-- graph build and patch operations
-- component error supervision
+- graph patch operations
+- component error routing and supervision
 
 Hot reload should belong to this runtime layer, not to the UI shell. The UI can request a reload, but the runtime decides how to validate the next definition, preserve unaffected resources, patch links, and report failures.
 
