@@ -13,6 +13,10 @@
     @if (!Node.IsCollapsed)
     {
         <MudDivider Class="my-2" />
+        @if (!string.IsNullOrWhiteSpace(Node.ActivityText))
+        {
+            <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined" Class="mb-2">@Node.ActivityText</MudAlert>
+        }
         <MudText Typo="Typo.caption" Color="Color.Secondary">@Node.Summary</MudText>
         <div class="flow-node-ports">
             @foreach (var port in Node.PortDescriptors)
@@ -26,6 +30,10 @@
             }
         </div>
         <MudText Typo="Typo.caption" Color="Color.Secondary">@Node.NodeType</MudText>
+    }
+    else if (!string.IsNullOrWhiteSpace(Node.ActivityText))
+    {
+        <MudText Typo="Typo.caption" Color="Color.Secondary">@Node.ActivityText</MudText>
     }
 
     @foreach (var port in Node.Ports)

@@ -1,19 +1,121 @@
 @page "/"
 
-<MudGrid Class="pa-3 flux-page flux-page-grid" Spacing="2">
-    <MudItem xs="12" lg="3" Class="flux-scroll">
-        <MudStack Spacing="2">
-            <ConnectionPanel />
-            <SessionPanel />
-            <RuntimePanel />
-        </MudStack>
-    </MudItem>
+<div class="workspace-layout @LayoutClass"
+     style="@GridStyle"
+     @onpointermove="@ResizePanel"
+     @onpointerup="@StopResize"
+     @onpointerleave="@StopResize">
+    <aside class="workspace-side workspace-left">
+        <MudIconButton Class="workspace-panel-toggle"
+                       Icon="@Icons.Material.Filled.ChevronLeft"
+                       OnClick="@ToggleLeft" />
+        <div class="workspace-side-scroll">
+            <MudStack Spacing="2">
+                <ConnectionPanel />
+                <SessionPanel />
+                <RuntimePanel />
+            </MudStack>
+        </div>
+    </aside>
 
-    <MudItem xs="12" lg="6" Class="flux-scroll">
+    <div class="workspace-resize-handle workspace-left-handle"
+         role="separator"
+         aria-orientation="vertical"
+         @onpointerdown="@((PointerEventArgs args) => StartResize(WorkspacePanelSide.Left, args))"
+         @onpointerdown:preventDefault />
+
+    <div class="workspace-rail workspace-rail-left">
+        <MudIconButton Icon="@Icons.Material.Filled.MenuOpen" OnClick="@ToggleLeft" />
+    </div>
+
+    <main class="workspace-center flux-scroll">
+        <div class="workspace-center-toolbar">
+            <MudIconButton Icon="@(_leftOpen ? Icons.Material.Filled.KeyboardDoubleArrowLeft : Icons.Material.Filled.KeyboardDoubleArrowRight)"
+                           OnClick="@ToggleLeft" />
+            <MudSpacer />
+            <MudIconButton Icon="@(_rightOpen ? Icons.Material.Filled.KeyboardDoubleArrowRight : Icons.Material.Filled.KeyboardDoubleArrowLeft)"
+                           OnClick="@ToggleRight" />
+        </div>
         <FlowDesigner />
-    </MudItem>
+    </main>
 
-    <MudItem xs="12" lg="3" Class="flux-scroll">
-        <LiveInspectorPanel />
-    </MudItem>
-</MudGrid>
+    <div class="workspace-rail workspace-rail-right">
+        <MudIconButton Icon="@Icons.Material.Filled.Troubleshoot" OnClick="@ToggleRight" />
+    </div>
+
+    <div class="workspace-resize-handle workspace-right-handle"
+         role="separator"
+         aria-orientation="vertical"
+         @onpointerdown="@((PointerEventArgs args) => StartResize(WorkspacePanelSide.Right, args))"
+         @onpointerdown:preventDefault />
+
+    <aside class="workspace-side workspace-right">
+        <MudIconButton Class="workspace-panel-toggle"
+                       Icon="@Icons.Material.Filled.ChevronRight"
+                       OnClick="@ToggleRight" />
+        <div class="workspace-side-scroll">
+            <LiveInspectorPanel />
+        </div>
+    </aside>
+</div>
+
+@code {
+    private const double LeftPanelMinWidth = 280;
+    private const double LeftPanelMaxWidth = 520;
+    private const double RightPanelMinWidth = 320;
+    private const double RightPanelMaxWidth = 600;
+
+    private bool _leftOpen = true;
+    private bool _rightOpen = true;
+    private double _leftPanelWidth = 340;
+    private double _rightPanelWidth = 400;
+    private WorkspacePanelSide? _resizingSide;
+    private double _resizeStartX;
+    private double _resizeStartLeftWidth;
+    private double _resizeStartRightWidth;
+
+    private string LayoutClass =>
+        $"{(!_leftOpen ? "workspace-left-closed" : string.Empty)} {(!_rightOpen ? "workspace-right-closed" : string.Empty)} {(_resizingSide is not null ? "workspace-resizing" : string.Empty)}";
+
+    private string GridStyle => $"--workspace-left-width: {_leftPanelWidth:0}px; --workspace-right-width: {_rightPanelWidth:0}px;";
+
+    private void ToggleLeft() => _leftOpen = !_leftOpen;
+    private void ToggleRight() => _rightOpen = !_rightOpen;
+
+    private void StartResize(WorkspacePanelSide side, PointerEventArgs args)
+    {
+        _resizingSide = side;
+        _resizeStartX = args.ClientX;
+        _resizeStartLeftWidth = _leftPanelWidth;
+        _resizeStartRightWidth = _rightPanelWidth;
+    }
+
+    private void ResizePanel(PointerEventArgs args)
+    {
+        if (_resizingSide is null)
+        {
+            return;
+        }
+
+        var delta = args.ClientX - _resizeStartX;
+        if (_resizingSide == WorkspacePanelSide.Left)
+        {
+            _leftPanelWidth = Math.Clamp(_resizeStartLeftWidth + delta, LeftPanelMinWidth, LeftPanelMaxWidth);
+        }
+        else
+        {
+            _rightPanelWidth = Math.Clamp(_resizeStartRightWidth - delta, RightPanelMinWidth, RightPanelMaxWidth);
+        }
+    }
+
+    private void StopResize()
+    {
+        _resizingSide = null;
+    }
+
+    private enum WorkspacePanelSide
+    {
+        Left,
+        Right
+    }
+}

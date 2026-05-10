@@ -6,50 +6,66 @@
 <MudExpansionPanels Dense="true" Elevation="0">
     <MudExpansionPanel Text="Fork Flow" Icon="@Icons.Material.Filled.AccountTree" Expanded="true">
         <MudStack Spacing="2">
-        <MudStack Row="true" AlignItems="AlignItems.Center">
-            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" />
-            <MudText Typo="Typo.subtitle1">Fork Flow</MudText>
-            <MudSpacer />
-            <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" OnClick="@ZoomToFit" />
-        </MudStack>
+            <MudStack Row="true" AlignItems="AlignItems.Center">
+                <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" />
+                <MudText Typo="Typo.subtitle1">Fork Flow</MudText>
+                <MudSpacer />
+                <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" OnClick="@ZoomToFit" />
+            </MudStack>
 
-        <MudGrid Spacing="2">
-            <MudItem xs="12" md="4">
-                <MudPaper Elevation="0" Outlined="true" Class="pa-2">
-                    <MudText Typo="Typo.subtitle2" Class="mb-2">Components</MudText>
-                    <MudStack Spacing="1">
-                        @foreach (var component in Catalog.Components)
-                        {
-                            <MudPaper Elevation="0"
-                                      Outlined="true"
-                                      Class="pa-2"
-                                      draggable="true"
-                                      @ondragstart="@(() => OnDragStart(component.Type))">
-                                <MudStack Row="true" AlignItems="AlignItems.Center">
-                                    <MudIcon Icon="@IconFor(component)" Color="@ColorFor(component)" />
-                                    <div>
-                                        <MudText Typo="Typo.body2">@component.DisplayName</MudText>
-                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@component.Category</MudText>
-                                    </div>
-                                    <MudSpacer />
-                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Add" OnClick="@(() => AddComponent(component.Type))" />
-                                </MudStack>
-                            </MudPaper>
-                        }
-                    </MudStack>
-                </MudPaper>
-            </MudItem>
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="4">
+                    <MudPaper Elevation="0" Outlined="true" Class="pa-2">
+                        <MudText Typo="Typo.subtitle2" Class="mb-2">Components</MudText>
+                        <MudStack Spacing="1">
+                            @foreach (var component in Catalog.Components)
+                            {
+                                <MudPaper Elevation="0"
+                                          Outlined="true"
+                                          Class="pa-2"
+                                          draggable="true"
+                                          @ondragstart="@(() => OnDragStart(component.Type))">
+                                    <MudStack Row="true" AlignItems="AlignItems.Center">
+                                        <MudIcon Icon="@IconFor(component)" Color="@ColorFor(component)" />
+                                        <div>
+                                            <MudText Typo="Typo.body2">@component.DisplayName</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@component.Category</MudText>
+                                        </div>
+                                        <MudSpacer />
+                                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Add" OnClick="@(() => AddComponent(component.Type))" />
+                                    </MudStack>
+                                </MudPaper>
+                            }
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
 
-            <MudItem xs="12" md="8">
-                <div class="flow-canvas" ondragover="event.preventDefault();" @ondragover:preventDefault @ondrop="@OnDrop">
-                    <CascadingValue Value="_diagram">
-                        <DiagramCanvas />
-                    </CascadingValue>
-                </div>
-            </MudItem>
-        </MudGrid>
+                <MudItem xs="12" md="8">
+                    <div class="flow-canvas" ondragover="event.preventDefault();" @ondragover:preventDefault @ondrop="@OnDrop">
+                        <CascadingValue Value="_diagram">
+                            <DiagramCanvas>
+                                <Widgets>
+                                    <GridWidget Size="20" Mode="GridMode.Point" BackgroundColor="transparent" />
+                                    <NavigatorWidget Width="180"
+                                                     Height="120"
+                                                     UseNodeShape="false"
+                                                     NodeColor="#1F7A8C"
+                                                     GroupColor="#99D6CE"
+                                                     ViewStrokeColor="#F4B860"
+                                                     Class="flow-navigator"
+                                                     Style="position:absolute;right:12px;bottom:12px;z-index:20;background:var(--mud-palette-surface);border:1px solid var(--mud-palette-lines-default);border-radius:8px;box-shadow:var(--mud-elevation-3);" />
+                                </Widgets>
+                            </DiagramCanvas>
+                        </CascadingValue>
+                    </div>
+                </MudItem>
+            </MudGrid>
 
-        <DefinitionEditor />
+            <MudExpansionPanels Dense="true" Elevation="0">
+                <MudExpansionPanel Text="Definition JSON" Icon="@Icons.Material.Filled.DataObject" Expanded="false">
+                    <DefinitionEditor />
+                </MudExpansionPanel>
+            </MudExpansionPanels>
         </MudStack>
     </MudExpansionPanel>
 </MudExpansionPanels>
@@ -68,6 +84,7 @@
     {
         _diagram.RegisterComponent<FlowDiagramNodeModel, FlowDiagramNodeWidget>();
         Flow.Changed += OnFlowChanged;
+        Live.Changed += OnLiveChanged;
         RebuildDiagram();
     }
 
@@ -182,6 +199,7 @@
         {
         }
 
+        UpdateDiagramActivity();
         _diagram.Refresh();
     }
 
@@ -202,6 +220,28 @@
         node.AddPort(PortAlignment.Right);
         _diagram.Nodes.Add(node);
         nodes[name] = node;
+    }
+
+    private void UpdateDiagramActivity()
+    {
+        var count = Live.SelectedStoredSession is null
+            ? Live.RecentMessages.Count
+            : Live.SelectedSessionMessages.Count;
+
+        foreach (var node in _diagram.Nodes.OfType<FlowDiagramNodeModel>())
+        {
+            var activity = node.NodeType switch
+            {
+                "mqtt.message-source" => $"{Live.State} | {count} messages",
+                "mqtt.payload-inspector" => Live.SelectedMessage is null
+                    ? "Waiting for payload"
+                    : $"{Live.SelectedInspection.ContentTypeLabel} | {Live.SelectedInspection.SizeBytes} bytes",
+                "mqtt.metrics-sink" => $"{count} messages observed",
+                _ => null
+            };
+
+            node.SetActivity(activity);
+        }
     }
 
     private static bool TryGetFlowApplication(JsonElement root, out JsonElement flowApplication)
@@ -276,8 +316,19 @@
         InvokeAsync(StateHasChanged);
     }
 
+    private void OnLiveChanged(object? sender, EventArgs e)
+    {
+        InvokeAsync(() =>
+        {
+            UpdateDiagramActivity();
+            _diagram.Refresh();
+            StateHasChanged();
+        });
+    }
+
     public void Dispose()
     {
         Flow.Changed -= OnFlowChanged;
+        Live.Changed -= OnLiveChanged;
     }
 }

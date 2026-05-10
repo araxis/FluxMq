@@ -241,6 +241,10 @@ Build the first usable MAUI Blazor Hybrid desktop alpha in `FluxMq.UI`.
 - Replaced blank default diagram nodes with FluxMQ flow node widgets that show name, type, category, ports, and collapsible details.
 - Added project/session selection over LiteDB recording sessions so recorded traffic can be grouped and loaded back into the workspace.
 - Renamed the UI definition helper to `FlowDefinitionComposer` to make its goal clearer: compose valid definition JSON from UI actions, not build runtime nodes.
+- Reworked the desktop workspace layout so the left and right columns collapse like side panels and can be resized with dedicated desktop splitters.
+- Moved the raw definition editor behind a collapsed panel so the visual workspace remains primary.
+- Wired the topic tree to the same live or selected-session message collection used by the message table, with branch selection filtering descendant topics.
+- Added diagram helper widgets from Blazor.Diagrams, including grid and navigator views, and surfaced live message/runtime activity on diagram nodes.
 
 ## Current Next Step
 

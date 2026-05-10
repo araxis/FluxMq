@@ -40,12 +40,164 @@ body,
 .flow-canvas {
     height: 520px;
     min-height: 420px;
+    position: relative;
     overflow: hidden;
 }
 
 .flow-canvas .diagram-canvas {
     width: 100%;
     height: 100%;
+}
+
+.workspace-layout {
+    display: grid;
+    gap: 12px;
+    grid-template-areas: "left left-handle center right-handle right";
+    grid-template-columns: var(--workspace-left-width, 340px) 8px minmax(0, 1fr) 8px var(--workspace-right-width, 400px);
+    height: 100%;
+    min-height: 0;
+    padding: 12px;
+    user-select: auto;
+}
+
+.workspace-side,
+.workspace-center {
+    min-height: 0;
+    min-width: 0;
+}
+
+.workspace-side {
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+}
+
+.workspace-left {
+    grid-area: left;
+}
+
+.workspace-right {
+    grid-area: right;
+}
+
+.workspace-side-scroll {
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 12px;
+}
+
+.workspace-center {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    grid-area: center;
+    overflow: auto;
+}
+
+.workspace-center-toolbar {
+    align-items: center;
+    display: flex;
+    flex: 0 0 auto;
+}
+
+.workspace-panel-toggle {
+    position: absolute;
+    right: 4px;
+    top: 4px;
+    z-index: 5;
+}
+
+.workspace-right .workspace-panel-toggle {
+    left: 4px;
+    right: auto;
+}
+
+.workspace-rail {
+    align-items: center;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 8px;
+    display: none;
+    justify-content: center;
+    min-height: 0;
+}
+
+.workspace-rail-left {
+    grid-area: left;
+}
+
+.workspace-rail-right {
+    grid-area: right;
+}
+
+.workspace-resize-handle {
+    align-self: stretch;
+    background: transparent;
+    border-radius: 6px;
+    cursor: col-resize;
+    min-height: 0;
+    position: relative;
+}
+
+.workspace-resize-handle::after {
+    background: var(--mud-palette-lines-default);
+    border-radius: 4px;
+    bottom: 10px;
+    content: "";
+    left: 3px;
+    position: absolute;
+    top: 10px;
+    width: 2px;
+}
+
+.workspace-resize-handle:hover::after,
+.workspace-resizing .workspace-resize-handle::after {
+    background: var(--mud-palette-primary);
+}
+
+.workspace-left-handle {
+    grid-area: left-handle;
+}
+
+.workspace-right-handle {
+    grid-area: right-handle;
+}
+
+.workspace-resizing {
+    user-select: none;
+}
+
+.workspace-left-closed {
+    grid-template-areas: "left center right-handle right";
+    grid-template-columns: 44px minmax(0, 1fr) 8px var(--workspace-right-width, 400px);
+}
+
+.workspace-right-closed {
+    grid-template-areas: "left left-handle center right";
+    grid-template-columns: var(--workspace-left-width, 340px) 8px minmax(0, 1fr) 44px;
+}
+
+.workspace-left-closed.workspace-right-closed {
+    grid-template-areas: "left center right";
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+}
+
+.workspace-left-closed .workspace-left,
+.workspace-right-closed .workspace-right {
+    display: none;
+}
+
+.workspace-left-closed .workspace-left-handle,
+.workspace-right-closed .workspace-right-handle,
+.workspace-left-closed.workspace-right-closed .workspace-left-handle,
+.workspace-left-closed.workspace-right-closed .workspace-right-handle {
+    display: none;
+}
+
+.workspace-left-closed .workspace-rail-left,
+.workspace-right-closed .workspace-rail-right {
+    display: flex;
 }
 
 .definition-editor {
@@ -108,6 +260,10 @@ body,
     background: var(--mud-palette-action-default-hover);
 }
 
+.topic-node-selected {
+    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent);
+}
+
 .topic-node-chevron {
     align-items: center;
     display: inline-flex;
@@ -130,4 +286,37 @@ body,
 
 .session-row {
     cursor: pointer;
+}
+
+.flow-navigator {
+    pointer-events: none;
+}
+
+@media (max-width: 1200px) {
+    .workspace-layout,
+    .workspace-left-closed,
+    .workspace-right-closed,
+    .workspace-left-closed.workspace-right-closed {
+        grid-template-areas:
+            "left"
+            "center"
+            "right";
+        grid-template-columns: 1fr;
+        overflow: auto;
+    }
+
+    .workspace-side,
+    .workspace-center,
+    .workspace-rail {
+        display: block;
+    }
+
+    .workspace-resize-handle {
+        display: none;
+    }
+
+    .workspace-left-closed .workspace-left,
+    .workspace-right-closed .workspace-right {
+        display: none;
+    }
 }

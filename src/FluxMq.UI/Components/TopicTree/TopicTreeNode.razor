@@ -2,9 +2,9 @@
 
 <div class="topic-node" style="padding-left: @(Node.Depth * 16)px">
 
-    <div class="topic-node-row" @onclick="Toggle">
+    <div class="topic-node-row @(Node.FullPath == SelectedTopic ? "topic-node-selected" : null)" @onclick="Select">
 
-        <span class="topic-node-chevron">
+        <span class="topic-node-chevron" @onclick="Toggle" @onclick:stopPropagation>
             @if (Node.HasChildren)
             {
                 <MudIcon Icon="@(_expanded ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
@@ -35,7 +35,9 @@
     {
         @foreach (var child in Node.Children.Values.OrderBy(n => n.Name))
         {
-            <TopicTreeNode Node="child" />
+            <TopicTreeNode Node="child"
+                           SelectedTopic="@SelectedTopic"
+                           TopicSelected="@TopicSelected" />
         }
     }
 
@@ -43,6 +45,8 @@
 
 @code {
     [Parameter, EditorRequired] public TopicNode Node { get; set; } = null!;
+    [Parameter] public string? SelectedTopic { get; set; }
+    [Parameter] public EventCallback<string?> TopicSelected { get; set; }
 
     private bool _expanded;
     private bool _initialized;
@@ -59,4 +63,5 @@
     }
 
     private void Toggle() => _expanded = !_expanded;
+    private Task Select() => TopicSelected.InvokeAsync(Node.FullPath);
 }

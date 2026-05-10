@@ -14,8 +14,11 @@ public sealed class TopicIndex : ITopicIndex
     public void Process(MqttEnvelope envelope)
     {
         var segments = envelope.Topic.Split('/');
-        var leaf = GetOrCreate(segments);
-        leaf.RecordMessage(envelope);
+        foreach (var node in GetOrCreatePath(segments))
+        {
+            node.RecordMessage(envelope);
+        }
+
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
@@ -38,9 +41,11 @@ public sealed class TopicIndex : ITopicIndex
             : Flatten(_roots.Values)
                 .Where(n => n.FullPath.Contains(filter, StringComparison.OrdinalIgnoreCase));
 
-    private TopicNode GetOrCreate(string[] segments)
+    private IEnumerable<TopicNode> GetOrCreatePath(string[] segments)
     {
         var node = _roots.GetOrAdd(segments[0], k => new TopicNode(k, k, 0));
+        yield return node;
+
         var path = segments[0];
 
         for (var i = 1; i < segments.Length; i++)
@@ -50,9 +55,8 @@ public sealed class TopicIndex : ITopicIndex
             var nodePath = path;
             var depth = i;
             node = node.Children.GetOrAdd(segment, k => new TopicNode(k, nodePath, depth));
+            yield return node;
         }
-
-        return node;
     }
 
     private static IEnumerable<TopicNode> Flatten(IEnumerable<TopicNode> nodes)

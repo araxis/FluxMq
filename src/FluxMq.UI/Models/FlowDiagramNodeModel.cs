@@ -36,11 +36,23 @@ public sealed class FlowDiagramNodeModel : NodeModel
     public bool IsResource { get; }
     public IReadOnlyList<ComponentPortDescriptor> PortDescriptors { get; }
     public bool IsCollapsed { get; private set; }
+    public string? ActivityText { get; private set; }
 
     public void Toggle()
     {
         IsCollapsed = !IsCollapsed;
         Size = IsCollapsed ? CollapsedSize : ExpandedSize;
         RefreshAll();
+    }
+
+    public void SetActivity(string? activityText)
+    {
+        if (ActivityText == activityText)
+        {
+            return;
+        }
+
+        ActivityText = activityText;
+        Refresh();
     }
 }

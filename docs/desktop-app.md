@@ -23,7 +23,10 @@ flowchart LR
 - LiteDB-backed live traffic recording controls
 - component catalog for registered runtime nodes
 - visual diagram projection from the flow application definition with collapsible flow nodes
-- JSON definition editor
+- diagram grid and navigator helper views
+- live runtime and traffic activity on diagram nodes
+- collapsible workspace columns with draggable side splitters
+- collapsible JSON definition editor
 - definition save and load from local files
 - validate, run, and stop controls through `FluxMq.App`
 - named sessions grouped by project
@@ -43,6 +46,10 @@ This matches a default local Mosquitto service. The app should not require editi
 The desktop app does not own flow graph mechanics. It sends flow application definitions to `FluxMq.App`, which loads them through the .NET configuration model and builds the runtime through registered factories.
 
 This keeps the same definition usable from the desktop app and the command-line host.
+
+## Sessions And Traffic
+
+The topic tree and message table are backed by the same message collection. When a stored session is selected, both views switch to that session's messages. When no stored session is selected, both views show live traffic. Selecting a topic branch filters the message table to that branch and its child topics.
 
 ## Definition Composer
 

@@ -55,6 +55,18 @@ public class TopicIndexTests
     }
 
     [Fact]
+    public void Process_MultiSegment_IncrementsAncestorCounts()
+    {
+        var index = new TopicIndex();
+        index.Process(Envelope("factory/line-01/temperature"));
+        index.Process(Envelope("factory/line-01/humidity"));
+
+        index.Find("factory")!.MessageCount.Should().Be(2);
+        index.Find("factory/line-01")!.MessageCount.Should().Be(2);
+        index.Find("factory/line-01/temperature")!.MessageCount.Should().Be(1);
+    }
+
+    [Fact]
     public void Process_UpdatesLeafLastMessage()
     {
         var index = new TopicIndex();
