@@ -8,62 +8,62 @@
         <MudExpansionPanel Text="Fork Flow" Icon="@Icons.Material.Filled.AccountTree" Expanded="true" Class="flow-designer-panel">
             <MudStack Spacing="2" Class="flow-designer-content">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Class="flow-designer-toolbar">
-                <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" />
-                <MudText Typo="Typo.subtitle1">Fork Flow</MudText>
-                <MudSpacer />
-                <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" OnClick="@ZoomToFit" />
-            </MudStack>
+                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" />
+                    <MudText Typo="Typo.subtitle1">Fork Flow</MudText>
+                    <MudSpacer />
+                    <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" OnClick="@ZoomToFit" />
+                </MudStack>
 
                 <MudGrid Spacing="2" Class="flow-designer-grid">
                     <MudItem xs="12" md="4" Class="flow-designer-catalog">
                         <MudPaper Elevation="0" Outlined="true" Class="flow-designer-catalog-paper pa-2">
-                        <MudText Typo="Typo.subtitle2" Class="mb-2">Components</MudText>
+                            <MudText Typo="Typo.subtitle2" Class="mb-2">Components</MudText>
                             <MudStack Spacing="1" Class="flow-designer-catalog-list">
-                            @foreach (var component in Catalog.Components)
-                            {
-                                <MudPaper Elevation="0"
-                                          Outlined="true"
-                                          Class="pa-2"
-                                          draggable="true"
-                                          @ondragstart="@(() => OnDragStart(component.Type))">
-                                    <MudStack Row="true" AlignItems="AlignItems.Center">
-                                        <MudIcon Icon="@IconFor(component)" Color="@ColorFor(component)" />
-                                        <div>
-                                            <MudText Typo="Typo.body2">@component.DisplayName</MudText>
-                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@component.Category</MudText>
-                                        </div>
-                                        <MudSpacer />
-                                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Add" OnClick="@(() => AddComponent(component.Type))" />
-                                    </MudStack>
-                                </MudPaper>
-                            }
-                        </MudStack>
-                    </MudPaper>
-                </MudItem>
+                                @foreach (var component in Catalog.Components)
+                                {
+                                    <MudPaper Elevation="0"
+                                              Outlined="true"
+                                              Class="pa-2"
+                                              draggable="true"
+                                              @ondragstart="@(() => OnDragStart(component.Type))">
+                                        <MudStack Row="true" AlignItems="AlignItems.Center">
+                                            <MudIcon Icon="@IconFor(component)" Color="@ColorFor(component)" />
+                                            <div>
+                                                <MudText Typo="Typo.body2">@component.DisplayName</MudText>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">@component.Category</MudText>
+                                            </div>
+                                            <MudSpacer />
+                                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Add" OnClick="@(() => AddComponent(component.Type))" />
+                                        </MudStack>
+                                    </MudPaper>
+                                }
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
 
                     <MudItem xs="12" md="8" Class="flow-designer-canvas-column">
-                    <div class="flow-canvas" ondragover="event.preventDefault();" @ondragover:preventDefault @ondrop="@OnDrop">
-                        <CascadingValue Value="_diagram">
-                            <DiagramCanvas>
-                                <Widgets>
-                                    <GridWidget Size="20" Mode="GridMode.Point" BackgroundColor="transparent" />
-                                    <NavigatorWidget Width="180"
-                                                     Height="120"
-                                                     UseNodeShape="false"
-                                                     NodeColor="#1F7A8C"
-                                                     GroupColor="#99D6CE"
-                                                     ViewStrokeColor="#F4B860"
-                                                     Class="flow-navigator"
-                                                     Style="position:absolute;right:12px;bottom:12px;z-index:20;background:var(--mud-palette-surface);border:1px solid var(--mud-palette-lines-default);border-radius:8px;box-shadow:var(--mud-elevation-3);" />
-                                </Widgets>
-                            </DiagramCanvas>
-                        </CascadingValue>
-                    </div>
-                </MudItem>
-            </MudGrid>
+                        <div class="flow-canvas" ondragover="event.preventDefault();" @ondragover:preventDefault @ondrop="@OnDrop">
+                            <CascadingValue Value="_diagram">
+                                <DiagramCanvas>
+                                    <Widgets>
+                                        <GridWidget Size="20" Mode="GridMode.Point" BackgroundColor="transparent" />
+                                        <NavigatorWidget Width="180"
+                                                         Height="120"
+                                                         UseNodeShape="false"
+                                                         NodeColor="#1F7A8C"
+                                                         GroupColor="#99D6CE"
+                                                         ViewStrokeColor="#F4B860"
+                                                         Class="flow-navigator"
+                                                         Style="position:absolute;right:12px;bottom:12px;z-index:20;background:var(--mud-palette-surface);border:1px solid var(--mud-palette-lines-default);border-radius:8px;box-shadow:var(--mud-elevation-3);" />
+                                    </Widgets>
+                                </DiagramCanvas>
+                            </CascadingValue>
+                        </div>
+                    </MudItem>
+                </MudGrid>
 
-        </MudStack>
-    </MudExpansionPanel>
+            </MudStack>
+        </MudExpansionPanel>
     </MudExpansionPanels>
 </div>
 
