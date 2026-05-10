@@ -1,0 +1,216 @@
+@*
+    Live metrics widget. When expanded, surfaces the in-flight workspace stats:
+    total message count, bytes, unique topics, top-3 topics with bars, last
+    activity line. Subscribes to LiveMqttWorkspaceService.Changed so it ticks
+    in real time without a render loop.
+*@
+@implements IDisposable
+@inherits NodeWidgetBase
+@inject LiveMqttWorkspaceService Live
+
+<NodeWidgetShell Node="@Node" HeaderIcon="@Icons.Material.Filled.Insights" CategoryColor="@Color.Tertiary">
+    <Body>
+        <div class="metrics-grid">
+            <div class="metrics-tile metrics-tile-primary">
+                <MudIcon Icon="@Icons.Material.Filled.Speed" Size="Size.Small" />
+                <span class="metrics-value">@FormatNumber(_snapshot.MessageCount)</span>
+                <span class="metrics-label">messages</span>
+            </div>
+            <div class="metrics-tile metrics-tile-secondary">
+                <MudIcon Icon="@Icons.Material.Filled.DataUsage" Size="Size.Small" />
+                <span class="metrics-value">@FormatBytes(_snapshot.TotalPayloadBytes)</span>
+                <span class="metrics-label">payload</span>
+            </div>
+            <div class="metrics-tile metrics-tile-tertiary">
+                <MudIcon Icon="@Icons.Material.Filled.Topic" Size="Size.Small" />
+                <span class="metrics-value">@_snapshot.UniqueTopicCount</span>
+                <span class="metrics-label">topics</span>
+            </div>
+        </div>
+
+        @if (_topTopics.Count > 0)
+        {
+            <div class="metrics-top-topics">
+                @foreach (var entry in _topTopics)
+                {
+                    var pct = _snapshot.MessageCount == 0 ? 0 : (double)entry.Count / _snapshot.MessageCount * 100.0;
+                    <div class="metrics-topic-row">
+                        <span class="metrics-topic-name" title="@entry.Topic">@TrimTopic(entry.Topic)</span>
+                        <div class="metrics-topic-bar">
+                            <div class="metrics-topic-bar-fill" style="width:@pct.ToString("F0", System.Globalization.CultureInfo.InvariantCulture)%"></div>
+                        </div>
+                        <span class="metrics-topic-count">@entry.Count</span>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="metrics-empty">
+                <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" />
+                <span>Waiting for traffic…</span>
+            </div>
+        }
+
+        @if (_snapshot.LastTopic is not null)
+        {
+            <div class="metrics-last">
+                <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Small" />
+                <span class="metrics-last-topic" title="@_snapshot.LastTopic">@TrimTopic(_snapshot.LastTopic)</span>
+                <span class="metrics-last-time">@RelativeTime(_snapshot.LastReceivedAt)</span>
+            </div>
+        }
+    </Body>
+</NodeWidgetShell>
+
+<style>
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 6px;
+        margin-bottom: 8px;
+    }
+    .metrics-tile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        padding: 6px 4px;
+        border-radius: 6px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+    .metrics-tile-primary { border-color: var(--mud-palette-primary); }
+    .metrics-tile-secondary { border-color: var(--mud-palette-secondary); }
+    .metrics-tile-tertiary { border-color: var(--mud-palette-tertiary); }
+    .metrics-value {
+        font-size: 1.05rem;
+        font-weight: 600;
+        line-height: 1;
+        margin-top: 2px;
+    }
+    .metrics-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        opacity: 0.65;
+    }
+    .metrics-top-topics {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        margin-bottom: 6px;
+    }
+    .metrics-topic-row {
+        display: grid;
+        grid-template-columns: 1fr 60px 28px;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.7rem;
+    }
+    .metrics-topic-name {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        opacity: 0.85;
+    }
+    .metrics-topic-bar {
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(255,255,255,0.08);
+        overflow: hidden;
+    }
+    .metrics-topic-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--mud-palette-tertiary), var(--mud-palette-primary));
+        transition: width 0.3s ease;
+    }
+    .metrics-topic-count {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        opacity: 0.7;
+    }
+    .metrics-empty {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 0;
+        font-size: 0.75rem;
+        opacity: 0.6;
+    }
+    .metrics-last {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding-top: 4px;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        font-size: 0.7rem;
+        opacity: 0.75;
+    }
+    .metrics-last-topic {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .metrics-last-time {
+        font-variant-numeric: tabular-nums;
+        opacity: 0.65;
+    }
+</style>
+
+@code {
+    private FluxMq.Pipeline.Components.MqttMetrics.MqttMetricsSnapshot _snapshot = new();
+    private IReadOnlyList<LiveMetricsCalculator.TopicCount> _topTopics = [];
+
+    protected override void OnInitialized()
+    {
+        Live.Changed += OnLiveChanged;
+        Recompute();
+    }
+
+    private void OnLiveChanged(object? sender, EventArgs e)
+    {
+        Recompute();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void Recompute()
+    {
+        var messages = Live.RecentMessages;
+        _snapshot = LiveMetricsCalculator.Compute(messages);
+        _topTopics = LiveMetricsCalculator.TopTopics(messages, take: 3);
+    }
+
+    public void Dispose() => Live.Changed -= OnLiveChanged;
+
+    private static string FormatNumber(long value) => value switch
+    {
+        < 1_000 => value.ToString(),
+        < 1_000_000 => $"{value / 1000.0:0.#}k",
+        < 1_000_000_000 => $"{value / 1_000_000.0:0.#}M",
+        _ => $"{value / 1_000_000_000.0:0.#}B"
+    };
+
+    private static string FormatBytes(long bytes) => bytes switch
+    {
+        < 1_024 => $"{bytes} B",
+        < 1_048_576 => $"{bytes / 1024.0:0.#} KB",
+        < 1_073_741_824 => $"{bytes / 1_048_576.0:0.#} MB",
+        _ => $"{bytes / 1_073_741_824.0:0.#} GB"
+    };
+
+    private static string TrimTopic(string topic)
+        => topic.Length <= 28 ? topic : "…" + topic[^27..];
+
+    private static string RelativeTime(DateTimeOffset? when)
+    {
+        if (when is null) return "—";
+        var delta = DateTimeOffset.UtcNow - when.Value;
+        if (delta.TotalSeconds < 1) return "now";
+        if (delta.TotalSeconds < 60) return $"{(int)delta.TotalSeconds}s ago";
+        if (delta.TotalMinutes < 60) return $"{(int)delta.TotalMinutes}m ago";
+        if (delta.TotalHours < 24) return $"{(int)delta.TotalHours}h ago";
+        return when.Value.ToString("HH:mm:ss");
+    }
+}

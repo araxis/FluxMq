@@ -2,7 +2,7 @@ using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using System.Threading.Tasks.Dataflow;
 
-namespace FluxMq.Pipeline.Components;
+namespace FluxMq.Pipeline.Components.MqttMetrics;
 
 public sealed class MqttMetricsSinkComponent : IFlowNode
 {

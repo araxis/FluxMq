@@ -21,7 +21,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
             {
                 ["observeTraffic"] = new()
                 {
-                    ["source"] = Node("mqtt.message-source"),
+                    ["source"] = Node("mqtt.trigger"),
                     ["metrics"] = NodeWithPort("mqtt.metrics-sink", "Input", "\"source.Output\"")
                 },
                 ["recordTraffic"] = new()
@@ -117,7 +117,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
             {
                 ["flow"] = new()
                 {
-                    ["source"] = NodeWithPort("mqtt.message-source", "Connection", "\"broker.Output\"")
+                    ["source"] = NodeWithPort("mqtt.trigger", "Connection", "\"broker.Output\"")
                 }
             }
         };
@@ -155,7 +155,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
             {
                 ["flow"] = new()
                 {
-                    ["source"] = Node("mqtt.message-source"),
+                    ["source"] = Node("mqtt.trigger"),
                     ["metrics"] = NodeWithPort("mqtt.metrics-sink", "Input", "\"source.\"")
                 }
             }
@@ -175,7 +175,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
             {
                 ["flow"] = new()
                 {
-                    ["source"] = Node("mqtt.message-source"),
+                    ["source"] = Node("mqtt.trigger"),
                     ["metrics"] = NodeWithPort("mqtt.metrics-sink", "Input", "[\"source.Output\", \"source.Output\"]")
                 }
             }

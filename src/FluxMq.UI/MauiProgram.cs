@@ -30,6 +30,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IMessageRepository, LiteDbMessageRepository>();
         builder.Services.AddSingleton<ISessionRepository, LiteDbSessionRepository>();
         builder.Services.AddSingleton<FlowComponentCatalog>();
+        builder.Services.AddSingleton<NodeWidgetRegistry>();
         builder.Services.AddSingleton<FlowDefinitionComposer>();
         builder.Services.AddSingleton<FlowWorkspaceService>();
         builder.Services.AddSingleton<LiveMqttWorkspaceService>();

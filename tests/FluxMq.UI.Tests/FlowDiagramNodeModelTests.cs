@@ -12,7 +12,7 @@ public sealed class FlowDiagramNodeModelTests
         var model = new FlowDiagramNodeModel(
             new DiagramPoint(10, 20),
             "source",
-            "mqtt.message-source",
+            "mqtt.trigger",
             descriptor: null,
             isResource: false);
 
@@ -22,22 +22,34 @@ public sealed class FlowDiagramNodeModelTests
     }
 
     [Fact]
-    public void Toggle_SwitchesBetweenExpandedAndCollapsedState()
+    public void NewNode_DefaultsToCollapsed()
     {
         var model = new FlowDiagramNodeModel(
             new DiagramPoint(10, 20),
             "source",
-            "mqtt.message-source",
+            "mqtt.trigger",
             descriptor: null,
             isResource: false);
 
-        model.Toggle();
-
         model.IsCollapsed.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Toggle_SwitchesBetweenCollapsedAndExpandedState()
+    {
+        var model = new FlowDiagramNodeModel(
+            new DiagramPoint(10, 20),
+            "source",
+            "mqtt.trigger",
+            descriptor: null,
+            isResource: false);
+
+        // Default: collapsed.
+        model.Toggle();
+        model.IsCollapsed.Should().BeFalse();
 
         model.Toggle();
-
-        model.IsCollapsed.Should().BeFalse();
+        model.IsCollapsed.Should().BeTrue();
     }
 
     [Fact]
@@ -46,7 +58,7 @@ public sealed class FlowDiagramNodeModelTests
         var model = new FlowDiagramNodeModel(
             new DiagramPoint(10, 20),
             "source",
-            "mqtt.message-source",
+            "mqtt.trigger",
             descriptor: null,
             isResource: false);
 

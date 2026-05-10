@@ -2,6 +2,7 @@ using FluentAssertions;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Pipeline.Components;
+using FluxMq.Pipeline.Components.MqttMetrics;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Pipeline.Tests.Components;

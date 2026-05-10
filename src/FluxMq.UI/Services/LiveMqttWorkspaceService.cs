@@ -15,7 +15,7 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
     private readonly ITopicIndex _topicIndex;
     private readonly ISessionRepository _sessionRepository;
     private readonly IMessageRepository _messageRepository;
-    private readonly object _sync = new();
+    private readonly Lock _sync = new();
     private readonly List<MqttEnvelope> _messages = [];
     private IMqttSession? _session;
     private CancellationTokenSource? _readerCts;
@@ -85,6 +85,25 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         NotifyChanged();
     }
 
+    /// <summary>
+    /// Splits the Subscription string into individual MQTT topic filters.
+    /// Supports comma, semicolon, and newline separators so users can subscribe
+    /// to e.g. "#, $SYS/#" — note that the MQTT spec does NOT match $-prefixed
+    /// topics against the # wildcard, so $SYS/# must be specified explicitly.
+    /// </summary>
+    private static string[] ParseSubscriptionFilters(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return ["#"];
+
+        var filters = raw
+            .Split([',', ';', '\n', '\r'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        return filters.Length == 0 ? ["#"] : filters;
+    }
+
     public void SetProject(string projectName)
     {
         CurrentProjectName = NormalizeProject(projectName);
@@ -129,10 +148,16 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         try
         {
             await _session.ConnectAsync(cancellationToken).ConfigureAwait(false);
-            await _session.SubscribeAsync(Subscription, MqttQualityOfServiceLevel.AtMostOnce, cancellationToken).ConfigureAwait(false);
+
+            var filters = ParseSubscriptionFilters(Subscription);
+            foreach (var filter in filters)
+            {
+                await _session.SubscribeAsync(filter, MqttQualityOfServiceLevel.AtMostOnce, cancellationToken).ConfigureAwait(false);
+            }
+
             Diagnostics =
             [
-                new WorkspaceDiagnostic("Info", "MQTT", "Subscribed", $"Subscribed to {Subscription}.")
+                new WorkspaceDiagnostic("Info", "MQTT", "Subscribed", $"Subscribed to {string.Join(", ", filters)}.")
             ];
             _readerTask = ReadMessagesAsync(_session, _readerCts.Token);
         }

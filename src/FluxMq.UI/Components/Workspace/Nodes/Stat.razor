@@ -1,0 +1,15 @@
+@*
+    Tiny single-line "icon + label + value" row used by node widgets to show
+    a piece of compact summary info. Keeps the shell free of layout noise.
+*@
+<div class="node-stat">
+    <MudIcon Icon="@Icon" Size="Size.Small" />
+    <span class="node-stat-label">@Label</span>
+    <span class="node-stat-value" title="@Value">@Value</span>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Icon { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Label { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Value { get; set; } = string.Empty;
+}

@@ -33,41 +33,75 @@ public sealed class FlowDefinitionComposerTests
         var result = host.Build();
 
         result.IsSuccess.Should().BeTrue(string.Join(Environment.NewLine, result.RuntimeBuild?.Errors.Select(error => error.Message) ?? []));
-        result.RuntimeBuild!.Runtime!.Resources.Keys.Select(key => key.Value).Should().Contain("source");
+        result.RuntimeBuild!.Runtime!.Resources.Keys.Select(key => key.Value)
+            .Should().Contain(FlowDefinitionComposer.BrokerResourceName);
     }
 
     [Fact]
-    public void UpsertComponent_UpdatesSourceWithoutRemovingExistingWorkflowNodes()
+    public void UpsertBroker_UpdatesConnectionAndTrigger_WithoutRemovingDownstreamNodes()
     {
         var composer = new FlowDefinitionComposer();
         var initial = composer.CreateInspectPayloadsDefinition(
             new MqttConnectionProfile { Name = "first", Host = "localhost", Port = 1883, ClientId = "first-client" },
             "#");
 
-        var updated = composer.UpsertComponent(
+        var updated = composer.UpsertBroker(
             initial,
-            "mqtt.message-source",
             new MqttConnectionProfile { Name = "second", Host = "127.0.0.1", Port = 1884, ClientId = "second-client" },
             "devices/#");
 
         using var document = JsonDocument.Parse(updated);
         var flowApplication = document.RootElement.GetProperty("FluxMq").GetProperty("FlowApplication");
 
+        // Broker connection updated
         flowApplication
             .GetProperty("resources")
-            .GetProperty("source")
+            .GetProperty(FlowDefinitionComposer.BrokerResourceName)
             .GetProperty("configuration")
             .GetProperty("profile")
             .GetProperty("port")
             .GetInt32()
-            .Should()
-            .Be(1884);
+            .Should().Be(1884);
 
+        // Trigger subscription updated
+        var trigger = flowApplication
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty(FlowDefinitionComposer.TriggerNodeName);
+
+        trigger.GetProperty("configuration").GetProperty("connection").GetString()
+            .Should().Be(FlowDefinitionComposer.BrokerResourceName);
+
+        trigger.GetProperty("configuration").GetProperty("subscriptions")[0].GetString()
+            .Should().Be("devices/#");
+
+        // Inspector / metrics nodes still present
         flowApplication
             .GetProperty("workflows")
-            .GetProperty("inspectPayloads")
-            .TryGetProperty("inspect", out _)
-            .Should()
-            .BeTrue();
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .TryGetProperty(FlowDefinitionComposer.InspectorNodeName, out _)
+            .Should().BeTrue();
+    }
+
+    [Fact]
+    public void AddComponent_WiresInspectorToTriggerOutput()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var updated = composer.AddComponent(initial, "mqtt.payload-inspector");
+
+        using var document = JsonDocument.Parse(updated);
+        var inspect = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty(FlowDefinitionComposer.InspectorNodeName);
+
+        inspect.GetProperty("Input").GetString()
+            .Should().Be($"{FlowDefinitionComposer.TriggerNodeName}.Output");
     }
 }

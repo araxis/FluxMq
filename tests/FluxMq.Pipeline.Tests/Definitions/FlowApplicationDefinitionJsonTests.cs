@@ -19,7 +19,7 @@ public sealed class FlowApplicationDefinitionJsonTests
               "workflows": {
                 "observeTraffic": {
                   "source": {
-                    "type": "mqtt.message-source"
+                    "type": "mqtt.trigger"
                   },
                   "metrics": {
                     "type": "mqtt.metrics-sink",
@@ -91,7 +91,7 @@ public sealed class FlowApplicationDefinitionJsonTests
                 {
                     ["source"] = new FlowNodeDefinition
                     {
-                        Type = new FlowNodeType("mqtt.message-source")
+                        Type = new FlowNodeType("mqtt.trigger")
                     },
                     ["metrics"] = new FlowNodeDefinition
                     {

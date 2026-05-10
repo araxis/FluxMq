@@ -1,0 +1,251 @@
+.flow-designer-root {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.flow-designer-root ::deep .flow-designer-panels,
+.flow-designer-root ::deep .flow-designer-panel,
+.flow-designer-root ::deep .mud-collapse-container,
+.flow-designer-root ::deep .mud-collapse-wrapper,
+.flow-designer-root ::deep .mud-collapse-wrapper-inner,
+.flow-designer-root ::deep .mud-expand-panel-content,
+.flow-designer-root ::deep .flow-designer-content {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+}
+
+.flow-designer-root ::deep .flow-designer-panel {
+    overflow: hidden;
+}
+
+.flow-designer-root ::deep .mud-expand-panel-header,
+.flow-designer-root ::deep .flow-designer-toolbar {
+    flex: 0 0 auto;
+}
+
+.flow-designer-root ::deep .mud-expand-panel-content {
+    padding-bottom: 0;
+}
+
+.flow-designer-root ::deep .flow-designer-grid {
+    align-content: stretch;
+    flex: 1 1 auto;
+    height: 100%;
+    margin-bottom: 0;
+    min-height: 0;
+}
+
+.flow-designer-root ::deep .flow-designer-catalog,
+.flow-designer-root ::deep .flow-designer-canvas-column {
+    display: flex;
+    min-height: 0;
+    min-width: 0;
+}
+
+.flow-designer-root ::deep .flow-designer-catalog-paper {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.flow-designer-root ::deep .flow-designer-catalog-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.flow-canvas {
+    flex: 1 1 auto;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+}
+
+.flow-canvas ::deep .diagram-canvas {
+    height: 100%;
+    width: 100%;
+}
+
+.flow-designer-root ::deep .flow-navigator {
+    pointer-events: none;
+}
+
+.flow-designer-root ::deep .flow-node {
+    background: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 8px;
+    box-shadow: var(--mud-elevation-2);
+    min-width: 260px;
+    overflow: visible;
+    padding: 10px;
+    position: relative;
+}
+
+.flow-designer-root ::deep .flow-node-selected {
+    border-color: var(--mud-palette-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-primary) 28%, transparent);
+}
+
+.flow-designer-root ::deep .flow-node-header,
+.flow-designer-root ::deep .flow-node-ports {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+}
+
+.flow-designer-root ::deep .flow-node-title {
+    flex: 1;
+    min-width: 0;
+}
+
+.flow-designer-root ::deep .flow-node-ports {
+    flex-wrap: wrap;
+    margin: 10px 0;
+}
+
+.flow-designer-root ::deep .diagram-port {
+    background: var(--mud-palette-surface);
+    border: 2px solid var(--mud-palette-primary);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-primary) 18%, transparent);
+    height: 12px !important;
+    transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+    width: 12px !important;
+    z-index: 5;
+}
+
+.flow-designer-root ::deep .diagram-port:hover {
+    background: var(--mud-palette-primary);
+    transform: scale(1.35);
+}
+
+.flow-designer-root ::deep .diagram-port.left {
+    border-color: var(--mud-palette-info);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-info) 18%, transparent);
+    margin-left: -6px;
+}
+
+.flow-designer-root ::deep .diagram-port.left:hover {
+    background: var(--mud-palette-info);
+}
+
+.flow-designer-root ::deep .diagram-port.right {
+    border-color: var(--mud-palette-secondary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-secondary) 18%, transparent);
+    margin-left: 6px;
+}
+
+.flow-designer-root ::deep .diagram-port.right:hover {
+    background: var(--mud-palette-secondary);
+}
+
+.flow-designer-root ::deep .diagram-port.has-link {
+    background: var(--mud-palette-primary);
+}
+
+.flow-designer-root ::deep .diagram-port.left.has-link {
+    background: var(--mud-palette-info);
+}
+
+.flow-designer-root ::deep .diagram-port.right.has-link {
+    background: var(--mud-palette-secondary);
+}
+
+.flow-designer-root ::deep .node-flip {
+    perspective: 1000px;
+    position: relative;
+}
+
+.flow-designer-root ::deep .node-flip-inner {
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.55s ease;
+}
+
+.flow-designer-root ::deep .node-flip.flipped .node-flip-inner {
+    transform: rotateY(180deg);
+}
+
+.flow-designer-root ::deep .node-flip-face {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+.flow-designer-root ::deep .node-flip-back {
+    display: flex;
+    flex-direction: column;
+    inset: 0;
+    position: absolute;
+    transform: rotateY(180deg);
+}
+
+.flow-designer-root ::deep .node-edit-actions {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    gap: 4px;
+    justify-content: flex-end;
+    margin-top: 6px;
+    padding: 4px 0;
+}
+
+.flow-designer-root ::deep .node-edit-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+    padding-right: 2px;
+}
+
+.flow-designer-root ::deep .node-stat {
+    align-items: center;
+    display: grid;
+    font-size: 0.72rem;
+    gap: 6px;
+    grid-template-columns: 18px auto 1fr;
+    line-height: 1.2;
+}
+
+.flow-designer-root ::deep .node-stat-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    opacity: 0.6;
+    text-transform: uppercase;
+}
+
+.flow-designer-root ::deep .node-stat-value {
+    font-variant-numeric: tabular-nums;
+    overflow: hidden;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 960px) {
+    .flow-designer-root {
+        min-height: 620px;
+    }
+
+    .flow-designer-root ::deep .flow-designer-grid {
+        overflow-y: auto;
+    }
+
+    .flow-canvas {
+        min-height: 420px;
+    }
+}

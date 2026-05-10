@@ -18,7 +18,7 @@
                    Dense="true"
                    Margin="Margin.Dense"
                    Variant="Variant.Text"
-                   FitContent ="true"
+                   FitContent="true"
                    Underline="false"
                    Style="width: 132px">
             <MudSelectItem Value="@ThemePreference.System">System</MudSelectItem>
@@ -27,11 +27,19 @@
         </MudSelect>
     </MudAppBar>
 
-    <MudDrawer @bind-Open="_drawerOpen" Elevation="0" ClipMode="DrawerClipMode.Always" Variant="DrawerVariant.Mini">
-        <MudNavMenu Dense="true">
-            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Hub">Workspace</MudNavLink>
-            <MudNavLink Href="/definition" Icon="@Icons.Material.Filled.DataObject">Definition</MudNavLink>
-        </MudNavMenu>
+    <MudDrawer @bind-Open="_drawerOpen"
+               Elevation="1"
+               ClipMode="DrawerClipMode.Always"
+               Variant="DrawerVariant.Persistent"
+               Width="340px"
+               Class="flux-drawer">
+        <div class="flux-drawer-scroll flux-scroll">
+            <MudStack Spacing="2" Class="pa-2">
+                <ConnectionPanel />
+                <SessionPanel />
+                <RuntimePanel />
+            </MudStack>
+        </div>
     </MudDrawer>
 
     <MudMainContent Class="flux-main">

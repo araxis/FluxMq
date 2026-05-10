@@ -1,0 +1,146 @@
+@*
+    Trigger widget. Read view shows the subscription filters as chips; edit view
+    flips to a per-row editor (text + remove button) plus an "add filter" row,
+    and saves the list back to configuration.subscriptions.
+*@
+@inherits NodeWidgetBase
+@inject FlowWorkspaceService Flow
+
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.Bolt"
+                 CategoryColor="@Color.Primary"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
+    <Body>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            Bound to a connection. Emits envelopes whose topic matches one of these filters.
+        </MudText>
+        <Stat Icon="@Icons.Material.Filled.Cable" Label="Connection" Value="@(ConnectionRef ?? "—")" />
+        <div class="flow-node-filters mt-1 d-flex flex-wrap gap-1">
+            @foreach (var filter in Filters)
+            {
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Variant="Variant.Filled"
+                         Color="@(IsSystemFilter(filter) ? Color.Warning : Color.Primary)"
+                         Icon="@Icons.Material.Filled.Topic">
+                    @filter
+                </MudChip>
+            }
+        </div>
+    </Body>
+    <Editor>
+        <MudTextField T="string"
+                      Label="Connection (resource name)"
+                      @bind-Value="_connection"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense" />
+        <MudText Typo="Typo.caption" Color="Color.Secondary">Subscriptions</MudText>
+        @for (var i = 0; i < _draftFilters.Count; i++)
+        {
+            var index = i;
+            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                <MudTextField T="string"
+                              Value="@_draftFilters[index]"
+                              ValueChanged="@(v => _draftFilters[index] = v ?? string.Empty)"
+                              Placeholder="topic/#"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Class="flex-grow-1" />
+                <MudIconButton Size="Size.Small"
+                               Icon="@Icons.Material.Filled.Close"
+                               OnClick="@(() => _draftFilters.RemoveAt(index))" />
+            </MudStack>
+        }
+        <MudButton Size="Size.Small"
+                   Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="@AddRow">Add filter</MudButton>
+    </Editor>
+</NodeWidgetShell>
+
+@code {
+    private string? ConnectionRef => Node.Configuration?["connection"]?.GetValue<string?>();
+
+    private string[] Filters => ReadFilters(Node.Configuration);
+
+    private string _connection = string.Empty;
+    private readonly List<string> _draftFilters = [];
+
+    protected override void OnParametersSet()
+    {
+        LoadDraft();
+    }
+
+    private void LoadDraft()
+    {
+        _connection = ConnectionRef ?? string.Empty;
+        _draftFilters.Clear();
+        _draftFilters.AddRange(Filters);
+        if (_draftFilters.Count == 0)
+        {
+            _draftFilters.Add("#");
+        }
+    }
+
+    private void AddRow() => _draftFilters.Add(string.Empty);
+
+    private Task SaveAsync()
+    {
+        var trimmed = _draftFilters
+            .Select(f => f?.Trim() ?? string.Empty)
+            .Where(f => f.Length > 0)
+            .ToArray();
+        if (trimmed.Length == 0)
+        {
+            trimmed = ["#"];
+        }
+
+        var subscriptions = new System.Text.Json.Nodes.JsonArray();
+        foreach (var filter in trimmed)
+        {
+            subscriptions.Add(filter);
+        }
+
+        var updated = new System.Text.Json.Nodes.JsonObject
+        {
+            ["connection"] = string.IsNullOrWhiteSpace(_connection)
+                ? FlowDefinitionComposer.BrokerResourceName
+                : _connection,
+            ["subscriptions"] = subscriptions,
+            ["boundedCapacity"] = ReadIntOrDefault(Node.Configuration, "boundedCapacity", 1000)
+        };
+
+        Flow.UpdateNodeConfiguration(Node.NodeName, updated);
+        return Task.CompletedTask;
+    }
+
+    private static string[] ReadFilters(System.Text.Json.Nodes.JsonObject? configuration)
+    {
+        if (configuration?["subscriptions"] is not System.Text.Json.Nodes.JsonArray array)
+        {
+            return ["#"];
+        }
+
+        return array
+            .Select(node => node switch
+            {
+                System.Text.Json.Nodes.JsonValue v when v.TryGetValue<string>(out var s) => s,
+                System.Text.Json.Nodes.JsonObject o => o["topicFilter"]?.GetValue<string?>() ?? string.Empty,
+                _ => string.Empty
+            })
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .ToArray();
+    }
+
+    private static int ReadIntOrDefault(System.Text.Json.Nodes.JsonObject? root, string key, int fallback)
+    {
+        if (root?[key] is System.Text.Json.Nodes.JsonValue value && value.TryGetValue<int>(out var result))
+        {
+            return result;
+        }
+        return fallback;
+    }
+
+    private static bool IsSystemFilter(string f) => f.StartsWith('$');
+}

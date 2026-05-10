@@ -4,8 +4,21 @@ using System.Text.Json.Nodes;
 
 namespace FluxMq.UI.Services;
 
+/// <summary>
+/// Builds JSON flow definitions for the desktop workspace. The default shape is:
+///   resources.broker            (mqtt.connection)
+///   workflows.inspectPayloads.trigger  (mqtt.trigger -> broker)
+///   workflows.inspectPayloads.inspect  (mqtt.payload-inspector &lt;- trigger.Output)
+///   workflows.inspectPayloads.metrics  (mqtt.metrics-sink &lt;- trigger.Output)
+/// </summary>
 public sealed class FlowDefinitionComposer
 {
+    public const string BrokerResourceName = "broker";
+    public const string TriggerNodeName = "trigger";
+    public const string InspectorNodeName = "inspect";
+    public const string MetricsNodeName = "metrics";
+    public const string DefaultWorkflowName = "inspectPayloads";
+
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = true
@@ -15,23 +28,25 @@ public sealed class FlowDefinitionComposer
     {
         var root = CreateRoot();
         var flowApplication = GetFlowApplication(root);
+
         flowApplication["resources"] = new JsonObject
         {
-            ["source"] = CreateMessageSource(profile, subscription)
+            [BrokerResourceName] = CreateConnection(profile)
         };
         flowApplication["workflows"] = new JsonObject
         {
-            ["inspectPayloads"] = new JsonObject
+            [DefaultWorkflowName] = new JsonObject
             {
-                ["inspect"] = new JsonObject
+                [TriggerNodeName] = CreateTrigger(BrokerResourceName, subscription),
+                [InspectorNodeName] = new JsonObject
                 {
                     ["type"] = "mqtt.payload-inspector",
-                    ["Input"] = "source.Output"
+                    ["Input"] = $"{TriggerNodeName}.Output"
                 },
-                ["metrics"] = new JsonObject
+                [MetricsNodeName] = new JsonObject
                 {
                     ["type"] = "mqtt.metrics-sink",
-                    ["Input"] = "source.Output"
+                    ["Input"] = $"{TriggerNodeName}.Output"
                 }
             }
         };
@@ -39,35 +54,117 @@ public sealed class FlowDefinitionComposer
         return root.ToJsonString(Options);
     }
 
-    public string UpsertComponent(string json, string componentType, MqttConnectionProfile profile, string subscription)
+    /// <summary>
+    /// Updates broker settings and the trigger's subscription list in an existing
+    /// definition. Inserts the connection / trigger pair if missing.
+    /// </summary>
+    public string UpsertBroker(string json, MqttConnectionProfile profile, string subscription)
     {
         var root = ParseOrCreate(json);
         var flowApplication = GetFlowApplication(root);
 
-        if (componentType == "mqtt.message-source")
+        var resources = GetOrCreateObject(flowApplication, "resources");
+        resources[BrokerResourceName] = CreateConnection(profile);
+
+        var workflows = GetOrCreateObject(flowApplication, "workflows");
+        var workflow = GetOrCreateObject(workflows, DefaultWorkflowName);
+        workflow[TriggerNodeName] = CreateTrigger(BrokerResourceName, subscription);
+
+        return root.ToJsonString(Options);
+    }
+
+    /// <summary>
+    /// Replaces the configuration object of a single node identified by its
+    /// resource or workflow-node name. Returns the original JSON unchanged
+    /// when the node can't be located. Used by per-node editor widgets.
+    /// </summary>
+    public string UpdateNodeConfiguration(string json, string nodeName, JsonObject configuration)
+    {
+        if (string.IsNullOrWhiteSpace(json) || string.IsNullOrWhiteSpace(nodeName))
         {
-            var resources = GetOrCreateObject(flowApplication, "resources");
-            resources["source"] = CreateMessageSource(profile, subscription);
+            return json;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+
+        // Resources first.
+        if (flowApplication["resources"] is JsonObject resources && resources[nodeName] is JsonObject resourceNode)
+        {
+            resourceNode["configuration"] = configuration;
             return root.ToJsonString(Options);
         }
 
+        // Then workflows.
+        if (flowApplication["workflows"] is JsonObject workflows)
+        {
+            foreach (var workflow in workflows)
+            {
+                if (workflow.Value is JsonObject workflowObject && workflowObject[nodeName] is JsonObject workflowNode)
+                {
+                    workflowNode["configuration"] = configuration;
+                    return root.ToJsonString(Options);
+                }
+            }
+        }
+
+        return json;
+    }
+
+    /// <summary>Adds a downstream component (inspector, metrics-sink, ...) wired to the trigger output.</summary>
+    public string AddComponent(string json, string componentType)
+    {
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
         var workflows = GetOrCreateObject(flowApplication, "workflows");
-        var workflow = GetOrCreateObject(workflows, "inspectPayloads");
+        var workflow = GetOrCreateObject(workflows, DefaultWorkflowName);
+
         var nodeName = componentType switch
         {
-            "mqtt.payload-inspector" => "inspect",
-            "mqtt.metrics-sink" => "metrics",
+            "mqtt.payload-inspector" => InspectorNodeName,
+            "mqtt.metrics-sink" => MetricsNodeName,
             _ => MakeNodeName(componentType)
         };
 
         workflow[nodeName] = new JsonObject
         {
             ["type"] = componentType,
-            ["Input"] = "source.Output"
+            ["Input"] = $"{TriggerNodeName}.Output"
         };
 
         return root.ToJsonString(Options);
     }
+
+    private static JsonObject CreateConnection(MqttConnectionProfile profile)
+        => new()
+        {
+            ["type"] = "mqtt.connection",
+            ["configuration"] = new JsonObject
+            {
+                ["profile"] = new JsonObject
+                {
+                    ["name"] = string.IsNullOrWhiteSpace(profile.Name) ? "local-broker" : profile.Name,
+                    ["host"] = profile.Host,
+                    ["port"] = profile.Port,
+                    ["clientId"] = profile.ClientId,
+                    ["useTls"] = profile.UseTls,
+                    ["keepAliveSeconds"] = (int)Math.Max(1, profile.KeepAlive.TotalSeconds),
+                    ["cleanStart"] = profile.CleanStart
+                }
+            }
+        };
+
+    private static JsonObject CreateTrigger(string connectionRef, string subscription)
+        => new()
+        {
+            ["type"] = "mqtt.trigger",
+            ["configuration"] = new JsonObject
+            {
+                ["connection"] = connectionRef,
+                ["subscriptions"] = new JsonArray(string.IsNullOrWhiteSpace(subscription) ? "#" : subscription),
+                ["boundedCapacity"] = 1000
+            }
+        };
 
     private static JsonObject CreateRoot()
         => new()
@@ -106,27 +203,6 @@ public sealed class FlowDefinitionComposer
         parent[propertyName] = created;
         return created;
     }
-
-    private static JsonObject CreateMessageSource(MqttConnectionProfile profile, string subscription)
-        => new()
-        {
-            ["type"] = "mqtt.message-source",
-            ["configuration"] = new JsonObject
-            {
-                ["profile"] = new JsonObject
-                {
-                    ["name"] = string.IsNullOrWhiteSpace(profile.Name) ? "local-broker" : profile.Name,
-                    ["host"] = profile.Host,
-                    ["port"] = profile.Port,
-                    ["clientId"] = profile.ClientId,
-                    ["useTls"] = profile.UseTls,
-                    ["keepAliveSeconds"] = (int)Math.Max(1, profile.KeepAlive.TotalSeconds),
-                    ["cleanStart"] = profile.CleanStart
-                },
-                ["subscriptions"] = new JsonArray(string.IsNullOrWhiteSpace(subscription) ? "#" : subscription),
-                ["boundedCapacity"] = 1000
-            }
-        };
 
     private static string MakeNodeName(string componentType)
     {

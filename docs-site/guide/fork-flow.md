@@ -15,7 +15,8 @@ source or trigger
 Record and inspect messages:
 
 ```text
-MQTT message source
+MQTT connection resource
+  -> MQTT trigger
   -> Topic filter
   -> Payload inspector
   -> UI projection
@@ -24,7 +25,8 @@ MQTT message source
 Record selected messages:
 
 ```text
-MQTT message source
+MQTT connection resource
+  -> MQTT trigger
   -> Topic filter
   -> Recording sink
 ```
@@ -48,7 +50,8 @@ Connection state trigger
 Branch live traffic:
 
 ```text
-MQTT message source
+MQTT connection resource
+  -> MQTT trigger
   -> Condition router
   -> Matching branch / non-matching branch
 ```
@@ -56,7 +59,8 @@ MQTT message source
 Observe traffic:
 
 ```text
-MQTT message source
+MQTT connection resource
+  -> MQTT trigger
   -> Metrics sink
   -> UI projection
 ```
@@ -84,26 +88,32 @@ Each workflow is an object. Each node is a property inside that workflow object.
 ```json
 {
   "resources": {
-    "source": {
-      "type": "mqtt.message-source",
+    "broker": {
+      "type": "mqtt.connection",
       "configuration": {
         "profile": {
           "name": "local-broker",
           "host": "localhost",
           "port": 1883
-        },
-        "subscriptions": [
-          "factory/#",
-          { "topicFilter": "telemetry/#", "qos": 1 }
-        ]
+        }
       }
     }
   },
   "workflows": {
     "observeTraffic": {
+      "trigger": {
+        "type": "mqtt.trigger",
+        "configuration": {
+          "connection": "broker",
+          "subscriptions": [
+            "factory/#",
+            { "topicFilter": "telemetry/#", "qos": 1 }
+          ]
+        }
+      },
       "metrics": {
         "type": "mqtt.metrics-sink",
-        "Input": "source.Output"
+        "Input": "trigger.Output"
       }
     }
   }
@@ -132,13 +142,18 @@ The first runtime builder can create registered node types and link compatible t
 
 The first registered runtime component types are:
 
-- `mqtt.message-source`: resource-style source that starts an MQTT session, subscribes to configured topics, emits `MqttEnvelope` on `Output`, and publishes `FlowError` on `Errors`.
+- `mqtt.connection`: shared resource that owns an MQTT session and publishes `FlowError` on `Errors`.
+- `mqtt.trigger`: workflow node that references a connection resource, subscribes to topic filters, emits `MqttEnvelope` on `Output`, and publishes `FlowError` on `Errors`.
 - `mqtt.payload-inspector`: `Input` receives `MqttEnvelope`, `Output` publishes `InspectedMqttMessage`, and `Errors` publishes `FlowError`.
 - `mqtt.metrics-sink`: `Input` receives `MqttEnvelope`, `Snapshots` publishes `MqttMetricsSnapshot`, and `Errors` publishes `FlowError`.
 
-Source configuration supports:
+Connection configuration supports:
 
 - `profile` object (`name` required; host/port/clientId/useTls/username/password/keepAliveSeconds/cleanStart optional)
+
+Trigger configuration supports:
+
+- `connection` resource name
 - `subscriptions` as string, array of strings, or array of objects
 - `qos` per subscription as `0|1|2` or `AtMostOnce|AtLeastOnce|ExactlyOnce`
 - optional `boundedCapacity`
@@ -185,7 +200,8 @@ The first desktop alpha includes a Blazor.Diagrams canvas that projects the curr
 
 ## Current Building Blocks
 
-- MQTT message source: reads live messages from an active session.
+- MQTT connection: owns the shared broker session.
+- MQTT trigger: subscribes through a connection and emits matching live messages.
 - Replay source: emits messages from a stored recording.
 - Topic filter: forwards only matching messages.
 - Condition router: sends each message to a true or false branch.

@@ -1,0 +1,17 @@
+@*
+    Inspector widget: shows what formats the inspector recognizes (JSON / hex / raw).
+*@
+@inherits NodeWidgetBase
+
+<NodeWidgetShell Node="@Node" HeaderIcon="@Icons.Material.Filled.FindInPage" CategoryColor="@Color.Secondary">
+    <Body>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            Maps incoming envelopes into typed payload inspections (JSON, text, binary).
+        </MudText>
+        <div class="d-flex gap-1 mt-2">
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">JSON</MudChip>
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">Text</MudChip>
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">Hex</MudChip>
+        </div>
+    </Body>
+</NodeWidgetShell>

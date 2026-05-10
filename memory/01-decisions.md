@@ -324,14 +324,15 @@ Reasoning:
 
 Status: Accepted.
 
-### 2026-05-09 - Register mqtt.message-source as the first service-backed runtime resource
+### 2026-05-09 - Split MQTT intake into connection resources and trigger nodes
 
-Decision: Add `mqtt.message-source` to `RegisterPipelineComponentFactories` as the first service-backed runtime registration, with explicit profile and subscription configuration parsing.
+Decision: Register `mqtt.connection` as the shared MQTT session resource and `mqtt.trigger` as the workflow node that subscribes through that resource and emits matching messages.
 
 Reasoning:
 - The runtime lifecycle path for resource start/dispose should be exercised by a real component, not only no-service components.
 - Message ingestion needs a config-first path that can run under `FlowApplicationHost` and `FluxMq.Cli`.
-- `mqtt.message-source` is a natural first service-backed registration because it already encapsulates session message streaming behavior.
+- Connections and subscriptions have different lifetimes: a connection can be shared across workflows, while each trigger owns the topic filters that define when it emits.
+- This matches the object-shaped definition model: shared broker configuration lives under `resources`, and workflow behavior lives under named workflow nodes.
 - Factory-level parsing gives clear build errors for invalid `profile`, `subscriptions`, or `qos` values before runtime start.
 - Keeping a session factory parameter on registration preserves deterministic testability while production stays on `MqttSession`.
 

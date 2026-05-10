@@ -3,72 +3,69 @@
 @inject LiveMqttWorkspaceService Live
 @inject FlowComponentCatalog Catalog
 
-<MudExpansionPanels Dense="true" Elevation="0">
-    <MudExpansionPanel Text="Fork Flow" Icon="@Icons.Material.Filled.AccountTree" Expanded="true">
-        <MudStack Spacing="2">
-            <MudStack Row="true" AlignItems="AlignItems.Center">
-                <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" />
-                <MudText Typo="Typo.subtitle1">Fork Flow</MudText>
-                <MudSpacer />
-                <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" OnClick="@ZoomToFit" />
+<div class="flow-designer-root">
+    <MudExpansionPanels Dense="true" Elevation="0" Class="flow-designer-panels">
+        <MudExpansionPanel Text="Fork Flow" Icon="@Icons.Material.Filled.AccountTree" Expanded="true" Class="flow-designer-panel">
+            <MudStack Spacing="2" Class="flow-designer-content">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="flow-designer-toolbar">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" />
+                    <MudText Typo="Typo.subtitle1">Fork Flow</MudText>
+                    <MudSpacer />
+                    <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" OnClick="@ZoomToFit" />
+                </MudStack>
+
+                <MudGrid Spacing="2" Class="flow-designer-grid">
+                    <MudItem xs="12" md="4" Class="flow-designer-catalog">
+                        <MudPaper Elevation="0" Outlined="true" Class="flow-designer-catalog-paper pa-2">
+                            <MudText Typo="Typo.subtitle2" Class="mb-2">Components</MudText>
+                            <MudStack Spacing="1" Class="flow-designer-catalog-list">
+                                @foreach (var component in Catalog.Components)
+                                {
+                                    <MudPaper Elevation="0"
+                                              Outlined="true"
+                                              Class="pa-2"
+                                              draggable="true"
+                                              @ondragstart="@(() => OnDragStart(component.Type))">
+                                        <MudStack Row="true" AlignItems="AlignItems.Center">
+                                            <MudIcon Icon="@IconFor(component)" Color="@ColorFor(component)" />
+                                            <div>
+                                                <MudText Typo="Typo.body2">@component.DisplayName</MudText>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">@component.Category</MudText>
+                                            </div>
+                                            <MudSpacer />
+                                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Add" OnClick="@(() => AddComponent(component.Type))" />
+                                        </MudStack>
+                                    </MudPaper>
+                                }
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
+
+                    <MudItem xs="12" md="8" Class="flow-designer-canvas-column">
+                        <div class="flow-canvas" ondragover="event.preventDefault();" @ondragover:preventDefault @ondrop="@OnDrop">
+                            <CascadingValue Value="_diagram">
+                                <DiagramCanvas>
+                                    <Widgets>
+                                        <GridWidget Size="20" Mode="GridMode.Point" BackgroundColor="transparent" />
+                                        <NavigatorWidget Width="180"
+                                                         Height="120"
+                                                         UseNodeShape="false"
+                                                         NodeColor="#1F7A8C"
+                                                         GroupColor="#99D6CE"
+                                                         ViewStrokeColor="#F4B860"
+                                                         Class="flow-navigator"
+                                                         Style="position:absolute;right:12px;bottom:12px;z-index:20;background:var(--mud-palette-surface);border:1px solid var(--mud-palette-lines-default);border-radius:8px;box-shadow:var(--mud-elevation-3);" />
+                                    </Widgets>
+                                </DiagramCanvas>
+                            </CascadingValue>
+                        </div>
+                    </MudItem>
+                </MudGrid>
+
             </MudStack>
-
-            <MudGrid Spacing="2">
-                <MudItem xs="12" md="4">
-                    <MudPaper Elevation="0" Outlined="true" Class="pa-2">
-                        <MudText Typo="Typo.subtitle2" Class="mb-2">Components</MudText>
-                        <MudStack Spacing="1">
-                            @foreach (var component in Catalog.Components)
-                            {
-                                <MudPaper Elevation="0"
-                                          Outlined="true"
-                                          Class="pa-2"
-                                          draggable="true"
-                                          @ondragstart="@(() => OnDragStart(component.Type))">
-                                    <MudStack Row="true" AlignItems="AlignItems.Center">
-                                        <MudIcon Icon="@IconFor(component)" Color="@ColorFor(component)" />
-                                        <div>
-                                            <MudText Typo="Typo.body2">@component.DisplayName</MudText>
-                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@component.Category</MudText>
-                                        </div>
-                                        <MudSpacer />
-                                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Add" OnClick="@(() => AddComponent(component.Type))" />
-                                    </MudStack>
-                                </MudPaper>
-                            }
-                        </MudStack>
-                    </MudPaper>
-                </MudItem>
-
-                <MudItem xs="12" md="8">
-                    <div class="flow-canvas" ondragover="event.preventDefault();" @ondragover:preventDefault @ondrop="@OnDrop">
-                        <CascadingValue Value="_diagram">
-                            <DiagramCanvas>
-                                <Widgets>
-                                    <GridWidget Size="20" Mode="GridMode.Point" BackgroundColor="transparent" />
-                                    <NavigatorWidget Width="180"
-                                                     Height="120"
-                                                     UseNodeShape="false"
-                                                     NodeColor="#1F7A8C"
-                                                     GroupColor="#99D6CE"
-                                                     ViewStrokeColor="#F4B860"
-                                                     Class="flow-navigator"
-                                                     Style="position:absolute;right:12px;bottom:12px;z-index:20;background:var(--mud-palette-surface);border:1px solid var(--mud-palette-lines-default);border-radius:8px;box-shadow:var(--mud-elevation-3);" />
-                                </Widgets>
-                            </DiagramCanvas>
-                        </CascadingValue>
-                    </div>
-                </MudItem>
-            </MudGrid>
-
-            <MudExpansionPanels Dense="true" Elevation="0">
-                <MudExpansionPanel Text="Definition JSON" Icon="@Icons.Material.Filled.DataObject" Expanded="false">
-                    <DefinitionEditor />
-                </MudExpansionPanel>
-            </MudExpansionPanels>
-        </MudStack>
-    </MudExpansionPanel>
-</MudExpansionPanels>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+</div>
 
 @code {
     private readonly BlazorDiagram _diagram = new(new Blazor.Diagrams.Options.BlazorDiagramOptions
@@ -92,7 +89,7 @@
 
     private void AddComponent(string componentType)
     {
-        Flow.AddComponent(componentType, Live.Profile, Live.Subscription);
+        Flow.AddComponent(componentType);
     }
 
     private void OnDragStart(string componentType)
@@ -175,6 +172,9 @@
                             continue;
                         }
 
+                        // Data links (Input ports etc. referenced via "<source>.<port>").
+                        // Port-anchored: source.Right -> target.Left so the line stays attached to the
+                        // visible connector dots whether the node is collapsed or expanded.
                         foreach (var port in target.Value.EnumerateObject())
                         {
                             if (IsDefinitionProperty(port.Name))
@@ -187,12 +187,39 @@
                                 var sourceName = sourceReference.Split('.', 2)[0];
                                 if (nodes.TryGetValue(sourceName, out var sourceNode))
                                 {
-                                    _diagram.Links.Add(new LinkModel(sourceNode, targetNode)
+                                    var sourcePort = PortFor(sourceNode, PortAlignment.Right);
+                                    var targetPort = PortFor(targetNode, PortAlignment.Left);
+                                    if (sourcePort is null || targetPort is null) continue;
+
+                                    _diagram.Links.Add(new LinkModel(sourcePort, targetPort)
                                     {
                                         Color = "#1F7A8C",
-                                        Width = 2
+                                        Width = 2,
+                                        TargetMarker = LinkMarker.Arrow
                                     });
                                 }
+                            }
+                        }
+
+                        // Resource link: configuration.connection references a resource by name.
+                        // Distinct gold colour so connection-binding is visually different from data flow.
+                        if (target.Value.TryGetProperty("configuration", out var configuration) &&
+                            configuration.ValueKind == JsonValueKind.Object &&
+                            configuration.TryGetProperty("connection", out var connectionRef) &&
+                            connectionRef.ValueKind == JsonValueKind.String &&
+                            connectionRef.GetString() is { Length: > 0 } resourceName &&
+                            nodes.TryGetValue(resourceName, out var resourceNode))
+                        {
+                            var sourcePort = PortFor(resourceNode, PortAlignment.Right);
+                            var targetPort = PortFor(targetNode, PortAlignment.Left);
+                            if (sourcePort is not null && targetPort is not null)
+                            {
+                                _diagram.Links.Add(new LinkModel(sourcePort, targetPort)
+                                {
+                                    Color = "#F4B860",
+                                    Width = 2,
+                                    TargetMarker = LinkMarker.Arrow
+                                });
                             }
                         }
                     }
@@ -226,11 +253,43 @@
             node.SetCollapsed(state!.IsCollapsed);
         }
 
-        node.AddPort(PortAlignment.Left);
-        node.AddPort(PortAlignment.Right);
+        // Carry the live configuration onto the model so per-node editors can read/write it.
+        if (definition.TryGetProperty("configuration", out var configElement) &&
+            configElement.ValueKind == JsonValueKind.Object &&
+            System.Text.Json.Nodes.JsonNode.Parse(configElement.GetRawText()) is System.Text.Json.Nodes.JsonObject configObject)
+        {
+            node.Configuration = configObject;
+        }
+
+        // Resources only have an output (their session feeds triggers); sinks only have an input.
+        // Everyone else gets both. Ports stay anchored to the node, so links follow automatically
+        // when the node collapses or moves.
+        if (isResource || HasOutputPort(node.NodeType))
+        {
+            node.AddPort(PortAlignment.Right);
+        }
+        if (!isResource && HasInputPort(node.NodeType))
+        {
+            node.AddPort(PortAlignment.Left);
+        }
         _diagram.Nodes.Add(node);
         nodes[name] = node;
     }
+
+    private static bool HasInputPort(string nodeType) => nodeType switch
+    {
+        "mqtt.connection" => false,
+        _ => true
+    };
+
+    private static bool HasOutputPort(string nodeType) => nodeType switch
+    {
+        "mqtt.metrics-sink" => false,
+        _ => true
+    };
+
+    private static PortModel? PortFor(NodeModel node, PortAlignment alignment)
+        => node.Ports.FirstOrDefault(p => p.Alignment == alignment);
 
     private void UpdateDiagramActivity()
     {
@@ -246,7 +305,8 @@
         {
             var activity = node.NodeType switch
             {
-                "mqtt.message-source" => $"{Live.State} | {count} messages",
+                "mqtt.connection" => Live.State.ToString(),
+                "mqtt.trigger" => $"{count} messages",
                 "mqtt.payload-inspector" => inspectedMessage is null
                     ? "Waiting for payload"
                     : $"{latestInspection.ContentTypeLabel} | {latestInspection.SizeBytes} bytes | {ShortTopic(inspectedMessage.Topic)}",

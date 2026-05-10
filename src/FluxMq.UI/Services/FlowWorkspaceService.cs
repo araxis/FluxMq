@@ -48,7 +48,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     {
         try
         {
-            ReplaceDefinition(_definitionComposer.UpsertComponent(DefinitionJson, "mqtt.message-source", profile, subscription));
+            ReplaceDefinition(_definitionComposer.UpsertBroker(DefinitionJson, profile, subscription));
             State = RuntimeWorkspaceState.Idle;
             Diagnostics = [];
         }
@@ -64,11 +64,11 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         NotifyChanged();
     }
 
-    public void AddComponent(string componentType, MqttConnectionProfile profile, string subscription)
+    public void AddComponent(string componentType)
     {
         try
         {
-            ReplaceDefinition(_definitionComposer.UpsertComponent(DefinitionJson, componentType, profile, subscription));
+            ReplaceDefinition(_definitionComposer.AddComponent(DefinitionJson, componentType));
             State = RuntimeWorkspaceState.Idle;
             Diagnostics = [];
         }
@@ -78,6 +78,30 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             Diagnostics =
             [
                 new WorkspaceDiagnostic("Error", "Designer", "DefinitionEditFailed", exception.Message)
+            ];
+        }
+
+        NotifyChanged();
+    }
+
+    /// <summary>
+    /// Replaces the configuration object of a single node — used by per-node
+    /// editor widgets when the user saves changes from the flip-view editor.
+    /// </summary>
+    public void UpdateNodeConfiguration(string nodeName, System.Text.Json.Nodes.JsonObject configuration)
+    {
+        try
+        {
+            ReplaceDefinition(_definitionComposer.UpdateNodeConfiguration(DefinitionJson, nodeName, configuration));
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics =
+            [
+                new WorkspaceDiagnostic("Error", "Designer", "NodeUpdateFailed", exception.Message)
             ];
         }
 
