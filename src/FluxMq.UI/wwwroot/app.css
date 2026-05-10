@@ -1,0 +1,36 @@
+html,
+body,
+#app {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+.flux-shell {
+    height: 100vh;
+}
+
+.flux-page {
+    height: calc(100vh - 64px);
+    overflow: hidden;
+}
+
+.flux-scroll {
+    min-height: 0;
+    overflow: auto;
+}
+
+.flow-canvas {
+    height: 520px;
+    min-height: 420px;
+    overflow: hidden;
+}
+
+.flow-canvas .diagram-canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.definition-editor {
+    font-family: Consolas, "Courier New", monospace;
+}

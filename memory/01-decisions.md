@@ -336,3 +336,16 @@ Reasoning:
 - Keeping a session factory parameter on registration preserves deterministic testability while production stays on `MqttSession`.
 
 Status: Accepted.
+
+### 2026-05-10 - Build the alpha desktop surface as a MAUI Blazor Hybrid app
+
+Decision: `FluxMq.UI` is the alpha desktop application surface, implemented as a Windows-first MAUI Blazor Hybrid app using MudBlazor and Blazor.Diagrams.
+
+Reasoning:
+- The app must connect to a local MQTT broker through normal TCP, read and write local files, and host the same workflow runtime used by CLI and future hosts.
+- MAUI Blazor Hybrid keeps the Blazor component model and MudBlazor UI while allowing native desktop access to files and broker connections.
+- `FluxMq.App` remains the host-independent workflow application boundary, not a UI shell.
+- `FluxMq.UI` composes the desktop workspace, live broker tools, visual flow definition surface, file load/save, and runtime controls.
+- The first alpha target remains Windows desktop because the current broker and development environment are Windows-based.
+
+Status: Accepted.

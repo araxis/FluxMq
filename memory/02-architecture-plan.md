@@ -75,13 +75,15 @@ Responsibilities:
 
 ### FluxMq.UI
 
-Reusable Blazor UI components.
+MAUI Blazor Hybrid desktop workspace.
 
 Responsibilities:
-- Topic tree components.
-- Message timeline components.
-- Payload viewing components.
-- Shared layout and state helpers.
+- Compose the alpha desktop app surface with MudBlazor.
+- Provide live broker connection, publish, topic, and payload inspection views.
+- Provide the visual Fork Flow definition workspace with Blazor.Diagrams.
+- Save and load flow application definitions from local files.
+- Validate, run, and stop flow application definitions through `FluxMq.App`.
+- Keep reusable topic tree and payload inspector components available inside the desktop workspace.
 
 ### FluxMq.Modules.PayloadInspector
 

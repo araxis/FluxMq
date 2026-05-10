@@ -218,4 +218,27 @@ Chronological progress record.
 
 ## Current Next Step
 
-Continue the alpha path by introducing an explicit shared MQTT connection resource (`mqtt.connection`) and letting message source and publish sink reuse it across workflows.
+Build the first usable MAUI Blazor Hybrid desktop alpha in `FluxMq.UI`.
+
+## 2026-05-10
+
+- Closed the rejected separate desktop host PR and returned to `main`.
+- Confirmed the existing solution direction: `FluxMq.App` remains the host-independent workflow application boundary.
+- Converted `FluxMq.UI` into the Windows-first MAUI Blazor Hybrid desktop app surface.
+- Added MudBlazor shell, light/dark/system theme selection, app icon, splash asset, and BlazorWebView host.
+- Added Blazor.Diagrams as the Fork Flow visual canvas dependency.
+- Added the alpha workspace:
+  - broker profile editor for local MQTT connection settings
+  - connection test, connect, disconnect, subscribe, and publish actions
+  - live topic tree and recent message list
+  - payload inspector panel wired to live MQTT messages
+  - LiteDB-backed recording controls for live traffic
+  - component catalog for registered runtime node types
+  - visual diagram projection from the flow definition JSON
+  - file path based definition load/save
+  - validate, run, and stop controls through `FluxMq.App`
+- Added focused UI service tests for definition generation, host validation, file round-trip, and invalid JSON diagnostics.
+
+## Current Next Step
+
+Harden the alpha desktop workspace by exercising it against Mosquitto, then add the explicit shared MQTT connection resource (`mqtt.connection`) so source and publish components can reuse one connection across workflows.

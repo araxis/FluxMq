@@ -11,6 +11,7 @@ Suggested Wiki pages:
 - Fork Flow
 - Flow Components
 - Flow Errors
+- Desktop App
 - Replay
 - Roadmap
 
@@ -25,8 +26,9 @@ Recommended reading order:
 3. Fork Flow
 4. Flow Components
 5. Flow Errors
-6. Replay
-7. Local Development
+6. Desktop App
+7. Replay
+8. Local Development
 
 ## Maintenance
 

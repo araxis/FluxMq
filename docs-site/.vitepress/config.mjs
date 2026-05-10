@@ -16,6 +16,7 @@ export default {
         text: 'Guide',
         items: [
           { text: 'Getting Started', link: '/guide/getting-started' },
+          { text: 'Desktop Workspace', link: '/guide/desktop-workspace' },
           { text: 'Connections', link: '/guide/connections' },
           { text: 'Recording', link: '/guide/recording' },
           { text: 'Replay', link: '/guide/replay' },

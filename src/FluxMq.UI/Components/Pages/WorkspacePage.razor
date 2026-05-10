@@ -1,0 +1,18 @@
+@page "/"
+
+<MudGrid Class="pa-3 flux-page" Spacing="2">
+    <MudItem xs="12" lg="3" Class="flux-scroll">
+        <MudStack Spacing="2">
+            <ConnectionPanel />
+            <RuntimePanel />
+        </MudStack>
+    </MudItem>
+
+    <MudItem xs="12" lg="6" Class="flux-scroll">
+        <FlowDesigner />
+    </MudItem>
+
+    <MudItem xs="12" lg="3" Class="flux-scroll">
+        <LiveInspectorPanel />
+    </MudItem>
+</MudGrid>

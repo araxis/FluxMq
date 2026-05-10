@@ -1,0 +1,278 @@
+@implements IDisposable
+@inject FlowWorkspaceService Flow
+@inject LiveMqttWorkspaceService Live
+@inject FlowComponentCatalog Catalog
+
+<MudPaper Elevation="0" Outlined="true" Class="pa-3">
+    <MudStack Spacing="2">
+        <MudStack Row="true" AlignItems="AlignItems.Center">
+            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" />
+            <MudText Typo="Typo.subtitle1">Fork Flow</MudText>
+            <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" OnClick="@ZoomToFit" />
+        </MudStack>
+
+        <MudGrid Spacing="2">
+            <MudItem xs="12" md="4">
+                <MudPaper Elevation="0" Outlined="true" Class="pa-2">
+                    <MudText Typo="Typo.subtitle2" Class="mb-2">Components</MudText>
+                    <MudStack Spacing="1">
+                        @foreach (var component in Catalog.Components)
+                        {
+                            <MudPaper Elevation="0"
+                                      Outlined="true"
+                                      Class="pa-2"
+                                      draggable="true"
+                                      @ondragstart="@(() => OnDragStart(component.Type))">
+                                <MudStack Row="true" AlignItems="AlignItems.Center">
+                                    <MudIcon Icon="@IconFor(component)" Color="@ColorFor(component)" />
+                                    <div>
+                                        <MudText Typo="Typo.body2">@component.DisplayName</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@component.Category</MudText>
+                                    </div>
+                                    <MudSpacer />
+                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Add" OnClick="@(() => AddComponent(component.Type))" />
+                                </MudStack>
+                            </MudPaper>
+                        }
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="8">
+                <div class="flow-canvas" ondragover="event.preventDefault();" @ondragover:preventDefault @ondrop="@OnDrop">
+                    <CascadingValue Value="_diagram">
+                        <DiagramCanvas />
+                    </CascadingValue>
+                </div>
+            </MudItem>
+        </MudGrid>
+
+        <DefinitionEditor />
+    </MudStack>
+</MudPaper>
+
+@code {
+    private readonly BlazorDiagram _diagram = new(new Blazor.Diagrams.Options.BlazorDiagramOptions
+    {
+        AllowMultiSelection = true,
+        AllowPanning = true,
+        GridSize = 20
+    });
+
+    private string? _draggedComponentType;
+
+    protected override void OnInitialized()
+    {
+        Flow.Changed += OnFlowChanged;
+        RebuildDiagram();
+    }
+
+    private void AddComponent(string componentType)
+    {
+        Flow.AddComponent(componentType, Live.Profile, Live.Subscription);
+    }
+
+    private void OnDragStart(string componentType)
+    {
+        _draggedComponentType = componentType;
+    }
+
+    private void OnDrop(DragEventArgs args)
+    {
+        if (!string.IsNullOrWhiteSpace(_draggedComponentType))
+        {
+            AddComponent(_draggedComponentType);
+            _draggedComponentType = null;
+        }
+    }
+
+    private void ZoomToFit()
+    {
+        _diagram.ZoomToFit(80);
+    }
+
+    private void RebuildDiagram()
+    {
+        _diagram.Nodes.Clear();
+        _diagram.Links.Clear();
+
+        try
+        {
+            using var document = JsonDocument.Parse(Flow.DefinitionJson);
+            if (!TryGetFlowApplication(document.RootElement, out var flowApplication))
+            {
+                _diagram.Refresh();
+                return;
+            }
+
+            var nodes = new Dictionary<string, NodeModel>(StringComparer.Ordinal);
+            var resourceY = 60d;
+            if (flowApplication.TryGetProperty("resources", out var resources) && resources.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var resource in resources.EnumerateObject())
+                {
+                    AddNode(nodes, resource.Name, resource.Value, x: 70, y: resourceY);
+                    resourceY += 120;
+                }
+            }
+
+            if (flowApplication.TryGetProperty("workflows", out var workflows) && workflows.ValueKind == JsonValueKind.Object)
+            {
+                var workflowY = 60d;
+                foreach (var workflow in workflows.EnumerateObject())
+                {
+                    if (workflow.Value.ValueKind != JsonValueKind.Object)
+                    {
+                        continue;
+                    }
+
+                    var nodeX = 380d;
+                    foreach (var node in workflow.Value.EnumerateObject())
+                    {
+                        AddNode(nodes, node.Name, node.Value, nodeX, workflowY);
+                        nodeX += 230;
+                    }
+
+                    workflowY += 140;
+                }
+
+                foreach (var workflow in workflows.EnumerateObject())
+                {
+                    if (workflow.Value.ValueKind != JsonValueKind.Object)
+                    {
+                        continue;
+                    }
+
+                    foreach (var target in workflow.Value.EnumerateObject())
+                    {
+                        if (!nodes.TryGetValue(target.Name, out var targetNode) || target.Value.ValueKind != JsonValueKind.Object)
+                        {
+                            continue;
+                        }
+
+                        foreach (var port in target.Value.EnumerateObject())
+                        {
+                            if (IsDefinitionProperty(port.Name))
+                            {
+                                continue;
+                            }
+
+                            foreach (var sourceReference in ReadSourceReferences(port.Value))
+                            {
+                                var sourceName = sourceReference.Split('.', 2)[0];
+                                if (nodes.TryGetValue(sourceName, out var sourceNode))
+                                {
+                                    _diagram.Links.Add(new LinkModel(sourceNode, targetNode)
+                                    {
+                                        Color = "#1F7A8C",
+                                        Width = 2
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch
+        {
+        }
+
+        _diagram.Refresh();
+    }
+
+    private void AddNode(IDictionary<string, NodeModel> nodes, string name, JsonElement definition, double x, double y)
+    {
+        var type = definition.TryGetProperty("type", out var typeElement) && typeElement.ValueKind == JsonValueKind.String
+            ? typeElement.GetString()
+            : "node";
+
+        var node = new NodeModel(new Blazor.Diagrams.Core.Geometry.Point(x, y))
+        {
+            Title = $"{name} | {type}"
+        };
+
+        node.AddPort(PortAlignment.Left);
+        node.AddPort(PortAlignment.Right);
+        _diagram.Nodes.Add(node);
+        nodes[name] = node;
+    }
+
+    private static bool TryGetFlowApplication(JsonElement root, out JsonElement flowApplication)
+    {
+        flowApplication = default;
+        if (root.TryGetProperty("FluxMq", out var fluxMq) &&
+            fluxMq.TryGetProperty("FlowApplication", out flowApplication) &&
+            flowApplication.ValueKind == JsonValueKind.Object)
+        {
+            return true;
+        }
+
+        return root.TryGetProperty("workflows", out _) || root.TryGetProperty("resources", out _)
+            ? (flowApplication = root).ValueKind == JsonValueKind.Object
+            : false;
+    }
+
+    private static IEnumerable<string> ReadSourceReferences(JsonElement element)
+    {
+        if (element.ValueKind == JsonValueKind.String && element.GetString() is { } reference)
+        {
+            yield return reference;
+        }
+        else if (element.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in element.EnumerateArray())
+            {
+                foreach (var sourceReference in ReadSourceReferences(item))
+                {
+                    yield return sourceReference;
+                }
+            }
+        }
+        else if (element.ValueKind == JsonValueKind.Object)
+        {
+            if (element.TryGetProperty("from", out var from) || element.TryGetProperty("From", out from))
+            {
+                foreach (var sourceReference in ReadSourceReferences(from))
+                {
+                    yield return sourceReference;
+                }
+            }
+        }
+    }
+
+    private static bool IsDefinitionProperty(string name)
+        => string.Equals(name, "type", StringComparison.OrdinalIgnoreCase) ||
+           string.Equals(name, "configuration", StringComparison.OrdinalIgnoreCase) ||
+           string.Equals(name, "when", StringComparison.OrdinalIgnoreCase);
+
+    private static string IconFor(FlowComponentDescriptor component)
+        => component.Category switch
+        {
+            "Source" => Icons.Material.Filled.Sensors,
+            "Mapper" => Icons.Material.Filled.Transform,
+            "Sink" => Icons.Material.Filled.CallMerge,
+            _ => Icons.Material.Filled.Extension
+        };
+
+    private static Color ColorFor(FlowComponentDescriptor component)
+        => component.Category switch
+        {
+            "Source" => Color.Primary,
+            "Mapper" => Color.Secondary,
+            "Sink" => Color.Tertiary,
+            _ => Color.Default
+        };
+
+    private void OnFlowChanged(object? sender, EventArgs e)
+    {
+        RebuildDiagram();
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Flow.Changed -= OnFlowChanged;
+    }
+}

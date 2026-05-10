@@ -80,12 +80,15 @@ Responsibilities:
 
 ### FluxMq.UI
 
-Reusable UI components.
+MAUI Blazor Hybrid desktop app and reusable UI components.
 
 Responsibilities:
 
-- topic tree
-- payload inspector panel
+- live broker connection, subscribe, publish, topic, and payload inspection views
+- visual Fork Flow definition workspace using Blazor.Diagrams
+- file load/save for flow application definitions
+- runtime validate, run, and stop controls through `FluxMq.App`
+- reusable topic tree and payload inspector components
 - future replay and observability UI pieces
 
 ## Observability Direction
@@ -166,6 +169,8 @@ flowchart TD
 ```
 
 The host asks the runtime to load, start, stop, or reload an application definition. The runtime validates the next definition, owns shared resource lifetime, starts workflows, propagates completion, converts component failures into flow errors, and applies reloads without making the UI shell responsible for graph mechanics.
+
+`FluxMq.UI` is the first desktop host for this boundary. It is a MAUI Blazor Hybrid app, so the Blazor workspace can use MudBlazor and Blazor.Diagrams while still connecting to local brokers and reading or writing local definition files through native desktop APIs.
 
 The first implemented slice is cold-start graph building. `FlowApplicationRuntimeBuilder` creates runtime nodes through a factory registry and links declared ports through typed port adapters. It deliberately does not hard-code component construction into the builder; concrete component registrations can evolve as component configuration schemas become stable.
 

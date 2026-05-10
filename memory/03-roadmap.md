@@ -126,3 +126,17 @@ Hot-reload constraints:
 Deliverable:
 - Users can build, save, and live-edit message pipeline topologies visually.
 - Pipeline changes take effect immediately without stopping the session.
+
+## Alpha Desktop Workspace
+
+Goals:
+- Make `FluxMq.UI` a MAUI Blazor Hybrid desktop app.
+- Use MudBlazor for the operational workspace.
+- Use Blazor.Diagrams for the first visual Fork Flow surface.
+- Connect to a local MQTT broker through normal TCP.
+- Let users test, connect, subscribe, publish, inspect topics, and inspect payloads.
+- Let users edit, save, load, validate, run, and stop flow application JSON files.
+- Keep runtime execution behind `FluxMq.App` so CLI and desktop use the same host boundary.
+
+Deliverable:
+- A usable first alpha desktop app for Windows that can operate against a default local Mosquitto broker on `localhost:1883`.

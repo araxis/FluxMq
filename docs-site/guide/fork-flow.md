@@ -181,6 +181,8 @@ Runtime factories can now tell whether they are building a shared resource or a 
 
 Reloading will be owned by the runtime layer. The UI can edit and save definitions, but the runtime is responsible for validating the next definition, keeping unaffected resources alive, patching workflow graphs, and reporting reload failures.
 
+The first desktop alpha includes a Blazor.Diagrams canvas that projects the current definition into nodes and links, a JSON editor for the same definition, local file save/load, and run controls that call the same host boundary as the command-line host.
+
 ## Current Building Blocks
 
 - MQTT message source: reads live messages from an active session.
