@@ -1,0 +1,127 @@
+@*
+    Resource node widget. View face shows the broker endpoint at a glance;
+    edit face flips to a compact form (host, port, client id, TLS, credentials)
+    and saves back to the node's configuration.profile.
+*@
+@inherits NodeWidgetBase
+@inject FlowWorkspaceService Flow
+
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.Cable"
+                 CategoryColor="@Color.Info"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
+    <Body>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            Broker connection. Triggers reference this node by name.
+        </MudText>
+        <MudStack Spacing="1" Class="mt-2">
+            <Stat Icon="@Icons.Material.Filled.Dns" Label="Endpoint" Value="@($"{Profile.Host}:{Profile.Port}")" />
+            @if (!string.IsNullOrWhiteSpace(Profile.ClientId))
+            {
+                <Stat Icon="@Icons.Material.Filled.Tag" Label="Client" Value="@Profile.ClientId" />
+            }
+            @if (Profile.UseTls)
+            {
+                <Stat Icon="@Icons.Material.Filled.Lock" Label="TLS" Value="enabled" />
+            }
+        </MudStack>
+    </Body>
+    <Editor>
+        <MudTextField T="string" Label="Host" @bind-Value="_host" Variant="Variant.Outlined" Margin="Margin.Dense" />
+        <MudNumericField T="int" Label="Port" @bind-Value="_port" Min="1" Variant="Variant.Outlined" Margin="Margin.Dense" />
+        <MudTextField T="string" Label="Client ID" @bind-Value="_clientId" Variant="Variant.Outlined" Margin="Margin.Dense" />
+        <MudCheckBox T="bool" @bind-Value="_useTls" Label="TLS" Dense="true" />
+        <MudTextField T="string" Label="Username" @bind-Value="_username" Variant="Variant.Outlined" Margin="Margin.Dense" />
+        <MudTextField T="string" Label="Password" @bind-Value="_password" InputType="InputType.Password" Variant="Variant.Outlined" Margin="Margin.Dense" />
+    </Editor>
+</NodeWidgetShell>
+
+@code {
+    private record BrokerProfile(string Name, string Host, int Port, string ClientId, bool UseTls, string? Username, string? Password);
+
+    private BrokerProfile Profile => ReadProfile(Node.Configuration);
+
+    private string _host = string.Empty;
+    private int _port = 1883;
+    private string _clientId = string.Empty;
+    private bool _useTls;
+    private string? _username;
+    private string? _password;
+
+    protected override void OnParametersSet()
+    {
+        LoadDraft();
+    }
+
+    private void LoadDraft()
+    {
+        var profile = Profile;
+        _host = profile.Host;
+        _port = profile.Port;
+        _clientId = profile.ClientId;
+        _useTls = profile.UseTls;
+        _username = profile.Username;
+        _password = profile.Password;
+    }
+
+    private Task SaveAsync()
+    {
+        var existing = Node.Configuration ?? new System.Text.Json.Nodes.JsonObject();
+        var profileObject = new System.Text.Json.Nodes.JsonObject
+        {
+            ["name"] = string.IsNullOrWhiteSpace(Profile.Name) ? "broker" : Profile.Name,
+            ["host"] = string.IsNullOrWhiteSpace(_host) ? "localhost" : _host,
+            ["port"] = _port,
+            ["clientId"] = string.IsNullOrWhiteSpace(_clientId) ? Guid.NewGuid().ToString("N")[..8] : _clientId,
+            ["useTls"] = _useTls,
+            ["username"] = string.IsNullOrWhiteSpace(_username) ? null : _username,
+            ["password"] = string.IsNullOrWhiteSpace(_password) ? null : _password,
+            ["keepAliveSeconds"] = ReadIntOrDefault(existing, "profile", "keepAliveSeconds", 60),
+            ["cleanStart"] = ReadBoolOrDefault(existing, "profile", "cleanStart", true)
+        };
+        var updated = new System.Text.Json.Nodes.JsonObject { ["profile"] = profileObject };
+
+        Flow.UpdateNodeConfiguration(Node.NodeName, updated);
+        return Task.CompletedTask;
+    }
+
+    private static BrokerProfile ReadProfile(System.Text.Json.Nodes.JsonObject? configuration)
+    {
+        if (configuration is null || configuration["profile"] is not System.Text.Json.Nodes.JsonObject profile)
+        {
+            return new BrokerProfile("broker", "localhost", 1883, string.Empty, false, null, null);
+        }
+
+        return new BrokerProfile(
+            profile["name"]?.GetValue<string>() ?? "broker",
+            profile["host"]?.GetValue<string>() ?? "localhost",
+            (profile["port"] as System.Text.Json.Nodes.JsonValue)?.TryGetValue<int>(out var port) == true ? port : 1883,
+            profile["clientId"]?.GetValue<string>() ?? string.Empty,
+            (profile["useTls"] as System.Text.Json.Nodes.JsonValue)?.TryGetValue<bool>(out var tls) == true && tls,
+            profile["username"]?.GetValue<string?>(),
+            profile["password"]?.GetValue<string?>());
+    }
+
+    private static int ReadIntOrDefault(System.Text.Json.Nodes.JsonObject root, string section, string key, int fallback)
+    {
+        if (root[section] is System.Text.Json.Nodes.JsonObject obj &&
+            obj[key] is System.Text.Json.Nodes.JsonValue value &&
+            value.TryGetValue<int>(out var result))
+        {
+            return result;
+        }
+        return fallback;
+    }
+
+    private static bool ReadBoolOrDefault(System.Text.Json.Nodes.JsonObject root, string section, string key, bool fallback)
+    {
+        if (root[section] is System.Text.Json.Nodes.JsonObject obj &&
+            obj[key] is System.Text.Json.Nodes.JsonValue value &&
+            value.TryGetValue<bool>(out var result))
+        {
+            return result;
+        }
+        return fallback;
+    }
+}

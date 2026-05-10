@@ -7,11 +7,20 @@ public sealed class FlowComponentCatalog
     private readonly IReadOnlyList<FlowComponentDescriptor> _components =
     [
         new(
-            "mqtt.message-source",
-            "MQTT Message Source",
-            "Source",
-            "Connects to a broker, subscribes to topic filters, and emits MQTT messages.",
+            "mqtt.connection",
+            "MQTT Connection",
+            "Resource",
+            "Defines broker settings (host, port, credentials, TLS) and owns the live session. Triggers reference it by name.",
             IsResource: true,
+            [
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "mqtt.trigger",
+            "MQTT Trigger",
+            "Source",
+            "Bound to a connection. Owns its own subscription list and emits envelopes whose topic matches one of its filters.",
+            IsResource: false,
             [
                 new("Output", "MqttEnvelope", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)

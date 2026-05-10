@@ -1,0 +1,22 @@
+@*
+    Fallback widget — used when a node type has no registered specialised widget.
+    Mirrors the pre-split behaviour: name, category chip, summary, port chips.
+*@
+@inherits NodeWidgetBase
+
+<NodeWidgetShell Node="@Node" HeaderIcon="@Icons.Material.Filled.Memory" CategoryColor="@CategoryColor">
+    <Body>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">@Node.Summary</MudText>
+    </Body>
+</NodeWidgetShell>
+
+@code {
+    private Color CategoryColor => Node.Category switch
+    {
+        "Source" => Color.Primary,
+        "Mapper" => Color.Secondary,
+        "Sink" => Color.Tertiary,
+        "Resource" => Color.Info,
+        _ => Color.Default
+    };
+}

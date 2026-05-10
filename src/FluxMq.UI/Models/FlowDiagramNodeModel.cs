@@ -1,4 +1,5 @@
 using Blazor.Diagrams.Core.Models;
+using System.Text.Json.Nodes;
 using DiagramPoint = Blazor.Diagrams.Core.Geometry.Point;
 using DiagramSize = Blazor.Diagrams.Core.Geometry.Size;
 
@@ -6,8 +7,8 @@ namespace FluxMq.UI.Models;
 
 public sealed class FlowDiagramNodeModel : NodeModel
 {
-    private static readonly DiagramSize ExpandedSize = new(260, 178);
-    private static readonly DiagramSize CollapsedSize = new(260, 82);
+    private static readonly DiagramSize ExpandedSize = new(280, 240);
+    private static readonly DiagramSize CollapsedSize = new(280, 82);
 
     public FlowDiagramNodeModel(
         DiagramPoint position,
@@ -25,7 +26,9 @@ public sealed class FlowDiagramNodeModel : NodeModel
         IsResource = isResource;
         PortDescriptors = descriptor?.Ports ?? [];
         ControlledSize = true;
-        Size = ExpandedSize;
+        // Nodes default to collapsed — the user can flip / expand on demand.
+        IsCollapsed = true;
+        Size = CollapsedSize;
     }
 
     public string NodeName { get; }
@@ -37,6 +40,11 @@ public sealed class FlowDiagramNodeModel : NodeModel
     public IReadOnlyList<ComponentPortDescriptor> PortDescriptors { get; }
     public bool IsCollapsed { get; private set; }
     public string? ActivityText { get; private set; }
+    /// <summary>
+    /// The node's current configuration JSON object, kept in sync by the
+    /// designer when the definition is rebuilt. Read by per-node editors.
+    /// </summary>
+    public JsonObject? Configuration { get; set; }
 
     public void Toggle()
     {

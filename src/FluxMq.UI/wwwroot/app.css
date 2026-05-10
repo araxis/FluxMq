@@ -37,23 +37,11 @@ body,
     padding-bottom: 16px;
 }
 
-.flow-canvas {
-    height: 520px;
-    min-height: 420px;
-    position: relative;
-    overflow: hidden;
-}
-
-.flow-canvas .diagram-canvas {
-    width: 100%;
-    height: 100%;
-}
-
 .workspace-layout {
     display: grid;
     gap: 12px;
-    grid-template-areas: "left left-handle center right-handle right";
-    grid-template-columns: var(--workspace-left-width, 340px) 8px minmax(0, 1fr) 8px var(--workspace-right-width, 400px);
+    grid-template-areas: "center right-handle right";
+    grid-template-columns: minmax(0, 1fr) 8px var(--workspace-right-width, 400px);
     height: 100%;
     min-height: 0;
     padding: 12px;
@@ -73,10 +61,6 @@ body,
     position: relative;
 }
 
-.workspace-left {
-    grid-area: left;
-}
-
 .workspace-right {
     grid-area: right;
 }
@@ -93,13 +77,20 @@ body,
     flex-direction: column;
     gap: 8px;
     grid-area: center;
-    overflow: auto;
+    overflow: hidden;
 }
 
 .workspace-center-toolbar {
     align-items: center;
     display: flex;
     flex: 0 0 auto;
+}
+
+.workspace-designer-region {
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .workspace-panel-toggle {
@@ -121,10 +112,6 @@ body,
     display: none;
     justify-content: center;
     min-height: 0;
-}
-
-.workspace-rail-left {
-    grid-area: left;
 }
 
 .workspace-rail-right {
@@ -156,10 +143,6 @@ body,
     background: var(--mud-palette-primary);
 }
 
-.workspace-left-handle {
-    grid-area: left-handle;
-}
-
 .workspace-right-handle {
     grid-area: right-handle;
 }
@@ -168,73 +151,29 @@ body,
     user-select: none;
 }
 
-.workspace-left-closed {
-    grid-template-areas: "left center right-handle right";
-    grid-template-columns: 44px minmax(0, 1fr) 8px var(--workspace-right-width, 400px);
-}
-
 .workspace-right-closed {
-    grid-template-areas: "left left-handle center right";
-    grid-template-columns: var(--workspace-left-width, 340px) 8px minmax(0, 1fr) 44px;
+    grid-template-areas: "center right";
+    grid-template-columns: minmax(0, 1fr) 44px;
 }
 
-.workspace-left-closed.workspace-right-closed {
-    grid-template-areas: "left center right";
-    grid-template-columns: 44px minmax(0, 1fr) 44px;
-}
-
-.workspace-left-closed .workspace-left,
-.workspace-right-closed .workspace-right {
+.workspace-right-closed .workspace-right,
+.workspace-right-closed .workspace-right-handle {
     display: none;
 }
 
-.workspace-left-closed .workspace-left-handle,
-.workspace-right-closed .workspace-right-handle,
-.workspace-left-closed.workspace-right-closed .workspace-left-handle,
-.workspace-left-closed.workspace-right-closed .workspace-right-handle {
-    display: none;
-}
-
-.workspace-left-closed .workspace-rail-left,
 .workspace-right-closed .workspace-rail-right {
     display: flex;
 }
 
-.definition-editor {
-    font-family: Consolas, "Courier New", monospace;
+.flux-drawer-scroll {
+    height: 100%;
 }
 
-.flow-node {
-    background: var(--mud-palette-surface);
-    border: 1px solid var(--mud-palette-lines-default);
-    border-radius: 8px;
-    box-shadow: var(--mud-elevation-2);
-    min-width: 260px;
-    padding: 10px;
-}
-
-.flow-node-selected {
-    border-color: var(--mud-palette-primary);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-primary) 28%, transparent);
-}
-
-.flow-node-header,
-.flow-node-ports,
 .topic-node-row,
 .topic-node-flat {
     align-items: center;
     display: flex;
     gap: 8px;
-}
-
-.flow-node-title {
-    flex: 1;
-    min-width: 0;
-}
-
-.flow-node-ports {
-    flex-wrap: wrap;
-    margin: 10px 0;
 }
 
 .topic-tree-view {
@@ -288,17 +227,10 @@ body,
     cursor: pointer;
 }
 
-.flow-navigator {
-    pointer-events: none;
-}
-
 @media (max-width: 1200px) {
     .workspace-layout,
-    .workspace-left-closed,
-    .workspace-right-closed,
-    .workspace-left-closed.workspace-right-closed {
+    .workspace-right-closed {
         grid-template-areas:
-            "left"
             "center"
             "right";
         grid-template-columns: 1fr;
@@ -315,7 +247,6 @@ body,
         display: none;
     }
 
-    .workspace-left-closed .workspace-left,
     .workspace-right-closed .workspace-right {
         display: none;
     }
