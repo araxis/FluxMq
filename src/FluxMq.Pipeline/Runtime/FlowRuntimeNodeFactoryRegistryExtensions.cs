@@ -1,9 +1,12 @@
 using FluxMq.Core.Models;
 using FluxMq.Core.Session;
 using FluxMq.Pipeline.Components;
+using FluxMq.Pipeline.Components.MessageSource;
+using FluxMq.Pipeline.Components.MqttMetrics;
 using FluxMq.Pipeline.Definitions;
 using MQTTnet.Protocol;
 using System.Text.Json;
+using FluxMq.Pipeline.Components.MqttPayloadInspector;
 
 namespace FluxMq.Pipeline.Runtime;
 
@@ -22,23 +25,46 @@ public static class FlowRuntimeNodeFactoryRegistryExtensions
         sessionFactory ??= static profile => new MqttSession(profile);
 
         return registry
-            .Register(PipelineFlowNodeTypes.MessageSource, context => CreateMessageSource(context.Name, context.Definition, sessionFactory))
+            .Register(PipelineFlowNodeTypes.Connection, context => CreateConnection(context.Name, context.Definition, sessionFactory))
+            .Register(PipelineFlowNodeTypes.Trigger, context => CreateTrigger(context.Name, context.Definition, context))
             .Register(PipelineFlowNodeTypes.PayloadInspector, CreatePayloadInspector)
             .Register(PipelineFlowNodeTypes.MetricsSink, CreateMetricsSink);
     }
 
-    private static FlowRuntimeNode CreateMessageSource(
+    private static FlowRuntimeNode CreateConnection(
         FlowNodeName name,
         FlowNodeDefinition definition,
         Func<MqttConnectionProfile, IMqttSession> sessionFactory)
     {
         var profile = GetConnectionProfile(definition);
+        var component = new MqttConnectionComponent(sessionFactory(profile), disposeSessionOnDispose: true);
+
+        return FlowRuntimeNode.Create(
+            name,
+            component,
+            outputs:
+            [
+                new FlowOutputPort<FlowError>(ErrorsPort, component.Errors)
+            ]);
+    }
+
+    private static FlowRuntimeNode CreateTrigger(
+        FlowNodeName name,
+        FlowNodeDefinition definition,
+        FlowRuntimeNodeFactoryContext context)
+    {
+        var connectionRef = GetRequiredString(definition, "connection");
+        var resource = context.GetResource(new FlowNodeName(connectionRef));
+        if (resource.Node is not MqttConnectionComponent connection)
+        {
+            throw new InvalidOperationException(
+                $"Resource '{connectionRef}' must be of type '{PipelineFlowNodeTypes.Connection.Value}' to be used by an mqtt.trigger.");
+        }
+
         var subscriptions = GetSubscriptions(definition);
-        var component = new MqttMessageSourceComponent(
-            sessionFactory(profile),
+        var component = new MqttTriggerComponent(
+            connection,
             subscriptions,
-            connectOnStart: true,
-            disposeSessionOnDispose: true,
             boundedCapacity: GetBoundedCapacity(definition));
 
         return FlowRuntimeNode.Create(
@@ -87,6 +113,22 @@ public static class FlowRuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
+    private static string GetRequiredString(FlowNodeDefinition definition, string key)
+    {
+        if (!definition.Configuration.TryGetValue(key, out var value) || value.ValueKind != JsonValueKind.String)
+        {
+            throw new InvalidOperationException($"Configuration value '{key}' is required and must be a string.");
+        }
+
+        var s = value.GetString();
+        if (string.IsNullOrWhiteSpace(s))
+        {
+            throw new InvalidOperationException($"Configuration value '{key}' must not be empty.");
+        }
+
+        return s;
+    }
+
     private static int GetBoundedCapacity(FlowNodeDefinition definition)
     {
         const int defaultBoundedCapacity = 1000;
@@ -108,7 +150,7 @@ public static class FlowRuntimeNodeFactoryRegistryExtensions
     {
         if (!definition.Configuration.TryGetValue("profile", out var profileElement))
         {
-            throw new InvalidOperationException("Configuration value 'profile' is required for mqtt.message-source.");
+            throw new InvalidOperationException("Configuration value 'profile' is required for mqtt.connection.");
         }
 
         if (profileElement.ValueKind != JsonValueKind.Object)
@@ -136,7 +178,7 @@ public static class FlowRuntimeNodeFactoryRegistryExtensions
     {
         if (!definition.Configuration.TryGetValue("subscriptions", out var subscriptionsElement))
         {
-            throw new InvalidOperationException("Configuration value 'subscriptions' is required for mqtt.message-source.");
+            throw new InvalidOperationException("Configuration value 'subscriptions' is required for mqtt.trigger.");
         }
 
         return subscriptionsElement.ValueKind switch

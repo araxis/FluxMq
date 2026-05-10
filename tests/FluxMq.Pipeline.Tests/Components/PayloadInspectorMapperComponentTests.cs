@@ -6,6 +6,7 @@ using FluxMq.Core.Payloads;
 using FluxMq.Pipeline.Components;
 using MQTTnet.Protocol;
 using System.Threading.Tasks.Dataflow;
+using FluxMq.Pipeline.Components.MqttPayloadInspector;
 
 namespace FluxMq.Pipeline.Tests.Components;
 

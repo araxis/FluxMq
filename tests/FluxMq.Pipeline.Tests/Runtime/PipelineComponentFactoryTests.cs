@@ -4,12 +4,14 @@ using FluxMq.Core.Models;
 using FluxMq.Core.Payloads;
 using FluxMq.Core.Session;
 using FluxMq.Pipeline.Components;
+using FluxMq.Pipeline.Components.MqttMetrics;
 using FluxMq.Pipeline.Definitions;
 using FluxMq.Pipeline.Runtime;
 using MQTTnet.Protocol;
 using System.Text.Json;
 using System.Threading.Channels;
 using System.Threading.Tasks.Dataflow;
+using FluxMq.Pipeline.Components.MqttPayloadInspector;
 
 namespace FluxMq.Pipeline.Tests.Runtime;
 
@@ -22,7 +24,8 @@ public sealed class PipelineComponentFactoryTests
             .RegisterPipelineComponentFactories();
 
         registry.Factories.Keys.Should().BeEquivalentTo([
-            PipelineFlowNodeTypes.MessageSource,
+            PipelineFlowNodeTypes.Connection,
+            PipelineFlowNodeTypes.Trigger,
             PipelineFlowNodeTypes.PayloadInspector,
             PipelineFlowNodeTypes.MetricsSink
         ]);
@@ -118,7 +121,7 @@ public sealed class PipelineComponentFactoryTests
     }
 
     [Fact]
-    public async Task MessageSourceFactory_StartsSessionAndFeedsWorkflowNodes()
+    public async Task ConnectionAndTriggerFactories_StartSessionAndFeedWorkflowNodes()
     {
         FakeMqttSession? session = null;
         TestSinkNode<MqttMetricsSnapshot>? sink = null;
@@ -139,13 +142,12 @@ public sealed class PipelineComponentFactoryTests
         {
             Resources =
             {
-                ["source"] = new FlowNodeDefinition
+                ["broker"] = new FlowNodeDefinition
                 {
-                    Type = PipelineFlowNodeTypes.MessageSource,
+                    Type = PipelineFlowNodeTypes.Connection,
                     Configuration =
                     {
-                        ["profile"] = JsonDocument.Parse("""{"name":"factory-source","host":"localhost","port":1883}""").RootElement.Clone(),
-                        ["subscriptions"] = JsonDocument.Parse("""["factory/#"]""").RootElement.Clone()
+                        ["profile"] = JsonDocument.Parse("""{"name":"factory-broker","host":"localhost","port":1883}""").RootElement.Clone()
                     }
                 }
             },
@@ -153,7 +155,16 @@ public sealed class PipelineComponentFactoryTests
             {
                 ["flow"] = new()
                 {
-                    ["metrics"] = NodeWithPort(PipelineFlowNodeTypes.MetricsSink, "Input", "\"source.Output\""),
+                    ["trigger"] = new FlowNodeDefinition
+                    {
+                        Type = PipelineFlowNodeTypes.Trigger,
+                        Configuration =
+                        {
+                            ["connection"] = JsonDocument.Parse("\"broker\"").RootElement.Clone(),
+                            ["subscriptions"] = JsonDocument.Parse("""["factory/#"]""").RootElement.Clone()
+                        }
+                    },
+                    ["metrics"] = NodeWithPort(PipelineFlowNodeTypes.MetricsSink, "Input", "\"trigger.Output\""),
                     ["sink"] = NodeWithPort("test.snapshot-sink", "Input", "\"metrics.Snapshots\"")
                 }
             }
@@ -185,7 +196,7 @@ public sealed class PipelineComponentFactoryTests
     }
 
     [Fact]
-    public void MessageSourceFactory_ReturnsBuildErrorWhenSubscriptionsMissing()
+    public void TriggerFactory_ReturnsBuildErrorWhenConnectionMissing()
     {
         var builder = new FlowApplicationRuntimeBuilder(new FlowRuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories());
@@ -196,12 +207,12 @@ public sealed class PipelineComponentFactoryTests
             {
                 ["flow"] = new()
                 {
-                    ["source"] = new FlowNodeDefinition
+                    ["trigger"] = new FlowNodeDefinition
                     {
-                        Type = PipelineFlowNodeTypes.MessageSource,
+                        Type = PipelineFlowNodeTypes.Trigger,
                         Configuration =
                         {
-                            ["profile"] = JsonDocument.Parse("""{"name":"factory-source"}""").RootElement.Clone()
+                            ["subscriptions"] = JsonDocument.Parse("""["#"]""").RootElement.Clone()
                         }
                     }
                 }
@@ -209,7 +220,7 @@ public sealed class PipelineComponentFactoryTests
         });
 
         result.IsSuccess.Should().BeFalse();
-        result.Errors.Should().Contain(error => error.Message.Contains("subscriptions"));
+        result.Errors.Should().Contain(error => error.Message.Contains("connection"));
     }
 
     [Fact]

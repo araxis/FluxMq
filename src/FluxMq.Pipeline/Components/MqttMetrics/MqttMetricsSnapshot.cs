@@ -1,4 +1,4 @@
-namespace FluxMq.Pipeline.Components;
+namespace FluxMq.Pipeline.Components.MqttMetrics;
 
 public sealed record MqttMetricsSnapshot
 {

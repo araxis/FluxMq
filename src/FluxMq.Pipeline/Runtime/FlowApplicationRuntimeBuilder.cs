@@ -38,7 +38,7 @@ public sealed class FlowApplicationRuntimeBuilder
         var resources = CreateNodes(null, definition.Resources, errors);
         var workflows = definition.Workflows.ToDictionary(
             workflow => workflow.Key,
-            workflow => (IReadOnlyDictionary<FlowNodeName, FlowRuntimeNode>)CreateNodes(workflow.Key, workflow.Value, errors));
+            workflow => (IReadOnlyDictionary<FlowNodeName, FlowRuntimeNode>)CreateNodes(workflow.Key, workflow.Value, errors, resources));
 
         if (errors.Count == 0)
         {
@@ -59,9 +59,12 @@ public sealed class FlowApplicationRuntimeBuilder
     private IReadOnlyDictionary<FlowNodeName, FlowRuntimeNode> CreateNodes(
         string? workflowName,
         IReadOnlyDictionary<string, FlowNodeDefinition> definitions,
-        List<FlowApplicationRuntimeBuildError> errors)
+        List<FlowApplicationRuntimeBuildError> errors,
+        IReadOnlyDictionary<FlowNodeName, FlowRuntimeNode>? resources = null)
     {
         var nodes = new Dictionary<FlowNodeName, FlowRuntimeNode>();
+        // Resources see themselves so a resource may reference an earlier-built resource.
+        var resourceView = resources ?? nodes;
 
         foreach (var definition in definitions)
         {
@@ -82,7 +85,8 @@ public sealed class FlowApplicationRuntimeBuilder
                 nodes.Add(nodeName, factory(new FlowRuntimeNodeFactoryContext(
                     nodeName,
                     definition.Value,
-                    workflowName)));
+                    workflowName,
+                    resourceView)));
             }
             catch (Exception exception)
             {

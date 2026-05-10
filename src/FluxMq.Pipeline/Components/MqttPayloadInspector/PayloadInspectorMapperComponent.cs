@@ -1,9 +1,9 @@
+using System.Threading.Tasks.Dataflow;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Payloads;
-using System.Threading.Tasks.Dataflow;
 
-namespace FluxMq.Pipeline.Components;
+namespace FluxMq.Pipeline.Components.MqttPayloadInspector;
 
 public sealed class PayloadInspectorMapperComponent : IFlowNode
 {
