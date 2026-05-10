@@ -59,11 +59,11 @@ jobs:
 
       - name: Restore
         shell: pwsh
-        run: dotnet restore FluxMq.sln
+        run: dotnet restore FluxMq.sln -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64
 
       - name: Test
         shell: pwsh
-        run: dotnet test FluxMq.sln --configuration Release --no-restore --verbosity minimal
+        run: dotnet test FluxMq.sln --configuration Release --no-restore --verbosity minimal -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64
 
       - name: Install WiX
         shell: pwsh
