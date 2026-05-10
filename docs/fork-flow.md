@@ -16,7 +16,8 @@ Examples:
 
 ```mermaid
 flowchart LR
-    MqttSource["MqttMessageSource"] --> TopicFilter["TopicFilter"]
+    MqttConnection["MqttConnection"] --> MqttTrigger["MqttTrigger"]
+    MqttTrigger --> TopicFilter["TopicFilter"]
     TopicFilter --> PayloadMapper["PayloadInspectorMapper"]
     PayloadMapper --> UiSink["UiProjectionSink"]
     TopicFilter --> StorageSink["StorageSink"]
@@ -42,9 +43,13 @@ See [Flow Components](flow-components.md) for behavior diagrams and sample usage
 
 Broadcasts MQTT connection state changes as flow events.
 
-### MqttMessageSourceComponent
+### MqttConnectionComponent
 
-Reads live MQTT messages from a session and broadcasts them as `MqttEnvelope` values.
+Owns the MQTT session lifecycle as a shared resource.
+
+### MqttTriggerComponent
+
+References a shared MQTT connection, subscribes to topic filters, and broadcasts matching `MqttEnvelope` values.
 
 ### TopicFilterComponent
 
@@ -139,26 +144,32 @@ Example JSON shape:
 ```json
 {
   "resources": {
-    "source": {
-      "type": "mqtt.message-source",
+    "broker": {
+      "type": "mqtt.connection",
       "configuration": {
         "profile": {
           "name": "local-broker",
           "host": "localhost",
           "port": 1883
-        },
-        "subscriptions": [
-          "factory/#",
-          { "topicFilter": "telemetry/#", "qos": 1 }
-        ]
+        }
       }
     }
   },
   "workflows": {
     "observeTraffic": {
+      "trigger": {
+        "type": "mqtt.trigger",
+        "configuration": {
+          "connection": "broker",
+          "subscriptions": [
+            "factory/#",
+            { "topicFilter": "telemetry/#", "qos": 1 }
+          ]
+        }
+      },
       "metrics": {
         "type": "mqtt.metrics-sink",
-        "Input": "source.Output"
+        "Input": "trigger.Output"
       }
     }
   }
@@ -290,11 +301,15 @@ The first runtime builder slice is intentionally small. `FlowApplicationRuntimeB
 - completes only entry nodes so Dataflow completion propagates through linked graphs in order
 - disposes workflow nodes before shared resources
 
-The first concrete registrations now include one service-backed source plus stable no-service sinks/mappers:
+The first concrete registrations now split MQTT intake into a shared connection resource plus trigger nodes, alongside stable no-service sinks/mappers:
 
-- `mqtt.message-source`
-  - Resource-style source node.
-  - Reads from an `IMqttSession` channel and auto-starts connection/subscriptions.
+- `mqtt.connection`
+  - Shared resource node.
+  - Owns the `IMqttSession` lifecycle and broadcasts received envelopes internally to triggers.
+  - `Errors`: `FlowError`
+- `mqtt.trigger`
+  - Workflow trigger node.
+  - References a `mqtt.connection` resource, installs subscriptions, and emits matching messages.
   - `Output`: `MqttEnvelope`
   - `Errors`: `FlowError`
 - `mqtt.payload-inspector`
@@ -324,29 +339,43 @@ registry.Register(new FlowNodeType("example.resource"), context =>
 
 Producer or service-backed nodes that need explicit start work should implement `IFlowStartable`. Startup failures are converted into host build errors instead of escaping through the CLI or host shell.
 
-Current configuration shape for `mqtt.message-source`:
+Current configuration shape for `mqtt.connection` plus `mqtt.trigger`:
 
 ```json
 {
-  "type": "mqtt.message-source",
-  "configuration": {
-    "profile": {
-      "name": "local-broker",
-      "host": "localhost",
-      "port": 1883,
-      "keepAliveSeconds": 30,
-      "cleanStart": true
-    },
-    "subscriptions": [
-      "factory/#",
-      { "topicFilter": "telemetry/#", "qos": "AtLeastOnce" }
-    ],
-    "boundedCapacity": 1000
+  "resources": {
+    "broker": {
+      "type": "mqtt.connection",
+      "configuration": {
+        "profile": {
+          "name": "local-broker",
+          "host": "localhost",
+          "port": 1883,
+          "keepAliveSeconds": 30,
+          "cleanStart": true
+        }
+      }
+    }
+  },
+  "workflows": {
+    "observeTraffic": {
+      "trigger": {
+        "type": "mqtt.trigger",
+        "configuration": {
+          "connection": "broker",
+          "subscriptions": [
+            "factory/#",
+            { "topicFilter": "telemetry/#", "qos": "AtLeastOnce" }
+          ],
+          "boundedCapacity": 1000
+        }
+      }
+    }
   }
 }
 ```
 
-`subscriptions` supports:
+`mqtt.trigger.configuration.subscriptions` supports:
 
 - string shorthand (`"factory/#"`)
 - array of strings

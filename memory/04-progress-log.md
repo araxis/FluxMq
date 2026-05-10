@@ -169,8 +169,8 @@ Chronological progress record.
 - Added `docs/documentation-strategy.md` to define the split between developer docs and user docs.
 - Added a GitHub Pages workflow for the docs site and a Dependabot configuration for docs-site packages and GitHub Actions.
 - Updated the Pages workflow to `actions/configure-pages@v6` and ignored local VitePress cache output.
-- Started the next Fork Flow component after replay and publish support: live MQTT message source.
-- Added `MqttMessageSourceComponent` to bridge `IMqttSession.Messages` into Dataflow-backed Fork Flow graphs.
+- Started the next Fork Flow component after replay and publish support: live MQTT intake from an active session.
+- Added an MQTT intake prototype to bridge `IMqttSession.Messages` into Dataflow-backed Fork Flow graphs.
 - Added tests for message order, reader completion, reader failure conversion to `FlowError`, clean completion, and explicit fault behavior.
 - Added `MqttConditionRouterComponent` to route `MqttEnvelope` values into true/false branches.
 - Added tests for topic-prefix routing, predicate failure conversion to `FlowError`, pending-error completion, and explicit fault behavior.
@@ -206,10 +206,10 @@ Chronological progress record.
 - Added `IFlowStartable` and runtime start ordering so shared resources start before workflow nodes.
 - Converted startup failures into structured host errors.
 - Updated runtime disposal ordering so workflow nodes are disposed before shared resources.
-- Added `mqtt.message-source` to runtime factory registrations as the first service-backed resource component.
-- Added `MqttSubscription` and config parsing for message source profile/subscriptions/qos in flow definitions.
-- Added runtime tests proving message source resource startup, subscription, and downstream delivery through workflow links.
-- Added runtime validation tests for missing message source subscriptions.
+- Added service-backed MQTT intake runtime registrations.
+- Added `MqttSubscription` and config parsing for profile/subscriptions/qos in flow definitions.
+- Added runtime tests proving resource startup, subscription, and downstream delivery through workflow links.
+- Added runtime validation tests for missing subscriptions.
 - Replaced CLI hand-rolled argument parsing with `Spectre.Console.Cli` command/settings handlers.
 - Removed parser-only CLI code and parser-specific tests.
 - Kept CLI execution contracts stable by routing Spectre command handlers into the existing runner and result renderers.
@@ -252,7 +252,15 @@ Build the first usable MAUI Blazor Hybrid desktop alpha in `FluxMq.UI`.
 - Updated the workspace splitters to use pointer-captured mouse dragging for reliable column width resizing.
 - Stopped non-definition workspace changes from rebuilding the diagram; live traffic and runtime status now update node activity in place.
 - Updated diagram payload inspector activity to show the latest inspected message payload instead of stale selected-message state.
+- Split live MQTT intake into explicit `mqtt.connection` and `mqtt.trigger` runtime registrations.
+- Added `MqttConnectionComponent` as a shared resource that owns the session and `MqttTriggerComponent` as the workflow node that subscribes and emits matching envelopes.
+- Added MQTT topic-filter matching tests, connection/trigger component tests, and runtime factory tests for shared connection startup.
+- Updated the desktop definition composer so the alpha workspace produces `resources.broker` plus `workflows.inspectPayloads.trigger`.
+- Added component-specific diagram node widgets for connection, trigger, payload inspector, metrics, and fallback nodes.
+- Kept diagram node state stable during live updates and moved diagram-specific styles into `FlowDesigner.razor.css`.
+- Made the flow designer fill the available workspace container height so the diagram canvas is usable inside the resizable layout.
+- Updated developer docs and the user documentation site for the connection/trigger model.
 
 ## Current Next Step
 
-Harden the alpha desktop workspace by exercising it against Mosquitto, then add the explicit shared MQTT connection resource (`mqtt.connection`) so source and publish components can reuse one connection across workflows.
+Harden the alpha desktop workspace by exercising it against Mosquitto, then add publish support that reuses the shared MQTT connection resource.

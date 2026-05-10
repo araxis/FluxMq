@@ -26,7 +26,8 @@ Recordings are local-first. This keeps debugging data available without requirin
 ## Flow Shape
 
 ```text
-MQTT message source
+MQTT connection resource
+  -> MQTT trigger
   -> Optional topic filter
   -> Recording sink
 ```

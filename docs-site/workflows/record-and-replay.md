@@ -26,7 +26,8 @@ Use a topic filter when the recording contains traffic that should not be replay
 ## Recording Flow Shape
 
 ```text
-MQTT message source
+MQTT connection resource
+  -> MQTT trigger
   -> Topic filter
   -> Recording sink
 ```

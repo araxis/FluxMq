@@ -5,7 +5,8 @@ Traffic observation turns live MQTT messages into operational counters.
 ## Typical Flow
 
 ```text
-MQTT message source
+MQTT connection resource
+  -> MQTT trigger
   -> Optional topic filter
   -> Metrics sink
   -> UI projection
