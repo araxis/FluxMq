@@ -1,0 +1,105 @@
+name: Windows Desktop Packages
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/windows-desktop-packages.yml
+      - eng/package-windows.ps1
+      - installer/**
+      - src/**
+      - tests/**
+      - FluxMq.sln
+      - global.json
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+    paths:
+      - .github/workflows/windows-desktop-packages.yml
+      - eng/package-windows.ps1
+      - installer/**
+      - src/**
+      - tests/**
+      - FluxMq.sln
+      - global.json
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-desktop-packages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    name: Package Windows desktop app
+    runs-on: windows-latest
+    timeout-minutes: 90
+
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Restore workloads
+        shell: pwsh
+        run: dotnet workload restore src\FluxMq.UI\FluxMq.UI.csproj
+
+      - name: Restore
+        shell: pwsh
+        run: dotnet restore FluxMq.sln
+
+      - name: Test
+        shell: pwsh
+        run: dotnet test FluxMq.sln --configuration Release --no-restore --verbosity minimal
+
+      - name: Install WiX
+        shell: pwsh
+        run: |
+          dotnet tool install --global wix --version 6.0.2
+          "$env:USERPROFILE\.dotnet\tools" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Resolve package version
+        shell: pwsh
+        run: |
+          $version = "0.1.${{ github.run_number }}"
+          if ("${{ github.ref_type }}" -eq "tag" -and "${{ github.ref_name }}" -match '^v?\d+\.\d+\.\d+$') {
+            $version = "${{ github.ref_name }}".TrimStart([char[]]"vV")
+          }
+          "PACKAGE_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Package
+        shell: pwsh
+        run: >
+          .\eng\package-windows.ps1
+          -Configuration Release
+          -Version $env:PACKAGE_VERSION
+          -ArtifactsPath "$env:RUNNER_TEMP\windows-packages"
+
+      - name: Upload portable package
+        uses: actions/upload-artifact@v4
+        with:
+          name: FluxMQ-portable-win-x64
+          path: ${{ runner.temp }}\windows-packages\dist\*-portable-win-x64.zip
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload MSI package
+        uses: actions/upload-artifact@v4
+        with:
+          name: FluxMQ-msi-win-x64
+          path: ${{ runner.temp }}\windows-packages\dist\*.msi
+          if-no-files-found: error
+          retention-days: 14

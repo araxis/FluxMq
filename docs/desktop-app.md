@@ -30,6 +30,7 @@ flowchart LR
 - definition save and load from local files
 - validate, run, and stop controls through `FluxMq.App`
 - named sessions grouped by project
+- Windows package workflow producing portable zip and MSI artifacts
 
 ## Broker Assumption
 
@@ -56,3 +57,7 @@ The topic tree and message table are backed by the same message collection. When
 `FlowDefinitionComposer` is a UI-side adapter, not a runtime factory. Its job is to turn desktop actions such as "use this broker profile" or "add this component" into valid flow application JSON.
 
 The runtime still builds components through `FluxMq.App` and the registered runtime factories. The composer only keeps the editor, diagram, and saved JSON synchronized around the current alpha definition shape.
+
+## Packaging
+
+The desktop app is packaged from an unpackaged, self-contained Windows publish folder. The GitHub workflow uploads both the portable zip and an MSI installer. The MSI is built with WiX from the same publish output so both artifacts run the same app bits.

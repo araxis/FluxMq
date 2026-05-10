@@ -79,6 +79,8 @@
     });
 
     private string? _draggedComponentType;
+    private long _renderedDefinitionRevision = -1;
+    private readonly Dictionary<string, DiagramNodeState> _nodeStates = new(StringComparer.Ordinal);
 
     protected override void OnInitialized()
     {
@@ -114,8 +116,10 @@
 
     private void RebuildDiagram()
     {
+        CaptureDiagramState();
         _diagram.Nodes.Clear();
         _diagram.Links.Clear();
+        _renderedDefinitionRevision = Flow.DefinitionRevision;
 
         try
         {
@@ -208,13 +212,19 @@
         var type = definition.TryGetProperty("type", out var typeElement) && typeElement.ValueKind == JsonValueKind.String
             ? typeElement.GetString()
             : "node";
+        var hasState = _nodeStates.TryGetValue(name, out var state);
 
         var node = new FlowDiagramNodeModel(
-            new Blazor.Diagrams.Core.Geometry.Point(x, y),
+            hasState ? state!.Position : new Blazor.Diagrams.Core.Geometry.Point(x, y),
             name,
             type ?? "node",
             Catalog.Find(type ?? string.Empty),
             isResource);
+
+        if (hasState)
+        {
+            node.SetCollapsed(state!.IsCollapsed);
+        }
 
         node.AddPort(PortAlignment.Left);
         node.AddPort(PortAlignment.Right);
@@ -227,20 +237,32 @@
         var count = Live.SelectedStoredSession is null
             ? Live.RecentMessages.Count
             : Live.SelectedSessionMessages.Count;
+        var inspectedMessage = Live.LatestMessage ?? Live.SelectedMessage;
+        var latestInspection = Live.LatestMessage is null
+            ? Live.SelectedInspection
+            : Live.LatestInspection;
 
         foreach (var node in _diagram.Nodes.OfType<FlowDiagramNodeModel>())
         {
             var activity = node.NodeType switch
             {
                 "mqtt.message-source" => $"{Live.State} | {count} messages",
-                "mqtt.payload-inspector" => Live.SelectedMessage is null
+                "mqtt.payload-inspector" => inspectedMessage is null
                     ? "Waiting for payload"
-                    : $"{Live.SelectedInspection.ContentTypeLabel} | {Live.SelectedInspection.SizeBytes} bytes",
+                    : $"{latestInspection.ContentTypeLabel} | {latestInspection.SizeBytes} bytes | {ShortTopic(inspectedMessage.Topic)}",
                 "mqtt.metrics-sink" => $"{count} messages observed",
                 _ => null
             };
 
             node.SetActivity(activity);
+        }
+    }
+
+    private void CaptureDiagramState()
+    {
+        foreach (var node in _diagram.Nodes.OfType<FlowDiagramNodeModel>())
+        {
+            _nodeStates[node.NodeName] = new DiagramNodeState(node.Position, node.IsCollapsed);
         }
     }
 
@@ -292,6 +314,9 @@
            string.Equals(name, "configuration", StringComparison.OrdinalIgnoreCase) ||
            string.Equals(name, "when", StringComparison.OrdinalIgnoreCase);
 
+    private static string ShortTopic(string topic)
+        => topic.Length <= 42 ? topic : $"{topic[..18]}...{topic[^18..]}";
+
     private static string IconFor(FlowComponentDescriptor component)
         => component.Category switch
         {
@@ -312,8 +337,20 @@
 
     private void OnFlowChanged(object? sender, EventArgs e)
     {
-        RebuildDiagram();
-        InvokeAsync(StateHasChanged);
+        InvokeAsync(() =>
+        {
+            if (_renderedDefinitionRevision != Flow.DefinitionRevision)
+            {
+                RebuildDiagram();
+            }
+            else
+            {
+                UpdateDiagramActivity();
+                _diagram.Refresh();
+            }
+
+            StateHasChanged();
+        });
     }
 
     private void OnLiveChanged(object? sender, EventArgs e)
@@ -331,4 +368,6 @@
         Flow.Changed -= OnFlowChanged;
         Live.Changed -= OnLiveChanged;
     }
+
+    private sealed record DiagramNodeState(Blazor.Diagrams.Core.Geometry.Point Position, bool IsCollapsed);
 }

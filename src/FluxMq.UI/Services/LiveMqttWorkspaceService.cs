@@ -45,6 +45,8 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
     public string Subscription { get; private set; } = "#";
     public string CurrentProjectName { get; private set; } = "Default";
     public MqttSessionState State { get; private set; } = MqttSessionState.Disconnected;
+    public MqttEnvelope? LatestMessage { get; private set; }
+    public PayloadInspectionResult LatestInspection { get; private set; } = PayloadInspector.Inspect([]);
     public MqttEnvelope? SelectedMessage { get; private set; }
     public PayloadInspectionResult SelectedInspection { get; private set; } = PayloadInspector.Inspect([]);
     public bool IsRecording => _recordingSession is not null;
@@ -88,6 +90,8 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         CurrentProjectName = NormalizeProject(projectName);
         _selectedStoredSession = null;
         _selectedSessionMessages = [];
+        SelectedMessage = null;
+        SelectedInspection = PayloadInspector.Inspect([]);
         NotifyChanged();
     }
 
@@ -273,6 +277,8 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
     {
         SelectedMessage = message;
         SelectedInspection = PayloadInspector.Inspect(message.Payload);
+        LatestMessage ??= message;
+        LatestInspection = LatestMessage == message ? SelectedInspection : LatestInspection;
         NotifyChanged();
     }
 
@@ -288,8 +294,17 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
             var first = _selectedSessionMessages.FirstOrDefault();
             if (first is not null)
             {
+                LatestMessage = first;
+                LatestInspection = PayloadInspector.Inspect(first.Payload);
                 SelectedMessage = first;
-                SelectedInspection = PayloadInspector.Inspect(first.Payload);
+                SelectedInspection = LatestInspection;
+            }
+            else
+            {
+                LatestMessage = null;
+                LatestInspection = PayloadInspector.Inspect([]);
+                SelectedMessage = null;
+                SelectedInspection = LatestInspection;
             }
 
             Diagnostics =
@@ -330,8 +345,14 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
                 }
 
                 RecordMessage(message);
-                SelectedMessage ??= message;
-                SelectedInspection = PayloadInspector.Inspect(SelectedMessage.Payload);
+                LatestMessage = message;
+                LatestInspection = PayloadInspector.Inspect(message.Payload);
+                if (SelectedMessage is null)
+                {
+                    SelectedMessage = message;
+                    SelectedInspection = LatestInspection;
+                }
+
                 NotifyChanged();
             }
         }

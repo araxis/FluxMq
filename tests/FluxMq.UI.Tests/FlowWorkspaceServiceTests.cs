@@ -34,6 +34,31 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public async Task ValidateAsync_DoesNotChangeDefinitionRevision()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        var revision = service.DefinitionRevision;
+
+        await service.ValidateAsync();
+
+        service.DefinitionRevision.Should().Be(revision);
+    }
+
+    [Fact]
+    public void SetDefinitionJson_ChangesDefinitionRevisionOnlyWhenContentChanges()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        var initialRevision = service.DefinitionRevision;
+        var json = service.DefinitionJson;
+
+        service.SetDefinitionJson(json);
+        service.DefinitionRevision.Should().Be(initialRevision);
+
+        service.SetDefinitionJson("{}");
+        service.DefinitionRevision.Should().Be(initialRevision + 1);
+    }
+
+    [Fact]
     public async Task ValidateAsync_ConvertsInvalidJsonToDiagnostic()
     {
         var service = new FlowWorkspaceService(new FlowDefinitionComposer());

@@ -28,6 +28,15 @@ dotnet run --project src/FluxMq.UI/FluxMq.UI.csproj -f net10.0-windows10.0.19041
 
 The default broker profile points to `localhost:1883`.
 
+### Windows Packages
+
+The repository workflow builds early Windows desktop packages:
+
+- portable `win-x64` zip
+- MSI installer
+
+Both artifacts are produced from the same desktop app publish output.
+
 ### Command Line
 
 The first command-line surface validates a flow application definition through the same host boundary planned for future app surfaces:

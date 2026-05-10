@@ -80,6 +80,8 @@ Observability and replay timeline:
   /FluxMq.Storage.Tests
 /docs
 /docs-site
+/eng
+/installer
 /memory
 ```
 
@@ -113,6 +115,20 @@ Run the same flow application for a bounded smoke test:
 
 ```powershell
 dotnet run --project src\FluxMq.Cli -- run --config samples\flow-applications\metrics-only.json --duration-ms 1000
+```
+
+## Windows Packages
+
+The Windows desktop packaging workflow builds:
+
+- `FluxMQ-<version>-portable-win-x64.zip`
+- `FluxMQ-<version>-win-x64.msi`
+
+The reusable local packaging entry point is:
+
+```powershell
+dotnet tool install --global wix --version 6.0.2
+.\eng\package-windows.ps1 -Configuration Release -Version 0.1.0
 ```
 
 ## Project Memory

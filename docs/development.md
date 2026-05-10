@@ -31,6 +31,10 @@ dotnet test FluxMq.sln --no-build
   /FluxMq.UI.Tests
 /docs
   contributor and Wiki-ready documentation
+/eng
+  repeatable local build and packaging scripts
+/installer
+  Windows installer authoring
 /memory
   decisions, roadmap, progress, and working context
 ```
@@ -71,6 +75,24 @@ dotnet run --project src\FluxMq.UI\FluxMq.UI.csproj -f net10.0-windows10.0.19041
 ```
 
 The alpha workspace assumes a local MQTT broker is available at `localhost:1883` unless the user edits the broker profile in the app.
+
+## Windows Packaging
+
+The `Windows Desktop Packages` workflow builds the MAUI desktop app on a Windows runner and uploads two artifacts:
+
+- a portable `win-x64` zip containing the published `FluxMq.UI.exe` folder
+- an MSI installer built from the same publish output with WiX
+
+The workflow is backed by `eng/package-windows.ps1` and `installer/FluxMq.UI/Product.wxs`.
+
+Run the packaging script locally from PowerShell:
+
+```powershell
+dotnet tool install --global wix --version 6.0.2
+.\eng\package-windows.ps1 -Configuration Release -Version 0.1.0
+```
+
+The portable package is built with `WindowsPackageType=None`, `RuntimeIdentifierOverride=win-x64`, and `WindowsAppSDKSelfContained=true`.
 
 ## Documentation Locations
 

@@ -28,6 +28,8 @@ Use the Broker panel to change host, port, client ID, credentials, TLS, and subs
 
 The left and right workspace columns can be collapsed from the center toolbar. On desktop, drag the slim splitters beside the designer to resize the side columns.
 
+Runtime and traffic updates refresh diagram node activity without rebuilding the diagram, so node positions and collapsed state remain stable while messages arrive.
+
 ## Files
 
 The Runtime panel saves and loads the current flow application JSON from the file path shown in the panel.

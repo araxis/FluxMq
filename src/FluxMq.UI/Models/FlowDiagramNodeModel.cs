@@ -40,7 +40,17 @@ public sealed class FlowDiagramNodeModel : NodeModel
 
     public void Toggle()
     {
-        IsCollapsed = !IsCollapsed;
+        SetCollapsed(!IsCollapsed);
+    }
+
+    public void SetCollapsed(bool isCollapsed)
+    {
+        if (IsCollapsed == isCollapsed)
+        {
+            return;
+        }
+
+        IsCollapsed = isCollapsed;
         Size = IsCollapsed ? CollapsedSize : ExpandedSize;
         RefreshAll();
     }

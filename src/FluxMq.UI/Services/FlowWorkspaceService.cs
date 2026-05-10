@@ -23,6 +23,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     }
 
     public string DefinitionJson { get; private set; }
+    public long DefinitionRevision { get; private set; }
     public string CurrentFilePath { get; private set; }
     public RuntimeWorkspaceState State { get; private set; } = RuntimeWorkspaceState.Idle;
     public IReadOnlyList<WorkspaceDiagnostic> Diagnostics { get; private set; } = [];
@@ -37,7 +38,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
     public void SetDefinitionJson(string json)
     {
-        DefinitionJson = json;
+        ReplaceDefinition(json);
         State = RuntimeWorkspaceState.Idle;
         Diagnostics = [];
         NotifyChanged();
@@ -47,7 +48,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     {
         try
         {
-            DefinitionJson = _definitionComposer.UpsertComponent(DefinitionJson, "mqtt.message-source", profile, subscription);
+            ReplaceDefinition(_definitionComposer.UpsertComponent(DefinitionJson, "mqtt.message-source", profile, subscription));
             State = RuntimeWorkspaceState.Idle;
             Diagnostics = [];
         }
@@ -67,7 +68,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     {
         try
         {
-            DefinitionJson = _definitionComposer.UpsertComponent(DefinitionJson, componentType, profile, subscription);
+            ReplaceDefinition(_definitionComposer.UpsertComponent(DefinitionJson, componentType, profile, subscription));
             State = RuntimeWorkspaceState.Idle;
             Diagnostics = [];
         }
@@ -88,7 +89,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            DefinitionJson = await File.ReadAllTextAsync(CurrentFilePath, cancellationToken).ConfigureAwait(false);
+            ReplaceDefinition(await File.ReadAllTextAsync(CurrentFilePath, cancellationToken).ConfigureAwait(false));
             State = RuntimeWorkspaceState.Idle;
             Diagnostics = [];
         }
@@ -284,6 +285,17 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             await _host.DisposeAsync().ConfigureAwait(false);
             _host = null;
         }
+    }
+
+    private void ReplaceDefinition(string json)
+    {
+        if (string.Equals(DefinitionJson, json, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        DefinitionJson = json;
+        DefinitionRevision++;
     }
 
     private void NotifyChanged() => Changed?.Invoke(this, EventArgs.Empty);

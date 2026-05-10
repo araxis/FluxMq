@@ -39,4 +39,21 @@ public sealed class FlowDiagramNodeModelTests
 
         model.IsCollapsed.Should().BeFalse();
     }
+
+    [Fact]
+    public void SetCollapsed_AppliesRequestedState()
+    {
+        var model = new FlowDiagramNodeModel(
+            new DiagramPoint(10, 20),
+            "source",
+            "mqtt.message-source",
+            descriptor: null,
+            isResource: false);
+
+        model.SetCollapsed(true);
+        model.IsCollapsed.Should().BeTrue();
+
+        model.SetCollapsed(false);
+        model.IsCollapsed.Should().BeFalse();
+    }
 }
