@@ -33,6 +33,15 @@ public class SessionRepositoryTests : IDisposable
     }
 
     [Fact]
+    public void Start_CreatesNamedProjectSession()
+    {
+        var session = _repo.Start(Profile("broker-a"), "morning capture", "factory floor");
+
+        session.Name.Should().Be("morning capture");
+        session.ProjectName.Should().Be("factory floor");
+    }
+
+    [Fact]
     public void Start_PersistsSession()
     {
         var session = _repo.Start(Profile());

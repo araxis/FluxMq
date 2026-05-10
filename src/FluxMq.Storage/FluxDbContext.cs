@@ -50,6 +50,7 @@ public sealed class FluxDbContext : IDisposable
         Messages.EnsureIndex(m => m.SessionId);
         Messages.EnsureIndex(m => m.Topic);
         Sessions.EnsureIndex(nameof(StoredSession.ProfileId));
+        Sessions.EnsureIndex(nameof(StoredSession.ProjectName));
     }
 
     public void Dispose() => _db.Dispose();

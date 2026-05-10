@@ -1,0 +1,41 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package
+    Name="FluxMQ"
+    Manufacturer="FluxMQ"
+    Version="$(var.ProductVersion)"
+    UpgradeCode="{FC7B288C-A45A-4A18-8DA0-FF372B7F550E}"
+    Scope="perMachine">
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of FluxMQ is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Feature Id="Main" Title="FluxMQ" Level="1">
+      <ComponentGroupRef Id="PublishedFiles" />
+      <ComponentRef Id="StartMenuShortcut" />
+    </Feature>
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="FluxMQ" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="FluxMQ" />
+    </StandardDirectory>
+
+    <Component Id="StartMenuShortcut" Directory="ApplicationProgramsFolder" Guid="{178BAED6-F1FC-4877-B8E7-B1E5A12AE1DF}">
+      <Shortcut
+        Id="ApplicationStartMenuShortcut"
+        Name="FluxMQ"
+        Target="[INSTALLFOLDER]FluxMq.UI.exe"
+        WorkingDirectory="INSTALLFOLDER" />
+      <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+      <RegistryValue Root="HKLM" Key="Software\FluxMQ" Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+  </Package>
+
+  <Fragment>
+    <ComponentGroup Id="PublishedFiles" Directory="INSTALLFOLDER">
+      <Files Include="$(var.PublishDir)\**\*.*" />
+    </ComponentGroup>
+  </Fragment>
+</Wix>

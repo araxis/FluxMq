@@ -1,0 +1,101 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject AppThemeService ThemeService
+
+<MudThemeProvider Theme="@_theme" IsDarkMode="@ThemeService.IsDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout Class="flux-shell">
+    <MudAppBar Elevation="0" Dense="true">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
+        <MudText Typo="Typo.h6">FluxMQ</MudText>
+        <MudSpacer />
+        <MudSelect T="ThemePreference"
+                   Value="@ThemeService.Preference"
+                   ValueChanged="@OnThemeChanged"
+                   Dense="true"
+                   Margin="Margin.Dense"
+                   Variant="Variant.Text"
+                   FitContent ="true"
+                   Underline="false"
+                   Style="width: 132px">
+            <MudSelectItem Value="@ThemePreference.System">System</MudSelectItem>
+            <MudSelectItem Value="@ThemePreference.Light">Light</MudSelectItem>
+            <MudSelectItem Value="@ThemePreference.Dark">Dark</MudSelectItem>
+        </MudSelect>
+    </MudAppBar>
+
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="0" ClipMode="DrawerClipMode.Always" Variant="DrawerVariant.Mini">
+        <MudNavMenu Dense="true">
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Hub">Workspace</MudNavLink>
+            <MudNavLink Href="/definition" Icon="@Icons.Material.Filled.DataObject">Definition</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+
+    <MudMainContent Class="flux-main">
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool _drawerOpen = true;
+
+    private readonly MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#1F7A8C",
+            Secondary = "#29B6A8",
+            Tertiary = "#F4B860",
+            AppbarBackground = "#17212B",
+            AppbarText = "#FFFFFF",
+            Background = "#F6F7F9",
+            Surface = "#FFFFFF",
+            DrawerBackground = "#FFFFFF"
+        },
+        PaletteDark = new PaletteDark
+        {
+            Primary = "#36C5B5",
+            Secondary = "#F4B860",
+            Tertiary = "#7AA2F7",
+            AppbarBackground = "#101418",
+            AppbarText = "#F5F7FA",
+            Background = "#0F1419",
+            Surface = "#151B22",
+            DrawerBackground = "#121820"
+        },
+        LayoutProperties = new LayoutProperties
+        {
+            DefaultBorderRadius = "8px"
+        },
+        Typography = new Typography
+        {
+            Default = new DefaultTypography
+            {
+                FontFamily = ["Segoe UI", "Roboto", "Arial", "sans-serif"]
+            }
+        }
+    };
+
+    protected override void OnInitialized()
+    {
+        ThemeService.Changed += OnThemeChanged;
+    }
+
+    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+
+    private void OnThemeChanged(ThemePreference preference)
+    {
+        ThemeService.SetPreference(preference);
+        StateHasChanged();
+    }
+
+    private void OnThemeChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        ThemeService.Changed -= OnThemeChanged;
+    }
+}

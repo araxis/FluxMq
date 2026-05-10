@@ -10,9 +10,9 @@ public sealed class LiteDbSessionRepository : ISessionRepository
 
     public LiteDbSessionRepository(FluxDbContext ctx) => _ctx = ctx;
 
-    public StoredSession Start(MqttConnectionProfile profile)
+    public StoredSession Start(MqttConnectionProfile profile, string? name = null, string? projectName = null)
     {
-        var session = StoredSession.From(profile);
+        var session = StoredSession.From(profile, name, projectName);
         _ctx.Sessions.Insert(session);
         return session;
     }

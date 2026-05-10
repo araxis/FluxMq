@@ -17,16 +17,19 @@
     <div class="topic-tree-nodes">
         @if (string.IsNullOrWhiteSpace(_filter))
         {
-            @foreach (var root in TopicIndex.Roots.Values.OrderBy(n => n.Name))
+            @foreach (var root in Roots.OrderBy(n => n.Name))
             {
-                <TopicTreeNode Node="root" />
+                <TopicTreeNode Node="root"
+                               SelectedTopic="@SelectedTopic"
+                               TopicSelected="@TopicSelected" />
             }
         }
         else
         {
-            @foreach (var node in TopicIndex.Search(_filter).OrderBy(n => n.FullPath))
+            @foreach (var node in SearchResults.OrderBy(n => n.FullPath))
             {
-                <div class="topic-node-flat">
+                <div class="topic-node-flat @(node.FullPath == SelectedTopic ? "topic-node-selected" : null)"
+                     @onclick="@(() => TopicSelected.InvokeAsync(node.FullPath))">
                     <MudText Typo="Typo.body2" Class="topic-path">@node.FullPath</MudText>
                     <MudChip T="string" Size="Size.Small" Color="Color.Default" Class="ml-2">@node.MessageCount</MudChip>
                     @if (node.LastActivity != default)
@@ -43,9 +46,18 @@
 </div>
 
 @code {
+    [Parameter] public IReadOnlyList<MqttEnvelope>? Messages { get; set; }
+    [Parameter] public string? SelectedTopic { get; set; }
+    [Parameter] public EventCallback<string?> TopicSelected { get; set; }
+
     private string _filter = string.Empty;
     private volatile bool _pendingUpdate;
     private Timer? _refreshTimer;
+    private ITopicIndex? _localTopicIndex;
+
+    private IReadOnlyCollection<TopicNode> Roots => ActiveTopicIndex.Roots.Values.ToArray();
+    private IEnumerable<TopicNode> SearchResults => ActiveTopicIndex.Search(_filter);
+    private ITopicIndex ActiveTopicIndex => _localTopicIndex ?? TopicIndex;
 
     protected override void OnInitialized()
     {
@@ -58,6 +70,23 @@
             _pendingUpdate = false;
             InvokeAsync(StateHasChanged);
         }, null, TimeSpan.FromMilliseconds(250), TimeSpan.FromMilliseconds(250));
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Messages is null)
+        {
+            _localTopicIndex = null;
+            return;
+        }
+
+        var index = new TopicIndex();
+        foreach (var message in Messages)
+        {
+            index.Process(message);
+        }
+
+        _localTopicIndex = index;
     }
 
     private void OnIndexChanged(object? sender, EventArgs e) => _pendingUpdate = true;

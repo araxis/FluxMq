@@ -7,6 +7,7 @@ This folder contains project documentation intended for contributors and future 
 - [Project Overview](overview.md)
 - [Local Development](development.md)
 - [Architecture](architecture.md)
+- [Desktop App](desktop-app.md)
 - [Fork Flow](fork-flow.md)
 - [Flow Components](flow-components.md)
 - [Flow Errors](flow-errors.md)

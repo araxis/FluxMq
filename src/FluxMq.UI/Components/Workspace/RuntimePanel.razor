@@ -1,0 +1,95 @@
+@implements IDisposable
+@inject FlowWorkspaceService Flow
+
+<MudExpansionPanels Dense="true" Elevation="0">
+    <MudExpansionPanel Text="Runtime" Icon="@Icons.Material.Filled.Route" Expanded="true">
+        <MudStack Spacing="2">
+        <MudStack Row="true" AlignItems="AlignItems.Center">
+            <MudIcon Icon="@Icons.Material.Filled.Route" Color="Color.Primary" />
+            <MudText Typo="Typo.subtitle1">Runtime</MudText>
+            <MudSpacer />
+            <MudChip T="string" Size="Size.Small" Color="@StateColor">@Flow.State</MudChip>
+        </MudStack>
+
+        <MudTextField T="string"
+                      Label="File"
+                      Value="@Flow.CurrentFilePath"
+                      ValueChanged="@Flow.SetFilePath"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense" />
+
+        <MudStack Row="true" Spacing="1">
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.UploadFile" Disabled="@_busy" OnClick="@LoadAsync">Load</MudButton>
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Save" Disabled="@_busy" OnClick="@SaveAsync">Save</MudButton>
+        </MudStack>
+
+        <MudStack Row="true" Spacing="1">
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.FactCheck" Disabled="@_busy" OnClick="@ValidateAsync">Validate</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" Disabled="@_busy" OnClick="@RunAsync">Run</MudButton>
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Stop" Disabled="@_busy" OnClick="@StopAsync">Stop</MudButton>
+        </MudStack>
+
+        @foreach (var diagnostic in Flow.Diagnostics)
+        {
+            <MudAlert Severity="@SeverityFor(diagnostic)" Dense="true" Variant="Variant.Outlined">
+                <MudText Typo="Typo.caption">@diagnostic.Source / @diagnostic.Code</MudText>
+                <MudText Typo="Typo.body2">@diagnostic.Message</MudText>
+            </MudAlert>
+        }
+        </MudStack>
+    </MudExpansionPanel>
+</MudExpansionPanels>
+
+@code {
+    private bool _busy;
+
+    private Color StateColor => Flow.State switch
+    {
+        RuntimeWorkspaceState.Running => Color.Success,
+        RuntimeWorkspaceState.Valid => Color.Info,
+        RuntimeWorkspaceState.Faulted => Color.Error,
+        RuntimeWorkspaceState.Stopped => Color.Warning,
+        _ => Color.Default
+    };
+
+    protected override void OnInitialized()
+    {
+        Flow.Changed += OnChanged;
+    }
+
+    private Task LoadAsync() => RunBusyAsync(() => Flow.LoadFromFileAsync());
+    private Task SaveAsync() => RunBusyAsync(() => Flow.SaveToFileAsync());
+    private Task ValidateAsync() => RunBusyAsync(() => Flow.ValidateAsync());
+    private Task RunAsync() => RunBusyAsync(() => Flow.RunAsync());
+    private Task StopAsync() => RunBusyAsync(() => Flow.StopAsync());
+
+    private async Task RunBusyAsync(Func<Task> action)
+    {
+        _busy = true;
+        try
+        {
+            await action();
+        }
+        finally
+        {
+            _busy = false;
+            StateHasChanged();
+        }
+    }
+
+    private static Severity SeverityFor(WorkspaceDiagnostic diagnostic)
+        => diagnostic.Severity switch
+        {
+            "Error" => Severity.Error,
+            "Warning" => Severity.Warning,
+            "Info" => Severity.Info,
+            _ => Severity.Normal
+        };
+
+    private void OnChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        Flow.Changed -= OnChanged;
+    }
+}

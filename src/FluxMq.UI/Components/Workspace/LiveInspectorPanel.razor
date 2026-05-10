@@ -1,0 +1,131 @@
+@implements IDisposable
+@inject LiveMqttWorkspaceService Live
+
+<MudExpansionPanels Dense="true" Elevation="0">
+    <MudExpansionPanel Text="Traffic" Icon="@Icons.Material.Filled.Troubleshoot" Expanded="true">
+        <MudStack Spacing="2">
+            <MudStack Row="true" AlignItems="AlignItems.Center">
+                <MudIcon Icon="@Icons.Material.Filled.Troubleshoot" Color="Color.Primary" />
+                <MudText Typo="Typo.subtitle1">Traffic</MudText>
+                <MudSpacer />
+                @if (!string.IsNullOrWhiteSpace(_selectedTopic))
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Info" OnClose="@ClearTopic">@_selectedTopic</MudChip>
+                }
+                <MudChip T="string" Size="Size.Small" Color="Color.Default">@DisplayedMessages.Count</MudChip>
+            </MudStack>
+
+            <MudPaper Elevation="0" Outlined="true" Class="pa-2">
+                <MudText Typo="Typo.subtitle2" Class="mb-2">Publish</MudText>
+                <MudTextField T="string" Label="Topic" @bind-Value="_publishTopic" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudTextField T="string" Label="Payload" @bind-Value="_publishPayload" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Send" Disabled="@_busy" OnClick="@PublishAsync">Publish</MudButton>
+            </MudPaper>
+
+            <MudExpansionPanels Dense="true" Elevation="0">
+                <MudExpansionPanel Text="Topics" Icon="@Icons.Material.Filled.AccountTree" Expanded="true">
+                    <TopicTreeView Messages="@MessageSource"
+                                   SelectedTopic="@_selectedTopic"
+                                   TopicSelected="@OnTopicSelected" />
+                </MudExpansionPanel>
+                <MudExpansionPanel Text="Messages" Icon="@Icons.Material.Filled.ListAlt" Expanded="true">
+                    <MudTable Items="@DisplayedMessages" Dense="true" Hover="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>Topic</MudTh>
+                            <MudTh>Bytes</MudTh>
+                            <MudTh></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Topic">
+                                <MudText Typo="Typo.caption">@context.Topic</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="Bytes">@context.Payload.Length</MudTd>
+                            <MudTd>
+                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Search" OnClick="@(() => Live.SelectMessage(context))" />
+                            </MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">No messages.</MudText>
+                        </NoRecordsContent>
+                    </MudTable>
+                </MudExpansionPanel>
+            </MudExpansionPanels>
+
+            <PayloadInspectorPanel Title="Payload" Topic="@Live.SelectedMessage?.Topic" ReceivedAt="@Live.SelectedMessage?.ReceivedAt" Payload="@Live.SelectedMessage?.Payload" />
+
+            @foreach (var diagnostic in Live.Diagnostics)
+            {
+                <MudAlert Severity="@SeverityFor(diagnostic)" Dense="true" Variant="Variant.Outlined">@diagnostic.Message</MudAlert>
+            }
+        </MudStack>
+    </MudExpansionPanel>
+</MudExpansionPanels>
+
+@code {
+    private bool _busy;
+    private string _publishTopic = "fluxmq/test";
+    private string _publishPayload = "{\"hello\":\"fluxmq\"}";
+    private string? _selectedTopic;
+    private IReadOnlyList<MqttEnvelope> MessageSource => Live.SelectedStoredSession is null
+        ? Live.RecentMessages
+        : Live.SelectedSessionMessages;
+    private IReadOnlyList<MqttEnvelope> DisplayedMessages => string.IsNullOrWhiteSpace(_selectedTopic)
+        ? MessageSource
+        : MessageSource.Where(message => IsInSelectedTopic(message.Topic)).ToArray();
+
+    protected override void OnInitialized()
+    {
+        Live.Changed += OnChanged;
+    }
+
+    private async Task PublishAsync()
+    {
+        _busy = true;
+        try
+        {
+            await Live.PublishAsync(_publishTopic, _publishPayload);
+        }
+        finally
+        {
+            _busy = false;
+            StateHasChanged();
+        }
+    }
+
+    private static Severity SeverityFor(WorkspaceDiagnostic diagnostic)
+        => diagnostic.Severity switch
+        {
+            "Error" => Severity.Error,
+            "Warning" => Severity.Warning,
+            "Info" => Severity.Info,
+            _ => Severity.Normal
+        };
+
+    private void OnChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
+
+    private void OnTopicSelected(string? topic)
+    {
+        _selectedTopic = topic;
+    }
+
+    private void ClearTopic()
+    {
+        _selectedTopic = null;
+    }
+
+    private bool IsInSelectedTopic(string topic)
+    {
+        if (string.IsNullOrWhiteSpace(_selectedTopic))
+        {
+            return true;
+        }
+
+        return string.Equals(topic, _selectedTopic, StringComparison.Ordinal) ||
+               topic.StartsWith($"{_selectedTopic}/", StringComparison.Ordinal);
+    }
+
+    public void Dispose()
+    {
+        Live.Changed -= OnChanged;
+    }
+}

@@ -20,6 +20,8 @@ The product direction is to move beyond a passive MQTT client. FluxMQ should hel
 - Flow error ports with stable numeric error codes.
 - Metrics snapshots for flow observability.
 - Initial Fork Flow application definition model and validation.
+- MAUI Blazor Hybrid desktop alpha surface in `FluxMq.UI`.
+- Desktop broker connection, publish, topic inspection, payload inspection, LiteDB-backed recording, definition file load/save, validation, run, and stop controls.
 
 ## Product Shape
 
@@ -40,4 +42,4 @@ OpenTelemetry support is planned later for exporting selected runtime metrics, t
 
 The project is still in foundation work. Core runtime pieces are being built before the full drag-and-drop Fork Flow editor. This keeps the runtime honest: the visual editor will represent real executable flow application definitions, not a separate UI-only model.
 
-Fork Flow now has an initial application definition model with shared resources and named workflows. The first cold-start runtime builder can create registered nodes and link typed ports from that definition, including a service-backed MQTT message source resource. Reload control and visual editing are still planned work.
+Fork Flow now has an initial application definition model with shared resources and named workflows. The first cold-start runtime builder can create registered nodes and link typed ports from that definition, including a service-backed MQTT message source resource. The first desktop alpha can edit, save, load, validate, and run this JSON through the same host boundary. Runtime reload and richer graph patching are still planned work.

@@ -1,6 +1,6 @@
 # Getting Started
 
-FluxMQ is in early foundation work. The current repository focuses on the core MQTT, storage, flow component, workflow runtime, and host boundary libraries.
+FluxMQ is in early alpha work. The current repository includes the core MQTT, storage, flow component, workflow runtime, command-line host, and desktop workspace.
 
 ## What FluxMQ Helps With
 
@@ -14,7 +14,30 @@ FluxMQ is in early foundation work. The current repository focuses on the core M
 
 FluxMQ is designed as a focused desktop workspace, closer to an IDE than a dashboard. The goal is to make repeated debugging work fast, visible, and reliable.
 
-## Current Alpha Entry Point
+## Current Alpha Entry Points
+
+### Desktop Workspace
+
+The first desktop workspace is `FluxMq.UI`, a MAUI Blazor Hybrid app.
+
+Run it on Windows with:
+
+```sh
+dotnet run --project src/FluxMq.UI/FluxMq.UI.csproj -f net10.0-windows10.0.19041.0
+```
+
+The default broker profile points to `localhost:1883`.
+
+### Windows Packages
+
+The repository workflow builds early Windows desktop packages:
+
+- portable `win-x64` zip
+- MSI installer
+
+Both artifacts are produced from the same desktop app publish output.
+
+### Command Line
 
 The first command-line surface validates a flow application definition through the same host boundary planned for future app surfaces:
 

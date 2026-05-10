@@ -218,4 +218,41 @@ Chronological progress record.
 
 ## Current Next Step
 
-Continue the alpha path by introducing an explicit shared MQTT connection resource (`mqtt.connection`) and letting message source and publish sink reuse it across workflows.
+Build the first usable MAUI Blazor Hybrid desktop alpha in `FluxMq.UI`.
+
+## 2026-05-10
+
+- Closed the rejected separate desktop host PR and returned to `main`.
+- Confirmed the existing solution direction: `FluxMq.App` remains the host-independent workflow application boundary.
+- Converted `FluxMq.UI` into the Windows-first MAUI Blazor Hybrid desktop app surface.
+- Added MudBlazor shell, light/dark/system theme selection, app icon, splash asset, and BlazorWebView host.
+- Added Blazor.Diagrams as the Fork Flow visual canvas dependency.
+- Added the alpha workspace:
+  - broker profile editor for local MQTT connection settings
+  - connection test, connect, disconnect, subscribe, and publish actions
+  - live topic tree and recent message list
+  - payload inspector panel wired to live MQTT messages
+  - LiteDB-backed recording controls for live traffic
+  - component catalog for registered runtime node types
+  - visual diagram projection from the flow definition JSON
+  - file path based definition load/save
+  - validate, run, and stop controls through `FluxMq.App`
+- Added focused UI service tests for definition generation, host validation, file round-trip, and invalid JSON diagnostics.
+- Replaced blank default diagram nodes with FluxMQ flow node widgets that show name, type, category, ports, and collapsible details.
+- Added project/session selection over LiteDB recording sessions so recorded traffic can be grouped and loaded back into the workspace.
+- Renamed the UI definition helper to `FlowDefinitionComposer` to make its goal clearer: compose valid definition JSON from UI actions, not build runtime nodes.
+- Reworked the desktop workspace layout so the left and right columns collapse like side panels and can be resized with dedicated desktop splitters.
+- Moved the raw definition editor behind a collapsed panel so the visual workspace remains primary.
+- Wired the topic tree to the same live or selected-session message collection used by the message table, with branch selection filtering descendant topics.
+- Added diagram helper widgets from Blazor.Diagrams, including grid and navigator views, and surfaced live message/runtime activity on diagram nodes.
+- Added a Windows packaging workflow that produces a portable `win-x64` zip and MSI installer from the MAUI desktop app publish output.
+- Declared `win-x64` as the desktop app runtime so clean CI restores include the Windows runtime pack needed by MAUI test and package builds.
+- Disabled ReadyToRun for the alpha desktop app to keep clean hosted test/package builds reliable while installer signing and release optimization are still future work.
+- Added WiX installer authoring and a reusable local packaging script.
+- Updated the workspace splitters to use pointer-captured mouse dragging for reliable column width resizing.
+- Stopped non-definition workspace changes from rebuilding the diagram; live traffic and runtime status now update node activity in place.
+- Updated diagram payload inspector activity to show the latest inspected message payload instead of stale selected-message state.
+
+## Current Next Step
+
+Harden the alpha desktop workspace by exercising it against Mosquitto, then add the explicit shared MQTT connection resource (`mqtt.connection`) so source and publish components can reuse one connection across workflows.

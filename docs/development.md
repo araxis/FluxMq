@@ -22,14 +22,19 @@ dotnet test FluxMq.sln --no-build
   /FluxMq.Pipeline  Dataflow pipeline and concrete flow components
   /FluxMq.Replay    recorded session replay orchestration
   /FluxMq.Storage   LiteDB persistence
-  /FluxMq.UI        reusable Blazor UI components
+  /FluxMq.UI        MAUI Blazor Hybrid desktop workspace
 /tests
   /FluxMq.Core.Tests
   /FluxMq.Pipeline.Tests
   /FluxMq.Replay.Tests
   /FluxMq.Storage.Tests
+  /FluxMq.UI.Tests
 /docs
   contributor and Wiki-ready documentation
+/eng
+  repeatable local build and packaging scripts
+/installer
+  Windows installer authoring
 /memory
   decisions, roadmap, progress, and working context
 ```
@@ -52,6 +57,42 @@ Before opening a PR:
 dotnet test FluxMq.sln
 npm run build --prefix docs-site
 ```
+
+## Desktop App
+
+`FluxMq.UI` is a Windows-first MAUI Blazor Hybrid app for the first alpha.
+
+Build it directly with:
+
+```powershell
+dotnet build src\FluxMq.UI\FluxMq.UI.csproj
+```
+
+Run it from Visual Studio or with:
+
+```powershell
+dotnet run --project src\FluxMq.UI\FluxMq.UI.csproj -f net10.0-windows10.0.19041.0
+```
+
+The alpha workspace assumes a local MQTT broker is available at `localhost:1883` unless the user edits the broker profile in the app.
+
+## Windows Packaging
+
+The `Windows Desktop Packages` workflow builds the MAUI desktop app on a Windows runner and uploads two artifacts:
+
+- a portable `win-x64` zip containing the published `FluxMq.UI.exe` folder
+- an MSI installer built from the same publish output with WiX
+
+The workflow is backed by `eng/package-windows.ps1` and `installer/FluxMq.UI/Product.wxs`.
+
+Run the packaging script locally from PowerShell:
+
+```powershell
+dotnet tool install --global wix --version 6.0.2
+.\eng\package-windows.ps1 -Configuration Release -Version 0.1.0
+```
+
+The portable package is built with `WindowsPackageType=None`, `RuntimeIdentifierOverride=win-x64`, and `WindowsAppSDKSelfContained=true`.
 
 ## Documentation Locations
 
