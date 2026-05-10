@@ -1,8 +1,9 @@
 @implements IDisposable
 @inject LiveMqttWorkspaceService Live
 
-<MudPaper Elevation="0" Outlined="true" Class="pa-3">
-    <MudStack Spacing="2">
+<MudExpansionPanels Dense="true" Elevation="0">
+    <MudExpansionPanel Text="Traffic" Icon="@Icons.Material.Filled.Troubleshoot" Expanded="true">
+        <MudStack Spacing="2">
         <MudStack Row="true" AlignItems="AlignItems.Center">
             <MudIcon Icon="@Icons.Material.Filled.Troubleshoot" Color="Color.Primary" />
             <MudText Typo="Typo.subtitle1">Traffic</MudText>
@@ -17,26 +18,12 @@
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Send" Disabled="@_busy" OnClick="@PublishAsync">Publish</MudButton>
         </MudPaper>
 
-        <MudPaper Elevation="0" Outlined="true" Class="pa-2">
-            <MudStack Row="true" AlignItems="AlignItems.Center">
-                <MudText Typo="Typo.subtitle2">Recording</MudText>
-                <MudSpacer />
-                <MudChip T="string" Size="Size.Small" Color="@(Live.IsRecording ? Color.Success : Color.Default)">
-                    @(Live.IsRecording ? $"{Live.RecordedMessageCount} messages" : $"{Live.StoredSessions.Count} sessions")
-                </MudChip>
-            </MudStack>
-            <MudStack Row="true" Spacing="1" Class="mt-2">
-                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.FiberManualRecord" Disabled="@Live.IsRecording" OnClick="@Live.StartRecording">Start</MudButton>
-                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.StopCircle" Disabled="@(!Live.IsRecording)" OnClick="@Live.StopRecording">Stop</MudButton>
-            </MudStack>
-        </MudPaper>
-
         <MudExpansionPanels Dense="true" Elevation="0">
             <MudExpansionPanel Text="Topics" Icon="@Icons.Material.Filled.AccountTree" Expanded="true">
                 <TopicTreeView />
             </MudExpansionPanel>
             <MudExpansionPanel Text="Messages" Icon="@Icons.Material.Filled.ListAlt" Expanded="true">
-                <MudTable Items="@Live.RecentMessages" Dense="true" Hover="true" Elevation="0">
+                <MudTable Items="@DisplayedMessages" Dense="true" Hover="true" Elevation="0">
                     <HeaderContent>
                         <MudTh>Topic</MudTh>
                         <MudTh>Bytes</MudTh>
@@ -64,13 +51,17 @@
         {
             <MudAlert Severity="@SeverityFor(diagnostic)" Dense="true" Variant="Variant.Outlined">@diagnostic.Message</MudAlert>
         }
-    </MudStack>
-</MudPaper>
+        </MudStack>
+    </MudExpansionPanel>
+</MudExpansionPanels>
 
 @code {
     private bool _busy;
     private string _publishTopic = "fluxmq/test";
     private string _publishPayload = "{\"hello\":\"fluxmq\"}";
+    private IReadOnlyList<MqttEnvelope> DisplayedMessages => Live.SelectedStoredSession is null
+        ? Live.RecentMessages
+        : Live.SelectedSessionMessages;
 
     protected override void OnInitialized()
     {

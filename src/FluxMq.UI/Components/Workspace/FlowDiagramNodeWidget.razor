@@ -1,0 +1,53 @@
+<div class="flow-node @(Node.Selected ? "flow-node-selected" : null) @(Node.IsCollapsed ? "flow-node-collapsed" : null)">
+    <div class="flow-node-header">
+        <MudIconButton Size="Size.Small"
+                       Icon="@(Node.IsCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore)"
+                       OnClick="@Toggle" />
+        <div class="flow-node-title">
+            <MudText Typo="Typo.subtitle2">@Node.NodeName</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@Node.DisplayName</MudText>
+        </div>
+        <MudChip T="string" Size="Size.Small" Color="@CategoryColor">@Node.Category</MudChip>
+    </div>
+
+    @if (!Node.IsCollapsed)
+    {
+        <MudDivider Class="my-2" />
+        <MudText Typo="Typo.caption" Color="Color.Secondary">@Node.Summary</MudText>
+        <div class="flow-node-ports">
+            @foreach (var port in Node.PortDescriptors)
+            {
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Variant="Variant.Outlined"
+                         Color="@(port.IsInput ? Color.Info : Color.Success)">
+                    @(port.IsInput ? "In" : "Out") · @port.Name
+                </MudChip>
+            }
+        </div>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">@Node.NodeType</MudText>
+    }
+
+    @foreach (var port in Node.Ports)
+    {
+        <PortRenderer @key="port" Port="port" />
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public FlowDiagramNodeModel Node { get; set; } = null!;
+
+    private Color CategoryColor => Node.Category switch
+    {
+        "Source" => Color.Primary,
+        "Mapper" => Color.Secondary,
+        "Sink" => Color.Tertiary,
+        "Resource" => Color.Info,
+        _ => Color.Default
+    };
+
+    private void Toggle()
+    {
+        Node.Toggle();
+    }
+}

@@ -8,14 +8,14 @@ namespace FluxMq.UI.Services;
 
 public sealed class FlowWorkspaceService : IAsyncDisposable
 {
-    private readonly FlowDefinitionFactory _definitionFactory;
+    private readonly FlowDefinitionComposer _definitionComposer;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private FlowApplicationHost? _host;
 
-    public FlowWorkspaceService(FlowDefinitionFactory definitionFactory)
+    public FlowWorkspaceService(FlowDefinitionComposer definitionComposer)
     {
-        _definitionFactory = definitionFactory;
-        DefinitionJson = _definitionFactory.CreateInspectPayloadsDefinition(DefaultProfile(), "#");
+        _definitionComposer = definitionComposer;
+        DefinitionJson = _definitionComposer.CreateInspectPayloadsDefinition(DefaultProfile(), "#");
         CurrentFilePath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
             "FluxMQ",
@@ -47,7 +47,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     {
         try
         {
-            DefinitionJson = _definitionFactory.UpsertComponent(DefinitionJson, "mqtt.message-source", profile, subscription);
+            DefinitionJson = _definitionComposer.UpsertComponent(DefinitionJson, "mqtt.message-source", profile, subscription);
             State = RuntimeWorkspaceState.Idle;
             Diagnostics = [];
         }
@@ -67,7 +67,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     {
         try
         {
-            DefinitionJson = _definitionFactory.UpsertComponent(DefinitionJson, componentType, profile, subscription);
+            DefinitionJson = _definitionComposer.UpsertComponent(DefinitionJson, componentType, profile, subscription);
             State = RuntimeWorkspaceState.Idle;
             Diagnostics = [];
         }

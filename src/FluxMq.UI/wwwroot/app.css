@@ -8,16 +8,33 @@ body,
 
 .flux-shell {
     height: 100vh;
-}
-
-.flux-page {
-    height: calc(100vh - 64px);
     overflow: hidden;
 }
 
-.flux-scroll {
+.flux-main {
+    height: calc(100vh - 48px);
     min-height: 0;
-    overflow: auto;
+    overflow: hidden;
+}
+
+.flux-page {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.flux-page-grid {
+    align-content: stretch;
+    margin: 0 !important;
+    width: 100%;
+}
+
+.flux-scroll {
+    height: 100%;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-bottom: 16px;
 }
 
 .flow-canvas {
@@ -33,4 +50,84 @@ body,
 
 .definition-editor {
     font-family: Consolas, "Courier New", monospace;
+}
+
+.flow-node {
+    background: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 8px;
+    box-shadow: var(--mud-elevation-2);
+    min-width: 260px;
+    padding: 10px;
+}
+
+.flow-node-selected {
+    border-color: var(--mud-palette-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-primary) 28%, transparent);
+}
+
+.flow-node-header,
+.flow-node-ports,
+.topic-node-row,
+.topic-node-flat {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+}
+
+.flow-node-title {
+    flex: 1;
+    min-width: 0;
+}
+
+.flow-node-ports {
+    flex-wrap: wrap;
+    margin: 10px 0;
+}
+
+.topic-tree-view {
+    min-width: 0;
+}
+
+.topic-tree-nodes {
+    max-height: 360px;
+    overflow: auto;
+}
+
+.topic-node-row,
+.topic-node-flat {
+    border-radius: 6px;
+    cursor: pointer;
+    min-height: 32px;
+    padding: 3px 6px;
+}
+
+.topic-node-row:hover,
+.topic-node-flat:hover,
+.session-row:hover {
+    background: var(--mud-palette-action-default-hover);
+}
+
+.topic-node-chevron {
+    align-items: center;
+    display: inline-flex;
+    flex: 0 0 22px;
+    justify-content: center;
+}
+
+.topic-node-name,
+.topic-path {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.topic-node-count,
+.topic-node-time {
+    flex: 0 0 auto;
+}
+
+.session-row {
+    cursor: pointer;
 }

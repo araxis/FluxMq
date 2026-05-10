@@ -21,6 +21,8 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
     private CancellationTokenSource? _readerCts;
     private Task? _readerTask;
     private StoredSession? _recordingSession;
+    private StoredSession? _selectedStoredSession;
+    private IReadOnlyList<MqttEnvelope> _selectedSessionMessages = [];
     private long _recordedMessageCount;
 
     public LiveMqttWorkspaceService(
@@ -41,12 +43,24 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
     };
 
     public string Subscription { get; private set; } = "#";
+    public string CurrentProjectName { get; private set; } = "Default";
     public MqttSessionState State { get; private set; } = MqttSessionState.Disconnected;
     public MqttEnvelope? SelectedMessage { get; private set; }
     public PayloadInspectionResult SelectedInspection { get; private set; } = PayloadInspector.Inspect([]);
     public bool IsRecording => _recordingSession is not null;
     public long RecordedMessageCount => _recordedMessageCount;
+    public StoredSession? ActiveRecordingSession => _recordingSession;
+    public StoredSession? SelectedStoredSession => _selectedStoredSession;
+    public IReadOnlyList<MqttEnvelope> SelectedSessionMessages => _selectedSessionMessages;
+    public IReadOnlyList<string> ProjectNames => StoredSessions
+        .Select(session => string.IsNullOrWhiteSpace(session.ProjectName) ? "Default" : session.ProjectName)
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(project => project)
+        .ToArray();
     public IReadOnlyList<StoredSession> StoredSessions => _sessionRepository.GetAll();
+    public IReadOnlyList<StoredSession> CurrentProjectSessions => StoredSessions
+        .Where(session => string.Equals(NormalizeProject(session.ProjectName), CurrentProjectName, StringComparison.OrdinalIgnoreCase))
+        .ToArray();
     public IReadOnlyList<MqttEnvelope> RecentMessages
     {
         get
@@ -66,6 +80,14 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
     {
         Profile = profile;
         Subscription = string.IsNullOrWhiteSpace(subscription) ? "#" : subscription;
+        NotifyChanged();
+    }
+
+    public void SetProject(string projectName)
+    {
+        CurrentProjectName = NormalizeProject(projectName);
+        _selectedStoredSession = null;
+        _selectedSessionMessages = [];
         NotifyChanged();
     }
 
@@ -189,7 +211,7 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         NotifyChanged();
     }
 
-    public void StartRecording()
+    public void StartRecording(string sessionName, string projectName)
     {
         if (_recordingSession is not null)
         {
@@ -198,11 +220,12 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
 
         try
         {
-            _recordingSession = _sessionRepository.Start(Profile);
+            CurrentProjectName = NormalizeProject(projectName);
+            _recordingSession = _sessionRepository.Start(Profile, sessionName, CurrentProjectName);
             _recordedMessageCount = 0;
             Diagnostics =
             [
-                new WorkspaceDiagnostic("Info", "Recording", "Started", $"Recording session started for {Profile.Name}.")
+                new WorkspaceDiagnostic("Info", "Recording", "Started", $"Recording session '{_recordingSession.Name}' started.")
             ];
         }
         catch (Exception exception)
@@ -250,6 +273,38 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
     {
         SelectedMessage = message;
         SelectedInspection = PayloadInspector.Inspect(message.Payload);
+        NotifyChanged();
+    }
+
+    public void SelectStoredSession(StoredSession session)
+    {
+        try
+        {
+            _selectedStoredSession = session;
+            _selectedSessionMessages = _messageRepository.GetBySession(session.Id)
+                .Select(message => message.ToEnvelope())
+                .ToArray();
+
+            var first = _selectedSessionMessages.FirstOrDefault();
+            if (first is not null)
+            {
+                SelectedMessage = first;
+                SelectedInspection = PayloadInspector.Inspect(first.Payload);
+            }
+
+            Diagnostics =
+            [
+                new WorkspaceDiagnostic("Info", "Recording", "SessionLoaded", $"Loaded {_selectedSessionMessages.Count} messages from '{session.Name}'.")
+            ];
+        }
+        catch (Exception exception)
+        {
+            Diagnostics =
+            [
+                new WorkspaceDiagnostic("Error", "Recording", "SessionLoadFailed", exception.Message)
+            ];
+        }
+
         NotifyChanged();
     }
 
@@ -323,4 +378,7 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
     }
 
     private void NotifyChanged() => Changed?.Invoke(this, EventArgs.Empty);
+
+    private static string NormalizeProject(string? projectName)
+        => string.IsNullOrWhiteSpace(projectName) ? "Default" : projectName.Trim();
 }

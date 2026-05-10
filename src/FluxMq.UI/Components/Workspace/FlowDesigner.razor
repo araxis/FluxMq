@@ -3,8 +3,9 @@
 @inject LiveMqttWorkspaceService Live
 @inject FlowComponentCatalog Catalog
 
-<MudPaper Elevation="0" Outlined="true" Class="pa-3">
-    <MudStack Spacing="2">
+<MudExpansionPanels Dense="true" Elevation="0">
+    <MudExpansionPanel Text="Fork Flow" Icon="@Icons.Material.Filled.AccountTree" Expanded="true">
+        <MudStack Spacing="2">
         <MudStack Row="true" AlignItems="AlignItems.Center">
             <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" />
             <MudText Typo="Typo.subtitle1">Fork Flow</MudText>
@@ -49,8 +50,9 @@
         </MudGrid>
 
         <DefinitionEditor />
-    </MudStack>
-</MudPaper>
+        </MudStack>
+    </MudExpansionPanel>
+</MudExpansionPanels>
 
 @code {
     private readonly BlazorDiagram _diagram = new(new Blazor.Diagrams.Options.BlazorDiagramOptions
@@ -64,6 +66,7 @@
 
     protected override void OnInitialized()
     {
+        _diagram.RegisterComponent<FlowDiagramNodeModel, FlowDiagramNodeWidget>();
         Flow.Changed += OnFlowChanged;
         RebuildDiagram();
     }
@@ -112,8 +115,8 @@
             {
                 foreach (var resource in resources.EnumerateObject())
                 {
-                    AddNode(nodes, resource.Name, resource.Value, x: 70, y: resourceY);
-                    resourceY += 120;
+                    AddNode(nodes, resource.Name, resource.Value, x: 70, y: resourceY, isResource: true);
+                    resourceY += 150;
                 }
             }
 
@@ -130,11 +133,11 @@
                     var nodeX = 380d;
                     foreach (var node in workflow.Value.EnumerateObject())
                     {
-                        AddNode(nodes, node.Name, node.Value, nodeX, workflowY);
-                        nodeX += 230;
+                        AddNode(nodes, node.Name, node.Value, nodeX, workflowY, isResource: false);
+                        nodeX += 300;
                     }
 
-                    workflowY += 140;
+                    workflowY += 190;
                 }
 
                 foreach (var workflow in workflows.EnumerateObject())
@@ -182,16 +185,18 @@
         _diagram.Refresh();
     }
 
-    private void AddNode(IDictionary<string, NodeModel> nodes, string name, JsonElement definition, double x, double y)
+    private void AddNode(IDictionary<string, NodeModel> nodes, string name, JsonElement definition, double x, double y, bool isResource)
     {
         var type = definition.TryGetProperty("type", out var typeElement) && typeElement.ValueKind == JsonValueKind.String
             ? typeElement.GetString()
             : "node";
 
-        var node = new NodeModel(new Blazor.Diagrams.Core.Geometry.Point(x, y))
-        {
-            Title = $"{name} | {type}"
-        };
+        var node = new FlowDiagramNodeModel(
+            new Blazor.Diagrams.Core.Geometry.Point(x, y),
+            name,
+            type ?? "node",
+            Catalog.Find(type ?? string.Empty),
+            isResource);
 
         node.AddPort(PortAlignment.Left);
         node.AddPort(PortAlignment.Right);

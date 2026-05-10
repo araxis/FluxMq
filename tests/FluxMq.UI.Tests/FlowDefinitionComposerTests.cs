@@ -8,13 +8,13 @@ using System.Text.Json;
 
 namespace FluxMq.UI.Tests;
 
-public sealed class FlowDefinitionFactoryTests
+public sealed class FlowDefinitionComposerTests
 {
     [Fact]
     public void CreateInspectPayloadsDefinition_CreatesHostBuildableDefinition()
     {
-        var factory = new FlowDefinitionFactory();
-        var json = factory.CreateInspectPayloadsDefinition(
+        var composer = new FlowDefinitionComposer();
+        var json = composer.CreateInspectPayloadsDefinition(
             new MqttConnectionProfile
             {
                 Name = "local-broker",
@@ -39,12 +39,12 @@ public sealed class FlowDefinitionFactoryTests
     [Fact]
     public void UpsertComponent_UpdatesSourceWithoutRemovingExistingWorkflowNodes()
     {
-        var factory = new FlowDefinitionFactory();
-        var initial = factory.CreateInspectPayloadsDefinition(
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
             new MqttConnectionProfile { Name = "first", Host = "localhost", Port = 1883, ClientId = "first-client" },
             "#");
 
-        var updated = factory.UpsertComponent(
+        var updated = composer.UpsertComponent(
             initial,
             "mqtt.message-source",
             new MqttConnectionProfile { Name = "second", Host = "127.0.0.1", Port = 1884, ClientId = "second-client" },

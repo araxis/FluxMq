@@ -238,6 +238,9 @@ Build the first usable MAUI Blazor Hybrid desktop alpha in `FluxMq.UI`.
   - file path based definition load/save
   - validate, run, and stop controls through `FluxMq.App`
 - Added focused UI service tests for definition generation, host validation, file round-trip, and invalid JSON diagnostics.
+- Replaced blank default diagram nodes with FluxMQ flow node widgets that show name, type, category, ports, and collapsible details.
+- Added project/session selection over LiteDB recording sessions so recorded traffic can be grouped and loaded back into the workspace.
+- Renamed the UI definition helper to `FlowDefinitionComposer` to make its goal clearer: compose valid definition JSON from UI actions, not build runtime nodes.
 
 ## Current Next Step
 

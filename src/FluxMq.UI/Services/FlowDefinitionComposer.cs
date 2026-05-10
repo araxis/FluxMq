@@ -4,7 +4,7 @@ using System.Text.Json.Nodes;
 
 namespace FluxMq.UI.Services;
 
-public sealed class FlowDefinitionFactory
+public sealed class FlowDefinitionComposer
 {
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
     {

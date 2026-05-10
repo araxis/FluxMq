@@ -1,0 +1,98 @@
+@implements IDisposable
+@inject LiveMqttWorkspaceService Live
+
+<MudExpansionPanels Dense="true" Elevation="0">
+    <MudExpansionPanel Text="Sessions" Icon="@Icons.Material.Filled.Folder" Expanded="true">
+        <MudStack Spacing="2">
+            <MudTextField T="string" Label="Project" @bind-Value="_projectName" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudTextField T="string" Label="Session" @bind-Value="_sessionName" Variant="Variant.Outlined" Margin="Margin.Dense" />
+
+            <MudStack Row="true" Spacing="1">
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.FiberManualRecord" Disabled="@Live.IsRecording" OnClick="@StartRecording">Start</MudButton>
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.StopCircle" Disabled="@(!Live.IsRecording)" OnClick="@Live.StopRecording">Stop</MudButton>
+            </MudStack>
+
+            @if (Live.IsRecording)
+            {
+                <MudAlert Severity="Severity.Success" Dense="true" Variant="Variant.Outlined">
+                    @Live.ActiveRecordingSession?.Name · @Live.RecordedMessageCount messages
+                </MudAlert>
+            }
+
+            <MudSelect T="string"
+                       Label="Project list"
+                       Value="@Live.CurrentProjectName"
+                       ValueChanged="@OnProjectSelected"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       Dense="true">
+                @foreach (var project in Live.ProjectNames.DefaultIfEmpty("Default"))
+                {
+                    <MudSelectItem Value="@project">@project</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudStack Spacing="1">
+                @if (Live.CurrentProjectSessions.Count == 0)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">No sessions in this project.</MudText>
+                }
+                else
+                {
+                    @foreach (var session in Live.CurrentProjectSessions)
+                    {
+                        <MudPaper Elevation="0" Outlined="true" Class="pa-2 session-row" @onclick="@(() => SelectSession(session))">
+                            <MudStack Row="true" AlignItems="AlignItems.Center">
+                                <div>
+                                    <MudText Typo="Typo.body2">@session.Name</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        @session.StartedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
+                                    </MudText>
+                                </div>
+                                <MudSpacer />
+                                <MudIcon Icon="@(Live.SelectedStoredSession?.Id == session.Id ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.RadioButtonUnchecked)"
+                                         Color="@(Live.SelectedStoredSession?.Id == session.Id ? Color.Success : Color.Default)" />
+                            </MudStack>
+                        </MudPaper>
+                    }
+                }
+            </MudStack>
+        </MudStack>
+    </MudExpansionPanel>
+</MudExpansionPanels>
+
+@code {
+    private string _projectName = "Default";
+    private string _sessionName = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        _projectName = Live.CurrentProjectName;
+        _sessionName = $"Session {DateTimeOffset.Now:yyyy-MM-dd HH-mm}";
+        Live.Changed += OnChanged;
+    }
+
+    private void StartRecording()
+    {
+        Live.StartRecording(_sessionName, _projectName);
+    }
+
+    private void OnProjectSelected(string projectName)
+    {
+        _projectName = projectName;
+        Live.SetProject(projectName);
+    }
+
+    private void SelectSession(StoredSession session)
+    {
+        _projectName = session.ProjectName;
+        Live.SelectStoredSession(session);
+    }
+
+    private void OnChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        Live.Changed -= OnChanged;
+    }
+}

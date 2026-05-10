@@ -45,6 +45,18 @@
     [Parameter, EditorRequired] public TopicNode Node { get; set; } = null!;
 
     private bool _expanded;
+    private bool _initialized;
+
+    protected override void OnParametersSet()
+    {
+        if (_initialized)
+        {
+            return;
+        }
+
+        _expanded = Node.Depth < 2;
+        _initialized = true;
+    }
 
     private void Toggle() => _expanded = !_expanded;
 }

@@ -9,7 +9,7 @@ public sealed class FlowWorkspaceServiceTests
     [Fact]
     public async Task SaveAndLoad_RoundTripsCurrentDefinition()
     {
-        var service = new FlowWorkspaceService(new FlowDefinitionFactory());
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
         var path = Path.Combine(Path.GetTempPath(), $"fluxmq-{Guid.NewGuid():N}.json");
         service.SetFilePath(path);
 
@@ -36,7 +36,7 @@ public sealed class FlowWorkspaceServiceTests
     [Fact]
     public async Task ValidateAsync_ConvertsInvalidJsonToDiagnostic()
     {
-        var service = new FlowWorkspaceService(new FlowDefinitionFactory());
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
         service.SetDefinitionJson("{");
 
         await service.ValidateAsync();
@@ -48,7 +48,7 @@ public sealed class FlowWorkspaceServiceTests
     [Fact]
     public async Task ValidateAsync_AcceptsDefaultDefinition()
     {
-        var service = new FlowWorkspaceService(new FlowDefinitionFactory());
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
 
         await service.ValidateAsync();
 

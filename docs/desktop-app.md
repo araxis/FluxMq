@@ -22,10 +22,11 @@ flowchart LR
 - payload inspector
 - LiteDB-backed live traffic recording controls
 - component catalog for registered runtime nodes
-- visual diagram projection from the flow application definition
+- visual diagram projection from the flow application definition with collapsible flow nodes
 - JSON definition editor
 - definition save and load from local files
 - validate, run, and stop controls through `FluxMq.App`
+- named sessions grouped by project
 
 ## Broker Assumption
 
@@ -42,3 +43,9 @@ This matches a default local Mosquitto service. The app should not require editi
 The desktop app does not own flow graph mechanics. It sends flow application definitions to `FluxMq.App`, which loads them through the .NET configuration model and builds the runtime through registered factories.
 
 This keeps the same definition usable from the desktop app and the command-line host.
+
+## Definition Composer
+
+`FlowDefinitionComposer` is a UI-side adapter, not a runtime factory. Its job is to turn desktop actions such as "use this broker profile" or "add this component" into valid flow application JSON.
+
+The runtime still builds components through `FluxMq.App` and the registered runtime factories. The composer only keeps the editor, diagram, and saved JSON synchronized around the current alpha definition shape.

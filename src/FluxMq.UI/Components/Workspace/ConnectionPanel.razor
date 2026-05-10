@@ -2,8 +2,9 @@
 @inject LiveMqttWorkspaceService Live
 @inject FlowWorkspaceService Flow
 
-<MudPaper Elevation="0" Outlined="true" Class="pa-3">
-    <MudStack Spacing="2">
+<MudExpansionPanels Dense="true" Elevation="0">
+    <MudExpansionPanel Text="Broker" Icon="@Icons.Material.Filled.SettingsEthernet" Expanded="true">
+        <MudStack Spacing="2">
         <MudStack Row="true" AlignItems="AlignItems.Center">
             <MudIcon Icon="@Icons.Material.Filled.SettingsEthernet" Color="Color.Primary" />
             <MudText Typo="Typo.subtitle1">Broker</MudText>
@@ -30,8 +31,9 @@
         {
             <MudAlert Severity="@SeverityFor(diagnostic)" Dense="true" Variant="Variant.Outlined">@diagnostic.Message</MudAlert>
         }
-    </MudStack>
-</MudPaper>
+        </MudStack>
+    </MudExpansionPanel>
+</MudExpansionPanels>
 
 @code {
     private bool _busy;

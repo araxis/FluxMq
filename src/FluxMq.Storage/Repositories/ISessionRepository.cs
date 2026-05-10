@@ -6,7 +6,7 @@ namespace FluxMq.Storage.Repositories;
 
 public interface ISessionRepository
 {
-    StoredSession Start(MqttConnectionProfile profile);
+    StoredSession Start(MqttConnectionProfile profile, string? name = null, string? projectName = null);
     void End(SessionId sessionId);
     StoredSession? Get(SessionId sessionId);
     IReadOnlyList<StoredSession> GetAll();

@@ -23,11 +23,16 @@ Use the Broker panel to change host, port, client ID, credentials, TLS, and subs
 - Broker: connection profile, test, connect, disconnect.
 - Runtime: load, save, validate, run, and stop flow definitions.
 - Fork Flow: component catalog, diagram canvas, and JSON definition editor.
+- Sessions: define recording sessions, group them by project, and load stored traffic.
 - Traffic: publish, LiteDB recording, topic tree, recent messages, and payload inspector.
 
 ## Files
 
 The Runtime panel saves and loads the current flow application JSON from the file path shown in the panel.
+
+## Sessions And Projects
+
+Use the Sessions panel to name a recording session and assign it to a project. Stored sessions are listed by project, and selecting one loads its recorded messages into the Traffic panel.
 
 ## Flow Execution
 

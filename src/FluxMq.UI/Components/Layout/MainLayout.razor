@@ -17,7 +17,9 @@
                    ValueChanged="@OnThemeChanged"
                    Dense="true"
                    Margin="Margin.Dense"
-                   Variant="Variant.Outlined"
+                   Variant="Variant.Text"
+                   FitContent ="true"
+                   Underline="false"
                    Style="width: 132px">
             <MudSelectItem Value="@ThemePreference.System">System</MudSelectItem>
             <MudSelectItem Value="@ThemePreference.Light">Light</MudSelectItem>
@@ -32,7 +34,7 @@
         </MudNavMenu>
     </MudDrawer>
 
-    <MudMainContent Class="flux-page">
+    <MudMainContent Class="flux-main">
         @Body
     </MudMainContent>
 </MudLayout>
