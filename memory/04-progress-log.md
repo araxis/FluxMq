@@ -247,6 +247,7 @@ Build the first usable MAUI Blazor Hybrid desktop alpha in `FluxMq.UI`.
 - Added diagram helper widgets from Blazor.Diagrams, including grid and navigator views, and surfaced live message/runtime activity on diagram nodes.
 - Added a Windows packaging workflow that produces a portable `win-x64` zip and MSI installer from the MAUI desktop app publish output.
 - Declared `win-x64` as the desktop app runtime so clean CI restores include the Windows runtime pack needed by MAUI test and package builds.
+- Disabled ReadyToRun for the alpha desktop app to keep clean hosted test/package builds reliable while installer signing and release optimization are still future work.
 - Added WiX installer authoring and a reusable local packaging script.
 - Updated the workspace splitters to use pointer-captured mouse dragging for reliable column width resizing.
 - Stopped non-definition workspace changes from rebuilding the diagram; live traffic and runtime status now update node activity in place.
