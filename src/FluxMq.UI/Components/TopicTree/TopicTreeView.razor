@@ -17,28 +17,44 @@
     <div class="topic-tree-nodes">
         @if (string.IsNullOrWhiteSpace(_filter))
         {
-            @foreach (var root in Roots.OrderBy(n => n.Name))
+            var roots = Roots.OrderBy(n => n.Name).ToList();
+            @if (roots.Count == 0)
             {
-                <TopicTreeNode Node="root"
-                               SelectedTopic="@SelectedTopic"
-                               TopicSelected="@TopicSelected" />
+                <EmptyView Message="@EmptyMessage" Content="@EmptyContent" />
+            }
+            else
+            {
+                @foreach (var root in roots)
+                {
+                    <TopicTreeNode Node="root"
+                                   SelectedTopic="@SelectedTopic"
+                                   TopicSelected="@TopicSelected" />
+                }
             }
         }
         else
         {
-            @foreach (var node in SearchResults.OrderBy(n => n.FullPath))
+            var results = SearchResults.OrderBy(n => n.FullPath).ToList();
+            @if (results.Count == 0)
             {
-                <div class="topic-node-flat @(node.FullPath == SelectedTopic ? "topic-node-selected" : null)"
-                     @onclick="@(() => TopicSelected.InvokeAsync(node.FullPath))">
-                    <MudText Typo="Typo.body2" Class="topic-path">@node.FullPath</MudText>
-                    <MudChip T="string" Size="Size.Small" Color="Color.Default" Class="ml-2">@node.MessageCount</MudChip>
-                    @if (node.LastActivity != default)
-                    {
-                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="ml-2">
-                            @node.LastActivity.ToLocalTime().ToString("HH:mm:ss.fff")
-                        </MudText>
-                    }
-                </div>
+                <EmptyView Message="No topics match your filter" />
+            }
+            else
+            {
+                @foreach (var node in results)
+                {
+                    <div class="topic-node-flat @(node.FullPath == SelectedTopic ? "topic-node-selected" : null)"
+                         @onclick="@(() => TopicSelected.InvokeAsync(node.FullPath))">
+                        <MudText Typo="Typo.body2" Class="topic-path">@node.FullPath</MudText>
+                        <MudChip T="string" Size="Size.Small" Color="Color.Default" Class="ml-2">@node.MessageCount</MudChip>
+                        @if (node.LastActivity != default)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="ml-2">
+                                @node.LastActivity.ToLocalTime().ToString("HH:mm:ss.fff")
+                            </MudText>
+                        }
+                    </div>
+                }
             }
         }
     </div>
@@ -49,6 +65,8 @@
     [Parameter] public IReadOnlyList<MqttEnvelope>? Messages { get; set; }
     [Parameter] public string? SelectedTopic { get; set; }
     [Parameter] public EventCallback<string?> TopicSelected { get; set; }
+    [Parameter] public string? EmptyMessage { get; set; }
+    [Parameter] public RenderFragment? EmptyContent { get; set; }
 
     private string _filter = string.Empty;
     private volatile bool _pendingUpdate;
