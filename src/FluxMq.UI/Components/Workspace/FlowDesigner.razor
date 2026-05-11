@@ -84,7 +84,18 @@
         _diagram.RegisterComponent<FlowDiagramNodeModel, FlowDiagramNodeWidget>();
         Flow.Changed += OnFlowChanged;
         Live.Changed += OnLiveChanged;
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return Task.CompletedTask;
+        // Build the diagram here, not in OnInitialized, so that DiagramCanvas has
+        // already measured its container (its OnAfterRenderAsync fires before ours
+        // in the child→parent order). PortRenderers added by this call will be in
+        // their own first render with a valid Diagram.Container, measure correctly,
+        // fire Port.Changed, and links auto-update without any artificial delays.
         RebuildDiagram();
+        return Task.CompletedTask;
     }
 
     private void AddComponent(string componentType)
