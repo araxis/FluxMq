@@ -13,6 +13,7 @@ public sealed class FlowComponentCatalog
             "Defines broker settings (host, port, credentials, TLS) and owns the live session. Triggers reference it by name.",
             IsResource: true,
             [
+                new("Connection", "MqttConnection", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
@@ -22,6 +23,7 @@ public sealed class FlowComponentCatalog
             "Bound to a connection. Owns its own subscription list and emits envelopes whose topic matches one of its filters.",
             IsResource: false,
             [
+                new("Connection", "MqttConnection", IsInput: true, SingleLink: true),
                 new("Output", "MqttEnvelope", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ]),

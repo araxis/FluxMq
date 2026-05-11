@@ -222,8 +222,8 @@
                             connectionRef.GetString() is { Length: > 0 } resourceName &&
                             nodes.TryGetValue(resourceName, out var resourceNode))
                         {
-                            var sourcePort = PortFor(resourceNode, PortAlignment.Right);
-                            var targetPort = PortFor(targetNode, PortAlignment.Left);
+                            var sourcePort = PortFor(resourceNode, PortAlignment.Right, "Connection");
+                            var targetPort = PortFor(targetNode, PortAlignment.Left, "Connection");
                             if (sourcePort is not null && targetPort is not null)
                             {
                                 _diagram.Links.Add(new LinkModel(sourcePort, targetPort)
@@ -277,8 +277,8 @@
         {
             foreach (var descriptor in node.PortDescriptors)
             {
-                node.AddPort(new FlowPortModel(node, PortAlignment.Left, descriptor.Name));
-                node.AddPort(new FlowPortModel(node, PortAlignment.Right, descriptor.Name));
+                node.AddPort(new FlowPortModel(node, PortAlignment.Left, descriptor.Name, descriptor.SingleLink));
+                node.AddPort(new FlowPortModel(node, PortAlignment.Right, descriptor.Name, descriptor.SingleLink));
             }
         }
         else
