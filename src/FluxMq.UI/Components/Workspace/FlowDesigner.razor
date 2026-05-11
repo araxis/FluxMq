@@ -187,8 +187,9 @@
                                 var sourceName = sourceReference.Split('.', 2)[0];
                                 if (nodes.TryGetValue(sourceName, out var sourceNode))
                                 {
-                                    var sourcePort = PortFor(sourceNode, PortAlignment.Right);
-                                    var targetPort = PortFor(targetNode, PortAlignment.Left);
+                                    var sourcePortName = sourceReference.Contains('.') ? sourceReference.Split('.', 2)[1] : null;
+                                    var sourcePort = PortFor(sourceNode, PortAlignment.Right, sourcePortName);
+                                    var targetPort = PortFor(targetNode, PortAlignment.Left, port.Name);
                                     if (sourcePort is null || targetPort is null) continue;
 
                                     _diagram.Links.Add(new LinkModel(sourcePort, targetPort)
@@ -261,16 +262,21 @@
             node.Configuration = configObject;
         }
 
-        // Resources only have an output (their session feeds triggers); sinks only have an input.
-        // Everyone else gets both. Ports stay anchored to the node, so links follow automatically
-        // when the node collapses or moves.
-        if (isResource || HasOutputPort(node.NodeType))
+        if (node.PortDescriptors.Count > 0)
         {
-            node.AddPort(PortAlignment.Right);
+            foreach (var descriptor in node.PortDescriptors)
+            {
+                node.AddPort(new FlowPortModel(node, PortAlignment.Left, descriptor.Name));
+                node.AddPort(new FlowPortModel(node, PortAlignment.Right, descriptor.Name));
+            }
         }
-        if (!isResource && HasInputPort(node.NodeType))
+        else
         {
-            node.AddPort(PortAlignment.Left);
+            // Fallback for nodes with no catalog entry.
+            if (isResource || HasOutputPort(node.NodeType))
+                node.AddPort(PortAlignment.Right);
+            if (!isResource && HasInputPort(node.NodeType))
+                node.AddPort(PortAlignment.Left);
         }
         _diagram.Nodes.Add(node);
         nodes[name] = node;
@@ -288,8 +294,17 @@
         _ => true
     };
 
-    private static PortModel? PortFor(NodeModel node, PortAlignment alignment)
-        => node.Ports.FirstOrDefault(p => p.Alignment == alignment);
+    private static PortModel? PortFor(NodeModel node, PortAlignment alignment, string? portName = null)
+    {
+        if (portName is not null)
+        {
+            var named = node.Ports.OfType<FlowPortModel>()
+                .FirstOrDefault(p => p.Alignment == alignment &&
+                                     string.Equals(p.PortName, portName, StringComparison.OrdinalIgnoreCase));
+            if (named is not null) return named;
+        }
+        return node.Ports.FirstOrDefault(p => p.Alignment == alignment);
+    }
 
     private void UpdateDiagramActivity()
     {

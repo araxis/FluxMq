@@ -44,22 +44,41 @@
                     }
 
                     @Body
-
-                    <div class="flow-node-ports mt-2">
-                        @foreach (var port in Node.PortDescriptors)
-                        {
-                            <MudChip T="string"
-                                     Size="Size.Small"
-                                     Variant="Variant.Outlined"
-                                     Color="@(port.IsInput ? Color.Info : Color.Success)">
-                                @(port.IsInput ? "In" : "Out") · @port.Name
-                            </MudChip>
-                        }
-                    </div>
                 }
                 else if (!string.IsNullOrWhiteSpace(Node.ActivityText))
                 {
                     <MudText Typo="Typo.caption" Color="Color.Secondary">@Node.ActivityText</MudText>
+                }
+
+                @if (Node.PortDescriptors.Count > 0)
+                {
+                    <div class="flow-node-port-list">
+                        @foreach (var descriptor in Node.PortDescriptors.OrderBy(p => p.IsInput ? 0 : 1).ThenBy(p => p.Name))
+                        {
+                            var leftPort = Node.Ports.OfType<FlowPortModel>()
+                                .FirstOrDefault(p => p.Alignment == PortAlignment.Left && p.PortName == descriptor.Name);
+                            var rightPort = Node.Ports.OfType<FlowPortModel>()
+                                .FirstOrDefault(p => p.Alignment == PortAlignment.Right && p.PortName == descriptor.Name);
+
+                            <div class="flow-port-row">
+                                <div class="flow-port-side flow-port-side-left">
+                                    @if (leftPort is not null)
+                                    {
+                                        <PortRenderer @key="leftPort" Port="leftPort" />
+                                    }
+                                </div>
+                                <span class="flow-port-name @(descriptor.IsInput ? "flow-port-input" : "flow-port-output")">
+                                    @descriptor.Name
+                                </span>
+                                <div class="flow-port-side flow-port-side-right">
+                                    @if (rightPort is not null)
+                                    {
+                                        <PortRenderer @key="rightPort" Port="rightPort" />
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
                 }
             </div>
 
@@ -91,11 +110,13 @@
         </div>
     </div>
 
-    @* Diagram-engine port hosts. The CSS in app.css turns them into visible
-       connector dots on each side of the node. *@
-    @foreach (var port in Node.Ports)
+    @* Fallback port renderers for nodes without descriptors (always rendered outside collapse). *@
+    @if (Node.PortDescriptors.Count == 0)
     {
-        <PortRenderer @key="port" Port="port" />
+        @foreach (var port in Node.Ports)
+        {
+            <PortRenderer @key="port" Port="port" />
+        }
     }
 </div>
 

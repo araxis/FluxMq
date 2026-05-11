@@ -7,8 +7,18 @@ namespace FluxMq.UI.Models;
 
 public sealed class FlowDiagramNodeModel : NodeModel
 {
-    private static readonly DiagramSize ExpandedSize = new(280, 240);
-    private static readonly DiagramSize CollapsedSize = new(280, 82);
+    private readonly DiagramSize _collapsedSize;
+    private readonly DiagramSize _expandedSize;
+
+    // port section height: border(1) + padding(10) + margin-top(8) - negative-margin-bottom(10) = 9px overhead
+    private static int PortSectionHeight(int portCount)
+        => portCount > 0 ? 9 + portCount * 26 : 0;
+
+    private static DiagramSize ComputeCollapsedSize(int portCount)
+        => new(280, 82 + PortSectionHeight(portCount));
+
+    private static DiagramSize ComputeExpandedSize(int portCount)
+        => new(280, 160 + PortSectionHeight(portCount));
 
     public FlowDiagramNodeModel(
         DiagramPoint position,
@@ -25,10 +35,11 @@ public sealed class FlowDiagramNodeModel : NodeModel
         Summary = descriptor?.Summary ?? "Configuration-defined flow node.";
         IsResource = isResource;
         PortDescriptors = descriptor?.Ports ?? [];
+        _collapsedSize = ComputeCollapsedSize(PortDescriptors.Count);
+        _expandedSize = ComputeExpandedSize(PortDescriptors.Count);
         ControlledSize = true;
-        // Nodes default to collapsed — the user can flip / expand on demand.
         IsCollapsed = true;
-        Size = CollapsedSize;
+        Size = _collapsedSize;
     }
 
     public string NodeName { get; }
@@ -59,7 +70,7 @@ public sealed class FlowDiagramNodeModel : NodeModel
         }
 
         IsCollapsed = isCollapsed;
-        Size = IsCollapsed ? CollapsedSize : ExpandedSize;
+        Size = IsCollapsed ? _collapsedSize : _expandedSize;
         RefreshAll();
     }
 
