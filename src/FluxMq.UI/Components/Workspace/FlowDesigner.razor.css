@@ -101,8 +101,7 @@
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-primary) 28%, transparent);
 }
 
-.flow-designer-root ::deep .flow-node-header,
-.flow-designer-root ::deep .flow-node-ports {
+.flow-designer-root ::deep .flow-node-header {
     align-items: center;
     display: flex;
     gap: 8px;
@@ -111,11 +110,6 @@
 .flow-designer-root ::deep .flow-node-title {
     flex: 1;
     min-width: 0;
-}
-
-.flow-designer-root ::deep .flow-node-ports {
-    flex-wrap: wrap;
-    margin: 10px 0;
 }
 
 .flow-designer-root ::deep .diagram-port {
@@ -210,6 +204,58 @@
     gap: 6px;
     overflow-y: auto;
     padding-right: 2px;
+}
+
+.flow-designer-root ::deep .flow-node-port-list {
+    border-top: 1px solid var(--mud-palette-lines-default);
+    /* pull out to cancel node padding so dots sit on the node border */
+    margin: 8px -10px -10px;
+    padding: 4px 0 6px;
+}
+
+.flow-designer-root ::deep .flow-port-row {
+    align-items: center;
+    display: flex;
+    min-height: 26px;
+    padding: 1px 0;
+}
+
+/* 6px side containers — half the dot width — so the 12px dot straddles the node edge */
+.flow-designer-root ::deep .flow-port-side-left,
+.flow-designer-root ::deep .flow-port-side-right {
+    align-items: center;
+    display: flex;
+    flex: 0 0 6px;
+    justify-content: center;
+}
+
+.flow-designer-root ::deep .flow-port-name {
+    flex: 1;
+    font-size: 0.68rem;
+    letter-spacing: 0.02em;
+    overflow: hidden;
+    padding: 0 8px;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.flow-designer-root ::deep .flow-port-input {
+    color: var(--mud-palette-info);
+}
+
+.flow-designer-root ::deep .flow-port-output {
+    color: var(--mud-palette-success);
+}
+
+/* In the port-row context the side container is already at the node edge, so
+   reset the default offsets that were designed for node-level port renderers. */
+.flow-designer-root ::deep .flow-port-side-left .diagram-port.left {
+    margin-left: -6px;
+}
+
+.flow-designer-root ::deep .flow-port-side-right .diagram-port.right {
+    margin-left: 0;
 }
 
 .flow-designer-root ::deep .node-stat {

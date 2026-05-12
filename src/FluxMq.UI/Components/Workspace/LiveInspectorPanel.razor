@@ -22,13 +22,28 @@
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Send" Disabled="@_busy" OnClick="@PublishAsync">Publish</MudButton>
             </MudPaper>
 
-            <MudExpansionPanels Dense="true" Elevation="0">
-                <MudExpansionPanel Text="Topics" Icon="@Icons.Material.Filled.AccountTree" Expanded="true">
+            <MudPaper Elevation="0" Outlined="true" Class="pa-2">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+                    <MudIcon Icon="@(_treeView ? Icons.Material.Filled.AccountTree : Icons.Material.Filled.ListAlt)"
+                             Size="Size.Small" Color="Color.Default" />
+                    <MudText Typo="Typo.subtitle2">@(_treeView ? "Topics" : "Messages")</MudText>
+                    <MudSpacer />
+                    <MudToggleIconButton @bind-Toggled="_treeView"
+                                         Icon="@Icons.Material.Filled.ListAlt"
+                                         ToggledIcon="@Icons.Material.Filled.AccountTree"
+                                         Title="Switch to tree view"
+                                         ToggledTitle="Switch to table view"
+                                         Size="Size.Small" />
+                </MudStack>
+
+                @if (_treeView)
+                {
                     <TopicTreeView Messages="@MessageSource"
                                    SelectedTopic="@_selectedTopic"
                                    TopicSelected="@OnTopicSelected" />
-                </MudExpansionPanel>
-                <MudExpansionPanel Text="Messages" Icon="@Icons.Material.Filled.ListAlt" Expanded="true">
+                }
+                else
+                {
                     <MudTable Items="@DisplayedMessages" Dense="true" Hover="true" Elevation="0">
                         <HeaderContent>
                             <MudTh>Topic</MudTh>
@@ -45,11 +60,11 @@
                             </MudTd>
                         </RowTemplate>
                         <NoRecordsContent>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">No messages.</MudText>
+                            <EmptyView Message="No messages" />
                         </NoRecordsContent>
                     </MudTable>
-                </MudExpansionPanel>
-            </MudExpansionPanels>
+                }
+            </MudPaper>
 
             <PayloadInspectorPanel Title="Payload" Topic="@Live.SelectedMessage?.Topic" ReceivedAt="@Live.SelectedMessage?.ReceivedAt" Payload="@Live.SelectedMessage?.Payload" />
 
@@ -63,6 +78,7 @@
 
 @code {
     private bool _busy;
+    private bool _treeView = true;
     private string _publishTopic = "fluxmq/test";
     private string _publishPayload = "{\"hello\":\"fluxmq\"}";
     private string? _selectedTopic;
