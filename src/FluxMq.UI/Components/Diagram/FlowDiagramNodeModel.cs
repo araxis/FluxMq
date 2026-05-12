@@ -1,9 +1,10 @@
 using Blazor.Diagrams.Core.Models;
+using FluxMq.UI.Models;
 using System.Text.Json.Nodes;
 using DiagramPoint = Blazor.Diagrams.Core.Geometry.Point;
 using DiagramSize = Blazor.Diagrams.Core.Geometry.Size;
 
-namespace FluxMq.UI.Models;
+namespace FluxMq.UI.Components.Diagram;
 
 public sealed class FlowDiagramNodeModel : NodeModel
 {

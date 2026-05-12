@@ -3,12 +3,12 @@
     the matching specialised widget via DynamicComponent. Keeps the diagram
     template type-agnostic so each component kind owns its own UI.
 *@
-@inject FluxMq.UI.Services.NodeWidgetRegistry WidgetRegistry
+@inject NodeWidgetRegistry WidgetRegistry
 
 <DynamicComponent Type="@WidgetRegistry.Resolve(Node.NodeType)" Parameters="@Parameters" />
 
 @code {
-    [Parameter, EditorRequired] public FluxMq.UI.Models.FlowDiagramNodeModel Node { get; set; } = null!;
+    [Parameter, EditorRequired] public FlowDiagramNodeModel Node { get; set; } = null!;
 
     private IDictionary<string, object> Parameters => new Dictionary<string, object>
     {

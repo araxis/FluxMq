@@ -103,7 +103,7 @@
                                    Variant="Variant.Filled"
                                    Color="@CategoryColor"
                                    StartIcon="@Icons.Material.Filled.Check"
-                                   OnClick="@(() => SaveAndClose())">Save</MudButton>
+                                   OnClick="@(SaveAndClose)">Save</MudButton>
                     </div>
                 </div>
             }
@@ -121,7 +121,7 @@
 </div>
 
 @code {
-    [Parameter, EditorRequired] public FluxMq.UI.Models.FlowDiagramNodeModel Node { get; set; } = null!;
+    [Parameter, EditorRequired] public FlowDiagramNodeModel Node { get; set; } = null!;
     [Parameter] public RenderFragment? Body { get; set; }
     [Parameter] public RenderFragment<NodeEditorContext>? Editor { get; set; }
     [Parameter] public string HeaderIcon { get; set; } = Icons.Material.Filled.Memory;

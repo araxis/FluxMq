@@ -1,7 +1,6 @@
-using FluxMq.UI.Models;
 using Microsoft.AspNetCore.Components;
 
-namespace FluxMq.UI.Components.Workspace.Nodes;
+namespace FluxMq.UI.Components.Diagram;
 
 /// <summary>
 /// Base class for per-type node widgets. Each concrete widget (MqttConnection,

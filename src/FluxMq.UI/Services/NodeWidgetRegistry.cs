@@ -1,3 +1,4 @@
+using FluxMq.UI.Components.Diagram;
 using FluxMq.UI.Components.Workspace.Nodes;
 
 namespace FluxMq.UI.Services;
