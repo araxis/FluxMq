@@ -6,15 +6,15 @@ namespace FluxMq.App;
 public sealed class FlowApplicationHost : IAsyncDisposable, IDisposable
 {
     private readonly IConfiguration _configuration;
-    private readonly FlowApplicationRuntimeBuilder _runtimeBuilder;
+    private readonly ApplicationRuntimeBuilder _runtimeBuilder;
     private readonly FlowApplicationConfigurationLoader _configurationLoader;
     private readonly string _sectionName;
-    private FlowApplicationRuntime? _runtime;
+    private ApplicationRuntime? _runtime;
     private bool _disposed;
 
     public FlowApplicationHost(
         IConfiguration configuration,
-        FlowApplicationRuntimeBuilder runtimeBuilder,
+        ApplicationRuntimeBuilder runtimeBuilder,
         FlowApplicationConfigurationLoader? configurationLoader = null,
         string sectionName = FlowApplicationConfigurationLoader.DefaultSectionName)
     {
@@ -25,16 +25,16 @@ public sealed class FlowApplicationHost : IAsyncDisposable, IDisposable
     }
 
     public FlowApplicationHostState State { get; private set; } = FlowApplicationHostState.Empty;
-    public FlowApplicationRuntime? Runtime => _runtime;
+    public ApplicationRuntime? Runtime => _runtime;
     public FlowApplicationHostBuildResult? LastBuildResult { get; private set; }
     public Exception? LastException { get; private set; }
 
     public static FlowApplicationHost CreateDefault(IConfiguration configuration)
     {
-        var factories = new FlowRuntimeNodeFactoryRegistry()
+        var factories = new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories();
 
-        return new FlowApplicationHost(configuration, new FlowApplicationRuntimeBuilder(factories));
+        return new FlowApplicationHost(configuration, new ApplicationRuntimeBuilder(factories));
     }
 
     public FlowApplicationHostBuildResult Build()

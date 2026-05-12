@@ -1,89 +1,41 @@
 @page "/"
-@implements IAsyncDisposable
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 
-<div class="workspace-layout @LayoutClass"
-     @ref="_layoutElement"
-     style="@GridStyle"
-     data-right-min="@RightPanelMinWidth"
-     data-right-max="@RightPanelMaxWidth">
-
-    <main class="workspace-center">
-        <div class="workspace-center-toolbar">
-            <MudSpacer />
-            <MudIconButton Icon="@(_rightOpen ? Icons.Material.Filled.KeyboardDoubleArrowRight : Icons.Material.Filled.KeyboardDoubleArrowLeft)"
-                           OnClick="@ToggleRight" />
-        </div>
-        <div class="workspace-designer-region">
-            <FlowDesigner />
-        </div>
-    </main>
-
-    <div class="workspace-rail workspace-rail-right">
-        <MudIconButton Icon="@Icons.Material.Filled.Troubleshoot" OnClick="@ToggleRight" />
-    </div>
-
-    <div class="workspace-resize-handle workspace-right-handle"
-         data-workspace-resize="right"
-         role="separator"
-         aria-orientation="vertical" />
-
-    <aside class="workspace-side workspace-right">
-        <MudIconButton Class="workspace-panel-toggle"
-                       Icon="@Icons.Material.Filled.ChevronRight"
-                       OnClick="@ToggleRight" />
-        <div class="workspace-side-scroll">
-            <LiveInspectorPanel />
-        </div>
-    </aside>
-</div>
+<MudStack Class="mud-width-full mud-height-full" Justify="Justify.Center" AlignItems="AlignItems.Center">
+    <MudSplitPanel @ref="_splitPanel"
+                   Class="mud-width-full mud-height-full"
+                   Horizontal="false"
+                   Rounded="true"
+                   Transparent="false"
+                   MinPanelSize="400"
+                   Elevation="1">
+        <FirstPanel >
+            <MudStack Justify="Justify.Center" AlignItems="AlignItems.Stretch" Class="mud-width-full mud-height-full">
+                <FlowDesigner />
+            </MudStack>
+        </FirstPanel>
+        <SecondPanel>
+            <MudStack Justify="Justify.FlexStart" AlignItems="AlignItems.Stretch"  Class="mud-width-full mud-height-full">
+                <LiveInspectorPanel />
+            </MudStack>
+        </SecondPanel>
+    </MudSplitPanel>
+</MudStack>
 
 @code {
-    private const double RightPanelMinWidth = 320;
-    private const double RightPanelMaxWidth = 600;
 
-    private bool _rightOpen = true;
-    private double _rightPanelWidth = 400;
-    private ElementReference _layoutElement;
-    private IJSObjectReference? _module;
-    private DotNetObjectReference<WorkspacePage>? _dotNetReference;
-
-    private string LayoutClass => _rightOpen ? string.Empty : "workspace-right-closed";
-
-    private string GridStyle => $"--workspace-right-width: {_rightPanelWidth:0}px;";
-
-    private void ToggleRight() => _rightOpen = !_rightOpen;
+    private MudSplitPanel? _splitPanel;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender)
-        {
-            return;
-        }
-
-        _dotNetReference = DotNetObjectReference.Create(this);
-        _module = await JS.InvokeAsync<IJSObjectReference>("import", "./workspace-page.js");
-        await _module.InvokeVoidAsync("attachWorkspaceResizer", _layoutElement, _dotNetReference);
+        await base.OnAfterRenderAsync(firstRender);
+        if (!firstRender || _splitPanel is null) return;
+        // var width1 = await Js.InvokeAsync<double>("eval", 
+        //     "document.querySelector('.mud-split-panel')?.offsetWidth || 0");
+        var width = await Js.InvokeAsync<int>("eval", "document.querySelector('.mud-split-panel').offsetWidth");
+        var minWidth = _splitPanel.MinPanelSize;
+        var x = await _splitPanel.GetDividerPositionAsync();
+        await _splitPanel.SetDividerPositionAsync((int)(width*0.90));
     }
 
-    [JSInvokable]
-    public void CommitPanelWidth(string side, double width)
-    {
-        if (string.Equals(side, "right", StringComparison.Ordinal))
-        {
-            _rightPanelWidth = Math.Clamp(width, RightPanelMinWidth, RightPanelMaxWidth);
-            StateHasChanged();
-        }
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_module is not null)
-        {
-            await _module.InvokeVoidAsync("detachWorkspaceResizer", _layoutElement);
-            await _module.DisposeAsync();
-        }
-
-        _dotNetReference?.Dispose();
-    }
 }

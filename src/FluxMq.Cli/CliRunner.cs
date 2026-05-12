@@ -140,8 +140,8 @@ public sealed class CliRunner
 
         host = new FlowApplicationHost(
             configuration,
-            new FlowApplicationRuntimeBuilder(
-                new FlowRuntimeNodeFactoryRegistry()
+            new ApplicationRuntimeBuilder(
+                new RuntimeNodeFactoryRegistry()
                     .RegisterPipelineComponentFactories()),
             sectionName: options.SectionName);
         exitCode = (int)CliExitCode.Success;

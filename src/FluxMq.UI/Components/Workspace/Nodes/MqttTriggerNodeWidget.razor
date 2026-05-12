@@ -3,7 +3,8 @@
     flips to a per-row editor (text + remove button) plus an "add filter" row,
     and saves the list back to configuration.subscriptions.
 *@
-@inherits NodeWidgetBase
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
 @inject FlowWorkspaceService Flow
 
 <NodeWidgetShell Node="@Node"

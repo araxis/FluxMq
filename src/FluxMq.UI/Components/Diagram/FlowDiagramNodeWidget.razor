@@ -1,0 +1,17 @@
+@*
+    Per-node dispatcher. Looks the node type up in NodeWidgetRegistry and renders
+    the matching specialised widget via DynamicComponent. Keeps the diagram
+    template type-agnostic so each component kind owns its own UI.
+*@
+@inject NodeWidgetRegistry WidgetRegistry
+
+<DynamicComponent Type="@WidgetRegistry.Resolve(Node.NodeType)" Parameters="@Parameters" />
+
+@code {
+    [Parameter, EditorRequired] public FlowDiagramNodeModel Node { get; set; } = null!;
+
+    private IDictionary<string, object> Parameters => new Dictionary<string, object>
+    {
+        ["Node"] = Node
+    };
+}

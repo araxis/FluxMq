@@ -1,0 +1,16 @@
+namespace FluxMq.Pipeline.Definitions;
+
+public enum ApplicationDefinitionValidationErrorCode
+{
+    EmptyDefinition = 1,
+    EmptyWorkflowName = 2,
+    EmptyWorkflow = 3,
+    EmptyNodeName = 4,
+    EmptyResourceName = 5,
+    EmptyNodeType = 6,
+    InvalidLink = 7,
+    MissingSourceNode = 8,
+    EmptySourcePort = 9,
+    EmptyTargetPort = 10,
+    DuplicateLink = 11
+}

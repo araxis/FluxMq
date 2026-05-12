@@ -143,15 +143,15 @@ The connection binding is configuration, not a dataflow link. This keeps the con
 
 If the session reader fails, the connection publishes a `FlowError` and completes its broadcast. If subscription startup fails, the trigger publishes a `FlowError`; the application host turns startup failures into structured host errors instead of letting them escape the process boundary.
 
-## Topic Filter
+## Message Filter
 
-`TopicFilterComponent` forwards only matching MQTT messages.
+`MessageFilterComponent` forwards only matching MQTT messages.
 
 ### Behavior
 
 ```mermaid
 flowchart LR
-    In["Input: MqttEnvelope"] --> Filter["TopicFilterComponent"]
+    In["Input: MqttEnvelope"] --> Filter["MessageFilterComponent"]
     Filter -->|match| Out["Output: MqttEnvelope"]
     Filter -->|predicate failure| Errors["Errors: FlowError code 2000"]
 ```
@@ -159,7 +159,7 @@ flowchart LR
 ### Usage
 
 ```csharp
-var filter = TopicFilterComponent.Prefix("factory/");
+var filter = MessageFilterComponent.Prefix("factory/");
 
 source.LinkTo(filter.Input, new DataflowLinkOptions
 {

@@ -5,7 +5,8 @@
     in real time without a render loop.
 *@
 @implements IDisposable
-@inherits NodeWidgetBase
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
 @inject LiveMqttWorkspaceService Live
 
 <NodeWidgetShell Node="@Node" HeaderIcon="@Icons.Material.Filled.Insights" CategoryColor="@Color.Tertiary">

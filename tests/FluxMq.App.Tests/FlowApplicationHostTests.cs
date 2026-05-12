@@ -115,9 +115,9 @@ public sealed class FlowApplicationHostTests
     [Fact]
     public async Task StopAsync_ConvertsRuntimeCompletionFailureToFaultedState()
     {
-        var builder = new FlowApplicationRuntimeBuilder(new FlowRuntimeNodeFactoryRegistry()
-            .Register(new FlowNodeType("test.faulting"), (name, _) =>
-                FlowRuntimeNode.Create(name, new FaultingNode())));
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .Register(new NodeType("test.faulting"), (name, _) =>
+                RuntimeNode.Create(name, new FaultingNode())));
 
         await using var host = new FlowApplicationHost(
             BuildConfiguration(
@@ -150,9 +150,9 @@ public sealed class FlowApplicationHostTests
     [Fact]
     public async Task StartAsync_ConvertsStartFailureToHostError()
     {
-        var builder = new FlowApplicationRuntimeBuilder(new FlowRuntimeNodeFactoryRegistry()
-            .Register(new FlowNodeType("test.start-fails"), (name, _) =>
-                FlowRuntimeNode.Create(name, new StartFailingNode())));
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .Register(new NodeType("test.start-fails"), (name, _) =>
+                RuntimeNode.Create(name, new StartFailingNode())));
 
         await using var host = new FlowApplicationHost(
             BuildConfiguration(

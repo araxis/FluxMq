@@ -10,7 +10,7 @@ public sealed class FlowApplicationConfigurationLoader
 {
     public const string DefaultSectionName = "FluxMq:FlowApplication";
 
-    public FlowApplicationDefinition Load(IConfiguration configuration, string sectionName = DefaultSectionName)
+    public ApplicationDefinition Load(IConfiguration configuration, string sectionName = DefaultSectionName)
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
@@ -28,7 +28,7 @@ public sealed class FlowApplicationConfigurationLoader
 
         try
         {
-            return json.Deserialize<FlowApplicationDefinition>(FlowApplicationDefinitionJson.CreateSerializerOptions())
+            return json.Deserialize<ApplicationDefinition>(ApplicationDefinitionJson.CreateSerializerOptions())
                 ?? throw new FlowApplicationConfigurationException($"Configuration section '{sectionName}' did not contain a flow application definition.");
         }
         catch (JsonException exception)
