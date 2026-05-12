@@ -10,15 +10,15 @@ using FluxMq.Pipeline.Components.MqttPayloadInspector;
 
 namespace FluxMq.Pipeline.Runtime;
 
-public static class FlowRuntimeNodeFactoryRegistryExtensions
+public static class RuntimeNodeFactoryRegistryExtensions
 {
-    private static readonly FlowPortName InputPort = new("Input");
-    private static readonly FlowPortName OutputPort = new("Output");
-    private static readonly FlowPortName SnapshotsPort = new("Snapshots");
-    private static readonly FlowPortName ErrorsPort = new("Errors");
+    private static readonly PortName InputPort = new("Input");
+    private static readonly PortName OutputPort = new("Output");
+    private static readonly PortName SnapshotsPort = new("Snapshots");
+    private static readonly PortName ErrorsPort = new("Errors");
 
-    public static FlowRuntimeNodeFactoryRegistry RegisterPipelineComponentFactories(
-        this FlowRuntimeNodeFactoryRegistry registry,
+    public static RuntimeNodeFactoryRegistry RegisterPipelineComponentFactories(
+        this RuntimeNodeFactoryRegistry registry,
         Func<MqttConnectionProfile, IMqttSession>? sessionFactory = null)
     {
         ArgumentNullException.ThrowIfNull(registry);
@@ -31,30 +31,30 @@ public static class FlowRuntimeNodeFactoryRegistryExtensions
             .Register(PipelineFlowNodeTypes.MetricsSink, CreateMetricsSink);
     }
 
-    private static FlowRuntimeNode CreateConnection(
-        FlowNodeName name,
-        FlowNodeDefinition definition,
+    private static RuntimeNode CreateConnection(
+        NodeName name,
+        NodeDefinition definition,
         Func<MqttConnectionProfile, IMqttSession> sessionFactory)
     {
         var profile = GetConnectionProfile(definition);
         var component = new MqttConnectionComponent(sessionFactory(profile), disposeSessionOnDispose: true);
 
-        return FlowRuntimeNode.Create(
+        return RuntimeNode.Create(
             name,
             component,
             outputs:
             [
-                new FlowOutputPort<FlowError>(ErrorsPort, component.Errors)
+                new OutputPort<FlowError>(ErrorsPort, component.Errors)
             ]);
     }
 
-    private static FlowRuntimeNode CreateTrigger(
-        FlowNodeName name,
-        FlowNodeDefinition definition,
-        FlowRuntimeNodeFactoryContext context)
+    private static RuntimeNode CreateTrigger(
+        NodeName name,
+        NodeDefinition definition,
+        RuntimeNodeFactoryContext context)
     {
         var connectionRef = GetRequiredString(definition, "connection");
-        var resource = context.GetResource(new FlowNodeName(connectionRef));
+        var resource = context.GetResource(new NodeName(connectionRef));
         if (resource.Node is not MqttConnectionComponent connection)
         {
             throw new InvalidOperationException(
@@ -67,53 +67,53 @@ public static class FlowRuntimeNodeFactoryRegistryExtensions
             subscriptions,
             boundedCapacity: GetBoundedCapacity(definition));
 
-        return FlowRuntimeNode.Create(
+        return RuntimeNode.Create(
             name,
             component,
             outputs:
             [
-                new FlowOutputPort<MqttEnvelope>(OutputPort, component.Output),
-                new FlowOutputPort<FlowError>(ErrorsPort, component.Errors)
+                new OutputPort<MqttEnvelope>(OutputPort, component.Output),
+                new OutputPort<FlowError>(ErrorsPort, component.Errors)
             ]);
     }
 
-    private static FlowRuntimeNode CreatePayloadInspector(FlowNodeName name, FlowNodeDefinition definition)
+    private static RuntimeNode CreatePayloadInspector(NodeName name, NodeDefinition definition)
     {
         var component = new PayloadInspectorMapperComponent(boundedCapacity: GetBoundedCapacity(definition));
 
-        return FlowRuntimeNode.Create(
+        return RuntimeNode.Create(
             name,
             component,
             inputs:
             [
-                new FlowInputPort<MqttEnvelope>(InputPort, component.Input)
+                new InputPort<MqttEnvelope>(InputPort, component.Input)
             ],
             outputs:
             [
-                new FlowOutputPort<InspectedMqttMessage>(OutputPort, component.Output),
-                new FlowOutputPort<FlowError>(ErrorsPort, component.Errors)
+                new OutputPort<InspectedMqttMessage>(OutputPort, component.Output),
+                new OutputPort<FlowError>(ErrorsPort, component.Errors)
             ]);
     }
 
-    private static FlowRuntimeNode CreateMetricsSink(FlowNodeName name, FlowNodeDefinition definition)
+    private static RuntimeNode CreateMetricsSink(NodeName name, NodeDefinition definition)
     {
         var component = new MqttMetricsSinkComponent(boundedCapacity: GetBoundedCapacity(definition));
 
-        return FlowRuntimeNode.Create(
+        return RuntimeNode.Create(
             name,
             component,
             inputs:
             [
-                new FlowInputPort<MqttEnvelope>(InputPort, component.Input)
+                new InputPort<MqttEnvelope>(InputPort, component.Input)
             ],
             outputs:
             [
-                new FlowOutputPort<MqttMetricsSnapshot>(SnapshotsPort, component.Snapshots),
-                new FlowOutputPort<FlowError>(ErrorsPort, component.Errors)
+                new OutputPort<MqttMetricsSnapshot>(SnapshotsPort, component.Snapshots),
+                new OutputPort<FlowError>(ErrorsPort, component.Errors)
             ]);
     }
 
-    private static string GetRequiredString(FlowNodeDefinition definition, string key)
+    private static string GetRequiredString(NodeDefinition definition, string key)
     {
         if (!definition.Configuration.TryGetValue(key, out var value) || value.ValueKind != JsonValueKind.String)
         {
@@ -129,7 +129,7 @@ public static class FlowRuntimeNodeFactoryRegistryExtensions
         return s;
     }
 
-    private static int GetBoundedCapacity(FlowNodeDefinition definition)
+    private static int GetBoundedCapacity(NodeDefinition definition)
     {
         const int defaultBoundedCapacity = 1000;
 
@@ -146,7 +146,7 @@ public static class FlowRuntimeNodeFactoryRegistryExtensions
         return boundedCapacity;
     }
 
-    private static MqttConnectionProfile GetConnectionProfile(FlowNodeDefinition definition)
+    private static MqttConnectionProfile GetConnectionProfile(NodeDefinition definition)
     {
         if (!definition.Configuration.TryGetValue("profile", out var profileElement))
         {
@@ -174,7 +174,7 @@ public static class FlowRuntimeNodeFactoryRegistryExtensions
         };
     }
 
-    private static IReadOnlyList<MqttSubscription> GetSubscriptions(FlowNodeDefinition definition)
+    private static IReadOnlyList<MqttSubscription> GetSubscriptions(NodeDefinition definition)
     {
         if (!definition.Configuration.TryGetValue("subscriptions", out var subscriptionsElement))
         {

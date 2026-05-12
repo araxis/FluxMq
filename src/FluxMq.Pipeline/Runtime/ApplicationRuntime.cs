@@ -3,17 +3,17 @@ using FluxMq.Pipeline.Definitions;
 
 namespace FluxMq.Pipeline.Runtime;
 
-public sealed class FlowApplicationRuntime : IAsyncDisposable, IDisposable
+public sealed class ApplicationRuntime : IAsyncDisposable, IDisposable
 {
     private readonly IReadOnlyList<IDisposable> _links;
-    private readonly IReadOnlyList<FlowRuntimeNode> _entryNodes;
+    private readonly IReadOnlyList<RuntimeNode> _entryNodes;
     private bool _disposed;
 
-    public FlowApplicationRuntime(
-        IReadOnlyDictionary<FlowNodeName, FlowRuntimeNode> resources,
-        IReadOnlyDictionary<string, IReadOnlyDictionary<FlowNodeName, FlowRuntimeNode>> workflows,
+    public ApplicationRuntime(
+        IReadOnlyDictionary<NodeName, RuntimeNode> resources,
+        IReadOnlyDictionary<string, IReadOnlyDictionary<NodeName, RuntimeNode>> workflows,
         IReadOnlyList<IDisposable> links,
-        IReadOnlyList<FlowRuntimeNode>? entryNodes = null)
+        IReadOnlyList<RuntimeNode>? entryNodes = null)
     {
         Resources = resources;
         Workflows = workflows;
@@ -21,10 +21,10 @@ public sealed class FlowApplicationRuntime : IAsyncDisposable, IDisposable
         _entryNodes = entryNodes ?? Nodes.ToArray();
     }
 
-    public IReadOnlyDictionary<FlowNodeName, FlowRuntimeNode> Resources { get; }
-    public IReadOnlyDictionary<string, IReadOnlyDictionary<FlowNodeName, FlowRuntimeNode>> Workflows { get; }
+    public IReadOnlyDictionary<NodeName, RuntimeNode> Resources { get; }
+    public IReadOnlyDictionary<string, IReadOnlyDictionary<NodeName, RuntimeNode>> Workflows { get; }
 
-    public IEnumerable<FlowRuntimeNode> Nodes => Resources.Values.Concat(Workflows.Values.SelectMany(workflow => workflow.Values));
+    public IEnumerable<RuntimeNode> Nodes => Resources.Values.Concat(Workflows.Values.SelectMany(workflow => workflow.Values));
 
     public Task Completion => Task.WhenAll(Nodes.Select(node => node.Node.Completion));
 
@@ -97,10 +97,10 @@ public sealed class FlowApplicationRuntime : IAsyncDisposable, IDisposable
         }
     }
 
-    private IEnumerable<FlowRuntimeNode> WorkflowNodes()
+    private IEnumerable<RuntimeNode> WorkflowNodes()
         => Workflows.Values.SelectMany(workflow => workflow.Values);
 
-    private static async Task StartNodeAsync(FlowRuntimeNode node, CancellationToken cancellationToken)
+    private static async Task StartNodeAsync(RuntimeNode node, CancellationToken cancellationToken)
     {
         if (node.Node is IFlowStartable startable)
         {

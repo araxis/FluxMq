@@ -1,12 +1,12 @@
 namespace FluxMq.Pipeline.Definitions;
 
-public readonly record struct FlowNodeType
+public readonly record struct WorkflowName
 {
-    public FlowNodeType(string value)
+    public WorkflowName(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new ArgumentException("Flow node type cannot be empty.", nameof(value));
+            throw new ArgumentException("Workflow name cannot be empty.", nameof(value));
         }
 
         Value = value;

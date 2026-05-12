@@ -3,26 +3,26 @@ using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Pipeline.Runtime;
 
-public abstract class FlowOutputPort
+public abstract class OutputPort
 {
-    private protected FlowOutputPort(FlowPortName name, Type valueType)
+    private protected OutputPort(PortName name, Type valueType)
     {
         Name = name;
         ValueType = valueType;
     }
 
-    public FlowPortName Name { get; }
+    public PortName Name { get; }
     public Type ValueType { get; }
 
     public abstract IDisposable? TryLinkTo(
-        FlowInputPort input,
+        InputPort input,
         bool propagateCompletion,
-        out FlowApplicationRuntimeBuildError? error);
+        out ApplicationRuntimeBuildError? error);
 }
 
-public sealed class FlowOutputPort<T> : FlowOutputPort
+public sealed class OutputPort<T> : OutputPort
 {
-    public FlowOutputPort(FlowPortName name, ISourceBlock<T> source)
+    public OutputPort(PortName name, ISourceBlock<T> source)
         : base(name, typeof(T))
     {
         Source = source;
@@ -31,14 +31,14 @@ public sealed class FlowOutputPort<T> : FlowOutputPort
     public ISourceBlock<T> Source { get; }
 
     public override IDisposable? TryLinkTo(
-        FlowInputPort input,
+        InputPort input,
         bool propagateCompletion,
-        out FlowApplicationRuntimeBuildError? error)
+        out ApplicationRuntimeBuildError? error)
     {
-        if (input is not FlowInputPort<T> typedInput)
+        if (input is not InputPort<T> typedInput)
         {
             error = new(
-                FlowApplicationRuntimeBuildErrorCode.PortTypeMismatch,
+                ApplicationRuntimeBuildErrorCode.PortTypeMismatch,
                 $"Cannot link '{Name}' ({ValueType.Name}) to '{input.Name}' ({input.ValueType.Name}).",
                 PortName: input.Name);
             return null;
@@ -54,7 +54,7 @@ public sealed class FlowOutputPort<T> : FlowOutputPort
         catch (Exception exception)
         {
             error = new(
-                FlowApplicationRuntimeBuildErrorCode.LinkFailed,
+                ApplicationRuntimeBuildErrorCode.LinkFailed,
                 $"Failed to link '{Name}' to '{input.Name}': {exception.Message}",
                 PortName: input.Name);
             return null;

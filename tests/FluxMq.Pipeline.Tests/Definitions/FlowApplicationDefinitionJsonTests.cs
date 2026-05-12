@@ -30,9 +30,9 @@ public sealed class FlowApplicationDefinitionJsonTests
             }
             """;
 
-        var definition = JsonSerializer.Deserialize<FlowApplicationDefinition>(
+        var definition = JsonSerializer.Deserialize<ApplicationDefinition>(
             json,
-            FlowApplicationDefinitionJson.CreateSerializerOptions());
+            ApplicationDefinitionJson.CreateSerializerOptions());
 
         definition.Should().NotBeNull();
         definition!.Resources.Keys.Should().Contain("broker");
@@ -40,9 +40,9 @@ public sealed class FlowApplicationDefinitionJsonTests
         definition.Workflows["observeTraffic"].Keys.Should().Contain(["source", "metrics"]);
 
         var metrics = definition.Workflows["observeTraffic"]["metrics"];
-        metrics.Type.Should().Be(new FlowNodeType("mqtt.metrics-sink"));
+        metrics.Type.Should().Be(new NodeType("mqtt.metrics-sink"));
         metrics.GetPortLinks("Input").Should().ContainSingle()
-            .Which.From.Should().Be(new FlowPortReference(new FlowNodeName("source"), new FlowPortName("Output")));
+            .Which.From.Should().Be(new PortReference(new NodeName("source"), new PortName("Output")));
     }
 
     [Fact]
@@ -65,9 +65,9 @@ public sealed class FlowApplicationDefinitionJsonTests
             }
             """;
 
-        var node = JsonSerializer.Deserialize<FlowNodeDefinition>(
+        var node = JsonSerializer.Deserialize<NodeDefinition>(
             json,
-            FlowApplicationDefinitionJson.CreateSerializerOptions());
+            ApplicationDefinitionJson.CreateSerializerOptions());
 
         var links = node!.GetPortLinks("Input");
 
@@ -83,19 +83,19 @@ public sealed class FlowApplicationDefinitionJsonTests
     [Fact]
     public void Serialize_KeepsWorkflowsAndNodesAsObjectProperties()
     {
-        var definition = new FlowApplicationDefinition
+        var definition = new ApplicationDefinition
         {
             Workflows =
             {
                 ["observeTraffic"] = new()
                 {
-                    ["source"] = new FlowNodeDefinition
+                    ["source"] = new NodeDefinition
                     {
-                        Type = new FlowNodeType("mqtt.trigger")
+                        Type = new NodeType("mqtt.trigger")
                     },
-                    ["metrics"] = new FlowNodeDefinition
+                    ["metrics"] = new NodeDefinition
                     {
-                        Type = new FlowNodeType("mqtt.metrics-sink"),
+                        Type = new NodeType("mqtt.metrics-sink"),
                         Ports =
                         {
                             ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
@@ -105,7 +105,7 @@ public sealed class FlowApplicationDefinitionJsonTests
             }
         };
 
-        var json = JsonSerializer.Serialize(definition, FlowApplicationDefinitionJson.CreateSerializerOptions());
+        var json = JsonSerializer.Serialize(definition, ApplicationDefinitionJson.CreateSerializerOptions());
 
         json.Should().Contain("\"observeTraffic\"");
         json.Should().Contain("\"source\"");

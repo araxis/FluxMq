@@ -4,13 +4,13 @@ using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Pipeline.Components;
 
-public sealed class TopicFilterComponent : IFlowNode
+public sealed class MessageFilterComponent : IFlowNode
 {
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly TransformManyBlock<MqttEnvelope, MqttEnvelope> _block;
     private readonly Func<MqttEnvelope, bool> _predicate;
 
-    public TopicFilterComponent(Func<MqttEnvelope, bool> predicate, FlowNodeId? id = null, int boundedCapacity = 1000)
+    public MessageFilterComponent(Func<MqttEnvelope, bool> predicate, FlowNodeId? id = null, int boundedCapacity = 1000)
     {
         Id = id ?? FlowNodeId.New();
         _predicate = predicate;
@@ -36,7 +36,7 @@ public sealed class TopicFilterComponent : IFlowNode
     public ITargetBlock<MqttEnvelope> Input => _block;
     public ISourceBlock<MqttEnvelope> Output => _block;
 
-    public static TopicFilterComponent Prefix(string topicPrefix, StringComparison comparison = StringComparison.Ordinal)
+    public static MessageFilterComponent TopicPrefix(string topicPrefix, StringComparison comparison = StringComparison.Ordinal)
         => new(envelope => envelope.Topic.StartsWith(topicPrefix, comparison));
 
     public void Complete()

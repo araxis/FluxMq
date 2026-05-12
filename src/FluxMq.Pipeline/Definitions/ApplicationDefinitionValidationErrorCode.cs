@@ -1,6 +1,6 @@
 namespace FluxMq.Pipeline.Definitions;
 
-public enum FlowApplicationDefinitionValidationErrorCode
+public enum ApplicationDefinitionValidationErrorCode
 {
     EmptyDefinition = 1,
     EmptyWorkflowName = 2,

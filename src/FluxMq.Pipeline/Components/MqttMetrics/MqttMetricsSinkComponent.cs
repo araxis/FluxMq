@@ -6,7 +6,7 @@ namespace FluxMq.Pipeline.Components.MqttMetrics;
 
 public sealed class MqttMetricsSinkComponent : IFlowNode
 {
-    private readonly object _sync = new();
+    private readonly Lock _sync = new();
     private readonly HashSet<string> _topics = [];
     private readonly ActionBlock<MqttEnvelope> _block;
     private readonly BroadcastBlock<FlowError> _errors;

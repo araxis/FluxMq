@@ -1,8 +1,8 @@
 namespace FluxMq.Pipeline.Definitions;
 
-public sealed record FlowPortReference(FlowNodeName Node, FlowPortName Port)
+public sealed record PortReference(NodeName Node, PortName Port)
 {
-    public static FlowPortReference Parse(string value)
+    public static PortReference Parse(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -15,9 +15,9 @@ public sealed record FlowPortReference(FlowNodeName Node, FlowPortName Port)
             throw new FormatException("Flow port reference must use 'node.port' format.");
         }
 
-        return new FlowPortReference(
-            new FlowNodeName(value[..separator]),
-            new FlowPortName(value[(separator + 1)..]));
+        return new PortReference(
+            new NodeName(value[..separator]),
+            new PortName(value[(separator + 1)..]));
     }
 
     public override string ToString() => $"{Node}.{Port}";

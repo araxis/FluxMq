@@ -1,17 +1,17 @@
 namespace FluxMq.Pipeline.Definitions;
 
-public sealed class FlowApplicationDefinitionValidator
+public sealed class ApplicationDefinitionValidator
 {
-    public FlowApplicationDefinitionValidationResult Validate(FlowApplicationDefinition definition)
+    public ApplicationDefinitionValidationResult Validate(ApplicationDefinition definition)
     {
         ArgumentNullException.ThrowIfNull(definition);
 
-        var errors = new List<FlowApplicationDefinitionValidationError>();
+        var errors = new List<ApplicationDefinitionValidationError>();
 
         if (definition.Workflows.Count == 0)
         {
             errors.Add(new(
-                FlowApplicationDefinitionValidationErrorCode.EmptyDefinition,
+                ApplicationDefinitionValidationErrorCode.EmptyDefinition,
                 "Flow application definition must contain at least one workflow."));
         }
 
@@ -20,7 +20,7 @@ public sealed class FlowApplicationDefinitionValidator
             if (string.IsNullOrWhiteSpace(resource.Key))
             {
                 errors.Add(new(
-                    FlowApplicationDefinitionValidationErrorCode.EmptyResourceName,
+                    ApplicationDefinitionValidationErrorCode.EmptyResourceName,
                     "Resource name cannot be empty."));
             }
 
@@ -32,14 +32,14 @@ public sealed class FlowApplicationDefinitionValidator
             if (string.IsNullOrWhiteSpace(workflow.Key))
             {
                 errors.Add(new(
-                    FlowApplicationDefinitionValidationErrorCode.EmptyWorkflowName,
+                    ApplicationDefinitionValidationErrorCode.EmptyWorkflowName,
                     "Workflow name cannot be empty."));
             }
 
             if (workflow.Value.Count == 0)
             {
                 errors.Add(new(
-                    FlowApplicationDefinitionValidationErrorCode.EmptyWorkflow,
+                    ApplicationDefinitionValidationErrorCode.EmptyWorkflow,
                     $"Workflow '{workflow.Key}' must contain at least one node."));
             }
 
@@ -60,34 +60,34 @@ public sealed class FlowApplicationDefinitionValidator
             ValidateLinks(workflow.Key, workflow.Value, knownNodeNames, errors);
         }
 
-        return new FlowApplicationDefinitionValidationResult(errors);
+        return new ApplicationDefinitionValidationResult(errors);
     }
 
     private static void ValidateNode(
         string nodeName,
-        FlowNodeDefinition node,
-        List<FlowApplicationDefinitionValidationError> errors)
+        NodeDefinition node,
+        List<ApplicationDefinitionValidationError> errors)
     {
         if (string.IsNullOrWhiteSpace(nodeName))
         {
             errors.Add(new(
-                FlowApplicationDefinitionValidationErrorCode.EmptyNodeName,
+                ApplicationDefinitionValidationErrorCode.EmptyNodeName,
                 "Flow node name cannot be empty."));
         }
 
         if (string.IsNullOrWhiteSpace(node.Type.Value))
         {
             errors.Add(new(
-                FlowApplicationDefinitionValidationErrorCode.EmptyNodeType,
+                ApplicationDefinitionValidationErrorCode.EmptyNodeType,
                 $"Flow node '{nodeName}' has an empty node type."));
         }
     }
 
     private static void ValidateLinks(
         string workflowName,
-        IReadOnlyDictionary<string, FlowNodeDefinition> nodes,
+        IReadOnlyDictionary<string, NodeDefinition> nodes,
         IReadOnlySet<string> knownNodeNames,
-        List<FlowApplicationDefinitionValidationError> errors)
+        List<ApplicationDefinitionValidationError> errors)
     {
         var knownLinks = new HashSet<LinkKey>();
 
@@ -98,11 +98,11 @@ public sealed class FlowApplicationDefinitionValidator
                 if (string.IsNullOrWhiteSpace(port.Key))
                 {
                     errors.Add(new(
-                        FlowApplicationDefinitionValidationErrorCode.EmptyTargetPort,
+                        ApplicationDefinitionValidationErrorCode.EmptyTargetPort,
                         $"Node '{targetNode.Key}' in workflow '{workflowName}' has an empty target port."));
                 }
 
-                IReadOnlyList<FlowLinkDefinition> links;
+                IReadOnlyList<LinkDefinition> links;
 
                 try
                 {
@@ -111,7 +111,7 @@ public sealed class FlowApplicationDefinitionValidator
                 catch (Exception exception) when (exception is FormatException or System.Text.Json.JsonException)
                 {
                     errors.Add(new(
-                        FlowApplicationDefinitionValidationErrorCode.InvalidLink,
+                        ApplicationDefinitionValidationErrorCode.InvalidLink,
                         $"Node '{targetNode.Key}' port '{port.Key}' in workflow '{workflowName}' has an invalid link: {exception.Message}"));
                     continue;
                 }
@@ -121,21 +121,21 @@ public sealed class FlowApplicationDefinitionValidator
                     if (string.IsNullOrWhiteSpace(link.From.Port.Value))
                     {
                         errors.Add(new(
-                            FlowApplicationDefinitionValidationErrorCode.EmptySourcePort,
+                            ApplicationDefinitionValidationErrorCode.EmptySourcePort,
                             $"Node '{targetNode.Key}' port '{port.Key}' in workflow '{workflowName}' has an empty source port."));
                     }
 
                     if (!knownNodeNames.Contains(link.From.Node.Value))
                     {
                         errors.Add(new(
-                            FlowApplicationDefinitionValidationErrorCode.MissingSourceNode,
+                            ApplicationDefinitionValidationErrorCode.MissingSourceNode,
                             $"Node '{targetNode.Key}' port '{port.Key}' in workflow '{workflowName}' references missing source node '{link.From.Node}'."));
                     }
 
                     if (!knownLinks.Add(LinkKey.From(targetNode.Key, port.Key, link)))
                     {
                         errors.Add(new(
-                            FlowApplicationDefinitionValidationErrorCode.DuplicateLink,
+                            ApplicationDefinitionValidationErrorCode.DuplicateLink,
                             $"Node '{targetNode.Key}' port '{port.Key}' in workflow '{workflowName}' has a duplicate link from '{link.From}'."));
                     }
                 }
@@ -150,7 +150,7 @@ public sealed class FlowApplicationDefinitionValidator
         string SourcePort,
         string? When)
     {
-        public static LinkKey From(string targetNode, string targetPort, FlowLinkDefinition link)
+        public static LinkKey From(string targetNode, string targetPort, LinkDefinition link)
             => new(
                 targetNode,
                 targetPort,

@@ -91,9 +91,9 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowStartable, IAsyncDisp
             {
                 await _session.SubscribeAsync(subscription.TopicFilter, subscription.QualityOfService, ct).ConfigureAwait(false);
             }
-
-            // Pump from the connection's broadcast, filter by our topic filters, post to output.
-            var pump = new ActionBlock<MqttEnvelope>(async envelope =>
+           
+             // Pump from the connection's broadcast, filter by our topic filters, post to output.
+             var pump = new ActionBlock<MqttEnvelope>(async envelope =>
             {
                 if (MqttTopicFilterMatcher.MatchesAny(_topicFilters, envelope.Topic))
                 {

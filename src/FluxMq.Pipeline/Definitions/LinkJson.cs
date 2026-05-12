@@ -2,14 +2,14 @@ using System.Text.Json;
 
 namespace FluxMq.Pipeline.Definitions;
 
-public static class FlowLinkJson
+public static class LinkJson
 {
-    public static IReadOnlyList<FlowLinkDefinition> ParseMany(
+    public static IReadOnlyList<LinkDefinition> ParseMany(
         JsonElement value,
         string? defaultWhen = null,
         JsonSerializerOptions? options = null)
     {
-        options ??= FlowApplicationDefinitionJson.CreateSerializerOptions();
+        options ??= ApplicationDefinitionJson.CreateSerializerOptions();
 
         if (value.ValueKind == JsonValueKind.Array)
         {
@@ -21,18 +21,18 @@ public static class FlowLinkJson
         return [ParseOne(value, defaultWhen, options)];
     }
 
-    public static FlowLinkDefinition ParseOne(
+    public static LinkDefinition ParseOne(
         JsonElement value,
         string? defaultWhen = null,
         JsonSerializerOptions? options = null)
     {
-        options ??= FlowApplicationDefinitionJson.CreateSerializerOptions();
+        options ??= ApplicationDefinitionJson.CreateSerializerOptions();
 
         return value.ValueKind switch
         {
-            JsonValueKind.String => new FlowLinkDefinition
+            JsonValueKind.String => new LinkDefinition
             {
-                From = FlowPortReference.Parse(value.GetString()!),
+                From = PortReference.Parse(value.GetString()!),
                 When = defaultWhen
             },
             JsonValueKind.Object => ParseObject(value, defaultWhen, options),
@@ -40,7 +40,7 @@ public static class FlowLinkJson
         };
     }
 
-    private static FlowLinkDefinition ParseObject(
+    private static LinkDefinition ParseObject(
         JsonElement value,
         string? defaultWhen,
         JsonSerializerOptions options)
@@ -53,9 +53,9 @@ public static class FlowLinkJson
 
         var when = ReadProperty(value, "when") ?? ReadProperty(value, "When");
 
-        return new FlowLinkDefinition
+        return new LinkDefinition
         {
-            From = from.Value.Deserialize<FlowPortReference>(options)!,
+            From = from.Value.Deserialize<PortReference>(options)!,
             When = when?.GetString() ?? defaultWhen
         };
     }

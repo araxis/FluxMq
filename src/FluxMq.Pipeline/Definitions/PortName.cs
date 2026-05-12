@@ -1,8 +1,8 @@
 namespace FluxMq.Pipeline.Definitions;
 
-public readonly record struct FlowPortName
+public readonly record struct PortName
 {
-    public FlowPortName(string value)
+    public PortName(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {

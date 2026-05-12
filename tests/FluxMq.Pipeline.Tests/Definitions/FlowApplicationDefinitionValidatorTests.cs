@@ -6,12 +6,12 @@ namespace FluxMq.Pipeline.Tests.Definitions;
 
 public sealed class FlowApplicationDefinitionValidatorTests
 {
-    private readonly FlowApplicationDefinitionValidator _validator = new();
+    private readonly ApplicationDefinitionValidator _validator = new();
 
     [Fact]
     public void Validate_AcceptsApplicationWithSharedResourcesAndMultipleWorkflows()
     {
-        var definition = new FlowApplicationDefinition
+        var definition = new ApplicationDefinition
         {
             Resources =
             {
@@ -40,17 +40,17 @@ public sealed class FlowApplicationDefinitionValidatorTests
     [Fact]
     public void Validate_ReportsDefinitionWithoutWorkflows()
     {
-        var result = _validator.Validate(new FlowApplicationDefinition());
+        var result = _validator.Validate(new ApplicationDefinition());
 
         result.IsValid.Should().BeFalse();
         result.Errors.Should().ContainSingle()
-            .Which.Code.Should().Be(FlowApplicationDefinitionValidationErrorCode.EmptyDefinition);
+            .Which.Code.Should().Be(ApplicationDefinitionValidationErrorCode.EmptyDefinition);
     }
 
     [Fact]
     public void Validate_ReportsEmptyWorkflow()
     {
-        var definition = new FlowApplicationDefinition
+        var definition = new ApplicationDefinition
         {
             Workflows =
             {
@@ -60,19 +60,19 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        result.Errors.Should().Contain(error => error.Code == FlowApplicationDefinitionValidationErrorCode.EmptyWorkflow);
+        result.Errors.Should().Contain(error => error.Code == ApplicationDefinitionValidationErrorCode.EmptyWorkflow);
     }
 
     [Fact]
     public void Validate_ReportsEmptyNodeType()
     {
-        var definition = new FlowApplicationDefinition
+        var definition = new ApplicationDefinition
         {
             Workflows =
             {
                 ["flow"] = new()
                 {
-                    ["node"] = new FlowNodeDefinition
+                    ["node"] = new NodeDefinition
                     {
                         Type = default
                     }
@@ -82,13 +82,13 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        result.Errors.Should().Contain(error => error.Code == FlowApplicationDefinitionValidationErrorCode.EmptyNodeType);
+        result.Errors.Should().Contain(error => error.Code == ApplicationDefinitionValidationErrorCode.EmptyNodeType);
     }
 
     [Fact]
     public void Validate_ReportsMissingSourceNode()
     {
-        var definition = new FlowApplicationDefinition
+        var definition = new ApplicationDefinition
         {
             Workflows =
             {
@@ -101,13 +101,13 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        result.Errors.Should().Contain(error => error.Code == FlowApplicationDefinitionValidationErrorCode.MissingSourceNode);
+        result.Errors.Should().Contain(error => error.Code == ApplicationDefinitionValidationErrorCode.MissingSourceNode);
     }
 
     [Fact]
     public void Validate_AllowsLinksFromSharedResources()
     {
-        var definition = new FlowApplicationDefinition
+        var definition = new ApplicationDefinition
         {
             Resources =
             {
@@ -130,7 +130,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
     [Fact]
     public void Validate_ReportsInvalidLinkShape()
     {
-        var definition = new FlowApplicationDefinition
+        var definition = new ApplicationDefinition
         {
             Workflows =
             {
@@ -143,13 +143,13 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        result.Errors.Should().Contain(error => error.Code == FlowApplicationDefinitionValidationErrorCode.InvalidLink);
+        result.Errors.Should().Contain(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidLink);
     }
 
     [Fact]
     public void Validate_ReportsEmptySourcePort()
     {
-        var definition = new FlowApplicationDefinition
+        var definition = new ApplicationDefinition
         {
             Workflows =
             {
@@ -163,13 +163,13 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        result.Errors.Should().Contain(error => error.Code == FlowApplicationDefinitionValidationErrorCode.InvalidLink);
+        result.Errors.Should().Contain(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidLink);
     }
 
     [Fact]
     public void Validate_ReportsDuplicateLinks()
     {
-        var definition = new FlowApplicationDefinition
+        var definition = new ApplicationDefinition
         {
             Workflows =
             {
@@ -183,17 +183,17 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        result.Errors.Should().Contain(error => error.Code == FlowApplicationDefinitionValidationErrorCode.DuplicateLink);
+        result.Errors.Should().Contain(error => error.Code == ApplicationDefinitionValidationErrorCode.DuplicateLink);
     }
 
-    private static FlowNodeDefinition Node(string type) => new()
+    private static NodeDefinition Node(string type) => new()
     {
-        Type = new FlowNodeType(type)
+        Type = new NodeType(type)
     };
 
-    private static FlowNodeDefinition NodeWithPort(string type, string portName, string linkJson) => new()
+    private static NodeDefinition NodeWithPort(string type, string portName, string linkJson) => new()
     {
-        Type = new FlowNodeType(type),
+        Type = new NodeType(type),
         Ports =
         {
             [portName] = JsonDocument.Parse(linkJson).RootElement.Clone()

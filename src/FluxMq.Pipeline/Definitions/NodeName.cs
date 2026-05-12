@@ -1,8 +1,8 @@
 namespace FluxMq.Pipeline.Definitions;
 
-public readonly record struct FlowNodeName
+public readonly record struct NodeName
 {
-    public FlowNodeName(string value)
+    public NodeName(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {

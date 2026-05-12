@@ -2,43 +2,43 @@ using FluxMq.Pipeline.Definitions;
 
 namespace FluxMq.Pipeline.Runtime;
 
-public sealed class FlowApplicationRuntimeBuilder
+public sealed class ApplicationRuntimeBuilder
 {
-    private readonly FlowRuntimeNodeFactoryRegistry _factories;
-    private readonly FlowApplicationDefinitionValidator _validator;
+    private readonly RuntimeNodeFactoryRegistry _factories;
+    private readonly ApplicationDefinitionValidator _validator;
 
-    public FlowApplicationRuntimeBuilder(
-        FlowRuntimeNodeFactoryRegistry factories,
-        FlowApplicationDefinitionValidator? validator = null)
+    public ApplicationRuntimeBuilder(
+        RuntimeNodeFactoryRegistry factories,
+        ApplicationDefinitionValidator? validator = null)
     {
         _factories = factories;
-        _validator = validator ?? new FlowApplicationDefinitionValidator();
+        _validator = validator ?? new ApplicationDefinitionValidator();
     }
 
-    public FlowApplicationRuntimeBuildResult Build(FlowApplicationDefinition definition)
+    public ApplicationRuntimeBuildResult Build(ApplicationDefinition definition)
     {
         ArgumentNullException.ThrowIfNull(definition);
 
         var validation = _validator.Validate(definition);
         if (!validation.IsValid)
         {
-            return FlowApplicationRuntimeBuildResult.Failed(
+            return ApplicationRuntimeBuildResult.Failed(
                 validation,
                 validation.Errors
-                    .Select(error => new FlowApplicationRuntimeBuildError(
-                        FlowApplicationRuntimeBuildErrorCode.ValidationFailed,
+                    .Select(error => new ApplicationRuntimeBuildError(
+                        ApplicationRuntimeBuildErrorCode.ValidationFailed,
                         error.Message))
                     .ToArray());
         }
 
-        var errors = new List<FlowApplicationRuntimeBuildError>();
+        var errors = new List<ApplicationRuntimeBuildError>();
         var links = new List<IDisposable>();
-        var linkedTargets = new HashSet<FlowRuntimeNode>();
+        var linkedTargets = new HashSet<RuntimeNode>();
 
         var resources = CreateNodes(null, definition.Resources, errors);
         var workflows = definition.Workflows.ToDictionary(
             workflow => workflow.Key,
-            workflow => (IReadOnlyDictionary<FlowNodeName, FlowRuntimeNode>)CreateNodes(workflow.Key, workflow.Value, errors, resources));
+            workflow => (IReadOnlyDictionary<NodeName, RuntimeNode>)CreateNodes(workflow.Key, workflow.Value, errors, resources));
 
         if (errors.Count == 0)
         {
@@ -48,32 +48,32 @@ public sealed class FlowApplicationRuntimeBuilder
         if (errors.Count > 0)
         {
             DisposeCreatedNodes(resources, workflows, links);
-            return FlowApplicationRuntimeBuildResult.Failed(validation, errors);
+            return ApplicationRuntimeBuildResult.Failed(validation, errors);
         }
 
-        return FlowApplicationRuntimeBuildResult.Succeeded(
-            new FlowApplicationRuntime(resources, workflows, links, FindEntryNodes(resources, workflows, linkedTargets)),
+        return ApplicationRuntimeBuildResult.Succeeded(
+            new ApplicationRuntime(resources, workflows, links, FindEntryNodes(resources, workflows, linkedTargets)),
             validation);
     }
 
-    private IReadOnlyDictionary<FlowNodeName, FlowRuntimeNode> CreateNodes(
+    private IReadOnlyDictionary<NodeName, RuntimeNode> CreateNodes(
         string? workflowName,
-        IReadOnlyDictionary<string, FlowNodeDefinition> definitions,
-        List<FlowApplicationRuntimeBuildError> errors,
-        IReadOnlyDictionary<FlowNodeName, FlowRuntimeNode>? resources = null)
+        IReadOnlyDictionary<string, NodeDefinition> definitions,
+        List<ApplicationRuntimeBuildError> errors,
+        IReadOnlyDictionary<NodeName, RuntimeNode>? resources = null)
     {
-        var nodes = new Dictionary<FlowNodeName, FlowRuntimeNode>();
+        var nodes = new Dictionary<NodeName, RuntimeNode>();
         // Resources see themselves so a resource may reference an earlier-built resource.
         var resourceView = resources ?? nodes;
 
         foreach (var definition in definitions)
         {
-            var nodeName = new FlowNodeName(definition.Key);
+            var nodeName = new NodeName(definition.Key);
 
             if (!_factories.TryGetFactory(definition.Value.Type, out var factory))
             {
                 errors.Add(new(
-                    FlowApplicationRuntimeBuildErrorCode.UnknownNodeType,
+                    ApplicationRuntimeBuildErrorCode.UnknownNodeType,
                     $"No flow node factory is registered for type '{definition.Value.Type}'.",
                     workflowName,
                     nodeName));
@@ -82,7 +82,7 @@ public sealed class FlowApplicationRuntimeBuilder
 
             try
             {
-                nodes.Add(nodeName, factory(new FlowRuntimeNodeFactoryContext(
+                nodes.Add(nodeName, factory(new RuntimeNodeFactoryContext(
                     nodeName,
                     definition.Value,
                     workflowName,
@@ -91,7 +91,7 @@ public sealed class FlowApplicationRuntimeBuilder
             catch (Exception exception)
             {
                 errors.Add(new(
-                    FlowApplicationRuntimeBuildErrorCode.FactoryFailed,
+                    ApplicationRuntimeBuildErrorCode.FactoryFailed,
                     $"Factory for node '{nodeName}' failed: {exception.Message}",
                     workflowName,
                     nodeName));
@@ -102,12 +102,12 @@ public sealed class FlowApplicationRuntimeBuilder
     }
 
     private static void LinkWorkflows(
-        FlowApplicationDefinition definition,
-        IReadOnlyDictionary<FlowNodeName, FlowRuntimeNode> resources,
-        IReadOnlyDictionary<string, IReadOnlyDictionary<FlowNodeName, FlowRuntimeNode>> workflows,
+        ApplicationDefinition definition,
+        IReadOnlyDictionary<NodeName, RuntimeNode> resources,
+        IReadOnlyDictionary<string, IReadOnlyDictionary<NodeName, RuntimeNode>> workflows,
         List<IDisposable> links,
-        HashSet<FlowRuntimeNode> linkedTargets,
-        List<FlowApplicationRuntimeBuildError> errors)
+        HashSet<RuntimeNode> linkedTargets,
+        List<ApplicationRuntimeBuildError> errors)
     {
         foreach (var workflowDefinition in definition.Workflows)
         {
@@ -116,16 +116,16 @@ public sealed class FlowApplicationRuntimeBuilder
 
             foreach (var targetDefinition in workflowDefinition.Value)
             {
-                var targetName = new FlowNodeName(targetDefinition.Key);
+                var targetName = new NodeName(targetDefinition.Key);
                 var targetNode = workflowNodes[targetName];
 
                 foreach (var portLinks in targetDefinition.Value.GetAllPortLinks())
                 {
-                    var targetPortName = new FlowPortName(portLinks.Key);
+                    var targetPortName = new PortName(portLinks.Key);
                     if (!targetNode.Inputs.TryGetValue(targetPortName, out var input))
                     {
                         errors.Add(new(
-                            FlowApplicationRuntimeBuildErrorCode.MissingInputPort,
+                            ApplicationRuntimeBuildErrorCode.MissingInputPort,
                             $"Node '{targetName}' does not expose input port '{targetPortName}'.",
                             workflowName,
                             targetName,
@@ -143,7 +143,7 @@ public sealed class FlowApplicationRuntimeBuilder
                         if (!sourceNode.Outputs.TryGetValue(link.From.Port, out var output))
                         {
                             errors.Add(new(
-                                FlowApplicationRuntimeBuildErrorCode.MissingOutputPort,
+                                ApplicationRuntimeBuildErrorCode.MissingOutputPort,
                                 $"Node '{sourceNode.Name}' does not expose output port '{link.From.Port}'.",
                                 workflowName,
                                 sourceNode.Name,
@@ -175,10 +175,10 @@ public sealed class FlowApplicationRuntimeBuilder
     }
 
     private static bool TryFindSource(
-        FlowNodeName sourceName,
-        IReadOnlyDictionary<FlowNodeName, FlowRuntimeNode> workflowNodes,
-        IReadOnlyDictionary<FlowNodeName, FlowRuntimeNode> resources,
-        out FlowRuntimeNode sourceNode)
+        NodeName sourceName,
+        IReadOnlyDictionary<NodeName, RuntimeNode> workflowNodes,
+        IReadOnlyDictionary<NodeName, RuntimeNode> resources,
+        out RuntimeNode sourceNode)
     {
         if (workflowNodes.TryGetValue(sourceName, out sourceNode!))
         {
@@ -189,17 +189,17 @@ public sealed class FlowApplicationRuntimeBuilder
     }
 
     private static void DisposeCreatedNodes(
-        IReadOnlyDictionary<FlowNodeName, FlowRuntimeNode> resources,
-        IReadOnlyDictionary<string, IReadOnlyDictionary<FlowNodeName, FlowRuntimeNode>> workflows,
+        IReadOnlyDictionary<NodeName, RuntimeNode> resources,
+        IReadOnlyDictionary<string, IReadOnlyDictionary<NodeName, RuntimeNode>> workflows,
         List<IDisposable> links)
     {
-        using var runtime = new FlowApplicationRuntime(resources, workflows, links);
+        using var runtime = new ApplicationRuntime(resources, workflows, links);
     }
 
-    private static IReadOnlyList<FlowRuntimeNode> FindEntryNodes(
-        IReadOnlyDictionary<FlowNodeName, FlowRuntimeNode> resources,
-        IReadOnlyDictionary<string, IReadOnlyDictionary<FlowNodeName, FlowRuntimeNode>> workflows,
-        HashSet<FlowRuntimeNode> linkedTargets)
+    private static IReadOnlyList<RuntimeNode> FindEntryNodes(
+        IReadOnlyDictionary<NodeName, RuntimeNode> resources,
+        IReadOnlyDictionary<string, IReadOnlyDictionary<NodeName, RuntimeNode>> workflows,
+        HashSet<RuntimeNode> linkedTargets)
     {
         var nodes = resources.Values
             .Concat(workflows.Values.SelectMany(workflow => workflow.Values))

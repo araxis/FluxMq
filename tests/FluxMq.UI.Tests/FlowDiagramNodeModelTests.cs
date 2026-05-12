@@ -1,5 +1,6 @@
 using FluxMq.UI.Models;
 using FluentAssertions;
+using FluxMq.UI.Components.Diagram;
 using DiagramPoint = Blazor.Diagrams.Core.Geometry.Point;
 
 namespace FluxMq.UI.Tests;

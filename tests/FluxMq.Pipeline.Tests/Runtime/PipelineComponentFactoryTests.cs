@@ -20,7 +20,7 @@ public sealed class PipelineComponentFactoryTests
     [Fact]
     public void RegisterPipelineComponentFactories_RegistersStableComponentTypes()
     {
-        var registry = new FlowRuntimeNodeFactoryRegistry()
+        var registry = new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories();
 
         registry.Factories.Keys.Should().BeEquivalentTo([
@@ -37,20 +37,20 @@ public sealed class PipelineComponentFactoryTests
         TestSourceNode? source = null;
         TestSinkNode<InspectedMqttMessage>? sink = null;
 
-        var builder = new FlowApplicationRuntimeBuilder(new FlowRuntimeNodeFactoryRegistry()
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories()
-            .Register(new FlowNodeType("test.source"), (name, _) =>
+            .Register(new NodeType("test.source"), (name, _) =>
             {
                 source = new TestSourceNode();
                 return SourceNode(name, source);
             })
-            .Register(new FlowNodeType("test.inspected-sink"), (name, _) =>
+            .Register(new NodeType("test.inspected-sink"), (name, _) =>
             {
                 sink = new TestSinkNode<InspectedMqttMessage>();
                 return SinkNode(name, sink);
             }));
 
-        var result = builder.Build(new FlowApplicationDefinition
+        var result = builder.Build(new ApplicationDefinition
         {
             Workflows =
             {
@@ -81,20 +81,20 @@ public sealed class PipelineComponentFactoryTests
         TestSourceNode? source = null;
         TestSinkNode<MqttMetricsSnapshot>? sink = null;
 
-        var builder = new FlowApplicationRuntimeBuilder(new FlowRuntimeNodeFactoryRegistry()
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories()
-            .Register(new FlowNodeType("test.source"), (name, _) =>
+            .Register(new NodeType("test.source"), (name, _) =>
             {
                 source = new TestSourceNode();
                 return SourceNode(name, source);
             })
-            .Register(new FlowNodeType("test.snapshot-sink"), (name, _) =>
+            .Register(new NodeType("test.snapshot-sink"), (name, _) =>
             {
                 sink = new TestSinkNode<MqttMetricsSnapshot>();
                 return SinkNode(name, sink);
             }));
 
-        var result = builder.Build(new FlowApplicationDefinition
+        var result = builder.Build(new ApplicationDefinition
         {
             Workflows =
             {
@@ -126,23 +126,23 @@ public sealed class PipelineComponentFactoryTests
         FakeMqttSession? session = null;
         TestSinkNode<MqttMetricsSnapshot>? sink = null;
 
-        var builder = new FlowApplicationRuntimeBuilder(new FlowRuntimeNodeFactoryRegistry()
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories(_ =>
             {
                 session = new FakeMqttSession();
                 return session;
             })
-            .Register(new FlowNodeType("test.snapshot-sink"), (name, _) =>
+            .Register(new NodeType("test.snapshot-sink"), (name, _) =>
             {
                 sink = new TestSinkNode<MqttMetricsSnapshot>();
                 return SinkNode(name, sink);
             }));
 
-        var result = builder.Build(new FlowApplicationDefinition
+        var result = builder.Build(new ApplicationDefinition
         {
             Resources =
             {
-                ["broker"] = new FlowNodeDefinition
+                ["broker"] = new NodeDefinition
                 {
                     Type = PipelineFlowNodeTypes.Connection,
                     Configuration =
@@ -155,7 +155,7 @@ public sealed class PipelineComponentFactoryTests
             {
                 ["flow"] = new()
                 {
-                    ["trigger"] = new FlowNodeDefinition
+                    ["trigger"] = new NodeDefinition
                     {
                         Type = PipelineFlowNodeTypes.Trigger,
                         Configuration =
@@ -198,16 +198,16 @@ public sealed class PipelineComponentFactoryTests
     [Fact]
     public void TriggerFactory_ReturnsBuildErrorWhenConnectionMissing()
     {
-        var builder = new FlowApplicationRuntimeBuilder(new FlowRuntimeNodeFactoryRegistry()
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories());
 
-        var result = builder.Build(new FlowApplicationDefinition
+        var result = builder.Build(new ApplicationDefinition
         {
             Workflows =
             {
                 ["flow"] = new()
                 {
-                    ["trigger"] = new FlowNodeDefinition
+                    ["trigger"] = new NodeDefinition
                     {
                         Type = PipelineFlowNodeTypes.Trigger,
                         Configuration =
@@ -226,16 +226,16 @@ public sealed class PipelineComponentFactoryTests
     [Fact]
     public void RegisteredFactory_ReturnsBuildErrorForInvalidBoundedCapacity()
     {
-        var builder = new FlowApplicationRuntimeBuilder(new FlowRuntimeNodeFactoryRegistry()
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories());
 
-        var result = builder.Build(new FlowApplicationDefinition
+        var result = builder.Build(new ApplicationDefinition
         {
             Workflows =
             {
                 ["flow"] = new()
                 {
-                    ["inspect"] = new FlowNodeDefinition
+                    ["inspect"] = new NodeDefinition
                     {
                         Type = PipelineFlowNodeTypes.PayloadInspector,
                         Configuration =
@@ -249,34 +249,34 @@ public sealed class PipelineComponentFactoryTests
 
         result.IsSuccess.Should().BeFalse();
         result.Errors.Should().ContainSingle(error =>
-            error.Code == FlowApplicationRuntimeBuildErrorCode.FactoryFailed &&
+            error.Code == ApplicationRuntimeBuildErrorCode.FactoryFailed &&
             error.Message.Contains("boundedCapacity"));
     }
 
-    private static FlowRuntimeNode SourceNode(FlowNodeName name, TestSourceNode node)
-        => FlowRuntimeNode.Create(
+    private static RuntimeNode SourceNode(NodeName name, TestSourceNode node)
+        => RuntimeNode.Create(
             name,
             node,
             outputs:
             [
-                new FlowOutputPort<MqttEnvelope>(new FlowPortName("Output"), node.Output)
+                new OutputPort<MqttEnvelope>(new PortName("Output"), node.Output)
             ]);
 
-    private static FlowRuntimeNode SinkNode<T>(FlowNodeName name, TestSinkNode<T> node)
-        => FlowRuntimeNode.Create(
+    private static RuntimeNode SinkNode<T>(NodeName name, TestSinkNode<T> node)
+        => RuntimeNode.Create(
             name,
             node,
             inputs:
             [
-                new FlowInputPort<T>(new FlowPortName("Input"), node.Input)
+                new InputPort<T>(new PortName("Input"), node.Input)
             ]);
 
-    private static FlowNodeDefinition Node(string type) => new()
+    private static NodeDefinition Node(string type) => new()
     {
-        Type = new FlowNodeType(type)
+        Type = new NodeType(type)
     };
 
-    private static FlowNodeDefinition NodeWithPort(FlowNodeType type, string portName, string linkJson) => new()
+    private static NodeDefinition NodeWithPort(NodeType type, string portName, string linkJson) => new()
     {
         Type = type,
         Ports =
@@ -285,8 +285,8 @@ public sealed class PipelineComponentFactoryTests
         }
     };
 
-    private static FlowNodeDefinition NodeWithPort(string type, string portName, string linkJson)
-        => NodeWithPort(new FlowNodeType(type), portName, linkJson);
+    private static NodeDefinition NodeWithPort(string type, string portName, string linkJson)
+        => NodeWithPort(new NodeType(type), portName, linkJson);
 
     private sealed class TestSourceNode : IFlowNode
     {

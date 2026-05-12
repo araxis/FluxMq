@@ -6,12 +6,12 @@ using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Pipeline.Tests.Components;
 
-public sealed class TopicFilterComponentTests
+public sealed class MessageFilterComponentTests
 {
     [Fact]
     public async Task Prefix_ForwardsOnlyMatchingTopics()
     {
-        var component = TopicFilterComponent.Prefix("factory/");
+        var component = MessageFilterComponent.TopicPrefix("factory/");
         var received = new List<string>();
         var sink = new ActionBlock<MqttEnvelope>(message => received.Add(message.Topic));
 
@@ -32,7 +32,7 @@ public sealed class TopicFilterComponentTests
     [Fact]
     public async Task Fault_CompletesWithFailure()
     {
-        var component = new TopicFilterComponent(_ => true);
+        var component = new MessageFilterComponent(_ => true);
         var errors = new List<FlowError>();
         var errorSink = new ActionBlock<FlowError>(errors.Add);
         var failure = new InvalidOperationException("filter failed");
@@ -53,7 +53,7 @@ public sealed class TopicFilterComponentTests
     [Fact]
     public async Task PredicateFailure_PublishesErrorAndKeepsCompleting()
     {
-        var component = new TopicFilterComponent(message =>
+        var component = new MessageFilterComponent(message =>
         {
             if (message.Topic == "bad/topic")
             {
@@ -91,7 +91,7 @@ public sealed class TopicFilterComponentTests
     [Fact]
     public async Task Complete_KeepsErrorPortOpenUntilPendingMessagesDrain()
     {
-        var component = new TopicFilterComponent(_ => throw new InvalidOperationException("late failure"));
+        var component = new MessageFilterComponent(_ => throw new InvalidOperationException("late failure"));
         var errors = new List<FlowError>();
         var errorSink = new ActionBlock<FlowError>(errors.Add);
 

@@ -1,6 +1,6 @@
 namespace FluxMq.Pipeline.Runtime;
 
-public enum FlowApplicationRuntimeBuildErrorCode
+public enum ApplicationRuntimeBuildErrorCode
 {
     ValidationFailed = 1,
     UnknownNodeType = 2,
