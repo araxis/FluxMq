@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Pipeline.Components;
 using FluxMq.Pipeline.Definitions;
@@ -14,7 +14,7 @@ public sealed class WorkflowStateTests
     {
         var workflow = MakeWorkflow();
 
-        workflow.State.Should().Be(WorkflowState.Idle);
+        workflow.State.ShouldBe(WorkflowState.Idle);
     }
 
     [Fact]
@@ -24,7 +24,7 @@ public sealed class WorkflowStateTests
 
         await workflow.StartAsync();
 
-        workflow.State.Should().Be(WorkflowState.Running);
+        workflow.State.ShouldBe(WorkflowState.Running);
     }
 
     [Fact]
@@ -39,21 +39,24 @@ public sealed class WorkflowStateTests
         var first = await buffer.ReceiveAsync(TimeSpan.FromSeconds(1));
         var second = await buffer.ReceiveAsync(TimeSpan.FromSeconds(1));
 
-        first.Previous.Should().Be(WorkflowState.Idle);
-        first.Current.Should().Be(WorkflowState.Starting);
-        second.Previous.Should().Be(WorkflowState.Starting);
-        second.Current.Should().Be(WorkflowState.Running);
+        first.Previous.ShouldBe(WorkflowState.Idle);
+        first.Current.ShouldBe(WorkflowState.Starting);
+        second.Previous.ShouldBe(WorkflowState.Starting);
+        second.Current.ShouldBe(WorkflowState.Running);
     }
 
     [Fact]
     public async Task Complete_TransitionsToStopping()
     {
         var workflow = MakeWorkflow();
+        var buffer = new BufferBlock<WorkflowStateChanged>();
+        workflow.StateChanges.LinkTo(buffer);
         await workflow.StartAsync();
 
         workflow.Complete();
 
-        workflow.State.Should().Be(WorkflowState.Stopping);
+        var stopping = await DrainUntilAsync(buffer, WorkflowState.Stopping);
+        stopping.Previous.ShouldBe(WorkflowState.Running);
     }
 
     [Fact]
@@ -67,8 +70,8 @@ public sealed class WorkflowStateTests
         workflow.Complete();
 
         var stopped = await DrainUntilAsync(buffer, WorkflowState.Stopped);
-        stopped.Previous.Should().Be(WorkflowState.Stopping);
-        workflow.State.Should().Be(WorkflowState.Stopped);
+        stopped.Previous.ShouldBe(WorkflowState.Stopping);
+        workflow.State.ShouldBe(WorkflowState.Stopped);
     }
 
     [Fact]
@@ -79,7 +82,7 @@ public sealed class WorkflowStateTests
 
         workflow.Fault(new InvalidOperationException("test"));
 
-        workflow.State.Should().Be(WorkflowState.Faulted);
+        workflow.State.ShouldBe(WorkflowState.Faulted);
     }
 
     [Fact]
@@ -94,8 +97,8 @@ public sealed class WorkflowStateTests
         workflow.Fault(ex);
 
         var faulted = await DrainUntilAsync(buffer, WorkflowState.Faulted);
-        faulted.Exception.Should().BeSameAs(ex);
-        faulted.WorkflowName.Should().Be(new WorkflowName("my-flow"));
+        faulted.Exception.ShouldBeSameAs(ex);
+        faulted.WorkflowName.ShouldBe(new WorkflowName("my-flow"));
     }
 
     [Fact]
@@ -106,7 +109,7 @@ public sealed class WorkflowStateTests
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => workflow.StartAsync());
 
-        workflow.State.Should().Be(WorkflowState.Faulted);
+        workflow.State.ShouldBe(WorkflowState.Faulted);
     }
 
     private static Workflow MakeWorkflow(TestNode? node = null, string workflowName = "test")
