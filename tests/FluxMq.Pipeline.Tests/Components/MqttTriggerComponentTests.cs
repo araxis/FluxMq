@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Models;
 using FluxMq.Pipeline.Components.MessageSource;
 using MQTTnet.Protocol;
@@ -32,9 +32,9 @@ public sealed class MqttTriggerComponentTests
 
         await sink.Completion.WaitAsync(TimeSpan.FromSeconds(5));
 
-        received.Should().Equal("sensors/temp", "sensors/humidity");
-        session.Subscriptions.Should().ContainSingle()
-            .Which.Should().Be(("sensors/+", MqttQualityOfServiceLevel.AtLeastOnce));
+        received.ShouldBe(new[] { "sensors/temp", "sensors/humidity" });
+        var sub = session.Subscriptions.ShouldHaveSingleItem();
+        sub.ShouldBe(("sensors/+", MqttQualityOfServiceLevel.AtLeastOnce));
     }
 
     [Fact]
@@ -69,12 +69,12 @@ public sealed class MqttTriggerComponentTests
 
         await Task.WhenAll(sensorSink.Completion, sysSink.Completion).WaitAsync(TimeSpan.FromSeconds(5));
 
-        sensorMessages.Should().ContainSingle().Which.Should().Be("sensors/temp");
-        sysMessages.Should().ContainSingle().Which.Should().Be("$SYS/broker/uptime");
+        sensorMessages.ShouldHaveSingleItem().ShouldBe("sensors/temp");
+        sysMessages.ShouldHaveSingleItem().ShouldBe("$SYS/broker/uptime");
 
         // Each trigger installed its own subscription on the broker.
         session.Subscriptions.Select(s => s.TopicFilter)
-            .Should().BeEquivalentTo(["sensors/#", "$SYS/#"]);
+            .ShouldBe(new[] { "sensors/#", "$SYS/#" }, ignoreOrder: true);
     }
 
     [Fact]
@@ -83,7 +83,8 @@ public sealed class MqttTriggerComponentTests
         var session = new TestMqttSession();
         var connection = new MqttConnectionComponent(session, disposeSessionOnDispose: false);
         var act = () => new MqttTriggerComponent(connection, []);
-        act.Should().Throw<ArgumentException>().WithMessage("*at least one subscription*");
+        var ex = Should.Throw<ArgumentException>(act);
+        ex.Message.ShouldContain("at least one subscription");
     }
 
     [Fact]
@@ -102,6 +103,6 @@ public sealed class MqttTriggerComponentTests
         await trigger.StartAsync();
         await trigger.DisposeAsync();
 
-        trigger.Completion.IsCompleted.Should().BeTrue();
+        trigger.Completion.IsCompleted.ShouldBeTrue();
     }
 }

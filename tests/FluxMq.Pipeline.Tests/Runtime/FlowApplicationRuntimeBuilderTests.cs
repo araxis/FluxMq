@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Pipeline.Components;
 using FluxMq.Pipeline.Definitions;
@@ -42,8 +42,8 @@ public sealed class FlowApplicationRuntimeBuilderTests
             }
         });
 
-        result.IsSuccess.Should().BeTrue();
-        result.Errors.Should().BeEmpty();
+        result.IsSuccess.ShouldBeTrue();
+        result.Errors.ShouldBeEmpty();
 
         source!.Post(1);
         source.Post(2);
@@ -51,7 +51,7 @@ public sealed class FlowApplicationRuntimeBuilderTests
 
         await result.Runtime.Completion;
 
-        sink!.Values.Should().Equal(1, 2);
+        sink!.Values.ShouldBe(new[] { 1, 2 });
     }
 
     [Fact]
@@ -90,14 +90,14 @@ public sealed class FlowApplicationRuntimeBuilderTests
             }
         });
 
-        result.IsSuccess.Should().BeTrue();
+        result.IsSuccess.ShouldBeTrue();
 
         resource!.Post(42);
         result.Runtime!.Complete();
 
         await result.Runtime.Completion;
 
-        sink!.Values.Should().Equal(42);
+        sink!.Values.ShouldBe(new[] { 42 });
     }
 
     [Fact]
@@ -107,10 +107,9 @@ public sealed class FlowApplicationRuntimeBuilderTests
 
         var result = builder.Build(new ApplicationDefinition());
 
-        result.IsSuccess.Should().BeFalse();
-        result.Runtime.Should().BeNull();
-        result.Errors.Should().ContainSingle()
-            .Which.Code.Should().Be(ApplicationRuntimeBuildErrorCode.ValidationFailed);
+        result.IsSuccess.ShouldBeFalse();
+        result.Runtime.ShouldBeNull();
+        result.Errors.ShouldHaveSingleItem().Code.ShouldBe(ApplicationRuntimeBuildErrorCode.ValidationFailed);
     }
 
     [Fact]
@@ -132,9 +131,8 @@ public sealed class FlowApplicationRuntimeBuilderTests
             }
         });
 
-        result.IsSuccess.Should().BeFalse();
-        result.Errors.Should().ContainSingle()
-            .Which.Code.Should().Be(ApplicationRuntimeBuildErrorCode.UnknownNodeType);
+        result.IsSuccess.ShouldBeFalse();
+        result.Errors.ShouldHaveSingleItem().Code.ShouldBe(ApplicationRuntimeBuildErrorCode.UnknownNodeType);
     }
 
     [Fact]
@@ -159,8 +157,8 @@ public sealed class FlowApplicationRuntimeBuilderTests
             }
         });
 
-        result.IsSuccess.Should().BeFalse();
-        result.Errors.Should().ContainSingle(error => error.Code == ApplicationRuntimeBuildErrorCode.MissingInputPort);
+        result.IsSuccess.ShouldBeFalse();
+        result.Errors.ShouldContain(error => error.Code == ApplicationRuntimeBuildErrorCode.MissingInputPort);
     }
 
     [Fact]
@@ -185,8 +183,8 @@ public sealed class FlowApplicationRuntimeBuilderTests
             }
         });
 
-        result.IsSuccess.Should().BeFalse();
-        result.Errors.Should().ContainSingle(error => error.Code == ApplicationRuntimeBuildErrorCode.PortTypeMismatch);
+        result.IsSuccess.ShouldBeFalse();
+        result.Errors.ShouldContain(error => error.Code == ApplicationRuntimeBuildErrorCode.PortTypeMismatch);
     }
 
     [Fact]
@@ -218,9 +216,9 @@ public sealed class FlowApplicationRuntimeBuilderTests
             }
         });
 
-        result.IsSuccess.Should().BeTrue();
-        contexts.Should().ContainSingle(context => context.Name.Value == "shared" && context.IsResource && context.WorkflowName == null);
-        contexts.Should().ContainSingle(context => context.Name.Value == "source" && !context.IsResource && context.WorkflowName == "flow");
+        result.IsSuccess.ShouldBeTrue();
+        contexts.ShouldContain(context => context.Name.Value == "shared" && context.IsResource && context.WorkflowName == null);
+        contexts.ShouldContain(context => context.Name.Value == "source" && !context.IsResource && context.WorkflowName == "flow");
     }
 
     [Fact]
@@ -249,11 +247,11 @@ public sealed class FlowApplicationRuntimeBuilderTests
             }
         });
 
-        result.IsSuccess.Should().BeTrue();
+        result.IsSuccess.ShouldBeTrue();
 
         result.Runtime!.Dispose();
 
-        disposalOrder.Should().Equal("workflow", "resource");
+        disposalOrder.ShouldBe(new[] { "workflow", "resource" });
     }
 
     [Fact]
@@ -282,11 +280,11 @@ public sealed class FlowApplicationRuntimeBuilderTests
             }
         });
 
-        result.IsSuccess.Should().BeTrue();
+        result.IsSuccess.ShouldBeTrue();
 
         await result.Runtime!.StartAsync();
 
-        startOrder.Should().Equal("resource", "workflow");
+        startOrder.ShouldBe(new[] { "resource", "workflow" });
     }
 
     private static RuntimeNode SourceNode(NodeAddress address, TestSourceNode node)

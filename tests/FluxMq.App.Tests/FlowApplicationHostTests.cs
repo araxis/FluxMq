@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Pipeline.Components;
 using FluxMq.Pipeline.Definitions;
@@ -34,10 +34,10 @@ public sealed class FlowApplicationHostTests
 
         var result = host.Start();
 
-        result.IsSuccess.Should().BeTrue();
-        host.State.Should().Be(FlowApplicationHostState.Running);
-        host.Runtime.Should().NotBeNull();
-        host.Runtime!.Workflows.Should().Contain(wf => wf.Name.Value == "observe");
+        result.IsSuccess.ShouldBeTrue();
+        host.State.ShouldBe(FlowApplicationHostState.Running);
+        host.Runtime.ShouldNotBeNull();
+        host.Runtime!.Workflows.ShouldContain(wf => wf.Name.Value == "observe");
     }
 
     [Fact]
@@ -60,12 +60,12 @@ public sealed class FlowApplicationHostTests
             }
             """));
 
-        host.Start().IsSuccess.Should().BeTrue();
+        host.Start().IsSuccess.ShouldBeTrue();
 
         await host.StopAsync();
 
-        host.State.Should().Be(FlowApplicationHostState.Stopped);
-        host.Runtime!.Completion.IsCompletedSuccessfully.Should().BeTrue();
+        host.State.ShouldBe(FlowApplicationHostState.Stopped);
+        host.Runtime!.Completion.IsCompletedSuccessfully.ShouldBeTrue();
     }
 
     [Fact]
@@ -75,10 +75,9 @@ public sealed class FlowApplicationHostTests
 
         var result = host.Start();
 
-        result.IsSuccess.Should().BeFalse();
-        result.Errors.Should().ContainSingle()
-            .Which.Code.Should().Be(FlowApplicationHostBuildErrorCode.InvalidConfiguration);
-        host.State.Should().Be(FlowApplicationHostState.Empty);
+        result.IsSuccess.ShouldBeFalse();
+        result.Errors.ShouldHaveSingleItem().Code.ShouldBe(FlowApplicationHostBuildErrorCode.InvalidConfiguration);
+        host.State.ShouldBe(FlowApplicationHostState.Empty);
     }
 
     [Fact]
@@ -106,10 +105,10 @@ public sealed class FlowApplicationHostTests
 
         var result = host.Start();
 
-        result.IsSuccess.Should().BeFalse();
-        result.Errors.Should().BeEmpty();
-        result.RuntimeBuild!.Errors.Should().ContainSingle(error => error.Message.Contains("boundedCapacity"));
-        host.State.Should().Be(FlowApplicationHostState.Empty);
+        result.IsSuccess.ShouldBeFalse();
+        result.Errors.ShouldBeEmpty();
+        result.RuntimeBuild!.Errors.ShouldContain(error => error.Message.Contains("boundedCapacity"));
+        host.State.ShouldBe(FlowApplicationHostState.Empty);
     }
 
     [Fact]
@@ -138,13 +137,13 @@ public sealed class FlowApplicationHostTests
                 """),
             builder);
 
-        host.Start().IsSuccess.Should().BeTrue();
+        host.Start().IsSuccess.ShouldBeTrue();
 
         await host.StopAsync();
 
-        host.State.Should().Be(FlowApplicationHostState.Faulted);
-        host.LastException.Should().BeOfType<InvalidOperationException>()
-            .Which.Message.Should().Be("completion failed");
+        host.State.ShouldBe(FlowApplicationHostState.Faulted);
+        host.LastException.ShouldBeOfType<InvalidOperationException>()
+            .Message.ShouldBe("completion failed");
     }
 
     [Fact]
@@ -175,12 +174,11 @@ public sealed class FlowApplicationHostTests
 
         var result = await host.StartAsync();
 
-        result.IsSuccess.Should().BeFalse();
-        result.Errors.Should().ContainSingle()
-            .Which.Code.Should().Be(FlowApplicationHostBuildErrorCode.StartFailed);
-        host.State.Should().Be(FlowApplicationHostState.Faulted);
-        host.LastException.Should().BeOfType<InvalidOperationException>()
-            .Which.Message.Should().Be("start failed");
+        result.IsSuccess.ShouldBeFalse();
+        result.Errors.ShouldHaveSingleItem().Code.ShouldBe(FlowApplicationHostBuildErrorCode.StartFailed);
+        host.State.ShouldBe(FlowApplicationHostState.Faulted);
+        host.LastException.ShouldBeOfType<InvalidOperationException>()
+            .Message.ShouldBe("start failed");
     }
 
     private static IConfiguration BuildConfiguration(string json)

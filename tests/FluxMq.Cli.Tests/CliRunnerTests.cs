@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Cli;
 using System.Text.Json;
 
@@ -32,9 +32,9 @@ public sealed class CliRunnerTests
 
         var exitCode = runner.Run(["validate", "--config", temp.Path]);
 
-        exitCode.Should().Be((int)CliExitCode.Success);
-        output.Lines.Should().ContainSingle(line => line.Contains("Flow application is valid."));
-        error.Lines.Should().BeEmpty();
+        exitCode.ShouldBe((int)CliExitCode.Success);
+        output.Lines.ShouldContain(line => line.Contains("Flow application is valid."));
+        error.Lines.ShouldBeEmpty();
     }
 
     [Fact]
@@ -66,10 +66,10 @@ public sealed class CliRunnerTests
 
         var exitCode = runner.Run(["validate", "--config", temp.Path]);
 
-        exitCode.Should().Be((int)CliExitCode.ValidationError);
-        output.Lines.Should().BeEmpty();
-        error.Lines.Should().Contain(line => line.Contains("Flow application is invalid."));
-        error.Lines.Should().Contain(line => line.Contains("boundedCapacity"));
+        exitCode.ShouldBe((int)CliExitCode.ValidationError);
+        output.Lines.ShouldBeEmpty();
+        error.Lines.ShouldContain(line => line.Contains("Flow application is invalid."));
+        error.Lines.ShouldContain(line => line.Contains("boundedCapacity"));
     }
 
     [Fact]
@@ -98,14 +98,14 @@ public sealed class CliRunnerTests
 
         var exitCode = runner.Run(["validate", "--config", temp.Path, "--output", "json"]);
 
-        exitCode.Should().Be((int)CliExitCode.Success);
-        error.Lines.Should().BeEmpty();
+        exitCode.ShouldBe((int)CliExitCode.Success);
+        error.Lines.ShouldBeEmpty();
 
         using var document = JsonDocument.Parse(string.Join(Environment.NewLine, output.Lines));
-        document.RootElement.GetProperty("isValid").GetBoolean().Should().BeTrue();
-        document.RootElement.GetProperty("workflowCount").GetInt32().Should().Be(1);
-        document.RootElement.GetProperty("resourceCount").GetInt32().Should().Be(0);
-        document.RootElement.GetProperty("diagnostics").GetArrayLength().Should().Be(0);
+        document.RootElement.GetProperty("isValid").GetBoolean().ShouldBeTrue();
+        document.RootElement.GetProperty("workflowCount").GetInt32().ShouldBe(1);
+        document.RootElement.GetProperty("resourceCount").GetInt32().ShouldBe(0);
+        document.RootElement.GetProperty("diagnostics").GetArrayLength().ShouldBe(0);
     }
 
     [Fact]
@@ -137,12 +137,12 @@ public sealed class CliRunnerTests
 
         var exitCode = runner.Run(["validate", "--config", temp.Path, "--output", "json"]);
 
-        exitCode.Should().Be((int)CliExitCode.ValidationError);
-        error.Lines.Should().BeEmpty();
+        exitCode.ShouldBe((int)CliExitCode.ValidationError);
+        error.Lines.ShouldBeEmpty();
 
         using var document = JsonDocument.Parse(string.Join(Environment.NewLine, output.Lines));
-        document.RootElement.GetProperty("isValid").GetBoolean().Should().BeFalse();
-        document.RootElement.GetProperty("diagnostics")[0].GetProperty("message").GetString().Should().Contain("boundedCapacity");
+        document.RootElement.GetProperty("isValid").GetBoolean().ShouldBeFalse();
+        document.RootElement.GetProperty("diagnostics")[0].GetProperty("message").GetString().ShouldContain("boundedCapacity");
     }
 
     [Fact]
@@ -154,9 +154,9 @@ public sealed class CliRunnerTests
 
         var exitCode = runner.Run(["validate", "--config", Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".json")]);
 
-        exitCode.Should().Be((int)CliExitCode.UsageError);
-        output.Lines.Should().BeEmpty();
-        error.Lines.Should().Contain(line => line.Contains("Configuration file was not found"));
+        exitCode.ShouldBe((int)CliExitCode.UsageError);
+        output.Lines.ShouldBeEmpty();
+        error.Lines.ShouldContain(line => line.Contains("Configuration file was not found"));
     }
 
     [Fact]
@@ -185,10 +185,10 @@ public sealed class CliRunnerTests
 
         var exitCode = await runner.RunAsync(["run", "--config", temp.Path, "--duration-ms", "1"]);
 
-        exitCode.Should().Be((int)CliExitCode.Success);
-        error.Lines.Should().BeEmpty();
-        output.Lines.Should().Contain(line => line.Contains("Flow application is running."));
-        output.Lines.Should().Contain(line => line.Contains("Flow application stopped."));
+        exitCode.ShouldBe((int)CliExitCode.Success);
+        error.Lines.ShouldBeEmpty();
+        output.Lines.ShouldContain(line => line.Contains("Flow application is running."));
+        output.Lines.ShouldContain(line => line.Contains("Flow application stopped."));
     }
 
     [Fact]
@@ -217,15 +217,15 @@ public sealed class CliRunnerTests
 
         var exitCode = await runner.RunAsync(["run", "--config", temp.Path, "--duration-ms", "1", "--output", "json"]);
 
-        exitCode.Should().Be((int)CliExitCode.Success);
-        error.Lines.Should().BeEmpty();
+        exitCode.ShouldBe((int)CliExitCode.Success);
+        error.Lines.ShouldBeEmpty();
 
         using var document = JsonDocument.Parse(string.Join(Environment.NewLine, output.Lines));
-        document.RootElement.GetProperty("started").GetBoolean().Should().BeTrue();
-        document.RootElement.GetProperty("workflowCount").GetInt32().Should().Be(1);
-        document.RootElement.GetProperty("resourceCount").GetInt32().Should().Be(0);
-        document.RootElement.GetProperty("exitReason").GetString().Should().Be("duration elapsed");
-        document.RootElement.GetProperty("hostState").GetString().Should().Be("Stopped");
+        document.RootElement.GetProperty("started").GetBoolean().ShouldBeTrue();
+        document.RootElement.GetProperty("workflowCount").GetInt32().ShouldBe(1);
+        document.RootElement.GetProperty("resourceCount").GetInt32().ShouldBe(0);
+        document.RootElement.GetProperty("exitReason").GetString().ShouldBe("duration elapsed");
+        document.RootElement.GetProperty("hostState").GetString().ShouldBe("Stopped");
     }
 
     [Fact]
@@ -257,13 +257,13 @@ public sealed class CliRunnerTests
 
         var exitCode = await runner.RunAsync(["run", "--config", temp.Path, "--duration-ms", "1", "--output", "json"]);
 
-        exitCode.Should().Be((int)CliExitCode.ValidationError);
-        error.Lines.Should().BeEmpty();
+        exitCode.ShouldBe((int)CliExitCode.ValidationError);
+        error.Lines.ShouldBeEmpty();
 
         using var document = JsonDocument.Parse(string.Join(Environment.NewLine, output.Lines));
-        document.RootElement.GetProperty("started").GetBoolean().Should().BeFalse();
-        document.RootElement.GetProperty("exitReason").GetString().Should().Be("validation failed");
-        document.RootElement.GetProperty("diagnostics")[0].GetProperty("message").GetString().Should().Contain("boundedCapacity");
+        document.RootElement.GetProperty("started").GetBoolean().ShouldBeFalse();
+        document.RootElement.GetProperty("exitReason").GetString().ShouldBe("validation failed");
+        document.RootElement.GetProperty("diagnostics")[0].GetProperty("message").GetString().ShouldContain("boundedCapacity");
     }
 
     private static TemporaryFile TemporaryJsonFile(string content)

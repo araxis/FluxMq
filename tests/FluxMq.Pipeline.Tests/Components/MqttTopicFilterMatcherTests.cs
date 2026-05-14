@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Pipeline.Components;
 
 namespace FluxMq.Pipeline.Tests.Components;
@@ -20,7 +20,7 @@ public sealed class MqttTopicFilterMatcherTests
     [InlineData("+/+", "a/b/c", false)]
     public void IsMatch_HandlesStandardWildcards(string filter, string topic, bool expected)
     {
-        MqttTopicFilterMatcher.IsMatch(filter, topic).Should().Be(expected);
+        MqttTopicFilterMatcher.IsMatch(filter, topic).ShouldBe(expected);
     }
 
     [Theory]
@@ -30,7 +30,7 @@ public sealed class MqttTopicFilterMatcherTests
     [InlineData("$SYS/broker/+", "$SYS/broker/uptime", true)]
     public void IsMatch_DoesNotMatchDollarTopicsAgainstWildcardFilters(string filter, string topic, bool expected)
     {
-        MqttTopicFilterMatcher.IsMatch(filter, topic).Should().Be(expected);
+        MqttTopicFilterMatcher.IsMatch(filter, topic).ShouldBe(expected);
     }
 
     [Fact]
@@ -38,8 +38,8 @@ public sealed class MqttTopicFilterMatcherTests
     {
         string[] filters = ["sensors/+", "$SYS/#"];
 
-        MqttTopicFilterMatcher.MatchesAny(filters, "sensors/temp").Should().BeTrue();
-        MqttTopicFilterMatcher.MatchesAny(filters, "$SYS/broker/uptime").Should().BeTrue();
-        MqttTopicFilterMatcher.MatchesAny(filters, "lights/kitchen/state").Should().BeFalse();
+        MqttTopicFilterMatcher.MatchesAny(filters, "sensors/temp").ShouldBeTrue();
+        MqttTopicFilterMatcher.MatchesAny(filters, "$SYS/broker/uptime").ShouldBeTrue();
+        MqttTopicFilterMatcher.MatchesAny(filters, "lights/kitchen/state").ShouldBeFalse();
     }
 }

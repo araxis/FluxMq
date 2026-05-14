@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Session;
@@ -33,9 +33,9 @@ public sealed class ConnectionStateTriggerComponentTests
         component.Dispose();
         await sink.Completion;
 
-        received.Should().ContainSingle().Which.State.Should().Be(MqttSessionState.Connected);
-        component.Id.Should().Be(nodeId);
-        component.Completion.IsCompletedSuccessfully.Should().BeTrue();
+        received.ShouldHaveSingleItem().State.ShouldBe(MqttSessionState.Connected);
+        component.Id.ShouldBe(nodeId);
+        component.Completion.IsCompletedSuccessfully.ShouldBeTrue();
     }
 
     [Fact]
@@ -51,13 +51,13 @@ public sealed class ConnectionStateTriggerComponentTests
         component.Fault(failure);
         var act = async () => await component.Completion;
 
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("state stream failed");
+        var ex = await Should.ThrowAsync<InvalidOperationException>(act);
+        ex.Message.ShouldBe("state stream failed");
         await errorSink.Completion;
 
-        var error = errors.Should().ContainSingle().Subject;
-        error.Code.Should().Be(FlowErrorCodes.NodeFaulted);
-        error.Message.Should().Be("Connection state trigger faulted.");
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(FlowErrorCodes.NodeFaulted);
+        error.Message.ShouldBe("Connection state trigger faulted.");
     }
 
     private sealed class FakeConnectionManager : IMqttConnectionManager

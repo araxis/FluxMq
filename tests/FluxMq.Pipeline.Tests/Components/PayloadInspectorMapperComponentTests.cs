@@ -1,5 +1,5 @@
 using System.Text;
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Payloads;
@@ -32,11 +32,11 @@ public sealed class PayloadInspectorMapperComponentTests
 
         await sink.Completion;
 
-        var message = received.Should().ContainSingle().Subject;
-        message.Envelope.Topic.Should().Be("factory/status");
-        message.Payload.Format.Should().Be(PayloadFormat.Json);
-        component.Id.Should().Be(nodeId);
-        component.Completion.IsCompletedSuccessfully.Should().BeTrue();
+        var message = received.ShouldHaveSingleItem();
+        message.Envelope.Topic.ShouldBe("factory/status");
+        message.Payload.Format.ShouldBe(PayloadFormat.Json);
+        component.Id.ShouldBe(nodeId);
+        component.Completion.IsCompletedSuccessfully.ShouldBeTrue();
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public sealed class PayloadInspectorMapperComponentTests
         component.Complete();
         await Task.WhenAll(component.Completion, sink.Completion);
 
-        component.Completion.IsCompletedSuccessfully.Should().BeTrue();
+        component.Completion.IsCompletedSuccessfully.ShouldBeTrue();
     }
 
     [Fact]
@@ -64,12 +64,12 @@ public sealed class PayloadInspectorMapperComponentTests
         component.Fault(failure);
 
         var act = async () => await component.Completion;
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("inspect failed");
+        var ex = await Should.ThrowAsync<InvalidOperationException>(act);
+        ex.Message.ShouldBe("inspect failed");
         await errorSink.Completion;
 
-        var error = errors.Should().ContainSingle().Subject;
-        error.Code.Should().Be(FlowErrorCodes.NodeFaulted);
-        error.Message.Should().Be("Payload inspector mapper faulted.");
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(FlowErrorCodes.NodeFaulted);
+        error.Message.ShouldBe("Payload inspector mapper faulted.");
     }
 }

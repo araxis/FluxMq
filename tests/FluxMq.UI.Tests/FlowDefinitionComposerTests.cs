@@ -1,7 +1,7 @@
 using FluxMq.App;
 using FluxMq.Core.Models;
 using FluxMq.UI.Services;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.Extensions.Configuration;
 using System.Text;
 using System.Text.Json;
@@ -32,9 +32,9 @@ public sealed class FlowDefinitionComposerTests
         using var host = FlowApplicationHost.CreateDefault(configuration);
         var result = host.Build();
 
-        result.IsSuccess.Should().BeTrue(string.Join(Environment.NewLine, result.RuntimeBuild?.Errors.Select(error => error.Message) ?? []));
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.RuntimeBuild?.Errors.Select(error => error.Message) ?? []));
         result.RuntimeBuild!.Runtime!.Resources.Select(node => node.Address.Node.Value)
-            .Should().Contain(FlowDefinitionComposer.BrokerResourceName);
+            .ShouldContain(FlowDefinitionComposer.BrokerResourceName);
     }
 
     [Fact]
@@ -61,7 +61,7 @@ public sealed class FlowDefinitionComposerTests
             .GetProperty("profile")
             .GetProperty("port")
             .GetInt32()
-            .Should().Be(1884);
+            .ShouldBe(1884);
 
         // Trigger subscription updated
         var trigger = flowApplication
@@ -70,17 +70,17 @@ public sealed class FlowDefinitionComposerTests
             .GetProperty(FlowDefinitionComposer.TriggerNodeName);
 
         trigger.GetProperty("configuration").GetProperty("connection").GetString()
-            .Should().Be(FlowDefinitionComposer.BrokerResourceName);
+            .ShouldBe(FlowDefinitionComposer.BrokerResourceName);
 
         trigger.GetProperty("configuration").GetProperty("subscriptions")[0].GetString()
-            .Should().Be("devices/#");
+            .ShouldBe("devices/#");
 
         // Inspector / metrics nodes still present
         flowApplication
             .GetProperty("workflows")
             .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
             .TryGetProperty(FlowDefinitionComposer.InspectorNodeName, out _)
-            .Should().BeTrue();
+            .ShouldBeTrue();
     }
 
     [Fact]
@@ -102,6 +102,6 @@ public sealed class FlowDefinitionComposerTests
             .GetProperty(FlowDefinitionComposer.InspectorNodeName);
 
         inspect.GetProperty("Input").GetString()
-            .Should().Be($"{FlowDefinitionComposer.TriggerNodeName}.Output");
+            .ShouldBe($"{FlowDefinitionComposer.TriggerNodeName}.Output");
     }
 }

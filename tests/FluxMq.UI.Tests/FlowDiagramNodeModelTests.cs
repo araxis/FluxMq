@@ -1,5 +1,5 @@
 using FluxMq.UI.Models;
-using FluentAssertions;
+using Shouldly;
 using FluxMq.UI.Components.Diagram;
 using DiagramPoint = Blazor.Diagrams.Core.Geometry.Point;
 
@@ -19,7 +19,7 @@ public sealed class FlowDiagramNodeModelTests
 
         model.SetActivity("Connected | 3 messages");
 
-        model.ActivityText.Should().Be("Connected | 3 messages");
+        model.ActivityText.ShouldBe("Connected | 3 messages");
     }
 
     [Fact]
@@ -32,7 +32,7 @@ public sealed class FlowDiagramNodeModelTests
             descriptor: null,
             isResource: false);
 
-        model.IsCollapsed.Should().BeTrue();
+        model.IsCollapsed.ShouldBeTrue();
     }
 
     [Fact]
@@ -47,10 +47,10 @@ public sealed class FlowDiagramNodeModelTests
 
         // Default: collapsed.
         model.Toggle();
-        model.IsCollapsed.Should().BeFalse();
+        model.IsCollapsed.ShouldBeFalse();
 
         model.Toggle();
-        model.IsCollapsed.Should().BeTrue();
+        model.IsCollapsed.ShouldBeTrue();
     }
 
     [Fact]
@@ -64,9 +64,9 @@ public sealed class FlowDiagramNodeModelTests
             isResource: false);
 
         model.SetCollapsed(true);
-        model.IsCollapsed.Should().BeTrue();
+        model.IsCollapsed.ShouldBeTrue();
 
         model.SetCollapsed(false);
-        model.IsCollapsed.Should().BeFalse();
+        model.IsCollapsed.ShouldBeFalse();
     }
 }

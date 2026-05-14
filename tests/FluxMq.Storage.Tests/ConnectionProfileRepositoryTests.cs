@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Storage;
@@ -23,10 +23,10 @@ public class ConnectionProfileRepositoryTests : IDisposable
         _repo.Save(profile);
         var loaded = _repo.Get(profile.Id);
 
-        loaded.Should().NotBeNull();
-        loaded!.Name.Should().Be("Local");
-        loaded.Host.Should().Be("localhost");
-        loaded.Port.Should().Be(1883);
+        loaded.ShouldNotBeNull();
+        loaded!.Name.ShouldBe("Local");
+        loaded.Host.ShouldBe("localhost");
+        loaded.Port.ShouldBe(1883);
     }
 
     [Fact]
@@ -38,8 +38,7 @@ public class ConnectionProfileRepositoryTests : IDisposable
         var updated = profile with { Name = "Updated" };
         _repo.Save(updated);
 
-        _repo.GetAll().Should().ContainSingle()
-            .Which.Name.Should().Be("Updated");
+        _repo.GetAll().ShouldHaveSingleItem().Name.ShouldBe("Updated");
     }
 
     [Fact]
@@ -49,13 +48,13 @@ public class ConnectionProfileRepositoryTests : IDisposable
         _repo.Save(new MqttConnectionProfile { Name = "B" });
         _repo.Save(new MqttConnectionProfile { Name = "C" });
 
-        _repo.GetAll().Should().HaveCount(3);
+        _repo.GetAll().Count.ShouldBe(3);
     }
 
     [Fact]
     public void Get_ReturnsNull_ForUnknownId()
     {
-        _repo.Get(ConnectionProfileId.New()).Should().BeNull();
+        _repo.Get(ConnectionProfileId.New()).ShouldBeNull();
     }
 
     [Fact]
@@ -66,14 +65,14 @@ public class ConnectionProfileRepositoryTests : IDisposable
 
         var deleted = _repo.Delete(profile.Id);
 
-        deleted.Should().BeTrue();
-        _repo.Get(profile.Id).Should().BeNull();
+        deleted.ShouldBeTrue();
+        _repo.Get(profile.Id).ShouldBeNull();
     }
 
     [Fact]
     public void Delete_ReturnsFalse_ForUnknownId()
     {
-        _repo.Delete(ConnectionProfileId.New()).Should().BeFalse();
+        _repo.Delete(ConnectionProfileId.New()).ShouldBeFalse();
     }
 
     public void Dispose() => _ctx.Dispose();
