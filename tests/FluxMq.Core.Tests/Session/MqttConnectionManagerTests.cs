@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Session;
@@ -36,8 +36,8 @@ public class MqttConnectionManagerTests
 
         var result = await manager.ConnectAsync(profile);
 
-        result.Should().BeSameAs(session);
-        manager.Sessions.Should().ContainKey(profile.Id);
+        result.ShouldBeSameAs(session);
+        manager.Sessions.ContainsKey(profile.Id).ShouldBeTrue();
     }
 
     [Fact]
@@ -50,8 +50,8 @@ public class MqttConnectionManagerTests
         await manager.ConnectAsync(profile);
 
         var act = async () => await manager.ConnectAsync(profile);
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*already active*");
+        var ex = await Should.ThrowAsync<InvalidOperationException>(act);
+        ex.Message.ShouldContain("already active");
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class MqttConnectionManagerTests
         await manager.ConnectAsync(profile);
         await manager.DisconnectAsync(profile.Id);
 
-        session.DisconnectCalled.Should().BeTrue();
+        session.DisconnectCalled.ShouldBeTrue();
     }
 
     [Fact]
@@ -77,8 +77,8 @@ public class MqttConnectionManagerTests
         await manager.ConnectAsync(profile);
         await manager.RemoveAsync(profile.Id);
 
-        manager.Sessions.Should().NotContainKey(profile.Id);
-        session.Disposed.Should().BeTrue();
+        manager.Sessions.ContainsKey(profile.Id).ShouldBeFalse();
+        session.Disposed.ShouldBeTrue();
     }
 
     [Fact]
@@ -97,7 +97,7 @@ public class MqttConnectionManagerTests
         // Give reconnect task a moment to fire Reconnecting state
         await Task.Delay(50);
 
-        received.Should().Contain(a => a.State == MqttSessionState.Faulted);
+        received.ShouldContain(a => a.State == MqttSessionState.Faulted);
     }
 
     [Fact]
@@ -125,8 +125,8 @@ public class MqttConnectionManagerTests
 
         await reconnectedTcs.Task.WaitAsync(TimeSpan.FromSeconds(2));
 
-        reconnectingStates.Should().Contain(MqttSessionState.Reconnecting);
-        reconnectingStates.Should().Contain(MqttSessionState.Connected);
+        reconnectingStates.ShouldContain(MqttSessionState.Reconnecting);
+        reconnectingStates.ShouldContain(MqttSessionState.Connected);
     }
 
     [Fact]
@@ -152,8 +152,8 @@ public class MqttConnectionManagerTests
         await Task.Delay(50);
         await manager.RemoveAsync(profile.Id);
 
-        manager.Sessions.Should().NotContainKey(profile.Id);
-        session.Disposed.Should().BeTrue();
+        manager.Sessions.ContainsKey(profile.Id).ShouldBeFalse();
+        session.Disposed.ShouldBeTrue();
 
         connectGate.Release(); // unblock so test teardown is clean
     }
@@ -178,7 +178,7 @@ public class MqttConnectionManagerTests
 
         await manager.DisposeAsync();
 
-        sessions.Should().AllSatisfy(s => s.Disposed.Should().BeTrue());
+        foreach (var item in sessions) { item.Disposed.ShouldBeTrue(); }
     }
 }
 

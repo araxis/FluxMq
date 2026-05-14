@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Pipeline.Components;
@@ -29,8 +29,8 @@ public sealed class RecordedSessionReplayFactoryTests
         await component.StartAsync();
         await sink.Completion;
 
-        received.Should().Equal("factory/1", "factory/2");
-        repository.RequestedSessionIds.Should().Equal(sessionId);
+        received.ShouldBe(new[] { "factory/1", "factory/2" });
+        repository.RequestedSessionIds.ShouldBe(new[] { sessionId });
     }
 
     [Fact]
@@ -48,8 +48,8 @@ public sealed class RecordedSessionReplayFactoryTests
             BoundedCapacity = 32
         });
 
-        component.Id.Should().Be(nodeId);
-        component.Speed.Should().Be(4);
+        component.Id.ShouldBe(nodeId);
+        component.Speed.ShouldBe(4);
     }
 
     [Fact]
@@ -67,8 +67,8 @@ public sealed class RecordedSessionReplayFactoryTests
         await component.StartAsync();
         await sink.Completion;
 
-        received.Should().BeEmpty();
-        component.Completion.IsCompletedSuccessfully.Should().BeTrue();
+        received.ShouldBeEmpty();
+        component.Completion.IsCompletedSuccessfully.ShouldBeTrue();
     }
 
     private static StoredMessage Stored(SessionId sessionId, string topic, DateTimeOffset receivedAt) => new()

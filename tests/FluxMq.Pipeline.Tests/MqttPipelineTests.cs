@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Models;
 using FluxMq.Pipeline;
 using System.Threading.Channels;
@@ -27,8 +27,8 @@ public class MqttPipelineTests
 
         await Task.WhenAll(sinkA.Completion, sinkB.Completion);
 
-        receivedA.Should().ContainSingle().Which.Topic.Should().Be("test/topic");
-        receivedB.Should().ContainSingle().Which.Topic.Should().Be("test/topic");
+        receivedA.ShouldHaveSingleItem().Topic.ShouldBe("test/topic");
+        receivedB.ShouldHaveSingleItem().Topic.ShouldBe("test/topic");
     }
 
     [Fact]
@@ -47,7 +47,7 @@ public class MqttPipelineTests
         channel.Writer.Complete();
         await sink.Completion;
 
-        received.Should().Equal("a", "b", "c");
+        received.ShouldBe(new[] { "a", "b", "c" });
     }
 
     [Fact]
@@ -69,7 +69,7 @@ public class MqttPipelineTests
 
         await sink.Completion;
 
-        received.Should().ContainSingle().Which.Topic.Should().Be("sensors/temp");
+        received.ShouldHaveSingleItem().Topic.ShouldBe("sensors/temp");
     }
 
     [Fact]

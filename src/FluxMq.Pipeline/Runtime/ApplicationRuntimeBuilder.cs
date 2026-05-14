@@ -32,27 +32,41 @@ public sealed class ApplicationRuntimeBuilder
         }
 
         var errors = new List<ApplicationRuntimeBuildError>();
-        var links = new List<IDisposable>();
+        var workflowLinks = new Dictionary<string, List<IDisposable>>();
         var linkedTargets = new HashSet<RuntimeNode>();
 
-        var resources = CreateNodes(null, definition.Resources, errors);
-        var workflows = definition.Workflows.ToDictionary(
+        var resourceNodes = CreateNodes(null, definition.Resources, errors);
+        var workflowNodes = definition.Workflows.ToDictionary(
             workflow => workflow.Key,
-            workflow => (IReadOnlyDictionary<NodeName, RuntimeNode>)CreateNodes(workflow.Key, workflow.Value, errors, resources));
+            workflow => (IReadOnlyDictionary<NodeName, RuntimeNode>)CreateNodes(workflow.Key, workflow.Value.Nodes, errors, resourceNodes));
 
         if (errors.Count == 0)
         {
-            LinkWorkflows(definition, resources, workflows, links, linkedTargets, errors);
+            foreach (var key in workflowNodes.Keys)
+                workflowLinks[key] = [];
+
+            LinkWorkflows(definition, resourceNodes, workflowNodes, workflowLinks, linkedTargets, errors);
         }
 
         if (errors.Count > 0)
         {
-            DisposeCreatedNodes(resources, workflows, links);
+            DisposeCreatedNodes(resourceNodes, workflowNodes, workflowLinks.Values.SelectMany(l => l).ToList());
             return ApplicationRuntimeBuildResult.Failed(validation, errors);
         }
 
+        var resources = resourceNodes.Values.ToArray();
+        var workflows = workflowNodes
+            .Select(kvp =>
+            {
+                var nodes = kvp.Value.Values.ToArray();
+                var entryNodes = nodes.Where(n => !linkedTargets.Contains(n)).ToArray();
+                return new Workflow(new WorkflowName(kvp.Key), nodes, workflowLinks[kvp.Key], entryNodes);
+            })
+            .ToArray();
+        var resourceEntryNodes = resources.Where(n => !linkedTargets.Contains(n)).ToArray();
+
         return ApplicationRuntimeBuildResult.Succeeded(
-            new ApplicationRuntime(resources, workflows, links, FindEntryNodes(resources, workflows, linkedTargets)),
+            new ApplicationRuntime(resources, workflows, resourceEntryNodes),
             validation);
     }
 
@@ -63,7 +77,6 @@ public sealed class ApplicationRuntimeBuilder
         IReadOnlyDictionary<NodeName, RuntimeNode>? resources = null)
     {
         var nodes = new Dictionary<NodeName, RuntimeNode>();
-        // Resources see themselves so a resource may reference an earlier-built resource.
         var resourceView = resources ?? nodes;
 
         foreach (var definition in definitions)
@@ -82,11 +95,12 @@ public sealed class ApplicationRuntimeBuilder
 
             try
             {
-                nodes.Add(nodeName, factory(new RuntimeNodeFactoryContext(
+                var runtimeNode = factory(new RuntimeNodeFactoryContext(
                     nodeName,
                     definition.Value,
                     workflowName,
-                    resourceView)));
+                    resourceView));
+                nodes.Add(nodeName, runtimeNode with { Phase = definition.Value.Phase });
             }
             catch (Exception exception)
             {
@@ -105,7 +119,7 @@ public sealed class ApplicationRuntimeBuilder
         ApplicationDefinition definition,
         IReadOnlyDictionary<NodeName, RuntimeNode> resources,
         IReadOnlyDictionary<string, IReadOnlyDictionary<NodeName, RuntimeNode>> workflows,
-        List<IDisposable> links,
+        Dictionary<string, List<IDisposable>> workflowLinks,
         HashSet<RuntimeNode> linkedTargets,
         List<ApplicationRuntimeBuildError> errors)
     {
@@ -113,16 +127,18 @@ public sealed class ApplicationRuntimeBuilder
         {
             var workflowName = workflowDefinition.Key;
             var workflowNodes = workflows[workflowName];
+            var links = workflowLinks[workflowName];
 
-            foreach (var targetDefinition in workflowDefinition.Value)
+            foreach (var targetDefinition in workflowDefinition.Value.Nodes)
             {
                 var targetName = new NodeName(targetDefinition.Key);
                 var targetNode = workflowNodes[targetName];
 
-                foreach (var portLinks in targetDefinition.Value.GetAllPortLinks())
+                foreach (var portLinks in targetDefinition.Value.GetAllPortLinks(workflowName))
                 {
                     var targetPortName = new PortName(portLinks.Key);
-                    if (!targetNode.Inputs.TryGetValue(targetPortName, out var input))
+                    var input = targetNode.FindInput(targetPortName);
+                    if (input is null)
                     {
                         errors.Add(new(
                             ApplicationRuntimeBuildErrorCode.MissingInputPort,
@@ -135,18 +151,19 @@ public sealed class ApplicationRuntimeBuilder
 
                     foreach (var link in portLinks.Value)
                     {
-                        if (!TryFindSource(link.From.Node, workflowNodes, resources, out var sourceNode))
+                        if (!TryFindSource(link.From, workflows, resources, out var sourceNode))
                         {
                             continue;
                         }
 
-                        if (!sourceNode.Outputs.TryGetValue(link.From.Port, out var output))
+                        var output = sourceNode.FindOutput(link.From.Port);
+                        if (output is null)
                         {
                             errors.Add(new(
                                 ApplicationRuntimeBuildErrorCode.MissingOutputPort,
-                                $"Node '{sourceNode.Name}' does not expose output port '{link.From.Port}'.",
+                                $"Node '{sourceNode.Address}' does not expose output port '{link.From.Port}'.",
                                 workflowName,
-                                sourceNode.Name,
+                                sourceNode.Address.Node,
                                 link.From.Port));
                             continue;
                         }
@@ -175,17 +192,22 @@ public sealed class ApplicationRuntimeBuilder
     }
 
     private static bool TryFindSource(
-        NodeName sourceName,
-        IReadOnlyDictionary<NodeName, RuntimeNode> workflowNodes,
+        PortAddress source,
+        IReadOnlyDictionary<string, IReadOnlyDictionary<NodeName, RuntimeNode>> workflows,
         IReadOnlyDictionary<NodeName, RuntimeNode> resources,
         out RuntimeNode sourceNode)
     {
-        if (workflowNodes.TryGetValue(sourceName, out sourceNode!))
+        IReadOnlyDictionary<NodeName, RuntimeNode>? scope = source.Scope == WellKnownScopes.Resources
+            ? resources
+            : workflows.GetValueOrDefault(source.Scope);
+
+        if (scope is null)
         {
-            return true;
+            sourceNode = null!;
+            return false;
         }
 
-        return resources.TryGetValue(sourceName, out sourceNode!);
+        return scope.TryGetValue(source.Node, out sourceNode!);
     }
 
     private static void DisposeCreatedNodes(
@@ -193,19 +215,14 @@ public sealed class ApplicationRuntimeBuilder
         IReadOnlyDictionary<string, IReadOnlyDictionary<NodeName, RuntimeNode>> workflows,
         List<IDisposable> links)
     {
-        using var runtime = new ApplicationRuntime(resources, workflows, links);
+        foreach (var link in links)
+            link.Dispose();
+
+        foreach (var disposable in workflows.Values.SelectMany(wf => wf.Values).Select(n => n.Node).OfType<IDisposable>())
+            disposable.Dispose();
+
+        foreach (var disposable in resources.Values.Select(n => n.Node).OfType<IDisposable>())
+            disposable.Dispose();
     }
 
-    private static IReadOnlyList<RuntimeNode> FindEntryNodes(
-        IReadOnlyDictionary<NodeName, RuntimeNode> resources,
-        IReadOnlyDictionary<string, IReadOnlyDictionary<NodeName, RuntimeNode>> workflows,
-        HashSet<RuntimeNode> linkedTargets)
-    {
-        var nodes = resources.Values
-            .Concat(workflows.Values.SelectMany(workflow => workflow.Values))
-            .Where(node => !linkedTargets.Contains(node))
-            .ToArray();
-
-        return nodes;
-    }
 }

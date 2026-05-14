@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Pipeline.Components;
 using FluxMq.Pipeline.Components.MessageSource;
 using System.Threading.Tasks.Dataflow;
@@ -15,7 +15,7 @@ public sealed class MqttConnectionComponentTests
 
         await component.StartAsync();
 
-        session.ConnectCalls.Should().Be(1);
+        session.ConnectCalls.ShouldBe(1);
     }
 
     [Fact]
@@ -27,7 +27,7 @@ public sealed class MqttConnectionComponentTests
         await component.StartAsync();
         await component.StartAsync();
 
-        session.ConnectCalls.Should().Be(1);
+        session.ConnectCalls.ShouldBe(1);
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public sealed class MqttConnectionComponentTests
         var session = new TestMqttSession();
         var component = new MqttConnectionComponent(session);
 
-        component.Session.Should().BeSameAs(session);
+        component.Session.ShouldBeSameAs(session);
     }
 
     [Fact]
@@ -47,7 +47,7 @@ public sealed class MqttConnectionComponentTests
 
         await component.DisposeAsync();
 
-        session.DisposeCalls.Should().Be(1);
+        session.DisposeCalls.ShouldBe(1);
     }
 
     [Fact]
@@ -58,7 +58,7 @@ public sealed class MqttConnectionComponentTests
 
         await component.DisposeAsync();
 
-        session.DisposeCalls.Should().Be(0);
+        session.DisposeCalls.ShouldBe(0);
     }
 
     [Fact]
@@ -73,9 +73,10 @@ public sealed class MqttConnectionComponentTests
         component.Fault(failure);
 
         var act = async () => await component.Completion;
-        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("boom");
+        var ex = await Should.ThrowAsync<InvalidOperationException>(act);
+        ex.Message.ShouldBe("boom");
         await sink.Completion;
 
-        errors.Should().ContainSingle().Which.Code.Should().Be(FlowErrorCodes.NodeFaulted);
+        errors.ShouldHaveSingleItem().Code.ShouldBe(FlowErrorCodes.NodeFaulted);
     }
 }

@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Pipeline.Definitions;
 using System.Text.Json;
 
@@ -19,22 +19,28 @@ public sealed class FlowApplicationDefinitionValidatorTests
             },
             Workflows =
             {
-                ["observeTraffic"] = new()
+                ["observeTraffic"] = new WorkflowDefinition
                 {
-                    ["source"] = Node("mqtt.trigger"),
-                    ["metrics"] = NodeWithPort("mqtt.metrics-sink", "Input", "\"source.Output\"")
+                    Nodes =
+                    {
+                        ["source"] = Node("mqtt.trigger"),
+                        ["metrics"] = NodeWithPort("mqtt.metrics-sink", "Input", "\"source.Output\"")
+                    }
                 },
-                ["recordTraffic"] = new()
+                ["recordTraffic"] = new WorkflowDefinition
                 {
-                    ["recorder"] = NodeWithPort("mqtt.recording-sink", "Connection", "\"localBroker.Output\"")
+                    Nodes =
+                    {
+                        ["recorder"] = NodeWithPort("mqtt.recording-sink", "Connection", "\"$resources.localBroker.Output\"")
+                    }
                 }
             }
         };
 
         var result = _validator.Validate(definition);
 
-        result.IsValid.Should().BeTrue();
-        result.Errors.Should().BeEmpty();
+        result.IsValid.ShouldBeTrue();
+        result.Errors.ShouldBeEmpty();
     }
 
     [Fact]
@@ -42,9 +48,8 @@ public sealed class FlowApplicationDefinitionValidatorTests
     {
         var result = _validator.Validate(new ApplicationDefinition());
 
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().ContainSingle()
-            .Which.Code.Should().Be(ApplicationDefinitionValidationErrorCode.EmptyDefinition);
+        result.IsValid.ShouldBeFalse();
+        result.Errors.ShouldHaveSingleItem().Code.ShouldBe(ApplicationDefinitionValidationErrorCode.EmptyDefinition);
     }
 
     [Fact]
@@ -54,13 +59,13 @@ public sealed class FlowApplicationDefinitionValidatorTests
         {
             Workflows =
             {
-                ["empty"] = []
+                ["empty"] = new WorkflowDefinition()
             }
         };
 
         var result = _validator.Validate(definition);
 
-        result.Errors.Should().Contain(error => error.Code == ApplicationDefinitionValidationErrorCode.EmptyWorkflow);
+        result.Errors.ShouldContain(error => error.Code == ApplicationDefinitionValidationErrorCode.EmptyWorkflow);
     }
 
     [Fact]
@@ -70,11 +75,14 @@ public sealed class FlowApplicationDefinitionValidatorTests
         {
             Workflows =
             {
-                ["flow"] = new()
+                ["flow"] = new WorkflowDefinition
                 {
-                    ["node"] = new NodeDefinition
+                    Nodes =
                     {
-                        Type = default
+                        ["node"] = new NodeDefinition
+                        {
+                            Type = default
+                        }
                     }
                 }
             }
@@ -82,7 +90,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        result.Errors.Should().Contain(error => error.Code == ApplicationDefinitionValidationErrorCode.EmptyNodeType);
+        result.Errors.ShouldContain(error => error.Code == ApplicationDefinitionValidationErrorCode.EmptyNodeType);
     }
 
     [Fact]
@@ -92,16 +100,19 @@ public sealed class FlowApplicationDefinitionValidatorTests
         {
             Workflows =
             {
-                ["flow"] = new()
+                ["flow"] = new WorkflowDefinition
                 {
-                    ["metrics"] = NodeWithPort("mqtt.metrics-sink", "Input", "\"missing.Output\"")
+                    Nodes =
+                    {
+                        ["metrics"] = NodeWithPort("mqtt.metrics-sink", "Input", "\"missing.Output\"")
+                    }
                 }
             }
         };
 
         var result = _validator.Validate(definition);
 
-        result.Errors.Should().Contain(error => error.Code == ApplicationDefinitionValidationErrorCode.MissingSourceNode);
+        result.Errors.ShouldContain(error => error.Code == ApplicationDefinitionValidationErrorCode.MissingSourceNode);
     }
 
     [Fact]
@@ -115,16 +126,19 @@ public sealed class FlowApplicationDefinitionValidatorTests
             },
             Workflows =
             {
-                ["flow"] = new()
+                ["flow"] = new WorkflowDefinition
                 {
-                    ["source"] = NodeWithPort("mqtt.trigger", "Connection", "\"broker.Output\"")
+                    Nodes =
+                    {
+                        ["source"] = NodeWithPort("mqtt.trigger", "Connection", "\"$resources.broker.Output\"")
+                    }
                 }
             }
         };
 
         var result = _validator.Validate(definition);
 
-        result.IsValid.Should().BeTrue();
+        result.IsValid.ShouldBeTrue();
     }
 
     [Fact]
@@ -134,16 +148,19 @@ public sealed class FlowApplicationDefinitionValidatorTests
         {
             Workflows =
             {
-                ["flow"] = new()
+                ["flow"] = new WorkflowDefinition
                 {
-                    ["metrics"] = NodeWithPort("mqtt.metrics-sink", "Input", "123")
+                    Nodes =
+                    {
+                        ["metrics"] = NodeWithPort("mqtt.metrics-sink", "Input", "123")
+                    }
                 }
             }
         };
 
         var result = _validator.Validate(definition);
 
-        result.Errors.Should().Contain(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidLink);
+        result.Errors.ShouldContain(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidLink);
     }
 
     [Fact]
@@ -153,17 +170,20 @@ public sealed class FlowApplicationDefinitionValidatorTests
         {
             Workflows =
             {
-                ["flow"] = new()
+                ["flow"] = new WorkflowDefinition
                 {
-                    ["source"] = Node("mqtt.trigger"),
-                    ["metrics"] = NodeWithPort("mqtt.metrics-sink", "Input", "\"source.\"")
+                    Nodes =
+                    {
+                        ["source"] = Node("mqtt.trigger"),
+                        ["metrics"] = NodeWithPort("mqtt.metrics-sink", "Input", "\"source.\"")
+                    }
                 }
             }
         };
 
         var result = _validator.Validate(definition);
 
-        result.Errors.Should().Contain(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidLink);
+        result.Errors.ShouldContain(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidLink);
     }
 
     [Fact]
@@ -173,17 +193,20 @@ public sealed class FlowApplicationDefinitionValidatorTests
         {
             Workflows =
             {
-                ["flow"] = new()
+                ["flow"] = new WorkflowDefinition
                 {
-                    ["source"] = Node("mqtt.trigger"),
-                    ["metrics"] = NodeWithPort("mqtt.metrics-sink", "Input", "[\"source.Output\", \"source.Output\"]")
+                    Nodes =
+                    {
+                        ["source"] = Node("mqtt.trigger"),
+                        ["metrics"] = NodeWithPort("mqtt.metrics-sink", "Input", "[\"source.Output\", \"source.Output\"]")
+                    }
                 }
             }
         };
 
         var result = _validator.Validate(definition);
 
-        result.Errors.Should().Contain(error => error.Code == ApplicationDefinitionValidationErrorCode.DuplicateLink);
+        result.Errors.ShouldContain(error => error.Code == ApplicationDefinitionValidationErrorCode.DuplicateLink);
     }
 
     private static NodeDefinition Node(string type) => new()

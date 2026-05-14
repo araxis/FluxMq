@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Payloads;
@@ -23,12 +23,13 @@ public sealed class PipelineComponentFactoryTests
         var registry = new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories();
 
-        registry.Factories.Keys.Should().BeEquivalentTo([
+        registry.Factories.Keys.ShouldBe(new[]
+        {
             PipelineFlowNodeTypes.Connection,
             PipelineFlowNodeTypes.Trigger,
             PipelineFlowNodeTypes.PayloadInspector,
             PipelineFlowNodeTypes.MetricsSink
-        ]);
+        }, ignoreOrder: true);
     }
 
     [Fact]
@@ -39,40 +40,43 @@ public sealed class PipelineComponentFactoryTests
 
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories()
-            .Register(new NodeType("test.source"), (name, _) =>
+            .Register(new NodeType("test.source"), (address, _) =>
             {
                 source = new TestSourceNode();
-                return SourceNode(name, source);
+                return SourceNode(address, source);
             })
-            .Register(new NodeType("test.inspected-sink"), (name, _) =>
+            .Register(new NodeType("test.inspected-sink"), (address, _) =>
             {
                 sink = new TestSinkNode<InspectedMqttMessage>();
-                return SinkNode(name, sink);
+                return SinkNode(address, sink);
             }));
 
         var result = builder.Build(new ApplicationDefinition
         {
             Workflows =
             {
-                ["flow"] = new()
+                ["flow"] = new WorkflowDefinition
                 {
-                    ["source"] = Node("test.source"),
-                    ["inspect"] = NodeWithPort(PipelineFlowNodeTypes.PayloadInspector, "Input", "\"source.Output\""),
-                    ["sink"] = NodeWithPort("test.inspected-sink", "Input", "\"inspect.Output\"")
+                    Nodes =
+                    {
+                        ["source"] = Node("test.source"),
+                        ["inspect"] = NodeWithPort(PipelineFlowNodeTypes.PayloadInspector, "Input", "\"source.Output\""),
+                        ["sink"] = NodeWithPort("test.inspected-sink", "Input", "\"inspect.Output\"")
+                    }
                 }
             }
         });
 
-        result.IsSuccess.Should().BeTrue();
+        result.IsSuccess.ShouldBeTrue();
 
         source!.Post(new MqttEnvelope { Topic = "factory/json", Payload = """{"value":1}"""u8.ToArray() });
         result.Runtime!.Complete();
 
         await result.Runtime.Completion;
 
-        sink!.Values.Should().ContainSingle();
-        sink.Values[0].Envelope.Topic.Should().Be("factory/json");
-        sink.Values[0].Payload.Format.Should().Be(PayloadFormat.Json);
+        sink!.Values.ShouldHaveSingleItem();
+        sink.Values[0].Envelope.Topic.ShouldBe("factory/json");
+        sink.Values[0].Payload.Format.ShouldBe(PayloadFormat.Json);
     }
 
     [Fact]
@@ -83,31 +87,34 @@ public sealed class PipelineComponentFactoryTests
 
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories()
-            .Register(new NodeType("test.source"), (name, _) =>
+            .Register(new NodeType("test.source"), (address, _) =>
             {
                 source = new TestSourceNode();
-                return SourceNode(name, source);
+                return SourceNode(address, source);
             })
-            .Register(new NodeType("test.snapshot-sink"), (name, _) =>
+            .Register(new NodeType("test.snapshot-sink"), (address, _) =>
             {
                 sink = new TestSinkNode<MqttMetricsSnapshot>();
-                return SinkNode(name, sink);
+                return SinkNode(address, sink);
             }));
 
         var result = builder.Build(new ApplicationDefinition
         {
             Workflows =
             {
-                ["flow"] = new()
+                ["flow"] = new WorkflowDefinition
                 {
-                    ["source"] = Node("test.source"),
-                    ["metrics"] = NodeWithPort(PipelineFlowNodeTypes.MetricsSink, "Input", "\"source.Output\""),
-                    ["sink"] = NodeWithPort("test.snapshot-sink", "Input", "\"metrics.Snapshots\"")
+                    Nodes =
+                    {
+                        ["source"] = Node("test.source"),
+                        ["metrics"] = NodeWithPort(PipelineFlowNodeTypes.MetricsSink, "Input", "\"source.Output\""),
+                        ["sink"] = NodeWithPort("test.snapshot-sink", "Input", "\"metrics.Snapshots\"")
+                    }
                 }
             }
         });
 
-        result.IsSuccess.Should().BeTrue();
+        result.IsSuccess.ShouldBeTrue();
 
         source!.Post(new MqttEnvelope { Topic = "factory/one", Payload = [1, 2] });
         source.Post(new MqttEnvelope { Topic = "factory/two", Payload = [1, 2, 3] });
@@ -115,9 +122,9 @@ public sealed class PipelineComponentFactoryTests
 
         await result.Runtime.Completion;
 
-        sink!.Values.Should().HaveCount(2);
-        sink.Values[^1].MessageCount.Should().Be(2);
-        sink.Values[^1].TotalPayloadBytes.Should().Be(5);
+        sink!.Values.Count.ShouldBe(2);
+        sink.Values[^1].MessageCount.ShouldBe(2);
+        sink.Values[^1].TotalPayloadBytes.ShouldBe(5);
     }
 
     [Fact]
@@ -132,10 +139,10 @@ public sealed class PipelineComponentFactoryTests
                 session = new FakeMqttSession();
                 return session;
             })
-            .Register(new NodeType("test.snapshot-sink"), (name, _) =>
+            .Register(new NodeType("test.snapshot-sink"), (address, _) =>
             {
                 sink = new TestSinkNode<MqttMetricsSnapshot>();
-                return SinkNode(name, sink);
+                return SinkNode(address, sink);
             }));
 
         var result = builder.Build(new ApplicationDefinition
@@ -153,31 +160,34 @@ public sealed class PipelineComponentFactoryTests
             },
             Workflows =
             {
-                ["flow"] = new()
+                ["flow"] = new WorkflowDefinition
                 {
-                    ["trigger"] = new NodeDefinition
+                    Nodes =
                     {
-                        Type = PipelineFlowNodeTypes.Trigger,
-                        Configuration =
+                        ["trigger"] = new NodeDefinition
                         {
-                            ["connection"] = JsonDocument.Parse("\"broker\"").RootElement.Clone(),
-                            ["subscriptions"] = JsonDocument.Parse("""["factory/#"]""").RootElement.Clone()
-                        }
-                    },
-                    ["metrics"] = NodeWithPort(PipelineFlowNodeTypes.MetricsSink, "Input", "\"trigger.Output\""),
-                    ["sink"] = NodeWithPort("test.snapshot-sink", "Input", "\"metrics.Snapshots\"")
+                            Type = PipelineFlowNodeTypes.Trigger,
+                            Configuration =
+                            {
+                                ["connection"] = JsonDocument.Parse("\"broker\"").RootElement.Clone(),
+                                ["subscriptions"] = JsonDocument.Parse("""["factory/#"]""").RootElement.Clone()
+                            }
+                        },
+                        ["metrics"] = NodeWithPort(PipelineFlowNodeTypes.MetricsSink, "Input", "\"trigger.Output\""),
+                        ["sink"] = NodeWithPort("test.snapshot-sink", "Input", "\"metrics.Snapshots\"")
+                    }
                 }
             }
         });
 
-        result.IsSuccess.Should().BeTrue();
+        result.IsSuccess.ShouldBeTrue();
         using var runtime = result.Runtime!;
 
         await runtime.StartAsync();
 
-        session.Should().NotBeNull();
-        session!.ConnectCalls.Should().Be(1);
-        session.Subscriptions.Should().ContainSingle(subscription =>
+        session.ShouldNotBeNull();
+        session!.ConnectCalls.ShouldBe(1);
+        session.Subscriptions.ShouldContain(subscription =>
             subscription.TopicFilter == "factory/#" &&
             subscription.QualityOfService == MqttQualityOfServiceLevel.AtMostOnce);
 
@@ -190,9 +200,9 @@ public sealed class PipelineComponentFactoryTests
         session.CompleteMessages();
         await runtime.Completion;
 
-        sink!.Values.Should().NotBeEmpty();
-        sink.Values[^1].MessageCount.Should().Be(1);
-        sink.Values[^1].TotalPayloadBytes.Should().Be(3);
+        sink!.Values.ShouldNotBeEmpty();
+        sink.Values[^1].MessageCount.ShouldBe(1);
+        sink.Values[^1].TotalPayloadBytes.ShouldBe(3);
     }
 
     [Fact]
@@ -205,22 +215,25 @@ public sealed class PipelineComponentFactoryTests
         {
             Workflows =
             {
-                ["flow"] = new()
+                ["flow"] = new WorkflowDefinition
                 {
-                    ["trigger"] = new NodeDefinition
+                    Nodes =
                     {
-                        Type = PipelineFlowNodeTypes.Trigger,
-                        Configuration =
+                        ["trigger"] = new NodeDefinition
                         {
-                            ["subscriptions"] = JsonDocument.Parse("""["#"]""").RootElement.Clone()
+                            Type = PipelineFlowNodeTypes.Trigger,
+                            Configuration =
+                            {
+                                ["subscriptions"] = JsonDocument.Parse("""["#"]""").RootElement.Clone()
+                            }
                         }
                     }
                 }
             }
         });
 
-        result.IsSuccess.Should().BeFalse();
-        result.Errors.Should().Contain(error => error.Message.Contains("connection"));
+        result.IsSuccess.ShouldBeFalse();
+        result.Errors.ShouldContain(error => error.Message.Contains("connection"));
     }
 
     [Fact]
@@ -233,42 +246,45 @@ public sealed class PipelineComponentFactoryTests
         {
             Workflows =
             {
-                ["flow"] = new()
+                ["flow"] = new WorkflowDefinition
                 {
-                    ["inspect"] = new NodeDefinition
+                    Nodes =
                     {
-                        Type = PipelineFlowNodeTypes.PayloadInspector,
-                        Configuration =
+                        ["inspect"] = new NodeDefinition
                         {
-                            ["boundedCapacity"] = JsonDocument.Parse("0").RootElement.Clone()
+                            Type = PipelineFlowNodeTypes.PayloadInspector,
+                            Configuration =
+                            {
+                                ["boundedCapacity"] = JsonDocument.Parse("0").RootElement.Clone()
+                            }
                         }
                     }
                 }
             }
         });
 
-        result.IsSuccess.Should().BeFalse();
-        result.Errors.Should().ContainSingle(error =>
+        result.IsSuccess.ShouldBeFalse();
+        result.Errors.ShouldContain(error =>
             error.Code == ApplicationRuntimeBuildErrorCode.FactoryFailed &&
             error.Message.Contains("boundedCapacity"));
     }
 
-    private static RuntimeNode SourceNode(NodeName name, TestSourceNode node)
+    private static RuntimeNode SourceNode(NodeAddress address, TestSourceNode node)
         => RuntimeNode.Create(
-            name,
+            address,
             node,
             outputs:
             [
-                new OutputPort<MqttEnvelope>(new PortName("Output"), node.Output)
+                new OutputPort<MqttEnvelope>(address.Port(new PortName("Output")), node.Output)
             ]);
 
-    private static RuntimeNode SinkNode<T>(NodeName name, TestSinkNode<T> node)
+    private static RuntimeNode SinkNode<T>(NodeAddress address, TestSinkNode<T> node)
         => RuntimeNode.Create(
-            name,
+            address,
             node,
             inputs:
             [
-                new InputPort<T>(new PortName("Input"), node.Input)
+                new InputPort<T>(address.Port(new PortName("Input")), node.Input)
             ]);
 
     private static NodeDefinition Node(string type) => new()

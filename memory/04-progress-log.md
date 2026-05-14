@@ -264,3 +264,52 @@ Build the first usable MAUI Blazor Hybrid desktop alpha in `FluxMq.UI`.
 ## Current Next Step
 
 Harden the alpha desktop workspace by exercising it against Mosquitto, then add publish support that reuses the shared MQTT connection resource.
+
+## 2026-05-14
+
+- Introduced phase-based lifecycle management for the pipeline runtime:
+  - Added `int Phase` (default `0`) to `NodeDefinition` and `RuntimeNode`.
+  - Builder stamps each `RuntimeNode.Phase` from `NodeDefinition.Phase` after the factory runs; factory code is unaffected.
+  - `ApplicationRuntime.StartAsync` and `Workflow.StartAsync` now iterate all nodes grouped by `Phase` ascending, awaiting each group before the next.
+  - Resources and workflow nodes are unified in the startup loop so a workflow node at a lower phase starts before a resource at a higher phase.
+  - Startup ordering is entirely a runtime concern; components do not declare their own phase.
+- Removed `IFlowStartable`:
+  - `StartAsync(CancellationToken = default) => Task.CompletedTask` moved to `IFlowNode` as a default interface method.
+  - `MqttConnectionComponent`, `MqttTriggerComponent`, and `ReplaySourceComponent` dropped `IFlowStartable` from their declarations.
+- Deleted `IPreExecutionProcessor` and `IPostExecutionProcessor` — marker-interface-on-component approach was tried and rejected in favour of config-driven phase ordering.
+- Committed as `850bc8b` on branch `feature/pipeline-runtime-model`.
+
+- Added workflow and application state tracking:
+  - `WorkflowState` enum: `Idle, Starting, Running, Stopping, Stopped, Faulted`.
+  - `ApplicationState` enum: same values.
+  - `WorkflowStateChanged` and `ApplicationStateChanged` sealed records carrying previous/current state, optional exception, and timestamp.
+  - `Workflow.StateChanges` and `ApplicationRuntime.StateChanges` exposed as `ISourceBlock<T>` backed by `BroadcastBlock<T>` — consistent with `IFlowNode.Errors`; consumers use `LinkTo` to subscribe.
+  - `Workflow.State` and `ApplicationRuntime.State` properties expose the current state.
+  - Transitions driven by `StartAsync` (Idle→Starting→Running), `Complete` (→Stopping), `Fault` (→Faulted); a `Completion` continuation fires Stopped or Faulted when the dataflow graph drains naturally.
+  - State transitions are lock-guarded to prevent races between concurrent callers.
+  - Committed as `15ea5b5` on branch `feature/pipeline-runtime-model`.
+
+- Added tests for workflow and application state tracking (`WorkflowStateTests`, `ApplicationRuntimeStateTests`):
+  - 17 new tests covering all state transitions (Idle→Starting→Running→Stopping→Stopped, Faulted).
+  - Verifies `ISourceBlock<T>` state streams deliver correct previous/current values and exceptions.
+  - Verifies per-workflow state is updated when the runtime drives phase-based startup.
+  - Fixed `ApplicationRuntime.StartAsync` to call `workflow.BeginStartup()` / `workflow.CompleteStartup()` (internal helpers on `Workflow`) so workflow state is advanced correctly even when the runtime bypasses `Workflow.StartAsync()` for phase ordering.
+  - 102/102 tests passing.
+  - Committed as `9da8eb4` on branch `feature/pipeline-runtime-model`.
+
+- Migrated all test projects from FluentAssertions to Shouldly:
+  - FluentAssertions v8 moved to a commercial license; replaced with Shouldly (MIT) across all 7 test projects.
+  - Updated all test `.csproj` files: removed `FluentAssertions` package reference, added `Shouldly 4.2.1`.
+  - Rewrote assertions in 33 test files to use Shouldly APIs (`ShouldBe`, `ShouldBeTrue`, `ShouldContain`, `ShouldHaveSingleItem`, `Should.ThrowAsync<T>`, etc.).
+  - Three Shouldly API differences required specific fixes:
+    - `ShouldContainKey`/`ShouldNotContainKey` do not overload `IReadOnlyDictionary<K,V>` → replaced with `ContainsKey().ShouldBeTrue()/ShouldBeFalse()`.
+    - `Search(null).Count` → `Search(null).Count()` (Count is a LINQ method, not a property).
+    - `ShouldHaveSingleItem(predicate)` takes no args → replaced with `ShouldContain(predicate)`.
+  - 192/192 tests passing across all projects.
+
+- Fixed two classes of flaky tests:
+  - **`Complete_TransitionsToStopping` race** (`WorkflowStateTests` and `ApplicationRuntimeStateTests`): `TestNode.Complete()` fires synchronously, allowing the Stopped continuation to race past the Stopping state assertion. Fixed by subscribing to the `StateChanges` stream before calling `Complete()` and draining until the Stopping event arrives, which preserves event order regardless of scheduling.
+  - **`MqttConditionRouterComponent.Fault_PublishesErrorAndFaultsCompletion` race**: Two issues:
+    1. `_errors` was a `BroadcastBlock<FlowError>` which offers messages asynchronously; `ExecuteSynchronously` continuation could call `_errors.Complete()` before delivery completed. Changed to `BufferBlock<FlowError>` which guarantees all queued messages drain before completion.
+    2. `component.Completion` was `Task.WhenAll(_block, _whenTrue, _whenFalse)`. When `_block` faults it propagates to `_whenTrue` and `_whenFalse` via `PropagateCompletion`, so WhenAll had three faulted tasks with multiple inner exceptions — `await` throws `AggregateException` instead of the unwrapped `InvalidOperationException`. Fixed by changing `Completion` to `_block.Completion` only; output port completions propagate naturally through linked targets.
+  - 192/192 tests passing, stable across 3 consecutive full-suite runs under parallel test load.

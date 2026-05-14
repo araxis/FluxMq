@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.App;
 using Microsoft.Extensions.Configuration;
 using System.Text;
@@ -32,9 +32,9 @@ public sealed class FlowApplicationConfigurationLoaderTests
 
         var definition = new FlowApplicationConfigurationLoader().Load(configuration);
 
-        definition.Workflows.Should().ContainKey("observe");
-        definition.Workflows["observe"]["inspect"].Type.Value.Should().Be("mqtt.payload-inspector");
-        definition.Workflows["observe"]["inspect"].Configuration["boundedCapacity"].GetInt32().Should().Be(250);
+        definition.Workflows.ShouldContainKey("observe");
+        definition.Workflows["observe"].Nodes["inspect"].Type.Value.ShouldBe("mqtt.payload-inspector");
+        definition.Workflows["observe"].Nodes["inspect"].Configuration["boundedCapacity"].GetInt32().ShouldBe(250);
     }
 
     [Fact]
@@ -44,8 +44,8 @@ public sealed class FlowApplicationConfigurationLoaderTests
 
         var act = () => new FlowApplicationConfigurationLoader().Load(configuration);
 
-        act.Should().Throw<FlowApplicationConfigurationException>()
-            .WithMessage("*FluxMq:FlowApplication*");
+        var ex = Should.Throw<FlowApplicationConfigurationException>(act);
+        ex.Message.ShouldContain("FluxMq:FlowApplication");
     }
 
     private static IConfiguration BuildConfiguration(string json)

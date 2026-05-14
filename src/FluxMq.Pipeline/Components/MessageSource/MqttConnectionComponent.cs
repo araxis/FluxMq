@@ -17,7 +17,7 @@ namespace FluxMq.Pipeline.Components.MessageSource;
 /// instances reference a connection by name, install their own filters against the
 /// session, and link their inputs to <see cref="Messages"/>.
 /// </summary>
-public sealed class MqttConnectionComponent : IFlowNode, IFlowStartable, IAsyncDisposable
+public sealed class MqttConnectionComponent : IFlowNode, IAsyncDisposable
 {
     private readonly IMqttSession _session;
     private readonly BroadcastBlock<MqttEnvelope> _broadcast;

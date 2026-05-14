@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Pipeline.Components;
 using FluxMq.Pipeline.Definitions;
@@ -16,31 +16,34 @@ public sealed class FlowApplicationRuntimeBuilderTests
         TestSinkNode<int>? sink = null;
 
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
-            .Register(new NodeType("test.source"), (name, _) =>
+            .Register(new NodeType("test.source"), (address, _) =>
             {
                 source = new TestSourceNode();
-                return SourceNode(name, source);
+                return SourceNode(address, source);
             })
-            .Register(new NodeType("test.sink"), (name, _) =>
+            .Register(new NodeType("test.sink"), (address, _) =>
             {
                 sink = new TestSinkNode<int>();
-                return SinkNode(name, sink);
+                return SinkNode(address, sink);
             }));
 
         var result = builder.Build(new ApplicationDefinition
         {
             Workflows =
             {
-                ["flow"] = new()
+                ["flow"] = new WorkflowDefinition
                 {
-                    ["source"] = Node("test.source"),
-                    ["sink"] = NodeWithPort("test.sink", "Input", "\"source.Output\"")
+                    Nodes =
+                    {
+                        ["source"] = Node("test.source"),
+                        ["sink"] = NodeWithPort("test.sink", "Input", "\"source.Output\"")
+                    }
                 }
             }
         });
 
-        result.IsSuccess.Should().BeTrue();
-        result.Errors.Should().BeEmpty();
+        result.IsSuccess.ShouldBeTrue();
+        result.Errors.ShouldBeEmpty();
 
         source!.Post(1);
         source.Post(2);
@@ -48,7 +51,7 @@ public sealed class FlowApplicationRuntimeBuilderTests
 
         await result.Runtime.Completion;
 
-        sink!.Values.Should().Equal(1, 2);
+        sink!.Values.ShouldBe(new[] { 1, 2 });
     }
 
     [Fact]
@@ -58,15 +61,15 @@ public sealed class FlowApplicationRuntimeBuilderTests
         TestSinkNode<int>? sink = null;
 
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
-            .Register(new NodeType("test.resource"), (name, _) =>
+            .Register(new NodeType("test.resource"), (address, _) =>
             {
                 resource = new TestSourceNode();
-                return SourceNode(name, resource);
+                return SourceNode(address, resource);
             })
-            .Register(new NodeType("test.sink"), (name, _) =>
+            .Register(new NodeType("test.sink"), (address, _) =>
             {
                 sink = new TestSinkNode<int>();
-                return SinkNode(name, sink);
+                return SinkNode(address, sink);
             }));
 
         var result = builder.Build(new ApplicationDefinition
@@ -77,21 +80,24 @@ public sealed class FlowApplicationRuntimeBuilderTests
             },
             Workflows =
             {
-                ["flow"] = new()
+                ["flow"] = new WorkflowDefinition
                 {
-                    ["sink"] = NodeWithPort("test.sink", "Input", "\"shared.Output\"")
+                    Nodes =
+                    {
+                        ["sink"] = NodeWithPort("test.sink", "Input", "\"$resources.shared.Output\"")
+                    }
                 }
             }
         });
 
-        result.IsSuccess.Should().BeTrue();
+        result.IsSuccess.ShouldBeTrue();
 
         resource!.Post(42);
         result.Runtime!.Complete();
 
         await result.Runtime.Completion;
 
-        sink!.Values.Should().Equal(42);
+        sink!.Values.ShouldBe(new[] { 42 });
     }
 
     [Fact]
@@ -101,10 +107,9 @@ public sealed class FlowApplicationRuntimeBuilderTests
 
         var result = builder.Build(new ApplicationDefinition());
 
-        result.IsSuccess.Should().BeFalse();
-        result.Runtime.Should().BeNull();
-        result.Errors.Should().ContainSingle()
-            .Which.Code.Should().Be(ApplicationRuntimeBuildErrorCode.ValidationFailed);
+        result.IsSuccess.ShouldBeFalse();
+        result.Runtime.ShouldBeNull();
+        result.Errors.ShouldHaveSingleItem().Code.ShouldBe(ApplicationRuntimeBuildErrorCode.ValidationFailed);
     }
 
     [Fact]
@@ -116,62 +121,70 @@ public sealed class FlowApplicationRuntimeBuilderTests
         {
             Workflows =
             {
-                ["flow"] = new()
+                ["flow"] = new WorkflowDefinition
                 {
-                    ["source"] = Node("test.source")
+                    Nodes =
+                    {
+                        ["source"] = Node("test.source")
+                    }
                 }
             }
         });
 
-        result.IsSuccess.Should().BeFalse();
-        result.Errors.Should().ContainSingle()
-            .Which.Code.Should().Be(ApplicationRuntimeBuildErrorCode.UnknownNodeType);
+        result.IsSuccess.ShouldBeFalse();
+        result.Errors.ShouldHaveSingleItem().Code.ShouldBe(ApplicationRuntimeBuildErrorCode.UnknownNodeType);
     }
 
     [Fact]
     public void Build_ReturnsMissingInputPort()
     {
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
-            .Register(new NodeType("test.source"), (name, _) => SourceNode(name, new TestSourceNode()))
-            .Register(new NodeType("test.sink"), (name, _) => SinkNode(name, new TestSinkNode<int>())));
+            .Register(new NodeType("test.source"), (address, _) => SourceNode(address, new TestSourceNode()))
+            .Register(new NodeType("test.sink"), (address, _) => SinkNode(address, new TestSinkNode<int>())));
 
         var result = builder.Build(new ApplicationDefinition
         {
             Workflows =
             {
-                ["flow"] = new()
+                ["flow"] = new WorkflowDefinition
                 {
-                    ["source"] = Node("test.source"),
-                    ["sink"] = NodeWithPort("test.sink", "Unknown", "\"source.Output\"")
+                    Nodes =
+                    {
+                        ["source"] = Node("test.source"),
+                        ["sink"] = NodeWithPort("test.sink", "Unknown", "\"source.Output\"")
+                    }
                 }
             }
         });
 
-        result.IsSuccess.Should().BeFalse();
-        result.Errors.Should().ContainSingle(error => error.Code == ApplicationRuntimeBuildErrorCode.MissingInputPort);
+        result.IsSuccess.ShouldBeFalse();
+        result.Errors.ShouldContain(error => error.Code == ApplicationRuntimeBuildErrorCode.MissingInputPort);
     }
 
     [Fact]
     public void Build_ReturnsPortTypeMismatch()
     {
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
-            .Register(new NodeType("test.source"), (name, _) => SourceNode(name, new TestSourceNode()))
-            .Register(new NodeType("test.string-sink"), (name, _) => StringSinkNode(name, new TestSinkNode<string>())));
+            .Register(new NodeType("test.source"), (address, _) => SourceNode(address, new TestSourceNode()))
+            .Register(new NodeType("test.string-sink"), (address, _) => StringSinkNode(address, new TestSinkNode<string>())));
 
         var result = builder.Build(new ApplicationDefinition
         {
             Workflows =
             {
-                ["flow"] = new()
+                ["flow"] = new WorkflowDefinition
                 {
-                    ["source"] = Node("test.source"),
-                    ["sink"] = NodeWithPort("test.string-sink", "Input", "\"source.Output\"")
+                    Nodes =
+                    {
+                        ["source"] = Node("test.source"),
+                        ["sink"] = NodeWithPort("test.string-sink", "Input", "\"source.Output\"")
+                    }
                 }
             }
         });
 
-        result.IsSuccess.Should().BeFalse();
-        result.Errors.Should().ContainSingle(error => error.Code == ApplicationRuntimeBuildErrorCode.PortTypeMismatch);
+        result.IsSuccess.ShouldBeFalse();
+        result.Errors.ShouldContain(error => error.Code == ApplicationRuntimeBuildErrorCode.PortTypeMismatch);
     }
 
     [Fact]
@@ -182,7 +195,7 @@ public sealed class FlowApplicationRuntimeBuilderTests
             .Register(new NodeType("test.node"), context =>
             {
                 contexts.Add(context);
-                return SourceNode(context.Name, new TestSourceNode());
+                return SourceNode(context.Address, new TestSourceNode());
             }));
 
         var result = builder.Build(new ApplicationDefinition
@@ -193,16 +206,19 @@ public sealed class FlowApplicationRuntimeBuilderTests
             },
             Workflows =
             {
-                ["flow"] = new()
+                ["flow"] = new WorkflowDefinition
                 {
-                    ["source"] = Node("test.node")
+                    Nodes =
+                    {
+                        ["source"] = Node("test.node")
+                    }
                 }
             }
         });
 
-        result.IsSuccess.Should().BeTrue();
-        contexts.Should().ContainSingle(context => context.Name.Value == "shared" && context.IsResource && context.WorkflowName == null);
-        contexts.Should().ContainSingle(context => context.Name.Value == "source" && !context.IsResource && context.WorkflowName == "flow");
+        result.IsSuccess.ShouldBeTrue();
+        contexts.ShouldContain(context => context.Name.Value == "shared" && context.IsResource && context.WorkflowName == null);
+        contexts.ShouldContain(context => context.Name.Value == "source" && !context.IsResource && context.WorkflowName == "flow");
     }
 
     [Fact]
@@ -210,8 +226,8 @@ public sealed class FlowApplicationRuntimeBuilderTests
     {
         var disposalOrder = new List<string>();
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
-            .Register(new NodeType("test.resource"), (name, _) => DisposableNode(name, "resource", disposalOrder))
-            .Register(new NodeType("test.workflow"), (name, _) => DisposableNode(name, "workflow", disposalOrder)));
+            .Register(new NodeType("test.resource"), (address, _) => DisposableNode(address, "resource", disposalOrder))
+            .Register(new NodeType("test.workflow"), (address, _) => DisposableNode(address, "workflow", disposalOrder)));
 
         var result = builder.Build(new ApplicationDefinition
         {
@@ -221,18 +237,21 @@ public sealed class FlowApplicationRuntimeBuilderTests
             },
             Workflows =
             {
-                ["flow"] = new()
+                ["flow"] = new WorkflowDefinition
                 {
-                    ["worker"] = Node("test.workflow")
+                    Nodes =
+                    {
+                        ["worker"] = Node("test.workflow")
+                    }
                 }
             }
         });
 
-        result.IsSuccess.Should().BeTrue();
+        result.IsSuccess.ShouldBeTrue();
 
         result.Runtime!.Dispose();
 
-        disposalOrder.Should().Equal("workflow", "resource");
+        disposalOrder.ShouldBe(new[] { "workflow", "resource" });
     }
 
     [Fact]
@@ -240,8 +259,8 @@ public sealed class FlowApplicationRuntimeBuilderTests
     {
         var startOrder = new List<string>();
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
-            .Register(new NodeType("test.resource"), (name, _) => StartableNode(name, "resource", startOrder))
-            .Register(new NodeType("test.workflow"), (name, _) => StartableNode(name, "workflow", startOrder)));
+            .Register(new NodeType("test.resource"), (address, _) => StartableNode(address, "resource", startOrder))
+            .Register(new NodeType("test.workflow"), (address, _) => StartableNode(address, "workflow", startOrder)));
 
         var result = builder.Build(new ApplicationDefinition
         {
@@ -251,52 +270,55 @@ public sealed class FlowApplicationRuntimeBuilderTests
             },
             Workflows =
             {
-                ["flow"] = new()
+                ["flow"] = new WorkflowDefinition
                 {
-                    ["worker"] = Node("test.workflow")
+                    Nodes =
+                    {
+                        ["worker"] = Node("test.workflow")
+                    }
                 }
             }
         });
 
-        result.IsSuccess.Should().BeTrue();
+        result.IsSuccess.ShouldBeTrue();
 
         await result.Runtime!.StartAsync();
 
-        startOrder.Should().Equal("resource", "workflow");
+        startOrder.ShouldBe(new[] { "resource", "workflow" });
     }
 
-    private static RuntimeNode SourceNode(NodeName name, TestSourceNode node)
+    private static RuntimeNode SourceNode(NodeAddress address, TestSourceNode node)
         => RuntimeNode.Create(
-            name,
+            address,
             node,
             outputs:
             [
-                new OutputPort<int>(new PortName("Output"), node.Output)
+                new OutputPort<int>(address.Port(new PortName("Output")), node.Output)
             ]);
 
-    private static RuntimeNode SinkNode(NodeName name, TestSinkNode<int> node)
+    private static RuntimeNode SinkNode(NodeAddress address, TestSinkNode<int> node)
         => RuntimeNode.Create(
-            name,
+            address,
             node,
             inputs:
             [
-                new InputPort<int>(new PortName("Input"), node.Input)
+                new InputPort<int>(address.Port(new PortName("Input")), node.Input)
             ]);
 
-    private static RuntimeNode StringSinkNode(NodeName name, TestSinkNode<string> node)
+    private static RuntimeNode StringSinkNode(NodeAddress address, TestSinkNode<string> node)
         => RuntimeNode.Create(
-            name,
+            address,
             node,
             inputs:
             [
-                new InputPort<string>(new PortName("Input"), node.Input)
+                new InputPort<string>(address.Port(new PortName("Input")), node.Input)
             ]);
 
-    private static RuntimeNode DisposableNode(NodeName name, string label, List<string> disposalOrder)
-        => RuntimeNode.Create(name, new TestDisposableNode(label, disposalOrder));
+    private static RuntimeNode DisposableNode(NodeAddress address, string label, List<string> disposalOrder)
+        => RuntimeNode.Create(address, new TestDisposableNode(label, disposalOrder));
 
-    private static RuntimeNode StartableNode(NodeName name, string label, List<string> startOrder)
-        => RuntimeNode.Create(name, new TestStartableNode(label, startOrder));
+    private static RuntimeNode StartableNode(NodeAddress address, string label, List<string> startOrder)
+        => RuntimeNode.Create(address, new TestStartableNode(label, startOrder));
 
     private static NodeDefinition Node(string type) => new()
     {
@@ -390,7 +412,7 @@ public sealed class FlowApplicationRuntimeBuilderTests
         public void Dispose() => _disposalOrder.Add(_label);
     }
 
-    private sealed class TestStartableNode : IFlowNode, IFlowStartable
+    private sealed class TestStartableNode : IFlowNode
     {
         private readonly string _label;
         private readonly List<string> _startOrder;

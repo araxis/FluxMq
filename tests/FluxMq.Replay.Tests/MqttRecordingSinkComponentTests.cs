@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Pipeline.Components;
@@ -26,9 +26,9 @@ public sealed class MqttRecordingSinkComponentTests
         await component.Completion;
 
         repository.Recorded.Select(record => record.SessionId)
-            .Should().Equal(sessionId, sessionId);
+            .ShouldBe(new[] { sessionId, sessionId });
         repository.Recorded.Select(record => record.Envelope.Topic)
-            .Should().Equal("factory/1", "factory/2");
+            .ShouldBe(new[] { "factory/1", "factory/2" });
     }
 
     [Fact]
@@ -45,7 +45,7 @@ public sealed class MqttRecordingSinkComponentTests
         await component.Completion;
 
         repository.Recorded.Select(record => record.Envelope.Topic)
-            .Should().Equal("factory/1", "factory/2", "factory/3");
+            .ShouldBe(new[] { "factory/1", "factory/2", "factory/3" });
     }
 
     [Fact]
@@ -66,12 +66,12 @@ public sealed class MqttRecordingSinkComponentTests
         await Task.WhenAll(component.Completion, errorSink.Completion);
 
         repository.Recorded.Select(record => record.Envelope.Topic)
-            .Should().Equal("factory/ok-1", "factory/ok-2");
+            .ShouldBe(new[] { "factory/ok-1", "factory/ok-2" });
 
-        var error = errors.Should().ContainSingle().Subject;
-        error.Code.Should().Be(FlowErrorCodes.ProcessingFailed);
-        error.Context.Should().Be("factory/fail");
-        error.NodeId.Should().Be(component.Id);
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(FlowErrorCodes.ProcessingFailed);
+        error.Context.ShouldBe("factory/fail");
+        error.NodeId.ShouldBe(component.Id);
     }
 
     [Fact]
@@ -86,11 +86,11 @@ public sealed class MqttRecordingSinkComponentTests
         component.Fault(failure);
 
         var act = async () => await component.Completion;
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("recording sink failed");
+        var ex = await Should.ThrowAsync<InvalidOperationException>(act);
+        ex.Message.ShouldBe("recording sink failed");
         await errorSink.Completion;
 
-        errors.Should().ContainSingle().Which.Code.Should().Be(FlowErrorCodes.NodeFaulted);
+        errors.ShouldHaveSingleItem().Code.ShouldBe(FlowErrorCodes.NodeFaulted);
     }
 
     private static MqttEnvelope Message(string topic, byte[]? payload = null) => new()

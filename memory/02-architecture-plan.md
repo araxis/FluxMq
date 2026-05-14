@@ -164,7 +164,9 @@ Current first slice:
 - `FlowApplicationRuntimeBuilder` performs cold-start graph construction.
 - Runtime node factories create concrete nodes outside the builder and receive context about resource vs workflow placement.
 - Typed runtime ports prevent accidental links between incompatible value types.
-- `IFlowStartable` resources start before workflow nodes.
+- `NodeDefinition.Phase` (int, default 0) controls startup order. `ApplicationRuntime.StartAsync` and `Workflow.StartAsync` group all nodes by phase ascending and start each group in sequence. Resources and workflow nodes are unified in this loop.
+- `IFlowNode.StartAsync` is a default interface method (`Task.CompletedTask`); `IFlowStartable` is deleted. Nodes that need startup logic override the method directly.
+- All startup ordering logic lives in the runtime layer. Components must not declare their own phase or ordering.
 - Workflow nodes are disposed before shared resources.
 - Build failures are returned as structured errors instead of escaping through ordinary definition mistakes.
 

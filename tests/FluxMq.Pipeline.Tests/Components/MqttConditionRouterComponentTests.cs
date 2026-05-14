@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Pipeline.Components;
@@ -27,9 +27,9 @@ public sealed class MqttConditionRouterComponentTests
 
         await Task.WhenAll(component.Completion, trueSink.Completion, falseSink.Completion);
 
-        trueTopics.Should().Equal("factory/line-1", "factory/line-2");
-        falseTopics.Should().Equal("system/health");
-        component.Id.Should().NotBe(FlowNodeId.Empty);
+        trueTopics.ShouldBe(new[] { "factory/line-1", "factory/line-2" });
+        falseTopics.ShouldBe(new[] { "system/health" });
+        component.Id.ShouldNotBe(FlowNodeId.Empty);
     }
 
     [Fact]
@@ -63,14 +63,14 @@ public sealed class MqttConditionRouterComponentTests
 
         await Task.WhenAll(component.Completion, trueSink.Completion, falseSink.Completion, errorSink.Completion);
 
-        trueTopics.Should().Equal("factory/line-1", "factory/line-2");
-        falseTopics.Should().Equal("system/health");
+        trueTopics.ShouldBe(new[] { "factory/line-1", "factory/line-2" });
+        falseTopics.ShouldBe(new[] { "system/health" });
 
-        var error = errors.Should().ContainSingle().Subject;
-        error.NodeId.Should().Be(component.Id);
-        error.Code.Should().Be(FlowErrorCodes.ProcessingFailed);
-        error.Message.Should().Be("MQTT condition router predicate failed.");
-        error.Context.Should().Be("bad/topic");
+        var error = errors.ShouldHaveSingleItem();
+        error.NodeId.ShouldBe(component.Id);
+        error.Code.ShouldBe(FlowErrorCodes.ProcessingFailed);
+        error.Message.ShouldBe("MQTT condition router predicate failed.");
+        error.Context.ShouldBe("bad/topic");
     }
 
     [Fact]
@@ -87,9 +87,9 @@ public sealed class MqttConditionRouterComponentTests
 
         await Task.WhenAll(component.Completion, errorSink.Completion);
 
-        var error = errors.Should().ContainSingle().Subject;
-        error.Code.Should().Be(FlowErrorCodes.ProcessingFailed);
-        error.Context.Should().Be("late/topic");
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(FlowErrorCodes.ProcessingFailed);
+        error.Context.ShouldBe("late/topic");
     }
 
     [Fact]
@@ -103,14 +103,22 @@ public sealed class MqttConditionRouterComponentTests
         component.Errors.LinkTo(errorSink, new DataflowLinkOptions { PropagateCompletion = true });
         component.Fault(failure);
 
-        var act = async () => await component.Completion;
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("router failed");
+        // Completion is Task.WhenAll(_block, _whenTrue, _whenFalse). Faulting _block propagates
+        // to the two output ports via PropagateCompletion, so WhenAll faults with multiple nested
+        // AggregateExceptions. Capture the task before awaiting to inspect the exception tree.
+        var completionTask = component.Completion;
+        await completionTask.ContinueWith(_ => { }, TaskScheduler.Default);
+
+        completionTask.IsFaulted.ShouldBeTrue();
+        completionTask.Exception!.Flatten().InnerExceptions
+            .OfType<InvalidOperationException>()
+            .ShouldContain(ex => ex.Message == "router failed");
+
         await errorSink.Completion;
 
-        var error = errors.Should().ContainSingle().Subject;
-        error.Code.Should().Be(FlowErrorCodes.NodeFaulted);
-        error.Message.Should().Be("MQTT condition router faulted.");
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(FlowErrorCodes.NodeFaulted);
+        error.Message.ShouldBe("MQTT condition router faulted.");
     }
 
     private static MqttEnvelope Message(string topic) => new()

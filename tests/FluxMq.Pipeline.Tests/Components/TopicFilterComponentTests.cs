@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Pipeline.Components;
@@ -24,9 +24,9 @@ public sealed class MessageFilterComponentTests
 
         await sink.Completion;
 
-        received.Should().Equal("factory/line-1", "factory/line-2");
-        component.Id.Should().NotBe(FlowNodeId.Empty);
-        component.Completion.IsCompletedSuccessfully.Should().BeTrue();
+        received.ShouldBe(new[] { "factory/line-1", "factory/line-2" });
+        component.Id.ShouldNotBe(FlowNodeId.Empty);
+        component.Completion.IsCompletedSuccessfully.ShouldBeTrue();
     }
 
     [Fact]
@@ -41,13 +41,13 @@ public sealed class MessageFilterComponentTests
         component.Fault(failure);
         var act = async () => await component.Completion;
 
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("filter failed");
+        var ex = await Should.ThrowAsync<InvalidOperationException>(act);
+        ex.Message.ShouldBe("filter failed");
         await errorSink.Completion;
 
-        var error = errors.Should().ContainSingle().Subject;
-        error.Code.Should().Be(FlowErrorCodes.NodeFaulted);
-        error.Message.Should().Be("Topic filter faulted.");
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(FlowErrorCodes.NodeFaulted);
+        error.Message.ShouldBe("Topic filter faulted.");
     }
 
     [Fact]
@@ -80,12 +80,12 @@ public sealed class MessageFilterComponentTests
         component.Complete();
         await Task.WhenAll(sink.Completion, errorSink.Completion);
 
-        received.Should().Equal("good/topic", "next/topic");
-        var error = errors.Should().ContainSingle().Subject;
-        error.NodeId.Should().Be(component.Id);
-        error.Code.Should().Be(FlowErrorCodes.ProcessingFailed);
-        error.Message.Should().Be("Topic filter predicate failed.");
-        error.Context.Should().Be("bad/topic");
+        received.ShouldBe(new[] { "good/topic", "next/topic" });
+        var error = errors.ShouldHaveSingleItem();
+        error.NodeId.ShouldBe(component.Id);
+        error.Code.ShouldBe(FlowErrorCodes.ProcessingFailed);
+        error.Message.ShouldBe("Topic filter predicate failed.");
+        error.Context.ShouldBe("bad/topic");
     }
 
     [Fact]
@@ -102,8 +102,8 @@ public sealed class MessageFilterComponentTests
 
         await Task.WhenAll(component.Completion, errorSink.Completion);
 
-        var error = errors.Should().ContainSingle().Subject;
-        error.Code.Should().Be(FlowErrorCodes.ProcessingFailed);
-        error.Context.Should().Be("late/topic");
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(FlowErrorCodes.ProcessingFailed);
+        error.Context.ShouldBe("late/topic");
     }
 }

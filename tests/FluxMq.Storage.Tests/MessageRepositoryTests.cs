@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Storage;
@@ -32,8 +32,7 @@ public class MessageRepositoryTests : IDisposable
 
         var messages = _repo.GetBySession(_sessionId);
 
-        messages.Should().ContainSingle()
-            .Which.Topic.Should().Be("sensors/temp");
+        messages.ShouldHaveSingleItem().Topic.ShouldBe("sensors/temp");
     }
 
     [Fact]
@@ -44,7 +43,7 @@ public class MessageRepositoryTests : IDisposable
 
         _repo.AddBatch(_sessionId, envelopes);
 
-        _repo.GetBySession(_sessionId).Should().HaveCount(5);
+        _repo.GetBySession(_sessionId).Count.ShouldBe(5);
     }
 
     [Fact]
@@ -54,8 +53,7 @@ public class MessageRepositoryTests : IDisposable
         _repo.Add(_sessionId, Envelope("a/b"));
         _repo.Add(otherId, Envelope("c/d"));
 
-        _repo.GetBySession(_sessionId).Should().ContainSingle()
-            .Which.Topic.Should().Be("a/b");
+        _repo.GetBySession(_sessionId).ShouldHaveSingleItem().Topic.ShouldBe("a/b");
     }
 
     [Fact]
@@ -65,7 +63,7 @@ public class MessageRepositoryTests : IDisposable
         _repo.Add(SessionId.New(), Envelope("sensors/temp"));
         _repo.Add(_sessionId, Envelope("sensors/humidity"));
 
-        _repo.GetByTopic("sensors/temp").Should().HaveCount(2);
+        _repo.GetByTopic("sensors/temp").Count.ShouldBe(2);
     }
 
     [Fact]
@@ -81,7 +79,7 @@ public class MessageRepositoryTests : IDisposable
 
         var topics = _repo.GetBySession(_sessionId).Select(m => m.Topic).ToList();
 
-        topics.Should().BeInAscendingOrder();
+        topics.ShouldBeInOrder();
     }
 
     [Fact]
@@ -91,7 +89,7 @@ public class MessageRepositoryTests : IDisposable
         _repo.Add(_sessionId, Envelope("b"));
         _repo.Add(SessionId.New(), Envelope("c"));
 
-        _repo.CountBySession(_sessionId).Should().Be(2);
+        _repo.CountBySession(_sessionId).ShouldBe(2);
     }
 
     [Fact]
@@ -109,10 +107,10 @@ public class MessageRepositoryTests : IDisposable
         _repo.Add(_sessionId, original);
         var restored = _repo.GetBySession(_sessionId).Single().ToEnvelope();
 
-        restored.Topic.Should().Be(original.Topic);
-        restored.Payload.Should().Equal(original.Payload);
-        restored.QualityOfService.Should().Be(original.QualityOfService);
-        restored.Retain.Should().Be(original.Retain);
+        restored.Topic.ShouldBe(original.Topic);
+        restored.Payload.ShouldBe(original.Payload);
+        restored.QualityOfService.ShouldBe(original.QualityOfService);
+        restored.Retain.ShouldBe(original.Retain);
     }
 
     public void Dispose() => _ctx.Dispose();

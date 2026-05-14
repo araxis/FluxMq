@@ -10,6 +10,10 @@ public sealed record RuntimeNodeFactoryContext(
 {
     public bool IsResource => WorkflowName is null;
 
+    public NodeAddress Address => WorkflowName is null
+        ? new NodeAddress(WellKnownScopes.Resources, Name)
+        : new NodeAddress(WorkflowName, Name);
+
     /// <summary>
     /// Looks up a resource node (connection, etc.) by name. Used by workflow factories
     /// that need to inject a resource handle (e.g. an MQTT session) into their component.

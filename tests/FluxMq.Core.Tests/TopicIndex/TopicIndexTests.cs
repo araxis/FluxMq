@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Models;
 using FluxMq.Core.TopicIndex;
 
@@ -17,8 +17,8 @@ public class TopicIndexTests
         var index = new TopicIndex();
         index.Process(Envelope("sensors"));
 
-        index.Roots.Should().ContainKey("sensors");
-        index.Roots["sensors"].MessageCount.Should().Be(1);
+        index.Roots.ContainsKey("sensors").ShouldBeTrue();
+        index.Roots["sensors"].MessageCount.ShouldBe(1);
     }
 
     [Fact]
@@ -27,10 +27,10 @@ public class TopicIndexTests
         var index = new TopicIndex();
         index.Process(Envelope("factory/line-01/temperature"));
 
-        index.Roots.Should().ContainKey("factory");
+        index.Roots.ContainsKey("factory").ShouldBeTrue();
         var factory = index.Roots["factory"];
-        factory.Children.Should().ContainKey("line-01");
-        factory.Children["line-01"].Children.Should().ContainKey("temperature");
+        factory.Children.ShouldContainKey("line-01");
+        factory.Children["line-01"].Children.ShouldContainKey("temperature");
     }
 
     [Fact]
@@ -40,7 +40,7 @@ public class TopicIndexTests
         index.Process(Envelope("sensors/temp"));
         index.Process(Envelope("sensors/temp"));
 
-        index.Find("sensors/temp")!.MessageCount.Should().Be(2);
+        index.Find("sensors/temp")!.MessageCount.ShouldBe(2);
     }
 
     [Fact]
@@ -50,8 +50,8 @@ public class TopicIndexTests
         index.Process(Envelope("sensors/temp"));
         index.Process(Envelope("sensors/humidity"));
 
-        index.Roots.Should().ContainKey("sensors");
-        index.Roots["sensors"].Children.Should().HaveCount(2);
+        index.Roots.ContainsKey("sensors").ShouldBeTrue();
+        index.Roots["sensors"].Children.Count.ShouldBe(2);
     }
 
     [Fact]
@@ -61,9 +61,9 @@ public class TopicIndexTests
         index.Process(Envelope("factory/line-01/temperature"));
         index.Process(Envelope("factory/line-01/humidity"));
 
-        index.Find("factory")!.MessageCount.Should().Be(2);
-        index.Find("factory/line-01")!.MessageCount.Should().Be(2);
-        index.Find("factory/line-01/temperature")!.MessageCount.Should().Be(1);
+        index.Find("factory")!.MessageCount.ShouldBe(2);
+        index.Find("factory/line-01")!.MessageCount.ShouldBe(2);
+        index.Find("factory/line-01/temperature")!.MessageCount.ShouldBe(1);
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public class TopicIndexTests
         var envelope = Envelope("sensors/temp");
         index.Process(envelope);
 
-        index.Find("sensors/temp")!.LastMessage.Should().BeSameAs(envelope);
+        index.Find("sensors/temp")!.LastMessage.ShouldBeSameAs(envelope);
     }
 
     [Fact]
@@ -86,14 +86,14 @@ public class TopicIndexTests
         index.Process(Envelope("a/b"));
         index.Process(Envelope("a/b"));
 
-        raised.Should().Be(2);
+        raised.ShouldBe(2);
     }
 
     [Fact]
     public void Find_ReturnsNull_ForUnknownTopic()
     {
         var index = new TopicIndex();
-        index.Find("unknown/topic").Should().BeNull();
+        index.Find("unknown/topic").ShouldBeNull();
     }
 
     [Fact]
@@ -103,10 +103,10 @@ public class TopicIndexTests
         index.Process(Envelope("a/b/c/d"));
 
         var node = index.Find("a/b/c/d");
-        node.Should().NotBeNull();
-        node!.Name.Should().Be("d");
-        node.FullPath.Should().Be("a/b/c/d");
-        node.Depth.Should().Be(3);
+        node.ShouldNotBeNull();
+        node!.Name.ShouldBe("d");
+        node.FullPath.ShouldBe("a/b/c/d");
+        node.Depth.ShouldBe(3);
     }
 
     [Fact]
@@ -118,7 +118,7 @@ public class TopicIndexTests
         index.Process(Envelope("x/y/z"));
 
         // a, a/b, a/c, x, x/y, x/y/z
-        index.Search(null).Should().HaveCount(6);
+        index.Search(null).Count().ShouldBe(6);
     }
 
     [Fact]
@@ -131,9 +131,9 @@ public class TopicIndexTests
 
         var results = index.Search("temp").Select(n => n.FullPath);
 
-        results.Should().Contain("factory/line-01/temp");
-        results.Should().Contain("sensors/outdoor/temp");
-        results.Should().NotContain("factory/line-01/pressure");
+        results.ShouldContain("factory/line-01/temp");
+        results.ShouldContain("sensors/outdoor/temp");
+        results.ShouldNotContain("factory/line-01/pressure");
     }
 
     [Fact]
@@ -142,8 +142,8 @@ public class TopicIndexTests
         var index = new TopicIndex();
         index.Process(Envelope("Sensors/TEMP"));
 
-        index.Search("sensors").Should().NotBeEmpty();
-        index.Search("temp").Should().NotBeEmpty();
+        index.Search("sensors").ShouldNotBeEmpty();
+        index.Search("temp").ShouldNotBeEmpty();
     }
 
     [Fact]
@@ -152,8 +152,8 @@ public class TopicIndexTests
         var index = new TopicIndex();
         index.Process(Envelope("a/b/c"));
 
-        index.Find("a")!.Depth.Should().Be(0);
-        index.Find("a/b")!.Depth.Should().Be(1);
-        index.Find("a/b/c")!.Depth.Should().Be(2);
+        index.Find("a")!.Depth.ShouldBe(0);
+        index.Find("a/b")!.Depth.ShouldBe(1);
+        index.Find("a/b/c")!.Depth.ShouldBe(2);
     }
 }
