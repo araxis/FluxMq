@@ -37,6 +37,20 @@ Reasoning:
 
 Status: Accepted.
 
+### 2026-05-14 - Phase-based lifecycle management via NodeDefinition.Phase
+
+Decision: Startup ordering is controlled by an integer `Phase` property on `NodeDefinition` (default `0`). Lower values start first. All ordering logic lives in `ApplicationRuntime` and `Workflow`; components do not declare their own phase.
+
+Reasoning:
+- Startup order must be expressible per-node through configuration, not through component code or marker interfaces.
+- Components should remain free of lifecycle ordering concerns — a node's phase is an operational concern belonging to the application definition, not to the node type.
+- An earlier design using `IPreExecutionProcessor` and `IPostExecutionProcessor` marker interfaces on components was rejected because it mixed runtime ordering into the component layer.
+- `IFlowStartable` was removed; `StartAsync` is now a default interface method on `IFlowNode` (`Task.CompletedTask` unless overridden), so every node is startable without extra interfaces.
+- `RuntimeNode` carries `int Phase` (stamped by the builder from `NodeDefinition.Phase` after the factory runs, so factory code is unaffected).
+- `ApplicationRuntime.StartAsync` and `Workflow.StartAsync` group all nodes by `Phase` ascending and await each group before the next. Resources and workflow nodes are unified in the loop so a workflow node at `Phase = -100` starts before a resource at `Phase = 0`.
+
+Status: Accepted.
+
 ### 2026-05-09 - Give runtime factories placement context
 
 Decision: Runtime node factories receive `FlowRuntimeNodeFactoryContext`, runtime start calls `IFlowStartable` resources before workflow nodes, and runtime disposal releases workflow nodes before shared resources.

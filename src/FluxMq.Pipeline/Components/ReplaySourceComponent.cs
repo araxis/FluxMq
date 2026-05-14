@@ -4,7 +4,7 @@ using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Pipeline.Components;
 
-public sealed class ReplaySourceComponent : IFlowNode, IFlowStartable, IAsyncDisposable
+public sealed class ReplaySourceComponent : IFlowNode, IAsyncDisposable
 {
     private readonly IReadOnlyList<MqttEnvelope> _messages;
     private readonly BufferBlock<MqttEnvelope> _output;

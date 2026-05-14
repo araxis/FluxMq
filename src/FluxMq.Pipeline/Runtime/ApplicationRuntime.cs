@@ -1,24 +1,16 @@
-using FluxMq.Pipeline.Components;
-
 namespace FluxMq.Pipeline.Runtime;
 
-public sealed class ApplicationRuntime : IAsyncDisposable, IDisposable
+public sealed class ApplicationRuntime(
+    IReadOnlyList<RuntimeNode> resources,
+    IReadOnlyList<Workflow> workflows,
+    IReadOnlyList<RuntimeNode> resourceEntryNodes)
+    : IAsyncDisposable, IDisposable
 {
-    private readonly IReadOnlyList<RuntimeNode> _resourceEntryNodes;
+    private readonly IReadOnlyList<RuntimeNode> _resourceEntryNodes = resourceEntryNodes ?? throw new ArgumentNullException(nameof(resourceEntryNodes));
     private bool _disposed;
 
-    public ApplicationRuntime(
-        IReadOnlyList<RuntimeNode> resources,
-        IReadOnlyList<Workflow> workflows,
-        IReadOnlyList<RuntimeNode> resourceEntryNodes)
-    {
-        Resources = resources;
-        Workflows = workflows;
-        _resourceEntryNodes = resourceEntryNodes;
-    }
-
-    public IReadOnlyList<RuntimeNode> Resources { get; }
-    public IReadOnlyList<Workflow> Workflows { get; }
+    public IReadOnlyList<RuntimeNode> Resources { get; } = resources ?? throw new ArgumentNullException(nameof(resources));
+    public IReadOnlyList<Workflow> Workflows { get; } = workflows ?? throw new ArgumentNullException(nameof(workflows));
 
     public IEnumerable<RuntimeNode> Nodes => Resources.Concat(Workflows.SelectMany(wf => wf.Nodes));
 
@@ -26,17 +18,13 @@ public sealed class ApplicationRuntime : IAsyncDisposable, IDisposable
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        foreach (var resource in Resources)
+        var all = Resources.Concat(Workflows.SelectMany(wf => wf.Nodes));
+        foreach (var group in all.GroupBy(n => n.Phase).OrderBy(g => g.Key))
         {
-            if (resource.Node is IFlowStartable startable)
+            foreach (var node in group)
             {
-                await startable.StartAsync(cancellationToken).ConfigureAwait(false);
+                await node.Node.StartAsync(cancellationToken).ConfigureAwait(false);
             }
-        }
-
-        foreach (var workflow in Workflows)
-        {
-            await workflow.StartAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 

@@ -414,7 +414,7 @@ public sealed class FlowApplicationRuntimeBuilderTests
         public void Dispose() => _disposalOrder.Add(_label);
     }
 
-    private sealed class TestStartableNode : IFlowNode, IFlowStartable
+    private sealed class TestStartableNode : IFlowNode
     {
         private readonly string _label;
         private readonly List<string> _startOrder;
