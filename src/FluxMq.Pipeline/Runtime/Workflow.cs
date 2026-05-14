@@ -28,7 +28,7 @@ public sealed class Workflow(
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        SetState(WorkflowState.Starting);
+        BeginStartup();
         try
         {
             foreach (var group in Nodes.GroupBy(n => n.Phase).OrderBy(g => g.Key))
@@ -45,8 +45,14 @@ public sealed class Workflow(
             throw;
         }
 
-        SetState(WorkflowState.Running);
+        CompleteStartup();
+    }
 
+    internal void BeginStartup() => SetState(WorkflowState.Starting);
+
+    internal void CompleteStartup()
+    {
+        SetState(WorkflowState.Running);
         var completion = Completion;
         _ = completion.ContinueWith(t =>
         {

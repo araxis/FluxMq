@@ -28,6 +28,7 @@ public sealed class ApplicationRuntime(
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
         SetState(ApplicationState.Starting);
+        foreach (var workflow in Workflows) workflow.BeginStartup();
         try
         {
             var all = Resources.Concat(Workflows.SelectMany(wf => wf.Nodes));
@@ -45,6 +46,7 @@ public sealed class ApplicationRuntime(
             throw;
         }
 
+        foreach (var workflow in Workflows) workflow.CompleteStartup();
         SetState(ApplicationState.Running);
 
         var completion = Completion;
