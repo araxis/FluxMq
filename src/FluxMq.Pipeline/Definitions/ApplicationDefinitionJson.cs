@@ -15,8 +15,9 @@ public static class ApplicationDefinitionJson
         options.Converters.Add(new FlowNodeTypeJsonConverter());
         options.Converters.Add(new FlowPortNameJsonConverter());
         options.Converters.Add(new FlowNodeNameJsonConverter());
-        options.Converters.Add(new FlowPortReferenceJsonConverter());
+        options.Converters.Add(new FlowPortAddressJsonConverter());
         options.Converters.Add(new FlowLinkDefinitionJsonConverter());
+        options.Converters.Add(new FlowWorkflowDefinitionJsonConverter());
 
         return options;
     }
@@ -48,13 +49,26 @@ public static class ApplicationDefinitionJson
             => writer.WriteStringValue(value.Value);
     }
 
-    private sealed class FlowPortReferenceJsonConverter : JsonConverter<PortReference>
+    private sealed class FlowPortAddressJsonConverter : JsonConverter<PortAddress>
     {
-        public override PortReference Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-            => PortReference.Parse(reader.GetString() ?? throw new JsonException("Flow port reference must be a string."));
+        public override PortAddress Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            => PortAddress.Parse(reader.GetString() ?? throw new JsonException("Port address must be a string."));
 
-        public override void Write(Utf8JsonWriter writer, PortReference value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, PortAddress value, JsonSerializerOptions options)
             => writer.WriteStringValue(value.ToString());
+    }
+
+    private sealed class FlowWorkflowDefinitionJsonConverter : JsonConverter<WorkflowDefinition>
+    {
+        public override WorkflowDefinition Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            var nodes = JsonSerializer.Deserialize<Dictionary<string, NodeDefinition>>(ref reader, options)
+                ?? throw new JsonException("Workflow definition must be a non-null JSON object.");
+            return new WorkflowDefinition { Nodes = nodes };
+        }
+
+        public override void Write(Utf8JsonWriter writer, WorkflowDefinition value, JsonSerializerOptions options)
+            => JsonSerializer.Serialize(writer, value.Nodes, options);
     }
 
     private sealed class FlowLinkDefinitionJsonConverter : JsonConverter<LinkDefinition>
@@ -65,12 +79,29 @@ public static class ApplicationDefinitionJson
             {
                 return new LinkDefinition
                 {
-                    From = PortReference.Parse(reader.GetString()!)
+                    From = PortAddress.Parse(reader.GetString()!)
                 };
             }
 
             using var document = JsonDocument.ParseValue(ref reader);
-            return LinkJson.ParseOne(document.RootElement, null, options);
+            var root = document.RootElement;
+
+            var from = root.TryGetProperty("from", out var f) ? f
+                : root.TryGetProperty("From", out var fUpper) ? fUpper
+                : throw new JsonException("Flow link object must contain a From property.");
+
+            var fromStr = from.GetString()
+                ?? throw new JsonException("Flow link 'from' must be a string.");
+
+            var when = root.TryGetProperty("when", out var w) ? w.GetString()
+                : root.TryGetProperty("When", out var wUpper) ? wUpper.GetString()
+                : null;
+
+            return new LinkDefinition
+            {
+                From = PortAddress.Parse(fromStr),
+                When = when
+            };
         }
 
         public override void Write(Utf8JsonWriter writer, LinkDefinition value, JsonSerializerOptions options)
@@ -78,10 +109,7 @@ public static class ApplicationDefinitionJson
             writer.WriteStartObject();
             writer.WriteString("from", value.From.ToString());
             if (!string.IsNullOrWhiteSpace(value.When))
-            {
                 writer.WriteString("when", value.When);
-            }
-
             writer.WriteEndObject();
         }
     }

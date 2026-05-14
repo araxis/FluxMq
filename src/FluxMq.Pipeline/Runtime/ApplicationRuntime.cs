@@ -1,59 +1,68 @@
 using FluxMq.Pipeline.Components;
-using FluxMq.Pipeline.Definitions;
 
 namespace FluxMq.Pipeline.Runtime;
 
 public sealed class ApplicationRuntime : IAsyncDisposable, IDisposable
 {
-    private readonly IReadOnlyList<IDisposable> _links;
-    private readonly IReadOnlyList<RuntimeNode> _entryNodes;
+    private readonly IReadOnlyList<RuntimeNode> _resourceEntryNodes;
     private bool _disposed;
 
     public ApplicationRuntime(
-        IReadOnlyDictionary<NodeName, RuntimeNode> resources,
-        IReadOnlyDictionary<string, IReadOnlyDictionary<NodeName, RuntimeNode>> workflows,
-        IReadOnlyList<IDisposable> links,
-        IReadOnlyList<RuntimeNode>? entryNodes = null)
+        IReadOnlyList<RuntimeNode> resources,
+        IReadOnlyList<Workflow> workflows,
+        IReadOnlyList<RuntimeNode> resourceEntryNodes)
     {
         Resources = resources;
         Workflows = workflows;
-        _links = links;
-        _entryNodes = entryNodes ?? Nodes.ToArray();
+        _resourceEntryNodes = resourceEntryNodes;
     }
 
-    public IReadOnlyDictionary<NodeName, RuntimeNode> Resources { get; }
-    public IReadOnlyDictionary<string, IReadOnlyDictionary<NodeName, RuntimeNode>> Workflows { get; }
+    public IReadOnlyList<RuntimeNode> Resources { get; }
+    public IReadOnlyList<Workflow> Workflows { get; }
 
-    public IEnumerable<RuntimeNode> Nodes => Resources.Values.Concat(Workflows.Values.SelectMany(workflow => workflow.Values));
+    public IEnumerable<RuntimeNode> Nodes => Resources.Concat(Workflows.SelectMany(wf => wf.Nodes));
 
     public Task Completion => Task.WhenAll(Nodes.Select(node => node.Node.Completion));
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        foreach (var resource in Resources.Values)
+        foreach (var resource in Resources)
         {
-            await StartNodeAsync(resource, cancellationToken).ConfigureAwait(false);
+            if (resource.Node is IFlowStartable startable)
+            {
+                await startable.StartAsync(cancellationToken).ConfigureAwait(false);
+            }
         }
 
-        foreach (var node in WorkflowNodes())
+        foreach (var workflow in Workflows)
         {
-            await StartNodeAsync(node, cancellationToken).ConfigureAwait(false);
+            await workflow.StartAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
     public void Complete()
     {
-        foreach (var node in _entryNodes)
+        foreach (var node in _resourceEntryNodes)
         {
             node.Node.Complete();
+        }
+
+        foreach (var workflow in Workflows)
+        {
+            workflow.Complete();
         }
     }
 
     public void Fault(Exception exception)
     {
-        foreach (var node in Nodes)
+        foreach (var resource in Resources)
         {
-            node.Node.Fault(exception);
+            resource.Node.Fault(exception);
+        }
+
+        foreach (var workflow in Workflows)
+        {
+            workflow.Fault(exception);
         }
     }
 
@@ -66,17 +75,12 @@ public sealed class ApplicationRuntime : IAsyncDisposable, IDisposable
 
         _disposed = true;
 
-        foreach (var link in _links)
+        foreach (var workflow in Workflows)
         {
-            link.Dispose();
+            workflow.Dispose();
         }
 
-        foreach (var disposable in WorkflowNodes().Select(node => node.Node).OfType<IDisposable>())
-        {
-            disposable.Dispose();
-        }
-
-        foreach (var disposable in Resources.Values.Select(node => node.Node).OfType<IDisposable>())
+        foreach (var disposable in Resources.Select(node => node.Node).OfType<IDisposable>())
         {
             disposable.Dispose();
         }
@@ -84,27 +88,21 @@ public sealed class ApplicationRuntime : IAsyncDisposable, IDisposable
 
     public async ValueTask DisposeAsync()
     {
-        Dispose();
-
-        foreach (var disposable in WorkflowNodes().Select(node => node.Node).OfType<IAsyncDisposable>())
+        if (_disposed)
         {
-            await disposable.DisposeAsync().ConfigureAwait(false);
+            return;
         }
 
-        foreach (var disposable in Resources.Values.Select(node => node.Node).OfType<IAsyncDisposable>())
+        _disposed = true;
+
+        foreach (var workflow in Workflows)
+        {
+            await workflow.DisposeAsync().ConfigureAwait(false);
+        }
+
+        foreach (var disposable in Resources.Select(node => node.Node).OfType<IAsyncDisposable>())
         {
             await disposable.DisposeAsync().ConfigureAwait(false);
-        }
-    }
-
-    private IEnumerable<RuntimeNode> WorkflowNodes()
-        => Workflows.Values.SelectMany(workflow => workflow.Values);
-
-    private static async Task StartNodeAsync(RuntimeNode node, CancellationToken cancellationToken)
-    {
-        if (node.Node is IFlowStartable startable)
-        {
-            await startable.StartAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }

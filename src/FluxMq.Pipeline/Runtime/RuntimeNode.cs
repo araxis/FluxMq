@@ -4,19 +4,25 @@ using FluxMq.Pipeline.Definitions;
 namespace FluxMq.Pipeline.Runtime;
 
 public sealed record RuntimeNode(
-    NodeName Name,
+    NodeAddress Address,
     IFlowNode Node,
-    IReadOnlyDictionary<PortName, InputPort> Inputs,
-    IReadOnlyDictionary<PortName, OutputPort> Outputs)
+    IReadOnlyList<InputPort> Inputs,
+    IReadOnlyList<OutputPort> Outputs)
 {
+    public InputPort? FindInput(PortName port)
+        => Inputs.FirstOrDefault(p => p.Address.Port == port);
+
+    public OutputPort? FindOutput(PortName port)
+        => Outputs.FirstOrDefault(p => p.Address.Port == port);
+
     public static RuntimeNode Create(
-        NodeName name,
+        NodeAddress address,
         IFlowNode node,
         IEnumerable<InputPort>? inputs = null,
         IEnumerable<OutputPort>? outputs = null)
         => new(
-            name,
+            address,
             node,
-            (inputs ?? []).ToDictionary(port => port.Name),
-            (outputs ?? []).ToDictionary(port => port.Name));
+            (inputs ?? []).ToArray(),
+            (outputs ?? []).ToArray());
 }

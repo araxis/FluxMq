@@ -25,14 +25,14 @@ public static class RuntimeNodeFactoryRegistryExtensions
         sessionFactory ??= static profile => new MqttSession(profile);
 
         return registry
-            .Register(PipelineFlowNodeTypes.Connection, context => CreateConnection(context.Name, context.Definition, sessionFactory))
-            .Register(PipelineFlowNodeTypes.Trigger, context => CreateTrigger(context.Name, context.Definition, context))
+            .Register(PipelineFlowNodeTypes.Connection, context => CreateConnection(context.Address, context.Definition, sessionFactory))
+            .Register(PipelineFlowNodeTypes.Trigger, context => CreateTrigger(context.Address, context.Definition, context))
             .Register(PipelineFlowNodeTypes.PayloadInspector, CreatePayloadInspector)
             .Register(PipelineFlowNodeTypes.MetricsSink, CreateMetricsSink);
     }
 
     private static RuntimeNode CreateConnection(
-        NodeName name,
+        NodeAddress address,
         NodeDefinition definition,
         Func<MqttConnectionProfile, IMqttSession> sessionFactory)
     {
@@ -40,16 +40,16 @@ public static class RuntimeNodeFactoryRegistryExtensions
         var component = new MqttConnectionComponent(sessionFactory(profile), disposeSessionOnDispose: true);
 
         return RuntimeNode.Create(
-            name,
+            address,
             component,
             outputs:
             [
-                new OutputPort<FlowError>(ErrorsPort, component.Errors)
+                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
             ]);
     }
 
     private static RuntimeNode CreateTrigger(
-        NodeName name,
+        NodeAddress address,
         NodeDefinition definition,
         RuntimeNodeFactoryContext context)
     {
@@ -68,48 +68,48 @@ public static class RuntimeNodeFactoryRegistryExtensions
             boundedCapacity: GetBoundedCapacity(definition));
 
         return RuntimeNode.Create(
-            name,
+            address,
             component,
             outputs:
             [
-                new OutputPort<MqttEnvelope>(OutputPort, component.Output),
-                new OutputPort<FlowError>(ErrorsPort, component.Errors)
+                new OutputPort<MqttEnvelope>(address.Port(OutputPort), component.Output),
+                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
             ]);
     }
 
-    private static RuntimeNode CreatePayloadInspector(NodeName name, NodeDefinition definition)
+    private static RuntimeNode CreatePayloadInspector(NodeAddress address, NodeDefinition definition)
     {
         var component = new PayloadInspectorMapperComponent(boundedCapacity: GetBoundedCapacity(definition));
 
         return RuntimeNode.Create(
-            name,
+            address,
             component,
             inputs:
             [
-                new InputPort<MqttEnvelope>(InputPort, component.Input)
+                new InputPort<MqttEnvelope>(address.Port(InputPort), component.Input)
             ],
             outputs:
             [
-                new OutputPort<InspectedMqttMessage>(OutputPort, component.Output),
-                new OutputPort<FlowError>(ErrorsPort, component.Errors)
+                new OutputPort<InspectedMqttMessage>(address.Port(OutputPort), component.Output),
+                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
             ]);
     }
 
-    private static RuntimeNode CreateMetricsSink(NodeName name, NodeDefinition definition)
+    private static RuntimeNode CreateMetricsSink(NodeAddress address, NodeDefinition definition)
     {
         var component = new MqttMetricsSinkComponent(boundedCapacity: GetBoundedCapacity(definition));
 
         return RuntimeNode.Create(
-            name,
+            address,
             component,
             inputs:
             [
-                new InputPort<MqttEnvelope>(InputPort, component.Input)
+                new InputPort<MqttEnvelope>(address.Port(InputPort), component.Input)
             ],
             outputs:
             [
-                new OutputPort<MqttMetricsSnapshot>(SnapshotsPort, component.Snapshots),
-                new OutputPort<FlowError>(ErrorsPort, component.Errors)
+                new OutputPort<MqttMetricsSnapshot>(address.Port(SnapshotsPort), component.Snapshots),
+                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
             ]);
     }
 

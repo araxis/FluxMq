@@ -22,11 +22,11 @@ public sealed class RuntimeNodeFactoryRegistry
 
     public RuntimeNodeFactoryRegistry Register(
         NodeType type,
-        Func<NodeName, NodeDefinition, RuntimeNode> factory)
+        Func<NodeAddress, NodeDefinition, RuntimeNode> factory)
     {
         ArgumentNullException.ThrowIfNull(factory);
 
-        return Register(type, context => factory(context.Name, context.Definition));
+        return Register(type, context => factory(context.Address, context.Definition));
     }
 
     public bool TryGetFactory(NodeType type, out RuntimeNodeFactory factory)

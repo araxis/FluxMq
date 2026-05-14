@@ -1,7 +1,6 @@
-﻿namespace FluxMq.Pipeline.Definitions;
+namespace FluxMq.Pipeline.Definitions;
 
-public class WorkflowDefinition
+public sealed record WorkflowDefinition
 {
-    public required WorkflowName Name { get; init; }
-    public IEnumerable<NodeDefinition> Nodes { get; init; } = [];
+    public Dictionary<string, NodeDefinition> Nodes { get; init; } = [];
 }
