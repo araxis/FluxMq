@@ -1,3 +1,5 @@
+using System.Threading.Tasks.Dataflow;
+
 namespace FluxMq.Pipeline.Runtime;
 
 public sealed class ApplicationRuntime(
@@ -7,29 +9,56 @@ public sealed class ApplicationRuntime(
     : IAsyncDisposable, IDisposable
 {
     private readonly IReadOnlyList<RuntimeNode> _resourceEntryNodes = resourceEntryNodes ?? throw new ArgumentNullException(nameof(resourceEntryNodes));
+    private readonly BroadcastBlock<ApplicationStateChanged> _stateChanges = new(s => s);
+    private readonly object _stateLock = new();
     private bool _disposed;
+    private ApplicationState _state = ApplicationState.Idle;
 
     public IReadOnlyList<RuntimeNode> Resources { get; } = resources ?? throw new ArgumentNullException(nameof(resources));
     public IReadOnlyList<Workflow> Workflows { get; } = workflows ?? throw new ArgumentNullException(nameof(workflows));
 
     public IEnumerable<RuntimeNode> Nodes => Resources.Concat(Workflows.SelectMany(wf => wf.Nodes));
 
+    public ApplicationState State => _state;
+
+    public ISourceBlock<ApplicationStateChanged> StateChanges => _stateChanges;
+
     public Task Completion => Task.WhenAll(Nodes.Select(node => node.Node.Completion));
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        var all = Resources.Concat(Workflows.SelectMany(wf => wf.Nodes));
-        foreach (var group in all.GroupBy(n => n.Phase).OrderBy(g => g.Key))
+        SetState(ApplicationState.Starting);
+        try
         {
-            foreach (var node in group)
+            var all = Resources.Concat(Workflows.SelectMany(wf => wf.Nodes));
+            foreach (var group in all.GroupBy(n => n.Phase).OrderBy(g => g.Key))
             {
-                await node.Node.StartAsync(cancellationToken).ConfigureAwait(false);
+                foreach (var node in group)
+                {
+                    await node.Node.StartAsync(cancellationToken).ConfigureAwait(false);
+                }
             }
         }
+        catch (Exception ex)
+        {
+            SetState(ApplicationState.Faulted, ex);
+            throw;
+        }
+
+        SetState(ApplicationState.Running);
+
+        var completion = Completion;
+        _ = completion.ContinueWith(t =>
+        {
+            if (_state == ApplicationState.Faulted) return;
+            SetState(t.IsFaulted ? ApplicationState.Faulted : ApplicationState.Stopped,
+                     t.Exception?.InnerException);
+        }, TaskScheduler.Default);
     }
 
     public void Complete()
     {
+        SetState(ApplicationState.Stopping);
         foreach (var node in _resourceEntryNodes)
         {
             node.Node.Complete();
@@ -43,6 +72,7 @@ public sealed class ApplicationRuntime(
 
     public void Fault(Exception exception)
     {
+        SetState(ApplicationState.Faulted, exception);
         foreach (var resource in Resources)
         {
             resource.Node.Fault(exception);
@@ -92,5 +122,18 @@ public sealed class ApplicationRuntime(
         {
             await disposable.DisposeAsync().ConfigureAwait(false);
         }
+    }
+
+    private void SetState(ApplicationState next, Exception? exception = null)
+    {
+        ApplicationStateChanged? change;
+        lock (_stateLock)
+        {
+            if (_state == next) return;
+            var previous = _state;
+            _state = next;
+            change = new ApplicationStateChanged(previous, next, exception);
+        }
+        _stateChanges.Post(change);
     }
 }
