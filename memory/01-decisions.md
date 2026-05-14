@@ -37,6 +37,17 @@ Reasoning:
 
 Status: Accepted.
 
+### 2026-05-14 - Workflow and application state exposed as ISourceBlock, not events
+
+Decision: `Workflow.StateChanges` and `ApplicationRuntime.StateChanges` are `ISourceBlock<T>` backed by `BroadcastBlock<T>`, not `event EventHandler<T>`.
+
+Reasoning:
+- `IFlowNode.Errors` already uses `ISourceBlock<FlowError>` as the pipeline's data-out contract; state changes should follow the same pattern so they are first-class pipeline data.
+- Consumers (logging, telemetry, UI projections) subscribe via `LinkTo` and can route, filter, or buffer state changes through Fork Flow like any other output.
+- `event` handlers cannot participate in the dataflow graph and require manual subscription management.
+
+Status: Accepted.
+
 ### 2026-05-14 - Phase-based lifecycle management via NodeDefinition.Phase
 
 Decision: Startup ordering is controlled by an integer `Phase` property on `NodeDefinition` (default `0`). Lower values start first. All ordering logic lives in `ApplicationRuntime` and `Workflow`; components do not declare their own phase.

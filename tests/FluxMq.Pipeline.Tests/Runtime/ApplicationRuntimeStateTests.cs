@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Pipeline.Components;
 using FluxMq.Pipeline.Definitions;
@@ -14,7 +14,7 @@ public sealed class ApplicationRuntimeStateTests
     {
         var (runtime, _) = MakeRuntime();
 
-        runtime.State.Should().Be(ApplicationState.Idle);
+        runtime.State.ShouldBe(ApplicationState.Idle);
     }
 
     [Fact]
@@ -24,7 +24,7 @@ public sealed class ApplicationRuntimeStateTests
 
         await runtime.StartAsync();
 
-        runtime.State.Should().Be(ApplicationState.Running);
+        runtime.State.ShouldBe(ApplicationState.Running);
     }
 
     [Fact]
@@ -39,21 +39,24 @@ public sealed class ApplicationRuntimeStateTests
         var first = await buffer.ReceiveAsync(TimeSpan.FromSeconds(1));
         var second = await buffer.ReceiveAsync(TimeSpan.FromSeconds(1));
 
-        first.Previous.Should().Be(ApplicationState.Idle);
-        first.Current.Should().Be(ApplicationState.Starting);
-        second.Previous.Should().Be(ApplicationState.Starting);
-        second.Current.Should().Be(ApplicationState.Running);
+        first.Previous.ShouldBe(ApplicationState.Idle);
+        first.Current.ShouldBe(ApplicationState.Starting);
+        second.Previous.ShouldBe(ApplicationState.Starting);
+        second.Current.ShouldBe(ApplicationState.Running);
     }
 
     [Fact]
     public async Task Complete_TransitionsToStopping()
     {
         var (runtime, _) = MakeRuntime();
+        var buffer = new BufferBlock<ApplicationStateChanged>();
+        runtime.StateChanges.LinkTo(buffer);
         await runtime.StartAsync();
 
         runtime.Complete();
 
-        runtime.State.Should().Be(ApplicationState.Stopping);
+        var stopping = await DrainUntilAsync(buffer, ApplicationState.Stopping);
+        stopping.Previous.ShouldBe(ApplicationState.Running);
     }
 
     [Fact]
@@ -67,8 +70,8 @@ public sealed class ApplicationRuntimeStateTests
         runtime.Complete();
 
         var stopped = await DrainUntilAsync(buffer, ApplicationState.Stopped);
-        stopped.Previous.Should().Be(ApplicationState.Stopping);
-        runtime.State.Should().Be(ApplicationState.Stopped);
+        stopped.Previous.ShouldBe(ApplicationState.Stopping);
+        runtime.State.ShouldBe(ApplicationState.Stopped);
     }
 
     [Fact]
@@ -79,7 +82,7 @@ public sealed class ApplicationRuntimeStateTests
 
         runtime.Fault(new InvalidOperationException("test"));
 
-        runtime.State.Should().Be(ApplicationState.Faulted);
+        runtime.State.ShouldBe(ApplicationState.Faulted);
     }
 
     [Fact]
@@ -94,7 +97,7 @@ public sealed class ApplicationRuntimeStateTests
         runtime.Fault(ex);
 
         var faulted = await DrainUntilAsync(buffer, ApplicationState.Faulted);
-        faulted.Exception.Should().BeSameAs(ex);
+        faulted.Exception.ShouldBeSameAs(ex);
     }
 
     [Fact]
@@ -107,7 +110,7 @@ public sealed class ApplicationRuntimeStateTests
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => runtime.StartAsync());
 
-        runtime.State.Should().Be(ApplicationState.Faulted);
+        runtime.State.ShouldBe(ApplicationState.Faulted);
     }
 
     [Fact]
@@ -125,7 +128,7 @@ public sealed class ApplicationRuntimeStateTests
         await runtime.StartAsync();
 
         var change = await wfBuffer.ReceiveAsync(TimeSpan.FromSeconds(1));
-        change.Current.Should().Be(WorkflowState.Starting);
+        change.Current.ShouldBe(WorkflowState.Starting);
     }
 
     private static (ApplicationRuntime Runtime, TestNode Node) MakeRuntime()
