@@ -95,11 +95,12 @@ public sealed class ApplicationRuntimeBuilder
 
             try
             {
-                nodes.Add(nodeName, factory(new RuntimeNodeFactoryContext(
+                var runtimeNode = factory(new RuntimeNodeFactoryContext(
                     nodeName,
                     definition.Value,
                     workflowName,
-                    resourceView)));
+                    resourceView));
+                nodes.Add(nodeName, runtimeNode with { Phase = definition.Value.Phase });
             }
             catch (Exception exception)
             {

@@ -210,7 +210,7 @@ public sealed class FlowApplicationHostTests
         }
     }
 
-    private sealed class StartFailingNode : IFlowNode, IFlowStartable
+    private sealed class StartFailingNode : IFlowNode
     {
         private readonly BufferBlock<FlowError> _errors = new();
 

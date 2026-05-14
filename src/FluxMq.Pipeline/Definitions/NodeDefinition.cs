@@ -8,6 +8,7 @@ public sealed record NodeDefinition
     public required NodeType Type { get; init; }
     public Dictionary<string, JsonElement> Configuration { get; init; } = [];
     public string? When { get; init; }
+    public int Phase { get; init; } = 0;
 
     [JsonExtensionData]
     public Dictionary<string, JsonElement> Ports { get; init; } = [];

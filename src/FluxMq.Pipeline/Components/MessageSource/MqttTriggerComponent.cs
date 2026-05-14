@@ -13,7 +13,7 @@ namespace FluxMq.Pipeline.Components.MessageSource;
 /// block to the connection's broadcast. Multiple triggers may share one connection;
 /// each gets every envelope but only forwards the ones matching its own filters.
 /// </summary>
-public sealed class MqttTriggerComponent : IFlowNode, IFlowStartable, IAsyncDisposable
+public sealed class MqttTriggerComponent : IFlowNode, IAsyncDisposable
 {
     private readonly IMqttSession _session;
     private readonly ISourceBlock<MqttEnvelope> _connectionStream;

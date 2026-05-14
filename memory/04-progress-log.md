@@ -264,3 +264,17 @@ Build the first usable MAUI Blazor Hybrid desktop alpha in `FluxMq.UI`.
 ## Current Next Step
 
 Harden the alpha desktop workspace by exercising it against Mosquitto, then add publish support that reuses the shared MQTT connection resource.
+
+## 2026-05-14
+
+- Introduced phase-based lifecycle management for the pipeline runtime:
+  - Added `int Phase` (default `0`) to `NodeDefinition` and `RuntimeNode`.
+  - Builder stamps each `RuntimeNode.Phase` from `NodeDefinition.Phase` after the factory runs; factory code is unaffected.
+  - `ApplicationRuntime.StartAsync` and `Workflow.StartAsync` now iterate all nodes grouped by `Phase` ascending, awaiting each group before the next.
+  - Resources and workflow nodes are unified in the startup loop so a workflow node at a lower phase starts before a resource at a higher phase.
+  - Startup ordering is entirely a runtime concern; components do not declare their own phase.
+- Removed `IFlowStartable`:
+  - `StartAsync(CancellationToken = default) => Task.CompletedTask` moved to `IFlowNode` as a default interface method.
+  - `MqttConnectionComponent`, `MqttTriggerComponent`, and `ReplaySourceComponent` dropped `IFlowStartable` from their declarations.
+- Deleted `IPreExecutionProcessor` and `IPostExecutionProcessor` — marker-interface-on-component approach was tried and rejected in favour of config-driven phase ordering.
+- Committed as `850bc8b` on branch `feature/pipeline-runtime-model`.

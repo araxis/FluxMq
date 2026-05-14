@@ -1,4 +1,3 @@
-using FluxMq.Pipeline.Components;
 using FluxMq.Pipeline.Definitions;
 
 namespace FluxMq.Pipeline.Runtime;
@@ -28,11 +27,11 @@ public sealed class Workflow : IAsyncDisposable, IDisposable
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        foreach (var node in Nodes)
+        foreach (var group in Nodes.GroupBy(n => n.Phase).OrderBy(g => g.Key))
         {
-            if (node.Node is IFlowStartable startable)
+            foreach (var node in group)
             {
-                await startable.StartAsync(cancellationToken).ConfigureAwait(false);
+                await node.Node.StartAsync(cancellationToken).ConfigureAwait(false);
             }
         }
     }
