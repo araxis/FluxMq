@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Pipeline.Definitions;
 using System.Text.Json;
 
@@ -34,15 +34,16 @@ public sealed class FlowApplicationDefinitionJsonTests
             json,
             ApplicationDefinitionJson.CreateSerializerOptions());
 
-        definition.Should().NotBeNull();
-        definition!.Resources.Keys.Should().Contain("broker");
-        definition.Workflows.Keys.Should().Contain("observeTraffic");
-        definition.Workflows["observeTraffic"].Nodes.Keys.Should().Contain(["source", "metrics"]);
+        definition.ShouldNotBeNull();
+        definition!.Resources.Keys.ShouldContain("broker");
+        definition.Workflows.Keys.ShouldContain("observeTraffic");
+        definition.Workflows["observeTraffic"].Nodes.Keys.ShouldContain("source");
+        definition.Workflows["observeTraffic"].Nodes.Keys.ShouldContain("metrics");
 
         var metrics = definition.Workflows["observeTraffic"].Nodes["metrics"];
-        metrics.Type.Should().Be(new NodeType("mqtt.metrics-sink"));
-        metrics.GetPortLinks("Input", "observeTraffic").Should().ContainSingle()
-            .Which.From.Should().Be(new PortAddress("observeTraffic", new NodeName("source"), new PortName("Output")));
+        metrics.Type.ShouldBe(new NodeType("mqtt.metrics-sink"));
+        metrics.GetPortLinks("Input", "observeTraffic").ShouldHaveSingleItem()
+            .From.ShouldBe(new PortAddress("observeTraffic", new NodeName("source"), new PortName("Output")));
     }
 
     [Fact]
@@ -71,13 +72,13 @@ public sealed class FlowApplicationDefinitionJsonTests
 
         var links = node!.GetPortLinks("Input", "myWorkflow");
 
-        links.Should().HaveCount(3);
-        links[0].From.ToString().Should().Be("myWorkflow.source.Output");
-        links[0].When.Should().Be("payload.size > 0");
-        links[1].From.ToString().Should().Be("myWorkflow.replay.Output");
-        links[1].When.Should().Be("topic.startsWith('factory/')");
-        links[2].From.ToString().Should().Be("myWorkflow.router.WhenTrue");
-        links[2].When.Should().Be("payload.size > 0");
+        links.Count.ShouldBe(3);
+        links[0].From.ToString().ShouldBe("myWorkflow.source.Output");
+        links[0].When.ShouldBe("payload.size > 0");
+        links[1].From.ToString().ShouldBe("myWorkflow.replay.Output");
+        links[1].When.ShouldBe("topic.startsWith('factory/')");
+        links[2].From.ToString().ShouldBe("myWorkflow.router.WhenTrue");
+        links[2].When.ShouldBe("payload.size > 0");
     }
 
     [Fact]
@@ -110,11 +111,11 @@ public sealed class FlowApplicationDefinitionJsonTests
 
         var json = JsonSerializer.Serialize(definition, ApplicationDefinitionJson.CreateSerializerOptions());
 
-        json.Should().Contain("\"observeTraffic\"");
-        json.Should().Contain("\"source\"");
-        json.Should().Contain("\"metrics\"");
-        json.Should().Contain("\"Input\": \"source.Output\"");
-        json.Should().NotContain("\"nodes\"");
-        json.Should().NotContain("\"connections\"");
+        json.ShouldContain("\"observeTraffic\"");
+        json.ShouldContain("\"source\"");
+        json.ShouldContain("\"metrics\"");
+        json.ShouldContain("\"Input\": \"source.Output\"");
+        json.ShouldNotContain("\"nodes\"");
+        json.ShouldNotContain("\"connections\"");
     }
 }

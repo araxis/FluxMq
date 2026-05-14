@@ -1,6 +1,6 @@
 using FluxMq.UI.Models;
 using FluxMq.UI.Services;
-using FluentAssertions;
+using Shouldly;
 
 namespace FluxMq.UI.Tests;
 
@@ -21,8 +21,8 @@ public sealed class FlowWorkspaceServiceTests
             service.SetDefinitionJson("{}");
             await service.LoadFromFileAsync();
 
-            service.DefinitionJson.Should().Be(expected);
-            service.Diagnostics.Should().NotContain(diagnostic => diagnostic.Severity == "Error");
+            service.DefinitionJson.ShouldBe(expected);
+            service.Diagnostics.ShouldNotContain(diagnostic => diagnostic.Severity == "Error");
         }
         finally
         {
@@ -41,7 +41,7 @@ public sealed class FlowWorkspaceServiceTests
 
         await service.ValidateAsync();
 
-        service.DefinitionRevision.Should().Be(revision);
+        service.DefinitionRevision.ShouldBe(revision);
     }
 
     [Fact]
@@ -52,10 +52,10 @@ public sealed class FlowWorkspaceServiceTests
         var json = service.DefinitionJson;
 
         service.SetDefinitionJson(json);
-        service.DefinitionRevision.Should().Be(initialRevision);
+        service.DefinitionRevision.ShouldBe(initialRevision);
 
         service.SetDefinitionJson("{}");
-        service.DefinitionRevision.Should().Be(initialRevision + 1);
+        service.DefinitionRevision.ShouldBe(initialRevision + 1);
     }
 
     [Fact]
@@ -66,8 +66,8 @@ public sealed class FlowWorkspaceServiceTests
 
         await service.ValidateAsync();
 
-        service.State.Should().Be(RuntimeWorkspaceState.Faulted);
-        service.Diagnostics.Should().Contain(diagnostic => diagnostic.Severity == "Error");
+        service.State.ShouldBe(RuntimeWorkspaceState.Faulted);
+        service.Diagnostics.ShouldContain(diagnostic => diagnostic.Severity == "Error");
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public sealed class FlowWorkspaceServiceTests
 
         await service.ValidateAsync();
 
-        service.State.Should().Be(RuntimeWorkspaceState.Valid);
-        service.Diagnostics.Should().Contain(diagnostic => diagnostic.Code == "Ready");
+        service.State.ShouldBe(RuntimeWorkspaceState.Valid);
+        service.Diagnostics.ShouldContain(diagnostic => diagnostic.Code == "Ready");
     }
 }

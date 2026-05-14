@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Models;
 
 namespace FluxMq.Core.Tests.Models;
@@ -10,13 +10,13 @@ public class MqttConnectionProfileTests
     {
         var profile = new MqttConnectionProfile();
 
-        profile.Host.Should().Be("localhost");
-        profile.Port.Should().Be(1883);
-        profile.UseTls.Should().BeFalse();
-        profile.CleanStart.Should().BeTrue();
-        profile.KeepAlive.Should().Be(TimeSpan.FromSeconds(60));
-        profile.Username.Should().BeNull();
-        profile.Password.Should().BeNull();
+        profile.Host.ShouldBe("localhost");
+        profile.Port.ShouldBe(1883);
+        profile.UseTls.ShouldBeFalse();
+        profile.CleanStart.ShouldBeTrue();
+        profile.KeepAlive.ShouldBe(TimeSpan.FromSeconds(60));
+        profile.Username.ShouldBeNull();
+        profile.Password.ShouldBeNull();
     }
 
     [Fact]
@@ -25,8 +25,8 @@ public class MqttConnectionProfileTests
         var a = new MqttConnectionProfile();
         var b = new MqttConnectionProfile();
 
-        a.Id.Should().NotBe(b.Id);
-        a.ClientId.Should().NotBe(b.ClientId);
+        a.Id.ShouldNotBe(b.Id);
+        a.ClientId.ShouldNotBe(b.ClientId);
     }
 
     [Fact]
@@ -43,13 +43,13 @@ public class MqttConnectionProfileTests
             CleanStart = false
         };
 
-        profile.Name.Should().Be("Test Broker");
-        profile.Host.Should().Be("broker.example.com");
-        profile.Port.Should().Be(8883);
-        profile.UseTls.Should().BeTrue();
-        profile.Username.Should().Be("user");
-        profile.Password.Should().Be("pass");
-        profile.CleanStart.Should().BeFalse();
+        profile.Name.ShouldBe("Test Broker");
+        profile.Host.ShouldBe("broker.example.com");
+        profile.Port.ShouldBe(8883);
+        profile.UseTls.ShouldBeTrue();
+        profile.Username.ShouldBe("user");
+        profile.Password.ShouldBe("pass");
+        profile.CleanStart.ShouldBeFalse();
     }
 
     [Fact]
@@ -58,8 +58,8 @@ public class MqttConnectionProfileTests
         var original = new MqttConnectionProfile { Name = "Original", Port = 1883 };
         var updated = original with { Port = 8883 };
 
-        updated.Port.Should().Be(8883);
-        updated.Name.Should().Be("Original");
-        updated.Id.Should().Be(original.Id);
+        updated.Port.ShouldBe(8883);
+        updated.Name.ShouldBe("Original");
+        updated.Id.ShouldBe(original.Id);
     }
 }

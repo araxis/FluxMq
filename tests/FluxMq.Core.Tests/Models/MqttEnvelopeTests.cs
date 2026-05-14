@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Models;
 using MQTTnet.Protocol;
 
@@ -20,11 +20,11 @@ public class MqttEnvelopeTests
             Retain = true
         };
 
-        envelope.Topic.Should().Be("factory/line-01/telemetry");
-        envelope.Payload.Should().Equal(payload);
-        envelope.QualityOfService.Should().Be(MqttQualityOfServiceLevel.AtLeastOnce);
-        envelope.Retain.Should().BeTrue();
-        envelope.ReceivedAt.Should().BeOnOrAfter(before);
+        envelope.Topic.ShouldBe("factory/line-01/telemetry");
+        envelope.Payload.ShouldBe(payload);
+        envelope.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtLeastOnce);
+        envelope.Retain.ShouldBeTrue();
+        envelope.ReceivedAt.ShouldBeGreaterThanOrEqualTo(before);
     }
 
     [Fact]
@@ -32,8 +32,8 @@ public class MqttEnvelopeTests
     {
         var envelope = new MqttEnvelope { Topic = "t", Payload = [] };
 
-        envelope.QualityOfService.Should().Be(MqttQualityOfServiceLevel.AtMostOnce);
-        envelope.Retain.Should().BeFalse();
+        envelope.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtMostOnce);
+        envelope.Retain.ShouldBeFalse();
     }
 
     [Fact]
@@ -43,6 +43,7 @@ public class MqttEnvelopeTests
         var envelope = new MqttEnvelope { Topic = "t", Payload = [] };
         var after = DateTimeOffset.UtcNow;
 
-        envelope.ReceivedAt.Should().BeOnOrAfter(before).And.BeOnOrBefore(after);
+        envelope.ReceivedAt.ShouldBeGreaterThanOrEqualTo(before);
+        envelope.ReceivedAt.ShouldBeLessThanOrEqualTo(after);
     }
 }

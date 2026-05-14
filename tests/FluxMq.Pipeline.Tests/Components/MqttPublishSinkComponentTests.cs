@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Session;
@@ -28,11 +28,11 @@ public sealed class MqttPublishSinkComponentTests
 
         await component.Completion;
 
-        var publish = session.Published.Should().ContainSingle().Subject;
-        publish.Topic.Should().Be("factory/command");
-        publish.Payload.Should().Equal(1, 2, 3);
-        publish.QualityOfService.Should().Be(MqttQualityOfServiceLevel.AtLeastOnce);
-        publish.Retain.Should().BeTrue();
+        var publish = session.Published.ShouldHaveSingleItem();
+        publish.Topic.ShouldBe("factory/command");
+        publish.Payload.ShouldBe(new byte[] { 1, 2, 3 });
+        publish.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtLeastOnce);
+        publish.Retain.ShouldBeTrue();
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public sealed class MqttPublishSinkComponentTests
         await component.Completion;
 
         session.Published.Select(message => message.Topic)
-            .Should().Equal("factory/1", "factory/2", "factory/3");
+            .ShouldBe(new[] { "factory/1", "factory/2", "factory/3" });
     }
 
     [Fact]
@@ -70,12 +70,12 @@ public sealed class MqttPublishSinkComponentTests
         await Task.WhenAll(component.Completion, errorSink.Completion);
 
         session.Published.Select(message => message.Topic)
-            .Should().Equal("factory/ok-1", "factory/ok-2");
+            .ShouldBe(new[] { "factory/ok-1", "factory/ok-2" });
 
-        var error = errors.Should().ContainSingle().Subject;
-        error.Code.Should().Be(FlowErrorCodes.ProcessingFailed);
-        error.Context.Should().Be("factory/fail");
-        error.NodeId.Should().Be(component.Id);
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(FlowErrorCodes.ProcessingFailed);
+        error.Context.ShouldBe("factory/fail");
+        error.NodeId.ShouldBe(component.Id);
     }
 
     [Fact]
@@ -90,11 +90,11 @@ public sealed class MqttPublishSinkComponentTests
         component.Fault(failure);
 
         var act = async () => await component.Completion;
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("publish sink failed");
+        var ex = await Should.ThrowAsync<InvalidOperationException>(act);
+        ex.Message.ShouldBe("publish sink failed");
         await errorSink.Completion;
 
-        errors.Should().ContainSingle().Which.Code.Should().Be(FlowErrorCodes.NodeFaulted);
+        errors.ShouldHaveSingleItem().Code.ShouldBe(FlowErrorCodes.NodeFaulted);
     }
 
     private sealed class FakeMqttSession(string? topicToFail = null) : IMqttSession

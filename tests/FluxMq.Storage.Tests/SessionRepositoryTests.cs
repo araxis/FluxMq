@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Storage;
@@ -25,11 +25,11 @@ public class SessionRepositoryTests : IDisposable
 
         var session = _repo.Start(profile);
 
-        session.Id.Should().NotBe(SessionId.Empty);
-        session.ProfileId.Should().Be(profile.Id);
-        session.ProfileName.Should().Be("broker-a");
-        session.StartedAt.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(2));
-        session.EndedAt.Should().BeNull();
+        session.Id.ShouldNotBe(SessionId.Empty);
+        session.ProfileId.ShouldBe(profile.Id);
+        session.ProfileName.ShouldBe("broker-a");
+        session.StartedAt.ShouldBe(DateTimeOffset.UtcNow, tolerance: TimeSpan.FromSeconds(2));
+        session.EndedAt.ShouldBeNull();
     }
 
     [Fact]
@@ -37,8 +37,8 @@ public class SessionRepositoryTests : IDisposable
     {
         var session = _repo.Start(Profile("broker-a"), "morning capture", "factory floor");
 
-        session.Name.Should().Be("morning capture");
-        session.ProjectName.Should().Be("factory floor");
+        session.Name.ShouldBe("morning capture");
+        session.ProjectName.ShouldBe("factory floor");
     }
 
     [Fact]
@@ -46,7 +46,7 @@ public class SessionRepositoryTests : IDisposable
     {
         var session = _repo.Start(Profile());
 
-        _repo.Get(session.Id).Should().NotBeNull();
+        _repo.Get(session.Id).ShouldNotBeNull();
     }
 
     [Fact]
@@ -56,16 +56,16 @@ public class SessionRepositoryTests : IDisposable
 
         _repo.End(session.Id);
 
-        _repo.Get(session.Id)!.EndedAt.Should()
-            .NotBeNull()
-            .And.BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(2));
+        var endedAt = _repo.Get(session.Id)!.EndedAt;
+        endedAt.ShouldNotBeNull();
+        endedAt!.Value.ShouldBe(DateTimeOffset.UtcNow, tolerance: TimeSpan.FromSeconds(2));
     }
 
     [Fact]
     public void End_DoesNotThrow_ForUnknownId()
     {
         var act = () => _repo.End(SessionId.New());
-        act.Should().NotThrow();
+        Should.NotThrow(act);
     }
 
     [Fact]
@@ -77,8 +77,8 @@ public class SessionRepositoryTests : IDisposable
 
         var all = _repo.GetAll();
 
-        all.Should().HaveCount(3);
-        all[0].StartedAt.Should().BeOnOrAfter(all[1].StartedAt);
+        all.Count.ShouldBe(3);
+        all[0].StartedAt.ShouldBeGreaterThanOrEqualTo(all[1].StartedAt);
     }
 
     [Fact]
@@ -86,8 +86,8 @@ public class SessionRepositoryTests : IDisposable
     {
         var session = _repo.Start(Profile());
 
-        _repo.Delete(session.Id).Should().BeTrue();
-        _repo.Get(session.Id).Should().BeNull();
+        _repo.Delete(session.Id).ShouldBeTrue();
+        _repo.Get(session.Id).ShouldBeNull();
     }
 
     public void Dispose() => _ctx.Dispose();

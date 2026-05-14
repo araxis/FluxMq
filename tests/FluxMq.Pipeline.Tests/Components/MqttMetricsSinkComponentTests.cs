@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Pipeline.Components;
@@ -26,17 +26,17 @@ public sealed class MqttMetricsSinkComponentTests
 
         await Task.WhenAll(component.Completion, sink.Completion);
 
-        snapshots.Should().HaveCount(3);
+        snapshots.Count.ShouldBe(3);
         var current = component.Current;
-        current.MessageCount.Should().Be(3);
-        current.TotalPayloadBytes.Should().Be(6);
-        current.MinPayloadBytes.Should().Be(0);
-        current.MaxPayloadBytes.Should().Be(4);
-        current.AveragePayloadBytes.Should().Be(2);
-        current.RetainedMessageCount.Should().Be(1);
-        current.UniqueTopicCount.Should().Be(2);
-        current.LastTopic.Should().Be("factory/1");
-        current.LastReceivedAt.Should().Be(start.AddSeconds(2));
+        current.MessageCount.ShouldBe(3);
+        current.TotalPayloadBytes.ShouldBe(6);
+        current.MinPayloadBytes.ShouldBe(0);
+        current.MaxPayloadBytes.ShouldBe(4);
+        current.AveragePayloadBytes.ShouldBe(2);
+        current.RetainedMessageCount.ShouldBe(1);
+        current.UniqueTopicCount.ShouldBe(2);
+        current.LastTopic.ShouldBe("factory/1");
+        current.LastReceivedAt.ShouldBe(start.AddSeconds(2));
     }
 
     [Fact]
@@ -47,7 +47,7 @@ public sealed class MqttMetricsSinkComponentTests
         component.Complete();
         await component.Completion;
 
-        component.Current.Should().BeEquivalentTo(new MqttMetricsSnapshot());
+        component.Current.ShouldBe(new MqttMetricsSnapshot());
     }
 
     [Fact]
@@ -66,14 +66,14 @@ public sealed class MqttMetricsSinkComponentTests
 
         await Task.WhenAll(component.Completion, errorSink.Completion);
 
-        component.Current.MessageCount.Should().Be(2);
-        component.Current.TotalPayloadBytes.Should().Be(3);
+        component.Current.MessageCount.ShouldBe(2);
+        component.Current.TotalPayloadBytes.ShouldBe(3);
 
-        var error = errors.Should().ContainSingle().Subject;
-        error.NodeId.Should().Be(component.Id);
-        error.Code.Should().Be(FlowErrorCodes.ProcessingFailed);
-        error.Message.Should().Be("MQTT metrics update failed.");
-        error.Context.Should().Be("factory/bad");
+        var error = errors.ShouldHaveSingleItem();
+        error.NodeId.ShouldBe(component.Id);
+        error.Code.ShouldBe(FlowErrorCodes.ProcessingFailed);
+        error.Message.ShouldBe("MQTT metrics update failed.");
+        error.Context.ShouldBe("factory/bad");
     }
 
     [Fact]
@@ -88,13 +88,13 @@ public sealed class MqttMetricsSinkComponentTests
         component.Fault(failure);
 
         var act = async () => await component.Completion;
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("metrics failed");
+        var ex = await Should.ThrowAsync<InvalidOperationException>(act);
+        ex.Message.ShouldBe("metrics failed");
         await errorSink.Completion;
 
-        var error = errors.Should().ContainSingle().Subject;
-        error.Code.Should().Be(FlowErrorCodes.NodeFaulted);
-        error.Message.Should().Be("MQTT metrics sink faulted.");
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(FlowErrorCodes.NodeFaulted);
+        error.Message.ShouldBe("MQTT metrics sink faulted.");
     }
 
     private static MqttEnvelope Message(

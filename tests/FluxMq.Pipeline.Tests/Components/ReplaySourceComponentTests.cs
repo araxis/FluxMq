@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Pipeline.Components;
@@ -27,8 +27,8 @@ public sealed class ReplaySourceComponentTests
         await component.StartAsync();
         await sink.Completion;
 
-        received.Should().Equal("topic/1", "topic/2", "topic/3");
-        component.Completion.IsCompletedSuccessfully.Should().BeTrue();
+        received.ShouldBe(new[] { "topic/1", "topic/2", "topic/3" });
+        component.Completion.IsCompletedSuccessfully.ShouldBeTrue();
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public sealed class ReplaySourceComponentTests
         await component.StartAsync();
         await sink.Completion;
 
-        delays.Should().Equal(TimeSpan.FromSeconds(1), TimeSpan.FromMilliseconds(500));
+        delays.ShouldBe(new[] { TimeSpan.FromSeconds(1), TimeSpan.FromMilliseconds(500) });
     }
 
     [Fact]
@@ -75,11 +75,11 @@ public sealed class ReplaySourceComponentTests
         await component.StartAsync();
         await Task.WhenAll(errorSink.Completion, messageSink.Completion);
 
-        messages.Should().ContainSingle().Which.Topic.Should().Be("topic/1");
-        var error = errors.Should().ContainSingle().Subject;
-        error.NodeId.Should().Be(component.Id);
-        error.Code.Should().Be(FlowErrorCodes.ProcessingFailed);
-        error.Message.Should().Be("Replay source failed.");
+        messages.ShouldHaveSingleItem().Topic.ShouldBe("topic/1");
+        var error = errors.ShouldHaveSingleItem();
+        error.NodeId.ShouldBe(component.Id);
+        error.Code.ShouldBe(FlowErrorCodes.ProcessingFailed);
+        error.Message.ShouldBe("Replay source failed.");
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public sealed class ReplaySourceComponentTests
         component.Complete();
 
         await Task.WhenAll(component.Completion, sink.Completion);
-        component.Completion.IsCompletedSuccessfully.Should().BeTrue();
+        component.Completion.IsCompletedSuccessfully.ShouldBeTrue();
     }
 
     [Fact]
@@ -107,11 +107,11 @@ public sealed class ReplaySourceComponentTests
         component.Fault(failure);
 
         var act = async () => await component.Completion;
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("replay faulted");
+        var ex = await Should.ThrowAsync<InvalidOperationException>(act);
+        ex.Message.ShouldBe("replay faulted");
         await errorSink.Completion;
 
-        errors.Should().ContainSingle().Which.Code.Should().Be(FlowErrorCodes.NodeFaulted);
+        errors.ShouldHaveSingleItem().Code.ShouldBe(FlowErrorCodes.NodeFaulted);
     }
 
     private static MqttEnvelope Message(string topic, DateTimeOffset receivedAt) => new()

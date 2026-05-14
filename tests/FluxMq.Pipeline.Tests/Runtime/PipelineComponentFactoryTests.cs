@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Payloads;
@@ -23,12 +23,13 @@ public sealed class PipelineComponentFactoryTests
         var registry = new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories();
 
-        registry.Factories.Keys.Should().BeEquivalentTo([
+        registry.Factories.Keys.ShouldBe(new[]
+        {
             PipelineFlowNodeTypes.Connection,
             PipelineFlowNodeTypes.Trigger,
             PipelineFlowNodeTypes.PayloadInspector,
             PipelineFlowNodeTypes.MetricsSink
-        ]);
+        }, ignoreOrder: true);
     }
 
     [Fact]
@@ -66,16 +67,16 @@ public sealed class PipelineComponentFactoryTests
             }
         });
 
-        result.IsSuccess.Should().BeTrue();
+        result.IsSuccess.ShouldBeTrue();
 
         source!.Post(new MqttEnvelope { Topic = "factory/json", Payload = """{"value":1}"""u8.ToArray() });
         result.Runtime!.Complete();
 
         await result.Runtime.Completion;
 
-        sink!.Values.Should().ContainSingle();
-        sink.Values[0].Envelope.Topic.Should().Be("factory/json");
-        sink.Values[0].Payload.Format.Should().Be(PayloadFormat.Json);
+        sink!.Values.ShouldHaveSingleItem();
+        sink.Values[0].Envelope.Topic.ShouldBe("factory/json");
+        sink.Values[0].Payload.Format.ShouldBe(PayloadFormat.Json);
     }
 
     [Fact]
@@ -113,7 +114,7 @@ public sealed class PipelineComponentFactoryTests
             }
         });
 
-        result.IsSuccess.Should().BeTrue();
+        result.IsSuccess.ShouldBeTrue();
 
         source!.Post(new MqttEnvelope { Topic = "factory/one", Payload = [1, 2] });
         source.Post(new MqttEnvelope { Topic = "factory/two", Payload = [1, 2, 3] });
@@ -121,9 +122,9 @@ public sealed class PipelineComponentFactoryTests
 
         await result.Runtime.Completion;
 
-        sink!.Values.Should().HaveCount(2);
-        sink.Values[^1].MessageCount.Should().Be(2);
-        sink.Values[^1].TotalPayloadBytes.Should().Be(5);
+        sink!.Values.Count.ShouldBe(2);
+        sink.Values[^1].MessageCount.ShouldBe(2);
+        sink.Values[^1].TotalPayloadBytes.ShouldBe(5);
     }
 
     [Fact]
@@ -179,14 +180,14 @@ public sealed class PipelineComponentFactoryTests
             }
         });
 
-        result.IsSuccess.Should().BeTrue();
+        result.IsSuccess.ShouldBeTrue();
         using var runtime = result.Runtime!;
 
         await runtime.StartAsync();
 
-        session.Should().NotBeNull();
-        session!.ConnectCalls.Should().Be(1);
-        session.Subscriptions.Should().ContainSingle(subscription =>
+        session.ShouldNotBeNull();
+        session!.ConnectCalls.ShouldBe(1);
+        session.Subscriptions.ShouldContain(subscription =>
             subscription.TopicFilter == "factory/#" &&
             subscription.QualityOfService == MqttQualityOfServiceLevel.AtMostOnce);
 
@@ -199,9 +200,9 @@ public sealed class PipelineComponentFactoryTests
         session.CompleteMessages();
         await runtime.Completion;
 
-        sink!.Values.Should().NotBeEmpty();
-        sink.Values[^1].MessageCount.Should().Be(1);
-        sink.Values[^1].TotalPayloadBytes.Should().Be(3);
+        sink!.Values.ShouldNotBeEmpty();
+        sink.Values[^1].MessageCount.ShouldBe(1);
+        sink.Values[^1].TotalPayloadBytes.ShouldBe(3);
     }
 
     [Fact]
@@ -231,8 +232,8 @@ public sealed class PipelineComponentFactoryTests
             }
         });
 
-        result.IsSuccess.Should().BeFalse();
-        result.Errors.Should().Contain(error => error.Message.Contains("connection"));
+        result.IsSuccess.ShouldBeFalse();
+        result.Errors.ShouldContain(error => error.Message.Contains("connection"));
     }
 
     [Fact]
@@ -262,8 +263,8 @@ public sealed class PipelineComponentFactoryTests
             }
         });
 
-        result.IsSuccess.Should().BeFalse();
-        result.Errors.Should().ContainSingle(error =>
+        result.IsSuccess.ShouldBeFalse();
+        result.Errors.ShouldContain(error =>
             error.Code == ApplicationRuntimeBuildErrorCode.FactoryFailed &&
             error.Message.Contains("boundedCapacity"));
     }
