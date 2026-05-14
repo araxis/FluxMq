@@ -36,28 +36,19 @@ public sealed class ApplicationDefinitionValidator
                     "Workflow name cannot be empty."));
             }
 
-            if (workflow.Value.Count == 0)
+            if (workflow.Value.Nodes.Count == 0)
             {
                 errors.Add(new(
                     ApplicationDefinitionValidationErrorCode.EmptyWorkflow,
                     $"Workflow '{workflow.Key}' must contain at least one node."));
             }
 
-            var knownNodeNames = definition.Resources.Keys
-                .Where(name => !string.IsNullOrWhiteSpace(name))
-                .ToHashSet(StringComparer.Ordinal);
-
-            foreach (var node in workflow.Value)
+            foreach (var node in workflow.Value.Nodes)
             {
-                if (!string.IsNullOrWhiteSpace(node.Key))
-                {
-                    knownNodeNames.Add(node.Key);
-                }
-
                 ValidateNode(node.Key, node.Value, errors);
             }
 
-            ValidateLinks(workflow.Key, workflow.Value, knownNodeNames, errors);
+            ValidateLinks(workflow.Key, workflow.Value.Nodes, definition, errors);
         }
 
         return new ApplicationDefinitionValidationResult(errors);
@@ -86,7 +77,7 @@ public sealed class ApplicationDefinitionValidator
     private static void ValidateLinks(
         string workflowName,
         IReadOnlyDictionary<string, NodeDefinition> nodes,
-        IReadOnlySet<string> knownNodeNames,
+        ApplicationDefinition definition,
         List<ApplicationDefinitionValidationError> errors)
     {
         var knownLinks = new HashSet<LinkKey>();
@@ -106,9 +97,9 @@ public sealed class ApplicationDefinitionValidator
 
                 try
                 {
-                    links = targetNode.Value.GetPortLinks(port.Key);
+                    links = targetNode.Value.GetPortLinks(port.Key, workflowName);
                 }
-                catch (Exception exception) when (exception is FormatException or System.Text.Json.JsonException)
+                catch (Exception exception) when (exception is FormatException or System.Text.Json.JsonException or ArgumentException)
                 {
                     errors.Add(new(
                         ApplicationDefinitionValidationErrorCode.InvalidLink,
@@ -125,14 +116,9 @@ public sealed class ApplicationDefinitionValidator
                             $"Node '{targetNode.Key}' port '{port.Key}' in workflow '{workflowName}' has an empty source port."));
                     }
 
-                    if (!knownNodeNames.Contains(link.From.Node.Value))
-                    {
-                        errors.Add(new(
-                            ApplicationDefinitionValidationErrorCode.MissingSourceNode,
-                            $"Node '{targetNode.Key}' port '{port.Key}' in workflow '{workflowName}' references missing source node '{link.From.Node}'."));
-                    }
+                    ValidateSourceNode(targetNode.Key, port.Key, workflowName, link.From, definition, errors);
 
-                    if (!knownLinks.Add(LinkKey.From(targetNode.Key, port.Key, link)))
+                    if (!knownLinks.Add(new LinkKey(targetNode.Key, port.Key, link.From, link.When)))
                     {
                         errors.Add(new(
                             ApplicationDefinitionValidationErrorCode.DuplicateLink,
@@ -143,19 +129,45 @@ public sealed class ApplicationDefinitionValidator
         }
     }
 
+    private static void ValidateSourceNode(
+        string targetNodeName,
+        string targetPortName,
+        string targetWorkflowName,
+        PortAddress source,
+        ApplicationDefinition definition,
+        List<ApplicationDefinitionValidationError> errors)
+    {
+        if (source.Scope == WellKnownScopes.Resources)
+        {
+            if (!definition.Resources.ContainsKey(source.Node.Value))
+            {
+                errors.Add(new(
+                    ApplicationDefinitionValidationErrorCode.MissingSourceNode,
+                    $"Node '{targetNodeName}' port '{targetPortName}' in workflow '{targetWorkflowName}' references missing resource '{source.Node}'."));
+            }
+
+            return;
+        }
+
+        if (!definition.Workflows.TryGetValue(source.Scope, out var sourceWorkflow))
+        {
+            errors.Add(new(
+                ApplicationDefinitionValidationErrorCode.MissingSourceNode,
+                $"Node '{targetNodeName}' port '{targetPortName}' in workflow '{targetWorkflowName}' references unknown workflow scope '{source.Scope}'."));
+            return;
+        }
+
+        if (!sourceWorkflow.Nodes.ContainsKey(source.Node.Value))
+        {
+            errors.Add(new(
+                ApplicationDefinitionValidationErrorCode.MissingSourceNode,
+                $"Node '{targetNodeName}' port '{targetPortName}' in workflow '{targetWorkflowName}' references missing node '{source.Node}' in workflow '{source.Scope}'."));
+        }
+    }
+
     private sealed record LinkKey(
         string TargetNode,
         string TargetPort,
-        string SourceNode,
-        string SourcePort,
-        string? When)
-    {
-        public static LinkKey From(string targetNode, string targetPort, LinkDefinition link)
-            => new(
-                targetNode,
-                targetPort,
-                link.From.Node.Value,
-                link.From.Port.Value,
-                link.When);
-    }
+        PortAddress Source,
+        string? When);
 }

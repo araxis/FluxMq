@@ -37,7 +37,7 @@ public sealed class FlowApplicationHostTests
         result.IsSuccess.Should().BeTrue();
         host.State.Should().Be(FlowApplicationHostState.Running);
         host.Runtime.Should().NotBeNull();
-        host.Runtime!.Workflows.Should().ContainKey("observe");
+        host.Runtime!.Workflows.Should().Contain(wf => wf.Name.Value == "observe");
     }
 
     [Fact]
@@ -116,8 +116,8 @@ public sealed class FlowApplicationHostTests
     public async Task StopAsync_ConvertsRuntimeCompletionFailureToFaultedState()
     {
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
-            .Register(new NodeType("test.faulting"), (name, _) =>
-                RuntimeNode.Create(name, new FaultingNode())));
+            .Register(new NodeType("test.faulting"), (address, _) =>
+                RuntimeNode.Create(address, new FaultingNode())));
 
         await using var host = new FlowApplicationHost(
             BuildConfiguration(
@@ -151,8 +151,8 @@ public sealed class FlowApplicationHostTests
     public async Task StartAsync_ConvertsStartFailureToHostError()
     {
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
-            .Register(new NodeType("test.start-fails"), (name, _) =>
-                RuntimeNode.Create(name, new StartFailingNode())));
+            .Register(new NodeType("test.start-fails"), (address, _) =>
+                RuntimeNode.Create(address, new StartFailingNode())));
 
         await using var host = new FlowApplicationHost(
             BuildConfiguration(

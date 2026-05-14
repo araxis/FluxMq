@@ -37,12 +37,12 @@ public sealed class FlowApplicationDefinitionJsonTests
         definition.Should().NotBeNull();
         definition!.Resources.Keys.Should().Contain("broker");
         definition.Workflows.Keys.Should().Contain("observeTraffic");
-        definition.Workflows["observeTraffic"].Keys.Should().Contain(["source", "metrics"]);
+        definition.Workflows["observeTraffic"].Nodes.Keys.Should().Contain(["source", "metrics"]);
 
-        var metrics = definition.Workflows["observeTraffic"]["metrics"];
+        var metrics = definition.Workflows["observeTraffic"].Nodes["metrics"];
         metrics.Type.Should().Be(new NodeType("mqtt.metrics-sink"));
-        metrics.GetPortLinks("Input").Should().ContainSingle()
-            .Which.From.Should().Be(new PortReference(new NodeName("source"), new PortName("Output")));
+        metrics.GetPortLinks("Input", "observeTraffic").Should().ContainSingle()
+            .Which.From.Should().Be(new PortAddress("observeTraffic", new NodeName("source"), new PortName("Output")));
     }
 
     [Fact]
@@ -69,14 +69,14 @@ public sealed class FlowApplicationDefinitionJsonTests
             json,
             ApplicationDefinitionJson.CreateSerializerOptions());
 
-        var links = node!.GetPortLinks("Input");
+        var links = node!.GetPortLinks("Input", "myWorkflow");
 
         links.Should().HaveCount(3);
-        links[0].From.ToString().Should().Be("source.Output");
+        links[0].From.ToString().Should().Be("myWorkflow.source.Output");
         links[0].When.Should().Be("payload.size > 0");
-        links[1].From.ToString().Should().Be("replay.Output");
+        links[1].From.ToString().Should().Be("myWorkflow.replay.Output");
         links[1].When.Should().Be("topic.startsWith('factory/')");
-        links[2].From.ToString().Should().Be("router.WhenTrue");
+        links[2].From.ToString().Should().Be("myWorkflow.router.WhenTrue");
         links[2].When.Should().Be("payload.size > 0");
     }
 
@@ -87,18 +87,21 @@ public sealed class FlowApplicationDefinitionJsonTests
         {
             Workflows =
             {
-                ["observeTraffic"] = new()
+                ["observeTraffic"] = new WorkflowDefinition
                 {
-                    ["source"] = new NodeDefinition
+                    Nodes =
                     {
-                        Type = new NodeType("mqtt.trigger")
-                    },
-                    ["metrics"] = new NodeDefinition
-                    {
-                        Type = new NodeType("mqtt.metrics-sink"),
-                        Ports =
+                        ["source"] = new NodeDefinition
                         {
-                            ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
+                            Type = new NodeType("mqtt.trigger")
+                        },
+                        ["metrics"] = new NodeDefinition
+                        {
+                            Type = new NodeType("mqtt.metrics-sink"),
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
+                            }
                         }
                     }
                 }

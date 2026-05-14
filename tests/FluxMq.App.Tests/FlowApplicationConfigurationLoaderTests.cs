@@ -33,8 +33,8 @@ public sealed class FlowApplicationConfigurationLoaderTests
         var definition = new FlowApplicationConfigurationLoader().Load(configuration);
 
         definition.Workflows.Should().ContainKey("observe");
-        definition.Workflows["observe"]["inspect"].Type.Value.Should().Be("mqtt.payload-inspector");
-        definition.Workflows["observe"]["inspect"].Configuration["boundedCapacity"].GetInt32().Should().Be(250);
+        definition.Workflows["observe"].Nodes["inspect"].Type.Value.Should().Be("mqtt.payload-inspector");
+        definition.Workflows["observe"].Nodes["inspect"].Configuration["boundedCapacity"].GetInt32().Should().Be(250);
     }
 
     [Fact]

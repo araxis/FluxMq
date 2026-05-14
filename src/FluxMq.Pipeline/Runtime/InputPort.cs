@@ -5,17 +5,17 @@ namespace FluxMq.Pipeline.Runtime;
 
 public abstract class InputPort
 {
-    private protected InputPort(PortName name, Type valueType)
+    private protected InputPort(PortAddress address, Type valueType)
     {
-        Name = name;
+        Address = address;
         ValueType = valueType;
     }
 
-    public PortName Name { get; }
+    public PortAddress Address { get; }
     public Type ValueType { get; }
 }
 
-public sealed class InputPort<T>(PortName name, ITargetBlock<T> target) : InputPort(name, typeof(T))
+public sealed class InputPort<T>(PortAddress address, ITargetBlock<T> target) : InputPort(address, typeof(T))
 {
     public ITargetBlock<T> Target { get; } = target;
 }

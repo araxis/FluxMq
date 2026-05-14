@@ -33,7 +33,7 @@ public sealed class FlowDefinitionComposerTests
         var result = host.Build();
 
         result.IsSuccess.Should().BeTrue(string.Join(Environment.NewLine, result.RuntimeBuild?.Errors.Select(error => error.Message) ?? []));
-        result.RuntimeBuild!.Runtime!.Resources.Keys.Select(key => key.Value)
+        result.RuntimeBuild!.Runtime!.Resources.Select(node => node.Address.Node.Value)
             .Should().Contain(FlowDefinitionComposer.BrokerResourceName);
     }
 

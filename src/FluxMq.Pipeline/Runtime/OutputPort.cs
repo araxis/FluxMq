@@ -5,13 +5,13 @@ namespace FluxMq.Pipeline.Runtime;
 
 public abstract class OutputPort
 {
-    private protected OutputPort(PortName name, Type valueType)
+    private protected OutputPort(PortAddress address, Type valueType)
     {
-        Name = name;
+        Address = address;
         ValueType = valueType;
     }
 
-    public PortName Name { get; }
+    public PortAddress Address { get; }
     public Type ValueType { get; }
 
     public abstract IDisposable? TryLinkTo(
@@ -20,15 +20,9 @@ public abstract class OutputPort
         out ApplicationRuntimeBuildError? error);
 }
 
-public sealed class OutputPort<T> : OutputPort
+public sealed class OutputPort<T>(PortAddress address, ISourceBlock<T> source) : OutputPort(address, typeof(T))
 {
-    public OutputPort(PortName name, ISourceBlock<T> source)
-        : base(name, typeof(T))
-    {
-        Source = source;
-    }
-
-    public ISourceBlock<T> Source { get; }
+    public ISourceBlock<T> Source { get; } = source;
 
     public override IDisposable? TryLinkTo(
         InputPort input,
@@ -39,8 +33,8 @@ public sealed class OutputPort<T> : OutputPort
         {
             error = new(
                 ApplicationRuntimeBuildErrorCode.PortTypeMismatch,
-                $"Cannot link '{Name}' ({ValueType.Name}) to '{input.Name}' ({input.ValueType.Name}).",
-                PortName: input.Name);
+                $"Cannot link '{Address}' ({ValueType.Name}) to '{input.Address}' ({input.ValueType.Name}).",
+                PortName: input.Address.Port);
             return null;
         }
 
@@ -55,8 +49,8 @@ public sealed class OutputPort<T> : OutputPort
         {
             error = new(
                 ApplicationRuntimeBuildErrorCode.LinkFailed,
-                $"Failed to link '{Name}' to '{input.Name}': {exception.Message}",
-                PortName: input.Name);
+                $"Failed to link '{Address}' to '{input.Address}': {exception.Message}",
+                PortName: input.Address.Port);
             return null;
         }
     }
