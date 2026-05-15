@@ -89,7 +89,7 @@ jobs:
           -ArtifactsPath "$env:RUNNER_TEMP\windows-packages"
 
       - name: Upload portable package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: FluxMQ-portable-win-x64
           path: ${{ runner.temp }}\windows-packages\dist\*-portable-win-x64.zip
@@ -97,7 +97,7 @@ jobs:
           retention-days: 14
 
       - name: Upload MSI package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: FluxMQ-msi-win-x64
           path: ${{ runner.temp }}\windows-packages\dist\*.msi
