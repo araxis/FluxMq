@@ -86,6 +86,32 @@ Reasoning:
 
 Status: Accepted.
 
+### 2026-05-15 - Make runtime behavior source-agnostic
+
+Decision: Live broker traffic and stored/offline traffic must enter Fork Flow through the same runtime source shape. Workflows, projections, dashboards, and UI update paths should consume typed runtime ports without knowing whether the input came from an online broker, stored session, replay, import, or test source.
+
+Reasoning:
+- The current live workspace path reads broker messages directly in UI service code, while stored sessions are loaded as a separate list. That split will create duplicate behavior in topic views, payload inspection, metrics, dashboard blocks, and future replay workflows.
+- The workflow definition should describe message movement, not whether the source is online or offline.
+- Source selection is an execution binding concern. A logical source node can be bound at runtime to a live MQTT source, stored session source, replay source, imported file source, or synthetic test source.
+- Dashboards should bind to runtime/projection outputs only. A dashboard should not have separate live and replay implementations.
+- Stored traffic must be streamable, not only loaded as full lists, so large sessions can drive the same runtime path without exhausting memory.
+
+Status: Accepted.
+
+### 2026-05-15 - Prefer Dataflow streams over EventHandler for runtime updates
+
+Decision: Public runtime, component, projection, dashboard, and source update contracts should use Dataflow blocks (`ISourceBlock<T>`, `ITargetBlock<T>`, or typed runtime ports) rather than `EventHandler`. Channels may remain internal implementation details for low-level producers such as MQTT intake, but they should be adapted to Dataflow at the runtime boundary.
+
+Reasoning:
+- Dataflow carries the semantics FluxMQ needs: backpressure, completion, fault propagation, linking, unlinking, fan-out, and typed ports.
+- `EventHandler` is too weak for runtime behavior because it has no native completion, fault, backpressure, or graph-linking semantics.
+- Channels are excellent for single producer/consumer hot paths, but they do not express graph composition by themselves.
+- UI components can still trigger `StateHasChanged`, but the data they observe should come from source/projection streams or durable projection state rather than ad hoc events.
+- Projection objects should hold current state, while Dataflow streams carry updates. A late UI subscriber should read the latest projection snapshot and then receive future updates.
+
+Status: Accepted.
+
 ### 2026-05-06 - Keep project memory in Markdown
 
 Decision: Use a dedicated `memory` folder with Markdown files for decisions, steps, progress, and architecture notes.

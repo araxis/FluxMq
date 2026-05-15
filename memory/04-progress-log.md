@@ -323,3 +323,5 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Updated `FluxMq.UI` to consume concrete components and storage services from `FluxMq.Components`.
 - Added `tests/FluxMq.Components.Tests` and moved concrete component, replay, and storage tests there.
 - Updated developer docs and memory notes to describe the new runtime/component boundary.
+- Recorded the next refactoring direction: live broker data and stored/offline data must enter the runtime through the same source model.
+- Agreed that runtime/projection/dashboard update contracts should be Dataflow-native, with channels kept as internal producer details and `EventHandler` avoided as an architectural contract.

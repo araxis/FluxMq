@@ -144,11 +144,24 @@ Initial status:
 MQTTnet Client
   -> MqttSession
   -> Channel<MqttEnvelope>
+  -> Dataflow source adapter
   -> Flow Application Runtime
   -> Storage / Metrics / Topic Index
   -> UI Projection / Host Integration
   -> Optional OpenTelemetry export
 ```
+
+The same runtime flow must also support stored/offline data:
+
+```text
+Stored session / imported file / generated source
+  -> Dataflow source adapter
+  -> Flow Application Runtime
+  -> Storage / Metrics / Topic Index
+  -> UI Projection / Dashboard
+```
+
+Source mode is an execution binding, not a different workflow model. A workflow should consume a logical source output and remain unchanged when the host binds that source to live broker traffic, a stored session, replay, import, or deterministic test data.
 
 ## Flow Application Runtime Direction
 
@@ -156,6 +169,7 @@ Fork Flow should grow a host-independent runtime layer in `FluxMq.Pipeline` or a
 
 Responsibilities:
 - Load and validate `ApplicationDefinition`.
+- Bind logical source nodes to online or offline data sources.
 - Own shared resource lifetime.
 - Start, stop, and observe named workflows.
 - Coordinate reloads by validating the next definition before applying changes.
@@ -177,6 +191,29 @@ Expected hosts:
 - `FluxMq.Cli`
 - service process
 - command/tool integrations
+
+## Update Flow Direction
+
+Runtime and projection updates should be Dataflow-native.
+
+Rules:
+- Runtime state, workflow state, component errors, source updates, projection snapshots, and dashboard block updates should be exposed through typed source blocks or typed runtime ports.
+- `EventHandler` should not be used as an architectural update contract. It may exist only as a thin UI adapter while the UI is being migrated.
+- Channels may remain inside low-level producers when they are the best fit, but they should be adapted once into Dataflow before entering Fork Flow.
+- Projection services should hold durable current state and publish incremental update streams. Late subscribers read the current snapshot and then subscribe to updates.
+- Live and stored traffic must feed the same projection components for topic tree, recent messages, payload inspection, metrics, and dashboard state.
+
+The target shape:
+
+```mermaid
+flowchart LR
+    Binding["Source binding"] --> Source["Traffic source node"]
+    Source --> Runtime["Fork Flow runtime"]
+    Runtime --> Ports["Typed output ports"]
+    Ports --> Projections["Projection runtime"]
+    Ports --> Dashboard["Dashboard blocks"]
+    Projections --> UI["UI state"]
+```
 
 ## Core Domain Types
 

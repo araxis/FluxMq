@@ -77,6 +77,8 @@ Goals:
 - Basic silence/spike indicators.
 - Internal metrics snapshots for UI projection.
 - Planned OpenTelemetry export for selected runtime signals.
+- Metrics and dashboard blocks must consume runtime/projection streams, not separate live/offline code paths.
+- Stored sessions must drive the same observability path as live broker traffic.
 
 Deliverable:
 - First operational dashboard.
@@ -111,6 +113,8 @@ Goals:
 - Property panel (edit selected node's config; triggers hot-reload on save).
 - Persist flow application definitions in LiteDB.
 - Load/switch between saved flow application definitions at runtime.
+- Add source binding so a logical source node can be run from live MQTT traffic, stored sessions, replay, imports, or test data without changing downstream workflow nodes.
+- Move UI live update behavior behind runtime/projection streams so topic tree, recent messages, payload inspector, metrics, and dashboards share one update model.
 
 Application host note:
 - `FluxMq.App` is now the class-library workflow application host boundary.
@@ -126,6 +130,20 @@ Hot-reload constraints:
 Deliverable:
 - Users can build, save, and live-edit message pipeline topologies visually.
 - Pipeline changes take effect immediately without stopping the session.
+
+## Source-Agnostic Runtime Refactor
+
+Goals:
+- Replace split live/offline behavior with a single runtime source model.
+- Treat source mode as an execution binding, not as a different workflow definition.
+- Keep public update contracts Dataflow-native.
+- Keep channels as internal producer details only where they are useful.
+- Add streaming storage reads for stored sessions instead of loading full lists for runtime execution.
+- Add deterministic ordering for stored messages so replay and offline dashboards are repeatable.
+- Move UI update behavior into projection components that hold current state and publish typed updates.
+
+Deliverable:
+- Live broker traffic, stored sessions, replay, imports, and tests can feed the same workflows, UI projections, and dashboard blocks without changing downstream flow definitions.
 
 ## Alpha Desktop Workspace
 

@@ -7,7 +7,7 @@ The user wants a Dashboard concept layered on top of the existing pipeline runti
 1. **Metric calculator nodes** — new `IFlowNode` pipeline nodes users add to workflows in the diagram designer to compute per-topic payload sizes, message rates, error counts, etc.
 2. **Dashboard** — a UI that binds "dashboard blocks" (display widgets) to metric node outputs. Data can come from either a live running pipeline or a stored/replayed session — even with no broker connected.
 
-The dashboard does not replace the pipeline. It is a view over metric ISourceBlock<T> outputs, whether those are live or produced by an internal replay pipeline.
+The dashboard does not replace the pipeline. It is a view over runtime/projection outputs. Source mode is selected before the graph runs, so dashboard blocks should not have separate live and replay implementations.
 
 ---
 
@@ -80,41 +80,28 @@ This keeps everything in one application JSON file, consistent with the existing
 
 ## Phase 3: Dashboard Runtime
 
-Location: `src/FluxMq.Pipeline/Runtime/DashboardRuntime.cs` (new file)
+Location: `src/FluxMq.Pipeline/Runtime/DashboardRuntime.cs` or a projection-oriented runtime package after the source-agnostic refactor.
 
-### Data Source Abstraction
+Dashboard runtime should bind blocks to typed runtime ports or projection outputs from the active application runtime.
 
-```csharp
-public abstract class DashboardDataSource { }
+It should not choose between live and replay execution. The active runtime already has a source binding:
 
-public sealed class LiveDashboardSource(ApplicationRuntime runtime) : DashboardDataSource
-{
-    public ApplicationRuntime Runtime { get; } = runtime;
-}
+- live broker source
+- stored session source
+- timed replay source
+- as-fast-as-possible offline source
+- imported/generated source later
 
-public sealed class ReplayDashboardSource(SessionId sessionId) : DashboardDataSource
-{
-    public SessionId SessionId { get; } = sessionId;
-}
-```
-
-### `DashboardRuntime`
-
-- `StartAsync(DashboardDefinition, DashboardDataSource, ct)`:
-  - **Live**: walk definition.Blocks, resolve NodeAddress from the running ApplicationRuntime, cast the RuntimeNode's component to the expected metric component, return its `Snapshots` ISourceBlock
-  - **Replay**: use `RecordedSessionReplayFactory` to create `ReplaySourceComponent` from `SessionId`, instantiate the metric components declared in definition.Blocks, link `replay.Output → metric.Input`, start the mini-pipeline, return each metric component's `Snapshots` ISourceBlock
-- Exposes per-block data sources; disposes the replay pipeline on `DisposeAsync`
-
-Replay mode works with no broker — `ReplaySourceComponent` drains all stored messages through the metric calculators entirely from the LiteDB store.
+Replay and offline mode work with no broker because the workflow source is bound to stored data before runtime start. Metric nodes and dashboard blocks receive the same `MqttEnvelope` stream shape as live mode.
 
 ---
 
 ## Phase 4: UI
 
 ### `DashboardService` (`src/FluxMq.UI/Services/DashboardService.cs`)
-- Wraps `DashboardRuntime`
+- Wraps dashboard/projection runtime
 - Exposes `ActiveDashboard`, `State`, `Changed` event (following `FlowWorkspaceService` pattern)
-- Methods: `RunLiveAsync(definition, runtime)`, `RunReplayAsync(definition, sessionId)`, `StopAsync()`
+- Methods should start from an active runtime/projection set. Live vs offline is selected by source binding outside the dashboard service.
 
 ### Dashboard Page (`src/FluxMq.UI/Pages/DashboardPage.razor`)
 - New route: `/dashboard`
@@ -127,7 +114,7 @@ Replay mode works with no broker — `ReplaySourceComponent` drains all stored m
 - `MessageRateBlock.razor` — binds to `ISourceBlock<MessageRateSnapshot>`, msgs/sec display
 
 ### `DashboardPanel.razor` (sidebar, `src/FluxMq.UI/Components/Workspace/`)
-- Lets user pick: live (current runtime) or a stored session from `ISessionRepository`
+- Lets user select the active source binding: live broker, stored session, replay speed, or offline-as-fast-as-possible.
 - "Launch Dashboard" button → navigates to `/dashboard`
 
 ---
@@ -137,8 +124,8 @@ Replay mode works with no broker — `ReplaySourceComponent` drains all stored m
 | File | Action |
 |------|--------|
 | `src/FluxMq.Components/MqttMetrics/MqttMetricsSinkComponent.cs` | Reference pattern for new components |
-| `src/FluxMq.Components/ReplaySourceComponent.cs` | Used in replay mode |
-| `src/FluxMq.Components/RecordedSessionReplayFactory.cs` | Creates replay source from SessionId |
+| `src/FluxMq.Components/Replay/ReplaySourceComponent.cs` | Source implementation for timed stored-session replay |
+| `src/FluxMq.Components/Replay/RecordedSessionReplayFactory.cs` | Creates replay source from SessionId |
 | `src/FluxMq.Pipeline/Definitions/ApplicationDefinition.cs` | Extend with Dashboards dict |
 | `src/FluxMq.Pipeline/Runtime/` | Add DashboardRuntime.cs |
 | `src/FluxMq.UI/Services/FlowComponentCatalog.cs` | Register new metric node types |
@@ -152,17 +139,18 @@ Replay mode works with no broker — `ReplaySourceComponent` drains all stored m
 
 1. `PayloadSizePerTopicComponent` + tests
 2. `MessageRateComponent` + tests
-3. Dashboard definition model (`DashboardDefinition`, `DashboardBlockDefinition`, `DashboardName`) + extend `ApplicationDefinition`
-4. `DashboardRuntime` (replay mode first — easier to test; live mode second) + tests
-5. `DashboardService` (UI service wrapper)
-6. `DashboardPage.razor` + block components
-7. `DashboardPanel.razor` (session selector + launch)
-8. Register new metric components in `FlowComponentCatalog` + `NodeWidgetRegistry`
+3. Source-agnostic runtime binding refactor
+4. Dashboard definition model (`DashboardDefinition`, `DashboardBlockDefinition`, `DashboardName`) + extend `ApplicationDefinition`
+5. Dashboard runtime/projection binding + tests
+6. `DashboardService` (UI service wrapper)
+7. `DashboardPage.razor` + block components
+8. `DashboardPanel.razor` (source binding selector + launch)
+9. Register new metric components in `FlowComponentCatalog` + `NodeWidgetRegistry`
 
 ---
 
 ## Verification
 
 - **Unit tests** for `PayloadSizePerTopicComponent` and `MessageRateComponent`: xUnit + Shouldly + hand-rolled fakes, `BufferBlock<T>` to assert emitted snapshots
-- **Unit tests** for `DashboardRuntime` replay mode: create fake stored messages → run → assert final snapshot matches expected aggregation
-- **UI**: start pipeline with metric nodes, launch dashboard in live mode → blocks update in real-time; stop pipeline, select stored session, launch in replay mode → blocks populate from session with no broker
+- **Unit tests** for source-agnostic dashboard behavior: bind the same workflow/dashboard to a live-style in-memory source and a stored-session source, assert identical final snapshots
+- **UI**: run pipeline with metric nodes from live broker → blocks update in real time; switch source binding to stored session → blocks populate from stored data with no broker and without changing downstream workflow/dashboard definitions
