@@ -3,69 +3,36 @@
 @inject FlowWorkspaceService Flow
 @inject LiveMqttWorkspaceService Live
 @inject FlowComponentCatalog Catalog
+@inject DragStateService DragState
 
 <div class="flow-designer-root">
-    <MudExpansionPanels Dense="true" Elevation="0" Class="flow-designer-panels">
-        <MudExpansionPanel Text="Fork Flow" Icon="@Icons.Material.Filled.AccountTree" Expanded="true" Class="flow-designer-panel">
-            <MudStack Spacing="2" Class="flow-designer-content">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Class="flow-designer-toolbar">
-                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" />
-                    <MudText Typo="Typo.subtitle1">Fork Flow</MudText>
-                    <MudSpacer />
-                    <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" OnClick="@ZoomToFit" />
-                </MudStack>
-
-                <MudGrid Spacing="2" Class="flow-designer-grid">
-                    <MudItem xs="12" md="4" Class="flow-designer-catalog">
-                        <MudPaper Elevation="0" Outlined="true" Class="flow-designer-catalog-paper pa-2">
-                            <MudText Typo="Typo.subtitle2" Class="mb-2">Components</MudText>
-                            <MudStack Spacing="1" Class="flow-designer-catalog-list">
-                                @foreach (var component in Catalog.Components)
-                                {
-                                    <MudPaper Elevation="0"
-                                              Outlined="true"
-                                              Class="pa-2"
-                                              draggable="true"
-                                              @ondragstart="@(() => OnDragStart(component.Type))">
-                                        <MudStack Row="true" AlignItems="AlignItems.Center">
-                                            <MudIcon Icon="@IconFor(component)" Color="@ColorFor(component)" />
-                                            <div>
-                                                <MudText Typo="Typo.body2">@component.DisplayName</MudText>
-                                                <MudText Typo="Typo.caption" Color="Color.Secondary">@component.Category</MudText>
-                                            </div>
-                                            <MudSpacer />
-                                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Add" OnClick="@(() => AddComponent(component.Type))" />
-                                        </MudStack>
-                                    </MudPaper>
-                               }
-                            </MudStack>
-                        </MudPaper>
-                    </MudItem>
-
-                    <MudItem xs="12" md="8" Class="flow-designer-canvas-column">
-                        <div class="flow-canvas" ondragover="event.preventDefault();" @ondragover:preventDefault @ondrop="@OnDrop">
-                            <CascadingValue Value="_diagram">
-                                <DiagramCanvas>
-                                    <Widgets>
-                                        <GridWidget Size="20" Mode="GridMode.Point" BackgroundColor="transparent" />
-                                        <NavigatorWidget Width="180"
-                                                         Height="120"
-                                                         UseNodeShape="false"
-                                                         NodeColor="#1F7A8C"
-                                                         GroupColor="#99D6CE"
-                                                         ViewStrokeColor="#F4B860"
-                                                         Class="flow-navigator"
-                                                         Style="position:absolute;right:12px;bottom:12px;z-index:20;background:var(--mud-palette-surface);border:1px solid var(--mud-palette-lines-default);border-radius:8px;box-shadow:var(--mud-elevation-3);" />
-                                    </Widgets>
-                                </DiagramCanvas>
-                            </CascadingValue>
-                        </div>
-                    </MudItem>
-                </MudGrid>
-
-            </MudStack>
-        </MudExpansionPanel>
-    </MudExpansionPanels>
+    <div class="flow-canvas"
+         ondragover="event.preventDefault();"
+         @ondragover:preventDefault
+         @ondrop="@OnDrop">
+        <CascadingValue Value="_diagram">
+            <DiagramCanvas>
+                <Widgets>
+                    <GridWidget Size="20" Mode="GridMode.Point" BackgroundColor="transparent" />
+                    <NavigatorWidget Width="180"
+                                     Height="120"
+                                     UseNodeShape="false"
+                                     NodeColor="#1F7A8C"
+                                     GroupColor="#99D6CE"
+                                     ViewStrokeColor="#F4B860"
+                                     Class="flow-navigator"
+                                     Style="position:absolute;right:12px;bottom:12px;z-index:20;background:var(--mud-palette-surface);border:1px solid var(--mud-palette-lines-default);border-radius:8px;box-shadow:var(--mud-elevation-3);" />
+                </Widgets>
+            </DiagramCanvas>
+        </CascadingValue>
+    </div>
+    <div class="flow-canvas-toolbar">
+        <MudTooltip Text="Zoom to fit">
+            <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong"
+                           Size="Size.Small"
+                           OnClick="@ZoomToFit" />
+        </MudTooltip>
+    </div>
 </div>
 
 @code {
@@ -76,7 +43,6 @@
         GridSize = 20
     });
 
-    private string? _draggedComponentType;
     private long _renderedDefinitionRevision = -1;
     private readonly Dictionary<string, DiagramNodeState> _nodeStates = new(StringComparer.Ordinal);
 
@@ -90,38 +56,20 @@
     protected override Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return Task.CompletedTask;
-        // Build the diagram here, not in OnInitialized, so that DiagramCanvas has
-        // already measured its container (its OnAfterRenderAsync fires before ours
-        // in the child→parent order). PortRenderers added by this call will be in
-        // their own first render with a valid Diagram.Container, measure correctly,
-        // fire Port.Changed, and links auto-update without any artificial delays.
         RebuildDiagram();
         return Task.CompletedTask;
     }
 
-    private void AddComponent(string componentType)
-    {
-        Flow.AddComponent(componentType);
-    }
-
-    private void OnDragStart(string componentType)
-    {
-        _draggedComponentType = componentType;
-    }
-
     private void OnDrop(DragEventArgs args)
     {
-        if (!string.IsNullOrWhiteSpace(_draggedComponentType))
+        if (!string.IsNullOrWhiteSpace(DragState.ComponentType))
         {
-            AddComponent(_draggedComponentType);
-            _draggedComponentType = null;
+            Flow.AddComponent(DragState.ComponentType);
+            DragState.ComponentType = null;
         }
     }
 
-    private void ZoomToFit()
-    {
-        _diagram.ZoomToFit(80);
-    }
+    private void ZoomToFit() => _diagram.ZoomToFit(80);
 
     private void RebuildDiagram()
     {
@@ -156,9 +104,7 @@
                 foreach (var workflow in workflows.EnumerateObject())
                 {
                     if (workflow.Value.ValueKind != JsonValueKind.Object)
-                    {
                         continue;
-                    }
 
                     var nodeX = 380d;
                     foreach (var node in workflow.Value.EnumerateObject())
@@ -173,26 +119,17 @@
                 foreach (var workflow in workflows.EnumerateObject())
                 {
                     if (workflow.Value.ValueKind != JsonValueKind.Object)
-                    {
                         continue;
-                    }
 
                     foreach (var target in workflow.Value.EnumerateObject())
                     {
                         if (!nodes.TryGetValue(target.Name, out var targetNode) || target.Value.ValueKind != JsonValueKind.Object)
-                        {
                             continue;
-                        }
 
-                        // Data links (Input ports etc. referenced via "<source>.<port>").
-                        // Port-anchored: source.Right -> target.Left so the line stays attached to the
-                        // visible connector dots whether the node is collapsed or expanded.
                         foreach (var port in target.Value.EnumerateObject())
                         {
                             if (IsDefinitionProperty(port.Name))
-                            {
                                 continue;
-                            }
 
                             foreach (var sourceReference in ReadSourceReferences(port.Value))
                             {
@@ -214,8 +151,6 @@
                             }
                         }
 
-                        // Resource link: configuration.connection references a resource by name.
-                        // Distinct gold colour so connection-binding is visually different from data flow.
                         if (target.Value.TryGetProperty("configuration", out var configuration) &&
                             configuration.ValueKind == JsonValueKind.Object &&
                             configuration.TryGetProperty("connection", out var connectionRef) &&
@@ -262,9 +197,7 @@
             isResource);
 
         if (hasState)
-        {
             node.SetCollapsed(state!.IsCollapsed);
-        }
 
         if (definition.TryGetProperty("configuration", out var configElement) &&
             configElement.ValueKind == JsonValueKind.Object &&
@@ -283,12 +216,12 @@
         }
         else
         {
-            // Fallback for nodes with no catalog entry.
             if (isResource || HasOutputPort(node.NodeType))
                 node.AddPort(PortAlignment.Right);
             if (!isResource && HasInputPort(node.NodeType))
                 node.AddPort(PortAlignment.Left);
         }
+
         _diagram.Nodes.Add(node);
         nodes[name] = node;
     }
@@ -353,9 +286,7 @@
     private void CaptureDiagramState()
     {
         foreach (var node in _diagram.Nodes.OfType<FlowDiagramNodeModel>())
-        {
             _nodeStates[node.NodeName] = new DiagramNodeState(node.Position, node.IsCollapsed);
-        }
     }
 
     private static bool TryGetFlowApplication(JsonElement root, out JsonElement flowApplication)
@@ -382,22 +313,14 @@
         else if (element.ValueKind == JsonValueKind.Array)
         {
             foreach (var item in element.EnumerateArray())
-            {
                 foreach (var sourceReference in ReadSourceReferences(item))
-                {
                     yield return sourceReference;
-                }
-            }
         }
         else if (element.ValueKind == JsonValueKind.Object)
         {
             if (element.TryGetProperty("from", out var from) || element.TryGetProperty("From", out from))
-            {
                 foreach (var sourceReference in ReadSourceReferences(from))
-                {
                     yield return sourceReference;
-                }
-            }
         }
     }
 
@@ -409,38 +332,17 @@
     private static string ShortTopic(string topic)
         => topic.Length <= 42 ? topic : $"{topic[..18]}...{topic[^18..]}";
 
-    private static string IconFor(FlowComponentDescriptor component)
-        => component.Category switch
-        {
-            "Source" => Icons.Material.Filled.Sensors,
-            "Mapper" => Icons.Material.Filled.Transform,
-            "Sink" => Icons.Material.Filled.CallMerge,
-            _ => Icons.Material.Filled.Extension
-        };
-
-    private static Color ColorFor(FlowComponentDescriptor component)
-        => component.Category switch
-        {
-            "Source" => Color.Primary,
-            "Mapper" => Color.Secondary,
-            "Sink" => Color.Tertiary,
-            _ => Color.Default
-        };
-
     private void OnFlowChanged(object? sender, EventArgs e)
     {
         InvokeAsync(() =>
         {
             if (_renderedDefinitionRevision != Flow.DefinitionRevision)
-            {
                 RebuildDiagram();
-            }
             else
             {
                 UpdateDiagramActivity();
                 _diagram.Refresh();
             }
-
             StateHasChanged();
         });
     }

@@ -1,17 +1,76 @@
 @inherits LayoutComponentBase
 @implements IDisposable
 @inject AppThemeService ThemeService
+@inject FlowWorkspaceService Flow
+@inject LiveMqttWorkspaceService Live
 
 <MudThemeProvider Theme="@_theme" IsDarkMode="@ThemeService.IsDarkMode" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<MudLayout Class="flux-shell">
-    <MudAppBar Elevation="0" Dense="true">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
-        <MudText Typo="Typo.h6">FluxMQ</MudText>
+<MudLayout>
+
+    <MudAppBar Dense="true" Elevation="1" Fixed="true">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                       Color="Color.Inherit"
+                       Edge="Edge.Start"
+                       OnClick="@(() => _leftOpen = !_leftOpen)" />
+
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mr-3">
+            <MudIcon Icon="@Icons.Material.Filled.BubbleChart" Size="Size.Small" />
+            <MudText Typo="Typo.h6" Style="font-weight:600;letter-spacing:-0.01em;">FluxMQ</MudText>
+        </MudStack>
+
+        <MudText Typo="Typo.caption" Color="Color.Tertiary" Style="opacity:0.8;">
+            @System.IO.Path.GetFileName(Flow.CurrentFilePath)
+        </MudText>
+
         <MudSpacer />
+
+        <MudChip T="string" Size="Size.Small" Color="@FlowStateColor" Class="mx-1">@Flow.State</MudChip>
+
+        <MudTooltip Text="Validate">
+            <MudIconButton Icon="@Icons.Material.Filled.FactCheck"
+                           Color="Color.Inherit"
+                           Size="Size.Small"
+                           Disabled="@_busy"
+                           OnClick="@ValidateAsync" />
+        </MudTooltip>
+        <MudTooltip Text="Run">
+            <MudIconButton Icon="@Icons.Material.Filled.PlayArrow"
+                           Color="Color.Success"
+                           Size="Size.Small"
+                           Disabled="@_busy"
+                           OnClick="@RunAsync" />
+        </MudTooltip>
+        <MudTooltip Text="Stop">
+            <MudIconButton Icon="@Icons.Material.Filled.Stop"
+                           Color="Color.Error"
+                           Size="Size.Small"
+                           Disabled="@_busy"
+                           OnClick="@StopAsync" />
+        </MudTooltip>
+
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+
+        <MudTooltip Text="Load file">
+            <MudIconButton Icon="@Icons.Material.Filled.UploadFile"
+                           Color="Color.Inherit"
+                           Size="Size.Small"
+                           Disabled="@_busy"
+                           OnClick="@LoadAsync" />
+        </MudTooltip>
+        <MudTooltip Text="Save file">
+            <MudIconButton Icon="@Icons.Material.Filled.Save"
+                           Color="Color.Inherit"
+                           Size="Size.Small"
+                           Disabled="@_busy"
+                           OnClick="@SaveAsync" />
+        </MudTooltip>
+
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+
         <MudSelect T="ThemePreference"
                    Value="@ThemeService.Preference"
                    ValueChanged="@OnThemeChanged"
@@ -20,35 +79,119 @@
                    Variant="Variant.Text"
                    FitContent="true"
                    Underline="false"
-                   Style="width: 132px">
+                   Style="width:120px;">
             <MudSelectItem Value="@ThemePreference.System">System</MudSelectItem>
             <MudSelectItem Value="@ThemePreference.Light">Light</MudSelectItem>
             <MudSelectItem Value="@ThemePreference.Dark">Dark</MudSelectItem>
         </MudSelect>
+
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
+                       Color="Color.Inherit"
+                       Edge="Edge.End"
+                       OnClick="@(() => _rightOpen = !_rightOpen)" />
     </MudAppBar>
 
-    <MudDrawer @bind-Open="_drawerOpen"
-               Elevation="1"
-               ClipMode="DrawerClipMode.Always"
+    <MudDrawer @bind-Open="_leftOpen"
+               Anchor="Anchor.Left"
                Variant="DrawerVariant.Persistent"
-               Width="340px"
-               Class="flux-drawer">
-        <div class="flux-drawer-scroll flux-scroll">
-            <MudStack Spacing="2" Class="pa-2">
-                <ConnectionPanel />
-                <SessionPanel />
-                <RuntimePanel />
-            </MudStack>
+               Width="300px"
+               ClipMode="DrawerClipMode.Always"
+               Elevation="1">
+        <div class="flux-left-drawer">
+            <div class="flux-rail">
+                <MudTooltip Text="Components" Placement="Placement.Right">
+                    <MudIconButton Icon="@Icons.Material.Filled.Extension"
+                                   Color="@(_railTab == 0 ? Color.Primary : Color.Default)"
+                                   Size="Size.Small"
+                                   OnClick="@(() => _railTab = 0)" />
+                </MudTooltip>
+                <MudTooltip Text="Connections" Placement="Placement.Right">
+                    <MudIconButton Icon="@Icons.Material.Filled.Cable"
+                                   Color="@(_railTab == 1 ? Color.Primary : Color.Default)"
+                                   Size="Size.Small"
+                                   OnClick="@(() => _railTab = 1)" />
+                </MudTooltip>
+                <MudTooltip Text="Projects" Placement="Placement.Right">
+                    <MudIconButton Icon="@Icons.Material.Filled.Folder"
+                                   Color="@(_railTab == 2 ? Color.Primary : Color.Default)"
+                                   Size="Size.Small"
+                                   OnClick="@(() => _railTab = 2)" />
+                </MudTooltip>
+                <div style="flex:1;"></div>
+                <MudTooltip Text="Help" Placement="Placement.Right">
+                    <MudIconButton Icon="@Icons.Material.Filled.HelpOutline"
+                                   Color="Color.Default"
+                                   Size="Size.Small" />
+                </MudTooltip>
+            </div>
+            <div class="flux-rail-panel">
+                @switch (_railTab)
+                {
+                    case 0:
+                        <ComponentCatalogPanel />
+                        break;
+                    case 1:
+                        <ConnectionPanel />
+                        break;
+                    default:
+                        <SessionPanel />
+                        break;
+                }
+            </div>
         </div>
     </MudDrawer>
 
-    <MudMainContent Class="flux-main">
+    <MudDrawer @bind-Open="_rightOpen"
+               Anchor="Anchor.Right"
+               Variant="DrawerVariant.Persistent"
+               Width="320px"
+               ClipMode="DrawerClipMode.Always"
+               Elevation="1">
+        <MudTabs MinimumTabWidth="80px" Class="flux-right-tabs">
+            <MudTabPanel Text="Traffic" Icon="@Icons.Material.Filled.Troubleshoot">
+                <LiveInspectorPanel />
+            </MudTabPanel>
+            <MudTabPanel Text="Runtime" Icon="@Icons.Material.Filled.Route">
+                <RuntimePanel />
+            </MudTabPanel>
+        </MudTabs>
+    </MudDrawer>
+
+    <MudMainContent Class="flux-main-canvas">
         @Body
     </MudMainContent>
+
+    <MudAppBar Bottom="true" Dense="true" Elevation="1" Fixed="true">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+            <MudIcon Icon="@Icons.Material.Filled.Circle"
+                     Size="Size.Small"
+                     Color="@ConnectionStateColor"
+                     Style="font-size:9px;" />
+            <MudText Typo="Typo.caption">@Live.State</MudText>
+            @if (Live.Connections.Count > 0)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    · @Live.Connections.Count conn
+                </MudText>
+            }
+        </MudStack>
+        <MudSpacer />
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            @System.IO.Path.GetFileName(Flow.CurrentFilePath)
+        </MudText>
+        <MudSpacer />
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            @Live.RecentMessages.Count msgs
+        </MudText>
+    </MudAppBar>
+
 </MudLayout>
 
 @code {
-    private bool _drawerOpen = true;
+    private bool _leftOpen = true;
+    private bool _rightOpen = true;
+    private bool _busy;
+    private int _railTab;
 
     private readonly MudTheme _theme = new()
     {
@@ -90,9 +233,39 @@
     protected override void OnInitialized()
     {
         ThemeService.Changed += OnThemeChanged;
+        Flow.Changed += OnChanged;
+        Live.Changed += OnChanged;
     }
 
-    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+    private Color FlowStateColor => Flow.State switch
+    {
+        RuntimeWorkspaceState.Running => Color.Success,
+        RuntimeWorkspaceState.Valid => Color.Info,
+        RuntimeWorkspaceState.Faulted => Color.Error,
+        RuntimeWorkspaceState.Stopped => Color.Warning,
+        _ => Color.Default
+    };
+
+    private Color ConnectionStateColor => Live.State switch
+    {
+        MqttSessionState.Connected => Color.Success,
+        MqttSessionState.Connecting or MqttSessionState.Reconnecting => Color.Warning,
+        MqttSessionState.Faulted => Color.Error,
+        _ => Color.Default
+    };
+
+    private Task LoadAsync() => RunBusyAsync(() => Flow.LoadFromFileAsync());
+    private Task SaveAsync() => RunBusyAsync(() => Flow.SaveToFileAsync());
+    private Task ValidateAsync() => RunBusyAsync(() => Flow.ValidateAsync());
+    private Task RunAsync() => RunBusyAsync(() => Flow.RunAsync());
+    private Task StopAsync() => RunBusyAsync(() => Flow.StopAsync());
+
+    private async Task RunBusyAsync(Func<Task> action)
+    {
+        _busy = true;
+        try { await action(); }
+        finally { _busy = false; StateHasChanged(); }
+    }
 
     private void OnThemeChanged(ThemePreference preference)
     {
@@ -101,9 +274,12 @@
     }
 
     private void OnThemeChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
+    private void OnChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
 
     public void Dispose()
     {
         ThemeService.Changed -= OnThemeChanged;
+        Flow.Changed -= OnChanged;
+        Live.Changed -= OnChanged;
     }
 }

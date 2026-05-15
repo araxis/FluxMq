@@ -1,41 +1,4 @@
 @page "/"
-@inject IJSRuntime Js
-
-<MudStack Class="mud-width-full mud-height-full" Justify="Justify.Center" AlignItems="AlignItems.Center">
-    <MudSplitPanel @ref="_splitPanel"
-                   Class="mud-width-full mud-height-full"
-                   Horizontal="false"
-                   Rounded="true"
-                   Transparent="false"
-                   MinPanelSize="400"
-                   Elevation="1">
-        <FirstPanel >
-            <MudStack Justify="Justify.Center" AlignItems="AlignItems.Stretch" Class="mud-width-full mud-height-full">
-                <FlowDesigner />
-            </MudStack>
-        </FirstPanel>
-        <SecondPanel>
-            <MudStack Justify="Justify.FlexStart" AlignItems="AlignItems.Stretch"  Class="mud-width-full mud-height-full">
-                <LiveInspectorPanel />
-            </MudStack>
-        </SecondPanel>
-    </MudSplitPanel>
-</MudStack>
-
-@code {
-
-    private MudSplitPanel? _splitPanel;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        await base.OnAfterRenderAsync(firstRender);
-        if (!firstRender || _splitPanel is null) return;
-        // var width1 = await Js.InvokeAsync<double>("eval", 
-        //     "document.querySelector('.mud-split-panel')?.offsetWidth || 0");
-        var width = await Js.InvokeAsync<int>("eval", "document.querySelector('.mud-split-panel').offsetWidth");
-        var minWidth = _splitPanel.MinPanelSize;
-        var x = await _splitPanel.GetDividerPositionAsync();
-        await _splitPanel.SetDividerPositionAsync((int)(width*0.90));
-    }
-
-}
+<div class="workspace-fill">
+    <FlowDesigner />
+</div>

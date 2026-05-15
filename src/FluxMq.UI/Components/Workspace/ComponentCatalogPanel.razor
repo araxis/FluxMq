@@ -1,0 +1,50 @@
+@inject FlowComponentCatalog Catalog
+@inject DragStateService DragState
+@inject FlowWorkspaceService Flow
+
+<MudStack Spacing="0" Class="pa-2">
+    <MudText Typo="Typo.subtitle2" Class="px-1 pb-2">Components</MudText>
+    @foreach (var group in Catalog.Components.GroupBy(c => c.Category))
+    {
+        <MudText Typo="Typo.overline" Color="Color.Secondary" Class="px-1 pt-1 pb-1" Style="font-size:0.65rem;letter-spacing:0.06em;">
+            @group.Key
+        </MudText>
+        @foreach (var component in group)
+        {
+            <MudPaper Elevation="0"
+                      Class="pa-2 mb-1"
+                      Style="cursor:grab;"
+                      draggable="true"
+                      @ondragstart="@(() => DragState.ComponentType = component.Type)">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudIcon Icon="@IconFor(component)" Color="@ColorFor(component)" Size="Size.Small" />
+                    <MudStack Spacing="0" Class="flex-grow-1">
+                        <MudText Typo="Typo.body2">@component.DisplayName</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@component.Category</MudText>
+                    </MudStack>
+                    <MudIconButton Size="Size.Small"
+                                   Icon="@Icons.Material.Filled.Add"
+                                   OnClick="@(() => Flow.AddComponent(component.Type))" />
+                </MudStack>
+            </MudPaper>
+        }
+    }
+</MudStack>
+
+@code {
+    private static string IconFor(FlowComponentDescriptor component) => component.Category switch
+    {
+        "Source" => Icons.Material.Filled.Sensors,
+        "Mapper" => Icons.Material.Filled.Transform,
+        "Sink" => Icons.Material.Filled.CallMerge,
+        _ => Icons.Material.Filled.Extension
+    };
+
+    private static Color ColorFor(FlowComponentDescriptor component) => component.Category switch
+    {
+        "Source" => Color.Primary,
+        "Mapper" => Color.Secondary,
+        "Sink" => Color.Tertiary,
+        _ => Color.Default
+    };
+}
