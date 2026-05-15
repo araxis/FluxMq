@@ -11,6 +11,7 @@ public sealed class FlowDiagramNodeModelTests
     public void SetActivity_StoresLatestActivityText()
     {
         var model = new FlowDiagramNodeModel(
+            "workflow1.source",
             new DiagramPoint(10, 20),
             "source",
             "mqtt.trigger",
@@ -26,6 +27,7 @@ public sealed class FlowDiagramNodeModelTests
     public void NewNode_DefaultsToCollapsed()
     {
         var model = new FlowDiagramNodeModel(
+            "workflow1.source",
             new DiagramPoint(10, 20),
             "source",
             "mqtt.trigger",
@@ -39,6 +41,7 @@ public sealed class FlowDiagramNodeModelTests
     public void Toggle_SwitchesBetweenCollapsedAndExpandedState()
     {
         var model = new FlowDiagramNodeModel(
+            "workflow1.source",
             new DiagramPoint(10, 20),
             "source",
             "mqtt.trigger",
@@ -57,6 +60,7 @@ public sealed class FlowDiagramNodeModelTests
     public void SetCollapsed_AppliesRequestedState()
     {
         var model = new FlowDiagramNodeModel(
+            "workflow1.source",
             new DiagramPoint(10, 20),
             "source",
             "mqtt.trigger",
