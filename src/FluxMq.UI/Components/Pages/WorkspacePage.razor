@@ -1,37 +1,52 @@
 @page "/"
 @implements IDisposable
 @inject ProjectManagerService Projects
+@inject IDialogService DialogService
 
 <div class="workspace-fill">
-    @if (Projects.Projects.Count == 0)
+    @if (Projects.ActiveProject is null)
     {
         <div class="workspace-empty">
             <MudStack AlignItems="AlignItems.Center" Spacing="3">
                 <MudIcon Icon="@Icons.Material.Filled.BubbleChart" Style="font-size:64px;opacity:0.18;" />
-                <MudText Typo="Typo.h6" Color="Color.Secondary">No project open</MudText>
+                <MudText Typo="Typo.h6" Color="Color.Secondary">No app open</MudText>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.NoteAdd"
-                           OnClick="@(() => Projects.NewProject())">New project</MudButton>
+                           OnClick="@(() => Projects.NewProject())">New app</MudButton>
             </MudStack>
         </div>
     }
     else
     {
+        var active = Projects.ActiveProject;
         <div class="project-tabbar">
-            @foreach (var project in Projects.Projects)
+            @foreach (var wf in active.WorkflowNames)
             {
-                var p = project;
-                var isActive = p == Projects.ActiveProject;
+                var w = wf;
+                var isActive = string.Equals(w, active.ActiveWorkflowName, StringComparison.Ordinal);
                 <div class="project-tab @(isActive ? "project-tab-active" : "")"
-                     @onclick="@(() => Projects.SetActive(p))">
-                    <span class="project-tab-name">@p.Name@(p.HasUnsavedChanges ? " ●" : "")</span>
-                    <span @onclick:stopPropagation="true" @onclick="@(() => CloseTabAsync(p))"
-                          class="project-tab-close">×</span>
+                     @onclick="@(() => active.SetActiveWorkflow(w))">
+                    <span class="project-tab-name">@w</span>
                 </div>
             }
+            <div class="project-tab project-tab-add" @onclick="@AddWorkflowAsync">
+                <span>+</span>
+            </div>
         </div>
 
-        @if (Projects.ActiveProject is { } active)
+        @if (active.ActiveWorkflowName is null && active.WorkflowNames.Count == 0)
+        {
+            <div class="workspace-empty">
+                <MudStack AlignItems="AlignItems.Center" Spacing="3">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" Style="font-size:64px;opacity:0.18;" />
+                    <MudText Typo="Typo.h6" Color="Color.Secondary">No pipelines</MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="@AddWorkflowAsync">Add pipeline</MudButton>
+                </MudStack>
+            </div>
+        }
+        else
         {
             <CascadingValue Value="@active" @key="@active">
                 <div class="workspace-tab-content">
@@ -74,7 +89,19 @@
         }
     }
 
-    private Task CloseTabAsync(FlowWorkspaceService project) => Projects.CloseProjectAsync(project).AsTask();
+    private async Task AddWorkflowAsync()
+    {
+        var active = Projects.ActiveProject;
+        if (active is null) return;
+
+        var dialog = await DialogService.ShowAsync<NewPipelineDialog>("New Pipeline");
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string name } && !string.IsNullOrWhiteSpace(name))
+        {
+            active.AddWorkflow(name.Trim());
+            active.SetActiveWorkflow(name.Trim());
+        }
+    }
 
     public void Dispose()
     {

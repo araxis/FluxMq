@@ -282,6 +282,25 @@ body,
     overflow: hidden;
 }
 
+.project-tab-add {
+    color: var(--mud-palette-text-secondary);
+    font-size: 1.1rem;
+    font-weight: 500;
+    min-width: 36px;
+    padding: 5px 10px;
+}
+
+.flux-app-item,
+.flux-app-item-active {
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.flux-app-item-active {
+    background: var(--mud-palette-action-default-hover);
+}
+
 
 .topic-node-row,
 .topic-node-flat {

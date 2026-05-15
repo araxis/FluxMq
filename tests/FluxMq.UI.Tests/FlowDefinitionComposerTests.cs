@@ -126,4 +126,85 @@ public sealed class FlowDefinitionComposerTests
         inspect.GetProperty("Input").GetString()
             .ShouldBe($"{FlowDefinitionComposer.TriggerNodeName}.Output");
     }
+
+    [Fact]
+    public void GetWorkflowNames_ReturnsEmptyListForEmptyDefinition()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.CreateEmptyDefinition();
+
+        var names = composer.GetWorkflowNames(json);
+
+        names.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetWorkflowNames_ReturnsWorkflowNamesInOrder()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.CreateEmptyDefinition();
+        json = composer.AddWorkflow(json, "alpha");
+        json = composer.AddWorkflow(json, "beta");
+
+        var names = composer.GetWorkflowNames(json);
+
+        names.ShouldBe(["alpha", "beta"]);
+    }
+
+    [Fact]
+    public void AddWorkflow_IsIdempotentForDuplicateName()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.CreateEmptyDefinition();
+        json = composer.AddWorkflow(json, "pipe");
+        json = composer.AddWorkflow(json, "pipe");
+
+        var names = composer.GetWorkflowNames(json);
+
+        names.ShouldBe(["pipe"]);
+    }
+
+    [Fact]
+    public void RemoveWorkflow_RemovesNamedWorkflow()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.CreateEmptyDefinition();
+        json = composer.AddWorkflow(json, "alpha");
+        json = composer.AddWorkflow(json, "beta");
+
+        json = composer.RemoveWorkflow(json, "alpha");
+
+        composer.GetWorkflowNames(json).ShouldBe(["beta"]);
+    }
+
+    [Fact]
+    public void RemoveWorkflow_IsNoOpForMissingName()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.CreateEmptyDefinition();
+        json = composer.AddWorkflow(json, "pipe");
+
+        json = composer.RemoveWorkflow(json, "nonexistent");
+
+        composer.GetWorkflowNames(json).ShouldBe(["pipe"]);
+    }
+
+    [Fact]
+    public void AddComponent_UsesTargetWorkflowNameWhenProvided()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.CreateEmptyDefinition();
+        json = composer.AddWorkflow(json, "myPipeline");
+
+        json = composer.AddComponent(json, "mqtt.payload-inspector", "myPipeline");
+
+        using var document = JsonDocument.Parse(json);
+        var workflows = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows");
+
+        workflows.TryGetProperty("myPipeline", out var myPipeline).ShouldBeTrue();
+        myPipeline.TryGetProperty(FlowDefinitionComposer.InspectorNodeName, out _).ShouldBeTrue();
+    }
 }

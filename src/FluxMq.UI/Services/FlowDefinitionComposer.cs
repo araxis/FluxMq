@@ -116,13 +116,61 @@ public sealed class FlowDefinitionComposer
         return json;
     }
 
-    /// <summary>Adds a downstream component (inspector, metrics-sink, ...) wired to the trigger output.</summary>
-    public string AddComponent(string json, string componentType)
+    /// <summary>Returns the ordered list of workflow names in the definition.</summary>
+    public IReadOnlyList<string> GetWorkflowNames(string json)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            JsonElement flowApp;
+            if (root.TryGetProperty("FluxMq", out var fluxMq) &&
+                fluxMq.TryGetProperty("FlowApplication", out flowApp) &&
+                flowApp.ValueKind == JsonValueKind.Object)
+            { }
+            else
+            {
+                flowApp = root;
+            }
+
+            if (flowApp.TryGetProperty("workflows", out var workflows) &&
+                workflows.ValueKind == JsonValueKind.Object)
+            {
+                return workflows.EnumerateObject().Select(w => w.Name).ToArray();
+            }
+        }
+        catch { }
+        return [];
+    }
+
+    /// <summary>Adds an empty workflow with the given name if it does not already exist.</summary>
+    public string AddWorkflow(string json, string name)
     {
         var root = ParseOrCreate(json);
         var flowApplication = GetFlowApplication(root);
         var workflows = GetOrCreateObject(flowApplication, "workflows");
-        var workflow = GetOrCreateObject(workflows, DefaultWorkflowName);
+        if (!workflows.ContainsKey(name))
+            workflows[name] = new JsonObject();
+        return root.ToJsonString(Options);
+    }
+
+    /// <summary>Removes a workflow by name, leaving the definition unchanged if it doesn't exist.</summary>
+    public string RemoveWorkflow(string json, string name)
+    {
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["workflows"] is JsonObject workflows)
+            workflows.Remove(name);
+        return root.ToJsonString(Options);
+    }
+
+    /// <summary>Adds a downstream component (inspector, metrics-sink, ...) wired to the trigger output.</summary>
+    public string AddComponent(string json, string componentType, string? targetWorkflowName = null)
+    {
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        var workflows = GetOrCreateObject(flowApplication, "workflows");
+        var workflow = GetOrCreateObject(workflows, targetWorkflowName ?? DefaultWorkflowName);
 
         var nodeName = componentType switch
         {

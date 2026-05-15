@@ -91,11 +91,17 @@
                                    Size="Size.Small"
                                    OnClick="@(() => { _railTab = 0; _leftOpen = true; })" />
                 </MudTooltip>
-                <MudTooltip Text="Projects" Placement="Placement.Right">
+                <MudTooltip Text="Apps" Placement="Placement.Right">
                     <MudIconButton Icon="@Icons.Material.Filled.Folder"
                                    Color="@(_railTab == 1 ? Color.Primary : Color.Default)"
                                    Size="Size.Small"
                                    OnClick="@(() => { _railTab = 1; _leftOpen = true; })" />
+                </MudTooltip>
+                <MudTooltip Text="Sessions" Placement="Placement.Right">
+                    <MudIconButton Icon="@Icons.Material.Filled.History"
+                                   Color="@(_railTab == 2 ? Color.Primary : Color.Default)"
+                                   Size="Size.Small"
+                                   OnClick="@(() => { _railTab = 2; _leftOpen = true; })" />
                 </MudTooltip>
                 <div style="flex:1;"></div>
                 <MudTooltip Text="Help" Placement="Placement.Right">
@@ -112,6 +118,10 @@
                         <ConnectionPanel />
                         <MudDivider Class="my-1" />
                         <ComponentCatalogPanel />
+                    }
+                    else if (_railTab == 1)
+                    {
+                        <AppsPanel />
                     }
                     else
                     {

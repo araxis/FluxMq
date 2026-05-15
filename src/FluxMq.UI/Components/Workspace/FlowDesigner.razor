@@ -45,16 +45,21 @@
     });
 
     private long _renderedDefinitionRevision = -1;
+    private string? _renderedWorkflowName;
     private readonly Dictionary<string, DiagramNodeState> _nodeStates = new(StringComparer.Ordinal);
 
     protected override void OnInitialized()
     {
         _diagram.RegisterComponent<FlowDiagramNodeModel, FlowDiagramNodeWidget>();
-        Flow.GetDiagramState = () => _diagram.Nodes.OfType<FlowDiagramNodeModel>()
-            .ToDictionary(
-                n => n.Id,
-                n => (n.Position.X, n.Position.Y, n.IsCollapsed),
-                StringComparer.Ordinal);
+        Flow.GetDiagramState = () =>
+        {
+            var result = new Dictionary<string, (double X, double Y, bool Collapsed)>(StringComparer.Ordinal);
+            foreach (var (id, state) in _nodeStates)
+                result[id] = (state.Position.X, state.Position.Y, state.IsCollapsed);
+            foreach (var node in _diagram.Nodes.OfType<FlowDiagramNodeModel>())
+                result[node.Id] = (node.Position.X, node.Position.Y, node.IsCollapsed);
+            return result;
+        };
         Flow.Changed += OnFlowChanged;
         Live.Changed += OnLiveChanged;
     }
@@ -94,6 +99,7 @@
         _diagram.Nodes.Clear();
         _diagram.Links.Clear();
         _renderedDefinitionRevision = Flow.DefinitionRevision;
+        _renderedWorkflowName = Flow.ActiveWorkflowName;
 
         try
         {
@@ -119,77 +125,66 @@
                 }
             }
 
-            if (flowApplication.TryGetProperty("workflows", out var workflows) && workflows.ValueKind == JsonValueKind.Object)
+            if (flowApplication.TryGetProperty("workflows", out var workflows) &&
+                workflows.ValueKind == JsonValueKind.Object &&
+                Flow.ActiveWorkflowName is { } activeWorkflowName &&
+                workflows.TryGetProperty(activeWorkflowName, out var activeWorkflow) &&
+                activeWorkflow.ValueKind == JsonValueKind.Object)
             {
-                var workflowY = 60d;
-                foreach (var workflow in workflows.EnumerateObject())
+                var nodeX = 380d;
+                foreach (var node in activeWorkflow.EnumerateObject())
                 {
-                    if (workflow.Value.ValueKind != JsonValueKind.Object)
-                        continue;
-
-                    var nodeX = 380d;
-                    foreach (var node in workflow.Value.EnumerateObject())
-                    {
-                        AddNode(nodes, node.Name, node.Value, nodeX, workflowY, isResource: false, workflowName: workflow.Name);
-                        nodeX += 300;
-                    }
-
-                    workflowY += 190;
+                    AddNode(nodes, node.Name, node.Value, nodeX, 60d, isResource: false, workflowName: activeWorkflowName);
+                    nodeX += 300;
                 }
 
-                foreach (var workflow in workflows.EnumerateObject())
+                foreach (var target in activeWorkflow.EnumerateObject())
                 {
-                    if (workflow.Value.ValueKind != JsonValueKind.Object)
+                    if (!nodes.TryGetValue(target.Name, out var targetNode) || target.Value.ValueKind != JsonValueKind.Object)
                         continue;
 
-                    foreach (var target in workflow.Value.EnumerateObject())
+                    foreach (var port in target.Value.EnumerateObject())
                     {
-                        if (!nodes.TryGetValue(target.Name, out var targetNode) || target.Value.ValueKind != JsonValueKind.Object)
+                        if (IsDefinitionProperty(port.Name))
                             continue;
 
-                        foreach (var port in target.Value.EnumerateObject())
+                        foreach (var sourceReference in ReadSourceReferences(port.Value))
                         {
-                            if (IsDefinitionProperty(port.Name))
-                                continue;
-
-                            foreach (var sourceReference in ReadSourceReferences(port.Value))
+                            var sourceName = sourceReference.Split('.', 2)[0];
+                            if (nodes.TryGetValue(sourceName, out var sourceNode))
                             {
-                                var sourceName = sourceReference.Split('.', 2)[0];
-                                if (nodes.TryGetValue(sourceName, out var sourceNode))
-                                {
-                                    var sourcePortName = sourceReference.Contains('.') ? sourceReference.Split('.', 2)[1] : null;
-                                    var sourcePort = PortFor(sourceNode, PortAlignment.Right, sourcePortName);
-                                    var targetPort = PortFor(targetNode, PortAlignment.Left, port.Name);
-                                    if (sourcePort is null || targetPort is null) continue;
+                                var sourcePortName = sourceReference.Contains('.') ? sourceReference.Split('.', 2)[1] : null;
+                                var sourcePort = PortFor(sourceNode, PortAlignment.Right, sourcePortName);
+                                var targetPort = PortFor(targetNode, PortAlignment.Left, port.Name);
+                                if (sourcePort is null || targetPort is null) continue;
 
-                                    _diagram.Links.Add(new LinkModel(sourcePort, targetPort)
-                                    {
-                                        Color = "#1F7A8C",
-                                        Width = 2,
-                                        TargetMarker = LinkMarker.Arrow
-                                    });
-                                }
-                            }
-                        }
-
-                        if (target.Value.TryGetProperty("configuration", out var configuration) &&
-                            configuration.ValueKind == JsonValueKind.Object &&
-                            configuration.TryGetProperty("connection", out var connectionRef) &&
-                            connectionRef.ValueKind == JsonValueKind.String &&
-                            connectionRef.GetString() is { Length: > 0 } resourceName &&
-                            nodes.TryGetValue(resourceName, out var resourceNode))
-                        {
-                            var sourcePort = PortFor(resourceNode, PortAlignment.Right, "Connection");
-                            var targetPort = PortFor(targetNode, PortAlignment.Left, "Connection");
-                            if (sourcePort is not null && targetPort is not null)
-                            {
                                 _diagram.Links.Add(new LinkModel(sourcePort, targetPort)
                                 {
-                                    Color = "#F4B860",
+                                    Color = "#1F7A8C",
                                     Width = 2,
                                     TargetMarker = LinkMarker.Arrow
                                 });
                             }
+                        }
+                    }
+
+                    if (target.Value.TryGetProperty("configuration", out var configuration) &&
+                        configuration.ValueKind == JsonValueKind.Object &&
+                        configuration.TryGetProperty("connection", out var connectionRef) &&
+                        connectionRef.ValueKind == JsonValueKind.String &&
+                        connectionRef.GetString() is { Length: > 0 } resourceName &&
+                        nodes.TryGetValue(resourceName, out var resourceNode))
+                    {
+                        var sourcePort = PortFor(resourceNode, PortAlignment.Right, "Connection");
+                        var targetPort = PortFor(targetNode, PortAlignment.Left, "Connection");
+                        if (sourcePort is not null && targetPort is not null)
+                        {
+                            _diagram.Links.Add(new LinkModel(sourcePort, targetPort)
+                            {
+                                Color = "#F4B860",
+                                Width = 2,
+                                TargetMarker = LinkMarker.Arrow
+                            });
                         }
                     }
                 }
@@ -356,7 +351,9 @@
     {
         InvokeAsync(() =>
         {
-            if (_renderedDefinitionRevision != Flow.DefinitionRevision || Flow.StagedNodePositions is { Count: > 0 })
+            if (_renderedDefinitionRevision != Flow.DefinitionRevision ||
+            _renderedWorkflowName != Flow.ActiveWorkflowName ||
+            Flow.StagedNodePositions is { Count: > 0 })
                 RebuildDiagram();
             else
             {

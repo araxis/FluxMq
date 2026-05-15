@@ -23,6 +23,8 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         DefinitionJson = _definitionComposer.CreateEmptyDefinition();
     }
 
+    private string? _activeWorkflowName;
+
     public string DefinitionJson { get; private set; }
     public long DefinitionRevision { get; private set; }
     public string CurrentFilePath { get; private set; } = string.Empty;
@@ -33,12 +35,58 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     public RuntimeWorkspaceState State { get; private set; } = RuntimeWorkspaceState.Idle;
     public IReadOnlyList<WorkspaceDiagnostic> Diagnostics { get; private set; } = [];
 
+    public IReadOnlyList<string> WorkflowNames => _definitionComposer.GetWorkflowNames(DefinitionJson);
+    public string? ActiveWorkflowName => _activeWorkflowName;
+
     public Func<IReadOnlyDictionary<string, (double X, double Y, bool Collapsed)>>? GetDiagramState { get; set; }
     public IReadOnlyDictionary<string, (double X, double Y, bool Collapsed)>? StagedNodePositions { get; private set; }
     public void ConsumeStagedPositions() => StagedNodePositions = null;
     public Dictionary<string, (double X, double Y, bool Collapsed)> LastNodePositions { get; } = new(StringComparer.Ordinal);
 
     public event EventHandler? Changed;
+
+    public void SetActiveWorkflow(string name)
+    {
+        if (string.Equals(_activeWorkflowName, name, StringComparison.Ordinal)) return;
+        _activeWorkflowName = name;
+        NotifyChanged();
+    }
+
+    public void AddWorkflow(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return;
+        try
+        {
+            ReplaceDefinition(_definitionComposer.AddWorkflow(DefinitionJson, name));
+            _activeWorkflowName ??= name;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "WorkflowAddFailed", exception.Message)];
+        }
+        NotifyChanged();
+    }
+
+    public void RemoveWorkflow(string name)
+    {
+        try
+        {
+            ReplaceDefinition(_definitionComposer.RemoveWorkflow(DefinitionJson, name));
+            if (string.Equals(_activeWorkflowName, name, StringComparison.Ordinal))
+                _activeWorkflowName = WorkflowNames.FirstOrDefault();
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "WorkflowRemoveFailed", exception.Message)];
+        }
+        NotifyChanged();
+    }
 
     public void SetFilePath(string path)
     {
@@ -113,7 +161,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     {
         try
         {
-            ReplaceDefinition(_definitionComposer.AddComponent(DefinitionJson, componentType));
+            ReplaceDefinition(_definitionComposer.AddComponent(DefinitionJson, componentType, _activeWorkflowName));
             State = RuntimeWorkspaceState.Idle;
             Diagnostics = [];
         }
@@ -177,6 +225,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             var fileJson = await File.ReadAllTextAsync(CurrentFilePath, cancellationToken).ConfigureAwait(false);
             StagedNodePositions = _definitionComposer.ReadNodePositions(fileJson);
             ReplaceDefinitionSilent(_definitionComposer.StripDesignerSection(fileJson));
+            _activeWorkflowName = _definitionComposer.GetWorkflowNames(DefinitionJson).FirstOrDefault();
             HasUnsavedChanges = false;
             State = RuntimeWorkspaceState.Idle;
             Diagnostics = [];
