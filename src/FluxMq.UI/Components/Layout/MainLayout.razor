@@ -28,32 +28,6 @@
 
         <MudSpacer />
 
-        <MudChip T="string" Size="Size.Small" Color="@FlowStateColor" Class="mx-1">@Flow.State</MudChip>
-
-        <MudTooltip Text="Validate">
-            <MudIconButton Icon="@Icons.Material.Filled.FactCheck"
-                           Color="Color.Inherit"
-                           Size="Size.Small"
-                           Disabled="@_busy"
-                           OnClick="@ValidateAsync" />
-        </MudTooltip>
-        <MudTooltip Text="Run">
-            <MudIconButton Icon="@Icons.Material.Filled.PlayArrow"
-                           Color="Color.Success"
-                           Size="Size.Small"
-                           Disabled="@_busy"
-                           OnClick="@RunAsync" />
-        </MudTooltip>
-        <MudTooltip Text="Stop">
-            <MudIconButton Icon="@Icons.Material.Filled.Stop"
-                           Color="Color.Error"
-                           Size="Size.Small"
-                           Disabled="@_busy"
-                           OnClick="@StopAsync" />
-        </MudTooltip>
-
-        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
-
         <MudTooltip Text="Load file">
             <MudIconButton Icon="@Icons.Material.Filled.UploadFile"
                            Color="Color.Inherit"
@@ -139,14 +113,7 @@
                Width="320px"
                ClipMode="DrawerClipMode.Always"
                Elevation="1">
-        <MudTabs MinimumTabWidth="80px" Class="flux-right-tabs">
-            <MudTabPanel Text="Traffic" Icon="@Icons.Material.Filled.Troubleshoot">
-                <LiveInspectorPanel />
-            </MudTabPanel>
-            <MudTabPanel Text="Runtime" Icon="@Icons.Material.Filled.Route">
-                <RuntimePanel />
-            </MudTabPanel>
-        </MudTabs>
+        <LiveInspectorPanel />
     </MudDrawer>
 
     <MudMainContent Class="flux-main-canvas">
@@ -229,15 +196,6 @@
         Live.Changed += OnChanged;
     }
 
-    private Color FlowStateColor => Flow.State switch
-    {
-        RuntimeWorkspaceState.Running => Color.Success,
-        RuntimeWorkspaceState.Valid => Color.Info,
-        RuntimeWorkspaceState.Faulted => Color.Error,
-        RuntimeWorkspaceState.Stopped => Color.Warning,
-        _ => Color.Default
-    };
-
     private Color ConnectionStateColor => Live.State switch
     {
         MqttSessionState.Connected => Color.Success,
@@ -248,9 +206,6 @@
 
     private Task LoadAsync() => RunBusyAsync(() => Flow.LoadFromFileAsync());
     private Task SaveAsync() => RunBusyAsync(() => Flow.SaveToFileAsync());
-    private Task ValidateAsync() => RunBusyAsync(() => Flow.ValidateAsync());
-    private Task RunAsync() => RunBusyAsync(() => Flow.RunAsync());
-    private Task StopAsync() => RunBusyAsync(() => Flow.StopAsync());
 
     private async Task RunBusyAsync(Func<Task> action)
     {
