@@ -78,9 +78,9 @@ IMessageRepository.GetBySession(sessionId)
   -> ReplaySourceComponent
 ```
 
-This keeps `FluxMq.Pipeline` independent from `FluxMq.Storage`.
+This keeps `FluxMq.Pipeline` independent from concrete storage dependencies.
 
-`FluxMq.Replay` owns this orchestration through `RecordedSessionReplayFactory`.
+`FluxMq.Components` owns this orchestration through `RecordedSessionReplayFactory`.
 
 ```mermaid
 flowchart LR

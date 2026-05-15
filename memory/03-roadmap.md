@@ -97,14 +97,14 @@ Deliverable:
 ## Stage 8 - Visual Pipeline Editor
 
 Goals:
-- Define a config-first `FlowApplicationDefinition` model with shared resources and object-shaped workflows.
+- Define a config-first `ApplicationDefinition` model with shared resources and object-shaped workflows.
 - Support natural receiving-port links such as `Input: "source.Output"` and link objects such as `{ "From": "source.Output", "When": "condition" }`.
 - Validate definitions before runtime graph construction.
 - Introduce a host-independent flow application runtime class-library boundary.
 - Load the first alpha definitions through the .NET configuration system.
 - Let the runtime own shared resources, named workflow lifecycle, reload coordination, and component error supervision.
 - Define `IPipelineNode` abstraction: display name, port descriptors, configurable properties with schema.
-- Implement cold-start graph construction from `FlowApplicationDefinition`. Initial builder slice is in place with registered factories, factory placement context, typed port adapters, shared resource links, start ordering, disposal ordering, and structured build errors.
+- Implement cold-start graph construction from `ApplicationDefinition`. Initial builder slice is in place with registered factories, factory placement context, typed port adapters, shared resource links, phase-based start ordering, disposal ordering, and structured build errors.
 - Implement reload patching: diff two application definitions and apply only changed links/config/resources when safe.
 - Integrate Blazor.Diagrams as the visual canvas in `FluxMq.UI`.
 - Node palette (available block types from registered modules).

@@ -11,9 +11,9 @@ Build FluxMQ around the message/session flow first. Treat plugins as a future fo
 ```text
 /src
   /FluxMq.App
+  /FluxMq.Components
   /FluxMq.Core
   /FluxMq.Pipeline
-  /FluxMq.Storage
   /FluxMq.UI
   /FluxMq.Modules.PayloadInspector
   /FluxMq.Modules.Observability
@@ -31,7 +31,7 @@ Workflow application host boundary.
 
 Initial status:
 - Part of the current solution as a class library.
-- Loads `FlowApplicationDefinition` from .NET configuration.
+- Loads `ApplicationDefinition` from .NET configuration.
 - Builds runtimes through registered factories.
 - Controls basic lifecycle with build, start, and stop.
 - Holds the future reload coordination boundary.
@@ -50,28 +50,30 @@ Responsibilities:
 
 ### FluxMq.Pipeline
 
-Message ingestion and processing.
+Message ingestion, definitions, and runtime primitives.
 
 Responsibilities:
 - Channel-based message ingestion.
-- Ordered message processors.
-- Decode/enrichment hooks.
-- Filtering and drop rules.
-- Backpressure strategy.
 - Flow application definition model.
-- Future host-independent flow application runtime.
+- Host-independent flow application runtime.
+- Runtime graph building.
+- Typed runtime ports.
+- Flow lifecycle and flow error primitives.
 
-### FluxMq.Storage
+### FluxMq.Components
 
-Persistence using LiteDB.
+Concrete component implementations and local persistence.
 
 Responsibilities:
+- MQTT connection and trigger nodes.
+- Payload inspection, filtering, routing, publishing, replay, recording, and metrics components.
 - Connection profile persistence.
 - Session recording.
 - Replay session metadata.
 - Message storage.
 - Lightweight metrics snapshots.
 - App settings.
+- Keep LiteDB and concrete MQTT component dependencies outside `FluxMq.Pipeline`.
 
 ### FluxMq.UI
 
@@ -153,7 +155,7 @@ MQTTnet Client
 Fork Flow should grow a host-independent runtime layer in `FluxMq.Pipeline` or a closely related class library.
 
 Responsibilities:
-- Load and validate `FlowApplicationDefinition`.
+- Load and validate `ApplicationDefinition`.
 - Own shared resource lifetime.
 - Start, stop, and observe named workflows.
 - Coordinate reloads by validating the next definition before applying changes.
@@ -161,7 +163,7 @@ Responsibilities:
 - Convert component failures into flow errors instead of allowing them to escape the runtime boundary.
 
 Current first slice:
-- `FlowApplicationRuntimeBuilder` performs cold-start graph construction.
+- `ApplicationRuntimeBuilder` performs cold-start graph construction.
 - Runtime node factories create concrete nodes outside the builder and receive context about resource vs workflow placement.
 - Typed runtime ports prevent accidental links between incompatible value types.
 - `NodeDefinition.Phase` (int, default 0) controls startup order. `ApplicationRuntime.StartAsync` and `Workflow.StartAsync` group all nodes by phase ascending and start each group in sequence. Resources and workflow nodes are unified in this loop.

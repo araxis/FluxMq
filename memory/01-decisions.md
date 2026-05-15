@@ -64,13 +64,25 @@ Status: Accepted.
 
 ### 2026-05-09 - Give runtime factories placement context
 
-Decision: Runtime node factories receive `FlowRuntimeNodeFactoryContext`, runtime start calls `IFlowStartable` resources before workflow nodes, and runtime disposal releases workflow nodes before shared resources.
+Decision: Runtime node factories receive placement context, and runtime disposal releases workflow nodes before shared resources.
 
 Reasoning:
 - Service-backed resources need to know when they are declared as shared resources instead of ordinary workflow nodes.
-- Service-backed resources must be started before dependent workflow nodes begin producing or consuming messages.
 - Resource lifetime should outlive dependent workflow nodes during shutdown.
 - The builder should keep construction generic and let registered factories enforce resource-specific placement rules.
+
+Status: Superseded by the 2026-05-14 phase-based lifecycle decision for startup ordering. Factory placement context remains accepted.
+
+### 2026-05-15 - Move concrete components into FluxMq.Components
+
+Decision: Keep `FluxMq.Pipeline` focused on definitions, runtime graph construction, typed ports, lifecycle primitives, and flow error contracts. Move concrete MQTT components, replay orchestration, LiteDB storage, and related tests into `FluxMq.Components`. Keep runtime component registration in `FluxMq.App` as the composition boundary.
+
+Reasoning:
+- The runtime primitives should not depend on LiteDB or concrete MQTT/storage component implementations.
+- Concrete flow nodes are still first-class user-facing components, but they are not the runtime itself.
+- `FluxMq.App` is the right composition point because it can register production components while tests can still register focused fake nodes.
+- `FluxMq.UI` can reference the component package for local persistence, live metrics, replay, and desktop workspace services without pulling those dependencies into the runtime core.
+- This boundary is closer to the future package shape: runtime primitives, concrete components, and host composition can evolve independently.
 
 Status: Accepted.
 
@@ -125,7 +137,7 @@ Concept:
 ```
 Blazor.Diagrams canvas (user drags nodes, draws connections)
   ↕ serialize / deserialize
-FlowApplicationDefinition (JSON: resources + workflows + per-node config)
+ApplicationDefinition (JSON: resources + workflows + per-node config)
   ↕ stored in LiteDB
 Flow application runtime
   → instantiates Dataflow blocks by node type
@@ -143,7 +155,7 @@ Hot-reload requirement:
 - When a connection is added/removed: patch only the affected link in the Dataflow graph; do not drain or restart unaffected blocks.
 - In-flight messages in unaffected blocks must not be dropped during a patch.
 - Some structural changes (e.g. removing the entry-point block) may require a brief coordinated pause; this is acceptable but must be explicit and fast.
-- The flow application runtime must therefore support two modes: `Build` (cold start) and `Patch(delta)` (hot update from a diff of two `FlowApplicationDefinition` versions).
+- The flow application runtime must therefore support two modes: `Build` (cold start) and `Patch(delta)` (hot update from a diff of two `ApplicationDefinition` versions).
 
 Architectural constraints for module authors:
 - Block processing logic must be wrapped in a replaceable delegate so config-only changes can hot-swap without recreating the Dataflow block.

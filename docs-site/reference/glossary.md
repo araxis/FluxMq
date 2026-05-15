@@ -24,6 +24,10 @@ A configuration model that describes one runnable FluxMQ application: shared res
 
 The future host-independent runtime layer that loads a flow application definition, owns shared resources, starts workflows, coordinates reloads, and supervises lifecycle and errors.
 
+## Flow Components
+
+The concrete MQTT, replay, storage, filtering, mapping, routing, publishing, recording, and metrics nodes registered into the runtime by a host.
+
 ## Runtime Builder
 
 The cold-start builder that validates a flow application definition, creates registered runtime nodes, links compatible typed ports, and returns build errors when the graph cannot be constructed.

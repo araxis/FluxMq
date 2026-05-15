@@ -347,7 +347,7 @@ The component preserves publish order by default. Higher parallelism is availabl
 
 `MqttRecordingSinkComponent` stores incoming MQTT messages for a recording session.
 
-This component lives in `FluxMq.Replay` because it bridges flow nodes with storage repositories. `FluxMq.Pipeline` stays independent from storage.
+This component lives in `FluxMq.Components` because it bridges flow nodes with storage repositories. `FluxMq.Pipeline` stays independent from storage and concrete component dependencies.
 
 ### Behavior
 
