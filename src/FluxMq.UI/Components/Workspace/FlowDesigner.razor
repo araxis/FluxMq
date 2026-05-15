@@ -254,7 +254,7 @@
             : "node";
         var hasState = _nodeStates.TryGetValue(name, out var state);
 
-        var node = new FlowDiagramNodeModel(
+        var node = FlowNodeModelFactory.Create(
             hasState ? state!.Position : new Blazor.Diagrams.Core.Geometry.Point(x, y),
             name,
             type ?? "node",
@@ -266,12 +266,11 @@
             node.SetCollapsed(state!.IsCollapsed);
         }
 
-        // Carry the live configuration onto the model so per-node editors can read/write it.
         if (definition.TryGetProperty("configuration", out var configElement) &&
             configElement.ValueKind == JsonValueKind.Object &&
             System.Text.Json.Nodes.JsonNode.Parse(configElement.GetRawText()) is System.Text.Json.Nodes.JsonObject configObject)
         {
-            node.Configuration = configObject;
+            node.LoadConfiguration(configObject);
         }
 
         if (node.PortDescriptors.Count > 0)

@@ -1,8 +1,3 @@
-@*
-    Resource node widget. View face shows the broker endpoint at a glance;
-    edit face flips to a compact form (host, port, client id, TLS, credentials)
-    and saves back to the node's configuration.profile.
-*@
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
 @inject FlowWorkspaceService Flow
@@ -17,12 +12,12 @@
             Broker connection. Triggers reference this node by name.
         </MudText>
         <MudStack Spacing="1" Class="mt-2">
-            <Stat Icon="@Icons.Material.Filled.Dns" Label="Endpoint" Value="@($"{Profile.Host}:{Profile.Port}")" />
-            @if (!string.IsNullOrWhiteSpace(Profile.ClientId))
+            <Stat Icon="@Icons.Material.Filled.Dns" Label="Endpoint" Value="@($"{Model.Host}:{Model.Port}")" />
+            @if (!string.IsNullOrWhiteSpace(Model.ClientId))
             {
-                <Stat Icon="@Icons.Material.Filled.Tag" Label="Client" Value="@Profile.ClientId" />
+                <Stat Icon="@Icons.Material.Filled.Tag" Label="Client" Value="@Model.ClientId" />
             }
-            @if (Profile.UseTls)
+            @if (Model.UseTls)
             {
                 <Stat Icon="@Icons.Material.Filled.Lock" Label="TLS" Value="enabled" />
             }
@@ -39,9 +34,7 @@
 </NodeWidgetShell>
 
 @code {
-    private record BrokerProfile(string Name, string Host, int Port, string ClientId, bool UseTls, string? Username, string? Password);
-
-    private BrokerProfile Profile => ReadProfile(Node.Configuration);
+    private MqttConnectionNodeModel Model => (MqttConnectionNodeModel)Node;
 
     private string _host = string.Empty;
     private int _port = 1883;
@@ -57,72 +50,23 @@
 
     private void LoadDraft()
     {
-        var profile = Profile;
-        _host = profile.Host;
-        _port = profile.Port;
-        _clientId = profile.ClientId;
-        _useTls = profile.UseTls;
-        _username = profile.Username;
-        _password = profile.Password;
+        _host = Model.Host;
+        _port = Model.Port;
+        _clientId = Model.ClientId;
+        _useTls = Model.UseTls;
+        _username = Model.Username;
+        _password = Model.Password;
     }
 
     private Task SaveAsync()
     {
-        var existing = Node.Configuration ?? new System.Text.Json.Nodes.JsonObject();
-        var profileObject = new System.Text.Json.Nodes.JsonObject
-        {
-            ["name"] = string.IsNullOrWhiteSpace(Profile.Name) ? "broker" : Profile.Name,
-            ["host"] = string.IsNullOrWhiteSpace(_host) ? "localhost" : _host,
-            ["port"] = _port,
-            ["clientId"] = string.IsNullOrWhiteSpace(_clientId) ? Guid.NewGuid().ToString("N")[..8] : _clientId,
-            ["useTls"] = _useTls,
-            ["username"] = string.IsNullOrWhiteSpace(_username) ? null : _username,
-            ["password"] = string.IsNullOrWhiteSpace(_password) ? null : _password,
-            ["keepAliveSeconds"] = ReadIntOrDefault(existing, "profile", "keepAliveSeconds", 60),
-            ["cleanStart"] = ReadBoolOrDefault(existing, "profile", "cleanStart", true)
-        };
-        var updated = new System.Text.Json.Nodes.JsonObject { ["profile"] = profileObject };
-
-        Flow.UpdateNodeConfiguration(Node.NodeName, updated);
+        Model.Host = _host;
+        Model.Port = _port;
+        Model.ClientId = _clientId;
+        Model.UseTls = _useTls;
+        Model.Username = _username;
+        Model.Password = _password;
+        Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
         return Task.CompletedTask;
-    }
-
-    private static BrokerProfile ReadProfile(System.Text.Json.Nodes.JsonObject? configuration)
-    {
-        if (configuration is null || configuration["profile"] is not System.Text.Json.Nodes.JsonObject profile)
-        {
-            return new BrokerProfile("broker", "localhost", 1883, string.Empty, false, null, null);
-        }
-
-        return new BrokerProfile(
-            profile["name"]?.GetValue<string>() ?? "broker",
-            profile["host"]?.GetValue<string>() ?? "localhost",
-            (profile["port"] as System.Text.Json.Nodes.JsonValue)?.TryGetValue<int>(out var port) == true ? port : 1883,
-            profile["clientId"]?.GetValue<string>() ?? string.Empty,
-            (profile["useTls"] as System.Text.Json.Nodes.JsonValue)?.TryGetValue<bool>(out var tls) == true && tls,
-            profile["username"]?.GetValue<string?>(),
-            profile["password"]?.GetValue<string?>());
-    }
-
-    private static int ReadIntOrDefault(System.Text.Json.Nodes.JsonObject root, string section, string key, int fallback)
-    {
-        if (root[section] is System.Text.Json.Nodes.JsonObject obj &&
-            obj[key] is System.Text.Json.Nodes.JsonValue value &&
-            value.TryGetValue<int>(out var result))
-        {
-            return result;
-        }
-        return fallback;
-    }
-
-    private static bool ReadBoolOrDefault(System.Text.Json.Nodes.JsonObject root, string section, string key, bool fallback)
-    {
-        if (root[section] is System.Text.Json.Nodes.JsonObject obj &&
-            obj[key] is System.Text.Json.Nodes.JsonValue value &&
-            value.TryGetValue<bool>(out var result))
-        {
-            return result;
-        }
-        return fallback;
     }
 }

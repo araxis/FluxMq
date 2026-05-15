@@ -17,8 +17,7 @@ public sealed class NodeWidgetRegistry
         ["mqtt.connection"] = typeof(MqttConnectionNodeWidget),
         ["mqtt.trigger"] = typeof(MqttTriggerNodeWidget),
         ["mqtt.payload-inspector"] = typeof(PayloadInspectorNodeWidget),
-        ["mqtt.metrics-sink"] = typeof(MetricsSinkNodeWidget),
-        ["traffic.source"] = typeof(TrafficSourceNodeWidget)
+        ["mqtt.metrics-sink"] = typeof(MetricsSinkNodeWidget)
     };
 
     /// <summary>Returns the widget type for the given node type, or the fallback default widget.</summary>
