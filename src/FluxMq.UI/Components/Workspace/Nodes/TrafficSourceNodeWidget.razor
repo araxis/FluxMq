@@ -1,0 +1,250 @@
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject FlowWorkspaceService Flow
+
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.Sensors"
+                 CategoryColor="@Color.Primary"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
+    <Body>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            Logical MQTT traffic source for live, stored, or generated messages.
+        </MudText>
+        <MudStack Spacing="1" Class="mt-2">
+            <Stat Icon="@Icons.Material.Filled.Source" Label="Mode" Value="@Kind" />
+            @if (Kind == "live")
+            {
+                <Stat Icon="@Icons.Material.Filled.Dns" Label="Endpoint" Value="@($"{Profile.Host}:{Profile.Port}")" />
+                <div class="flow-node-filters mt-1 d-flex flex-wrap gap-1">
+                    @foreach (var filter in Filters)
+                    {
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Variant="Variant.Filled"
+                                 Color="@(IsSystemFilter(filter) ? Color.Warning : Color.Primary)"
+                                 Icon="@Icons.Material.Filled.Topic">
+                            @filter
+                        </MudChip>
+                    }
+                </div>
+            }
+            else if (Kind == "stored-session")
+            {
+                <Stat Icon="@Icons.Material.Filled.Folder" Label="Session" Value="@StoredSessionId" />
+            }
+            else
+            {
+                <Stat Icon="@Icons.Material.Filled.DataObject" Label="Messages" Value="@GeneratedCount.ToString()" />
+            }
+        </MudStack>
+    </Body>
+    <Editor>
+        <MudSelect T="string" Label="Mode" @bind-Value="_kind" Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true">
+            <MudSelectItem Value="@("live")">Live broker</MudSelectItem>
+            <MudSelectItem Value="@("stored-session")">Stored session</MudSelectItem>
+            <MudSelectItem Value="@("generated")">Generated</MudSelectItem>
+        </MudSelect>
+
+        @if (_kind == "live")
+        {
+            <MudTextField T="string" Label="Name" @bind-Value="_name" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudTextField T="string" Label="Host" @bind-Value="_host" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudNumericField T="int" Label="Port" @bind-Value="_port" Min="1" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudTextField T="string" Label="Client ID" @bind-Value="_clientId" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudCheckBox T="bool" @bind-Value="_useTls" Label="TLS" Dense="true" />
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Subscriptions</MudText>
+            @for (var i = 0; i < _draftFilters.Count; i++)
+            {
+                var index = i;
+                <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                    <MudTextField T="string"
+                                  Value="@_draftFilters[index]"
+                                  ValueChanged="@(v => _draftFilters[index] = v ?? string.Empty)"
+                                  Placeholder="topic/#"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="flex-grow-1" />
+                    <MudIconButton Size="Size.Small"
+                                   Icon="@Icons.Material.Filled.Close"
+                                   OnClick="@(() => _draftFilters.RemoveAt(index))" />
+                </MudStack>
+            }
+            <MudButton Size="Size.Small"
+                       Variant="Variant.Outlined"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="@AddRow">Add filter</MudButton>
+        }
+        else if (_kind == "stored-session")
+        {
+            <MudTextField T="string" Label="Session ID" @bind-Value="_storedSessionId" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudCheckBox T="bool" @bind-Value="_preserveTiming" Label="Preserve timing" Dense="true" />
+            <MudNumericField T="double" Label="Speed" @bind-Value="_speed" Min="0.1" Variant="Variant.Outlined" Margin="Margin.Dense" />
+        }
+        else
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Generated messages are configured in JSON for now.</MudText>
+        }
+    </Editor>
+</NodeWidgetShell>
+
+@code {
+    private record SourceProfile(string Name, string Host, int Port, string ClientId, bool UseTls);
+
+    private string Kind => Node.Configuration?["kind"]?.GetValue<string?>() ?? "live";
+    private SourceProfile Profile => ReadProfile(Node.Configuration);
+    private string[] Filters => ReadFilters(Node.Configuration);
+    private string StoredSessionId => Node.Configuration?["sessionId"]?.GetValue<string?>() ?? string.Empty;
+    private int GeneratedCount => Node.Configuration?["messages"] is System.Text.Json.Nodes.JsonArray messages ? messages.Count : 0;
+
+    private string _kind = "live";
+    private string _name = "local-broker";
+    private string _host = "localhost";
+    private int _port = 1883;
+    private string _clientId = string.Empty;
+    private bool _useTls;
+    private string _storedSessionId = string.Empty;
+    private bool _preserveTiming;
+    private double _speed = 1;
+    private readonly List<string> _draftFilters = [];
+
+    protected override void OnParametersSet()
+    {
+        LoadDraft();
+    }
+
+    private void LoadDraft()
+    {
+        _kind = Kind;
+        var profile = Profile;
+        _name = profile.Name;
+        _host = profile.Host;
+        _port = profile.Port;
+        _clientId = profile.ClientId;
+        _useTls = profile.UseTls;
+        _storedSessionId = StoredSessionId;
+        _preserveTiming = ReadBoolOrDefault(Node.Configuration, "preserveTiming", false);
+        _speed = ReadDoubleOrDefault(Node.Configuration, "speed", 1);
+        _draftFilters.Clear();
+        _draftFilters.AddRange(Filters);
+        if (_draftFilters.Count == 0)
+        {
+            _draftFilters.Add("#");
+        }
+    }
+
+    private void AddRow() => _draftFilters.Add(string.Empty);
+
+    private Task SaveAsync()
+    {
+        var updated = _kind switch
+        {
+            "stored-session" => new System.Text.Json.Nodes.JsonObject
+            {
+                ["kind"] = "stored-session",
+                ["sessionId"] = _storedSessionId,
+                ["preserveTiming"] = _preserveTiming,
+                ["speed"] = _speed <= 0 ? 1 : _speed,
+                ["boundedCapacity"] = ReadIntOrDefault(Node.Configuration, "boundedCapacity", 1000)
+            },
+            "generated" => new System.Text.Json.Nodes.JsonObject
+            {
+                ["kind"] = "generated",
+                ["messages"] = Node.Configuration?["messages"]?.DeepClone() ?? new System.Text.Json.Nodes.JsonArray(),
+                ["boundedCapacity"] = ReadIntOrDefault(Node.Configuration, "boundedCapacity", 1000)
+            },
+            _ => CreateLiveConfiguration()
+        };
+
+        Flow.UpdateNodeConfiguration(Node.NodeName, updated);
+        return Task.CompletedTask;
+    }
+
+    private System.Text.Json.Nodes.JsonObject CreateLiveConfiguration()
+    {
+        var subscriptions = new System.Text.Json.Nodes.JsonArray();
+        foreach (var filter in _draftFilters.Select(f => f.Trim()).Where(f => f.Length > 0).DefaultIfEmpty("#"))
+        {
+            subscriptions.Add(filter);
+        }
+
+        return new System.Text.Json.Nodes.JsonObject
+        {
+            ["kind"] = "live",
+            ["profile"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["name"] = string.IsNullOrWhiteSpace(_name) ? "local-broker" : _name,
+                ["host"] = string.IsNullOrWhiteSpace(_host) ? "localhost" : _host,
+                ["port"] = _port <= 0 ? 1883 : _port,
+                ["clientId"] = _clientId,
+                ["useTls"] = _useTls,
+                ["keepAliveSeconds"] = 60,
+                ["cleanStart"] = true
+            },
+            ["subscriptions"] = subscriptions,
+            ["boundedCapacity"] = ReadIntOrDefault(Node.Configuration, "boundedCapacity", 1000)
+        };
+    }
+
+    private static string[] ReadFilters(System.Text.Json.Nodes.JsonObject? configuration)
+    {
+        if (configuration?["subscriptions"] is not System.Text.Json.Nodes.JsonArray array)
+        {
+            return ["#"];
+        }
+
+        return array
+            .Select(node => node switch
+            {
+                System.Text.Json.Nodes.JsonValue v when v.TryGetValue<string>(out var s) => s,
+                System.Text.Json.Nodes.JsonObject o => o["topicFilter"]?.GetValue<string?>() ?? string.Empty,
+                _ => string.Empty
+            })
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .ToArray();
+    }
+
+    private static SourceProfile ReadProfile(System.Text.Json.Nodes.JsonObject? configuration)
+    {
+        if (configuration is null || configuration["profile"] is not System.Text.Json.Nodes.JsonObject profile)
+        {
+            return new SourceProfile("local-broker", "localhost", 1883, string.Empty, false);
+        }
+
+        return new SourceProfile(
+            profile["name"]?.GetValue<string>() ?? "local-broker",
+            profile["host"]?.GetValue<string>() ?? "localhost",
+            (profile["port"] as System.Text.Json.Nodes.JsonValue)?.TryGetValue<int>(out var port) == true ? port : 1883,
+            profile["clientId"]?.GetValue<string>() ?? string.Empty,
+            (profile["useTls"] as System.Text.Json.Nodes.JsonValue)?.TryGetValue<bool>(out var tls) == true && tls);
+    }
+
+    private static int ReadIntOrDefault(System.Text.Json.Nodes.JsonObject? root, string key, int fallback)
+    {
+        if (root?[key] is System.Text.Json.Nodes.JsonValue value && value.TryGetValue<int>(out var result))
+        {
+            return result;
+        }
+        return fallback;
+    }
+
+    private static bool ReadBoolOrDefault(System.Text.Json.Nodes.JsonObject? root, string key, bool fallback)
+    {
+        if (root?[key] is System.Text.Json.Nodes.JsonValue value && value.TryGetValue<bool>(out var result))
+        {
+            return result;
+        }
+        return fallback;
+    }
+
+    private static double ReadDoubleOrDefault(System.Text.Json.Nodes.JsonObject? root, string key, double fallback)
+    {
+        if (root?[key] is System.Text.Json.Nodes.JsonValue value && value.TryGetValue<double>(out var result))
+        {
+            return result;
+        }
+        return fallback;
+    }
+
+    private static bool IsSystemFilter(string f) => f.StartsWith('$');
+}

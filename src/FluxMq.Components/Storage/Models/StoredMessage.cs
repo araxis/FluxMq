@@ -8,15 +8,17 @@ public sealed class StoredMessage
 {
     public MessageId Id { get; set; } = MessageId.New();
     public SessionId SessionId { get; set; }
+    public long Sequence { get; set; }
     public string Topic { get; set; } = string.Empty;
     public byte[] Payload { get; set; } = [];
     public DateTimeOffset ReceivedAt { get; set; }
     public MqttQualityOfServiceLevel QualityOfService { get; set; }
     public bool Retain { get; set; }
 
-    public static StoredMessage From(SessionId sessionId, MqttEnvelope envelope) => new()
+    public static StoredMessage From(SessionId sessionId, MqttEnvelope envelope, long sequence = 0) => new()
     {
         SessionId = sessionId,
+        Sequence = sequence,
         Topic = envelope.Topic,
         Payload = envelope.Payload,
         ReceivedAt = envelope.ReceivedAt,

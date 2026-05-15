@@ -1,3 +1,6 @@
+using FluxMq.Core.Models;
+using FluxMq.Core.Session;
+using FluxMq.Components.Storage.Repositories;
 using FluxMq.Pipeline.Runtime;
 using Microsoft.Extensions.Configuration;
 
@@ -21,10 +24,13 @@ public sealed class FlowApplicationHost(
     public FlowApplicationHostBuildResult? LastBuildResult { get; private set; }
     public Exception? LastException { get; private set; }
 
-    public static FlowApplicationHost CreateDefault(IConfiguration configuration)
+    public static FlowApplicationHost CreateDefault(
+        IConfiguration configuration,
+        IMessageRepository? messageRepository = null,
+        Func<MqttConnectionProfile, IMqttSession>? sessionFactory = null)
     {
         var factories = new RuntimeNodeFactoryRegistry()
-            .RegisterPipelineComponentFactories();
+            .RegisterPipelineComponentFactories(sessionFactory, messageRepository);
 
         return new FlowApplicationHost(configuration, new ApplicationRuntimeBuilder(factories));
     }

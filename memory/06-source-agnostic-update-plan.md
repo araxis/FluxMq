@@ -115,6 +115,16 @@ flowchart LR
 
 ### Step 1 - Define Source Binding Shape
 
+Status: implemented for the first alpha source modes.
+
+`traffic.source` is now a registered runtime node type. Its `configuration.kind` selects the concrete source mode:
+
+- `live`
+- `stored-session`
+- `generated`
+
+Downstream nodes link to `traffic.Output` and do not need to know which mode produced the message.
+
 Add a small execution-time model that can bind a logical source node to an online or offline source.
 
 Do not create a large contract hierarchy yet. Start with the minimum needed to express:
@@ -126,10 +136,12 @@ Do not create a large contract hierarchy yet. Start with the minimum needed to e
 
 ### Step 2 - Add Streamed Stored Session Reads
 
+Status: implemented.
+
 Add streaming repository reads for stored messages:
 
 ```csharp
-IAsyncEnumerable<MqttEnvelope> ReadSessionAsync(...)
+IAsyncEnumerable<MqttEnvelope> ReadEnvelopesBySessionAsync(...)
 ```
 
 Keep `GetBySession` for UI lists and tests, but runtime execution should use streaming reads.
@@ -137,6 +149,8 @@ Keep `GetBySession` for UI lists and tests, but runtime execution should use str
 Add deterministic ordering for stored messages. `ReceivedAt` is not enough by itself because two messages can share the same timestamp. Add a per-session sequence field before relying on stored sessions for replay, dashboards, and repeatable tests.
 
 ### Step 3 - Create Source Components/Adapters
+
+Status: implemented for live MQTT, stored sessions, and generated test data.
 
 Introduce source implementations that all expose the same `MqttEnvelope` output shape:
 
@@ -148,6 +162,10 @@ Introduce source implementations that all expose the same `MqttEnvelope` output 
 The live adapter may read from a channel internally. The runtime sees a Dataflow source port.
 
 ### Step 4 - Move Workspace Updates Behind Projections
+
+Status: started.
+
+The desktop workspace now has a `WorkspaceMessageProjection` with durable snapshot state and Dataflow input/update surfaces. Live traffic and selected stored sessions both update the same projection path before the UI reads recent messages, selected payloads, and latest inspection state.
 
 Replace direct UI-side message processing with projection components:
 
@@ -162,9 +180,13 @@ The desktop app observes projections and renders state. It should not own broker
 
 ### Step 5 - Update Dashboard Design
 
+Status: pending.
+
 Revise dashboard runtime so dashboard blocks bind to projection outputs or typed runtime ports. Remove separate live/replay dashboard branches.
 
 ### Step 6 - Keep Temporary UI Glue Small
+
+Status: in progress.
 
 The MAUI Blazor UI may still need a local notification to call `StateHasChanged`. That glue should sit at the edge and must not become the data contract.
 

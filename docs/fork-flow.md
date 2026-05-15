@@ -143,24 +143,17 @@ Example JSON shape:
 
 ```json
 {
-  "resources": {
-    "broker": {
-      "type": "mqtt.connection",
-      "configuration": {
-        "profile": {
-          "name": "local-broker",
-          "host": "localhost",
-          "port": 1883
-        }
-      }
-    }
-  },
   "workflows": {
     "observeTraffic": {
-      "trigger": {
-        "type": "mqtt.trigger",
+      "traffic": {
+        "type": "traffic.source",
         "configuration": {
-          "connection": "broker",
+          "kind": "live",
+          "profile": {
+            "name": "local-broker",
+            "host": "localhost",
+            "port": 1883
+          },
           "subscriptions": [
             "factory/#",
             { "topicFilter": "telemetry/#", "qos": 1 }
@@ -169,7 +162,7 @@ Example JSON shape:
       },
       "metrics": {
         "type": "mqtt.metrics-sink",
-        "Input": "trigger.Output"
+        "Input": "traffic.Output"
       }
     }
   }
@@ -277,6 +270,12 @@ The first CLI alpha command validates a configured flow application:
 dotnet run --project src/FluxMq.Cli -- validate --config samples/flow-applications/metrics-only.json
 ```
 
+The generated traffic sample exercises `traffic.source` without requiring a broker:
+
+```powershell
+dotnet run --project src/FluxMq.Cli -- validate --config samples/flow-applications/generated-traffic-inspect.json
+```
+
 For automation, the same validation command can emit structured output:
 
 ```powershell
@@ -301,8 +300,13 @@ The first runtime builder slice is intentionally small. `ApplicationRuntimeBuild
 - completes only entry nodes so Dataflow completion propagates through linked graphs in order
 - disposes workflow nodes before shared resources
 
-The first concrete registrations now split MQTT intake into a shared connection resource plus trigger nodes, alongside stable no-service sinks/mappers:
+The preferred alpha source registration is a logical traffic source, alongside the shared connection/trigger pair and stable sinks/mappers:
 
+- `traffic.source`
+  - Workflow source node.
+  - Binds to live MQTT, a stored session, or generated data.
+  - `Output`: `MqttEnvelope`
+  - `Errors`: `FlowError`
 - `mqtt.connection`
   - Shared resource node.
   - Owns the `IMqttSession` lifecycle and broadcasts received envelopes internally to triggers.
@@ -339,7 +343,56 @@ registry.Register(new NodeType("example.resource"), context =>
 
 Producer or service-backed nodes that need explicit start work should override `IFlowNode.StartAsync`. Startup failures are converted into host build errors instead of escaping through the CLI or host shell.
 
-Current configuration shape for `mqtt.connection` plus `mqtt.trigger`:
+Preferred alpha configuration shape with `traffic.source`:
+
+```json
+{
+  "workflows": {
+    "observeTraffic": {
+      "traffic": {
+        "type": "traffic.source",
+        "configuration": {
+          "kind": "live",
+          "profile": {
+            "name": "local-broker",
+            "host": "localhost",
+            "port": 1883,
+            "keepAliveSeconds": 30,
+            "cleanStart": true
+          },
+          "subscriptions": [
+            "factory/#",
+            { "topicFilter": "telemetry/#", "qos": "AtLeastOnce" }
+          ],
+          "boundedCapacity": 1000
+        }
+      },
+      "metrics": {
+        "type": "mqtt.metrics-sink",
+        "Input": "traffic.Output"
+      }
+    }
+  }
+}
+```
+
+Stored-session source configuration:
+
+```json
+{
+  "traffic": {
+    "type": "traffic.source",
+    "configuration": {
+      "kind": "stored-session",
+      "sessionId": "00000000-0000-0000-0000-000000000001",
+      "preserveTiming": false,
+      "speed": 1
+    }
+  }
+}
+```
+
+Legacy shared connection plus trigger configuration remains supported:
 
 ```json
 {
@@ -375,7 +428,7 @@ Current configuration shape for `mqtt.connection` plus `mqtt.trigger`:
 }
 ```
 
-`mqtt.trigger.configuration.subscriptions` supports:
+`traffic.source.configuration.subscriptions` and `mqtt.trigger.configuration.subscriptions` support:
 
 - string shorthand (`"factory/#"`)
 - array of strings
@@ -399,7 +452,7 @@ Predicate-driven components such as topic filters and condition routers are not 
 
 Fork Flow should not split downstream behavior between live and offline sources.
 
-A workflow should link to a logical traffic source. The host then binds that source to one concrete mode:
+A workflow links to a logical traffic source. The host then binds that source to one concrete mode:
 
 - live MQTT broker
 - stored session
@@ -409,7 +462,7 @@ A workflow should link to a logical traffic source. The host then binds that sou
 
 Topic tree, recent messages, payload inspection, metrics, and dashboards should consume runtime/projection outputs from the active source binding. The dashboard should not implement separate live and replay behavior.
 
-Stored sessions need a streaming execution path so large recordings can drive the same graph without loading every message into memory.
+Stored sessions now have a streaming execution path through `IMessageRepository.ReadEnvelopesBySessionAsync`. Stored messages include a per-session sequence value so equal timestamps still replay deterministically.
 
 The wider runtime controller should later own:
 

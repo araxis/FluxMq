@@ -10,6 +10,8 @@ Replay preserves relative message timing by default. Speed controls can make a s
 
 A recorded session can be replayed back to a broker by linking the replay source to an MQTT publish sink.
 
+For analysis flows, a stored session can also be selected as a `traffic.source` mode so payload inspection, topic views, metrics, and future dashboards use the same path as live traffic.
+
 ```text
 Recorded session
   -> Replay source

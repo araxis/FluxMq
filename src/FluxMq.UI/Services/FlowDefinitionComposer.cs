@@ -6,15 +6,15 @@ namespace FluxMq.UI.Services;
 
 /// <summary>
 /// Builds JSON flow definitions for the desktop workspace. The default shape is:
-///   resources.broker            (mqtt.connection)
-///   workflows.inspectPayloads.trigger  (mqtt.trigger -> broker)
-///   workflows.inspectPayloads.inspect  (mqtt.payload-inspector &lt;- trigger.Output)
-///   workflows.inspectPayloads.metrics  (mqtt.metrics-sink &lt;- trigger.Output)
+///   workflows.inspectPayloads.traffic  (traffic.source)
+///   workflows.inspectPayloads.inspect  (mqtt.payload-inspector &lt;- traffic.Output)
+///   workflows.inspectPayloads.metrics  (mqtt.metrics-sink &lt;- traffic.Output)
 /// </summary>
 public sealed class FlowDefinitionComposer
 {
     public const string BrokerResourceName = "broker";
     public const string TriggerNodeName = "trigger";
+    public const string TrafficSourceNodeName = "traffic";
     public const string InspectorNodeName = "inspect";
     public const string MetricsNodeName = "metrics";
     public const string DefaultWorkflowName = "inspectPayloads";
@@ -29,24 +29,21 @@ public sealed class FlowDefinitionComposer
         var root = CreateRoot();
         var flowApplication = GetFlowApplication(root);
 
-        flowApplication["resources"] = new JsonObject
-        {
-            [BrokerResourceName] = CreateConnection(profile)
-        };
+        flowApplication["resources"] = new JsonObject();
         flowApplication["workflows"] = new JsonObject
         {
             [DefaultWorkflowName] = new JsonObject
             {
-                [TriggerNodeName] = CreateTrigger(BrokerResourceName, subscription),
+                [TrafficSourceNodeName] = CreateTrafficSource(profile, subscription),
                 [InspectorNodeName] = new JsonObject
                 {
                     ["type"] = "mqtt.payload-inspector",
-                    ["Input"] = $"{TriggerNodeName}.Output"
+                    ["Input"] = $"{TrafficSourceNodeName}.Output"
                 },
                 [MetricsNodeName] = new JsonObject
                 {
                     ["type"] = "mqtt.metrics-sink",
-                    ["Input"] = $"{TriggerNodeName}.Output"
+                    ["Input"] = $"{TrafficSourceNodeName}.Output"
                 }
             }
         };
@@ -55,8 +52,7 @@ public sealed class FlowDefinitionComposer
     }
 
     /// <summary>
-    /// Updates broker settings and the trigger's subscription list in an existing
-    /// definition. Inserts the connection / trigger pair if missing.
+    /// Updates broker settings and the logical traffic source in an existing definition.
     /// </summary>
     public string UpsertBroker(string json, MqttConnectionProfile profile, string subscription)
     {
@@ -64,11 +60,14 @@ public sealed class FlowDefinitionComposer
         var flowApplication = GetFlowApplication(root);
 
         var resources = GetOrCreateObject(flowApplication, "resources");
-        resources[BrokerResourceName] = CreateConnection(profile);
+        resources.Remove(BrokerResourceName);
 
         var workflows = GetOrCreateObject(flowApplication, "workflows");
         var workflow = GetOrCreateObject(workflows, DefaultWorkflowName);
-        workflow[TriggerNodeName] = CreateTrigger(BrokerResourceName, subscription);
+        workflow.Remove(TriggerNodeName);
+        workflow[TrafficSourceNodeName] = CreateTrafficSource(profile, subscription);
+        RewriteInputLink(workflow, InspectorNodeName, $"{TrafficSourceNodeName}.Output");
+        RewriteInputLink(workflow, MetricsNodeName, $"{TrafficSourceNodeName}.Output");
 
         return root.ToJsonString(Options);
     }
@@ -129,7 +128,7 @@ public sealed class FlowDefinitionComposer
         workflow[nodeName] = new JsonObject
         {
             ["type"] = componentType,
-            ["Input"] = $"{TriggerNodeName}.Output"
+            ["Input"] = $"{TrafficSourceNodeName}.Output"
         };
 
         return root.ToJsonString(Options);
@@ -165,6 +164,36 @@ public sealed class FlowDefinitionComposer
                 ["boundedCapacity"] = 1000
             }
         };
+
+    private static JsonObject CreateTrafficSource(MqttConnectionProfile profile, string subscription)
+        => new()
+        {
+            ["type"] = "traffic.source",
+            ["configuration"] = new JsonObject
+            {
+                ["kind"] = "live",
+                ["profile"] = new JsonObject
+                {
+                    ["name"] = string.IsNullOrWhiteSpace(profile.Name) ? "local-broker" : profile.Name,
+                    ["host"] = profile.Host,
+                    ["port"] = profile.Port,
+                    ["clientId"] = profile.ClientId,
+                    ["useTls"] = profile.UseTls,
+                    ["keepAliveSeconds"] = (int)Math.Max(1, profile.KeepAlive.TotalSeconds),
+                    ["cleanStart"] = profile.CleanStart
+                },
+                ["subscriptions"] = new JsonArray(string.IsNullOrWhiteSpace(subscription) ? "#" : subscription),
+                ["boundedCapacity"] = 1000
+            }
+        };
+
+    private static void RewriteInputLink(JsonObject workflow, string nodeName, string link)
+    {
+        if (workflow[nodeName] is JsonObject node)
+        {
+            node["Input"] = link;
+        }
+    }
 
     private static JsonObject CreateRoot()
         => new()

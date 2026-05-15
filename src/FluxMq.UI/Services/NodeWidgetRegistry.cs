@@ -13,6 +13,7 @@ public sealed class NodeWidgetRegistry
 {
     private readonly Dictionary<string, Type> _widgets = new(StringComparer.Ordinal)
     {
+        ["traffic.source"] = typeof(TrafficSourceNodeWidget),
         ["mqtt.connection"] = typeof(MqttConnectionNodeWidget),
         ["mqtt.trigger"] = typeof(MqttTriggerNodeWidget),
         ["mqtt.payload-inspector"] = typeof(PayloadInspectorNodeWidget),
