@@ -64,7 +64,9 @@
                                 <div class="flow-port-side flow-port-side-left">
                                     @if (leftPort is not null)
                                     {
-                                        <PortRenderer @key="leftPort" Port="leftPort" />
+                                        <PortRenderer @key="leftPort"
+                                                      Port="leftPort"
+                                                      Class="@(descriptor.IsInput ? "port-input" : "port-output")" />
                                     }
                                 </div>
                                 <span class="flow-port-name @(descriptor.IsInput ? "flow-port-input" : "flow-port-output")">
@@ -73,7 +75,9 @@
                                 <div class="flow-port-side flow-port-side-right">
                                     @if (rightPort is not null)
                                     {
-                                        <PortRenderer @key="rightPort" Port="rightPort" />
+                                        <PortRenderer @key="rightPort"
+                                                      Port="rightPort"
+                                                      Class="@(descriptor.IsInput ? "port-input" : "port-output")" />
                                     }
                                 </div>
                             </div>
@@ -137,6 +141,32 @@
     [Parameter] public EventCallback OnCancel { get; set; }
 
     private bool _isEditing;
+    private bool _lastCollapsedState;
+
+    protected override void OnInitialized()
+    {
+        _lastCollapsedState = Node.IsCollapsed;
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        // PortRenderer only measures a port's DOM position when Port.Initialized == false
+        // (i.e. on its first render). After that, positions are stale. When the node
+        // collapses or expands, the port-list moves but links keep pointing at the old
+        // coordinates. Fix: after the DOM has settled (OnAfterRenderAsync fires after
+        // all child renders and DOM updates), reset Initialized on every port and call
+        // Refresh() so PortRenderer re-measures at the correct new position.
+        if (!firstRender && Node.IsCollapsed != _lastCollapsedState)
+        {
+            _lastCollapsedState = Node.IsCollapsed;
+            foreach (var port in Node.Ports)
+            {
+                port.Initialized = false;
+                port.Refresh();
+            }
+        }
+        return Task.CompletedTask;
+    }
 
     private void StartEdit()
     {

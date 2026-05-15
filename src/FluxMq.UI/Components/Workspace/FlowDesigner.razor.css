@@ -128,36 +128,48 @@
     transform: scale(1.35);
 }
 
+/* Position-only — colour comes from .port-input / .port-output below.
+   Mirror approach: left ports pull left with margin-left: -6px;
+   right ports push right with margin-right: -6px. */
 .flow-designer-root ::deep .diagram-port.left {
-    border-color: var(--mud-palette-info);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-info) 18%, transparent);
     margin-left: -6px;
 }
 
-.flow-designer-root ::deep .diagram-port.left:hover {
+.flow-designer-root ::deep .flow-port-side-right .diagram-port {
+    margin-right: -6px;
+}
+
+/* Semantic: input ports (info / blue) */
+.flow-designer-root ::deep .diagram-port.port-input {
+    border-color: var(--mud-palette-info);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-info) 18%, transparent);
+}
+
+.flow-designer-root ::deep .diagram-port.port-input:hover {
     background: var(--mud-palette-info);
 }
 
-.flow-designer-root ::deep .diagram-port.right {
-    border-color: var(--mud-palette-secondary);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-secondary) 18%, transparent);
-    margin-left: 6px;
+.flow-designer-root ::deep .diagram-port.port-input.has-links {
+    background: var(--mud-palette-info);
 }
 
-.flow-designer-root ::deep .diagram-port.right:hover {
-    background: var(--mud-palette-secondary);
+/* Semantic: output ports (success / green) */
+.flow-designer-root ::deep .diagram-port.port-output {
+    border-color: var(--mud-palette-success);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-success) 18%, transparent);
 }
 
-.flow-designer-root ::deep .diagram-port.has-link {
+.flow-designer-root ::deep .diagram-port.port-output:hover {
+    background: var(--mud-palette-success);
+}
+
+.flow-designer-root ::deep .diagram-port.port-output.has-links {
+    background: var(--mud-palette-success);
+}
+
+/* Fallback connected state for ports without a semantic class */
+.flow-designer-root ::deep .diagram-port.has-links {
     background: var(--mud-palette-primary);
-}
-
-.flow-designer-root ::deep .diagram-port.left.has-link {
-    background: var(--mud-palette-info);
-}
-
-.flow-designer-root ::deep .diagram-port.right.has-link {
-    background: var(--mud-palette-secondary);
 }
 
 .flow-designer-root ::deep .node-flip {
@@ -248,15 +260,6 @@
     color: var(--mud-palette-success);
 }
 
-/* In the port-row context the side container is already at the node edge, so
-   reset the default offsets that were designed for node-level port renderers. */
-.flow-designer-root ::deep .flow-port-side-left .diagram-port.left {
-    margin-left: -6px;
-}
-
-.flow-designer-root ::deep .flow-port-side-right .diagram-port.right {
-    margin-left: 0;
-}
 
 .flow-designer-root ::deep .node-stat {
     align-items: center;

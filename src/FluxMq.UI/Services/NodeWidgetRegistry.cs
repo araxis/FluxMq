@@ -13,11 +13,12 @@ public sealed class NodeWidgetRegistry
 {
     private readonly Dictionary<string, Type> _widgets = new(StringComparer.Ordinal)
     {
-        ["traffic.source"] = typeof(TrafficSourceNodeWidget),
+        ["session.source"] = typeof(StoredSessionSourceNodeWidget),
         ["mqtt.connection"] = typeof(MqttConnectionNodeWidget),
         ["mqtt.trigger"] = typeof(MqttTriggerNodeWidget),
         ["mqtt.payload-inspector"] = typeof(PayloadInspectorNodeWidget),
-        ["mqtt.metrics-sink"] = typeof(MetricsSinkNodeWidget)
+        ["mqtt.metrics-sink"] = typeof(MetricsSinkNodeWidget),
+        ["traffic.source"] = typeof(TrafficSourceNodeWidget)
     };
 
     /// <summary>Returns the widget type for the given node type, or the fallback default widget.</summary>

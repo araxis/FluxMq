@@ -333,10 +333,13 @@
             var activity = node.NodeType switch
             {
                 "mqtt.connection" => Live.State.ToString(),
+                "mqtt.trigger" => $"{Live.State} | {count} messages",
+                "session.source" => Live.SelectedStoredSession is null
+                    ? null
+                    : $"{count} stored messages",
                 "traffic.source" => Live.SelectedStoredSession is null
                     ? $"{Live.State} | {count} messages"
                     : $"{count} stored messages",
-                "mqtt.trigger" => $"{count} messages",
                 "mqtt.payload-inspector" => inspectedMessage is null
                     ? "Waiting for payload"
                     : $"{latestInspection.ContentTypeLabel} | {latestInspection.SizeBytes} bytes | {ShortTopic(inspectedMessage.Topic)}",

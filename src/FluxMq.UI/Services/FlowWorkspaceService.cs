@@ -69,6 +69,42 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         NotifyChanged();
     }
 
+    /// <summary>
+    /// Returns the names of all mqtt.connection resources in the current definition.
+    /// Used by trigger widgets to populate broker dropdowns.
+    /// </summary>
+    public IReadOnlyList<string> GetConnectionNames()
+    {
+        try
+        {
+            using var document = System.Text.Json.JsonDocument.Parse(DefinitionJson);
+            var root = document.RootElement;
+
+            if (root.TryGetProperty("FluxMq", out var fluxMq) &&
+                fluxMq.TryGetProperty("FlowApplication", out var app))
+            {
+                root = app;
+            }
+
+            if (!root.TryGetProperty("resources", out var resources) ||
+                resources.ValueKind != System.Text.Json.JsonValueKind.Object)
+            {
+                return [];
+            }
+
+            return resources.EnumerateObject()
+                .Where(r => r.Value.ValueKind == System.Text.Json.JsonValueKind.Object &&
+                            r.Value.TryGetProperty("type", out var t) &&
+                            t.GetString() == "mqtt.connection")
+                .Select(r => r.Name)
+                .ToArray();
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
     public void AddComponent(string componentType)
     {
         try

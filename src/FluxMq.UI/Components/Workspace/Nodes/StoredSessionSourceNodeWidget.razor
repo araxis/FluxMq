@@ -1,0 +1,141 @@
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject FlowWorkspaceService Flow
+@inject LiveMqttWorkspaceService Live
+
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.FolderOpen"
+                 CategoryColor="@Color.Primary"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
+    <Body>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            Replays messages from a stored MQTT recording session.
+        </MudText>
+        <MudStack Spacing="1" Class="mt-2">
+            @if (string.IsNullOrEmpty(SessionName))
+            {
+                <Stat Icon="@Icons.Material.Filled.Folder" Label="Session" Value="—" />
+            }
+            else
+            {
+                <Stat Icon="@Icons.Material.Filled.Folder" Label="Session" Value="@SessionName" />
+            }
+            @if (PreserveTiming)
+            {
+                <Stat Icon="@Icons.Material.Filled.Speed" Label="Speed" Value="@($"{Speed:0.##}×")" />
+            }
+        </MudStack>
+    </Body>
+    <Editor>
+        @{
+            var sessions = Live.StoredSessions;
+        }
+        @if (sessions.Count > 0)
+        {
+            <MudSelect T="string" Label="Session" @bind-Value="_sessionId"
+                       Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true"
+                       ToStringFunc="@(id => sessions.FirstOrDefault(s => s.Id.ToString() == id)?.Name ?? id)">
+                @foreach (var session in sessions)
+                {
+                    <MudSelectItem Value="@session.Id.ToString()">
+                        <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                            <MudText Typo="Typo.body2">@session.Name</MudText>
+                            @if (!string.IsNullOrWhiteSpace(session.ProjectName) && session.ProjectName != "Default")
+                            {
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Secondary">@session.ProjectName</MudChip>
+                            }
+                        </MudStack>
+                    </MudSelectItem>
+                }
+            </MudSelect>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined">
+                No recorded sessions found. Record a session first.
+            </MudAlert>
+        }
+        <MudCheckBox T="bool" @bind-Value="_preserveTiming" Label="Preserve original timing" Dense="true" />
+        @if (_preserveTiming)
+        {
+            <MudNumericField T="double" Label="Playback speed" @bind-Value="_speed"
+                             Min="0.1" Max="100" Step="0.1"
+                             Variant="Variant.Outlined" Margin="Margin.Dense"
+                             HelperText="1 = real-time, 2 = double speed, 0.5 = half speed" />
+        }
+    </Editor>
+</NodeWidgetShell>
+
+@code {
+    private string? SessionName
+    {
+        get
+        {
+            var id = Node.Configuration?["sessionId"]?.GetValue<string?>();
+            if (string.IsNullOrEmpty(id)) return null;
+            var session = Live.StoredSessions.FirstOrDefault(s => s.Id.ToString() == id);
+            return session?.Name ?? id;
+        }
+    }
+
+    private bool PreserveTiming => ReadBoolOrDefault(Node.Configuration, "preserveTiming", false);
+    private double Speed => ReadDoubleOrDefault(Node.Configuration, "speed", 1);
+
+    private string _sessionId = string.Empty;
+    private bool _preserveTiming;
+    private double _speed = 1;
+
+    protected override void OnParametersSet()
+    {
+        LoadDraft();
+    }
+
+    private void LoadDraft()
+    {
+        _sessionId = Node.Configuration?["sessionId"]?.GetValue<string?>() ?? string.Empty;
+        _preserveTiming = PreserveTiming;
+        _speed = Speed;
+    }
+
+    private Task SaveAsync()
+    {
+        var updated = new System.Text.Json.Nodes.JsonObject
+        {
+            ["sessionId"] = _sessionId,
+            ["preserveTiming"] = _preserveTiming,
+            ["speed"] = _speed <= 0 ? 1 : _speed,
+            ["boundedCapacity"] = ReadIntOrDefault(Node.Configuration, "boundedCapacity", 1000)
+        };
+
+        Flow.UpdateNodeConfiguration(Node.NodeName, updated);
+        return Task.CompletedTask;
+    }
+
+    private static bool ReadBoolOrDefault(System.Text.Json.Nodes.JsonObject? root, string key, bool fallback)
+    {
+        if (root?[key] is System.Text.Json.Nodes.JsonValue value && value.TryGetValue<bool>(out var result))
+        {
+            return result;
+        }
+        return fallback;
+    }
+
+    private static double ReadDoubleOrDefault(System.Text.Json.Nodes.JsonObject? root, string key, double fallback)
+    {
+        if (root?[key] is System.Text.Json.Nodes.JsonValue value && value.TryGetValue<double>(out var result))
+        {
+            return result;
+        }
+        return fallback;
+    }
+
+    private static int ReadIntOrDefault(System.Text.Json.Nodes.JsonObject? root, string key, int fallback)
+    {
+        if (root?[key] is System.Text.Json.Nodes.JsonValue value && value.TryGetValue<int>(out var result))
+        {
+            return result;
+        }
+        return fallback;
+    }
+}
