@@ -1,5 +1,9 @@
 using FluxMq.UI.Components.Diagram;
 using FluxMq.UI.Components.Workspace.Nodes;
+using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
+using FluxMq.UI.Components.Workspace.Nodes.MqttConnection;
+using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
+using FluxMq.UI.Components.Workspace.Nodes.PayloadInspector;
 using FluxMq.UI.Models;
 using DiagramPoint = Blazor.Diagrams.Core.Geometry.Point;
 

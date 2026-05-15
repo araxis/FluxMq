@@ -4,7 +4,7 @@ using FluxMq.UI.Services;
 using System.Text.Json.Nodes;
 using DiagramPoint = Blazor.Diagrams.Core.Geometry.Point;
 
-namespace FluxMq.UI.Components.Workspace.Nodes;
+namespace FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
 
 public sealed class MqttTriggerNodeModel(DiagramPoint position, string nodeName, FlowComponentDescriptor? descriptor, bool isResource)
     : FlowDiagramNodeModel(position, nodeName, "mqtt.trigger", descriptor, isResource)

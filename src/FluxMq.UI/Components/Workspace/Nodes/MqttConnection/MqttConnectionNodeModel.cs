@@ -3,7 +3,7 @@ using FluxMq.UI.Models;
 using System.Text.Json.Nodes;
 using DiagramPoint = Blazor.Diagrams.Core.Geometry.Point;
 
-namespace FluxMq.UI.Components.Workspace.Nodes;
+namespace FluxMq.UI.Components.Workspace.Nodes.MqttConnection;
 
 public sealed class MqttConnectionNodeModel(DiagramPoint position, string nodeName, FlowComponentDescriptor? descriptor, bool isResource)
     : FlowDiagramNodeModel(position, nodeName, "mqtt.connection", descriptor, isResource)
