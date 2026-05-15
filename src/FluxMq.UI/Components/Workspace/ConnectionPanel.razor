@@ -1,52 +1,87 @@
 @implements IDisposable
 @inject LiveMqttWorkspaceService Live
-@inject FlowWorkspaceService Flow
+@inject IDialogService DialogService
 
-<MudExpansionPanels Dense="true" Elevation="0">
-    <MudExpansionPanel Text="Broker" Icon="@Icons.Material.Filled.SettingsEthernet" Expanded="true">
-        <MudStack Spacing="2">
-        <MudStack Row="true" AlignItems="AlignItems.Center">
-            <MudIcon Icon="@Icons.Material.Filled.SettingsEthernet" Color="Color.Primary" />
-            <MudText Typo="Typo.subtitle1">Broker</MudText>
-            <MudSpacer />
-            <MudChip T="string" Size="Size.Small" Color="@StateColor">@Live.State</MudChip>
-        </MudStack>
+<MudStack Spacing="0">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="px-2 py-1">
+        <MudIcon Icon="@Icons.Material.Filled.Cable" Size="Size.Small" Color="Color.Primary" />
+        <MudText Typo="Typo.subtitle2" Class="flex-grow-1 ml-1">Connections</MudText>
+        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Add"
+                       OnClick="@AddConnectionAsync" />
+    </MudStack>
 
-        <MudTextField T="string" Label="Name" @bind-Value="_name" Variant="Variant.Outlined" Margin="Margin.Dense" />
-        <MudTextField T="string" Label="Host" @bind-Value="_host" Variant="Variant.Outlined" Margin="Margin.Dense" />
-        <MudNumericField T="int" Label="Port" @bind-Value="_port" Min="1" Variant="Variant.Outlined" Margin="Margin.Dense" />
-        <MudTextField T="string" Label="Client ID" @bind-Value="_clientId" Variant="Variant.Outlined" Margin="Margin.Dense" />
-        <MudTextField T="string" Label="Subscription" @bind-Value="_subscription" Variant="Variant.Outlined" Margin="Margin.Dense" />
-        <MudTextField T="string" Label="Username" @bind-Value="_username" Variant="Variant.Outlined" Margin="Margin.Dense" />
-        <MudTextField T="string" Label="Password" @bind-Value="_password" InputType="InputType.Password" Variant="Variant.Outlined" Margin="Margin.Dense" />
-        <MudCheckBox T="bool" @bind-Value="_useTls" Label="TLS" Dense="true" />
-
-        <MudStack Row="true" Spacing="1">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" Disabled="@_busy" OnClick="@ConnectAsync">Connect</MudButton>
-            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Stop" Disabled="@_busy" OnClick="@DisconnectAsync">Disconnect</MudButton>
-            <MudIconButton Icon="@Icons.Material.Filled.NetworkPing" Color="Color.Default" Disabled="@_busy" OnClick="@TestAsync" />
-        </MudStack>
-
-        @foreach (var diagnostic in Live.Diagnostics)
+    @if (Live.Connections.Count == 0)
+    {
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="px-4 pb-2">
+            No connections. Click + to add one.
+        </MudText>
+    }
+    else
+    {
+        @foreach (var conn in Live.Connections)
         {
-            <MudAlert Severity="@SeverityFor(diagnostic)" Dense="true" Variant="Variant.Outlined">@diagnostic.Message</MudAlert>
+            <MudStack Spacing="0" Class="px-3 py-1">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudIcon Icon="@Icons.Material.Filled.Circle"
+                             Size="Size.Small"
+                             Color="@StateColor(conn.State)"
+                             Style="font-size:10px" />
+                    <MudStack Spacing="0" Class="flex-grow-1">
+                        <MudText Typo="Typo.body2">@conn.Profile.Name</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            @conn.Profile.Host:@conn.Profile.Port
+                        </MudText>
+                    </MudStack>
+                    @if (conn.State is MqttSessionState.Disconnected or MqttSessionState.Faulted)
+                    {
+                        <MudIconButton Size="Size.Small"
+                                       Icon="@Icons.Material.Filled.PlayArrow"
+                                       Color="Color.Success"
+                                       OnClick="@(() => ConnectAsync(conn.Id))" />
+                    }
+                    else
+                    {
+                        <MudIconButton Size="Size.Small"
+                                       Icon="@Icons.Material.Filled.Stop"
+                                       Color="Color.Error"
+                                       OnClick="@(() => DisconnectAsync(conn.Id))" />
+                    }
+                    <MudIconButton Size="Size.Small"
+                                   Icon="@Icons.Material.Filled.DeleteOutline"
+                                   OnClick="@(() => RemoveAsync(conn.Id))" />
+                </MudStack>
+                @if (!string.IsNullOrEmpty(conn.LastError))
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Error" Class="pl-4">@conn.LastError</MudText>
+                }
+            </MudStack>
         }
-        </MudStack>
-    </MudExpansionPanel>
-</MudExpansionPanels>
+    }
+
+    @foreach (var diagnostic in Live.Diagnostics)
+    {
+        <MudAlert Severity="@SeverityFor(diagnostic)" Dense="true" Variant="Variant.Text" Class="mx-2 mb-1">
+            @diagnostic.Message
+        </MudAlert>
+    }
+</MudStack>
 
 @code {
-    private bool _busy;
-    private string _name = string.Empty;
-    private string _host = string.Empty;
-    private int _port = 1883;
-    private string _clientId = string.Empty;
-    private string _subscription = "#";
-    private string? _username;
-    private string? _password;
-    private bool _useTls;
+    protected override void OnInitialized() => Live.Changed += OnChanged;
 
-    private Color StateColor => Live.State switch
+    private async Task AddConnectionAsync()
+    {
+        var dialog = await DialogService.ShowAsync<AddConnectionDialog>("New Connection");
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: AddConnectionDialog.AddConnectionResult r })
+            Live.AddConnection(r.Profile, r.Subscription);
+    }
+
+    private Task ConnectAsync(Guid id) => Live.ConnectAsync(id);
+    private Task DisconnectAsync(Guid id) => Live.DisconnectAsync(id);
+    private Task RemoveAsync(Guid id) => Live.RemoveConnectionAsync(id);
+
+    private static Color StateColor(MqttSessionState state) => state switch
     {
         MqttSessionState.Connected => Color.Success,
         MqttSessionState.Connecting or MqttSessionState.Reconnecting => Color.Warning,
@@ -54,86 +89,15 @@
         _ => Color.Default
     };
 
-    protected override void OnInitialized()
+    private static Severity SeverityFor(WorkspaceDiagnostic d) => d.Severity switch
     {
-        LoadFields();
-        Live.Changed += OnChanged;
-    }
-
-    private async Task ConnectAsync()
-    {
-        await RunBusyAsync(async () =>
-        {
-            var profile = CreateProfile();
-            Live.UpdateProfile(profile, _subscription);
-            Flow.ApplyLocalBroker(profile, _subscription);
-            await Live.ConnectAsync();
-        });
-    }
-
-    private Task DisconnectAsync() => RunBusyAsync(() => Live.DisconnectAsync());
-
-    private Task TestAsync()
-        => RunBusyAsync(async () =>
-        {
-            var profile = CreateProfile();
-            Live.UpdateProfile(profile, _subscription);
-            Flow.ApplyLocalBroker(profile, _subscription);
-            await Live.TestConnectionAsync();
-        });
-
-    private MqttConnectionProfile CreateProfile()
-        => new()
-        {
-            Name = string.IsNullOrWhiteSpace(_name) ? "local-broker" : _name,
-            Host = string.IsNullOrWhiteSpace(_host) ? "localhost" : _host,
-            Port = _port,
-            ClientId = string.IsNullOrWhiteSpace(_clientId) ? Guid.NewGuid().ToString("N")[..8] : _clientId,
-            Username = string.IsNullOrWhiteSpace(_username) ? null : _username,
-            Password = string.IsNullOrWhiteSpace(_password) ? null : _password,
-            UseTls = _useTls,
-            CleanStart = true
-        };
-
-    private async Task RunBusyAsync(Func<Task> action)
-    {
-        _busy = true;
-        try
-        {
-            await action();
-        }
-        finally
-        {
-            _busy = false;
-            StateHasChanged();
-        }
-    }
-
-    private void LoadFields()
-    {
-        _name = Live.Profile.Name;
-        _host = Live.Profile.Host;
-        _port = Live.Profile.Port;
-        _clientId = Live.Profile.ClientId;
-        _username = Live.Profile.Username;
-        _password = Live.Profile.Password;
-        _useTls = Live.Profile.UseTls;
-        _subscription = Live.Subscription;
-    }
-
-    private static Severity SeverityFor(WorkspaceDiagnostic diagnostic)
-        => diagnostic.Severity switch
-        {
-            "Error" => Severity.Error,
-            "Warning" => Severity.Warning,
-            "Info" => Severity.Info,
-            _ => Severity.Normal
-        };
+        "Error" => Severity.Error,
+        "Warning" => Severity.Warning,
+        "Info" => Severity.Info,
+        _ => Severity.Normal
+    };
 
     private void OnChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
 
-    public void Dispose()
-    {
-        Live.Changed -= OnChanged;
-    }
+    public void Dispose() => Live.Changed -= OnChanged;
 }

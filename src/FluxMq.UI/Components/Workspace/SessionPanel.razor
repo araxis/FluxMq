@@ -1,98 +1,116 @@
 @implements IDisposable
 @inject LiveMqttWorkspaceService Live
+@inject IDialogService DialogService
 
-<MudExpansionPanels Dense="true" Elevation="0">
-    <MudExpansionPanel Text="Sessions" Icon="@Icons.Material.Filled.Folder" Expanded="true">
-        <MudStack Spacing="2">
-            <MudTextField T="string" Label="Project" @bind-Value="_projectName" Variant="Variant.Outlined" Margin="Margin.Dense" />
-            <MudTextField T="string" Label="Session" @bind-Value="_sessionName" Variant="Variant.Outlined" Margin="Margin.Dense" />
-
-            <MudStack Row="true" Spacing="1">
-                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.FiberManualRecord" Disabled="@Live.IsRecording" OnClick="@StartRecording">Start</MudButton>
-                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.StopCircle" Disabled="@(!Live.IsRecording)" OnClick="@Live.StopRecording">Stop</MudButton>
-            </MudStack>
-
-            @if (Live.IsRecording)
-            {
-                <MudAlert Severity="Severity.Success" Dense="true" Variant="Variant.Outlined">
-                    @Live.ActiveRecordingSession?.Name · @Live.RecordedMessageCount messages
-                </MudAlert>
-            }
-
-            <MudSelect T="string"
-                       Label="Project list"
-                       Value="@Live.CurrentProjectName"
-                       ValueChanged="@OnProjectSelected"
-                       Variant="Variant.Outlined"
-                       Margin="Margin.Dense"
-                       Dense="true">
-                @foreach (var project in Live.ProjectNames.DefaultIfEmpty("Default"))
-                {
-                    <MudSelectItem Value="@project">@project</MudSelectItem>
-                }
-            </MudSelect>
-
-            <MudStack Spacing="1">
-                @if (Live.CurrentProjectSessions.Count == 0)
-                {
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">No sessions in this project.</MudText>
-                }
-                else
-                {
-                    @foreach (var session in Live.CurrentProjectSessions)
-                    {
-                            <MudPaper Elevation="0" Outlined="true" Class="pa-2 session-row" @onclick="@(() => SelectSessionAsync(session))">
-                            <MudStack Row="true" AlignItems="AlignItems.Center">
-                                <div>
-                                    <MudText Typo="Typo.body2">@session.Name</MudText>
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                        @session.StartedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
-                                    </MudText>
-                                </div>
-                                <MudSpacer />
-                                <MudIcon Icon="@(Live.SelectedStoredSession?.Id == session.Id ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.RadioButtonUnchecked)"
-                                         Color="@(Live.SelectedStoredSession?.Id == session.Id ? Color.Success : Color.Default)" />
-                            </MudStack>
-                        </MudPaper>
-                    }
-                }
-            </MudStack>
+<MudStack Spacing="0">
+    @if (Live.IsRecording)
+    {
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="px-2 py-1">
+            <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Color="Color.Error" Size="Size.Small" />
+            <MudText Typo="Typo.caption" Class="flex-grow-1">
+                @Live.ActiveRecordingSession?.Name · @Live.RecordedMessageCount msgs
+            </MudText>
+            <MudIconButton Size="Size.Small"
+                           Icon="@Icons.Material.Filled.StopCircle"
+                           Color="Color.Error"
+                           OnClick="@Live.StopRecording" />
         </MudStack>
-    </MudExpansionPanel>
-</MudExpansionPanels>
+    }
+
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="px-2 py-1">
+        <MudIcon Icon="@Icons.Material.Filled.Folder" Size="Size.Small" Color="Color.Secondary" />
+        <MudText Typo="Typo.subtitle2" Class="flex-grow-1 ml-1">Projects</MudText>
+        <MudIconButton Size="Size.Small"
+                       Icon="@Icons.Material.Filled.FiberManualRecord"
+                       Color="Color.Error"
+                       Disabled="@Live.IsRecording"
+                       OnClick="@StartRecordingAsync" />
+    </MudStack>
+
+    @if (Live.SelectedStoredSession is not null)
+    {
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="px-3 pb-1">
+            <MudButton Size="Size.Small" Variant="Variant.Text"
+                       StartIcon="@Icons.Material.Filled.Sensors"
+                       OnClick="@Live.ClearStoredSessionSelection">
+                Switch to Live
+            </MudButton>
+        </MudStack>
+    }
+
+    @{
+        var allSessions = Live.StoredSessions;
+        var projects = Live.ProjectNames.ToList();
+        if (projects.Count == 0) projects.Add("Default");
+    }
+
+    @if (allSessions.Count == 0)
+    {
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="px-4 pb-2">
+            No recorded sessions. Start a recording first.
+        </MudText>
+    }
+    else
+    {
+        @foreach (var project in projects)
+        {
+            var sessions = allSessions
+                .Where(s => string.Equals(
+                    string.IsNullOrWhiteSpace(s.ProjectName) ? "Default" : s.ProjectName,
+                    project, StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(s => s.StartedAt)
+                .ToList();
+
+            <MudStack Spacing="0">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="px-3 py-1">
+                    <MudIcon Icon="@Icons.Material.Filled.FolderOpen" Size="Size.Small" Color="Color.Default" />
+                    <MudText Typo="Typo.body2" Class="flex-grow-1 ml-1">@project</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@sessions.Count</MudText>
+                </MudStack>
+
+                @foreach (var session in sessions)
+                {
+                    var isSelected = Live.SelectedStoredSession?.Id == session.Id;
+                    <MudStack Row="true"
+                              AlignItems="AlignItems.Center"
+                              Spacing="1"
+                              Class="@($"px-6 py-1 session-row{(isSelected ? " session-selected" : "")}")"
+                              Style="cursor:pointer"
+                              @onclick="@(() => SelectSessionAsync(session))">
+                        <MudIcon Icon="@(isSelected ? Icons.Material.Filled.CheckCircle : Icons.Material.Outlined.Circle)"
+                                 Size="Size.Small"
+                                 Color="@(isSelected ? Color.Success : Color.Default)" />
+                        <MudStack Spacing="0" Class="flex-grow-1">
+                            <MudText Typo="Typo.body2">@session.Name</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                @session.StartedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                            </MudText>
+                        </MudStack>
+                    </MudStack>
+                }
+            </MudStack>
+        }
+    }
+</MudStack>
 
 @code {
-    private string _projectName = "Default";
-    private string _sessionName = string.Empty;
+    protected override void OnInitialized() => Live.Changed += OnChanged;
 
-    protected override void OnInitialized()
+    private async Task StartRecordingAsync()
     {
-        _projectName = Live.CurrentProjectName;
-        _sessionName = $"Session {DateTimeOffset.Now:yyyy-MM-dd HH-mm}";
-        Live.Changed += OnChanged;
+        var parameters = new DialogParameters<StartRecordingDialog>
+        {
+            { x => x.ExistingProjects, Live.ProjectNames }
+        };
+        var dialog = await DialogService.ShowAsync<StartRecordingDialog>("Start Recording", parameters);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: StartRecordingDialog.StartRecordingResult r })
+            Live.StartRecording(r.SessionName, r.ProjectName);
     }
 
-    private void StartRecording()
-    {
-        Live.StartRecording(_sessionName, _projectName);
-    }
-
-    private void OnProjectSelected(string projectName)
-    {
-        _projectName = projectName;
-        Live.SetProject(projectName);
-    }
-
-    private async Task SelectSessionAsync(StoredSession session)
-    {
-        _projectName = session.ProjectName;
-        await Live.SelectStoredSessionAsync(session);
-    }
+    private Task SelectSessionAsync(StoredSession session) => Live.SelectStoredSessionAsync(session);
 
     private void OnChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
 
-    public void Dispose()
-    {
-        Live.Changed -= OnChanged;
-    }
+    public void Dispose() => Live.Changed -= OnChanged;
 }
