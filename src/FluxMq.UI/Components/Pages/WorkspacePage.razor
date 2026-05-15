@@ -1,4 +1,86 @@
 @page "/"
+@implements IDisposable
+@inject ProjectManagerService Projects
+
 <div class="workspace-fill">
-    <FlowDesigner />
+    @if (Projects.Projects.Count == 0)
+    {
+        <div class="workspace-empty">
+            <MudStack AlignItems="AlignItems.Center" Spacing="3">
+                <MudIcon Icon="@Icons.Material.Filled.BubbleChart" Style="font-size:64px;opacity:0.18;" />
+                <MudText Typo="Typo.h6" Color="Color.Secondary">No project open</MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.NoteAdd"
+                           OnClick="@(() => Projects.NewProject())">New project</MudButton>
+            </MudStack>
+        </div>
+    }
+    else
+    {
+        <div class="project-tabbar">
+            @foreach (var project in Projects.Projects)
+            {
+                var p = project;
+                var isActive = p == Projects.ActiveProject;
+                <div class="project-tab @(isActive ? "project-tab-active" : "")"
+                     @onclick="@(() => Projects.SetActive(p))">
+                    <span class="project-tab-name">@p.Name@(p.HasUnsavedChanges ? " ●" : "")</span>
+                    <span @onclick:stopPropagation="true" @onclick="@(() => CloseTabAsync(p))"
+                          class="project-tab-close">×</span>
+                </div>
+            }
+        </div>
+
+        @if (Projects.ActiveProject is { } active)
+        {
+            <CascadingValue Value="@active" @key="@active">
+                <div class="workspace-tab-content">
+                    <div class="workspace-designer-region">
+                        <FlowDesigner />
+                    </div>
+                </div>
+            </CascadingValue>
+        }
+    }
 </div>
+
+@code {
+    private readonly HashSet<FlowWorkspaceService> _subscribed = [];
+
+    protected override void OnInitialized()
+    {
+        Projects.Changed += OnProjectsChanged;
+        SyncSubscriptions();
+    }
+
+    private void OnProjectsChanged(object? sender, EventArgs e)
+    {
+        SyncSubscriptions();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnProjectChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
+
+    private void SyncSubscriptions()
+    {
+        foreach (var project in Projects.Projects)
+            if (_subscribed.Add(project))
+                project.Changed += OnProjectChanged;
+
+        foreach (var stale in _subscribed.Where(p => !Projects.Projects.Contains(p)).ToList())
+        {
+            stale.Changed -= OnProjectChanged;
+            _subscribed.Remove(stale);
+        }
+    }
+
+    private Task CloseTabAsync(FlowWorkspaceService project) => Projects.CloseProjectAsync(project).AsTask();
+
+    public void Dispose()
+    {
+        Projects.Changed -= OnProjectsChanged;
+        foreach (var project in _subscribed)
+            project.Changed -= OnProjectChanged;
+        _subscribed.Clear();
+    }
+}

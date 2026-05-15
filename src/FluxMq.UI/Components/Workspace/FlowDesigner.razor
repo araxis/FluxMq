@@ -1,6 +1,5 @@
 @using FluxMq.UI.Components.Diagram
 @implements IDisposable
-@inject FlowWorkspaceService Flow
 @inject LiveMqttWorkspaceService Live
 @inject FlowComponentCatalog Catalog
 @inject DragStateService DragState
@@ -36,6 +35,8 @@
 </div>
 
 @code {
+    [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
+
     private readonly BlazorDiagram _diagram = new(new Blazor.Diagrams.Options.BlazorDiagramOptions
     {
         AllowMultiSelection = true,
@@ -49,6 +50,11 @@
     protected override void OnInitialized()
     {
         _diagram.RegisterComponent<FlowDiagramNodeModel, FlowDiagramNodeWidget>();
+        Flow.GetDiagramState = () => _diagram.Nodes.OfType<FlowDiagramNodeModel>()
+            .ToDictionary(
+                n => n.NodeName,
+                n => (n.Position.X, n.Position.Y, n.IsCollapsed),
+                StringComparer.Ordinal);
         Flow.Changed += OnFlowChanged;
         Live.Changed += OnLiveChanged;
     }
@@ -74,6 +80,17 @@
     private void RebuildDiagram()
     {
         CaptureDiagramState();
+        if (Flow.StagedNodePositions is { Count: > 0 } staged)
+        {
+            foreach (var (name, (x, y, collapsed)) in staged)
+                _nodeStates[name] = new DiagramNodeState(new Blazor.Diagrams.Core.Geometry.Point(x, y), collapsed);
+            Flow.ConsumeStagedPositions();
+        }
+        else
+        {
+            foreach (var (name, (x, y, collapsed)) in Flow.LastNodePositions)
+                _nodeStates.TryAdd(name, new DiagramNodeState(new Blazor.Diagrams.Core.Geometry.Point(x, y), collapsed));
+        }
         _diagram.Nodes.Clear();
         _diagram.Links.Clear();
         _renderedDefinitionRevision = Flow.DefinitionRevision;
@@ -335,7 +352,7 @@
     {
         InvokeAsync(() =>
         {
-            if (_renderedDefinitionRevision != Flow.DefinitionRevision)
+            if (_renderedDefinitionRevision != Flow.DefinitionRevision || Flow.StagedNodePositions is { Count: > 0 })
                 RebuildDiagram();
             else
             {
@@ -358,6 +375,13 @@
 
     public void Dispose()
     {
+        if (Flow.GetDiagramState is { } capture)
+        {
+            Flow.LastNodePositions.Clear();
+            foreach (var (k, v) in capture())
+                Flow.LastNodePositions[k] = v;
+        }
+        Flow.GetDiagramState = null;
         Flow.Changed -= OnFlowChanged;
         Live.Changed -= OnLiveChanged;
     }

@@ -1,6 +1,5 @@
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
-@inject FlowWorkspaceService Flow
 @inject LiveMqttWorkspaceService Live
 
 <NodeWidgetShell Node="@Node"
@@ -61,6 +60,8 @@
 </NodeWidgetShell>
 
 @code {
+    [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
+
     private SessionSourceNodeModel Model => (SessionSourceNodeModel)Node;
 
     private string? ResolvedSessionName

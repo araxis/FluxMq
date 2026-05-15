@@ -1,6 +1,6 @@
 @inject FlowComponentCatalog Catalog
 @inject DragStateService DragState
-@inject FlowWorkspaceService Flow
+@inject ProjectManagerService Projects
 
 <MudStack Spacing="0" Class="pa-2">
     <MudText Typo="Typo.subtitle2" Class="px-1 pb-2">Components</MudText>
@@ -24,7 +24,8 @@
                     </MudStack>
                     <MudIconButton Size="Size.Small"
                                    Icon="@Icons.Material.Filled.Add"
-                                   OnClick="@(() => Flow.AddComponent(component.Type))" />
+                                   Disabled="@(Projects.ActiveProject is null)"
+                                   OnClick="@(() => Projects.ActiveProject?.AddComponent(component.Type))" />
                 </MudStack>
             </MudPaper>
         }

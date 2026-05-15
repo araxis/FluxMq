@@ -1,7 +1,7 @@
 @inherits LayoutComponentBase
 @implements IDisposable
 @inject AppThemeService ThemeService
-@inject FlowWorkspaceService Flow
+@inject ProjectManagerService Projects
 @inject LiveMqttWorkspaceService Live
 
 <MudThemeProvider Theme="@_theme" IsDarkMode="@ThemeService.IsDarkMode" />
@@ -17,30 +17,40 @@
                        Edge="Edge.Start"
                        OnClick="@(() => _leftOpen = !_leftOpen)" />
 
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mr-3">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mr-2">
             <MudIcon Icon="@Icons.Material.Filled.BubbleChart" Size="Size.Small" />
             <MudText Typo="Typo.h6" Style="font-weight:600;letter-spacing:-0.01em;">FluxMQ</MudText>
         </MudStack>
 
-        <MudText Typo="Typo.caption" Color="Color.Tertiary" Style="opacity:0.8;">
-            @System.IO.Path.GetFileName(Flow.CurrentFilePath)
-        </MudText>
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
 
-        <MudSpacer />
-
-        <MudTooltip Text="Load file">
-            <MudIconButton Icon="@Icons.Material.Filled.UploadFile"
+        <MudTooltip Text="New project">
+            <MudIconButton Icon="@Icons.Material.Filled.NoteAdd"
                            Color="Color.Inherit"
                            Size="Size.Small"
                            Disabled="@_busy"
-                           OnClick="@LoadAsync" />
+                           OnClick="@NewProject" />
         </MudTooltip>
-        <MudTooltip Text="Save file">
+        <MudTooltip Text="Open file">
+            <MudIconButton Icon="@Icons.Material.Filled.FolderOpen"
+                           Color="Color.Inherit"
+                           Size="Size.Small"
+                           Disabled="@_busy"
+                           OnClick="@OpenAsync" />
+        </MudTooltip>
+        <MudTooltip Text="Save">
             <MudIconButton Icon="@Icons.Material.Filled.Save"
                            Color="Color.Inherit"
                            Size="Size.Small"
-                           Disabled="@_busy"
+                           Disabled="@(_busy || Projects.ActiveProject is null)"
                            OnClick="@SaveAsync" />
+        </MudTooltip>
+        <MudTooltip Text="Save as">
+            <MudIconButton Icon="@Icons.Material.Filled.SaveAs"
+                           Color="Color.Inherit"
+                           Size="Size.Small"
+                           Disabled="@(_busy || Projects.ActiveProject is null)"
+                           OnClick="@SaveAsAsync" />
         </MudTooltip>
 
         <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
@@ -135,9 +145,12 @@
             }
         </MudStack>
         <MudSpacer />
-        <MudText Typo="Typo.caption" Color="Color.Secondary">
-            @System.IO.Path.GetFileName(Flow.CurrentFilePath)
-        </MudText>
+        @if (Projects.ActiveProject is { } active)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                @(string.IsNullOrEmpty(active.CurrentFilePath) ? "Untitled" : active.CurrentFilePath)
+            </MudText>
+        }
         <MudSpacer />
         <MudText Typo="Typo.caption" Color="Color.Secondary">
             @Live.RecentMessages.Count msgs
@@ -192,7 +205,7 @@
     protected override void OnInitialized()
     {
         ThemeService.Changed += OnThemeChanged;
-        Flow.Changed += OnChanged;
+        Projects.Changed += OnChanged;
         Live.Changed += OnChanged;
     }
 
@@ -204,12 +217,60 @@
         _ => Color.Default
     };
 
-    private Task LoadAsync() => RunBusyAsync(() => Flow.LoadFromFileAsync());
-    private Task SaveAsync() => RunBusyAsync(() => Flow.SaveToFileAsync());
+    private void NewProject() => Projects.NewProject();
+
+    private Task OpenAsync() => RunBusyAsync(async () =>
+    {
+        var result = await FilePicker.Default.PickAsync(new PickOptions
+        {
+            PickerTitle = "Open FluxMQ Project",
+            FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+            {
+                { DevicePlatform.WinUI, [".json"] },
+                { DevicePlatform.macOS, ["json", "public.json"] }
+            })
+        });
+        if (result is not null)
+            await Projects.OpenAsync(result.FullPath);
+    });
+
+    private Task SaveAsync() => RunBusyAsync(async () =>
+    {
+        var project = Projects.ActiveProject;
+        if (project is null) return;
+        if (string.IsNullOrEmpty(project.CurrentFilePath))
+            await PromptSaveAsAsync(project);
+        else
+            await project.SaveToFileAsync();
+    });
+
+    private Task SaveAsAsync() => RunBusyAsync(async () =>
+    {
+        var project = Projects.ActiveProject;
+        if (project is null) return;
+        await PromptSaveAsAsync(project);
+    });
+
+    private async Task PromptSaveAsAsync(FlowWorkspaceService project)
+    {
+        var suggested = string.IsNullOrEmpty(project.CurrentFilePath)
+            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "FluxMQ", "project.json")
+            : project.CurrentFilePath;
+
+        var dialog = await DialogService!.ShowAsync<SaveAsDialog>("Save As", new DialogParameters
+        {
+            ["SuggestedPath"] = suggested
+        }, new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+
+        var dialogResult = await dialog.Result;
+        if (!dialogResult!.Canceled && dialogResult.Data is string path && !string.IsNullOrWhiteSpace(path))
+            await project.SaveAsAsync(path);
+    }
 
     private async Task RunBusyAsync(Func<Task> action)
     {
         _busy = true;
+        StateHasChanged();
         try { await action(); }
         finally { _busy = false; StateHasChanged(); }
     }
@@ -226,7 +287,9 @@
     public void Dispose()
     {
         ThemeService.Changed -= OnThemeChanged;
-        Flow.Changed -= OnChanged;
+        Projects.Changed -= OnChanged;
         Live.Changed -= OnChanged;
     }
+
+    [Inject] private IDialogService? DialogService { get; set; }
 }
