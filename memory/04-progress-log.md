@@ -325,3 +325,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Updated developer docs and memory notes to describe the new runtime/component boundary.
 - Recorded the next refactoring direction: live broker data and stored/offline data must enter the runtime through the same source model.
 - Agreed that runtime/projection/dashboard update contracts should be Dataflow-native, with channels kept as internal producer details and `EventHandler` avoided as an architectural contract.
+- Implemented the first source-agnostic runtime slice:
+  - Added `traffic.source` as a logical runtime node type with live MQTT, stored-session, and generated source modes.
+  - Added live, stored-session, and generated source components that expose `MqttEnvelope` through Dataflow output ports and `FlowError` through error ports.
+  - Added streaming stored-session reads through `IMessageRepository.ReadBySessionAsync` and `ReadEnvelopesBySessionAsync`.
+  - Added per-session stored-message sequence numbers and sequence-aware ordering for deterministic replay when timestamps match.
+  - Updated the desktop definition composer so the default inspect-payloads flow links inspector and metrics nodes to `traffic.Output`.
+  - Added a Traffic Source diagram node widget and catalog entry.
+  - Moved live and stored workspace message updates behind `WorkspaceMessageProjection`, keeping durable state plus Dataflow input/update surfaces.
+  - Updated `FlowApplicationHost` so hosts can pass the message repository required by stored-session sources.
+  - Verified the solution with `dotnet build FluxMq.sln --no-restore` and `dotnet test FluxMq.sln --no-build`; 204 tests passing.

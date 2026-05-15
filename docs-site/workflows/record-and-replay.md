@@ -16,7 +16,7 @@ This workflow captures live MQTT traffic and replays it later.
 
 ```text
 Recorded session
-  -> Replay source
+  -> Traffic source or replay source
   -> Topic filter
   -> MQTT publish sink
 ```
@@ -26,8 +26,7 @@ Use a topic filter when the recording contains traffic that should not be replay
 ## Recording Flow Shape
 
 ```text
-MQTT connection resource
-  -> MQTT trigger
+Traffic source
   -> Topic filter
   -> Recording sink
 ```

@@ -51,6 +51,78 @@ trigger.Output.LinkTo(stateSink, new DataflowLinkOptions
 - Use this when a flow should react to connection lifecycle events.
 - Example downstream nodes: state router, notification sink, UI state projection.
 
+## Traffic Source
+
+`traffic.source` is the preferred alpha source node for user workflows. It binds a logical source to one concrete execution mode and emits `MqttEnvelope` values through the same `Output` port.
+
+Current modes:
+
+- `live`: connects to a broker, subscribes, and emits matching traffic.
+- `stored-session`: streams messages from LiteDB by `SessionId`.
+- `generated`: emits configured messages for deterministic tests and samples.
+
+### Behavior
+
+```mermaid
+flowchart LR
+    Binding["Source mode"] --> Source["traffic.source"]
+    Source --> Out["Output: MqttEnvelope"]
+    Source --> Errors["Errors: FlowError"]
+```
+
+### Flow Definition
+
+Registered workflow node type: `traffic.source`
+
+Ports:
+
+- `Output`: `MqttEnvelope`
+- `Errors`: `FlowError`
+
+Live source:
+
+```json
+{
+  "traffic": {
+    "type": "traffic.source",
+    "configuration": {
+      "kind": "live",
+      "profile": {
+        "name": "local-broker",
+        "host": "localhost",
+        "port": 1883
+      },
+      "subscriptions": [
+        "factory/#"
+      ],
+      "boundedCapacity": 1000
+    }
+  },
+  "inspect": {
+    "type": "mqtt.payload-inspector",
+    "Input": "traffic.Output"
+  }
+}
+```
+
+Stored-session source:
+
+```json
+{
+  "traffic": {
+    "type": "traffic.source",
+    "configuration": {
+      "kind": "stored-session",
+      "sessionId": "00000000-0000-0000-0000-000000000001",
+      "preserveTiming": false,
+      "speed": 1
+    }
+  }
+}
+```
+
+The stored-session mode requires the host to provide `IMessageRepository` when registering component factories.
+
 ## MQTT Connection and Trigger
 
 `MqttConnectionComponent` owns the MQTT session lifecycle. `MqttTriggerComponent` references that shared connection, installs its own subscriptions, and emits matching `MqttEnvelope` values.
@@ -465,16 +537,14 @@ var replay = factory.Create(sessionId, new RecordedSessionReplayOptions
 
 ## Sample Flow
 
-This flow reads live MQTT traffic through a shared connection, filters it, inspects payloads, and projects results to UI.
+This flow reads traffic through a logical source, filters it, inspects payloads, and projects results to UI. The same downstream graph can run from live or stored traffic.
 
 ```mermaid
 flowchart LR
-    Connection["MqttConnectionComponent"] --> Trigger["MqttTriggerComponent"]
-    Trigger --> Filter["TopicFilterComponent"]
+    Source["traffic.source"] --> Filter["TopicFilterComponent"]
     Filter --> Mapper["PayloadInspectorMapperComponent"]
     Mapper --> Ui["Payload UI Sink"]
-    Connection --> ErrorLog["Error Log"]
-    Trigger --> ErrorLog
+    Source --> ErrorLog["Error Log"]
     Filter --> ErrorLog
     Mapper --> ErrorLog
 ```
@@ -482,39 +552,34 @@ flowchart LR
 Equivalent code shape:
 
 ```csharp
-var connection = new MqttConnectionComponent(session);
-var trigger = new MqttTriggerComponent(connection,
+var source = new LiveMqttSourceComponent(session,
 [
     new MqttSubscription("factory/#", MqttQualityOfServiceLevel.AtMostOnce)
 ]);
 var filter = TopicFilterComponent.Prefix("factory/");
 var mapper = new PayloadInspectorMapperComponent();
 
-trigger.Output.LinkTo(filter.Input, new DataflowLinkOptions { PropagateCompletion = true });
+source.Output.LinkTo(filter.Input, new DataflowLinkOptions { PropagateCompletion = true });
 filter.Output.LinkTo(mapper.Input, new DataflowLinkOptions { PropagateCompletion = true });
 mapper.Output.LinkTo(payloadUiSink, new DataflowLinkOptions { PropagateCompletion = true });
 
-connection.Errors.LinkTo(errorSink);
-trigger.Errors.LinkTo(errorSink);
+source.Errors.LinkTo(errorSink);
 filter.Errors.LinkTo(errorSink);
 mapper.Errors.LinkTo(errorSink);
 
-await connection.StartAsync();
-await trigger.StartAsync();
+await source.StartAsync();
 ```
 
 This flow branches live traffic into two paths.
 
 ```mermaid
 flowchart LR
-    Connection["MqttConnectionComponent"] --> Trigger["MqttTriggerComponent"]
-    Trigger --> Router["MqttConditionRouterComponent"]
+    Source["traffic.source"] --> Router["MqttConditionRouterComponent"]
     Router -->|factory topics| Inspector["PayloadInspectorMapperComponent"]
     Router -->|other topics| Metrics["MqttMetricsSinkComponent"]
     Inspector --> Ui["Payload UI Sink"]
     Metrics --> MetricsUi["Metrics UI Sink"]
-    Connection --> ErrorLog["Error Log"]
-    Trigger --> ErrorLog
+    Source --> ErrorLog["Error Log"]
     Router --> ErrorLog
     Inspector --> ErrorLog
     Metrics --> ErrorLog
@@ -524,11 +589,9 @@ This flow records selected live traffic.
 
 ```mermaid
 flowchart LR
-    Connection["MqttConnectionComponent"] --> Trigger["MqttTriggerComponent"]
-    Trigger --> Filter["TopicFilterComponent"]
+    Source["traffic.source"] --> Filter["TopicFilterComponent"]
     Filter --> Record["MqttRecordingSinkComponent"]
-    Connection --> ErrorLog["Error Log"]
-    Trigger --> ErrorLog
+    Source --> ErrorLog["Error Log"]
     Filter --> ErrorLog
     Record --> ErrorLog
 ```

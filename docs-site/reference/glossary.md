@@ -40,9 +40,9 @@ A registered constructor that turns a node definition into a runtime node with t
 
 The FluxMQ runtime shape for an MQTT message and its metadata.
 
-## MQTT Message Source
+## Traffic Source
 
-A flow component that reads live messages from an active MQTT session.
+A logical flow source that can bind to live MQTT traffic, a stored recording session, or generated messages while exposing the same `MqttEnvelope` output.
 
 ## Metrics Sink
 

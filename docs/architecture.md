@@ -51,6 +51,7 @@ Concrete flow components and local component services.
 Responsibilities:
 
 - MQTT connection and trigger components
+- source adapters for live, stored, and generated MQTT traffic
 - replay source and recorded-session replay orchestration
 - local metrics projection components
 - LiteDB persistence and repositories
@@ -197,13 +198,13 @@ CLI command execution should stay separate from output rendering. The command la
 
 ## Source-Agnostic Update Direction
 
-Live broker traffic and stored/offline traffic should enter Fork Flow through the same runtime source shape.
+Live broker traffic and stored/offline traffic enter Fork Flow through the same runtime source shape.
 
-Source mode is an execution binding. A workflow should consume a logical source output, while the host binds that source to live MQTT traffic, a stored session, replay, imported data, or deterministic test data.
+Source mode is an execution binding. A workflow consumes a logical source output, while the host binds that source to live MQTT traffic, a stored session, replay, imported data, or deterministic test data. The first implemented node type is `traffic.source`, which exposes `Output: MqttEnvelope` and `Errors: FlowError`.
 
 ```mermaid
 flowchart LR
-    Binding["Source binding"] --> Source["Traffic source node"]
+    Binding["Source binding"] --> Source["traffic.source node"]
     Source --> Runtime["Fork Flow runtime"]
     Runtime --> Ports["Typed output ports"]
     Ports --> Projections["Projection runtime"]

@@ -70,10 +70,10 @@ sequenceDiagram
 
 The replay source works with `MqttEnvelope`.
 
-Storage integration stays outside the source component:
+Storage integration stays outside the replay source component:
 
 ```text
-IMessageRepository.GetBySession(sessionId)
+IMessageRepository.ReadEnvelopesBySessionAsync(sessionId)
   -> StoredMessage.ToEnvelope()
   -> ReplaySourceComponent
 ```
@@ -81,6 +81,8 @@ IMessageRepository.GetBySession(sessionId)
 This keeps `FluxMq.Pipeline` independent from concrete storage dependencies.
 
 `FluxMq.Components` owns this orchestration through `RecordedSessionReplayFactory`.
+
+For source-agnostic workflow execution, stored sessions can also enter the graph directly through `traffic.source` with `kind = "stored-session"`. Downstream nodes still link to `traffic.Output`.
 
 ```mermaid
 flowchart LR
