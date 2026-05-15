@@ -395,6 +395,22 @@ Other registered components currently accept optional configuration:
 
 Predicate-driven components such as topic filters and condition routers are not registered yet because their expression/configuration model needs deliberate design first.
 
+## Source-Agnostic Execution
+
+Fork Flow should not split downstream behavior between live and offline sources.
+
+A workflow should link to a logical traffic source. The host then binds that source to one concrete mode:
+
+- live MQTT broker
+- stored session
+- timed replay
+- offline replay as fast as possible
+- imported or generated data later
+
+Topic tree, recent messages, payload inspection, metrics, and dashboards should consume runtime/projection outputs from the active source binding. The dashboard should not implement separate live and replay behavior.
+
+Stored sessions need a streaming execution path so large recordings can drive the same graph without loading every message into memory.
+
 The wider runtime controller should later own:
 
 - application definition loading

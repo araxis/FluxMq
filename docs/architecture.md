@@ -194,3 +194,23 @@ dotnet run --project src/FluxMq.Cli -- run --config samples/flow-applications/me
 The current `run` command is a host lifecycle path: load, build, start, wait for cancellation or a bounded duration, and stop cleanly. Message-producing and service-backed behavior should come from registered components and resources rather than special CLI code.
 
 CLI command execution should stay separate from output rendering. The command layer now uses `Spectre.Console.Cli` for parsing and dispatch, while result rendering stays in dedicated renderers for stable automation output.
+
+## Source-Agnostic Update Direction
+
+Live broker traffic and stored/offline traffic should enter Fork Flow through the same runtime source shape.
+
+Source mode is an execution binding. A workflow should consume a logical source output, while the host binds that source to live MQTT traffic, a stored session, replay, imported data, or deterministic test data.
+
+```mermaid
+flowchart LR
+    Binding["Source binding"] --> Source["Traffic source node"]
+    Source --> Runtime["Fork Flow runtime"]
+    Runtime --> Ports["Typed output ports"]
+    Ports --> Projections["Projection runtime"]
+    Projections --> Dashboard["Dashboard blocks"]
+    Projections --> UI["Workspace UI"]
+```
+
+Runtime and projection updates should be Dataflow-native. Public runtime/component/projection contracts should expose typed source blocks or typed runtime ports for updates, state changes, and errors. Channels can remain internal to hot producers such as MQTT intake, but they should be adapted to Dataflow at the runtime boundary.
+
+`EventHandler` should not shape runtime architecture. It may remain as temporary UI glue, but UI state should ultimately come from projection state plus typed update streams.
