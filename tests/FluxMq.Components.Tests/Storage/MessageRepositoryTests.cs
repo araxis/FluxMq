@@ -33,6 +33,7 @@ public class MessageRepositoryTests : IDisposable
         var messages = _repo.GetBySession(_sessionId);
 
         messages.ShouldHaveSingleItem().Topic.ShouldBe("sensors/temp");
+        messages.Single().Sequence.ShouldBe(1);
     }
 
     [Fact]
@@ -44,6 +45,7 @@ public class MessageRepositoryTests : IDisposable
         _repo.AddBatch(_sessionId, envelopes);
 
         _repo.GetBySession(_sessionId).Count.ShouldBe(5);
+        _repo.GetBySession(_sessionId).Select(message => message.Sequence).ShouldBe([1, 2, 3, 4, 5]);
     }
 
     [Fact]
@@ -80,6 +82,33 @@ public class MessageRepositoryTests : IDisposable
         var topics = _repo.GetBySession(_sessionId).Select(m => m.Topic).ToList();
 
         topics.ShouldBeInOrder();
+    }
+
+    [Fact]
+    public void GetBySession_UsesSequenceAsTieBreaker()
+    {
+        var receivedAt = DateTimeOffset.UtcNow;
+        _repo.Add(_sessionId, Envelope("t/1") with { ReceivedAt = receivedAt });
+        _repo.Add(_sessionId, Envelope("t/2") with { ReceivedAt = receivedAt });
+
+        var topics = _repo.GetBySession(_sessionId).Select(m => m.Topic).ToArray();
+
+        topics.ShouldBe(["t/1", "t/2"]);
+    }
+
+    [Fact]
+    public async Task ReadEnvelopesBySessionAsync_StreamsStoredMessagesInRepositoryOrder()
+    {
+        _repo.Add(_sessionId, Envelope("t/1") with { ReceivedAt = DateTimeOffset.Parse("2026-05-15T10:00:00Z") });
+        _repo.Add(_sessionId, Envelope("t/2") with { ReceivedAt = DateTimeOffset.Parse("2026-05-15T10:00:01Z") });
+        var topics = new List<string>();
+
+        await foreach (var message in _repo.ReadEnvelopesBySessionAsync(_sessionId))
+        {
+            topics.Add(message.Topic);
+        }
+
+        topics.ShouldBe(["t/1", "t/2"]);
     }
 
     [Fact]

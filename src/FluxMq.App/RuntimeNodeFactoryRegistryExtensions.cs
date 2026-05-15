@@ -1,13 +1,17 @@
+using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Session;
 using FluxMq.Components.MessageSource;
 using FluxMq.Components.MqttMetrics;
 using FluxMq.Components.MqttPayloadInspector;
+using FluxMq.Components.Storage.Repositories;
 using FluxMq.Pipeline.Components;
 using FluxMq.Pipeline.Definitions;
 using FluxMq.Pipeline.Runtime;
 using MQTTnet.Protocol;
+using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.App;
 
@@ -20,7 +24,8 @@ public static class RuntimeNodeFactoryRegistryExtensions
 
     public static RuntimeNodeFactoryRegistry RegisterPipelineComponentFactories(
         this RuntimeNodeFactoryRegistry registry,
-        Func<MqttConnectionProfile, IMqttSession>? sessionFactory = null)
+        Func<MqttConnectionProfile, IMqttSession>? sessionFactory = null,
+        IMessageRepository? messageRepository = null)
     {
         ArgumentNullException.ThrowIfNull(registry);
         sessionFactory ??= static profile => new MqttSession(profile);
@@ -28,6 +33,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
         return registry
             .Register(PipelineFlowNodeTypes.Connection, context => CreateConnection(context.Address, context.Definition, sessionFactory))
             .Register(PipelineFlowNodeTypes.Trigger, context => CreateTrigger(context.Address, context.Definition, context))
+            .Register(PipelineFlowNodeTypes.TrafficSource, context => CreateTrafficSource(context.Address, context.Definition, sessionFactory, messageRepository))
             .Register(PipelineFlowNodeTypes.PayloadInspector, CreatePayloadInspector)
             .Register(PipelineFlowNodeTypes.MetricsSink, CreateMetricsSink);
     }
@@ -37,7 +43,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
         NodeDefinition definition,
         Func<MqttConnectionProfile, IMqttSession> sessionFactory)
     {
-        var profile = GetConnectionProfile(definition);
+        var profile = GetConnectionProfile(definition, PipelineFlowNodeTypes.Connection.Value);
         var component = new MqttConnectionComponent(sessionFactory(profile), disposeSessionOnDispose: true);
 
         return RuntimeNode.Create(
@@ -45,6 +51,75 @@ public static class RuntimeNodeFactoryRegistryExtensions
             component,
             outputs:
             [
+                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
+            ]);
+    }
+
+    private static RuntimeNode CreateTrafficSource(
+        NodeAddress address,
+        NodeDefinition definition,
+        Func<MqttConnectionProfile, IMqttSession> sessionFactory,
+        IMessageRepository? messageRepository)
+    {
+        var kind = GetStringOrDefault(definition, "kind", "live");
+        IFlowNode component;
+        ISourceBlock<MqttEnvelope> output;
+
+        switch (kind.Trim().ToLowerInvariant())
+        {
+            case "live":
+            case "mqtt":
+            {
+                var profile = GetConnectionProfile(definition, PipelineFlowNodeTypes.TrafficSource.Value);
+                var live = new LiveMqttSourceComponent(
+                    sessionFactory(profile),
+                    GetSubscriptions(definition, PipelineFlowNodeTypes.TrafficSource.Value),
+                    boundedCapacity: GetBoundedCapacity(definition));
+                component = live;
+                output = live.Output;
+                break;
+            }
+
+            case "stored":
+            case "stored-session":
+            {
+                if (messageRepository is null)
+                {
+                    throw new InvalidOperationException("Stored traffic source requires a message repository.");
+                }
+
+                var stored = new StoredSessionSourceComponent(
+                    messageRepository,
+                    GetRequiredSessionId(definition, "sessionId"),
+                    preserveTiming: GetBoolOrDefault(definition, "preserveTiming", false),
+                    speed: GetDoubleOrDefault(definition, "speed", 1),
+                    boundedCapacity: GetBoundedCapacity(definition));
+                component = stored;
+                output = stored.Output;
+                break;
+            }
+
+            case "generated":
+            case "test":
+            {
+                var generated = new GeneratedMqttSourceComponent(
+                    GetGeneratedMessages(definition),
+                    boundedCapacity: GetBoundedCapacity(definition));
+                component = generated;
+                output = generated.Output;
+                break;
+            }
+
+            default:
+                throw new InvalidOperationException("Configuration value 'kind' must be live, stored-session, or generated.");
+        }
+
+        return RuntimeNode.Create(
+            address,
+            component,
+            outputs:
+            [
+                new OutputPort<MqttEnvelope>(address.Port(OutputPort), output),
                 new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
             ]);
     }
@@ -130,6 +205,27 @@ public static class RuntimeNodeFactoryRegistryExtensions
         return s;
     }
 
+    private static string GetStringOrDefault(NodeDefinition definition, string key, string defaultValue)
+    {
+        if (!definition.Configuration.TryGetValue(key, out var value))
+        {
+            return defaultValue;
+        }
+
+        if (value.ValueKind != JsonValueKind.String)
+        {
+            throw new InvalidOperationException($"Configuration value '{key}' must be a string.");
+        }
+
+        var s = value.GetString();
+        if (string.IsNullOrWhiteSpace(s))
+        {
+            throw new InvalidOperationException($"Configuration value '{key}' must not be empty.");
+        }
+
+        return s;
+    }
+
     private static int GetBoundedCapacity(NodeDefinition definition)
     {
         const int defaultBoundedCapacity = 1000;
@@ -147,11 +243,11 @@ public static class RuntimeNodeFactoryRegistryExtensions
         return boundedCapacity;
     }
 
-    private static MqttConnectionProfile GetConnectionProfile(NodeDefinition definition)
+    private static MqttConnectionProfile GetConnectionProfile(NodeDefinition definition, string nodeType)
     {
         if (!definition.Configuration.TryGetValue("profile", out var profileElement))
         {
-            throw new InvalidOperationException("Configuration value 'profile' is required for mqtt.connection.");
+            throw new InvalidOperationException($"Configuration value 'profile' is required for {nodeType}.");
         }
 
         if (profileElement.ValueKind != JsonValueKind.Object)
@@ -175,11 +271,11 @@ public static class RuntimeNodeFactoryRegistryExtensions
         };
     }
 
-    private static IReadOnlyList<MqttSubscription> GetSubscriptions(NodeDefinition definition)
+    private static IReadOnlyList<MqttSubscription> GetSubscriptions(NodeDefinition definition, string requiredFor = "mqtt.trigger")
     {
         if (!definition.Configuration.TryGetValue("subscriptions", out var subscriptionsElement))
         {
-            throw new InvalidOperationException("Configuration value 'subscriptions' is required for mqtt.trigger.");
+            throw new InvalidOperationException($"Configuration value 'subscriptions' is required for {requiredFor}.");
         }
 
         return subscriptionsElement.ValueKind switch
@@ -259,6 +355,132 @@ public static class RuntimeNodeFactoryRegistryExtensions
         }
 
         throw new InvalidOperationException("Configuration value 'qos' must be 0, 1, 2, AtMostOnce, AtLeastOnce, or ExactlyOnce.");
+    }
+
+    private static SessionId GetRequiredSessionId(NodeDefinition definition, string key)
+    {
+        var value = GetRequiredString(definition, key);
+        if (!Guid.TryParse(value, out var guid) || guid == Guid.Empty)
+        {
+            throw new InvalidOperationException($"Configuration value '{key}' must be a non-empty GUID.");
+        }
+
+        return new SessionId(guid);
+    }
+
+    private static bool GetBoolOrDefault(NodeDefinition definition, string key, bool defaultValue)
+    {
+        if (!definition.Configuration.TryGetValue(key, out var value))
+        {
+            return defaultValue;
+        }
+
+        if (value.ValueKind != JsonValueKind.True && value.ValueKind != JsonValueKind.False)
+        {
+            throw new InvalidOperationException($"Configuration value '{key}' must be a boolean.");
+        }
+
+        return value.GetBoolean();
+    }
+
+    private static double GetDoubleOrDefault(NodeDefinition definition, string key, double defaultValue)
+    {
+        if (!definition.Configuration.TryGetValue(key, out var value))
+        {
+            return defaultValue;
+        }
+
+        if (value.ValueKind != JsonValueKind.Number ||
+            !value.TryGetDouble(out var result) ||
+            result <= 0 ||
+            double.IsNaN(result) ||
+            double.IsInfinity(result))
+        {
+            throw new InvalidOperationException($"Configuration value '{key}' must be a positive finite number.");
+        }
+
+        return result;
+    }
+
+    private static IReadOnlyList<MqttEnvelope> GetGeneratedMessages(NodeDefinition definition)
+    {
+        if (!definition.Configuration.TryGetValue("messages", out var messagesElement))
+        {
+            return [];
+        }
+
+        if (messagesElement.ValueKind != JsonValueKind.Array)
+        {
+            throw new InvalidOperationException("Configuration value 'messages' must be an array.");
+        }
+
+        var messages = new List<MqttEnvelope>();
+        foreach (var item in messagesElement.EnumerateArray())
+        {
+            if (item.ValueKind != JsonValueKind.Object)
+            {
+                throw new InvalidOperationException("Each generated message must be an object.");
+            }
+
+            messages.Add(new MqttEnvelope
+            {
+                Topic = ReadRequiredString(item, "topic"),
+                Payload = ReadPayload(item),
+                ReceivedAt = ReadDateTimeOffsetOrDefault(item, "receivedAt", DateTimeOffset.UtcNow),
+                QualityOfService = ParseQualityOfService(item),
+                Retain = ReadBoolOrDefault(item, "retain", false)
+            });
+        }
+
+        return messages;
+    }
+
+    private static byte[] ReadPayload(JsonElement item)
+    {
+        if (!item.TryGetProperty("payload", out var payload))
+        {
+            return [];
+        }
+
+        return payload.ValueKind switch
+        {
+            JsonValueKind.String => DecodePayload(payload.GetString() ?? string.Empty, ReadStringOrDefault(item, "payloadEncoding", "utf8")),
+            JsonValueKind.Array => payload.EnumerateArray().Select(ReadByte).ToArray(),
+            _ => throw new InvalidOperationException("Generated message payload must be a string or byte array.")
+        };
+    }
+
+    private static byte[] DecodePayload(string value, string encoding)
+        => encoding.Trim().ToLowerInvariant() switch
+        {
+            "utf8" or "text" => Encoding.UTF8.GetBytes(value),
+            "base64" => Convert.FromBase64String(value),
+            _ => throw new InvalidOperationException("Generated message payloadEncoding must be utf8 or base64.")
+        };
+
+    private static byte ReadByte(JsonElement value)
+    {
+        if (value.ValueKind != JsonValueKind.Number || !value.TryGetByte(out var result))
+        {
+            throw new InvalidOperationException("Generated message byte payload values must be between 0 and 255.");
+        }
+
+        return result;
+    }
+
+    private static DateTimeOffset ReadDateTimeOffsetOrDefault(JsonElement element, string propertyName, DateTimeOffset defaultValue)
+    {
+        if (!element.TryGetProperty(propertyName, out var property))
+        {
+            return defaultValue;
+        }
+
+        if (property.ValueKind != JsonValueKind.String || !DateTimeOffset.TryParse(property.GetString(), out var value))
+        {
+            throw new InvalidOperationException($"Configuration value '{propertyName}' must be a valid date/time string.");
+        }
+
+        return value;
     }
 
     private static string ReadRequiredString(JsonElement element, string propertyName)

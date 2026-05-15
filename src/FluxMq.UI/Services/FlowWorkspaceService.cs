@@ -1,5 +1,6 @@
 using FluxMq.App;
 using FluxMq.Core.Models;
+using FluxMq.Components.Storage.Repositories;
 using FluxMq.UI.Models;
 using Microsoft.Extensions.Configuration;
 using System.Text;
@@ -9,12 +10,16 @@ namespace FluxMq.UI.Services;
 public sealed class FlowWorkspaceService : IAsyncDisposable
 {
     private readonly FlowDefinitionComposer _definitionComposer;
+    private readonly IMessageRepository? _messageRepository;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private FlowApplicationHost? _host;
 
-    public FlowWorkspaceService(FlowDefinitionComposer definitionComposer)
+    public FlowWorkspaceService(
+        FlowDefinitionComposer definitionComposer,
+        IMessageRepository? messageRepository = null)
     {
         _definitionComposer = definitionComposer;
+        _messageRepository = messageRepository;
         DefinitionJson = _definitionComposer.CreateInspectPayloadsDefinition(DefaultProfile(), "#");
         CurrentFilePath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
@@ -170,7 +175,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         try
         {
             await DisposeHostAsync().ConfigureAwait(false);
-            _host = FlowApplicationHost.CreateDefault(CreateConfiguration(DefinitionJson));
+            _host = FlowApplicationHost.CreateDefault(CreateConfiguration(DefinitionJson), _messageRepository);
             var result = _host.Build();
             Diagnostics = CollectDiagnostics(result);
             State = result.IsSuccess ? RuntimeWorkspaceState.Valid : RuntimeWorkspaceState.Faulted;
@@ -196,7 +201,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         try
         {
             await DisposeHostAsync().ConfigureAwait(false);
-            _host = FlowApplicationHost.CreateDefault(CreateConfiguration(DefinitionJson));
+            _host = FlowApplicationHost.CreateDefault(CreateConfiguration(DefinitionJson), _messageRepository);
             var result = await _host.StartAsync(cancellationToken).ConfigureAwait(false);
             Diagnostics = CollectDiagnostics(result);
             State = result.IsSuccess ? RuntimeWorkspaceState.Running : RuntimeWorkspaceState.Faulted;

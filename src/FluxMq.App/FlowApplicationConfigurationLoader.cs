@@ -28,8 +28,13 @@ public sealed class FlowApplicationConfigurationLoader
 
         try
         {
-            return json.Deserialize<ApplicationDefinition>(ApplicationDefinitionJson.CreateSerializerOptions())
+            var definition = json.Deserialize<ApplicationDefinition>(ApplicationDefinitionJson.CreateSerializerOptions())
                 ?? throw new FlowApplicationConfigurationException($"Configuration section '{sectionName}' did not contain a flow application definition.");
+            return definition with
+            {
+                Resources = definition.Resources ?? [],
+                Workflows = definition.Workflows ?? []
+            };
         }
         catch (JsonException exception)
         {

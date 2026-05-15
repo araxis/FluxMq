@@ -33,8 +33,8 @@ public sealed class FlowDefinitionComposerTests
         var result = host.Build();
 
         result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.RuntimeBuild?.Errors.Select(error => error.Message) ?? []));
-        result.RuntimeBuild!.Runtime!.Resources.Select(node => node.Address.Node.Value)
-            .ShouldContain(FlowDefinitionComposer.BrokerResourceName);
+        result.RuntimeBuild!.Runtime!.Workflows.Single().Nodes.Select(node => node.Address.Node.Value)
+            .ShouldContain(FlowDefinitionComposer.TrafficSourceNodeName);
     }
 
     [Fact]
@@ -53,26 +53,19 @@ public sealed class FlowDefinitionComposerTests
         using var document = JsonDocument.Parse(updated);
         var flowApplication = document.RootElement.GetProperty("FluxMq").GetProperty("FlowApplication");
 
-        // Broker connection updated
-        flowApplication
-            .GetProperty("resources")
-            .GetProperty(FlowDefinitionComposer.BrokerResourceName)
+        var traffic = flowApplication
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty(FlowDefinitionComposer.TrafficSourceNodeName);
+
+        traffic
             .GetProperty("configuration")
             .GetProperty("profile")
             .GetProperty("port")
             .GetInt32()
             .ShouldBe(1884);
 
-        // Trigger subscription updated
-        var trigger = flowApplication
-            .GetProperty("workflows")
-            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
-            .GetProperty(FlowDefinitionComposer.TriggerNodeName);
-
-        trigger.GetProperty("configuration").GetProperty("connection").GetString()
-            .ShouldBe(FlowDefinitionComposer.BrokerResourceName);
-
-        trigger.GetProperty("configuration").GetProperty("subscriptions")[0].GetString()
+        traffic.GetProperty("configuration").GetProperty("subscriptions")[0].GetString()
             .ShouldBe("devices/#");
 
         // Inspector / metrics nodes still present
@@ -84,7 +77,7 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
-    public void AddComponent_WiresInspectorToTriggerOutput()
+    public void AddComponent_WiresInspectorToTrafficSourceOutput()
     {
         var composer = new FlowDefinitionComposer();
         var initial = composer.CreateInspectPayloadsDefinition(
@@ -102,6 +95,6 @@ public sealed class FlowDefinitionComposerTests
             .GetProperty(FlowDefinitionComposer.InspectorNodeName);
 
         inspect.GetProperty("Input").GetString()
-            .ShouldBe($"{FlowDefinitionComposer.TriggerNodeName}.Output");
+            .ShouldBe($"{FlowDefinitionComposer.TrafficSourceNodeName}.Output");
     }
 }

@@ -4,6 +4,7 @@ using FluxMq.Core.Models;
 using FluxMq.Components.Replay;
 using FluxMq.Components.Storage.Models;
 using FluxMq.Components.Storage.Repositories;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.Tests.Replay;
@@ -101,6 +102,28 @@ public sealed class RecordedSessionReplayFactoryTests
 
         public IReadOnlyList<StoredMessage> GetByTopic(string topic)
             => throw new NotSupportedException();
+
+        public async IAsyncEnumerable<StoredMessage> ReadBySessionAsync(
+            SessionId sessionId,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            foreach (var message in GetBySession(sessionId))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                yield return message;
+                await Task.Yield();
+            }
+        }
+
+        public async IAsyncEnumerable<MqttEnvelope> ReadEnvelopesBySessionAsync(
+            SessionId sessionId,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            await foreach (var message in ReadBySessionAsync(sessionId, cancellationToken))
+            {
+                yield return message.ToEnvelope();
+            }
+        }
 
         public long CountBySession(SessionId sessionId)
             => _messages.Count(message => message.SessionId == sessionId);

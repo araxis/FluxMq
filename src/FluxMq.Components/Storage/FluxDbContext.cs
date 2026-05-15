@@ -48,6 +48,8 @@ public sealed class FluxDbContext : IDisposable
     private void EnsureIndexes()
     {
         Messages.EnsureIndex(m => m.SessionId);
+        Messages.EnsureIndex(m => m.Sequence);
+        Messages.EnsureIndex(m => m.ReceivedAt);
         Messages.EnsureIndex(m => m.Topic);
         Sessions.EnsureIndex(nameof(StoredSession.ProfileId));
         Sessions.EnsureIndex(nameof(StoredSession.ProjectName));

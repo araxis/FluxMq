@@ -1,13 +1,14 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
+using FluxMq.Components.Storage.Repositories;
 using FluxMq.Pipeline.Components;
 using System.Threading.Tasks.Dataflow;
 
-namespace FluxMq.Components.Replay;
+namespace FluxMq.Components.MessageSource;
 
-public sealed class ReplaySourceComponent : IFlowNode, IAsyncDisposable
+public sealed class StoredSessionSourceComponent : IFlowNode, IAsyncDisposable
 {
-    private readonly IReadOnlyList<MqttEnvelope> _messages;
+    private readonly IMessageRepository _messages;
     private readonly BufferBlock<MqttEnvelope> _output;
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly Func<TimeSpan, CancellationToken, ValueTask> _delayAsync;
@@ -15,27 +16,30 @@ public sealed class ReplaySourceComponent : IFlowNode, IAsyncDisposable
     private Task? _producerTask;
     private int _started;
 
-    public ReplaySourceComponent(
-        IEnumerable<MqttEnvelope> messages,
+    public StoredSessionSourceComponent(
+        IMessageRepository messages,
+        SessionId sessionId,
         FlowNodeId? id = null,
+        bool preserveTiming = false,
         double speed = 1,
         int boundedCapacity = 1000,
         Func<TimeSpan, CancellationToken, ValueTask>? delayAsync = null)
     {
         if (speed <= 0 || double.IsNaN(speed) || double.IsInfinity(speed))
         {
-            throw new ArgumentOutOfRangeException(nameof(speed), speed, "Replay speed must be a positive finite value.");
+            throw new ArgumentOutOfRangeException(nameof(speed), speed, "Source speed must be a positive finite value.");
         }
 
         Id = id ?? FlowNodeId.New();
+        SessionId = sessionId;
+        PreserveTiming = preserveTiming;
         Speed = speed;
-        _messages = messages.OrderBy(message => message.ReceivedAt).ToArray();
+        _messages = messages ?? throw new ArgumentNullException(nameof(messages));
         _delayAsync = delayAsync ?? DefaultDelayAsync;
         _errors = new BroadcastBlock<FlowError>(static error => error);
         _output = new BufferBlock<MqttEnvelope>(new DataflowBlockOptions
         {
-            BoundedCapacity = boundedCapacity,
-            CancellationToken = _cts.Token
+            BoundedCapacity = boundedCapacity
         });
 
         _output.Completion.ContinueWith(
@@ -46,19 +50,21 @@ public sealed class ReplaySourceComponent : IFlowNode, IAsyncDisposable
     }
 
     public FlowNodeId Id { get; }
+    public SessionId SessionId { get; }
+    public bool PreserveTiming { get; }
     public double Speed { get; }
     public ISourceBlock<FlowError> Errors => _errors;
     public Task Completion => _output.Completion;
     public ISourceBlock<MqttEnvelope> Output => _output;
 
-    public Task StartAsync(CancellationToken ct = default)
+    public Task StartAsync(CancellationToken cancellationToken = default)
     {
         if (Interlocked.Exchange(ref _started, 1) == 1)
         {
             return Task.CompletedTask;
         }
 
-        _producerTask = RunAsync(ct);
+        _producerTask = RunAsync(cancellationToken);
         return Task.CompletedTask;
     }
 
@@ -76,7 +82,9 @@ public sealed class ReplaySourceComponent : IFlowNode, IAsyncDisposable
 
     public void Fault(Exception exception)
     {
-        PublishError(FlowErrorCodes.NodeFaulted, "Replay source faulted.", exception);
+        Interlocked.Exchange(ref _started, 1);
+        _cts.Cancel();
+        PublishError(FlowErrorCodes.NodeFaulted, "Stored session source faulted.", exception);
         ((IDataflowBlock)_output).Fault(exception);
     }
 
@@ -101,11 +109,11 @@ public sealed class ReplaySourceComponent : IFlowNode, IAsyncDisposable
         {
             DateTimeOffset? previousReceivedAt = null;
 
-            foreach (var message in _messages)
+            await foreach (var message in _messages.ReadEnvelopesBySessionAsync(SessionId, ct).ConfigureAwait(false))
             {
                 ct.ThrowIfCancellationRequested();
 
-                if (previousReceivedAt is not null)
+                if (PreserveTiming && previousReceivedAt is not null)
                 {
                     var delay = ScaleDelay(message.ReceivedAt - previousReceivedAt.Value);
                     if (delay > TimeSpan.Zero)
@@ -126,7 +134,7 @@ public sealed class ReplaySourceComponent : IFlowNode, IAsyncDisposable
         }
         catch (Exception exception)
         {
-            PublishError(FlowErrorCodes.ProcessingFailed, "Replay source failed.", exception);
+            PublishError(FlowErrorCodes.ProcessingFailed, "Stored session source failed.", exception);
             _output.Complete();
         }
     }
@@ -141,7 +149,7 @@ public sealed class ReplaySourceComponent : IFlowNode, IAsyncDisposable
         return TimeSpan.FromTicks((long)Math.Ceiling(originalDelay.Ticks / Speed));
     }
 
-    private void PublishError(int code, string message, Exception exception, string? context = null)
+    private void PublishError(int code, string message, Exception exception)
     {
         _errors.Post(new FlowError
         {
@@ -149,7 +157,7 @@ public sealed class ReplaySourceComponent : IFlowNode, IAsyncDisposable
             Code = code,
             Message = message,
             Exception = exception,
-            Context = context
+            Context = SessionId.ToString()
         });
     }
 

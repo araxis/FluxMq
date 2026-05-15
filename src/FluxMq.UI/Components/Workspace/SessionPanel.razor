@@ -41,7 +41,7 @@
                 {
                     @foreach (var session in Live.CurrentProjectSessions)
                     {
-                        <MudPaper Elevation="0" Outlined="true" Class="pa-2 session-row" @onclick="@(() => SelectSession(session))">
+                            <MudPaper Elevation="0" Outlined="true" Class="pa-2 session-row" @onclick="@(() => SelectSessionAsync(session))">
                             <MudStack Row="true" AlignItems="AlignItems.Center">
                                 <div>
                                     <MudText Typo="Typo.body2">@session.Name</MudText>
@@ -83,10 +83,10 @@
         Live.SetProject(projectName);
     }
 
-    private void SelectSession(StoredSession session)
+    private async Task SelectSessionAsync(StoredSession session)
     {
         _projectName = session.ProjectName;
-        Live.SelectStoredSession(session);
+        await Live.SelectStoredSessionAsync(session);
     }
 
     private void OnChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);

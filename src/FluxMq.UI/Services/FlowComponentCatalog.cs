@@ -7,6 +7,16 @@ public sealed class FlowComponentCatalog
     private readonly IReadOnlyList<FlowComponentDescriptor> _components =
     [
         new(
+            "traffic.source",
+            "Traffic Source",
+            "Source",
+            "Binds a workflow to live, stored, or generated MQTT traffic and emits MQTT envelopes.",
+            IsResource: false,
+            [
+                new("Output", "MqttEnvelope", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
             "mqtt.connection",
             "MQTT Connection",
             "Resource",

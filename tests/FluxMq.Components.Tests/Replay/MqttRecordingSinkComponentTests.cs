@@ -6,6 +6,7 @@ using FluxMq.Components.Storage.Models;
 using FluxMq.Components.Storage.Repositories;
 using FluxMq.Pipeline.Components;
 using MQTTnet.Protocol;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.Tests.Replay;
@@ -125,6 +126,22 @@ public sealed class MqttRecordingSinkComponentTests
 
         public IReadOnlyList<StoredMessage> GetBySession(SessionId sessionId) => [];
         public IReadOnlyList<StoredMessage> GetByTopic(string topic) => [];
+        public async IAsyncEnumerable<StoredMessage> ReadBySessionAsync(
+            SessionId sessionId,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            await Task.CompletedTask;
+            yield break;
+        }
+
+        public async IAsyncEnumerable<MqttEnvelope> ReadEnvelopesBySessionAsync(
+            SessionId sessionId,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            await Task.CompletedTask;
+            yield break;
+        }
+
         public long CountBySession(SessionId sessionId) => Recorded.Count(record => record.SessionId == sessionId);
     }
 

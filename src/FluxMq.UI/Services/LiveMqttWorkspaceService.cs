@@ -12,11 +12,9 @@ namespace FluxMq.UI.Services;
 
 public sealed class LiveMqttWorkspaceService : IAsyncDisposable
 {
-    private readonly ITopicIndex _topicIndex;
     private readonly ISessionRepository _sessionRepository;
     private readonly IMessageRepository _messageRepository;
-    private readonly Lock _sync = new();
-    private readonly List<MqttEnvelope> _messages = [];
+    private readonly WorkspaceMessageProjection _projection;
     private IMqttSession? _session;
     private CancellationTokenSource? _readerCts;
     private Task? _readerTask;
@@ -30,9 +28,9 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         ISessionRepository sessionRepository,
         IMessageRepository messageRepository)
     {
-        _topicIndex = topicIndex;
         _sessionRepository = sessionRepository;
         _messageRepository = messageRepository;
+        _projection = new WorkspaceMessageProjection(topicIndex);
     }
 
     public MqttConnectionProfile Profile { get; private set; } = new()
@@ -45,10 +43,10 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
     public string Subscription { get; private set; } = "#";
     public string CurrentProjectName { get; private set; } = "Default";
     public MqttSessionState State { get; private set; } = MqttSessionState.Disconnected;
-    public MqttEnvelope? LatestMessage { get; private set; }
-    public PayloadInspectionResult LatestInspection { get; private set; } = PayloadInspector.Inspect([]);
-    public MqttEnvelope? SelectedMessage { get; private set; }
-    public PayloadInspectionResult SelectedInspection { get; private set; } = PayloadInspector.Inspect([]);
+    public MqttEnvelope? LatestMessage => _projection.LatestMessage;
+    public PayloadInspectionResult LatestInspection => _projection.LatestInspection;
+    public MqttEnvelope? SelectedMessage => _projection.SelectedMessage;
+    public PayloadInspectionResult SelectedInspection => _projection.SelectedInspection;
     public bool IsRecording => _recordingSession is not null;
     public long RecordedMessageCount => _recordedMessageCount;
     public StoredSession? ActiveRecordingSession => _recordingSession;
@@ -63,16 +61,7 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
     public IReadOnlyList<StoredSession> CurrentProjectSessions => StoredSessions
         .Where(session => string.Equals(NormalizeProject(session.ProjectName), CurrentProjectName, StringComparison.OrdinalIgnoreCase))
         .ToArray();
-    public IReadOnlyList<MqttEnvelope> RecentMessages
-    {
-        get
-        {
-            lock (_sync)
-            {
-                return _messages.ToArray();
-            }
-        }
-    }
+    public IReadOnlyList<MqttEnvelope> RecentMessages => _projection.RecentMessages;
 
     public IReadOnlyList<WorkspaceDiagnostic> Diagnostics { get; private set; } = [];
 
@@ -109,8 +98,7 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         CurrentProjectName = NormalizeProject(projectName);
         _selectedStoredSession = null;
         _selectedSessionMessages = [];
-        SelectedMessage = null;
-        SelectedInspection = PayloadInspector.Inspect([]);
+        _projection.ClearSelection();
         NotifyChanged();
     }
 
@@ -300,37 +288,30 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
 
     public void SelectMessage(MqttEnvelope message)
     {
-        SelectedMessage = message;
-        SelectedInspection = PayloadInspector.Inspect(message.Payload);
-        LatestMessage ??= message;
-        LatestInspection = LatestMessage == message ? SelectedInspection : LatestInspection;
+        _projection.SelectMessage(message);
         NotifyChanged();
     }
 
+    public Task SelectStoredSessionAsync(StoredSession session, CancellationToken cancellationToken = default)
+        => LoadStoredSessionAsync(session, cancellationToken);
+
     public void SelectStoredSession(StoredSession session)
+        => _ = LoadStoredSessionAsync(session, CancellationToken.None);
+
+    public async Task LoadStoredSessionAsync(StoredSession session, CancellationToken cancellationToken = default)
     {
         try
         {
             _selectedStoredSession = session;
-            _selectedSessionMessages = _messageRepository.GetBySession(session.Id)
-                .Select(message => message.ToEnvelope())
-                .ToArray();
+            _projection.Reset();
+            var loaded = new List<MqttEnvelope>();
+            await foreach (var message in _messageRepository.ReadEnvelopesBySessionAsync(session.Id, cancellationToken).ConfigureAwait(false))
+            {
+                loaded.Add(message);
+                await _projection.ApplyAsync(message, cancellationToken).ConfigureAwait(false);
+            }
 
-            var first = _selectedSessionMessages.FirstOrDefault();
-            if (first is not null)
-            {
-                LatestMessage = first;
-                LatestInspection = PayloadInspector.Inspect(first.Payload);
-                SelectedMessage = first;
-                SelectedInspection = LatestInspection;
-            }
-            else
-            {
-                LatestMessage = null;
-                LatestInspection = PayloadInspector.Inspect([]);
-                SelectedMessage = null;
-                SelectedInspection = LatestInspection;
-            }
+            _selectedSessionMessages = loaded.ToArray();
 
             Diagnostics =
             [
@@ -351,6 +332,7 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         await DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
+        await _projection.DisposeAsync().ConfigureAwait(false);
     }
 
     private async Task ReadMessagesAsync(IMqttSession session, CancellationToken cancellationToken)
@@ -359,24 +341,8 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         {
             await foreach (var message in session.Messages.ReadAllAsync(cancellationToken).ConfigureAwait(false))
             {
-                _topicIndex.Process(message);
-                lock (_sync)
-                {
-                    _messages.Insert(0, message);
-                    if (_messages.Count > 200)
-                    {
-                        _messages.RemoveRange(200, _messages.Count - 200);
-                    }
-                }
-
                 RecordMessage(message);
-                LatestMessage = message;
-                LatestInspection = PayloadInspector.Inspect(message.Payload);
-                if (SelectedMessage is null)
-                {
-                    SelectedMessage = message;
-                    SelectedInspection = LatestInspection;
-                }
+                await _projection.ApplyAsync(message, cancellationToken).ConfigureAwait(false);
 
                 NotifyChanged();
             }

@@ -1,0 +1,36 @@
+{
+  "FluxMq": {
+    "FlowApplication": {
+      "workflows": {
+        "inspectGeneratedTraffic": {
+          "traffic": {
+            "type": "traffic.source",
+            "configuration": {
+              "kind": "generated",
+              "messages": [
+                {
+                  "topic": "factory/temperature",
+                  "payload": "{\"value\":21}",
+                  "receivedAt": "2026-05-15T10:00:00Z"
+                },
+                {
+                  "topic": "factory/humidity",
+                  "payload": "{\"value\":45}",
+                  "receivedAt": "2026-05-15T10:00:01Z"
+                }
+              ]
+            }
+          },
+          "inspect": {
+            "type": "mqtt.payload-inspector",
+            "Input": "traffic.Output"
+          },
+          "metrics": {
+            "type": "mqtt.metrics-sink",
+            "Input": "traffic.Output"
+          }
+        }
+      }
+    }
+  }
+}
