@@ -3,26 +3,18 @@ using Microsoft.Extensions.Configuration;
 
 namespace FluxMq.App;
 
-public sealed class FlowApplicationHost : IAsyncDisposable, IDisposable
+public sealed class FlowApplicationHost(
+    IConfiguration configuration,
+    ApplicationRuntimeBuilder runtimeBuilder,
+    FlowApplicationConfigurationLoader? configurationLoader = null,
+    string sectionName = FlowApplicationConfigurationLoader.DefaultSectionName)
+    : IAsyncDisposable, IDisposable
 {
-    private readonly IConfiguration _configuration;
-    private readonly ApplicationRuntimeBuilder _runtimeBuilder;
-    private readonly FlowApplicationConfigurationLoader _configurationLoader;
-    private readonly string _sectionName;
+    private readonly IConfiguration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+    private readonly ApplicationRuntimeBuilder _runtimeBuilder = runtimeBuilder ?? throw new ArgumentNullException(nameof(runtimeBuilder));
+    private readonly FlowApplicationConfigurationLoader _configurationLoader = configurationLoader ?? new FlowApplicationConfigurationLoader();
     private ApplicationRuntime? _runtime;
     private bool _disposed;
-
-    public FlowApplicationHost(
-        IConfiguration configuration,
-        ApplicationRuntimeBuilder runtimeBuilder,
-        FlowApplicationConfigurationLoader? configurationLoader = null,
-        string sectionName = FlowApplicationConfigurationLoader.DefaultSectionName)
-    {
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        _runtimeBuilder = runtimeBuilder ?? throw new ArgumentNullException(nameof(runtimeBuilder));
-        _configurationLoader = configurationLoader ?? new FlowApplicationConfigurationLoader();
-        _sectionName = sectionName;
-    }
 
     public FlowApplicationHostState State { get; private set; } = FlowApplicationHostState.Empty;
     public ApplicationRuntime? Runtime => _runtime;
@@ -46,7 +38,7 @@ public sealed class FlowApplicationHost : IAsyncDisposable, IDisposable
         try
         {
             LastException = null;
-            var definition = _configurationLoader.Load(_configuration, _sectionName);
+            var definition = _configurationLoader.Load(_configuration, sectionName);
             var runtimeBuild = _runtimeBuilder.Build(definition);
 
             if (runtimeBuild.IsSuccess)
@@ -84,29 +76,27 @@ public sealed class FlowApplicationHost : IAsyncDisposable, IDisposable
         ThrowIfDisposed();
 
         var result = Build();
-        if (result.IsSuccess)
+        if (!result.IsSuccess) return result;
+        try
         {
-            try
-            {
-                await _runtime!.StartAsync(cancellationToken).ConfigureAwait(false);
-                State = FlowApplicationHostState.Running;
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception exception)
-            {
-                State = FlowApplicationHostState.Faulted;
-                LastException = exception;
-                LastBuildResult = FlowApplicationHostBuildResult.FromHostError(
-                    new FlowApplicationHostBuildError(
-                        FlowApplicationHostBuildErrorCode.StartFailed,
-                        $"Flow application start failed: {exception.Message}",
-                        exception));
+            await _runtime!.StartAsync(cancellationToken).ConfigureAwait(false);
+            State = FlowApplicationHostState.Running;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            State = FlowApplicationHostState.Faulted;
+            LastException = exception;
+            LastBuildResult = FlowApplicationHostBuildResult.FromHostError(
+                new FlowApplicationHostBuildError(
+                    FlowApplicationHostBuildErrorCode.StartFailed,
+                    $"Flow application start failed: {exception.Message}",
+                    exception));
 
-                return LastBuildResult;
-            }
+            return LastBuildResult;
         }
 
         return result;

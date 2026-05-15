@@ -161,7 +161,7 @@
 </style>
 
 @code {
-    private FluxMq.Pipeline.Components.MqttMetrics.MqttMetricsSnapshot _snapshot = new();
+    private FluxMq.Components.MqttMetrics.MqttMetricsSnapshot _snapshot = new();
     private IReadOnlyList<LiveMetricsCalculator.TopicCount> _topTopics = [];
 
     protected override void OnInitialized()
