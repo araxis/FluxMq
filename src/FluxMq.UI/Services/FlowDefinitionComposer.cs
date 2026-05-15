@@ -197,6 +197,109 @@ public sealed class FlowDefinitionComposer
     }
 
     /// <summary>
+    /// Reads all connection profiles from a definition.
+    /// Covers two storage shapes:
+    ///   1. <c>resources[name].type == "mqtt.connection"</c> with subscription from the first <c>mqtt.trigger</c> that references it.
+    ///   2. Workflow nodes that embed a <c>profile</c> object directly (e.g. <c>traffic.source</c> with <c>kind == "live"</c>).
+    /// </summary>
+    public IReadOnlyList<(MqttConnectionProfile Profile, string Subscription)> ReadConnectionsFromDefinition(string json)
+    {
+        var result = new List<(MqttConnectionProfile, string)>();
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            JsonElement flowApp;
+            if (root.TryGetProperty("FluxMq", out var fluxMq) &&
+                fluxMq.TryGetProperty("FlowApplication", out flowApp) &&
+                flowApp.ValueKind == JsonValueKind.Object)
+            { }
+            else
+            {
+                flowApp = root;
+            }
+
+            var resourceProfiles = new Dictionary<string, MqttConnectionProfile>(StringComparer.Ordinal);
+            var triggerSubscriptions = new Dictionary<string, string>(StringComparer.Ordinal);
+
+            if (flowApp.TryGetProperty("resources", out var resources) &&
+                resources.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var resource in resources.EnumerateObject())
+                {
+                    if (!resource.Value.TryGetProperty("type", out var type) ||
+                        type.GetString() != "mqtt.connection") continue;
+                    if (!resource.Value.TryGetProperty("configuration", out var config) ||
+                        !config.TryGetProperty("profile", out var profileEl)) continue;
+
+                    resourceProfiles[resource.Name] = ReadProfile(profileEl);
+                }
+            }
+
+            if (flowApp.TryGetProperty("workflows", out var workflows) &&
+                workflows.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var workflow in workflows.EnumerateObject())
+                {
+                    if (workflow.Value.ValueKind != JsonValueKind.Object) continue;
+                    foreach (var node in workflow.Value.EnumerateObject())
+                    {
+                        if (!node.Value.TryGetProperty("type", out var nodeType)) continue;
+                        var typeStr = nodeType.GetString();
+                        if (!node.Value.TryGetProperty("configuration", out var conf)) continue;
+
+                        if (typeStr == "mqtt.trigger")
+                        {
+                            if (!conf.TryGetProperty("connection", out var connRef) ||
+                                connRef.GetString() is not { Length: > 0 } connName) continue;
+                            if (!triggerSubscriptions.ContainsKey(connName))
+                                triggerSubscriptions[connName] = ReadSubscriptionString(conf);
+                        }
+                        else if (typeStr == "traffic.source")
+                        {
+                            if (!conf.TryGetProperty("profile", out var profileEl)) continue;
+                            if (conf.TryGetProperty("kind", out var kind) &&
+                                kind.GetString() is { } k &&
+                                !string.Equals(k, "live", StringComparison.OrdinalIgnoreCase)) continue;
+
+                            result.Add((ReadProfile(profileEl), ReadSubscriptionString(conf)));
+                        }
+                    }
+                }
+            }
+
+            foreach (var (name, profile) in resourceProfiles)
+                result.Add((profile, triggerSubscriptions.TryGetValue(name, out var sub) ? sub : "#"));
+        }
+        catch { }
+
+        return result;
+    }
+
+    private static MqttConnectionProfile ReadProfile(JsonElement profileEl) => new()
+    {
+        Name = profileEl.TryGetProperty("name", out var n) ? n.GetString() ?? "" : "",
+        Host = profileEl.TryGetProperty("host", out var h) ? h.GetString() ?? "localhost" : "localhost",
+        Port = profileEl.TryGetProperty("port", out var p) ? p.GetInt32() : 1883,
+        ClientId = profileEl.TryGetProperty("clientId", out var c) ? c.GetString() ?? "" : "",
+        UseTls = profileEl.TryGetProperty("useTls", out var tls) && tls.GetBoolean(),
+        KeepAlive = TimeSpan.FromSeconds(profileEl.TryGetProperty("keepAliveSeconds", out var ka) ? ka.GetInt32() : 60),
+        CleanStart = !profileEl.TryGetProperty("cleanStart", out var cs) || cs.GetBoolean()
+    };
+
+    private static string ReadSubscriptionString(JsonElement conf)
+    {
+        if (!conf.TryGetProperty("subscriptions", out var subs) ||
+            subs.ValueKind != JsonValueKind.Array)
+            return "#";
+        var parts = new List<string>();
+        foreach (var s in subs.EnumerateArray())
+            if (s.GetString() is { } str) parts.Add(str);
+        return parts.Count > 0 ? string.Join(", ", parts) : "#";
+    }
+
+    /// <summary>
     /// Returns the JSON with the <c>FluxMq.Designer</c> section removed so that
     /// the in-memory definition stays clean of UI-only data.
     /// </summary>

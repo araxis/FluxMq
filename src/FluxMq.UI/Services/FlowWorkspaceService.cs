@@ -74,6 +74,9 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         NotifyChanged();
     }
 
+    public IReadOnlyList<(MqttConnectionProfile Profile, string Subscription)> GetConnectionProfiles()
+        => _definitionComposer.ReadConnectionsFromDefinition(DefinitionJson);
+
     public IReadOnlyList<string> GetConnectionNames()
     {
         try

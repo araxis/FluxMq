@@ -85,6 +85,15 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         NotifyChanged();
     }
 
+    public void AddConnectionIfAbsent(MqttConnectionProfile profile, string subscription = "#")
+    {
+        var already = _entries.Values.Any(e =>
+            string.Equals(e.Connection.Profile.Host, profile.Host, StringComparison.OrdinalIgnoreCase) &&
+            e.Connection.Profile.Port == profile.Port);
+        if (!already)
+            AddConnection(profile, subscription);
+    }
+
     public async Task RemoveConnectionAsync(Guid id, CancellationToken cancellationToken = default)
     {
         if (!_entries.TryGetValue(id, out var entry)) return;
