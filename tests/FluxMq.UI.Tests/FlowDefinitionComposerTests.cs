@@ -34,7 +34,36 @@ public sealed class FlowDefinitionComposerTests
 
         result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.RuntimeBuild?.Errors.Select(error => error.Message) ?? []));
         result.RuntimeBuild!.Runtime!.Workflows.Single().Nodes.Select(node => node.Address.Node.Value)
-            .ShouldContain(FlowDefinitionComposer.TrafficSourceNodeName);
+            .ShouldContain(FlowDefinitionComposer.TriggerNodeName);
+    }
+
+    [Fact]
+    public void CreateInspectPayloadsDefinition_PlacesBrokerAsResource()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "my-broker", Host = "192.168.1.10", Port = 8883, ClientId = "test" },
+            "#");
+
+        using var document = JsonDocument.Parse(json);
+        var flowApplication = document.RootElement.GetProperty("FluxMq").GetProperty("FlowApplication");
+
+        var broker = flowApplication
+            .GetProperty("resources")
+            .GetProperty(FlowDefinitionComposer.BrokerResourceName);
+
+        broker.GetProperty("type").GetString().ShouldBe("mqtt.connection");
+        broker.GetProperty("configuration").GetProperty("profile").GetProperty("host").GetString()
+            .ShouldBe("192.168.1.10");
+
+        var trigger = flowApplication
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty(FlowDefinitionComposer.TriggerNodeName);
+
+        trigger.GetProperty("type").GetString().ShouldBe("mqtt.trigger");
+        trigger.GetProperty("configuration").GetProperty("connection").GetString()
+            .ShouldBe(FlowDefinitionComposer.BrokerResourceName);
     }
 
     [Fact]
@@ -53,22 +82,22 @@ public sealed class FlowDefinitionComposerTests
         using var document = JsonDocument.Parse(updated);
         var flowApplication = document.RootElement.GetProperty("FluxMq").GetProperty("FlowApplication");
 
-        var traffic = flowApplication
-            .GetProperty("workflows")
-            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
-            .GetProperty(FlowDefinitionComposer.TrafficSourceNodeName);
+        var broker = flowApplication
+            .GetProperty("resources")
+            .GetProperty(FlowDefinitionComposer.BrokerResourceName);
 
-        traffic
-            .GetProperty("configuration")
-            .GetProperty("profile")
-            .GetProperty("port")
-            .GetInt32()
+        broker.GetProperty("configuration").GetProperty("profile").GetProperty("port").GetInt32()
             .ShouldBe(1884);
 
-        traffic.GetProperty("configuration").GetProperty("subscriptions")[0].GetString()
+        var trigger = flowApplication
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty(FlowDefinitionComposer.TriggerNodeName);
+
+        trigger.GetProperty("configuration").GetProperty("subscriptions")[0].GetString()
             .ShouldBe("devices/#");
 
-        // Inspector / metrics nodes still present
+        // Inspector and metrics nodes still present
         flowApplication
             .GetProperty("workflows")
             .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
@@ -77,7 +106,7 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
-    public void AddComponent_WiresInspectorToTrafficSourceOutput()
+    public void AddComponent_WiresInspectorToTriggerOutput()
     {
         var composer = new FlowDefinitionComposer();
         var initial = composer.CreateInspectPayloadsDefinition(
@@ -95,6 +124,6 @@ public sealed class FlowDefinitionComposerTests
             .GetProperty(FlowDefinitionComposer.InspectorNodeName);
 
         inspect.GetProperty("Input").GetString()
-            .ShouldBe($"{FlowDefinitionComposer.TrafficSourceNodeName}.Output");
+            .ShouldBe($"{FlowDefinitionComposer.TriggerNodeName}.Output");
     }
 }

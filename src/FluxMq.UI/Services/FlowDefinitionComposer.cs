@@ -29,21 +29,24 @@ public sealed class FlowDefinitionComposer
         var root = CreateRoot();
         var flowApplication = GetFlowApplication(root);
 
-        flowApplication["resources"] = new JsonObject();
+        flowApplication["resources"] = new JsonObject
+        {
+            [BrokerResourceName] = CreateConnection(profile)
+        };
         flowApplication["workflows"] = new JsonObject
         {
             [DefaultWorkflowName] = new JsonObject
             {
-                [TrafficSourceNodeName] = CreateTrafficSource(profile, subscription),
+                [TriggerNodeName] = CreateTrigger(BrokerResourceName, subscription),
                 [InspectorNodeName] = new JsonObject
                 {
                     ["type"] = "mqtt.payload-inspector",
-                    ["Input"] = $"{TrafficSourceNodeName}.Output"
+                    ["Input"] = $"{TriggerNodeName}.Output"
                 },
                 [MetricsNodeName] = new JsonObject
                 {
                     ["type"] = "mqtt.metrics-sink",
-                    ["Input"] = $"{TrafficSourceNodeName}.Output"
+                    ["Input"] = $"{TriggerNodeName}.Output"
                 }
             }
         };
@@ -52,7 +55,8 @@ public sealed class FlowDefinitionComposer
     }
 
     /// <summary>
-    /// Updates broker settings and the logical traffic source in an existing definition.
+    /// Updates the broker resource and trigger node in an existing definition.
+    /// Creates the resource and trigger if absent.
     /// </summary>
     public string UpsertBroker(string json, MqttConnectionProfile profile, string subscription)
     {
@@ -60,14 +64,14 @@ public sealed class FlowDefinitionComposer
         var flowApplication = GetFlowApplication(root);
 
         var resources = GetOrCreateObject(flowApplication, "resources");
-        resources.Remove(BrokerResourceName);
+        resources[BrokerResourceName] = CreateConnection(profile);
 
         var workflows = GetOrCreateObject(flowApplication, "workflows");
         var workflow = GetOrCreateObject(workflows, DefaultWorkflowName);
-        workflow.Remove(TriggerNodeName);
-        workflow[TrafficSourceNodeName] = CreateTrafficSource(profile, subscription);
-        RewriteInputLink(workflow, InspectorNodeName, $"{TrafficSourceNodeName}.Output");
-        RewriteInputLink(workflow, MetricsNodeName, $"{TrafficSourceNodeName}.Output");
+        workflow.Remove(TrafficSourceNodeName);
+        workflow[TriggerNodeName] = CreateTrigger(BrokerResourceName, subscription);
+        RewriteInputLink(workflow, InspectorNodeName, $"{TriggerNodeName}.Output");
+        RewriteInputLink(workflow, MetricsNodeName, $"{TriggerNodeName}.Output");
 
         return root.ToJsonString(Options);
     }
@@ -125,10 +129,14 @@ public sealed class FlowDefinitionComposer
             _ => MakeNodeName(componentType)
         };
 
+        var sourceNodeName = workflow.ContainsKey(TriggerNodeName)
+            ? TriggerNodeName
+            : TrafficSourceNodeName;
+
         workflow[nodeName] = new JsonObject
         {
             ["type"] = componentType,
-            ["Input"] = $"{TrafficSourceNodeName}.Output"
+            ["Input"] = $"{sourceNodeName}.Output"
         };
 
         return root.ToJsonString(Options);

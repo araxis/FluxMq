@@ -1,8 +1,3 @@
-@*
-    Trigger widget. Read view shows the subscription filters as chips; edit view
-    flips to a per-row editor (text + remove button) plus an "add filter" row,
-    and saves the list back to configuration.subscriptions.
-*@
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
 @inject FlowWorkspaceService Flow
@@ -13,10 +8,9 @@
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
-        <MudText Typo="Typo.caption" Color="Color.Secondary">
-            Bound to a connection. Emits envelopes whose topic matches one of these filters.
-        </MudText>
-        <Stat Icon="@Icons.Material.Filled.Cable" Label="Connection" Value="@(ConnectionRef ?? "—")" />
+        <MudStack Spacing="1" Class="mt-1">
+            <Stat Icon="@Icons.Material.Filled.Cable" Label="Broker" Value="@(ConnectionRef ?? "—")" />
+        </MudStack>
         <div class="flow-node-filters mt-1 d-flex flex-wrap gap-1">
             @foreach (var filter in Filters)
             {
@@ -31,11 +25,28 @@
         </div>
     </Body>
     <Editor>
-        <MudTextField T="string"
-                      Label="Connection (resource name)"
-                      @bind-Value="_connection"
-                      Variant="Variant.Outlined"
-                      Margin="Margin.Dense" />
+        @{
+            var connectionNames = Flow.GetConnectionNames();
+        }
+        @if (connectionNames.Count > 0)
+        {
+            <MudSelect T="string" Label="Broker connection" @bind-Value="_connection"
+                       Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true">
+                @foreach (var name in connectionNames)
+                {
+                    <MudSelectItem Value="@name">@name</MudSelectItem>
+                }
+            </MudSelect>
+        }
+        else
+        {
+            <MudTextField T="string"
+                          Label="Connection (resource name)"
+                          @bind-Value="_connection"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          HelperText="Add an mqtt.connection resource to enable the dropdown." />
+        }
         <MudText Typo="Typo.caption" Color="Color.Secondary">Subscriptions</MudText>
         @for (var i = 0; i < _draftFilters.Count; i++)
         {
