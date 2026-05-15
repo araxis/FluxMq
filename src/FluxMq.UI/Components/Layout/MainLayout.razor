@@ -105,17 +105,11 @@
                                    Size="Size.Small"
                                    OnClick="@(() => _railTab = 0)" />
                 </MudTooltip>
-                <MudTooltip Text="Connections" Placement="Placement.Right">
-                    <MudIconButton Icon="@Icons.Material.Filled.Cable"
+                <MudTooltip Text="Projects" Placement="Placement.Right">
+                    <MudIconButton Icon="@Icons.Material.Filled.Folder"
                                    Color="@(_railTab == 1 ? Color.Primary : Color.Default)"
                                    Size="Size.Small"
                                    OnClick="@(() => _railTab = 1)" />
-                </MudTooltip>
-                <MudTooltip Text="Projects" Placement="Placement.Right">
-                    <MudIconButton Icon="@Icons.Material.Filled.Folder"
-                                   Color="@(_railTab == 2 ? Color.Primary : Color.Default)"
-                                   Size="Size.Small"
-                                   OnClick="@(() => _railTab = 2)" />
                 </MudTooltip>
                 <div style="flex:1;"></div>
                 <MudTooltip Text="Help" Placement="Placement.Right">
@@ -125,17 +119,15 @@
                 </MudTooltip>
             </div>
             <div class="flux-rail-panel">
-                @switch (_railTab)
+                @if (_railTab == 0)
                 {
-                    case 0:
-                        <ComponentCatalogPanel />
-                        break;
-                    case 1:
-                        <ConnectionPanel />
-                        break;
-                    default:
-                        <SessionPanel />
-                        break;
+                    <ConnectionPanel />
+                    <MudDivider Class="my-1" />
+                    <ComponentCatalogPanel />
+                }
+                else
+                {
+                    <SessionPanel />
                 }
             </div>
         </div>

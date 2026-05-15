@@ -1,6 +1,7 @@
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
 @inject FlowWorkspaceService Flow
+@inject LiveMqttWorkspaceService Live
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.Bolt"
@@ -26,26 +27,26 @@
     </Body>
     <Editor>
         @{
-            var connectionNames = Flow.GetConnectionNames();
+            var liveConnections = Live.Connections;
         }
-        @if (connectionNames.Count > 0)
+        @if (liveConnections.Count > 0)
         {
             <MudSelect T="string" Label="Broker connection" @bind-Value="_connection"
                        Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true">
-                @foreach (var name in connectionNames)
+                @foreach (var conn in liveConnections)
                 {
-                    <MudSelectItem Value="@name">@name</MudSelectItem>
+                    <MudSelectItem Value="@conn.Profile.Name">@conn.Profile.Name (@conn.Profile.Host:@conn.Profile.Port)</MudSelectItem>
                 }
             </MudSelect>
         }
         else
         {
             <MudTextField T="string"
-                          Label="Connection (resource name)"
+                          Label="Connection name"
                           @bind-Value="_connection"
                           Variant="Variant.Outlined"
                           Margin="Margin.Dense"
-                          HelperText="Add an mqtt.connection resource to enable the dropdown." />
+                          HelperText="Add a broker connection in the left panel to enable the dropdown." />
         }
         <MudText Typo="Typo.caption" Color="Color.Secondary">Subscriptions</MudText>
         @for (var i = 0; i < _draftFilters.Count; i++)
@@ -77,10 +78,7 @@
     private string _connection = string.Empty;
     private readonly List<string> _draftFilters = [];
 
-    protected override void OnParametersSet()
-    {
-        LoadDraft();
-    }
+    protected override void OnParametersSet() => LoadDraft();
 
     private void LoadDraft()
     {
@@ -102,7 +100,16 @@
 
         Model.Connection = _connection;
         Model.Subscriptions = trimmed;
-        Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
+
+        var selectedProfile = Live.Connections
+            .FirstOrDefault(c => string.Equals(c.Profile.Name, _connection, StringComparison.OrdinalIgnoreCase))
+            ?.Profile;
+
+        if (selectedProfile is not null)
+            Flow.SyncConnectionAndUpdateNode(_connection, selectedProfile, Node.NodeName, Model.BuildConfiguration());
+        else
+            Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
+
         return Task.CompletedTask;
     }
 }

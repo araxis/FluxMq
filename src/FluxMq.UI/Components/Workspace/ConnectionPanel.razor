@@ -72,7 +72,10 @@ else
 
     private async Task AddConnectionAsync()
     {
-        var dialog = await DialogService.ShowAsync<AddConnectionDialog>("New Connection");
+        var dialog = await DialogService.ShowAsync<AddConnectionDialog>("New Connection", new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium
+        });
         var result = await dialog.Result;
         if (result is { Canceled: false, Data: AddConnectionDialog.AddConnectionResult r })
             Live.AddConnection(r.Profile, r.Subscription);

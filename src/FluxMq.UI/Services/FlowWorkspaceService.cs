@@ -149,6 +149,26 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         NotifyChanged();
     }
 
+    public void SyncConnectionAndUpdateNode(string resourceName, MqttConnectionProfile profile, string nodeName, System.Text.Json.Nodes.JsonObject configuration)
+    {
+        try
+        {
+            ReplaceDefinition(_definitionComposer.SyncConnectionAndSaveNode(DefinitionJson, resourceName, profile, nodeName, configuration));
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics =
+            [
+                new WorkspaceDiagnostic("Error", "Designer", "DefinitionEditFailed", exception.Message)
+            ];
+        }
+
+        NotifyChanged();
+    }
+
     public async Task LoadFromFileAsync(CancellationToken cancellationToken = default)
     {
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);

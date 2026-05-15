@@ -142,6 +142,34 @@ public sealed class FlowDefinitionComposer
         return root.ToJsonString(Options);
     }
 
+    /// <summary>
+    /// Adds or replaces a single mqtt.connection resource by name, leaving all other
+    /// nodes and resources untouched. Used when the trigger widget saves its broker selection.
+    /// </summary>
+    public string UpsertConnectionResource(string json, string resourceName, MqttConnectionProfile profile)
+    {
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        var resources = GetOrCreateObject(flowApplication, "resources");
+        resources[resourceName] = CreateConnection(profile);
+        return root.ToJsonString(Options);
+    }
+
+    /// <summary>
+    /// Atomically syncs a connection resource and updates a node's configuration in one pass,
+    /// emitting a single JSON string so callers only need one <see cref="FlowWorkspaceService"/> call.
+    /// </summary>
+    public string SyncConnectionAndSaveNode(
+        string json,
+        string resourceName,
+        MqttConnectionProfile profile,
+        string nodeName,
+        JsonObject nodeConfiguration)
+    {
+        var withResource = UpsertConnectionResource(json, resourceName, profile);
+        return UpdateNodeConfiguration(withResource, nodeName, nodeConfiguration);
+    }
+
     private static JsonObject CreateConnection(MqttConnectionProfile profile)
         => new()
         {

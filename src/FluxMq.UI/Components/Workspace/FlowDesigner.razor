@@ -93,6 +93,10 @@
             {
                 foreach (var resource in resources.EnumerateObject())
                 {
+                    if (resource.Value.TryGetProperty("type", out var rType) &&
+                        rType.GetString() == "mqtt.connection")
+                        continue;
+
                     AddNode(nodes, resource.Name, resource.Value, x: 70, y: resourceY, isResource: true);
                     resourceY += 150;
                 }
@@ -226,11 +230,7 @@
         nodes[name] = node;
     }
 
-    private static bool HasInputPort(string nodeType) => nodeType switch
-    {
-        "mqtt.connection" => false,
-        _ => true
-    };
+    private static bool HasInputPort(string nodeType) => true;
 
     private static bool HasOutputPort(string nodeType) => nodeType switch
     {
@@ -264,7 +264,6 @@
         {
             var activity = node.NodeType switch
             {
-                "mqtt.connection" => Live.State.ToString(),
                 "mqtt.trigger" => $"{Live.State} | {count} messages",
                 "session.source" => Live.SelectedStoredSession is null
                     ? null

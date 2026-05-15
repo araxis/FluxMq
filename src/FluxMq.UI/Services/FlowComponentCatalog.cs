@@ -17,16 +17,6 @@ public sealed class FlowComponentCatalog
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
-            "mqtt.connection",
-            "MQTT Connection",
-            "Resource",
-            "Defines broker settings (host, port, credentials, TLS) and owns the live session. Triggers reference it by name.",
-            IsResource: true,
-            [
-                new("Connection", "MqttConnection", IsInput: false),
-                new("Errors", "FlowError", IsInput: false)
-            ]),
-        new(
             "mqtt.trigger",
             "MQTT Trigger",
             "Source",
