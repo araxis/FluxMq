@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\FluxMq.Components\FluxMq.Components.csproj" />
     <ProjectReference Include="..\FluxMq.Pipeline\FluxMq.Pipeline.csproj" />
   </ItemGroup>
 

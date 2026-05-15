@@ -67,7 +67,7 @@ MQTT connection resource
 
 ## Design Goal
 
-The same flow application definition should eventually be editable through configuration and through a drag-and-drop interface.
+The same flow application definition should be editable through configuration and through the drag-and-drop interface.
 
 FluxMQ now uses the .NET configuration system as the first loading path for flow application definitions. A JSON file can provide `FluxMq:FlowApplication`, and future hosts can layer command-line values, environment values, saved settings, or UI-produced definitions through the same configuration model.
 
@@ -158,6 +158,8 @@ Trigger configuration supports:
 - `qos` per subscription as `0|1|2` or `AtMostOnce|AtLeastOnce|ExactlyOnce`
 - optional `boundedCapacity`
 
+The runtime package owns the definition model, graph builder, typed ports, lifecycle state, and error contracts. Concrete MQTT, replay, storage, and metrics components live in the component package and are registered by the application host.
+
 The mapper and metrics nodes were chosen first because they have stable constructors and do not need external services or expression configuration.
 
 The first host boundary can build and control a configured flow application from this section:
@@ -192,7 +194,7 @@ The same file can be started through the command-line host lifecycle:
 dotnet run --project src/FluxMq.Cli -- run --config samples/flow-applications/metrics-only.json --duration-ms 1000
 ```
 
-Runtime factories can now tell whether they are building a shared resource or a workflow node. Startable resources are started before workflow nodes, and workflow nodes are stopped and disposed before shared resources.
+Runtime factories can tell whether they are building a shared resource or a workflow node. Startup order is controlled with `phase` on each node definition; lower phases start first across both resources and workflow nodes. Workflow nodes are stopped and disposed before shared resources.
 
 Reloading will be owned by the runtime layer. The UI can edit and save definitions, but the runtime is responsible for validating the next definition, keeping unaffected resources alive, patching workflow graphs, and reporting reload failures.
 

@@ -120,18 +120,18 @@ Fork Flow now has an initial config-first application definition model. The top-
 
 Current definition types:
 
-- `FlowApplicationDefinition`
-- `FlowNodeDefinition`
-- `FlowNodeType`
-- `FlowPortName`
-- `FlowPortReference`
-- `FlowLinkDefinition`
+- `ApplicationDefinition`
+- `NodeDefinition`
+- `NodeType`
+- `PortName`
+- `PortReference`
+- `LinkDefinition`
 
 Definitions are object-shaped for hand-authored configuration:
 
 ```mermaid
 flowchart LR
-    Definition["FlowApplicationDefinition"] --> Resources["Resources"]
+    Definition["ApplicationDefinition"] --> Resources["Resources"]
     Definition --> Workflows["Workflows"]
     Workflows --> Workflow["Workflow object"]
     Workflow --> Node["Node property"]
@@ -225,7 +225,7 @@ Default condition for all links on a component:
 
 If a link has its own `When`, it wins. Otherwise the component-level `When` applies.
 
-`FlowApplicationDefinitionValidator` currently checks:
+`ApplicationDefinitionValidator` currently checks:
 
 - at least one workflow exists
 - workflow names are not empty
@@ -241,13 +241,13 @@ Runtime graph construction is intentionally separate and will come after this de
 
 ## Application Runtime Direction
 
-The runtime boundary is a host-independent class library direction. A desktop app, console runner, Windows service, or tool host should all be able to load the same `FlowApplicationDefinition`.
+The runtime boundary is a host-independent class library direction. A desktop app, console runner, Windows service, or tool host should all be able to load the same `ApplicationDefinition`.
 
 The first application host boundary is `FluxMq.App`. It is a class library, not a UI project. `FlowApplicationHost` currently:
 
 - reads `FluxMq:FlowApplication` through the .NET configuration system
-- converts the configuration tree into `FlowApplicationDefinition`
-- builds a runtime with `FlowApplicationRuntimeBuilder`
+- converts the configuration tree into `ApplicationDefinition`
+- builds a runtime with `ApplicationRuntimeBuilder`
 - exposes build results and host state
 - starts and stops the current runtime
 
@@ -289,12 +289,12 @@ The first `run` command exercises the same host lifecycle and stops after a boun
 dotnet run --project src/FluxMq.Cli -- run --config samples/flow-applications/metrics-only.json --duration-ms 1000
 ```
 
-The first runtime builder slice is intentionally small. `FlowApplicationRuntimeBuilder`:
+The first runtime builder slice is intentionally small. `ApplicationRuntimeBuilder`:
 
-- validates a `FlowApplicationDefinition`
+- validates an `ApplicationDefinition`
 - creates runtime nodes through registered factories
 - passes factory context so registrations know whether they are building a shared resource or a workflow node
-- starts `IFlowStartable` resources before workflow nodes
+- starts nodes by `NodeDefinition.Phase`, with lower phases first across resources and workflow nodes
 - links workflow ports through typed input/output port adapters
 - supports shared resources as link sources
 - returns build errors for validation, missing factories, missing ports, type mismatches, and link failures
@@ -321,12 +321,12 @@ The first concrete registrations now split MQTT intake into a shared connection 
   - `Snapshots`: `MqttMetricsSnapshot`
   - `Errors`: `FlowError`
 
-Register them with `RegisterPipelineComponentFactories()` on `FlowRuntimeNodeFactoryRegistry`.
+Register them with `RegisterPipelineComponentFactories()` on `RuntimeNodeFactoryRegistry`.
 
 Factories that need lifecycle context can use the context-aware registration shape:
 
 ```csharp
-registry.Register(new FlowNodeType("example.resource"), context =>
+registry.Register(new NodeType("example.resource"), context =>
 {
     if (!context.IsResource)
     {
@@ -337,7 +337,7 @@ registry.Register(new FlowNodeType("example.resource"), context =>
 });
 ```
 
-Producer or service-backed nodes that need explicit start work should implement `IFlowStartable`. Startup failures are converted into host build errors instead of escaping through the CLI or host shell.
+Producer or service-backed nodes that need explicit start work should override `IFlowNode.StartAsync`. Startup failures are converted into host build errors instead of escaping through the CLI or host shell.
 
 Current configuration shape for `mqtt.connection` plus `mqtt.trigger`:
 

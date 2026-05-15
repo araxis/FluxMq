@@ -1,7 +1,7 @@
 using FluxMq.Core.Session;
 using FluxMq.Core.TopicIndex;
-using FluxMq.Storage;
-using FluxMq.Storage.Repositories;
+using FluxMq.Components.Storage;
+using FluxMq.Components.Storage.Repositories;
 using FluxMq.UI.Services;
 using Microsoft.Extensions.Logging;
 using MudBlazor.Services;

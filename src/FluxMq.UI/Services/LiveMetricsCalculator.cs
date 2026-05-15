@@ -1,5 +1,5 @@
 using FluxMq.Core.Models;
-using FluxMq.Pipeline.Components.MqttMetrics;
+using FluxMq.Components.MqttMetrics;
 
 namespace FluxMq.UI.Services;
 

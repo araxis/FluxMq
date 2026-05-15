@@ -19,15 +19,13 @@ dotnet test FluxMq.sln --no-build
 ```text
 /src
   /FluxMq.Core      domain models, MQTT session, topic index, payload inspection
-  /FluxMq.Pipeline  Dataflow pipeline and concrete flow components
-  /FluxMq.Replay    recorded session replay orchestration
-  /FluxMq.Storage   LiteDB persistence
+  /FluxMq.Pipeline  Dataflow pipeline, definitions, and runtime primitives
+  /FluxMq.Components concrete flow components, replay orchestration, LiteDB persistence
   /FluxMq.UI        MAUI Blazor Hybrid desktop workspace
 /tests
   /FluxMq.Core.Tests
   /FluxMq.Pipeline.Tests
-  /FluxMq.Replay.Tests
-  /FluxMq.Storage.Tests
+  /FluxMq.Components.Tests
   /FluxMq.UI.Tests
 /docs
   contributor and Wiki-ready documentation

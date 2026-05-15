@@ -313,3 +313,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     1. `_errors` was a `BroadcastBlock<FlowError>` which offers messages asynchronously; `ExecuteSynchronously` continuation could call `_errors.Complete()` before delivery completed. Changed to `BufferBlock<FlowError>` which guarantees all queued messages drain before completion.
     2. `component.Completion` was `Task.WhenAll(_block, _whenTrue, _whenFalse)`. When `_block` faults it propagates to `_whenTrue` and `_whenFalse` via `PropagateCompletion`, so WhenAll had three faulted tasks with multiple inner exceptions — `await` throws `AggregateException` instead of the unwrapped `InvalidOperationException`. Fixed by changing `Completion` to `_block.Completion` only; output port completions propagate naturally through linked targets.
   - 192/192 tests passing, stable across 3 consecutive full-suite runs under parallel test load.
+
+## 2026-05-15
+
+- Moved the current in-progress component-boundary work onto `feature/components-boundary` from the latest `origin/main`.
+- Introduced `FluxMq.Components` as the home for concrete flow components, replay orchestration, LiteDB storage, and component-level tests.
+- Kept `FluxMq.Pipeline` focused on definitions, runtime graph construction, typed runtime ports, lifecycle state, and flow error primitives.
+- Moved runtime component registration into `FluxMq.App` so the application host remains the composition boundary for production components.
+- Updated `FluxMq.UI` to consume concrete components and storage services from `FluxMq.Components`.
+- Added `tests/FluxMq.Components.Tests` and moved concrete component, replay, and storage tests there.
+- Updated developer docs and memory notes to describe the new runtime/component boundary.

@@ -33,38 +33,33 @@ Responsibilities:
 
 ### FluxMq.Pipeline
 
-Dataflow-based message movement and Fork Flow components.
+Dataflow-based message movement and Fork Flow runtime primitives.
 
 Responsibilities:
 
 - message pipeline foundation
-- concrete flow components
+- application definition model
+- runtime graph building
+- typed runtime ports
 - lifecycle behavior
 - flow error events
-- replay source behavior
-- local metrics projection components
 
-### FluxMq.Replay
+### FluxMq.Components
 
-Recorded session replay orchestration.
+Concrete flow components and local component services.
 
 Responsibilities:
 
+- MQTT connection and trigger components
+- replay source and recorded-session replay orchestration
+- local metrics projection components
+- LiteDB persistence and repositories
 - load stored session messages through storage repositories
 - convert stored messages into MQTT envelopes
-- create configured replay source components
-- keep replay orchestration separate from both storage and primitive pipeline components
-
-### FluxMq.Storage
-
-LiteDB persistence.
-
-Responsibilities:
-
 - connection profiles
 - sessions
 - stored messages
-- repository layer
+- keep concrete component dependencies out of the runtime primitives
 
 ### FluxMq.App
 
@@ -161,7 +156,7 @@ The runtime controller should sit above individual workflow graphs and below the
 ```mermaid
 flowchart TD
     Host["Host shell"] --> Runtime["Flow application runtime"]
-    Runtime --> Definition["FlowApplicationDefinition"]
+    Runtime --> Definition["ApplicationDefinition"]
     Runtime --> Resources["Shared resources"]
     Runtime --> Workflows["Running workflows"]
     Runtime --> Reload["Reload coordinator"]
@@ -172,11 +167,11 @@ The host asks the runtime to load, start, stop, or reload an application definit
 
 `FluxMq.UI` is the first desktop host for this boundary. It is a MAUI Blazor Hybrid app, so the Blazor workspace can use MudBlazor and Blazor.Diagrams while still connecting to local brokers and reading or writing local definition files through native desktop APIs.
 
-The first implemented slice is cold-start graph building. `FlowApplicationRuntimeBuilder` creates runtime nodes through a factory registry and links declared ports through typed port adapters. It deliberately does not hard-code component construction into the builder; concrete component registrations can evolve as component configuration schemas become stable.
+The first implemented slice is cold-start graph building. `ApplicationRuntimeBuilder` creates runtime nodes through a factory registry and links declared ports through typed port adapters. It deliberately does not hard-code component construction into the builder; concrete component registrations can evolve as component configuration schemas become stable.
 
-Factory calls receive a `FlowRuntimeNodeFactoryContext` with the node name, node definition, optional workflow name, and `IsResource`. That gives service-backed registrations enough information to distinguish shared resources from workflow nodes without adding host-specific code. Runtime start now calls `IFlowStartable` nodes in resource-before-workflow order, and disposal releases workflow nodes before shared resources so long-lived connections, stores, or sessions can remain available while dependent workflow nodes shut down.
+Factory calls receive a `RuntimeNodeFactoryContext` with the node address, node definition, optional workflow name, and resource placement. That gives service-backed registrations enough information to distinguish shared resources from workflow nodes without adding host-specific code. Runtime startup uses `NodeDefinition.Phase`; lower phases start first across both resources and workflow nodes. Nodes that need startup work override `IFlowNode.StartAsync`, and disposal releases workflow nodes before shared resources so long-lived connections, stores, or sessions can remain available while dependent workflow nodes shut down.
 
-`FluxMq.App` now provides the first host boundary. `FlowApplicationHost` reads a `FlowApplicationDefinition` from .NET configuration, builds a runtime, exposes current state, starts the runtime boundary, and completes it on stop. The current default configuration section is `FluxMq:FlowApplication`.
+`FluxMq.App` now provides the first host boundary. `FlowApplicationHost` reads an `ApplicationDefinition` from .NET configuration, builds a runtime, exposes current state, starts the runtime boundary, and completes it on stop. The current default configuration section is `FluxMq:FlowApplication`.
 
 Definition sources should remain configuration providers. A JSON file is the first alpha path, but the same host can later accept environment values, command-line values, LiteDB-backed providers, or UI-produced configuration without changing the runtime model.
 
