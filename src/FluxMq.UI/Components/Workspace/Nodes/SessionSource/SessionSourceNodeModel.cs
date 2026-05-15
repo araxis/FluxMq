@@ -3,7 +3,7 @@ using FluxMq.UI.Models;
 using System.Text.Json.Nodes;
 using DiagramPoint = Blazor.Diagrams.Core.Geometry.Point;
 
-namespace FluxMq.UI.Components.Workspace.Nodes;
+namespace FluxMq.UI.Components.Workspace.Nodes.SessionSource;
 
 public sealed class SessionSourceNodeModel(DiagramPoint position, string nodeName, FlowComponentDescriptor? descriptor, bool isResource)
     : FlowDiagramNodeModel(position, nodeName, "session.source", descriptor, isResource)

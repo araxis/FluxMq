@@ -2,69 +2,70 @@
 @inject LiveMqttWorkspaceService Live
 @inject IDialogService DialogService
 
-<MudStack Spacing="0">
-    <MudStack Row="true" AlignItems="AlignItems.Center" Class="px-2 py-1">
-        <MudIcon Icon="@Icons.Material.Filled.Cable" Size="Size.Small" Color="Color.Primary" />
-        <MudText Typo="Typo.subtitle2" Class="flex-grow-1 ml-1">Connections</MudText>
-        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Add"
-                       OnClick="@AddConnectionAsync" />
-    </MudStack>
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="px-2 pt-1">
+    <MudIcon Icon="@Icons.Material.Filled.Cable" Size="Size.Small" Color="Color.Primary" />
+    <MudText Typo="Typo.subtitle2" Class="flex-grow-1">Connections</MudText>
+    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Add" OnClick="@AddConnectionAsync" />
+</MudStack>
 
-    @if (Live.Connections.Count == 0)
-    {
-        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="px-4 pb-2">
-            No connections. Click + to add one.
-        </MudText>
-    }
-    else
-    {
+@if (Live.Connections.Count == 0)
+{
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="px-4 pb-2">
+        No connections. Click + to add one.
+    </MudText>
+}
+else
+{
+    <MudTreeView T="ManagedConnection" Dense="true" Hover="true">
         @foreach (var conn in Live.Connections)
         {
-            <MudStack Spacing="0" Class="px-3 py-1">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                    <MudIcon Icon="@Icons.Material.Filled.Circle"
-                             Size="Size.Small"
-                             Color="@StateColor(conn.State)"
-                             Style="font-size:10px" />
-                    <MudStack Spacing="0" Class="flex-grow-1">
-                        <MudText Typo="Typo.body2">@conn.Profile.Name</MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">
-                            @conn.Profile.Host:@conn.Profile.Port
-                        </MudText>
+            <MudTreeViewItem T="ManagedConnection" Value="@conn">
+                <Content>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="flex-grow-1 py-1">
+                        <MudIcon Icon="@Icons.Material.Filled.Circle"
+                                 Size="Size.Small"
+                                 Color="@StateColor(conn.State)"
+                                 Style="font-size:10px;min-width:10px" />
+                        <MudStack Spacing="0" Class="flex-grow-1">
+                            <MudText Typo="Typo.body2">@conn.Profile.Name</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                @conn.Profile.Host:@conn.Profile.Port
+                            </MudText>
+                            @if (!string.IsNullOrEmpty(conn.LastError))
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Error">@conn.LastError</MudText>
+                            }
+                        </MudStack>
+                        @if (conn.State is MqttSessionState.Disconnected or MqttSessionState.Faulted)
+                        {
+                            <MudIconButton Size="Size.Small"
+                                           Icon="@Icons.Material.Filled.PlayArrow"
+                                           Color="Color.Success"
+                                           OnClick="@(() => ConnectAsync(conn.Id))" />
+                        }
+                        else
+                        {
+                            <MudIconButton Size="Size.Small"
+                                           Icon="@Icons.Material.Filled.Stop"
+                                           Color="Color.Error"
+                                           OnClick="@(() => DisconnectAsync(conn.Id))" />
+                        }
+                        <MudIconButton Size="Size.Small"
+                                       Icon="@Icons.Material.Filled.DeleteOutline"
+                                       OnClick="@(() => RemoveAsync(conn.Id))" />
                     </MudStack>
-                    @if (conn.State is MqttSessionState.Disconnected or MqttSessionState.Faulted)
-                    {
-                        <MudIconButton Size="Size.Small"
-                                       Icon="@Icons.Material.Filled.PlayArrow"
-                                       Color="Color.Success"
-                                       OnClick="@(() => ConnectAsync(conn.Id))" />
-                    }
-                    else
-                    {
-                        <MudIconButton Size="Size.Small"
-                                       Icon="@Icons.Material.Filled.Stop"
-                                       Color="Color.Error"
-                                       OnClick="@(() => DisconnectAsync(conn.Id))" />
-                    }
-                    <MudIconButton Size="Size.Small"
-                                   Icon="@Icons.Material.Filled.DeleteOutline"
-                                   OnClick="@(() => RemoveAsync(conn.Id))" />
-                </MudStack>
-                @if (!string.IsNullOrEmpty(conn.LastError))
-                {
-                    <MudText Typo="Typo.caption" Color="Color.Error" Class="pl-4">@conn.LastError</MudText>
-                }
-            </MudStack>
+                </Content>
+            </MudTreeViewItem>
         }
-    }
+    </MudTreeView>
+}
 
-    @foreach (var diagnostic in Live.Diagnostics)
-    {
-        <MudAlert Severity="@SeverityFor(diagnostic)" Dense="true" Variant="Variant.Text" Class="mx-2 mb-1">
-            @diagnostic.Message
-        </MudAlert>
-    }
-</MudStack>
+@foreach (var diagnostic in Live.Diagnostics)
+{
+    <MudAlert Severity="@SeverityFor(diagnostic)" Dense="true" Variant="Variant.Text" Class="mx-2 mb-1">
+        @diagnostic.Message
+    </MudAlert>
+}
 
 @code {
     protected override void OnInitialized() => Live.Changed += OnChanged;

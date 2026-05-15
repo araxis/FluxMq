@@ -2,49 +2,45 @@
 @inject LiveMqttWorkspaceService Live
 @inject IDialogService DialogService
 
-<MudStack Spacing="0">
-    @if (Live.IsRecording)
-    {
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="px-2 py-1">
-            <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Color="Color.Error" Size="Size.Small" />
-            <MudText Typo="Typo.caption" Class="flex-grow-1">
-                @Live.ActiveRecordingSession?.Name · @Live.RecordedMessageCount msgs
-            </MudText>
-            <MudIconButton Size="Size.Small"
-                           Icon="@Icons.Material.Filled.StopCircle"
-                           Color="Color.Error"
-                           OnClick="@Live.StopRecording" />
-        </MudStack>
-    }
-
-    <MudStack Row="true" AlignItems="AlignItems.Center" Class="px-2 py-1">
-        <MudIcon Icon="@Icons.Material.Filled.Folder" Size="Size.Small" Color="Color.Secondary" />
-        <MudText Typo="Typo.subtitle2" Class="flex-grow-1 ml-1">Projects</MudText>
+@if (Live.IsRecording)
+{
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="px-2 py-1">
+        <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Color="Color.Error" Size="Size.Small" />
+        <MudText Typo="Typo.caption" Class="flex-grow-1">
+            @Live.ActiveRecordingSession?.Name · @Live.RecordedMessageCount msgs
+        </MudText>
         <MudIconButton Size="Size.Small"
-                       Icon="@Icons.Material.Filled.FiberManualRecord"
+                       Icon="@Icons.Material.Filled.StopCircle"
                        Color="Color.Error"
-                       Disabled="@Live.IsRecording"
-                       OnClick="@StartRecordingAsync" />
+                       OnClick="@Live.StopRecording" />
     </MudStack>
+}
 
-    @if (Live.SelectedStoredSession is not null)
-    {
-        <MudStack Row="true" AlignItems="AlignItems.Center" Class="px-3 pb-1">
-            <MudButton Size="Size.Small" Variant="Variant.Text"
-                       StartIcon="@Icons.Material.Filled.Sensors"
-                       OnClick="@Live.ClearStoredSessionSelection">
-                Switch to Live
-            </MudButton>
-        </MudStack>
-    }
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="px-2 pt-1">
+    <MudIcon Icon="@Icons.Material.Filled.Folder" Size="Size.Small" Color="Color.Secondary" />
+    <MudText Typo="Typo.subtitle2" Class="flex-grow-1">Projects</MudText>
+    <MudIconButton Size="Size.Small"
+                   Icon="@Icons.Material.Filled.FiberManualRecord"
+                   Color="Color.Error"
+                   Disabled="@Live.IsRecording"
+                   OnClick="@StartRecordingAsync" />
+</MudStack>
 
-    @{
-        var allSessions = Live.StoredSessions;
-        var projects = Live.ProjectNames.ToList();
-        if (projects.Count == 0) projects.Add("Default");
-    }
+@if (Live.SelectedStoredSession is not null)
+{
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="px-3 pb-1">
+        <MudButton Size="Size.Small" Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.Sensors"
+                   OnClick="@Live.ClearStoredSessionSelection">
+            Switch to Live
+        </MudButton>
+    </MudStack>
+}
 
-    @if (allSessions.Count == 0)
+@{
+    var allSessions = Live.StoredSessions;
+    var projects = Live.ProjectNames.ToList();
+    if (projects.Count == 0 && allSessions.Count == 0)
     {
         <MudText Typo="Typo.caption" Color="Color.Secondary" Class="px-4 pb-2">
             No recorded sessions. Start a recording first.
@@ -52,46 +48,46 @@
     }
     else
     {
-        @foreach (var project in projects)
-        {
-            var sessions = allSessions
-                .Where(s => string.Equals(
-                    string.IsNullOrWhiteSpace(s.ProjectName) ? "Default" : s.ProjectName,
-                    project, StringComparison.OrdinalIgnoreCase))
-                .OrderByDescending(s => s.StartedAt)
-                .ToList();
+        if (projects.Count == 0) projects.Add("Default");
 
-            <MudStack Spacing="0">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="px-3 py-1">
-                    <MudIcon Icon="@Icons.Material.Filled.FolderOpen" Size="Size.Small" Color="Color.Default" />
-                    <MudText Typo="Typo.body2" Class="flex-grow-1 ml-1">@project</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">@sessions.Count</MudText>
-                </MudStack>
+        <MudTreeView T="object" Dense="true" Hover="true">
+            @foreach (var project in projects)
+            {
+                var sessions = allSessions
+                    .Where(s => string.Equals(
+                        string.IsNullOrWhiteSpace(s.ProjectName) ? "Default" : s.ProjectName,
+                        project, StringComparison.OrdinalIgnoreCase))
+                    .OrderByDescending(s => s.StartedAt)
+                    .ToList();
 
-                @foreach (var session in sessions)
-                {
-                    var isSelected = Live.SelectedStoredSession?.Id == session.Id;
-                    <MudStack Row="true"
-                              AlignItems="AlignItems.Center"
-                              Spacing="1"
-                              Class="@($"px-6 py-1 session-row{(isSelected ? " session-selected" : "")}")"
-                              Style="cursor:pointer"
-                              @onclick="@(() => SelectSessionAsync(session))">
-                        <MudIcon Icon="@(isSelected ? Icons.Material.Filled.CheckCircle : Icons.Material.Outlined.Circle)"
-                                 Size="Size.Small"
-                                 Color="@(isSelected ? Color.Success : Color.Default)" />
-                        <MudStack Spacing="0" Class="flex-grow-1">
-                            <MudText Typo="Typo.body2">@session.Name</MudText>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                @session.StartedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
-                            </MudText>
-                        </MudStack>
-                    </MudStack>
-                }
-            </MudStack>
-        }
+                <MudTreeViewItem T="object" Value="@project" Text="@project"
+                                 Icon="@Icons.Material.Filled.FolderOpen"
+                                 Expanded="true">
+                    @foreach (var session in sessions)
+                    {
+                        var isSelected = Live.SelectedStoredSession?.Id == session.Id;
+                        <MudTreeViewItem T="object" Value="@session"
+                                         OnClick="@(() => SelectSessionAsync(session))">
+                            <Content>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="flex-grow-1 py-1">
+                                    <MudIcon Icon="@(isSelected ? Icons.Material.Filled.CheckCircle : Icons.Material.Outlined.Circle)"
+                                             Size="Size.Small"
+                                             Color="@(isSelected ? Color.Success : Color.Default)" />
+                                    <MudStack Spacing="0" Class="flex-grow-1">
+                                        <MudText Typo="Typo.body2">@session.Name</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                            @session.StartedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                                        </MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </Content>
+                        </MudTreeViewItem>
+                    }
+                </MudTreeViewItem>
+            }
+        </MudTreeView>
     }
-</MudStack>
+}
 
 @code {
     protected override void OnInitialized() => Live.Changed += OnChanged;
