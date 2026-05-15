@@ -77,8 +77,10 @@
 
     <MudDrawer @bind-Open="_leftOpen"
                Anchor="Anchor.Left"
-               Variant="DrawerVariant.Persistent"
+               Variant="DrawerVariant.Mini"
+               MiniWidth="56px"
                Width="300px"
+               Class="pt-4 pe-4"
                ClipMode="DrawerClipMode.Always"
                Elevation="1">
         <div class="flux-left-drawer">
@@ -87,13 +89,13 @@
                     <MudIconButton Icon="@Icons.Material.Filled.Extension"
                                    Color="@(_railTab == 0 ? Color.Primary : Color.Default)"
                                    Size="Size.Small"
-                                   OnClick="@(() => _railTab = 0)" />
+                                   OnClick="@(() => { _railTab = 0; _leftOpen = true; })" />
                 </MudTooltip>
                 <MudTooltip Text="Projects" Placement="Placement.Right">
                     <MudIconButton Icon="@Icons.Material.Filled.Folder"
                                    Color="@(_railTab == 1 ? Color.Primary : Color.Default)"
                                    Size="Size.Small"
-                                   OnClick="@(() => _railTab = 1)" />
+                                   OnClick="@(() => { _railTab = 1; _leftOpen = true; })" />
                 </MudTooltip>
                 <div style="flex:1;"></div>
                 <MudTooltip Text="Help" Placement="Placement.Right">
@@ -102,18 +104,21 @@
                                    Size="Size.Small" />
                 </MudTooltip>
             </div>
-            <div class="flux-rail-panel">
-                @if (_railTab == 0)
-                {
-                    <ConnectionPanel />
-                    <MudDivider Class="my-1" />
-                    <ComponentCatalogPanel />
-                }
-                else
-                {
-                    <SessionPanel />
-                }
-            </div>
+            @if (_leftOpen)
+            {
+                <div class="flux-rail-panel">
+                    @if (_railTab == 0)
+                    {
+                        <ConnectionPanel />
+                        <MudDivider Class="my-1" />
+                        <ComponentCatalogPanel />
+                    }
+                    else
+                    {
+                        <SessionPanel />
+                    }
+                </div>
+            }
         </div>
     </MudDrawer>
 
@@ -231,7 +236,11 @@
             })
         });
         if (result is not null)
-            await Projects.OpenAsync(result.FullPath);
+        {
+            var project = await Projects.OpenAsync(result.FullPath);
+            foreach (var (profile, sub) in project.GetConnectionProfiles())
+                Live.AddConnectionIfAbsent(profile, sub);
+        }
     });
 
     private Task SaveAsync() => RunBusyAsync(async () =>

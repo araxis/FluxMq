@@ -60,12 +60,6 @@ else
     </MudTreeView>
 }
 
-@foreach (var diagnostic in Live.Diagnostics)
-{
-    <MudAlert Severity="@SeverityFor(diagnostic)" Dense="true" Variant="Variant.Text" Class="mx-2 mb-1">
-        @diagnostic.Message
-    </MudAlert>
-}
 
 @code {
     protected override void OnInitialized() => Live.Changed += OnChanged;

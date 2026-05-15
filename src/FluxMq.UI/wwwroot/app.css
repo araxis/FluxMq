@@ -34,8 +34,8 @@ body,
 }
 
 .flux-rail {
-    width: 52px;
-    min-width: 52px;
+    width: 56px;
+    min-width: 56px;
     display: flex;
     flex-direction: column;
     align-items: center;
