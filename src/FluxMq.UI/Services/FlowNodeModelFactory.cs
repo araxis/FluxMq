@@ -11,16 +11,17 @@ namespace FluxMq.UI.Services;
 public static class FlowNodeModelFactory
 {
     public static FlowDiagramNodeModel Create(
+        string id,
         DiagramPoint position,
         string nodeName,
         string nodeType,
         FlowComponentDescriptor? descriptor,
         bool isResource) => nodeType switch
     {
-        "mqtt.trigger" => new MqttTriggerNodeModel(position, nodeName, descriptor, isResource),
-        "session.source" => new SessionSourceNodeModel(position, nodeName, descriptor, isResource),
-        "mqtt.payload-inspector" => new PayloadInspectorNodeModel(position, nodeName, descriptor, isResource),
-        "mqtt.metrics-sink" => new MetricsSinkNodeModel(position, nodeName, descriptor, isResource),
-        _ => new FlowDiagramNodeModel(position, nodeName, nodeType, descriptor, isResource)
+        "mqtt.trigger" => new MqttTriggerNodeModel(id, position, nodeName, descriptor, isResource),
+        "session.source" => new SessionSourceNodeModel(id, position, nodeName, descriptor, isResource),
+        "mqtt.payload-inspector" => new PayloadInspectorNodeModel(id, position, nodeName, descriptor, isResource),
+        "mqtt.metrics-sink" => new MetricsSinkNodeModel(id, position, nodeName, descriptor, isResource),
+        _ => new FlowDiagramNodeModel(id, position, nodeName, nodeType, descriptor, isResource)
     };
 }

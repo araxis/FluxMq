@@ -22,12 +22,13 @@ public class FlowDiagramNodeModel : NodeModel
         => new(280, 160 + PortSectionHeight(portCount));
 
     public FlowDiagramNodeModel(
+        string id,
         DiagramPoint position,
         string nodeName,
         string nodeType,
         FlowComponentDescriptor? descriptor,
         bool isResource)
-        : base(position)
+        : base(id, position)
     {
         NodeName = nodeName;
         NodeType = nodeType;

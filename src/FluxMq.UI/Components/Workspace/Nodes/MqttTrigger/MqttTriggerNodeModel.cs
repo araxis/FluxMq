@@ -6,8 +6,8 @@ using DiagramPoint = Blazor.Diagrams.Core.Geometry.Point;
 
 namespace FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
 
-public sealed class MqttTriggerNodeModel(DiagramPoint position, string nodeName, FlowComponentDescriptor? descriptor, bool isResource)
-    : FlowDiagramNodeModel(position, nodeName, "mqtt.trigger", descriptor, isResource)
+public sealed class MqttTriggerNodeModel(string id, DiagramPoint position, string nodeName, FlowComponentDescriptor? descriptor, bool isResource)
+    : FlowDiagramNodeModel(id, position, nodeName, "mqtt.trigger", descriptor, isResource)
 {
     public string Connection { get; set; } = string.Empty;
     public string[] Subscriptions { get; set; } = ["#"];

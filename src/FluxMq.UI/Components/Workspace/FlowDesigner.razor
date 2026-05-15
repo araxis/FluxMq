@@ -52,7 +52,7 @@
         _diagram.RegisterComponent<FlowDiagramNodeModel, FlowDiagramNodeWidget>();
         Flow.GetDiagramState = () => _diagram.Nodes.OfType<FlowDiagramNodeModel>()
             .ToDictionary(
-                n => n.NodeName,
+                n => n.Id,
                 n => (n.Position.X, n.Position.Y, n.IsCollapsed),
                 StringComparer.Ordinal);
         Flow.Changed += OnFlowChanged;
@@ -114,7 +114,7 @@
                         rType.GetString() == "mqtt.connection")
                         continue;
 
-                    AddNode(nodes, resource.Name, resource.Value, x: 70, y: resourceY, isResource: true);
+                    AddNode(nodes, resource.Name, resource.Value, x: 70, y: resourceY, isResource: true, workflowName: null);
                     resourceY += 150;
                 }
             }
@@ -130,7 +130,7 @@
                     var nodeX = 380d;
                     foreach (var node in workflow.Value.EnumerateObject())
                     {
-                        AddNode(nodes, node.Name, node.Value, nodeX, workflowY, isResource: false);
+                        AddNode(nodes, node.Name, node.Value, nodeX, workflowY, isResource: false, workflowName: workflow.Name);
                         nodeX += 300;
                     }
 
@@ -203,14 +203,18 @@
         _diagram.Refresh();
     }
 
-    private void AddNode(IDictionary<string, NodeModel> nodes, string name, JsonElement definition, double x, double y, bool isResource)
+    private void AddNode(IDictionary<string, NodeModel> nodes, string name, JsonElement definition, double x, double y, bool isResource, string? workflowName)
     {
         var type = definition.TryGetProperty("type", out var typeElement) && typeElement.ValueKind == JsonValueKind.String
             ? typeElement.GetString()
             : "node";
-        var hasState = _nodeStates.TryGetValue(name, out var state);
+        var positionKey = workflowName is not null ? $"{workflowName}.{name}" : name;
+        // Fall back to unqualified name for files saved before qualified keys were introduced
+        var hasState = _nodeStates.TryGetValue(positionKey, out var state) ||
+                       _nodeStates.TryGetValue(name, out state);
 
         var node = FlowNodeModelFactory.Create(
+            positionKey,
             hasState ? state!.Position : new Blazor.Diagrams.Core.Geometry.Point(x, y),
             name,
             type ?? "node",
@@ -302,7 +306,7 @@
     private void CaptureDiagramState()
     {
         foreach (var node in _diagram.Nodes.OfType<FlowDiagramNodeModel>())
-            _nodeStates[node.NodeName] = new DiagramNodeState(node.Position, node.IsCollapsed);
+            _nodeStates[node.Id] = new DiagramNodeState(node.Position, node.IsCollapsed);
     }
 
     private static bool TryGetFlowApplication(JsonElement root, out JsonElement flowApplication)
@@ -378,8 +382,8 @@
         if (Flow.GetDiagramState is { } capture)
         {
             Flow.LastNodePositions.Clear();
-            foreach (var (k, v) in capture())
-                Flow.LastNodePositions[k] = v;
+            foreach (var (key, v) in capture())
+                Flow.LastNodePositions[key] = v;
         }
         Flow.GetDiagramState = null;
         Flow.Changed -= OnFlowChanged;

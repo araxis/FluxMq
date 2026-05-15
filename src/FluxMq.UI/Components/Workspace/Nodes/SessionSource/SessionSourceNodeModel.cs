@@ -5,8 +5,8 @@ using DiagramPoint = Blazor.Diagrams.Core.Geometry.Point;
 
 namespace FluxMq.UI.Components.Workspace.Nodes.SessionSource;
 
-public sealed class SessionSourceNodeModel(DiagramPoint position, string nodeName, FlowComponentDescriptor? descriptor, bool isResource)
-    : FlowDiagramNodeModel(position, nodeName, "session.source", descriptor, isResource)
+public sealed class SessionSourceNodeModel(string id, DiagramPoint position, string nodeName, FlowComponentDescriptor? descriptor, bool isResource)
+    : FlowDiagramNodeModel(id, position, nodeName, "session.source", descriptor, isResource)
 {
     public string SessionId { get; set; } = string.Empty;
     public bool PreserveTiming { get; set; }
