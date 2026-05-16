@@ -232,7 +232,18 @@
         _ => Color.Default
     };
 
-    private void NewProject() => Projects.NewProject();
+    private Task NewProject() => RunBusyAsync(async () =>
+    {
+        var dialog = await DialogService!.ShowAsync<NewAppDialog>("New App");
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: NewAppDialog.NewAppResult r })
+        {
+            var project = Projects.NewProject();
+            project.SetDisplayName(r.AppName);
+            project.AddWorkflow(r.PipelineName);
+            project.SetActiveWorkflow(r.PipelineName);
+        }
+    });
 
     private Task OpenAsync() => RunBusyAsync(async () =>
     {
@@ -272,8 +283,9 @@
 
     private async Task PromptSaveAsAsync(FlowWorkspaceService project)
     {
+        var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "FluxMQ");
         var suggested = string.IsNullOrEmpty(project.CurrentFilePath)
-            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "FluxMQ", "project.json")
+            ? Path.Combine(dir, $"{project.Name}.json")
             : project.CurrentFilePath;
 
         var dialog = await DialogService!.ShowAsync<SaveAsDialog>("Save As", new DialogParameters

@@ -24,13 +24,14 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     }
 
     private string? _activeWorkflowName;
+    private string? _displayName;
 
     public string DefinitionJson { get; private set; }
     public long DefinitionRevision { get; private set; }
     public string CurrentFilePath { get; private set; } = string.Empty;
-    public string Name => string.IsNullOrEmpty(CurrentFilePath)
-        ? "Untitled"
-        : Path.GetFileNameWithoutExtension(CurrentFilePath);
+    public string Name => !string.IsNullOrEmpty(CurrentFilePath)
+        ? Path.GetFileNameWithoutExtension(CurrentFilePath)
+        : _displayName ?? "Untitled";
     public bool HasUnsavedChanges { get; private set; }
     public RuntimeWorkspaceState State { get; private set; } = RuntimeWorkspaceState.Idle;
     public IReadOnlyList<WorkspaceDiagnostic> Diagnostics { get; private set; } = [];
@@ -44,6 +45,12 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     public Dictionary<string, (double X, double Y, bool Collapsed)> LastNodePositions { get; } = new(StringComparer.Ordinal);
 
     public event EventHandler? Changed;
+
+    public void SetDisplayName(string name)
+    {
+        _displayName = string.IsNullOrWhiteSpace(name) ? null : name.Trim();
+        NotifyChanged();
+    }
 
     public void SetActiveWorkflow(string name)
     {

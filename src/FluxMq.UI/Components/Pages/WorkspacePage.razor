@@ -12,7 +12,7 @@
                 <MudText Typo="Typo.h6" Color="Color.Secondary">No app open</MudText>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.NoteAdd"
-                           OnClick="@(() => Projects.NewProject())">New app</MudButton>
+                           OnClick="@NewAppAsync">New app</MudButton>
             </MudStack>
         </div>
     }
@@ -86,6 +86,19 @@
         {
             stale.Changed -= OnProjectChanged;
             _subscribed.Remove(stale);
+        }
+    }
+
+    private async Task NewAppAsync()
+    {
+        var dialog = await DialogService.ShowAsync<NewAppDialog>("New App");
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: NewAppDialog.NewAppResult r })
+        {
+            var project = Projects.NewProject();
+            project.SetDisplayName(r.AppName);
+            project.AddWorkflow(r.PipelineName);
+            project.SetActiveWorkflow(r.PipelineName);
         }
     }
 
