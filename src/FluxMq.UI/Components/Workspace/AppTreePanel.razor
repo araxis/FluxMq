@@ -48,17 +48,22 @@ else
                     }
                     else if (item.Value is ConnNode cn)
                     {
-                        <div style="display:grid;grid-template-columns:1fr auto;align-items:center;width:100%">
-                            <div style="min-width:0;overflow:hidden;">
-                                <MudText Typo="Typo.body2"
-                                         Style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                                    @cn.Conn.Profile.Name
-                                </MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                    @cn.Conn.Profile.Host:@cn.Conn.Profile.Port
-                                </MudText>
+                        <div class="conn-row" style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px;width:100%">
+                            <div style="display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;">
+                                <MudIcon Icon="@Icons.Material.Filled.Circle"
+                                         Color="@StateColor(cn.Conn.State)"
+                                         Style="font-size:10px;flex-shrink:0;" />
+                                <div style="min-width:0;overflow:hidden;">
+                                    <MudText Typo="Typo.body2"
+                                             Style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                        @cn.Conn.Profile.Name
+                                    </MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        @cn.Conn.Profile.Host:@cn.Conn.Profile.Port
+                                    </MudText>
+                                </div>
                             </div>
-                            <span @onclick:stopPropagation="true">
+                            <span class="conn-actions" @onclick:stopPropagation="true">
                                 @if (cn.Conn.State is MqttSessionState.Disconnected or MqttSessionState.Faulted)
                                 {
                                     <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.PlayArrow"
@@ -152,7 +157,7 @@ else
                              ? Icons.Material.Filled.FolderOpen
                              : Icons.Material.Filled.Folder,
         ConnGroupNode => Icons.Material.Filled.Cable,
-        ConnNode      => Icons.Material.Filled.Circle,
+        ConnNode      => "",
         PipeGroupNode => Icons.Material.Filled.AccountTree,
         PipeNode      => Icons.Material.Filled.Timeline,
         NodeItem      => Icons.Material.Filled.Circle,

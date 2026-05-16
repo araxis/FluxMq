@@ -23,10 +23,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <MauiCss Remove="Components\Workspace\AppTreePanel.razor.css" />
 	  <MauiCss Remove="Components\Workspace\FlowDesigner.razor.css" />
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Content Include="Components\Workspace\AppTreePanel.razor.css" />
 	  <Content Include="Components\Workspace\FlowDesigner.razor.css" />
 	</ItemGroup>
 
