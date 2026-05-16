@@ -39,6 +39,9 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     public IReadOnlyList<string> WorkflowNames => _definitionComposer.GetWorkflowNames(DefinitionJson);
     public string? ActiveWorkflowName => _activeWorkflowName;
 
+    public IReadOnlyList<(string Name, string Type)> GetWorkflowNodes(string workflowName)
+        => _definitionComposer.GetWorkflowNodes(DefinitionJson, workflowName);
+
     public Func<IReadOnlyDictionary<string, (double X, double Y, bool Collapsed)>>? GetDiagramState { get; set; }
     public IReadOnlyDictionary<string, (double X, double Y, bool Collapsed)>? StagedNodePositions { get; private set; }
     public void ConsumeStagedPositions() => StagedNodePositions = null;
@@ -201,6 +204,22 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             ];
         }
 
+        NotifyChanged();
+    }
+
+    public void UpsertConnectionResource(string resourceName, MqttConnectionProfile profile)
+    {
+        try
+        {
+            ReplaceDefinition(_definitionComposer.UpsertConnectionResource(DefinitionJson, resourceName, profile));
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "ConnectionAddFailed", exception.Message)];
+        }
         NotifyChanged();
     }
 

@@ -116,6 +116,40 @@ public sealed class FlowDefinitionComposer
         return json;
     }
 
+    /// <summary>Returns (name, type) pairs for all nodes in a specific workflow.</summary>
+    public IReadOnlyList<(string Name, string Type)> GetWorkflowNodes(string json, string workflowName)
+    {
+        var result = new List<(string, string)>();
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            JsonElement flowApp;
+            if (root.TryGetProperty("FluxMq", out var fluxMq) &&
+                fluxMq.TryGetProperty("FlowApplication", out flowApp) &&
+                flowApp.ValueKind == JsonValueKind.Object)
+            { }
+            else
+            {
+                flowApp = root;
+            }
+
+            if (flowApp.TryGetProperty("workflows", out var workflows) &&
+                workflows.ValueKind == JsonValueKind.Object &&
+                workflows.TryGetProperty(workflowName, out var workflow) &&
+                workflow.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var node in workflow.EnumerateObject())
+                {
+                    var type = node.Value.TryGetProperty("type", out var t) ? t.GetString() ?? "" : "";
+                    result.Add((node.Name, type));
+                }
+            }
+        }
+        catch { }
+        return result;
+    }
+
     /// <summary>Returns the ordered list of workflow names in the definition.</summary>
     public IReadOnlyList<string> GetWorkflowNames(string json)
     {

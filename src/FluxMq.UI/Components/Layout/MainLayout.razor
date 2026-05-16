@@ -85,14 +85,14 @@
                Elevation="1">
         <div class="flux-left-drawer">
             <div class="flux-rail">
-                <MudTooltip Text="Components" Placement="Placement.Right">
-                    <MudIconButton Icon="@Icons.Material.Filled.Extension"
+                <MudTooltip Text="Explorer" Placement="Placement.Right">
+                    <MudIconButton Icon="@Icons.Material.Filled.AccountTree"
                                    Color="@(_railTab == 0 ? Color.Primary : Color.Default)"
                                    Size="Size.Small"
                                    OnClick="@(() => { _railTab = 0; _leftOpen = true; })" />
                 </MudTooltip>
-                <MudTooltip Text="Apps" Placement="Placement.Right">
-                    <MudIconButton Icon="@Icons.Material.Filled.Folder"
+                <MudTooltip Text="Components" Placement="Placement.Right">
+                    <MudIconButton Icon="@Icons.Material.Filled.Extension"
                                    Color="@(_railTab == 1 ? Color.Primary : Color.Default)"
                                    Size="Size.Small"
                                    OnClick="@(() => { _railTab = 1; _leftOpen = true; })" />
@@ -115,13 +115,11 @@
                 <div class="flux-rail-panel">
                     @if (_railTab == 0)
                     {
-                        <ConnectionPanel />
-                        <MudDivider Class="my-1" />
-                        <ComponentCatalogPanel />
+                        <AppTreePanel />
                     }
                     else if (_railTab == 1)
                     {
-                        <AppsPanel />
+                        <ComponentCatalogPanel />
                     }
                     else
                     {

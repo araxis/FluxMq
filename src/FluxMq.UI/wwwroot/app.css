@@ -301,6 +301,100 @@ body,
     background: var(--mud-palette-action-default-hover);
 }
 
+/* ── Custom app explorer tree ──────────────────────────────── */
+.ftree {
+    padding: 4px 0;
+    user-select: none;
+}
+
+.ftree-row {
+    align-items: center;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    min-height: 28px;
+    padding: 1px 4px 1px 0;
+    position: relative;
+}
+
+.ftree-row:hover {
+    background: var(--mud-palette-action-default-hover);
+}
+
+.ftree-active {
+    background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent);
+}
+
+.ftree-d0 { padding-left: 2px; }
+.ftree-d1 { padding-left: 14px; }
+.ftree-d2 { padding-left: 28px; }
+.ftree-d3 { padding-left: 42px; }
+
+.ftree-caret {
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    display: inline-flex;
+    flex-shrink: 0;
+    height: 20px;
+    justify-content: center;
+    transition: transform 0.15s ease;
+    width: 20px;
+}
+
+.ftree-caret-open {
+    transform: rotate(90deg);
+}
+
+.ftree-leaf .ftree-caret {
+    visibility: hidden;
+}
+
+.ftree-label {
+    flex: 1;
+    font-size: 0.875rem;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ftree-bold {
+    font-weight: 600;
+}
+
+.ftree-secondary {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.8rem;
+}
+
+.ftree-sublabel {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.72rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ftree-col {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.ftree-actions {
+    align-items: center;
+    display: flex;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.1s;
+}
+
+.ftree-row:hover .ftree-actions {
+    opacity: 1;
+}
+
 
 .topic-node-row,
 .topic-node-flat {
