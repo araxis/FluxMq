@@ -25,13 +25,13 @@ else
                     @if (item.Value is AppNode an)
                     {
                         var isActive = an.App == Projects.ActiveProject;
-                        <div style="display:grid;grid-template-columns:1fr auto;align-items:center;width:100%">
+                        <div class="app-row" style="display:grid;grid-template-columns:1fr auto;align-items:center;width:100%">
                             <MudText Typo="Typo.body2"
                                      Style="@($"{(isActive ? "font-weight:600;" : "")}overflow:hidden;text-overflow:ellipsis;white-space:nowrap;")">
                                 @an.App.Name@(an.App.HasUnsavedChanges ? " ●" : "")
                             </MudText>
-                            <span @onclick:stopPropagation="true">
-                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close"
+                            <span class="app-actions" @onclick:stopPropagation="true">
+                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Cancel"
                                                OnClick="@(() => CloseAsync(an.App))" />
                             </span>
                         </div>

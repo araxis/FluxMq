@@ -1,8 +1,10 @@
+.app-actions,
 .conn-actions {
     opacity: 0;
     transition: opacity 0.1s;
 }
 
+.app-row:hover .app-actions,
 .conn-row:hover .conn-actions {
     opacity: 1;
 }
