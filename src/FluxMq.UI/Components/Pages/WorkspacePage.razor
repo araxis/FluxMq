@@ -1,6 +1,7 @@
 @page "/"
 @implements IDisposable
 @inject ProjectManagerService Projects
+@inject LiveMqttWorkspaceService Live
 @inject IDialogService DialogService
 
 <div class="workspace-fill">
@@ -99,6 +100,11 @@
             project.SetDisplayName(r.AppName);
             project.AddWorkflow(r.PipelineName);
             project.SetActiveWorkflow(r.PipelineName);
+            var resourceKey = string.IsNullOrWhiteSpace(r.Connection.Name)
+                ? "connection"
+                : r.Connection.Name.Trim().ToLowerInvariant().Replace(' ', '-');
+            project.UpsertConnectionResource(resourceKey, r.Connection);
+            Live.AddConnectionIfAbsent(r.Connection, r.Subscription);
         }
     }
 

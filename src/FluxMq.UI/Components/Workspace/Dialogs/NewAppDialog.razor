@@ -1,24 +1,91 @@
-<MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true })">
+<MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
     <TitleContent>
         <MudText Typo="Typo.h6">New App</MudText>
     </TitleContent>
     <DialogContent>
-        <MudStack Spacing="2">
-            <MudTextField T="string"
-                          Label="App name"
-                          @bind-Value="_appName"
-                          Variant="Variant.Outlined"
-                          Margin="Margin.Dense"
-                          Immediate="true"
-                          HelperText="Used as the suggested filename when saving"
-                          OnKeyDown="@OnKeyDown" />
-            <MudTextField T="string"
-                          Label="First pipeline name"
-                          @bind-Value="_pipelineName"
-                          Variant="Variant.Outlined"
-                          Margin="Margin.Dense"
-                          Immediate="true"
-                          OnKeyDown="@OnKeyDown" />
+        <MudStack Spacing="3">
+
+            <MudStack Spacing="2">
+                <MudTextField T="string"
+                              Label="App name"
+                              @bind-Value="_appName"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Immediate="true"
+                              HelperText="Used as the suggested filename when saving"
+                              OnKeyDown="@OnKeyDown" />
+                <MudTextField T="string"
+                              Label="First pipeline name"
+                              @bind-Value="_pipelineName"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Immediate="true"
+                              OnKeyDown="@OnKeyDown" />
+            </MudStack>
+
+            <MudDivider />
+
+            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">MQTT Connection</MudText>
+
+            <MudStack Spacing="2">
+                <MudStack Row="true" Spacing="2">
+                    <MudTextField T="string"
+                                  Label="Name"
+                                  @bind-Value="_connName"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="flex-grow-1" />
+                </MudStack>
+                <MudStack Row="true" Spacing="2">
+                    <MudTextField T="string"
+                                  Label="Host"
+                                  @bind-Value="_host"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  Class="flex-grow-1"
+                                  OnKeyDown="@OnKeyDown" />
+                    <MudNumericField T="int"
+                                     Label="Port"
+                                     @bind-Value="_port"
+                                     Min="1" Max="65535"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Style="width:90px;" />
+                </MudStack>
+                <MudTextField T="string"
+                              Label="Subscription(s)"
+                              @bind-Value="_subscription"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              HelperText="Separate multiple topics with commas"
+                              OnKeyDown="@OnKeyDown" />
+                <MudStack Row="true" Spacing="2">
+                    <MudTextField T="string"
+                                  Label="Client ID"
+                                  @bind-Value="_clientId"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="flex-grow-1" />
+                    <MudCheckBox T="bool" @bind-Value="_useTls" Label="TLS" Dense="true" Class="align-self-center" />
+                </MudStack>
+                <MudStack Row="true" Spacing="2">
+                    <MudTextField T="string"
+                                  Label="Username"
+                                  @bind-Value="_username"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="flex-grow-1" />
+                    <MudTextField T="string"
+                                  Label="Password"
+                                  @bind-Value="_password"
+                                  InputType="InputType.Password"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="flex-grow-1" />
+                </MudStack>
+            </MudStack>
+
         </MudStack>
     </DialogContent>
     <DialogActions>
@@ -35,15 +102,40 @@
     private string _appName = string.Empty;
     private string _pipelineName = string.Empty;
 
+    private string _connName = "local-broker";
+    private string _host = "localhost";
+    private int _port = 1883;
+    private string _clientId = Guid.NewGuid().ToString("N")[..8];
+    private string _subscription = "#";
+    private bool _useTls;
+    private string? _username;
+    private string? _password;
+
     private bool IsValid =>
-        !string.IsNullOrWhiteSpace(_appName) && !string.IsNullOrWhiteSpace(_pipelineName);
+        !string.IsNullOrWhiteSpace(_appName) &&
+        !string.IsNullOrWhiteSpace(_pipelineName) &&
+        !string.IsNullOrWhiteSpace(_host);
 
     private void Cancel() => MudDialog.Cancel();
 
     private void Submit()
     {
-        if (IsValid)
-            MudDialog.Close(DialogResult.Ok(new NewAppResult(_appName.Trim(), _pipelineName.Trim())));
+        if (!IsValid) return;
+
+        var profile = new MqttConnectionProfile
+        {
+            Name = string.IsNullOrWhiteSpace(_connName) ? "local-broker" : _connName.Trim(),
+            Host = _host.Trim(),
+            Port = _port,
+            ClientId = string.IsNullOrWhiteSpace(_clientId) ? Guid.NewGuid().ToString("N")[..8] : _clientId.Trim(),
+            Username = string.IsNullOrWhiteSpace(_username) ? null : _username,
+            Password = string.IsNullOrWhiteSpace(_password) ? null : _password,
+            UseTls = _useTls,
+            CleanStart = true
+        };
+
+        MudDialog.Close(DialogResult.Ok(
+            new NewAppResult(_appName.Trim(), _pipelineName.Trim(), profile, _subscription)));
     }
 
     private void OnKeyDown(KeyboardEventArgs args)
@@ -51,5 +143,9 @@
         if (args.Key == "Enter") Submit();
     }
 
-    public record NewAppResult(string AppName, string PipelineName);
+    public record NewAppResult(
+        string AppName,
+        string PipelineName,
+        MqttConnectionProfile Connection,
+        string Subscription);
 }
