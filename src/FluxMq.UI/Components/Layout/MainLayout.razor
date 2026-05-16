@@ -1,17 +1,60 @@
 @inherits LayoutComponentBase
 @implements IDisposable
 @inject AppThemeService ThemeService
+@inject ProjectManagerService Projects
+@inject LiveMqttWorkspaceService Live
 
 <MudThemeProvider Theme="@_theme" IsDarkMode="@ThemeService.IsDarkMode" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<MudLayout Class="flux-shell">
-    <MudAppBar Elevation="0" Dense="true">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
-        <MudText Typo="Typo.h6">FluxMQ</MudText>
-        <MudSpacer />
+<MudLayout>
+
+    <MudAppBar Dense="true" Elevation="1" Fixed="true">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                       Color="Color.Inherit"
+                       Edge="Edge.Start"
+                       OnClick="@(() => _leftOpen = !_leftOpen)" />
+
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mr-2">
+            <MudIcon Icon="@Icons.Material.Filled.BubbleChart" Size="Size.Small" />
+            <MudText Typo="Typo.h6" Style="font-weight:600;letter-spacing:-0.01em;">FluxMQ</MudText>
+        </MudStack>
+
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+
+        <MudTooltip Text="New project">
+            <MudIconButton Icon="@Icons.Material.Filled.NoteAdd"
+                           Color="Color.Inherit"
+                           Size="Size.Small"
+                           Disabled="@_busy"
+                           OnClick="@NewProject" />
+        </MudTooltip>
+        <MudTooltip Text="Open file">
+            <MudIconButton Icon="@Icons.Material.Filled.FolderOpen"
+                           Color="Color.Inherit"
+                           Size="Size.Small"
+                           Disabled="@_busy"
+                           OnClick="@OpenAsync" />
+        </MudTooltip>
+        <MudTooltip Text="Save">
+            <MudIconButton Icon="@Icons.Material.Filled.Save"
+                           Color="Color.Inherit"
+                           Size="Size.Small"
+                           Disabled="@(_busy || Projects.ActiveProject is null)"
+                           OnClick="@SaveAsync" />
+        </MudTooltip>
+        <MudTooltip Text="Save as">
+            <MudIconButton Icon="@Icons.Material.Filled.SaveAs"
+                           Color="Color.Inherit"
+                           Size="Size.Small"
+                           Disabled="@(_busy || Projects.ActiveProject is null)"
+                           OnClick="@SaveAsAsync" />
+        </MudTooltip>
+
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+
         <MudSelect T="ThemePreference"
                    Value="@ThemeService.Preference"
                    ValueChanged="@OnThemeChanged"
@@ -20,35 +63,120 @@
                    Variant="Variant.Text"
                    FitContent="true"
                    Underline="false"
-                   Style="width: 132px">
+                   Style="width:120px;">
             <MudSelectItem Value="@ThemePreference.System">System</MudSelectItem>
             <MudSelectItem Value="@ThemePreference.Light">Light</MudSelectItem>
             <MudSelectItem Value="@ThemePreference.Dark">Dark</MudSelectItem>
         </MudSelect>
+
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
+                       Color="Color.Inherit"
+                       Edge="Edge.End"
+                       OnClick="@(() => _rightOpen = !_rightOpen)" />
     </MudAppBar>
 
-    <MudDrawer @bind-Open="_drawerOpen"
-               Elevation="1"
+    <MudDrawer @bind-Open="_leftOpen"
+               Anchor="Anchor.Left"
+               Variant="DrawerVariant.Mini"
+               MiniWidth="56px"
+               Width="300px"
+               Class="pt-4 pe-4"
                ClipMode="DrawerClipMode.Always"
-               Variant="DrawerVariant.Persistent"
-               Width="340px"
-               Class="flux-drawer">
-        <div class="flux-drawer-scroll flux-scroll">
-            <MudStack Spacing="2" Class="pa-2">
-                <ConnectionPanel />
-                <SessionPanel />
-                <RuntimePanel />
-            </MudStack>
+               Elevation="1">
+        <div class="flux-left-drawer">
+            <div class="flux-rail">
+                <MudTooltip Text="Explorer" Placement="Placement.Right">
+                    <MudIconButton Icon="@Icons.Material.Filled.AccountTree"
+                                   Color="@(_railTab == 0 ? Color.Primary : Color.Default)"
+                                   Size="Size.Small"
+                                   OnClick="@(() => { _railTab = 0; _leftOpen = true; })" />
+                </MudTooltip>
+                <MudTooltip Text="Components" Placement="Placement.Right">
+                    <MudIconButton Icon="@Icons.Material.Filled.Extension"
+                                   Color="@(_railTab == 1 ? Color.Primary : Color.Default)"
+                                   Size="Size.Small"
+                                   OnClick="@(() => { _railTab = 1; _leftOpen = true; })" />
+                </MudTooltip>
+                <MudTooltip Text="Sessions" Placement="Placement.Right">
+                    <MudIconButton Icon="@Icons.Material.Filled.History"
+                                   Color="@(_railTab == 2 ? Color.Primary : Color.Default)"
+                                   Size="Size.Small"
+                                   OnClick="@(() => { _railTab = 2; _leftOpen = true; })" />
+                </MudTooltip>
+                <div style="flex:1;"></div>
+                <MudTooltip Text="Help" Placement="Placement.Right">
+                    <MudIconButton Icon="@Icons.Material.Filled.HelpOutline"
+                                   Color="Color.Default"
+                                   Size="Size.Small" />
+                </MudTooltip>
+            </div>
+            @if (_leftOpen)
+            {
+                <div class="flux-rail-panel">
+                    @if (_railTab == 0)
+                    {
+                        <AppTreePanel />
+                    }
+                    else if (_railTab == 1)
+                    {
+                        <ComponentCatalogPanel />
+                    }
+                    else
+                    {
+                        <SessionPanel />
+                    }
+                </div>
+            }
         </div>
     </MudDrawer>
 
-    <MudMainContent Class="flux-main">
+    <MudDrawer @bind-Open="_rightOpen"
+               Anchor="Anchor.Right"
+               Variant="DrawerVariant.Persistent"
+               Width="320px"
+               ClipMode="DrawerClipMode.Always"
+               Elevation="1">
+        <LiveInspectorPanel />
+    </MudDrawer>
+
+    <MudMainContent Class="flux-main-canvas">
         @Body
     </MudMainContent>
+
+    <MudAppBar Bottom="true" Dense="true" Elevation="1" Fixed="true">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+            <MudIcon Icon="@Icons.Material.Filled.Circle"
+                     Size="Size.Small"
+                     Color="@ConnectionStateColor"
+                     Style="font-size:9px;" />
+            <MudText Typo="Typo.caption">@Live.State</MudText>
+            @if (Live.Connections.Count > 0)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    · @Live.Connections.Count conn
+                </MudText>
+            }
+        </MudStack>
+        <MudSpacer />
+        @if (Projects.ActiveProject is { } active)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                @(string.IsNullOrEmpty(active.CurrentFilePath) ? "Untitled" : active.CurrentFilePath)
+            </MudText>
+        }
+        <MudSpacer />
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            @Live.RecentMessages.Count msgs
+        </MudText>
+    </MudAppBar>
+
 </MudLayout>
 
 @code {
-    private bool _drawerOpen = true;
+    private bool _leftOpen = true;
+    private bool _rightOpen = true;
+    private bool _busy;
+    private int _railTab;
 
     private readonly MudTheme _theme = new()
     {
@@ -90,9 +218,96 @@
     protected override void OnInitialized()
     {
         ThemeService.Changed += OnThemeChanged;
+        Projects.Changed += OnChanged;
+        Live.Changed += OnChanged;
     }
 
-    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+    private Color ConnectionStateColor => Live.State switch
+    {
+        MqttSessionState.Connected => Color.Success,
+        MqttSessionState.Connecting or MqttSessionState.Reconnecting => Color.Warning,
+        MqttSessionState.Faulted => Color.Error,
+        _ => Color.Default
+    };
+
+    private Task NewProject() => RunBusyAsync(async () =>
+    {
+        var dialog = await DialogService!.ShowAsync<NewAppDialog>("New App");
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: NewAppDialog.NewAppResult r })
+        {
+            var project = Projects.NewProject();
+            project.SetDisplayName(r.AppName);
+            project.AddWorkflow(r.PipelineName);
+            project.SetActiveWorkflow(r.PipelineName);
+            var resourceKey = string.IsNullOrWhiteSpace(r.Connection.Name)
+                ? "connection"
+                : r.Connection.Name.Trim().ToLowerInvariant().Replace(' ', '-');
+            project.UpsertConnectionResource(resourceKey, r.Connection);
+            Live.AddConnectionIfAbsent(r.Connection, r.Subscription);
+        }
+    });
+
+    private Task OpenAsync() => RunBusyAsync(async () =>
+    {
+        var result = await FilePicker.Default.PickAsync(new PickOptions
+        {
+            PickerTitle = "Open FluxMQ Project",
+            FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+            {
+                { DevicePlatform.WinUI, [".json"] },
+                { DevicePlatform.macOS, ["json", "public.json"] }
+            })
+        });
+        if (result is not null)
+        {
+            var project = await Projects.OpenAsync(result.FullPath);
+            foreach (var (profile, sub) in project.GetConnectionProfiles())
+                Live.AddConnectionIfAbsent(profile, sub);
+        }
+    });
+
+    private Task SaveAsync() => RunBusyAsync(async () =>
+    {
+        var project = Projects.ActiveProject;
+        if (project is null) return;
+        if (string.IsNullOrEmpty(project.CurrentFilePath))
+            await PromptSaveAsAsync(project);
+        else
+            await project.SaveToFileAsync();
+    });
+
+    private Task SaveAsAsync() => RunBusyAsync(async () =>
+    {
+        var project = Projects.ActiveProject;
+        if (project is null) return;
+        await PromptSaveAsAsync(project);
+    });
+
+    private async Task PromptSaveAsAsync(FlowWorkspaceService project)
+    {
+        var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "FluxMQ");
+        var suggested = string.IsNullOrEmpty(project.CurrentFilePath)
+            ? Path.Combine(dir, $"{project.Name}.json")
+            : project.CurrentFilePath;
+
+        var dialog = await DialogService!.ShowAsync<SaveAsDialog>("Save As", new DialogParameters
+        {
+            ["SuggestedPath"] = suggested
+        }, new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+
+        var dialogResult = await dialog.Result;
+        if (!dialogResult!.Canceled && dialogResult.Data is string path && !string.IsNullOrWhiteSpace(path))
+            await project.SaveAsAsync(path);
+    }
+
+    private async Task RunBusyAsync(Func<Task> action)
+    {
+        _busy = true;
+        StateHasChanged();
+        try { await action(); }
+        finally { _busy = false; StateHasChanged(); }
+    }
 
     private void OnThemeChanged(ThemePreference preference)
     {
@@ -101,9 +316,14 @@
     }
 
     private void OnThemeChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
+    private void OnChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
 
     public void Dispose()
     {
         ThemeService.Changed -= OnThemeChanged;
+        Projects.Changed -= OnChanged;
+        Live.Changed -= OnChanged;
     }
+
+    [Inject] private IDialogService? DialogService { get; set; }
 }

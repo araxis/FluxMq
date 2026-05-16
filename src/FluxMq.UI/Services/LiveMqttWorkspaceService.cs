@@ -12,12 +12,18 @@ namespace FluxMq.UI.Services;
 
 public sealed class LiveMqttWorkspaceService : IAsyncDisposable
 {
+    private sealed class ConnectionEntry(ManagedConnection connection)
+    {
+        public ManagedConnection Connection { get; } = connection;
+        public IMqttSession? Session { get; set; }
+        public CancellationTokenSource? Cts { get; set; }
+        public Task? ReaderTask { get; set; }
+    }
+
+    private readonly Dictionary<Guid, ConnectionEntry> _entries = new();
     private readonly ISessionRepository _sessionRepository;
     private readonly IMessageRepository _messageRepository;
     private readonly WorkspaceMessageProjection _projection;
-    private IMqttSession? _session;
-    private CancellationTokenSource? _readerCts;
-    private Task? _readerTask;
     private StoredSession? _recordingSession;
     private StoredSession? _selectedStoredSession;
     private IReadOnlyList<MqttEnvelope> _selectedSessionMessages = [];
@@ -33,16 +39,22 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         _projection = new WorkspaceMessageProjection(topicIndex);
     }
 
-    public MqttConnectionProfile Profile { get; private set; } = new()
-    {
-        Name = "local-broker",
-        Host = "localhost",
-        Port = 1883
-    };
+    public IReadOnlyList<ManagedConnection> Connections => [.. _entries.Values.Select(e => e.Connection)];
 
-    public string Subscription { get; private set; } = "#";
+    public MqttSessionState State
+    {
+        get
+        {
+            if (_entries.Count == 0) return MqttSessionState.Disconnected;
+            var states = _entries.Values.Select(e => e.Connection.State).ToArray();
+            if (states.Any(s => s == MqttSessionState.Connected)) return MqttSessionState.Connected;
+            if (states.Any(s => s is MqttSessionState.Connecting or MqttSessionState.Reconnecting)) return MqttSessionState.Connecting;
+            if (states.Any(s => s == MqttSessionState.Faulted)) return MqttSessionState.Faulted;
+            return MqttSessionState.Disconnected;
+        }
+    }
+
     public string CurrentProjectName { get; private set; } = "Default";
-    public MqttSessionState State { get; private set; } = MqttSessionState.Disconnected;
     public MqttEnvelope? LatestMessage => _projection.LatestMessage;
     public PayloadInspectionResult LatestInspection => _projection.LatestInspection;
     public MqttEnvelope? SelectedMessage => _projection.SelectedMessage;
@@ -53,44 +65,85 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
     public StoredSession? SelectedStoredSession => _selectedStoredSession;
     public IReadOnlyList<MqttEnvelope> SelectedSessionMessages => _selectedSessionMessages;
     public IReadOnlyList<string> ProjectNames => StoredSessions
-        .Select(session => string.IsNullOrWhiteSpace(session.ProjectName) ? "Default" : session.ProjectName)
+        .Select(s => string.IsNullOrWhiteSpace(s.ProjectName) ? "Default" : s.ProjectName)
         .Distinct(StringComparer.OrdinalIgnoreCase)
-        .OrderBy(project => project)
+        .OrderBy(p => p)
         .ToArray();
     public IReadOnlyList<StoredSession> StoredSessions => _sessionRepository.GetAll();
     public IReadOnlyList<StoredSession> CurrentProjectSessions => StoredSessions
-        .Where(session => string.Equals(NormalizeProject(session.ProjectName), CurrentProjectName, StringComparison.OrdinalIgnoreCase))
+        .Where(s => string.Equals(NormalizeProject(s.ProjectName), CurrentProjectName, StringComparison.OrdinalIgnoreCase))
         .ToArray();
     public IReadOnlyList<MqttEnvelope> RecentMessages => _projection.RecentMessages;
-
     public IReadOnlyList<WorkspaceDiagnostic> Diagnostics { get; private set; } = [];
 
     public event EventHandler? Changed;
 
-    public void UpdateProfile(MqttConnectionProfile profile, string subscription)
+    public void AddConnection(MqttConnectionProfile profile, string subscription = "#")
     {
-        Profile = profile;
-        Subscription = string.IsNullOrWhiteSpace(subscription) ? "#" : subscription;
+        var conn = new ManagedConnection(profile, subscription);
+        _entries[conn.Id] = new ConnectionEntry(conn);
         NotifyChanged();
     }
 
-    /// <summary>
-    /// Splits the Subscription string into individual MQTT topic filters.
-    /// Supports comma, semicolon, and newline separators so users can subscribe
-    /// to e.g. "#, $SYS/#" — note that the MQTT spec does NOT match $-prefixed
-    /// topics against the # wildcard, so $SYS/# must be specified explicitly.
-    /// </summary>
-    private static string[] ParseSubscriptionFilters(string raw)
+    public void AddConnectionIfAbsent(MqttConnectionProfile profile, string subscription = "#")
     {
-        if (string.IsNullOrWhiteSpace(raw))
-            return ["#"];
+        var already = _entries.Values.Any(e =>
+            string.Equals(e.Connection.Profile.Host, profile.Host, StringComparison.OrdinalIgnoreCase) &&
+            e.Connection.Profile.Port == profile.Port);
+        if (!already)
+            AddConnection(profile, subscription);
+    }
 
-        var filters = raw
-            .Split([',', ';', '\n', '\r'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-            .Distinct(StringComparer.Ordinal)
-            .ToArray();
+    public async Task RemoveConnectionAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!_entries.TryGetValue(id, out var entry)) return;
+        await DisconnectEntryAsync(entry, cancellationToken).ConfigureAwait(false);
+        _entries.Remove(id);
+        NotifyChanged();
+    }
 
-        return filters.Length == 0 ? ["#"] : filters;
+    public async Task ConnectAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!_entries.TryGetValue(id, out var entry)) return;
+        var conn = entry.Connection;
+
+        await DisconnectEntryAsync(entry, cancellationToken).ConfigureAwait(false);
+
+        entry.Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var session = new MqttSession(conn.Profile);
+        entry.Session = session;
+        session.StateChanged += (_, state) => OnConnectionStateChanged(id, state);
+
+        try
+        {
+            await session.ConnectAsync(cancellationToken).ConfigureAwait(false);
+
+            var filters = ParseSubscriptionFilters(conn.Subscription);
+            foreach (var filter in filters)
+                await session.SubscribeAsync(filter, MqttQualityOfServiceLevel.AtMostOnce, cancellationToken).ConfigureAwait(false);
+
+            conn.LastError = null;
+            Diagnostics = [new WorkspaceDiagnostic("Info", "MQTT", "Subscribed", $"Connected to {conn.Profile.Host}:{conn.Profile.Port}.")];
+            entry.ReaderTask = ReadConnectionAsync(entry, entry.Cts.Token);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            conn.State = MqttSessionState.Faulted;
+            conn.LastError = exception.Message;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "MQTT", "ConnectFailed", exception.Message)];
+            await DisconnectEntryAsync(entry, CancellationToken.None).ConfigureAwait(false);
+            conn.State = MqttSessionState.Faulted;
+            conn.LastError = exception.Message;
+        }
+
+        NotifyChanged();
+    }
+
+    public async Task DisconnectAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!_entries.TryGetValue(id, out var entry)) return;
+        await DisconnectEntryAsync(entry, cancellationToken).ConfigureAwait(false);
+        NotifyChanged();
     }
 
     public void SetProject(string projectName)
@@ -102,127 +155,40 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         NotifyChanged();
     }
 
-    public async Task TestConnectionAsync(CancellationToken cancellationToken = default)
+    public void ClearStoredSessionSelection()
     {
-        await using var session = new MqttSession(Profile);
-        try
-        {
-            await session.ConnectAsync(cancellationToken).ConfigureAwait(false);
-            await session.DisconnectAsync(cancellationToken).ConfigureAwait(false);
-            Diagnostics =
-            [
-                new WorkspaceDiagnostic("Info", "MQTT", "ConnectionOk", $"Connected to {Profile.Host}:{Profile.Port}.")
-            ];
-        }
-        catch (Exception exception) when (exception is not OperationCanceledException)
-        {
-            Diagnostics =
-            [
-                new WorkspaceDiagnostic("Error", "MQTT", "ConnectionFailed", exception.Message)
-            ];
-        }
-
-        NotifyChanged();
-    }
-
-    public async Task ConnectAsync(CancellationToken cancellationToken = default)
-    {
-        await DisconnectAsync(cancellationToken).ConfigureAwait(false);
-
-        _readerCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        _session = new MqttSession(Profile);
-        _session.StateChanged += OnSessionStateChanged;
-
-        try
-        {
-            await _session.ConnectAsync(cancellationToken).ConfigureAwait(false);
-
-            var filters = ParseSubscriptionFilters(Subscription);
-            foreach (var filter in filters)
-            {
-                await _session.SubscribeAsync(filter, MqttQualityOfServiceLevel.AtMostOnce, cancellationToken).ConfigureAwait(false);
-            }
-
-            Diagnostics =
-            [
-                new WorkspaceDiagnostic("Info", "MQTT", "Subscribed", $"Subscribed to {string.Join(", ", filters)}.")
-            ];
-            _readerTask = ReadMessagesAsync(_session, _readerCts.Token);
-        }
-        catch (Exception exception) when (exception is not OperationCanceledException)
-        {
-            State = MqttSessionState.Faulted;
-            Diagnostics =
-            [
-                new WorkspaceDiagnostic("Error", "MQTT", "ConnectFailed", exception.Message)
-            ];
-            await DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
-            State = MqttSessionState.Faulted;
-        }
-
-        NotifyChanged();
-    }
-
-    public async Task DisconnectAsync(CancellationToken cancellationToken = default)
-    {
-        var session = _session;
-        _session = null;
-
-        if (_readerCts is not null)
-        {
-            await _readerCts.CancelAsync().ConfigureAwait(false);
-            _readerCts.Dispose();
-            _readerCts = null;
-        }
-
-        if (_readerTask is not null)
-        {
-            await _readerTask.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
-            _readerTask = null;
-        }
-
-        if (session is not null)
-        {
-            session.StateChanged -= OnSessionStateChanged;
-            await session.DisposeAsync().ConfigureAwait(false);
-        }
-
-        State = MqttSessionState.Disconnected;
+        _selectedStoredSession = null;
+        _selectedSessionMessages = [];
+        _projection.ClearSelection();
         NotifyChanged();
     }
 
     public async Task PublishAsync(string topic, string payload, CancellationToken cancellationToken = default)
     {
-        if (_session is null || State != MqttSessionState.Connected)
+        var session = _entries.Values
+            .FirstOrDefault(e => e.Connection.State == MqttSessionState.Connected)?.Session;
+
+        if (session is null)
         {
-            Diagnostics =
-            [
-                new WorkspaceDiagnostic("Warning", "MQTT", "NotConnected", "Connect before publishing.")
-            ];
+            Diagnostics = [new WorkspaceDiagnostic("Warning", "MQTT", "NotConnected", "Connect before publishing.")];
             NotifyChanged();
             return;
         }
 
         try
         {
-            await _session.PublishAsync(
+            await session.PublishAsync(
                 topic,
                 Encoding.UTF8.GetBytes(payload),
                 MqttQualityOfServiceLevel.AtMostOnce,
                 retain: false,
                 cancellationToken).ConfigureAwait(false);
 
-            Diagnostics =
-            [
-                new WorkspaceDiagnostic("Info", "MQTT", "Published", $"Published to {topic}.")
-            ];
+            Diagnostics = [new WorkspaceDiagnostic("Info", "MQTT", "Published", $"Published to {topic}.")];
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            Diagnostics =
-            [
-                new WorkspaceDiagnostic("Error", "MQTT", "PublishFailed", exception.Message)
-            ];
+            Diagnostics = [new WorkspaceDiagnostic("Error", "MQTT", "PublishFailed", exception.Message)];
         }
 
         NotifyChanged();
@@ -230,27 +196,23 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
 
     public void StartRecording(string sessionName, string projectName)
     {
-        if (_recordingSession is not null)
-        {
-            return;
-        }
+        if (_recordingSession is not null) return;
+
+        var profile = _entries.Values
+            .Where(e => e.Connection.State == MqttSessionState.Connected)
+            .Select(e => e.Connection.Profile)
+            .FirstOrDefault() ?? new MqttConnectionProfile { Name = "workspace" };
 
         try
         {
             CurrentProjectName = NormalizeProject(projectName);
-            _recordingSession = _sessionRepository.Start(Profile, sessionName, CurrentProjectName);
+            _recordingSession = _sessionRepository.Start(profile, sessionName, CurrentProjectName);
             _recordedMessageCount = 0;
-            Diagnostics =
-            [
-                new WorkspaceDiagnostic("Info", "Recording", "Started", $"Recording session '{_recordingSession.Name}' started.")
-            ];
+            Diagnostics = [new WorkspaceDiagnostic("Info", "Recording", "Started", $"Recording session '{_recordingSession.Name}' started.")];
         }
         catch (Exception exception)
         {
-            Diagnostics =
-            [
-                new WorkspaceDiagnostic("Error", "Recording", "StartFailed", exception.Message)
-            ];
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Recording", "StartFailed", exception.Message)];
         }
 
         NotifyChanged();
@@ -258,25 +220,16 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
 
     public void StopRecording()
     {
-        if (_recordingSession is null)
-        {
-            return;
-        }
+        if (_recordingSession is null) return;
 
         try
         {
             _sessionRepository.End(_recordingSession.Id);
-            Diagnostics =
-            [
-                new WorkspaceDiagnostic("Info", "Recording", "Stopped", $"Recorded {_recordedMessageCount} messages.")
-            ];
+            Diagnostics = [new WorkspaceDiagnostic("Info", "Recording", "Stopped", $"Recorded {_recordedMessageCount} messages.")];
         }
         catch (Exception exception)
         {
-            Diagnostics =
-            [
-                new WorkspaceDiagnostic("Error", "Recording", "StopFailed", exception.Message)
-            ];
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Recording", "StopFailed", exception.Message)];
         }
         finally
         {
@@ -312,18 +265,11 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
             }
 
             _selectedSessionMessages = loaded.ToArray();
-
-            Diagnostics =
-            [
-                new WorkspaceDiagnostic("Info", "Recording", "SessionLoaded", $"Loaded {_selectedSessionMessages.Count} messages from '{session.Name}'.")
-            ];
+            Diagnostics = [new WorkspaceDiagnostic("Info", "Recording", "SessionLoaded", $"Loaded {_selectedSessionMessages.Count} messages from '{session.Name}'.")];
         }
         catch (Exception exception)
         {
-            Diagnostics =
-            [
-                new WorkspaceDiagnostic("Error", "Recording", "SessionLoadFailed", exception.Message)
-            ];
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Recording", "SessionLoadFailed", exception.Message)];
         }
 
         NotifyChanged();
@@ -331,19 +277,47 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        await DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
+        foreach (var entry in _entries.Values)
+            await DisconnectEntryAsync(entry, CancellationToken.None).ConfigureAwait(false);
         await _projection.DisposeAsync().ConfigureAwait(false);
     }
 
-    private async Task ReadMessagesAsync(IMqttSession session, CancellationToken cancellationToken)
+    private async Task DisconnectEntryAsync(ConnectionEntry entry, CancellationToken cancellationToken)
     {
+        var session = entry.Session;
+        entry.Session = null;
+
+        if (entry.Cts is not null)
+        {
+            await entry.Cts.CancelAsync().ConfigureAwait(false);
+            entry.Cts.Dispose();
+            entry.Cts = null;
+        }
+
+        if (entry.ReaderTask is not null)
+        {
+            await entry.ReaderTask.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+            entry.ReaderTask = null;
+        }
+
+        if (session is not null)
+        {
+            session.StateChanged -= (_, state) => OnConnectionStateChanged(entry.Connection.Id, state);
+            await session.DisposeAsync().ConfigureAwait(false);
+        }
+
+        entry.Connection.State = MqttSessionState.Disconnected;
+    }
+
+    private async Task ReadConnectionAsync(ConnectionEntry entry, CancellationToken cancellationToken)
+    {
+        var conn = entry.Connection;
         try
         {
-            await foreach (var message in session.Messages.ReadAllAsync(cancellationToken).ConfigureAwait(false))
+            await foreach (var message in entry.Session!.Messages.ReadAllAsync(cancellationToken).ConfigureAwait(false))
             {
                 RecordMessage(message);
                 await _projection.ApplyAsync(message, cancellationToken).ConfigureAwait(false);
-
                 NotifyChanged();
             }
         }
@@ -352,28 +326,26 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         }
         catch (Exception exception)
         {
-            State = MqttSessionState.Faulted;
-            Diagnostics =
-            [
-                new WorkspaceDiagnostic("Error", "MQTT", "ReaderFailed", exception.Message)
-            ];
+            conn.State = MqttSessionState.Faulted;
+            conn.LastError = exception.Message;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "MQTT", "ReaderFailed", exception.Message)];
             NotifyChanged();
         }
     }
 
-    private void OnSessionStateChanged(object? sender, MqttSessionState state)
+    private void OnConnectionStateChanged(Guid id, MqttSessionState state)
     {
-        State = state;
-        NotifyChanged();
+        if (_entries.TryGetValue(id, out var entry))
+        {
+            entry.Connection.State = state;
+            NotifyChanged();
+        }
     }
 
     private void RecordMessage(MqttEnvelope message)
     {
         var recordingSession = _recordingSession;
-        if (recordingSession is null)
-        {
-            return;
-        }
+        if (recordingSession is null) return;
 
         try
         {
@@ -382,10 +354,7 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         }
         catch (Exception exception)
         {
-            Diagnostics =
-            [
-                new WorkspaceDiagnostic("Error", "Recording", "MessageStoreFailed", exception.Message)
-            ];
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Recording", "MessageStoreFailed", exception.Message)];
         }
     }
 
@@ -393,4 +362,14 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
 
     private static string NormalizeProject(string? projectName)
         => string.IsNullOrWhiteSpace(projectName) ? "Default" : projectName.Trim();
+
+    private static string[] ParseSubscriptionFilters(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return ["#"];
+        var filters = raw
+            .Split([',', ';', '\n', '\r'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        return filters.Length == 0 ? ["#"] : filters;
+    }
 }

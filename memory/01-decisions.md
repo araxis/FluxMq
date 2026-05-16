@@ -112,6 +112,17 @@ Reasoning:
 
 Status: Accepted.
 
+### 2026-05-16 - Override MudBlazor styles via app.css, not component isolated CSS
+
+Decision: All MudBlazor internal CSS class overrides go in `wwwroot/app.css` as plain global rules. Component `.razor.css` files are used only for classes that the component itself renders directly.
+
+Reasoning:
+- Blazor CSS isolation applies the scope attribute (`b-xxx`) only to HTML elements authored in the current component's template. Child component internals (e.g. `MudTreeView`'s `.mud-treeview-item-content`) never receive the scope attribute, so `[b-xxx] .mud-treeview-item-content` never matches.
+- `::deep` in isolated CSS requires the component to have a plain HTML wrapper element (`<div>`) around the MudBlazor component. Without the wrapper, the scope attribute has no ancestor that is an ancestor of the target element.
+- MudBlazor confirms this limitation in their own documentation.
+
+Status: Accepted.
+
 ### 2026-05-06 - Keep project memory in Markdown
 
 Decision: Use a dedicated `memory` folder with Markdown files for decisions, steps, progress, and architecture notes.

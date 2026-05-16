@@ -6,7 +6,7 @@ using DiagramSize = Blazor.Diagrams.Core.Geometry.Size;
 
 namespace FluxMq.UI.Components.Diagram;
 
-public sealed class FlowDiagramNodeModel : NodeModel
+public class FlowDiagramNodeModel : NodeModel
 {
     private readonly DiagramSize _collapsedSize;
     private readonly DiagramSize _expandedSize;
@@ -22,12 +22,13 @@ public sealed class FlowDiagramNodeModel : NodeModel
         => new(280, 160 + PortSectionHeight(portCount));
 
     public FlowDiagramNodeModel(
+        string id,
         DiagramPoint position,
         string nodeName,
         string nodeType,
         FlowComponentDescriptor? descriptor,
         bool isResource)
-        : base(position)
+        : base(id, position)
     {
         NodeName = nodeName;
         NodeType = nodeType;
@@ -52,11 +53,15 @@ public sealed class FlowDiagramNodeModel : NodeModel
     public IReadOnlyList<ComponentPortDescriptor> PortDescriptors { get; }
     public bool IsCollapsed { get; private set; }
     public string? ActivityText { get; private set; }
-    /// <summary>
-    /// The node's current configuration JSON object, kept in sync by the
-    /// designer when the definition is rebuilt. Read by per-node editors.
-    /// </summary>
-    public JsonObject? Configuration { get; set; }
+
+    /// <summary>Called by the designer after the node is created to parse the JSON configuration.</summary>
+    internal void LoadConfiguration(JsonObject? config) => OnConfigurationLoaded(config);
+
+    /// <summary>Override to read typed properties from the JSON configuration object.</summary>
+    protected virtual void OnConfigurationLoaded(JsonObject? config) { }
+
+    /// <summary>Override to serialise typed properties back to a JSON configuration object on save.</summary>
+    public virtual JsonObject BuildConfiguration() => [];
 
     public void Toggle()
     {

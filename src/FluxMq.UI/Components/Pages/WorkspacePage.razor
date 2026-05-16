@@ -1,41 +1,132 @@
 @page "/"
-@inject IJSRuntime Js
+@implements IDisposable
+@inject ProjectManagerService Projects
+@inject LiveMqttWorkspaceService Live
+@inject IDialogService DialogService
 
-<MudStack Class="mud-width-full mud-height-full" Justify="Justify.Center" AlignItems="AlignItems.Center">
-    <MudSplitPanel @ref="_splitPanel"
-                   Class="mud-width-full mud-height-full"
-                   Horizontal="false"
-                   Rounded="true"
-                   Transparent="false"
-                   MinPanelSize="400"
-                   Elevation="1">
-        <FirstPanel >
-            <MudStack Justify="Justify.Center" AlignItems="AlignItems.Stretch" Class="mud-width-full mud-height-full">
-                <FlowDesigner />
+<div class="workspace-fill">
+    @if (Projects.ActiveProject is null)
+    {
+        <div class="workspace-empty">
+            <MudStack AlignItems="AlignItems.Center" Spacing="3">
+                <MudIcon Icon="@Icons.Material.Filled.BubbleChart" Style="font-size:64px;opacity:0.18;" />
+                <MudText Typo="Typo.h6" Color="Color.Secondary">No app open</MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.NoteAdd"
+                           OnClick="@NewAppAsync">New app</MudButton>
             </MudStack>
-        </FirstPanel>
-        <SecondPanel>
-            <MudStack Justify="Justify.FlexStart" AlignItems="AlignItems.Stretch"  Class="mud-width-full mud-height-full">
-                <LiveInspectorPanel />
-            </MudStack>
-        </SecondPanel>
-    </MudSplitPanel>
-</MudStack>
+        </div>
+    }
+    else
+    {
+        var active = Projects.ActiveProject;
+        <div class="project-tabbar">
+            @foreach (var wf in active.WorkflowNames)
+            {
+                var w = wf;
+                var isActive = string.Equals(w, active.ActiveWorkflowName, StringComparison.Ordinal);
+                <div class="project-tab @(isActive ? "project-tab-active" : "")"
+                     @onclick="@(() => active.SetActiveWorkflow(w))">
+                    <span class="project-tab-name">@w</span>
+                </div>
+            }
+            <div class="project-tab project-tab-add" @onclick="@AddWorkflowAsync">
+                <span>+</span>
+            </div>
+        </div>
+
+        @if (active.ActiveWorkflowName is null && active.WorkflowNames.Count == 0)
+        {
+            <div class="workspace-empty">
+                <MudStack AlignItems="AlignItems.Center" Spacing="3">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" Style="font-size:64px;opacity:0.18;" />
+                    <MudText Typo="Typo.h6" Color="Color.Secondary">No pipelines</MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="@AddWorkflowAsync">Add pipeline</MudButton>
+                </MudStack>
+            </div>
+        }
+        else
+        {
+            <CascadingValue Value="@active" @key="@active">
+                <div class="workspace-tab-content">
+                    <div class="workspace-designer-region">
+                        <FlowDesigner />
+                    </div>
+                </div>
+            </CascadingValue>
+        }
+    }
+</div>
 
 @code {
+    private readonly HashSet<FlowWorkspaceService> _subscribed = [];
 
-    private MudSplitPanel? _splitPanel;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override void OnInitialized()
     {
-        await base.OnAfterRenderAsync(firstRender);
-        if (!firstRender || _splitPanel is null) return;
-        // var width1 = await Js.InvokeAsync<double>("eval", 
-        //     "document.querySelector('.mud-split-panel')?.offsetWidth || 0");
-        var width = await Js.InvokeAsync<int>("eval", "document.querySelector('.mud-split-panel').offsetWidth");
-        var minWidth = _splitPanel.MinPanelSize;
-        var x = await _splitPanel.GetDividerPositionAsync();
-        await _splitPanel.SetDividerPositionAsync((int)(width*0.90));
+        Projects.Changed += OnProjectsChanged;
+        SyncSubscriptions();
     }
 
+    private void OnProjectsChanged(object? sender, EventArgs e)
+    {
+        SyncSubscriptions();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnProjectChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
+
+    private void SyncSubscriptions()
+    {
+        foreach (var project in Projects.Projects)
+            if (_subscribed.Add(project))
+                project.Changed += OnProjectChanged;
+
+        foreach (var stale in _subscribed.Where(p => !Projects.Projects.Contains(p)).ToList())
+        {
+            stale.Changed -= OnProjectChanged;
+            _subscribed.Remove(stale);
+        }
+    }
+
+    private async Task NewAppAsync()
+    {
+        var dialog = await DialogService.ShowAsync<NewAppDialog>("New App");
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: NewAppDialog.NewAppResult r })
+        {
+            var project = Projects.NewProject();
+            project.SetDisplayName(r.AppName);
+            project.AddWorkflow(r.PipelineName);
+            project.SetActiveWorkflow(r.PipelineName);
+            var resourceKey = string.IsNullOrWhiteSpace(r.Connection.Name)
+                ? "connection"
+                : r.Connection.Name.Trim().ToLowerInvariant().Replace(' ', '-');
+            project.UpsertConnectionResource(resourceKey, r.Connection);
+            Live.AddConnectionIfAbsent(r.Connection, r.Subscription);
+        }
+    }
+
+    private async Task AddWorkflowAsync()
+    {
+        var active = Projects.ActiveProject;
+        if (active is null) return;
+
+        var dialog = await DialogService.ShowAsync<NewPipelineDialog>("New Pipeline");
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string name } && !string.IsNullOrWhiteSpace(name))
+        {
+            active.AddWorkflow(name.Trim());
+            active.SetActiveWorkflow(name.Trim());
+        }
+    }
+
+    public void Dispose()
+    {
+        Projects.Changed -= OnProjectsChanged;
+        foreach (var project in _subscribed)
+            project.Changed -= OnProjectChanged;
+        _subscribed.Clear();
+    }
 }

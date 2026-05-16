@@ -1,0 +1,49 @@
+<MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Start Recording</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="2">
+            <MudAutocomplete T="string" Label="Project" @bind-Value="_project"
+                             SearchFunc="@SearchProjects"
+                             Variant="Variant.Outlined" Margin="Margin.Dense"
+                             ResetValueOnEmptyText="false" />
+            <MudTextField T="string" Label="Session name" @bind-Value="_session"
+                          Variant="Variant.Outlined" Margin="Margin.Dense" />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled"
+                   StartIcon="@Icons.Material.Filled.FiberManualRecord" OnClick="@Submit">
+            Start Recording
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public IReadOnlyList<string> ExistingProjects { get; set; } = [];
+
+    private string _project = "Default";
+    private string _session = $"Session {DateTimeOffset.Now:yyyy-MM-dd HH-mm}";
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Submit()
+    {
+        var project = string.IsNullOrWhiteSpace(_project) ? "Default" : _project.Trim();
+        var session = string.IsNullOrWhiteSpace(_session) ? $"Session {DateTimeOffset.Now:yyyy-MM-dd HH-mm}" : _session.Trim();
+        MudDialog.Close(DialogResult.Ok(new StartRecordingResult(project, session)));
+    }
+
+    private Task<IEnumerable<string>> SearchProjects(string? value, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return Task.FromResult<IEnumerable<string>>(ExistingProjects);
+        return Task.FromResult(ExistingProjects.Where(p => p.Contains(value, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    public record StartRecordingResult(string ProjectName, string SessionName);
+}

@@ -32,9 +32,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<FlowComponentCatalog>();
         builder.Services.AddSingleton<NodeWidgetRegistry>();
         builder.Services.AddSingleton<FlowDefinitionComposer>();
-        builder.Services.AddSingleton<FlowWorkspaceService>();
+        builder.Services.AddSingleton<ProjectManagerService>();
         builder.Services.AddSingleton<LiveMqttWorkspaceService>();
         builder.Services.AddSingleton<AppThemeService>();
+        builder.Services.AddSingleton<DragStateService>();
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();

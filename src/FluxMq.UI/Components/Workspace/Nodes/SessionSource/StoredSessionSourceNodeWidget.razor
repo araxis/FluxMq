@@ -1,6 +1,5 @@
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
-@inject FlowWorkspaceService Flow
 @inject LiveMqttWorkspaceService Live
 
 <NodeWidgetShell Node="@Node"
@@ -13,17 +12,10 @@
             Replays messages from a stored MQTT recording session.
         </MudText>
         <MudStack Spacing="1" Class="mt-2">
-            @if (string.IsNullOrEmpty(SessionName))
+            <Stat Icon="@Icons.Material.Filled.Folder" Label="Session" Value="@(ResolvedSessionName ?? "—")" />
+            @if (Model.PreserveTiming)
             {
-                <Stat Icon="@Icons.Material.Filled.Folder" Label="Session" Value="—" />
-            }
-            else
-            {
-                <Stat Icon="@Icons.Material.Filled.Folder" Label="Session" Value="@SessionName" />
-            }
-            @if (PreserveTiming)
-            {
-                <Stat Icon="@Icons.Material.Filled.Speed" Label="Speed" Value="@($"{Speed:0.##}×")" />
+                <Stat Icon="@Icons.Material.Filled.Speed" Label="Speed" Value="@($"{Model.Speed:0.##}×")" />
             }
         </MudStack>
     </Body>
@@ -68,19 +60,18 @@
 </NodeWidgetShell>
 
 @code {
-    private string? SessionName
+    [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
+
+    private SessionSourceNodeModel Model => (SessionSourceNodeModel)Node;
+
+    private string? ResolvedSessionName
     {
         get
         {
-            var id = Node.Configuration?["sessionId"]?.GetValue<string?>();
-            if (string.IsNullOrEmpty(id)) return null;
-            var session = Live.StoredSessions.FirstOrDefault(s => s.Id.ToString() == id);
-            return session?.Name ?? id;
+            if (string.IsNullOrEmpty(Model.SessionId)) return null;
+            return Live.StoredSessions.FirstOrDefault(s => s.Id.ToString() == Model.SessionId)?.Name ?? Model.SessionId;
         }
     }
-
-    private bool PreserveTiming => ReadBoolOrDefault(Node.Configuration, "preserveTiming", false);
-    private double Speed => ReadDoubleOrDefault(Node.Configuration, "speed", 1);
 
     private string _sessionId = string.Empty;
     private bool _preserveTiming;
@@ -93,49 +84,17 @@
 
     private void LoadDraft()
     {
-        _sessionId = Node.Configuration?["sessionId"]?.GetValue<string?>() ?? string.Empty;
-        _preserveTiming = PreserveTiming;
-        _speed = Speed;
+        _sessionId = Model.SessionId;
+        _preserveTiming = Model.PreserveTiming;
+        _speed = Model.Speed;
     }
 
     private Task SaveAsync()
     {
-        var updated = new System.Text.Json.Nodes.JsonObject
-        {
-            ["sessionId"] = _sessionId,
-            ["preserveTiming"] = _preserveTiming,
-            ["speed"] = _speed <= 0 ? 1 : _speed,
-            ["boundedCapacity"] = ReadIntOrDefault(Node.Configuration, "boundedCapacity", 1000)
-        };
-
-        Flow.UpdateNodeConfiguration(Node.NodeName, updated);
+        Model.SessionId = _sessionId;
+        Model.PreserveTiming = _preserveTiming;
+        Model.Speed = _speed;
+        Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
         return Task.CompletedTask;
-    }
-
-    private static bool ReadBoolOrDefault(System.Text.Json.Nodes.JsonObject? root, string key, bool fallback)
-    {
-        if (root?[key] is System.Text.Json.Nodes.JsonValue value && value.TryGetValue<bool>(out var result))
-        {
-            return result;
-        }
-        return fallback;
-    }
-
-    private static double ReadDoubleOrDefault(System.Text.Json.Nodes.JsonObject? root, string key, double fallback)
-    {
-        if (root?[key] is System.Text.Json.Nodes.JsonValue value && value.TryGetValue<double>(out var result))
-        {
-            return result;
-        }
-        return fallback;
-    }
-
-    private static int ReadIntOrDefault(System.Text.Json.Nodes.JsonObject? root, string key, int fallback)
-    {
-        if (root?[key] is System.Text.Json.Nodes.JsonValue value && value.TryGetValue<int>(out var result))
-        {
-            return result;
-        }
-        return fallback;
     }
 }

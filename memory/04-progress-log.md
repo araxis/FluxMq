@@ -220,6 +220,7 @@ Chronological progress record.
 
 Build the first usable MAUI Blazor Hybrid desktop alpha in `FluxMq.UI`.
 
+
 ## 2026-05-10
 
 - Closed the rejected separate desktop host PR and returned to `main`.
@@ -335,3 +336,22 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Moved live and stored workspace message updates behind `WorkspaceMessageProjection`, keeping durable state plus Dataflow input/update surfaces.
   - Updated `FlowApplicationHost` so hosts can pass the message repository required by stored-session sources.
   - Verified the solution with `dotnet build FluxMq.sln --no-restore` and `dotnet test FluxMq.sln --no-build`; 204 tests passing.
+
+## 2026-05-16
+
+- UI redesign of `FluxMq.UI` — `AppTreePanel`, `NewAppDialog`, `MainLayout`, `WorkspacePage`:
+  - Rewrote `AppTreePanel` as a data-driven `MudTreeView` using `Items` + `ItemTemplate` + `BodyContent` (not `Content`, which replaces the entire item including the expand toggle).
+  - Used sealed records as discriminated union node types (`AppNode`, `ConnGroupNode`, `ConnNode`, `NoConnNode`, `PipeGroupNode`, `PipeNode`, `NodeItem`) with `ITreeItemData<object>` in all helpers.
+  - `_expanded` `HashSet<string>` tracks expand state across rebuilds; new apps auto-expand to their connection and pipeline groups.
+  - Hover-only action buttons via `.tree-row-actions { opacity:0 }` / `.tree-row:hover .tree-row-actions { opacity:1 }` in isolated `AppTreePanel.razor.css`.
+  - Added full MQTT connection fields to `NewAppDialog` (Name, Host, Port, Client ID, Subscription, TLS, Username, Password); `NewAppResult` record updated accordingly; `MainLayout.NewProject` and `WorkspacePage.NewAppAsync` both wire the connection.
+  - Increased left drawer width to 400px and removed `pe-4` padding class.
+  - Added global MudBlazor treeview overrides in `app.css`: `width:100%`, `.mud-treeview-group padding-left`, `.mud-treeview-item-arrow width`, `.mud-treeview-item-icon width`, `.mud-treeview-item-content` height/padding, `.mud-treeview-item-label flex:1`.
+
+- **Key CSS lesson confirmed**: `::deep` in component-isolated `.razor.css` does not reach MudBlazor internal elements — the Blazor CSS scope attribute is only applied to HTML elements the component authors directly, not to child component internals. All MudBlazor class overrides must go in `app.css`.
+
+- **MudBlazor treeview class names confirmed** from `MudBlazor.min.css`:
+  - Children container is `.mud-treeview-group` (a `<ul>`), NOT `.mud-treeview-item-children` (does not exist).
+  - Indentation is browser-default `padding-left` on `<ul>` — MudBlazor resets `margin` but not `padding`.
+
+- **Paused**: action button clipping on hover not fully resolved. The buttons (`conn-actions`) are not fully visible despite `overflow:visible` on `.mud-treeview-item-label`. Root cause not confirmed — user reverted `AppTreePanel` to last stable state to resume later.

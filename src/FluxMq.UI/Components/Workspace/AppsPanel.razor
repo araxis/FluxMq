@@ -1,0 +1,62 @@
+@implements IDisposable
+@inject ProjectManagerService Projects
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="px-2 pt-1">
+    <MudIcon Icon="@Icons.Material.Filled.Folder" Size="Size.Small" Color="Color.Primary" />
+    <MudText Typo="Typo.subtitle2" Class="flex-grow-1">Open Apps</MudText>
+</MudStack>
+
+@if (Projects.Projects.Count == 0)
+{
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="px-4 pb-2">
+        No apps open. Use New or Open from the toolbar.
+    </MudText>
+}
+else
+{
+    <MudList T="FlowWorkspaceService" Dense="true" Class="py-0">
+        @foreach (var app in Projects.Projects)
+        {
+            var a = app;
+            var isActive = a == Projects.ActiveProject;
+            <MudListItem T="FlowWorkspaceService"
+                         Value="@a"
+                         OnClick="@(() => Projects.SetActive(a))"
+                         Class="@(isActive ? "flux-app-item-active" : "flux-app-item")">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="flex-grow-1">
+                    <MudIcon Icon="@Icons.Material.Filled.Article"
+                             Size="Size.Small"
+                             Color="@(isActive ? Color.Primary : Color.Default)" />
+                    <MudStack Spacing="0" Class="flex-grow-1" Style="min-width:0;">
+                        <MudText Typo="Typo.body2"
+                                 Style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                            @a.Name@(a.HasUnsavedChanges ? " ●" : "")
+                        </MudText>
+                        @if (!string.IsNullOrEmpty(a.CurrentFilePath))
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary"
+                                     Style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                @a.CurrentFilePath
+                            </MudText>
+                        }
+                    </MudStack>
+                    <span @onclick:stopPropagation="true">
+                        <MudIconButton Size="Size.Small"
+                                       Icon="@Icons.Material.Filled.Close"
+                                       OnClick="@(() => CloseAsync(a))" />
+                    </span>
+                </MudStack>
+            </MudListItem>
+        }
+    </MudList>
+}
+
+@code {
+    protected override void OnInitialized() => Projects.Changed += OnChanged;
+
+    private Task CloseAsync(FlowWorkspaceService app) => Projects.CloseProjectAsync(app).AsTask();
+
+    private void OnChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Projects.Changed -= OnChanged;
+}
