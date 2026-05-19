@@ -104,6 +104,16 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         NotifyChanged();
     }
 
+    public string GetFullDefinitionJson()
+    {
+        IReadOnlyDictionary<string, (double X, double Y, bool Collapsed)>? positions =
+            GetDiagramState?.Invoke() ??
+            (LastNodePositions.Count > 0 ? LastNodePositions : null);
+        return positions is not null
+            ? _definitionComposer.WriteNodePositions(DefinitionJson, positions)
+            : DefinitionJson;
+    }
+
     public void SetDefinitionJson(string json)
     {
         ReplaceDefinition(json);

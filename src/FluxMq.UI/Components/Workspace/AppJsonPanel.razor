@@ -24,20 +24,29 @@
         </MudTooltip>
     </MudStack>
 
-    <pre class="app-json-body">@Project.DefinitionJson</pre>
+    <pre class="app-json-body">@_fullJson</pre>
 
 </div>
 
 @code {
     [Parameter, EditorRequired] public FlowWorkspaceService Project { get; set; } = null!;
+    private string _fullJson = string.Empty;
 
-    protected override void OnInitialized() => Project.Changed += OnChanged;
+    protected override void OnInitialized()
+    {
+        Project.Changed += OnChanged;
+        _fullJson = Project.GetFullDefinitionJson();
+    }
 
-    private void OnChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
+    private void OnChanged(object? sender, EventArgs e)
+    {
+        _fullJson = Project.GetFullDefinitionJson();
+        InvokeAsync(StateHasChanged);
+    }
 
     private async Task CopyAsync()
     {
-        await Clipboard.Default.SetTextAsync(Project.DefinitionJson);
+        await Clipboard.Default.SetTextAsync(_fullJson);
         Snackbar.Add("JSON copied to clipboard", Severity.Success);
     }
 
