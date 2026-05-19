@@ -290,6 +290,29 @@ body,
     padding: 5px 10px;
 }
 
+.project-tab-json {
+    align-items: center;
+    border-radius: 4px;
+    color: var(--mud-palette-text-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 5px;
+    user-select: none;
+}
+
+.project-tab-json:hover {
+    background: var(--mud-palette-action-default-hover);
+    color: var(--mud-palette-text-primary);
+}
+
+.project-tab-json-active {
+    background: color-mix(in srgb, var(--mud-palette-primary) 15%, transparent);
+    color: var(--mud-palette-primary);
+}
+
 .project-tabbar-app {
     align-items: center;
     border-left: 1px solid var(--mud-palette-lines-default);

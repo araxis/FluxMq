@@ -1,0 +1,26 @@
+.app-json-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    padding: 12px;
+}
+
+.app-json-toolbar {
+    flex-shrink: 0;
+    margin-bottom: 8px;
+}
+
+.app-json-body {
+    background: var(--mud-palette-background-grey);
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 8px;
+    flex: 1 1 0;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin: 0;
+    overflow: auto;
+    padding: 16px;
+    white-space: pre;
+}

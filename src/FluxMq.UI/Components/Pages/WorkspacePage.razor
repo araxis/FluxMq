@@ -29,9 +29,9 @@
             @foreach (var wf in active.WorkflowNames)
             {
                 var w = wf;
-                var isActive = string.Equals(w, active.ActiveWorkflowName, StringComparison.Ordinal);
+                var isActive = string.Equals(w, active.ActiveWorkflowName, StringComparison.Ordinal) && !_jsonView;
                 <div class="project-tab @(isActive ? "project-tab-active" : "")"
-                     @onclick="@(() => active.SetActiveWorkflow(w))">
+                     @onclick="@(() => { active.SetActiveWorkflow(w); _jsonView = false; })">
                     <span class="project-tab-name">@w</span>
                 </div>
             }
@@ -39,12 +39,18 @@
                 <span>+</span>
             </div>
             <div class="project-tabbar-app">
+                <span class="project-tab-json @(_jsonView ? "project-tab-json-active" : null)"
+                      title="View JSON" @onclick="@(() => _jsonView = !_jsonView)">&lt;/&gt;</span>
                 <span class="project-tabbar-app-name">@active.Name</span>
                 <span class="project-tab-close" title="Close app" @onclick="@CloseActiveAsync">&#x2715;</span>
             </div>
         </div>
 
-        @if (active.ActiveWorkflowName is null && active.WorkflowNames.Count == 0)
+        @if (_jsonView)
+        {
+            <AppJsonPanel Project="@active" />
+        }
+        else if (active.ActiveWorkflowName is null && active.WorkflowNames.Count == 0)
         {
             <div class="workspace-empty">
                 <MudStack AlignItems="AlignItems.Center" Spacing="3">
@@ -71,6 +77,7 @@
 
 @code {
     private readonly HashSet<FlowWorkspaceService> _subscribed = [];
+    private bool _jsonView;
 
     protected override void OnInitialized()
     {
@@ -139,8 +146,9 @@
     private async Task CloseActiveAsync()
     {
         var active = Projects.ActiveProject;
-        if (active is not null)
-            await Projects.CloseProjectAsync(active);
+        if (active is null) return;
+        _jsonView = false;
+        await Projects.CloseProjectAsync(active);
     }
 
     private async Task AddWorkflowAsync()
