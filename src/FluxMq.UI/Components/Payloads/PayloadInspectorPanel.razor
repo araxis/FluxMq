@@ -2,24 +2,25 @@
 
 <MudPaper Elevation="0" Outlined="true" Class="pa-2 payload-inspector">
 
-    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
-        <MudChip T="string" Size="Size.Small" Color="@FormatColor">@_inspection.ContentTypeLabel</MudChip>
-        @if (!string.IsNullOrWhiteSpace(Topic))
-        {
+    @if (!string.IsNullOrWhiteSpace(Topic))
+    {
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
+            <MudChip T="string" Size="Size.Small" Color="@FormatColor">@_inspection.ContentTypeLabel</MudChip>
             <MudText Typo="Typo.caption" Style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:0;flex:1 1 0">@Topic</MudText>
-        }
-        <MudText Typo="Typo.caption" Color="Color.Secondary">@_inspection.SizeBytes B</MudText>
-        @if (ReceivedAt is not null)
-        {
-            <MudText Typo="Typo.caption" Color="Color.Secondary">@ReceivedAt.Value.ToLocalTime().ToString("HH:mm:ss")</MudText>
-        }
-        <MudToggleGroup T="string" @bind-Value="_activeView" Size="Size.Small" Outlined="true" Color="Color.Primary" Class="ml-1">
-            <MudToggleItem Value="@("formatted")" UnselectedIcon="@Icons.Material.Filled.DataObject" SelectedIcon="@Icons.Material.Filled.DataObject" />
-            <MudToggleItem Value="@("raw")" UnselectedIcon="@Icons.Material.Filled.Subject" SelectedIcon="@Icons.Material.Filled.Subject" />
-            <MudToggleItem Value="@("hex")" UnselectedIcon="@Icons.Material.Filled.Tag" SelectedIcon="@Icons.Material.Filled.Tag" />
-            <MudToggleItem Value="@("meta")" UnselectedIcon="@Icons.Material.Filled.Info" SelectedIcon="@Icons.Material.Filled.Info" />
-        </MudToggleGroup>
-    </MudStack>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@_inspection.SizeBytes B</MudText>
+            @if (ReceivedAt is not null)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@ReceivedAt.Value.ToLocalTime().ToString("HH:mm:ss")</MudText>
+            }
+        </MudStack>
+    }
+
+    <MudToggleGroup T="string" @bind-Value="_activeView" Size="Size.Small" Outlined="true" Color="Color.Primary" Class="mb-1" Style="width:100%">
+        <MudToggleItem Value="@("formatted")" UnselectedIcon="@Icons.Material.Filled.DataObject" SelectedIcon="@Icons.Material.Filled.DataObject" />
+        <MudToggleItem Value="@("raw")" UnselectedIcon="@Icons.Material.Filled.Subject" SelectedIcon="@Icons.Material.Filled.Subject" />
+        <MudToggleItem Value="@("hex")" UnselectedIcon="@Icons.Material.Filled.Tag" SelectedIcon="@Icons.Material.Filled.Tag" />
+        <MudToggleItem Value="@("meta")" UnselectedIcon="@Icons.Material.Filled.Info" SelectedIcon="@Icons.Material.Filled.Info" />
+    </MudToggleGroup>
 
     @if (_activeView == "formatted")
     {
