@@ -189,13 +189,6 @@ public static class PayloadInspector
                 builder.Append(index == 3 ? "  " : " ");
             }
 
-            builder.Append(' ');
-
-            foreach (var value in line)
-            {
-                builder.Append(value is >= 32 and <= 126 ? (char)value : '.');
-            }
-
             if (offset + 8 < payload.Length)
             {
                 builder.AppendLine();

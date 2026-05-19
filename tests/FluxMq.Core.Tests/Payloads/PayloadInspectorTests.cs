@@ -52,7 +52,7 @@ public sealed class PayloadInspectorTests
         result.Format.ShouldBe(PayloadFormat.Binary);
         result.IsText.ShouldBeFalse();
         result.HexDump.ShouldStartWith("00000000  FF 00 10 80");
-        result.HexDump.ShouldEndWith("....");
+        result.HexDump.ShouldNotContain(".");
     }
 
     [Fact]
