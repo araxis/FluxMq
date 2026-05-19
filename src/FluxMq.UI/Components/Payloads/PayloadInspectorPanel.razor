@@ -2,18 +2,18 @@
 
 <MudPaper Elevation="0" Outlined="true" Class="pa-2 payload-inspector">
 
-    @if (!string.IsNullOrWhiteSpace(Topic))
-    {
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
-            <MudChip T="string" Size="Size.Small" Color="@FormatColor">@_inspection.ContentTypeLabel</MudChip>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
+        <MudChip T="string" Size="Size.Small" Color="@FormatColor">@_inspection.ContentTypeLabel</MudChip>
+        @if (!string.IsNullOrWhiteSpace(Topic))
+        {
             <MudText Typo="Typo.caption" Style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:0;flex:1 1 0">@Topic</MudText>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">@_inspection.SizeBytes B</MudText>
-            @if (ReceivedAt is not null)
-            {
-                <MudText Typo="Typo.caption" Color="Color.Secondary">@ReceivedAt.Value.ToLocalTime().ToString("HH:mm:ss")</MudText>
-            }
-        </MudStack>
-    }
+        }
+        <MudText Typo="Typo.caption" Color="Color.Secondary">@_inspection.SizeBytes B</MudText>
+        @if (ReceivedAt is not null)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@ReceivedAt.Value.ToLocalTime().ToString("HH:mm:ss")</MudText>
+        }
+    </MudStack>
 
     <MudToggleGroup T="string" @bind-Value="_activeView" Size="Size.Small" Outlined="true" Color="Color.Primary" Class="mb-1" Style="width:100%">
         <MudToggleItem Value="@("formatted")" UnselectedIcon="@Icons.Material.Filled.DataObject" SelectedIcon="@Icons.Material.Filled.DataObject" />
