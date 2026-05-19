@@ -11,9 +11,14 @@
             <MudStack AlignItems="AlignItems.Center" Spacing="3">
                 <MudIcon Icon="@Icons.Material.Filled.BubbleChart" Style="font-size:64px;opacity:0.18;" />
                 <MudText Typo="Typo.h6" Color="Color.Secondary">No app open</MudText>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.NoteAdd"
-                           OnClick="@NewAppAsync">New app</MudButton>
+                <MudStack Row="true" Spacing="2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.NoteAdd"
+                               OnClick="@NewAppAsync">New app</MudButton>
+                    <MudButton Variant="Variant.Outlined"
+                               StartIcon="@Icons.Material.Filled.FolderOpen"
+                               OnClick="@OpenFileAsync">Open file</MudButton>
+                </MudStack>
             </MudStack>
         </div>
     }
@@ -32,6 +37,10 @@
             }
             <div class="project-tab project-tab-add" @onclick="@AddWorkflowAsync">
                 <span>+</span>
+            </div>
+            <div class="project-tabbar-app">
+                <span class="project-tabbar-app-name">@active.Name</span>
+                <span class="project-tab-close" title="Close app" @onclick="@CloseActiveAsync">&#x2715;</span>
             </div>
         </div>
 
@@ -106,6 +115,32 @@
             project.UpsertConnectionResource(resourceKey, r.Connection);
             Live.AddConnectionIfAbsent(r.Connection, r.Subscription);
         }
+    }
+
+    private async Task OpenFileAsync()
+    {
+        var result = await FilePicker.Default.PickAsync(new PickOptions
+        {
+            PickerTitle = "Open FluxMQ Project",
+            FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+            {
+                { DevicePlatform.WinUI, [".json"] },
+                { DevicePlatform.macOS, ["json", "public.json"] }
+            })
+        });
+        if (result is not null)
+        {
+            var project = await Projects.OpenAsync(result.FullPath);
+            foreach (var (profile, sub) in project.GetConnectionProfiles())
+                Live.AddConnectionIfAbsent(profile, sub);
+        }
+    }
+
+    private async Task CloseActiveAsync()
+    {
+        var active = Projects.ActiveProject;
+        if (active is not null)
+            await Projects.CloseProjectAsync(active);
     }
 
     private async Task AddWorkflowAsync()

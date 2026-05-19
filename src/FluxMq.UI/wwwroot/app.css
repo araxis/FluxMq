@@ -290,6 +290,25 @@ body,
     padding: 5px 10px;
 }
 
+.project-tabbar-app {
+    align-items: center;
+    border-left: 1px solid var(--mud-palette-lines-default);
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    font-size: 0.75rem;
+    gap: 6px;
+    margin-left: auto;
+    padding: 5px 8px 5px 10px;
+    user-select: none;
+}
+
+.project-tabbar-app-name {
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .flux-app-item,
 .flux-app-item-active {
     border-radius: 6px;

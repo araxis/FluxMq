@@ -3,19 +3,8 @@
 
 <div class="topic-tree-view">
 
-    <MudTextField T="string"
-                  @bind-Value="_filter"
-                  Placeholder="Filter topics…"
-                  Immediate="true"
-                  Clearable="true"
-                  Variant="Variant.Outlined"
-                  Margin="Margin.Dense"
-                  Adornment="Adornment.Start"
-                  AdornmentIcon="@Icons.Material.Filled.Search"
-                  Class="mb-2" />
-
     <div class="topic-tree-nodes">
-        @if (string.IsNullOrWhiteSpace(_filter))
+        @if (string.IsNullOrWhiteSpace(Filter))
         {
             var roots = Roots.OrderBy(n => n.Name).ToList();
             @if (roots.Count == 0)
@@ -67,14 +56,14 @@
     [Parameter] public EventCallback<string?> TopicSelected { get; set; }
     [Parameter] public string? EmptyMessage { get; set; }
     [Parameter] public RenderFragment? EmptyContent { get; set; }
+    [Parameter] public string Filter { get; set; } = string.Empty;
 
-    private string _filter = string.Empty;
     private volatile bool _pendingUpdate;
     private Timer? _refreshTimer;
     private ITopicIndex? _localTopicIndex;
 
     private IReadOnlyCollection<TopicNode> Roots => ActiveTopicIndex.Roots.Values.ToArray();
-    private IEnumerable<TopicNode> SearchResults => ActiveTopicIndex.Search(_filter);
+    private IEnumerable<TopicNode> SearchResults => ActiveTopicIndex.Search(Filter);
     private ITopicIndex ActiveTopicIndex => _localTopicIndex ?? TopicIndex;
 
     protected override void OnInitialized()

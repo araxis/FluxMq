@@ -1,28 +1,20 @@
 @using FluxMq.Core.Payloads
 
-<MudPaper Elevation="0" Outlined="true" Class="pa-3 payload-inspector">
+<MudPaper Elevation="0" Outlined="true" Class="pa-2 payload-inspector">
     <div class="payload-inspector-header">
-        <div>
-            <MudText Typo="Typo.subtitle2">@Title</MudText>
-            @if (!string.IsNullOrWhiteSpace(Topic))
-            {
-                <MudText Typo="Typo.caption" Color="Color.Secondary">@Topic</MudText>
-            }
-        </div>
-        <div class="payload-inspector-meta">
-            <MudChip T="string" Size="Size.Small" Color="@FormatColor">@_inspection.ContentTypeLabel</MudChip>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">@_inspection.SizeBytes bytes</MudText>
-        </div>
+        <MudChip T="string" Size="Size.Small" Color="@FormatColor" Class="flex-shrink-0">@_inspection.ContentTypeLabel</MudChip>
+        @if (!string.IsNullOrWhiteSpace(Topic))
+        {
+            <MudText Typo="Typo.caption" Class="flex-grow-1 text-truncate mx-1">@Topic</MudText>
+        }
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="flex-shrink-0">@_inspection.SizeBytes B</MudText>
+        @if (ReceivedAt is not null)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="flex-shrink-0 ml-2">@ReceivedAt.Value.ToLocalTime().ToString("HH:mm:ss")</MudText>
+        }
     </div>
 
-    @if (ReceivedAt is not null)
-    {
-        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
-            @ReceivedAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss.fff")
-        </MudText>
-    }
-
-    <MudTabs Rounded="true" Elevation="0" Class="mt-3">
+    <MudTabs Rounded="true" Elevation="0">
         <MudTabPanel Text="Formatted" Icon="@Icons.Material.Filled.DataObject">
             <pre class="payload-inspector-body">@DisplayFormatted()</pre>
         </MudTabPanel>

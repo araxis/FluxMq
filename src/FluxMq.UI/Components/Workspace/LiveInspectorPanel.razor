@@ -30,32 +30,46 @@
                                  Size="Size.Small" />
         </MudStack>
 
+        <MudTextField T="string"
+                      @bind-Value="_filter"
+                      Placeholder="@(_treeView ? "Filter topics…" : "Filter messages…")"
+                      Immediate="true"
+                      Clearable="true"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Class="mb-2" />
+
         @if (_treeView)
         {
             <TopicTreeView Messages="@MessageSource"
                            SelectedTopic="@_selectedTopic"
-                           TopicSelected="@OnTopicSelected" />
+                           TopicSelected="@OnTopicSelected"
+                           Filter="@_filter" />
         }
         else
         {
-            <MudTable Items="@DisplayedMessages" Dense="true" Hover="true" Elevation="0">
+            <MudTable T="MqttEnvelope" Items="@FilteredTableMessages" Dense="true" Hover="true" Elevation="0"
+                      RowsPerPage="10" SelectOnRowClick="true"
+                      SelectedItem="@Live.SelectedMessage"
+                      SelectedItemChanged="@OnSelectionChanged">
                 <HeaderContent>
                     <MudTh>Topic</MudTh>
                     <MudTh>Bytes</MudTh>
-                    <MudTh></MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="Topic">
-                        <MudText Typo="Typo.caption">@context.Topic</MudText>
+                        <MudText Typo="Typo.caption" Class="text-truncate" Style="max-width:160px; display:block">@context.Topic</MudText>
                     </MudTd>
                     <MudTd DataLabel="Bytes">@context.Payload.Length</MudTd>
-                    <MudTd>
-                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Search" OnClick="@(() => Live.SelectMessage(context))" />
-                    </MudTd>
                 </RowTemplate>
                 <NoRecordsContent>
                     <EmptyView Message="No messages" />
                 </NoRecordsContent>
+                <PagerContent>
+                    <MudTablePager HideRowsPerPage="true" />
+                </PagerContent>
             </MudTable>
         }
     </MudPaper>
@@ -65,10 +79,6 @@
                            ReceivedAt="@Live.SelectedMessage?.ReceivedAt"
                            Payload="@Live.SelectedMessage?.Payload" />
 
-    @foreach (var diagnostic in Live.Diagnostics)
-    {
-        <MudAlert Severity="@SeverityFor(diagnostic)" Dense="true" Variant="Variant.Outlined">@diagnostic.Message</MudAlert>
-    }
 
 </MudStack>
 
@@ -78,6 +88,7 @@
     private string _publishTopic = "fluxmq/test";
     private string _publishPayload = "{\"hello\":\"fluxmq\"}";
     private string? _selectedTopic;
+    private string _filter = string.Empty;
 
     private IReadOnlyList<MqttEnvelope> MessageSource => Live.SelectedStoredSession is null
         ? Live.RecentMessages
@@ -86,6 +97,11 @@
     private IReadOnlyList<MqttEnvelope> DisplayedMessages => string.IsNullOrWhiteSpace(_selectedTopic)
         ? MessageSource
         : MessageSource.Where(message => IsInSelectedTopic(message.Topic)).ToArray();
+
+    private IReadOnlyList<MqttEnvelope> FilteredTableMessages =>
+        string.IsNullOrWhiteSpace(_filter)
+            ? DisplayedMessages
+            : DisplayedMessages.Where(m => m.Topic.Contains(_filter, StringComparison.OrdinalIgnoreCase)).ToArray();
 
     protected override void OnInitialized() => Live.Changed += OnChanged;
 
@@ -96,17 +112,22 @@
         finally { _busy = false; StateHasChanged(); }
     }
 
-    private static Severity SeverityFor(WorkspaceDiagnostic diagnostic) => diagnostic.Severity switch
-    {
-        "Error" => Severity.Error,
-        "Warning" => Severity.Warning,
-        "Info" => Severity.Info,
-        _ => Severity.Normal
-    };
-
     private void OnChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
 
-    private void OnTopicSelected(string? topic) => _selectedTopic = topic;
+    private void OnSelectionChanged(MqttEnvelope? msg)
+    {
+        if (msg is not null)
+            Live.SelectMessage(msg);
+    }
+
+    private void OnTopicSelected(string? topic)
+    {
+        _selectedTopic = topic;
+        if (string.IsNullOrWhiteSpace(topic)) return;
+        var latest = DisplayedMessages.OrderByDescending(m => m.ReceivedAt).FirstOrDefault();
+        if (latest is not null)
+            Live.SelectMessage(latest);
+    }
 
     private void ClearTopic() => _selectedTopic = null;
 

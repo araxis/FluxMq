@@ -1,6 +1,6 @@
 @* Recursive component — renders one TopicNode and its children when expanded. *@
 
-<div class="topic-node" style="padding-left: @(Node.Depth * 16)px">
+<div class="topic-node" style="padding-left: @(Node.Depth * 12)px">
 
     <div class="topic-node-row @(Node.FullPath == SelectedTopic ? "topic-node-selected" : null)" @onclick="Select">
 
@@ -12,7 +12,7 @@
             }
             else
             {
-                <MudIcon Icon="@Icons.Material.Filled.Circle" Size="Size.Small" Style="opacity:0.2" />
+                <span style="width:1.25rem; display:inline-block;"></span>
             }
         </span>
 
