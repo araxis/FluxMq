@@ -48,7 +48,9 @@
 
         @if (_jsonView)
         {
-            <AppJsonPanel Project="@active" />
+            <div class="workspace-tab-content">
+                <AppJsonPanel Project="@active" />
+            </div>
         }
         else if (active.ActiveWorkflowName is null && active.WorkflowNames.Count == 0)
         {
