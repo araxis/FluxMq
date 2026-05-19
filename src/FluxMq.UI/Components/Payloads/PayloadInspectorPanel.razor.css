@@ -2,14 +2,6 @@
     max-width: 100%;
 }
 
-.payload-inspector-header {
-    align-items: center;
-    display: flex;
-    gap: 0;
-    margin-bottom: 4px;
-    overflow: hidden;
-}
-
 .payload-inspector-body {
     background: var(--mud-palette-background-grey);
     border: 1px solid var(--mud-palette-lines-default);
