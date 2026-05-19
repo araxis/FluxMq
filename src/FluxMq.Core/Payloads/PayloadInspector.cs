@@ -177,26 +177,19 @@ public static class PayloadInspector
 
         var builder = new StringBuilder();
 
-        for (var offset = 0; offset < payload.Length; offset += 16)
+        for (var offset = 0; offset < payload.Length; offset += 8)
         {
-            var line = payload.AsSpan(offset, Math.Min(16, payload.Length - offset));
+            var line = payload.AsSpan(offset, Math.Min(8, payload.Length - offset));
             builder.Append(offset.ToString("X8"));
             builder.Append("  ");
 
-            for (var index = 0; index < 16; index++)
+            for (var index = 0; index < 8; index++)
             {
                 builder.Append(index < line.Length ? line[index].ToString("X2") : "  ");
-                builder.Append(index == 7 ? "  " : " ");
+                builder.Append(index == 3 ? "  " : " ");
             }
 
-            builder.Append(' ');
-
-            foreach (var value in line)
-            {
-                builder.Append(value is >= 32 and <= 126 ? (char)value : '.');
-            }
-
-            if (offset + 16 < payload.Length)
+            if (offset + 8 < payload.Length)
             {
                 builder.AppendLine();
             }

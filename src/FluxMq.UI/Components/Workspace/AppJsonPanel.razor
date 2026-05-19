@@ -1,0 +1,54 @@
+@implements IDisposable
+@inject ISnackbar Snackbar
+
+<div class="app-json-view">
+
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="app-json-toolbar">
+        <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" Color="Color.Default" />
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="flex-grow-1 text-truncate mx-1">
+            @if (!string.IsNullOrEmpty(Project.CurrentFilePath))
+            {
+                @Project.CurrentFilePath
+            }
+            else
+            {
+                <span>In memory — not saved</span>
+            }
+        </MudText>
+        @if (Project.HasUnsavedChanges)
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Warning">Unsaved</MudChip>
+        }
+        <MudTooltip Text="Copy JSON">
+            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" OnClick="@CopyAsync" />
+        </MudTooltip>
+    </MudStack>
+
+    <pre class="app-json-body">@_fullJson</pre>
+
+</div>
+
+@code {
+    [Parameter, EditorRequired] public FlowWorkspaceService Project { get; set; } = null!;
+    private string _fullJson = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        Project.Changed += OnChanged;
+        _fullJson = Project.GetFullDefinitionJson();
+    }
+
+    private void OnChanged(object? sender, EventArgs e)
+    {
+        _fullJson = Project.GetFullDefinitionJson();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task CopyAsync()
+    {
+        await Clipboard.Default.SetTextAsync(_fullJson);
+        Snackbar.Add("JSON copied to clipboard", Severity.Success);
+    }
+
+    public void Dispose() => Project.Changed -= OnChanged;
+}

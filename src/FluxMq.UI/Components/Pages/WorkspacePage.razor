@@ -11,9 +11,14 @@
             <MudStack AlignItems="AlignItems.Center" Spacing="3">
                 <MudIcon Icon="@Icons.Material.Filled.BubbleChart" Style="font-size:64px;opacity:0.18;" />
                 <MudText Typo="Typo.h6" Color="Color.Secondary">No app open</MudText>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.NoteAdd"
-                           OnClick="@NewAppAsync">New app</MudButton>
+                <MudStack Row="true" Spacing="2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.NoteAdd"
+                               OnClick="@NewAppAsync">New app</MudButton>
+                    <MudButton Variant="Variant.Outlined"
+                               StartIcon="@Icons.Material.Filled.FolderOpen"
+                               OnClick="@OpenFileAsync">Open file</MudButton>
+                </MudStack>
             </MudStack>
         </div>
     }
@@ -24,18 +29,30 @@
             @foreach (var wf in active.WorkflowNames)
             {
                 var w = wf;
-                var isActive = string.Equals(w, active.ActiveWorkflowName, StringComparison.Ordinal);
+                var isActive = string.Equals(w, active.ActiveWorkflowName, StringComparison.Ordinal) && !_jsonView;
                 <div class="project-tab @(isActive ? "project-tab-active" : "")"
-                     @onclick="@(() => active.SetActiveWorkflow(w))">
+                     @onclick="@(() => { active.SetActiveWorkflow(w); _jsonView = false; })">
                     <span class="project-tab-name">@w</span>
                 </div>
             }
             <div class="project-tab project-tab-add" @onclick="@AddWorkflowAsync">
                 <span>+</span>
             </div>
+            <div class="project-tabbar-app">
+                <span class="project-tab-json @(_jsonView ? "project-tab-json-active" : null)"
+                      title="View JSON" @onclick="@(() => _jsonView = !_jsonView)">&lt;/&gt;</span>
+                <span class="project-tabbar-app-name">@active.Name</span>
+                <span class="project-tab-close" title="Close app" @onclick="@CloseActiveAsync">&#x2715;</span>
+            </div>
         </div>
 
-        @if (active.ActiveWorkflowName is null && active.WorkflowNames.Count == 0)
+        @if (_jsonView)
+        {
+            <div class="workspace-tab-content">
+                <AppJsonPanel Project="@active" />
+            </div>
+        }
+        else if (active.ActiveWorkflowName is null && active.WorkflowNames.Count == 0)
         {
             <div class="workspace-empty">
                 <MudStack AlignItems="AlignItems.Center" Spacing="3">
@@ -62,6 +79,7 @@
 
 @code {
     private readonly HashSet<FlowWorkspaceService> _subscribed = [];
+    private bool _jsonView;
 
     protected override void OnInitialized()
     {
@@ -106,6 +124,33 @@
             project.UpsertConnectionResource(resourceKey, r.Connection);
             Live.AddConnectionIfAbsent(r.Connection, r.Subscription);
         }
+    }
+
+    private async Task OpenFileAsync()
+    {
+        var result = await FilePicker.Default.PickAsync(new PickOptions
+        {
+            PickerTitle = "Open FluxMQ Project",
+            FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+            {
+                { DevicePlatform.WinUI, [".json"] },
+                { DevicePlatform.macOS, ["json", "public.json"] }
+            })
+        });
+        if (result is not null)
+        {
+            var project = await Projects.OpenAsync(result.FullPath);
+            foreach (var (profile, sub) in project.GetConnectionProfiles())
+                Live.AddConnectionIfAbsent(profile, sub);
+        }
+    }
+
+    private async Task CloseActiveAsync()
+    {
+        var active = Projects.ActiveProject;
+        if (active is null) return;
+        _jsonView = false;
+        await Projects.CloseProjectAsync(active);
     }
 
     private async Task AddWorkflowAsync()

@@ -282,12 +282,83 @@ body,
     overflow: hidden;
 }
 
+.app-json-view {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    padding: 12px;
+}
+
+.app-json-toolbar {
+    flex-shrink: 0;
+    margin-bottom: 8px;
+}
+
+.app-json-body {
+    background: var(--mud-palette-background-grey);
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 8px;
+    flex: 1 1 0;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin: 0;
+    min-height: 0;
+    overflow: auto;
+    padding: 16px;
+    white-space: pre;
+}
+
 .project-tab-add {
     color: var(--mud-palette-text-secondary);
     font-size: 1.1rem;
     font-weight: 500;
     min-width: 36px;
     padding: 5px 10px;
+}
+
+.project-tab-json {
+    align-items: center;
+    border-radius: 4px;
+    color: var(--mud-palette-text-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 5px;
+    user-select: none;
+}
+
+.project-tab-json:hover {
+    background: var(--mud-palette-action-default-hover);
+    color: var(--mud-palette-text-primary);
+}
+
+.project-tab-json-active {
+    background: color-mix(in srgb, var(--mud-palette-primary) 15%, transparent);
+    color: var(--mud-palette-primary);
+}
+
+.project-tabbar-app {
+    align-items: center;
+    border-left: 1px solid var(--mud-palette-lines-default);
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    font-size: 0.75rem;
+    gap: 6px;
+    margin-left: auto;
+    padding: 5px 8px 5px 10px;
+    user-select: none;
+}
+
+.project-tabbar-app-name {
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .flux-app-item,
