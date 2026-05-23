@@ -5,8 +5,10 @@
   "scripts": {
     "preview": "remotion preview src/index.ts",
     "render": "remotion render src/index.ts FluxMqIntro out/fluxmq-intro.mp4",
+    "render:ad": "remotion render src/index.ts FluxMqAd out/fluxmq-ad.mp4",
     "render:gif": "remotion render src/index.ts FluxMqIntro out/fluxmq-intro.gif --codec=gif --scale=0.5 --every-nth-frame=2",
-    "still": "remotion still src/index.ts FluxMqIntro out/fluxmq-intro-poster.png --frame=230"
+    "still": "remotion still src/index.ts FluxMqIntro out/fluxmq-intro-poster.png --frame=230",
+    "still:ad": "remotion still src/index.ts FluxMqAd out/fluxmq-ad-poster.png --frame=1740"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.390",
