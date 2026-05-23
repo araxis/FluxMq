@@ -124,6 +124,13 @@
     width: 1px;
 }
 
+.flux-command-button {
+    font-size: 11.5px;
+    height: 28px;
+    min-width: 0;
+    padding: 0 8px;
+}
+
 .flux-runstate {
     align-items: center;
     background: var(--flux-surface-2);
@@ -138,7 +145,22 @@
     white-space: nowrap;
 }
 
+.flux-flowstate {
+    align-items: center;
+    background: var(--flux-surface-2);
+    border: 1px solid var(--flux-border);
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    display: inline-flex;
+    font-size: 11.5px;
+    gap: 7px;
+    height: 26px;
+    padding: 0 9px;
+    white-space: nowrap;
+}
+
 .flux-run-dot,
+.flux-flow-dot,
 .flux-status-dot {
     background: var(--flux-idle);
     border-radius: 50%;
@@ -153,13 +175,25 @@
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--mud-palette-success) 18%, transparent);
 }
 
+.flux-flowstate.valid .flux-flow-dot,
+.flux-flowstate.running .flux-flow-dot {
+    background: var(--mud-palette-success);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mud-palette-success) 18%, transparent);
+}
+
 .flux-runstate.pending .flux-run-dot,
 .flux-status-dot.pending {
     background: var(--mud-palette-warning);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--mud-palette-warning) 16%, transparent);
 }
 
+.flux-flowstate.stopped .flux-flow-dot {
+    background: var(--mud-palette-info);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mud-palette-info) 16%, transparent);
+}
+
 .flux-runstate.faulted .flux-run-dot,
+.flux-flowstate.faulted .flux-flow-dot,
 .flux-status-dot.faulted {
     background: var(--mud-palette-error);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--mud-palette-error) 16%, transparent);

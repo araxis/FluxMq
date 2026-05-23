@@ -90,7 +90,9 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        result.Errors.ShouldContain(error => error.Code == ApplicationDefinitionValidationErrorCode.EmptyNodeType);
+        var error = result.Errors.Single(error => error.Code == ApplicationDefinitionValidationErrorCode.EmptyNodeType);
+        error.WorkflowName.ShouldBe("flow");
+        error.NodeName.ShouldBe("node");
     }
 
     [Fact]
@@ -112,7 +114,10 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        result.Errors.ShouldContain(error => error.Code == ApplicationDefinitionValidationErrorCode.MissingSourceNode);
+        var error = result.Errors.Single(error => error.Code == ApplicationDefinitionValidationErrorCode.MissingSourceNode);
+        error.WorkflowName.ShouldBe("flow");
+        error.NodeName.ShouldBe("metrics");
+        error.PortName.ShouldBe("Input");
     }
 
     [Fact]
@@ -160,7 +165,10 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        result.Errors.ShouldContain(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidLink);
+        var error = result.Errors.Single(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidLink);
+        error.WorkflowName.ShouldBe("flow");
+        error.NodeName.ShouldBe("metrics");
+        error.PortName.ShouldBe("Input");
     }
 
     [Fact]
@@ -206,7 +214,10 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        result.Errors.ShouldContain(error => error.Code == ApplicationDefinitionValidationErrorCode.DuplicateLink);
+        var error = result.Errors.Single(error => error.Code == ApplicationDefinitionValidationErrorCode.DuplicateLink);
+        error.WorkflowName.ShouldBe("flow");
+        error.NodeName.ShouldBe("metrics");
+        error.PortName.ShouldBe("Input");
     }
 
     private static NodeDefinition Node(string type) => new()

@@ -27,7 +27,10 @@ public sealed class ApplicationRuntimeBuilder
                 validation.Errors
                     .Select(error => new ApplicationRuntimeBuildError(
                         ApplicationRuntimeBuildErrorCode.ValidationFailed,
-                        error.Message))
+                        error.Message,
+                        error.WorkflowName,
+                        ToNodeName(error.NodeName),
+                        ToPortName(error.PortName)))
                     .ToArray());
         }
 
@@ -225,4 +228,9 @@ public sealed class ApplicationRuntimeBuilder
             disposable.Dispose();
     }
 
+    private static NodeName? ToNodeName(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : new NodeName(value);
+
+    private static PortName? ToPortName(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : new PortName(value);
 }

@@ -1,5 +1,6 @@
 using Shouldly;
 using FluxMq.UI.Components.Diagram;
+using FluxMq.UI.Models;
 using FluxMq.UI.Services;
 using Blazor.Diagrams.Core.Models;
 using DiagramPoint = Blazor.Diagrams.Core.Geometry.Point;
@@ -22,6 +23,30 @@ public sealed class FlowDiagramNodeModelTests
         model.SetActivity("Connected | 3 messages");
 
         model.ActivityText.ShouldBe("Connected | 3 messages");
+    }
+
+    [Fact]
+    public void SetDiagnostics_StoresNodeDiagnosticsAndPrimarySeverity()
+    {
+        var model = new FlowDiagramNodeModel(
+            "workflow1.source",
+            new DiagramPoint(10, 20),
+            "source",
+            "mqtt.trigger",
+            descriptor: null,
+            isResource: false);
+
+        var warning = new WorkspaceDiagnostic("Warning", "Definition", "Check", "Check this node.", "workflow1", "source");
+        var error = new WorkspaceDiagnostic("Error", "RuntimeBuild", "FactoryFailed", "Factory failed.", "workflow1", "source");
+
+        model.SetDiagnostics([warning, error]);
+
+        model.Diagnostics.ShouldBe([warning, error]);
+        model.PrimaryDiagnostic.ShouldBe(error);
+
+        model.SetDiagnostics([]);
+        model.Diagnostics.ShouldBeEmpty();
+        model.PrimaryDiagnostic.ShouldBeNull();
     }
 
     [Fact]

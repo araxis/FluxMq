@@ -108,8 +108,11 @@ public sealed class ApplicationRuntimeStateTests
         var runtimeNode = RuntimeNode.Create(address, node);
         var runtime = new ApplicationRuntime([runtimeNode], [], [runtimeNode]);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => runtime.StartAsync());
+        var exception = await Assert.ThrowsAsync<ApplicationRuntimeNodeStartException>(() => runtime.StartAsync());
 
+        exception.NodeAddress.ShouldBe(address);
+        exception.InnerException.ShouldBeOfType<InvalidOperationException>()
+            .Message.ShouldBe("startup failed");
         runtime.State.ShouldBe(ApplicationState.Faulted);
     }
 

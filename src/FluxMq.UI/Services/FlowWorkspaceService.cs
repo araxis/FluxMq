@@ -1,6 +1,7 @@
 using FluxMq.App;
 using FluxMq.Core.Models;
 using FluxMq.Components.Storage.Repositories;
+using FluxMq.Pipeline.Runtime;
 using FluxMq.UI.Models;
 using Microsoft.Extensions.Configuration;
 using System.Text;
@@ -211,7 +212,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             State = RuntimeWorkspaceState.Faulted;
             Diagnostics =
             [
-                new WorkspaceDiagnostic("Error", "Designer", "NodeUpdateFailed", exception.Message)
+                new WorkspaceDiagnostic("Error", "Designer", "NodeUpdateFailed", exception.Message, _activeWorkflowName, nodeName)
             ];
         }
 
@@ -229,7 +230,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         catch (Exception exception)
         {
             State = RuntimeWorkspaceState.Faulted;
-            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "NodeRenameFailed", exception.Message)];
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "NodeRenameFailed", exception.Message, workflowName, oldName)];
         }
         NotifyChanged();
     }
@@ -441,15 +442,35 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         var diagnostics = new List<WorkspaceDiagnostic>();
 
         diagnostics.AddRange(result.Errors.Select(error => new WorkspaceDiagnostic(
-            "Error", "Host", error.Code.ToString(), error.Message)));
+            "Error",
+            "Host",
+            error.Code.ToString(),
+            error.Message,
+            error.WorkflowName,
+            error.NodeName,
+            error.PortName)));
 
         if (result.RuntimeBuild is not null)
         {
             diagnostics.AddRange(result.RuntimeBuild.Validation.Errors.Select(error => new WorkspaceDiagnostic(
-                "Error", "Definition", error.Code.ToString(), error.Message)));
+                "Error",
+                "Definition",
+                error.Code.ToString(),
+                error.Message,
+                error.WorkflowName,
+                error.NodeName,
+                error.PortName)));
 
-            diagnostics.AddRange(result.RuntimeBuild.Errors.Select(error => new WorkspaceDiagnostic(
-                "Error", "RuntimeBuild", error.Code.ToString(), error.Message)));
+            diagnostics.AddRange(result.RuntimeBuild.Errors
+                .Where(error => error.Code != ApplicationRuntimeBuildErrorCode.ValidationFailed)
+                .Select(error => new WorkspaceDiagnostic(
+                    "Error",
+                    "RuntimeBuild",
+                    error.Code.ToString(),
+                    error.Message,
+                    error.WorkflowName,
+                    error.NodeName?.Value,
+                    error.PortName?.Value)));
         }
 
         if (diagnostics.Count == 0)

@@ -84,6 +84,68 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public async Task ValidateAsync_PreservesValidationDiagnosticScope()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "flow": {
+                  "metrics": {
+                    "type": "mqtt.metrics",
+                    "Input": "missing.Output"
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+
+        await service.ValidateAsync();
+
+        var diagnostic = service.Diagnostics.Single(d => d.Code == "MissingSourceNode");
+        diagnostic.Source.ShouldBe("Definition");
+        diagnostic.WorkflowName.ShouldBe("flow");
+        diagnostic.NodeName.ShouldBe("metrics");
+        diagnostic.PortName.ShouldBe("Input");
+    }
+
+    [Fact]
+    public async Task ValidateAsync_PreservesRuntimeBuildDiagnosticScope()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "flow": {
+                  "inspect": {
+                    "type": "mqtt.payload-inspector",
+                    "configuration": {
+                      "boundedCapacity": 0
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+
+        await service.ValidateAsync();
+
+        var diagnostic = service.Diagnostics.Single(d => d.Code == "FactoryFailed");
+        diagnostic.Source.ShouldBe("RuntimeBuild");
+        diagnostic.WorkflowName.ShouldBe("flow");
+        diagnostic.NodeName.ShouldBe("inspect");
+        diagnostic.PortName.ShouldBeNull();
+    }
+
+    [Fact]
     public void WorkflowNames_ReflectsCurrentDefinition()
     {
         var composer = new FlowDefinitionComposer();

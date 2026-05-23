@@ -24,7 +24,7 @@ public sealed class ApplicationDefinitionValidator
                     "Resource name cannot be empty."));
             }
 
-            ValidateNode(resource.Key, resource.Value, errors);
+            ValidateNode(null, resource.Key, resource.Value, errors);
         }
 
         foreach (var workflow in definition.Workflows)
@@ -45,7 +45,7 @@ public sealed class ApplicationDefinitionValidator
 
             foreach (var node in workflow.Value.Nodes)
             {
-                ValidateNode(node.Key, node.Value, errors);
+                ValidateNode(workflow.Key, node.Key, node.Value, errors);
             }
 
             ValidateLinks(workflow.Key, workflow.Value.Nodes, definition, errors);
@@ -55,6 +55,7 @@ public sealed class ApplicationDefinitionValidator
     }
 
     private static void ValidateNode(
+        string? workflowName,
         string nodeName,
         NodeDefinition node,
         List<ApplicationDefinitionValidationError> errors)
@@ -63,14 +64,18 @@ public sealed class ApplicationDefinitionValidator
         {
             errors.Add(new(
                 ApplicationDefinitionValidationErrorCode.EmptyNodeName,
-                "Flow node name cannot be empty."));
+                "Flow node name cannot be empty.",
+                workflowName,
+                nodeName));
         }
 
         if (string.IsNullOrWhiteSpace(node.Type.Value))
         {
             errors.Add(new(
                 ApplicationDefinitionValidationErrorCode.EmptyNodeType,
-                $"Flow node '{nodeName}' has an empty node type."));
+                $"Flow node '{nodeName}' has an empty node type.",
+                workflowName,
+                nodeName));
         }
     }
 
@@ -90,7 +95,9 @@ public sealed class ApplicationDefinitionValidator
                 {
                     errors.Add(new(
                         ApplicationDefinitionValidationErrorCode.EmptyTargetPort,
-                        $"Node '{targetNode.Key}' in workflow '{workflowName}' has an empty target port."));
+                        $"Node '{targetNode.Key}' in workflow '{workflowName}' has an empty target port.",
+                        workflowName,
+                        targetNode.Key));
                 }
 
                 IReadOnlyList<LinkDefinition> links;
@@ -103,7 +110,10 @@ public sealed class ApplicationDefinitionValidator
                 {
                     errors.Add(new(
                         ApplicationDefinitionValidationErrorCode.InvalidLink,
-                        $"Node '{targetNode.Key}' port '{port.Key}' in workflow '{workflowName}' has an invalid link: {exception.Message}"));
+                        $"Node '{targetNode.Key}' port '{port.Key}' in workflow '{workflowName}' has an invalid link: {exception.Message}",
+                        workflowName,
+                        targetNode.Key,
+                        port.Key));
                     continue;
                 }
 
@@ -113,7 +123,10 @@ public sealed class ApplicationDefinitionValidator
                     {
                         errors.Add(new(
                             ApplicationDefinitionValidationErrorCode.EmptySourcePort,
-                            $"Node '{targetNode.Key}' port '{port.Key}' in workflow '{workflowName}' has an empty source port."));
+                            $"Node '{targetNode.Key}' port '{port.Key}' in workflow '{workflowName}' has an empty source port.",
+                            workflowName,
+                            targetNode.Key,
+                            port.Key));
                     }
 
                     ValidateSourceNode(targetNode.Key, port.Key, workflowName, link.From, definition, errors);
@@ -122,7 +135,10 @@ public sealed class ApplicationDefinitionValidator
                     {
                         errors.Add(new(
                             ApplicationDefinitionValidationErrorCode.DuplicateLink,
-                            $"Node '{targetNode.Key}' port '{port.Key}' in workflow '{workflowName}' has a duplicate link from '{link.From}'."));
+                            $"Node '{targetNode.Key}' port '{port.Key}' in workflow '{workflowName}' has a duplicate link from '{link.From}'.",
+                            workflowName,
+                            targetNode.Key,
+                            port.Key));
                     }
                 }
             }
@@ -143,7 +159,10 @@ public sealed class ApplicationDefinitionValidator
             {
                 errors.Add(new(
                     ApplicationDefinitionValidationErrorCode.MissingSourceNode,
-                    $"Node '{targetNodeName}' port '{targetPortName}' in workflow '{targetWorkflowName}' references missing resource '{source.Node}'."));
+                    $"Node '{targetNodeName}' port '{targetPortName}' in workflow '{targetWorkflowName}' references missing resource '{source.Node}'.",
+                    targetWorkflowName,
+                    targetNodeName,
+                    targetPortName));
             }
 
             return;
@@ -153,7 +172,10 @@ public sealed class ApplicationDefinitionValidator
         {
             errors.Add(new(
                 ApplicationDefinitionValidationErrorCode.MissingSourceNode,
-                $"Node '{targetNodeName}' port '{targetPortName}' in workflow '{targetWorkflowName}' references unknown workflow scope '{source.Scope}'."));
+                $"Node '{targetNodeName}' port '{targetPortName}' in workflow '{targetWorkflowName}' references unknown workflow scope '{source.Scope}'.",
+                targetWorkflowName,
+                targetNodeName,
+                targetPortName));
             return;
         }
 
@@ -161,7 +183,10 @@ public sealed class ApplicationDefinitionValidator
         {
             errors.Add(new(
                 ApplicationDefinitionValidationErrorCode.MissingSourceNode,
-                $"Node '{targetNodeName}' port '{targetPortName}' in workflow '{targetWorkflowName}' references missing node '{source.Node}' in workflow '{source.Scope}'."));
+                $"Node '{targetNodeName}' port '{targetPortName}' in workflow '{targetWorkflowName}' references missing node '{source.Node}' in workflow '{source.Scope}'.",
+                targetWorkflowName,
+                targetNodeName,
+                targetPortName));
         }
     }
 
