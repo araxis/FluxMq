@@ -62,7 +62,9 @@
     private string? _renderedWorkflowName;
     private readonly Dictionary<string, DiagramNodeState> _nodeStates = new(StringComparer.Ordinal);
     private readonly Dictionary<string, long> _filterPassCounts = new(StringComparer.Ordinal);
+    private static readonly LinkMarker FlowTargetMarker = new("M 0 -4 6 0 0 4 z", 13d);
     private System.Threading.Timer? _pulseTimer;
+    private int _portMeasurementGeneration;
 
     protected override void OnInitialized()
     {
@@ -203,6 +205,7 @@
 
         UpdateDiagramActivity();
         _diagram.Refresh();
+        SchedulePortMeasurementRefresh();
     }
 
     private void AddNode(IDictionary<string, NodeModel> nodes, string name, JsonElement definition, double x, double y, bool isResource, string? workflowName)
@@ -237,8 +240,8 @@
         {
             foreach (var descriptor in node.PortDescriptors)
             {
-                node.AddPort(new FlowPortModel(node, PortAlignment.Left, descriptor.Name, descriptor.SingleLink));
-                node.AddPort(new FlowPortModel(node, PortAlignment.Right, descriptor.Name, descriptor.SingleLink));
+                node.AddPort(new FlowPortModel(node, PortAlignment.Left, descriptor.Name, descriptor.SingleLink, descriptor.IsInput));
+                node.AddPort(new FlowPortModel(node, PortAlignment.Right, descriptor.Name, descriptor.SingleLink, descriptor.IsInput));
             }
         }
         else
@@ -283,7 +286,7 @@
     {
         link.Color = color;
         link.Width = 2;
-        link.TargetMarker = LinkMarker.Arrow;
+        link.TargetMarker = FlowTargetMarker;
         return link;
     }
 
@@ -321,6 +324,42 @@
     {
         foreach (var node in _diagram.Nodes.OfType<FlowDiagramNodeModel>())
             _nodeStates[node.Id] = new DiagramNodeState(node.Position, node.IsCollapsed);
+    }
+
+    private void SchedulePortMeasurementRefresh()
+    {
+        var generation = ++_portMeasurementGeneration;
+        _ = RefreshPortMeasurementsAsync(generation);
+    }
+
+    private async Task RefreshPortMeasurementsAsync(int generation)
+    {
+        await Task.Delay(80);
+        await InvokeAsync(() =>
+        {
+            if (generation != _portMeasurementGeneration) return;
+
+            foreach (var port in _diagram.Nodes
+                         .OfType<FlowDiagramNodeModel>()
+                         .SelectMany(static node => node.Ports))
+            {
+                port.Initialized = false;
+                port.Refresh();
+            }
+        });
+
+        await Task.Delay(80);
+        await InvokeAsync(() =>
+        {
+            if (generation != _portMeasurementGeneration) return;
+
+            foreach (var node in _diagram.Nodes.OfType<FlowDiagramNodeModel>())
+            {
+                node.RefreshAll();
+            }
+
+            _diagram.Refresh();
+        });
     }
 
     private static bool TryGetFlowApplication(JsonElement root, out JsonElement flowApplication)
@@ -462,6 +501,7 @@
         Flow.GetDiagramState = null;
         Flow.Changed -= OnFlowChanged;
         Live.Changed -= OnLiveChanged;
+        _portMeasurementGeneration++;
     }
 
     private sealed record DiagramNodeState(Blazor.Diagrams.Core.Geometry.Point Position, bool IsCollapsed);

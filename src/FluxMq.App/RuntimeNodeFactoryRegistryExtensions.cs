@@ -45,6 +45,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .Register(PipelineFlowNodeTypes.GeneratedSource, context => CreateGeneratedMqttSource(context.Address, context.Definition))
             .Register(PipelineFlowNodeTypes.PayloadInspector, CreatePayloadInspector)
             .Register(PipelineFlowNodeTypes.MqttMetrics, CreateMqttMetrics)
+            .Register(PipelineFlowNodeTypes.MqttMetricsSink, CreateMqttMetrics)
             .Register(PipelineFlowNodeTypes.MessageFilter, context => CreateMessageFilter(context.Address, context.Definition, expressionEngine))
             .Register(PipelineFlowNodeTypes.DynamicMapper, context => CreateDynamicMapper(context.Address, context.Definition, expressionEngine))
             .Register(PipelineFlowNodeTypes.PublishRequestMapper, context => CreatePublishRequestMapper(context.Address, context.Definition, expressionEngine))

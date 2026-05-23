@@ -10,12 +10,13 @@
 
 @code {
     [Parameter] public PortModel Port { get; set; } = null!;
+    [Parameter] public bool? IsInput { get; set; }
 
     private string _css => BuildCss();
 
     private string BuildCss()
     {
-        var isInput = Port.Alignment == PortAlignment.Left;
+        var isInput = IsInput ?? (Port is FlowPortModel flowPort ? flowPort.RepresentsInput : Port.Alignment == PortAlignment.Left);
         var hasLinks = Port.Links.Count > 0;
         var isPulsing = Port is FlowPortModel fp && fp.IsPulsing;
 

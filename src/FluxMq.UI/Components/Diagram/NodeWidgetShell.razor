@@ -61,7 +61,9 @@
                         {
                             <PortRenderer @key="leftPort"
                                           Port="leftPort"
-                                          Class="@PortClass(descriptor.IsInput, leftPort)" />
+                                          Class="@PortClass(descriptor.IsInput, leftPort)">
+                                <FluxPortWidget Port="leftPort" IsInput="@descriptor.IsInput" />
+                            </PortRenderer>
                         }
                     </div>
                     <span class="flow-port-name @(descriptor.IsInput ? "flow-port-input" : "flow-port-output")">
@@ -72,7 +74,9 @@
                         {
                             <PortRenderer @key="rightPort"
                                           Port="rightPort"
-                                          Class="@PortClass(descriptor.IsInput, rightPort)" />
+                                          Class="@PortClass(descriptor.IsInput, rightPort)">
+                                <FluxPortWidget Port="rightPort" IsInput="@descriptor.IsInput" />
+                            </PortRenderer>
                         }
                     </div>
                 </div>
@@ -85,7 +89,9 @@
     {
         @foreach (var port in Node.Ports)
         {
-            <PortRenderer @key="port" Port="port" />
+            <PortRenderer @key="port" Port="port">
+                <FluxPortWidget Port="port" />
+            </PortRenderer>
         }
     }
 </div>

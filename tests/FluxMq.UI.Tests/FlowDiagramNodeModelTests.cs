@@ -1,6 +1,8 @@
 using FluxMq.UI.Models;
 using Shouldly;
 using FluxMq.UI.Components.Diagram;
+using FluxMq.UI.Services;
+using Blazor.Diagrams.Core.Models;
 using DiagramPoint = Blazor.Diagrams.Core.Geometry.Point;
 
 namespace FluxMq.UI.Tests;
@@ -72,5 +74,64 @@ public sealed class FlowDiagramNodeModelTests
 
         model.SetCollapsed(false);
         model.IsCollapsed.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void FlowPortModel_PreservesDescriptorDirectionIndependentlyOfSide()
+    {
+        var model = new FlowDiagramNodeModel(
+            "workflow1.source",
+            new DiagramPoint(10, 20),
+            "source",
+            "mqtt.trigger",
+            descriptor: null,
+            isResource: false);
+
+        var leftOutput = new FlowPortModel(model, PortAlignment.Left, "Output", representsInput: false);
+        var rightInput = new FlowPortModel(model, PortAlignment.Right, "Input", representsInput: true);
+
+        leftOutput.RepresentsInput.ShouldBeFalse();
+        rightInput.RepresentsInput.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void FlowPortModel_AnchorsLinksToVisibleHandleCenter()
+    {
+        var model = new FlowDiagramNodeModel(
+            "workflow1.source",
+            new DiagramPoint(10, 20),
+            "source",
+            "mqtt.trigger",
+            descriptor: null,
+            isResource: false);
+
+        var port = new FlowPortModel(model, PortAlignment.Left, "Input")
+        {
+            Initialized = true,
+            Position = new DiagramPoint(100, 200),
+            Size = new Blazor.Diagrams.Core.Geometry.Size(12, 12)
+        };
+
+        port.GetShape().GetPointAtAngle(180).ShouldBe(new DiagramPoint(106, 206));
+        port.GetShape().GetPointAtAngle(0).ShouldBe(new DiagramPoint(106, 206));
+    }
+
+    [Fact]
+    public void FlowNodeModelFactory_NormalizesMetricsSinkAlias()
+    {
+        var catalog = new FlowComponentCatalog();
+        var descriptor = catalog.Find("mqtt.metrics-sink").ShouldNotBeNull();
+
+        var model = FlowNodeModelFactory.Create(
+            "workflow1.metrics",
+            new DiagramPoint(10, 20),
+            "metrics",
+            "mqtt.metrics-sink",
+            descriptor,
+            isResource: false);
+
+        model.NodeType.ShouldBe("mqtt.metrics");
+        model.DisplayName.ShouldBe("MQTT Metrics");
+        model.PortDescriptors.ShouldContain(port => port.Name == "Input" && port.IsInput);
     }
 }
