@@ -5,18 +5,24 @@ using System.Text.Json.Nodes;
 namespace FluxMq.UI.Services;
 
 /// <summary>
-/// Builds JSON flow definitions for the desktop workspace. The default shape is:
-///   workflows.inspectPayloads.traffic  (traffic.source)
-///   workflows.inspectPayloads.inspect  (mqtt.payload-inspector &lt;- traffic.Output)
-///   workflows.inspectPayloads.metrics  (mqtt.metrics-sink &lt;- traffic.Output)
+/// Builds JSON flow definitions for the desktop workspace. The default shape uses
+/// explicit live, stored-session, replay, and generated source nodes.
 /// </summary>
 public sealed class FlowDefinitionComposer
 {
     public const string BrokerResourceName = "broker";
     public const string TriggerNodeName = "trigger";
-    public const string TrafficSourceNodeName = "traffic";
+    public const string LiveSourceNodeName = "live";
+    public const string StoredSourceNodeName = "stored";
     public const string InspectorNodeName = "inspect";
     public const string MetricsNodeName = "metrics";
+    public const string FilterNodeName = "filter";
+    public const string RouterNodeName = "router";
+    public const string RecorderNodeName = "recorder";
+    public const string PublisherNodeName = "publisher";
+    public const string StateSourceNodeName = "state";
+    public const string ReplayNodeName = "replay";
+    public const string GeneratedNodeName = "generated";
     public const string DefaultWorkflowName = "inspectPayloads";
 
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
@@ -47,7 +53,7 @@ public sealed class FlowDefinitionComposer
                 },
                 [MetricsNodeName] = new JsonObject
                 {
-                    ["type"] = "mqtt.metrics-sink",
+                    ["type"] = "mqtt.metrics",
                     ["Input"] = $"{TriggerNodeName}.Output"
                 }
             }
@@ -70,7 +76,6 @@ public sealed class FlowDefinitionComposer
 
         var workflows = GetOrCreateObject(flowApplication, "workflows");
         var workflow = GetOrCreateObject(workflows, DefaultWorkflowName);
-        workflow.Remove(TrafficSourceNodeName);
         workflow[TriggerNodeName] = CreateTrigger(BrokerResourceName, subscription);
         RewriteInputLink(workflow, InspectorNodeName, $"{TriggerNodeName}.Output");
         RewriteInputLink(workflow, MetricsNodeName, $"{TriggerNodeName}.Output");
@@ -240,7 +245,7 @@ public sealed class FlowDefinitionComposer
         return root.ToJsonString(Options);
     }
 
-    /// <summary>Adds a downstream component (inspector, metrics-sink, ...) wired to the trigger output.</summary>
+    /// <summary>Adds a component and, when appropriate, wires it to the current explicit source node.</summary>
     public string AddComponent(string json, string componentType, string? targetWorkflowName = null)
     {
         var root = ParseOrCreate(json);
@@ -251,19 +256,34 @@ public sealed class FlowDefinitionComposer
         var nodeName = componentType switch
         {
             "mqtt.payload-inspector" => InspectorNodeName,
-            "mqtt.metrics-sink" => MetricsNodeName,
+            "mqtt.metrics" => MetricsNodeName,
+            "mqtt.message-filter" => FilterNodeName,
+            "mqtt.condition-router" => RouterNodeName,
+            "mqtt.recording-request" => RecorderNodeName,
+            "mqtt.recorder" => RecorderNodeName,
+            "mqtt.publish-request" => PublisherNodeName,
+            "mqtt.publisher" => PublisherNodeName,
+            "file.write-request" => "fileWriteRequest",
+            "file.writer" => "fileWriter",
+            "mqtt.connection-state-trigger" => StateSourceNodeName,
+            "mqtt.live-source" => LiveSourceNodeName,
+            "replay.source" => ReplayNodeName,
+            "generated.source" => GeneratedNodeName,
+            "session.source" => StoredSourceNodeName,
             _ => MakeNodeName(componentType)
         };
 
-        var sourceNodeName = workflow.ContainsKey(TriggerNodeName)
-            ? TriggerNodeName
-            : TrafficSourceNodeName;
-
-        workflow[nodeName] = new JsonObject
+        var node = new JsonObject
         {
-            ["type"] = componentType,
-            ["Input"] = $"{sourceNodeName}.Output"
+            ["type"] = componentType
         };
+
+        if (NeedsInputLink(componentType) && FindPreferredSourceNode(workflow) is { Length: > 0 } sourceNodeName)
+        {
+            node["Input"] = $"{sourceNodeName}.Output";
+        }
+
+        workflow[nodeName] = node;
 
         return root.ToJsonString(Options);
     }
@@ -324,7 +344,7 @@ public sealed class FlowDefinitionComposer
     /// Reads all connection profiles from a definition.
     /// Covers two storage shapes:
     ///   1. <c>resources[name].type == "mqtt.connection"</c> with subscription from the first <c>mqtt.trigger</c> that references it.
-    ///   2. Workflow nodes that embed a <c>profile</c> object directly (e.g. <c>traffic.source</c> with <c>kind == "live"</c>).
+    ///   2. Workflow nodes that embed a <c>profile</c> object directly (e.g. <c>mqtt.live-source</c>).
     /// </summary>
     public IReadOnlyList<(MqttConnectionProfile Profile, string Subscription)> ReadConnectionsFromDefinition(string json)
     {
@@ -380,13 +400,9 @@ public sealed class FlowDefinitionComposer
                             if (!triggerSubscriptions.ContainsKey(connName))
                                 triggerSubscriptions[connName] = ReadSubscriptionString(conf);
                         }
-                        else if (typeStr == "traffic.source")
+                        else if (typeStr == "mqtt.live-source")
                         {
                             if (!conf.TryGetProperty("profile", out var profileEl)) continue;
-                            if (conf.TryGetProperty("kind", out var kind) &&
-                                kind.GetString() is { } k &&
-                                !string.Equals(k, "live", StringComparison.OrdinalIgnoreCase)) continue;
-
                             result.Add((ReadProfile(profileEl), ReadSubscriptionString(conf)));
                         }
                     }
@@ -494,34 +510,38 @@ public sealed class FlowDefinitionComposer
             }
         };
 
-    private static JsonObject CreateTrafficSource(MqttConnectionProfile profile, string subscription)
-        => new()
-        {
-            ["type"] = "traffic.source",
-            ["configuration"] = new JsonObject
-            {
-                ["kind"] = "live",
-                ["profile"] = new JsonObject
-                {
-                    ["name"] = string.IsNullOrWhiteSpace(profile.Name) ? "local-broker" : profile.Name,
-                    ["host"] = profile.Host,
-                    ["port"] = profile.Port,
-                    ["clientId"] = profile.ClientId,
-                    ["useTls"] = profile.UseTls,
-                    ["keepAliveSeconds"] = (int)Math.Max(1, profile.KeepAlive.TotalSeconds),
-                    ["cleanStart"] = profile.CleanStart
-                },
-                ["subscriptions"] = new JsonArray(string.IsNullOrWhiteSpace(subscription) ? "#" : subscription),
-                ["boundedCapacity"] = 1000
-            }
-        };
-
     private static void RewriteInputLink(JsonObject workflow, string nodeName, string link)
     {
         if (workflow[nodeName] is JsonObject node)
         {
             node["Input"] = link;
         }
+    }
+
+    private static bool NeedsInputLink(string componentType) => componentType switch
+    {
+        "mqtt.trigger" or "mqtt.live-source" or "session.source" or "replay.source" or "generated.source" or "mqtt.connection-state-trigger" => false,
+        _ => true
+    };
+
+    private static string? FindPreferredSourceNode(JsonObject workflow)
+    {
+        foreach (var preferredName in new[] { TriggerNodeName, LiveSourceNodeName, StoredSourceNodeName })
+        {
+            if (workflow.ContainsKey(preferredName)) return preferredName;
+        }
+
+        foreach (var node in workflow)
+        {
+            if (node.Value is not JsonObject nodeObject || nodeObject["type"]?.GetValue<string?>() is not { } type)
+            {
+                continue;
+            }
+
+            if (!NeedsInputLink(type)) return node.Key;
+        }
+
+        return null;
     }
 
     private static JsonObject CreateRoot()

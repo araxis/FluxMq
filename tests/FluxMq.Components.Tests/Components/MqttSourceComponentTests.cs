@@ -11,7 +11,7 @@ using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.Tests.Components;
 
-public sealed class TrafficSourceComponentTests
+public sealed class MqttSourceComponentTests
 {
     [Fact]
     public async Task LiveMqttSource_StartsSessionSubscribesAndEmitsMatchingMessages()

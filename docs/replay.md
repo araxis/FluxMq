@@ -82,7 +82,7 @@ This keeps `FluxMq.Pipeline` independent from concrete storage dependencies.
 
 `FluxMq.Components` owns this orchestration through `RecordedSessionReplayFactory`.
 
-For source-agnostic workflow execution, stored sessions can also enter the graph directly through `traffic.source` with `kind = "stored-session"`. Downstream nodes still link to `traffic.Output`.
+For source-agnostic workflow execution, stored sessions can also enter the graph directly through `session.source`. Downstream nodes link to that source node's `Output` port.
 
 ```mermaid
 flowchart LR
@@ -93,19 +93,21 @@ flowchart LR
 
 ## Replay To MQTT
 
-Recorded sessions can be replayed back through an MQTT session by linking the replay source to `MqttPublishSinkComponent`.
+Recorded sessions can be replayed back through an MQTT session by mapping each replayed envelope into a `MqttPublishRequest`, then linking the request stream to `MqttPublisherComponent`.
 
 ```mermaid
 flowchart LR
     Repository["IMessageRepository"] --> Factory["RecordedSessionReplayFactory"]
     Factory --> Replay["ReplaySourceComponent"]
-    Replay --> Publish["MqttPublishSinkComponent"]
+    Replay --> Mapper["MqttPublishRequestMapperComponent"]
+    Mapper --> Publish["MqttPublisherComponent"]
     Publish --> Broker["MQTT broker"]
-    Replay --> Errors["Error sink"]
+    Replay --> Errors["Errors"]
+    Mapper --> Errors
     Publish --> Errors
 ```
 
-The replay source controls timing. The publish sink owns broker publishing and converts publish exceptions into `FlowError` values, so one failed publish does not stop the rest of the replay.
+The replay source controls timing. The mapper owns the envelope-to-command transformation. The publisher owns broker publishing and converts publish exceptions into `FlowError` values, so one failed publish does not stop the rest of the replay.
 
 ## Next Replay Steps
 

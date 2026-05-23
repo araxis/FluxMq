@@ -11,17 +11,17 @@ using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.Tests.Replay;
 
-public sealed class MqttRecordingSinkComponentTests
+public sealed class MqttRecorderComponentTests
 {
     [Fact]
     public async Task Input_RecordsMessagesForSession()
     {
         var sessionId = SessionId.New();
         var repository = new FakeMessageRepository();
-        var component = new MqttRecordingSinkComponent(repository, sessionId);
+        var component = new MqttRecorderComponent(repository);
 
-        component.Input.Post(Message("factory/1", [1]));
-        component.Input.Post(Message("factory/2", [2]));
+        component.Input.Post(Record(sessionId, "factory/1", [1]));
+        component.Input.Post(Record(sessionId, "factory/2", [2]));
         component.Complete();
 
         await component.Completion;
@@ -36,11 +36,12 @@ public sealed class MqttRecordingSinkComponentTests
     public async Task Input_PreservesRecordOrder()
     {
         var repository = new FakeMessageRepository();
-        var component = new MqttRecordingSinkComponent(repository, SessionId.New());
+        var component = new MqttRecorderComponent(repository);
+        var sessionId = SessionId.New();
 
-        component.Input.Post(Message("factory/1"));
-        component.Input.Post(Message("factory/2"));
-        component.Input.Post(Message("factory/3"));
+        component.Input.Post(Record(sessionId, "factory/1"));
+        component.Input.Post(Record(sessionId, "factory/2"));
+        component.Input.Post(Record(sessionId, "factory/3"));
         component.Complete();
 
         await component.Completion;
@@ -53,15 +54,16 @@ public sealed class MqttRecordingSinkComponentTests
     public async Task RecordFailure_PublishesErrorAndKeepsProcessing()
     {
         var repository = new FakeMessageRepository(topicToFail: "factory/fail");
-        var component = new MqttRecordingSinkComponent(repository, SessionId.New());
+        var component = new MqttRecorderComponent(repository);
+        var sessionId = SessionId.New();
         var errors = new List<FlowError>();
         var errorSink = new ActionBlock<FlowError>(errors.Add);
 
         component.Errors.LinkTo(errorSink, new DataflowLinkOptions { PropagateCompletion = true });
 
-        component.Input.Post(Message("factory/ok-1"));
-        component.Input.Post(Message("factory/fail"));
-        component.Input.Post(Message("factory/ok-2"));
+        component.Input.Post(Record(sessionId, "factory/ok-1"));
+        component.Input.Post(Record(sessionId, "factory/fail"));
+        component.Input.Post(Record(sessionId, "factory/ok-2"));
         component.Complete();
 
         await Task.WhenAll(component.Completion, errorSink.Completion);
@@ -78,17 +80,17 @@ public sealed class MqttRecordingSinkComponentTests
     [Fact]
     public async Task Fault_PublishesErrorAndFaultsCompletion()
     {
-        var component = new MqttRecordingSinkComponent(new FakeMessageRepository(), SessionId.New(), FlowNodeId.New());
+        var component = new MqttRecorderComponent(new FakeMessageRepository(), FlowNodeId.New());
         var errors = new List<FlowError>();
         var errorSink = new ActionBlock<FlowError>(errors.Add);
-        var failure = new InvalidOperationException("recording sink failed");
+        var failure = new InvalidOperationException("recorder failed");
 
         component.Errors.LinkTo(errorSink, new DataflowLinkOptions { PropagateCompletion = true });
         component.Fault(failure);
 
         var act = async () => await component.Completion;
         var ex = await Should.ThrowAsync<InvalidOperationException>(act);
-        ex.Message.ShouldBe("recording sink failed");
+        ex.Message.ShouldBe("recorder failed");
         await errorSink.Completion;
 
         errors.ShouldHaveSingleItem().Code.ShouldBe(FlowErrorCodes.NodeFaulted);
@@ -100,6 +102,12 @@ public sealed class MqttRecordingSinkComponentTests
         Payload = payload ?? [],
         QualityOfService = MqttQualityOfServiceLevel.AtLeastOnce,
         Retain = false
+    };
+
+    private static MqttRecordingRequest Record(SessionId sessionId, string topic, byte[]? payload = null) => new()
+    {
+        SessionId = sessionId,
+        Envelope = Message(topic, payload)
     };
 
     private sealed class FakeMessageRepository(string? topicToFail = null) : IMessageRepository

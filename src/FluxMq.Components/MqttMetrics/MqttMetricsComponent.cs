@@ -5,7 +5,7 @@ using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.MqttMetrics;
 
-public sealed class MqttMetricsSinkComponent : IFlowNode
+public sealed class MqttMetricsComponent : IFlowNode
 {
     private readonly Lock _sync = new();
     private readonly HashSet<string> _topics = [];
@@ -20,7 +20,7 @@ public sealed class MqttMetricsSinkComponent : IFlowNode
     private string? _lastTopic;
     private DateTimeOffset? _lastReceivedAt;
 
-    public MqttMetricsSinkComponent(
+    public MqttMetricsComponent(
         FlowNodeId? id = null,
         int boundedCapacity = 1000)
     {
@@ -67,7 +67,7 @@ public sealed class MqttMetricsSinkComponent : IFlowNode
 
     public void Fault(Exception exception)
     {
-        PublishError(FlowErrorCodes.NodeFaulted, "MQTT metrics sink faulted.", exception);
+        PublishError(FlowErrorCodes.NodeFaulted, "MQTT metrics observer faulted.", exception);
         ((IDataflowBlock)_block).Fault(exception);
     }
 

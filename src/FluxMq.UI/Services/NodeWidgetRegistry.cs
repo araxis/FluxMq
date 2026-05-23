@@ -1,4 +1,8 @@
 using FluxMq.UI.Components.Diagram;
+using FluxMq.UI.Components.Workspace.Nodes.ConditionRouter;
+using FluxMq.UI.Components.Workspace.Nodes.ConnectionStateTrigger;
+using FluxMq.UI.Components.Workspace.Nodes.Generic;
+using FluxMq.UI.Components.Workspace.Nodes.MessageFilter;
 using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
 using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
 using FluxMq.UI.Components.Workspace.Nodes.PayloadInspector;
@@ -17,9 +21,21 @@ public sealed class NodeWidgetRegistry
     private readonly Dictionary<string, Type> _widgets = new(StringComparer.Ordinal)
     {
         ["session.source"] = typeof(StoredSessionSourceNodeWidget),
+        ["mqtt.live-source"] = typeof(GenericFlowNodeWidget),
         ["mqtt.trigger"] = typeof(MqttTriggerNodeWidget),
+        ["mqtt.connection-state-trigger"] = typeof(ConnectionStateTriggerNodeWidget),
+        ["mqtt.message-filter"] = typeof(MessageFilterNodeWidget),
+        ["generated.source"] = typeof(GenericFlowNodeWidget),
+        ["replay.source"] = typeof(GenericFlowNodeWidget),
         ["mqtt.payload-inspector"] = typeof(PayloadInspectorNodeWidget),
-        ["mqtt.metrics-sink"] = typeof(MetricsSinkNodeWidget)
+        ["mqtt.condition-router"] = typeof(ConditionRouterNodeWidget),
+        ["mqtt.publish-request"] = typeof(GenericFlowNodeWidget),
+        ["mqtt.publisher"] = typeof(GenericFlowNodeWidget),
+        ["mqtt.recording-request"] = typeof(GenericFlowNodeWidget),
+        ["mqtt.recorder"] = typeof(GenericFlowNodeWidget),
+        ["file.write-request"] = typeof(GenericFlowNodeWidget),
+        ["file.writer"] = typeof(GenericFlowNodeWidget),
+        ["mqtt.metrics"] = typeof(MqttMetricsNodeWidget)
     };
 
     /// <summary>Returns the widget type for the given node type, or the fallback default widget.</summary>

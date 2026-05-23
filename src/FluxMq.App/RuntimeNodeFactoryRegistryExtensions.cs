@@ -1,12 +1,17 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Session;
+using FluxMq.Components.FileWriter;
+using FluxMq.Components.MessageFilter;
 using FluxMq.Components.MessageSource;
 using FluxMq.Components.MqttMetrics;
 using FluxMq.Components.MqttPayloadInspector;
+using FluxMq.Components.MqttPublisher;
+using FluxMq.Components.Replay;
 using FluxMq.Components.Storage.Repositories;
 using FluxMq.Pipeline.Components;
 using FluxMq.Pipeline.Definitions;
+using FluxMq.Pipeline.Mapping;
 using FluxMq.Pipeline.Runtime;
 using MQTTnet.Protocol;
 using System.Text;
@@ -25,17 +30,28 @@ public static class RuntimeNodeFactoryRegistryExtensions
     public static RuntimeNodeFactoryRegistry RegisterPipelineComponentFactories(
         this RuntimeNodeFactoryRegistry registry,
         Func<MqttConnectionProfile, IMqttSession>? sessionFactory = null,
-        IMessageRepository? messageRepository = null)
+        IMessageRepository? messageRepository = null,
+        IFlowExpressionEngine? expressionEngine = null)
     {
         ArgumentNullException.ThrowIfNull(registry);
         sessionFactory ??= static profile => new MqttSession(profile);
+        expressionEngine ??= new DynamicExpressoFlowExpressionEngine();
 
         return registry
             .Register(PipelineFlowNodeTypes.Connection, context => CreateConnection(context.Address, context.Definition, sessionFactory))
             .Register(PipelineFlowNodeTypes.Trigger, context => CreateTrigger(context.Address, context.Definition, context))
-            .Register(PipelineFlowNodeTypes.TrafficSource, context => CreateTrafficSource(context.Address, context.Definition, sessionFactory, messageRepository))
+            .Register(PipelineFlowNodeTypes.LiveSource, context => CreateLiveMqttSource(context.Address, context.Definition, sessionFactory))
+            .Register(PipelineFlowNodeTypes.StoredSessionSource, context => CreateStoredSessionSource(context.Address, context.Definition, messageRepository))
+            .Register(PipelineFlowNodeTypes.GeneratedSource, context => CreateGeneratedMqttSource(context.Address, context.Definition))
             .Register(PipelineFlowNodeTypes.PayloadInspector, CreatePayloadInspector)
-            .Register(PipelineFlowNodeTypes.MetricsSink, CreateMetricsSink);
+            .Register(PipelineFlowNodeTypes.MqttMetrics, CreateMqttMetrics)
+            .Register(PipelineFlowNodeTypes.MessageFilter, context => CreateMessageFilter(context.Address, context.Definition, expressionEngine))
+            .Register(PipelineFlowNodeTypes.PublishRequestMapper, context => CreatePublishRequestMapper(context.Address, context.Definition, expressionEngine))
+            .Register(PipelineFlowNodeTypes.MqttPublisher, context => CreatePublisher(context.Address, context.Definition, context))
+            .Register(PipelineFlowNodeTypes.RecordingRequestMapper, CreateRecordingRequestMapper)
+            .Register(PipelineFlowNodeTypes.MqttRecorder, context => CreateRecorder(context.Address, messageRepository))
+            .Register(PipelineFlowNodeTypes.FileWriteRequestMapper, context => CreateFileWriteRequestMapper(context.Address, context.Definition, expressionEngine))
+            .Register(PipelineFlowNodeTypes.FileWriter, CreateFileWriter);
     }
 
     private static RuntimeNode CreateConnection(
@@ -55,65 +71,54 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
-    private static RuntimeNode CreateTrafficSource(
+    private static RuntimeNode CreateLiveMqttSource(
         NodeAddress address,
         NodeDefinition definition,
-        Func<MqttConnectionProfile, IMqttSession> sessionFactory,
+        Func<MqttConnectionProfile, IMqttSession> sessionFactory)
+    {
+        var profile = GetConnectionProfile(definition, PipelineFlowNodeTypes.LiveSource.Value);
+        var component = new LiveMqttSourceComponent(
+            sessionFactory(profile),
+            GetSubscriptions(definition, PipelineFlowNodeTypes.LiveSource.Value),
+            boundedCapacity: GetBoundedCapacity(definition));
+
+        return SourceRuntimeNode(address, component, component.Output);
+    }
+
+    private static RuntimeNode CreateStoredSessionSource(
+        NodeAddress address,
+        NodeDefinition definition,
         IMessageRepository? messageRepository)
     {
-        var kind = GetStringOrDefault(definition, "kind", "live");
-        IFlowNode component;
-        ISourceBlock<MqttEnvelope> output;
-
-        switch (kind.Trim().ToLowerInvariant())
+        if (messageRepository is null)
         {
-            case "live":
-            case "mqtt":
-            {
-                var profile = GetConnectionProfile(definition, PipelineFlowNodeTypes.TrafficSource.Value);
-                var live = new LiveMqttSourceComponent(
-                    sessionFactory(profile),
-                    GetSubscriptions(definition, PipelineFlowNodeTypes.TrafficSource.Value),
-                    boundedCapacity: GetBoundedCapacity(definition));
-                component = live;
-                output = live.Output;
-                break;
-            }
-
-            case "stored":
-            case "stored-session":
-            {
-                if (messageRepository is null)
-                {
-                    throw new InvalidOperationException("Stored traffic source requires a message repository.");
-                }
-
-                var stored = new StoredSessionSourceComponent(
-                    messageRepository,
-                    GetRequiredSessionId(definition, "sessionId"),
-                    preserveTiming: GetBoolOrDefault(definition, "preserveTiming", false),
-                    speed: GetDoubleOrDefault(definition, "speed", 1),
-                    boundedCapacity: GetBoundedCapacity(definition));
-                component = stored;
-                output = stored.Output;
-                break;
-            }
-
-            case "generated":
-            case "test":
-            {
-                var generated = new GeneratedMqttSourceComponent(
-                    GetGeneratedMessages(definition),
-                    boundedCapacity: GetBoundedCapacity(definition));
-                component = generated;
-                output = generated.Output;
-                break;
-            }
-
-            default:
-                throw new InvalidOperationException("Configuration value 'kind' must be live, stored-session, or generated.");
+            throw new InvalidOperationException("Stored session source requires a message repository.");
         }
 
+        var component = new StoredSessionSourceComponent(
+            messageRepository,
+            GetRequiredSessionId(definition, "sessionId"),
+            preserveTiming: GetBoolOrDefault(definition, "preserveTiming", false),
+            speed: GetDoubleOrDefault(definition, "speed", 1),
+            boundedCapacity: GetBoundedCapacity(definition));
+
+        return SourceRuntimeNode(address, component, component.Output);
+    }
+
+    private static RuntimeNode CreateGeneratedMqttSource(NodeAddress address, NodeDefinition definition)
+    {
+        var component = new GeneratedMqttSourceComponent(
+            GetGeneratedMessages(definition),
+            boundedCapacity: GetBoundedCapacity(definition));
+
+        return SourceRuntimeNode(address, component, component.Output);
+    }
+
+    private static RuntimeNode SourceRuntimeNode(
+        NodeAddress address,
+        IFlowNode component,
+        ISourceBlock<MqttEnvelope> output)
+    {
         return RuntimeNode.Create(
             address,
             component,
@@ -153,6 +158,37 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
+    private static RuntimeNode CreateMessageFilter(
+        NodeAddress address,
+        NodeDefinition definition,
+        IFlowExpressionEngine expressionEngine)
+    {
+        var patterns = GetFilterPatterns(definition);
+        var expression = GetNullableString(definition, "expression");
+        IFlowPredicate<MqttEnvelope> expressionPredicate = string.IsNullOrWhiteSpace(expression)
+            ? new DelegateFlowPredicate<MqttEnvelope>(_ => true)
+            : new MqttEnvelopeExpressionPredicate(expressionEngine, expression);
+
+        Func<MqttEnvelope, bool> predicate = patterns.Count > 0
+            ? envelope => MqttTopicFilterMatcher.MatchesAny(patterns, envelope.Topic) && expressionPredicate.IsMatch(envelope)
+            : expressionPredicate.IsMatch;
+
+        var component = new MessageFilterComponent(predicate, boundedCapacity: GetBoundedCapacity(definition));
+
+        return RuntimeNode.Create(
+            address,
+            component,
+            inputs:
+            [
+                new InputPort<MqttEnvelope>(address.Port(InputPort), component.Input)
+            ],
+            outputs:
+            [
+                new OutputPort<MqttEnvelope>(address.Port(OutputPort), component.Output),
+                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
+            ]);
+    }
+
     private static RuntimeNode CreatePayloadInspector(NodeAddress address, NodeDefinition definition)
     {
         var component = new PayloadInspectorMapperComponent(boundedCapacity: GetBoundedCapacity(definition));
@@ -171,9 +207,9 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
-    private static RuntimeNode CreateMetricsSink(NodeAddress address, NodeDefinition definition)
+    private static RuntimeNode CreateMqttMetrics(NodeAddress address, NodeDefinition definition)
     {
-        var component = new MqttMetricsSinkComponent(boundedCapacity: GetBoundedCapacity(definition));
+        var component = new MqttMetricsComponent(boundedCapacity: GetBoundedCapacity(definition));
 
         return RuntimeNode.Create(
             address,
@@ -187,6 +223,281 @@ public static class RuntimeNodeFactoryRegistryExtensions
                 new OutputPort<MqttMetricsSnapshot>(address.Port(SnapshotsPort), component.Snapshots),
                 new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
             ]);
+    }
+
+    private static RuntimeNode CreatePublishRequestMapper(
+        NodeAddress address,
+        NodeDefinition definition,
+        IFlowExpressionEngine expressionEngine)
+    {
+        EnsureMapperEngineSupported(definition, expressionEngine);
+
+        var component = new MqttPublishRequestMapperComponent(
+            new MqttPublishRequestExpressionMapper(
+                expressionEngine,
+                GetPublishRequestMapDefinition(definition)),
+            boundedCapacity: GetBoundedCapacity(definition));
+
+        return RuntimeNode.Create(
+            address,
+            component,
+            inputs:
+            [
+                new InputPort<MqttEnvelope>(address.Port(InputPort), component.Input)
+            ],
+            outputs:
+            [
+                new OutputPort<MqttPublishRequest>(address.Port(OutputPort), component.Output),
+                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
+            ]);
+    }
+
+    private static RuntimeNode CreateRecordingRequestMapper(NodeAddress address, NodeDefinition definition)
+    {
+        var component = new MqttRecordingRequestMapperComponent(
+            GetRequiredSessionId(definition, "sessionId"),
+            boundedCapacity: GetBoundedCapacity(definition));
+
+        return RuntimeNode.Create(
+            address,
+            component,
+            inputs:
+            [
+                new InputPort<MqttEnvelope>(address.Port(InputPort), component.Input)
+            ],
+            outputs:
+            [
+                new OutputPort<MqttRecordingRequest>(address.Port(OutputPort), component.Output),
+                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
+            ]);
+    }
+
+    private static RuntimeNode CreatePublisher(
+        NodeAddress address,
+        NodeDefinition definition,
+        RuntimeNodeFactoryContext context)
+    {
+        var connectionRef = GetRequiredString(definition, "connection");
+        var resource = context.GetResource(new NodeName(connectionRef));
+        if (resource.Node is not MqttConnectionComponent connection)
+        {
+            throw new InvalidOperationException(
+                $"Resource '{connectionRef}' must be of type '{PipelineFlowNodeTypes.Connection.Value}' to be used by an mqtt.publisher.");
+        }
+
+        var component = new MqttPublisherComponent(connection.Session, boundedCapacity: GetBoundedCapacity(definition));
+
+        return RuntimeNode.Create(
+            address,
+            component,
+            inputs:
+            [
+                new InputPort<MqttPublishRequest>(address.Port(InputPort), component.Input)
+            ],
+            outputs:
+            [
+                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
+            ]);
+    }
+
+    private static RuntimeNode CreateRecorder(NodeAddress address, IMessageRepository? messageRepository)
+    {
+        if (messageRepository is null)
+        {
+            throw new InvalidOperationException("MQTT recorder requires a message repository.");
+        }
+
+        var component = new MqttRecorderComponent(messageRepository);
+
+        return RuntimeNode.Create(
+            address,
+            component,
+            inputs:
+            [
+                new InputPort<MqttRecordingRequest>(address.Port(InputPort), component.Input)
+            ],
+            outputs:
+            [
+                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
+            ]);
+    }
+
+    private static RuntimeNode CreateFileWriteRequestMapper(
+        NodeAddress address,
+        NodeDefinition definition,
+        IFlowExpressionEngine expressionEngine)
+    {
+        EnsureMapperEngineSupported(definition, expressionEngine);
+
+        var component = new FileWriteRequestMapperComponent(
+            new FileWriteRequestExpressionMapper(
+                expressionEngine,
+                GetFileWriteRequestMapDefinition(definition)),
+            boundedCapacity: GetBoundedCapacity(definition));
+
+        return RuntimeNode.Create(
+            address,
+            component,
+            inputs:
+            [
+                new InputPort<MqttEnvelope>(address.Port(InputPort), component.Input)
+            ],
+            outputs:
+            [
+                new OutputPort<FileWriteRequest>(address.Port(OutputPort), component.Output),
+                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
+            ]);
+    }
+
+    private static RuntimeNode CreateFileWriter(NodeAddress address, NodeDefinition definition)
+    {
+        var component = new FileWriterComponent(boundedCapacity: GetBoundedCapacity(definition));
+
+        return RuntimeNode.Create(
+            address,
+            component,
+            inputs:
+            [
+                new InputPort<FileWriteRequest>(address.Port(InputPort), component.Input)
+            ],
+            outputs:
+            [
+                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
+            ]);
+    }
+
+    private static MqttPublishRequestMapDefinition GetPublishRequestMapDefinition(NodeDefinition definition)
+    {
+        if (definition.Configuration.TryGetValue("map", out var mapElement))
+        {
+            if (mapElement.ValueKind != JsonValueKind.Object)
+            {
+                throw new InvalidOperationException("Configuration value 'map' must be an object.");
+            }
+
+            return new MqttPublishRequestMapDefinition
+            {
+                TopicExpression = ReadOptionalString(mapElement, "topic") ?? ReadOptionalString(mapElement, "topicExpression"),
+                PayloadExpression = ReadOptionalString(mapElement, "payload") ?? ReadOptionalString(mapElement, "payloadExpression"),
+                QualityOfServiceExpression =
+                    ReadOptionalString(mapElement, "qos") ??
+                    ReadOptionalString(mapElement, "qualityOfService") ??
+                    ReadOptionalString(mapElement, "qosExpression") ??
+                    ReadOptionalString(mapElement, "qualityOfServiceExpression"),
+                RetainExpression = ReadOptionalString(mapElement, "retain") ?? ReadOptionalString(mapElement, "retainExpression")
+            };
+        }
+
+        var fixedTopic = GetNullableString(definition, "topic");
+        return new MqttPublishRequestMapDefinition
+        {
+            TopicExpression =
+                GetNullableString(definition, "topicExpression") ??
+                (fixedTopic is null ? null : JsonSerializer.Serialize(fixedTopic)),
+            PayloadExpression = GetNullableString(definition, "payloadExpression"),
+            QualityOfServiceExpression =
+                GetNullableString(definition, "qosExpression") ??
+                GetNullableString(definition, "qualityOfServiceExpression"),
+            RetainExpression = GetNullableString(definition, "retainExpression")
+        };
+    }
+
+    private static FileWriteRequestMapDefinition GetFileWriteRequestMapDefinition(NodeDefinition definition)
+    {
+        if (definition.Configuration.TryGetValue("map", out var mapElement))
+        {
+            if (mapElement.ValueKind != JsonValueKind.Object)
+            {
+                throw new InvalidOperationException("Configuration value 'map' must be an object.");
+            }
+
+            return new FileWriteRequestMapDefinition
+            {
+                PathExpression =
+                    ReadOptionalString(mapElement, "path") ??
+                    ReadOptionalString(mapElement, "pathExpression") ??
+                    throw new InvalidOperationException("File write request map requires a 'path' expression."),
+                ContentExpression = ReadOptionalString(mapElement, "content") ?? ReadOptionalString(mapElement, "contentExpression"),
+                ModeExpression = ReadOptionalString(mapElement, "mode") ?? ReadOptionalString(mapElement, "modeExpression"),
+                CreateDirectoryExpression =
+                    ReadOptionalString(mapElement, "createDirectory") ??
+                    ReadOptionalString(mapElement, "createDirectoryExpression")
+            };
+        }
+
+        return new FileWriteRequestMapDefinition
+        {
+            PathExpression =
+                GetNullableString(definition, "pathExpression") ??
+                throw new InvalidOperationException("File write request mapper requires configuration value 'pathExpression' or 'map.path'."),
+            ContentExpression = GetNullableString(definition, "contentExpression"),
+            ModeExpression = GetNullableString(definition, "modeExpression"),
+            CreateDirectoryExpression = GetNullableString(definition, "createDirectoryExpression")
+        };
+    }
+
+    private static void EnsureMapperEngineSupported(NodeDefinition definition, IFlowExpressionEngine expressionEngine)
+    {
+        var requestedEngine = GetNullableString(definition, "engine") ?? GetNullableString(definition, "mapper");
+        if (requestedEngine is null)
+        {
+            return;
+        }
+
+        if (!string.Equals(requestedEngine, expressionEngine.Name, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"Mapper engine '{requestedEngine}' is not registered. Current engine is '{expressionEngine.Name}'.");
+        }
+    }
+
+    private static string? ReadOptionalString(JsonElement element, string propertyName)
+    {
+        if (!element.TryGetProperty(propertyName, out var property) || property.ValueKind == JsonValueKind.Null)
+        {
+            return null;
+        }
+
+        if (property.ValueKind != JsonValueKind.String)
+        {
+            throw new InvalidOperationException($"Configuration value '{propertyName}' must be a string.");
+        }
+
+        var value = property.GetString();
+        return string.IsNullOrWhiteSpace(value) ? null : value;
+    }
+
+    private static IReadOnlyList<string> GetFilterPatterns(NodeDefinition definition)
+    {
+        if (!definition.Configuration.TryGetValue("patterns", out var element))
+            return [];
+
+        if (element.ValueKind == JsonValueKind.String)
+        {
+            var s = element.GetString();
+            return string.IsNullOrWhiteSpace(s) ? [] : [s];
+        }
+
+        if (element.ValueKind == JsonValueKind.Array)
+        {
+            var list = new List<string>();
+            foreach (var item in element.EnumerateArray())
+            {
+                if (item.ValueKind == JsonValueKind.String && item.GetString() is { Length: > 0 } pattern)
+                    list.Add(pattern);
+            }
+            return list;
+        }
+
+        return [];
+    }
+
+    private static string? GetNullableString(NodeDefinition definition, string key)
+    {
+        if (!definition.Configuration.TryGetValue(key, out var value) || value.ValueKind != JsonValueKind.String)
+            return null;
+        var s = value.GetString();
+        return string.IsNullOrWhiteSpace(s) ? null : s;
     }
 
     private static string GetRequiredString(NodeDefinition definition, string key)
