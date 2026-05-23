@@ -38,7 +38,8 @@ public sealed class NodeWidgetRegistry
         ["mqtt.recorder"] = typeof(GenericFlowNodeWidget),
         ["file.write-request"] = typeof(GenericFlowNodeWidget),
         ["file.writer"] = typeof(GenericFlowNodeWidget),
-        ["mqtt.metrics"] = typeof(MqttMetricsNodeWidget)
+        ["mqtt.metrics"] = typeof(MqttMetricsNodeWidget),
+        ["mqtt.metrics-sink"] = typeof(MqttMetricsNodeWidget)
     };
 
     /// <summary>Returns the widget type for the given node type, or the fallback default widget.</summary>

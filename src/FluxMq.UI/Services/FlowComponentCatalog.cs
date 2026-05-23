@@ -39,6 +39,17 @@ public sealed class FlowComponentCatalog
                     new("Input", "MqttEnvelope", IsInput: true),
                     new("Output", "FileWriteRequest", IsInput: false),
                     new("Errors", "FlowError", IsInput: false)
+                ]),
+            ["mqtt.metrics-sink"] = new(
+                "mqtt.metrics-sink",
+                "MQTT Metrics",
+                "Observer",
+                "Compatibility alias for older definitions. Use MQTT Metrics for new flows.",
+                IsResource: false,
+                [
+                    new("Input", "MqttEnvelope", IsInput: true),
+                    new("Snapshots", "MqttMetricsSnapshot", IsInput: false),
+                    new("Errors", "FlowError", IsInput: false)
                 ])
         };
 

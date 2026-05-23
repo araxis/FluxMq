@@ -29,7 +29,7 @@ public static class FlowNodeModelFactory
         "flow.mapper" => new DynamicMapperNodeModel(id, position, nodeName, descriptor, isResource),
         "session.source" => new SessionSourceNodeModel(id, position, nodeName, descriptor, isResource),
         "mqtt.payload-inspector" => new PayloadInspectorNodeModel(id, position, nodeName, descriptor, isResource),
-        "mqtt.metrics" => new MqttMetricsNodeModel(id, position, nodeName, descriptor, isResource),
+        "mqtt.metrics" or "mqtt.metrics-sink" => new MqttMetricsNodeModel(id, position, nodeName, descriptor, isResource),
         _ => new FlowDiagramNodeModel(id, position, nodeName, nodeType, descriptor, isResource)
     };
 }

@@ -74,9 +74,12 @@
    position.  No extra background/border here; the inner FluxPortWidget
    provides all visual styling.                                              */
 .flow-designer-root ::deep .diagram-port {
+    box-sizing: border-box;
     cursor: crosshair;
     display: block;
+    flex: 0 0 12px;
     height: 12px;
+    min-width: 12px;
     pointer-events: all;
     position: relative;
     transition: transform 0.15s ease;
@@ -93,7 +96,9 @@
     background: var(--flux-surface);
     border: 2px solid var(--flux-accent);
     border-radius: 50%;
+    box-sizing: border-box;
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--flux-accent) 18%, transparent);
+    display: block;
     height: 100%;
     pointer-events: none;
     transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
@@ -149,44 +154,41 @@
 
 .flow-designer-root ::deep .flow-port-row {
     align-items: center;
-    display: flex;
+    display: grid;
+    grid-template-columns: 0 minmax(0, 1fr) 0;
     min-height: 26px;
     padding: 1px 0;
 }
 
 /* ── Port side containers ───────────────────────────────────────────────────
-   Each side is 6 px wide — half the 12 px dot — so the dot straddles the
-   node border.  Left container: dot starts at the container left edge and is
-   then pulled 6 px further left by margin-left, centering it on the border.
-   Right container: dot starts at the container left edge and overflows 6 px
-   to the right, again centering it on the border.
-   IMPORTANT: no justify-content here.  Centering would offset the dot by an
-   extra –3 px and push most of it outside the canvas clip rect.            */
+   The side columns are zero-width grid tracks placed at the node edges.
+   Pulling each 12 px dot left by 6 px centers the measured port box on the
+   edge, so left and right handles mirror each other exactly.               */
 .flow-designer-root ::deep .flow-port-side-left {
     align-items: center;
     display: flex;
-    flex: 0 0 6px;
+    min-width: 0;
     overflow: visible;
+    width: 0;
 }
 
 .flow-designer-root ::deep .flow-port-side-right {
     align-items: center;
     display: flex;
-    flex: 0 0 6px;
+    min-width: 0;
     overflow: visible;
+    width: 0;
 }
 
-/* Pull the left dot 6 px outside the node border */
-.flow-designer-root ::deep .flow-port-side-left .diagram-port {
+.flow-designer-root ::deep .flow-port-side-left .diagram-port,
+.flow-designer-root ::deep .flow-port-side-right .diagram-port {
     margin-left: -6px;
 }
 
-/* Right dot naturally overflows 6 px to the right — no margin needed */
-
 .flow-designer-root ::deep .flow-port-name {
-    flex: 1;
     font-size: 0.68rem;
     letter-spacing: 0.02em;
+    min-width: 0;
     overflow: hidden;
     padding: 0 8px;
     text-align: center;

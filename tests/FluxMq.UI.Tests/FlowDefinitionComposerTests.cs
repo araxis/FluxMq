@@ -24,6 +24,19 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void ComponentCatalog_ResolvesMetricsSinkAlias()
+    {
+        var catalog = new FlowComponentCatalog();
+
+        var descriptor = catalog.Find("mqtt.metrics-sink").ShouldNotBeNull();
+
+        descriptor.DisplayName.ShouldBe("MQTT Metrics");
+        descriptor.Ports.ShouldContain(port => port.Name == "Input" && port.IsInput);
+        descriptor.Ports.ShouldContain(port => port.Name == "Snapshots" && !port.IsInput);
+        descriptor.Ports.ShouldContain(port => port.Name == "Errors" && !port.IsInput);
+    }
+
+    [Fact]
     public void CreateInspectPayloadsDefinition_CreatesHostBuildableDefinition()
     {
         var composer = new FlowDefinitionComposer();

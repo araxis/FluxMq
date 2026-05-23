@@ -36,6 +36,7 @@ public sealed class PipelineComponentFactoryTests
             PipelineFlowNodeTypes.GeneratedSource,
             PipelineFlowNodeTypes.PayloadInspector,
             PipelineFlowNodeTypes.MqttMetrics,
+            PipelineFlowNodeTypes.MqttMetricsSink,
             PipelineFlowNodeTypes.MessageFilter,
             PipelineFlowNodeTypes.DynamicMapper,
             PipelineFlowNodeTypes.PublishRequestMapper,
