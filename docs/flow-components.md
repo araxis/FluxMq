@@ -381,30 +381,57 @@ await replay.StartAsync();
 - `speed = 2` replays twice as fast.
 - delay behavior is injectable for deterministic tests.
 
-## MQTT Publish Request Mapper
+## Dynamic Mapper
 
-`MqttPublishRequestMapperComponent` maps incoming MQTT envelopes into explicit publish commands. The mapper can preserve the input envelope or use configured expressions to produce a different topic, payload, QoS, and retain flag.
+`flow.mapper` is the user-facing mapper node. It explicitly maps one typed input into the typed request object required by an actor. FluxMQ must not insert this node automatically: if `mqtt.trigger` emits `MqttEnvelope` and `mqtt.publisher` accepts `MqttPublishRequest`, the user adds a mapper between them and configures the mapping expressions.
+
+The current runtime supports `MqttEnvelope` input and these output request types:
+
+- `MqttPublishRequest`
+- `FileWriteRequest`
+- `MqttRecordingRequest`
+
+Supported mapper engines:
+
+- `dynamic-expresso` for C#-style field expressions
+- `jsonata` for JSONata field expressions over the envelope context
 
 ### Behavior
 
 ```mermaid
 flowchart LR
-    In["Input: MqttEnvelope"] --> Mapper["MqttPublishRequestMapperComponent"]
-    Mapper --> Out["Output: MqttPublishRequest"]
+    In["Input: MqttEnvelope"] --> Mapper["flow.mapper"]
+    Mapper --> Out["Output: configured request type"]
     Mapper -->|mapping failure| Errors["Errors: FlowError code 2000"]
 ```
 
-### Usage
+### Flow Definition
 
-```csharp
-var mapper = new MqttPublishRequestMapperComponent(MqttPublishRequestMapperComponent.PreserveEnvelope);
-
-source.LinkTo(mapper.Input, new DataflowLinkOptions
+```json
 {
-    PropagateCompletion = true
-});
-
-mapper.Errors.LinkTo(errorSink);
+  "mapper": {
+    "type": "flow.mapper",
+    "Input": "trigger.Output",
+    "configuration": {
+      "engine": "jsonata",
+      "inputType": "MqttEnvelope",
+      "outputType": "MqttPublishRequest",
+      "map": {
+        "topic": "\"mirror/\" & topic",
+        "payload": "\"mapped:\" & payloadText",
+        "qos": "1",
+        "retain": "false"
+      }
+    }
+  },
+  "publisher": {
+    "type": "mqtt.publisher",
+    "Input": "mapper.Output",
+    "configuration": {
+      "connection": "broker2"
+    }
+  }
+}
 ```
 
 ### Failure Behavior
@@ -442,19 +469,6 @@ publisher.Errors.LinkTo(errorSink);
 If publishing fails for one request, the publisher publishes a `FlowError` with the topic in `Context` and continues processing later requests.
 
 The component preserves publish order by default. Higher parallelism is available through the constructor, but ordered single-message publishing should remain the default for replay and deterministic flow behavior.
-
-## MQTT Recording Request Mapper
-
-`MqttRecordingRequestMapperComponent` maps incoming MQTT envelopes into recording commands that carry the target session id.
-
-### Behavior
-
-```mermaid
-flowchart LR
-    In["Input: MqttEnvelope"] --> Mapper["MqttRecordingRequestMapperComponent"]
-    Mapper --> Out["Output: MqttRecordingRequest"]
-    Mapper -->|mapping failure| Errors["Errors: FlowError code 2000"]
-```
 
 ## MQTT Recorder
 
@@ -631,7 +645,7 @@ This flow records selected live traffic.
 ```mermaid
 flowchart LR
     Source["mqtt.live-source"] --> Filter["TopicFilterComponent"]
-    Filter --> Mapper["MqttRecordingRequestMapperComponent"]
+    Filter --> Mapper["flow.mapper: MqttEnvelope -> MqttRecordingRequest"]
     Mapper --> Recorder["MqttRecorderComponent"]
     Source --> ErrorLog["Error Log"]
     Filter --> ErrorLog
@@ -645,7 +659,7 @@ This flow replays a recorded session back through an MQTT session.
 flowchart LR
     Factory["RecordedSessionReplayFactory"] --> Replay["ReplaySourceComponent"]
     Replay --> Filter["TopicFilterComponent"]
-    Filter --> Mapper["MqttPublishRequestMapperComponent"]
+    Filter --> Mapper["flow.mapper: MqttEnvelope -> MqttPublishRequest"]
     Mapper --> Publisher["MqttPublisherComponent"]
     Replay --> ErrorLog["Error Log"]
     Filter --> ErrorLog
@@ -653,34 +667,39 @@ flowchart LR
     Publisher --> ErrorLog
 ```
 
-Equivalent code shape:
+Equivalent definition shape:
 
-```csharp
-var replay = replayFactory.Create(sessionId);
-var filter = TopicFilterComponent.Prefix("factory/");
-var publishMapper = new MqttPublishRequestMapperComponent(MqttPublishRequestMapperComponent.PreserveEnvelope);
-var publisher = new MqttPublisherComponent(session);
-
-replay.Output.LinkTo(filter.Input, new DataflowLinkOptions { PropagateCompletion = true });
-filter.Output.LinkTo(publishMapper.Input, new DataflowLinkOptions { PropagateCompletion = true });
-publishMapper.Output.LinkTo(publisher.Input, new DataflowLinkOptions { PropagateCompletion = true });
-
-replay.Errors.LinkTo(errorSink);
-filter.Errors.LinkTo(errorSink);
-publishMapper.Errors.LinkTo(errorSink);
-publisher.Errors.LinkTo(errorSink);
-
-await replay.StartAsync();
-await publisher.Completion;
+```json
+{
+  "replay": { "type": "replay.source" },
+  "filter": {
+    "type": "mqtt.message-filter",
+    "Input": "replay.Output"
+  },
+  "mapper": {
+    "type": "flow.mapper",
+    "Input": "filter.Output",
+    "configuration": {
+      "engine": "jsonata",
+      "inputType": "MqttEnvelope",
+      "outputType": "MqttPublishRequest",
+      "map": {
+        "topic": "topic",
+        "payload": "payloadText",
+        "qos": "qos",
+        "retain": "retain"
+      }
+    }
+  },
+  "publisher": {
+    "type": "mqtt.publisher",
+    "Input": "mapper.Output"
+  }
+}
 ```
 
 ## Future Component Types
 
-Likely near-term additions:
-
-- dynamic expression mapper
-- JSONata mapper
-
-Dynamic expression components should use `FlowError.Code` for routing and diagnostics instead of relying on exception message text.
+Dynamic mapper components should use `FlowError.Code` for routing and diagnostics instead of relying on exception message text. Request-specific mapper node types remain compatibility/runtime implementation details; new user-facing definitions should use `flow.mapper`.
 
 OpenTelemetry support is planned as an observability export layer, not as a replacement for local flow components.

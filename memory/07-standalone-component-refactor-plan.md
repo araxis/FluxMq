@@ -31,14 +31,16 @@ The generic source alias has been removed; use explicit source names in new defi
 Mapper nodes are a core product feature, not glue. They prepare intent for actor nodes and should become dynamically configurable:
 
 - `mqtt.payload-inspector`: `MqttEnvelope -> InspectedMqttMessage`.
-- `mqtt.publish-request`: `MqttEnvelope -> MqttPublishRequest`.
-- `mqtt.recording-request`: `MqttEnvelope -> MqttRecordingRequest`.
-- Future: `file.write-request`, `http.request`, `database.write-request`, `json.schema-validation-result`.
+- `flow.mapper`: user-facing dynamic mapper from `MqttEnvelope` to a configured output request type.
+- Current mapper output targets: `MqttPublishRequest`, `MqttRecordingRequest`, and `FileWriteRequest`.
+- Future output targets: `HttpRequest`, `EmailSendRequest`, `database.write-request`, `json.schema-validation-result`.
+
+Request models are actor input contracts, not user-facing components. A graph should show a dynamic mapper node between a source/filter/router and an actor whenever the port types differ.
 
 Dynamic mapping engines:
 
 - Dynamic Expresso for C#-style expressions and object construction.
-- Jsonata or an equivalent JSON mapping/query engine for payload transformation.
+- Jsonata for JSON payload query, mapping, and transformation.
 - Later, UI-assisted mappers for ops users.
 
 Example developer flow:
@@ -73,29 +75,27 @@ Avoid user-facing "sink" naming where an actor name is clearer. Internal code ma
 
 - Added `MqttPublishRequest` and `MqttPublisherComponent`; publishing now consumes `MqttPublishRequest` instead of raw `MqttEnvelope`.
 - Added `MqttRecordingRequest` and `MqttRecorderComponent`; recording now consumes `MqttRecordingRequest`, so `SessionId` lives on the input request.
-- Added `MqttPublishRequestMapperComponent`.
-- Added `MqttRecordingRequestMapperComponent`.
+- Added request-specific mapper components as internal/runtime adapters.
 - Added runtime-level mapper/predicate/expression abstractions under `FluxMq.Pipeline.Mapping`.
-- Added Dynamic Expresso as the first concrete expression engine in `FluxMq.Components.Mapping`.
+- Added Dynamic Expresso as the first concrete expression engine in `FluxMq.Pipeline.Mapping`.
+- Added Jsonata as the JSON-oriented mapper engine.
 - Changed `mqtt.message-filter` expression configuration from a placeholder to real Dynamic Expresso evaluation.
-- Changed `mqtt.publish-request` from fixed mapping to configurable field expressions that build `MqttPublishRequest`.
+- Added `flow.mapper` as the user-facing dynamic mapper node; request-specific mapper node types are compatibility aliases, not catalog components.
 - Added `mqtt.publisher` as the MQTT publish actor node type.
 - Renamed the metrics observer to `MqttMetricsComponent` / `mqtt.metrics`.
-- Added `FileWriteRequest`, `file.write-request`, and `file.writer` as the first non-MQTT proof of the mapper-to-actor pattern.
-- Registered runtime node types and catalog entries:
-  - `mqtt.publish-request`
+- Added `FileWriteRequest` and `file.writer` as the first non-MQTT proof of the mapper-to-actor pattern.
+- Registered runtime node types and user-facing catalog entries:
+  - `flow.mapper`
   - `mqtt.publisher`
-  - `mqtt.recording-request`
   - `mqtt.recorder`
   - `mqtt.metrics`
-  - `file.write-request`
   - `file.writer`
 
 ## Next Refactoring Steps
 
-1. Generalize dynamic mapper configuration beyond per-command mapper classes so the same engine can produce `FileWriteRequest`, `HttpRequest`, `EmailSendRequest`, and future command types.
+1. Generalize dynamic mapper targets beyond the current request adapters so the same node can produce `HttpRequest`, `EmailSendRequest`, and future command types.
 2. Add richer File Writer configuration and UI editing for path/content/mode expressions.
-3. Add Jsonata or an equivalent .NET-friendly JSON query/transform engine beside Dynamic Expresso.
+3. Harden Jsonata mapping around binary payloads, JSON payload objects, and schema-aware helper variables.
 4. Add JSON Schema validator component with a typed validation-result output.
 5. Add assertion and metric components for the ops/QA era.
 6. Rework node editor fields so each mapper's expressions and required actor input are obvious.

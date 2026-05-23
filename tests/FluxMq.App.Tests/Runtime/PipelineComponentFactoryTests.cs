@@ -37,6 +37,7 @@ public sealed class PipelineComponentFactoryTests
             PipelineFlowNodeTypes.PayloadInspector,
             PipelineFlowNodeTypes.MqttMetrics,
             PipelineFlowNodeTypes.MessageFilter,
+            PipelineFlowNodeTypes.DynamicMapper,
             PipelineFlowNodeTypes.PublishRequestMapper,
             PipelineFlowNodeTypes.MqttPublisher,
             PipelineFlowNodeTypes.RecordingRequestMapper,
@@ -333,7 +334,7 @@ public sealed class PipelineComponentFactoryTests
     }
 
     [Fact]
-    public async Task DynamicFilterAndPublishMapper_CanPublishMappedRequestsToConnection()
+    public async Task DynamicFilterAndJsonataMapper_CanPublishMappedRequestsToConnection()
     {
         FakeMqttSession? session = null;
 
@@ -390,18 +391,20 @@ public sealed class PipelineComponentFactoryTests
                         },
                         ["map"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.PublishRequestMapper,
+                            Type = PipelineFlowNodeTypes.DynamicMapper,
                             Ports =
                             {
                                 ["Input"] = JsonDocument.Parse("\"filter.Output\"").RootElement.Clone()
                             },
                             Configuration =
                             {
-                                ["engine"] = JsonDocument.Parse("\"dynamic-expresso\"").RootElement.Clone(),
+                                ["engine"] = JsonDocument.Parse("\"jsonata\"").RootElement.Clone(),
+                                ["inputType"] = JsonDocument.Parse("\"MqttEnvelope\"").RootElement.Clone(),
+                                ["outputType"] = JsonDocument.Parse("\"MqttPublishRequest\"").RootElement.Clone(),
                                 ["map"] = JsonDocument.Parse("""
                                 {
-                                  "topic": "\"mirror/\" + topic",
-                                  "payload": "\"mapped:\" + payloadText",
+                                  "topic": "\"mirror/\" & topic",
+                                  "payload": "\"mapped:\" & payloadText",
                                   "qos": "1",
                                   "retain": "false"
                                 }
@@ -441,7 +444,7 @@ public sealed class PipelineComponentFactoryTests
     }
 
     [Fact]
-    public async Task DynamicFileWriteMapper_CanWriteMappedEnvelopePayloadsToFiles()
+    public async Task DynamicGenericMapper_CanWriteMappedEnvelopePayloadsToFiles()
     {
         var directory = Path.Combine(Path.GetTempPath(), "fluxmq-runtime-tests", Guid.NewGuid().ToString("N"))
             .Replace('\\', '/');
@@ -473,13 +476,16 @@ public sealed class PipelineComponentFactoryTests
                         },
                         ["map"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.FileWriteRequestMapper,
+                            Type = PipelineFlowNodeTypes.DynamicMapper,
                             Ports =
                             {
                                 ["Input"] = JsonDocument.Parse("\"traffic.Output\"").RootElement.Clone()
                             },
                             Configuration =
                             {
+                                ["engine"] = JsonDocument.Parse("\"dynamic-expresso\"").RootElement.Clone(),
+                                ["inputType"] = JsonDocument.Parse("\"MqttEnvelope\"").RootElement.Clone(),
+                                ["outputType"] = JsonDocument.Parse("\"FileWriteRequest\"").RootElement.Clone(),
                                 ["map"] = JsonDocument.Parse($$"""
                                 {
                                   "path": {{JsonSerializer.Serialize(pathExpression)}},

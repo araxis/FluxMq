@@ -410,8 +410,8 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Added `memory/07-standalone-component-refactor-plan.md`.
 - Changed MQTT publishing from raw `MqttEnvelope` input to explicit `MqttPublishRequest` input.
 - Changed MQTT recording from raw `MqttEnvelope` input with constructor-bound `SessionId` to explicit `MqttRecordingRequest` input carrying both `SessionId` and envelope.
-- Added `MqttPublishRequestMapperComponent` and `MqttRecordingRequestMapperComponent` so a flow can read clearly as `source -> filter/router -> request mapper -> actor`.
-- Added runtime node types, app factory registrations, and UI catalog entries for publish/recording request mappers and actors.
+- Added `MqttPublishRequestMapperComponent` and `MqttRecordingRequestMapperComponent` as runtime adapters, then corrected the product surface so flows read as `source -> filter/router -> dynamic mapper -> actor`.
+- Added runtime node types, app factory registrations, and actor catalog entries. Request-specific mapper node types are compatibility/internal details, not user-facing catalog components.
 - Verified:
   - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 87 tests.
   - `dotnet build src\FluxMq.App\FluxMq.App.csproj --no-restore -p:UseSharedCompilation=false` passes with 0 errors and 0 warnings.
@@ -422,7 +422,7 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Removed the stale `rtk` shell-command requirement from `C:\Users\meisa\.codex\RTK.md`; normal shell commands should be used directly.
 - Added `memory/08-dynamic-mapping-and-ops-vision.md`.
 - Corrected the component plan: dynamic mappers are a core FluxMQ capability, not incidental glue.
-- Recorded Dynamic Expresso for C#-style filters/mappers and Jsonata or equivalent for JSON query/mapping as explicit runtime directions.
+- Recorded Dynamic Expresso for C#-style filters/mappers and JSONata for JSON query/mapping as explicit runtime directions.
 - Recorded that user-facing side-effect components should use actor names such as MQTT Publisher, File Writer, Recorder, HTTP Sender, and Email Sender instead of generic "sink" names.
 - Recorded the two-era product direction:
   - developer ELT/integration flows first
@@ -439,12 +439,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Added `MqttEnvelopeExpressionContextFactory` so expressions get stable variables such as `envelope`, `topic`, `payload`, `payloadText`, `qos`, `retain`, and `receivedAt`.
 - Changed `MessageFilterComponent` to accept an `IFlowPredicate<MqttEnvelope>` while preserving the delegate constructor.
 - Added `MqttEnvelopeExpressionPredicate` and wired `mqtt.message-filter` factory config `expression` to Dynamic Expresso.
-- Added `MqttPublishRequestExpressionMapper` and `MqttPublishRequestMapDefinition`; `mqtt.publish-request` can now map topic, payload, QoS, and retain through configurable expressions.
+- Added `MqttPublishRequestExpressionMapper` and `MqttPublishRequestMapDefinition`; mapper configuration can now map topic, payload, QoS, and retain through configurable expressions.
 - Added `MqttPublisherComponent` and `mqtt.publisher` as the MQTT publish actor node type.
 - Added focused tests for:
   - Dynamic Expresso filtering with `qos >= 1`.
   - Dynamic MQTT publish request mapping.
-  - Runtime flow: generated MQTT envelopes -> expression filter -> dynamic publish-request mapper -> MQTT publisher using `broker2`.
+  - Runtime flow: generated MQTT envelopes -> expression filter -> dynamic mapper -> MQTT publisher using `broker2`.
 - Verified targeted tests:
   - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 89 tests.
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 19 tests.
@@ -456,8 +456,21 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Removed the old generic source compatibility node alias; app definitions should now use `mqtt.live-source`, `session.source`, or `generated.source`.
 - Renamed the publish namespace to `FluxMq.Components.MqttPublisher`.
 - Renamed the metrics observer to `MqttMetricsComponent` / `mqtt.metrics`.
-- Added `FileWriteRequest`, Dynamic Expresso-backed `FileWriteRequestExpressionMapper`, `FileWriteRequestMapperComponent`, and `FileWriterComponent`.
-- Registered `file.write-request` and `file.writer` in the runtime factory registry, UI catalog, node widgets, and definition composer.
+- Added `FileWriteRequest`, Dynamic Expresso-backed file-write request mapping, and `FileWriterComponent`.
+- Registered file write request mapping in the runtime factory registry and exposed `file.writer` as the user-facing actor.
 - Updated docs and memory to describe flows as `source -> filter/router -> dynamic mapper -> actor/observer`.
+
+## 2026-05-23 - Dynamic mapper product-surface correction
+
+- Corrected the mapper/request-model misunderstanding:
+  - Request models such as `MqttPublishRequest` and `FileWriteRequest` are actor input contracts.
+  - They are not separate user-facing UI components.
+  - The visible graph component is now `flow.mapper`.
+- Added `flow.mapper` as the user-facing mapper node with explicit `inputType`, `outputType`, `engine`, and `map` configuration.
+- Kept request-specific mapper node types as hidden compatibility/runtime aliases for old definitions.
+- Updated the desktop component catalog so it exposes Dynamic Mapper plus actors, not `Publish Request`, `Recording Request`, or `File Write Request` pseudo-components.
+- Stopped the UI composer from wiring actors directly to envelope sources. If a user adds `mqtt.publisher`, it only links to an existing mapper output; otherwise the missing type bridge is explicit.
+- Added a mapper node editor for engine, input type, output type, and field expressions.
+- Added `jsonata` as a mapper expression engine alongside `dynamic-expresso`.
 - Verified:
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -m:1` passes with 225 tests after the actor/observer rename, explicit source cleanup, and File Writer slice.

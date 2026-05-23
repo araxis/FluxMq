@@ -4,6 +4,8 @@ FluxMQ is a workflow-runtime platform for MQTT debugging, observability, recordi
 
 The product direction is to move beyond a passive MQTT client. FluxMQ should help developers and operators inspect topic activity, decode payloads, record real sessions, replay traffic, and build configurable message flows.
 
+FluxMQ is also a dynamic ELT app. Sources extract message streams, mapper nodes transform typed data into explicit actor requests, and actors load the result into brokers, files, recorders, HTTP endpoints, or future targets.
+
 ## Current Capabilities
 
 - MQTT session model and connection manager.
@@ -17,7 +19,10 @@ The product direction is to move beyond a passive MQTT client. FluxMQ should hel
   - MQTT connection resource
   - MQTT trigger
   - topic filter
+  - dynamic mapper
   - payload inspector mapper
+  - MQTT publisher actor
+  - file writer actor
   - replay source
 - Flow error ports with stable numeric error codes.
 - Metrics snapshots for flow observability.
@@ -44,4 +49,4 @@ OpenTelemetry support is planned later for exporting selected runtime metrics, t
 
 The project is still in foundation work. Core runtime pieces are being built before the full drag-and-drop Fork Flow editor. This keeps the runtime honest: the visual editor will represent real executable flow application definitions, not a separate UI-only model.
 
-Fork Flow now has an initial application definition model with shared resources and named workflows. The first cold-start runtime builder can create registered nodes and link typed ports from that definition. The preferred alpha shape uses explicit source nodes such as `mqtt.live-source`, `session.source`, and `generated.source`, each emitting the same `MqttEnvelope` port shape. The first desktop alpha can edit, save, load, validate, and run this JSON through the same host boundary. Runtime reload and richer graph patching are still planned work.
+Fork Flow now has an initial application definition model with shared resources and named workflows. The first cold-start runtime builder can create registered nodes and link typed ports from that definition. The preferred alpha shape uses explicit source nodes such as `mqtt.live-source`, `session.source`, and `generated.source`, each emitting the same `MqttEnvelope` port shape. Actor nodes consume explicit request models, so users add `flow.mapper` nodes when a source output must become a request such as `MqttPublishRequest` or `FileWriteRequest`. The first desktop alpha can edit, save, load, validate, and run this JSON through the same host boundary. Runtime reload and richer graph patching are still planned work.

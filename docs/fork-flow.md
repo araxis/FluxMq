@@ -20,14 +20,14 @@ flowchart LR
     MqttTrigger --> TopicFilter["TopicFilter"]
     TopicFilter --> PayloadMapper["PayloadInspectorMapper"]
     PayloadMapper --> UiProjection["UI Projection"]
-    TopicFilter --> RecordingMapper["RecordingRequestMapper"]
+    TopicFilter --> RecordingMapper["DynamicMapper: MqttRecordingRequest"]
     RecordingMapper --> Recorder["MqttRecorder"]
 ```
 
 ```mermaid
 flowchart LR
     ReplaySource["ReplaySource"] --> ReplayFilter["TopicFilter"]
-    ReplayFilter --> PublishMapper["PublishRequestMapper"]
+    ReplayFilter --> PublishMapper["DynamicMapper: MqttPublishRequest"]
     PublishMapper --> Publisher["MqttPublisher"]
 ```
 
@@ -69,17 +69,15 @@ Maps `MqttEnvelope` into `InspectedMqttMessage`.
 
 Replays ordered `MqttEnvelope` values with relative timing and speed control.
 
-### MqttPublishRequestMapperComponent
+### Dynamic Mapper
 
-Maps `MqttEnvelope` values into explicit `MqttPublishRequest` command objects.
+The user-facing `flow.mapper` node maps `MqttEnvelope` values into the explicit request type required by the next actor. Examples include `MqttPublishRequest`, `MqttRecordingRequest`, and `FileWriteRequest`.
+
+Request-specific mapper component classes may exist as runtime implementation details and compatibility aliases, but they are not separate product components in the visual catalog.
 
 ### MqttPublisherComponent
 
 Publishes `MqttPublishRequest` values through an MQTT session and reports publish failures through the error port.
-
-### MqttRecordingRequestMapperComponent
-
-Maps `MqttEnvelope` values into `MqttRecordingRequest` command objects.
 
 ### MqttRecorderComponent
 
@@ -335,6 +333,11 @@ The preferred alpha source registrations are explicit source nodes, alongside th
 - `mqtt.payload-inspector`
   - `Input`: `MqttEnvelope`
   - `Output`: `InspectedMqttMessage`
+  - `Errors`: `FlowError`
+- `flow.mapper`
+  - User-facing dynamic mapper node.
+  - `Input`: currently `MqttEnvelope`
+  - `Output`: configured request type, such as `MqttPublishRequest`, `MqttRecordingRequest`, or `FileWriteRequest`
   - `Errors`: `FlowError`
 - `mqtt.metrics`
   - `Input`: `MqttEnvelope`

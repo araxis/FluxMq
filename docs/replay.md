@@ -99,7 +99,7 @@ Recorded sessions can be replayed back through an MQTT session by mapping each r
 flowchart LR
     Repository["IMessageRepository"] --> Factory["RecordedSessionReplayFactory"]
     Factory --> Replay["ReplaySourceComponent"]
-    Replay --> Mapper["MqttPublishRequestMapperComponent"]
+    Replay --> Mapper["flow.mapper: MqttPublishRequest"]
     Mapper --> Publish["MqttPublisherComponent"]
     Publish --> Broker["MQTT broker"]
     Replay --> Errors["Errors"]
@@ -107,7 +107,7 @@ flowchart LR
     Publish --> Errors
 ```
 
-The replay source controls timing. The mapper owns the envelope-to-command transformation. The publisher owns broker publishing and converts publish exceptions into `FlowError` values, so one failed publish does not stop the rest of the replay.
+The replay source controls timing. The explicit mapper owns the envelope-to-request transformation. The publisher owns broker publishing and converts publish exceptions into `FlowError` values, so one failed publish does not stop the rest of the replay.
 
 ## Next Replay Steps
 

@@ -41,6 +41,7 @@ Responsibilities:
 - application definition model
 - runtime graph building
 - typed runtime ports
+- expression-engine abstractions for dynamic ELT mapping
 - lifecycle behavior
 - flow error events
 
@@ -52,6 +53,8 @@ Responsibilities:
 
 - MQTT connection and trigger components
 - source adapters for live, stored, and generated MQTT traffic
+- actor request contracts such as `MqttPublishRequest` and `FileWriteRequest`
+- mapper adapters that turn source messages into actor requests when driven by `flow.mapper`
 - replay source and recorded-session replay orchestration
 - local metrics projection components
 - LiteDB persistence and repositories
@@ -82,6 +85,7 @@ Responsibilities:
 
 - live broker connection, subscribe, publish, topic, and payload inspection views
 - visual Fork Flow definition workspace using Blazor.Diagrams
+- user-facing Dynamic Mapper node configuration for explicit ELT type conversion
 - file load/save for flow application definitions
 - runtime validate, run, and stop controls through `FluxMq.App`
 - reusable topic tree and payload inspector components
@@ -147,6 +151,8 @@ The first definition layer describes a host-independent flow application in an o
 Validation runs before graph construction and catches broken references, empty names, empty node types, malformed links, and duplicate links.
 
 Runtime graph building, component factories, schema metadata, and hot reload remain separate steps. This keeps the definition model useful without prematurely forcing all components into a large abstraction.
+
+Dynamic ELT mapping is explicit in the graph. Source and trigger nodes emit protocol/domain messages such as `MqttEnvelope`; actor nodes consume request contracts such as `MqttPublishRequest` or `FileWriteRequest`. When the port types differ, the user adds a `flow.mapper` node and configures the mapping engine and expressions. Request models are not standalone UI components, and FluxMQ should not insert hidden mappers automatically.
 
 ## Flow Application Runtime Direction
 

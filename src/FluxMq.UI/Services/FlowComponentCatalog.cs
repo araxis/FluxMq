@@ -4,6 +4,44 @@ namespace FluxMq.UI.Services;
 
 public sealed class FlowComponentCatalog
 {
+    private readonly IReadOnlyDictionary<string, FlowComponentDescriptor> _hiddenComponents =
+        new Dictionary<string, FlowComponentDescriptor>(StringComparer.Ordinal)
+        {
+            ["mqtt.publish-request"] = new(
+                "mqtt.publish-request",
+                "Publish Request Mapper",
+                "Mapper",
+                "Compatibility mapper for older definitions. Use Dynamic Mapper for new flows.",
+                IsResource: false,
+                [
+                    new("Input", "MqttEnvelope", IsInput: true),
+                    new("Output", "MqttPublishRequest", IsInput: false),
+                    new("Errors", "FlowError", IsInput: false)
+                ]),
+            ["mqtt.recording-request"] = new(
+                "mqtt.recording-request",
+                "Recording Request Mapper",
+                "Mapper",
+                "Compatibility mapper for older definitions. Use Dynamic Mapper for new flows.",
+                IsResource: false,
+                [
+                    new("Input", "MqttEnvelope", IsInput: true),
+                    new("Output", "MqttRecordingRequest", IsInput: false),
+                    new("Errors", "FlowError", IsInput: false)
+                ]),
+            ["file.write-request"] = new(
+                "file.write-request",
+                "File Write Request Mapper",
+                "Mapper",
+                "Compatibility mapper for older definitions. Use Dynamic Mapper for new flows.",
+                IsResource: false,
+                [
+                    new("Input", "MqttEnvelope", IsInput: true),
+                    new("Output", "FileWriteRequest", IsInput: false),
+                    new("Errors", "FlowError", IsInput: false)
+                ])
+        };
+
     private readonly IReadOnlyList<FlowComponentDescriptor> _components =
     [
         new(
@@ -92,6 +130,17 @@ public sealed class FlowComponentCatalog
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
+            "flow.mapper",
+            "Dynamic Mapper",
+            "Mapper",
+            "Explicitly maps one port type into another using user-authored mapping expressions.",
+            IsResource: false,
+            [
+                new("Input", "MqttEnvelope", IsInput: true),
+                new("Output", "Configured output type", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
             "mqtt.metrics",
             "MQTT Metrics",
             "Observer",
@@ -103,21 +152,10 @@ public sealed class FlowComponentCatalog
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
-            "mqtt.publish-request",
-            "Publish Request",
-            "Mapper",
-            "Dynamically maps MQTT envelopes into MQTT publish requests.",
-            IsResource: false,
-            [
-                new("Input", "MqttEnvelope", IsInput: true),
-                new("Output", "MqttPublishRequest", IsInput: false),
-                new("Errors", "FlowError", IsInput: false)
-            ]),
-        new(
             "mqtt.publisher",
             "MQTT Publisher",
             "Actor",
-            "Publishes explicit MQTT publish requests through a broker session.",
+            "Publishes MqttPublishRequest values through a broker session. Add a Dynamic Mapper upstream when starting from MQTT envelopes.",
             IsResource: false,
             [
                 new("Connection", "MqttConnection", IsInput: true),
@@ -125,42 +163,20 @@ public sealed class FlowComponentCatalog
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
-            "mqtt.recording-request",
-            "Recording Request",
-            "Mapper",
-            "Builds recording write requests from incoming MQTT envelopes.",
-            IsResource: false,
-            [
-                new("Input", "MqttEnvelope", IsInput: true),
-                new("Output", "MqttRecordingRequest", IsInput: false),
-                new("Errors", "FlowError", IsInput: false)
-            ]),
-        new(
             "mqtt.recorder",
             "MQTT Recorder",
             "Actor",
-            "Stores explicit MQTT recording requests in the local session store.",
+            "Stores MqttRecordingRequest values in the local session store. Add a Dynamic Mapper upstream when starting from MQTT envelopes.",
             IsResource: false,
             [
                 new("Input", "MqttRecordingRequest", IsInput: true),
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
-            "file.write-request",
-            "File Write Request",
-            "Mapper",
-            "Dynamically maps MQTT envelopes into file write requests.",
-            IsResource: false,
-            [
-                new("Input", "MqttEnvelope", IsInput: true),
-                new("Output", "FileWriteRequest", IsInput: false),
-                new("Errors", "FlowError", IsInput: false)
-            ]),
-        new(
             "file.writer",
             "File Writer",
             "Actor",
-            "Writes explicit file write requests to disk.",
+            "Writes FileWriteRequest values to disk. Add a Dynamic Mapper upstream when starting from MQTT envelopes.",
             IsResource: false,
             [
                 new("Input", "FileWriteRequest", IsInput: true),
@@ -182,5 +198,6 @@ public sealed class FlowComponentCatalog
     public IReadOnlyList<FlowComponentDescriptor> Components => _components;
 
     public FlowComponentDescriptor? Find(string type)
-        => _components.FirstOrDefault(component => string.Equals(component.Type, type, StringComparison.Ordinal));
+        => _components.FirstOrDefault(component => string.Equals(component.Type, type, StringComparison.Ordinal)) ??
+           (_hiddenComponents.TryGetValue(type, out var descriptor) ? descriptor : null);
 }

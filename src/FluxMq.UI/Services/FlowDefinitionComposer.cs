@@ -18,6 +18,7 @@ public sealed class FlowDefinitionComposer
     public const string MetricsNodeName = "metrics";
     public const string FilterNodeName = "filter";
     public const string RouterNodeName = "router";
+    public const string MapperNodeName = "mapper";
     public const string RecorderNodeName = "recorder";
     public const string PublisherNodeName = "publisher";
     public const string StateSourceNodeName = "state";
@@ -259,6 +260,7 @@ public sealed class FlowDefinitionComposer
             "mqtt.metrics" => MetricsNodeName,
             "mqtt.message-filter" => FilterNodeName,
             "mqtt.condition-router" => RouterNodeName,
+            "flow.mapper" => MakeUniqueNodeName(workflow, MapperNodeName),
             "mqtt.recording-request" => RecorderNodeName,
             "mqtt.recorder" => RecorderNodeName,
             "mqtt.publish-request" => PublisherNodeName,
@@ -278,9 +280,14 @@ public sealed class FlowDefinitionComposer
             ["type"] = componentType
         };
 
-        if (NeedsInputLink(componentType) && FindPreferredSourceNode(workflow) is { Length: > 0 } sourceNodeName)
+        if (componentType == "flow.mapper")
         {
-            node["Input"] = $"{sourceNodeName}.Output";
+            node["configuration"] = CreateDynamicMapperConfiguration("MqttPublishRequest");
+        }
+
+        if (FindDefaultInputLink(componentType, workflow) is { Length: > 0 } inputLink)
+        {
+            node["Input"] = inputLink;
         }
 
         workflow[nodeName] = node;
@@ -524,6 +531,28 @@ public sealed class FlowDefinitionComposer
         _ => true
     };
 
+    private static string? FindDefaultInputLink(string componentType, JsonObject workflow)
+    {
+        if (!NeedsInputLink(componentType))
+        {
+            return null;
+        }
+
+        if (IsActor(componentType))
+        {
+            return FindPreferredMapperNode(workflow) is { Length: > 0 } mapper
+                ? $"{mapper}.Output"
+                : null;
+        }
+
+        return FindPreferredSourceNode(workflow) is { Length: > 0 } source
+            ? $"{source}.Output"
+            : null;
+    }
+
+    private static bool IsActor(string componentType)
+        => componentType is "mqtt.publisher" or "mqtt.recorder" or "file.writer";
+
     private static string? FindPreferredSourceNode(JsonObject workflow)
     {
         foreach (var preferredName in new[] { TriggerNodeName, LiveSourceNodeName, StoredSourceNodeName })
@@ -543,6 +572,35 @@ public sealed class FlowDefinitionComposer
 
         return null;
     }
+
+    private static string? FindPreferredMapperNode(JsonObject workflow)
+    {
+        foreach (var node in workflow)
+        {
+            if (node.Value is JsonObject nodeObject &&
+                nodeObject["type"]?.GetValue<string?>() is "flow.mapper")
+            {
+                return node.Key;
+            }
+        }
+
+        return null;
+    }
+
+    private static JsonObject CreateDynamicMapperConfiguration(string outputType)
+        => new()
+        {
+            ["engine"] = "dynamic-expresso",
+            ["inputType"] = "MqttEnvelope",
+            ["outputType"] = outputType,
+            ["map"] = new JsonObject
+            {
+                ["topic"] = "topic",
+                ["payload"] = "payloadText",
+                ["qos"] = "qos",
+                ["retain"] = "retain"
+            }
+        };
 
     private static JsonObject CreateRoot()
         => new()
@@ -592,5 +650,21 @@ public sealed class FlowDefinitionComposer
         }
 
         return parts[0] + string.Concat(parts.Skip(1).Select(part => char.ToUpperInvariant(part[0]) + part[1..]));
+    }
+
+    private static string MakeUniqueNodeName(JsonObject workflow, string preferred)
+    {
+        if (!workflow.ContainsKey(preferred))
+        {
+            return preferred;
+        }
+
+        var index = 2;
+        while (workflow.ContainsKey($"{preferred}{index}"))
+        {
+            index++;
+        }
+
+        return $"{preferred}{index}";
     }
 }

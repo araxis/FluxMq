@@ -1,0 +1,150 @@
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.Transform"
+                 CategoryColor="@Color.Secondary"
+                 EditDialogMaxWidth="MaxWidth.Medium"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
+    <Body>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            @_inputType -> @_outputType
+        </MudText>
+        <div class="d-flex flex-wrap gap-1 mt-2">
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@_engine</MudChip>
+            @foreach (var key in _map.Keys.Take(4))
+            {
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">@key</MudChip>
+            }
+        </div>
+    </Body>
+    <Editor>
+        <MudStack Spacing="2">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                The mapper is explicit. It converts the input port type into the actor request type; FluxMQ will not insert this node automatically.
+            </MudText>
+
+            <MudGrid Spacing="2">
+                <MudItem xs="12" sm="4">
+                    <MudSelect T="string"
+                               Label="Engine"
+                               Value="@_engine"
+                               ValueChanged="@SetEngine"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        <MudSelectItem Value="@("dynamic-expresso")">Dynamic Expresso</MudSelectItem>
+                        <MudSelectItem Value="@("jsonata")">JSONata</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudTextField T="string"
+                                  @bind-Value="_inputType"
+                                  Label="Input type"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudSelect T="string"
+                               Label="Output type"
+                               Value="@_outputType"
+                               ValueChanged="@SetOutputType"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        <MudSelectItem Value="@("MqttPublishRequest")">MqttPublishRequest</MudSelectItem>
+                        <MudSelectItem Value="@("FileWriteRequest")">FileWriteRequest</MudSelectItem>
+                        <MudSelectItem Value="@("MqttRecordingRequest")">MqttRecordingRequest</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+
+            <MudText Typo="Typo.subtitle2">Map expressions</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                Expressions run against an MQTT envelope context: envelope, topic, payload, payloadText, qos, qualityOfService, retain, receivedAt.
+            </MudText>
+
+            @foreach (var key in MapKeysFor(_outputType))
+            {
+                var field = key;
+                <MudTextField T="string"
+                              Value="@MapValue(field)"
+                              ValueChanged="@(value => _map[field] = value ?? string.Empty)"
+                              Label="@field"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Lines="@(field is "payload" or "content" ? 3 : 1)" />
+            }
+        </MudStack>
+    </Editor>
+</NodeWidgetShell>
+
+@code {
+    [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
+
+    private DynamicMapperNodeModel Model => (DynamicMapperNodeModel)Node;
+
+    private string _engine = "dynamic-expresso";
+    private string _inputType = "MqttEnvelope";
+    private string _outputType = "MqttPublishRequest";
+    private Dictionary<string, string> _map = [];
+
+    protected override void OnParametersSet() => LoadDraft();
+
+    private void LoadDraft()
+    {
+        _engine = Model.Engine;
+        _inputType = Model.InputType;
+        _outputType = Model.OutputType;
+        _map = new Dictionary<string, string>(Model.Map, StringComparer.Ordinal);
+        EnsureMapKeys();
+    }
+
+    private void SetEngine(string value) => _engine = value;
+
+    private void SetOutputType(string value)
+    {
+        if (string.Equals(_outputType, value, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _outputType = value;
+        _map = DynamicMapperNodeModel.DefaultMap(_outputType);
+    }
+
+    private string MapValue(string key)
+    {
+        EnsureMapKeys();
+        return _map.TryGetValue(key, out var value) ? value : string.Empty;
+    }
+
+    private void EnsureMapKeys()
+    {
+        var defaults = DynamicMapperNodeModel.DefaultMap(_outputType);
+        foreach (var (key, value) in defaults)
+        {
+            _map.TryAdd(key, value);
+        }
+    }
+
+    private Task SaveAsync()
+    {
+        EnsureMapKeys();
+        Model.Engine = _engine.Trim();
+        Model.InputType = string.IsNullOrWhiteSpace(_inputType) ? "MqttEnvelope" : _inputType.Trim();
+        Model.OutputType = string.IsNullOrWhiteSpace(_outputType) ? "MqttPublishRequest" : _outputType.Trim();
+        Model.Map = _map
+            .Where(pair => !string.IsNullOrWhiteSpace(pair.Value))
+            .ToDictionary(pair => pair.Key, pair => pair.Value.Trim(), StringComparer.Ordinal);
+        Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
+        return Task.CompletedTask;
+    }
+
+    private static IReadOnlyList<string> MapKeysFor(string outputType)
+        => outputType switch
+        {
+            "FileWriteRequest" => ["path", "content", "mode", "createDirectory"],
+            "MqttRecordingRequest" => ["sessionId"],
+            _ => ["topic", "payload", "qos", "retain"]
+        };
+}
