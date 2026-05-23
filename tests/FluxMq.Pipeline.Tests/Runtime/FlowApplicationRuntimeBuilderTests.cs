@@ -55,6 +55,64 @@ public sealed class FlowApplicationRuntimeBuilderTests
     }
 
     [Fact]
+    public async Task Build_MultipleLinksToSameInput_WaitsForAllSourceCompletions()
+    {
+        TestSourceNode? sourceA = null;
+        TestSourceNode? sourceB = null;
+        TestSinkNode<int>? sink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .Register(new NodeType("test.source"), (address, _) =>
+            {
+                var node = new TestSourceNode();
+                if (address.Node.Value == "sourceA")
+                {
+                    sourceA = node;
+                }
+                else
+                {
+                    sourceB = node;
+                }
+
+                return SourceNode(address, node);
+            })
+            .Register(new NodeType("test.sink"), (address, _) =>
+            {
+                sink = new TestSinkNode<int>();
+                return SinkNode(address, sink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["sourceA"] = Node("test.source"),
+                        ["sourceB"] = Node("test.source"),
+                        ["sink"] = NodeWithPort("test.sink", "Input", "[\"sourceA.Output\", \"sourceB.Output\"]")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue();
+
+        sourceA!.Post(1);
+        sourceA.Complete();
+        await Task.Delay(50);
+
+        sourceB!.Post(2);
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+        sink!.Values.ShouldBe(new[] { 1, 2 });
+    }
+
+    [Fact]
     public async Task Build_LinksWorkflowNodeFromSharedResource()
     {
         TestSourceNode? resource = null;

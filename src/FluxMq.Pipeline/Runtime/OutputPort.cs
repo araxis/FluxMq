@@ -13,6 +13,7 @@ public abstract class OutputPort
 
     public PortAddress Address { get; }
     public Type ValueType { get; }
+    public abstract Task Completion { get; }
 
     public abstract IDisposable? TryLinkTo(
         InputPort input,
@@ -23,6 +24,7 @@ public abstract class OutputPort
 public sealed class OutputPort<T>(PortAddress address, ISourceBlock<T> source) : OutputPort(address, typeof(T))
 {
     public ISourceBlock<T> Source { get; } = source;
+    public override Task Completion => Source.Completion;
 
     public override IDisposable? TryLinkTo(
         InputPort input,

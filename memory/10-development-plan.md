@@ -35,7 +35,7 @@ Actor editors are in place for `mqtt.publisher`, `mqtt.recorder`, and `file.writ
 
 The current diagnostics slice attaches validation, runtime build, and node startup failures to the responsible node where possible. Diagram nodes now show error/warning/info status in their border and header tooltip while the existing workspace diagnostic list remains available for global errors.
 The desktop shell now exposes active-app `Validate`, `Run`, and `Stop` actions in the top bar, plus an app runtime state pill, so validation/run feedback is separate from live broker connection state.
-The current logger slice adds `flow.logger` as a standalone observer component with explicit `Input`, `FlowErrors`, `Entries`, and `Errors` ports. Workspace logs are becoming a history surface for validation, run/stop feedback, and runtime logger entries, while diagnostics remain the current status view.
+The current logging slice keeps diagrams clean by collecting all runtime component `FlowError` outputs into the workspace `Logs` tab by default, without adding hidden definition nodes or visible links. `Flow Logger` remains an explicit observer component for flows that need log entries as stream data. Runtime linking now keeps multi-source input ports open until every linked source completes, so explicit multi-input observers still behave correctly.
 
 ## Step-by-Step Plan
 
@@ -287,18 +287,12 @@ Done when:
 
 ## Next Action
 
-Continue Phase 5 after review of the runtime logger slice:
+Continue Phase 5 after review of the default runtime log collection slice:
 
-1. In the desktop right inspector, open `Logs` and confirm validation messages appear after pressing `Validate`.
-2. Run a live MQTT trigger flow against an available broker and confirm the previous `MQTT client is not connected` trigger-start error is gone.
-3. Open an app with two broker resources and confirm MQTT Publisher, MQTT Trigger, and the right-side Publish panel show broker-resource dropdowns.
-4. Add `Flow Logger` to a flow with a source, run it, and confirm MQTT message entries appear in `Logs`.
-5. Confirm each log row has a visible `Level: ...` label, matching icon/color treatment, source/code, and scope when available.
-6. Run an app that auto-connects a broker, press `Stop`, and confirm that app-started broker sessions disconnect and the top toolbar is enabled again.
-7. While stopping, confirm the Stop action shows the compact spinner beside the `Stop` label.
-8. In an app with multiple broker resources, open the Publish tab and confirm the first app broker is selected by default.
-9. Add or edit an MQTT Publisher node and confirm its broker field defaults to the first app broker.
-10. Manually connect a broker, run and stop the app, and confirm the manually connected broker remains connected.
-11. Try the filter box and clear button in `Logs`.
-12. Next slice: make component error wiring easier so `Errors` outputs can be routed to a logger without manual JSON edits.
-13. Add pass/fail routing or assertion components only after the plain validation-result and log-entry surfaces feel right.
+1. Open an app with several components and do not add `Flow Logger`.
+2. Run the app with a deliberate component error, such as a bad filter expression, and confirm the right-inspector `Logs` tab receives a `FlowError` entry with workflow/node/port scope.
+3. Confirm the designer did not add visible error links or hidden logger configuration to the app JSON.
+4. Add `Flow Logger` only when you want message/log entries as explicit stream data, then confirm it behaves like a normal observer component.
+5. Save the app JSON and confirm the logger does not get a generated `FlowErrors` array unless the user explicitly connects one.
+6. Next slice: improve visual link editing/type feedback so users can intentionally connect or reroute ports without editing JSON.
+7. Add pass/fail routing or assertion components only after the plain validation-result and log-entry surfaces feel right.

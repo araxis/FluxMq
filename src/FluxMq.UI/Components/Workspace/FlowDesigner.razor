@@ -178,7 +178,8 @@
                                 var targetPort = PortFor(targetNode, PortAlignment.Left, port.Name);
                                 if (sourcePort is null || targetPort is null) continue;
 
-                                _diagram.Links.Add(CreateStyledLink(sourcePort, targetPort));
+                                var linkColor = IsErrorLink(sourcePortName, port.Name) ? "#F87171" : "#2DD4BF";
+                                _diagram.Links.Add(CreateStyledLink(sourcePort, targetPort, linkColor));
                             }
                         }
                     }
@@ -431,6 +432,10 @@
 
     private static string ShortTopic(string topic)
         => topic.Length <= 42 ? topic : $"{topic[..18]}...{topic[^18..]}";
+
+    private static bool IsErrorLink(string? sourcePortName, string targetPortName)
+        => string.Equals(sourcePortName, "Errors", StringComparison.OrdinalIgnoreCase) ||
+           string.Equals(targetPortName, "FlowErrors", StringComparison.OrdinalIgnoreCase);
 
     private void UpdatePulseTimer()
     {

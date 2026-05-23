@@ -306,10 +306,54 @@ public sealed class FlowDefinitionComposerTests
 
         logger.GetProperty("type").GetString().ShouldBe("flow.logger");
         logger.GetProperty("Input").GetString().ShouldBe($"{FlowDefinitionComposer.TriggerNodeName}.Output");
+        logger.TryGetProperty("FlowErrors", out _).ShouldBeFalse();
         logger.GetProperty("configuration").GetProperty("boundedCapacity").GetInt32()
             .ShouldBe(1000);
         logger.GetProperty("configuration").GetProperty("maxEntries").GetInt32()
             .ShouldBe(500);
+    }
+
+    [Fact]
+    public void AddComponent_DoesNotAppendNewComponentErrorsToExistingFlowLogger()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var withLogger = composer.AddComponent(initial, "flow.logger");
+        var updated = composer.AddComponent(withLogger, "json.schema-validator");
+
+        using var document = JsonDocument.Parse(updated);
+        var logger = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty(FlowDefinitionComposer.LoggerNodeName);
+
+        logger.TryGetProperty("FlowErrors", out _).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void AddComponent_FlowLoggerWithoutErrorLinksCreatesBuildableDefinition()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var updated = composer.AddComponent(initial, "flow.logger");
+
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(updated));
+        var configuration = new ConfigurationBuilder()
+            .AddJsonStream(stream)
+            .Build();
+
+        using var host = FlowApplicationHost.CreateDefault(configuration);
+        var result = host.Build();
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.RuntimeBuild?.Errors.Select(error => error.Message) ?? []));
     }
 
     [Theory]

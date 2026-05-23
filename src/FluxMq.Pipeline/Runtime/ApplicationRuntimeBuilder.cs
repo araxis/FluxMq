@@ -152,6 +152,7 @@ public sealed class ApplicationRuntimeBuilder
                         continue;
                     }
 
+                    var resolvedLinks = new List<OutputPort>();
                     foreach (var link in portLinks.Value)
                     {
                         if (!TryFindSource(link.From, workflows, resources, out var sourceNode))
@@ -171,7 +172,14 @@ public sealed class ApplicationRuntimeBuilder
                             continue;
                         }
 
-                        var disposable = output.TryLinkTo(input, propagateCompletion: true, out var error);
+                        resolvedLinks.Add(output);
+                    }
+
+                    var shouldCoordinateCompletion = resolvedLinks.Count > 1;
+                    var linkedOutputs = new List<OutputPort>();
+                    foreach (var output in resolvedLinks)
+                    {
+                        var disposable = output.TryLinkTo(input, propagateCompletion: !shouldCoordinateCompletion, out var error);
                         if (error is not null)
                         {
                             errors.Add(error with
@@ -187,7 +195,13 @@ public sealed class ApplicationRuntimeBuilder
                         {
                             links.Add(disposable);
                             linkedTargets.Add(targetNode);
+                            linkedOutputs.Add(output);
                         }
+                    }
+
+                    if (shouldCoordinateCompletion && linkedOutputs.Count == resolvedLinks.Count)
+                    {
+                        links.Add(new InputCompletionLink(input, linkedOutputs));
                     }
                 }
             }
@@ -233,4 +247,61 @@ public sealed class ApplicationRuntimeBuilder
 
     private static PortName? ToPortName(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : new PortName(value);
+
+    private sealed class InputCompletionLink : IDisposable
+    {
+        private readonly CancellationTokenSource _disposed = new();
+        private int _remaining;
+        private int _finished;
+
+        public InputCompletionLink(InputPort input, IReadOnlyCollection<OutputPort> outputs)
+        {
+            _remaining = outputs.Count;
+
+            foreach (var output in outputs)
+            {
+                _ = WatchSourceCompletionAsync(input, output.Completion, _disposed.Token);
+            }
+        }
+
+        public void Dispose()
+        {
+            if (!_disposed.IsCancellationRequested)
+            {
+                _disposed.Cancel();
+            }
+
+            _disposed.Dispose();
+        }
+
+        private async Task WatchSourceCompletionAsync(
+            InputPort input,
+            Task sourceCompletion,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                await sourceCompletion.WaitAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+            catch (Exception exception)
+            {
+                if (Interlocked.Exchange(ref _finished, 1) == 0)
+                {
+                    input.Fault(exception);
+                }
+
+                return;
+            }
+
+            if (Interlocked.Decrement(ref _remaining) == 0 &&
+                Interlocked.Exchange(ref _finished, 1) == 0)
+            {
+                input.Complete();
+            }
+        }
+    }
 }

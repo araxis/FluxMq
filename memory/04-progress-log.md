@@ -613,3 +613,18 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutDir="$env:TEMP\FluxMqVerifyUiTests\"` passes with 75 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -m:1` passes with 285 tests.
   - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false` passes with 0 warnings.
+
+## 2026-05-23 - Default runtime log collection slice
+
+- Made workspace `Logs` collect runtime component errors by default:
+  - every runtime output port carrying `FlowError` is observed by the workspace while the app runs
+  - errors appear in the right-inspector `Logs` tab with workflow, node, and port scope
+  - no hidden logger node or generated `FlowErrors` links are written into app definitions
+  - `Flow Logger` remains an explicit observer component for flows that need log entries as stream data
+- Hardened runtime multi-source input behavior:
+  - multiple links into the same input no longer propagate completion independently
+  - the input completes after every linked source completes, so a logger can safely collect several error streams
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 46 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 23 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 78 tests.
