@@ -35,8 +35,10 @@ public sealed class ApplicationRuntimeBuilder
         }
 
         var errors = new List<ApplicationRuntimeBuildError>();
+        var resourceLinks = new List<IDisposable>();
         var workflowLinks = new Dictionary<string, List<IDisposable>>();
         var linkedTargets = new HashSet<RuntimeNode>();
+        var linkedOutputs = new HashSet<OutputPort>();
 
         var resourceNodes = CreateNodes(null, definition.Resources, errors);
         var workflowNodes = definition.Workflows.ToDictionary(
@@ -48,12 +50,19 @@ public sealed class ApplicationRuntimeBuilder
             foreach (var key in workflowNodes.Keys)
                 workflowLinks[key] = [];
 
-            LinkWorkflows(definition, resourceNodes, workflowNodes, workflowLinks, linkedTargets, errors);
+            LinkWorkflows(definition, resourceNodes, workflowNodes, workflowLinks, linkedTargets, linkedOutputs, errors);
+            if (errors.Count == 0)
+            {
+                DrainUnlinkedOutputs(resourceNodes.Values, workflowNodes, resourceLinks, workflowLinks, linkedOutputs);
+            }
         }
 
         if (errors.Count > 0)
         {
-            DisposeCreatedNodes(resourceNodes, workflowNodes, workflowLinks.Values.SelectMany(l => l).ToList());
+            DisposeCreatedNodes(
+                resourceNodes,
+                workflowNodes,
+                resourceLinks.Concat(workflowLinks.Values.SelectMany(l => l)).ToList());
             return ApplicationRuntimeBuildResult.Failed(validation, errors);
         }
 
@@ -69,7 +78,7 @@ public sealed class ApplicationRuntimeBuilder
         var resourceEntryNodes = resources.Where(n => !linkedTargets.Contains(n)).ToArray();
 
         return ApplicationRuntimeBuildResult.Succeeded(
-            new ApplicationRuntime(resources, workflows, resourceEntryNodes),
+            new ApplicationRuntime(resources, workflows, resourceEntryNodes, resourceLinks),
             validation);
     }
 
@@ -124,6 +133,7 @@ public sealed class ApplicationRuntimeBuilder
         IReadOnlyDictionary<string, IReadOnlyDictionary<NodeName, RuntimeNode>> workflows,
         Dictionary<string, List<IDisposable>> workflowLinks,
         HashSet<RuntimeNode> linkedTargets,
+        HashSet<OutputPort> allLinkedOutputs,
         List<ApplicationRuntimeBuildError> errors)
     {
         foreach (var workflowDefinition in definition.Workflows)
@@ -196,6 +206,7 @@ public sealed class ApplicationRuntimeBuilder
                             links.Add(disposable);
                             linkedTargets.Add(targetNode);
                             linkedOutputs.Add(output);
+                            allLinkedOutputs.Add(output);
                         }
                     }
 
@@ -205,6 +216,37 @@ public sealed class ApplicationRuntimeBuilder
                     }
                 }
             }
+        }
+    }
+
+    private static void DrainUnlinkedOutputs(
+        IEnumerable<RuntimeNode> resources,
+        IReadOnlyDictionary<string, IReadOnlyDictionary<NodeName, RuntimeNode>> workflows,
+        List<IDisposable> resourceLinks,
+        Dictionary<string, List<IDisposable>> workflowLinks,
+        HashSet<OutputPort> linkedOutputs)
+    {
+        AddUnlinkedOutputDrains(resources, resourceLinks, linkedOutputs);
+
+        foreach (var workflow in workflows)
+        {
+            AddUnlinkedOutputDrains(workflow.Value.Values, workflowLinks[workflow.Key], linkedOutputs);
+        }
+    }
+
+    private static void AddUnlinkedOutputDrains(
+        IEnumerable<RuntimeNode> nodes,
+        List<IDisposable> links,
+        HashSet<OutputPort> linkedOutputs)
+    {
+        foreach (var output in nodes.SelectMany(node => node.Outputs))
+        {
+            if (!output.DrainWhenUnlinked || linkedOutputs.Contains(output))
+            {
+                continue;
+            }
+
+            links.Add(output.LinkToDiscard());
         }
     }
 

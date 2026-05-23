@@ -1,3 +1,4 @@
+using FluxMq.Pipeline.Components;
 using FluxMq.Pipeline.Definitions;
 using System.Threading.Tasks.Dataflow;
 
@@ -14,17 +15,25 @@ public abstract class OutputPort
     public PortAddress Address { get; }
     public Type ValueType { get; }
     public abstract Task Completion { get; }
+    public abstract bool DrainWhenUnlinked { get; }
 
     public abstract IDisposable? TryLinkTo(
         InputPort input,
         bool propagateCompletion,
         out ApplicationRuntimeBuildError? error);
+
+    public abstract IDisposable LinkToDiscard();
 }
 
-public sealed class OutputPort<T>(PortAddress address, ISourceBlock<T> source) : OutputPort(address, typeof(T))
+public sealed class OutputPort<T>(
+    PortAddress address,
+    ISourceBlock<T> source,
+    bool drainWhenUnlinked = true)
+    : OutputPort(address, typeof(T))
 {
     public ISourceBlock<T> Source { get; } = source;
     public override Task Completion => Source.Completion;
+    public override bool DrainWhenUnlinked { get; } = drainWhenUnlinked && typeof(T) != typeof(FlowError);
 
     public override IDisposable? TryLinkTo(
         InputPort input,
@@ -56,4 +65,9 @@ public sealed class OutputPort<T>(PortAddress address, ISourceBlock<T> source) :
             return null;
         }
     }
+
+    public override IDisposable LinkToDiscard()
+        => Source.LinkTo(
+            DataflowBlock.NullTarget<T>(),
+            new DataflowLinkOptions { PropagateCompletion = true });
 }
