@@ -1,5 +1,6 @@
 using Shouldly;
 using FluxMq.UI.Components.Diagram;
+using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
 using FluxMq.UI.Models;
 using FluxMq.UI.Services;
 using Blazor.Diagrams.Core.Models;
@@ -116,6 +117,72 @@ public sealed class FlowDiagramNodeModelTests
 
         leftOutput.RepresentsInput.ShouldBeFalse();
         rightInput.RepresentsInput.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void FlowPortModel_RejectsSameDirectionLinks()
+    {
+        var first = new FlowDiagramNodeModel(
+            "workflow1.first",
+            new DiagramPoint(10, 20),
+            "first",
+            "mqtt.trigger",
+            descriptor: null,
+            isResource: false);
+        var second = new FlowDiagramNodeModel(
+            "workflow1.second",
+            new DiagramPoint(40, 20),
+            "second",
+            "mqtt.trigger",
+            descriptor: null,
+            isResource: false);
+
+        var firstOutput = new FlowPortModel(first, PortAlignment.Right, "Output", representsInput: false, valueType: "MqttEnvelope");
+        var secondOutput = new FlowPortModel(second, PortAlignment.Right, "Output", representsInput: false, valueType: "MqttEnvelope");
+
+        firstOutput.CanAttachTo(secondOutput).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void FlowPortModel_RejectsMismatchedValueTypes()
+    {
+        var source = new FlowDiagramNodeModel(
+            "workflow1.source",
+            new DiagramPoint(10, 20),
+            "source",
+            "mqtt.trigger",
+            descriptor: null,
+            isResource: false);
+        var publisher = new FlowDiagramNodeModel(
+            "workflow1.publisher",
+            new DiagramPoint(40, 20),
+            "publisher",
+            "mqtt.publisher",
+            descriptor: null,
+            isResource: false);
+
+        var output = new FlowPortModel(source, PortAlignment.Right, "Output", representsInput: false, valueType: "MqttEnvelope");
+        var input = new FlowPortModel(publisher, PortAlignment.Left, "Input", representsInput: true, valueType: "MqttPublishRequest");
+
+        output.CanCarryValueTo(input).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DynamicMapperNodeModel_UsesConfiguredOutputTypeForPortType()
+    {
+        var descriptor = new ComponentPortDescriptor("Output", "Configured output type", IsInput: false);
+        var model = new DynamicMapperNodeModel(
+            "workflow1.mapper",
+            new DiagramPoint(10, 20),
+            "mapper",
+            descriptor: null,
+            isResource: false)
+        {
+            OutputContract = DynamicMapperNodeModel.OutputContractTyped,
+            OutputType = "FileWriteRequest"
+        };
+
+        model.ResolvePortValueType(descriptor).ShouldBe("FileWriteRequest");
     }
 
     [Fact]

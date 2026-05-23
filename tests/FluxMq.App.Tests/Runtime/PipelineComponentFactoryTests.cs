@@ -518,6 +518,124 @@ public sealed class PipelineComponentFactoryTests
     }
 
     [Fact]
+    public async Task LiveTriggerAndJsonataMapper_CanPublishMappedRequestsToConnection()
+    {
+        FakeMqttSession? session = null;
+        const string mapperExpression = """
+        {
+          "topic": 'test',
+          "payload": payloadText,
+          "qos": qos,
+          "retain": retain
+        }
+        """;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories(profile =>
+            {
+                session = new FakeMqttSession();
+                return session;
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Resources =
+            {
+                ["local-broker"] = new NodeDefinition
+                {
+                    Type = PipelineFlowNodeTypes.Connection,
+                    Configuration =
+                    {
+                        ["profile"] = JsonDocument.Parse("""{"name":"local-broker","host":"localhost","port":1883,"clientId":"test-client"}""").RootElement.Clone()
+                    }
+                }
+            },
+            Workflows =
+            {
+                ["pip1"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["trigger"] = new NodeDefinition
+                        {
+                            Type = PipelineFlowNodeTypes.Trigger,
+                            Configuration =
+                            {
+                                ["connection"] = JsonDocument.Parse("\"local-broker\"").RootElement.Clone(),
+                                ["subscriptions"] = JsonDocument.Parse("""["#"]""").RootElement.Clone()
+                            }
+                        },
+                        ["mapper"] = new NodeDefinition
+                        {
+                            Type = PipelineFlowNodeTypes.DynamicMapper,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"trigger.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["engine"] = JsonDocument.Parse("\"jsonata\"").RootElement.Clone(),
+                                ["inputType"] = JsonDocument.Parse("\"MqttEnvelope\"").RootElement.Clone(),
+                                ["outputType"] = JsonDocument.Parse("\"MqttPublishRequest\"").RootElement.Clone(),
+                                ["expression"] = JsonDocument.Parse(JsonSerializer.Serialize(mapperExpression)).RootElement.Clone()
+                            }
+                        },
+                        ["publisher"] = new NodeDefinition
+                        {
+                            Type = PipelineFlowNodeTypes.MqttPublisher,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"mapper.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["connection"] = JsonDocument.Parse("\"local-broker\"").RootElement.Clone()
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue();
+        await using var runtime = result.Runtime!;
+
+        await runtime.StartAsync();
+        session.ShouldNotBeNull();
+        await session!.WriteAsync(new MqttEnvelope
+        {
+            Topic = "factory/source",
+            Payload = """{"hello":"fluxmq"}"""u8.ToArray(),
+            QualityOfService = MqttQualityOfServiceLevel.AtLeastOnce,
+            Retain = true
+        });
+        await WaitUntilAsync(() => session.Published.Count == 1);
+        session.CompleteMessages();
+        await runtime.Completion;
+
+        var publish = session.Published.ShouldHaveSingleItem();
+        publish.Topic.ShouldBe("test");
+        publish.Payload.ShouldBe("""{"hello":"fluxmq"}"""u8.ToArray());
+        publish.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtLeastOnce);
+        publish.Retain.ShouldBeTrue();
+    }
+
+    private static async Task WaitUntilAsync(Func<bool> predicate)
+    {
+        for (var attempt = 0; attempt < 40; attempt++)
+        {
+            if (predicate())
+            {
+                return;
+            }
+
+            await Task.Delay(25);
+        }
+
+        predicate().ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task DynamicGenericMapper_CanWriteMappedEnvelopePayloadsToFiles()
     {
         var directory = Path.Combine(Path.GetTempPath(), "fluxmq-runtime-tests", Guid.NewGuid().ToString("N"))

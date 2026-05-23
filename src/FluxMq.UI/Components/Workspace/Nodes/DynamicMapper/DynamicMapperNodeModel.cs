@@ -47,6 +47,25 @@ public sealed class DynamicMapperNodeModel(string id, DiagramPoint position, str
                 : Expression.Trim()
         };
 
+    public override string ResolvePortValueType(ComponentPortDescriptor descriptor)
+    {
+        if (descriptor.IsInput &&
+            string.Equals(descriptor.Name, "Input", StringComparison.OrdinalIgnoreCase))
+        {
+            return string.IsNullOrWhiteSpace(InputType) ? descriptor.ValueType : InputType.Trim();
+        }
+
+        if (!descriptor.IsInput &&
+            string.Equals(descriptor.Name, "Output", StringComparison.OrdinalIgnoreCase))
+        {
+            return NormalizeOutputContract(OutputContract) == OutputContractTyped && !string.IsNullOrWhiteSpace(OutputType)
+                ? OutputType.Trim()
+                : "Any";
+        }
+
+        return base.ResolvePortValueType(descriptor);
+    }
+
     public static string NormalizeOutputContract(string? value)
         => value?.Trim().ToLowerInvariant() switch
         {

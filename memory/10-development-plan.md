@@ -25,7 +25,7 @@ This is the active implementation plan. Keep it updated after every meaningful d
 ## Current Target
 
 **Phase:** 5 - desktop workspace authoring polish
-**Active feature:** `F-023 - Runtime Control And Diagnostics`
+**Active feature:** `F-021 - Visual Flow Diagram`
 **Status:** Review
 **Started:** 2026-05-23
 
@@ -36,6 +36,10 @@ Actor editors are in place for `mqtt.publisher`, `mqtt.recorder`, and `file.writ
 The current diagnostics slice attaches validation, runtime build, and node startup failures to the responsible node where possible. Diagram nodes now show error/warning/info status in their border and header tooltip while the existing workspace diagnostic list remains available for global errors.
 The desktop shell now exposes active-app `Validate`, `Run`, and `Stop` actions in the top bar, plus an app runtime state pill, so validation/run feedback is separate from live broker connection state.
 The current logging slice keeps diagrams clean by collecting all runtime component `FlowError` outputs into the workspace `Logs` tab by default, without adding hidden definition nodes or visible links. `Flow Logger` remains an explicit observer component for flows that need log entries as stream data. Runtime linking now keeps multi-source input ports open until every linked source completes, so explicit multi-input observers still behave correctly.
+
+The current visual-link slice makes the diagram a real editor for workflow links. Dragging a compatible output port to an input port writes the target port reference into the active workflow JSON, deleting a rendered workflow link removes that reference, and dynamic mapper output ports use their configured result type for type feedback. Plain target inputs are rerouted on new connections; `Flow Logger` keeps append-style behavior for message/log collection inputs.
+Deleting a workflow node from the designer now removes it from the active workflow JSON and cleans downstream references to that node, so deleted components do not return after the next add/rebuild action.
+MQTT Publisher now emits successful publish log entries to the workspace `Logs` tab by default and updates node activity with published count plus the last topic. This keeps actor execution observable without wiring every actor to an explicit logger block.
 
 ## Step-by-Step Plan
 
@@ -284,15 +288,25 @@ Done when:
   - the right-side Publish panel defaults to the first broker resource from the active app
   - MQTT Publisher nodes default to the first app broker resource when added or when their editor opens with the generic fallback
 - Removed the Live MQTT Trigger `Connection` canvas port; broker selection is handled through node configuration and the broker resource dropdown.
+- Added the first visual link editing slice:
+  - diagram-created workflow links now write back to the active workflow JSON
+  - deleted workflow links remove their matching JSON reference
+  - port compatibility now checks source/output direction and value type before accepting a new link
+  - dynamic mapper output ports expose the configured result type, so actor inputs only accept the correct mapped request type
+  - logger inputs that are meant to collect streams append links instead of replacing the existing reference
+  - deleting a workflow node from the canvas now persists to JSON and removes downstream links to that node
+  - MQTT Publisher now logs successful publishes and surfaces publish count/topic activity in the node
 
 ## Next Action
 
-Continue Phase 5 after review of the default runtime log collection slice:
+Review the visual link editing slice:
 
-1. Open an app with several components and do not add `Flow Logger`.
-2. Run the app with a deliberate component error, such as a bad filter expression, and confirm the right-inspector `Logs` tab receives a `FlowError` entry with workflow/node/port scope.
-3. Confirm the designer did not add visible error links or hidden logger configuration to the app JSON.
-4. Add `Flow Logger` only when you want message/log entries as explicit stream data, then confirm it behaves like a normal observer component.
-5. Save the app JSON and confirm the logger does not get a generated `FlowErrors` array unless the user explicitly connects one.
-6. Next slice: improve visual link editing/type feedback so users can intentionally connect or reroute ports without editing JSON.
-7. Add pass/fail routing or assertion components only after the plain validation-result and log-entry surfaces feel right.
+1. Open `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json`.
+2. In a pipeline, drag `trigger.Output` to a normal input such as `inspect.Input` or `metrics.Input`; confirm the link appears and the App JSON updates that target port.
+3. Add a Dynamic Mapper configured as `MqttPublishRequest`, then drag `mapper.Output` to `publisher.Input`; confirm the link is accepted and saved.
+4. Try dragging `trigger.Output` directly to `publisher.Input`; confirm the designer rejects the mismatched type.
+5. Delete a workflow link from the canvas and confirm the matching JSON reference is removed.
+6. Delete a component such as `filter`, then add another component such as `mqtt.publisher`; confirm the deleted component does not return.
+7. Run `pip1` in `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json`, publish any message into the trigger path, and confirm the `publisher` node shows a published count and the `Logs` tab gets a `MqttPublisher` info entry for topic `test`.
+8. Connect multiple error outputs to `logger.FlowErrors` or multiple envelope outputs to `logger.Input`; confirm those logger ports append links instead of replacing the existing link.
+9. After confirmation, commit this slice and open a PR. Next slice can add clearer hover/status feedback for rejected link attempts or move to pass/fail routing.

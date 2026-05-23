@@ -1,6 +1,8 @@
 @using FluxMq.UI.Components.Diagram
 @using FluxMq.Components.MessageFilter
+@using FluxMq.Components.MqttPublisher
 @using FluxMq.UI.Models
+@using Blazor.Diagrams.Core.Models.Base
 @implements IDisposable
 @inject LiveMqttWorkspaceService Live
 @inject FlowComponentCatalog Catalog
@@ -66,6 +68,8 @@
     private static readonly LinkMarker FlowTargetMarker = new("M 0 -4 6 0 0 4 z", 13d);
     private System.Threading.Timer? _pulseTimer;
     private int _portMeasurementGeneration;
+    private bool _isRebuildingDiagram;
+    private bool _isApplyingLinkEdit;
 
     protected override void OnInitialized()
     {
@@ -80,6 +84,9 @@
                 result[node.Id] = (node.Position.X, node.Position.Y, node.IsCollapsed);
             return result;
         };
+        _diagram.Nodes.Removed += OnDiagramNodeRemoved;
+        _diagram.Links.Added += OnDiagramLinkAdded;
+        _diagram.Links.Removed += OnDiagramLinkRemoved;
         Flow.Changed += OnFlowChanged;
         Live.Changed += OnLiveChanged;
     }
@@ -116,93 +123,101 @@
             foreach (var (name, (x, y, collapsed)) in Flow.LastNodePositions)
                 _nodeStates.TryAdd(name, new DiagramNodeState(new Blazor.Diagrams.Core.Geometry.Point(x, y), collapsed));
         }
-        _diagram.Nodes.Clear();
-        _diagram.Links.Clear();
-        _renderedDefinitionRevision = Flow.DefinitionRevision;
-        _renderedWorkflowName = Flow.ActiveWorkflowName;
-
+        _isRebuildingDiagram = true;
         try
         {
-            using var document = JsonDocument.Parse(Flow.DefinitionJson);
-            if (!TryGetFlowApplication(document.RootElement, out var flowApplication))
-            {
-                _diagram.Refresh();
-                return;
-            }
+            _diagram.Nodes.Clear();
+            _diagram.Links.Clear();
+            _renderedDefinitionRevision = Flow.DefinitionRevision;
+            _renderedWorkflowName = Flow.ActiveWorkflowName;
 
-            var nodes = new Dictionary<string, NodeModel>(StringComparer.Ordinal);
-            var resourceY = 60d;
-            if (flowApplication.TryGetProperty("resources", out var resources) && resources.ValueKind == JsonValueKind.Object)
+            try
             {
-                foreach (var resource in resources.EnumerateObject())
+                using var document = JsonDocument.Parse(Flow.DefinitionJson);
+                if (!TryGetFlowApplication(document.RootElement, out var flowApplication))
                 {
-                    if (resource.Value.TryGetProperty("type", out var rType) &&
-                        rType.GetString() == "mqtt.connection")
-                        continue;
-
-                    AddNode(nodes, resource.Name, resource.Value, x: 70, y: resourceY, isResource: true, workflowName: null);
-                    resourceY += 150;
-                }
-            }
-
-            if (flowApplication.TryGetProperty("workflows", out var workflows) &&
-                workflows.ValueKind == JsonValueKind.Object &&
-                Flow.ActiveWorkflowName is { } activeWorkflowName &&
-                workflows.TryGetProperty(activeWorkflowName, out var activeWorkflow) &&
-                activeWorkflow.ValueKind == JsonValueKind.Object)
-            {
-                var nodeX = 380d;
-                foreach (var node in activeWorkflow.EnumerateObject())
-                {
-                    AddNode(nodes, node.Name, node.Value, nodeX, 60d, isResource: false, workflowName: activeWorkflowName);
-                    nodeX += 300;
+                    _diagram.Refresh();
+                    return;
                 }
 
-                foreach (var target in activeWorkflow.EnumerateObject())
+                var nodes = new Dictionary<string, NodeModel>(StringComparer.Ordinal);
+                var resourceY = 60d;
+                if (flowApplication.TryGetProperty("resources", out var resources) && resources.ValueKind == JsonValueKind.Object)
                 {
-                    if (!nodes.TryGetValue(target.Name, out var targetNode) || target.Value.ValueKind != JsonValueKind.Object)
-                        continue;
-
-                    foreach (var port in target.Value.EnumerateObject())
+                    foreach (var resource in resources.EnumerateObject())
                     {
-                        if (IsDefinitionProperty(port.Name))
+                        if (resource.Value.TryGetProperty("type", out var rType) &&
+                            rType.GetString() == "mqtt.connection")
                             continue;
 
-                        foreach (var sourceReference in ReadSourceReferences(port.Value))
-                        {
-                            var sourceName = sourceReference.Split('.', 2)[0];
-                            if (nodes.TryGetValue(sourceName, out var sourceNode))
-                            {
-                                var sourcePortName = sourceReference.Contains('.') ? sourceReference.Split('.', 2)[1] : null;
-                                var sourcePort = PortFor(sourceNode, PortAlignment.Right, sourcePortName);
-                                var targetPort = PortFor(targetNode, PortAlignment.Left, port.Name);
-                                if (sourcePort is null || targetPort is null) continue;
+                        AddNode(nodes, resource.Name, resource.Value, x: 70, y: resourceY, isResource: true, workflowName: null);
+                        resourceY += 150;
+                    }
+                }
 
-                                var linkColor = IsErrorLink(sourcePortName, port.Name) ? "#F87171" : "#2DD4BF";
-                                _diagram.Links.Add(CreateStyledLink(sourcePort, targetPort, linkColor));
+                if (flowApplication.TryGetProperty("workflows", out var workflows) &&
+                    workflows.ValueKind == JsonValueKind.Object &&
+                    Flow.ActiveWorkflowName is { } activeWorkflowName &&
+                    workflows.TryGetProperty(activeWorkflowName, out var activeWorkflow) &&
+                    activeWorkflow.ValueKind == JsonValueKind.Object)
+                {
+                    var nodeX = 380d;
+                    foreach (var node in activeWorkflow.EnumerateObject())
+                    {
+                        AddNode(nodes, node.Name, node.Value, nodeX, 60d, isResource: false, workflowName: activeWorkflowName);
+                        nodeX += 300;
+                    }
+
+                    foreach (var target in activeWorkflow.EnumerateObject())
+                    {
+                        if (!nodes.TryGetValue(target.Name, out var targetNode) || target.Value.ValueKind != JsonValueKind.Object)
+                            continue;
+
+                        foreach (var port in target.Value.EnumerateObject())
+                        {
+                            if (IsDefinitionProperty(port.Name))
+                                continue;
+
+                            foreach (var sourceReference in ReadSourceReferences(port.Value))
+                            {
+                                var sourceName = sourceReference.Split('.', 2)[0];
+                                if (nodes.TryGetValue(sourceName, out var sourceNode))
+                                {
+                                    var sourcePortName = sourceReference.Contains('.') ? sourceReference.Split('.', 2)[1] : null;
+                                    var sourcePort = PortFor(sourceNode, PortAlignment.Right, sourcePortName);
+                                    var targetPort = PortFor(targetNode, PortAlignment.Left, port.Name);
+                                    if (sourcePort is null || targetPort is null) continue;
+
+                                    var linkColor = IsErrorLink(sourcePortName, port.Name) ? "#F87171" : "#2DD4BF";
+                                    _diagram.Links.Add(CreateStyledLink(sourcePort, targetPort, linkColor));
+                                }
+                            }
+                        }
+
+                        if (target.Value.TryGetProperty("configuration", out var configuration) &&
+                            configuration.ValueKind == JsonValueKind.Object &&
+                            configuration.TryGetProperty("connection", out var connectionRef) &&
+                            connectionRef.ValueKind == JsonValueKind.String &&
+                            connectionRef.GetString() is { Length: > 0 } resourceName &&
+                            nodes.TryGetValue(resourceName, out var resourceNode))
+                        {
+                            var sourcePort = PortFor(resourceNode, PortAlignment.Right, "Connection");
+                            var targetPort = PortFor(targetNode, PortAlignment.Left, "Connection");
+                            if (sourcePort is not null && targetPort is not null)
+                            {
+                                _diagram.Links.Add(CreateStyledLink(sourcePort, targetPort, "#FBBF24"));
                             }
                         }
                     }
-
-                    if (target.Value.TryGetProperty("configuration", out var configuration) &&
-                        configuration.ValueKind == JsonValueKind.Object &&
-                        configuration.TryGetProperty("connection", out var connectionRef) &&
-                        connectionRef.ValueKind == JsonValueKind.String &&
-                        connectionRef.GetString() is { Length: > 0 } resourceName &&
-                        nodes.TryGetValue(resourceName, out var resourceNode))
-                    {
-                        var sourcePort = PortFor(resourceNode, PortAlignment.Right, "Connection");
-                        var targetPort = PortFor(targetNode, PortAlignment.Left, "Connection");
-                        if (sourcePort is not null && targetPort is not null)
-                        {
-                            _diagram.Links.Add(CreateStyledLink(sourcePort, targetPort, "#FBBF24"));
-                        }
-                    }
                 }
             }
+            catch
+            {
+            }
         }
-        catch
+        finally
         {
+            _isRebuildingDiagram = false;
         }
 
         UpdateDiagramActivity();
@@ -243,8 +258,9 @@
         {
             foreach (var descriptor in node.PortDescriptors)
             {
-                node.AddPort(new FlowPortModel(node, PortAlignment.Left, descriptor.Name, descriptor.SingleLink, descriptor.IsInput));
-                node.AddPort(new FlowPortModel(node, PortAlignment.Right, descriptor.Name, descriptor.SingleLink, descriptor.IsInput));
+                var valueType = node.ResolvePortValueType(descriptor);
+                node.AddPort(new FlowPortModel(node, PortAlignment.Left, descriptor.Name, descriptor.SingleLink, descriptor.IsInput, valueType));
+                node.AddPort(new FlowPortModel(node, PortAlignment.Right, descriptor.Name, descriptor.SingleLink, descriptor.IsInput, valueType));
             }
         }
         else
@@ -293,6 +309,133 @@
         return link;
     }
 
+    private void OnDiagramLinkAdded(BaseLinkModel link)
+    {
+        if (_isRebuildingDiagram)
+        {
+            return;
+        }
+
+        link.TargetAttached += OnDiagramLinkTargetAttached;
+        if (link.IsAttached)
+        {
+            OnDiagramLinkTargetAttached(link);
+        }
+    }
+
+    private void OnDiagramLinkRemoved(BaseLinkModel link)
+    {
+        link.TargetAttached -= OnDiagramLinkTargetAttached;
+
+        if (_isRebuildingDiagram || _isApplyingLinkEdit)
+        {
+            return;
+        }
+
+        if (TryResolveWorkflowLink(link, out var sourcePort, out var targetPort))
+        {
+            Flow.RemoveWorkflowPortLink(
+                ((FlowDiagramNodeModel)sourcePort.Parent).NodeName,
+                sourcePort.PortName,
+                ((FlowDiagramNodeModel)targetPort.Parent).NodeName,
+                targetPort.PortName);
+        }
+    }
+
+    private void OnDiagramLinkTargetAttached(BaseLinkModel link)
+    {
+        if (_isRebuildingDiagram || _isApplyingLinkEdit)
+        {
+            return;
+        }
+
+        if (!TryResolveWorkflowLink(link, out var sourcePort, out var targetPort) ||
+            !sourcePort.CanCarryValueTo(targetPort))
+        {
+            RemoveUncommittedLink(link);
+            return;
+        }
+
+        Flow.ConnectWorkflowPorts(
+            ((FlowDiagramNodeModel)sourcePort.Parent).NodeName,
+            sourcePort.PortName,
+            ((FlowDiagramNodeModel)targetPort.Parent).NodeName,
+            targetPort.PortName,
+            ShouldReplaceTargetLinks(targetPort));
+    }
+
+    private void RemoveUncommittedLink(BaseLinkModel link)
+    {
+        _isApplyingLinkEdit = true;
+        try
+        {
+            _diagram.Links.Remove(link);
+            _diagram.Refresh();
+        }
+        finally
+        {
+            _isApplyingLinkEdit = false;
+        }
+    }
+
+    private static bool TryResolveWorkflowLink(BaseLinkModel link, out FlowPortModel sourcePort, out FlowPortModel targetPort)
+    {
+        sourcePort = null!;
+        targetPort = null!;
+
+        if (!TryGetFlowPort(link.Source, out var firstPort) ||
+            !TryGetFlowPort(link.Target, out var secondPort) ||
+            firstPort.Parent is not FlowDiagramNodeModel firstNode ||
+            secondPort.Parent is not FlowDiagramNodeModel secondNode ||
+            firstNode.IsResource ||
+            secondNode.IsResource ||
+            firstPort.RepresentsInput == secondPort.RepresentsInput)
+        {
+            return false;
+        }
+
+        sourcePort = firstPort.RepresentsInput ? secondPort : firstPort;
+        targetPort = firstPort.RepresentsInput ? firstPort : secondPort;
+        return true;
+    }
+
+    private static bool TryGetFlowPort(Blazor.Diagrams.Core.Anchors.Anchor anchor, out FlowPortModel port)
+    {
+        if (anchor is Blazor.Diagrams.Core.Anchors.SinglePortAnchor { Port: FlowPortModel flowPort })
+        {
+            port = flowPort;
+            return true;
+        }
+
+        port = null!;
+        return false;
+    }
+
+    private static bool ShouldReplaceTargetLinks(FlowPortModel targetPort)
+    {
+        if (string.Equals(targetPort.PortName, "FlowErrors", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return targetPort.Parent is not FlowDiagramNodeModel { NodeType: "flow.logger" } ||
+               !string.Equals(targetPort.PortName, "Input", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void OnDiagramNodeRemoved(NodeModel node)
+    {
+        if (_isRebuildingDiagram || node is not FlowDiagramNodeModel flowNode || flowNode.IsResource)
+        {
+            return;
+        }
+
+        _nodeStates.Remove(flowNode.Id);
+        _nodeStates.Remove(flowNode.NodeName);
+        Flow.LastNodePositions.Remove(flowNode.Id);
+        Flow.LastNodePositions.Remove(flowNode.NodeName);
+        Flow.RemoveWorkflowNode(flowNode.NodeName);
+    }
+
     private void UpdateDiagramActivity()
     {
         var count = Live.SelectedStoredSession is null
@@ -316,11 +459,34 @@
                     ? "Waiting for payload"
                     : $"{latestInspection.ContentTypeLabel} | {latestInspection.SizeBytes} bytes | {ShortTopic(inspectedMessage.Topic)}",
                 "mqtt.metrics" => $"{count} messages observed",
+                "mqtt.publisher" => PublisherActivity(node.NodeName),
                 _ => null
             };
 
             node.SetActivity(activity);
         }
+    }
+
+    private string? PublisherActivity(string nodeName)
+    {
+        var publisher = Flow.Host?.Runtime?.Nodes
+            .FirstOrDefault(runtimeNode =>
+                string.Equals(runtimeNode.Address.Scope, Flow.ActiveWorkflowName, StringComparison.Ordinal) &&
+                string.Equals(runtimeNode.Address.Node.Value, nodeName, StringComparison.Ordinal))
+            ?.Node as MqttPublisherComponent;
+
+        if (publisher is null)
+        {
+            return null;
+        }
+
+        var count = publisher.PublishedCount;
+        if (count == 0)
+        {
+            return "Waiting for publish request";
+        }
+
+        return $"{count} published | {ShortTopic(publisher.LastPublishedTopic ?? string.Empty)}";
     }
 
     private void UpdateDiagramDiagnostics()
@@ -350,6 +516,16 @@
 
     private void CaptureDiagramState()
     {
+        var currentNodeIds = _diagram.Nodes
+            .OfType<FlowDiagramNodeModel>()
+            .Select(static node => node.Id)
+            .ToHashSet(StringComparer.Ordinal);
+
+        foreach (var removedKey in _nodeStates.Keys.Where(key => !currentNodeIds.Contains(key)).ToArray())
+        {
+            _nodeStates.Remove(removedKey);
+        }
+
         foreach (var node in _diagram.Nodes.OfType<FlowDiagramNodeModel>())
             _nodeStates[node.Id] = new DiagramNodeState(node.Position, node.IsCollapsed);
     }
@@ -532,6 +708,9 @@
                 Flow.LastNodePositions[key] = v;
         }
         Flow.GetDiagramState = null;
+        _diagram.Nodes.Removed -= OnDiagramNodeRemoved;
+        _diagram.Links.Added -= OnDiagramLinkAdded;
+        _diagram.Links.Removed -= OnDiagramLinkRemoved;
         Flow.Changed -= OnFlowChanged;
         Live.Changed -= OnLiveChanged;
         _portMeasurementGeneration++;

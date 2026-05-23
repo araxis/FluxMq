@@ -2,6 +2,7 @@ using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Session;
+using FluxMq.Components.Logging;
 using FluxMq.Components.MqttPublisher;
 using FluxMq.Pipeline.Components;
 using MQTTnet.Protocol;
@@ -34,6 +35,32 @@ public sealed class MqttPublisherComponentTests
         publish.Payload.ShouldBe(new byte[] { 1, 2, 3 });
         publish.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtLeastOnce);
         publish.Retain.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Input_EmitsPublishLogEntry()
+    {
+        var session = new FakeMqttSession();
+        var component = new MqttPublisherComponent(session);
+        var entries = new BufferBlock<FlowLogEntry>();
+
+        component.Entries.LinkTo(entries, new DataflowLinkOptions { PropagateCompletion = true });
+        component.Input.Post(new MqttPublishRequest
+        {
+            Topic = "factory/logged",
+            Payload = "hello"u8.ToArray()
+        });
+        component.Complete();
+
+        var entry = await entries.ReceiveAsync();
+        await component.Completion;
+
+        entry.Severity.ShouldBe(FlowLogSeverity.Info);
+        entry.Source.ShouldBe("MqttPublisher");
+        entry.Topic.ShouldBe("factory/logged");
+        entry.PayloadBytes.ShouldBe(5);
+        component.PublishedCount.ShouldBe(1);
+        component.LastPublishedTopic.ShouldBe("factory/logged");
     }
 
     [Fact]

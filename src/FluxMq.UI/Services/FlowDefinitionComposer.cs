@@ -172,6 +172,131 @@ public sealed class FlowDefinitionComposer
         return root.ToJsonString(Options);
     }
 
+    public string ConnectWorkflowPorts(
+        string json,
+        string? workflowName,
+        string sourceNodeName,
+        string sourcePortName,
+        string targetNodeName,
+        string targetPortName,
+        bool replaceTargetPortLinks = true)
+    {
+        if (string.IsNullOrWhiteSpace(workflowName) ||
+            string.IsNullOrWhiteSpace(sourceNodeName) ||
+            string.IsNullOrWhiteSpace(targetNodeName) ||
+            string.IsNullOrWhiteSpace(targetPortName) ||
+            string.Equals(sourceNodeName, targetNodeName, StringComparison.Ordinal))
+        {
+            return json;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["workflows"] is not JsonObject workflows ||
+            workflows[workflowName] is not JsonObject workflow ||
+            workflow[sourceNodeName] is not JsonObject ||
+            workflow[targetNodeName] is not JsonObject targetNode)
+        {
+            return json;
+        }
+
+        var reference = BuildPortReference(sourceNodeName, sourcePortName);
+        if (replaceTargetPortLinks)
+        {
+            targetNode[targetPortName] = reference;
+        }
+        else
+        {
+            AppendLinkReference(targetNode, targetPortName, reference);
+        }
+
+        return root.ToJsonString(Options);
+    }
+
+    public string RemoveWorkflowPortLink(
+        string json,
+        string? workflowName,
+        string sourceNodeName,
+        string sourcePortName,
+        string targetNodeName,
+        string targetPortName)
+    {
+        if (string.IsNullOrWhiteSpace(workflowName) ||
+            string.IsNullOrWhiteSpace(sourceNodeName) ||
+            string.IsNullOrWhiteSpace(targetNodeName) ||
+            string.IsNullOrWhiteSpace(targetPortName))
+        {
+            return json;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["workflows"] is not JsonObject workflows ||
+            workflows[workflowName] is not JsonObject workflow ||
+            workflow[targetNodeName] is not JsonObject targetNode ||
+            !RemoveLinkReference(targetNode, targetPortName, sourceNodeName, sourcePortName))
+        {
+            return json;
+        }
+
+        return root.ToJsonString(Options);
+    }
+
+    public string RemoveWorkflowNode(string json, string? workflowName, string nodeName)
+    {
+        if (string.IsNullOrWhiteSpace(workflowName) || string.IsNullOrWhiteSpace(nodeName))
+        {
+            return json;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["workflows"] is not JsonObject workflows ||
+            workflows[workflowName] is not JsonObject workflow ||
+            !workflow.Remove(nodeName))
+        {
+            return json;
+        }
+
+        foreach (var (_, node) in workflow.AsEnumerable().ToList())
+        {
+            if (node is not JsonObject nodeObject)
+            {
+                continue;
+            }
+
+            foreach (var (portName, portValue) in nodeObject.AsEnumerable().ToList())
+            {
+                if (IsDefinitionProperty(portName))
+                {
+                    continue;
+                }
+
+                if (portValue is null)
+                {
+                    continue;
+                }
+
+                var updated = RemoveReferencesFromSourceNode(portValue, nodeName, out var removed);
+                if (!removed)
+                {
+                    continue;
+                }
+
+                if (updated is null)
+                {
+                    nodeObject.Remove(portName);
+                }
+                else
+                {
+                    nodeObject[portName] = updated;
+                }
+            }
+        }
+
+        return root.ToJsonString(Options);
+    }
+
     /// <summary>Returns (name, type) pairs for all nodes in a specific workflow.</summary>
     public IReadOnlyList<(string Name, string Type)> GetWorkflowNodes(string json, string workflowName)
     {
@@ -608,6 +733,259 @@ public sealed class FlowDefinitionComposer
         {
             node["Input"] = link;
         }
+    }
+
+    private static bool IsDefinitionProperty(string name)
+        => string.Equals(name, "type", StringComparison.OrdinalIgnoreCase) ||
+           string.Equals(name, "configuration", StringComparison.OrdinalIgnoreCase) ||
+           string.Equals(name, "when", StringComparison.OrdinalIgnoreCase);
+
+    private static string BuildPortReference(string sourceNodeName, string sourcePortName)
+    {
+        var sourcePort = string.IsNullOrWhiteSpace(sourcePortName) ? "Output" : sourcePortName.Trim();
+        return $"{sourceNodeName.Trim()}.{sourcePort}";
+    }
+
+    private static void AppendLinkReference(JsonObject targetNode, string targetPortName, string reference)
+    {
+        if (targetNode[targetPortName] is not { } existing)
+        {
+            targetNode[targetPortName] = reference;
+            return;
+        }
+
+        if (ContainsLinkReference(existing, reference))
+        {
+            return;
+        }
+
+        if (existing is JsonArray existingArray)
+        {
+            existingArray.Add(JsonValue.Create(reference));
+            return;
+        }
+
+        targetNode[targetPortName] = new JsonArray(existing.DeepClone(), JsonValue.Create(reference));
+    }
+
+    private static bool RemoveLinkReference(
+        JsonObject targetNode,
+        string targetPortName,
+        string sourceNodeName,
+        string sourcePortName)
+    {
+        if (targetNode[targetPortName] is not { } existing)
+        {
+            return false;
+        }
+
+        var updated = RemoveLinkReference(existing, sourceNodeName, sourcePortName, out var removed);
+        if (!removed)
+        {
+            return false;
+        }
+
+        if (updated is null)
+        {
+            targetNode.Remove(targetPortName);
+        }
+        else
+        {
+            targetNode[targetPortName] = updated;
+        }
+
+        return true;
+    }
+
+    private static JsonNode? RemoveLinkReference(
+        JsonNode node,
+        string sourceNodeName,
+        string sourcePortName,
+        out bool removed)
+    {
+        removed = false;
+
+        if (node is JsonValue value &&
+            value.TryGetValue<string>(out var reference) &&
+            ReferenceMatches(reference, sourceNodeName, sourcePortName))
+        {
+            removed = true;
+            return null;
+        }
+
+        if (node is JsonArray array)
+        {
+            var updatedArray = new JsonArray();
+            foreach (var item in array)
+            {
+                if (item is null)
+                {
+                    updatedArray.Add(null);
+                    continue;
+                }
+
+                var updatedItem = RemoveLinkReference(item, sourceNodeName, sourcePortName, out var itemRemoved);
+                removed |= itemRemoved;
+                if (updatedItem is not null)
+                {
+                    updatedArray.Add(updatedItem);
+                }
+                else if (!itemRemoved)
+                {
+                    updatedArray.Add(item.DeepClone());
+                }
+            }
+
+            return removed
+                ? updatedArray.Count == 0 ? null : updatedArray
+                : node.DeepClone();
+        }
+
+        if (node is JsonObject obj &&
+            (obj.TryGetPropertyValue("from", out var fromNode) ||
+             obj.TryGetPropertyValue("From", out fromNode)) &&
+            fromNode is not null)
+        {
+            var updatedFrom = RemoveLinkReference(fromNode, sourceNodeName, sourcePortName, out removed);
+            if (!removed)
+            {
+                return node.DeepClone();
+            }
+
+            if (updatedFrom is null)
+            {
+                return null;
+            }
+
+            var updatedObject = (JsonObject)node.DeepClone();
+            updatedObject["from"] = updatedFrom;
+            updatedObject.Remove("From");
+            return updatedObject;
+        }
+
+        return node.DeepClone();
+    }
+
+    private static JsonNode? RemoveReferencesFromSourceNode(
+        JsonNode node,
+        string sourceNodeName,
+        out bool removed)
+    {
+        removed = false;
+
+        if (node is JsonValue value &&
+            value.TryGetValue<string>(out var reference) &&
+            ReferenceNodeMatches(reference, sourceNodeName))
+        {
+            removed = true;
+            return null;
+        }
+
+        if (node is JsonArray array)
+        {
+            var updatedArray = new JsonArray();
+            foreach (var item in array)
+            {
+                if (item is null)
+                {
+                    updatedArray.Add(null);
+                    continue;
+                }
+
+                var updatedItem = RemoveReferencesFromSourceNode(item, sourceNodeName, out var itemRemoved);
+                removed |= itemRemoved;
+                if (updatedItem is not null)
+                {
+                    updatedArray.Add(updatedItem);
+                }
+                else if (!itemRemoved)
+                {
+                    updatedArray.Add(item.DeepClone());
+                }
+            }
+
+            return removed
+                ? updatedArray.Count == 0 ? null : updatedArray
+                : node.DeepClone();
+        }
+
+        if (node is JsonObject obj &&
+            (obj.TryGetPropertyValue("from", out var fromNode) ||
+             obj.TryGetPropertyValue("From", out fromNode)) &&
+            fromNode is not null)
+        {
+            var updatedFrom = RemoveReferencesFromSourceNode(fromNode, sourceNodeName, out removed);
+            if (!removed)
+            {
+                return node.DeepClone();
+            }
+
+            if (updatedFrom is null)
+            {
+                return null;
+            }
+
+            var updatedObject = (JsonObject)node.DeepClone();
+            updatedObject["from"] = updatedFrom;
+            updatedObject.Remove("From");
+            return updatedObject;
+        }
+
+        return node.DeepClone();
+    }
+
+    private static bool ContainsLinkReference(JsonNode node, string reference)
+    {
+        if (node is JsonValue value &&
+            value.TryGetValue<string>(out var existingReference) &&
+            string.Equals(existingReference, reference, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (node is JsonArray array)
+        {
+            return array.Any(item => item is not null && ContainsLinkReference(item, reference));
+        }
+
+        if (node is JsonObject obj &&
+            (obj.TryGetPropertyValue("from", out var fromNode) ||
+             obj.TryGetPropertyValue("From", out fromNode)) &&
+            fromNode is not null)
+        {
+            return ContainsLinkReference(fromNode, reference);
+        }
+
+        return false;
+    }
+
+    private static bool ReferenceMatches(string reference, string sourceNodeName, string sourcePortName)
+    {
+        if (string.IsNullOrWhiteSpace(reference))
+        {
+            return false;
+        }
+
+        var parts = reference.Trim().Split('.', 2, StringSplitOptions.TrimEntries);
+        var referenceNode = parts[0];
+        var referencePort = parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1])
+            ? parts[1]
+            : "Output";
+        var sourcePort = string.IsNullOrWhiteSpace(sourcePortName) ? "Output" : sourcePortName.Trim();
+
+        return string.Equals(referenceNode, sourceNodeName.Trim(), StringComparison.Ordinal) &&
+               string.Equals(referencePort, sourcePort, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool ReferenceNodeMatches(string reference, string sourceNodeName)
+    {
+        if (string.IsNullOrWhiteSpace(reference))
+        {
+            return false;
+        }
+
+        var referenceNode = reference.Trim().Split('.', 2, StringSplitOptions.TrimEntries)[0];
+        return string.Equals(referenceNode, sourceNodeName.Trim(), StringComparison.Ordinal);
     }
 
     private static bool NeedsInputLink(string componentType) => componentType switch
