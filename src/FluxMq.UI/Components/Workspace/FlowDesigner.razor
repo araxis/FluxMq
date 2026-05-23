@@ -67,6 +67,7 @@
     protected override void OnInitialized()
     {
         _diagram.RegisterComponent<FlowDiagramNodeModel, FlowDiagramNodeWidget>();
+        _diagram.RegisterComponent<FlowPortModel, FluxPortWidget>();
         Flow.GetDiagramState = () =>
         {
             var result = new Dictionary<string, (double X, double Y, bool Collapsed)>(StringComparer.Ordinal);

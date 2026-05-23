@@ -1,4 +1,7 @@
 using FluxMq.UI.Components.Diagram;
+using FluxMq.UI.Components.Workspace.Nodes.ConditionRouter;
+using FluxMq.UI.Components.Workspace.Nodes.ConnectionStateTrigger;
+using FluxMq.UI.Components.Workspace.Nodes.MessageFilter;
 using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
 using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
 using FluxMq.UI.Components.Workspace.Nodes.PayloadInspector;
@@ -19,9 +22,12 @@ public static class FlowNodeModelFactory
         bool isResource) => nodeType switch
     {
         "mqtt.trigger" => new MqttTriggerNodeModel(id, position, nodeName, descriptor, isResource),
+        "mqtt.connection-state-trigger" => new ConnectionStateTriggerNodeModel(id, position, nodeName, descriptor, isResource),
+        "mqtt.message-filter" => new MessageFilterNodeModel(id, position, nodeName, descriptor, isResource),
+        "mqtt.condition-router" => new ConditionRouterNodeModel(id, position, nodeName, descriptor, isResource),
         "session.source" => new SessionSourceNodeModel(id, position, nodeName, descriptor, isResource),
         "mqtt.payload-inspector" => new PayloadInspectorNodeModel(id, position, nodeName, descriptor, isResource),
-        "mqtt.metrics-sink" => new MetricsSinkNodeModel(id, position, nodeName, descriptor, isResource),
+        "mqtt.metrics" => new MqttMetricsNodeModel(id, position, nodeName, descriptor, isResource),
         _ => new FlowDiagramNodeModel(id, position, nodeName, nodeType, descriptor, isResource)
     };
 }

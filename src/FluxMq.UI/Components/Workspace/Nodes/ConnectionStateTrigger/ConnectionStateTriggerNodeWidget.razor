@@ -1,0 +1,67 @@
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject LiveMqttWorkspaceService Live
+
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.SyncAlt"
+                 CategoryColor="@Color.Primary"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
+    <Body>
+        <MudStack Spacing="1" Class="mt-1">
+            <Stat Icon="@Icons.Material.Filled.Cable" Label="Broker" Value="@(Model.Connection.Length > 0 ? Model.Connection : "—")" />
+        </MudStack>
+    </Body>
+    <Editor>
+        @{
+            var liveConnections = Live.Connections;
+        }
+        @if (liveConnections.Count > 0)
+        {
+            <MudSelect T="string" Label="Broker connection" @bind-Value="_connection"
+                       Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true">
+                @foreach (var conn in liveConnections)
+                {
+                    <MudSelectItem Value="@conn.Profile.Name">@conn.Profile.Name (@conn.Profile.Host:@conn.Profile.Port)</MudSelectItem>
+                }
+            </MudSelect>
+        }
+        else
+        {
+            <MudTextField T="string"
+                          Label="Connection name"
+                          @bind-Value="_connection"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          HelperText="Add a broker connection in the left panel to enable the dropdown." />
+        }
+    </Editor>
+</NodeWidgetShell>
+
+@code {
+    [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
+
+    private ConnectionStateTriggerNodeModel Model => (ConnectionStateTriggerNodeModel)Node;
+
+    private string _connection = string.Empty;
+
+    protected override void OnParametersSet() => LoadDraft();
+
+    private void LoadDraft() => _connection = Model.Connection;
+
+    private Task SaveAsync()
+    {
+        Model.Connection = _connection;
+
+        var selectedProfile = Live.Connections
+            .FirstOrDefault(c => string.Equals(c.Profile.Name, _connection, StringComparison.OrdinalIgnoreCase))
+            ?.Profile;
+
+        if (selectedProfile is not null)
+            Flow.SyncConnectionAndUpdateNode(_connection, selectedProfile, Node.NodeName, Model.BuildConfiguration());
+        else
+            Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
+
+        return Task.CompletedTask;
+    }
+}

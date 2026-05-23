@@ -1,0 +1,69 @@
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.CallSplit"
+                 CategoryColor="@Color.Secondary"
+                 EditDialogMaxWidth="MaxWidth.Medium"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
+    <Body>
+        @if (!string.IsNullOrWhiteSpace(Model.Expression))
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1 node-expr-preview">@Model.Expression</MudText>
+        }
+        else
+        {
+            <MudText Typo="Typo.caption" Color="Color.Error" Class="mt-1">No condition set</MudText>
+        }
+    </Body>
+    <Editor>
+        <MudStack Spacing="2">
+            <MudText Typo="Typo.subtitle2">Condition expression</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                Evaluate to <code>true</code> → routed to <b>WhenTrue</b>, otherwise <b>WhenFalse</b>.
+            </MudText>
+            <MudTextField T="string"
+                          @bind-Value="_expression"
+                          Label="Expression"
+                          Variant="Variant.Outlined"
+                          Lines="4"
+                          Class="node-expr-field"
+                          Placeholder='topic.StartsWith("sensors/") && qos >= 1'
+                          HelperText="DynamicExpresso C# expression. Variables: topic, payload, qos, retain, receivedAt" />
+            <MudExpansionPanel Text="Available variables" Dense="true" Class="pa-0">
+                <MudSimpleTable Dense="true" Striped="true" Class="mt-1">
+                    <thead>
+                        <tr><th>Variable</th><th>Type</th><th>Example</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>topic</code></td><td>string</td><td><code>topic.StartsWith("sensors/")</code></td></tr>
+                        <tr><td><code>payload</code></td><td>string</td><td><code>payload.Contains("error")</code></td></tr>
+                        <tr><td><code>qos</code></td><td>int</td><td><code>qos >= 1</code></td></tr>
+                        <tr><td><code>retain</code></td><td>bool</td><td><code>retain == true</code></td></tr>
+                        <tr><td><code>receivedAt</code></td><td>DateTimeOffset</td><td><code>receivedAt.Hour >= 8</code></td></tr>
+                    </tbody>
+                </MudSimpleTable>
+            </MudExpansionPanel>
+        </MudStack>
+    </Editor>
+</NodeWidgetShell>
+
+@code {
+    [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
+
+    private ConditionRouterNodeModel Model => (ConditionRouterNodeModel)Node;
+
+    private string _expression = string.Empty;
+
+    protected override void OnParametersSet() => LoadDraft();
+
+    private void LoadDraft() => _expression = Model.Expression;
+
+    private Task SaveAsync()
+    {
+        Model.Expression = _expression.Trim();
+        Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
+        return Task.CompletedTask;
+    }
+}
