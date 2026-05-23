@@ -53,7 +53,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .Register(PipelineFlowNodeTypes.PublishRequestMapper, context => CreatePublishRequestMapper(context.Address, context.Definition, expressionEngine))
             .Register(PipelineFlowNodeTypes.MqttPublisher, context => CreatePublisher(context.Address, context.Definition, context))
             .Register(PipelineFlowNodeTypes.RecordingRequestMapper, context => CreateRecordingRequestMapper(context.Address, context.Definition, expressionEngine))
-            .Register(PipelineFlowNodeTypes.MqttRecorder, context => CreateRecorder(context.Address, messageRepository))
+            .Register(PipelineFlowNodeTypes.MqttRecorder, context => CreateRecorder(context.Address, context.Definition, messageRepository))
             .Register(PipelineFlowNodeTypes.FileWriteRequestMapper, context => CreateFileWriteRequestMapper(context.Address, context.Definition, expressionEngine))
             .Register(PipelineFlowNodeTypes.FileWriter, CreateFileWriter);
     }
@@ -361,14 +361,14 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
-    private static RuntimeNode CreateRecorder(NodeAddress address, IMessageRepository? messageRepository)
+    private static RuntimeNode CreateRecorder(NodeAddress address, NodeDefinition definition, IMessageRepository? messageRepository)
     {
         if (messageRepository is null)
         {
             throw new InvalidOperationException("MQTT recorder requires a message repository.");
         }
 
-        var component = new MqttRecorderComponent(messageRepository);
+        var component = new MqttRecorderComponent(messageRepository, boundedCapacity: GetBoundedCapacity(definition));
 
         return RuntimeNode.Create(
             address,

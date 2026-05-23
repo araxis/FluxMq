@@ -526,3 +526,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore` passes with 21 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore` passes with 43 tests.
   - `dotnet test FluxMq.sln --no-restore -m:1` passes with 247 tests.
+
+## 2026-05-23 - Actor node editor hardening slice
+
+- Started the `F-022` actor editor hardening slice.
+- Added typed designer models/widgets for MQTT Publisher, MQTT Recorder, and File Writer so they no longer use the generic node body/editor.
+- MQTT Publisher now exposes broker resource selection and input buffer settings; publish topic, payload, QoS, and retain remain explicit `MqttPublishRequest` fields.
+- MQTT Publisher keeps broker selection as node configuration and does not expose a `Connection` canvas port.
+- MQTT Recorder and File Writer now show their command input fields and expose only input-buffer configuration on the actor node.
+- Updated actor catalog add behavior to write default actor configuration.
+- Updated the runtime recorder factory to honor configured buffer capacity.
