@@ -69,64 +69,61 @@
     min-width: 0;
 }
 
+/* ── Port hit-target wrapper (rendered by PortRenderer) ─────────────────────
+   Must be exactly the dot size so getBoundingClientRect measures the right
+   position.  No extra background/border here; the inner FluxPortWidget
+   provides all visual styling.                                              */
 .flow-designer-root ::deep .diagram-port {
-    background: var(--flux-surface);
-    border: 2px solid var(--flux-accent);
-    border-radius: 50%;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-primary) 18%, transparent);
-    height: 12px !important;
-    transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
-    width: 12px !important;
+    cursor: crosshair;
+    display: block;
+    height: 12px;
+    pointer-events: all;
+    position: relative;
+    transition: transform 0.15s ease;
+    width: 12px;
     z-index: 5;
 }
 
 .flow-designer-root ::deep .diagram-port:hover {
-    background: var(--mud-palette-primary);
     transform: scale(1.35);
 }
 
-/* Position-only: colour comes from .port-input / .port-output below.
-   Mirror approach: left ports pull left with margin-left: -6px;
-   right ports push right with margin-right: -6px. */
-.flow-designer-root ::deep .diagram-port.left {
-    margin-left: -6px;
+/* ── Inner connector dot (rendered by FluxPortWidget) ───────────────────── */
+.flow-designer-root ::deep .flux-port-inner {
+    background: var(--flux-surface);
+    border: 2px solid var(--flux-accent);
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--flux-accent) 18%, transparent);
+    height: 100%;
+    pointer-events: none;
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    width: 100%;
 }
 
-.flow-designer-root ::deep .flow-port-side-right .diagram-port {
-    margin-right: -6px;
-}
-
-/* Semantic: input ports (info / blue) */
-.flow-designer-root ::deep .diagram-port.port-input {
+.flow-designer-root ::deep .flux-port-input {
     border-color: var(--mud-palette-info);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-info) 18%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mud-palette-info) 18%, transparent);
 }
 
-.flow-designer-root ::deep .diagram-port.port-input:hover {
-    background: var(--mud-palette-info);
-}
-
-.flow-designer-root ::deep .diagram-port.port-input.has-links {
-    background: var(--mud-palette-info);
-}
-
-/* Semantic: output ports (success / green) */
-.flow-designer-root ::deep .diagram-port.port-output {
+.flow-designer-root ::deep .flux-port-output {
     border-color: var(--mud-palette-success);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-success) 18%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mud-palette-success) 18%, transparent);
 }
 
-.flow-designer-root ::deep .diagram-port.port-output:hover {
+.flow-designer-root ::deep .flux-port-connected.flux-port-input {
+    background: var(--mud-palette-info);
+}
+
+.flow-designer-root ::deep .flux-port-connected.flux-port-output {
     background: var(--mud-palette-success);
 }
 
-.flow-designer-root ::deep .diagram-port.port-output.has-links {
-    background: var(--mud-palette-success);
+.flow-designer-root ::deep .diagram-port:hover .flux-port-input {
+    background: var(--mud-palette-info);
 }
 
-/* Fallback connected state for ports without a semantic class */
-.flow-designer-root ::deep .diagram-port.has-links {
-    background: var(--mud-palette-primary);
+.flow-designer-root ::deep .diagram-port:hover .flux-port-output {
+    background: var(--mud-palette-success);
 }
 
 .flow-designer-root ::deep .diagram-link path,
@@ -157,14 +154,34 @@
     padding: 1px 0;
 }
 
-/* 6px side containers, half the dot width, so the 12px dot straddles the node edge */
-.flow-designer-root ::deep .flow-port-side-left,
+/* ── Port side containers ───────────────────────────────────────────────────
+   Each side is 6 px wide — half the 12 px dot — so the dot straddles the
+   node border.  Left container: dot starts at the container left edge and is
+   then pulled 6 px further left by margin-left, centering it on the border.
+   Right container: dot starts at the container left edge and overflows 6 px
+   to the right, again centering it on the border.
+   IMPORTANT: no justify-content here.  Centering would offset the dot by an
+   extra –3 px and push most of it outside the canvas clip rect.            */
+.flow-designer-root ::deep .flow-port-side-left {
+    align-items: center;
+    display: flex;
+    flex: 0 0 6px;
+    overflow: visible;
+}
+
 .flow-designer-root ::deep .flow-port-side-right {
     align-items: center;
     display: flex;
     flex: 0 0 6px;
-    justify-content: center;
+    overflow: visible;
 }
+
+/* Pull the left dot 6 px outside the node border */
+.flow-designer-root ::deep .flow-port-side-left .diagram-port {
+    margin-left: -6px;
+}
+
+/* Right dot naturally overflows 6 px to the right — no margin needed */
 
 .flow-designer-root ::deep .flow-port-name {
     flex: 1;
@@ -210,16 +227,16 @@
     white-space: nowrap;
 }
 
-/* Output port blink when a filter passes a message */
+/* Output port blink — animates the INNER dot, not the hit-target wrapper */
 @keyframes port-pulse-anim {
-    0%   { transform: scale(1);   box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-success) 18%, transparent); }
-    40%  { transform: scale(2);   box-shadow: 0 0 0 5px color-mix(in srgb, var(--mud-palette-success) 38%, transparent), 0 0 10px 3px color-mix(in srgb, var(--mud-palette-success) 28%, transparent); }
-    100% { transform: scale(1);   box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-success) 18%, transparent); }
+    0%   { transform: scale(1);   box-shadow: 0 0 0 3px color-mix(in srgb, var(--mud-palette-success) 18%, transparent); }
+    40%  { transform: scale(1.8); box-shadow: 0 0 0 6px color-mix(in srgb, var(--mud-palette-success) 38%, transparent), 0 0 10px 4px color-mix(in srgb, var(--mud-palette-success) 28%, transparent); }
+    100% { transform: scale(1);   box-shadow: 0 0 0 3px color-mix(in srgb, var(--mud-palette-success) 18%, transparent); }
 }
 
-.flow-designer-root ::deep .diagram-port.port-pulse {
+.flow-designer-root ::deep .flux-port-pulse {
     animation: port-pulse-anim 0.6s ease-out;
-    background: var(--mud-palette-success);
+    background: var(--mud-palette-success) !important;
 }
 
 @media (max-width: 960px) {

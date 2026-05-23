@@ -113,14 +113,12 @@
     [Parameter] public MaxWidth EditDialogMaxWidth { get; set; } = MaxWidth.Small;
 
     [CascadingParameter] private FlowWorkspaceService? Flow { get; set; }
+    [CascadingParameter] private BlazorDiagram? Diagram { get; set; }
 
     private bool _lastCollapsedState;
 
     private static string PortClass(bool isInput, FlowPortModel port)
-    {
-        var semantic = isInput ? "port-input" : "port-output";
-        return port.IsPulsing ? $"{semantic} port-pulse" : semantic;
-    }
+        => isInput ? "port-input" : "port-output";
 
     protected override void OnInitialized()
     {
@@ -132,13 +130,35 @@
         if (!firstRender && Node.IsCollapsed != _lastCollapsedState)
         {
             _lastCollapsedState = Node.IsCollapsed;
-            foreach (var port in Node.Ports)
-            {
-                port.Initialized = false;
-                port.Refresh();
-            }
+            _ = ReinitializePortsAsync();
         }
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Resets port measurement state after a collapse/expand so the library
+    /// re-queries getBoundingClientRect. A second pass (after one frame) then
+    /// forces all connected links to re-route using the freshly measured positions.
+    /// </summary>
+    private async Task ReinitializePortsAsync()
+    {
+        // Pass 1: mark all ports as un-measured so PortRenderer will re-read the DOM.
+        foreach (var port in Node.Ports)
+        {
+            port.Initialized = false;
+            port.Refresh();
+        }
+
+        // Wait one frame for Blazor to re-render PortRenderers and let the async
+        // JS getBoundingClientRect calls complete.
+        await Task.Delay(60);
+
+        // Pass 2: force the diagram to re-route every link that touches this node.
+        await InvokeAsync(() =>
+        {
+            Node.RefreshAll();
+            Diagram?.Refresh();
+        });
     }
 
     private async Task OpenEditDialogAsync()

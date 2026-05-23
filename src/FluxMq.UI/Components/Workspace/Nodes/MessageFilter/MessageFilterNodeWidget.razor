@@ -30,7 +30,7 @@
     </Body>
     <Editor>
         <MudTabs Elevation="0" Rounded="false" ApplyEffectsToContainer="true">
-            <MudTabPanel Text="Topic filters" Icon="@Icons.Material.Filled.Topic" Class="pt-3">
+            <MudTabPanel Text="Topic filters" Icon="@Icons.Material.Filled.Topic">
                 <MudStack Spacing="2">
                     <MudText Typo="Typo.caption" Color="Color.Secondary">
                         MQTT topic patterns. Use <code>#</code> (multi-level wildcard) and <code>+</code> (single-level wildcard).
@@ -57,7 +57,7 @@
                                OnClick="@AddPattern">Add pattern</MudButton>
                 </MudStack>
             </MudTabPanel>
-            <MudTabPanel Text="Expression" Icon="@Icons.Material.Filled.Code" Class="pt-3">
+            <MudTabPanel Text="Expression" Icon="@Icons.Material.Filled.Code">
                 <MudStack Spacing="2">
                     <MudText Typo="Typo.caption" Color="Color.Secondary">
                         Optional C# expression (DynamicExpresso). When set, overrides topic patterns.
@@ -71,7 +71,7 @@
                                   Class="node-expr-field"
                                   Placeholder='topic.StartsWith("sensors/") && payload.Length < 1024'
                                   HelperText="Leave empty to use topic patterns above." />
-                    <MudExpansionPanel Text="Available variables" Dense="true" Gutters="false">
+                    <MudExpansionPanel Text="Available variables" Dense="true" Class="pa-0">
                         <MudSimpleTable Dense="true" Striped="true" Class="mt-1">
                             <thead>
                                 <tr><th>Variable</th><th>Type</th><th>Example</th></tr>

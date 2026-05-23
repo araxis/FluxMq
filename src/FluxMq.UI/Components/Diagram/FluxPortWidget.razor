@@ -1,0 +1,28 @@
+@*
+    Custom port widget registered for FlowPortModel.
+    Renders the visible connector shape inside the div.diagram-port wrapper
+    that PortRenderer provides. The outer div handles hit-testing; this
+    component provides the visual appearance.
+*@
+@using Blazor.Diagrams.Core.Models
+
+<div class="@_css"></div>
+
+@code {
+    [Parameter] public PortModel Port { get; set; } = null!;
+
+    private string _css => BuildCss();
+
+    private string BuildCss()
+    {
+        var isInput = Port.Alignment == PortAlignment.Left;
+        var hasLinks = Port.Links.Count > 0;
+        var isPulsing = Port is FlowPortModel fp && fp.IsPulsing;
+
+        var sb = new System.Text.StringBuilder("flux-port-inner");
+        sb.Append(isInput ? " flux-port-input" : " flux-port-output");
+        if (hasLinks) sb.Append(" flux-port-connected");
+        if (isPulsing) sb.Append(" flux-port-pulse");
+        return sb.ToString();
+    }
+}
