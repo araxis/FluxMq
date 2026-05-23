@@ -142,7 +142,9 @@ public sealed class CliRunnerTests
 
         using var document = JsonDocument.Parse(string.Join(Environment.NewLine, output.Lines));
         document.RootElement.GetProperty("isValid").GetBoolean().ShouldBeFalse();
-        document.RootElement.GetProperty("diagnostics")[0].GetProperty("message").GetString().ShouldContain("boundedCapacity");
+        var message = document.RootElement.GetProperty("diagnostics")[0].GetProperty("message").GetString();
+        message.ShouldNotBeNull();
+        message.ShouldContain("boundedCapacity");
     }
 
     [Fact]
@@ -263,7 +265,9 @@ public sealed class CliRunnerTests
         using var document = JsonDocument.Parse(string.Join(Environment.NewLine, output.Lines));
         document.RootElement.GetProperty("started").GetBoolean().ShouldBeFalse();
         document.RootElement.GetProperty("exitReason").GetString().ShouldBe("validation failed");
-        document.RootElement.GetProperty("diagnostics")[0].GetProperty("message").GetString().ShouldContain("boundedCapacity");
+        var message = document.RootElement.GetProperty("diagnostics")[0].GetProperty("message").GetString();
+        message.ShouldNotBeNull();
+        message.ShouldContain("boundedCapacity");
     }
 
     private static TemporaryFile TemporaryJsonFile(string content)

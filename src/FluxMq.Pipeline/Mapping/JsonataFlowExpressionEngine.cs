@@ -15,7 +15,7 @@ public sealed class JsonataFlowExpressionEngine : IFlowExpressionEngine
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(resultType);
 
-        var inputJson = JsonSerializer.Serialize(context.Variables, Options);
+        var inputJson = JsonSerializer.Serialize(ToJsonataVariables(context.Variables), Options);
         var resultJson = new JsonataQuery(expression).Eval(inputJson);
 
         using var document = JsonDocument.Parse(resultJson);
@@ -48,4 +48,9 @@ public sealed class JsonataFlowExpressionEngine : IFlowExpressionEngine
             JsonValueKind.Null => null,
             _ => element.Clone()
         };
+
+    private static IReadOnlyDictionary<string, object?> ToJsonataVariables(IReadOnlyDictionary<string, object?> variables)
+        => variables
+            .Where(pair => pair.Value is not Type and not Delegate)
+            .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
 }

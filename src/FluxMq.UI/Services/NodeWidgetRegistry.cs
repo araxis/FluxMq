@@ -3,6 +3,7 @@ using FluxMq.UI.Components.Workspace.Nodes.ConditionRouter;
 using FluxMq.UI.Components.Workspace.Nodes.ConnectionStateTrigger;
 using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
 using FluxMq.UI.Components.Workspace.Nodes.Generic;
+using FluxMq.UI.Components.Workspace.Nodes.JsonSchemaValidator;
 using FluxMq.UI.Components.Workspace.Nodes.MessageFilter;
 using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
 using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
@@ -30,6 +31,7 @@ public sealed class NodeWidgetRegistry
         ["replay.source"] = typeof(GenericFlowNodeWidget),
         ["mqtt.payload-inspector"] = typeof(PayloadInspectorNodeWidget),
         ["mqtt.condition-router"] = typeof(ConditionRouterNodeWidget),
+        ["json.schema-validator"] = typeof(JsonSchemaValidatorNodeWidget),
         ["flow.mapper"] = typeof(DynamicMapperNodeWidget),
         // Hidden compatibility aliases for definitions created before flow.mapper.
         ["mqtt.publish-request"] = typeof(GenericFlowNodeWidget),

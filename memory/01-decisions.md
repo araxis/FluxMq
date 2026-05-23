@@ -22,10 +22,22 @@ Decision: Dynamic mapping and expression-based filtering/routing are first-class
 
 Reasoning:
 - Developer ELT flows require mapping from incoming protocol messages into explicit actor commands such as `MqttPublishRequest`, `FileWriteRequest`, `HttpRequest`, and `EmailSendRequest`.
-- Request models are actor input contracts, not user-facing component types. The visual/user-facing component is `flow.mapper`, configured with input type, output type, engine, and map expressions.
+- Request models are actor input contracts, not user-facing component types. The visual/user-facing component is `flow.mapper`, currently fixed to `MqttEnvelope` input and configured with engine, typed runtime output target, output contract, and a single expression that returns the output object.
 - A typical flow is: receive `MqttEnvelope`, filter by QoS/topic/payload, map to a publish request, then publish to another broker.
 - Hard-coded mappers are useful tests and defaults, but the product power comes from user-authored mapping logic.
 - The same expression/mapping foundation later supports ops features such as assertions, counters, summaries, rates, fault counts, and schema-based test expectations.
+
+Status: Accepted.
+
+### 2026-05-23 - Mapper contracts configure intent, validators live in runtime
+
+Decision: The Dynamic Mapper editor owns the output contract selection because it describes what the mapper is expected to emit, but the validation implementation belongs in runtime/components as reusable services and standalone nodes.
+
+Reasoning:
+- `typed` mapper output keeps today's actor-request wiring path.
+- `any` lets authors preview arbitrary expression output without pretending it is an actor command.
+- `json-schema-file` records a schema contract, but JSON Schema validation must also be available as `json.schema-validator` for ops checks, assertions, and non-mapper flows.
+- UI preview, CLI/runtime execution, and future assertion nodes should not each invent their own schema evaluator.
 
 Status: Accepted.
 

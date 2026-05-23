@@ -13,6 +13,9 @@ This folder is the working memory for FluxMQ. It should hold the project decisio
 - [06-source-agnostic-update-plan.md](06-source-agnostic-update-plan.md) - source-agnostic runtime and update-flow refactoring plan.
 - [07-standalone-component-refactor-plan.md](07-standalone-component-refactor-plan.md) - standalone component and actor-command refactoring plan.
 - [08-dynamic-mapping-and-ops-vision.md](08-dynamic-mapping-and-ops-vision.md) - dynamic mapper, ELT, and ops/assertion product direction.
+- [09-feature-list.md](09-feature-list.md) - followable product and implementation feature backlog.
+- [10-development-plan.md](10-development-plan.md) - living step-by-step implementation plan and progress tracker.
+- [11-opc-router-ui-inspiration.md](11-opc-router-ui-inspiration.md) - industrial ETL UI inspiration for mapper/workflow authoring.
 
 ## Working Rule
 
