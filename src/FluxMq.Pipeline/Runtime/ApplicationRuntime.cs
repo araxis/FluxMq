@@ -36,7 +36,18 @@ public sealed class ApplicationRuntime(
             {
                 foreach (var node in group)
                 {
-                    await node.Node.StartAsync(cancellationToken).ConfigureAwait(false);
+                    try
+                    {
+                        await node.Node.StartAsync(cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
+                    }
+                    catch (Exception exception)
+                    {
+                        throw new ApplicationRuntimeNodeStartException(node.Address, exception);
+                    }
                 }
             }
         }

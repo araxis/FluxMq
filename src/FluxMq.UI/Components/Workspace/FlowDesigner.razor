@@ -1,5 +1,6 @@
 @using FluxMq.UI.Components.Diagram
 @using FluxMq.Components.MessageFilter
+@using FluxMq.UI.Models
 @implements IDisposable
 @inject LiveMqttWorkspaceService Live
 @inject FlowComponentCatalog Catalog
@@ -204,6 +205,7 @@
         }
 
         UpdateDiagramActivity();
+        UpdateDiagramDiagnostics();
         _diagram.Refresh();
         SchedulePortMeasurementRefresh();
     }
@@ -318,6 +320,31 @@
 
             node.SetActivity(activity);
         }
+    }
+
+    private void UpdateDiagramDiagnostics()
+    {
+        foreach (var node in _diagram.Nodes.OfType<FlowDiagramNodeModel>())
+        {
+            node.SetDiagnostics(Flow.Diagnostics.Where(diagnostic => DiagnosticMatchesNode(diagnostic, node)));
+        }
+    }
+
+    private bool DiagnosticMatchesNode(WorkspaceDiagnostic diagnostic, FlowDiagramNodeModel node)
+    {
+        if (string.IsNullOrWhiteSpace(diagnostic.NodeName) ||
+            !string.Equals(diagnostic.NodeName, node.NodeName, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        if (node.IsResource)
+        {
+            return string.IsNullOrWhiteSpace(diagnostic.WorkflowName);
+        }
+
+        return !string.IsNullOrWhiteSpace(diagnostic.WorkflowName) &&
+               string.Equals(diagnostic.WorkflowName, Flow.ActiveWorkflowName, StringComparison.Ordinal);
     }
 
     private void CaptureDiagramState()
@@ -471,6 +498,7 @@
             else
             {
                 UpdateDiagramActivity();
+                UpdateDiagramDiagnostics();
                 _diagram.Refresh();
             }
             UpdatePulseTimer();

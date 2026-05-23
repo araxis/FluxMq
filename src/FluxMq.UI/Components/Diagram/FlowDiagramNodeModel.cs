@@ -53,6 +53,12 @@ public class FlowDiagramNodeModel : NodeModel
     public IReadOnlyList<ComponentPortDescriptor> PortDescriptors { get; }
     public bool IsCollapsed { get; private set; }
     public string? ActivityText { get; private set; }
+    public IReadOnlyList<WorkspaceDiagnostic> Diagnostics { get; private set; } = [];
+    public WorkspaceDiagnostic? PrimaryDiagnostic => Diagnostics
+        .OrderByDescending(DiagnosticSeverityRank)
+        .ThenBy(static diagnostic => diagnostic.Source, StringComparer.Ordinal)
+        .ThenBy(static diagnostic => diagnostic.Code, StringComparer.Ordinal)
+        .FirstOrDefault();
 
     /// <summary>Called by the designer after the node is created to parse the JSON configuration.</summary>
     internal void LoadConfiguration(JsonObject? config) => OnConfigurationLoaded(config);
@@ -90,4 +96,25 @@ public class FlowDiagramNodeModel : NodeModel
         ActivityText = activityText;
         Refresh();
     }
+
+    public void SetDiagnostics(IEnumerable<WorkspaceDiagnostic> diagnostics)
+    {
+        var next = diagnostics.ToArray();
+        if (Diagnostics.SequenceEqual(next))
+        {
+            return;
+        }
+
+        Diagnostics = next;
+        Refresh();
+    }
+
+    private static int DiagnosticSeverityRank(WorkspaceDiagnostic diagnostic)
+        => diagnostic.Severity switch
+        {
+            "Error" => 3,
+            "Warning" => 2,
+            "Info" => 1,
+            _ => 0
+        };
 }

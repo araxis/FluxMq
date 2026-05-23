@@ -175,7 +175,10 @@ public sealed class FlowApplicationHostTests
         var result = await host.StartAsync();
 
         result.IsSuccess.ShouldBeFalse();
-        result.Errors.ShouldHaveSingleItem().Code.ShouldBe(FlowApplicationHostBuildErrorCode.StartFailed);
+        var error = result.Errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(FlowApplicationHostBuildErrorCode.StartFailed);
+        error.WorkflowName.ShouldBe("observe");
+        error.NodeName.ShouldBe("start");
         host.State.ShouldBe(FlowApplicationHostState.Faulted);
         host.LastException.ShouldBeOfType<InvalidOperationException>()
             .Message.ShouldBe("start failed");

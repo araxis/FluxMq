@@ -25,15 +25,16 @@ This is the active implementation plan. Keep it updated after every meaningful d
 ## Current Target
 
 **Phase:** 5 - desktop workspace authoring polish
-**Active feature:** `F-022 - Node Editors`
+**Active feature:** `F-023 - Runtime Control And Diagnostics`
 **Status:** Review
 **Started:** 2026-05-23
 
 The mapper workbench now follows a JSONata Exerciser-like shape: Monaco JSON input on the left, Monaco mapper expression in the middle, and live JSON result on the right. MQTT envelope samples use `{ topic, qos, retain, receivedAt, payload }`; arbitrary JSON input is treated as payload for quick experimentation. Mapper output configuration now separates the runtime target type from the result contract: `typed`, `any`, or `json-schema-file`. `json.schema-validator` exists as a standalone runtime/UI component backed by JsonSchema.Net, so schema validation is a reusable runtime capability rather than mapper-only UI behavior.
 
-Actor editors are in place for `mqtt.publisher`, `mqtt.recorder`, and `file.writer`. Source editors are now in review for `generated.source` and `replay.source`. Live broker traffic stays on the existing `mqtt.connection` plus `mqtt.trigger` path; `generated.source` owns its fixed MQTT message list; `replay.source` selects a recorded session and playback speed.
+Actor editors are in place for `mqtt.publisher`, `mqtt.recorder`, and `file.writer`. Source editors are in place for `generated.source` and `replay.source`. Live broker traffic stays on the existing `mqtt.connection` plus `mqtt.trigger` path; `generated.source` owns its fixed MQTT message list; `replay.source` selects a recorded session and playback speed.
 
-The next desktop authoring slice should move toward runtime/build diagnostics on nodes after the source editor slice is accepted.
+The current diagnostics slice attaches validation, runtime build, and node startup failures to the responsible node where possible. Diagram nodes now show error/warning/info status in their border and header tooltip while the existing workspace diagnostic list remains available for global errors.
+The desktop shell now exposes active-app `Validate`, `Run`, and `Stop` actions in the top bar, plus an app runtime state pill, so validation/run feedback is separate from live broker connection state.
 
 ## Step-by-Step Plan
 
@@ -255,13 +256,20 @@ Done when:
 - `replay.source` now exposes session selection, playback speed, and output buffer settings.
 - Registered `replay.source` in the runtime factory registry and covered it with runtime tests.
 - The composer now writes default configuration for generated and replay sources when they are added from the catalog; live flows continue to use the shared broker resource plus trigger.
+- Moved the active target to `F-023 - Runtime Control And Diagnostics`.
+- Validation errors now retain workflow, node, and port scope where possible.
+- Runtime build errors and node startup failures now retain node scope.
+- Workspace diagnostics now carry optional workflow/node/port metadata.
+- Diagram nodes now render node-scoped diagnostics as border status plus a header tooltip.
+- The desktop top bar now exposes active-app `Validate`, `Run`, and `Stop` actions and an app runtime state pill, instead of leaving validation/run paths hidden behind service methods.
 
 ## Next Action
 
-Continue Phase 5 after review of the source editor slice:
+Continue Phase 5 after review of the node diagnostics slice:
 
-1. Manually inspect the new source edit dialogs in the desktop workspace.
-2. Build and validate a visual flow: `mqtt.trigger -> message filter -> dynamic mapper -> mqtt.publisher`.
-3. Confirm generated and replay sources save meaningful JSON and validate through the runtime.
-4. Next slice: surface validation/runtime errors on graph nodes.
-5. Add pass/fail routing or assertion components only after the plain validation-result output feels right.
+1. In the desktop app top bar, confirm `Validate`, `Run`, and `Stop` are visible when an app is open.
+2. Confirm `Validate` marks a bad node configuration on the graph and updates the app state pill to `App faulted`.
+3. Restore the bad value, run `Validate` again, and confirm the node status clears and the state pill changes to `App valid`.
+4. Build and validate a visual flow: `mqtt.trigger -> message filter -> dynamic mapper -> mqtt.publisher`.
+5. Next slice: capture component `FlowError` outputs into the same diagnostics path when a flow is running.
+6. Add pass/fail routing or assertion components only after the plain validation-result output feels right.

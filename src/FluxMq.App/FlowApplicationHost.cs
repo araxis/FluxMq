@@ -1,6 +1,7 @@
 using FluxMq.Core.Models;
 using FluxMq.Core.Session;
 using FluxMq.Components.Storage.Repositories;
+using FluxMq.Pipeline.Definitions;
 using FluxMq.Pipeline.Runtime;
 using Microsoft.Extensions.Configuration;
 
@@ -91,6 +92,20 @@ public sealed class FlowApplicationHost(
         catch (OperationCanceledException)
         {
             throw;
+        }
+        catch (ApplicationRuntimeNodeStartException exception)
+        {
+            State = FlowApplicationHostState.Faulted;
+            LastException = exception.InnerException ?? exception;
+            LastBuildResult = FlowApplicationHostBuildResult.FromHostError(
+                new FlowApplicationHostBuildError(
+                    FlowApplicationHostBuildErrorCode.StartFailed,
+                    exception.Message,
+                    exception,
+                    exception.NodeAddress.Scope == WellKnownScopes.Resources ? null : exception.NodeAddress.Scope,
+                    exception.NodeAddress.Node.Value));
+
+            return LastBuildResult;
         }
         catch (Exception exception)
         {

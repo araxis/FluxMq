@@ -8,10 +8,11 @@
     here so widgets stay focused on their content.
 *@
 @using FluxMq.UI.Components.Workspace.Dialogs
+@using FluxMq.UI.Models
 @using FluxMq.UI.Services
 @inject IDialogService DialogService
 
-<div class="flow-node @(Node.Selected ? "flow-node-selected" : null) @(Node.IsCollapsed ? "flow-node-collapsed" : null)">
+<div class="flow-node @(Node.Selected ? "flow-node-selected" : null) @(Node.IsCollapsed ? "flow-node-collapsed" : null) @DiagnosticClass">
     <div class="flow-node-header">
         <MudIconButton Size="Size.Small"
                        Icon="@(Node.IsCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore)"
@@ -26,6 +27,15 @@
                            Icon="@Icons.Material.Filled.Edit"
                            OnClick="@OpenEditDialogAsync" />
         </MudTooltip>
+        @if (Node.PrimaryDiagnostic is { } diagnostic)
+        {
+            <MudTooltip Text="@DiagnosticTooltip">
+                <MudIcon Icon="@DiagnosticIcon(diagnostic)"
+                         Color="@DiagnosticColor(diagnostic)"
+                         Size="Size.Small"
+                         Class="flow-node-diagnostic-icon" />
+            </MudTooltip>
+        }
         <MudChip T="string" Size="Size.Small" Color="@CategoryColor">@Node.Category</MudChip>
     </div>
 
@@ -123,8 +133,37 @@
 
     private bool _lastCollapsedState;
 
+    private string? DiagnosticClass => Node.PrimaryDiagnostic is { } diagnostic
+        ? $"flow-node-diagnostic-{diagnostic.Severity.ToLowerInvariant()}"
+        : null;
+
+    private string DiagnosticTooltip => string.Join(Environment.NewLine, Node.Diagnostics.Select(FormatDiagnostic));
+
     private static string PortClass(bool isInput, FlowPortModel port)
         => isInput ? "port-input" : "port-output";
+
+    private static string DiagnosticIcon(WorkspaceDiagnostic diagnostic)
+        => diagnostic.Severity switch
+        {
+            "Error" => Icons.Material.Filled.ErrorOutline,
+            "Warning" => Icons.Material.Filled.WarningAmber,
+            "Info" => Icons.Material.Filled.Info,
+            _ => Icons.Material.Filled.Info
+        };
+
+    private static Color DiagnosticColor(WorkspaceDiagnostic diagnostic)
+        => diagnostic.Severity switch
+        {
+            "Error" => Color.Error,
+            "Warning" => Color.Warning,
+            "Info" => Color.Info,
+            _ => Color.Default
+        };
+
+    private static string FormatDiagnostic(WorkspaceDiagnostic diagnostic)
+        => string.IsNullOrWhiteSpace(diagnostic.PortName)
+            ? $"{diagnostic.Code}: {diagnostic.Message}"
+            : $"{diagnostic.Code} ({diagnostic.PortName}): {diagnostic.Message}";
 
     protected override void OnInitialized()
     {

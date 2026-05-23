@@ -113,6 +113,32 @@ public sealed class FlowApplicationRuntimeBuilderTests
     }
 
     [Fact]
+    public void Build_PreservesValidationErrorScope()
+    {
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry());
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["metrics"] = NodeWithPort("test.sink", "Input", "\"missing.Output\"")
+                    }
+                }
+            }
+        });
+
+        var error = result.Errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(ApplicationRuntimeBuildErrorCode.ValidationFailed);
+        error.WorkflowName.ShouldBe("flow");
+        error.NodeName?.Value.ShouldBe("metrics");
+        error.PortName?.Value.ShouldBe("Input");
+    }
+
+    [Fact]
     public void Build_ReturnsUnknownNodeType()
     {
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry());

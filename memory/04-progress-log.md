@@ -549,3 +549,19 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 23 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 61 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -m:1` passes with 267 tests.
+
+## 2026-05-23 - Node diagnostics slice
+
+- Added workflow/node/port scope to definition validation errors and runtime build errors.
+- Added node startup failure wrapping so run-start failures keep the failing node address.
+- Extended workspace diagnostics with optional workflow, node, and port metadata.
+- Diagram nodes now show node-scoped diagnostics through status border styling and a header tooltip.
+- Build validation diagnostics no longer duplicate the same validation failure as both definition and runtime-build diagnostics in the workspace list.
+- Added visible top-bar actions for the active app: `Validate`, `Run`, and `Stop`.
+- Added an app runtime state pill so app validation/start state is separate from live broker connection state.
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 45 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 22 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 61 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -m:1` passes with 266 tests.
+  - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false` passes with the existing WinAppSDK PRI249 warnings.

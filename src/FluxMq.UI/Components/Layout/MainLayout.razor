@@ -54,6 +54,43 @@
 
             <span class="flux-toolbar-divider"></span>
 
+            <MudTooltip Text="Validate app">
+                <MudButton Size="Size.Small"
+                           Variant="Variant.Text"
+                           Color="Color.Info"
+                           StartIcon="@Icons.Material.Filled.FactCheck"
+                           Class="flux-command-button"
+                           Disabled="@(!CanValidateActiveProject)"
+                           OnClick="@ValidateActiveAsync">Validate</MudButton>
+            </MudTooltip>
+            <MudTooltip Text="Run app">
+                <MudButton Size="Size.Small"
+                           Variant="Variant.Text"
+                           Color="Color.Success"
+                           StartIcon="@Icons.Material.Filled.PlayArrow"
+                           Class="flux-command-button"
+                           Disabled="@(!CanRunActiveProject)"
+                           OnClick="@RunActiveAsync">Run</MudButton>
+            </MudTooltip>
+            <MudTooltip Text="Stop app">
+                <MudButton Size="Size.Small"
+                           Variant="Variant.Text"
+                           Color="Color.Error"
+                           StartIcon="@Icons.Material.Filled.Stop"
+                           Class="flux-command-button"
+                           Disabled="@(!CanStopActiveProject)"
+                           OnClick="@StopActiveAsync">Stop</MudButton>
+            </MudTooltip>
+
+            <MudTooltip Text="@ActiveProjectStateTooltip">
+                <div class="@FlowStateClass">
+                    <span class="flux-flow-dot"></span>
+                    <span>@ActiveProjectStateLabel</span>
+                </div>
+            </MudTooltip>
+
+            <span class="flux-toolbar-divider"></span>
+
             <div class="@RunStateClass">
                 <span class="flux-run-dot"></span>
                 <span>@Live.State</span>
@@ -171,6 +208,7 @@
     private bool _rightOpen = true;
     private bool _busy;
     private int _railTab;
+    private readonly HashSet<FlowWorkspaceService> _subscribedProjects = [];
 
     private readonly MudTheme _theme = new()
     {
@@ -228,6 +266,7 @@
         ThemeService.Changed += OnThemeChanged;
         Projects.Changed += OnChanged;
         Live.Changed += OnChanged;
+        SyncProjectSubscriptions();
     }
 
     private string ShellClass =>
@@ -247,6 +286,46 @@
         MqttSessionState.Faulted => "flux-runstate faulted",
         _ => "flux-runstate"
     };
+
+    private string FlowStateClass => Projects.ActiveProject?.State switch
+    {
+        RuntimeWorkspaceState.Valid => "flux-flowstate valid",
+        RuntimeWorkspaceState.Running => "flux-flowstate running",
+        RuntimeWorkspaceState.Faulted => "flux-flowstate faulted",
+        RuntimeWorkspaceState.Stopped => "flux-flowstate stopped",
+        _ => "flux-flowstate"
+    };
+
+    private string ActiveProjectStateLabel => Projects.ActiveProject is null
+        ? "No app"
+        : Projects.ActiveProject.State switch
+        {
+            RuntimeWorkspaceState.Valid => "App valid",
+            RuntimeWorkspaceState.Running => "App running",
+            RuntimeWorkspaceState.Faulted => "App faulted",
+            RuntimeWorkspaceState.Stopped => "App stopped",
+            _ => "App idle"
+        };
+
+    private string ActiveProjectStateTooltip
+    {
+        get
+        {
+            var project = Projects.ActiveProject;
+            if (project is null) return "No active app";
+
+            var errors = project.Diagnostics.Count(d => string.Equals(d.Severity, "Error", StringComparison.Ordinal));
+            var warnings = project.Diagnostics.Count(d => string.Equals(d.Severity, "Warning", StringComparison.Ordinal));
+            return errors > 0 || warnings > 0
+                ? $"{project.State}: {errors} errors, {warnings} warnings"
+                : $"App runtime state: {project.State}";
+        }
+    }
+
+    private bool ActiveProjectIsRunning => Projects.ActiveProject?.State == RuntimeWorkspaceState.Running;
+    private bool CanValidateActiveProject => !_busy && Projects.ActiveProject is not null && !ActiveProjectIsRunning;
+    private bool CanRunActiveProject => !_busy && Projects.ActiveProject is not null && !ActiveProjectIsRunning;
+    private bool CanStopActiveProject => !_busy && ActiveProjectIsRunning;
 
     private string StatusDotClass => Live.State switch
     {
@@ -327,6 +406,24 @@
             await project.SaveAsAsync(path);
     }
 
+    private Task ValidateActiveAsync() => RunBusyAsync(async () =>
+    {
+        if (Projects.ActiveProject is { } project)
+            await project.ValidateAsync();
+    });
+
+    private Task RunActiveAsync() => RunBusyAsync(async () =>
+    {
+        if (Projects.ActiveProject is { } project)
+            await project.RunAsync();
+    });
+
+    private Task StopActiveAsync() => RunBusyAsync(async () =>
+    {
+        if (Projects.ActiveProject is { } project)
+            await project.StopAsync();
+    });
+
     private async Task RunBusyAsync(Func<Task> action)
     {
         _busy = true;
@@ -368,13 +465,35 @@
     }
 
     private void OnThemeChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
-    private void OnChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
+    private void OnChanged(object? sender, EventArgs e)
+    {
+        SyncProjectSubscriptions();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void SyncProjectSubscriptions()
+    {
+        foreach (var project in Projects.Projects)
+        {
+            if (_subscribedProjects.Add(project))
+                project.Changed += OnChanged;
+        }
+
+        foreach (var stale in _subscribedProjects.Where(project => !Projects.Projects.Contains(project)).ToArray())
+        {
+            stale.Changed -= OnChanged;
+            _subscribedProjects.Remove(stale);
+        }
+    }
 
     public void Dispose()
     {
         ThemeService.Changed -= OnThemeChanged;
         Projects.Changed -= OnChanged;
         Live.Changed -= OnChanged;
+        foreach (var project in _subscribedProjects)
+            project.Changed -= OnChanged;
+        _subscribedProjects.Clear();
     }
 
     [Inject] private IDialogService? DialogService { get; set; }

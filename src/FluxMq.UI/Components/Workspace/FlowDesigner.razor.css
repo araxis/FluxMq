@@ -58,6 +58,20 @@
     box-shadow: 0 0 0 2px var(--flux-accent-dim), var(--flux-shadow-node);
 }
 
+.flow-designer-root ::deep .flow-node-diagnostic-error {
+    border-color: var(--mud-palette-error);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--mud-palette-error) 42%, transparent), var(--flux-shadow-node);
+}
+
+.flow-designer-root ::deep .flow-node-diagnostic-warning {
+    border-color: var(--mud-palette-warning);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--mud-palette-warning) 36%, transparent), var(--flux-shadow-node);
+}
+
+.flow-designer-root ::deep .flow-node-diagnostic-info {
+    border-color: var(--mud-palette-info);
+}
+
 .flow-designer-root ::deep .flow-node-header {
     align-items: center;
     display: flex;
@@ -67,6 +81,10 @@
 .flow-designer-root ::deep .flow-node-title {
     flex: 1;
     min-width: 0;
+}
+
+.flow-designer-root ::deep .flow-node-diagnostic-icon {
+    flex: 0 0 auto;
 }
 
 /* ── Port hit-target wrapper (rendered by PortRenderer) ─────────────────────
