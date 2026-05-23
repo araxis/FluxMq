@@ -151,16 +151,24 @@ Example JSON shape:
 
 ```json
 {
+  "resources": {
+    "broker": {
+      "type": "mqtt.connection",
+      "configuration": {
+        "profile": {
+          "name": "local-broker",
+          "host": "localhost",
+          "port": 1883
+        }
+      }
+    }
+  },
   "workflows": {
     "observeTraffic": {
-      "live": {
-        "type": "mqtt.live-source",
+      "trigger": {
+        "type": "mqtt.trigger",
         "configuration": {
-          "profile": {
-            "name": "local-broker",
-            "host": "localhost",
-            "port": 1883
-          },
+          "connection": "broker",
           "subscriptions": [
             "factory/#",
             { "topicFilter": "telemetry/#", "qos": 1 }
@@ -169,7 +177,7 @@ Example JSON shape:
       },
       "metrics": {
         "type": "mqtt.metrics",
-        "Input": "live.Output"
+        "Input": "trigger.Output"
       }
     }
   }
@@ -307,12 +315,7 @@ The first runtime builder slice is intentionally small. `ApplicationRuntimeBuild
 - completes only entry nodes so Dataflow completion propagates through linked graphs in order
 - disposes workflow nodes before shared resources
 
-The preferred alpha source registrations are explicit source nodes, alongside the shared connection/trigger pair and stable observers, actors, and mappers:
-
-- `mqtt.live-source`
-  - Workflow source node for direct live broker traffic.
-  - `Output`: `MqttEnvelope`
-  - `Errors`: `FlowError`
+The preferred alpha source registrations use the shared connection/trigger pair for live broker traffic, plus explicit source nodes for stored, replayed, and configured message streams:
 - `session.source`
   - Workflow source node for stored session messages.
   - `Output`: `MqttEnvelope`
@@ -362,54 +365,7 @@ registry.Register(new NodeType("example.resource"), context =>
 
 Producer or service-backed nodes that need explicit start work should override `IFlowNode.StartAsync`. Startup failures are converted into host build errors instead of escaping through the CLI or host shell.
 
-Preferred alpha configuration shape with `mqtt.live-source`:
-
-```json
-{
-  "workflows": {
-    "observeTraffic": {
-      "live": {
-        "type": "mqtt.live-source",
-        "configuration": {
-          "profile": {
-            "name": "local-broker",
-            "host": "localhost",
-            "port": 1883,
-            "keepAliveSeconds": 30,
-            "cleanStart": true
-          },
-          "subscriptions": [
-            "factory/#",
-            { "topicFilter": "telemetry/#", "qos": "AtLeastOnce" }
-          ],
-          "boundedCapacity": 1000
-        }
-      },
-      "metrics": {
-        "type": "mqtt.metrics",
-        "Input": "live.Output"
-      }
-    }
-  }
-}
-```
-
-Stored-session source configuration:
-
-```json
-{
-  "stored": {
-    "type": "session.source",
-    "configuration": {
-      "sessionId": "00000000-0000-0000-0000-000000000001",
-      "preserveTiming": false,
-      "speed": 1
-    }
-  }
-}
-```
-
-Shared connection plus trigger configuration is also supported:
+Preferred alpha configuration shape with `mqtt.connection` plus `mqtt.trigger`:
 
 ```json
 {
@@ -439,13 +395,32 @@ Shared connection plus trigger configuration is also supported:
           ],
           "boundedCapacity": 1000
         }
+      },
+      "metrics": {
+        "type": "mqtt.metrics",
+        "Input": "trigger.Output"
       }
     }
   }
 }
 ```
 
-`mqtt.live-source.configuration.subscriptions` and `mqtt.trigger.configuration.subscriptions` support:
+Stored-session source configuration:
+
+```json
+{
+  "stored": {
+    "type": "session.source",
+    "configuration": {
+      "sessionId": "00000000-0000-0000-0000-000000000001",
+      "preserveTiming": false,
+      "speed": 1
+    }
+  }
+}
+```
+
+`mqtt.trigger.configuration.subscriptions` supports:
 
 - string shorthand (`"factory/#"`)
 - array of strings

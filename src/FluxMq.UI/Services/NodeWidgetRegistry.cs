@@ -10,6 +10,7 @@ using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
 using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
 using FluxMq.UI.Components.Workspace.Nodes.PayloadInspector;
 using FluxMq.UI.Components.Workspace.Nodes.SessionSource;
+using FluxMq.UI.Components.Workspace.Nodes.Sources;
 
 namespace FluxMq.UI.Services;
 
@@ -24,12 +25,11 @@ public sealed class NodeWidgetRegistry
     private readonly Dictionary<string, Type> _widgets = new(StringComparer.Ordinal)
     {
         ["session.source"] = typeof(StoredSessionSourceNodeWidget),
-        ["mqtt.live-source"] = typeof(GenericFlowNodeWidget),
         ["mqtt.trigger"] = typeof(MqttTriggerNodeWidget),
         ["mqtt.connection-state-trigger"] = typeof(ConnectionStateTriggerNodeWidget),
         ["mqtt.message-filter"] = typeof(MessageFilterNodeWidget),
-        ["generated.source"] = typeof(GenericFlowNodeWidget),
-        ["replay.source"] = typeof(GenericFlowNodeWidget),
+        ["generated.source"] = typeof(GeneratedSourceNodeWidget),
+        ["replay.source"] = typeof(ReplaySourceNodeWidget),
         ["mqtt.payload-inspector"] = typeof(PayloadInspectorNodeWidget),
         ["mqtt.condition-router"] = typeof(ConditionRouterNodeWidget),
         ["json.schema-validator"] = typeof(JsonSchemaValidatorNodeWidget),

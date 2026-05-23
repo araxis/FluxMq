@@ -117,13 +117,14 @@ flowchart LR
 
 Status: implemented for the first alpha source modes.
 
-FluxMQ now uses explicit source node types instead of one generic source type with a mode flag:
+FluxMQ now uses a clear live-trigger path plus explicit non-live source node types instead of one generic source type with a mode flag:
 
-- `mqtt.live-source`
+- `mqtt.trigger`
 - `session.source`
 - `generated.source`
+- `replay.source`
 
-Downstream nodes link to each source node's `Output` port and do not need to know whether the data came from live MQTT, storage, or generated messages.
+Downstream nodes link to each source or trigger node's `Output` port and do not need to know whether the data came from live MQTT, storage, replay, or configured message lists.
 
 Add a small execution-time model that can bind a logical source node to an online or offline source.
 

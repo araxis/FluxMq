@@ -32,8 +32,8 @@ public sealed class PipelineComponentFactoryTests
         {
             PipelineFlowNodeTypes.Connection,
             PipelineFlowNodeTypes.Trigger,
-            PipelineFlowNodeTypes.LiveSource,
             PipelineFlowNodeTypes.StoredSessionSource,
+            PipelineFlowNodeTypes.ReplaySource,
             PipelineFlowNodeTypes.GeneratedSource,
             PipelineFlowNodeTypes.PayloadInspector,
             PipelineFlowNodeTypes.MqttMetrics,
@@ -291,67 +291,6 @@ public sealed class PipelineComponentFactoryTests
         sink!.Values.ShouldNotBeEmpty();
         sink.Values[^1].MessageCount.ShouldBe(1);
         sink.Values[^1].TotalPayloadBytes.ShouldBe(3);
-    }
-
-    [Fact]
-    public async Task LiveSourceFactory_CreatesLiveSource()
-    {
-        FakeMqttSession? session = null;
-        TestSinkNode<MqttMetricsSnapshot>? sink = null;
-
-        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
-            .RegisterPipelineComponentFactories(_ =>
-            {
-                session = new FakeMqttSession();
-                return session;
-            })
-            .Register(new NodeType("test.snapshot-sink"), (address, _) =>
-            {
-                sink = new TestSinkNode<MqttMetricsSnapshot>();
-                return SinkNode(address, sink);
-            }));
-
-        var result = builder.Build(new ApplicationDefinition
-        {
-            Workflows =
-            {
-                ["flow"] = new WorkflowDefinition
-                {
-                    Nodes =
-                    {
-                        ["live"] = new NodeDefinition
-                        {
-                            Type = PipelineFlowNodeTypes.LiveSource,
-                            Configuration =
-                            {
-                                ["profile"] = JsonDocument.Parse("""{"name":"factory-broker","host":"localhost","port":1883}""").RootElement.Clone(),
-                                ["subscriptions"] = JsonDocument.Parse("""["factory/#"]""").RootElement.Clone()
-                            }
-                        },
-                        ["metrics"] = NodeWithPort(PipelineFlowNodeTypes.MqttMetrics, "Input", "\"live.Output\""),
-                        ["sink"] = NodeWithPort("test.snapshot-sink", "Input", "\"metrics.Snapshots\"")
-                    }
-                }
-            }
-        });
-
-        result.IsSuccess.ShouldBeTrue();
-        await using var runtime = result.Runtime!;
-
-        await runtime.StartAsync();
-
-        session.ShouldNotBeNull();
-        session!.ConnectCalls.ShouldBe(1);
-        session.Subscriptions.ShouldContain(subscription => subscription.TopicFilter == "factory/#");
-
-        await session.WriteAsync(new MqttEnvelope { Topic = "factory/one", Payload = [1, 2, 3] });
-        await session.WriteAsync(new MqttEnvelope { Topic = "other/one", Payload = [1, 2, 3] });
-
-        session.CompleteMessages();
-        await runtime.Completion;
-
-        sink!.Values.ShouldNotBeEmpty();
-        sink.Values[^1].MessageCount.ShouldBe(1);
     }
 
     [Fact]
@@ -639,6 +578,90 @@ public sealed class PipelineComponentFactoryTests
     }
 
     [Fact]
+    public async Task ReplaySourceFactory_CreatesReplaySource()
+    {
+        var sessionId = SessionId.New();
+        var repository = new FakeMessageRepository(
+            Stored(sessionId, "factory/one", DateTimeOffset.Parse("2026-05-15T10:00:01Z"), 2),
+            Stored(sessionId, "factory/two", DateTimeOffset.Parse("2026-05-15T10:00:00Z"), 1));
+        TestSinkNode<MqttMetricsSnapshot>? sink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories(messageRepository: repository)
+            .Register(new NodeType("test.snapshot-sink"), (address, _) =>
+            {
+                sink = new TestSinkNode<MqttMetricsSnapshot>();
+                return SinkNode(address, sink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["replay"] = new NodeDefinition
+                        {
+                            Type = PipelineFlowNodeTypes.ReplaySource,
+                            Configuration =
+                            {
+                                ["sessionId"] = JsonDocument.Parse($"\"{sessionId}\"").RootElement.Clone(),
+                                ["speed"] = JsonDocument.Parse("1000").RootElement.Clone()
+                            }
+                        },
+                        ["metrics"] = NodeWithPort(PipelineFlowNodeTypes.MqttMetrics, "Input", "\"replay.Output\""),
+                        ["sink"] = NodeWithPort("test.snapshot-sink", "Input", "\"metrics.Snapshots\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue();
+        await using var runtime = result.Runtime!;
+
+        await runtime.StartAsync();
+        await runtime.Completion;
+
+        sink!.Values.ShouldNotBeEmpty();
+        sink.Values[^1].MessageCount.ShouldBe(2);
+        repository.LoadedSessionIds.ShouldBe(new[] { sessionId });
+    }
+
+    [Fact]
+    public void ReplaySourceFactory_ReturnsBuildErrorWhenReplaySourceHasNoRepository()
+    {
+        var sessionId = SessionId.New();
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories());
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["replay"] = new NodeDefinition
+                        {
+                            Type = PipelineFlowNodeTypes.ReplaySource,
+                            Configuration =
+                            {
+                                ["sessionId"] = JsonDocument.Parse($"\"{sessionId}\"").RootElement.Clone()
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeFalse();
+        result.Errors.ShouldContain(error => error.Message.Contains("message repository"));
+    }
+
+    [Fact]
     public void StoredSessionSourceFactory_ReturnsBuildErrorWhenStoredSourceHasNoRepository()
     {
         var sessionId = SessionId.New();
@@ -900,6 +923,7 @@ public sealed class PipelineComponentFactoryTests
     {
         private readonly IReadOnlyList<StoredMessage> _messages = messages;
 
+        public List<SessionId> LoadedSessionIds { get; } = [];
         public List<SessionId> StreamedSessionIds { get; } = [];
 
         public void Add(SessionId sessionId, MqttEnvelope envelope)
@@ -909,6 +933,12 @@ public sealed class PipelineComponentFactoryTests
             => throw new NotSupportedException();
 
         public IReadOnlyList<StoredMessage> GetBySession(SessionId sessionId)
+        {
+            LoadedSessionIds.Add(sessionId);
+            return GetBySessionCore(sessionId);
+        }
+
+        private IReadOnlyList<StoredMessage> GetBySessionCore(SessionId sessionId)
             => _messages
                 .Where(message => message.SessionId == sessionId)
                 .OrderBy(message => message.ReceivedAt)
@@ -923,7 +953,7 @@ public sealed class PipelineComponentFactoryTests
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             StreamedSessionIds.Add(sessionId);
-            foreach (var message in GetBySession(sessionId))
+            foreach (var message in GetBySessionCore(sessionId))
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 yield return message;

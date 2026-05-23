@@ -57,52 +57,27 @@ Source nodes emit `MqttEnvelope` values through the same `Output` port, but each
 
 Current source node types:
 
-- `mqtt.live-source`: connects to a broker, subscribes, and emits matching traffic.
 - `session.source`: streams messages from LiteDB by `SessionId`.
+- `replay.source`: replays a stored session with configurable timing.
 - `generated.source`: emits configured messages for deterministic tests and samples.
 
 ### Behavior
 
 ```mermaid
 flowchart LR
-    Live["mqtt.live-source"] --> LiveOut["Output: MqttEnvelope"]
     Stored["session.source"] --> StoredOut["Output: MqttEnvelope"]
+    Replay["replay.source"] --> ReplayOut["Output: MqttEnvelope"]
     Generated["generated.source"] --> GeneratedOut["Output: MqttEnvelope"]
 ```
 
 ### Flow Definition
 
-Registered workflow node types: `mqtt.live-source`, `session.source`, `generated.source`
+Registered workflow node types: `session.source`, `replay.source`, `generated.source`
 
 Ports:
 
 - `Output`: `MqttEnvelope`
 - `Errors`: `FlowError`
-
-Live source:
-
-```json
-{
-  "traffic": {
-    "type": "mqtt.live-source",
-    "configuration": {
-      "profile": {
-        "name": "local-broker",
-        "host": "localhost",
-        "port": 1883
-      },
-      "subscriptions": [
-        "factory/#"
-      ],
-      "boundedCapacity": 1000
-    }
-  },
-  "inspect": {
-    "type": "mqtt.payload-inspector",
-    "Input": "traffic.Output"
-  }
-}
-```
 
 Stored-session source:
 
@@ -630,7 +605,7 @@ This flow reads traffic through a source, filters it, inspects payloads, and pro
 
 ```mermaid
 flowchart LR
-    Source["mqtt.live-source"] --> Filter["TopicFilterComponent"]
+    Source["mqtt.trigger"] --> Filter["TopicFilterComponent"]
     Filter --> Mapper["PayloadInspectorMapperComponent"]
     Mapper --> Ui["Payload UI"]
     Source --> ErrorLog["Error Log"]
@@ -641,7 +616,8 @@ flowchart LR
 Equivalent code shape:
 
 ```csharp
-var source = new LiveMqttSourceComponent(session,
+var connection = new MqttConnectionComponent(session, disposeSessionOnDispose: false);
+var source = new MqttTriggerComponent(connection,
 [
     new MqttSubscription("factory/#", MqttQualityOfServiceLevel.AtMostOnce)
 ]);
@@ -652,10 +628,12 @@ source.Output.LinkTo(filter.Input, new DataflowLinkOptions { PropagateCompletion
 filter.Output.LinkTo(mapper.Input, new DataflowLinkOptions { PropagateCompletion = true });
 mapper.Output.LinkTo(payloadUiSink, new DataflowLinkOptions { PropagateCompletion = true });
 
+connection.Errors.LinkTo(errorSink);
 source.Errors.LinkTo(errorSink);
 filter.Errors.LinkTo(errorSink);
 mapper.Errors.LinkTo(errorSink);
 
+await connection.StartAsync();
 await source.StartAsync();
 ```
 
@@ -663,7 +641,7 @@ This flow branches live traffic into two paths.
 
 ```mermaid
 flowchart LR
-    Source["mqtt.live-source"] --> Router["MqttConditionRouterComponent"]
+    Source["mqtt.trigger"] --> Router["MqttConditionRouterComponent"]
     Router -->|factory topics| Inspector["PayloadInspectorMapperComponent"]
     Router -->|other topics| Metrics["MqttMetricsComponent"]
     Inspector --> Ui["Payload UI"]
@@ -678,7 +656,7 @@ This flow records selected live traffic.
 
 ```mermaid
 flowchart LR
-    Source["mqtt.live-source"] --> Filter["TopicFilterComponent"]
+    Source["mqtt.trigger"] --> Filter["TopicFilterComponent"]
     Filter --> Mapper["flow.mapper: MqttEnvelope -> MqttRecordingRequest"]
     Mapper --> Recorder["MqttRecorderComponent"]
     Source --> ErrorLog["Error Log"]

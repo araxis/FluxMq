@@ -25,13 +25,15 @@ This is the active implementation plan. Keep it updated after every meaningful d
 ## Current Target
 
 **Phase:** 5 - desktop workspace authoring polish
-**Active feature:** `F-022 - Actor Node Editors And Contract Hardening`
-**Status:** In progress
+**Active feature:** `F-022 - Node Editors`
+**Status:** Review
 **Started:** 2026-05-23
 
 The mapper workbench now follows a JSONata Exerciser-like shape: Monaco JSON input on the left, Monaco mapper expression in the middle, and live JSON result on the right. MQTT envelope samples use `{ topic, qos, retain, receivedAt, payload }`; arbitrary JSON input is treated as payload for quick experimentation. Mapper output configuration now separates the runtime target type from the result contract: `typed`, `any`, or `json-schema-file`. `json.schema-validator` exists as a standalone runtime/UI component backed by JsonSchema.Net, so schema validation is a reusable runtime capability rather than mapper-only UI behavior.
 
-The next desktop authoring slice is now focused on actor clarity. `mqtt.publisher`, `mqtt.recorder`, and `file.writer` should read as standalone actors that consume explicit request inputs, with only true actor settings exposed on the node. MQTT Publisher keeps broker selection in configuration, not as a canvas port.
+Actor editors are in place for `mqtt.publisher`, `mqtt.recorder`, and `file.writer`. Source editors are now in review for `generated.source` and `replay.source`. Live broker traffic stays on the existing `mqtt.connection` plus `mqtt.trigger` path; `generated.source` owns its fixed MQTT message list; `replay.source` selects a recorded session and playback speed.
+
+The next desktop authoring slice should move toward runtime/build diagnostics on nodes after the source editor slice is accepted.
 
 ## Step-by-Step Plan
 
@@ -98,7 +100,7 @@ Goal: Clean up the component model so graph intent is visible.
 Tasks:
 
 - Replace vague side-effect naming with actor names.
-- Add explicit source nodes: `mqtt.live-source`, `session.source`, `generated.source`, `replay.source`.
+- Keep `mqtt.trigger` as the live broker entry point and add explicit non-live source nodes: `session.source`, `generated.source`, `replay.source`.
 - Add `mqtt.publisher`, `mqtt.recorder`, `file.writer`.
 - Add runtime mapper/predicate/expression abstractions.
 - Add `flow.mapper` as the user-facing mapper component.
@@ -175,7 +177,7 @@ Tasks:
 Done when:
 
 - A user can create a flow visually:
-  `mqtt.live-source -> message filter -> dynamic mapper -> mqtt.publisher`
+  `mqtt.trigger -> message filter -> dynamic mapper -> mqtt.publisher`
 - The same flow validates/runs from the desktop and round-trips to JSON.
 - UI tests and visual review pass.
 
@@ -247,13 +249,19 @@ Done when:
 - `mqtt.recorder` and `file.writer` now show the command fields they consume and expose only input-buffer settings on the actor.
 - The composer now writes default actor configuration when actors are added from the catalog.
 - The runtime recorder factory now honors `boundedCapacity` from node configuration.
+- Added typed source node models and editor widgets for `generated.source` and `replay.source`.
+- Removed the separate live MQTT source path; live broker input remains `mqtt.connection` plus `mqtt.trigger`.
+- `generated.source` now exposes its configured MQTT message list instead of a generic JSON editor.
+- `replay.source` now exposes session selection, playback speed, and output buffer settings.
+- Registered `replay.source` in the runtime factory registry and covered it with runtime tests.
+- The composer now writes default configuration for generated and replay sources when they are added from the catalog; live flows continue to use the shared broker resource plus trigger.
 
 ## Next Action
 
-Continue Phase 5 with node editor and contract hardening:
+Continue Phase 5 after review of the source editor slice:
 
-1. Manually inspect the new actor edit dialogs in the desktop workspace.
-2. Finish source node editors for live, generated, and replay sources.
-3. Surface validation/runtime errors on the graph nodes.
-4. Add pass/fail routing or assertion components only after the plain validation-result output feels right.
-5. Run UI tests and the serial full solution test gate for each slice.
+1. Manually inspect the new source edit dialogs in the desktop workspace.
+2. Build and validate a visual flow: `mqtt.trigger -> message filter -> dynamic mapper -> mqtt.publisher`.
+3. Confirm generated and replay sources save meaningful JSON and validate through the runtime.
+4. Next slice: surface validation/runtime errors on graph nodes.
+5. Add pass/fail routing or assertion components only after the plain validation-result output feels right.

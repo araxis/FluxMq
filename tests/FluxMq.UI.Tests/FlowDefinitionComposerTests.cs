@@ -16,6 +16,7 @@ public sealed class FlowDefinitionComposerTests
         var catalog = new FlowComponentCatalog();
 
         catalog.Components.ShouldContain(component => component.Type == "flow.mapper");
+        catalog.Components.ShouldContain(component => component.Type == "mqtt.trigger");
         catalog.Components.ShouldNotContain(component => component.Type == "mqtt.publish-request");
         catalog.Components.ShouldNotContain(component => component.Type == "mqtt.recording-request");
         catalog.Components.ShouldNotContain(component => component.Type == "file.write-request");
@@ -123,7 +124,6 @@ public sealed class FlowDefinitionComposerTests
         trigger.GetProperty("configuration").GetProperty("subscriptions")[0].GetString()
             .ShouldBe("devices/#");
 
-        // Inspector and metrics nodes still present
         flowApplication
             .GetProperty("workflows")
             .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
@@ -225,6 +225,30 @@ public sealed class FlowDefinitionComposerTests
             .GetProperty(nodeName);
 
         actor.GetProperty("configuration").GetProperty("boundedCapacity").GetInt32()
+            .ShouldBe(1000);
+    }
+
+    [Theory]
+    [InlineData("generated.source", FlowDefinitionComposer.GeneratedNodeName, "messages")]
+    [InlineData("replay.source", FlowDefinitionComposer.ReplayNodeName, "speed")]
+    public void AddComponent_AddsSourceConfiguration(string componentType, string nodeName, string expectedProperty)
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.AddWorkflow(composer.CreateEmptyDefinition(), FlowDefinitionComposer.DefaultWorkflowName);
+
+        var updated = composer.AddComponent(initial, componentType);
+
+        using var document = JsonDocument.Parse(updated);
+        var source = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty(nodeName);
+
+        source.GetProperty("type").GetString().ShouldBe(componentType);
+        source.GetProperty("configuration").TryGetProperty(expectedProperty, out _).ShouldBeTrue();
+        source.GetProperty("configuration").GetProperty("boundedCapacity").GetInt32()
             .ShouldBe(1000);
     }
 
