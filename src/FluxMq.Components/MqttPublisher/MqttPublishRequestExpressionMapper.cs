@@ -1,4 +1,5 @@
 using FluxMq.Core.Models;
+using FluxMq.Components.Mapping;
 using FluxMq.Pipeline.Mapping;
 using MQTTnet.Protocol;
 using System.Text;
@@ -20,6 +21,11 @@ public sealed class MqttPublishRequestExpressionMapper : IFlowMapper<MqttEnvelop
 
     public MqttPublishRequest Map(MqttEnvelope input, FlowMapContext context)
     {
+        if (!string.IsNullOrWhiteSpace(_definition.Expression))
+        {
+            return EvaluateRequest(_definition.Expression, input, context);
+        }
+
         return new MqttPublishRequest
         {
             Topic = EvaluateString(_definition.TopicExpression, context, input.Topic),
@@ -28,6 +34,29 @@ public sealed class MqttPublishRequestExpressionMapper : IFlowMapper<MqttEnvelop
             Retain = EvaluateBool(_definition.RetainExpression, context, input.Retain)
         };
     }
+
+    private MqttPublishRequest EvaluateRequest(string expression, MqttEnvelope input, FlowMapContext context)
+    {
+        var value = _engine.Evaluate(expression, context, typeof(object));
+        return value switch
+        {
+            MqttPublishRequest request => request,
+            null => throw new InvalidOperationException("Mapper expression returned null. Expected MqttPublishRequest object."),
+            _ => CoerceRequest(value, input)
+        };
+    }
+
+    private static MqttPublishRequest CoerceRequest(object value, MqttEnvelope input)
+        => new()
+        {
+            Topic = ExpressionObjectReader.ReadRequiredString(value, "topic"),
+            Payload = ExpressionObjectReader.ReadBytesOrDefault(value, "payload", input.Payload),
+            QualityOfService =
+                ExpressionObjectReader.TryRead(value, "qos", out _)
+                    ? ExpressionObjectReader.ReadEnumOrDefault(value, "qos", input.QualityOfService)
+                    : ExpressionObjectReader.ReadEnumOrDefault(value, "qualityOfService", input.QualityOfService),
+            Retain = ExpressionObjectReader.ReadBoolOrDefault(value, "retain", input.Retain)
+        };
 
     private string EvaluateString(string? expression, FlowMapContext context, string fallback)
     {

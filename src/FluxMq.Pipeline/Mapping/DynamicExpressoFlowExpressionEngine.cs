@@ -15,6 +15,12 @@ public sealed class DynamicExpressoFlowExpressionEngine : IFlowExpressionEngine
         var interpreter = new Interpreter();
         foreach (var (name, value) in context.Variables)
         {
+            if (value is Type type)
+            {
+                interpreter.Reference(type);
+                continue;
+            }
+
             interpreter.SetVariable(name, value, value?.GetType() ?? typeof(object));
         }
 

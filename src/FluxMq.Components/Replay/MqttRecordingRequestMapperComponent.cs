@@ -1,25 +1,35 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
+using FluxMq.Components.Mapping;
 using FluxMq.Pipeline.Components;
+using FluxMq.Pipeline.Mapping;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.Replay;
 
 public sealed class MqttRecordingRequestMapperComponent : IFlowNode
 {
-    private readonly SessionId _sessionId;
-    private readonly TransformBlock<MqttEnvelope, MqttRecordingRequest> _block;
+    private readonly TransformManyBlock<MqttEnvelope, MqttRecordingRequest> _block;
     private readonly BroadcastBlock<FlowError> _errors;
+    private readonly IFlowMapper<MqttEnvelope, MqttRecordingRequest> _mapper;
 
     public MqttRecordingRequestMapperComponent(
         SessionId sessionId,
         FlowNodeId? id = null,
         int boundedCapacity = 1000)
+        : this(new StaticSessionRecordingRequestMapper(sessionId), id, boundedCapacity)
+    {
+    }
+
+    public MqttRecordingRequestMapperComponent(
+        IFlowMapper<MqttEnvelope, MqttRecordingRequest> mapper,
+        FlowNodeId? id = null,
+        int boundedCapacity = 1000)
     {
         Id = id ?? FlowNodeId.New();
-        _sessionId = sessionId;
+        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _errors = new BroadcastBlock<FlowError>(static error => error);
-        _block = new TransformBlock<MqttEnvelope, MqttRecordingRequest>(
+        _block = new TransformManyBlock<MqttEnvelope, MqttRecordingRequest>(
             Map,
             new ExecutionDataflowBlockOptions
             {
@@ -48,11 +58,19 @@ public sealed class MqttRecordingRequestMapperComponent : IFlowNode
         ((IDataflowBlock)_block).Fault(exception);
     }
 
-    private MqttRecordingRequest Map(MqttEnvelope envelope) => new()
+    private IEnumerable<MqttRecordingRequest> Map(MqttEnvelope envelope)
     {
-        SessionId = _sessionId,
-        Envelope = envelope
-    };
+        try
+        {
+            var context = MqttEnvelopeExpressionContextFactory.Create(envelope);
+            return [_mapper.Map(envelope, context)];
+        }
+        catch (Exception exception)
+        {
+            PublishError(FlowErrorCodes.ProcessingFailed, "MQTT recording request mapping failed.", exception);
+            return [];
+        }
+    }
 
     private void PublishError(int code, string message, Exception exception)
     {
@@ -63,5 +81,15 @@ public sealed class MqttRecordingRequestMapperComponent : IFlowNode
             Message = message,
             Exception = exception
         });
+    }
+
+    private sealed class StaticSessionRecordingRequestMapper(SessionId sessionId) : IFlowMapper<MqttEnvelope, MqttRecordingRequest>
+    {
+        public MqttRecordingRequest Map(MqttEnvelope input, FlowMapContext context)
+            => new()
+            {
+                SessionId = sessionId,
+                Envelope = input
+            };
     }
 }

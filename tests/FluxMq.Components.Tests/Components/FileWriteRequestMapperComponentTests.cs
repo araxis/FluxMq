@@ -16,10 +16,14 @@ public sealed class FileWriteRequestMapperComponentTests
             new DynamicExpressoFlowExpressionEngine(),
             new FileWriteRequestMapDefinition
             {
-                PathExpression = "\"C:/tmp/\" + topic.Replace(\"/\", \"_\") + \".txt\"",
-                ContentExpression = "\"topic=\" + topic + \";payload=\" + payloadText",
-                ModeExpression = "\"Append\"",
-                CreateDirectoryExpression = "false"
+                Expression = """
+                new FileWriteRequest {
+                  Path = "C:/tmp/" + topic.Replace("/", "_") + ".txt",
+                  Content = Encoding.UTF8.GetBytes("topic=" + topic + ";payload=" + payloadText),
+                  Mode = FileWriteMode.Append,
+                  CreateDirectory = false
+                }
+                """
             });
         var component = new FileWriteRequestMapperComponent(mapper);
         var output = new BufferBlock<FileWriteRequest>();

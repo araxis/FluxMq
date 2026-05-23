@@ -2,6 +2,7 @@ using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Session;
 using FluxMq.Components.FileWriter;
+using FluxMq.Components.JsonSchema;
 using FluxMq.Components.MessageFilter;
 using FluxMq.Components.MessageSource;
 using FluxMq.Components.MqttMetrics;
@@ -47,10 +48,11 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .Register(PipelineFlowNodeTypes.MqttMetrics, CreateMqttMetrics)
             .Register(PipelineFlowNodeTypes.MqttMetricsSink, CreateMqttMetrics)
             .Register(PipelineFlowNodeTypes.MessageFilter, context => CreateMessageFilter(context.Address, context.Definition, expressionEngine))
+            .Register(PipelineFlowNodeTypes.JsonSchemaValidator, context => CreateJsonSchemaValidator(context.Address, context.Definition))
             .Register(PipelineFlowNodeTypes.DynamicMapper, context => CreateDynamicMapper(context.Address, context.Definition, expressionEngine))
             .Register(PipelineFlowNodeTypes.PublishRequestMapper, context => CreatePublishRequestMapper(context.Address, context.Definition, expressionEngine))
             .Register(PipelineFlowNodeTypes.MqttPublisher, context => CreatePublisher(context.Address, context.Definition, context))
-            .Register(PipelineFlowNodeTypes.RecordingRequestMapper, CreateRecordingRequestMapper)
+            .Register(PipelineFlowNodeTypes.RecordingRequestMapper, context => CreateRecordingRequestMapper(context.Address, context.Definition, expressionEngine))
             .Register(PipelineFlowNodeTypes.MqttRecorder, context => CreateRecorder(context.Address, messageRepository))
             .Register(PipelineFlowNodeTypes.FileWriteRequestMapper, context => CreateFileWriteRequestMapper(context.Address, context.Definition, expressionEngine))
             .Register(PipelineFlowNodeTypes.FileWriter, CreateFileWriter);
@@ -227,6 +229,26 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
+    private static RuntimeNode CreateJsonSchemaValidator(NodeAddress address, NodeDefinition definition)
+    {
+        var component = new JsonSchemaValidatorComponent(
+            GetJsonSchemaValidatorDefinition(definition),
+            boundedCapacity: GetBoundedCapacity(definition));
+
+        return RuntimeNode.Create(
+            address,
+            component,
+            inputs:
+            [
+                new InputPort<MqttEnvelope>(address.Port(InputPort), component.Input)
+            ],
+            outputs:
+            [
+                new OutputPort<JsonSchemaValidationResult>(address.Port(OutputPort), component.Output),
+                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
+            ]);
+    }
+
     private static RuntimeNode CreatePublishRequestMapper(
         NodeAddress address,
         NodeDefinition definition,
@@ -274,18 +296,28 @@ public static class RuntimeNodeFactoryRegistryExtensions
         return outputType switch
         {
             "MqttPublishRequest" => CreatePublishRequestMapper(address, definition, expressionEngine),
-            "MqttRecordingRequest" => CreateRecordingRequestMapper(address, definition),
+            "MqttRecordingRequest" => CreateRecordingRequestMapper(address, definition, expressionEngine),
             "FileWriteRequest" => CreateFileWriteRequestMapper(address, definition, expressionEngine),
             _ => throw new InvalidOperationException(
                 $"Dynamic mapper outputType '{outputType}' is not supported yet. Supported outputType values: MqttPublishRequest, MqttRecordingRequest, FileWriteRequest.")
         };
     }
 
-    private static RuntimeNode CreateRecordingRequestMapper(NodeAddress address, NodeDefinition definition)
+    private static RuntimeNode CreateRecordingRequestMapper(
+        NodeAddress address,
+        NodeDefinition definition,
+        IFlowExpressionEngine expressionEngine)
     {
-        var component = new MqttRecordingRequestMapperComponent(
-            GetRequiredSessionId(definition, "sessionId"),
-            boundedCapacity: GetBoundedCapacity(definition));
+        var expression = GetNullableString(definition, "expression");
+        var component = string.IsNullOrWhiteSpace(expression)
+            ? new MqttRecordingRequestMapperComponent(
+                GetRequiredSessionId(definition, "sessionId"),
+                boundedCapacity: GetBoundedCapacity(definition))
+            : new MqttRecordingRequestMapperComponent(
+                new MqttRecordingRequestExpressionMapper(
+                    GetMapperExpressionEngine(definition, expressionEngine),
+                    expression),
+                boundedCapacity: GetBoundedCapacity(definition));
 
         return RuntimeNode.Create(
             address,
@@ -397,6 +429,15 @@ public static class RuntimeNodeFactoryRegistryExtensions
 
     private static MqttPublishRequestMapDefinition GetPublishRequestMapDefinition(NodeDefinition definition)
     {
+        var expression = GetNullableString(definition, "expression");
+        if (!string.IsNullOrWhiteSpace(expression))
+        {
+            return new MqttPublishRequestMapDefinition
+            {
+                Expression = expression
+            };
+        }
+
         if (definition.Configuration.TryGetValue("map", out var mapElement))
         {
             if (mapElement.ValueKind != JsonValueKind.Object)
@@ -433,6 +474,15 @@ public static class RuntimeNodeFactoryRegistryExtensions
 
     private static FileWriteRequestMapDefinition GetFileWriteRequestMapDefinition(NodeDefinition definition)
     {
+        var expression = GetNullableString(definition, "expression");
+        if (!string.IsNullOrWhiteSpace(expression))
+        {
+            return new FileWriteRequestMapDefinition
+            {
+                Expression = expression
+            };
+        }
+
         if (definition.Configuration.TryGetValue("map", out var mapElement))
         {
             if (mapElement.ValueKind != JsonValueKind.Object)
@@ -462,6 +512,28 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ContentExpression = GetNullableString(definition, "contentExpression"),
             ModeExpression = GetNullableString(definition, "modeExpression"),
             CreateDirectoryExpression = GetNullableString(definition, "createDirectoryExpression")
+        };
+    }
+
+    private static JsonSchemaValidatorDefinition GetJsonSchemaValidatorDefinition(NodeDefinition definition)
+    {
+        var schema = GetNullableString(definition, "schema");
+        var schemaPath = GetNullableString(definition, "schemaPath") ?? GetNullableString(definition, "schemaFile");
+        if (string.IsNullOrWhiteSpace(schema))
+        {
+            if (string.IsNullOrWhiteSpace(schemaPath))
+            {
+                throw new InvalidOperationException(
+                    "JSON Schema validator requires configuration value 'schema' or 'schemaPath'.");
+            }
+
+            schema = File.ReadAllText(schemaPath);
+        }
+
+        return new JsonSchemaValidatorDefinition
+        {
+            SchemaJson = schema,
+            SchemaId = GetNullableString(definition, "schemaId") ?? schemaPath ?? "inline"
         };
     }
 

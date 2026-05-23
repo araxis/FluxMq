@@ -42,10 +42,14 @@ public sealed class MqttPublishRequestMapperComponentTests
             new DynamicExpressoFlowExpressionEngine(),
             new MqttPublishRequestMapDefinition
             {
-                TopicExpression = "\"mirror/\" + topic",
-                PayloadExpression = "\"mapped:\" + payloadText",
-                QualityOfServiceExpression = "1",
-                RetainExpression = "false"
+                Expression = """
+                new MqttPublishRequest {
+                  Topic = "mirror/" + topic,
+                  Payload = Encoding.UTF8.GetBytes("mapped:" + payloadText),
+                  QualityOfService = MqttQualityOfServiceLevel.AtLeastOnce,
+                  Retain = false
+                }
+                """
             });
         var component = new MqttPublishRequestMapperComponent(mapper);
         var output = new BufferBlock<MqttPublishRequest>();

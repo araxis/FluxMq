@@ -1,0 +1,249 @@
+@implements IDisposable
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject AppThemeService ThemeService
+@inject IJSRuntime JsRuntime
+
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.FactCheck"
+                 CategoryColor="@Color.Info"
+                 EditDialogMaxWidth="MaxWidth.Medium"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
+    <Body>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            @SchemaSourceCaption schema: @_schemaId
+        </MudText>
+        <div class="d-flex flex-wrap gap-1 mt-2">
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">MqttEnvelope</MudChip>
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">JsonSchemaValidationResult</MudChip>
+        </div>
+    </Body>
+    <Editor>
+        <MudStack Spacing="2">
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string"
+                               Label="Schema source"
+                               Value="@_schemaSource"
+                               ValueChanged="@SetSchemaSource"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        <MudSelectItem Value="@JsonSchemaValidatorNodeModel.SchemaSourceInline">Inline</MudSelectItem>
+                        <MudSelectItem Value="@JsonSchemaValidatorNodeModel.SchemaSourceFile">JSON Schema file</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Schema id"
+                                  @bind-Value="_schemaId"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                </MudItem>
+            </MudGrid>
+
+            @if (IsFileSchema)
+            {
+                <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="1">
+                    <MudTextField T="string"
+                                  Label="JSON Schema file"
+                                  @bind-Value="_schemaPath"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="flex-grow-1" />
+                    <MudTooltip Text="Select schema file">
+                        <MudIconButton Icon="@Icons.Material.Filled.FolderOpen"
+                                       Size="Size.Small"
+                                       Color="Color.Info"
+                                       Class="schema-file-picker-button"
+                                       OnClick="@PickSchemaFileAsync" />
+                    </MudTooltip>
+                </MudStack>
+            }
+            else
+            {
+                <StandaloneCodeEditor @key="_editorVersion"
+                                      @ref="_editor"
+                                      Id="@EditorId"
+                                      CssClass="schema-monaco-editor"
+                                      ConstructionOptions="@EditorConstructionOptions"
+                                      OnDidChangeModelContent="@OnEditorContentChanged" />
+            }
+        </MudStack>
+    </Editor>
+</NodeWidgetShell>
+
+<style>
+    .schema-monaco-editor {
+        min-height: 420px;
+        height: 420px;
+        overflow: hidden;
+        border: 1px solid var(--flux-border-strong);
+        border-radius: 6px;
+        background: var(--flux-surface);
+    }
+
+    .schema-monaco-editor .monaco-editor,
+    .schema-monaco-editor .overflow-guard {
+        border-radius: 6px;
+    }
+
+    .schema-file-picker-button.mud-icon-button {
+        height: 40px;
+        margin-top: 4px;
+        width: 40px;
+    }
+</style>
+
+@code {
+    [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
+
+    private JsonSchemaValidatorNodeModel Model => (JsonSchemaValidatorNodeModel)Node;
+
+    private string _schemaSource = JsonSchemaValidatorNodeModel.SchemaSourceInline;
+    private string _schemaId = "payload-object";
+    private string _schema = JsonSchemaValidatorNodeModel.DefaultSchema;
+    private string _schemaPath = string.Empty;
+    private StandaloneCodeEditor? _editor;
+    private int _editorVersion;
+    private bool _syncingEditor;
+    private string? _loadedNodeName;
+    private FlowDiagramNodeModel? _loadedNode;
+
+    private string EditorId => $"json-schema-{Node.NodeName.Replace('.', '-').Replace(' ', '-')}";
+    private bool IsFileSchema => string.Equals(_schemaSource, JsonSchemaValidatorNodeModel.SchemaSourceFile, StringComparison.Ordinal);
+    private string SchemaSourceCaption => IsFileSchema ? "file" : "inline";
+
+    protected override void OnInitialized()
+    {
+        ThemeService.Changed += OnThemeChanged;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
+        {
+            LoadDraftFromModel();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ConfigureMonacoAsync();
+            await SyncEditorAsync();
+        }
+    }
+
+    public void Dispose()
+        => ThemeService.Changed -= OnThemeChanged;
+
+    private Task LoadDraft()
+    {
+        LoadDraftFromModel();
+        _editorVersion++;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private void LoadDraftFromModel()
+    {
+        _loadedNode = Node;
+        _loadedNodeName = Node.NodeName;
+        _schemaSource = JsonSchemaValidatorNodeModel.NormalizeSchemaSource(Model.SchemaSource);
+        _schemaId = string.IsNullOrWhiteSpace(Model.SchemaId) ? "payload-object" : Model.SchemaId;
+        _schema = string.IsNullOrWhiteSpace(Model.Schema) ? JsonSchemaValidatorNodeModel.DefaultSchema : Model.Schema;
+        _schemaPath = Model.SchemaPath;
+        _editorVersion++;
+    }
+
+    private void OnThemeChanged(object? sender, EventArgs e)
+        => _ = InvokeAsync(ConfigureMonacoAsync);
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
+        => new()
+        {
+            AutomaticLayout = true,
+            Language = "json",
+            Theme = ThemeService.IsDarkMode ? "fluxmq-dark" : "fluxmq-light",
+            Value = _schema
+        };
+
+    private async Task ConfigureMonacoAsync()
+        => await JsRuntime.InvokeVoidAsync("fluxmqMonaco.ensureConfigured", ThemeService.IsDarkMode);
+
+    private async Task OnEditorContentChanged()
+    {
+        if (_syncingEditor || _editor is null)
+        {
+            return;
+        }
+
+        _schema = await _editor.GetValue();
+    }
+
+    private async Task SyncEditorAsync()
+    {
+        if (_editor is null)
+        {
+            return;
+        }
+
+        _syncingEditor = true;
+        try
+        {
+            await _editor.SetValue(_schema);
+        }
+        finally
+        {
+            _syncingEditor = false;
+        }
+    }
+
+    private async Task SetSchemaSource(string value)
+    {
+        var normalized = JsonSchemaValidatorNodeModel.NormalizeSchemaSource(value);
+        if (string.Equals(_schemaSource, normalized, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _schemaSource = normalized;
+        _editorVersion++;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task PickSchemaFileAsync()
+    {
+        var result = await FilePicker.Default.PickAsync(JsonSchemaPickOptions());
+        if (result is not null)
+        {
+            _schemaPath = result.FullPath;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_editor is not null && !IsFileSchema)
+        {
+            _schema = await _editor.GetValue();
+        }
+
+        Model.SchemaSource = _schemaSource;
+        Model.SchemaId = string.IsNullOrWhiteSpace(_schemaId) ? "payload-object" : _schemaId.Trim();
+        Model.Schema = string.IsNullOrWhiteSpace(_schema) ? JsonSchemaValidatorNodeModel.DefaultSchema : _schema.Trim();
+        Model.SchemaPath = _schemaPath.Trim();
+        Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
+    }
+
+    private static PickOptions JsonSchemaPickOptions()
+        => new()
+        {
+            PickerTitle = "Select JSON Schema",
+            FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+            {
+                { DevicePlatform.WinUI, [".json"] },
+                { DevicePlatform.macOS, ["json", "public.json"] }
+            })
+        };
+}

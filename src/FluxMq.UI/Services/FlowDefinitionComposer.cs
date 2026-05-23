@@ -1,4 +1,5 @@
 using FluxMq.Core.Models;
+using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -260,6 +261,7 @@ public sealed class FlowDefinitionComposer
             "mqtt.metrics" => MetricsNodeName,
             "mqtt.message-filter" => FilterNodeName,
             "mqtt.condition-router" => RouterNodeName,
+            "json.schema-validator" => "jsonSchemaValidator",
             "flow.mapper" => MakeUniqueNodeName(workflow, MapperNodeName),
             "mqtt.recording-request" => RecorderNodeName,
             "mqtt.recorder" => RecorderNodeName,
@@ -283,6 +285,10 @@ public sealed class FlowDefinitionComposer
         if (componentType == "flow.mapper")
         {
             node["configuration"] = CreateDynamicMapperConfiguration("MqttPublishRequest");
+        }
+        else if (componentType == "json.schema-validator")
+        {
+            node["configuration"] = CreateJsonSchemaValidatorConfiguration();
         }
 
         if (FindDefaultInputLink(componentType, workflow) is { Length: > 0 } inputLink)
@@ -590,16 +596,22 @@ public sealed class FlowDefinitionComposer
     private static JsonObject CreateDynamicMapperConfiguration(string outputType)
         => new()
         {
-            ["engine"] = "dynamic-expresso",
+            ["engine"] = "jsonata",
             ["inputType"] = "MqttEnvelope",
             ["outputType"] = outputType,
-            ["map"] = new JsonObject
+            ["outputContract"] = "typed",
+            ["expression"] = DynamicMapperNodeModel.DefaultExpression(outputType, "jsonata")
+        };
+
+    private static JsonObject CreateJsonSchemaValidatorConfiguration()
+        => new()
+        {
+            ["schemaId"] = "payload-object",
+            ["schema"] = """
             {
-                ["topic"] = "topic",
-                ["payload"] = "payloadText",
-                ["qos"] = "qos",
-                ["retain"] = "retain"
+              "type": "object"
             }
+            """
         };
 
     private static JsonObject CreateRoot()

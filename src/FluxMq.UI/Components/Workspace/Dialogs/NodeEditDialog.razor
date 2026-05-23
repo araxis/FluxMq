@@ -1,4 +1,6 @@
+@implements IDisposable
 @using FluxMq.UI.Services
+@inject NodeEditDialogRefreshService EditorRefresh
 
 <MudDialog>
     <TitleContent>
@@ -47,12 +49,34 @@
     [Parameter] public FlowWorkspaceService? Flow { get; set; }
 
     private string _nodeId = "";
+    private string _registeredNodeId = "";
 
     protected override void OnParametersSet()
     {
         if (string.IsNullOrEmpty(_nodeId))
             _nodeId = NodeId;
+
+        if (!string.Equals(_registeredNodeId, NodeId, StringComparison.Ordinal))
+        {
+            if (!string.IsNullOrWhiteSpace(_registeredNodeId))
+            {
+                EditorRefresh.Unregister(_registeredNodeId);
+            }
+
+            _registeredNodeId = NodeId;
+            EditorRefresh.Register(NodeId, RequestRenderAsync);
+        }
     }
+
+    public void Dispose()
+    {
+        if (!string.IsNullOrWhiteSpace(_registeredNodeId))
+        {
+            EditorRefresh.Unregister(_registeredNodeId);
+        }
+    }
+
+    private Task RequestRenderAsync() => InvokeAsync(StateHasChanged);
 
     private async Task Submit()
     {
