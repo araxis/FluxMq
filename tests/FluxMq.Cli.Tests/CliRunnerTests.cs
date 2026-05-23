@@ -17,7 +17,7 @@ public sealed class CliRunnerTests
                   "workflows": {
                     "observe": {
                       "metrics": {
-                        "type": "mqtt.metrics-sink"
+                        "type": "mqtt.metrics"
                       }
                     }
                   }
@@ -83,7 +83,7 @@ public sealed class CliRunnerTests
                   "workflows": {
                     "observe": {
                       "metrics": {
-                        "type": "mqtt.metrics-sink"
+                        "type": "mqtt.metrics"
                       }
                     }
                   }
@@ -170,7 +170,7 @@ public sealed class CliRunnerTests
                   "workflows": {
                     "observe": {
                       "metrics": {
-                        "type": "mqtt.metrics-sink"
+                        "type": "mqtt.metrics"
                       }
                     }
                   }
@@ -202,7 +202,7 @@ public sealed class CliRunnerTests
                   "workflows": {
                     "observe": {
                       "metrics": {
-                        "type": "mqtt.metrics-sink"
+                        "type": "mqtt.metrics"
                       }
                     }
                   }

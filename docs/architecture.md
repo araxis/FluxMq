@@ -94,7 +94,7 @@ FluxMQ has two observability layers:
 - Local flow metrics for the desktop app.
 - Planned OpenTelemetry export for external monitoring tools.
 
-Local metrics must work without external infrastructure. Components such as `MqttMetricsSinkComponent` provide deterministic metric snapshots for UI projection and Fork Flow composition.
+Local metrics must work without external infrastructure. Components such as `MqttMetricsComponent` provide deterministic metric snapshots for UI projection and Fork Flow composition.
 
 OpenTelemetry should be added later as an optional export layer. It should publish selected counters, traces, and diagnostic events without replacing local flow components.
 
@@ -200,11 +200,11 @@ CLI command execution should stay separate from output rendering. The command la
 
 Live broker traffic and stored/offline traffic enter Fork Flow through the same runtime source shape.
 
-Source mode is an execution binding. A workflow consumes a logical source output, while the host binds that source to live MQTT traffic, a stored session, replay, imported data, or deterministic test data. The first implemented node type is `traffic.source`, which exposes `Output: MqttEnvelope` and `Errors: FlowError`.
+Source nodes are explicit execution bindings. A workflow consumes a source output from `mqtt.live-source`, `session.source`, `generated.source`, replay, imported data, or future protocol sources. These source nodes expose `Output: MqttEnvelope` and `Errors: FlowError`.
 
 ```mermaid
 flowchart LR
-    Binding["Source binding"] --> Source["traffic.source node"]
+    Binding["Source binding"] --> Source["explicit source node"]
     Source --> Runtime["Fork Flow runtime"]
     Runtime --> Ports["Typed output ports"]
     Ports --> Projections["Projection runtime"]

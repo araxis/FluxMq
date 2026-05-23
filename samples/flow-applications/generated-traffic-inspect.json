@@ -3,10 +3,9 @@
     "FlowApplication": {
       "workflows": {
         "inspectGeneratedTraffic": {
-          "traffic": {
-            "type": "traffic.source",
+          "generated": {
+            "type": "generated.source",
             "configuration": {
-              "kind": "generated",
               "messages": [
                 {
                   "topic": "factory/temperature",
@@ -23,11 +22,11 @@
           },
           "inspect": {
             "type": "mqtt.payload-inspector",
-            "Input": "traffic.Output"
+            "Input": "generated.Output"
           },
           "metrics": {
-            "type": "mqtt.metrics-sink",
-            "Input": "traffic.Output"
+            "type": "mqtt.metrics",
+            "Input": "generated.Output"
           }
         }
       }

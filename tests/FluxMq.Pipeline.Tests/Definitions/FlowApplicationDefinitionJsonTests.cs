@@ -22,7 +22,7 @@ public sealed class FlowApplicationDefinitionJsonTests
                     "type": "mqtt.trigger"
                   },
                   "metrics": {
-                    "type": "mqtt.metrics-sink",
+                    "type": "mqtt.metrics",
                     "Input": "source.Output"
                   }
                 }
@@ -41,7 +41,7 @@ public sealed class FlowApplicationDefinitionJsonTests
         definition.Workflows["observeTraffic"].Nodes.Keys.ShouldContain("metrics");
 
         var metrics = definition.Workflows["observeTraffic"].Nodes["metrics"];
-        metrics.Type.ShouldBe(new NodeType("mqtt.metrics-sink"));
+        metrics.Type.ShouldBe(new NodeType("mqtt.metrics"));
         metrics.GetPortLinks("Input", "observeTraffic").ShouldHaveSingleItem()
             .From.ShouldBe(new PortAddress("observeTraffic", new NodeName("source"), new PortName("Output")));
     }
@@ -51,7 +51,7 @@ public sealed class FlowApplicationDefinitionJsonTests
     {
         const string json = """
             {
-              "type": "mqtt.recording-sink",
+              "type": "mqtt.recorder",
               "When": "payload.size > 0",
               "Input": [
                 "source.Output",
@@ -98,7 +98,7 @@ public sealed class FlowApplicationDefinitionJsonTests
                         },
                         ["metrics"] = new NodeDefinition
                         {
-                            Type = new NodeType("mqtt.metrics-sink"),
+                            Type = new NodeType("mqtt.metrics"),
                             Ports =
                             {
                                 ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()

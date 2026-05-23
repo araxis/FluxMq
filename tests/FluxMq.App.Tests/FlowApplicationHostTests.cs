@@ -23,7 +23,7 @@ public sealed class FlowApplicationHostTests
                   "workflows": {
                     "observe": {
                       "metrics": {
-                        "type": "mqtt.metrics-sink"
+                        "type": "mqtt.metrics"
                       }
                     }
                   }
@@ -51,7 +51,7 @@ public sealed class FlowApplicationHostTests
                   "workflows": {
                     "observe": {
                       "metrics": {
-                        "type": "mqtt.metrics-sink"
+                        "type": "mqtt.metrics"
                       }
                     }
                   }

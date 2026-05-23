@@ -174,9 +174,9 @@ Chronological progress record.
 - Added tests for message order, reader completion, reader failure conversion to `FlowError`, clean completion, and explicit fault behavior.
 - Added `MqttConditionRouterComponent` to route `MqttEnvelope` values into true/false branches.
 - Added tests for topic-prefix routing, predicate failure conversion to `FlowError`, pending-error completion, and explicit fault behavior.
-- Added `MqttRecordingSinkComponent` in `FluxMq.Replay` so recording can remain a flow component without making `FluxMq.Pipeline` depend on storage.
+- Added `MqttRecorderComponent` in `FluxMq.Replay` so recording can remain a flow component without making `FluxMq.Pipeline` depend on storage.
 - Added tests for recording order, repository failure conversion to `FlowError`, continued processing after failed writes, and explicit fault behavior.
-- Added `MqttMetricsSinkComponent` and `MqttMetricsSnapshot` in `FluxMq.Pipeline` for observability projections.
+- Added `MqttMetricsComponent` and `MqttMetricsSnapshot` in `FluxMq.Pipeline` for observability projections.
 - Added tests for snapshot updates, empty metrics, processing failure conversion to `FlowError`, and explicit fault behavior.
 - Recorded OpenTelemetry as a planned observability export layer, separate from local flow metrics and UI projections.
 - Added the initial config-first Fork Flow application definition model with object-shaped workflows, shared resources, typed node types, typed port names, string/object link parsing, default link conditions, JSON serialization options, and validation for missing graph references.
@@ -191,7 +191,7 @@ Chronological progress record.
 - Removed the early Blazor shell from the current solution. `FluxMq.App` is now reserved for a later workflow application host and builder, after the runtime host boundary is clearer.
 - Added the first concrete pipeline component factory registrations:
   - `mqtt.payload-inspector`
-  - `mqtt.metrics-sink`
+  - `mqtt.metrics`
 - Added runtime tests proving registered components can be linked through flow definitions and that invalid component configuration becomes a structured build error.
 - Reintroduced `FluxMq.App` as a class-library workflow application host boundary.
 - Added `FlowApplicationConfigurationLoader` to load `FluxMq:FlowApplication` through .NET configuration.
@@ -327,7 +327,7 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Recorded the next refactoring direction: live broker data and stored/offline data must enter the runtime through the same source model.
 - Agreed that runtime/projection/dashboard update contracts should be Dataflow-native, with channels kept as internal producer details and `EventHandler` avoided as an architectural contract.
 - Implemented the first source-agnostic runtime slice:
-  - Added `traffic.source` as a logical runtime node type with live MQTT, stored-session, and generated source modes.
+  - Added explicit source node types for live MQTT, stored-session, and generated source modes.
   - Added live, stored-session, and generated source components that expose `MqttEnvelope` through Dataflow output ports and `FlowError` through error ports.
   - Added streaming stored-session reads through `IMessageRepository.ReadBySessionAsync` and `ReadEnvelopesBySessionAsync`.
   - Added per-session stored-message sequence numbers and sequence-aware ordering for deterministic replay when timestamps match.
@@ -336,6 +336,43 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Moved live and stored workspace message updates behind `WorkspaceMessageProjection`, keeping durable state plus Dataflow input/update surfaces.
   - Updated `FlowApplicationHost` so hosts can pass the message repository required by stored-session sources.
   - Verified the solution with `dotnet build FluxMq.sln --no-restore` and `dotnet test FluxMq.sln --no-build`; 204 tests passing.
+
+## 2026-05-22
+
+- Created local branch `codex/fluxmq-redesign-ui` from the dirty UI refactor state so the redesign work is isolated from `feature/live-inspector-and-json-viewer`.
+- Treated all existing uncommitted UI changes as part of the redesign refactor.
+- Used `memory/fluxmq-redesign.html` as the visual target for the desktop shell: compact dark operational UI, 48px top bar, 52px rail, left explorer, canvas, right inspector, and 28px status bar.
+- Replaced the MudBlazor drawer/appbar workspace frame in `MainLayout` with an explicit CSS grid shell:
+  - branded top bar with breadcrumb, file actions, theme toggle, inspector toggle, and run state pill
+  - fixed icon rail with explorer/components/sessions tabs
+  - compact left panel with section header
+  - full-height canvas area
+  - right inspector panel
+  - bottom status bar for connection state, file path, and message count
+- Reworked global design tokens in `wwwroot/app.css` around the redesign palette (`#0a0d12`, `#11151c`, `#2dd4bf`, restrained blue/yellow/success/error accents), compact radii, shadows, scrollbars, table density, MudBlazor tabs, buttons, inputs, chips, and TreeView internals.
+- Rebuilt `AppTreePanel` as a compact custom explorer surface instead of a MudTreeView/expansion-panel hybrid:
+  - app cards with active state, connection and pipeline sections
+  - reserved hover action space so connection buttons no longer depend on overflow hacks
+  - stable row heights and tighter section labels
+- Tuned `WorkspacePage`, `LiveInspectorPanel`, `FlowDesigner`, `ComponentCatalogPanel`, `TopicTree`, `PayloadInspectorPanel`, and `AppJsonPanel` CSS to match the redesign spacing, border, surface, and elevation system.
+- Updated diagram colors and navigator chrome to match the redesigned teal/yellow operational palette.
+- Fixed the Light/Dark/System theme regression introduced by the first redesign pass:
+  - `MainLayout` now adds `flux-theme-light` or `flux-theme-dark` to the shell based on `AppThemeService.IsDarkMode`.
+  - `--flux-*` design tokens are defined under those shell theme classes instead of globally on `:root`.
+  - Heavy MudBlazor overrides are scoped under `.flux-shell` so dialogs/popovers can keep following MudBlazor theme variables.
+- Corrected the right inspector spacing after visual review:
+  - Removed the extra `Runtime / Live Inspector` header so the panel starts with tabs like `fluxmq-redesign.html`.
+  - Reduced MudTabs minimum width/height and added component-local tab overrides for compact, mockup-like tab spacing.
+  - Changed the publish pane to 14px panel padding, 10px field gaps, tighter input text spacing, and a fixed action row.
+- Reworked the right inspector again after the MudTabs approach made spacing worse:
+  - Replaced MudTabs with a purpose-built custom tab strip matching the mockup's right panel rhythm.
+  - Rebuilt the Publish surface with custom topic/payload controls, dropdown-style `QoS`, `Retain` toggle, and smaller 28px publish button.
+  - Added the missing Publish-tab lower sections from `fluxmq-redesign.html`: live topic activity rows, recording label, active topic highlight, topic rates, and a compact last-payload footer.
+  - Fixed the last-payload age label so it refreshes every second and uses lowercase units such as `12s ago`.
+  - Extended `LiveMqttWorkspaceService.PublishAsync` so QoS and retain are real publish options, not decorative UI.
+- Verified:
+  - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseAppHost=false` passes with 0 errors and 0 warnings.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-build` passes with 26 tests.
 
 ## 2026-05-16
 
@@ -355,3 +392,72 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Indentation is browser-default `padding-left` on `<ul>` — MudBlazor resets `margin` but not `padding`.
 
 - **Paused**: action button clipping on hover not fully resolved. The buttons (`conn-actions`) are not fully visible despite `overflow:visible` on `.mud-treeview-item-label`. Root cause not confirmed — user reverted `AppTreePanel` to last stable state to resume later.
+
+## 2026-05-22 - UI component/catalog cleanup continuation
+
+- Expanded the visual component catalog to expose additional source, mapper, actor, observer, and connection-state components with visible ports.
+- Added a generic diagram node widget so catalog entries without specialized editors can still render on the canvas.
+- Continued moving new UI/default naming toward explicit live, stored-session, replay, and generated source concepts.
+- Registered explicit runtime source node types for live MQTT, stored session, and generated traffic as aliases over the existing source component creation path.
+- Updated diagram link creation so newly drawn links use the same teal/arrowed styling as links loaded from definitions, with CSS fallback styling for rendered SVG links.
+- Simplified the publish QoS native select styling and removed the extra visual arrow treatment from the markup to avoid the odd white dropdown appearance on Windows/WebView.
+- Removed the extra active/accent panel styling from the app card in the left explorer so the selected app remains visually neutral.
+- Verification so far: targeted `git diff --check` on the touched UI/runtime files passes. Compile/test verification is blocked in this WSL session because Linux `dotnet` is unavailable and Windows `.exe` interop returns `cannot execute binary file: Exec format error`.
+
+## 2026-05-22 - Standalone component refactor kickoff
+
+- Read the source-agnostic runtime memory and confirmed the next architectural cleanup: components should be standalone actors, mappers, routers, or observers with clear typed ports.
+- Added `memory/07-standalone-component-refactor-plan.md`.
+- Changed MQTT publishing from raw `MqttEnvelope` input to explicit `MqttPublishRequest` input.
+- Changed MQTT recording from raw `MqttEnvelope` input with constructor-bound `SessionId` to explicit `MqttRecordingRequest` input carrying both `SessionId` and envelope.
+- Added `MqttPublishRequestMapperComponent` and `MqttRecordingRequestMapperComponent` so a flow can read clearly as `source -> filter/router -> request mapper -> actor`.
+- Added runtime node types, app factory registrations, and UI catalog entries for publish/recording request mappers and actors.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 87 tests.
+  - `dotnet build src\FluxMq.App\FluxMq.App.csproj --no-restore -p:UseSharedCompilation=false` passes with 0 errors and 0 warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false` passes: 218 tests.
+
+## 2026-05-22 - Dynamic mapper and ops vision correction
+
+- Removed the stale `rtk` shell-command requirement from `C:\Users\meisa\.codex\RTK.md`; normal shell commands should be used directly.
+- Added `memory/08-dynamic-mapping-and-ops-vision.md`.
+- Corrected the component plan: dynamic mappers are a core FluxMQ capability, not incidental glue.
+- Recorded Dynamic Expresso for C#-style filters/mappers and Jsonata or equivalent for JSON query/mapping as explicit runtime directions.
+- Recorded that user-facing side-effect components should use actor names such as MQTT Publisher, File Writer, Recorder, HTTP Sender, and Email Sender instead of generic "sink" names.
+- Recorded the two-era product direction:
+  - developer ELT/integration flows first
+  - ops/QA assertions, counters, summaries, schema validation, message-rate measurements, and response expectations later
+
+## 2026-05-22 - Dynamic mapper runtime slice
+
+- Added runtime-level mapping abstractions in `FluxMq.Pipeline.Mapping`:
+  - `IFlowMapper<TInput,TOutput>`
+  - `IFlowPredicate<TInput>`
+  - `IFlowExpressionEngine`
+  - `FlowExpressionContext`
+- Added `DynamicExpresso.Core 2.19.3` to `FluxMq.Components` and implemented `DynamicExpressoFlowExpressionEngine`.
+- Added `MqttEnvelopeExpressionContextFactory` so expressions get stable variables such as `envelope`, `topic`, `payload`, `payloadText`, `qos`, `retain`, and `receivedAt`.
+- Changed `MessageFilterComponent` to accept an `IFlowPredicate<MqttEnvelope>` while preserving the delegate constructor.
+- Added `MqttEnvelopeExpressionPredicate` and wired `mqtt.message-filter` factory config `expression` to Dynamic Expresso.
+- Added `MqttPublishRequestExpressionMapper` and `MqttPublishRequestMapDefinition`; `mqtt.publish-request` can now map topic, payload, QoS, and retain through configurable expressions.
+- Added `MqttPublisherComponent` and `mqtt.publisher` as the MQTT publish actor node type.
+- Added focused tests for:
+  - Dynamic Expresso filtering with `qos >= 1`.
+  - Dynamic MQTT publish request mapping.
+  - Runtime flow: generated MQTT envelopes -> expression filter -> dynamic publish-request mapper -> MQTT publisher using `broker2`.
+- Verified targeted tests:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 89 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 19 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false` passes with 221 tests.
+
+## 2026-05-22 - Actor naming and File Writer runtime slice
+
+- Removed the old MQTT publish and recording compatibility node aliases; app definitions should now use `mqtt.publisher` and `mqtt.recorder`.
+- Removed the old generic source compatibility node alias; app definitions should now use `mqtt.live-source`, `session.source`, or `generated.source`.
+- Renamed the publish namespace to `FluxMq.Components.MqttPublisher`.
+- Renamed the metrics observer to `MqttMetricsComponent` / `mqtt.metrics`.
+- Added `FileWriteRequest`, Dynamic Expresso-backed `FileWriteRequestExpressionMapper`, `FileWriteRequestMapperComponent`, and `FileWriterComponent`.
+- Registered `file.write-request` and `file.writer` in the runtime factory registry, UI catalog, node widgets, and definition composer.
+- Updated docs and memory to describe flows as `source -> filter/router -> dynamic mapper -> actor/observer`.
+- Verified:
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -m:1` passes with 225 tests after the actor/observer rename, explicit source cleanup, and File Writer slice.

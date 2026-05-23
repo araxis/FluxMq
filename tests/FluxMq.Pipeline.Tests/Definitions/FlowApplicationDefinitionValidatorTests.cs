@@ -24,14 +24,14 @@ public sealed class FlowApplicationDefinitionValidatorTests
                     Nodes =
                     {
                         ["source"] = Node("mqtt.trigger"),
-                        ["metrics"] = NodeWithPort("mqtt.metrics-sink", "Input", "\"source.Output\"")
+                        ["metrics"] = NodeWithPort("mqtt.metrics", "Input", "\"source.Output\"")
                     }
                 },
                 ["recordTraffic"] = new WorkflowDefinition
                 {
                     Nodes =
                     {
-                        ["recorder"] = NodeWithPort("mqtt.recording-sink", "Connection", "\"$resources.localBroker.Output\"")
+                        ["recorder"] = NodeWithPort("mqtt.recorder", "Connection", "\"$resources.localBroker.Output\"")
                     }
                 }
             }
@@ -104,7 +104,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
                 {
                     Nodes =
                     {
-                        ["metrics"] = NodeWithPort("mqtt.metrics-sink", "Input", "\"missing.Output\"")
+                        ["metrics"] = NodeWithPort("mqtt.metrics", "Input", "\"missing.Output\"")
                     }
                 }
             }
@@ -152,7 +152,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
                 {
                     Nodes =
                     {
-                        ["metrics"] = NodeWithPort("mqtt.metrics-sink", "Input", "123")
+                        ["metrics"] = NodeWithPort("mqtt.metrics", "Input", "123")
                     }
                 }
             }
@@ -175,7 +175,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
                     Nodes =
                     {
                         ["source"] = Node("mqtt.trigger"),
-                        ["metrics"] = NodeWithPort("mqtt.metrics-sink", "Input", "\"source.\"")
+                        ["metrics"] = NodeWithPort("mqtt.metrics", "Input", "\"source.\"")
                     }
                 }
             }
@@ -198,7 +198,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
                     Nodes =
                     {
                         ["source"] = Node("mqtt.trigger"),
-                        ["metrics"] = NodeWithPort("mqtt.metrics-sink", "Input", "[\"source.Output\", \"source.Output\"]")
+                        ["metrics"] = NodeWithPort("mqtt.metrics", "Input", "[\"source.Output\", \"source.Output\"]")
                     }
                 }
             }

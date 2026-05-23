@@ -2,7 +2,7 @@
 
 ## Context
 
-The user wants a Dashboard concept layered on top of the existing pipeline runtime. Pipelines can already record sessions (`MqttRecordingSinkComponent`, `ISessionRepository`, `IMessageRepository`) and replay them (`ReplaySourceComponent`, `RecordedSessionReplayFactory`). The dashboard adds two things:
+The user wants a Dashboard concept layered on top of the existing pipeline runtime. Pipelines can already record sessions (`MqttRecorderComponent`, `ISessionRepository`, `IMessageRepository`) and replay them (`ReplaySourceComponent`, `RecordedSessionReplayFactory`). The dashboard adds two things:
 
 1. **Metric calculator nodes** — new `IFlowNode` pipeline nodes users add to workflows in the diagram designer to compute per-topic payload sizes, message rates, error counts, etc.
 2. **Dashboard** — a UI that binds "dashboard blocks" (display widgets) to metric node outputs. Data can come from either a live running pipeline or a stored/replayed session — even with no broker connected.
@@ -15,7 +15,7 @@ The dashboard does not replace the pipeline. It is a view over runtime/projectio
 
 Location: `src/FluxMq.Components/`
 
-All components follow the `MqttMetricsSinkComponent` pattern: `ActionBlock<MqttEnvelope>` as `Input`, `BroadcastBlock<TSnapshot>` as output, `BroadcastBlock<FlowError>` as `Errors`, completion propagated via `ContinueWith`.
+All components follow the `MqttMetricsComponent` pattern: `ActionBlock<MqttEnvelope>` as `Input`, `BroadcastBlock<TSnapshot>` as output, `BroadcastBlock<FlowError>` as `Errors`, completion propagated via `ContinueWith`.
 
 ### A. `PayloadSizePerTopicComponent`
 - Folder: `Components/PayloadSizePerTopic/`
@@ -33,7 +33,7 @@ All components follow the `MqttMetricsSinkComponent` pattern: `ActionBlock<MqttE
 ### C. `ErrorCountComponent` (deferred — lower priority)
 - Input: `ITargetBlock<FlowError>` — connects to other nodes' `Errors` output ports
 - Output: `ISourceBlock<int>` error count
-- Can be addressed later; the existing `MqttMetricsSinkComponent` covers most initial needs
+- Can be addressed later; the existing `MqttMetricsComponent` covers most initial needs
 
 ### Registration
 - Add descriptors to `FlowComponentCatalog` (`src/FluxMq.UI/Services/FlowComponentCatalog.cs`):
@@ -123,7 +123,7 @@ Replay and offline mode work with no broker because the workflow source is bound
 
 | File | Action |
 |------|--------|
-| `src/FluxMq.Components/MqttMetrics/MqttMetricsSinkComponent.cs` | Reference pattern for new components |
+| `src/FluxMq.Components/MqttMetrics/MqttMetricsComponent.cs` | Reference pattern for new components |
 | `src/FluxMq.Components/Replay/ReplaySourceComponent.cs` | Source implementation for timed stored-session replay |
 | `src/FluxMq.Components/Replay/RecordedSessionReplayFactory.cs` | Creates replay source from SessionId |
 | `src/FluxMq.Pipeline/Definitions/ApplicationDefinition.cs` | Extend with Dashboards dict |

@@ -7,13 +7,13 @@ using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.Tests.Components;
 
-public sealed class MqttMetricsSinkComponentTests
+public sealed class MqttMetricsComponentTests
 {
     [Fact]
     public async Task Input_UpdatesMetricsAndPublishesSnapshots()
     {
         var start = DateTimeOffset.Parse("2026-05-09T10:00:00Z");
-        var component = new MqttMetricsSinkComponent();
+        var component = new MqttMetricsComponent();
         var snapshots = new List<MqttMetricsSnapshot>();
         var sink = new ActionBlock<MqttMetricsSnapshot>(snapshots.Add);
 
@@ -42,7 +42,7 @@ public sealed class MqttMetricsSinkComponentTests
     [Fact]
     public async Task Current_BeforeMessages_ReturnsEmptySnapshot()
     {
-        var component = new MqttMetricsSinkComponent();
+        var component = new MqttMetricsComponent();
 
         component.Complete();
         await component.Completion;
@@ -53,7 +53,7 @@ public sealed class MqttMetricsSinkComponentTests
     [Fact]
     public async Task ProcessingFailure_PublishesErrorAndKeepsProcessing()
     {
-        var component = new MqttMetricsSinkComponent();
+        var component = new MqttMetricsComponent();
         var errors = new List<FlowError>();
         var errorSink = new ActionBlock<FlowError>(errors.Add);
 
@@ -79,7 +79,7 @@ public sealed class MqttMetricsSinkComponentTests
     [Fact]
     public async Task Fault_PublishesErrorAndFaultsCompletion()
     {
-        var component = new MqttMetricsSinkComponent(FlowNodeId.New());
+        var component = new MqttMetricsComponent(FlowNodeId.New());
         var errors = new List<FlowError>();
         var errorSink = new ActionBlock<FlowError>(errors.Add);
         var failure = new InvalidOperationException("metrics failed");
@@ -94,7 +94,7 @@ public sealed class MqttMetricsSinkComponentTests
 
         var error = errors.ShouldHaveSingleItem();
         error.Code.ShouldBe(FlowErrorCodes.NodeFaulted);
-        error.Message.ShouldBe("MQTT metrics sink faulted.");
+        error.Message.ShouldBe("MQTT metrics observer faulted.");
     }
 
     private static MqttEnvelope Message(
