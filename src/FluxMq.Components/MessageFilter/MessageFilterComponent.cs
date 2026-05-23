@@ -11,6 +11,7 @@ public sealed class MessageFilterComponent : IFlowNode
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly TransformManyBlock<MqttEnvelope, MqttEnvelope> _block;
     private readonly IFlowPredicate<MqttEnvelope> _predicate;
+    private long _passedCount;
 
     public MessageFilterComponent(IFlowPredicate<MqttEnvelope> predicate, FlowNodeId? id = null, int boundedCapacity = 1000)
     {
@@ -36,8 +37,6 @@ public sealed class MessageFilterComponent : IFlowNode
         : this(new DelegateFlowPredicate<MqttEnvelope>(predicate), id, boundedCapacity)
     {
     }
-
-    private long _passedCount;
 
     public FlowNodeId Id { get; }
     public ISourceBlock<FlowError> Errors => _errors;

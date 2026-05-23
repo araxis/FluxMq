@@ -28,6 +28,7 @@ public sealed class MessageFilterComponentTests
         await sink.Completion;
 
         received.ShouldBe(new[] { "factory/line-1", "factory/line-2" });
+        component.PassedCount.ShouldBe(2);
         component.Id.ShouldNotBe(FlowNodeId.Empty);
         component.Completion.IsCompletedSuccessfully.ShouldBeTrue();
     }
