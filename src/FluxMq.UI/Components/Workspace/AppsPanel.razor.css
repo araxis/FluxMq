@@ -1,0 +1,10 @@
+.flux-app-item,
+.flux-app-item-active {
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.flux-app-item-active {
+    background: var(--mud-palette-action-default-hover);
+}

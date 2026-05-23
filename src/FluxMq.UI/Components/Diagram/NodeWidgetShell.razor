@@ -1,120 +1,86 @@
 @*
-    Per-type widget shell. Concrete widgets (MqttConnection, Trigger, ...) pass:
-        Body   = the read-only view face
-        Editor = the edit face (optional). When present a pencil icon flips the
-                 card; the Editor receives Save / Cancel callbacks via context.
+    Per-type widget shell. Concrete widgets pass:
+        Body     = the read-only view face
+        Editor   = the edit content shown inside a MudDialog (optional).
+                   When absent the dialog still lets the user rename the node.
 
-    Common chrome (selection state, expand/collapse, activity badge, port chips,
-    diagram port renderers) lives here so widgets stay focused on their content.
+    Common chrome (selection state, expand/collapse, activity badge, ports) lives
+    here so widgets stay focused on their content.
 *@
+@using FluxMq.UI.Components.Workspace.Dialogs
+@using FluxMq.UI.Services
+@inject IDialogService DialogService
+
 <div class="flow-node @(Node.Selected ? "flow-node-selected" : null) @(Node.IsCollapsed ? "flow-node-collapsed" : null)">
-    <div class="node-flip @(_isEditing ? "flipped" : null)">
-        <div class="node-flip-inner">
+    <div class="flow-node-header">
+        <MudIconButton Size="Size.Small"
+                       Icon="@(Node.IsCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore)"
+                       OnClick="@(() => Node.Toggle())" />
+        <MudIcon Icon="@HeaderIcon" Color="@CategoryColor" Size="Size.Small" Class="me-2" />
+        <div class="flow-node-title">
+            <MudText Typo="Typo.subtitle2">@Node.NodeName</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@Node.DisplayName</MudText>
+        </div>
+        <MudTooltip Text="Edit settings">
+            <MudIconButton Size="Size.Small"
+                           Icon="@Icons.Material.Filled.Edit"
+                           OnClick="@OpenEditDialogAsync" />
+        </MudTooltip>
+        <MudChip T="string" Size="Size.Small" Color="@CategoryColor">@Node.Category</MudChip>
+    </div>
 
-            <!-- ── Front face: the normal widget view ──────────────────── -->
-            <div class="node-flip-face">
-                <div class="flow-node-header">
-                    <MudIconButton Size="Size.Small"
-                                   Icon="@(Node.IsCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore)"
-                                   OnClick="@(() => Node.Toggle())" />
-                    <MudIcon Icon="@HeaderIcon" Color="@CategoryColor" Size="Size.Small" Class="me-2" />
-                    <div class="flow-node-title">
-                        <MudText Typo="Typo.subtitle2">@Node.NodeName</MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">@Node.DisplayName</MudText>
-                    </div>
-                    @if (Editor is not null)
-                    {
-                        <MudTooltip Text="Edit settings">
-                            <MudIconButton Size="Size.Small"
-                                           Icon="@Icons.Material.Filled.Edit"
-                                           OnClick="@StartEdit" />
-                        </MudTooltip>
-                    }
-                    <MudChip T="string" Size="Size.Small" Color="@CategoryColor">@Node.Category</MudChip>
-                </div>
+    @if (!Node.IsCollapsed)
+    {
+        <MudDivider Class="my-2" />
+        @if (!string.IsNullOrWhiteSpace(Node.ActivityText))
+        {
+            <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined" Class="mb-2">
+                @Node.ActivityText
+            </MudAlert>
+        }
+        @Body
+    }
+    else if (!string.IsNullOrWhiteSpace(Node.ActivityText))
+    {
+        <MudText Typo="Typo.caption" Color="Color.Secondary">@Node.ActivityText</MudText>
+    }
 
-                @if (!Node.IsCollapsed)
-                {
-                    <MudDivider Class="my-2" />
-                    @if (!string.IsNullOrWhiteSpace(Node.ActivityText))
-                    {
-                        <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined" Class="mb-2">
-                            @Node.ActivityText
-                        </MudAlert>
-                    }
+    @if (Node.PortDescriptors.Count > 0)
+    {
+        <div class="flow-node-port-list">
+            @foreach (var descriptor in Node.PortDescriptors.OrderBy(p => p.IsInput ? 0 : 1).ThenBy(p => p.Name))
+            {
+                var leftPort = Node.Ports.OfType<FlowPortModel>()
+                    .FirstOrDefault(p => p.Alignment == PortAlignment.Left && p.PortName == descriptor.Name);
+                var rightPort = Node.Ports.OfType<FlowPortModel>()
+                    .FirstOrDefault(p => p.Alignment == PortAlignment.Right && p.PortName == descriptor.Name);
 
-                    @Body
-                }
-                else if (!string.IsNullOrWhiteSpace(Node.ActivityText))
-                {
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">@Node.ActivityText</MudText>
-                }
-
-                @if (Node.PortDescriptors.Count > 0)
-                {
-                    <div class="flow-node-port-list">
-                        @foreach (var descriptor in Node.PortDescriptors.OrderBy(p => p.IsInput ? 0 : 1).ThenBy(p => p.Name))
+                <div class="flow-port-row">
+                    <div class="flow-port-side flow-port-side-left">
+                        @if (leftPort is not null)
                         {
-                            var leftPort = Node.Ports.OfType<FlowPortModel>()
-                                .FirstOrDefault(p => p.Alignment == PortAlignment.Left && p.PortName == descriptor.Name);
-                            var rightPort = Node.Ports.OfType<FlowPortModel>()
-                                .FirstOrDefault(p => p.Alignment == PortAlignment.Right && p.PortName == descriptor.Name);
-
-                            <div class="flow-port-row">
-                                <div class="flow-port-side flow-port-side-left">
-                                    @if (leftPort is not null)
-                                    {
-                                        <PortRenderer @key="leftPort"
-                                                      Port="leftPort"
-                                                      Class="@(descriptor.IsInput ? "port-input" : "port-output")" />
-                                    }
-                                </div>
-                                <span class="flow-port-name @(descriptor.IsInput ? "flow-port-input" : "flow-port-output")">
-                                    @descriptor.Name
-                                </span>
-                                <div class="flow-port-side flow-port-side-right">
-                                    @if (rightPort is not null)
-                                    {
-                                        <PortRenderer @key="rightPort"
-                                                      Port="rightPort"
-                                                      Class="@(descriptor.IsInput ? "port-input" : "port-output")" />
-                                    }
-                                </div>
-                            </div>
+                            <PortRenderer @key="leftPort"
+                                          Port="leftPort"
+                                          Class="@PortClass(descriptor.IsInput, leftPort)" />
                         }
                     </div>
-                }
-            </div>
-
-            <!-- ── Back face: the edit panel (only rendered when an editor was provided) ── -->
-            @if (Editor is not null)
-            {
-                <div class="node-flip-face node-flip-back">
-                    <div class="flow-node-header">
-                        <MudIcon Icon="@Icons.Material.Filled.Edit" Color="@CategoryColor" Size="Size.Small" Class="me-2" />
-                        <div class="flow-node-title">
-                            <MudText Typo="Typo.subtitle2">@Node.NodeName</MudText>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">Edit settings</MudText>
-                        </div>
-                    </div>
-                    <MudDivider Class="my-2" />
-                    <div class="node-edit-body">
-                        @Editor(new NodeEditorContext(SaveAndClose, CancelEdit))
-                    </div>
-                    <div class="node-edit-actions">
-                        <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="@CancelEdit">Cancel</MudButton>
-                        <MudButton Size="Size.Small"
-                                   Variant="Variant.Filled"
-                                   Color="@CategoryColor"
-                                   StartIcon="@Icons.Material.Filled.Check"
-                                   OnClick="@(SaveAndClose)">Save</MudButton>
+                    <span class="flow-port-name @(descriptor.IsInput ? "flow-port-input" : "flow-port-output")">
+                        @descriptor.Name
+                    </span>
+                    <div class="flow-port-side flow-port-side-right">
+                        @if (rightPort is not null)
+                        {
+                            <PortRenderer @key="rightPort"
+                                          Port="rightPort"
+                                          Class="@PortClass(descriptor.IsInput, rightPort)" />
+                        }
                     </div>
                 </div>
             }
         </div>
-    </div>
+    }
 
-    @* Fallback port renderers for nodes without descriptors (always rendered outside collapse). *@
+    @* Fallback port renderers for nodes without descriptors. *@
     @if (Node.PortDescriptors.Count == 0)
     {
         @foreach (var port in Node.Ports)
@@ -127,21 +93,34 @@
 @code {
     [Parameter, EditorRequired] public FlowDiagramNodeModel Node { get; set; } = null!;
     [Parameter] public RenderFragment? Body { get; set; }
-    [Parameter] public RenderFragment<NodeEditorContext>? Editor { get; set; }
+
+    /// <summary>
+    /// Widget-specific editor content rendered inside the edit dialog.
+    /// When null the dialog still allows renaming the node.
+    /// </summary>
+    [Parameter] public RenderFragment? Editor { get; set; }
+
     [Parameter] public string HeaderIcon { get; set; } = Icons.Material.Filled.Memory;
     [Parameter] public Color CategoryColor { get; set; } = Color.Default;
 
-    /// <summary>
-    /// When the user starts editing the parent widget can hand us a save callback
-    /// here. The shell calls it on Save before the flip back to the read view.
-    /// </summary>
+    /// <summary>Called before the dialog closes with Save, so the widget can flush its draft state.</summary>
     [Parameter] public EventCallback OnSave { get; set; }
 
-    /// <summary>Called on Cancel so widgets can discard their draft state.</summary>
+    /// <summary>Called when the dialog is cancelled so the widget can discard its draft state.</summary>
     [Parameter] public EventCallback OnCancel { get; set; }
 
-    private bool _isEditing;
+    /// <summary>Max width of the edit dialog — defaults to Small; use Medium for complex editors.</summary>
+    [Parameter] public MaxWidth EditDialogMaxWidth { get; set; } = MaxWidth.Small;
+
+    [CascadingParameter] private FlowWorkspaceService? Flow { get; set; }
+
     private bool _lastCollapsedState;
+
+    private static string PortClass(bool isInput, FlowPortModel port)
+    {
+        var semantic = isInput ? "port-input" : "port-output";
+        return port.IsPulsing ? $"{semantic} port-pulse" : semantic;
+    }
 
     protected override void OnInitialized()
     {
@@ -150,12 +129,6 @@
 
     protected override Task OnAfterRenderAsync(bool firstRender)
     {
-        // PortRenderer only measures a port's DOM position when Port.Initialized == false
-        // (i.e. on its first render). After that, positions are stale. When the node
-        // collapses or expands, the port-list moves but links keep pointing at the old
-        // coordinates. Fix: after the DOM has settled (OnAfterRenderAsync fires after
-        // all child renders and DOM updates), reset Initialized on every port and call
-        // Refresh() so PortRenderer re-measures at the correct new position.
         if (!firstRender && Node.IsCollapsed != _lastCollapsedState)
         {
             _lastCollapsedState = Node.IsCollapsed;
@@ -168,34 +141,30 @@
         return Task.CompletedTask;
     }
 
-    private void StartEdit()
+    private async Task OpenEditDialogAsync()
     {
-        // Force expand so the back face has room.
         Node.SetCollapsed(false);
-        _isEditing = true;
-    }
 
-    private async Task SaveAndClose()
-    {
-        if (OnSave.HasDelegate)
+        var parameters = new DialogParameters
         {
-            await OnSave.InvokeAsync();
-        }
-        _isEditing = false;
-    }
+            [nameof(NodeEditDialog.NodeDisplayName)] = Node.DisplayName,
+            [nameof(NodeEditDialog.NodeId)] = Node.NodeName,
+            [nameof(NodeEditDialog.WorkflowName)] = Flow?.ActiveWorkflowName ?? string.Empty,
+            [nameof(NodeEditDialog.CategoryColor)] = CategoryColor,
+            [nameof(NodeEditDialog.EditorContent)] = Editor,
+            [nameof(NodeEditDialog.OnSave)] = OnSave,
+            [nameof(NodeEditDialog.OnCancel)] = OnCancel,
+            [nameof(NodeEditDialog.Flow)] = Flow
+        };
 
-    private async Task CancelEdit()
-    {
-        if (OnCancel.HasDelegate)
+        var options = new DialogOptions
         {
-            await OnCancel.InvokeAsync();
-        }
-        _isEditing = false;
-    }
+            MaxWidth = EditDialogMaxWidth,
+            FullWidth = true,
+            CloseButton = true,
+            CloseOnEscapeKey = true
+        };
 
-    /// <summary>
-    /// Passed to widget-supplied editor fragments so they can trigger Save / Cancel
-    /// from inside (e.g. an Enter key on a single-field edit).
-    /// </summary>
-    public sealed record NodeEditorContext(Func<Task> Save, Func<Task> Cancel);
+        await DialogService.ShowAsync<NodeEditDialog>(Node.DisplayName, parameters, options);
+    }
 }

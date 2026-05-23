@@ -9,168 +9,162 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<MudLayout>
-
-    <MudAppBar Dense="true" Elevation="1" Fixed="true">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu"
-                       Color="Color.Inherit"
-                       Edge="Edge.Start"
-                       OnClick="@(() => _leftOpen = !_leftOpen)" />
-
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mr-2">
-            <MudIcon Icon="@Icons.Material.Filled.BubbleChart" Size="Size.Small" />
-            <MudText Typo="Typo.h6" Style="font-weight:600;letter-spacing:-0.01em;">FluxMQ</MudText>
-        </MudStack>
-
-        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
-
-        <MudTooltip Text="New project">
-            <MudIconButton Icon="@Icons.Material.Filled.NoteAdd"
-                           Color="Color.Inherit"
-                           Size="Size.Small"
-                           Disabled="@_busy"
-                           OnClick="@NewProject" />
-        </MudTooltip>
-        <MudTooltip Text="Open file">
-            <MudIconButton Icon="@Icons.Material.Filled.FolderOpen"
-                           Color="Color.Inherit"
-                           Size="Size.Small"
-                           Disabled="@_busy"
-                           OnClick="@OpenAsync" />
-        </MudTooltip>
-        <MudTooltip Text="Save">
-            <MudIconButton Icon="@Icons.Material.Filled.Save"
-                           Color="Color.Inherit"
-                           Size="Size.Small"
-                           Disabled="@(_busy || Projects.ActiveProject is null)"
-                           OnClick="@SaveAsync" />
-        </MudTooltip>
-        <MudTooltip Text="Save as">
-            <MudIconButton Icon="@Icons.Material.Filled.SaveAs"
-                           Color="Color.Inherit"
-                           Size="Size.Small"
-                           Disabled="@(_busy || Projects.ActiveProject is null)"
-                           OnClick="@SaveAsAsync" />
-        </MudTooltip>
-
-        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
-
-        <MudSelect T="ThemePreference"
-                   Value="@ThemeService.Preference"
-                   ValueChanged="@OnThemeChanged"
-                   Dense="true"
-                   Margin="Margin.Dense"
-                   Variant="Variant.Text"
-                   FitContent="true"
-                   Underline="false"
-                   Style="width:120px;">
-            <MudSelectItem Value="@ThemePreference.System">System</MudSelectItem>
-            <MudSelectItem Value="@ThemePreference.Light">Light</MudSelectItem>
-            <MudSelectItem Value="@ThemePreference.Dark">Dark</MudSelectItem>
-        </MudSelect>
-
-        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
-                       Color="Color.Inherit"
-                       Edge="Edge.End"
-                       OnClick="@(() => _rightOpen = !_rightOpen)" />
-    </MudAppBar>
-
-    <MudDrawer @bind-Open="_leftOpen"
-               Anchor="Anchor.Left"
-               Variant="DrawerVariant.Mini"
-               MiniWidth="56px"
-               Width="300px"
-               Class="pt-4 pe-4"
-               ClipMode="DrawerClipMode.Always"
-               Elevation="1">
-        <div class="flux-left-drawer">
-            <div class="flux-rail">
-                <MudTooltip Text="Explorer" Placement="Placement.Right">
-                    <MudIconButton Icon="@Icons.Material.Filled.AccountTree"
-                                   Color="@(_railTab == 0 ? Color.Primary : Color.Default)"
-                                   Size="Size.Small"
-                                   OnClick="@(() => { _railTab = 0; _leftOpen = true; })" />
-                </MudTooltip>
-                <MudTooltip Text="Components" Placement="Placement.Right">
-                    <MudIconButton Icon="@Icons.Material.Filled.Extension"
-                                   Color="@(_railTab == 1 ? Color.Primary : Color.Default)"
-                                   Size="Size.Small"
-                                   OnClick="@(() => { _railTab = 1; _leftOpen = true; })" />
-                </MudTooltip>
-                <MudTooltip Text="Sessions" Placement="Placement.Right">
-                    <MudIconButton Icon="@Icons.Material.Filled.History"
-                                   Color="@(_railTab == 2 ? Color.Primary : Color.Default)"
-                                   Size="Size.Small"
-                                   OnClick="@(() => { _railTab = 2; _leftOpen = true; })" />
-                </MudTooltip>
-                <div style="flex:1;"></div>
-                <MudTooltip Text="Help" Placement="Placement.Right">
-                    <MudIconButton Icon="@Icons.Material.Filled.HelpOutline"
-                                   Color="Color.Default"
-                                   Size="Size.Small" />
-                </MudTooltip>
-            </div>
-            @if (_leftOpen)
-            {
-                <div class="flux-rail-panel">
-                    @if (_railTab == 0)
-                    {
-                        <AppTreePanel />
-                    }
-                    else if (_railTab == 1)
-                    {
-                        <ComponentCatalogPanel />
-                    }
-                    else
-                    {
-                        <SessionPanel />
-                    }
-                </div>
-            }
+<div class="@ShellClass">
+    <header class="flux-topbar">
+        <div class="flux-brand">
+            <span class="flux-brand-mark" aria-hidden="true"></span>
+            <span class="flux-brand-name">FluxMQ</span>
         </div>
-    </MudDrawer>
 
-    <MudDrawer @bind-Open="_rightOpen"
-               Anchor="Anchor.Right"
-               Variant="DrawerVariant.Persistent"
-               Width="400px"
-               ClipMode="DrawerClipMode.Always"
-               Elevation="1">
-        <LiveInspectorPanel />
-    </MudDrawer>
+        <nav class="flux-breadcrumb" aria-label="Current workspace">
+            <span>Workspace</span>
+            <span class="flux-breadcrumb-separator">/</span>
+            <span class="flux-breadcrumb-current">@(Projects.ActiveProject?.Name ?? "No app open")</span>
+        </nav>
 
-    <MudMainContent Class="flux-main-canvas">
+        <div class="flux-toolbar">
+            <MudTooltip Text="New project">
+                <MudIconButton Icon="@Icons.Material.Filled.NoteAdd"
+                               Size="Size.Small"
+                               Class="flux-icon-button"
+                               Disabled="@_busy"
+                               OnClick="@NewProject" />
+            </MudTooltip>
+            <MudTooltip Text="Open file">
+                <MudIconButton Icon="@Icons.Material.Filled.FolderOpen"
+                               Size="Size.Small"
+                               Class="flux-icon-button"
+                               Disabled="@_busy"
+                               OnClick="@OpenAsync" />
+            </MudTooltip>
+            <MudTooltip Text="Save">
+                <MudIconButton Icon="@Icons.Material.Filled.Save"
+                               Size="Size.Small"
+                               Class="flux-icon-button"
+                               Disabled="@(_busy || Projects.ActiveProject is null)"
+                               OnClick="@SaveAsync" />
+            </MudTooltip>
+            <MudTooltip Text="Save as">
+                <MudIconButton Icon="@Icons.Material.Filled.SaveAs"
+                               Size="Size.Small"
+                               Class="flux-icon-button"
+                               Disabled="@(_busy || Projects.ActiveProject is null)"
+                               OnClick="@SaveAsAsync" />
+            </MudTooltip>
+
+            <span class="flux-toolbar-divider"></span>
+
+            <div class="@RunStateClass">
+                <span class="flux-run-dot"></span>
+                <span>@Live.State</span>
+            </div>
+
+            <MudTooltip Text="@_themeLabel">
+                <MudIconButton Icon="@_themeIcon"
+                               Size="Size.Small"
+                               Class="flux-icon-button"
+                               OnClick="@CycleTheme" />
+            </MudTooltip>
+            <MudTooltip Text="@(_rightOpen ? "Hide inspector" : "Show inspector")">
+                <MudIconButton Icon="@(_rightOpen ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ChevronLeft)"
+                               Size="Size.Small"
+                               Class="flux-icon-button"
+                               OnClick="@(() => _rightOpen = !_rightOpen)" />
+            </MudTooltip>
+        </div>
+    </header>
+
+    <aside class="flux-rail" aria-label="Workspace navigation">
+        <MudTooltip Text="Explorer" Placement="Placement.Right">
+            <button type="button"
+                    class="flux-rail-button @(_railTab == 0 ? "active" : null)"
+                    @onclick="@(() => { _railTab = 0; _leftOpen = true; })">
+                <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+            </button>
+        </MudTooltip>
+        <MudTooltip Text="Components" Placement="Placement.Right">
+            <button type="button"
+                    class="flux-rail-button @(_railTab == 1 ? "active" : null)"
+                    @onclick="@(() => { _railTab = 1; _leftOpen = true; })">
+                <MudIcon Icon="@Icons.Material.Filled.Extension" Size="Size.Small" />
+            </button>
+        </MudTooltip>
+        <MudTooltip Text="Sessions" Placement="Placement.Right">
+            <button type="button"
+                    class="flux-rail-button @(_railTab == 2 ? "active" : null)"
+                    @onclick="@(() => { _railTab = 2; _leftOpen = true; })">
+                <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" />
+            </button>
+        </MudTooltip>
+        <div class="flux-rail-spacer"></div>
+        <MudTooltip Text="@(_leftOpen ? "Collapse panel" : "Expand panel")" Placement="Placement.Right">
+            <button type="button" class="flux-rail-button" @onclick="@(() => _leftOpen = !_leftOpen)">
+                <MudIcon Icon="@(_leftOpen ? Icons.Material.Filled.ChevronLeft : Icons.Material.Filled.ChevronRight)" Size="Size.Small" />
+            </button>
+        </MudTooltip>
+    </aside>
+
+    @if (_leftOpen)
+    {
+        <aside class="flux-side-panel flux-left-panel">
+            <div class="flux-panel-header">
+                <div>
+                    <div class="flux-panel-kicker">FluxMQ</div>
+                    <div class="flux-panel-title">@LeftPanelTitle</div>
+                </div>
+            </div>
+            <div class="flux-panel-body">
+                @if (_railTab == 0)
+                {
+                    <AppTreePanel />
+                }
+                else if (_railTab == 1)
+                {
+                    <ComponentCatalogPanel />
+                }
+                else
+                {
+                    <SessionPanel />
+                }
+            </div>
+        </aside>
+    }
+
+    <main class="flux-main-canvas">
         @Body
-    </MudMainContent>
+    </main>
 
-    <MudAppBar Bottom="true" Dense="true" Elevation="1" Fixed="true">
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-            <MudIcon Icon="@Icons.Material.Filled.Circle"
-                     Size="Size.Small"
-                     Color="@ConnectionStateColor"
-                     Style="font-size:9px;" />
-            <MudText Typo="Typo.caption">@Live.State</MudText>
+    @if (_rightOpen)
+    {
+        <aside class="flux-side-panel flux-right-panel">
+            <LiveInspectorPanel />
+        </aside>
+    }
+
+    <footer class="flux-statusbar">
+        <div class="flux-status-group">
+            <span class="@StatusDotClass"></span>
+            <span>@Live.State</span>
             @if (Live.Connections.Count > 0)
             {
-                <MudText Typo="Typo.caption" Color="Color.Secondary">
-                    · @Live.Connections.Count conn
-                </MudText>
+                <span class="flux-status-muted">@Live.Connections.Count connections</span>
             }
-        </MudStack>
-        <MudSpacer />
-        @if (Projects.ActiveProject is { } active)
-        {
-            <MudText Typo="Typo.caption" Color="Color.Secondary">
-                @(string.IsNullOrEmpty(active.CurrentFilePath) ? "Untitled" : active.CurrentFilePath)
-            </MudText>
-        }
-        <MudSpacer />
-        <MudText Typo="Typo.caption" Color="Color.Secondary">
-            @Live.RecentMessages.Count msgs
-        </MudText>
-    </MudAppBar>
-
-</MudLayout>
+        </div>
+        <div class="flux-status-path">
+            @if (Projects.ActiveProject is { } active)
+            {
+                @(string.IsNullOrEmpty(active.CurrentFilePath) ? "Untitled project" : active.CurrentFilePath)
+            }
+            else
+            {
+                <span>No active project</span>
+            }
+        </div>
+        <div class="flux-status-group right">
+            <span>@Live.RecentMessages.Count messages</span>
+        </div>
+    </footer>
+</div>
 
 @code {
     private bool _leftOpen = true;
@@ -182,35 +176,49 @@
     {
         PaletteLight = new PaletteLight
         {
-            Primary = "#1F7A8C",
-            Secondary = "#29B6A8",
-            Tertiary = "#F4B860",
-            AppbarBackground = "#17212B",
-            AppbarText = "#FFFFFF",
-            Background = "#F6F7F9",
+            Primary = "#0F766E",
+            Secondary = "#2563EB",
+            Tertiary = "#D97706",
+            Info = "#2563EB",
+            Success = "#059669",
+            Warning = "#D97706",
+            Error = "#DC2626",
+            Background = "#F4F6F8",
             Surface = "#FFFFFF",
-            DrawerBackground = "#FFFFFF"
+            DrawerBackground = "#FFFFFF",
+            LinesDefault = "#DDE3EA",
+            LinesInputs = "#CBD5E1",
+            TextPrimary = "#111827",
+            TextSecondary = "#526174"
         },
         PaletteDark = new PaletteDark
         {
-            Primary = "#36C5B5",
-            Secondary = "#F4B860",
-            Tertiary = "#7AA2F7",
-            AppbarBackground = "#101418",
-            AppbarText = "#F5F7FA",
-            Background = "#0F1419",
-            Surface = "#151B22",
-            DrawerBackground = "#121820"
+            Primary = "#2DD4BF",
+            Secondary = "#60A5FA",
+            Tertiary = "#FBBF24",
+            Info = "#60A5FA",
+            Success = "#34D399",
+            Warning = "#FBBF24",
+            Error = "#F87171",
+            Background = "#0A0D12",
+            Surface = "#11151C",
+            DrawerBackground = "#11151C",
+            LinesDefault = "#1D232E",
+            LinesInputs = "#2A313D",
+            TextPrimary = "#E8ECF2",
+            TextSecondary = "#A0A8B4"
         },
         LayoutProperties = new LayoutProperties
         {
-            DefaultBorderRadius = "8px"
+            DefaultBorderRadius = "6px"
         },
         Typography = new Typography
         {
             Default = new DefaultTypography
             {
-                FontFamily = ["Segoe UI", "Roboto", "Arial", "sans-serif"]
+                FontFamily = ["Geist", "Segoe UI", "Roboto", "Arial", "sans-serif"],
+                FontSize = "13px",
+                LineHeight = "1.4"
             }
         }
     };
@@ -222,12 +230,30 @@
         Live.Changed += OnChanged;
     }
 
-    private Color ConnectionStateColor => Live.State switch
+    private string ShellClass =>
+        $"flux-shell {(ThemeService.IsDarkMode ? "flux-theme-dark" : "flux-theme-light")}{(!_leftOpen ? " left-collapsed" : "")}{(!_rightOpen ? " right-collapsed" : "")}";
+
+    private string LeftPanelTitle => _railTab switch
     {
-        MqttSessionState.Connected => Color.Success,
-        MqttSessionState.Connecting or MqttSessionState.Reconnecting => Color.Warning,
-        MqttSessionState.Faulted => Color.Error,
-        _ => Color.Default
+        1 => "Components",
+        2 => "Sessions",
+        _ => "Explorer"
+    };
+
+    private string RunStateClass => Live.State switch
+    {
+        MqttSessionState.Connected => "flux-runstate live",
+        MqttSessionState.Connecting or MqttSessionState.Reconnecting => "flux-runstate pending",
+        MqttSessionState.Faulted => "flux-runstate faulted",
+        _ => "flux-runstate"
+    };
+
+    private string StatusDotClass => Live.State switch
+    {
+        MqttSessionState.Connected => "flux-status-dot live",
+        MqttSessionState.Connecting or MqttSessionState.Reconnecting => "flux-status-dot pending",
+        MqttSessionState.Faulted => "flux-status-dot faulted",
+        _ => "flux-status-dot"
     };
 
     private Task NewProject() => RunBusyAsync(async () =>
@@ -307,6 +333,32 @@
         StateHasChanged();
         try { await action(); }
         finally { _busy = false; StateHasChanged(); }
+    }
+
+    private string _themeIcon => ThemeService.Preference switch
+    {
+        ThemePreference.Light  => Icons.Material.Filled.LightMode,
+        ThemePreference.Dark   => Icons.Material.Filled.DarkMode,
+        _                      => Icons.Material.Filled.Brightness6
+    };
+
+    private string _themeLabel => ThemeService.Preference switch
+    {
+        ThemePreference.Light => "Light mode (click for Dark)",
+        ThemePreference.Dark  => "Dark mode (click for System)",
+        _                     => "System theme (click for Light)"
+    };
+
+    private void CycleTheme()
+    {
+        var next = ThemeService.Preference switch
+        {
+            ThemePreference.System => ThemePreference.Light,
+            ThemePreference.Light  => ThemePreference.Dark,
+            _                      => ThemePreference.System
+        };
+        ThemeService.SetPreference(next);
+        StateHasChanged();
     }
 
     private void OnThemeChanged(ThemePreference preference)

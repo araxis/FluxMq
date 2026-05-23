@@ -1,0 +1,32 @@
+.component-catalog {
+    padding: 0;
+}
+
+.catalog-title {
+    font-size: 13px;
+    font-weight: 650;
+    padding: 2px 2px 10px;
+}
+
+.catalog-group {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 8px 2px 5px;
+}
+
+.catalog-item {
+    background: var(--flux-surface-2);
+    border: 1px solid var(--flux-border);
+    border-radius: 6px;
+    cursor: grab;
+    margin-bottom: 6px;
+    padding: 8px;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.catalog-item:hover {
+    background: var(--flux-surface-3);
+    border-color: var(--flux-border-strong);
+    transform: translateY(-1px);
+}

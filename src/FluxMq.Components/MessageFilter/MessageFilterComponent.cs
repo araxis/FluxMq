@@ -9,6 +9,7 @@ public sealed class MessageFilterComponent : IFlowNode
 {
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly TransformManyBlock<MqttEnvelope, MqttEnvelope> _block;
+    private long _passedCount;
     private readonly Func<MqttEnvelope, bool> _predicate;
 
     public MessageFilterComponent(Func<MqttEnvelope, bool> predicate, FlowNodeId? id = null, int boundedCapacity = 1000)
@@ -36,6 +37,7 @@ public sealed class MessageFilterComponent : IFlowNode
     public Task Completion => _block.Completion;
     public ITargetBlock<MqttEnvelope> Input => _block;
     public ISourceBlock<MqttEnvelope> Output => _block;
+    public long PassedCount => Interlocked.Read(ref _passedCount);
 
     public static MessageFilterComponent TopicPrefix(string topicPrefix, StringComparison comparison = StringComparison.Ordinal)
         => new(envelope => envelope.Topic.StartsWith(topicPrefix, comparison));
@@ -67,6 +69,7 @@ public sealed class MessageFilterComponent : IFlowNode
 
         if (matched)
         {
+            Interlocked.Increment(ref _passedCount);
             yield return envelope;
         }
     }

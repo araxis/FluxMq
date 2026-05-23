@@ -1,0 +1,172 @@
+.workspace-fill {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.workspace-empty {
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    flex: 1 1 auto;
+    justify-content: center;
+    min-height: 0;
+}
+
+.workspace-tab-content {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.workspace-designer-region {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.project-tabbar {
+    align-items: stretch;
+    background: var(--flux-surface);
+    border-bottom: 1px solid var(--flux-border);
+    display: flex;
+    flex: 0 0 36px;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.project-tab {
+    align-items: center;
+    border-right: 1px solid var(--flux-border-soft);
+    color: var(--mud-palette-text-secondary);
+    cursor: pointer;
+    display: flex;
+    font-size: 12px;
+    gap: 6px;
+    max-width: 200px;
+    min-width: 92px;
+    padding: 0 10px 0 12px;
+    position: relative;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.project-tab:hover {
+    background: var(--flux-surface-2);
+    color: var(--mud-palette-text-primary);
+}
+
+.project-tab-active {
+    background: var(--flux-canvas);
+    color: var(--mud-palette-text-primary);
+    font-weight: 650;
+}
+
+.project-tab-active::after {
+    background: var(--flux-accent);
+    border-radius: 2px 2px 0 0;
+    bottom: 0;
+    content: "";
+    height: 2px;
+    left: 10px;
+    position: absolute;
+    right: 10px;
+}
+
+.project-tab-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.project-tab-add {
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    cursor: pointer;
+    display: flex;
+    font-size: 16px;
+    font-weight: 500;
+    justify-content: center;
+    min-width: 34px;
+    padding: 0;
+}
+
+.project-tab-add:hover {
+    background: var(--flux-surface-2);
+    color: var(--mud-palette-text-primary);
+}
+
+.project-tab-close {
+    align-items: center;
+    border-radius: 4px;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    flex: 0 0 auto;
+    font-size: 12px;
+    height: 18px;
+    justify-content: center;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity 0.12s ease, background 0.12s ease, color 0.12s ease;
+    width: 18px;
+}
+
+.project-tabbar-app:hover .project-tab-close {
+    opacity: 1;
+}
+
+.project-tab-close:hover {
+    background: color-mix(in srgb, var(--mud-palette-error) 12%, transparent);
+    color: var(--mud-palette-error);
+}
+
+.project-tab-json {
+    align-items: center;
+    border-radius: 4px;
+    color: var(--mud-palette-text-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 11px;
+    font-weight: 700;
+    height: 22px;
+    padding: 0 6px;
+    user-select: none;
+}
+
+.project-tab-json:hover,
+.project-tab-json-active {
+    background: var(--flux-accent-soft);
+    color: var(--flux-accent);
+}
+
+.project-tabbar-app {
+    align-items: center;
+    border-left: 1px solid var(--flux-border);
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    font-size: 12px;
+    gap: 7px;
+    margin-left: auto;
+    min-width: 0;
+    padding: 0 10px;
+    user-select: none;
+}
+
+.project-tabbar-app-name {
+    max-width: 180px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

@@ -1,94 +1,186 @@
 @implements IDisposable
+@using FluxMq.Core.Payloads
+@using System.Text
+@using MQTTnet.Protocol
 @inject LiveMqttWorkspaceService Live
 
-<MudStack Spacing="2" Class="pa-2">
+<div class="inspector-shell">
+    <div class="inspector-tabs" role="tablist" aria-label="Inspector views">
+        <button type="button"
+                class="inspector-tab @(_activeTab == InspectorTab.Inspect ? "active" : null)"
+                @onclick="@(() => _activeTab = InspectorTab.Inspect)">
+            Inspect
+        </button>
+        <button type="button"
+                class="inspector-tab @(_activeTab == InspectorTab.Publish ? "active" : null)"
+                @onclick="@(() => _activeTab = InspectorTab.Publish)">
+            Publish
+        </button>
+        <button type="button"
+                class="inspector-tab @(_activeTab == InspectorTab.Topics ? "active" : null)"
+                @onclick="@(() => _activeTab = InspectorTab.Topics)">
+            Topics <span class="tab-count">@DisplayedMessages.Count</span>
+        </button>
+    </div>
 
-    <MudStack Row="true" AlignItems="AlignItems.Center">
-        <MudText Typo="Typo.subtitle2" Class="flex-grow-1">Traffic</MudText>
-        @if (!string.IsNullOrWhiteSpace(_selectedTopic))
-        {
-            <MudChip T="string" Size="Size.Small" Color="Color.Info" OnClose="@ClearTopic">@_selectedTopic</MudChip>
-        }
-        <MudChip T="string" Size="Size.Small" Color="Color.Default">@DisplayedMessages.Count</MudChip>
-    </MudStack>
+    @if (_activeTab == InspectorTab.Publish)
+    {
+        <div class="publish-view">
+            <div class="inspector-panel publish-form-panel">
+                <label class="publish-field">
+                    <span class="field-label">Topic</span>
+                    <input class="publish-input" @bind="_publishTopic" />
+                </label>
 
-    <MudPaper Elevation="0" Outlined="true" Class="pa-2">
-        <MudText Typo="Typo.subtitle2" Class="mb-2">Publish</MudText>
-        <MudTextField T="string" Label="Topic" @bind-Value="_publishTopic" Variant="Variant.Outlined" Margin="Margin.Dense" />
-        <MudTextField T="string" Label="Payload" @bind-Value="_publishPayload" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Send" Disabled="@_busy" OnClick="@PublishAsync" Class="mt-1">Publish</MudButton>
-    </MudPaper>
+                <label class="publish-field">
+                    <span class="field-label split">
+                        <span>Payload</span>
+                        <span>@PayloadMeta</span>
+                    </span>
+                    <textarea class="publish-textarea" spellcheck="false" @bind="_publishPayload"></textarea>
+                </label>
 
-    <MudPaper Elevation="0" Outlined="true" Class="pa-2">
-        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
-            <MudIcon Icon="@(_treeView ? Icons.Material.Filled.AccountTree : Icons.Material.Filled.ListAlt)"
-                     Size="Size.Small" Color="Color.Default" />
-            <MudText Typo="Typo.subtitle2" Class="flex-grow-1">@(_treeView ? "Topics" : "Messages")</MudText>
-            <MudToggleIconButton @bind-Toggled="_treeView"
-                                 Icon="@Icons.Material.Filled.ListAlt"
-                                 ToggledIcon="@Icons.Material.Filled.AccountTree"
-                                 Size="Size.Small" />
-        </MudStack>
+                <div class="publish-row">
+                    <label class="select-pill" aria-label="Quality of service">
+                        <select @bind="_publishQos">
+                            <option value="@MqttQualityOfServiceLevel.AtMostOnce">QoS 0</option>
+                            <option value="@MqttQualityOfServiceLevel.AtLeastOnce">QoS 1</option>
+                            <option value="@MqttQualityOfServiceLevel.ExactlyOnce">QoS 2</option>
+                        </select>
+                    </label>
+                    <button type="button" class="pill-button" @onclick="@(() => _retain = !_retain)">
+                        Retain: @(_retain ? "on" : "off")
+                    </button>
+                    <button type="button"
+                            class="publish-submit"
+                            disabled="@_busy"
+                            @onclick="PublishAsync">
+                        <MudIcon Icon="@Icons.Material.Filled.Send" Size="Size.Small" />
+                        <span>Publish</span>
+                    </button>
+                </div>
 
-        <MudTextField T="string"
-                      @bind-Value="_filter"
-                      Placeholder="@(_treeView ? "Filter topics…" : "Filter messages…")"
-                      Immediate="true"
-                      Clearable="true"
-                      Variant="Variant.Outlined"
-                      Margin="Margin.Dense"
-                      Adornment="Adornment.Start"
-                      AdornmentIcon="@Icons.Material.Filled.Search"
-                      Class="mb-2" />
+                @if (Live.SelectedStoredSession is not null)
+                {
+                    <div class="stored-session-note">
+                        <span>@Live.SelectedStoredSession.Name</span>
+                        <button type="button" @onclick="@Live.ClearStoredSessionSelection">Switch to live</button>
+                    </div>
+                }
+            </div>
 
-        @if (_treeView)
-        {
-            <TopicTreeView Messages="@MessageSource"
-                           SelectedTopic="@_selectedTopic"
-                           TopicSelected="@OnTopicSelected"
-                           Filter="@_filter" />
-        }
-        else
-        {
-            <MudTable T="MqttEnvelope" Items="@FilteredTableMessages" Dense="true" Hover="true" Elevation="0"
-                      RowsPerPage="10" SelectOnRowClick="true"
-                      SelectedItem="@Live.SelectedMessage"
-                      SelectedItemChanged="@OnSelectionChanged">
-                <HeaderContent>
-                    <MudTh>Topic</MudTh>
-                    <MudTh>Bytes</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd DataLabel="Topic">
-                        <MudText Typo="Typo.caption" Class="text-truncate" Style="max-width:160px; display:block">@context.Topic</MudText>
-                    </MudTd>
-                    <MudTd DataLabel="Bytes">@context.Payload.Length</MudTd>
-                </RowTemplate>
-                <NoRecordsContent>
-                    <EmptyView Message="No messages" />
-                </NoRecordsContent>
-                <PagerContent>
-                    <MudTablePager HideRowsPerPage="true" />
-                </PagerContent>
-            </MudTable>
-        }
-    </MudPaper>
+            <div class="inspector-panel live-topic-panel">
+                <div class="section-label">
+                    <span>Live topics</span>
+                    <span class="recording-label"><span class="recording-dot"></span>Recording</span>
+                </div>
 
-    <PayloadInspectorPanel Title="Payload"
-                           Topic="@Live.SelectedMessage?.Topic"
-                           ReceivedAt="@Live.SelectedMessage?.ReceivedAt"
-                           Payload="@Live.SelectedMessage?.Payload" />
+                <div class="live-topic-list">
+                    @if (LiveTopicRows.Count == 0)
+                    {
+                        <div class="empty-topic-row">No topics yet</div>
+                    }
+                    else
+                    {
+                        @foreach (var topic in LiveTopicRows)
+                        {
+                            <button type="button"
+                                    class="live-topic-row @(string.Equals(topic.Topic, _selectedTopic, StringComparison.Ordinal) ? "active" : null)"
+                                    @onclick="@(() => OnTopicSelected(topic.Topic))">
+                                <span class="live-topic-dot @(topic.IsHot ? "hot" : null)"></span>
+                                <span class="live-topic-name">@topic.Topic</span>
+                                <span class="live-topic-rate">@topic.RateLabel</span>
+                            </button>
+                        }
+                    }
+                </div>
+            </div>
 
+            <div class="inspector-panel last-payload-panel">
+                <div class="section-label">
+                    <span>Last payload</span>
+                    <span>@LastPayloadMeta</span>
+                </div>
+                <pre class="last-payload-body">@LastPayloadPreview</pre>
+            </div>
+        </div>
+    }
+    else if (_activeTab == InspectorTab.Topics)
+    {
+        <div class="inspector-panel fill">
+            <div class="section-label">
+                <span>Live topics</span>
+                <span class="section-badge">@MessageSource.Count msgs</span>
+            </div>
 
-</MudStack>
+            <div class="topic-toolbar">
+                <button type="button" class="icon-toggle" @onclick="@(() => _treeView = !_treeView)">
+                    <MudIcon Icon="@(_treeView ? Icons.Material.Filled.AccountTree : Icons.Material.Filled.ListAlt)"
+                             Size="Size.Small" />
+                </button>
+                <input class="topic-filter"
+                       placeholder="@(_treeView ? "Filter topics..." : "Filter messages...")"
+                       @bind="_filter"
+                       @bind:event="oninput" />
+            </div>
+
+            @if (_treeView)
+            {
+                <TopicTreeView Messages="@MessageSource"
+                               SelectedTopic="@_selectedTopic"
+                               TopicSelected="@OnTopicSelected"
+                               Filter="@_filter" />
+            }
+            else
+            {
+                <MudTable T="MqttEnvelope" Items="@FilteredTableMessages" Dense="true" Hover="true"
+                          Elevation="0" RowsPerPage="10" SelectOnRowClick="true"
+                          SelectedItem="@Live.SelectedMessage"
+                          SelectedItemChanged="@OnSelectionChanged">
+                    <HeaderContent>
+                        <MudTh>Topic</MudTh>
+                        <MudTh>Bytes</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Topic">
+                            <MudText Typo="Typo.caption" Class="text-truncate" Style="max-width:160px;display:block">
+                                @context.Topic
+                            </MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Bytes">@context.Payload.Length</MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <EmptyView Message="No messages" />
+                    </NoRecordsContent>
+                    <PagerContent>
+                        <MudTablePager HideRowsPerPage="true" />
+                    </PagerContent>
+                </MudTable>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="inspector-panel fill">
+            <PayloadInspectorPanel Title="Payload"
+                                   Topic="@Live.SelectedMessage?.Topic"
+                                   ReceivedAt="@Live.SelectedMessage?.ReceivedAt"
+                                   Payload="@Live.SelectedMessage?.Payload" />
+        </div>
+    }
+</div>
 
 @code {
+    private InspectorTab _activeTab = InspectorTab.Publish;
     private bool _busy;
     private bool _treeView = true;
     private string _publishTopic = "fluxmq/test";
     private string _publishPayload = "{\"hello\":\"fluxmq\"}";
+    private MqttQualityOfServiceLevel _publishQos = MqttQualityOfServiceLevel.AtMostOnce;
+    private bool _retain;
     private string? _selectedTopic;
     private string _filter = string.Empty;
+    private System.Threading.Timer? _clock;
 
     private IReadOnlyList<MqttEnvelope> MessageSource => Live.SelectedStoredSession is null
         ? Live.RecentMessages
@@ -96,19 +188,65 @@
 
     private IReadOnlyList<MqttEnvelope> DisplayedMessages => string.IsNullOrWhiteSpace(_selectedTopic)
         ? MessageSource
-        : MessageSource.Where(message => IsInSelectedTopic(message.Topic)).ToArray();
+        : MessageSource.Where(m => IsInSelectedTopic(m.Topic)).ToArray();
 
     private IReadOnlyList<MqttEnvelope> FilteredTableMessages =>
         string.IsNullOrWhiteSpace(_filter)
             ? DisplayedMessages
             : DisplayedMessages.Where(m => m.Topic.Contains(_filter, StringComparison.OrdinalIgnoreCase)).ToArray();
 
-    protected override void OnInitialized() => Live.Changed += OnChanged;
+    private IReadOnlyList<LiveTopicRow> LiveTopicRows => BuildLiveTopicRows();
+
+    private MqttEnvelope? LastPayloadMessage => MessageSource
+        .OrderByDescending(m => m.ReceivedAt)
+        .FirstOrDefault();
+
+    private string LastPayloadMeta
+    {
+        get
+        {
+            var message = LastPayloadMessage;
+            if (message is null)
+                return "idle";
+
+            var age = DateTimeOffset.UtcNow - message.ReceivedAt;
+            var ageText = age.TotalSeconds < 60
+                ? $"{Math.Max(0, age.TotalSeconds):0}s ago"
+                : $"{Math.Max(1, age.TotalMinutes):0}m ago";
+
+            return $"{ageText} / {message.Payload.Length} B";
+        }
+    }
+
+    private string LastPayloadPreview
+    {
+        get
+        {
+            var message = LastPayloadMessage;
+            if (message is null)
+                return "No payload captured.";
+
+            var inspection = PayloadInspector.Inspect(message.Payload);
+            return string.IsNullOrWhiteSpace(inspection.FormattedText)
+                ? inspection.HexDump
+                : inspection.FormattedText;
+        }
+    }
+
+    private string PayloadMeta => LooksLikeJson(_publishPayload)
+        ? $"JSON / {Encoding.UTF8.GetByteCount(_publishPayload)} B"
+        : $"{Encoding.UTF8.GetByteCount(_publishPayload)} B";
+
+    protected override void OnInitialized()
+    {
+        Live.Changed += OnChanged;
+        _clock = new System.Threading.Timer(_ => _ = InvokeAsync(StateHasChanged), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
+    }
 
     private async Task PublishAsync()
     {
         _busy = true;
-        try { await Live.PublishAsync(_publishTopic, _publishPayload); }
+        try { await Live.PublishAsync(_publishTopic, _publishPayload, _publishQos, _retain); }
         finally { _busy = false; StateHasChanged(); }
     }
 
@@ -129,14 +267,53 @@
             Live.SelectMessage(latest);
     }
 
-    private void ClearTopic() => _selectedTopic = null;
+    private bool IsInSelectedTopic(string topic) =>
+        string.IsNullOrWhiteSpace(_selectedTopic) ||
+        string.Equals(topic, _selectedTopic, StringComparison.Ordinal) ||
+        topic.StartsWith($"{_selectedTopic}/", StringComparison.Ordinal);
 
-    private bool IsInSelectedTopic(string topic)
+    private static bool LooksLikeJson(string value)
     {
-        if (string.IsNullOrWhiteSpace(_selectedTopic)) return true;
-        return string.Equals(topic, _selectedTopic, StringComparison.Ordinal) ||
-               topic.StartsWith($"{_selectedTopic}/", StringComparison.Ordinal);
+        var trimmed = value.TrimStart();
+        return trimmed.StartsWith('{') || trimmed.StartsWith('[');
     }
 
-    public void Dispose() => Live.Changed -= OnChanged;
+    private IReadOnlyList<LiveTopicRow> BuildLiveTopicRows()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var windowStart = now.AddSeconds(-10);
+
+        return MessageSource
+            .GroupBy(m => m.Topic, StringComparer.Ordinal)
+            .Select(group =>
+            {
+                var latest = group.Max(m => m.ReceivedAt);
+                var recentCount = group.Count(m => m.ReceivedAt >= windowStart);
+                var rate = recentCount / 10d;
+
+                return new LiveTopicRow(
+                    group.Key,
+                    now - latest < TimeSpan.FromSeconds(15),
+                    rate >= 10 ? $"{rate:0}/s" : $"{rate:0.0}/s");
+            })
+            .OrderByDescending(row => row.IsHot)
+            .ThenBy(row => row.Topic, StringComparer.Ordinal)
+            .Take(8)
+            .ToArray();
+    }
+
+    public void Dispose()
+    {
+        Live.Changed -= OnChanged;
+        _clock?.Dispose();
+    }
+
+    private sealed record LiveTopicRow(string Topic, bool IsHot, string RateLabel);
+
+    private enum InspectorTab
+    {
+        Inspect,
+        Publish,
+        Topics
+    }
 }

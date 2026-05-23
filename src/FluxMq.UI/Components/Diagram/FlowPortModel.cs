@@ -8,6 +8,7 @@ public sealed class FlowPortModel(NodeModel parent, PortAlignment alignment, str
 {
     public string PortName { get; } = portName;
     public bool SingleLink { get; } = singleLink;
+    public bool IsPulsing { get; set; }
 
     public override bool CanAttachTo(ILinkable linkable)
     {

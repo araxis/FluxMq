@@ -1,0 +1,78 @@
+@using FluxMq.UI.Services
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-items-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Edit" Color="@CategoryColor" Size="Size.Small" Class="me-1" />
+            <div>
+                <MudText Typo="Typo.h6">@NodeDisplayName</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Edit settings</MudText>
+            </div>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudTextField T="string"
+                          @bind-Value="_nodeId"
+                          Label="Node ID"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          HelperText="Key used in the pipeline definition. Must be unique within the workflow." />
+            @if (EditorContent is not null)
+            {
+                <MudDivider />
+                @EditorContent
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="@CategoryColor"
+                   Variant="Variant.Filled"
+                   StartIcon="@Icons.Material.Filled.Check"
+                   OnClick="@Submit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public string NodeDisplayName { get; set; } = "Node";
+    [Parameter] public string NodeId { get; set; } = "";
+    [Parameter] public string WorkflowName { get; set; } = "";
+    [Parameter] public Color CategoryColor { get; set; } = Color.Primary;
+    [Parameter] public RenderFragment? EditorContent { get; set; }
+    [Parameter] public EventCallback OnSave { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public FlowWorkspaceService? Flow { get; set; }
+
+    private string _nodeId = "";
+
+    protected override void OnParametersSet()
+    {
+        if (string.IsNullOrEmpty(_nodeId))
+            _nodeId = NodeId;
+    }
+
+    private async Task Submit()
+    {
+        if (OnSave.HasDelegate)
+            await OnSave.InvokeAsync();
+
+        if (Flow is not null &&
+            !string.IsNullOrWhiteSpace(_nodeId) &&
+            !string.Equals(_nodeId, NodeId, StringComparison.Ordinal))
+        {
+            Flow.RenameWorkflowNode(WorkflowName, NodeId, _nodeId.Trim());
+        }
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private async Task Cancel()
+    {
+        if (OnCancel.HasDelegate)
+            await OnCancel.InvokeAsync();
+        MudDialog.Cancel();
+    }
+}
