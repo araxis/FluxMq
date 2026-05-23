@@ -1,0 +1,189 @@
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject NodeEditDialogRefreshService DialogRefresh
+
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.DataObject"
+                 CategoryColor="@Color.Primary"
+                 EditDialogMaxWidth="@MaxWidth.Medium"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
+    <Body>
+        <MudStack Spacing="1" Class="mt-1">
+            <Stat Icon="@Icons.Material.Filled.FormatListNumbered" Label="Messages" Value="@Model.Messages.Count.ToString()" />
+            <Stat Icon="@Icons.Material.Filled.Topic" Label="First topic" Value="@(Model.Messages.FirstOrDefault()?.Topic ?? "-")" />
+        </MudStack>
+        <div class="flow-node-filters mt-2 d-flex flex-wrap gap-1">
+            @foreach (var message in Model.Messages.Take(3))
+            {
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Variant="Variant.Filled"
+                         Color="Color.Primary"
+                         Icon="@Icons.Material.Filled.Topic">
+                    @message.Topic
+                </MudChip>
+            }
+            @if (Model.Messages.Count > 3)
+            {
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">
+                    +@(Model.Messages.Count - 3)
+                </MudChip>
+            }
+        </div>
+    </Body>
+    <Editor>
+        <MudStack Spacing="2">
+            <MudNumericField T="int"
+                             Label="Output buffer"
+                             @bind-Value="_boundedCapacity"
+                             Min="1"
+                             Max="100000"
+                             Step="100"
+                             Variant="Variant.Outlined"
+                             Margin="Margin.Dense" />
+
+            <MudDivider />
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Messages</MudText>
+
+            @for (var i = 0; i < _messages.Count; i++)
+            {
+                var index = i;
+                <MudStack Spacing="1">
+                    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                        <MudTextField T="string"
+                                      Value="@_messages[index].Topic"
+                                      ValueChanged="@(value => _messages[index].Topic = value ?? string.Empty)"
+                                      Label="Topic"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Class="flex-grow-1" />
+                        <MudSelect T="int"
+                                   Value="@_messages[index].QualityOfService"
+                                   ValueChanged="@(value => _messages[index].QualityOfService = value)"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Dense="true"
+                                   Style="width: 104px">
+                            <MudSelectItem Value="@(0)">QoS 0</MudSelectItem>
+                            <MudSelectItem Value="@(1)">QoS 1</MudSelectItem>
+                            <MudSelectItem Value="@(2)">QoS 2</MudSelectItem>
+                        </MudSelect>
+                        <MudCheckBox T="bool"
+                                     Value="@_messages[index].Retain"
+                                     ValueChanged="@(value => _messages[index].Retain = value)"
+                                     Label="Retain"
+                                     Dense="true" />
+                        <MudIconButton Size="Size.Small"
+                                       Icon="@Icons.Material.Filled.Close"
+                                       OnClick="@(() => RemoveMessage(index))" />
+                    </MudStack>
+                    <MudTextField T="string"
+                                  Value="@_messages[index].Payload"
+                                  ValueChanged="@(value => _messages[index].Payload = value ?? string.Empty)"
+                                  Label="Payload"
+                                  Lines="3"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                    <MudTextField T="string"
+                                  Value="@_messages[index].ReceivedAt"
+                                  ValueChanged="@(value => _messages[index].ReceivedAt = value ?? string.Empty)"
+                                  Label="Received at"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                    @if (index < _messages.Count - 1)
+                    {
+                        <MudDivider />
+                    }
+                </MudStack>
+            }
+
+            <MudButton Size="Size.Small"
+                       Variant="Variant.Outlined"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="@AddMessageAsync">Add message</MudButton>
+        </MudStack>
+    </Editor>
+</NodeWidgetShell>
+
+@code {
+    [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
+
+    private GeneratedSourceNodeModel Model => (GeneratedSourceNodeModel)Node;
+
+    private int _boundedCapacity = SourceNodeConfiguration.DefaultBoundedCapacity;
+    private readonly List<GeneratedMessageDraft> _messages = [];
+
+    protected override void OnParametersSet() => LoadDraft();
+
+    private void LoadDraft()
+    {
+        _boundedCapacity = SourceNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity);
+        _messages.Clear();
+        _messages.AddRange(Model.Messages.Select(message => new GeneratedMessageDraft
+        {
+            Topic = message.Topic,
+            Payload = message.Payload,
+            QualityOfService = message.QualityOfService,
+            Retain = message.Retain,
+            ReceivedAt = message.ReceivedAt
+        }));
+        if (_messages.Count == 0)
+            AddMessageDraft();
+    }
+
+    private async Task AddMessageAsync()
+    {
+        AddMessageDraft();
+        await RefreshDialogAsync();
+    }
+
+    private void AddMessageDraft()
+        => _messages.Add(new GeneratedMessageDraft
+        {
+            Topic = "factory/sample",
+            Payload = """{"value":21.7,"unit":"c","status":"ok"}"""
+        });
+
+    private async Task RemoveMessage(int index)
+    {
+        if (index >= 0 && index < _messages.Count)
+        {
+            _messages.RemoveAt(index);
+            await RefreshDialogAsync();
+        }
+    }
+
+    private async Task RefreshDialogAsync()
+    {
+        await InvokeAsync(StateHasChanged);
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private Task SaveAsync()
+    {
+        Model.Messages = _messages
+            .Where(message => !string.IsNullOrWhiteSpace(message.Topic))
+            .Select(message => new GeneratedMessageDraft
+            {
+                Topic = message.Topic.Trim(),
+                Payload = message.Payload ?? string.Empty,
+                QualityOfService = SourceNodeConfiguration.NormalizeQualityOfService(message.QualityOfService),
+                Retain = message.Retain,
+                ReceivedAt = message.ReceivedAt?.Trim() ?? string.Empty
+            })
+            .ToList();
+        if (Model.Messages.Count == 0)
+        {
+            Model.Messages.Add(new GeneratedMessageDraft
+            {
+                Topic = "factory/sample",
+                Payload = """{"value":21.7,"unit":"c","status":"ok"}"""
+            });
+        }
+
+        Model.BoundedCapacity = SourceNodeConfiguration.NormalizeBoundedCapacity(_boundedCapacity);
+        Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
+        return Task.CompletedTask;
+    }
+}

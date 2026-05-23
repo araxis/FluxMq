@@ -1,5 +1,6 @@
 using FluxMq.Core.Models;
 using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
+using FluxMq.UI.Components.Workspace.Nodes.Sources;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -13,7 +14,6 @@ public sealed class FlowDefinitionComposer
 {
     public const string BrokerResourceName = "broker";
     public const string TriggerNodeName = "trigger";
-    public const string LiveSourceNodeName = "live";
     public const string StoredSourceNodeName = "stored";
     public const string InspectorNodeName = "inspect";
     public const string MetricsNodeName = "metrics";
@@ -270,7 +270,6 @@ public sealed class FlowDefinitionComposer
             "file.write-request" => "fileWriteRequest",
             "file.writer" => "fileWriter",
             "mqtt.connection-state-trigger" => StateSourceNodeName,
-            "mqtt.live-source" => LiveSourceNodeName,
             "replay.source" => ReplayNodeName,
             "generated.source" => GeneratedNodeName,
             "session.source" => StoredSourceNodeName,
@@ -293,6 +292,14 @@ public sealed class FlowDefinitionComposer
         else if (componentType == "mqtt.publisher")
         {
             node["configuration"] = CreateMqttPublisherConfiguration();
+        }
+        else if (componentType == "generated.source")
+        {
+            node["configuration"] = CreateGeneratedSourceConfiguration();
+        }
+        else if (componentType == "replay.source")
+        {
+            node["configuration"] = CreateReplaySourceConfiguration();
         }
         else if (componentType is "mqtt.recorder" or "file.writer")
         {
@@ -365,7 +372,7 @@ public sealed class FlowDefinitionComposer
     /// Reads all connection profiles from a definition.
     /// Covers two storage shapes:
     ///   1. <c>resources[name].type == "mqtt.connection"</c> with subscription from the first <c>mqtt.trigger</c> that references it.
-    ///   2. Workflow nodes that embed a <c>profile</c> object directly (e.g. <c>mqtt.live-source</c>).
+    ///   2. Future workflow nodes that embed broker profile objects directly.
     /// </summary>
     public IReadOnlyList<(MqttConnectionProfile Profile, string Subscription)> ReadConnectionsFromDefinition(string json)
     {
@@ -421,11 +428,6 @@ public sealed class FlowDefinitionComposer
                             if (!triggerSubscriptions.ContainsKey(connName))
                                 triggerSubscriptions[connName] = ReadSubscriptionString(conf);
                         }
-                        else if (typeStr == "mqtt.live-source")
-                        {
-                            if (!conf.TryGetProperty("profile", out var profileEl)) continue;
-                            result.Add((ReadProfile(profileEl), ReadSubscriptionString(conf)));
-                        }
                     }
                 }
             }
@@ -451,12 +453,37 @@ public sealed class FlowDefinitionComposer
 
     private static string ReadSubscriptionString(JsonElement conf)
     {
-        if (!conf.TryGetProperty("subscriptions", out var subs) ||
-            subs.ValueKind != JsonValueKind.Array)
+        if (!conf.TryGetProperty("subscriptions", out var subs))
+        {
             return "#";
+        }
+
+        if (subs.ValueKind == JsonValueKind.String)
+        {
+            return subs.GetString() is { Length: > 0 } single ? single : "#";
+        }
+
+        if (subs.ValueKind != JsonValueKind.Array)
+        {
+            return "#";
+        }
+
         var parts = new List<string>();
         foreach (var s in subs.EnumerateArray())
-            if (s.GetString() is { } str) parts.Add(str);
+        {
+            if (s.ValueKind == JsonValueKind.String && s.GetString() is { Length: > 0 } str)
+            {
+                parts.Add(str);
+            }
+            else if (s.ValueKind == JsonValueKind.Object &&
+                     s.TryGetProperty("topicFilter", out var topic) &&
+                     topic.ValueKind == JsonValueKind.String &&
+                     topic.GetString() is { Length: > 0 } topicFilter)
+            {
+                parts.Add(topicFilter);
+            }
+        }
+
         return parts.Count > 0 ? string.Join(", ", parts) : "#";
     }
 
@@ -541,7 +568,7 @@ public sealed class FlowDefinitionComposer
 
     private static bool NeedsInputLink(string componentType) => componentType switch
     {
-        "mqtt.trigger" or "mqtt.live-source" or "session.source" or "replay.source" or "generated.source" or "mqtt.connection-state-trigger" => false,
+        "mqtt.trigger" or "session.source" or "replay.source" or "generated.source" or "mqtt.connection-state-trigger" => false,
         _ => true
     };
 
@@ -569,7 +596,7 @@ public sealed class FlowDefinitionComposer
 
     private static string? FindPreferredSourceNode(JsonObject workflow)
     {
-        foreach (var preferredName in new[] { TriggerNodeName, LiveSourceNodeName, StoredSourceNodeName })
+        foreach (var preferredName in new[] { TriggerNodeName, StoredSourceNodeName, ReplayNodeName, GeneratedNodeName })
         {
             if (workflow.ContainsKey(preferredName)) return preferredName;
         }
@@ -626,6 +653,28 @@ public sealed class FlowDefinitionComposer
         => new()
         {
             ["connection"] = BrokerResourceName,
+            ["boundedCapacity"] = 1000
+        };
+
+    private static JsonObject CreateGeneratedSourceConfiguration()
+        => new()
+        {
+            ["messages"] = SourceNodeConfiguration.BuildGeneratedMessages(
+            [
+                new GeneratedMessageDraft
+                {
+                    Topic = "factory/sample",
+                    Payload = """{"value":21.7,"unit":"c","status":"ok"}"""
+                }
+            ]),
+            ["boundedCapacity"] = 1000
+        };
+
+    private static JsonObject CreateReplaySourceConfiguration()
+        => new()
+        {
+            ["sessionId"] = string.Empty,
+            ["speed"] = 1,
             ["boundedCapacity"] = 1000
         };
 

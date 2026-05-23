@@ -453,7 +453,7 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 ## 2026-05-22 - Actor naming and File Writer runtime slice
 
 - Removed the old MQTT publish and recording compatibility node aliases; app definitions should now use `mqtt.publisher` and `mqtt.recorder`.
-- Removed the old generic source compatibility node alias; app definitions should now use `mqtt.live-source`, `session.source`, or `generated.source`.
+- Removed the old generic source compatibility node alias; app definitions should now use `mqtt.trigger`, `session.source`, `replay.source`, or `generated.source`.
 - Renamed the publish namespace to `FluxMq.Components.MqttPublisher`.
 - Renamed the metrics observer to `MqttMetricsComponent` / `mqtt.metrics`.
 - Added `FileWriteRequest`, Dynamic Expresso-backed file-write request mapping, and `FileWriterComponent`.
@@ -536,3 +536,16 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - MQTT Recorder and File Writer now show their command input fields and expose only input-buffer configuration on the actor node.
 - Updated actor catalog add behavior to write default actor configuration.
 - Updated the runtime recorder factory to honor configured buffer capacity.
+
+## 2026-05-23 - Source node editor slice
+
+- Added typed designer models/widgets for Generated MQTT Source and Replay Source.
+- Removed the separate live broker source path; live broker input remains `mqtt.connection` plus `mqtt.trigger`.
+- Generated MQTT Source now edits a fixed message list with topic, payload, QoS, retain, optional timestamp, and output buffer.
+- Replay Source now selects a recorded session, playback speed, and output buffer.
+- Registered `replay.source` in runtime factories and added runtime coverage for replaying stored messages into metrics.
+- Updated the composer so generated and replay sources get default configuration when added from the catalog; live flows continue to use the broker resource plus trigger.
+- Verified:
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 23 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 61 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -m:1` passes with 267 tests.

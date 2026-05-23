@@ -97,13 +97,11 @@ Priority:
 
 **UI/UX:** The component catalog exposes concrete source nodes instead of a generic mode-driven source.
 
-**Data/Logic:** Source nodes:
+**Data/Logic:** Live MQTT uses `mqtt.connection` plus `mqtt.trigger`; non-live sources use:
 
-- `mqtt.live-source`
 - `session.source`
 - `replay.source`
 - `generated.source`
-- `mqtt.trigger`
 - `mqtt.connection-state-trigger`
 
 **Acceptance:**

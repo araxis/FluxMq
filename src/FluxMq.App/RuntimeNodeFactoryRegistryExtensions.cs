@@ -41,8 +41,8 @@ public static class RuntimeNodeFactoryRegistryExtensions
         return registry
             .Register(PipelineFlowNodeTypes.Connection, context => CreateConnection(context.Address, context.Definition, sessionFactory))
             .Register(PipelineFlowNodeTypes.Trigger, context => CreateTrigger(context.Address, context.Definition, context))
-            .Register(PipelineFlowNodeTypes.LiveSource, context => CreateLiveMqttSource(context.Address, context.Definition, sessionFactory))
             .Register(PipelineFlowNodeTypes.StoredSessionSource, context => CreateStoredSessionSource(context.Address, context.Definition, messageRepository))
+            .Register(PipelineFlowNodeTypes.ReplaySource, context => CreateReplaySource(context.Address, context.Definition, messageRepository))
             .Register(PipelineFlowNodeTypes.GeneratedSource, context => CreateGeneratedMqttSource(context.Address, context.Definition))
             .Register(PipelineFlowNodeTypes.PayloadInspector, CreatePayloadInspector)
             .Register(PipelineFlowNodeTypes.MqttMetrics, CreateMqttMetrics)
@@ -75,20 +75,6 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
-    private static RuntimeNode CreateLiveMqttSource(
-        NodeAddress address,
-        NodeDefinition definition,
-        Func<MqttConnectionProfile, IMqttSession> sessionFactory)
-    {
-        var profile = GetConnectionProfile(definition, PipelineFlowNodeTypes.LiveSource.Value);
-        var component = new LiveMqttSourceComponent(
-            sessionFactory(profile),
-            GetSubscriptions(definition, PipelineFlowNodeTypes.LiveSource.Value),
-            boundedCapacity: GetBoundedCapacity(definition));
-
-        return SourceRuntimeNode(address, component, component.Output);
-    }
-
     private static RuntimeNode CreateStoredSessionSource(
         NodeAddress address,
         NodeDefinition definition,
@@ -105,6 +91,28 @@ public static class RuntimeNodeFactoryRegistryExtensions
             preserveTiming: GetBoolOrDefault(definition, "preserveTiming", false),
             speed: GetDoubleOrDefault(definition, "speed", 1),
             boundedCapacity: GetBoundedCapacity(definition));
+
+        return SourceRuntimeNode(address, component, component.Output);
+    }
+
+    private static RuntimeNode CreateReplaySource(
+        NodeAddress address,
+        NodeDefinition definition,
+        IMessageRepository? messageRepository)
+    {
+        if (messageRepository is null)
+        {
+            throw new InvalidOperationException("Replay source requires a message repository.");
+        }
+
+        var factory = new RecordedSessionReplayFactory(messageRepository);
+        var component = factory.Create(
+            GetRequiredSessionId(definition, "sessionId"),
+            new RecordedSessionReplayOptions
+            {
+                Speed = GetDoubleOrDefault(definition, "speed", 1),
+                BoundedCapacity = GetBoundedCapacity(definition)
+            });
 
         return SourceRuntimeNode(address, component, component.Output);
     }

@@ -1,0 +1,113 @@
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject LiveMqttWorkspaceService Live
+
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.PlayCircle"
+                 CategoryColor="@Color.Primary"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
+    <Body>
+        <MudStack Spacing="1" Class="mt-1">
+            <Stat Icon="@Icons.Material.Filled.Folder" Label="Session" Value="@(ResolvedSessionName ?? "-")" />
+            <Stat Icon="@Icons.Material.Filled.Speed" Label="Speed" Value="@($"{Model.Speed:0.##}x")" />
+            <Stat Icon="@Icons.Material.Filled.Memory" Label="Output buffer" Value="@Model.BoundedCapacity.ToString()" />
+        </MudStack>
+    </Body>
+    <Editor>
+        <MudStack Spacing="2">
+            @{
+                var sessions = Live.StoredSessions;
+            }
+            @if (sessions.Count > 0)
+            {
+                <MudSelect T="string"
+                           Label="Session"
+                           @bind-Value="_sessionId"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Dense="true"
+                           ToStringFunc="@(id => sessions.FirstOrDefault(s => s.Id.ToString() == id)?.Name ?? id)">
+                    @foreach (var session in sessions)
+                    {
+                        <MudSelectItem Value="@session.Id.ToString()">
+                            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                                <MudText Typo="Typo.body2">@session.Name</MudText>
+                                @if (!string.IsNullOrWhiteSpace(session.ProjectName) && session.ProjectName != "Default")
+                                {
+                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Secondary">@session.ProjectName</MudChip>
+                                }
+                            </MudStack>
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+            }
+            else
+            {
+                <MudTextField T="string"
+                              Label="Session ID"
+                              @bind-Value="_sessionId"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense" />
+            }
+
+            <MudNumericField T="double"
+                             Label="Playback speed"
+                             @bind-Value="_speed"
+                             Min="0.1"
+                             Max="1000"
+                             Step="0.1"
+                             Variant="Variant.Outlined"
+                             Margin="Margin.Dense" />
+            <MudNumericField T="int"
+                             Label="Output buffer"
+                             @bind-Value="_boundedCapacity"
+                             Min="1"
+                             Max="100000"
+                             Step="100"
+                             Variant="Variant.Outlined"
+                             Margin="Margin.Dense" />
+        </MudStack>
+    </Editor>
+</NodeWidgetShell>
+
+@code {
+    [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
+
+    private ReplaySourceNodeModel Model => (ReplaySourceNodeModel)Node;
+
+    private string _sessionId = string.Empty;
+    private double _speed = 1;
+    private int _boundedCapacity = SourceNodeConfiguration.DefaultBoundedCapacity;
+
+    private string? ResolvedSessionName
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Model.SessionId))
+            {
+                return null;
+            }
+
+            return Live.StoredSessions.FirstOrDefault(s => s.Id.ToString() == Model.SessionId)?.Name ?? Model.SessionId;
+        }
+    }
+
+    protected override void OnParametersSet() => LoadDraft();
+
+    private void LoadDraft()
+    {
+        _sessionId = Model.SessionId;
+        _speed = Model.Speed > 0 && double.IsFinite(Model.Speed) ? Model.Speed : 1;
+        _boundedCapacity = SourceNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity);
+    }
+
+    private Task SaveAsync()
+    {
+        Model.SessionId = _sessionId?.Trim() ?? string.Empty;
+        Model.Speed = _speed > 0 && double.IsFinite(_speed) ? _speed : 1;
+        Model.BoundedCapacity = SourceNodeConfiguration.NormalizeBoundedCapacity(_boundedCapacity);
+        Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
+        return Task.CompletedTask;
+    }
+}

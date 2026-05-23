@@ -10,11 +10,11 @@ public static class PipelineFlowNodeTypes
     /// <summary>Workflow node: bound to a connection, owns its own subscription list, emits envelopes.</summary>
     public static readonly NodeType Trigger = new("mqtt.trigger");
 
-    /// <summary>Workflow node: owns a live MQTT session directly and emits envelopes.</summary>
-    public static readonly NodeType LiveSource = new("mqtt.live-source");
-
     /// <summary>Workflow node: streams envelopes from a stored session.</summary>
     public static readonly NodeType StoredSessionSource = new("session.source");
+
+    /// <summary>Workflow node: replays stored envelopes with configurable timing.</summary>
+    public static readonly NodeType ReplaySource = new("replay.source");
 
     /// <summary>Workflow node: emits deterministic generated/test envelopes.</summary>
     public static readonly NodeType GeneratedSource = new("generated.source");

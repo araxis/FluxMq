@@ -304,11 +304,11 @@
         {
             var activity = node.NodeType switch
             {
-                "mqtt.trigger" or "mqtt.live-source" => $"{Live.State} | {count} messages",
+                "mqtt.trigger" => $"{Live.State} | {count} messages",
                 "session.source" or "replay.source" => Live.SelectedStoredSession is null
                     ? null
                     : $"{count} stored messages",
-                "generated.source" => "Generated test messages",
+                "generated.source" => "Configured message list",
                 "mqtt.payload-inspector" => inspectedMessage is null
                     ? "Waiting for payload"
                     : $"{latestInspection.ContentTypeLabel} | {latestInspection.SizeBytes} bytes | {ShortTopic(inspectedMessage.Topic)}",

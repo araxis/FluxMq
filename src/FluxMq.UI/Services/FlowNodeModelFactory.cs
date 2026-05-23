@@ -9,6 +9,7 @@ using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
 using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
 using FluxMq.UI.Components.Workspace.Nodes.PayloadInspector;
 using FluxMq.UI.Components.Workspace.Nodes.SessionSource;
+using FluxMq.UI.Components.Workspace.Nodes.Sources;
 using FluxMq.UI.Models;
 using DiagramPoint = Blazor.Diagrams.Core.Geometry.Point;
 
@@ -30,6 +31,8 @@ public static class FlowNodeModelFactory
         "mqtt.condition-router" => new ConditionRouterNodeModel(id, position, nodeName, descriptor, isResource),
         "json.schema-validator" => new JsonSchemaValidatorNodeModel(id, position, nodeName, descriptor, isResource),
         "flow.mapper" => new DynamicMapperNodeModel(id, position, nodeName, descriptor, isResource),
+        "generated.source" => new GeneratedSourceNodeModel(id, position, nodeName, descriptor, isResource),
+        "replay.source" => new ReplaySourceNodeModel(id, position, nodeName, descriptor, isResource),
         "session.source" => new SessionSourceNodeModel(id, position, nodeName, descriptor, isResource),
         "mqtt.publisher" => new MqttPublisherNodeModel(id, position, nodeName, descriptor, isResource),
         "mqtt.recorder" => new MqttRecorderNodeModel(id, position, nodeName, descriptor, isResource),

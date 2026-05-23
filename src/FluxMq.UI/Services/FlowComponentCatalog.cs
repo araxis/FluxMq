@@ -67,16 +67,6 @@ public sealed class FlowComponentCatalog
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
-            "mqtt.live-source",
-            "Live MQTT Source",
-            "Source",
-            "Connects directly to a broker, subscribes, and emits live MQTT envelopes.",
-            IsResource: false,
-            [
-                new("Output", "MqttEnvelope", IsInput: false),
-                new("Errors", "FlowError", IsInput: false)
-            ]),
-        new(
             "session.source",
             "Stored Session Source",
             "Source",
@@ -90,7 +80,7 @@ public sealed class FlowComponentCatalog
             "replay.source",
             "Replay Source",
             "Source",
-            "Replays a selected message sequence through the pipeline.",
+            "Replays a selected stored session through the pipeline with configurable timing.",
             IsResource: false,
             [
                 new("Output", "MqttEnvelope", IsInput: false),
@@ -98,9 +88,9 @@ public sealed class FlowComponentCatalog
             ]),
         new(
             "generated.source",
-            "Generated Message Source",
+            "MQTT Message List Source",
             "Source",
-            "Emits deterministic generated MQTT messages for tests and demos.",
+            "Emits configured MQTT envelopes from a fixed message list.",
             IsResource: false,
             [
                 new("Output", "MqttEnvelope", IsInput: false),

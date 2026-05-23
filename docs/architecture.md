@@ -206,7 +206,7 @@ CLI command execution should stay separate from output rendering. The command la
 
 Live broker traffic and stored/offline traffic enter Fork Flow through the same runtime source shape.
 
-Source nodes are explicit execution bindings. A workflow consumes a source output from `mqtt.live-source`, `session.source`, `generated.source`, replay, imported data, or future protocol sources. These source nodes expose `Output: MqttEnvelope` and `Errors: FlowError`.
+Source nodes are explicit execution bindings. A workflow consumes a source output from `mqtt.trigger`, `session.source`, `generated.source`, replay, imported data, or future protocol sources. These source nodes expose `Output: MqttEnvelope` and `Errors: FlowError`.
 
 ```mermaid
 flowchart LR

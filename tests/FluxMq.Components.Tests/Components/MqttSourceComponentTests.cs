@@ -14,30 +14,6 @@ namespace FluxMq.Components.Tests.Components;
 public sealed class MqttSourceComponentTests
 {
     [Fact]
-    public async Task LiveMqttSource_StartsSessionSubscribesAndEmitsMatchingMessages()
-    {
-        var session = new TestMqttSession();
-        var source = new LiveMqttSourceComponent(
-            session,
-            [new MqttSubscription("factory/#", MqttQualityOfServiceLevel.AtMostOnce)],
-            disposeSessionOnDispose: false);
-        var received = new List<string>();
-        var sink = new ActionBlock<MqttEnvelope>(message => received.Add(message.Topic));
-
-        source.Output.LinkTo(sink, new DataflowLinkOptions { PropagateCompletion = true });
-
-        await source.StartAsync();
-        await session.WriteAsync(TestMqttSession.Message("factory/one"));
-        await session.WriteAsync(TestMqttSession.Message("other/one"));
-        session.CompleteMessages();
-        await sink.Completion;
-
-        session.ConnectCalls.ShouldBe(1);
-        session.Subscriptions.ShouldContain(subscription => subscription.TopicFilter == "factory/#");
-        received.ShouldBe(["factory/one"]);
-    }
-
-    [Fact]
     public async Task StoredSessionSource_StreamsRepositoryMessages()
     {
         var sessionId = SessionId.New();

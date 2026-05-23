@@ -19,10 +19,10 @@ Flow components should be clear, standalone actors, mappers, filters, routers, v
 
 Clear source components:
 
-- `mqtt.live-source`: live broker traffic.
+- `mqtt.trigger`: live broker traffic through a configured broker resource.
 - `session.source`: stored session stream.
 - `replay.source`: timed replay stream.
-- `generated.source`: deterministic test/demo traffic.
+- `generated.source`: deterministic configured MQTT envelope stream.
 
 The generic source alias has been removed; use explicit source names in new definitions.
 
