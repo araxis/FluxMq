@@ -49,30 +49,30 @@ trigger.Output.LinkTo(stateSink, new DataflowLinkOptions
 ### Notes
 
 - Use this when a flow should react to connection lifecycle events.
-- Example downstream nodes: state router, notification sink, UI state projection.
+- Example downstream nodes: state router, notification actor, UI state projection.
 
-## Traffic Source
+## Source Components
 
-`traffic.source` is the preferred alpha source node for user workflows. It binds a logical source to one concrete execution mode and emits `MqttEnvelope` values through the same `Output` port.
+Source nodes emit `MqttEnvelope` values through the same `Output` port, but each node type has one clear source responsibility.
 
-Current modes:
+Current source node types:
 
-- `live`: connects to a broker, subscribes, and emits matching traffic.
-- `stored-session`: streams messages from LiteDB by `SessionId`.
-- `generated`: emits configured messages for deterministic tests and samples.
+- `mqtt.live-source`: connects to a broker, subscribes, and emits matching traffic.
+- `session.source`: streams messages from LiteDB by `SessionId`.
+- `generated.source`: emits configured messages for deterministic tests and samples.
 
 ### Behavior
 
 ```mermaid
 flowchart LR
-    Binding["Source mode"] --> Source["traffic.source"]
-    Source --> Out["Output: MqttEnvelope"]
-    Source --> Errors["Errors: FlowError"]
+    Live["mqtt.live-source"] --> LiveOut["Output: MqttEnvelope"]
+    Stored["session.source"] --> StoredOut["Output: MqttEnvelope"]
+    Generated["generated.source"] --> GeneratedOut["Output: MqttEnvelope"]
 ```
 
 ### Flow Definition
 
-Registered workflow node type: `traffic.source`
+Registered workflow node types: `mqtt.live-source`, `session.source`, `generated.source`
 
 Ports:
 
@@ -84,9 +84,8 @@ Live source:
 ```json
 {
   "traffic": {
-    "type": "traffic.source",
+    "type": "mqtt.live-source",
     "configuration": {
-      "kind": "live",
       "profile": {
         "name": "local-broker",
         "host": "localhost",
@@ -109,10 +108,9 @@ Stored-session source:
 
 ```json
 {
-  "traffic": {
-    "type": "traffic.source",
+  "stored": {
+    "type": "session.source",
     "configuration": {
-      "kind": "stored-session",
       "sessionId": "00000000-0000-0000-0000-000000000001",
       "preserveTiming": false,
       "speed": 1
@@ -383,41 +381,84 @@ await replay.StartAsync();
 - `speed = 2` replays twice as fast.
 - delay behavior is injectable for deterministic tests.
 
-## MQTT Publish Sink
+## MQTT Publish Request Mapper
 
-`MqttPublishSinkComponent` publishes incoming MQTT messages through an active session.
+`MqttPublishRequestMapperComponent` maps incoming MQTT envelopes into explicit publish commands. The mapper can preserve the input envelope or use configured expressions to produce a different topic, payload, QoS, and retain flag.
 
 ### Behavior
 
 ```mermaid
 flowchart LR
-    In["Input: MqttEnvelope"] --> Sink["MqttPublishSinkComponent"]
-    Sink --> Session["IMqttSession.PublishAsync"]
-    Sink -->|publish failure| Errors["Errors: FlowError code 2000"]
+    In["Input: MqttEnvelope"] --> Mapper["MqttPublishRequestMapperComponent"]
+    Mapper --> Out["Output: MqttPublishRequest"]
+    Mapper -->|mapping failure| Errors["Errors: FlowError code 2000"]
 ```
 
 ### Usage
 
 ```csharp
-var publishSink = new MqttPublishSinkComponent(session);
+var mapper = new MqttPublishRequestMapperComponent(MqttPublishRequestMapperComponent.PreserveEnvelope);
 
-source.LinkTo(publishSink.Input, new DataflowLinkOptions
+source.LinkTo(mapper.Input, new DataflowLinkOptions
 {
     PropagateCompletion = true
 });
 
-publishSink.Errors.LinkTo(errorSink);
+mapper.Errors.LinkTo(errorSink);
 ```
 
 ### Failure Behavior
 
-If publishing fails for one message, the sink publishes a `FlowError` with the topic in `Context` and continues processing later messages.
+If mapping fails for one message, the mapper publishes a `FlowError` with the topic in `Context` and continues processing later messages.
+
+## MQTT Publisher
+
+`MqttPublisherComponent` consumes `MqttPublishRequest` commands and publishes them through an active MQTT session.
+
+### Behavior
+
+```mermaid
+flowchart LR
+    In["Input: MqttPublishRequest"] --> Publisher["MqttPublisherComponent"]
+    Publisher --> Session["IMqttSession.PublishAsync"]
+    Publisher -->|publish failure| Errors["Errors: FlowError code 2000"]
+```
+
+### Usage
+
+```csharp
+var publisher = new MqttPublisherComponent(session);
+
+mapper.Output.LinkTo(publisher.Input, new DataflowLinkOptions
+{
+    PropagateCompletion = true
+});
+
+publisher.Errors.LinkTo(errorSink);
+```
+
+### Failure Behavior
+
+If publishing fails for one request, the publisher publishes a `FlowError` with the topic in `Context` and continues processing later requests.
 
 The component preserves publish order by default. Higher parallelism is available through the constructor, but ordered single-message publishing should remain the default for replay and deterministic flow behavior.
 
-## MQTT Recording Sink
+## MQTT Recording Request Mapper
 
-`MqttRecordingSinkComponent` stores incoming MQTT messages for a recording session.
+`MqttRecordingRequestMapperComponent` maps incoming MQTT envelopes into recording commands that carry the target session id.
+
+### Behavior
+
+```mermaid
+flowchart LR
+    In["Input: MqttEnvelope"] --> Mapper["MqttRecordingRequestMapperComponent"]
+    Mapper --> Out["Output: MqttRecordingRequest"]
+    Mapper -->|mapping failure| Errors["Errors: FlowError code 2000"]
+```
+
+## MQTT Recorder
+
+`MqttRecorderComponent` stores incoming `MqttRecordingRequest` commands for a recording session.
 
 This component lives in `FluxMq.Components` because it bridges flow nodes with storage repositories. `FluxMq.Pipeline` stays independent from storage and concrete component dependencies.
 
@@ -425,31 +466,31 @@ This component lives in `FluxMq.Components` because it bridges flow nodes with s
 
 ```mermaid
 flowchart LR
-    In["Input: MqttEnvelope"] --> Sink["MqttRecordingSinkComponent"]
-    Sink --> Repository["IMessageRepository.Add"]
-    Sink -->|record failure| Errors["Errors: FlowError code 2000"]
+    In["Input: MqttRecordingRequest"] --> Recorder["MqttRecorderComponent"]
+    Recorder --> Repository["IMessageRepository.Add"]
+    Recorder -->|record failure| Errors["Errors: FlowError code 2000"]
 ```
 
 ### Usage
 
 ```csharp
-var recordingSink = new MqttRecordingSinkComponent(messageRepository, sessionId);
+var recorder = new MqttRecorderComponent(messageRepository);
 
-source.Output.LinkTo(recordingSink.Input, new DataflowLinkOptions
+recordingMapper.Output.LinkTo(recorder.Input, new DataflowLinkOptions
 {
     PropagateCompletion = true
 });
 
-recordingSink.Errors.LinkTo(errorSink);
+recorder.Errors.LinkTo(errorSink);
 ```
 
 ### Failure Behavior
 
-If a message cannot be stored, the sink publishes a `FlowError` with the topic in `Context` and continues recording later messages.
+If a message cannot be stored, the recorder publishes a `FlowError` with the topic in `Context` and continues recording later messages.
 
-## MQTT Metrics Sink
+## MQTT Metrics
 
-`MqttMetricsSinkComponent` tracks operational counters from incoming MQTT messages and broadcasts immutable snapshots.
+`MqttMetricsComponent` observes incoming MQTT messages and broadcasts immutable metric snapshots. It works only from its input stream; it does not care whether the data came from a live connection, replay, stored session, generated source, or imported source.
 
 These snapshots are local flow data. Planned OpenTelemetry support should export selected observability signals later without making this component depend on external collectors.
 
@@ -457,15 +498,15 @@ These snapshots are local flow data. Planned OpenTelemetry support should export
 
 ```mermaid
 flowchart LR
-    In["Input: MqttEnvelope"] --> Sink["MqttMetricsSinkComponent"]
-    Sink --> Snapshot["Snapshots: MqttMetricsSnapshot"]
-    Sink -->|processing failure| Errors["Errors: FlowError code 2000"]
+    In["Input: MqttEnvelope"] --> Metrics["MqttMetricsComponent"]
+    Metrics --> Snapshot["Snapshots: MqttMetricsSnapshot"]
+    Metrics -->|processing failure| Errors["Errors: FlowError code 2000"]
 ```
 
 ### Usage
 
 ```csharp
-var metrics = new MqttMetricsSinkComponent();
+var metrics = new MqttMetricsComponent();
 
 source.Output.LinkTo(metrics.Input, new DataflowLinkOptions
 {
@@ -478,7 +519,7 @@ metrics.Errors.LinkTo(errorSink);
 
 ### Flow Definition
 
-Registered node type: `mqtt.metrics-sink`
+Registered node type: `mqtt.metrics`
 
 Ports:
 
@@ -489,7 +530,7 @@ Ports:
 ```json
 {
   "metrics": {
-    "type": "mqtt.metrics-sink",
+    "type": "mqtt.metrics",
     "Input": "source.Output"
   }
 }
@@ -537,13 +578,13 @@ var replay = factory.Create(sessionId, new RecordedSessionReplayOptions
 
 ## Sample Flow
 
-This flow reads traffic through a logical source, filters it, inspects payloads, and projects results to UI. The same downstream graph can run from live or stored traffic.
+This flow reads traffic through a source, filters it, inspects payloads, and projects results to UI. The same downstream graph can run from live or stored traffic by choosing the appropriate source node.
 
 ```mermaid
 flowchart LR
-    Source["traffic.source"] --> Filter["TopicFilterComponent"]
+    Source["mqtt.live-source"] --> Filter["TopicFilterComponent"]
     Filter --> Mapper["PayloadInspectorMapperComponent"]
-    Mapper --> Ui["Payload UI Sink"]
+    Mapper --> Ui["Payload UI"]
     Source --> ErrorLog["Error Log"]
     Filter --> ErrorLog
     Mapper --> ErrorLog
@@ -574,11 +615,11 @@ This flow branches live traffic into two paths.
 
 ```mermaid
 flowchart LR
-    Source["traffic.source"] --> Router["MqttConditionRouterComponent"]
+    Source["mqtt.live-source"] --> Router["MqttConditionRouterComponent"]
     Router -->|factory topics| Inspector["PayloadInspectorMapperComponent"]
-    Router -->|other topics| Metrics["MqttMetricsSinkComponent"]
-    Inspector --> Ui["Payload UI Sink"]
-    Metrics --> MetricsUi["Metrics UI Sink"]
+    Router -->|other topics| Metrics["MqttMetricsComponent"]
+    Inspector --> Ui["Payload UI"]
+    Metrics --> MetricsUi["Metrics UI"]
     Source --> ErrorLog["Error Log"]
     Router --> ErrorLog
     Inspector --> ErrorLog
@@ -589,11 +630,13 @@ This flow records selected live traffic.
 
 ```mermaid
 flowchart LR
-    Source["traffic.source"] --> Filter["TopicFilterComponent"]
-    Filter --> Record["MqttRecordingSinkComponent"]
+    Source["mqtt.live-source"] --> Filter["TopicFilterComponent"]
+    Filter --> Mapper["MqttRecordingRequestMapperComponent"]
+    Mapper --> Recorder["MqttRecorderComponent"]
     Source --> ErrorLog["Error Log"]
     Filter --> ErrorLog
-    Record --> ErrorLog
+    Mapper --> ErrorLog
+    Recorder --> ErrorLog
 ```
 
 This flow replays a recorded session back through an MQTT session.
@@ -602,10 +645,12 @@ This flow replays a recorded session back through an MQTT session.
 flowchart LR
     Factory["RecordedSessionReplayFactory"] --> Replay["ReplaySourceComponent"]
     Replay --> Filter["TopicFilterComponent"]
-    Filter --> Publish["MqttPublishSinkComponent"]
+    Filter --> Mapper["MqttPublishRequestMapperComponent"]
+    Mapper --> Publisher["MqttPublisherComponent"]
     Replay --> ErrorLog["Error Log"]
     Filter --> ErrorLog
-    Publish --> ErrorLog
+    Mapper --> ErrorLog
+    Publisher --> ErrorLog
 ```
 
 Equivalent code shape:
@@ -613,17 +658,20 @@ Equivalent code shape:
 ```csharp
 var replay = replayFactory.Create(sessionId);
 var filter = TopicFilterComponent.Prefix("factory/");
-var publishSink = new MqttPublishSinkComponent(session);
+var publishMapper = new MqttPublishRequestMapperComponent(MqttPublishRequestMapperComponent.PreserveEnvelope);
+var publisher = new MqttPublisherComponent(session);
 
 replay.Output.LinkTo(filter.Input, new DataflowLinkOptions { PropagateCompletion = true });
-filter.Output.LinkTo(publishSink.Input, new DataflowLinkOptions { PropagateCompletion = true });
+filter.Output.LinkTo(publishMapper.Input, new DataflowLinkOptions { PropagateCompletion = true });
+publishMapper.Output.LinkTo(publisher.Input, new DataflowLinkOptions { PropagateCompletion = true });
 
 replay.Errors.LinkTo(errorSink);
 filter.Errors.LinkTo(errorSink);
-publishSink.Errors.LinkTo(errorSink);
+publishMapper.Errors.LinkTo(errorSink);
+publisher.Errors.LinkTo(errorSink);
 
 await replay.StartAsync();
-await publishSink.Completion;
+await publisher.Completion;
 ```
 
 ## Future Component Types

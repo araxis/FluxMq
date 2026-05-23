@@ -1,0 +1,47 @@
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+
+<NodeWidgetShell Node="@Node" HeaderIcon="@HeaderIcon" CategoryColor="@CategoryColor">
+    <Body>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">@Node.Summary</MudText>
+        @if (Node.PortDescriptors.Count > 0)
+        {
+            <div class="d-flex flex-wrap gap-1 mt-2">
+                @foreach (var output in Node.PortDescriptors.Where(p => !p.IsInput))
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">@output.Name</MudChip>
+                }
+                @foreach (var input in Node.PortDescriptors.Where(p => p.IsInput))
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@input.Name</MudChip>
+                }
+            </div>
+        }
+    </Body>
+</NodeWidgetShell>
+
+@code {
+    private string HeaderIcon => Node.NodeType switch
+    {
+        "mqtt.live-source" => Icons.Material.Filled.Sensors,
+        "generated.source" => Icons.Material.Filled.AutoAwesome,
+        "replay.source" => Icons.Material.Filled.Replay,
+        "mqtt.publish-request" => Icons.Material.Filled.Transform,
+        "mqtt.publisher" => Icons.Material.Filled.Publish,
+        "mqtt.recording-request" => Icons.Material.Filled.Transform,
+        "mqtt.recorder" => Icons.Material.Filled.Save,
+        "file.write-request" => Icons.Material.Filled.Transform,
+        "file.writer" => Icons.Material.Filled.Description,
+        _ => Icons.Material.Filled.Memory
+    };
+
+    private Color CategoryColor => Node.Category switch
+    {
+        "Source" => Color.Primary,
+        "Mapper" => Color.Secondary,
+        "Actor" => Color.Tertiary,
+        "Observer" => Color.Tertiary,
+        "Resource" => Color.Info,
+        _ => Color.Default
+    };
+}

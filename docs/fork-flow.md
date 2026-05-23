@@ -9,7 +9,7 @@ The goal is to let users define message and event flows through configuration fi
 ```text
 source / trigger
   -> mapper / filter / router
-  -> sink / projection / replay / publish
+  -> actor / observer / projection / replay / publish
 ```
 
 Examples:
@@ -19,20 +19,22 @@ flowchart LR
     MqttConnection["MqttConnection"] --> MqttTrigger["MqttTrigger"]
     MqttTrigger --> TopicFilter["TopicFilter"]
     TopicFilter --> PayloadMapper["PayloadInspectorMapper"]
-    PayloadMapper --> UiSink["UiProjectionSink"]
-    TopicFilter --> StorageSink["StorageSink"]
+    PayloadMapper --> UiProjection["UI Projection"]
+    TopicFilter --> RecordingMapper["RecordingRequestMapper"]
+    RecordingMapper --> Recorder["MqttRecorder"]
 ```
 
 ```mermaid
 flowchart LR
     ReplaySource["ReplaySource"] --> ReplayFilter["TopicFilter"]
-    ReplayFilter --> PublishSink["PublishSink"]
+    ReplayFilter --> PublishMapper["PublishRequestMapper"]
+    PublishMapper --> Publisher["MqttPublisher"]
 ```
 
 ```mermaid
 flowchart LR
     StateTrigger["ConnectionStateTrigger"] --> StateRouter["StateRouter"]
-    StateRouter --> NotificationSink["NotificationSink"]
+    StateRouter --> NotificationActor["NotificationActor"]
 ```
 
 ## Current Concrete Components
@@ -67,15 +69,23 @@ Maps `MqttEnvelope` into `InspectedMqttMessage`.
 
 Replays ordered `MqttEnvelope` values with relative timing and speed control.
 
-### MqttPublishSinkComponent
+### MqttPublishRequestMapperComponent
 
-Publishes `MqttEnvelope` values through an MQTT session and reports publish failures through the error port.
+Maps `MqttEnvelope` values into explicit `MqttPublishRequest` command objects.
 
-### MqttRecordingSinkComponent
+### MqttPublisherComponent
 
-Stores `MqttEnvelope` values through `IMessageRepository` for a recording session.
+Publishes `MqttPublishRequest` values through an MQTT session and reports publish failures through the error port.
 
-### MqttMetricsSinkComponent
+### MqttRecordingRequestMapperComponent
+
+Maps `MqttEnvelope` values into `MqttRecordingRequest` command objects.
+
+### MqttRecorderComponent
+
+Stores `MqttRecordingRequest` values through `IMessageRepository` for a recording session.
+
+### MqttMetricsComponent
 
 Tracks message counters and broadcasts `MqttMetricsSnapshot` values for observability views.
 
@@ -145,10 +155,9 @@ Example JSON shape:
 {
   "workflows": {
     "observeTraffic": {
-      "traffic": {
-        "type": "traffic.source",
+      "live": {
+        "type": "mqtt.live-source",
         "configuration": {
-          "kind": "live",
           "profile": {
             "name": "local-broker",
             "host": "localhost",
@@ -161,8 +170,8 @@ Example JSON shape:
         }
       },
       "metrics": {
-        "type": "mqtt.metrics-sink",
-        "Input": "traffic.Output"
+        "type": "mqtt.metrics",
+        "Input": "live.Output"
       }
     }
   }
@@ -204,7 +213,7 @@ Default condition for all links on a component:
 
 ```json
 {
-  "type": "mqtt.recording-sink",
+  "type": "mqtt.message-filter",
   "When": "payload.size > 0",
   "Input": [
     "source.Output",
@@ -253,7 +262,7 @@ Example appsettings shape:
       "workflows": {
         "observe": {
           "metrics": {
-            "type": "mqtt.metrics-sink"
+            "type": "mqtt.metrics"
           }
         }
       }
@@ -270,7 +279,7 @@ The first CLI alpha command validates a configured flow application:
 dotnet run --project src/FluxMq.Cli -- validate --config samples/flow-applications/metrics-only.json
 ```
 
-The generated traffic sample exercises `traffic.source` without requiring a broker:
+The generated traffic sample exercises `generated.source` without requiring a broker:
 
 ```powershell
 dotnet run --project src/FluxMq.Cli -- validate --config samples/flow-applications/generated-traffic-inspect.json
@@ -300,11 +309,18 @@ The first runtime builder slice is intentionally small. `ApplicationRuntimeBuild
 - completes only entry nodes so Dataflow completion propagates through linked graphs in order
 - disposes workflow nodes before shared resources
 
-The preferred alpha source registration is a logical traffic source, alongside the shared connection/trigger pair and stable sinks/mappers:
+The preferred alpha source registrations are explicit source nodes, alongside the shared connection/trigger pair and stable observers, actors, and mappers:
 
-- `traffic.source`
-  - Workflow source node.
-  - Binds to live MQTT, a stored session, or generated data.
+- `mqtt.live-source`
+  - Workflow source node for direct live broker traffic.
+  - `Output`: `MqttEnvelope`
+  - `Errors`: `FlowError`
+- `session.source`
+  - Workflow source node for stored session messages.
+  - `Output`: `MqttEnvelope`
+  - `Errors`: `FlowError`
+- `generated.source`
+  - Workflow source node for deterministic sample/test messages.
   - `Output`: `MqttEnvelope`
   - `Errors`: `FlowError`
 - `mqtt.connection`
@@ -320,7 +336,7 @@ The preferred alpha source registration is a logical traffic source, alongside t
   - `Input`: `MqttEnvelope`
   - `Output`: `InspectedMqttMessage`
   - `Errors`: `FlowError`
-- `mqtt.metrics-sink`
+- `mqtt.metrics`
   - `Input`: `MqttEnvelope`
   - `Snapshots`: `MqttMetricsSnapshot`
   - `Errors`: `FlowError`
@@ -343,16 +359,15 @@ registry.Register(new NodeType("example.resource"), context =>
 
 Producer or service-backed nodes that need explicit start work should override `IFlowNode.StartAsync`. Startup failures are converted into host build errors instead of escaping through the CLI or host shell.
 
-Preferred alpha configuration shape with `traffic.source`:
+Preferred alpha configuration shape with `mqtt.live-source`:
 
 ```json
 {
   "workflows": {
     "observeTraffic": {
-      "traffic": {
-        "type": "traffic.source",
+      "live": {
+        "type": "mqtt.live-source",
         "configuration": {
-          "kind": "live",
           "profile": {
             "name": "local-broker",
             "host": "localhost",
@@ -368,8 +383,8 @@ Preferred alpha configuration shape with `traffic.source`:
         }
       },
       "metrics": {
-        "type": "mqtt.metrics-sink",
-        "Input": "traffic.Output"
+        "type": "mqtt.metrics",
+        "Input": "live.Output"
       }
     }
   }
@@ -380,10 +395,9 @@ Stored-session source configuration:
 
 ```json
 {
-  "traffic": {
-    "type": "traffic.source",
+  "stored": {
+    "type": "session.source",
     "configuration": {
-      "kind": "stored-session",
       "sessionId": "00000000-0000-0000-0000-000000000001",
       "preserveTiming": false,
       "speed": 1
@@ -392,7 +406,7 @@ Stored-session source configuration:
 }
 ```
 
-Legacy shared connection plus trigger configuration remains supported:
+Shared connection plus trigger configuration is also supported:
 
 ```json
 {
@@ -428,7 +442,7 @@ Legacy shared connection plus trigger configuration remains supported:
 }
 ```
 
-`traffic.source.configuration.subscriptions` and `mqtt.trigger.configuration.subscriptions` support:
+`mqtt.live-source.configuration.subscriptions` and `mqtt.trigger.configuration.subscriptions` support:
 
 - string shorthand (`"factory/#"`)
 - array of strings

@@ -1,41 +1,32 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
-using FluxMq.Components.Storage.Repositories;
+using FluxMq.Components.Mapping;
 using FluxMq.Pipeline.Components;
+using FluxMq.Pipeline.Mapping;
 using System.Threading.Tasks.Dataflow;
 
-namespace FluxMq.Components.Replay;
+namespace FluxMq.Components.FileWriter;
 
-public sealed class MqttRecordingSinkComponent : IFlowNode
+public sealed class FileWriteRequestMapperComponent : IFlowNode
 {
-    private readonly IMessageRepository _messages;
-    private readonly SessionId _sessionId;
-    private readonly ActionBlock<MqttEnvelope> _block;
+    private readonly TransformManyBlock<MqttEnvelope, FileWriteRequest> _block;
     private readonly BroadcastBlock<FlowError> _errors;
+    private readonly IFlowMapper<MqttEnvelope, FileWriteRequest> _mapper;
 
-    public MqttRecordingSinkComponent(
-        IMessageRepository messages,
-        SessionId sessionId,
+    public FileWriteRequestMapperComponent(
+        IFlowMapper<MqttEnvelope, FileWriteRequest> mapper,
         FlowNodeId? id = null,
-        int boundedCapacity = 1000,
-        int maxDegreeOfParallelism = 1)
+        int boundedCapacity = 1000)
     {
-        if (maxDegreeOfParallelism <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(maxDegreeOfParallelism), maxDegreeOfParallelism, "Degree of parallelism must be positive.");
-        }
-
         Id = id ?? FlowNodeId.New();
-        _messages = messages ?? throw new ArgumentNullException(nameof(messages));
-        _sessionId = sessionId;
+        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _errors = new BroadcastBlock<FlowError>(static error => error);
-        _block = new ActionBlock<MqttEnvelope>(
-            Record,
+        _block = new TransformManyBlock<MqttEnvelope, FileWriteRequest>(
+            Map,
             new ExecutionDataflowBlockOptions
             {
                 BoundedCapacity = boundedCapacity,
-                EnsureOrdered = true,
-                MaxDegreeOfParallelism = maxDegreeOfParallelism
+                EnsureOrdered = true
             });
 
         _block.Completion.ContinueWith(
@@ -49,24 +40,27 @@ public sealed class MqttRecordingSinkComponent : IFlowNode
     public ISourceBlock<FlowError> Errors => _errors;
     public Task Completion => _block.Completion;
     public ITargetBlock<MqttEnvelope> Input => _block;
+    public ISourceBlock<FileWriteRequest> Output => _block;
 
     public void Complete() => _block.Complete();
 
     public void Fault(Exception exception)
     {
-        PublishError(FlowErrorCodes.NodeFaulted, "MQTT recording sink faulted.", exception);
+        PublishError(FlowErrorCodes.NodeFaulted, "File write request mapper faulted.", exception);
         ((IDataflowBlock)_block).Fault(exception);
     }
 
-    private void Record(MqttEnvelope envelope)
+    private IEnumerable<FileWriteRequest> Map(MqttEnvelope envelope)
     {
         try
         {
-            _messages.Add(_sessionId, envelope);
+            var context = MqttEnvelopeExpressionContextFactory.Create(envelope);
+            return [_mapper.Map(envelope, context)];
         }
         catch (Exception exception)
         {
-            PublishError(FlowErrorCodes.ProcessingFailed, "MQTT recording failed.", exception, envelope.Topic);
+            PublishError(FlowErrorCodes.ProcessingFailed, "File write request mapping failed.", exception, envelope.Topic);
+            return [];
         }
     }
 

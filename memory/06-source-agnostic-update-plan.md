@@ -50,7 +50,7 @@ Downstream nodes keep the same links:
     "Input": "traffic.Output"
   },
   "metrics": {
-    "type": "mqtt.metrics-sink",
+    "type": "mqtt.metrics",
     "Input": "traffic.Output"
   }
 }
@@ -106,7 +106,7 @@ flowchart LR
     SourceNode --> Runtime["Fork Flow runtime"]
     Runtime --> OutputPorts["Typed output ports"]
     OutputPorts --> Projections["Projection runtime\nstate + update streams"]
-    OutputPorts --> Sinks["Recording / publish / export sinks"]
+    OutputPorts --> Actors["Recording / publish / export actors"]
     Projections --> Dashboard["Dashboard blocks"]
     Projections --> Workspace["Desktop workspace"]
 ```
@@ -117,13 +117,13 @@ flowchart LR
 
 Status: implemented for the first alpha source modes.
 
-`traffic.source` is now a registered runtime node type. Its `configuration.kind` selects the concrete source mode:
+FluxMQ now uses explicit source node types instead of one generic source type with a mode flag:
 
-- `live`
-- `stored-session`
-- `generated`
+- `mqtt.live-source`
+- `session.source`
+- `generated.source`
 
-Downstream nodes link to `traffic.Output` and do not need to know which mode produced the message.
+Downstream nodes link to each source node's `Output` port and do not need to know whether the data came from live MQTT, storage, or generated messages.
 
 Add a small execution-time model that can bind a logical source node to an online or offline source.
 

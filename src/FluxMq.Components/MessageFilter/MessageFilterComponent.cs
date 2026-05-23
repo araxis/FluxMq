@@ -1,6 +1,7 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Pipeline.Components;
+using FluxMq.Pipeline.Mapping;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.MessageFilter;
@@ -9,13 +10,13 @@ public sealed class MessageFilterComponent : IFlowNode
 {
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly TransformManyBlock<MqttEnvelope, MqttEnvelope> _block;
+    private readonly IFlowPredicate<MqttEnvelope> _predicate;
     private long _passedCount;
-    private readonly Func<MqttEnvelope, bool> _predicate;
 
-    public MessageFilterComponent(Func<MqttEnvelope, bool> predicate, FlowNodeId? id = null, int boundedCapacity = 1000)
+    public MessageFilterComponent(IFlowPredicate<MqttEnvelope> predicate, FlowNodeId? id = null, int boundedCapacity = 1000)
     {
         Id = id ?? FlowNodeId.New();
-        _predicate = predicate;
+        _predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
         _errors = new BroadcastBlock<FlowError>(static error => error);
         _block = new TransformManyBlock<MqttEnvelope, MqttEnvelope>(
             Filter,
@@ -30,6 +31,11 @@ public sealed class MessageFilterComponent : IFlowNode
             CancellationToken.None,
             TaskContinuationOptions.ExecuteSynchronously,
             TaskScheduler.Default);
+    }
+
+    public MessageFilterComponent(Func<MqttEnvelope, bool> predicate, FlowNodeId? id = null, int boundedCapacity = 1000)
+        : this(new DelegateFlowPredicate<MqttEnvelope>(predicate), id, boundedCapacity)
+    {
     }
 
     public FlowNodeId Id { get; }
@@ -59,7 +65,7 @@ public sealed class MessageFilterComponent : IFlowNode
 
         try
         {
-            matched = _predicate(envelope);
+            matched = _predicate.IsMatch(envelope);
         }
         catch (Exception exception)
         {

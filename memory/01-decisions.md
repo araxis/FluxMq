@@ -4,6 +4,42 @@ This file records project decisions so they do not get lost across sessions.
 
 ## Accepted Decisions
 
+### 2026-05-22 - Components use explicit actor command inputs for side effects
+
+Decision: Side-effecting flow components should consume explicit request/command input types instead of raw `MqttEnvelope` values when the operation needs intent beyond "observe this message." User-facing names should prefer actor language such as MQTT Publisher, File Writer, Recorder, HTTP Sender, or Email Sender instead of generic "sink" names.
+
+Reasoning:
+- A publish node should publish a `MqttPublishRequest`, not guess that any envelope should be republished as-is.
+- A recording node should receive a `MqttRecordingRequest` that says what to record and where, instead of hiding `SessionId` in constructor configuration.
+- Filters and routers become more meaningful when the next step is visible: `filter -> request mapper -> actor`.
+- Metrics remain stream observers over `MqttEnvelope`; they should not care about connection or subscription details.
+
+Status: Accepted.
+
+### 2026-05-22 - Dynamic mapping is a core runtime capability
+
+Decision: Dynamic mapping and expression-based filtering/routing are first-class FluxMQ runtime capabilities, not optional UI sugar. The runtime should support expression-backed filters and mappers, starting with Dynamic Expresso for C#-style expressions and a Jsonata-like engine for JSON payload mapping/querying.
+
+Reasoning:
+- Developer ELT flows require mapping from incoming protocol messages into explicit actor commands such as `MqttPublishRequest`, `FileWriteRequest`, `HttpRequest`, and `EmailSendRequest`.
+- A typical flow is: receive `MqttEnvelope`, filter by QoS/topic/payload, map to a publish request, then publish to another broker.
+- Hard-coded mappers are useful tests and defaults, but the product power comes from user-authored mapping logic.
+- The same expression/mapping foundation later supports ops features such as assertions, counters, summaries, rates, fault counts, and schema-based test expectations.
+
+Status: Accepted.
+
+### 2026-05-22 - FluxMQ has developer ELT and ops/testing eras
+
+Decision: Treat FluxMQ as a serious flow platform with two product eras: first developer-oriented ELT/integration flows, then ops/QA-oriented testing, assertions, and observability over MQTT and future protocols.
+
+Reasoning:
+- MQTT is the first protocol, but the component model should also fit AMQP, HTTP, Bluetooth, file IO, email, and composed multi-protocol workflows.
+- Developers need protocol bridging and transformation.
+- Ops and QA teams need expectations like publish message X, receive response Y, validate response with JSON Schema, count faults, and measure per-topic rates.
+- These features should share the same runtime primitives rather than becoming a separate dashboard-only system.
+
+Status: Accepted.
+
 ### 2026-05-06 - Use LiteDB for local storage
 
 Decision: Use LiteDB as the first local database.
@@ -123,6 +159,29 @@ Reasoning:
 
 Status: Accepted.
 
+### 2026-05-22 - Use an explicit desktop grid shell for the FluxMQ redesign
+
+Decision: The redesigned `FluxMq.UI` workspace shell uses a purpose-built CSS grid layout instead of MudBlazor drawers/app bars for the primary desktop frame.
+
+Reasoning:
+- `memory/fluxmq-redesign.html` defines a precise operational desktop layout: 48px top bar, 52px icon rail, compact left explorer, full canvas, right inspector, and 28px status bar.
+- MudBlazor drawers and app bars are useful primitives, but their generated padding, clipping, and responsive behavior made exact panel alignment, hover actions, and canvas sizing harder to control.
+- The shell grid is a stable application frame, while MudBlazor remains the component system for buttons, tabs, forms, dialogs, tables, chips, and icons.
+- Component-isolated CSS is used for authored shell/panel elements; global `app.css` remains the place for MudBlazor internals and shared design tokens.
+
+Status: Accepted.
+
+### 2026-05-22 - Flux redesign tokens must follow Light/Dark/System theme
+
+Decision: The custom `--flux-*` design tokens are scoped under shell classes (`flux-theme-light` / `flux-theme-dark`) derived from `AppThemeService.IsDarkMode`. They must not be hard-coded globally on `:root`.
+
+Reasoning:
+- FluxMQ explicitly supports Light, Dark, and System themes.
+- The redesign can keep its visual language in both modes, but the shell, panels, canvas, buttons, borders, shadows, and hover states must switch with the selected theme.
+- Heavy MudBlazor internal overrides should be scoped under `.flux-shell` so app dialogs, popovers, and providers can continue to follow MudBlazor's own theme variables.
+
+Status: Accepted.
+
 ### 2026-05-06 - Keep project memory in Markdown
 
 Decision: Use a dedicated `memory` folder with Markdown files for decisions, steps, progress, and architecture notes.
@@ -185,7 +244,7 @@ Flow application runtime
 Node library (`FluxMq.Modules.*`):
 - Each module registers one or more node types.
 - A node type declares: display name, input/output port descriptors, configurable properties (with schema for the UI property panel).
-- Examples: TopicFilter, JsonDecoder, StorageSink, MetricsSink, ReplaySink, UiProjectionSink.
+- Examples: TopicFilter, JsonDecoder, Recorder, MQTT Publisher, MQTT Metrics, UI Projection.
 
 Hot-reload requirement:
 - When node config changes: update the block's behaviour in-place (delegate swap) without touching the rest of the graph.
@@ -292,7 +351,7 @@ Decision: Add OpenTelemetry support later as an instrumentation and export layer
 
 Reasoning:
 - FluxMQ should expose useful internal metrics in the app even when no external telemetry collector is configured.
-- Flow components such as `MqttMetricsSinkComponent` should remain local, deterministic, and useful for UI projections.
+- Flow components such as `MqttMetricsComponent` should remain local, deterministic, and useful for UI projections.
 - OpenTelemetry should complement those components by exporting selected counters, traces, and diagnostic events to external tools.
 - The integration should not become a required runtime dependency for basic desktop use.
 - OpenTelemetry naming and cardinality need deliberate design before implementation, especially around MQTT topics, sessions, profiles, flow nodes, and error codes.
@@ -362,7 +421,7 @@ Status: Accepted.
 
 ### 2026-05-09 - Register only stable no-service pipeline components first
 
-Decision: Start concrete runtime factory registrations with `mqtt.payload-inspector` and `mqtt.metrics-sink`.
+Decision: Start concrete runtime factory registrations with `mqtt.payload-inspector` and `mqtt.metrics`.
 
 Reasoning:
 - Both components have stable constructor needs and typed port surfaces.

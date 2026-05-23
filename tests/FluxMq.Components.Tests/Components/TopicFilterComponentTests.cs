@@ -1,6 +1,8 @@
 using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
+using FluxMq.Components.Mapping;
+using FluxMq.Pipeline.Mapping;
 using FluxMq.Components.MessageFilter;
 using FluxMq.Pipeline.Components;
 using System.Threading.Tasks.Dataflow;
@@ -50,6 +52,26 @@ public sealed class MessageFilterComponentTests
         var error = errors.ShouldHaveSingleItem();
         error.Code.ShouldBe(FlowErrorCodes.NodeFaulted);
         error.Message.ShouldBe("Topic filter faulted.");
+    }
+
+    [Fact]
+    public async Task ExpressionPredicate_ForwardsOnlyMatchingMessages()
+    {
+        var component = new MessageFilterComponent(
+            new MqttEnvelopeExpressionPredicate(new DynamicExpressoFlowExpressionEngine(), "qos >= 1 && topic.StartsWith(\"factory/\")"));
+        var received = new List<string>();
+        var sink = new ActionBlock<MqttEnvelope>(message => received.Add(message.Topic));
+
+        component.Output.LinkTo(sink, new DataflowLinkOptions { PropagateCompletion = true });
+
+        component.Input.Post(new MqttEnvelope { Topic = "factory/line-1", Payload = [], QualityOfService = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtMostOnce });
+        component.Input.Post(new MqttEnvelope { Topic = "factory/line-2", Payload = [], QualityOfService = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce });
+        component.Input.Post(new MqttEnvelope { Topic = "system/line-2", Payload = [], QualityOfService = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce });
+        component.Complete();
+
+        await sink.Completion;
+
+        received.ShouldBe(new[] { "factory/line-2" });
     }
 
     [Fact]

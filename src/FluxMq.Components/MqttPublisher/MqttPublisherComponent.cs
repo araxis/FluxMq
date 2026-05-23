@@ -1,18 +1,17 @@
 using FluxMq.Core.Ids;
-using FluxMq.Core.Models;
 using FluxMq.Core.Session;
 using FluxMq.Pipeline.Components;
 using System.Threading.Tasks.Dataflow;
 
-namespace FluxMq.Components.MqttPublishSink;
+namespace FluxMq.Components.MqttPublisher;
 
-public sealed class MqttPublishSinkComponent : IFlowNode
+public sealed class MqttPublisherComponent : IFlowNode
 {
     private readonly IMqttSession _session;
-    private readonly ActionBlock<MqttEnvelope> _block;
+    private readonly ActionBlock<MqttPublishRequest> _block;
     private readonly BroadcastBlock<FlowError> _errors;
 
-    public MqttPublishSinkComponent(
+    public MqttPublisherComponent(
         IMqttSession session,
         FlowNodeId? id = null,
         int boundedCapacity = 1000,
@@ -26,7 +25,7 @@ public sealed class MqttPublishSinkComponent : IFlowNode
         Id = id ?? FlowNodeId.New();
         _session = session ?? throw new ArgumentNullException(nameof(session));
         _errors = new BroadcastBlock<FlowError>(static error => error);
-        _block = new ActionBlock<MqttEnvelope>(
+        _block = new ActionBlock<MqttPublishRequest>(
             PublishAsync,
             new ExecutionDataflowBlockOptions
             {
@@ -45,29 +44,29 @@ public sealed class MqttPublishSinkComponent : IFlowNode
     public FlowNodeId Id { get; }
     public ISourceBlock<FlowError> Errors => _errors;
     public Task Completion => _block.Completion;
-    public ITargetBlock<MqttEnvelope> Input => _block;
+    public ITargetBlock<MqttPublishRequest> Input => _block;
 
     public void Complete() => _block.Complete();
 
     public void Fault(Exception exception)
     {
-        PublishError(FlowErrorCodes.NodeFaulted, "MQTT publish sink faulted.", exception);
+        PublishError(FlowErrorCodes.NodeFaulted, "MQTT publisher faulted.", exception);
         ((IDataflowBlock)_block).Fault(exception);
     }
 
-    private async Task PublishAsync(MqttEnvelope envelope)
+    private async Task PublishAsync(MqttPublishRequest request)
     {
         try
         {
             await _session.PublishAsync(
-                envelope.Topic,
-                envelope.Payload,
-                envelope.QualityOfService,
-                envelope.Retain).ConfigureAwait(false);
+                request.Topic,
+                request.Payload,
+                request.QualityOfService,
+                request.Retain).ConfigureAwait(false);
         }
         catch (Exception exception)
         {
-            PublishError(FlowErrorCodes.ProcessingFailed, "MQTT publish failed.", exception, envelope.Topic);
+            PublishError(FlowErrorCodes.ProcessingFailed, "MQTT publish failed.", exception, request.Topic);
         }
     }
 

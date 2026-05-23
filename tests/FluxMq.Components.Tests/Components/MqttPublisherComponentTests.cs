@@ -2,7 +2,7 @@ using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Session;
-using FluxMq.Components.MqttPublishSink;
+using FluxMq.Components.MqttPublisher;
 using FluxMq.Pipeline.Components;
 using MQTTnet.Protocol;
 using System.Threading.Channels;
@@ -10,15 +10,15 @@ using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.Tests.Components;
 
-public sealed class MqttPublishSinkComponentTests
+public sealed class MqttPublisherComponentTests
 {
     [Fact]
     public async Task Input_PublishesMessagesToSession()
     {
         var session = new FakeMqttSession();
-        var component = new MqttPublishSinkComponent(session);
+        var component = new MqttPublisherComponent(session);
 
-        component.Input.Post(new MqttEnvelope
+        component.Input.Post(new MqttPublishRequest
         {
             Topic = "factory/command",
             Payload = [1, 2, 3],
@@ -40,11 +40,11 @@ public sealed class MqttPublishSinkComponentTests
     public async Task Input_PreservesPublishOrder()
     {
         var session = new FakeMqttSession();
-        var component = new MqttPublishSinkComponent(session);
+        var component = new MqttPublisherComponent(session);
 
-        component.Input.Post(new MqttEnvelope { Topic = "factory/1", Payload = [] });
-        component.Input.Post(new MqttEnvelope { Topic = "factory/2", Payload = [] });
-        component.Input.Post(new MqttEnvelope { Topic = "factory/3", Payload = [] });
+        component.Input.Post(new MqttPublishRequest { Topic = "factory/1", Payload = [] });
+        component.Input.Post(new MqttPublishRequest { Topic = "factory/2", Payload = [] });
+        component.Input.Post(new MqttPublishRequest { Topic = "factory/3", Payload = [] });
         component.Complete();
 
         await component.Completion;
@@ -57,15 +57,15 @@ public sealed class MqttPublishSinkComponentTests
     public async Task PublishFailure_PublishesErrorAndKeepsProcessing()
     {
         var session = new FakeMqttSession(topicToFail: "factory/fail");
-        var component = new MqttPublishSinkComponent(session);
+        var component = new MqttPublisherComponent(session);
         var errors = new List<FlowError>();
         var errorSink = new ActionBlock<FlowError>(errors.Add);
 
         component.Errors.LinkTo(errorSink, new DataflowLinkOptions { PropagateCompletion = true });
 
-        component.Input.Post(new MqttEnvelope { Topic = "factory/ok-1", Payload = [] });
-        component.Input.Post(new MqttEnvelope { Topic = "factory/fail", Payload = [] });
-        component.Input.Post(new MqttEnvelope { Topic = "factory/ok-2", Payload = [] });
+        component.Input.Post(new MqttPublishRequest { Topic = "factory/ok-1", Payload = [] });
+        component.Input.Post(new MqttPublishRequest { Topic = "factory/fail", Payload = [] });
+        component.Input.Post(new MqttPublishRequest { Topic = "factory/ok-2", Payload = [] });
         component.Complete();
 
         await Task.WhenAll(component.Completion, errorSink.Completion);
@@ -82,17 +82,17 @@ public sealed class MqttPublishSinkComponentTests
     [Fact]
     public async Task Fault_PublishesErrorAndFaultsCompletion()
     {
-        var component = new MqttPublishSinkComponent(new FakeMqttSession(), FlowNodeId.New());
+        var component = new MqttPublisherComponent(new FakeMqttSession(), FlowNodeId.New());
         var errors = new List<FlowError>();
         var errorSink = new ActionBlock<FlowError>(errors.Add);
-        var failure = new InvalidOperationException("publish sink failed");
+        var failure = new InvalidOperationException("publisher failed");
 
         component.Errors.LinkTo(errorSink, new DataflowLinkOptions { PropagateCompletion = true });
         component.Fault(failure);
 
         var act = async () => await component.Completion;
         var ex = await Should.ThrowAsync<InvalidOperationException>(act);
-        ex.Message.ShouldBe("publish sink failed");
+        ex.Message.ShouldBe("publisher failed");
         await errorSink.Completion;
 
         errors.ShouldHaveSingleItem().Code.ShouldBe(FlowErrorCodes.NodeFaulted);
