@@ -100,6 +100,42 @@ public sealed class PipelineComponentFactoryTests
     }
 
     [Fact]
+    public async Task PayloadInspectorFactory_CompletesWhenOutputIsUnlinked()
+    {
+        TestSourceNode? source = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.source"), (address, _) =>
+            {
+                source = new TestSourceNode();
+                return SourceNode(address, source);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("test.source"),
+                        ["inspect"] = NodeWithPort(PipelineFlowNodeTypes.PayloadInspector, "Input", "\"source.Output\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue();
+
+        source!.Post(new MqttEnvelope { Topic = "factory/json", Payload = """{"value":1}"""u8.ToArray() });
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+    }
+
+    [Fact]
     public async Task MqttMetricsFactory_CreatesLinkableRuntimeNode()
     {
         TestSourceNode? source = null;

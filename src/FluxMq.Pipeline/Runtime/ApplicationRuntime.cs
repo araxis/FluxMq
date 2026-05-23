@@ -5,10 +5,12 @@ namespace FluxMq.Pipeline.Runtime;
 public sealed class ApplicationRuntime(
     IReadOnlyList<RuntimeNode> resources,
     IReadOnlyList<Workflow> workflows,
-    IReadOnlyList<RuntimeNode> resourceEntryNodes)
+    IReadOnlyList<RuntimeNode> resourceEntryNodes,
+    IReadOnlyList<IDisposable>? resourceLinks = null)
     : IAsyncDisposable, IDisposable
 {
     private readonly IReadOnlyList<RuntimeNode> _resourceEntryNodes = resourceEntryNodes ?? throw new ArgumentNullException(nameof(resourceEntryNodes));
+    private readonly IReadOnlyList<IDisposable> _resourceLinks = resourceLinks ?? [];
     private readonly BroadcastBlock<ApplicationStateChanged> _stateChanges = new(s => s);
     private readonly object _stateLock = new();
     private bool _disposed;
@@ -111,6 +113,11 @@ public sealed class ApplicationRuntime(
             workflow.Dispose();
         }
 
+        foreach (var link in _resourceLinks)
+        {
+            link.Dispose();
+        }
+
         foreach (var disposable in Resources.Select(node => node.Node).OfType<IDisposable>())
         {
             disposable.Dispose();
@@ -129,6 +136,11 @@ public sealed class ApplicationRuntime(
         foreach (var workflow in Workflows)
         {
             await workflow.DisposeAsync().ConfigureAwait(false);
+        }
+
+        foreach (var link in _resourceLinks)
+        {
+            link.Dispose();
         }
 
         foreach (var disposable in Resources.Select(node => node.Node).OfType<IAsyncDisposable>())

@@ -40,6 +40,7 @@ The current logging slice keeps diagrams clean by collecting all runtime compone
 The current visual-link slice makes the diagram a real editor for workflow links. Dragging a compatible output port to an input port writes the target port reference into the active workflow JSON, deleting a rendered workflow link removes that reference, and dynamic mapper output ports use their configured result type for type feedback. Plain target inputs are rerouted on new connections; `Flow Logger` keeps append-style behavior for message/log collection inputs.
 Deleting a workflow node from the designer now removes it from the active workflow JSON and cleans downstream references to that node, so deleted components do not return after the next add/rebuild action.
 MQTT Publisher now emits successful publish log entries to the workspace `Logs` tab by default and updates node activity with published count plus the last topic. This keeps actor execution observable without wiring every actor to an explicit logger block.
+Runtime linking now drains unconnected non-diagnostic outputs automatically, so observer/mapper/result outputs left unwired do not block runtime completion or cause Stop to time out. Diagnostic `FlowError` outputs stay available for the workspace `Logs` tab.
 
 ## Step-by-Step Plan
 
@@ -296,17 +297,18 @@ Done when:
   - logger inputs that are meant to collect streams append links instead of replacing the existing reference
   - deleting a workflow node from the canvas now persists to JSON and removes downstream links to that node
   - MQTT Publisher now logs successful publishes and surfaces publish count/topic activity in the node
+- Added runtime drain handling for unconnected data outputs:
+  - unlinked transform/source outputs are connected to a discard target during runtime build
+  - diagnostic `FlowError` outputs are not drained, preserving default workspace log collection
+  - regression coverage proves both the generic runtime shape and an unlinked Payload Inspector output complete cleanly
 
 ## Next Action
 
-Review the visual link editing slice:
+Review the unconnected-output stop slice:
 
 1. Open `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json`.
-2. In a pipeline, drag `trigger.Output` to a normal input such as `inspect.Input` or `metrics.Input`; confirm the link appears and the App JSON updates that target port.
-3. Add a Dynamic Mapper configured as `MqttPublishRequest`, then drag `mapper.Output` to `publisher.Input`; confirm the link is accepted and saved.
-4. Try dragging `trigger.Output` directly to `publisher.Input`; confirm the designer rejects the mismatched type.
-5. Delete a workflow link from the canvas and confirm the matching JSON reference is removed.
-6. Delete a component such as `filter`, then add another component such as `mqtt.publisher`; confirm the deleted component does not return.
-7. Run `pip1` in `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json`, publish any message into the trigger path, and confirm the `publisher` node shows a published count and the `Logs` tab gets a `MqttPublisher` info entry for topic `test`.
-8. Connect multiple error outputs to `logger.FlowErrors` or multiple envelope outputs to `logger.Input`; confirm those logger ports append links instead of replacing the existing link.
-9. After confirmation, commit this slice and open a PR. Next slice can add clearer hover/status feedback for rejected link attempts or move to pass/fail routing.
+2. Use a pipeline where `trigger.Output` feeds `inspect.Input` and `inspect.Output` is not connected to another node.
+3. Run the app, publish one message into the trigger topic, then click `Stop`.
+4. Confirm Stop completes without the warning `Flow application stop timed out; runtime was disposed.`
+5. Confirm the `Logs` tab still receives validation/runtime/publisher/error entries as before.
+6. After confirmation, commit this slice and open a PR. Next slice can move to pass/fail routing or clearer rejected-link feedback.

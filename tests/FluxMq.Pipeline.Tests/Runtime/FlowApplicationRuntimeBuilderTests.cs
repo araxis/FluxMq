@@ -113,6 +113,49 @@ public sealed class FlowApplicationRuntimeBuilderTests
     }
 
     [Fact]
+    public async Task Build_DrainsUnlinkedWorkflowOutputs()
+    {
+        TestSourceNode? source = null;
+        TestTransformNode? transform = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .Register(new NodeType("test.source"), (address, _) =>
+            {
+                source = new TestSourceNode();
+                return SourceNode(address, source);
+            })
+            .Register(new NodeType("test.transform"), (address, _) =>
+            {
+                transform = new TestTransformNode();
+                return TransformNode(address, transform);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("test.source"),
+                        ["transform"] = NodeWithPort("test.transform", "Input", "\"source.Output\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue();
+
+        source!.Post(42);
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+        transform!.Inputs.ShouldBe([42]);
+    }
+
+    [Fact]
     public async Task Build_LinksWorkflowNodeFromSharedResource()
     {
         TestSourceNode? resource = null;
@@ -389,6 +432,19 @@ public sealed class FlowApplicationRuntimeBuilderTests
                 new InputPort<int>(address.Port(new PortName("Input")), node.Input)
             ]);
 
+    private static RuntimeNode TransformNode(NodeAddress address, TestTransformNode node)
+        => RuntimeNode.Create(
+            address,
+            node,
+            inputs:
+            [
+                new InputPort<int>(address.Port(new PortName("Input")), node.Input)
+            ],
+            outputs:
+            [
+                new OutputPort<int>(address.Port(new PortName("Output")), node.Output)
+            ]);
+
     private static RuntimeNode StringSinkNode(NodeAddress address, TestSinkNode<string> node)
         => RuntimeNode.Create(
             address,
@@ -439,6 +495,41 @@ public sealed class FlowApplicationRuntimeBuilderTests
         public void Fault(Exception exception)
         {
             ((IDataflowBlock)_output).Fault(exception);
+            _errors.Complete();
+        }
+    }
+
+    private sealed class TestTransformNode : IFlowNode
+    {
+        private readonly TransformBlock<int, int> _block;
+        private readonly BufferBlock<FlowError> _errors = new();
+        private readonly List<int> _inputs = [];
+
+        public TestTransformNode()
+        {
+            _block = new TransformBlock<int, int>(value =>
+            {
+                _inputs.Add(value);
+                return value;
+            });
+        }
+
+        public FlowNodeId Id { get; } = FlowNodeId.New();
+        public ITargetBlock<int> Input => _block;
+        public ISourceBlock<int> Output => _block;
+        public ISourceBlock<FlowError> Errors => _errors;
+        public IReadOnlyList<int> Inputs => _inputs;
+        public Task Completion => _block.Completion;
+
+        public void Complete()
+        {
+            _block.Complete();
+            _errors.Complete();
+        }
+
+        public void Fault(Exception exception)
+        {
+            ((IDataflowBlock)_block).Fault(exception);
             _errors.Complete();
         }
     }
