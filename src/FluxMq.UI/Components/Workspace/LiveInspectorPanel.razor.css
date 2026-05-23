@@ -303,6 +303,16 @@
     color: var(--mud-palette-text-primary);
 }
 
+.icon-toggle:disabled {
+    cursor: default;
+    opacity: 0.45;
+}
+
+.icon-toggle:disabled:hover {
+    background: var(--flux-surface-2);
+    color: var(--mud-palette-text-secondary);
+}
+
 .recording-label {
     align-items: center;
     color: var(--flux-text-subtle);
@@ -398,4 +408,182 @@
     max-height: 104px;
     overflow: auto;
     white-space: pre-wrap;
+}
+
+.log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.log-row {
+    align-items: start;
+    background: color-mix(in srgb, var(--flux-accent) 4%, var(--flux-surface-2));
+    border: 1px solid var(--flux-border);
+    border-left: 3px solid var(--flux-accent-dim);
+    border-radius: 5px;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 30px minmax(0, 1fr);
+    min-width: 0;
+    padding: 9px;
+}
+
+.log-row.critical {
+    background: color-mix(in srgb, var(--mud-palette-error) 10%, var(--flux-surface-2));
+    border-left-color: var(--mud-palette-error);
+}
+
+.log-row.error {
+    background: color-mix(in srgb, var(--mud-palette-error) 7%, var(--flux-surface-2));
+    border-left-color: var(--mud-palette-error);
+}
+
+.log-row.warning {
+    background: color-mix(in srgb, var(--mud-palette-warning) 7%, var(--flux-surface-2));
+    border-left-color: var(--mud-palette-warning);
+}
+
+.log-row.debug {
+    border-left-color: var(--mud-palette-info);
+}
+
+.log-row.trace {
+    border-left-color: var(--flux-text-subtle);
+}
+
+.log-level-icon {
+    align-items: center;
+    background: color-mix(in srgb, var(--flux-accent) 13%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-accent) 34%, transparent);
+    border-radius: 6px;
+    color: var(--flux-accent);
+    display: inline-flex;
+    height: 28px;
+    justify-content: center;
+    margin-top: 1px;
+    width: 28px;
+}
+
+.log-row.critical .log-level-icon,
+.log-row.error .log-level-icon {
+    background: color-mix(in srgb, var(--mud-palette-error) 13%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-error) 36%, transparent);
+    color: var(--mud-palette-error);
+}
+
+.log-row.warning .log-level-icon {
+    background: color-mix(in srgb, var(--mud-palette-warning) 13%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-warning) 36%, transparent);
+    color: var(--mud-palette-warning);
+}
+
+.log-row.debug .log-level-icon {
+    background: color-mix(in srgb, var(--mud-palette-info) 13%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-info) 36%, transparent);
+    color: var(--mud-palette-info);
+}
+
+.log-row.trace .log-level-icon {
+    background: color-mix(in srgb, var(--flux-text-subtle) 11%, transparent);
+    border-color: color-mix(in srgb, var(--flux-text-subtle) 28%, transparent);
+    color: var(--flux-text-subtle);
+}
+
+.log-row-content {
+    min-width: 0;
+}
+
+.log-row-header {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    min-width: 0;
+}
+
+.log-time,
+.log-code,
+.log-context {
+    color: var(--flux-text-subtle);
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 10.5px;
+}
+
+.log-severity {
+    background: color-mix(in srgb, var(--flux-accent) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-accent) 36%, transparent);
+    border-radius: 4px;
+    color: var(--flux-accent);
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+    padding: 3px 5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.log-row.critical .log-severity,
+.log-row.error .log-severity {
+    background: color-mix(in srgb, var(--mud-palette-error) 12%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-error) 36%, transparent);
+    color: var(--mud-palette-error);
+}
+
+.log-row.warning .log-severity {
+    background: color-mix(in srgb, var(--mud-palette-warning) 12%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-warning) 36%, transparent);
+    color: var(--mud-palette-warning);
+}
+
+.log-row.debug .log-severity {
+    background: color-mix(in srgb, var(--mud-palette-info) 12%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-info) 36%, transparent);
+    color: var(--mud-palette-info);
+}
+
+.log-row.trace .log-severity {
+    background: color-mix(in srgb, var(--flux-text-subtle) 10%, transparent);
+    border-color: color-mix(in srgb, var(--flux-text-subtle) 28%, transparent);
+    color: var(--flux-text-subtle);
+}
+
+.log-code {
+    overflow: hidden;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.log-message {
+    color: var(--mud-palette-text-primary);
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1.35;
+    margin-top: 6px;
+    overflow-wrap: anywhere;
+}
+
+.log-context {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 52px minmax(0, 1fr);
+    line-height: 1.4;
+    margin-top: 5px;
+    overflow-wrap: anywhere;
+}
+
+.log-context span {
+    color: var(--flux-text-subtle);
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.log-context strong {
+    color: var(--mud-palette-text-secondary);
+    font-weight: 600;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }

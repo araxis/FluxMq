@@ -214,4 +214,168 @@ public sealed class FlowWorkspaceServiceTests
         service.State.ShouldBe(RuntimeWorkspaceState.Valid);
         service.Diagnostics.ShouldContain(d => d.Code == "Ready");
     }
+
+    [Fact]
+    public async Task ValidateAsync_AppendsDiagnosticsToLogs()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "flow": {
+                  "metrics": {
+                    "type": "mqtt.metrics",
+                    "Input": "missing.Output"
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+
+        await service.ValidateAsync();
+
+        service.Logs.ShouldContain(log =>
+            log.Severity == "Error" &&
+            log.Source == "Definition" &&
+            log.Code == "MissingSourceNode" &&
+            log.WorkflowName == "flow" &&
+            log.NodeName == "metrics" &&
+            log.PortName == "Input");
+    }
+
+    [Fact]
+    public async Task ClearLogs_RemovesWorkspaceLogHistory()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+
+        await service.ValidateAsync();
+        service.Logs.ShouldNotBeEmpty();
+
+        service.ClearLogs();
+
+        service.Logs.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task RunAsync_CollectsFlowLoggerEntries()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "flow": {
+                  "generated": {
+                    "type": "generated.source",
+                    "configuration": {
+                      "messages": [
+                        { "topic": "factory/log", "payload": "hello" }
+                      ]
+                    }
+                  },
+                  "logger": {
+                    "type": "flow.logger",
+                    "Input": "generated.Output",
+                    "configuration": {
+                      "includePayloadPreview": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+
+        await service.RunAsync();
+        await WaitUntilAsync(() => service.Logs.Any(log =>
+            log.Source == "MqttEnvelope" &&
+            log.NodeName == "logger" &&
+            log.Context?.Contains("topic=factory/log", StringComparison.Ordinal) == true));
+
+        service.Logs.ShouldContain(log => log.Code == "Ready");
+    }
+
+    [Fact]
+    public void UpdateNodeConfiguration_UpdatesActiveWorkflowWhenNodeNamesRepeat()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "pip1": {
+                  "trigger": {
+                    "type": "mqtt.trigger",
+                    "configuration": {
+                      "connection": "broker1",
+                      "subscriptions": ["one/#"]
+                    }
+                  }
+                },
+                "pip2": {
+                  "trigger": {
+                    "type": "mqtt.trigger",
+                    "configuration": {
+                      "subscriptions": ["two/#"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+        service.SetActiveWorkflow("pip2");
+
+        service.UpdateNodeConfiguration(
+            "trigger",
+            new System.Text.Json.Nodes.JsonObject
+            {
+                ["connection"] = "broker2",
+                ["subscriptions"] = new System.Text.Json.Nodes.JsonArray("two/#"),
+                ["boundedCapacity"] = 1000
+            });
+
+        using var document = System.Text.Json.JsonDocument.Parse(service.DefinitionJson);
+        var workflows = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows");
+
+        workflows.GetProperty("pip1")
+            .GetProperty("trigger")
+            .GetProperty("configuration")
+            .GetProperty("connection")
+            .GetString()
+            .ShouldBe("broker1");
+
+        workflows.GetProperty("pip2")
+            .GetProperty("trigger")
+            .GetProperty("configuration")
+            .GetProperty("connection")
+            .GetString()
+            .ShouldBe("broker2");
+    }
+
+    private static async Task WaitUntilAsync(Func<bool> predicate)
+    {
+        for (var attempt = 0; attempt < 40; attempt++)
+        {
+            if (predicate())
+            {
+                return;
+            }
+
+            await Task.Delay(25);
+        }
+
+        predicate().ShouldBeTrue();
+    }
 }

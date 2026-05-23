@@ -1,8 +1,10 @@
 @implements IDisposable
 @using FluxMq.Core.Payloads
+@using FluxMq.UI.Models
 @using System.Text
 @using MQTTnet.Protocol
 @inject LiveMqttWorkspaceService Live
+@inject ProjectManagerService Projects
 
 <div class="inspector-shell">
     <div class="inspector-tabs" role="tablist" aria-label="Inspector views">
@@ -21,12 +23,32 @@
                 @onclick="@(() => _activeTab = InspectorTab.Topics)">
             Topics <span class="tab-count">@DisplayedMessages.Count</span>
         </button>
+        <button type="button"
+                class="inspector-tab @(_activeTab == InspectorTab.Logs ? "active" : null)"
+                @onclick="@(() => _activeTab = InspectorTab.Logs)">
+            Logs <span class="tab-count">@ProjectLogs.Count</span>
+        </button>
     </div>
 
     @if (_activeTab == InspectorTab.Publish)
     {
         <div class="publish-view">
             <div class="inspector-panel publish-form-panel">
+                @if (PublishConnections.Count > 0)
+                {
+                    <label class="publish-field">
+                        <span class="field-label">Broker</span>
+                        <select class="publish-input" @bind="_publishConnectionId">
+                            @foreach (var connection in PublishConnections)
+                            {
+                                <option value="@connection.Id.ToString()">
+                                    @connection.ResourceName (@connection.Profile.Host:@connection.Profile.Port)
+                                </option>
+                            }
+                        </select>
+                    </label>
+                }
+
                 <label class="publish-field">
                     <span class="field-label">Topic</span>
                     <input class="publish-input" @bind="_publishTopic" />
@@ -159,6 +181,71 @@
             }
         </div>
     }
+    else if (_activeTab == InspectorTab.Logs)
+    {
+        <div class="inspector-panel fill">
+            <div class="section-label">
+                <span>Logs</span>
+                <span class="section-badge">@ProjectLogs.Count entries</span>
+            </div>
+
+            <div class="topic-toolbar">
+                <button type="button"
+                        class="icon-toggle"
+                        disabled="@(ProjectLogs.Count == 0)"
+                        title="Clear logs"
+                        @onclick="ClearProjectLogs">
+                    <MudIcon Icon="@Icons.Material.Filled.DeleteSweep" Size="Size.Small" />
+                </button>
+                <input class="topic-filter"
+                       placeholder="Filter logs..."
+                       @bind="_logFilter"
+                       @bind:event="oninput" />
+            </div>
+
+            <div class="log-list">
+                @if (FilteredLogs.Count == 0)
+                {
+                    <div class="empty-topic-row">No logs yet</div>
+                }
+                else
+                {
+                    @foreach (var entry in FilteredLogs)
+                    {
+                        <article class="log-row @LogSeverityClass(entry)">
+                            <div class="log-level-icon"
+                                 title="@LogLevelLabel(entry)"
+                                 aria-label="@LogLevelLabel(entry)">
+                                <MudIcon Icon="@LogSeverityIcon(entry)" Size="Size.Small" />
+                            </div>
+                            <div class="log-row-content">
+                                <div class="log-row-header">
+                                    <span class="log-time">@FormatLogTime(entry)</span>
+                                    <span class="log-severity">@LogLevelLabel(entry)</span>
+                                    <span class="log-code">@LogSourceCode(entry)</span>
+                                </div>
+                                <div class="log-message">@entry.Message</div>
+                                @if (LogScope(entry) is { Length: > 0 } scope)
+                                {
+                                    <div class="log-context">
+                                        <span>Scope</span>
+                                        <strong>@scope</strong>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(entry.Context))
+                                {
+                                    <div class="log-context">
+                                        <span>Context</span>
+                                        <strong>@entry.Context</strong>
+                                    </div>
+                                }
+                            </div>
+                        </article>
+                    }
+                }
+            </div>
+        </div>
+    }
     else
     {
         <div class="inspector-panel fill">
@@ -174,13 +261,16 @@
     private InspectorTab _activeTab = InspectorTab.Publish;
     private bool _busy;
     private bool _treeView = true;
+    private string _publishConnectionId = string.Empty;
     private string _publishTopic = "fluxmq/test";
     private string _publishPayload = "{\"hello\":\"fluxmq\"}";
     private MqttQualityOfServiceLevel _publishQos = MqttQualityOfServiceLevel.AtMostOnce;
     private bool _retain;
     private string? _selectedTopic;
     private string _filter = string.Empty;
+    private string _logFilter = string.Empty;
     private System.Threading.Timer? _clock;
+    private FlowWorkspaceService? _activeProject;
 
     private IReadOnlyList<MqttEnvelope> MessageSource => Live.SelectedStoredSession is null
         ? Live.RecentMessages
@@ -196,6 +286,19 @@
             : DisplayedMessages.Where(m => m.Topic.Contains(_filter, StringComparison.OrdinalIgnoreCase)).ToArray();
 
     private IReadOnlyList<LiveTopicRow> LiveTopicRows => BuildLiveTopicRows();
+
+    private IReadOnlyList<WorkspaceLogEntry> ProjectLogs => Projects.ActiveProject?.Logs ?? [];
+
+    private IReadOnlyList<ManagedConnection> PublishConnections => BuildPublishConnections();
+
+    private IReadOnlyList<WorkspaceLogEntry> FilteredLogs =>
+        string.IsNullOrWhiteSpace(_logFilter)
+            ? ProjectLogs.Reverse().Take(200).ToArray()
+            : ProjectLogs
+                .Where(LogMatchesFilter)
+                .Reverse()
+                .Take(200)
+                .ToArray();
 
     private MqttEnvelope? LastPayloadMessage => MessageSource
         .OrderByDescending(m => m.ReceivedAt)
@@ -240,17 +343,45 @@
     protected override void OnInitialized()
     {
         Live.Changed += OnChanged;
+        Projects.Changed += OnProjectsChanged;
+        SyncActiveProjectSubscription();
+        EnsurePublishBrokerSelection();
         _clock = new System.Threading.Timer(_ => _ = InvokeAsync(StateHasChanged), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
     }
 
     private async Task PublishAsync()
     {
+        EnsurePublishBrokerSelection();
         _busy = true;
-        try { await Live.PublishAsync(_publishTopic, _publishPayload, _publishQos, _retain); }
+        try
+        {
+            var connectionId = Guid.TryParse(_publishConnectionId, out var parsedConnectionId)
+                ? parsedConnectionId
+                : (Guid?)null;
+
+            await Live.PublishAsync(connectionId, _publishTopic, _publishPayload, _publishQos, _retain);
+        }
         finally { _busy = false; StateHasChanged(); }
     }
 
-    private void OnChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
+    private void OnChanged(object? sender, EventArgs e)
+    {
+        EnsurePublishBrokerSelection();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void OnProjectsChanged(object? sender, EventArgs e)
+    {
+        SyncActiveProjectSubscription();
+        EnsurePublishBrokerSelection();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void OnProjectChanged(object? sender, EventArgs e)
+    {
+        EnsurePublishBrokerSelection();
+        _ = InvokeAsync(StateHasChanged);
+    }
 
     private void OnSelectionChanged(MqttEnvelope? msg)
     {
@@ -276,6 +407,133 @@
     {
         var trimmed = value.TrimStart();
         return trimmed.StartsWith('{') || trimmed.StartsWith('[');
+    }
+
+    private void ClearProjectLogs() => Projects.ActiveProject?.ClearLogs();
+
+    private IReadOnlyList<ManagedConnection> BuildPublishConnections()
+    {
+        var appConnectionOrder = (Projects.ActiveProject?.GetConnectionNames() ?? [])
+            .Select((name, index) => (Name: name, Index: index))
+            .ToDictionary(item => item.Name, item => item.Index, StringComparer.Ordinal);
+
+        return Live.Connections
+            .OrderBy(connection => appConnectionOrder.TryGetValue(connection.ResourceName, out var index)
+                ? index
+                : int.MaxValue)
+            .ThenBy(connection => connection.ResourceName, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    private void EnsurePublishBrokerSelection()
+    {
+        var connections = PublishConnections;
+        if (connections.Count == 0)
+        {
+            _publishConnectionId = string.Empty;
+            return;
+        }
+
+        if (Guid.TryParse(_publishConnectionId, out var selectedId) &&
+            connections.Any(connection => connection.Id == selectedId))
+        {
+            return;
+        }
+
+        _publishConnectionId = connections[0].Id.ToString();
+    }
+
+    private void SyncActiveProjectSubscription()
+    {
+        var activeProject = Projects.ActiveProject;
+        if (ReferenceEquals(_activeProject, activeProject))
+        {
+            return;
+        }
+
+        if (_activeProject is not null)
+        {
+            _activeProject.Changed -= OnProjectChanged;
+        }
+
+        _activeProject = activeProject;
+
+        if (_activeProject is not null)
+        {
+            _activeProject.Changed += OnProjectChanged;
+        }
+    }
+
+    private bool LogMatchesFilter(WorkspaceLogEntry entry)
+    {
+        var filter = _logFilter.Trim();
+        return entry.Message.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               entry.Source.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               entry.Code.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               (entry.WorkflowName?.Contains(filter, StringComparison.OrdinalIgnoreCase) ?? false) ||
+               (entry.NodeName?.Contains(filter, StringComparison.OrdinalIgnoreCase) ?? false) ||
+               (entry.PortName?.Contains(filter, StringComparison.OrdinalIgnoreCase) ?? false) ||
+               (entry.Context?.Contains(filter, StringComparison.OrdinalIgnoreCase) ?? false);
+    }
+
+    private static string FormatLogTime(WorkspaceLogEntry entry)
+        => entry.Timestamp.ToLocalTime().ToString("HH:mm:ss");
+
+    private static string LogLevelLabel(WorkspaceLogEntry entry)
+        => $"Level: {NormalizeLogSeverity(entry)}";
+
+    private static string LogSourceCode(WorkspaceLogEntry entry)
+        => string.IsNullOrWhiteSpace(entry.Code)
+            ? entry.Source
+            : $"{entry.Source} / {entry.Code}";
+
+    private static string NormalizeLogSeverity(WorkspaceLogEntry entry)
+    {
+        var severity = entry.Severity.Trim();
+        return string.IsNullOrWhiteSpace(severity) ? "Info" : severity;
+    }
+
+    private static string LogSeverityClass(WorkspaceLogEntry entry)
+        => NormalizeLogSeverity(entry).ToLowerInvariant() switch
+        {
+            "critical" or "fatal" => "critical",
+            "error" => "error",
+            "warning" or "warn" => "warning",
+            "debug" => "debug",
+            "trace" => "trace",
+            _ => "info"
+        };
+
+    private static string LogSeverityIcon(WorkspaceLogEntry entry)
+        => LogSeverityClass(entry) switch
+        {
+            "critical" => Icons.Material.Filled.Report,
+            "error" => Icons.Material.Filled.ErrorOutline,
+            "warning" => Icons.Material.Filled.WarningAmber,
+            "debug" => Icons.Material.Filled.BugReport,
+            "trace" => Icons.Material.Filled.Timeline,
+            _ => Icons.Material.Filled.Info
+        };
+
+    private static string? LogScope(WorkspaceLogEntry entry)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(entry.WorkflowName))
+        {
+            parts.Add(entry.WorkflowName);
+        }
+
+        if (!string.IsNullOrWhiteSpace(entry.NodeName))
+        {
+            parts.Add(entry.NodeName);
+        }
+
+        if (!string.IsNullOrWhiteSpace(entry.PortName))
+        {
+            parts.Add(entry.PortName);
+        }
+
+        return parts.Count == 0 ? null : string.Join(" / ", parts);
     }
 
     private IReadOnlyList<LiveTopicRow> BuildLiveTopicRows()
@@ -305,6 +563,12 @@
     public void Dispose()
     {
         Live.Changed -= OnChanged;
+        Projects.Changed -= OnProjectsChanged;
+        if (_activeProject is not null)
+        {
+            _activeProject.Changed -= OnProjectChanged;
+        }
+
         _clock?.Dispose();
     }
 
@@ -314,6 +578,7 @@
     {
         Inspect,
         Publish,
-        Topics
+        Topics,
+        Logs
     }
 }

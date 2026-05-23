@@ -76,10 +76,24 @@
                 <MudButton Size="Size.Small"
                            Variant="Variant.Text"
                            Color="Color.Error"
-                           StartIcon="@Icons.Material.Filled.Stop"
+                           StartIcon="@StopButtonIcon"
                            Class="flux-command-button"
                            Disabled="@(!CanStopActiveProject)"
-                           OnClick="@StopActiveAsync">Stop</MudButton>
+                           OnClick="@StopActiveAsync">
+                    @if (_stopping)
+                    {
+                        <span class="flux-command-loading">
+                            <MudIcon Icon="@Icons.Material.Filled.Sync"
+                                     Size="Size.Small"
+                                     Class="flux-command-spin-icon" />
+                            <span>Stop</span>
+                        </span>
+                    }
+                    else
+                    {
+                        <span>Stop</span>
+                    }
+                </MudButton>
             </MudTooltip>
 
             <MudTooltip Text="@ActiveProjectStateTooltip">
@@ -207,6 +221,7 @@
     private bool _leftOpen = true;
     private bool _rightOpen = true;
     private bool _busy;
+    private bool _stopping;
     private int _railTab;
     private readonly HashSet<FlowWorkspaceService> _subscribedProjects = [];
 
@@ -349,7 +364,7 @@
                 ? "connection"
                 : r.Connection.Name.Trim().ToLowerInvariant().Replace(' ', '-');
             project.UpsertConnectionResource(resourceKey, r.Connection);
-            Live.AddConnectionIfAbsent(r.Connection, r.Subscription);
+            Live.AddConnectionIfAbsent(r.Connection, r.Subscription, resourceKey);
         }
     });
 
@@ -367,8 +382,8 @@
         if (result is not null)
         {
             var project = await Projects.OpenAsync(result.FullPath);
-            foreach (var (profile, sub) in project.GetConnectionProfiles())
-                Live.AddConnectionIfAbsent(profile, sub);
+            foreach (var (name, profile, sub) in project.GetConnectionResources())
+                Live.AddConnectionIfAbsent(profile, sub, name);
         }
     });
 
@@ -415,14 +430,37 @@
     private Task RunActiveAsync() => RunBusyAsync(async () =>
     {
         if (Projects.ActiveProject is { } project)
+        {
+            var brokersReady = await Live.EnsureConnectionsAsync(project.GetConnectionResources());
+            if (!brokersReady)
+            {
+                return;
+            }
+
             await project.RunAsync();
+        }
     });
 
-    private Task StopActiveAsync() => RunBusyAsync(async () =>
+    private async Task StopActiveAsync()
     {
-        if (Projects.ActiveProject is { } project)
-            await project.StopAsync();
-    });
+        _stopping = true;
+        try
+        {
+            await RunBusyAsync(async () =>
+            {
+                if (Projects.ActiveProject is { } project)
+                {
+                    await project.StopAsync();
+                    await Live.DisconnectAutoStartedConnectionsAsync();
+                }
+            });
+        }
+        finally
+        {
+            _stopping = false;
+            StateHasChanged();
+        }
+    }
 
     private async Task RunBusyAsync(Func<Task> action)
     {
@@ -438,6 +476,8 @@
         ThemePreference.Dark   => Icons.Material.Filled.DarkMode,
         _                      => Icons.Material.Filled.Brightness6
     };
+
+    private string? StopButtonIcon => _stopping ? null : Icons.Material.Filled.Stop;
 
     private string _themeLabel => ThemeService.Preference switch
     {

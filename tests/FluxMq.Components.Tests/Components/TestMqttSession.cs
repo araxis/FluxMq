@@ -9,10 +9,12 @@ internal sealed class TestMqttSession : IMqttSession
 {
     private readonly Channel<MqttEnvelope> _messages = Channel.CreateUnbounded<MqttEnvelope>();
     private readonly List<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService)> _subscriptions = [];
+    private readonly Task? _connectDelay;
 
-    public TestMqttSession(string profileName = "test")
+    public TestMqttSession(string profileName = "test", Task? connectDelay = null)
     {
         Profile = new MqttConnectionProfile { Name = profileName };
+        _connectDelay = connectDelay;
     }
 
     public MqttConnectionProfile Profile { get; }
@@ -20,6 +22,7 @@ internal sealed class TestMqttSession : IMqttSession
     public ChannelReader<MqttEnvelope> Messages => _messages.Reader;
     public int ConnectCalls { get; private set; }
     public int DisposeCalls { get; private set; }
+    public bool RequireConnectedForSubscribe { get; set; }
     public IReadOnlyList<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService)> Subscriptions => _subscriptions;
 
     public event EventHandler<MqttSessionState>? StateChanged
@@ -32,11 +35,16 @@ internal sealed class TestMqttSession : IMqttSession
 
     public void CompleteMessages(Exception? exception = null) => _messages.Writer.Complete(exception);
 
-    public Task ConnectAsync(CancellationToken ct = default)
+    public async Task ConnectAsync(CancellationToken ct = default)
     {
         ConnectCalls++;
+        State = MqttSessionState.Connecting;
+        if (_connectDelay is not null)
+        {
+            await _connectDelay.WaitAsync(ct);
+        }
+
         State = MqttSessionState.Connected;
-        return Task.CompletedTask;
     }
 
     public Task DisconnectAsync(CancellationToken ct = default)
@@ -48,6 +56,11 @@ internal sealed class TestMqttSession : IMqttSession
 
     public Task SubscribeAsync(string topicFilter, MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce, CancellationToken ct = default)
     {
+        if (RequireConnectedForSubscribe && State is not MqttSessionState.Connected)
+        {
+            throw new InvalidOperationException("MQTT client is not connected.");
+        }
+
         _subscriptions.Add((topicFilter, qos));
         return Task.CompletedTask;
     }

@@ -122,7 +122,7 @@
                 ? "connection"
                 : r.Connection.Name.Trim().ToLowerInvariant().Replace(' ', '-');
             project.UpsertConnectionResource(resourceKey, r.Connection);
-            Live.AddConnectionIfAbsent(r.Connection, r.Subscription);
+            Live.AddConnectionIfAbsent(r.Connection, r.Subscription, resourceKey);
         }
     }
 
@@ -140,8 +140,8 @@
         if (result is not null)
         {
             var project = await Projects.OpenAsync(result.FullPath);
-            foreach (var (profile, sub) in project.GetConnectionProfiles())
-                Live.AddConnectionIfAbsent(profile, sub);
+            foreach (var (name, profile, sub) in project.GetConnectionResources())
+                Live.AddConnectionIfAbsent(profile, sub, name);
         }
     }
 

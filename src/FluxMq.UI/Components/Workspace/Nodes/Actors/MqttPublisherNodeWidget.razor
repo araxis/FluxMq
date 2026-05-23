@@ -1,4 +1,5 @@
 @using FluxMq.UI.Components.Diagram
+@using FluxMq.Core.Models
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
 @inject LiveMqttWorkspaceService Live
 
@@ -9,7 +10,7 @@
                  OnCancel="@LoadDraft">
     <Body>
         <MudStack Spacing="1" Class="mt-1">
-            <Stat Icon="@Icons.Material.Filled.Cable" Label="Broker" Value="@(Model.Connection.Length > 0 ? Model.Connection : "-")" />
+            <Stat Icon="@Icons.Material.Filled.Cable" Label="Broker" Value="@DisplayConnection" />
             <Stat Icon="@Icons.Material.Filled.Input" Label="Input" Value="MqttPublishRequest" />
         </MudStack>
         <div class="d-flex flex-wrap gap-1 mt-2">
@@ -20,7 +21,7 @@
         </div>
     </Body>
     <Editor>
-        @if (ConnectionOptions.Count > 0)
+        @if (BrokerOptions.Count > 0)
         {
             <MudSelect T="string"
                        Label="Broker resource"
@@ -28,9 +29,9 @@
                        Variant="Variant.Outlined"
                        Margin="Margin.Dense"
                        Dense="true">
-                @foreach (var connection in ConnectionOptions)
+                @foreach (var option in BrokerOptions)
                 {
-                    <MudSelectItem Value="@connection">@connection</MudSelectItem>
+                    <MudSelectItem Value="@option.Name">@option.Label</MudSelectItem>
                 }
             </MudSelect>
         }
@@ -61,30 +62,47 @@
     private string _connection = string.Empty;
     private int _boundedCapacity = ActorNodeConfiguration.DefaultBoundedCapacity;
 
-    private IReadOnlyList<string> ConnectionOptions
+    private string DisplayConnection => ResolveConnectionName(Model.Connection);
+
+    private IReadOnlyList<BrokerOption> BrokerOptions
     {
         get
         {
-            var names = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var name in Flow.GetConnectionNames())
+            var options = new Dictionary<string, BrokerOption>(StringComparer.Ordinal);
+            foreach (var (name, profile, _) in Flow.GetConnectionResources())
             {
-                AddName(name);
+                AddOption(name, profile, isAppResource: true);
             }
 
             foreach (var connection in Live.Connections)
             {
-                AddName(connection.Profile.Name);
+                AddOption(connection.ResourceName, connection.Profile, isAppResource: false);
             }
 
-            AddName(Model.Connection);
-            return names.ToArray();
-
-            void AddName(string? value)
+            if (!string.IsNullOrWhiteSpace(Model.Connection) && !options.ContainsKey(Model.Connection.Trim()))
             {
-                if (!string.IsNullOrWhiteSpace(value))
+                options[Model.Connection.Trim()] = new BrokerOption(Model.Connection.Trim(), Model.Connection.Trim());
+            }
+
+            return options.Values
+                .OrderByDescending(static option => option.IsAppResource)
+                .ThenBy(static option => option.Name, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            void AddOption(string? name, MqttConnectionProfile profile, bool isAppResource)
+            {
+                if (string.IsNullOrWhiteSpace(name))
                 {
-                    names.Add(value.Trim());
+                    return;
                 }
+
+                var resourceName = name.Trim();
+                options.TryAdd(
+                    resourceName,
+                    new BrokerOption(
+                        resourceName,
+                        $"{resourceName} ({profile.Host}:{profile.Port})",
+                        isAppResource));
             }
         }
     }
@@ -93,21 +111,28 @@
 
     private void LoadDraft()
     {
-        _connection = string.IsNullOrWhiteSpace(Model.Connection)
-            ? FlowDefinitionComposer.BrokerResourceName
-            : Model.Connection;
+        _connection = ResolveConnectionName(Model.Connection);
         _boundedCapacity = ActorNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity);
     }
 
     private Task SaveAsync()
     {
         Model.Connection = string.IsNullOrWhiteSpace(_connection)
-            ? FlowDefinitionComposer.BrokerResourceName
+            ? DefaultConnectionName()
             : _connection.Trim();
         Model.BoundedCapacity = ActorNodeConfiguration.NormalizeBoundedCapacity(_boundedCapacity);
 
+        var isExistingAppResource = Flow.GetConnectionNames()
+            .Any(name => string.Equals(name, Model.Connection, StringComparison.Ordinal));
+
+        if (isExistingAppResource)
+        {
+            Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
+            return Task.CompletedTask;
+        }
+
         var selectedProfile = Live.Connections
-            .FirstOrDefault(c => string.Equals(c.Profile.Name, Model.Connection, StringComparison.OrdinalIgnoreCase))
+            .FirstOrDefault(c => string.Equals(c.ResourceName, Model.Connection, StringComparison.Ordinal))
             ?.Profile;
 
         if (selectedProfile is not null)
@@ -121,4 +146,24 @@
 
         return Task.CompletedTask;
     }
+
+    private string ResolveConnectionName(string? configuredConnection)
+    {
+        var configured = configuredConnection?.Trim() ?? string.Empty;
+        var appConnectionNames = Flow.GetConnectionNames();
+
+        if (configured.Length > 0 &&
+            (!string.Equals(configured, FlowDefinitionComposer.BrokerResourceName, StringComparison.Ordinal) ||
+             appConnectionNames.Any(name => string.Equals(name, configured, StringComparison.Ordinal))))
+        {
+            return configured;
+        }
+
+        return DefaultConnectionName();
+    }
+
+    private string DefaultConnectionName()
+        => BrokerOptions.FirstOrDefault()?.Name ?? FlowDefinitionComposer.BrokerResourceName;
+
+    private sealed record BrokerOption(string Name, string Label, bool IsAppResource = false);
 }

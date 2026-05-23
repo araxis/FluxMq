@@ -70,7 +70,7 @@ else
                             <div class="conn-item" @key="c.Id">
                                 <span class="@StateDotClass(c.State)"></span>
                                 <div class="conn-text">
-                                    <div class="conn-name">@c.Profile.Name</div>
+                                    <div class="conn-name">@c.ResourceName</div>
                                     <div class="conn-endpoint">@c.Profile.Host:@c.Profile.Port</div>
                                 </div>
                                 <div class="conn-actions">
@@ -159,7 +159,8 @@ else
         return Live.Connections.Where(c =>
             profiles.Any(p =>
                 string.Equals(p.Profile.Host, c.Profile.Host, StringComparison.OrdinalIgnoreCase) &&
-                p.Profile.Port == c.Profile.Port)).ToList();
+                p.Profile.Port == c.Profile.Port) ||
+            app.GetConnectionNames().Any(name => string.Equals(name, c.ResourceName, StringComparison.Ordinal))).ToList();
     }
 
     private void SyncSubscriptions()
@@ -189,7 +190,7 @@ else
                 ? "connection"
                 : r.Profile.Name.Trim().ToLowerInvariant().Replace(' ', '-');
             app.UpsertConnectionResource(resourceKey, r.Profile);
-            Live.AddConnectionIfAbsent(r.Profile, r.Subscription);
+            Live.AddConnectionIfAbsent(r.Profile, r.Subscription, resourceKey);
         }
     }
 

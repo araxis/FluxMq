@@ -84,6 +84,27 @@ public sealed class FlowApplicationHost(
 
         var result = Build();
         if (!result.IsSuccess) return result;
+
+        return await StartBuiltAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<FlowApplicationHostBuildResult> StartBuiltAsync(CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+
+        if (_runtime is null || LastBuildResult is null || !LastBuildResult.IsSuccess)
+        {
+            var buildResult = Build();
+            if (!buildResult.IsSuccess || _runtime is null)
+            {
+                return buildResult;
+            }
+
+            return await StartBuiltAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        var result = LastBuildResult;
+
         try
         {
             await _runtime!.StartAsync(cancellationToken).ConfigureAwait(false);

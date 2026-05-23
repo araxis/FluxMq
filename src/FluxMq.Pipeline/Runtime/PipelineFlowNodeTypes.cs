@@ -22,6 +22,7 @@ public static class PipelineFlowNodeTypes
     public static readonly NodeType PayloadInspector = new("mqtt.payload-inspector");
     public static readonly NodeType MqttMetrics = new("mqtt.metrics");
     public static readonly NodeType MqttMetricsSink = new("mqtt.metrics-sink");
+    public static readonly NodeType FlowLogger = new("flow.logger");
     public static readonly NodeType MessageFilter = new("mqtt.message-filter");
     public static readonly NodeType JsonSchemaValidator = new("json.schema-validator");
 
