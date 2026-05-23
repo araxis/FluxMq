@@ -43,6 +43,8 @@ The mapper is the important programmable part. Users should be able to map:
 - `MqttEnvelope -> HttpRequest`
 - protocol message -> another protocol command
 
+The request object is not the visual component. It is the actor's input contract. The visual graph should show a `flow.mapper` node that the user adds and configures explicitly. FluxMQ should not auto-insert hidden request mappers when an envelope source is connected to an actor.
+
 ## Dynamic Mapper Engines
 
 FluxMQ should support more than fixed built-in mappers.
@@ -50,7 +52,7 @@ FluxMQ should support more than fixed built-in mappers.
 Candidate engines:
 
 - Dynamic Expresso for C#-style predicates and lightweight expressions. First runtime slice implemented with `DynamicExpresso.Core 2.19.3`.
-- Jsonata or equivalent for JSON payload query, mapping, and transformation.
+- Jsonata for JSON payload query, mapping, and transformation.
 - Later, UI-assisted mapping for ops users who should not need to write code.
 
 Filter/router examples:
@@ -102,8 +104,7 @@ Internal code should keep moving toward actor names and observer names now that 
 
 ## Implemented Runtime Proof Points
 
-- `mqtt.publish-request` dynamically maps `MqttEnvelope` into `MqttPublishRequest`.
+- `flow.mapper` dynamically maps `MqttEnvelope` into configured request outputs such as `MqttPublishRequest` and `FileWriteRequest`.
 - `mqtt.publisher` consumes `MqttPublishRequest` and publishes through the configured broker.
-- `file.write-request` dynamically maps `MqttEnvelope` into `FileWriteRequest`.
 - `file.writer` consumes `FileWriteRequest` and writes/creates/appends files based only on the input command.
 - `mqtt.metrics` observes an input stream and emits snapshots without caring whether the stream came from live MQTT, replay, stored sessions, or generated data.

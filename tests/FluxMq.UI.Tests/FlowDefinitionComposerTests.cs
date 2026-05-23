@@ -11,6 +11,19 @@ namespace FluxMq.UI.Tests;
 public sealed class FlowDefinitionComposerTests
 {
     [Fact]
+    public void ComponentCatalog_ExposesDynamicMapperInsteadOfRequestAliases()
+    {
+        var catalog = new FlowComponentCatalog();
+
+        catalog.Components.ShouldContain(component => component.Type == "flow.mapper");
+        catalog.Components.ShouldNotContain(component => component.Type == "mqtt.publish-request");
+        catalog.Components.ShouldNotContain(component => component.Type == "mqtt.recording-request");
+        catalog.Components.ShouldNotContain(component => component.Type == "file.write-request");
+
+        catalog.Find("mqtt.publish-request").ShouldNotBeNull();
+    }
+
+    [Fact]
     public void CreateInspectPayloadsDefinition_CreatesHostBuildableDefinition()
     {
         var composer = new FlowDefinitionComposer();
@@ -125,6 +138,54 @@ public sealed class FlowDefinitionComposerTests
 
         inspect.GetProperty("Input").GetString()
             .ShouldBe($"{FlowDefinitionComposer.TriggerNodeName}.Output");
+    }
+
+    [Fact]
+    public void AddComponent_AddsExplicitDynamicMapperBetweenSourceAndActor()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var withMapper = composer.AddComponent(initial, "flow.mapper");
+        var updated = composer.AddComponent(withMapper, "mqtt.publisher");
+
+        using var document = JsonDocument.Parse(updated);
+        var workflow = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName);
+
+        var mapper = workflow.GetProperty(FlowDefinitionComposer.MapperNodeName);
+        mapper.GetProperty("type").GetString().ShouldBe("flow.mapper");
+        mapper.GetProperty("Input").GetString().ShouldBe($"{FlowDefinitionComposer.TriggerNodeName}.Output");
+        mapper.GetProperty("configuration").GetProperty("outputType").GetString().ShouldBe("MqttPublishRequest");
+
+        var publisher = workflow.GetProperty(FlowDefinitionComposer.PublisherNodeName);
+        publisher.GetProperty("Input").GetString().ShouldBe($"{FlowDefinitionComposer.MapperNodeName}.Output");
+    }
+
+    [Fact]
+    public void AddComponent_DoesNotWireActorDirectlyToEnvelopeSource()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var updated = composer.AddComponent(initial, "mqtt.publisher");
+
+        using var document = JsonDocument.Parse(updated);
+        var publisher = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty(FlowDefinitionComposer.PublisherNodeName);
+
+        publisher.TryGetProperty("Input", out _).ShouldBeFalse();
     }
 
     [Fact]

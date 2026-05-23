@@ -11,17 +11,18 @@ Decision: Side-effecting flow components should consume explicit request/command
 Reasoning:
 - A publish node should publish a `MqttPublishRequest`, not guess that any envelope should be republished as-is.
 - A recording node should receive a `MqttRecordingRequest` that says what to record and where, instead of hiding `SessionId` in constructor configuration.
-- Filters and routers become more meaningful when the next step is visible: `filter -> request mapper -> actor`.
+- Filters and routers become more meaningful when the next step is visible: `filter -> dynamic mapper -> actor`.
 - Metrics remain stream observers over `MqttEnvelope`; they should not care about connection or subscription details.
 
 Status: Accepted.
 
 ### 2026-05-22 - Dynamic mapping is a core runtime capability
 
-Decision: Dynamic mapping and expression-based filtering/routing are first-class FluxMQ runtime capabilities, not optional UI sugar. The runtime should support expression-backed filters and mappers, starting with Dynamic Expresso for C#-style expressions and a Jsonata-like engine for JSON payload mapping/querying.
+Decision: Dynamic mapping and expression-based filtering/routing are first-class FluxMQ runtime capabilities, not optional UI sugar. The runtime should support expression-backed filters and mappers, starting with Dynamic Expresso for C#-style expressions and JSONata for JSON payload mapping/querying.
 
 Reasoning:
 - Developer ELT flows require mapping from incoming protocol messages into explicit actor commands such as `MqttPublishRequest`, `FileWriteRequest`, `HttpRequest`, and `EmailSendRequest`.
+- Request models are actor input contracts, not user-facing component types. The visual/user-facing component is `flow.mapper`, configured with input type, output type, engine, and map expressions.
 - A typical flow is: receive `MqttEnvelope`, filter by QoS/topic/payload, map to a publish request, then publish to another broker.
 - Hard-coded mappers are useful tests and defaults, but the product power comes from user-authored mapping logic.
 - The same expression/mapping foundation later supports ops features such as assertions, counters, summaries, rates, fault counts, and schema-based test expectations.
