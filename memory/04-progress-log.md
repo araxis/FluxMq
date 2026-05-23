@@ -339,7 +339,7 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 
 ## 2026-05-22
 
-- Created local branch `codex/fluxmq-redesign-ui` from the dirty UI refactor state so the redesign work is isolated from `feature/live-inspector-and-json-viewer`.
+- Created a feature branch from the dirty UI refactor state so the redesign work is isolated from `feature/live-inspector-and-json-viewer`.
 - Treated all existing uncommitted UI changes as part of the redesign refactor.
 - Used `memory/fluxmq-redesign.html` as the visual target for the desktop shell: compact dark operational UI, 48px top bar, 52px rail, left explorer, canvas, right inspector, and 28px status bar.
 - Replaced the MudBlazor drawer/appbar workspace frame in `MainLayout` with an explicit CSS grid shell:
@@ -419,7 +419,7 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 
 ## 2026-05-22 - Dynamic mapper and ops vision correction
 
-- Removed the stale `rtk` shell-command requirement from `C:\Users\meisa\.codex\RTK.md`; normal shell commands should be used directly.
+- Removed the stale `rtk` shell-command requirement; normal shell commands should be used directly.
 - Added `memory/08-dynamic-mapping-and-ops-vision.md`.
 - Corrected the component plan: dynamic mappers are a core FluxMQ capability, not incidental glue.
 - Recorded Dynamic Expresso for C#-style filters/mappers and JSONata for JSON query/mapping as explicit runtime directions.
@@ -466,7 +466,7 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Request models such as `MqttPublishRequest` and `FileWriteRequest` are actor input contracts.
   - They are not separate user-facing UI components.
   - The visible graph component is now `flow.mapper`.
-- Added `flow.mapper` as the user-facing mapper node with explicit `inputType`, `outputType`, `engine`, and `map` configuration.
+- Added `flow.mapper` as the user-facing mapper node with explicit `inputType`, `outputType`, `engine`, and mapper configuration.
 - Kept request-specific mapper node types as hidden compatibility/runtime aliases for old definitions.
 - Updated the desktop component catalog so it exposes Dynamic Mapper plus actors, not `Publish Request`, `Recording Request`, or `File Write Request` pseudo-components.
 - Stopped the UI composer from wiring actors directly to envelope sources. If a user adds `mqtt.publisher`, it only links to an existing mapper output; otherwise the missing type bridge is explicit.
@@ -474,3 +474,55 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Added `jsonata` as a mapper expression engine alongside `dynamic-expresso`.
 - Verified:
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -m:1` passes with 225 tests after the actor/observer rename, explicit source cleanup, and File Writer slice.
+
+## 2026-05-23 - Feature backlog and living development plan
+
+- Mirrored the OpenGarden memory workflow for FluxMQ:
+  - added `memory/09-feature-list.md` as the followable feature backlog with feature IDs, priorities, UI/data/acceptance notes, MVP cut line, and suggested implementation order.
+  - added `memory/10-development-plan.md` as the active step-by-step development plan with operating rules, current target, phased status, quality gates, and progress log.
+- Set the current target to `F-014 - JSON Schema Validator`, following the completed Dynamic Mapper and actor cleanup.
+- Updated `memory/00-index.md` so future work can start from the new planning docs.
+
+## 2026-05-23 - OPC Router UI inspiration and JSONata mapper workbench
+
+- Added `memory/11-opc-router-ui-inspiration.md` as a reference note for industrial ETL/integration UX patterns.
+- Recorded useful OPC Router-inspired concepts for FluxMQ:
+  - plug-ins as component/module packs
+  - transfer objects as typed nodes with visible input/output ports
+  - triggers as explicit workflow starters
+  - JSON tools that expose input structures, schemas, and selectable fields
+- Added `F-015 - JSONata Mapper Workbench UI` to the feature list.
+- Updated the active development target to `F-015`, so the next mapper UI slice should provide input tree, output request shape, per-field expressions, preview, and validation instead of only a raw text editor.
+- Added the first JSONata mapper workbench implementation slice:
+  - `MqttEnvelopeExpressionContextFactory` now exposes parsed `payloadJson` when payload text is valid JSON.
+  - Added `DynamicMapperWorkbenchPreview` to derive input variables, output request fields, engine-aware examples, and preview results through the same mapper engines used at runtime.
+  - Reworked `DynamicMapperNodeWidget` into a three-pane editor: selected/live/session/sample input, expression editor, output shape, and preview/errors.
+  - Added tests for payload JSON context variables, JSONata publish preview, Dynamic Expresso file-write preview, engine-aware field examples, and recording-request validation.
+- Corrected the mapper model to use one `expression` that returns the whole command/request object instead of separate expressions per property. JSONata expressions return JSON objects; Dynamic Expresso expressions can return typed request objects.
+- Added BlazorMonaco 3.4.0 and replaced the mapper expression textarea with a Monaco `StandaloneCodeEditor`.
+- Added FluxMQ light/dark Monaco themes and a JSONata editor language definition for the mapper workbench.
+- Reworked mapper samples/results toward the JSONata Exerciser model: editable Monaco JSON input on the left, expression in the middle, and read-only live JSON result on the right.
+- Fixed mapper live preview by preventing parent redraws from reloading the draft editor state and explicitly rendering after preview recomputation.
+- Updated the active development target to `F-014 - JSON Schema Validator` as the next Phase 4 slice.
+
+## 2026-05-23 - Mapper output contracts and JSON Schema validator slice
+
+- Removed the editable mapper input type field from the node editor; the current mapper UI is explicitly `MqttEnvelope` input.
+- Reworked mapper output selection into a result contract model:
+  - `typed` for known actor request contracts.
+  - `any` for unvalidated arbitrary expression output preview.
+  - `json-schema-file` for schema-backed output contracts.
+- Kept the runtime typed mapper path intact because `flow.mapper` still uses `outputType` to build concrete actor request ports.
+- Added JsonSchema.Net 9.2.1 and implemented `JsonSchemaValidatorComponent` with:
+  - `Input: MqttEnvelope`
+  - `Output: JsonSchemaValidationResult`
+  - `Errors: FlowError`
+  - inline schema JSON and schema file path runtime configuration.
+- Registered `json.schema-validator` in runtime factories and the UI catalog.
+- Added a focused JSON Schema Validator node editor with Monaco JSON schema editing, schema id, and schema file mode.
+- Updated docs and memory to record that validation is a reusable runtime/component capability, not mapper-only UI behavior.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore` passes with 96 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore` passes with 21 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore` passes with 43 tests.
+  - `dotnet test FluxMq.sln --no-restore -m:1` passes with 247 tests.

@@ -1,4 +1,5 @@
 using FluxMq.Core.Models;
+using FluxMq.Components.Mapping;
 using FluxMq.Pipeline.Mapping;
 using System.Text;
 
@@ -19,6 +20,16 @@ public sealed class FileWriteRequestExpressionMapper : IFlowMapper<MqttEnvelope,
 
     public FileWriteRequest Map(MqttEnvelope input, FlowMapContext context)
     {
+        if (!string.IsNullOrWhiteSpace(_definition.Expression))
+        {
+            return EvaluateRequest(_definition.Expression, input, context);
+        }
+
+        if (string.IsNullOrWhiteSpace(_definition.PathExpression))
+        {
+            throw new InvalidOperationException("FileWriteRequest mapping requires an expression or a path expression.");
+        }
+
         return new FileWriteRequest
         {
             Path = _engine.Evaluate<string>(_definition.PathExpression, context),
@@ -27,6 +38,26 @@ public sealed class FileWriteRequestExpressionMapper : IFlowMapper<MqttEnvelope,
             CreateDirectory = EvaluateBool(_definition.CreateDirectoryExpression, context, true)
         };
     }
+
+    private FileWriteRequest EvaluateRequest(string expression, MqttEnvelope input, FlowMapContext context)
+    {
+        var value = _engine.Evaluate(expression, context, typeof(object));
+        return value switch
+        {
+            FileWriteRequest request => request,
+            null => throw new InvalidOperationException("Mapper expression returned null. Expected FileWriteRequest object."),
+            _ => CoerceRequest(value, input)
+        };
+    }
+
+    private static FileWriteRequest CoerceRequest(object value, MqttEnvelope input)
+        => new()
+        {
+            Path = ExpressionObjectReader.ReadRequiredString(value, "path"),
+            Content = ExpressionObjectReader.ReadBytesOrDefault(value, "content", input.Payload),
+            Mode = ExpressionObjectReader.ReadEnumOrDefault(value, "mode", FileWriteMode.Overwrite),
+            CreateDirectory = ExpressionObjectReader.ReadBoolOrDefault(value, "createDirectory", true)
+        };
 
     private byte[] EvaluateContent(string? expression, FlowMapContext context, byte[] fallback)
     {

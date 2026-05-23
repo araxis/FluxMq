@@ -1,150 +1,790 @@
+@implements IDisposable
+@using FluxMq.Core.Models
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject LiveMqttWorkspaceService Live
+@inject AppThemeService ThemeService
+@inject NodeEditDialogRefreshService DialogRefresh
+@inject IJSRuntime JsRuntime
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.Transform"
                  CategoryColor="@Color.Secondary"
-                 EditDialogMaxWidth="MaxWidth.Medium"
+                 EditDialogMaxWidth="MaxWidth.Large"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
         <MudText Typo="Typo.caption" Color="Color.Secondary">
-            @_inputType -> @_outputType
+            @_inputType -> @OutputContractCaption
         </MudText>
         <div class="d-flex flex-wrap gap-1 mt-2">
             <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@_engine</MudChip>
-            @foreach (var key in _map.Keys.Take(4))
-            {
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">@key</MudChip>
-            }
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">@OutputContractLabel</MudChip>
         </div>
     </Body>
     <Editor>
         <MudStack Spacing="2">
-            <MudText Typo="Typo.caption" Color="Color.Secondary">
-                The mapper is explicit. It converts the input port type into the actor request type; FluxMQ will not insert this node automatically.
-            </MudText>
-
             <MudGrid Spacing="2">
-                <MudItem xs="12" sm="4">
+                <MudItem xs="12" md="4">
                     <MudSelect T="string"
                                Label="Engine"
                                Value="@_engine"
                                ValueChanged="@SetEngine"
                                Variant="Variant.Outlined"
                                Margin="Margin.Dense">
-                        <MudSelectItem Value="@("dynamic-expresso")">Dynamic Expresso</MudSelectItem>
                         <MudSelectItem Value="@("jsonata")">JSONata</MudSelectItem>
+                        <MudSelectItem Value="@("dynamic-expresso")">Dynamic Expresso</MudSelectItem>
                     </MudSelect>
                 </MudItem>
-                <MudItem xs="12" sm="4">
-                    <MudTextField T="string"
-                                  @bind-Value="_inputType"
-                                  Label="Input type"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense" />
-                </MudItem>
-                <MudItem xs="12" sm="4">
+                <MudItem xs="12" md="4">
                     <MudSelect T="string"
-                               Label="Output type"
-                               Value="@_outputType"
-                               ValueChanged="@SetOutputType"
+                               Label="Result contract"
+                               Value="@_outputContract"
+                               ValueChanged="@SetOutputContract"
                                Variant="Variant.Outlined"
                                Margin="Margin.Dense">
-                        <MudSelectItem Value="@("MqttPublishRequest")">MqttPublishRequest</MudSelectItem>
-                        <MudSelectItem Value="@("FileWriteRequest")">FileWriteRequest</MudSelectItem>
-                        <MudSelectItem Value="@("MqttRecordingRequest")">MqttRecordingRequest</MudSelectItem>
+                        <MudSelectItem Value="@DynamicMapperNodeModel.OutputContractAny">Any</MudSelectItem>
+                        <MudSelectItem Value="@DynamicMapperNodeModel.OutputContractTyped">Typed</MudSelectItem>
+                        <MudSelectItem Value="@DynamicMapperNodeModel.OutputContractJsonSchemaFile">JSON Schema file</MudSelectItem>
                     </MudSelect>
+                </MudItem>
+                <MudItem @key="SchemaControlKey" xs="12" md="4">
+                    @if (IsTypedOutputContract)
+                    {
+                        <MudSelect T="string"
+                                   Label="Typed schema"
+                                   Value="@_outputType"
+                                   ValueChanged="@SetOutputType"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense">
+                            <MudSelectItem Value="@("MqttPublishRequest")">MqttPublishRequest</MudSelectItem>
+                            <MudSelectItem Value="@("FileWriteRequest")">FileWriteRequest</MudSelectItem>
+                            <MudSelectItem Value="@("MqttRecordingRequest")">MqttRecordingRequest</MudSelectItem>
+                        </MudSelect>
+                    }
+                    else if (IsJsonSchemaFileContract)
+                    {
+                        <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="1">
+                            <MudTextField T="string"
+                                          Label="JSON Schema file"
+                                          Value="@_outputSchemaPath"
+                                          ValueChanged="@SetOutputSchemaPath"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          Class="flex-grow-1" />
+                            <MudTooltip Text="Select schema file">
+                                <MudIconButton Icon="@Icons.Material.Filled.FolderOpen"
+                                               Size="Size.Small"
+                                               Color="Color.Info"
+                                               Class="mapper-file-picker-button"
+                                               OnClick="@PickOutputSchemaFileAsync" />
+                            </MudTooltip>
+                        </MudStack>
+                    }
+                    else
+                    {
+                        <MudTextField T="string"
+                                      Label="Typed schema"
+                                      Value="@("None")"
+                                      Disabled="true"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    }
                 </MudItem>
             </MudGrid>
 
-            <MudText Typo="Typo.subtitle2">Map expressions</MudText>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">
-                Expressions run against an MQTT envelope context: envelope, topic, payload, payloadText, qos, qualityOfService, retain, receivedAt.
-            </MudText>
+            <MudGrid Spacing="2" Class="mapper-workbench">
+                <MudItem xs="12" lg="3">
+                    <MudPaper Elevation="0" Class="mapper-panel">
+                        <div class="mapper-panel-heading">
+                            <MudIcon Icon="@Icons.Material.Filled.Input" Size="Size.Small" />
+                            <MudText Typo="Typo.subtitle2">Input sample</MudText>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@_sampleSource</MudChip>
+                            <MudTooltip Text="Reload from workspace">
+                                <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                               Size="Size.Small"
+                                               Class="mapper-panel-action"
+                                               OnClick="@ReloadWorkspaceSample" />
+                            </MudTooltip>
+                        </div>
 
-            @foreach (var key in MapKeysFor(_outputType))
-            {
-                var field = key;
-                <MudTextField T="string"
-                              Value="@MapValue(field)"
-                              ValueChanged="@(value => _map[field] = value ?? string.Empty)"
-                              Label="@field"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              Lines="@(field is "payload" or "content" ? 3 : 1)" />
-            }
+                        <StandaloneCodeEditor @key="_inputEditorVersion"
+                                              @ref="_inputEditor"
+                                              Id="@InputEditorId"
+                                              CssClass="mapper-monaco-editor mapper-input-editor"
+                                              ConstructionOptions="@InputEditorConstructionOptions"
+                                              OnDidChangeModelContent="@OnInputEditorContentChanged" />
+
+                        @if (!string.IsNullOrWhiteSpace(_inputJsonError))
+                        {
+                            <MudAlert Severity="Severity.Error" Dense="true" Variant="Variant.Outlined" Class="my-2">
+                                @_inputJsonError
+                            </MudAlert>
+                        }
+
+                        <div class="mapper-variable-list">
+                            @foreach (var variable in _variables)
+                            {
+                                var expression = DynamicMapperWorkbenchPreview.ExpressionFor(variable, _engine);
+                                var disabled = string.IsNullOrWhiteSpace(expression);
+                                <MudTooltip Text="@(disabled ? "JSON fields are available in JSONata" : expression)">
+                                    <MudButton Size="Size.Small"
+                                               Variant="Variant.Text"
+                                               Color="@(variable.JsonOnly ? Color.Info : Color.Default)"
+                                               Disabled="@disabled"
+                                               OnClick="@(() => InsertVariableAsync(variable))"
+                                               Class="@VariableClass(variable)">
+                                        <span class="mapper-variable-name">@variable.Label</span>
+                                        <span class="mapper-variable-value">@variable.Value</span>
+                                    </MudButton>
+                                </MudTooltip>
+                            }
+                        </div>
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" lg="6">
+                    <MudPaper Elevation="0" Class="mapper-panel mapper-editor-panel">
+                        <div class="mapper-panel-heading">
+                            <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" />
+                            <MudText Typo="Typo.subtitle2">Expression</MudText>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">@OutputShapeLabel</MudChip>
+                        </div>
+
+                        <StandaloneCodeEditor @key="_editorVersion"
+                                              @ref="_editor"
+                                              Id="@EditorId"
+                                              CssClass="mapper-monaco-editor"
+                                              ConstructionOptions="@EditorConstructionOptions"
+                                              OnDidChangeModelContent="@OnEditorContentChanged" />
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" lg="3">
+                    <MudPaper Elevation="0" Class="mapper-panel">
+                        <div class="mapper-panel-heading">
+                            <MudIcon Icon="@Icons.Material.Filled.Output" Size="Size.Small" />
+                            <MudText Typo="Typo.subtitle2">Result</MudText>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@PreviewUpdatedText</MudChip>
+                        </div>
+
+                        <div class="mapper-shape-list mapper-shape-compact">
+                            @foreach (var field in _outputFields)
+                            {
+                                <div class="mapper-shape-row">
+                                    <span>@field.Name</span>
+                                    <code>@field.Type</code>
+                                </div>
+                            }
+                        </div>
+
+                        @if (!_preview.Success)
+                        {
+                            <MudAlert Severity="Severity.Error" Dense="true" Variant="Variant.Outlined" Class="my-2">
+                                @_preview.Error
+                            </MudAlert>
+                        }
+
+                        <StandaloneCodeEditor @key="_resultEditorVersion"
+                                              @ref="_resultEditor"
+                                              Id="@ResultEditorId"
+                                              CssClass="mapper-monaco-editor mapper-result-editor"
+                                              ConstructionOptions="@ResultEditorConstructionOptions" />
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
         </MudStack>
     </Editor>
 </NodeWidgetShell>
+
+<style>
+    .mapper-workbench .mapper-panel {
+        height: 100%;
+        min-height: 320px;
+        padding: 12px;
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius: 8px;
+        background: rgba(255,255,255,0.03);
+    }
+
+    .mapper-editor-panel {
+        min-height: 520px;
+    }
+
+    .mapper-panel-heading,
+    .mapper-shape-row,
+    .mapper-preview-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .mapper-panel-heading {
+        margin-bottom: 10px;
+    }
+
+    .mapper-panel-heading .mud-chip {
+        margin-left: auto;
+    }
+
+    .mapper-panel-action.mud-icon-button {
+        height: 24px;
+        padding: 0;
+        width: 24px;
+    }
+
+    .mapper-file-picker-button.mud-icon-button {
+        height: 40px;
+        margin-top: 4px;
+        width: 40px;
+    }
+
+    .mapper-variable-list,
+    .mapper-preview-list,
+    .mapper-shape-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .mapper-variable {
+        width: 100%;
+        justify-content: flex-start;
+        min-height: 30px;
+        text-transform: none;
+    }
+
+    .mapper-variable .mud-button-label {
+        width: 100%;
+        display: grid;
+        grid-template-columns: minmax(72px, 1fr) minmax(0, 1.3fr);
+        gap: 8px;
+        align-items: center;
+    }
+
+    .mapper-variable-name {
+        text-align: left;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: var(--mud-typography-default-family);
+        font-weight: 600;
+    }
+
+    .mapper-variable-value {
+        text-align: right;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        opacity: 0.72;
+        font-size: 0.72rem;
+    }
+
+    .mapper-variable-json {
+        padding-left: 12px;
+    }
+
+    .mapper-monaco-editor {
+        min-height: 420px;
+        height: 420px;
+        overflow: hidden;
+        border: 1px solid var(--flux-border-strong);
+        border-radius: 6px;
+        background: var(--flux-surface);
+    }
+
+    .mapper-monaco-editor .monaco-editor,
+    .mapper-monaco-editor .overflow-guard {
+        border-radius: 6px;
+    }
+
+    .mapper-input-editor {
+        height: 300px;
+        min-height: 300px;
+        margin-bottom: 10px;
+    }
+
+    .mapper-result-editor {
+        height: 338px;
+        min-height: 338px;
+    }
+
+    .mapper-shape-compact {
+        margin-bottom: 10px;
+    }
+
+    .mapper-shape-row,
+    .mapper-preview-row {
+        justify-content: space-between;
+        min-height: 28px;
+        gap: 10px;
+        font-size: 0.78rem;
+    }
+
+    .mapper-shape-row code,
+    .mapper-preview-row code {
+        max-width: 58%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: right;
+        font-size: 0.72rem;
+    }
+</style>
 
 @code {
     [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
 
     private DynamicMapperNodeModel Model => (DynamicMapperNodeModel)Node;
 
-    private string _engine = "dynamic-expresso";
+    private string _engine = "jsonata";
     private string _inputType = "MqttEnvelope";
     private string _outputType = "MqttPublishRequest";
-    private Dictionary<string, string> _map = [];
+    private string _outputContract = DynamicMapperNodeModel.OutputContractTyped;
+    private string _outputSchemaPath = string.Empty;
+    private string _expression = string.Empty;
+    private StandaloneCodeEditor? _editor;
+    private StandaloneCodeEditor? _inputEditor;
+    private StandaloneCodeEditor? _resultEditor;
+    private int _editorVersion;
+    private int _inputEditorVersion;
+    private int _resultEditorVersion;
+    private int _schemaControlVersion;
+    private IReadOnlyList<DynamicMapperOutputField> _outputFields = [];
+    private IReadOnlyList<DynamicMapperVariable> _variables = [];
+    private DynamicMapperPreviewResult _preview = new(false, "MqttPublishRequest", [], "No preview.");
+    private MqttEnvelope _sampleEnvelope = DynamicMapperWorkbenchPreview.FallbackEnvelope();
+    private string _sampleSource = "sample";
+    private bool _sampleEdited;
+    private string _inputJsonText = string.Empty;
+    private string? _inputJsonError;
+    private string _resultJsonText = "{}";
+    private bool _syncingInputEditor;
+    private bool _syncingResultEditor;
+    private string? _loadedNodeName;
+    private FlowDiagramNodeModel? _loadedNode;
+    private DateTimeOffset _previewUpdatedAt = DateTimeOffset.Now;
 
-    protected override void OnParametersSet() => LoadDraft();
+    private string EditorId => $"mapper-expression-{Node.NodeName.Replace('.', '-').Replace(' ', '-')}";
+    private string InputEditorId => $"mapper-input-{Node.NodeName.Replace('.', '-').Replace(' ', '-')}";
+    private string ResultEditorId => $"mapper-result-{Node.NodeName.Replace('.', '-').Replace(' ', '-')}";
+    private string PreviewUpdatedText => $"updated {_previewUpdatedAt:HH:mm:ss}";
+    private string SchemaControlKey => $"{_outputContract}:{_schemaControlVersion}";
+    private bool IsTypedOutputContract => string.Equals(_outputContract, DynamicMapperNodeModel.OutputContractTyped, StringComparison.Ordinal);
+    private bool IsJsonSchemaFileContract => string.Equals(_outputContract, DynamicMapperNodeModel.OutputContractJsonSchemaFile, StringComparison.Ordinal);
+    private string OutputFieldsKey => IsTypedOutputContract
+        ? _outputType
+        : IsJsonSchemaFileContract ? "JsonSchema" : "Any";
+    private string OutputShapeLabel => IsTypedOutputContract
+        ? _outputType
+        : IsJsonSchemaFileContract ? "JSON Schema" : "Any JSON";
+    private string OutputContractLabel => IsTypedOutputContract
+        ? "typed"
+        : IsJsonSchemaFileContract ? "json schema" : "any";
+    private string OutputContractCaption => IsTypedOutputContract
+        ? _outputType
+        : IsJsonSchemaFileContract ? "JSON Schema" : "Any JSON";
 
-    private void LoadDraft()
+    protected override void OnInitialized()
     {
-        _engine = Model.Engine;
-        _inputType = Model.InputType;
-        _outputType = Model.OutputType;
-        _map = new Dictionary<string, string>(Model.Map, StringComparer.Ordinal);
-        EnsureMapKeys();
+        Live.Changed += OnLiveChanged;
+        ThemeService.Changed += OnThemeChanged;
+        RefreshWorkbench();
     }
 
-    private void SetEngine(string value) => _engine = value;
-
-    private void SetOutputType(string value)
+    protected override void OnParametersSet()
     {
-        if (string.Equals(_outputType, value, StringComparison.Ordinal))
+        if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
+        {
+            LoadDraftFromModel(resetSample: true);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ConfigureMonacoAsync();
+            await SyncInputEditorAsync();
+            await SyncResultEditorAsync();
+        }
+    }
+
+    public void Dispose()
+    {
+        Live.Changed -= OnLiveChanged;
+        ThemeService.Changed -= OnThemeChanged;
+    }
+
+    private Task LoadDraft()
+    {
+        LoadDraftFromModel(resetSample: true);
+        return RefreshEditorsAndRenderAsync();
+    }
+
+    private void LoadDraftFromModel(bool resetSample)
+    {
+        _loadedNode = Node;
+        _loadedNodeName = Node.NodeName;
+        if (resetSample)
+        {
+            _sampleEdited = false;
+        }
+
+        _engine = string.IsNullOrWhiteSpace(Model.Engine) ? "jsonata" : Model.Engine;
+        _inputType = "MqttEnvelope";
+        _outputType = string.IsNullOrWhiteSpace(Model.OutputType) ? "MqttPublishRequest" : Model.OutputType;
+        _outputContract = DynamicMapperNodeModel.NormalizeOutputContract(Model.OutputContract);
+        _outputSchemaPath = Model.OutputSchemaPath;
+        _schemaControlVersion++;
+        _expression = string.IsNullOrWhiteSpace(Model.Expression)
+            ? DynamicMapperNodeModel.DefaultExpression(_outputType, _engine)
+            : Model.Expression;
+        _editorVersion++;
+        _inputEditorVersion++;
+        _resultEditorVersion++;
+        RefreshWorkbench();
+    }
+
+    private void OnLiveChanged(object? sender, EventArgs e)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            RefreshWorkbench();
+            await SyncInputEditorAsync();
+            await SyncResultEditorAsync();
+            StateHasChanged();
+        });
+    }
+
+    private void OnThemeChanged(object? sender, EventArgs e)
+        => _ = InvokeAsync(ConfigureMonacoAsync);
+
+    private void RefreshWorkbench()
+    {
+        if (!_sampleEdited)
+        {
+            var (envelope, source) = ResolveSampleEnvelope();
+            LoadSampleEnvelope(envelope, source, updateInputJson: true);
+        }
+
+        _variables = DynamicMapperWorkbenchPreview.Variables(_sampleEnvelope);
+        _outputFields = DynamicMapperWorkbenchPreview.OutputFields(OutputFieldsKey, _engine);
+        RefreshPreview();
+    }
+
+    private void RefreshPreview()
+    {
+        _preview = string.IsNullOrWhiteSpace(_inputJsonError)
+            ? PreviewExpression()
+            : new DynamicMapperPreviewResult(
+                false,
+                OutputShapeLabel,
+                [],
+                _inputJsonError,
+                $$"""
+                {
+                  "error": {{System.Text.Json.JsonSerializer.Serialize(_inputJsonError)}}
+                }
+                """);
+        _resultJsonText = string.IsNullOrWhiteSpace(_preview.Json) ? "{}" : _preview.Json;
+        _previewUpdatedAt = DateTimeOffset.Now;
+    }
+
+    private DynamicMapperPreviewResult PreviewExpression()
+        => IsTypedOutputContract
+            ? DynamicMapperWorkbenchPreview.Preview(_engine, _outputType, _expression, _sampleEnvelope)
+            : DynamicMapperWorkbenchPreview.PreviewAny(_engine, _expression, _sampleEnvelope, OutputShapeLabel);
+
+    private (MqttEnvelope Envelope, string Source) ResolveSampleEnvelope()
+    {
+        if (Live.SelectedMessage is not null)
+        {
+            return (Live.SelectedMessage, "selected");
+        }
+
+        if (Live.LatestMessage is not null)
+        {
+            return (Live.LatestMessage, "live");
+        }
+
+        if (Live.SelectedSessionMessages.LastOrDefault() is { } sessionMessage)
+        {
+            return (sessionMessage, "session");
+        }
+
+        if (Live.RecentMessages.LastOrDefault() is { } recentMessage)
+        {
+            return (recentMessage, "recent");
+        }
+
+        return (DynamicMapperWorkbenchPreview.FallbackEnvelope(), "sample");
+    }
+
+    private async Task ReloadWorkspaceSample()
+    {
+        _sampleEdited = false;
+        RefreshWorkbench();
+        await RefreshEditorsAndRenderAsync();
+    }
+
+    private void LoadSampleEnvelope(MqttEnvelope envelope, string source, bool updateInputJson)
+    {
+        _sampleEnvelope = envelope;
+        _sampleSource = source;
+        _inputJsonError = null;
+        if (updateInputJson)
+        {
+            _inputJsonText = DynamicMapperWorkbenchPreview.InputJson(envelope);
+        }
+    }
+
+    private void ApplyInputJson()
+    {
+        var result = DynamicMapperWorkbenchPreview.ParseInputJson(_inputJsonText);
+        if (result is { Success: true, Envelope: not null })
+        {
+            LoadSampleEnvelope(result.Envelope, "edited", updateInputJson: false);
+            _sampleEdited = true;
+            _variables = DynamicMapperWorkbenchPreview.Variables(_sampleEnvelope);
+            _outputFields = DynamicMapperWorkbenchPreview.OutputFields(OutputFieldsKey, _engine);
+            return;
+        }
+
+        _sampleEdited = true;
+        _sampleSource = "invalid";
+        _inputJsonError = result.Error ?? "Input JSON is invalid.";
+        _variables = [];
+        _outputFields = DynamicMapperWorkbenchPreview.OutputFields(OutputFieldsKey, _engine);
+    }
+
+    private Task SetEngine(string value)
+    {
+        if (string.Equals(_engine, value, StringComparison.Ordinal))
+        {
+            return Task.CompletedTask;
+        }
+
+        var wasDefault = string.Equals(
+            NormalizeExpression(_expression),
+            NormalizeExpression(DynamicMapperNodeModel.DefaultExpression(_outputType, _engine)),
+            StringComparison.Ordinal);
+        _engine = value;
+        if (wasDefault)
+        {
+            _expression = DynamicMapperNodeModel.DefaultExpression(_outputType, _engine);
+        }
+
+        _editorVersion++;
+        RefreshWorkbench();
+        return RefreshEditorsAndRenderAsync(syncInput: false);
+    }
+
+    private async Task SetOutputContract(string value)
+    {
+        var normalized = DynamicMapperNodeModel.NormalizeOutputContract(value);
+        if (string.Equals(_outputContract, normalized, StringComparison.Ordinal))
         {
             return;
         }
 
-        _outputType = value;
-        _map = DynamicMapperNodeModel.DefaultMap(_outputType);
+        _outputContract = normalized;
+        _schemaControlVersion++;
+        RefreshWorkbench();
+        await RefreshEditorsAndRenderAsync(syncInput: false);
     }
 
-    private string MapValue(string key)
+    private Task SetOutputType(string value)
     {
-        EnsureMapKeys();
-        return _map.TryGetValue(key, out var value) ? value : string.Empty;
-    }
-
-    private void EnsureMapKeys()
-    {
-        var defaults = DynamicMapperNodeModel.DefaultMap(_outputType);
-        foreach (var (key, value) in defaults)
+        if (string.Equals(_outputType, value, StringComparison.Ordinal))
         {
-            _map.TryAdd(key, value);
+            return Task.CompletedTask;
+        }
+
+        _outputType = value;
+        _expression = DynamicMapperNodeModel.DefaultExpression(_outputType, _engine);
+        _editorVersion++;
+        RefreshWorkbench();
+        return RefreshEditorsAndRenderAsync(syncInput: false);
+    }
+
+    private Task SetOutputSchemaPath(string value)
+    {
+        _outputSchemaPath = value ?? string.Empty;
+        RefreshWorkbench();
+        return RefreshEditorsAndRenderAsync(syncInput: false);
+    }
+
+    private async Task PickOutputSchemaFileAsync()
+    {
+        var result = await FilePicker.Default.PickAsync(JsonSchemaPickOptions());
+        if (result is null)
+        {
+            return;
+        }
+
+        _outputSchemaPath = result.FullPath;
+        RefreshWorkbench();
+        await RefreshEditorsAndRenderAsync(syncInput: false);
+    }
+
+    private async Task InsertVariableAsync(DynamicMapperVariable variable)
+    {
+        var expression = DynamicMapperWorkbenchPreview.ExpressionFor(variable, _engine);
+        if (string.IsNullOrWhiteSpace(expression))
+        {
+            return;
+        }
+
+        _expression = string.IsNullOrWhiteSpace(_expression)
+            ? expression
+            : $"{_expression}{System.Environment.NewLine}{expression}";
+
+        if (_editor is not null)
+        {
+            await _editor.SetValue(_expression);
+        }
+
+        RefreshPreview();
+        await RefreshEditorsAndRenderAsync(syncInput: false);
+    }
+
+    private StandaloneEditorConstructionOptions InputEditorConstructionOptions(StandaloneCodeEditor editor)
+        => new()
+        {
+            AutomaticLayout = true,
+            Language = "json",
+            Theme = ThemeService.IsDarkMode ? "fluxmq-dark" : "fluxmq-light",
+            Value = _inputJsonText
+        };
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
+        => new()
+        {
+            AutomaticLayout = true,
+            Language = string.Equals(_engine, "jsonata", StringComparison.OrdinalIgnoreCase) ? "jsonata" : "csharp",
+            Theme = ThemeService.IsDarkMode ? "fluxmq-dark" : "fluxmq-light",
+            Value = _expression
+        };
+
+    private StandaloneEditorConstructionOptions ResultEditorConstructionOptions(StandaloneCodeEditor editor)
+        => new()
+        {
+            AutomaticLayout = true,
+            Language = "json",
+            ReadOnly = true,
+            Theme = ThemeService.IsDarkMode ? "fluxmq-dark" : "fluxmq-light",
+            Value = _resultJsonText
+        };
+
+    private async Task ConfigureMonacoAsync()
+        => await JsRuntime.InvokeVoidAsync("fluxmqMonaco.ensureConfigured", ThemeService.IsDarkMode);
+
+    private async Task OnInputEditorContentChanged()
+    {
+        if (_syncingInputEditor)
+        {
+            return;
+        }
+
+        if (_inputEditor is not null)
+        {
+            _inputJsonText = await _inputEditor.GetValue();
+        }
+
+        ApplyInputJson();
+        RefreshPreview();
+        await RefreshEditorsAndRenderAsync(syncInput: false);
+    }
+
+    private async Task OnEditorContentChanged()
+    {
+        if (_editor is not null)
+        {
+            _expression = await _editor.GetValue();
+        }
+
+        RefreshPreview();
+        await RefreshEditorsAndRenderAsync(syncInput: false);
+    }
+
+    private async Task RefreshEditorsAndRenderAsync(bool syncInput = true)
+    {
+        if (syncInput)
+        {
+            await SyncInputEditorAsync();
+        }
+
+        await SyncResultEditorAsync();
+        await InvokeAsync(StateHasChanged);
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SyncInputEditorAsync()
+    {
+        if (_inputEditor is null)
+        {
+            return;
+        }
+
+        _syncingInputEditor = true;
+        try
+        {
+            await _inputEditor.SetValue(_inputJsonText);
+        }
+        finally
+        {
+            _syncingInputEditor = false;
+        }
+    }
+
+    private async Task SyncResultEditorAsync()
+    {
+        if (_resultEditor is null || _syncingResultEditor)
+        {
+            return;
+        }
+
+        _syncingResultEditor = true;
+        try
+        {
+            await _resultEditor.SetValue(_resultJsonText);
+        }
+        finally
+        {
+            _syncingResultEditor = false;
         }
     }
 
     private Task SaveAsync()
     {
-        EnsureMapKeys();
-        Model.Engine = _engine.Trim();
-        Model.InputType = string.IsNullOrWhiteSpace(_inputType) ? "MqttEnvelope" : _inputType.Trim();
+        Model.Engine = string.IsNullOrWhiteSpace(_engine) ? "jsonata" : _engine.Trim();
+        Model.InputType = "MqttEnvelope";
         Model.OutputType = string.IsNullOrWhiteSpace(_outputType) ? "MqttPublishRequest" : _outputType.Trim();
-        Model.Map = _map
-            .Where(pair => !string.IsNullOrWhiteSpace(pair.Value))
-            .ToDictionary(pair => pair.Key, pair => pair.Value.Trim(), StringComparer.Ordinal);
+        Model.OutputContract = DynamicMapperNodeModel.NormalizeOutputContract(_outputContract);
+        Model.OutputSchemaPath = _outputSchemaPath.Trim();
+        Model.Expression = string.IsNullOrWhiteSpace(_expression)
+            ? DynamicMapperNodeModel.DefaultExpression(Model.OutputType, Model.Engine)
+            : _expression.Trim();
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
         return Task.CompletedTask;
     }
 
-    private static IReadOnlyList<string> MapKeysFor(string outputType)
-        => outputType switch
+    private static string VariableClass(DynamicMapperVariable variable)
+        => $"mapper-variable{(variable.JsonOnly ? " mapper-variable-json" : string.Empty)}";
+
+    private static string NormalizeExpression(string expression)
+        => string.Join('\n', expression.Split(["\r\n", "\n"], StringSplitOptions.None).Select(line => line.TrimEnd())).Trim();
+
+    private static PickOptions JsonSchemaPickOptions()
+        => new()
         {
-            "FileWriteRequest" => ["path", "content", "mode", "createDirectory"],
-            "MqttRecordingRequest" => ["sessionId"],
-            _ => ["topic", "payload", "qos", "retain"]
+            PickerTitle = "Select JSON Schema",
+            FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+            {
+                { DevicePlatform.WinUI, [".json"] },
+                { DevicePlatform.macOS, ["json", "public.json"] }
+            })
         };
+
 }

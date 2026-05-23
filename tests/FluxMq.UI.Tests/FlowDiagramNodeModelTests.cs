@@ -1,4 +1,3 @@
-using FluxMq.UI.Models;
 using Shouldly;
 using FluxMq.UI.Components.Diagram;
 using FluxMq.UI.Services;

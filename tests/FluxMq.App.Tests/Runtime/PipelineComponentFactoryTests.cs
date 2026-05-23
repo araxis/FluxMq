@@ -4,6 +4,7 @@ using FluxMq.Core.Models;
 using FluxMq.Core.Payloads;
 using FluxMq.Core.Session;
 using FluxMq.App;
+using FluxMq.Components.JsonSchema;
 using FluxMq.Components.MqttMetrics;
 using FluxMq.Components.MqttPayloadInspector;
 using FluxMq.Components.Storage.Models;
@@ -38,6 +39,7 @@ public sealed class PipelineComponentFactoryTests
             PipelineFlowNodeTypes.MqttMetrics,
             PipelineFlowNodeTypes.MqttMetricsSink,
             PipelineFlowNodeTypes.MessageFilter,
+            PipelineFlowNodeTypes.JsonSchemaValidator,
             PipelineFlowNodeTypes.DynamicMapper,
             PipelineFlowNodeTypes.PublishRequestMapper,
             PipelineFlowNodeTypes.MqttPublisher,
@@ -141,6 +143,76 @@ public sealed class PipelineComponentFactoryTests
         sink!.Values.Count.ShouldBe(2);
         sink.Values[^1].MessageCount.ShouldBe(2);
         sink.Values[^1].TotalPayloadBytes.ShouldBe(5);
+    }
+
+    [Fact]
+    public async Task JsonSchemaValidatorFactory_CreatesLinkableRuntimeNode()
+    {
+        TestSourceNode? source = null;
+        TestSinkNode<JsonSchemaValidationResult>? sink = null;
+        const string schemaJson = """
+        {
+          "type": "object",
+          "required": ["status"],
+          "properties": {
+            "status": { "const": "ok" }
+          }
+        }
+        """;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.source"), (address, _) =>
+            {
+                source = new TestSourceNode();
+                return SourceNode(address, source);
+            })
+            .Register(new NodeType("test.validation-sink"), (address, _) =>
+            {
+                sink = new TestSinkNode<JsonSchemaValidationResult>();
+                return SinkNode(address, sink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("test.source"),
+                        ["validator"] = new NodeDefinition
+                        {
+                            Type = PipelineFlowNodeTypes.JsonSchemaValidator,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["schemaId"] = JsonDocument.Parse("\"status-schema\"").RootElement.Clone(),
+                                ["schema"] = JsonDocument.Parse(JsonSerializer.Serialize(schemaJson)).RootElement.Clone()
+                            }
+                        },
+                        ["sink"] = NodeWithPort("test.validation-sink", "Input", "\"validator.Output\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue();
+
+        source!.Post(new MqttEnvelope { Topic = "factory/one", Payload = """{"status":"ok"}"""u8.ToArray() });
+        source.Post(new MqttEnvelope { Topic = "factory/two", Payload = """{"status":"fault"}"""u8.ToArray() });
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion;
+
+        sink!.Values.Count.ShouldBe(2);
+        sink.Values[0].IsValid.ShouldBeTrue();
+        sink.Values[1].IsValid.ShouldBeFalse();
+        sink.Values[1].SchemaId.ShouldBe("status-schema");
     }
 
     [Fact]
@@ -338,6 +410,14 @@ public sealed class PipelineComponentFactoryTests
     public async Task DynamicFilterAndJsonataMapper_CanPublishMappedRequestsToConnection()
     {
         FakeMqttSession? session = null;
+        const string mapperExpression = """
+        {
+          "topic": "mirror/" & topic,
+          "payload": "mapped:" & payloadText,
+          "qos": 1,
+          "retain": false
+        }
+        """;
 
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories(_ =>
@@ -402,14 +482,7 @@ public sealed class PipelineComponentFactoryTests
                                 ["engine"] = JsonDocument.Parse("\"jsonata\"").RootElement.Clone(),
                                 ["inputType"] = JsonDocument.Parse("\"MqttEnvelope\"").RootElement.Clone(),
                                 ["outputType"] = JsonDocument.Parse("\"MqttPublishRequest\"").RootElement.Clone(),
-                                ["map"] = JsonDocument.Parse("""
-                                {
-                                  "topic": "\"mirror/\" & topic",
-                                  "payload": "\"mapped:\" & payloadText",
-                                  "qos": "1",
-                                  "retain": "false"
-                                }
-                                """).RootElement.Clone()
+                                ["expression"] = JsonDocument.Parse(JsonSerializer.Serialize(mapperExpression)).RootElement.Clone()
                             }
                         },
                         ["publisher"] = new NodeDefinition
@@ -449,7 +522,14 @@ public sealed class PipelineComponentFactoryTests
     {
         var directory = Path.Combine(Path.GetTempPath(), "fluxmq-runtime-tests", Guid.NewGuid().ToString("N"))
             .Replace('\\', '/');
-        var pathExpression = $"\"{directory}/\" + topic.Replace(\"/\", \"_\") + \".txt\"";
+        var expression = $$"""
+        new FileWriteRequest {
+          Path = "{{directory}}/" + topic.Replace("/", "_") + ".txt",
+          Content = Encoding.UTF8.GetBytes("topic=" + topic + ";payload=" + payloadText),
+          Mode = FileWriteMode.Overwrite,
+          CreateDirectory = true
+        }
+        """;
 
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories());
@@ -487,13 +567,7 @@ public sealed class PipelineComponentFactoryTests
                                 ["engine"] = JsonDocument.Parse("\"dynamic-expresso\"").RootElement.Clone(),
                                 ["inputType"] = JsonDocument.Parse("\"MqttEnvelope\"").RootElement.Clone(),
                                 ["outputType"] = JsonDocument.Parse("\"FileWriteRequest\"").RootElement.Clone(),
-                                ["map"] = JsonDocument.Parse($$"""
-                                {
-                                  "path": {{JsonSerializer.Serialize(pathExpression)}},
-                                  "content": "\"topic=\" + topic + \";payload=\" + payloadText",
-                                  "mode": "\"Overwrite\""
-                                }
-                                """).RootElement.Clone()
+                                ["expression"] = JsonDocument.Parse(JsonSerializer.Serialize(expression)).RootElement.Clone()
                             }
                         },
                         ["writer"] = NodeWithPort(PipelineFlowNodeTypes.FileWriter, "Input", "\"map.Output\"")

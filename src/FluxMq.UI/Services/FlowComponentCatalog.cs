@@ -141,6 +141,17 @@ public sealed class FlowComponentCatalog
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
+            "json.schema-validator",
+            "JSON Schema Validator",
+            "Validator",
+            "Validates MQTT payload JSON against a configured JSON Schema.",
+            IsResource: false,
+            [
+                new("Input", "MqttEnvelope", IsInput: true),
+                new("Output", "JsonSchemaValidationResult", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
             "flow.mapper",
             "Dynamic Mapper",
             "Mapper",

@@ -36,6 +36,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<LiveMqttWorkspaceService>();
         builder.Services.AddSingleton<AppThemeService>();
         builder.Services.AddSingleton<DragStateService>();
+        builder.Services.AddSingleton<NodeEditDialogRefreshService>();
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();

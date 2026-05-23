@@ -391,6 +391,14 @@ The current runtime supports `MqttEnvelope` input and these output request types
 - `FileWriteRequest`
 - `MqttRecordingRequest`
 
+The mapper editor also records an output contract:
+
+- `typed`: validate/coerce the expression result as the configured actor request type.
+- `any`: preview the expression result as arbitrary JSON.
+- `json-schema-file`: record the schema file that should validate the expression result.
+
+Today, runtime execution still uses the typed `outputType` path for actor wiring. JSON Schema validation is implemented as a standalone validator component so the same runtime capability can be reused by mapper hardening, ops checks, and future assertion nodes.
+
 Supported mapper engines:
 
 - `dynamic-expresso` for C#-style field expressions
@@ -416,12 +424,8 @@ flowchart LR
       "engine": "jsonata",
       "inputType": "MqttEnvelope",
       "outputType": "MqttPublishRequest",
-      "map": {
-        "topic": "\"mirror/\" & topic",
-        "payload": "\"mapped:\" & payloadText",
-        "qos": "1",
-        "retain": "false"
-      }
+      "outputContract": "typed",
+      "expression": "{ \"topic\": \"mirror/\" & topic, \"payload\": \"mapped:\" & payloadText, \"qos\": 1, \"retain\": false }"
     }
   },
   "publisher": {
@@ -437,6 +441,36 @@ flowchart LR
 ### Failure Behavior
 
 If mapping fails for one message, the mapper publishes a `FlowError` with the topic in `Context` and continues processing later messages.
+
+## JSON Schema Validator
+
+`json.schema-validator` validates MQTT payload JSON against an inline schema or a schema file. It is a standalone validator node, not hidden filter behavior and not owned by the mapper UI.
+
+### Behavior
+
+```mermaid
+flowchart LR
+    In["Input: MqttEnvelope"] --> Validator["JsonSchemaValidatorComponent"]
+    Validator --> Out["Output: JsonSchemaValidationResult"]
+    Validator -->|schema/runtime failure| Errors["Errors: FlowError code 2000"]
+```
+
+Invalid payloads produce `JsonSchemaValidationResult` values with `IsValid = false` and issue details. Processing failures publish `FlowError` and the component continues with later messages where possible.
+
+### Flow Definition
+
+```json
+{
+  "validator": {
+    "type": "json.schema-validator",
+    "Input": "source.Output",
+    "configuration": {
+      "schemaId": "status-schema",
+      "schema": "{ \"type\": \"object\", \"required\": [\"status\"] }"
+    }
+  }
+}
+```
 
 ## MQTT Publisher
 
