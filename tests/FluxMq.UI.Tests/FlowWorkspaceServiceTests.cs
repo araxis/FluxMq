@@ -1,4 +1,5 @@
 using FluxMq.Core.Models;
+using FluxMq.Pipeline.Components;
 using FluxMq.UI.Models;
 using FluxMq.UI.Services;
 using Shouldly;
@@ -299,6 +300,51 @@ public sealed class FlowWorkspaceServiceTests
             log.Context?.Contains("topic=factory/log", StringComparison.Ordinal) == true));
 
         service.Logs.ShouldContain(log => log.Code == "Ready");
+    }
+
+    [Fact]
+    public async Task RunAsync_CollectsComponentErrorsWithoutFlowLogger()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "flow": {
+                  "generated": {
+                    "type": "generated.source",
+                    "configuration": {
+                      "messages": [
+                        { "topic": "factory/error", "payload": "hello" }
+                      ]
+                    }
+                  },
+                  "filter": {
+                    "type": "mqtt.message-filter",
+                    "Input": "generated.Output",
+                    "configuration": {
+                      "expression": "missing.Value > 0"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+
+        await service.RunAsync();
+        await WaitUntilAsync(() => service.Logs.Any(log =>
+            log.Source == "FlowError" &&
+            log.NodeName == "filter" &&
+            log.PortName == "Errors" &&
+            log.Code == FlowErrorCodes.ProcessingFailed.ToString()));
+
+        service.Logs.Any(log =>
+            log.Source == "FlowError" &&
+            log.Context is not null &&
+            log.Context.Contains("factory/error", StringComparison.Ordinal)).ShouldBeTrue();
     }
 
     [Fact]

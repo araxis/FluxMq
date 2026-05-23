@@ -2,6 +2,7 @@ using FluxMq.App;
 using FluxMq.Core.Models;
 using FluxMq.Components.Logging;
 using FluxMq.Components.Storage.Repositories;
+using FluxMq.Pipeline.Components;
 using FluxMq.Pipeline.Definitions;
 using FluxMq.Pipeline.Runtime;
 using FluxMq.UI.Models;
@@ -556,6 +557,8 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
         foreach (var node in _host.Runtime.Nodes)
         {
+            AttachRuntimeErrorOutputs(node);
+
             if (node.Node is not FlowLoggerComponent logger)
             {
                 continue;
@@ -574,6 +577,25 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
             _runtimeLogTargets.Add(target);
             _runtimeLogLinks.Add(logger.Entries.LinkTo(target, new DataflowLinkOptions { PropagateCompletion = true }));
+        }
+    }
+
+    private void AttachRuntimeErrorOutputs(RuntimeNode node)
+    {
+        foreach (var output in node.Outputs.OfType<OutputPort<FlowError>>())
+        {
+            var address = node.Address;
+            var portName = output.Address.Port.Value;
+            var target = new ActionBlock<FlowError>(
+                error => AppendLog(ToWorkspaceLogEntry(address, portName, error)),
+                new ExecutionDataflowBlockOptions
+                {
+                    EnsureOrdered = true,
+                    MaxDegreeOfParallelism = 1
+                });
+
+            _runtimeLogTargets.Add(target);
+            _runtimeLogLinks.Add(output.Source.LinkTo(target, new DataflowLinkOptions { PropagateCompletion = true }));
         }
     }
 
@@ -640,6 +662,18 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             null,
             BuildRuntimeLogContext(entry));
 
+    private static WorkspaceLogEntry ToWorkspaceLogEntry(NodeAddress address, string portName, FlowError error)
+        => new(
+            error.OccurredAt,
+            "Error",
+            "FlowError",
+            error.Code.ToString(),
+            error.Message,
+            address.Scope,
+            address.Node.Value,
+            portName,
+            BuildFlowErrorContext(error));
+
     private static string? BuildRuntimeLogContext(FlowLogEntry entry)
     {
         var parts = new List<string>();
@@ -662,6 +696,23 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         if (!string.IsNullOrWhiteSpace(entry.PayloadPreview))
         {
             parts.Add($"payload={entry.PayloadPreview}");
+        }
+
+        return parts.Count == 0 ? null : string.Join("; ", parts);
+    }
+
+    private static string? BuildFlowErrorContext(FlowError error)
+    {
+        var parts = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(error.Context))
+        {
+            parts.Add(error.Context);
+        }
+
+        if (error.Exception is not null)
+        {
+            parts.Add($"exception={error.Exception.GetType().Name}: {error.Exception.Message}");
         }
 
         return parts.Count == 0 ? null : string.Join("; ", parts);
