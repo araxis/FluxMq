@@ -1,18 +1,27 @@
 using FluxMq.App;
 using FluxMq.Core.Models;
+using FluxMq.Components.Logging;
 using FluxMq.Components.Storage.Repositories;
+using FluxMq.Pipeline.Definitions;
 using FluxMq.Pipeline.Runtime;
 using FluxMq.UI.Models;
 using Microsoft.Extensions.Configuration;
 using System.Text;
+using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.UI.Services;
 
 public sealed class FlowWorkspaceService : IAsyncDisposable
 {
+    private const int MaxWorkspaceLogs = 1000;
+    private static readonly TimeSpan RuntimeStopTimeout = TimeSpan.FromSeconds(5);
     private readonly FlowDefinitionComposer _definitionComposer;
     private readonly IMessageRepository? _messageRepository;
     private readonly SemaphoreSlim _gate = new(1, 1);
+    private readonly object _logSync = new();
+    private readonly List<WorkspaceLogEntry> _logs = [];
+    private readonly List<IDisposable> _runtimeLogLinks = [];
+    private readonly List<IDataflowBlock> _runtimeLogTargets = [];
     private FlowApplicationHost? _host;
 
     public FlowWorkspaceService(
@@ -37,6 +46,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     public bool HasUnsavedChanges { get; private set; }
     public RuntimeWorkspaceState State { get; private set; } = RuntimeWorkspaceState.Idle;
     public IReadOnlyList<WorkspaceDiagnostic> Diagnostics { get; private set; } = [];
+    public IReadOnlyList<WorkspaceLogEntry> Logs { get; private set; } = [];
 
     public IReadOnlyList<string> WorkflowNames => _definitionComposer.GetWorkflowNames(DefinitionJson);
     public string? ActiveWorkflowName => _activeWorkflowName;
@@ -54,6 +64,17 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     public void SetDisplayName(string name)
     {
         _displayName = string.IsNullOrWhiteSpace(name) ? null : name.Trim();
+        NotifyChanged();
+    }
+
+    public void ClearLogs()
+    {
+        lock (_logSync)
+        {
+            _logs.Clear();
+            Logs = [];
+        }
+
         NotifyChanged();
     }
 
@@ -147,6 +168,9 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     public IReadOnlyList<(MqttConnectionProfile Profile, string Subscription)> GetConnectionProfiles()
         => _definitionComposer.ReadConnectionsFromDefinition(DefinitionJson);
 
+    public IReadOnlyList<(string Name, MqttConnectionProfile Profile, string Subscription)> GetConnectionResources()
+        => _definitionComposer.ReadConnectionResourcesFromDefinition(DefinitionJson);
+
     public IReadOnlyList<string> GetConnectionNames()
     {
         try
@@ -203,7 +227,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     {
         try
         {
-            ReplaceDefinition(_definitionComposer.UpdateNodeConfiguration(DefinitionJson, nodeName, configuration));
+            ReplaceDefinition(_definitionComposer.UpdateNodeConfiguration(DefinitionJson, nodeName, configuration, _activeWorkflowName));
             State = RuntimeWorkspaceState.Idle;
             Diagnostics = [];
         }
@@ -255,7 +279,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     {
         try
         {
-            ReplaceDefinition(_definitionComposer.SyncConnectionAndSaveNode(DefinitionJson, resourceName, profile, nodeName, configuration));
+            ReplaceDefinition(_definitionComposer.SyncConnectionAndSaveNode(DefinitionJson, resourceName, profile, nodeName, configuration, _activeWorkflowName));
             State = RuntimeWorkspaceState.Idle;
             Diagnostics = [];
         }
@@ -352,6 +376,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             var result = _host.Build();
             Diagnostics = CollectDiagnostics(result);
             State = result.IsSuccess ? RuntimeWorkspaceState.Valid : RuntimeWorkspaceState.Faulted;
+            AppendDiagnosticsToLogs(Diagnostics, notify: false);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -360,6 +385,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             [
                 new WorkspaceDiagnostic("Error", "Validation", "Unhandled", exception.Message)
             ];
+            AppendDiagnosticsToLogs(Diagnostics, notify: false);
         }
         finally
         {
@@ -375,9 +401,16 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         {
             await DisposeHostAsync().ConfigureAwait(false);
             _host = FlowApplicationHost.CreateDefault(CreateConfiguration(DefinitionJson), _messageRepository);
-            var result = await _host.StartAsync(cancellationToken).ConfigureAwait(false);
+            var result = _host.Build();
+            if (result.IsSuccess)
+            {
+                AttachRuntimeLoggers();
+                result = await _host.StartBuiltAsync(cancellationToken).ConfigureAwait(false);
+            }
+
             Diagnostics = CollectDiagnostics(result);
             State = result.IsSuccess ? RuntimeWorkspaceState.Running : RuntimeWorkspaceState.Faulted;
+            AppendDiagnosticsToLogs(Diagnostics, notify: false);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -386,6 +419,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             [
                 new WorkspaceDiagnostic("Error", "Runtime", "StartFailed", exception.Message)
             ];
+            AppendDiagnosticsToLogs(Diagnostics, notify: false);
         }
         finally
         {
@@ -400,13 +434,33 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         try
         {
             if (_host is not null)
-                await _host.StopAsync(cancellationToken).ConfigureAwait(false);
+            {
+                using var stopCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                stopCts.CancelAfter(RuntimeStopTimeout);
+
+                try
+                {
+                    await _host.StopAsync(stopCts.Token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+                {
+                    await DisposeHostAsync().ConfigureAwait(false);
+                    State = RuntimeWorkspaceState.Stopped;
+                    Diagnostics =
+                    [
+                        new WorkspaceDiagnostic("Warning", "Runtime", "StopTimedOut", "Flow application stop timed out; runtime was disposed.")
+                    ];
+                    AppendDiagnosticsToLogs(Diagnostics, notify: false);
+                    return;
+                }
+            }
 
             State = RuntimeWorkspaceState.Stopped;
             Diagnostics =
             [
                 new WorkspaceDiagnostic("Info", "Runtime", "Stopped", "Flow application stopped.")
             ];
+            AppendDiagnosticsToLogs(Diagnostics, notify: false);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -415,6 +469,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             [
                 new WorkspaceDiagnostic("Error", "Runtime", "StopFailed", exception.Message)
             ];
+            AppendDiagnosticsToLogs(Diagnostics, notify: false);
         }
         finally
         {
@@ -481,11 +536,135 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
     private async ValueTask DisposeHostAsync()
     {
+        DisposeRuntimeLogSubscriptions();
+
         if (_host is not null)
         {
             await _host.DisposeAsync().ConfigureAwait(false);
             _host = null;
         }
+    }
+
+    private void AttachRuntimeLoggers()
+    {
+        DisposeRuntimeLogSubscriptions();
+
+        if (_host?.Runtime is null)
+        {
+            return;
+        }
+
+        foreach (var node in _host.Runtime.Nodes)
+        {
+            if (node.Node is not FlowLoggerComponent logger)
+            {
+                continue;
+            }
+
+            AppendLogs(logger.RecentEntries.Select(entry => ToWorkspaceLogEntry(node.Address, entry)), notify: false);
+
+            var address = node.Address;
+            var target = new ActionBlock<FlowLogEntry>(
+                entry => AppendLog(ToWorkspaceLogEntry(address, entry)),
+                new ExecutionDataflowBlockOptions
+                {
+                    EnsureOrdered = true,
+                    MaxDegreeOfParallelism = 1
+                });
+
+            _runtimeLogTargets.Add(target);
+            _runtimeLogLinks.Add(logger.Entries.LinkTo(target, new DataflowLinkOptions { PropagateCompletion = true }));
+        }
+    }
+
+    private void DisposeRuntimeLogSubscriptions()
+    {
+        foreach (var link in _runtimeLogLinks)
+        {
+            link.Dispose();
+        }
+
+        foreach (var target in _runtimeLogTargets)
+        {
+            target.Complete();
+        }
+
+        _runtimeLogLinks.Clear();
+        _runtimeLogTargets.Clear();
+    }
+
+    private void AppendDiagnosticsToLogs(IEnumerable<WorkspaceDiagnostic> diagnostics, bool notify = true)
+        => AppendLogs(diagnostics.Select(WorkspaceLogEntry.FromDiagnostic), notify);
+
+    private void AppendLog(WorkspaceLogEntry entry)
+        => AppendLogs([entry]);
+
+    private void AppendLogs(IEnumerable<WorkspaceLogEntry> entries, bool notify = true)
+    {
+        var materialized = entries.ToArray();
+        if (materialized.Length == 0)
+        {
+            return;
+        }
+
+        lock (_logSync)
+        {
+            foreach (var entry in materialized)
+            {
+                _logs.Add(entry);
+            }
+
+            if (_logs.Count > MaxWorkspaceLogs)
+            {
+                _logs.RemoveRange(0, _logs.Count - MaxWorkspaceLogs);
+            }
+
+            Logs = _logs.ToArray();
+        }
+
+        if (notify)
+        {
+            NotifyChanged();
+        }
+    }
+
+    private static WorkspaceLogEntry ToWorkspaceLogEntry(NodeAddress address, FlowLogEntry entry)
+        => new(
+            entry.Timestamp,
+            entry.Severity.ToString(),
+            entry.Source,
+            entry.ErrorCode?.ToString() ?? entry.Source,
+            entry.Message,
+            address.Scope,
+            address.Node.Value,
+            null,
+            BuildRuntimeLogContext(entry));
+
+    private static string? BuildRuntimeLogContext(FlowLogEntry entry)
+    {
+        var parts = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(entry.Topic))
+        {
+            parts.Add($"topic={entry.Topic}");
+        }
+
+        if (entry.PayloadBytes is not null)
+        {
+            parts.Add($"payloadBytes={entry.PayloadBytes}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(entry.Context))
+        {
+            parts.Add(entry.Context);
+        }
+
+        if (!string.IsNullOrWhiteSpace(entry.PayloadPreview))
+        {
+            parts.Add($"payload={entry.PayloadPreview}");
+        }
+
+        return parts.Count == 0 ? null : string.Join("; ", parts);
     }
 
     private void ReplaceDefinition(string json)

@@ -20,6 +20,7 @@ public sealed class FlowDefinitionComposer
     public const string FilterNodeName = "filter";
     public const string RouterNodeName = "router";
     public const string MapperNodeName = "mapper";
+    public const string LoggerNodeName = "logger";
     public const string RecorderNodeName = "recorder";
     public const string PublisherNodeName = "publisher";
     public const string StateSourceNodeName = "state";
@@ -90,7 +91,7 @@ public sealed class FlowDefinitionComposer
     /// resource or workflow-node name. Returns the original JSON unchanged
     /// when the node can't be located. Used by per-node editor widgets.
     /// </summary>
-    public string UpdateNodeConfiguration(string json, string nodeName, JsonObject configuration)
+    public string UpdateNodeConfiguration(string json, string nodeName, JsonObject configuration, string? workflowName = null)
     {
         if (string.IsNullOrWhiteSpace(json) || string.IsNullOrWhiteSpace(nodeName))
         {
@@ -99,6 +100,12 @@ public sealed class FlowDefinitionComposer
 
         var root = ParseOrCreate(json);
         var flowApplication = GetFlowApplication(root);
+
+        if (!string.IsNullOrWhiteSpace(workflowName) &&
+            TryUpdateWorkflowNodeConfiguration(flowApplication, workflowName, nodeName, configuration))
+        {
+            return root.ToJsonString(Options);
+        }
 
         // Resources first.
         if (flowApplication["resources"] is JsonObject resources && resources[nodeName] is JsonObject resourceNode)
@@ -112,9 +119,9 @@ public sealed class FlowDefinitionComposer
         {
             foreach (var workflow in workflows)
             {
-                if (workflow.Value is JsonObject workflowObject && workflowObject[nodeName] is JsonObject workflowNode)
+                if (workflow.Value is JsonObject workflowObject &&
+                    UpdateWorkflowNodeConfiguration(workflowObject, nodeName, configuration))
                 {
-                    workflowNode["configuration"] = configuration;
                     return root.ToJsonString(Options);
                 }
             }
@@ -263,6 +270,7 @@ public sealed class FlowDefinitionComposer
             "mqtt.condition-router" => RouterNodeName,
             "json.schema-validator" => "jsonSchemaValidator",
             "flow.mapper" => MakeUniqueNodeName(workflow, MapperNodeName),
+            "flow.logger" => MakeUniqueNodeName(workflow, LoggerNodeName),
             "mqtt.recording-request" => RecorderNodeName,
             "mqtt.recorder" => RecorderNodeName,
             "mqtt.publish-request" => PublisherNodeName,
@@ -291,7 +299,7 @@ public sealed class FlowDefinitionComposer
         }
         else if (componentType == "mqtt.publisher")
         {
-            node["configuration"] = CreateMqttPublisherConfiguration();
+            node["configuration"] = CreateMqttPublisherConfiguration(FindFirstConnectionResourceName(flowApplication));
         }
         else if (componentType == "generated.source")
         {
@@ -300,6 +308,10 @@ public sealed class FlowDefinitionComposer
         else if (componentType == "replay.source")
         {
             node["configuration"] = CreateReplaySourceConfiguration();
+        }
+        else if (componentType == "flow.logger")
+        {
+            node["configuration"] = CreateLoggerConfiguration();
         }
         else if (componentType is "mqtt.recorder" or "file.writer")
         {
@@ -375,8 +387,13 @@ public sealed class FlowDefinitionComposer
     ///   2. Future workflow nodes that embed broker profile objects directly.
     /// </summary>
     public IReadOnlyList<(MqttConnectionProfile Profile, string Subscription)> ReadConnectionsFromDefinition(string json)
+        => ReadConnectionResourcesFromDefinition(json)
+            .Select(connection => (connection.Profile, connection.Subscription))
+            .ToArray();
+
+    public IReadOnlyList<(string Name, MqttConnectionProfile Profile, string Subscription)> ReadConnectionResourcesFromDefinition(string json)
     {
-        var result = new List<(MqttConnectionProfile, string)>();
+        var result = new List<(string, MqttConnectionProfile, string)>();
         try
         {
             using var doc = JsonDocument.Parse(json);
@@ -433,7 +450,7 @@ public sealed class FlowDefinitionComposer
             }
 
             foreach (var (name, profile) in resourceProfiles)
-                result.Add((profile, triggerSubscriptions.TryGetValue(name, out var sub) ? sub : "#"));
+                result.Add((name, profile, triggerSubscriptions.TryGetValue(name, out var sub) ? sub : "#"));
         }
         catch { }
 
@@ -521,10 +538,37 @@ public sealed class FlowDefinitionComposer
         string resourceName,
         MqttConnectionProfile profile,
         string nodeName,
-        JsonObject nodeConfiguration)
+        JsonObject nodeConfiguration,
+        string? workflowName = null)
     {
         var withResource = UpsertConnectionResource(json, resourceName, profile);
-        return UpdateNodeConfiguration(withResource, nodeName, nodeConfiguration);
+        return UpdateNodeConfiguration(withResource, nodeName, nodeConfiguration, workflowName);
+    }
+
+    private static bool TryUpdateWorkflowNodeConfiguration(
+        JsonObject flowApplication,
+        string workflowName,
+        string nodeName,
+        JsonObject configuration)
+    {
+        if (flowApplication["workflows"] is not JsonObject workflows ||
+            workflows[workflowName] is not JsonObject workflow)
+        {
+            return false;
+        }
+
+        return UpdateWorkflowNodeConfiguration(workflow, nodeName, configuration);
+    }
+
+    private static bool UpdateWorkflowNodeConfiguration(JsonObject workflow, string nodeName, JsonObject configuration)
+    {
+        if (workflow[nodeName] is not JsonObject workflowNode)
+        {
+            return false;
+        }
+
+        workflowNode["configuration"] = configuration;
+        return true;
     }
 
     private static JsonObject CreateConnection(MqttConnectionProfile profile)
@@ -649,12 +693,31 @@ public sealed class FlowDefinitionComposer
             """
         };
 
-    private static JsonObject CreateMqttPublisherConfiguration()
+    private static JsonObject CreateMqttPublisherConfiguration(string? connectionName = null)
         => new()
         {
-            ["connection"] = BrokerResourceName,
+            ["connection"] = string.IsNullOrWhiteSpace(connectionName) ? BrokerResourceName : connectionName,
             ["boundedCapacity"] = 1000
         };
+
+    private static string? FindFirstConnectionResourceName(JsonObject flowApplication)
+    {
+        if (flowApplication["resources"] is not JsonObject resources)
+        {
+            return null;
+        }
+
+        foreach (var resource in resources)
+        {
+            if (resource.Value is JsonObject resourceNode &&
+                resourceNode["type"]?.GetValue<string?>() == "mqtt.connection")
+            {
+                return resource.Key;
+            }
+        }
+
+        return null;
+    }
 
     private static JsonObject CreateGeneratedSourceConfiguration()
         => new()
@@ -676,6 +739,15 @@ public sealed class FlowDefinitionComposer
             ["sessionId"] = string.Empty,
             ["speed"] = 1,
             ["boundedCapacity"] = 1000
+        };
+
+    private static JsonObject CreateLoggerConfiguration()
+        => new()
+        {
+            ["boundedCapacity"] = 1000,
+            ["maxEntries"] = 500,
+            ["includePayloadPreview"] = true,
+            ["maxPayloadPreviewChars"] = 512
         };
 
     private static JsonObject CreateActorCapacityConfiguration()

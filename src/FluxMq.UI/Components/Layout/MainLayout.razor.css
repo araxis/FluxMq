@@ -131,6 +131,25 @@
     padding: 0 8px;
 }
 
+.flux-command-loading {
+    align-items: center;
+    display: inline-flex;
+    gap: 4px;
+}
+
+.flux-command-spin-icon {
+    animation: flux-command-spin 0.85s linear infinite;
+    font-size: 14px !important;
+    height: 14px !important;
+    width: 14px !important;
+}
+
+@keyframes flux-command-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .flux-runstate {
     align-items: center;
     background: var(--flux-surface-2);

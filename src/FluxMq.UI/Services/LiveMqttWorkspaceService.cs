@@ -18,12 +18,15 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         public IMqttSession? Session { get; set; }
         public CancellationTokenSource? Cts { get; set; }
         public Task? ReaderTask { get; set; }
+        public EventHandler<MqttSessionState>? StateChangedHandler { get; set; }
     }
 
     private readonly Dictionary<Guid, ConnectionEntry> _entries = new();
     private readonly ISessionRepository _sessionRepository;
     private readonly IMessageRepository _messageRepository;
     private readonly WorkspaceMessageProjection _projection;
+    private readonly Func<MqttConnectionProfile, IMqttSession> _sessionFactory;
+    private readonly HashSet<Guid> _autoStartedConnectionIds = [];
     private StoredSession? _recordingSession;
     private StoredSession? _selectedStoredSession;
     private IReadOnlyList<MqttEnvelope> _selectedSessionMessages = [];
@@ -33,10 +36,20 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         ITopicIndex topicIndex,
         ISessionRepository sessionRepository,
         IMessageRepository messageRepository)
+        : this(topicIndex, sessionRepository, messageRepository, static profile => new MqttSession(profile))
+    {
+    }
+
+    public LiveMqttWorkspaceService(
+        ITopicIndex topicIndex,
+        ISessionRepository sessionRepository,
+        IMessageRepository messageRepository,
+        Func<MqttConnectionProfile, IMqttSession> sessionFactory)
     {
         _sessionRepository = sessionRepository;
         _messageRepository = messageRepository;
         _projection = new WorkspaceMessageProjection(topicIndex);
+        _sessionFactory = sessionFactory ?? throw new ArgumentNullException(nameof(sessionFactory));
     }
 
     public IReadOnlyList<ManagedConnection> Connections => [.. _entries.Values.Select(e => e.Connection)];
@@ -78,25 +91,67 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
 
     public event EventHandler? Changed;
 
-    public void AddConnection(MqttConnectionProfile profile, string subscription = "#")
+    public void AddConnection(MqttConnectionProfile profile, string subscription = "#", string? resourceName = null)
     {
-        var conn = new ManagedConnection(profile, subscription);
+        var conn = new ManagedConnection(profile, subscription, resourceName);
         _entries[conn.Id] = new ConnectionEntry(conn);
         NotifyChanged();
     }
 
-    public void AddConnectionIfAbsent(MqttConnectionProfile profile, string subscription = "#")
+    public ManagedConnection AddConnectionIfAbsent(MqttConnectionProfile profile, string subscription = "#", string? resourceName = null)
     {
-        var already = _entries.Values.Any(e =>
-            string.Equals(e.Connection.Profile.Host, profile.Host, StringComparison.OrdinalIgnoreCase) &&
-            e.Connection.Profile.Port == profile.Port);
-        if (!already)
-            AddConnection(profile, subscription);
+        var normalizedResourceName = NormalizeResourceName(resourceName);
+        var existing = _entries.Values.FirstOrDefault(e => ConnectionMatches(e.Connection, profile, normalizedResourceName));
+
+        if (existing is not null)
+        {
+            return existing.Connection;
+        }
+
+        var conn = new ManagedConnection(profile, subscription, normalizedResourceName);
+        _entries[conn.Id] = new ConnectionEntry(conn);
+        NotifyChanged();
+        return conn;
+    }
+
+    public Task<bool> EnsureConnectionsAsync(
+        IEnumerable<(MqttConnectionProfile Profile, string Subscription)> connections,
+        CancellationToken cancellationToken = default)
+        => EnsureConnectionsAsync(
+            connections.Select(static connection => (
+                ResourceName: string.Empty,
+                connection.Profile,
+                connection.Subscription)),
+            cancellationToken);
+
+    public async Task<bool> EnsureConnectionsAsync(
+        IEnumerable<(string ResourceName, MqttConnectionProfile Profile, string Subscription)> connections,
+        CancellationToken cancellationToken = default)
+    {
+        var managedConnections = connections
+            .Select(connection => AddConnectionIfAbsent(connection.Profile, connection.Subscription, connection.ResourceName))
+            .DistinctBy(static connection => connection.Id)
+            .ToArray();
+
+        foreach (var connection in managedConnections)
+        {
+            if (connection.State != MqttSessionState.Connected)
+            {
+                await ConnectAsync(connection.Id, cancellationToken).ConfigureAwait(false);
+                if (connection.State == MqttSessionState.Connected)
+                {
+                    _autoStartedConnectionIds.Add(connection.Id);
+                }
+            }
+        }
+
+        return managedConnections.All(static connection => connection.State == MqttSessionState.Connected);
     }
 
     public async Task RemoveConnectionAsync(Guid id, CancellationToken cancellationToken = default)
     {
         if (!_entries.TryGetValue(id, out var entry)) return;
+        _autoStartedConnectionIds.Remove(id);
         await DisconnectEntryAsync(entry, cancellationToken).ConfigureAwait(false);
         _entries.Remove(id);
         NotifyChanged();
@@ -110,9 +165,10 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         await DisconnectEntryAsync(entry, cancellationToken).ConfigureAwait(false);
 
         entry.Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        var session = new MqttSession(conn.Profile);
+        var session = _sessionFactory(CreateWorkspaceSessionProfile(conn.Profile, conn.Id));
         entry.Session = session;
-        session.StateChanged += (_, state) => OnConnectionStateChanged(id, state);
+        entry.StateChangedHandler = (_, state) => OnConnectionStateChanged(id, state);
+        session.StateChanged += entry.StateChangedHandler;
 
         try
         {
@@ -142,7 +198,30 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
     public async Task DisconnectAsync(Guid id, CancellationToken cancellationToken = default)
     {
         if (!_entries.TryGetValue(id, out var entry)) return;
+        _autoStartedConnectionIds.Remove(id);
         await DisconnectEntryAsync(entry, cancellationToken).ConfigureAwait(false);
+        NotifyChanged();
+    }
+
+    public async Task DisconnectAutoStartedConnectionsAsync(CancellationToken cancellationToken = default)
+    {
+        if (_autoStartedConnectionIds.Count == 0)
+        {
+            return;
+        }
+
+        var ids = _autoStartedConnectionIds.ToArray();
+        _autoStartedConnectionIds.Clear();
+
+        foreach (var id in ids)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (_entries.TryGetValue(id, out var entry))
+            {
+                await DisconnectEntryAsync(entry, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
         NotifyChanged();
     }
 
@@ -169,11 +248,27 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce,
         bool retain = false,
         CancellationToken cancellationToken = default)
-    {
-        var session = _entries.Values
-            .FirstOrDefault(e => e.Connection.State == MqttSessionState.Connected)?.Session;
+        => await PublishAsync(
+            connectionId: null,
+            topic,
+            payload,
+            qos,
+            retain,
+            cancellationToken).ConfigureAwait(false);
 
-        if (session is null)
+    public async Task PublishAsync(
+        Guid? connectionId,
+        string topic,
+        string payload,
+        MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce,
+        bool retain = false,
+        CancellationToken cancellationToken = default)
+    {
+        var entry = connectionId is { } id
+            ? _entries.Values.FirstOrDefault(e => e.Connection.Id == id && e.Connection.State == MqttSessionState.Connected)
+            : _entries.Values.FirstOrDefault(e => e.Connection.State == MqttSessionState.Connected);
+
+        if (entry?.Session is null)
         {
             Diagnostics = [new WorkspaceDiagnostic("Warning", "MQTT", "NotConnected", "Connect before publishing.")];
             NotifyChanged();
@@ -182,14 +277,14 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
 
         try
         {
-            await session.PublishAsync(
+            await entry.Session.PublishAsync(
                 topic,
                 Encoding.UTF8.GetBytes(payload),
                 qos,
                 retain,
                 cancellationToken).ConfigureAwait(false);
 
-            Diagnostics = [new WorkspaceDiagnostic("Info", "MQTT", "Published", $"Published to {topic}.")];
+            Diagnostics = [new WorkspaceDiagnostic("Info", "MQTT", "Published", $"Published to {topic} through {entry.Connection.ResourceName}.")];
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -282,6 +377,7 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        _autoStartedConnectionIds.Clear();
         foreach (var entry in _entries.Values)
             await DisconnectEntryAsync(entry, CancellationToken.None).ConfigureAwait(false);
         await _projection.DisposeAsync().ConfigureAwait(false);
@@ -307,7 +403,12 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
 
         if (session is not null)
         {
-            session.StateChanged -= (_, state) => OnConnectionStateChanged(entry.Connection.Id, state);
+            if (entry.StateChangedHandler is not null)
+            {
+                session.StateChanged -= entry.StateChangedHandler;
+                entry.StateChangedHandler = null;
+            }
+
             await session.DisposeAsync().ConfigureAwait(false);
         }
 
@@ -367,6 +468,43 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
 
     private static string NormalizeProject(string? projectName)
         => string.IsNullOrWhiteSpace(projectName) ? "Default" : projectName.Trim();
+
+    private static string? NormalizeResourceName(string? resourceName)
+        => string.IsNullOrWhiteSpace(resourceName) ? null : resourceName.Trim();
+
+    private static bool ConnectionMatches(
+        ManagedConnection connection,
+        MqttConnectionProfile profile,
+        string? resourceName)
+    {
+        if (!string.IsNullOrWhiteSpace(resourceName))
+        {
+            return string.Equals(connection.ResourceName, resourceName, StringComparison.Ordinal);
+        }
+
+        return string.Equals(connection.Profile.Host, profile.Host, StringComparison.OrdinalIgnoreCase) &&
+               connection.Profile.Port == profile.Port &&
+               connection.Profile.UseTls == profile.UseTls &&
+               string.Equals(connection.Profile.Username, profile.Username, StringComparison.Ordinal);
+    }
+
+    private static MqttConnectionProfile CreateWorkspaceSessionProfile(MqttConnectionProfile profile, Guid connectionId)
+    {
+        var baseClientId = string.IsNullOrWhiteSpace(profile.ClientId)
+            ? "fluxmq"
+            : profile.ClientId.Trim();
+
+        const int maxBaseLength = 48;
+        if (baseClientId.Length > maxBaseLength)
+        {
+            baseClientId = baseClientId[..maxBaseLength];
+        }
+
+        return profile with
+        {
+            ClientId = $"{baseClientId}-workspace-{connectionId:N}"[..Math.Min(baseClientId.Length + 19, 64)]
+        };
+    }
 
     private static string[] ParseSubscriptionFilters(string raw)
     {

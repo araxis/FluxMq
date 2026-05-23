@@ -3,6 +3,7 @@ using FluxMq.Core.Models;
 using FluxMq.Core.Session;
 using FluxMq.Components.FileWriter;
 using FluxMq.Components.JsonSchema;
+using FluxMq.Components.Logging;
 using FluxMq.Components.MessageFilter;
 using FluxMq.Components.MessageSource;
 using FluxMq.Components.MqttMetrics;
@@ -26,6 +27,8 @@ public static class RuntimeNodeFactoryRegistryExtensions
     private static readonly PortName InputPort = new("Input");
     private static readonly PortName OutputPort = new("Output");
     private static readonly PortName SnapshotsPort = new("Snapshots");
+    private static readonly PortName EntriesPort = new("Entries");
+    private static readonly PortName FlowErrorsPort = new("FlowErrors");
     private static readonly PortName ErrorsPort = new("Errors");
 
     public static RuntimeNodeFactoryRegistry RegisterPipelineComponentFactories(
@@ -47,6 +50,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .Register(PipelineFlowNodeTypes.PayloadInspector, CreatePayloadInspector)
             .Register(PipelineFlowNodeTypes.MqttMetrics, CreateMqttMetrics)
             .Register(PipelineFlowNodeTypes.MqttMetricsSink, CreateMqttMetrics)
+            .Register(PipelineFlowNodeTypes.FlowLogger, CreateFlowLogger)
             .Register(PipelineFlowNodeTypes.MessageFilter, context => CreateMessageFilter(context.Address, context.Definition, expressionEngine))
             .Register(PipelineFlowNodeTypes.JsonSchemaValidator, context => CreateJsonSchemaValidator(context.Address, context.Definition))
             .Register(PipelineFlowNodeTypes.DynamicMapper, context => CreateDynamicMapper(context.Address, context.Definition, expressionEngine))
@@ -233,6 +237,38 @@ public static class RuntimeNodeFactoryRegistryExtensions
             outputs:
             [
                 new OutputPort<MqttMetricsSnapshot>(address.Port(SnapshotsPort), component.Snapshots),
+                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
+            ]);
+    }
+
+    private static RuntimeNode CreateFlowLogger(NodeAddress address, NodeDefinition definition)
+    {
+        var hasMessageInput = definition.Ports.ContainsKey(InputPort.Value);
+        var hasFlowErrorInput = definition.Ports.ContainsKey(FlowErrorsPort.Value);
+        if (!hasMessageInput && !hasFlowErrorInput)
+        {
+            hasMessageInput = true;
+        }
+
+        var component = new FlowLoggerComponent(
+            boundedCapacity: GetBoundedCapacity(definition),
+            maxEntries: GetIntOrDefault(definition, "maxEntries", 500, minValue: 1),
+            includePayloadPreview: GetBoolOrDefault(definition, "includePayloadPreview", false),
+            maxPayloadPreviewChars: GetIntOrDefault(definition, "maxPayloadPreviewChars", 512, minValue: 1),
+            waitForMessageInputCompletion: hasMessageInput,
+            waitForFlowErrorInputCompletion: hasFlowErrorInput);
+
+        return RuntimeNode.Create(
+            address,
+            component,
+            inputs:
+            [
+                new InputPort<MqttEnvelope>(address.Port(InputPort), component.Input),
+                new InputPort<FlowError>(address.Port(FlowErrorsPort), component.FlowErrors)
+            ],
+            outputs:
+            [
+                new OutputPort<FlowLogEntry>(address.Port(EntriesPort), component.Entries),
                 new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
             ]);
     }
@@ -823,6 +859,21 @@ public static class RuntimeNodeFactoryRegistryExtensions
         }
 
         return value.GetBoolean();
+    }
+
+    private static int GetIntOrDefault(NodeDefinition definition, string key, int defaultValue, int minValue)
+    {
+        if (!definition.Configuration.TryGetValue(key, out var value))
+        {
+            return defaultValue;
+        }
+
+        if (value.ValueKind != JsonValueKind.Number || !value.TryGetInt32(out var result) || result < minValue)
+        {
+            throw new InvalidOperationException($"Configuration value '{key}' must be an integer greater than or equal to {minValue}.");
+        }
+
+        return result;
     }
 
     private static double GetDoubleOrDefault(NodeDefinition definition, string key, double defaultValue)

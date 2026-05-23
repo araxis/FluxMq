@@ -1,4 +1,5 @@
 @using FluxMq.UI.Components.Diagram
+@using FluxMq.Core.Models
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
 @inject LiveMqttWorkspaceService Live
 
@@ -14,15 +15,15 @@
     </Body>
     <Editor>
         @{
-            var liveConnections = Live.Connections;
+            var brokerOptions = BrokerOptions;
         }
-        @if (liveConnections.Count > 0)
+        @if (brokerOptions.Count > 0)
         {
             <MudSelect T="string" Label="Broker connection" @bind-Value="_connection"
                        Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true">
-                @foreach (var conn in liveConnections)
+                @foreach (var option in brokerOptions)
                 {
-                    <MudSelectItem Value="@conn.Profile.Name">@conn.Profile.Name (@conn.Profile.Host:@conn.Profile.Port)</MudSelectItem>
+                    <MudSelectItem Value="@option.Name">@option.Label</MudSelectItem>
                 }
             </MudSelect>
         }
@@ -45,6 +46,44 @@
 
     private string _connection = string.Empty;
 
+    private IReadOnlyList<BrokerOption> BrokerOptions
+    {
+        get
+        {
+            var options = new Dictionary<string, BrokerOption>(StringComparer.Ordinal);
+            foreach (var (name, profile, _) in Flow.GetConnectionResources())
+            {
+                AddOption(name, profile, isAppResource: true);
+            }
+
+            foreach (var connection in Live.Connections)
+            {
+                AddOption(connection.ResourceName, connection.Profile, isAppResource: false);
+            }
+
+            return options.Values
+                .OrderByDescending(static option => option.IsAppResource)
+                .ThenBy(static option => option.Name, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            void AddOption(string? name, MqttConnectionProfile profile, bool isAppResource)
+            {
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    return;
+                }
+
+                var resourceName = name.Trim();
+                options.TryAdd(
+                    resourceName,
+                    new BrokerOption(
+                        resourceName,
+                        $"{resourceName} ({profile.Host}:{profile.Port})",
+                        isAppResource));
+            }
+        }
+    }
+
     protected override void OnParametersSet() => LoadDraft();
 
     private void LoadDraft() => _connection = Model.Connection;
@@ -53,8 +92,17 @@
     {
         Model.Connection = _connection;
 
+        var isExistingAppResource = Flow.GetConnectionNames()
+            .Any(name => string.Equals(name, _connection, StringComparison.Ordinal));
+
+        if (isExistingAppResource)
+        {
+            Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
+            return Task.CompletedTask;
+        }
+
         var selectedProfile = Live.Connections
-            .FirstOrDefault(c => string.Equals(c.Profile.Name, _connection, StringComparison.OrdinalIgnoreCase))
+            .FirstOrDefault(c => string.Equals(c.ResourceName, _connection, StringComparison.Ordinal))
             ?.Profile;
 
         if (selectedProfile is not null)
@@ -64,4 +112,6 @@
 
         return Task.CompletedTask;
     }
+
+    private sealed record BrokerOption(string Name, string Label, bool IsAppResource = false);
 }

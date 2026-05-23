@@ -16,12 +16,39 @@ public sealed class FlowDefinitionComposerTests
         var catalog = new FlowComponentCatalog();
 
         catalog.Components.ShouldContain(component => component.Type == "flow.mapper");
+        catalog.Components.ShouldContain(component => component.Type == "flow.logger");
         catalog.Components.ShouldContain(component => component.Type == "mqtt.trigger");
         catalog.Components.ShouldNotContain(component => component.Type == "mqtt.publish-request");
         catalog.Components.ShouldNotContain(component => component.Type == "mqtt.recording-request");
         catalog.Components.ShouldNotContain(component => component.Type == "file.write-request");
 
         catalog.Find("mqtt.publish-request").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void ComponentCatalog_TriggerUsesConfiguredBrokerWithoutConnectionPort()
+    {
+        var catalog = new FlowComponentCatalog();
+
+        var descriptor = catalog.Find("mqtt.trigger").ShouldNotBeNull();
+
+        descriptor.Ports.ShouldNotContain(port => port.Name == "Connection");
+        descriptor.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "MqttEnvelope" && !port.IsInput);
+        descriptor.Ports.ShouldContain(port => port.Name == "Errors" && port.ValueType == "FlowError" && !port.IsInput);
+    }
+
+    [Fact]
+    public void ComponentCatalog_ExposesFlowLoggerPorts()
+    {
+        var catalog = new FlowComponentCatalog();
+
+        var descriptor = catalog.Find("flow.logger").ShouldNotBeNull();
+
+        descriptor.DisplayName.ShouldBe("Flow Logger");
+        descriptor.Category.ShouldBe("Observer");
+        descriptor.Ports.ShouldContain(port => port.Name == "Input" && port.ValueType == "MqttEnvelope" && port.IsInput);
+        descriptor.Ports.ShouldContain(port => port.Name == "FlowErrors" && port.ValueType == "FlowError" && port.IsInput);
+        descriptor.Ports.ShouldContain(port => port.Name == "Entries" && port.ValueType == "FlowLogEntry" && !port.IsInput);
     }
 
     [Fact]
@@ -205,6 +232,86 @@ public sealed class FlowDefinitionComposerTests
         publisher.TryGetProperty("Input", out _).ShouldBeFalse();
     }
 
+    [Fact]
+    public void AddComponent_DefaultsPublisherToFirstConnectionResource()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = """
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "resources": {
+                "brokerA": {
+                  "type": "mqtt.connection",
+                  "configuration": {
+                    "profile": {
+                      "name": "broker-a",
+                      "host": "localhost",
+                      "port": 1883,
+                      "clientId": "a"
+                    }
+                  }
+                },
+                "brokerB": {
+                  "type": "mqtt.connection",
+                  "configuration": {
+                    "profile": {
+                      "name": "broker-b",
+                      "host": "localhost",
+                      "port": 1884,
+                      "clientId": "b"
+                    }
+                  }
+                }
+              },
+              "workflows": {
+                "pipe": {}
+              }
+            }
+          }
+        }
+        """;
+
+        var updated = composer.AddComponent(initial, "mqtt.publisher", "pipe");
+
+        using var document = JsonDocument.Parse(updated);
+        var publisher = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty("pipe")
+            .GetProperty(FlowDefinitionComposer.PublisherNodeName);
+
+        publisher.GetProperty("configuration").GetProperty("connection").GetString()
+            .ShouldBe("brokerA");
+    }
+
+    [Fact]
+    public void AddComponent_WiresFlowLoggerToSourceAndAddsConfiguration()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var updated = composer.AddComponent(initial, "flow.logger");
+
+        using var document = JsonDocument.Parse(updated);
+        var logger = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty(FlowDefinitionComposer.LoggerNodeName);
+
+        logger.GetProperty("type").GetString().ShouldBe("flow.logger");
+        logger.GetProperty("Input").GetString().ShouldBe($"{FlowDefinitionComposer.TriggerNodeName}.Output");
+        logger.GetProperty("configuration").GetProperty("boundedCapacity").GetInt32()
+            .ShouldBe(1000);
+        logger.GetProperty("configuration").GetProperty("maxEntries").GetInt32()
+            .ShouldBe(500);
+    }
+
     [Theory]
     [InlineData("mqtt.recorder", FlowDefinitionComposer.RecorderNodeName)]
     [InlineData("file.writer", "fileWriter")]
@@ -331,5 +438,69 @@ public sealed class FlowDefinitionComposerTests
 
         workflows.TryGetProperty("myPipeline", out var myPipeline).ShouldBeTrue();
         myPipeline.TryGetProperty(FlowDefinitionComposer.InspectorNodeName, out _).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void UpdateNodeConfiguration_UsesWorkflowScopeWhenNodeNamesRepeat()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = """
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "pip1": {
+                  "trigger": {
+                    "type": "mqtt.trigger",
+                    "configuration": {
+                      "connection": "broker1",
+                      "subscriptions": ["one/#"]
+                    }
+                  }
+                },
+                "pip2": {
+                  "trigger": {
+                    "type": "mqtt.trigger",
+                    "configuration": {
+                      "subscriptions": ["two/#"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """;
+
+        var updated = composer.UpdateNodeConfiguration(
+            json,
+            "trigger",
+            new System.Text.Json.Nodes.JsonObject
+            {
+                ["connection"] = "broker2",
+                ["subscriptions"] = new System.Text.Json.Nodes.JsonArray("two/#"),
+                ["boundedCapacity"] = 1000
+            },
+            "pip2");
+
+        using var document = JsonDocument.Parse(updated);
+        var workflows = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows");
+
+        workflows.GetProperty("pip1")
+            .GetProperty("trigger")
+            .GetProperty("configuration")
+            .GetProperty("connection")
+            .GetString()
+            .ShouldBe("broker1");
+
+        workflows.GetProperty("pip2")
+            .GetProperty("trigger")
+            .GetProperty("configuration")
+            .GetProperty("connection")
+            .GetString()
+            .ShouldBe("broker2");
     }
 }

@@ -1,5 +1,6 @@
 using Shouldly;
 using FluxMq.Components.MessageSource;
+using FluxMq.Core.Session;
 using FluxMq.Pipeline.Components;
 using System.Threading.Tasks.Dataflow;
 
@@ -16,6 +17,25 @@ public sealed class MqttConnectionComponentTests
         await component.StartAsync();
 
         session.ConnectCalls.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task StartAsync_WaitsForConnectionBeforeReturning()
+    {
+        var connectGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var session = new TestMqttSession(connectDelay: connectGate.Task);
+        var component = new MqttConnectionComponent(session);
+
+        var startTask = component.StartAsync();
+        await Task.Delay(50);
+
+        startTask.IsCompleted.ShouldBeFalse();
+        session.State.ShouldBe(MqttSessionState.Connecting);
+
+        connectGate.SetResult();
+
+        await startTask.WaitAsync(TimeSpan.FromSeconds(5));
+        session.State.ShouldBe(MqttSessionState.Connected);
     }
 
     [Fact]

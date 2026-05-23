@@ -564,4 +564,52 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 22 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 61 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -m:1` passes with 266 tests.
-  - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false` passes with the existing WinAppSDK PRI249 warnings.
+  - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false` passes with 0 warnings.
+
+## 2026-05-23 - Runtime logger slice
+
+- Added `flow.logger` as a standalone observer component:
+  - `Input: MqttEnvelope`
+  - `FlowErrors: FlowError`
+  - `Entries: FlowLogEntry`
+  - `Errors: FlowError`
+- The logger keeps bounded recent history so the UI can collect entries even when a generated source completes quickly.
+- Registered the logger in the runtime factory registry, UI catalog, composer defaults, and generic node icon mapping.
+- Added workspace log history beside existing diagnostics:
+  - validation, run, and stop diagnostics append to history
+  - runtime logger entries append while an app is running
+  - history is bounded and can be cleared per project
+- Added a right-inspector `Logs` tab with filtering, severity styling, scope, and context.
+- Improved the `Logs` tab presentation so entries show an explicit level label, severity-specific icons, row treatment, source/code, scope, and context instead of reading like raw strings.
+- Fixed scoped node editor saves when multiple pipelines contain the same node name:
+  - node configuration updates now target the active workflow first
+  - broker-backed node saves now update the selected workflow node instead of the first matching node name
+  - this prevents `pip2.trigger` from visually showing a broker while its JSON still lacks `configuration.connection`
+- Fixed MQTT runtime startup ordering:
+  - `mqtt.connection` now awaits the broker connection before reporting itself started
+  - `mqtt.trigger` no longer races ahead and tries to subscribe while the underlying MQTT client is still disconnected
+  - connection failures now surface at the broker resource instead of as misleading trigger subscription failures
+- Tightened multi-broker desktop behavior:
+  - `Run` now ensures app broker resources are registered and connected in the desktop live workspace before starting runtime execution
+  - live workspace connections now retain the app broker resource name, such as `broker1` or `broker2`
+  - the right-side Publish panel can target a specific connected broker instead of always using the first connected session
+  - MQTT Trigger, Connection State Trigger, and MQTT Publisher editors now select broker resources by app resource name with endpoint labels
+  - desktop live sessions use a separate workspace client id so the live tools do not collide with runtime client ids
+- Fixed app-run broker ownership:
+  - live broker sessions started automatically by `Run` are tracked as app-started sessions
+  - `Stop` now disconnects those app-started sessions while leaving manually connected broker sessions alone
+  - workspace stop has a bounded timeout so a stalled runtime stop cannot keep the top toolbar busy indefinitely
+- Improved runtime controls and publisher defaults:
+  - the top-bar `Stop` action now shows a compact spinner beside the `Stop` label while the async stop operation is in progress
+  - the right-side Publish panel selects the first broker resource from the active app by default
+  - newly added MQTT Publisher nodes default their broker configuration to the first app broker resource instead of the generic fallback
+  - the MQTT Publisher editor resolves that same first app broker when opening a node that still has the generic fallback value
+- Cleaned up the Live MQTT Trigger node contract:
+  - the trigger no longer exposes a canvas `Connection` input port
+  - broker selection remains a configuration/editor concern through the broker resource dropdown
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 100 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 23 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutDir="$env:TEMP\FluxMqVerifyUiTests\"` passes with 75 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -m:1` passes with 285 tests.
+  - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false` passes with 0 warnings.

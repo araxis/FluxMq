@@ -35,6 +35,7 @@ Actor editors are in place for `mqtt.publisher`, `mqtt.recorder`, and `file.writ
 
 The current diagnostics slice attaches validation, runtime build, and node startup failures to the responsible node where possible. Diagram nodes now show error/warning/info status in their border and header tooltip while the existing workspace diagnostic list remains available for global errors.
 The desktop shell now exposes active-app `Validate`, `Run`, and `Stop` actions in the top bar, plus an app runtime state pill, so validation/run feedback is separate from live broker connection state.
+The current logger slice adds `flow.logger` as a standalone observer component with explicit `Input`, `FlowErrors`, `Entries`, and `Errors` ports. Workspace logs are becoming a history surface for validation, run/stop feedback, and runtime logger entries, while diagnostics remain the current status view.
 
 ## Step-by-Step Plan
 
@@ -262,14 +263,42 @@ Done when:
 - Workspace diagnostics now carry optional workflow/node/port metadata.
 - Diagram nodes now render node-scoped diagnostics as border status plus a header tooltip.
 - The desktop top bar now exposes active-app `Validate`, `Run`, and `Stop` actions and an app runtime state pill, instead of leaving validation/run paths hidden behind service methods.
+- Added the first runtime logger slice:
+  - `flow.logger` observes MQTT envelopes and `FlowError` inputs and emits structured `FlowLogEntry` values.
+  - the runtime factory, component catalog, composer, and generic node icon now treat the logger as a first-class observer.
+  - active project workspaces keep bounded log history and collect validation/run/stop diagnostics into that history.
+  - the right inspector has a `Logs` tab with filtering and clear actions.
+  - log rows now show explicit level labels, severity icons, source/code, scope, and context with level-specific formatting.
+- Fixed runtime MQTT startup ordering so `mqtt.connection` awaits broker connection before `mqtt.trigger` subscriptions run; trigger logs should no longer show the disconnected-client race.
+- Tightened the desktop multi-broker model:
+  - app broker resources are tracked by resource name in the live workspace
+  - `Run` connects configured broker resources before starting the runtime
+  - the right-side Publish panel can target a selected broker
+  - MQTT Trigger, Connection State Trigger, and MQTT Publisher editors select broker resources by app resource key with endpoint labels
+- Fixed app-run broker ownership:
+  - `Run` marks only the live broker sessions it had to start
+  - `Stop` disconnects those app-started sessions and preserves manually connected broker sessions
+  - workspace stop has a bounded timeout so the top toolbar does not stay busy if runtime completion stalls
+- Improved control feedback and publisher defaults:
+  - `Stop` shows a compact spinner beside the `Stop` label during the async stop path
+  - the right-side Publish panel defaults to the first broker resource from the active app
+  - MQTT Publisher nodes default to the first app broker resource when added or when their editor opens with the generic fallback
+- Removed the Live MQTT Trigger `Connection` canvas port; broker selection is handled through node configuration and the broker resource dropdown.
 
 ## Next Action
 
-Continue Phase 5 after review of the node diagnostics slice:
+Continue Phase 5 after review of the runtime logger slice:
 
-1. In the desktop app top bar, confirm `Validate`, `Run`, and `Stop` are visible when an app is open.
-2. Confirm `Validate` marks a bad node configuration on the graph and updates the app state pill to `App faulted`.
-3. Restore the bad value, run `Validate` again, and confirm the node status clears and the state pill changes to `App valid`.
-4. Build and validate a visual flow: `mqtt.trigger -> message filter -> dynamic mapper -> mqtt.publisher`.
-5. Next slice: capture component `FlowError` outputs into the same diagnostics path when a flow is running.
-6. Add pass/fail routing or assertion components only after the plain validation-result output feels right.
+1. In the desktop right inspector, open `Logs` and confirm validation messages appear after pressing `Validate`.
+2. Run a live MQTT trigger flow against an available broker and confirm the previous `MQTT client is not connected` trigger-start error is gone.
+3. Open an app with two broker resources and confirm MQTT Publisher, MQTT Trigger, and the right-side Publish panel show broker-resource dropdowns.
+4. Add `Flow Logger` to a flow with a source, run it, and confirm MQTT message entries appear in `Logs`.
+5. Confirm each log row has a visible `Level: ...` label, matching icon/color treatment, source/code, and scope when available.
+6. Run an app that auto-connects a broker, press `Stop`, and confirm that app-started broker sessions disconnect and the top toolbar is enabled again.
+7. While stopping, confirm the Stop action shows the compact spinner beside the `Stop` label.
+8. In an app with multiple broker resources, open the Publish tab and confirm the first app broker is selected by default.
+9. Add or edit an MQTT Publisher node and confirm its broker field defaults to the first app broker.
+10. Manually connect a broker, run and stop the app, and confirm the manually connected broker remains connected.
+11. Try the filter box and clear button in `Logs`.
+12. Next slice: make component error wiring easier so `Errors` outputs can be routed to a logger without manual JSON edits.
+13. Add pass/fail routing or assertion components only after the plain validation-result and log-entry surfaces feel right.

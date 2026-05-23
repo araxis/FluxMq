@@ -62,7 +62,6 @@ public sealed class FlowComponentCatalog
             "Subscribes to a configured broker connection and emits live MQTT envelopes.",
             IsResource: false,
             [
-                new("Connection", "MqttConnection", IsInput: true),
                 new("Output", "MqttEnvelope", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ]),
@@ -161,6 +160,18 @@ public sealed class FlowComponentCatalog
             [
                 new("Input", "MqttEnvelope", IsInput: true),
                 new("Snapshots", "MqttMetricsSnapshot", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "flow.logger",
+            "Flow Logger",
+            "Observer",
+            "Captures MQTT envelopes and flow errors into structured log entries.",
+            IsResource: false,
+            [
+                new("Input", "MqttEnvelope", IsInput: true),
+                new("FlowErrors", "FlowError", IsInput: true),
+                new("Entries", "FlowLogEntry", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(

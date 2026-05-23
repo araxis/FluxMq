@@ -50,15 +50,41 @@ public sealed class MqttConnectionComponent : IFlowNode, IAsyncDisposable
     /// <summary>Broadcast of every envelope received by the session. Triggers link their filters here.</summary>
     public ISourceBlock<MqttEnvelope> Messages => _broadcast;
 
-    public Task StartAsync(CancellationToken cancellationToken = default)
+    public async Task StartAsync(CancellationToken cancellationToken = default)
     {
         if (Interlocked.Exchange(ref _started, 1) == 1)
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        _pumpTask = RunAsync(cancellationToken);
-        return Task.CompletedTask;
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, cancellationToken);
+        try
+        {
+            if (_session.State is not MqttSessionState.Connected)
+            {
+                await _session.ConnectAsync(linkedCts.Token).ConfigureAwait(false);
+            }
+
+            if (_session.State is not MqttSessionState.Connected)
+            {
+                throw new InvalidOperationException("MQTT connection did not reach the connected state.");
+            }
+
+            _pumpTask = PumpMessagesAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            _broadcast.Complete();
+            _errors.Complete();
+            throw;
+        }
+        catch (Exception exception)
+        {
+            PublishError(FlowErrorCodes.ProcessingFailed, "MQTT connection failed.", exception);
+            _errors.Complete();
+            _broadcast.Complete();
+            throw;
+        }
     }
 
     public void Complete()
@@ -98,18 +124,13 @@ public sealed class MqttConnectionComponent : IFlowNode, IAsyncDisposable
         _cts.Dispose();
     }
 
-    private async Task RunAsync(CancellationToken externalToken)
+    private async Task PumpMessagesAsync(CancellationToken externalToken)
     {
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, externalToken);
         var ct = linkedCts.Token;
 
         try
         {
-            if (_session.State is not MqttSessionState.Connected and not MqttSessionState.Connecting)
-            {
-                await _session.ConnectAsync(ct).ConfigureAwait(false);
-            }
-
             await foreach (var message in _session.Messages.ReadAllAsync(ct).ConfigureAwait(false))
             {
                 if (!await _broadcast.SendAsync(message, ct).ConfigureAwait(false))

@@ -5,6 +5,7 @@ using FluxMq.Core.Payloads;
 using FluxMq.Core.Session;
 using FluxMq.App;
 using FluxMq.Components.JsonSchema;
+using FluxMq.Components.Logging;
 using FluxMq.Components.MqttMetrics;
 using FluxMq.Components.MqttPayloadInspector;
 using FluxMq.Components.Storage.Models;
@@ -38,6 +39,7 @@ public sealed class PipelineComponentFactoryTests
             PipelineFlowNodeTypes.PayloadInspector,
             PipelineFlowNodeTypes.MqttMetrics,
             PipelineFlowNodeTypes.MqttMetricsSink,
+            PipelineFlowNodeTypes.FlowLogger,
             PipelineFlowNodeTypes.MessageFilter,
             PipelineFlowNodeTypes.JsonSchemaValidator,
             PipelineFlowNodeTypes.DynamicMapper,
@@ -143,6 +145,65 @@ public sealed class PipelineComponentFactoryTests
         sink!.Values.Count.ShouldBe(2);
         sink.Values[^1].MessageCount.ShouldBe(2);
         sink.Values[^1].TotalPayloadBytes.ShouldBe(5);
+    }
+
+    [Fact]
+    public async Task FlowLoggerFactory_CreatesLinkableRuntimeNode()
+    {
+        TestSourceNode? source = null;
+        TestSinkNode<FlowLogEntry>? sink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.source"), (address, _) =>
+            {
+                source = new TestSourceNode();
+                return SourceNode(address, source);
+            })
+            .Register(new NodeType("test.log-sink"), (address, _) =>
+            {
+                sink = new TestSinkNode<FlowLogEntry>();
+                return SinkNode(address, sink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("test.source"),
+                        ["logger"] = new NodeDefinition
+                        {
+                            Type = PipelineFlowNodeTypes.FlowLogger,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["includePayloadPreview"] = JsonDocument.Parse("true").RootElement.Clone()
+                            }
+                        },
+                        ["sink"] = NodeWithPort("test.log-sink", "Input", "\"logger.Entries\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue();
+
+        source!.Post(new MqttEnvelope { Topic = "factory/one", Payload = """{"value":1}"""u8.ToArray() });
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion;
+
+        var entry = sink!.Values.ShouldHaveSingleItem();
+        entry.Source.ShouldBe("MqttEnvelope");
+        entry.Topic.ShouldBe("factory/one");
+        entry.PayloadPreview.ShouldBe("""{"value":1}""");
     }
 
     [Fact]
