@@ -69,6 +69,9 @@ public class FlowDiagramNodeModel : NodeModel
     /// <summary>Override to serialise typed properties back to a JSON configuration object on save.</summary>
     public virtual JsonObject BuildConfiguration() => [];
 
+    public virtual string ResolvePortValueType(ComponentPortDescriptor descriptor)
+        => descriptor.ValueType;
+
     public void Toggle()
     {
         SetCollapsed(!IsCollapsed);

@@ -1,8 +1,11 @@
 using FluxMq.Core.Models;
+using FluxMq.Core.Session;
 using FluxMq.Pipeline.Components;
 using FluxMq.UI.Models;
 using FluxMq.UI.Services;
+using MQTTnet.Protocol;
 using Shouldly;
+using System.Threading.Channels;
 
 namespace FluxMq.UI.Tests;
 
@@ -348,6 +351,78 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public async Task RunAsync_CollectsPublisherEntriesWithoutFlowLogger()
+    {
+        var session = new FakeRuntimeMqttSession();
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer(), runtimeSessionFactory: _ => session);
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "resources": {
+                "local-broker": {
+                  "type": "mqtt.connection",
+                  "configuration": {
+                    "profile": {
+                      "name": "local-broker",
+                      "host": "localhost",
+                      "port": 1883,
+                      "clientId": "test-client"
+                    }
+                  }
+                }
+              },
+              "workflows": {
+                "pip1": {
+                  "generated": {
+                    "type": "generated.source",
+                    "configuration": {
+                      "messages": [
+                        { "topic": "factory/source", "payload": "{\"hello\":\"fluxmq\"}", "qos": 1, "retain": true }
+                      ]
+                    }
+                  },
+                  "mapper": {
+                    "type": "flow.mapper",
+                    "Input": "generated.Output",
+                    "configuration": {
+                      "engine": "jsonata",
+                      "inputType": "MqttEnvelope",
+                      "outputType": "MqttPublishRequest",
+                      "expression": "{ \"topic\": 'test', \"payload\": payloadText, \"qos\": qos, \"retain\": retain }"
+                    }
+                  },
+                  "publisher": {
+                    "type": "mqtt.publisher",
+                    "Input": "mapper.Output",
+                    "configuration": {
+                      "connection": "local-broker"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+
+        await service.RunAsync();
+        await WaitUntilAsync(() => service.Logs.Any(log =>
+            log.Source == "MqttPublisher" &&
+            log.NodeName == "publisher" &&
+            log.Context is not null &&
+            log.Context.Contains("topic=test", StringComparison.Ordinal)));
+
+        session.Published.ShouldHaveSingleItem().Topic.ShouldBe("test");
+        service.Logs.Any(log =>
+            log.Source == "MqttPublisher" &&
+            log.WorkflowName == "pip1" &&
+            log.NodeName == "publisher" &&
+            log.Context is not null &&
+            log.Context.Contains("qos=1", StringComparison.Ordinal)).ShouldBeTrue();
+    }
+
+    [Fact]
     public void UpdateNodeConfiguration_UpdatesActiveWorkflowWhenNodeNamesRepeat()
     {
         var service = new FlowWorkspaceService(new FlowDefinitionComposer());
@@ -410,6 +485,45 @@ public sealed class FlowWorkspaceServiceTests
             .ShouldBe("broker2");
     }
 
+    [Fact]
+    public void RemoveWorkflowNode_RemovesNodeFromActiveWorkflow()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "pip1": {
+                  "filter": { "type": "mqtt.message-filter" }
+                },
+                "pip2": {
+                  "filter": { "type": "mqtt.message-filter" },
+                  "inspect": {
+                    "type": "mqtt.payload-inspector",
+                    "Input": "filter.Output"
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+        service.SetActiveWorkflow("pip2");
+
+        service.RemoveWorkflowNode("filter");
+
+        using var document = System.Text.Json.JsonDocument.Parse(service.DefinitionJson);
+        var workflows = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows");
+
+        workflows.GetProperty("pip1").TryGetProperty("filter", out _).ShouldBeTrue();
+        workflows.GetProperty("pip2").TryGetProperty("filter", out _).ShouldBeFalse();
+        workflows.GetProperty("pip2").GetProperty("inspect").TryGetProperty("Input", out _).ShouldBeFalse();
+    }
+
     private static async Task WaitUntilAsync(Func<bool> predicate)
     {
         for (var attempt = 0; attempt < 40; attempt++)
@@ -423,5 +537,65 @@ public sealed class FlowWorkspaceServiceTests
         }
 
         predicate().ShouldBeTrue();
+    }
+
+    private sealed class FakeRuntimeMqttSession : IMqttSession
+    {
+        private readonly Channel<MqttEnvelope> _messages = Channel.CreateUnbounded<MqttEnvelope>();
+
+        public MqttConnectionProfile Profile { get; } = new() { Name = "test" };
+        public MqttSessionState State { get; private set; } = MqttSessionState.Disconnected;
+        public ChannelReader<MqttEnvelope> Messages => _messages.Reader;
+        public List<PublishedMessage> Published { get; } = [];
+
+        public event EventHandler<MqttSessionState>? StateChanged
+        {
+            add { }
+            remove { }
+        }
+
+        public Task ConnectAsync(CancellationToken ct = default)
+        {
+            State = MqttSessionState.Connected;
+            return Task.CompletedTask;
+        }
+
+        public Task DisconnectAsync(CancellationToken ct = default)
+        {
+            State = MqttSessionState.Disconnected;
+            _messages.Writer.TryComplete();
+            return Task.CompletedTask;
+        }
+
+        public Task SubscribeAsync(
+            string topicFilter,
+            MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce,
+            CancellationToken ct = default)
+            => Task.CompletedTask;
+
+        public Task UnsubscribeAsync(string topicFilter, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task PublishAsync(
+            string topic,
+            byte[] payload,
+            MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce,
+            bool retain = false,
+            CancellationToken ct = default)
+        {
+            Published.Add(new PublishedMessage(topic, payload, qos, retain));
+            return Task.CompletedTask;
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            _messages.Writer.TryComplete();
+            return ValueTask.CompletedTask;
+        }
+
+        public sealed record PublishedMessage(
+            string Topic,
+            byte[] Payload,
+            MqttQualityOfServiceLevel QualityOfService,
+            bool Retain);
     }
 }

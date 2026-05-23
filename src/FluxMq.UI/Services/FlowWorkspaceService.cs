@@ -1,6 +1,8 @@
 using FluxMq.App;
 using FluxMq.Core.Models;
+using FluxMq.Core.Session;
 using FluxMq.Components.Logging;
+using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Storage.Repositories;
 using FluxMq.Pipeline.Components;
 using FluxMq.Pipeline.Definitions;
@@ -18,6 +20,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     private static readonly TimeSpan RuntimeStopTimeout = TimeSpan.FromSeconds(5);
     private readonly FlowDefinitionComposer _definitionComposer;
     private readonly IMessageRepository? _messageRepository;
+    private readonly Func<MqttConnectionProfile, IMqttSession>? _runtimeSessionFactory;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly object _logSync = new();
     private readonly List<WorkspaceLogEntry> _logs = [];
@@ -27,10 +30,12 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
     public FlowWorkspaceService(
         FlowDefinitionComposer definitionComposer,
-        IMessageRepository? messageRepository = null)
+        IMessageRepository? messageRepository = null,
+        Func<MqttConnectionProfile, IMqttSession>? runtimeSessionFactory = null)
     {
         _definitionComposer = definitionComposer;
         _messageRepository = messageRepository;
+        _runtimeSessionFactory = runtimeSessionFactory;
         DefinitionJson = _definitionComposer.CreateEmptyDefinition();
     }
 
@@ -244,6 +249,88 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         NotifyChanged();
     }
 
+    public void ConnectWorkflowPorts(
+        string sourceNodeName,
+        string sourcePortName,
+        string targetNodeName,
+        string targetPortName,
+        bool replaceTargetPortLinks)
+    {
+        try
+        {
+            ReplaceDefinition(_definitionComposer.ConnectWorkflowPorts(
+                DefinitionJson,
+                _activeWorkflowName,
+                sourceNodeName,
+                sourcePortName,
+                targetNodeName,
+                targetPortName,
+                replaceTargetPortLinks));
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics =
+            [
+                new WorkspaceDiagnostic("Error", "Designer", "PortConnectFailed", exception.Message, _activeWorkflowName, targetNodeName, targetPortName)
+            ];
+        }
+
+        NotifyChanged();
+    }
+
+    public void RemoveWorkflowPortLink(
+        string sourceNodeName,
+        string sourcePortName,
+        string targetNodeName,
+        string targetPortName)
+    {
+        try
+        {
+            ReplaceDefinition(_definitionComposer.RemoveWorkflowPortLink(
+                DefinitionJson,
+                _activeWorkflowName,
+                sourceNodeName,
+                sourcePortName,
+                targetNodeName,
+                targetPortName));
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics =
+            [
+                new WorkspaceDiagnostic("Error", "Designer", "PortDisconnectFailed", exception.Message, _activeWorkflowName, targetNodeName, targetPortName)
+            ];
+        }
+
+        NotifyChanged();
+    }
+
+    public void RemoveWorkflowNode(string nodeName)
+    {
+        try
+        {
+            ReplaceDefinition(_definitionComposer.RemoveWorkflowNode(DefinitionJson, _activeWorkflowName, nodeName));
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics =
+            [
+                new WorkspaceDiagnostic("Error", "Designer", "NodeRemoveFailed", exception.Message, _activeWorkflowName, nodeName)
+            ];
+        }
+
+        NotifyChanged();
+    }
+
     public void RenameWorkflowNode(string workflowName, string oldName, string newName)
     {
         try
@@ -373,7 +460,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         try
         {
             await DisposeHostAsync().ConfigureAwait(false);
-            _host = FlowApplicationHost.CreateDefault(CreateConfiguration(DefinitionJson), _messageRepository);
+            _host = FlowApplicationHost.CreateDefault(CreateConfiguration(DefinitionJson), _messageRepository, _runtimeSessionFactory);
             var result = _host.Build();
             Diagnostics = CollectDiagnostics(result);
             State = result.IsSuccess ? RuntimeWorkspaceState.Valid : RuntimeWorkspaceState.Faulted;
@@ -401,7 +488,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         try
         {
             await DisposeHostAsync().ConfigureAwait(false);
-            _host = FlowApplicationHost.CreateDefault(CreateConfiguration(DefinitionJson), _messageRepository);
+            _host = FlowApplicationHost.CreateDefault(CreateConfiguration(DefinitionJson), _messageRepository, _runtimeSessionFactory);
             var result = _host.Build();
             if (result.IsSuccess)
             {
@@ -561,23 +648,32 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
             if (node.Node is not FlowLoggerComponent logger)
             {
+                if (node.Node is MqttPublisherComponent publisher)
+                {
+                    AttachRuntimeLogEntries(node, publisher.Entries);
+                }
+
                 continue;
             }
 
             AppendLogs(logger.RecentEntries.Select(entry => ToWorkspaceLogEntry(node.Address, entry)), notify: false);
-
-            var address = node.Address;
-            var target = new ActionBlock<FlowLogEntry>(
-                entry => AppendLog(ToWorkspaceLogEntry(address, entry)),
-                new ExecutionDataflowBlockOptions
-                {
-                    EnsureOrdered = true,
-                    MaxDegreeOfParallelism = 1
-                });
-
-            _runtimeLogTargets.Add(target);
-            _runtimeLogLinks.Add(logger.Entries.LinkTo(target, new DataflowLinkOptions { PropagateCompletion = true }));
+            AttachRuntimeLogEntries(node, logger.Entries);
         }
+    }
+
+    private void AttachRuntimeLogEntries(RuntimeNode node, ISourceBlock<FlowLogEntry> entries)
+    {
+        var address = node.Address;
+        var target = new ActionBlock<FlowLogEntry>(
+            entry => AppendLog(ToWorkspaceLogEntry(address, entry)),
+            new ExecutionDataflowBlockOptions
+            {
+                EnsureOrdered = true,
+                MaxDegreeOfParallelism = 1
+            });
+
+        _runtimeLogTargets.Add(target);
+        _runtimeLogLinks.Add(entries.LinkTo(target, new DataflowLinkOptions { PropagateCompletion = true }));
     }
 
     private void AttachRuntimeErrorOutputs(RuntimeNode node)

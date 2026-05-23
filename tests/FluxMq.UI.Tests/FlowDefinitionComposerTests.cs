@@ -547,4 +547,199 @@ public sealed class FlowDefinitionComposerTests
             .GetString()
             .ShouldBe("broker2");
     }
+
+    [Fact]
+    public void ConnectWorkflowPorts_ReplacesTargetPortLink()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = """
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "pipe": {
+                  "trigger": { "type": "mqtt.trigger" },
+                  "filter": { "type": "mqtt.message-filter", "Input": "trigger.Output" },
+                  "inspect": { "type": "mqtt.payload-inspector", "Input": "trigger.Output" }
+                }
+              }
+            }
+          }
+        }
+        """;
+
+        var updated = composer.ConnectWorkflowPorts(json, "pipe", "filter", "Output", "inspect", "Input");
+
+        using var document = JsonDocument.Parse(updated);
+        var inspect = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty("pipe")
+            .GetProperty("inspect");
+
+        inspect.GetProperty("Input").GetString().ShouldBe("filter.Output");
+    }
+
+    [Fact]
+    public void ConnectWorkflowPorts_CanAppendTargetPortLinks()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = """
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "pipe": {
+                  "trigger": { "type": "mqtt.trigger" },
+                  "mapper": { "type": "flow.mapper" },
+                  "logger": { "type": "flow.logger", "FlowErrors": "trigger.Errors" }
+                }
+              }
+            }
+          }
+        }
+        """;
+
+        var updated = composer.ConnectWorkflowPorts(json, "pipe", "mapper", "Errors", "logger", "FlowErrors", replaceTargetPortLinks: false);
+
+        using var document = JsonDocument.Parse(updated);
+        var links = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty("pipe")
+            .GetProperty("logger")
+            .GetProperty("FlowErrors");
+
+        links.EnumerateArray().Select(item => item.GetString())
+            .ShouldBe(["trigger.Errors", "mapper.Errors"]);
+    }
+
+    [Fact]
+    public void RemoveWorkflowPortLink_RemovesOnlyMatchingReference()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = """
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "pipe": {
+                  "trigger": { "type": "mqtt.trigger" },
+                  "mapper": { "type": "flow.mapper" },
+                  "logger": {
+                    "type": "flow.logger",
+                    "FlowErrors": [ "trigger.Errors", "mapper.Errors" ]
+                  }
+                }
+              }
+            }
+          }
+        }
+        """;
+
+        var updated = composer.RemoveWorkflowPortLink(json, "pipe", "trigger", "Errors", "logger", "FlowErrors");
+
+        using var document = JsonDocument.Parse(updated);
+        var links = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty("pipe")
+            .GetProperty("logger")
+            .GetProperty("FlowErrors");
+
+        links.EnumerateArray().Select(item => item.GetString())
+            .ShouldBe(["mapper.Errors"]);
+    }
+
+    [Fact]
+    public void RemoveWorkflowNode_RemovesNodeAndReferencesToItsOutputs()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = """
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "pipe": {
+                  "trigger": { "type": "mqtt.trigger" },
+                  "filter": {
+                    "type": "mqtt.message-filter",
+                    "Input": "trigger.Output"
+                  },
+                  "inspect": {
+                    "type": "mqtt.payload-inspector",
+                    "Input": "filter.Output"
+                  },
+                  "logger": {
+                    "type": "flow.logger",
+                    "Input": [ "trigger.Output", "filter.Output" ],
+                    "FlowErrors": [ "trigger.Errors", "filter.Errors" ]
+                  }
+                }
+              }
+            }
+          }
+        }
+        """;
+
+        var updated = composer.RemoveWorkflowNode(json, "pipe", "filter");
+
+        using var document = JsonDocument.Parse(updated);
+        var workflow = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty("pipe");
+
+        workflow.TryGetProperty("filter", out _).ShouldBeFalse();
+        workflow.GetProperty("inspect").TryGetProperty("Input", out _).ShouldBeFalse();
+
+        workflow.GetProperty("logger")
+            .GetProperty("Input")
+            .EnumerateArray()
+            .Select(item => item.GetString())
+            .ShouldBe(["trigger.Output"]);
+
+        workflow.GetProperty("logger")
+            .GetProperty("FlowErrors")
+            .EnumerateArray()
+            .Select(item => item.GetString())
+            .ShouldBe(["trigger.Errors"]);
+    }
+
+    [Fact]
+    public void RemoveWorkflowNode_UsesWorkflowScopeWhenNodeNamesRepeat()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = """
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "pip1": {
+                  "filter": { "type": "mqtt.message-filter" }
+                },
+                "pip2": {
+                  "filter": { "type": "mqtt.message-filter" }
+                }
+              }
+            }
+          }
+        }
+        """;
+
+        var updated = composer.RemoveWorkflowNode(json, "pip2", "filter");
+
+        using var document = JsonDocument.Parse(updated);
+        var workflows = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows");
+
+        workflows.GetProperty("pip1").TryGetProperty("filter", out _).ShouldBeTrue();
+        workflows.GetProperty("pip2").TryGetProperty("filter", out _).ShouldBeFalse();
+    }
 }

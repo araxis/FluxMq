@@ -72,4 +72,42 @@ public sealed class MqttPublishRequestMapperComponentTests
         request.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtLeastOnce);
         request.Retain.ShouldBeFalse();
     }
+
+    [Fact]
+    public async Task JsonataMapper_MapsObjectExpressionWithQosAlias()
+    {
+        var mapper = new MqttPublishRequestExpressionMapper(
+            new JsonataFlowExpressionEngine(),
+            new MqttPublishRequestMapDefinition
+            {
+                Expression = """
+                {
+                  "topic": 'test',
+                  "payload": payloadText,
+                  "qos": qos,
+                  "retain": retain
+                }
+                """
+            });
+        var component = new MqttPublishRequestMapperComponent(mapper);
+        var output = new BufferBlock<MqttPublishRequest>();
+
+        component.Output.LinkTo(output, new DataflowLinkOptions { PropagateCompletion = true });
+        component.Input.Post(new MqttEnvelope
+        {
+            Topic = "factory/line-1",
+            Payload = """{"hello":"fluxmq"}"""u8.ToArray(),
+            QualityOfService = MqttQualityOfServiceLevel.AtLeastOnce,
+            Retain = true
+        });
+        component.Complete();
+
+        var request = await output.ReceiveAsync();
+        await component.Completion;
+
+        request.Topic.ShouldBe("test");
+        request.Payload.ShouldBe("""{"hello":"fluxmq"}"""u8.ToArray());
+        request.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtLeastOnce);
+        request.Retain.ShouldBeTrue();
+    }
 }
