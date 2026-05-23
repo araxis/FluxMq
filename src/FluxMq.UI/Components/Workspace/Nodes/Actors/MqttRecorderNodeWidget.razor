@@ -1,0 +1,55 @@
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.Save"
+                 CategoryColor="@Color.Tertiary"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
+    <Body>
+        <MudStack Spacing="1" Class="mt-1">
+            <Stat Icon="@Icons.Material.Filled.Storage" Label="Target" Value="Local sessions" />
+            <Stat Icon="@Icons.Material.Filled.Input" Label="Input" Value="MqttRecordingRequest" />
+        </MudStack>
+        <div class="d-flex flex-wrap gap-1 mt-2">
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">sessionId</MudChip>
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">envelope</MudChip>
+        </div>
+    </Body>
+    <Editor>
+        <MudStack Spacing="2">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">sessionId</MudChip>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">envelope</MudChip>
+            </MudStack>
+            <MudNumericField T="int"
+                             Label="Input buffer"
+                             @bind-Value="_boundedCapacity"
+                             Min="1"
+                             Max="100000"
+                             Step="100"
+                             Variant="Variant.Outlined"
+                             Margin="Margin.Dense" />
+        </MudStack>
+    </Editor>
+</NodeWidgetShell>
+
+@code {
+    [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
+
+    private MqttRecorderNodeModel Model => (MqttRecorderNodeModel)Node;
+
+    private int _boundedCapacity = ActorNodeConfiguration.DefaultBoundedCapacity;
+
+    protected override void OnParametersSet() => LoadDraft();
+
+    private void LoadDraft()
+        => _boundedCapacity = ActorNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity);
+
+    private Task SaveAsync()
+    {
+        Model.BoundedCapacity = ActorNodeConfiguration.NormalizeBoundedCapacity(_boundedCapacity);
+        Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
+        return Task.CompletedTask;
+    }
+}

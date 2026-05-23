@@ -290,6 +290,14 @@ public sealed class FlowDefinitionComposer
         {
             node["configuration"] = CreateJsonSchemaValidatorConfiguration();
         }
+        else if (componentType == "mqtt.publisher")
+        {
+            node["configuration"] = CreateMqttPublisherConfiguration();
+        }
+        else if (componentType is "mqtt.recorder" or "file.writer")
+        {
+            node["configuration"] = CreateActorCapacityConfiguration();
+        }
 
         if (FindDefaultInputLink(componentType, workflow) is { Length: > 0 } inputLink)
         {
@@ -612,6 +620,19 @@ public sealed class FlowDefinitionComposer
               "type": "object"
             }
             """
+        };
+
+    private static JsonObject CreateMqttPublisherConfiguration()
+        => new()
+        {
+            ["connection"] = BrokerResourceName,
+            ["boundedCapacity"] = 1000
+        };
+
+    private static JsonObject CreateActorCapacityConfiguration()
+        => new()
+        {
+            ["boundedCapacity"] = 1000
         };
 
     private static JsonObject CreateRoot()

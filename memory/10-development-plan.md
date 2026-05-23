@@ -24,12 +24,14 @@ This is the active implementation plan. Keep it updated after every meaningful d
 
 ## Current Target
 
-**Phase:** 4 - mapper UI and validator hardening
-**Active feature:** `F-022 - Node Editors And Contract Hardening`
+**Phase:** 5 - desktop workspace authoring polish
+**Active feature:** `F-022 - Actor Node Editors And Contract Hardening`
 **Status:** In progress
 **Started:** 2026-05-23
 
 The mapper workbench now follows a JSONata Exerciser-like shape: Monaco JSON input on the left, Monaco mapper expression in the middle, and live JSON result on the right. MQTT envelope samples use `{ topic, qos, retain, receivedAt, payload }`; arbitrary JSON input is treated as payload for quick experimentation. Mapper output configuration now separates the runtime target type from the result contract: `typed`, `any`, or `json-schema-file`. `json.schema-validator` exists as a standalone runtime/UI component backed by JsonSchema.Net, so schema validation is a reusable runtime capability rather than mapper-only UI behavior.
+
+The next desktop authoring slice is now focused on actor clarity. `mqtt.publisher`, `mqtt.recorder`, and `file.writer` should read as standalone actors that consume explicit request inputs, with only true actor settings exposed on the node. MQTT Publisher keeps broker selection in configuration, not as a canvas port.
 
 ## Step-by-Step Plan
 
@@ -238,13 +240,20 @@ Done when:
 - Reworked the mapper input sample into a Monaco JSON editor and the output preview into a read-only Monaco JSON result editor, matching the JSONata Exerciser mental model.
 - Fixed mapper live preview state handling: parent node redraws no longer reload the draft expression, and editor/sample changes explicitly request a render after recomputing preview.
 - Moved the active Phase 4 target to `F-014 - JSON Schema Validator`.
+- Moved the active target to `F-022 - Actor Node Editors And Contract Hardening`.
+- Added typed actor node models and editor widgets for `mqtt.publisher`, `mqtt.recorder`, and `file.writer`.
+- `mqtt.publisher` now exposes its broker resource and input buffer in the designer while clearly showing that message topic, payload, QoS, and retain come from `MqttPublishRequest`.
+- `mqtt.publisher` keeps broker selection in the editor but does not expose a `Connection` canvas port.
+- `mqtt.recorder` and `file.writer` now show the command fields they consume and expose only input-buffer settings on the actor.
+- The composer now writes default actor configuration when actors are added from the catalog.
+- The runtime recorder factory now honors `boundedCapacity` from node configuration.
 
 ## Next Action
 
-Continue Phase 4 with node editor and contract hardening:
+Continue Phase 5 with node editor and contract hardening:
 
-1. Add runtime validation for mapper `json-schema-file` output contracts or route schema validation explicitly through `json.schema-validator`.
-2. Add pass/fail routing or assertion components only after the plain validation-result output feels right.
-3. Finish source and actor node editors so broker/file/session/request settings are explicit and not hidden in raw JSON.
-4. Surface validation/runtime errors on the graph nodes.
-5. Run UI tests and the serial full solution test gate.
+1. Manually inspect the new actor edit dialogs in the desktop workspace.
+2. Finish source node editors for live, generated, and replay sources.
+3. Surface validation/runtime errors on the graph nodes.
+4. Add pass/fail routing or assertion components only after the plain validation-result output feels right.
+5. Run UI tests and the serial full solution test gate for each slice.

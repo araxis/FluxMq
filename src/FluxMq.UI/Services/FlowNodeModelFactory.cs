@@ -1,4 +1,5 @@
 using FluxMq.UI.Components.Diagram;
+using FluxMq.UI.Components.Workspace.Nodes.Actors;
 using FluxMq.UI.Components.Workspace.Nodes.ConditionRouter;
 using FluxMq.UI.Components.Workspace.Nodes.ConnectionStateTrigger;
 using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
@@ -30,6 +31,9 @@ public static class FlowNodeModelFactory
         "json.schema-validator" => new JsonSchemaValidatorNodeModel(id, position, nodeName, descriptor, isResource),
         "flow.mapper" => new DynamicMapperNodeModel(id, position, nodeName, descriptor, isResource),
         "session.source" => new SessionSourceNodeModel(id, position, nodeName, descriptor, isResource),
+        "mqtt.publisher" => new MqttPublisherNodeModel(id, position, nodeName, descriptor, isResource),
+        "mqtt.recorder" => new MqttRecorderNodeModel(id, position, nodeName, descriptor, isResource),
+        "file.writer" => new FileWriterNodeModel(id, position, nodeName, descriptor, isResource),
         "mqtt.payload-inspector" => new PayloadInspectorNodeModel(id, position, nodeName, descriptor, isResource),
         "mqtt.metrics" or "mqtt.metrics-sink" => new MqttMetricsNodeModel(id, position, nodeName, descriptor, isResource),
         _ => new FlowDiagramNodeModel(id, position, nodeName, nodeType, descriptor, isResource)

@@ -1,0 +1,124 @@
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject LiveMqttWorkspaceService Live
+
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.Publish"
+                 CategoryColor="@Color.Tertiary"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
+    <Body>
+        <MudStack Spacing="1" Class="mt-1">
+            <Stat Icon="@Icons.Material.Filled.Cable" Label="Broker" Value="@(Model.Connection.Length > 0 ? Model.Connection : "-")" />
+            <Stat Icon="@Icons.Material.Filled.Input" Label="Input" Value="MqttPublishRequest" />
+        </MudStack>
+        <div class="d-flex flex-wrap gap-1 mt-2">
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">topic</MudChip>
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">payload</MudChip>
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">qos</MudChip>
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">retain</MudChip>
+        </div>
+    </Body>
+    <Editor>
+        @if (ConnectionOptions.Count > 0)
+        {
+            <MudSelect T="string"
+                       Label="Broker resource"
+                       @bind-Value="_connection"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       Dense="true">
+                @foreach (var connection in ConnectionOptions)
+                {
+                    <MudSelectItem Value="@connection">@connection</MudSelectItem>
+                }
+            </MudSelect>
+        }
+        else
+        {
+            <MudTextField T="string"
+                          Label="Broker resource"
+                          @bind-Value="_connection"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense" />
+        }
+        <MudNumericField T="int"
+                         Label="Input buffer"
+                         @bind-Value="_boundedCapacity"
+                         Min="1"
+                         Max="100000"
+                         Step="100"
+                         Variant="Variant.Outlined"
+                         Margin="Margin.Dense" />
+    </Editor>
+</NodeWidgetShell>
+
+@code {
+    [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
+
+    private MqttPublisherNodeModel Model => (MqttPublisherNodeModel)Node;
+
+    private string _connection = string.Empty;
+    private int _boundedCapacity = ActorNodeConfiguration.DefaultBoundedCapacity;
+
+    private IReadOnlyList<string> ConnectionOptions
+    {
+        get
+        {
+            var names = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var name in Flow.GetConnectionNames())
+            {
+                AddName(name);
+            }
+
+            foreach (var connection in Live.Connections)
+            {
+                AddName(connection.Profile.Name);
+            }
+
+            AddName(Model.Connection);
+            return names.ToArray();
+
+            void AddName(string? value)
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    names.Add(value.Trim());
+                }
+            }
+        }
+    }
+
+    protected override void OnParametersSet() => LoadDraft();
+
+    private void LoadDraft()
+    {
+        _connection = string.IsNullOrWhiteSpace(Model.Connection)
+            ? FlowDefinitionComposer.BrokerResourceName
+            : Model.Connection;
+        _boundedCapacity = ActorNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity);
+    }
+
+    private Task SaveAsync()
+    {
+        Model.Connection = string.IsNullOrWhiteSpace(_connection)
+            ? FlowDefinitionComposer.BrokerResourceName
+            : _connection.Trim();
+        Model.BoundedCapacity = ActorNodeConfiguration.NormalizeBoundedCapacity(_boundedCapacity);
+
+        var selectedProfile = Live.Connections
+            .FirstOrDefault(c => string.Equals(c.Profile.Name, Model.Connection, StringComparison.OrdinalIgnoreCase))
+            ?.Profile;
+
+        if (selectedProfile is not null)
+        {
+            Flow.SyncConnectionAndUpdateNode(Model.Connection, selectedProfile, Node.NodeName, Model.BuildConfiguration());
+        }
+        else
+        {
+            Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
+        }
+
+        return Task.CompletedTask;
+    }
+}

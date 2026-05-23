@@ -178,6 +178,10 @@ public sealed class FlowDefinitionComposerTests
 
         var publisher = workflow.GetProperty(FlowDefinitionComposer.PublisherNodeName);
         publisher.GetProperty("Input").GetString().ShouldBe($"{FlowDefinitionComposer.MapperNodeName}.Output");
+        publisher.GetProperty("configuration").GetProperty("connection").GetString()
+            .ShouldBe(FlowDefinitionComposer.BrokerResourceName);
+        publisher.GetProperty("configuration").GetProperty("boundedCapacity").GetInt32()
+            .ShouldBe(1000);
     }
 
     [Fact]
@@ -199,6 +203,29 @@ public sealed class FlowDefinitionComposerTests
             .GetProperty(FlowDefinitionComposer.PublisherNodeName);
 
         publisher.TryGetProperty("Input", out _).ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData("mqtt.recorder", FlowDefinitionComposer.RecorderNodeName)]
+    [InlineData("file.writer", "fileWriter")]
+    public void AddComponent_AddsActorBufferConfiguration(string componentType, string nodeName)
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateEmptyDefinition();
+        var withWorkflow = composer.AddWorkflow(initial, FlowDefinitionComposer.DefaultWorkflowName);
+
+        var updated = composer.AddComponent(withWorkflow, componentType);
+
+        using var document = JsonDocument.Parse(updated);
+        var actor = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty(nodeName);
+
+        actor.GetProperty("configuration").GetProperty("boundedCapacity").GetInt32()
+            .ShouldBe(1000);
     }
 
     [Fact]
