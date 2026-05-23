@@ -4,7 +4,7 @@ namespace FluxMq.UI.Components.Diagram;
 
 /// <summary>
 /// Base class for per-type node widgets. Each concrete widget (MqttConnection,
-/// Trigger, Inspector, MetricsSink, ...) inherits this and renders its own
+/// Trigger, Inspector, Metrics, ...) inherits this and renders its own
 /// header + body for the node it represents. Common chrome (selection state,
 /// activity badge, port chips) is shared via the partial methods below.
 /// </summary>

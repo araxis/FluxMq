@@ -6,452 +6,262 @@ body,
     overflow: hidden;
 }
 
-.flux-main-canvas {
+body {
+    background: var(--mud-palette-background);
+    color: var(--mud-palette-text-primary);
+    font-family: Geist, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+* {
     box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    min-height: 0;
-    overflow: hidden;
-    padding-bottom: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    padding-top: 48px !important;
 }
 
-.workspace-fill {
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
+button,
+input,
+textarea,
+select {
+    font: inherit;
 }
 
-.flux-left-drawer {
-    display: flex;
-    height: 100%;
-    overflow: hidden;
+.flux-theme-dark {
+    --flux-bg: #0a0d12;
+    --flux-canvas: #0c1016;
+    --flux-surface: #11151c;
+    --flux-surface-2: #161b24;
+    --flux-surface-3: #1c222d;
+    --flux-border: #1d232e;
+    --flux-border-soft: #161b24;
+    --flux-border-strong: #2a313d;
+    --flux-accent: #2dd4bf;
+    --flux-accent-hover: #5eead4;
+    --flux-accent-contrast: #062a26;
+    --flux-accent-soft: rgba(45, 212, 191, 0.12);
+    --flux-accent-dim: rgba(45, 212, 191, 0.35);
+    --flux-text-muted: #6b7280;
+    --flux-text-subtle: #434c5a;
+    --flux-idle: #64748b;
+    --flux-shadow-1: 0 1px 0 rgba(255, 255, 255, 0.03), 0 1px 2px rgba(0, 0, 0, 0.4);
+    --flux-shadow-node: 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 24px -8px rgba(0, 0, 0, 0.6);
+    --flux-shadow-pop: 0 12px 32px -8px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--flux-border-strong);
 }
 
-.flux-rail {
-    width: 56px;
-    min-width: 56px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 8px 0;
-    border-right: 1px solid var(--mud-palette-lines-default);
+.flux-theme-light {
+    --flux-bg: #f4f6f8;
+    --flux-canvas: #eef2f6;
+    --flux-surface: #ffffff;
+    --flux-surface-2: #f7f9fb;
+    --flux-surface-3: #edf3f7;
+    --flux-border: #dde3ea;
+    --flux-border-soft: #edf1f5;
+    --flux-border-strong: #c3ccd8;
+    --flux-accent: #0f766e;
+    --flux-accent-hover: #115e59;
+    --flux-accent-contrast: #ffffff;
+    --flux-accent-soft: rgba(15, 118, 110, 0.10);
+    --flux-accent-dim: rgba(15, 118, 110, 0.24);
+    --flux-text-muted: #6b7280;
+    --flux-text-subtle: #94a3b8;
+    --flux-idle: #94a3b8;
+    --flux-shadow-1: 0 1px 0 rgba(255, 255, 255, 0.85), 0 1px 2px rgba(15, 23, 42, 0.10);
+    --flux-shadow-node: 0 1px 0 rgba(255, 255, 255, 0.9), 0 10px 24px -18px rgba(15, 23, 42, 0.32);
+    --flux-shadow-pop: 0 18px 40px -24px rgba(15, 23, 42, 0.34), 0 0 0 1px var(--flux-border);
 }
 
-.flux-rail-panel {
-    flex: 1;
-    min-width: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
+::-webkit-scrollbar {
+    height: 10px;
+    width: 10px;
 }
 
-.flux-right-tabs ::deep .mud-tab-panel {
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--mud-palette-text-secondary) 24%, transparent);
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--mud-palette-text-secondary) 38%, transparent);
+    border: 3px solid transparent;
+    background-clip: padding-box;
+}
+
+.flux-shell .flux-icon-button.mud-icon-button {
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: var(--mud-palette-text-secondary);
+    height: 28px;
     padding: 0;
-    overflow-y: auto;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    width: 28px;
 }
 
-.flux-page {
-    height: 100%;
+.flux-shell .flux-icon-button.mud-icon-button:hover {
+    background: var(--flux-surface-2);
+    border-color: var(--flux-border);
+    color: var(--mud-palette-text-primary);
+}
+
+.flux-shell .tree-icon-button.mud-icon-button {
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    height: 24px;
+    padding: 0;
+    width: 24px;
+}
+
+.flux-shell .tree-icon-button.mud-icon-button:hover {
+    background: var(--flux-surface-2);
+    color: var(--mud-palette-text-primary);
+}
+
+.flux-shell .mud-button-root {
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.flux-shell .mud-button-filled-primary {
+    background: var(--flux-accent);
+    color: var(--flux-accent-contrast);
+    font-weight: 650;
+}
+
+.flux-shell .mud-button-filled-primary:hover {
+    background: var(--flux-accent-hover);
+}
+
+.flux-shell .mud-input-control {
+    margin-top: 0;
+}
+
+.flux-shell .mud-input.mud-input-outlined .mud-input-outlined-border {
+    border-color: var(--flux-border-strong);
+}
+
+.flux-shell .mud-input.mud-input-outlined:hover .mud-input-outlined-border {
+    border-color: color-mix(in srgb, var(--flux-accent) 42%, var(--flux-border-strong));
+}
+
+.flux-shell .mud-input-control > .mud-input-control-input-container > .mud-input-label-inputcontrol {
+    color: var(--mud-palette-text-secondary);
+}
+
+.flux-shell .mud-paper {
+    background: var(--flux-surface);
+    border-color: var(--flux-border);
+}
+
+.flux-shell .mud-table {
+    background: transparent;
+}
+
+.flux-shell .mud-table-root .mud-table-head .mud-table-cell {
+    border-bottom-color: var(--flux-border);
+    color: var(--mud-palette-text-secondary);
+    font-size: 11px;
+    font-weight: 650;
+    height: 32px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.flux-shell .mud-table-root .mud-table-body .mud-table-cell {
+    border-bottom-color: var(--flux-border-soft);
+    font-size: 12px;
+    height: 34px;
+    padding-bottom: 6px;
+    padding-top: 6px;
+}
+
+.flux-shell .mud-tabs {
     min-height: 0;
-    overflow: hidden;
 }
 
-.flux-page-grid {
-    align-content: stretch;
-    margin: 0 !important;
+.flux-shell .mud-tabs-toolbar {
+    background: var(--flux-surface);
+    border-bottom: 1px solid var(--flux-border);
+    min-height: 42px;
+}
+
+.flux-shell .mud-tabs-panels,
+.flux-shell .mud-tabs-panels .mud-tabs-panel {
+    background: transparent;
+    min-height: 0;
+}
+
+.flux-shell .mud-tab {
+    font-size: 12px;
+    min-height: 42px;
+    text-transform: none;
+}
+
+.flux-shell .mud-tab-slider {
+    height: 2px;
+}
+
+.flux-shell .mud-chip {
+    border-radius: 5px;
+}
+
+/* MudBlazor TreeView internals must be overridden globally; isolated CSS does not reach them. */
+.flux-shell .mud-treeview {
     width: 100%;
 }
 
-.flux-scroll {
-    height: 100%;
-    min-height: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
-    padding-bottom: 16px;
+.flux-shell .mud-treeview-group {
+    margin: 0;
+    padding-left: 13px;
 }
 
-.workspace-layout {
-    display: grid;
-    gap: 12px;
-    grid-template-areas: "center right-handle right";
-    grid-template-columns: minmax(0, 1fr) 8px var(--workspace-right-width, 400px);
-    height: 100%;
-    min-height: 0;
-    padding: 12px;
-    user-select: auto;
+.flux-shell .mud-treeview-item-arrow {
+    color: var(--flux-text-muted);
+    margin: 0;
+    min-width: 20px;
+    width: 20px;
 }
 
-.workspace-side,
-.workspace-center {
-    min-height: 0;
-    min-width: 0;
-}
-
-.workspace-side {
-    border: 1px solid var(--mud-palette-lines-default);
-    border-radius: 8px;
-    overflow: hidden;
-    position: relative;
-}
-
-.workspace-right {
-    grid-area: right;
-}
-
-.workspace-side-scroll {
-    height: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
-    padding: 12px;
-}
-
-.workspace-center {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    grid-area: center;
-    overflow: hidden;
-}
-
-.workspace-center-toolbar {
-    align-items: center;
-    display: flex;
-    flex: 0 0 auto;
-}
-
-.workspace-designer-region {
-    flex: 1 1 auto;
-    min-height: 0;
-    min-width: 0;
-    overflow: hidden;
-}
-
-.workspace-panel-toggle {
-    position: absolute;
-    right: 4px;
-    top: 4px;
-    z-index: 5;
-}
-
-.workspace-right .workspace-panel-toggle {
-    left: 4px;
-    right: auto;
-}
-
-.workspace-rail {
-    align-items: center;
-    border: 1px solid var(--mud-palette-lines-default);
-    border-radius: 8px;
-    display: none;
-    justify-content: center;
-    min-height: 0;
-}
-
-.workspace-rail-right {
-    grid-area: right;
-}
-
-.workspace-resize-handle {
-    align-self: stretch;
-    background: transparent;
-    border-radius: 6px;
-    cursor: col-resize;
-    min-height: 0;
-    position: relative;
-}
-
-.workspace-resize-handle::after {
-    background: var(--mud-palette-lines-default);
-    border-radius: 4px;
-    bottom: 10px;
-    content: "";
-    left: 3px;
-    position: absolute;
-    top: 10px;
-    width: 2px;
-}
-
-.workspace-resize-handle:hover::after,
-.workspace-resizing .workspace-resize-handle::after {
-    background: var(--mud-palette-primary);
-}
-
-.workspace-right-handle {
-    grid-area: right-handle;
-}
-
-.workspace-resizing {
-    user-select: none;
-}
-
-.workspace-right-closed {
-    grid-template-areas: "center right";
-    grid-template-columns: minmax(0, 1fr) 44px;
-}
-
-.workspace-right-closed .workspace-right,
-.workspace-right-closed .workspace-right-handle {
-    display: none;
-}
-
-.workspace-right-closed .workspace-rail-right {
-    display: flex;
-}
-
-.flux-drawer-scroll {
-    height: 100%;
-}
-
-.workspace-empty {
-    align-items: center;
-    display: flex;
-    height: 100%;
-    justify-content: center;
-}
-
-.project-tabbar {
-    background: var(--mud-palette-surface);
-    border-bottom: 1px solid var(--mud-palette-lines-default);
-    display: flex;
-    flex: 0 0 auto;
-    overflow-x: auto;
-    overflow-y: hidden;
-}
-
-.project-tab {
-    align-items: center;
-    border-right: 1px solid var(--mud-palette-lines-default);
+.flux-shell .mud-treeview-item-icon {
     color: var(--mud-palette-text-secondary);
-    cursor: pointer;
-    display: flex;
-    font-size: 0.8rem;
-    gap: 6px;
-    max-width: 200px;
-    min-width: 100px;
-    padding: 5px 6px 5px 10px;
-    user-select: none;
-    white-space: nowrap;
-}
-
-.project-tab:hover {
-    background: var(--mud-palette-action-default-hover);
-    color: var(--mud-palette-text-primary);
-}
-
-.project-tab-active {
-    background: var(--mud-palette-background);
-    border-bottom: 2px solid var(--mud-palette-primary);
-    color: var(--mud-palette-text-primary);
-}
-
-.project-tab-name {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.project-tab-close {
-    align-items: center;
-    border-radius: 4px;
-    color: var(--mud-palette-text-secondary);
-    display: flex;
-    flex: 0 0 auto;
-    font-size: 1rem;
-    height: 18px;
-    justify-content: center;
-    line-height: 1;
+    margin-right: 6px;
+    min-width: 18px;
     width: 18px;
 }
 
-.project-tab-close:hover {
-    background: var(--mud-palette-action-default-hover);
-    color: var(--mud-palette-text-primary);
+.flux-shell .mud-treeview-item-content {
+    border-radius: 5px;
+    min-height: 28px;
+    padding: 0 4px;
 }
 
-.workspace-tab-content {
-    display: flex;
+.flux-shell .mud-treeview-item-content:hover {
+    background: var(--flux-surface-2);
+}
+
+.flux-shell .mud-treeview-item-label {
     flex: 1 1 auto;
-    flex-direction: column;
-    min-height: 0;
-    overflow: hidden;
+    min-width: 0;
+    overflow: visible;
 }
 
-.app-json-view {
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    padding: 12px;
-}
-
-.app-json-toolbar {
-    flex-shrink: 0;
-    margin-bottom: 8px;
-}
-
-.app-json-body {
-    background: var(--mud-palette-background-grey);
-    border: 1px solid var(--mud-palette-lines-default);
-    border-radius: 8px;
-    flex: 1 1 0;
-    font-family: Consolas, "Courier New", monospace;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    margin: 0;
-    min-height: 0;
-    overflow: auto;
-    padding: 16px;
-    white-space: pre;
-}
-
-.project-tab-add {
-    color: var(--mud-palette-text-secondary);
-    font-size: 1.1rem;
-    font-weight: 500;
-    min-width: 36px;
-    padding: 5px 10px;
-}
-
-.project-tab-json {
-    align-items: center;
-    border-radius: 4px;
-    color: var(--mud-palette-text-secondary);
-    cursor: pointer;
-    display: inline-flex;
-    font-family: Consolas, "Courier New", monospace;
-    font-size: 0.7rem;
-    font-weight: 700;
-    padding: 2px 5px;
-    user-select: none;
-}
-
-.project-tab-json:hover {
-    background: var(--mud-palette-action-default-hover);
-    color: var(--mud-palette-text-primary);
-}
-
-.project-tab-json-active {
-    background: color-mix(in srgb, var(--mud-palette-primary) 15%, transparent);
-    color: var(--mud-palette-primary);
-}
-
-.project-tabbar-app {
-    align-items: center;
-    border-left: 1px solid var(--mud-palette-lines-default);
-    color: var(--mud-palette-text-secondary);
-    display: flex;
-    font-size: 0.75rem;
-    gap: 6px;
-    margin-left: auto;
-    padding: 5px 8px 5px 10px;
-    user-select: none;
-}
-
-.project-tabbar-app-name {
-    max-width: 160px;
+/* Expression preview in collapsed node body */
+.node-expr-preview {
+    font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+    font-size: 11px;
+    opacity: 0.8;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.flux-app-item,
-.flux-app-item-active {
-    border-radius: 6px;
-    cursor: pointer;
-    padding: 4px 8px;
-}
-
-.flux-app-item-active {
-    background: var(--mud-palette-action-default-hover);
-}
-
-
-.topic-node-row,
-.topic-node-flat {
-    align-items: center;
-    display: flex;
-    gap: 8px;
-}
-
-.topic-tree-view {
-    min-width: 0;
-}
-
-.topic-tree-nodes {
-    max-height: 360px;
-    overflow: auto;
-}
-
-.topic-node-row,
-.topic-node-flat {
-    border-radius: 6px;
-    cursor: pointer;
-    min-height: 32px;
-    padding: 3px 6px;
-}
-
-.topic-node-row:hover,
-.topic-node-flat:hover,
-.session-row:hover {
-    background: var(--mud-palette-action-default-hover);
-}
-
-.topic-node-selected {
-    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent);
-}
-
-.topic-node-chevron {
-    align-items: center;
-    display: inline-flex;
-    flex: 0 0 22px;
-    justify-content: center;
-}
-
-.topic-node-name,
-.topic-path {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.topic-node-count,
-.topic-node-time {
-    flex: 0 0 auto;
-}
-
-.session-row {
-    cursor: pointer;
-}
-
-@media (max-width: 1200px) {
-    .workspace-layout,
-    .workspace-right-closed {
-        grid-template-areas:
-            "center"
-            "right";
-        grid-template-columns: 1fr;
-        overflow: auto;
-    }
-
-    .workspace-side,
-    .workspace-center,
-    .workspace-rail {
-        display: block;
-    }
-
-    .workspace-resize-handle {
-        display: none;
-    }
-
-    .workspace-right-closed .workspace-right {
-        display: none;
-    }
+/* Expression code editor field */
+.node-expr-field textarea {
+    font-family: "Cascadia Code", "Fira Code", "Consolas", monospace !important;
+    font-size: 12px !important;
 }

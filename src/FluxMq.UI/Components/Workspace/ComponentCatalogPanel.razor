@@ -2,18 +2,17 @@
 @inject DragStateService DragState
 @inject ProjectManagerService Projects
 
-<MudStack Spacing="0" Class="pa-2">
-    <MudText Typo="Typo.subtitle2" Class="px-1 pb-2">Components</MudText>
+<MudStack Spacing="0" Class="component-catalog">
+    <MudText Typo="Typo.subtitle2" Class="catalog-title">Components</MudText>
     @foreach (var group in Catalog.Components.GroupBy(c => c.Category))
     {
-        <MudText Typo="Typo.overline" Color="Color.Secondary" Class="px-1 pt-1 pb-1" Style="font-size:0.65rem;letter-spacing:0.06em;">
+        <MudText Typo="Typo.overline" Color="Color.Secondary" Class="catalog-group">
             @group.Key
         </MudText>
         @foreach (var component in group)
         {
             <MudPaper Elevation="0"
-                      Class="pa-2 mb-1"
-                      Style="cursor:grab;"
+                      Class="catalog-item"
                       draggable="true"
                       @ondragstart="@(() => DragState.ComponentType = component.Type)">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">

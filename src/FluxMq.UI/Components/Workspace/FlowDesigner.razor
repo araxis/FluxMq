@@ -1,4 +1,5 @@
 @using FluxMq.UI.Components.Diagram
+@using FluxMq.Components.MessageFilter
 @implements IDisposable
 @inject LiveMqttWorkspaceService Live
 @inject FlowComponentCatalog Catalog
@@ -16,11 +17,11 @@
                     <NavigatorWidget Width="180"
                                      Height="120"
                                      UseNodeShape="false"
-                                     NodeColor="#1F7A8C"
-                                     GroupColor="#99D6CE"
-                                     ViewStrokeColor="#F4B860"
+                                     NodeColor="#2DD4BF"
+                                     GroupColor="#1C222D"
+                                     ViewStrokeColor="#FBBF24"
                                      Class="flow-navigator"
-                                     Style="position:absolute;right:12px;bottom:60px;z-index:20;background:var(--mud-palette-surface);border:1px solid var(--mud-palette-lines-default);border-radius:8px;box-shadow:var(--mud-elevation-3);" />
+                                     Style="position:absolute;right:12px;bottom:60px;z-index:20;background:var(--flux-surface);border:1px solid var(--flux-border);border-radius:6px;box-shadow:var(--flux-shadow-pop);" />
                 </Widgets>
             </DiagramCanvas>
         </CascadingValue>
@@ -41,12 +42,27 @@
     {
         AllowMultiSelection = true,
         AllowPanning = true,
-        GridSize = 20
+        GridSize = 20,
+        Links =
+        {
+            Factory = (diagram, source, targetAnchor) =>
+            {
+                Blazor.Diagrams.Core.Anchors.Anchor sourceAnchor = source switch
+                {
+                    NodeModel node => new Blazor.Diagrams.Core.Anchors.ShapeIntersectionAnchor(node),
+                    PortModel port => new Blazor.Diagrams.Core.Anchors.SinglePortAnchor(port),
+                    _ => throw new NotImplementedException()
+                };
+                return CreateStyledLink(sourceAnchor, targetAnchor);
+            }
+        }
     });
 
     private long _renderedDefinitionRevision = -1;
     private string? _renderedWorkflowName;
     private readonly Dictionary<string, DiagramNodeState> _nodeStates = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, long> _filterPassCounts = new(StringComparer.Ordinal);
+    private System.Threading.Timer? _pulseTimer;
 
     protected override void OnInitialized()
     {
@@ -158,12 +174,7 @@
                                 var targetPort = PortFor(targetNode, PortAlignment.Left, port.Name);
                                 if (sourcePort is null || targetPort is null) continue;
 
-                                _diagram.Links.Add(new LinkModel(sourcePort, targetPort)
-                                {
-                                    Color = "#1F7A8C",
-                                    Width = 2,
-                                    TargetMarker = LinkMarker.Arrow
-                                });
+                                _diagram.Links.Add(CreateStyledLink(sourcePort, targetPort));
                             }
                         }
                     }
@@ -179,12 +190,7 @@
                         var targetPort = PortFor(targetNode, PortAlignment.Left, "Connection");
                         if (sourcePort is not null && targetPort is not null)
                         {
-                            _diagram.Links.Add(new LinkModel(sourcePort, targetPort)
-                            {
-                                Color = "#F4B860",
-                                Width = 2,
-                                TargetMarker = LinkMarker.Arrow
-                            });
+                            _diagram.Links.Add(CreateStyledLink(sourcePort, targetPort, "#FBBF24"));
                         }
                     }
                 }
@@ -250,7 +256,7 @@
 
     private static bool HasOutputPort(string nodeType) => nodeType switch
     {
-        "mqtt.metrics-sink" => false,
+        "mqtt.metrics" => false,
         _ => true
     };
 
@@ -264,6 +270,20 @@
             if (named is not null) return named;
         }
         return node.Ports.FirstOrDefault(p => p.Alignment == alignment);
+    }
+
+    private static LinkModel CreateStyledLink(PortModel sourcePort, PortModel targetPort, string color = "#2DD4BF")
+        => StyleLink(new LinkModel(sourcePort, targetPort), color);
+
+    private static LinkModel CreateStyledLink(Blazor.Diagrams.Core.Anchors.Anchor sourceAnchor, Blazor.Diagrams.Core.Anchors.Anchor targetAnchor, string color = "#2DD4BF")
+        => StyleLink(new LinkModel(sourceAnchor, targetAnchor), color);
+
+    private static LinkModel StyleLink(LinkModel link, string color)
+    {
+        link.Color = color;
+        link.Width = 2;
+        link.TargetMarker = LinkMarker.Arrow;
+        return link;
     }
 
     private void UpdateDiagramActivity()
@@ -280,17 +300,15 @@
         {
             var activity = node.NodeType switch
             {
-                "mqtt.trigger" => $"{Live.State} | {count} messages",
-                "session.source" => Live.SelectedStoredSession is null
+                "mqtt.trigger" or "mqtt.live-source" => $"{Live.State} | {count} messages",
+                "session.source" or "replay.source" => Live.SelectedStoredSession is null
                     ? null
                     : $"{count} stored messages",
-                "traffic.source" => Live.SelectedStoredSession is null
-                    ? $"{Live.State} | {count} messages"
-                    : $"{count} stored messages",
+                "generated.source" => "Generated test messages",
                 "mqtt.payload-inspector" => inspectedMessage is null
                     ? "Waiting for payload"
                     : $"{latestInspection.ContentTypeLabel} | {latestInspection.SizeBytes} bytes | {ShortTopic(inspectedMessage.Topic)}",
-                "mqtt.metrics-sink" => $"{count} messages observed",
+                "mqtt.metrics" => $"{count} messages observed",
                 _ => null
             };
 
@@ -347,6 +365,61 @@
     private static string ShortTopic(string topic)
         => topic.Length <= 42 ? topic : $"{topic[..18]}...{topic[^18..]}";
 
+    private void UpdatePulseTimer()
+    {
+        if (Flow.State == RuntimeWorkspaceState.Running)
+        {
+            _pulseTimer ??= new System.Threading.Timer(
+                _ => _ = InvokeAsync(CheckFilterPulses), null, 0, 200);
+        }
+        else
+        {
+            _pulseTimer?.Dispose();
+            _pulseTimer = null;
+        }
+    }
+
+    private void CheckFilterPulses()
+    {
+        var runtime = Flow.Host?.Runtime;
+        if (runtime is null) return;
+
+        foreach (var runtimeNode in runtime.Nodes)
+        {
+            if (runtimeNode.Node is not MessageFilterComponent filter) continue;
+
+            var nodeName = runtimeNode.Address.Node.Value;
+            var currentCount = filter.PassedCount;
+            _filterPassCounts.TryGetValue(nodeName, out var lastCount);
+            if (currentCount <= lastCount) continue;
+
+            _filterPassCounts[nodeName] = currentCount;
+
+            var diagramNode = _diagram.Nodes.OfType<FlowDiagramNodeModel>()
+                .FirstOrDefault(n => string.Equals(n.NodeName, nodeName, StringComparison.Ordinal));
+            if (diagramNode is null) continue;
+
+            var outputPort = diagramNode.Ports.OfType<FlowPortModel>()
+                .FirstOrDefault(p => p.Alignment == PortAlignment.Right &&
+                                     string.Equals(p.PortName, "Output", StringComparison.OrdinalIgnoreCase));
+            if (outputPort is null) continue;
+
+            outputPort.IsPulsing = true;
+            diagramNode.Refresh(); // fires NodeModel.Changed → node wrapper re-renders → NodeWidgetShell picks up new PortClass
+            SchedulePortPulseReset(outputPort, diagramNode);
+        }
+    }
+
+    private async void SchedulePortPulseReset(FlowPortModel port, FlowDiagramNodeModel node)
+    {
+        await Task.Delay(600);
+        await InvokeAsync(() =>
+        {
+            port.IsPulsing = false;
+            node.Refresh();
+        });
+    }
+
     private void OnFlowChanged(object? sender, EventArgs e)
     {
         InvokeAsync(() =>
@@ -360,6 +433,7 @@
                 UpdateDiagramActivity();
                 _diagram.Refresh();
             }
+            UpdatePulseTimer();
             StateHasChanged();
         });
     }
@@ -376,6 +450,8 @@
 
     public void Dispose()
     {
+        _pulseTimer?.Dispose();
+        _pulseTimer = null;
         if (Flow.GetDiagramState is { } capture)
         {
             Flow.LastNodePositions.Clear();

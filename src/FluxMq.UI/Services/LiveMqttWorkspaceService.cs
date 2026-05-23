@@ -163,7 +163,12 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         NotifyChanged();
     }
 
-    public async Task PublishAsync(string topic, string payload, CancellationToken cancellationToken = default)
+    public async Task PublishAsync(
+        string topic,
+        string payload,
+        MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce,
+        bool retain = false,
+        CancellationToken cancellationToken = default)
     {
         var session = _entries.Values
             .FirstOrDefault(e => e.Connection.State == MqttSessionState.Connected)?.Session;
@@ -180,8 +185,8 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
             await session.PublishAsync(
                 topic,
                 Encoding.UTF8.GetBytes(payload),
-                MqttQualityOfServiceLevel.AtMostOnce,
-                retain: false,
+                qos,
+                retain,
                 cancellationToken).ConfigureAwait(false);
 
             Diagnostics = [new WorkspaceDiagnostic("Info", "MQTT", "Published", $"Published to {topic}.")];

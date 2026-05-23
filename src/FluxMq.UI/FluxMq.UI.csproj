@@ -23,13 +23,29 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <MauiCss Remove="Components\Layout\MainLayout.razor.css" />
+	  <MauiCss Remove="Components\Pages\WorkspacePage.razor.css" />
+	  <MauiCss Remove="Components\Payloads\PayloadInspectorPanel.razor.css" />
+	  <MauiCss Remove="Components\TopicTree\TopicTreeNode.razor.css" />
+	  <MauiCss Remove="Components\TopicTree\TopicTreeView.razor.css" />
+	  <MauiCss Remove="Components\Workspace\AppJsonPanel.razor.css" />
 	  <MauiCss Remove="Components\Workspace\AppTreePanel.razor.css" />
+	  <MauiCss Remove="Components\Workspace\AppsPanel.razor.css" />
 	  <MauiCss Remove="Components\Workspace\FlowDesigner.razor.css" />
+	  <MauiCss Remove="Components\Workspace\LiveInspectorPanel.razor.css" />
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Content Include="Components\Layout\MainLayout.razor.css" />
+	  <Content Include="Components\Pages\WorkspacePage.razor.css" />
+	  <Content Include="Components\Payloads\PayloadInspectorPanel.razor.css" />
+	  <Content Include="Components\TopicTree\TopicTreeNode.razor.css" />
+	  <Content Include="Components\TopicTree\TopicTreeView.razor.css" />
+	  <Content Include="Components\Workspace\AppJsonPanel.razor.css" />
 	  <Content Include="Components\Workspace\AppTreePanel.razor.css" />
+	  <Content Include="Components\Workspace\AppsPanel.razor.css" />
 	  <Content Include="Components\Workspace\FlowDesigner.razor.css" />
+	  <Content Include="Components\Workspace\LiveInspectorPanel.razor.css" />
 	</ItemGroup>
 
 	<ItemGroup>

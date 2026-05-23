@@ -26,6 +26,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     private string? _activeWorkflowName;
     private string? _displayName;
 
+    public FlowApplicationHost? Host => _host;
     public string DefinitionJson { get; private set; }
     public long DefinitionRevision { get; private set; }
     public string CurrentFilePath { get; private set; } = string.Empty;
@@ -214,6 +215,22 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             ];
         }
 
+        NotifyChanged();
+    }
+
+    public void RenameWorkflowNode(string workflowName, string oldName, string newName)
+    {
+        try
+        {
+            ReplaceDefinition(_definitionComposer.RenameWorkflowNode(DefinitionJson, workflowName, oldName, newName));
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "NodeRenameFailed", exception.Message)];
+        }
         NotifyChanged();
     }
 

@@ -20,17 +20,17 @@
 }
 
 .flow-canvas-toolbar {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    z-index: 20;
+    background: var(--flux-surface);
+    border: 1px solid var(--flux-border);
+    border-radius: 6px;
+    box-shadow: var(--flux-shadow-1);
     display: flex;
-    gap: 4px;
-    background: var(--mud-palette-surface);
-    border: 1px solid var(--mud-palette-lines-default);
-    border-radius: 8px;
+    gap: 2px;
     padding: 2px;
-    box-shadow: var(--mud-elevation-2);
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    z-index: 20;
 }
 
 .flow-canvas ::deep .diagram-canvas {
@@ -43,10 +43,10 @@
 }
 
 .flow-designer-root ::deep .flow-node {
-    background: var(--mud-palette-surface);
-    border: 1px solid var(--mud-palette-lines-default);
-    border-radius: 8px;
-    box-shadow: var(--mud-elevation-2);
+    background: var(--flux-surface);
+    border: 1px solid var(--flux-border-strong);
+    border-radius: 6px;
+    box-shadow: var(--flux-shadow-node);
     min-width: 260px;
     overflow: visible;
     padding: 10px;
@@ -54,8 +54,8 @@
 }
 
 .flow-designer-root ::deep .flow-node-selected {
-    border-color: var(--mud-palette-primary);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-primary) 28%, transparent);
+    border-color: var(--flux-accent);
+    box-shadow: 0 0 0 2px var(--flux-accent-dim), var(--flux-shadow-node);
 }
 
 .flow-designer-root ::deep .flow-node-header {
@@ -70,8 +70,8 @@
 }
 
 .flow-designer-root ::deep .diagram-port {
-    background: var(--mud-palette-surface);
-    border: 2px solid var(--mud-palette-primary);
+    background: var(--flux-surface);
+    border: 2px solid var(--flux-accent);
     border-radius: 50%;
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-primary) 18%, transparent);
     height: 12px !important;
@@ -85,7 +85,7 @@
     transform: scale(1.35);
 }
 
-/* Position-only — colour comes from .port-input / .port-output below.
+/* Position-only: colour comes from .port-input / .port-output below.
    Mirror approach: left ports pull left with margin-left: -6px;
    right ports push right with margin-right: -6px. */
 .flow-designer-root ::deep .diagram-port.left {
@@ -129,54 +129,22 @@
     background: var(--mud-palette-primary);
 }
 
-.flow-designer-root ::deep .node-flip {
-    perspective: 1000px;
-    position: relative;
+.flow-designer-root ::deep .diagram-link path,
+.flow-designer-root ::deep .diagram-link polyline,
+.flow-designer-root ::deep .diagram-link line {
+    stroke: #2DD4BF;
+    stroke-width: 2px;
 }
 
-.flow-designer-root ::deep .node-flip-inner {
-    height: 100%;
-    transform-style: preserve-3d;
-    transition: transform 0.55s ease;
+.flow-designer-root ::deep .diagram-link.selected path,
+.flow-designer-root ::deep .diagram-link.selected polyline,
+.flow-designer-root ::deep .diagram-link.selected line {
+    stroke: #FBBF24;
 }
 
-.flow-designer-root ::deep .node-flip.flipped .node-flip-inner {
-    transform: rotateY(180deg);
-}
-
-.flow-designer-root ::deep .node-flip-face {
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-}
-
-.flow-designer-root ::deep .node-flip-back {
-    display: flex;
-    flex-direction: column;
-    inset: 0;
-    position: absolute;
-    transform: rotateY(180deg);
-}
-
-.flow-designer-root ::deep .node-edit-actions {
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    display: flex;
-    gap: 4px;
-    justify-content: flex-end;
-    margin-top: 6px;
-    padding: 4px 0;
-}
-
-.flow-designer-root ::deep .node-edit-body {
-    display: flex;
-    flex: 1 1 auto;
-    flex-direction: column;
-    gap: 6px;
-    overflow-y: auto;
-    padding-right: 2px;
-}
 
 .flow-designer-root ::deep .flow-node-port-list {
-    border-top: 1px solid var(--mud-palette-lines-default);
+    border-top: 1px solid var(--flux-border);
     /* pull out to cancel node padding so dots sit on the node border */
     margin: 8px -10px -10px;
     padding: 4px 0 6px;
@@ -189,7 +157,7 @@
     padding: 1px 0;
 }
 
-/* 6px side containers — half the dot width — so the 12px dot straddles the node edge */
+/* 6px side containers, half the dot width, so the 12px dot straddles the node edge */
 .flow-designer-root ::deep .flow-port-side-left,
 .flow-designer-root ::deep .flow-port-side-right {
     align-items: center;
@@ -240,6 +208,18 @@
     text-align: right;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* Output port blink when a filter passes a message */
+@keyframes port-pulse-anim {
+    0%   { transform: scale(1);   box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-success) 18%, transparent); }
+    40%  { transform: scale(2);   box-shadow: 0 0 0 5px color-mix(in srgb, var(--mud-palette-success) 38%, transparent), 0 0 10px 3px color-mix(in srgb, var(--mud-palette-success) 28%, transparent); }
+    100% { transform: scale(1);   box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-success) 18%, transparent); }
+}
+
+.flow-designer-root ::deep .diagram-port.port-pulse {
+    animation: port-pulse-anim 0.6s ease-out;
+    background: var(--mud-palette-success);
 }
 
 @media (max-width: 960px) {

@@ -116,6 +116,48 @@ public sealed class FlowDefinitionComposer
         return json;
     }
 
+    /// <summary>
+    /// Renames a workflow node and rewrites all intra-workflow references that point to it.
+    /// No-ops when old and new names are equal or the node cannot be found.
+    /// </summary>
+    public string RenameWorkflowNode(string json, string? workflowName, string oldName, string newName)
+    {
+        if (string.IsNullOrWhiteSpace(workflowName) ||
+            string.IsNullOrWhiteSpace(oldName) ||
+            string.IsNullOrWhiteSpace(newName) ||
+            string.Equals(oldName, newName, StringComparison.Ordinal))
+            return json;
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+
+        if (flowApplication["workflows"] is not JsonObject workflows ||
+            workflows[workflowName] is not JsonObject workflow)
+            return json;
+
+        var nodeDef = workflow[oldName];
+        if (nodeDef is null) return json;
+
+        workflow.Remove(oldName);
+        workflow[newName] = nodeDef;
+
+        var prefix = oldName + ".";
+        foreach (var (_, node) in workflow.AsEnumerable().ToList())
+        {
+            if (node is not JsonObject nodeObj) continue;
+            var updates = nodeObj
+                .Where(p => p.Value is JsonValue jv &&
+                             jv.TryGetValue<string>(out var s) &&
+                             s.StartsWith(prefix, StringComparison.Ordinal))
+                .Select(p => (p.Key, newName + p.Value!.GetValue<string>()[oldName.Length..]))
+                .ToList();
+            foreach (var (key, val) in updates)
+                nodeObj[key] = val;
+        }
+
+        return root.ToJsonString(Options);
+    }
+
     /// <summary>Returns (name, type) pairs for all nodes in a specific workflow.</summary>
     public IReadOnlyList<(string Name, string Type)> GetWorkflowNodes(string json, string workflowName)
     {

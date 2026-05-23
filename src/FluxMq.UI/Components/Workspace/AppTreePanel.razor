@@ -5,278 +5,174 @@
 
 @if (Projects.Projects.Count == 0)
 {
-    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="px-4 py-3">
-        No apps open. Use New or Open from the toolbar.
-    </MudText>
+    <div class="tree-empty">
+        <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Medium" />
+        <div>
+            <div class="tree-empty-title">No apps open</div>
+            <div class="tree-empty-copy">Create or open a project from the top bar.</div>
+        </div>
+    </div>
 }
 else
 {
-    <MudTreeView T="object" Items="@_items" Dense="true" Hover="true" ExpandOnClick="true">
-        <ItemTemplate Context="item">
-            <MudTreeViewItem T="object"
-                             @key="@GetKey(item)"
-                             Items="@item.Children"
-                             Icon="@GetIcon(item)"
-                             IconColor="@GetIconColor(item)"
-                             Expanded="@item.Expanded"
-                             ExpandedChanged="@(v => OnToggled(item, v))"
-                             OnClick="@(() => OnItemClick(item))">
-                <BodyContent>
-                    @if (item.Value is AppNode an)
-                    {
-                        var isActive = an.App == Projects.ActiveProject;
-                        <div class="app-row" style="display:grid;grid-template-columns:1fr auto;align-items:center;width:100%">
-                            <MudText Typo="Typo.body2"
-                                     Style="@($"{(isActive ? "font-weight:600;" : "")}overflow:hidden;text-overflow:ellipsis;white-space:nowrap;")">
-                                @an.App.Name@(an.App.HasUnsavedChanges ? " ●" : "")
-                            </MudText>
-                            <span class="app-actions" @onclick:stopPropagation="true">
-                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Cancel"
-                                               OnClick="@(() => CloseAsync(an.App))" />
-                            </span>
+    <div class="app-tree">
+        @foreach (var app in Projects.Projects)
+        {
+            var a = app;
+            var isActive = a == Projects.ActiveProject;
+            var conns = GetConnections(a);
+
+            <section class="app-card @(isActive ? "active" : null)" @key="a">
+                <div class="app-row" @onclick="@(() => Projects.SetActive(a))">
+                    <MudIcon Icon="@(isActive ? Icons.Material.Filled.FolderOpen : Icons.Material.Filled.Folder)"
+                             Size="Size.Small"
+                             Class="app-row-icon" />
+                    <div class="app-row-text">
+                        <div class="app-name">@a.Name</div>
+                        <div class="app-meta">
+                            @a.WorkflowNames.Count pipelines
+                            @if (a.HasUnsavedChanges)
+                            {
+                                <span class="dirty-dot">Unsaved</span>
+                            }
                         </div>
-                    }
-                    else if (item.Value is ConnGroupNode cg)
+                    </div>
+                    <div class="app-actions" @onclick:stopPropagation="true">
+                        <MudTooltip Text="Close app">
+                            <MudIconButton Size="Size.Small"
+                                           Icon="@Icons.Material.Outlined.Cancel"
+                                           Class="tree-icon-button"
+                                           OnClick="@(() => CloseAsync(a))" />
+                        </MudTooltip>
+                    </div>
+                </div>
+
+                <div class="tree-section">
+                    <div class="tree-section-header">
+                        <span>Connections</span>
+                        <MudTooltip Text="Add connection">
+                            <MudIconButton Size="Size.Small"
+                                           Icon="@Icons.Material.Filled.Add"
+                                           Class="tree-icon-button"
+                                           OnClick="@(() => AddConnectionAsync(a))" />
+                        </MudTooltip>
+                    </div>
+
+                    @if (conns.Count == 0)
                     {
-                        <div style="display:grid;grid-template-columns:1fr auto;align-items:center;width:100%">
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">Connections</MudText>
-                            <span @onclick:stopPropagation="true">
-                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Add"
-                                               OnClick="@(() => AddConnectionAsync(cg.App))" />
-                            </span>
-                        </div>
+                        <div class="tree-muted-row">No connections</div>
                     }
-                    else if (item.Value is ConnNode cn)
+                    else
                     {
-                        <div class="conn-row" style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px;width:100%">
-                            <div style="display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;">
-                                <MudIcon Icon="@Icons.Material.Filled.Circle"
-                                         Color="@StateColor(cn.Conn.State)"
-                                         Style="font-size:10px;flex-shrink:0;" />
-                                <div style="min-width:0;overflow:hidden;">
-                                    <MudText Typo="Typo.body2"
-                                             Style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                                        @cn.Conn.Profile.Name
-                                    </MudText>
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                        @cn.Conn.Profile.Host:@cn.Conn.Profile.Port
-                                    </MudText>
+                        foreach (var conn in conns)
+                        {
+                            var c = conn;
+                            <div class="conn-item" @key="c.Id">
+                                <span class="@StateDotClass(c.State)"></span>
+                                <div class="conn-text">
+                                    <div class="conn-name">@c.Profile.Name</div>
+                                    <div class="conn-endpoint">@c.Profile.Host:@c.Profile.Port</div>
+                                </div>
+                                <div class="conn-actions">
+                                    @if (c.State is MqttSessionState.Disconnected or MqttSessionState.Faulted)
+                                    {
+                                        <MudTooltip Text="Connect">
+                                            <MudIconButton Size="Size.Small"
+                                                           Icon="@Icons.Material.Filled.PlayArrow"
+                                                           Color="Color.Success"
+                                                           Class="tree-icon-button"
+                                                           OnClick="@(() => Live.ConnectAsync(c.Id))" />
+                                        </MudTooltip>
+                                    }
+                                    else
+                                    {
+                                        <MudTooltip Text="Disconnect">
+                                            <MudIconButton Size="Size.Small"
+                                                           Icon="@Icons.Material.Filled.Stop"
+                                                           Color="Color.Error"
+                                                           Class="tree-icon-button"
+                                                           OnClick="@(() => Live.DisconnectAsync(c.Id))" />
+                                        </MudTooltip>
+                                    }
+                                    <MudTooltip Text="Remove">
+                                        <MudIconButton Size="Size.Small"
+                                                       Icon="@Icons.Material.Filled.DeleteOutline"
+                                                       Class="tree-icon-button"
+                                                       OnClick="@(() => Live.RemoveConnectionAsync(c.Id))" />
+                                    </MudTooltip>
                                 </div>
                             </div>
-                            <span class="conn-actions" @onclick:stopPropagation="true">
-                                @if (cn.Conn.State is MqttSessionState.Disconnected or MqttSessionState.Faulted)
-                                {
-                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.PlayArrow"
-                                                   Color="Color.Success"
-                                                   OnClick="@(() => Live.ConnectAsync(cn.Conn.Id))" />
-                                }
-                                else
-                                {
-                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Stop"
-                                                   Color="Color.Error"
-                                                   OnClick="@(() => Live.DisconnectAsync(cn.Conn.Id))" />
-                                }
-                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.DeleteOutline"
-                                               OnClick="@(() => Live.RemoveConnectionAsync(cn.Conn.Id))" />
-                            </span>
-                        </div>
+                        }
                     }
-                    else if (item.Value is NoConnNode)
+                </div>
+
+                <div class="tree-section">
+                    <div class="tree-section-header">
+                        <span>Pipelines</span>
+                        <MudTooltip Text="Add pipeline">
+                            <MudIconButton Size="Size.Small"
+                                           Icon="@Icons.Material.Filled.Add"
+                                           Class="tree-icon-button"
+                                           OnClick="@(() => AddPipelineAsync(a))" />
+                        </MudTooltip>
+                    </div>
+
+                    @if (a.WorkflowNames.Count == 0)
                     {
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">No connections</MudText>
+                        <div class="tree-muted-row">No pipelines</div>
                     }
-                    else if (item.Value is PipeGroupNode pg)
+                    else
                     {
-                        <div style="display:grid;grid-template-columns:1fr auto;align-items:center;width:100%">
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">Pipelines</MudText>
-                            <span @onclick:stopPropagation="true">
-                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Add"
-                                               OnClick="@(() => AddPipelineAsync(pg.App))" />
-                            </span>
-                        </div>
+                        foreach (var wf in a.WorkflowNames)
+                        {
+                            var w = wf;
+                            var isPipeActive = a == Projects.ActiveProject &&
+                                string.Equals(w, a.ActiveWorkflowName, StringComparison.Ordinal);
+                            <div class="pipe-item @(isPipeActive ? "active" : null)"
+                                 @onclick="@(() => { Projects.SetActive(a); a.SetActiveWorkflow(w); })">
+                                <MudIcon Icon="@Icons.Material.Filled.Timeline"
+                                         Size="Size.Small"
+                                         Class="pipe-icon" />
+                                <span>@w</span>
+                            </div>
+                        }
                     }
-                    else if (item.Value is PipeNode pn)
-                    {
-                        var isPipeActive = pn.App == Projects.ActiveProject &&
-                            string.Equals(pn.WorkflowName, pn.App.ActiveWorkflowName, StringComparison.Ordinal);
-                        <MudText Typo="Typo.body2" Style="@(isPipeActive ? "font-weight:600;" : "")">
-                            @pn.WorkflowName
-                        </MudText>
-                    }
-                    else if (item.Value is NodeItem ni)
-                    {
-                        <div>
-                            <MudText Typo="Typo.body2">@ni.Name</MudText>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">@ni.NodeType</MudText>
-                        </div>
-                    }
-                </BodyContent>
-            </MudTreeViewItem>
-        </ItemTemplate>
-    </MudTreeView>
+                </div>
+            </section>
+        }
+    </div>
 }
 
 @code {
     private readonly HashSet<FlowWorkspaceService> _subscribed = [];
-    private readonly HashSet<string> _expanded = [];
-    private List<TreeItemData<object>> _items = [];
-
-    sealed record AppNode(FlowWorkspaceService App);
-    sealed record ConnGroupNode(FlowWorkspaceService App);
-    sealed record ConnNode(ManagedConnection Conn);
-    sealed record NoConnNode;
-    sealed record PipeGroupNode(FlowWorkspaceService App);
-    sealed record PipeNode(FlowWorkspaceService App, string WorkflowName);
-    sealed record NodeItem(string Name, string NodeType);
 
     protected override void OnInitialized()
     {
         Projects.Changed += OnChanged;
         Live.Changed += OnChanged;
         SyncSubscriptions();
-        RebuildTree();
     }
 
-    private static string AppKey(FlowWorkspaceService app) => app.GetHashCode().ToString();
-
-    private string GetKey(ITreeItemData<object> item) => item.Value switch
+    private List<ManagedConnection> GetConnections(FlowWorkspaceService app)
     {
-        AppNode an        => AppKey(an.App),
-        ConnGroupNode cg  => $"conn:{AppKey(cg.App)}",
-        ConnNode cn       => cn.Conn.Id.ToString(),
-        NoConnNode        => "no-conn",
-        PipeGroupNode pg  => $"pipe:{AppKey(pg.App)}",
-        PipeNode pn       => $"wf:{AppKey(pn.App)}:{pn.WorkflowName}",
-        NodeItem ni       => $"node:{ni.Name}",
-        _                 => Guid.NewGuid().ToString()
-    };
-
-    private string GetIcon(ITreeItemData<object> item) => item.Value switch
-    {
-        AppNode an    => an.App == Projects.ActiveProject
-                             ? Icons.Material.Filled.FolderOpen
-                             : Icons.Material.Filled.Folder,
-        ConnGroupNode => Icons.Material.Filled.Cable,
-        ConnNode      => "",
-        PipeGroupNode => Icons.Material.Filled.AccountTree,
-        PipeNode      => Icons.Material.Filled.Timeline,
-        NodeItem      => Icons.Material.Filled.Circle,
-        _             => Icons.Material.Filled.Folder
-    };
-
-    private Color GetIconColor(ITreeItemData<object> item) => item.Value switch
-    {
-        AppNode an    => an.App == Projects.ActiveProject ? Color.Primary : Color.Default,
-        ConnGroupNode => Color.Secondary,
-        ConnNode cn   => StateColor(cn.Conn.State),
-        PipeGroupNode => Color.Secondary,
-        PipeNode pn   => pn.App == Projects.ActiveProject &&
-                         string.Equals(pn.WorkflowName, pn.App.ActiveWorkflowName, StringComparison.Ordinal)
-                             ? Color.Primary : Color.Default,
-        NodeItem      => Color.Secondary,
-        _             => Color.Default
-    };
-
-    private void OnToggled(ITreeItemData<object> item, bool expanded)
-    {
-        var key = item.Value switch
-        {
-            AppNode an       => AppKey(an.App),
-            ConnGroupNode cg => $"conn:{AppKey(cg.App)}",
-            PipeGroupNode pg => $"pipe:{AppKey(pg.App)}",
-            PipeNode pn      => $"wf:{AppKey(pn.App)}:{pn.WorkflowName}",
-            _                => null
-        };
-        if (key is null) return;
-        if (expanded) _expanded.Add(key);
-        else _expanded.Remove(key);
-    }
-
-    private void OnItemClick(ITreeItemData<object> item)
-    {
-        switch (item.Value)
-        {
-            case AppNode an:
-                Projects.SetActive(an.App);
-                break;
-            case PipeNode pn:
-                Projects.SetActive(pn.App);
-                pn.App.SetActiveWorkflow(pn.WorkflowName);
-                break;
-        }
+        var profiles = app.GetConnectionProfiles();
+        return Live.Connections.Where(c =>
+            profiles.Any(p =>
+                string.Equals(p.Profile.Host, c.Profile.Host, StringComparison.OrdinalIgnoreCase) &&
+                p.Profile.Port == c.Profile.Port)).ToList();
     }
 
     private void SyncSubscriptions()
     {
         foreach (var app in Projects.Projects)
-        {
             if (_subscribed.Add(app))
-            {
                 app.Changed += OnChanged;
-                var key = AppKey(app);
-                _expanded.Add(key);
-                _expanded.Add($"conn:{key}");
-                _expanded.Add($"pipe:{key}");
-            }
-        }
+
         foreach (var stale in _subscribed.Where(p => !Projects.Projects.Contains(p)).ToList())
         {
             stale.Changed -= OnChanged;
             _subscribed.Remove(stale);
-            var key = AppKey(stale);
-            _expanded.Remove(key);
-            _expanded.Remove($"conn:{key}");
-            _expanded.Remove($"pipe:{key}");
         }
-    }
-
-    private void RebuildTree() =>
-        _items = Projects.Projects.Select(BuildAppItem).ToList();
-
-    private TreeItemData<object> BuildAppItem(FlowWorkspaceService app)
-    {
-        var appKey = AppKey(app);
-        var profiles = app.GetConnectionProfiles();
-        var conns = Live.Connections.Where(c =>
-            profiles.Any(p =>
-                string.Equals(p.Profile.Host, c.Profile.Host, StringComparison.OrdinalIgnoreCase) &&
-                p.Profile.Port == c.Profile.Port)).ToList();
-
-        IReadOnlyCollection<TreeItemData<object>> connChildren = conns.Count > 0
-            ? conns.Select(c => new TreeItemData<object> { Value = new ConnNode(c) }).ToList()
-            : [new TreeItemData<object> { Value = new NoConnNode() }];
-
-        var connGroup = new TreeItemData<object>
-        {
-            Value = new ConnGroupNode(app),
-            Expanded = _expanded.Contains($"conn:{appKey}"),
-            Children = connChildren
-        };
-
-        var pipeChildren = app.WorkflowNames.Select(w =>
-            new TreeItemData<object>
-            {
-                Value = new PipeNode(app, w),
-                Expanded = _expanded.Contains($"wf:{appKey}:{w}"),
-                Children = app.GetWorkflowNodes(w) is { Count: > 0 } wfNodes
-                    ? wfNodes.Select(n => new TreeItemData<object> { Value = new NodeItem(n.Name, n.Type) })
-                             .ToList<TreeItemData<object>>()
-                    : null
-            }).ToList<TreeItemData<object>>();
-
-        var pipeGroup = new TreeItemData<object>
-        {
-            Value = new PipeGroupNode(app),
-            Expanded = _expanded.Contains($"pipe:{appKey}"),
-            Children = pipeChildren.Count > 0 ? pipeChildren : null
-        };
-
-        return new TreeItemData<object>
-        {
-            Value = new AppNode(app),
-            Expanded = _expanded.Contains(appKey),
-            Children = [connGroup, pipeGroup]
-        };
     }
 
     private Task CloseAsync(FlowWorkspaceService app) => Projects.CloseProjectAsync(app).AsTask();
@@ -309,18 +205,17 @@ else
         }
     }
 
-    private static Color StateColor(MqttSessionState state) => state switch
+    private static string StateDotClass(MqttSessionState state) => state switch
     {
-        MqttSessionState.Connected                                => Color.Success,
-        MqttSessionState.Connecting or MqttSessionState.Reconnecting => Color.Warning,
-        MqttSessionState.Faulted                                  => Color.Error,
-        _                                                         => Color.Default
+        MqttSessionState.Connected => "conn-dot live",
+        MqttSessionState.Connecting or MqttSessionState.Reconnecting => "conn-dot pending",
+        MqttSessionState.Faulted => "conn-dot faulted",
+        _ => "conn-dot"
     };
 
     private void OnChanged(object? sender, EventArgs e)
     {
         SyncSubscriptions();
-        RebuildTree();
         InvokeAsync(StateHasChanged);
     }
 
