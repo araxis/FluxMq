@@ -616,6 +616,34 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void GetDashboardAndTestNames_ReturnsArtifactNamesInOrder()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = """
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "pipe": {}
+              },
+              "dashboards": {
+                "ops": {},
+                "debug": {}
+              },
+              "tests": {
+                "roundTrip": {},
+                "timeout": {}
+              }
+            }
+          }
+        }
+        """;
+
+        composer.GetDashboardNames(json).ShouldBe(["ops", "debug"]);
+        composer.GetTestNames(json).ShouldBe(["roundTrip", "timeout"]);
+    }
+
+    [Fact]
     public void AddWorkflow_IsIdempotentForDuplicateName()
     {
         var composer = new FlowDefinitionComposer();
@@ -626,6 +654,52 @@ public sealed class FlowDefinitionComposerTests
         var names = composer.GetWorkflowNames(json);
 
         names.ShouldBe(["pipe"]);
+    }
+
+    [Fact]
+    public void AddDashboard_AddsDefaultGridDashboardWithoutTouchingWorkflows()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.CreateEmptyDefinition();
+        json = composer.AddWorkflow(json, "pipe");
+
+        var updated = composer.AddDashboard(json, "ops");
+
+        using var document = JsonDocument.Parse(updated);
+        var flowApplication = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication");
+
+        flowApplication.GetProperty("workflows").TryGetProperty("pipe", out _).ShouldBeTrue();
+
+        var dashboard = flowApplication
+            .GetProperty("dashboards")
+            .GetProperty("ops");
+
+        dashboard.GetProperty("layout")
+            .GetProperty("columns")
+            .EnumerateArray()
+            .Select(item => item.GetString())
+            .ShouldBe(["320", "*"]);
+        dashboard.GetProperty("widgets").EnumerateObject().Count().ShouldBe(0);
+    }
+
+    [Fact]
+    public void AddTest_AddsEmptyScenarioArtifact()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.CreateEmptyDefinition();
+
+        var updated = composer.AddTest(json, "roundTrip");
+
+        using var document = JsonDocument.Parse(updated);
+        var scenario = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("tests")
+            .GetProperty("roundTrip");
+
+        scenario.GetProperty("steps").EnumerateObject().Count().ShouldBe(0);
     }
 
     [Fact]

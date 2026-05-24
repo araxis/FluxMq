@@ -62,7 +62,8 @@
 
 .app-name,
 .conn-name,
-.pipe-item span {
+.pipe-item span,
+.artifact-item span {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -104,28 +105,97 @@
 
 .tree-section {
     border-top: 1px solid var(--flux-border-soft);
-    padding: 5px 6px 7px;
+    padding: 8px 6px 7px;
 }
 
 .tree-section-header {
     align-items: center;
-    color: var(--flux-text-muted);
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    cursor: pointer;
     display: flex;
-    font-size: 10.5px;
-    font-weight: 700;
     justify-content: space-between;
-    letter-spacing: 0.08em;
-    min-height: 24px;
-    padding: 0 0 0 22px;
-    text-transform: uppercase;
+    min-height: 28px;
+    padding: 1px 2px 2px 4px;
+}
+
+.tree-section-header:hover {
+    background: color-mix(in srgb, var(--flux-surface-3) 70%, transparent);
+}
+
+.tree-section-title {
+    align-items: center;
+    display: flex;
+    font-size: 12px;
+    font-weight: 700;
+    gap: 7px;
+    min-width: 0;
+}
+
+.tree-section-actions {
+    align-items: center;
+    display: flex;
+    flex: 0 0 auto;
+}
+
+.tree-section-chevron {
+    color: var(--mud-palette-text-secondary);
+    flex: 0 0 auto;
+    opacity: 0.72;
+}
+
+.tree-section-title > span:not(.tree-section-count) {
+    color: var(--mud-palette-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tree-section-icon {
+    color: var(--flux-accent);
+    flex: 0 0 auto;
+    opacity: 0.92;
+}
+
+.tree-section-icon.brokers {
+    color: var(--mud-palette-info);
+}
+
+.tree-section-icon.pipelines {
+    color: var(--flux-accent);
+}
+
+.tree-section-icon.dashboards {
+    color: var(--mud-palette-info);
+}
+
+.tree-section-icon.tests {
+    color: var(--mud-palette-warning);
+}
+
+.tree-section-count {
+    align-items: center;
+    background: color-mix(in srgb, var(--mud-palette-text-secondary) 13%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-secondary) 18%, transparent);
+    border-radius: 999px;
+    color: var(--mud-palette-text-secondary);
+    display: inline-flex;
+    font-size: 10px;
+    font-weight: 750;
+    height: 17px;
+    justify-content: center;
+    line-height: 1;
+    min-width: 20px;
+    padding: 0 6px;
 }
 
 .tree-muted-row {
-    padding: 5px 4px 5px 24px;
+    padding: 5px 4px 5px 42px;
 }
 
 .conn-item,
-.pipe-item {
+.pipe-item,
+.artifact-item {
     align-items: center;
     border-radius: 5px;
     display: grid;
@@ -136,11 +206,12 @@
     gap: 8px;
     grid-template-columns: 7px minmax(0, 1fr) 54px;
     min-height: 38px;
-    padding: 4px 2px 4px 24px;
+    padding: 4px 2px 4px 42px;
 }
 
 .conn-item:hover,
-.pipe-item:hover {
+.pipe-item:hover,
+.artifact-item:hover {
     background: var(--flux-surface-3);
 }
 
@@ -176,20 +247,31 @@
     line-height: 1.2;
 }
 
-.pipe-item {
+.pipe-item,
+.artifact-item {
     color: var(--mud-palette-text-secondary);
     cursor: pointer;
     gap: 8px;
     grid-template-columns: 16px minmax(0, 1fr);
     min-height: 30px;
-    padding: 4px 6px 4px 24px;
+    padding: 4px 6px 4px 42px;
 }
 
-.pipe-item.active {
+.pipe-item.active,
+.artifact-item.active {
     background: var(--flux-accent-soft);
     color: var(--mud-palette-text-primary);
 }
 
-.pipe-icon {
+.pipe-icon,
+.artifact-icon {
     color: var(--flux-accent);
+}
+
+.artifact-icon.dashboard {
+    color: var(--mud-palette-info);
+}
+
+.artifact-icon.test {
+    color: var(--mud-palette-warning);
 }

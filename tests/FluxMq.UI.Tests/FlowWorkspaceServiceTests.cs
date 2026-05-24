@@ -107,6 +107,41 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public async Task SaveToFileAsync_WritesLastNodePositionsWhenDesignerIsUnmounted()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        var path = Path.Combine(Path.GetTempPath(), $"fluxmq-{Guid.NewGuid():N}.json");
+        service.SetFilePath(path);
+        service.AddWorkflow("pipe");
+        service.AddComponent("flow.mapper");
+        service.GetDiagramState = null;
+        service.LastNodePositions["pipe.mapper"] = (444d, 222d, true);
+
+        try
+        {
+            await service.SaveToFileAsync();
+
+            using var document = System.Text.Json.JsonDocument.Parse(await File.ReadAllTextAsync(path));
+            var node = document.RootElement
+                .GetProperty("FluxMq")
+                .GetProperty("Designer")
+                .GetProperty("nodes")
+                .GetProperty("pipe.mapper");
+
+            node.GetProperty("x").GetDouble().ShouldBe(444d);
+            node.GetProperty("y").GetDouble().ShouldBe(222d);
+            node.GetProperty("collapsed").GetBoolean().ShouldBeTrue();
+        }
+        finally
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+    }
+
+    [Fact]
     public async Task ValidateAsync_ConvertsInvalidJsonToDiagnostic()
     {
         var service = new FlowWorkspaceService(new FlowDefinitionComposer());
@@ -225,6 +260,98 @@ public sealed class FlowWorkspaceServiceTests
         service.SetActiveWorkflow("beta");
 
         service.ActiveWorkflowName.ShouldBe("beta");
+        service.ActiveArtifactKind.ShouldBe(WorkspaceArtifactKind.Pipeline);
+        service.ActiveArtifactName.ShouldBe("beta");
+    }
+
+    [Fact]
+    public void SetDefinitionJson_TracksWorkspaceArtifactNames()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "pipe": {}
+              },
+              "dashboards": {
+                "ops": {
+                  "layout": {
+                    "columns": ["*"],
+                    "rows": ["*"]
+                  }
+                }
+              },
+              "tests": {
+                "roundTrip": {
+                  "steps": {}
+                }
+              }
+            }
+          }
+        }
+        """);
+
+        service.WorkflowNames.ShouldBe(["pipe"]);
+        service.DashboardNames.ShouldBe(["ops"]);
+        service.TestNames.ShouldBe(["roundTrip"]);
+        service.ActiveArtifactKind.ShouldBe(WorkspaceArtifactKind.Pipeline);
+        service.ActiveArtifactName.ShouldBe("pipe");
+    }
+
+    [Fact]
+    public void DashboardAndTestSelection_DoesNotChangeActiveWorkflow()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddWorkflow("pipe");
+        service.AddDashboard("ops");
+        service.AddTest("roundTrip");
+
+        service.SetActiveDashboard("ops");
+
+        service.ActiveArtifactKind.ShouldBe(WorkspaceArtifactKind.Dashboard);
+        service.ActiveArtifactName.ShouldBe("ops");
+        service.ActiveWorkflowName.ShouldBe("pipe");
+
+        service.SetActiveTest("roundTrip");
+
+        service.ActiveArtifactKind.ShouldBe(WorkspaceArtifactKind.Test);
+        service.ActiveArtifactName.ShouldBe("roundTrip");
+        service.ActiveWorkflowName.ShouldBe("pipe");
+    }
+
+    [Fact]
+    public async Task SaveAndLoad_RoundTripsDashboardAndTestArtifacts()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        var path = Path.Combine(Path.GetTempPath(), $"fluxmq-{Guid.NewGuid():N}.json");
+        service.SetFilePath(path);
+        service.AddWorkflow("pipe");
+        service.AddDashboard("ops");
+        service.AddTest("roundTrip");
+
+        try
+        {
+            await service.SaveToFileAsync();
+
+            var loaded = new FlowWorkspaceService(new FlowDefinitionComposer());
+            loaded.SetFilePath(path);
+            await loaded.LoadFromFileAsync();
+
+            loaded.WorkflowNames.ShouldBe(["pipe"]);
+            loaded.DashboardNames.ShouldBe(["ops"]);
+            loaded.TestNames.ShouldBe(["roundTrip"]);
+            loaded.ActiveArtifactKind.ShouldBe(WorkspaceArtifactKind.Pipeline);
+        }
+        finally
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
     }
 
     [Fact]
