@@ -1,4 +1,5 @@
 using FluxMq.Core.Models;
+using FluxMq.Core.Payloads;
 using FluxMq.Core.Session;
 using FluxMq.Pipeline.Components;
 using FluxMq.UI.Models;
@@ -466,6 +467,53 @@ public sealed class FlowWorkspaceServiceTests
         snapshot.MessageCount.ShouldBe(1);
         snapshot.LastTopic.ShouldBe("factory/qos1");
         snapshot.TopicCounts.ShouldBe([new FluxMq.Components.MqttMetrics.MqttTopicMetric("factory/qos1", 1)]);
+    }
+
+    [Fact]
+    public async Task RunAsync_CollectsPayloadInspectionFromNodeInputStream()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "flow": {
+                  "generated": {
+                    "type": "generated.source",
+                    "configuration": {
+                      "messages": [
+                        { "topic": "factory/qos0", "payload": "low", "qos": 0 },
+                        { "topic": "factory/qos1", "payload": "{\"ok\":true}", "qos": 1 }
+                      ]
+                    }
+                  },
+                  "filter": {
+                    "type": "mqtt.message-filter",
+                    "Input": "generated.Output",
+                    "configuration": {
+                      "expression": "qos >= 1"
+                    }
+                  },
+                  "inspect": {
+                    "type": "mqtt.payload-inspector",
+                    "Input": "filter.Output"
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+
+        await service.RunAsync();
+        await WaitUntilAsync(() => service.GetPayloadInspection("flow", "inspect") is not null);
+
+        var inspection = service.GetPayloadInspection("flow", "inspect");
+        inspection.ShouldNotBeNull();
+        inspection.Envelope.Topic.ShouldBe("factory/qos1");
+        inspection.Payload.Format.ShouldBe(PayloadFormat.Json);
+        service.PayloadInspections.Keys.ShouldContain("flow/inspect");
     }
 
     [Fact]

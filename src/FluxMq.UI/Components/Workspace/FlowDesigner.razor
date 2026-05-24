@@ -441,10 +441,6 @@
         var count = Live.SelectedStoredSession is null
             ? Live.RecentMessages.Count
             : Live.SelectedSessionMessages.Count;
-        var inspectedMessage = Live.LatestMessage ?? Live.SelectedMessage;
-        var latestInspection = Live.LatestMessage is null
-            ? Live.SelectedInspection
-            : Live.LatestInspection;
 
         foreach (var node in _diagram.Nodes.OfType<FlowDiagramNodeModel>())
         {
@@ -455,9 +451,7 @@
                     ? null
                     : $"{count} stored messages",
                 "generated.source" => "Configured message list",
-                "mqtt.payload-inspector" => inspectedMessage is null
-                    ? "Waiting for payload"
-                    : $"{latestInspection.ContentTypeLabel} | {latestInspection.SizeBytes} bytes | {ShortTopic(inspectedMessage.Topic)}",
+                "mqtt.payload-inspector" => PayloadInspectorActivity(node.NodeName),
                 "mqtt.metrics" => $"{Flow.GetMetricsSnapshot(Flow.ActiveWorkflowName, node.NodeName).MessageCount} messages observed",
                 "mqtt.publisher" => PublisherActivity(node.NodeName),
                 _ => null
@@ -465,6 +459,14 @@
 
             node.SetActivity(activity);
         }
+    }
+
+    private string PayloadInspectorActivity(string nodeName)
+    {
+        var inspection = Flow.GetPayloadInspection(Flow.ActiveWorkflowName, nodeName);
+        return inspection is null
+            ? "Waiting for payload"
+            : $"{inspection.Payload.ContentTypeLabel} | {inspection.Payload.SizeBytes} bytes | {ShortTopic(inspection.Envelope.Topic)}";
     }
 
     private string? PublisherActivity(string nodeName)

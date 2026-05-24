@@ -25,7 +25,7 @@ This is the active implementation plan. Keep it updated after every meaningful d
 ## Current Target
 
 **Phase:** 6 - metrics, assertions, and scenarios
-**Active feature:** `F-030 - Input-driven Metrics Observer`
+**Active feature:** `F-031 - Input-driven Payload Inspector Projection`
 **Status:** In progress
 **Started:** 2026-05-24
 
@@ -46,7 +46,8 @@ Runtime `OutputPort<T>` now enforces the first-class broadcast contract for ever
 Runtime log collection now subscribes to all `FlowLogEntry` output ports by default, not just hand-picked logger/publisher components. `mqtt.condition-router` emits route entries for `WhenTrue` and `WhenFalse`, so a false branch with no downstream wire is still visible in the workspace Logs tab while testing.
 MQTT trigger subscription QoS is now explicit in the node editor. Short-form subscriptions such as `"#"` default to QoS 1, which keeps the default router expression `qos >= 1` useful during live broker tests while still allowing QoS 0 or QoS 2 per subscription.
 Pipeline MQTT triggers are now treated as configured subscriber blocks: each row owns topic filter, QoS, retained-message delivery, and retain-flag preservation. Broker-wide live monitoring is separate from pipeline design and auto-subscribes each broker monitor to `#,$SYS/#` for topic tree, counts, rates, and payload inspection.
-The current metrics slice is aligning the UI with the runtime component contract. `mqtt.metrics` observes only its `Input` stream, so the metrics node face must render snapshots produced by that node's runtime `Snapshots` output rather than broker-wide live monitor messages.
+The metrics slice aligned the UI with the runtime component contract. `mqtt.metrics` observes only its `Input` stream, and the metrics node face now renders snapshots produced by that node's runtime `Snapshots` output rather than broker-wide live monitor messages.
+The current payload inspector slice applies the same rule to `mqtt.payload-inspector`: broker-wide payload inspection stays in the Live Inspector panel, while the diagram node activity must render the latest inspection produced by that node's own runtime `Output` stream.
 
 ## Step-by-Step Plan
 
@@ -327,14 +328,17 @@ Done when:
   - the workspace collects each runtime metrics node's `Snapshots` output by workflow/node key
   - the MQTT Metrics node widget and node activity text render the node-local runtime snapshot instead of `Live.RecentMessages`
   - the old live-message metrics helper was removed so the UI path matches the standalone component contract
+- Started input-driven payload inspector polish:
+  - the workspace collects each runtime Payload Inspector node's `Output` stream by workflow/node key
+  - Payload Inspector node activity now renders the node-local inspected message instead of the broker-wide latest message
 
 ## Next Action
 
-Review the input-driven metrics slice:
+Review the input-driven Payload Inspector slice:
 
 1. Open `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json`.
-2. In a pipeline, place `mqtt.metrics` downstream of a filter or router branch rather than directly after the trigger.
-3. Run the app and publish messages where only some messages pass into that metrics node.
-4. Confirm the MQTT Metrics node count, payload bytes, topics, top-topic bars, and activity text reflect only messages that reached that node.
-5. Confirm the right-side Topics tab still shows broker-wide monitoring separately from the metrics node.
+2. In a pipeline, place `mqtt.payload-inspector` downstream of a filter or router branch rather than directly after the trigger.
+3. Run the app and publish messages where only some messages pass into that inspector node.
+4. Confirm the Payload Inspector node activity reflects only messages that reached that node.
+5. Confirm the right-side Live Inspector and Topics views still show broker-wide monitoring separately from the inspector node.
 6. After confirmation, commit this slice and open a PR.
