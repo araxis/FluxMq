@@ -72,8 +72,13 @@
     private static readonly LinkMarker FlowTargetMarker = new("M 0 -4 6 0 0 4 z", 13d);
     private const double DroppedNodeCenterOffsetX = 130d;
     private const double DroppedNodeCenterOffsetY = 45d;
+    private const int ZoomToFitMargin = 80;
+    private const int AutoZoomFirstPassDelayMs = 140;
+    private const int AutoZoomSecondPassDelayMs = 160;
     private System.Threading.Timer? _pulseTimer;
     private int _portMeasurementGeneration;
+    private int _autoZoomGeneration;
+    private bool _isDisposed;
     private bool _isRebuildingDiagram;
     private bool _isApplyingLinkEdit;
 
@@ -103,10 +108,45 @@
     {
         if (!firstRender) return Task.CompletedTask;
         RebuildDiagram();
+        ScheduleAutoZoomToFit();
         return Task.CompletedTask;
     }
 
-    private void ZoomToFit() => _diagram.ZoomToFit(80);
+    private void ZoomToFit() => _diagram.ZoomToFit(ZoomToFitMargin);
+
+    private void ScheduleAutoZoomToFit()
+    {
+        var generation = ++_autoZoomGeneration;
+        _ = AutoZoomToFitAsync(generation);
+    }
+
+    private async Task AutoZoomToFitAsync(int generation)
+    {
+        try
+        {
+            await Task.Delay(AutoZoomFirstPassDelayMs);
+            await InvokeAutoZoomToFitAsync(generation);
+            await Task.Delay(AutoZoomSecondPassDelayMs);
+            await InvokeAutoZoomToFitAsync(generation);
+        }
+        catch (InvalidOperationException) when (_isDisposed)
+        {
+        }
+    }
+
+    private Task InvokeAutoZoomToFitAsync(int generation)
+        => InvokeAsync(() =>
+        {
+            if (_isDisposed ||
+                generation != _autoZoomGeneration ||
+                !_diagram.Nodes.Any())
+            {
+                return;
+            }
+
+            ZoomToFit();
+            _diagram.Refresh();
+        });
 
     private void OnComponentDropRequested(object? sender, ComponentDropRequestedEventArgs args)
     {
@@ -732,10 +772,17 @@
     {
         InvokeAsync(() =>
         {
-            if (_renderedDefinitionRevision != Flow.DefinitionRevision ||
-            _renderedWorkflowName != Flow.ActiveWorkflowName ||
-            Flow.StagedNodePositions is { Count: > 0 })
+            var workflowChanged = _renderedWorkflowName != Flow.ActiveWorkflowName;
+            var shouldRebuild = _renderedDefinitionRevision != Flow.DefinitionRevision ||
+                workflowChanged ||
+                Flow.StagedNodePositions is { Count: > 0 };
+
+            if (shouldRebuild)
+            {
                 RebuildDiagram();
+                if (workflowChanged)
+                    ScheduleAutoZoomToFit();
+            }
             else
             {
                 UpdateDiagramActivity();
@@ -759,6 +806,8 @@
 
     public void Dispose()
     {
+        _isDisposed = true;
+        _autoZoomGeneration++;
         _pulseTimer?.Dispose();
         _pulseTimer = null;
         if (Flow.GetDiagramState is { } capture)
