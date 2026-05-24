@@ -17,7 +17,12 @@ body {
 }
 
 .flux-component-drag-active {
+    cursor: grabbing;
     user-select: none;
+}
+
+.flux-component-drag-active * {
+    cursor: grabbing !important;
 }
 
 .flux-drag-preview {

@@ -46,6 +46,7 @@
     padding: 7px 6px 7px 8px;
     text-align: left;
     transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+    touch-action: none;
     user-select: none;
     width: 100%;
 }
@@ -54,6 +55,10 @@
     background: var(--flux-surface-3);
     border-color: var(--flux-border-strong);
     transform: translateY(-1px);
+}
+
+.catalog-item:active {
+    cursor: grabbing;
 }
 
 .catalog-item-copy {
