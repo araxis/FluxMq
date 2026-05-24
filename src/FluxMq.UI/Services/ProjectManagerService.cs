@@ -1,3 +1,4 @@
+using FluxMq.Core.Models;
 using FluxMq.Components.Storage.Repositories;
 
 namespace FluxMq.UI.Services;
@@ -6,12 +7,17 @@ public sealed class ProjectManagerService : IAsyncDisposable
 {
     private readonly FlowDefinitionComposer _composer;
     private readonly IMessageRepository? _messageRepository;
+    private readonly LiveMqttWorkspaceService? _live;
     private readonly List<FlowWorkspaceService> _projects = [];
 
-    public ProjectManagerService(FlowDefinitionComposer composer, IMessageRepository? messageRepository = null)
+    public ProjectManagerService(
+        FlowDefinitionComposer composer,
+        IMessageRepository? messageRepository = null,
+        LiveMqttWorkspaceService? live = null)
     {
         _composer = composer;
         _messageRepository = messageRepository;
+        _live = live;
     }
 
     public IReadOnlyList<FlowWorkspaceService> Projects => _projects;
@@ -73,6 +79,10 @@ public sealed class ProjectManagerService : IAsyncDisposable
         var idx = _projects.IndexOf(project);
         if (idx < 0) return;
 
+        var closedConnections = project.GetConnectionResources()
+            .Select(static connection => (connection.Name, connection.Profile))
+            .ToArray();
+
         _projects.RemoveAt(idx);
         await project.DisposeAsync();
 
@@ -81,6 +91,7 @@ public sealed class ProjectManagerService : IAsyncDisposable
         else if (ActiveIndex >= _projects.Count)
             ActiveIndex = _projects.Count - 1;
 
+        await RemoveClosedProjectConnectionsAsync(closedConnections).ConfigureAwait(false);
         NotifyChanged();
     }
 
@@ -92,6 +103,37 @@ public sealed class ProjectManagerService : IAsyncDisposable
     }
 
     private FlowWorkspaceService CreateProject() => new(_composer, _messageRepository);
+
+    private async Task RemoveClosedProjectConnectionsAsync(
+        IReadOnlyList<(string ResourceName, MqttConnectionProfile Profile)> closedConnections)
+    {
+        if (_live is null || closedConnections.Count == 0)
+        {
+            return;
+        }
+
+        var remainingConnections = _projects
+            .SelectMany(static project => project.GetConnectionResources())
+            .Select(static connection => (connection.Name, connection.Profile))
+            .ToArray();
+
+        var unreferencedConnections = closedConnections
+            .Where(closed => !remainingConnections.Any(remaining => SameConnectionReference(closed, remaining)))
+            .ToArray();
+
+        if (unreferencedConnections.Length > 0)
+        {
+            await _live.RemoveConnectionsAsync(unreferencedConnections).ConfigureAwait(false);
+        }
+    }
+
+    private static bool SameConnectionReference(
+        (string ResourceName, MqttConnectionProfile Profile) left,
+        (string ResourceName, MqttConnectionProfile Profile) right)
+        => string.Equals(left.ResourceName, right.ResourceName, StringComparison.Ordinal) &&
+           string.Equals(left.Profile.Host, right.Profile.Host, StringComparison.OrdinalIgnoreCase) &&
+           left.Profile.Port == right.Profile.Port &&
+           left.Profile.UseTls == right.Profile.UseTls;
 
     private void NotifyChanged() => Changed?.Invoke(this, EventArgs.Empty);
 }

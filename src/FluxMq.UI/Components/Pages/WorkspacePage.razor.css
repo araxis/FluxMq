@@ -89,21 +89,42 @@
     text-overflow: ellipsis;
 }
 
-.project-tab-add {
-    align-items: center;
+.project-tab-icon {
+    color: var(--flux-accent);
+    flex: 0 0 auto;
+}
+
+.project-tab-dashboard .project-tab-icon {
+    color: var(--mud-palette-info);
+}
+
+.project-tab-test .project-tab-icon {
+    color: var(--mud-palette-warning);
+}
+
+.project-tab-menu {
+    align-items: stretch;
+    border-right: 1px solid var(--flux-border-soft);
+    display: inline-flex;
+    flex: 0 0 auto;
+    min-width: 34px;
+}
+
+.project-tab-menu ::deep .mud-button-root {
+    border-radius: 0;
     color: var(--mud-palette-text-secondary);
-    cursor: pointer;
-    display: flex;
-    font-size: 16px;
-    font-weight: 500;
-    justify-content: center;
+    height: 36px;
     min-width: 34px;
     padding: 0;
 }
 
-.project-tab-add:hover {
+.project-tab-menu ::deep .mud-button-root:hover {
     background: var(--flux-surface-2);
     color: var(--mud-palette-text-primary);
+}
+
+.project-tab-create-menu .mud-list-item-icon {
+    min-width: 30px;
 }
 
 .project-tab-close {
@@ -169,4 +190,38 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.artifact-workspace-state {
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    flex: 1 1 auto;
+    gap: 14px;
+    justify-content: center;
+    min-height: 0;
+}
+
+.artifact-workspace-icon {
+    font-size: 42px;
+    opacity: 0.65;
+}
+
+.artifact-workspace-icon.dashboard {
+    color: var(--mud-palette-info);
+}
+
+.artifact-workspace-icon.test {
+    color: var(--mud-palette-warning);
+}
+
+.artifact-workspace-title {
+    color: var(--mud-palette-text-primary);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.artifact-workspace-meta {
+    font-size: 12px;
+    margin-top: 2px;
 }

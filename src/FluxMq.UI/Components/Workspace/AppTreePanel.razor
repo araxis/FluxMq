@@ -21,6 +21,10 @@ else
             var a = app;
             var isActive = a == Projects.ActiveProject;
             var conns = GetConnections(a);
+            var brokersCollapsed = IsSectionCollapsed(a, BrokerSection);
+            var pipelinesCollapsed = IsSectionCollapsed(a, PipelineSection);
+            var dashboardsCollapsed = IsSectionCollapsed(a, DashboardSection);
+            var testsCollapsed = IsSectionCollapsed(a, TestSection);
 
             <section class="app-card @(isActive ? "active" : null)" @key="a">
                 <div class="app-row" @onclick="@(() => Projects.SetActive(a))">
@@ -30,7 +34,7 @@ else
                     <div class="app-row-text">
                         <div class="app-name">@a.Name</div>
                         <div class="app-meta">
-                            @a.WorkflowNames.Count pipelines
+                            @BuildAppMeta(a)
                             @if (a.HasUnsavedChanges)
                             {
                                 <span class="dirty-dot">Unsaved</span>
@@ -48,21 +52,32 @@ else
                 </div>
 
                 <div class="tree-section">
-                    <div class="tree-section-header">
-                        <span>Connections</span>
-                        <MudTooltip Text="Add connection">
-                            <MudIconButton Size="Size.Small"
-                                           Icon="@Icons.Material.Filled.Add"
-                                           Class="tree-icon-button"
-                                           OnClick="@(() => AddConnectionAsync(a))" />
-                        </MudTooltip>
+                    <div class="tree-section-header" @onclick="@(() => ToggleSection(a, BrokerSection))">
+                        <div class="tree-section-title">
+                            <MudIcon Icon="@CollapseIcon(brokersCollapsed)"
+                                     Size="Size.Small"
+                                     Class="tree-section-chevron" />
+                            <MudIcon Icon="@Icons.Material.Filled.Hub"
+                                     Size="Size.Small"
+                                     Class="tree-section-icon brokers" />
+                            <span>Brokers</span>
+                            <span class="tree-section-count">@conns.Count</span>
+                        </div>
+                        <div class="tree-section-actions" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
+                            <MudTooltip Text="Add connection">
+                                <MudIconButton Size="Size.Small"
+                                               Icon="@Icons.Material.Filled.Add"
+                                               Class="tree-icon-button"
+                                               OnClick="@(() => AddConnectionAsync(a))" />
+                            </MudTooltip>
+                        </div>
                     </div>
 
-                    @if (conns.Count == 0)
+                    @if (!brokersCollapsed && conns.Count == 0)
                     {
                         <div class="tree-muted-row">No connections</div>
                     }
-                    else
+                    else if (!brokersCollapsed)
                     {
                         foreach (var conn in conns)
                         {
@@ -107,26 +122,38 @@ else
                 </div>
 
                 <div class="tree-section">
-                    <div class="tree-section-header">
-                        <span>Pipelines</span>
-                        <MudTooltip Text="Add pipeline">
-                            <MudIconButton Size="Size.Small"
-                                           Icon="@Icons.Material.Filled.Add"
-                                           Class="tree-icon-button"
-                                           OnClick="@(() => AddPipelineAsync(a))" />
-                        </MudTooltip>
+                    <div class="tree-section-header" @onclick="@(() => ToggleSection(a, PipelineSection))">
+                        <div class="tree-section-title">
+                            <MudIcon Icon="@CollapseIcon(pipelinesCollapsed)"
+                                     Size="Size.Small"
+                                     Class="tree-section-chevron" />
+                            <MudIcon Icon="@Icons.Material.Filled.Timeline"
+                                     Size="Size.Small"
+                                     Class="tree-section-icon pipelines" />
+                            <span>Pipelines</span>
+                            <span class="tree-section-count">@a.WorkflowNames.Count</span>
+                        </div>
+                        <div class="tree-section-actions" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
+                            <MudTooltip Text="Add pipeline">
+                                <MudIconButton Size="Size.Small"
+                                               Icon="@Icons.Material.Filled.Add"
+                                               Class="tree-icon-button"
+                                               OnClick="@(() => AddPipelineAsync(a))" />
+                            </MudTooltip>
+                        </div>
                     </div>
 
-                    @if (a.WorkflowNames.Count == 0)
+                    @if (!pipelinesCollapsed && a.WorkflowNames.Count == 0)
                     {
                         <div class="tree-muted-row">No pipelines</div>
                     }
-                    else
+                    else if (!pipelinesCollapsed)
                     {
                         foreach (var wf in a.WorkflowNames)
                         {
                             var w = wf;
                             var isPipeActive = a == Projects.ActiveProject &&
+                                a.ActiveArtifactKind == WorkspaceArtifactKind.Pipeline &&
                                 string.Equals(w, a.ActiveWorkflowName, StringComparison.Ordinal);
                             <div class="pipe-item @(isPipeActive ? "active" : null)"
                                  @onclick="@(() => { Projects.SetActive(a); a.SetActiveWorkflow(w); })">
@@ -138,13 +165,109 @@ else
                         }
                     }
                 </div>
+
+                <div class="tree-section">
+                    <div class="tree-section-header" @onclick="@(() => ToggleSection(a, DashboardSection))">
+                        <div class="tree-section-title">
+                            <MudIcon Icon="@CollapseIcon(dashboardsCollapsed)"
+                                     Size="Size.Small"
+                                     Class="tree-section-chevron" />
+                            <MudIcon Icon="@Icons.Material.Filled.Dashboard"
+                                     Size="Size.Small"
+                                     Class="tree-section-icon dashboards" />
+                            <span>Dashboards</span>
+                            <span class="tree-section-count">@a.DashboardNames.Count</span>
+                        </div>
+                        <div class="tree-section-actions" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
+                            <MudTooltip Text="Add dashboard">
+                                <MudIconButton Size="Size.Small"
+                                               Icon="@Icons.Material.Filled.Add"
+                                               Class="tree-icon-button"
+                                               OnClick="@(() => AddDashboardAsync(a))" />
+                            </MudTooltip>
+                        </div>
+                    </div>
+
+                    @if (!dashboardsCollapsed && a.DashboardNames.Count == 0)
+                    {
+                        <div class="tree-muted-row">No dashboards</div>
+                    }
+                    else if (!dashboardsCollapsed)
+                    {
+                        foreach (var dashboard in a.DashboardNames)
+                        {
+                            var d = dashboard;
+                            var isDashboardActive = a == Projects.ActiveProject &&
+                                a.ActiveArtifactKind == WorkspaceArtifactKind.Dashboard &&
+                                string.Equals(d, a.ActiveDashboardName, StringComparison.Ordinal);
+                            <div class="artifact-item @(isDashboardActive ? "active" : null)"
+                                 @onclick="@(() => { Projects.SetActive(a); a.SetActiveDashboard(d); })">
+                                <MudIcon Icon="@Icons.Material.Filled.Dashboard"
+                                         Size="Size.Small"
+                                         Class="artifact-icon dashboard" />
+                                <span>@d</span>
+                            </div>
+                        }
+                    }
+                </div>
+
+                <div class="tree-section">
+                    <div class="tree-section-header" @onclick="@(() => ToggleSection(a, TestSection))">
+                        <div class="tree-section-title">
+                            <MudIcon Icon="@CollapseIcon(testsCollapsed)"
+                                     Size="Size.Small"
+                                     Class="tree-section-chevron" />
+                            <MudIcon Icon="@Icons.Material.Filled.FactCheck"
+                                     Size="Size.Small"
+                                     Class="tree-section-icon tests" />
+                            <span>Test scenarios</span>
+                            <span class="tree-section-count">@a.TestNames.Count</span>
+                        </div>
+                        <div class="tree-section-actions" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
+                            <MudTooltip Text="Add test">
+                                <MudIconButton Size="Size.Small"
+                                               Icon="@Icons.Material.Filled.Add"
+                                               Class="tree-icon-button"
+                                               OnClick="@(() => AddTestAsync(a))" />
+                            </MudTooltip>
+                        </div>
+                    </div>
+
+                    @if (!testsCollapsed && a.TestNames.Count == 0)
+                    {
+                        <div class="tree-muted-row">No tests</div>
+                    }
+                    else if (!testsCollapsed)
+                    {
+                        foreach (var test in a.TestNames)
+                        {
+                            var t = test;
+                            var isTestActive = a == Projects.ActiveProject &&
+                                a.ActiveArtifactKind == WorkspaceArtifactKind.Test &&
+                                string.Equals(t, a.ActiveTestName, StringComparison.Ordinal);
+                            <div class="artifact-item @(isTestActive ? "active" : null)"
+                                 @onclick="@(() => { Projects.SetActive(a); a.SetActiveTest(t); })">
+                                <MudIcon Icon="@Icons.Material.Filled.FactCheck"
+                                         Size="Size.Small"
+                                         Class="artifact-icon test" />
+                                <span>@t</span>
+                            </div>
+                        }
+                    }
+                </div>
             </section>
         }
     </div>
 }
 
 @code {
+    private const string BrokerSection = "brokers";
+    private const string PipelineSection = "pipelines";
+    private const string DashboardSection = "dashboards";
+    private const string TestSection = "tests";
+
     private readonly HashSet<FlowWorkspaceService> _subscribed = [];
+    private readonly Dictionary<FlowWorkspaceService, HashSet<string>> _collapsedSections = [];
 
     protected override void OnInitialized()
     {
@@ -163,6 +286,21 @@ else
             app.GetConnectionNames().Any(name => string.Equals(name, c.ResourceName, StringComparison.Ordinal))).ToList();
     }
 
+    private static string BuildAppMeta(FlowWorkspaceService app)
+    {
+        var parts = new[]
+        {
+            CountLabel(app.WorkflowNames.Count, "pipeline"),
+            CountLabel(app.DashboardNames.Count, "dashboard"),
+            CountLabel(app.TestNames.Count, "test")
+        };
+
+        return string.Join(" / ", parts);
+    }
+
+    private static string CountLabel(int count, string singular)
+        => count == 1 ? $"1 {singular}" : $"{count} {singular}s";
+
     private void SyncSubscriptions()
     {
         foreach (var app in Projects.Projects)
@@ -173,8 +311,40 @@ else
         {
             stale.Changed -= OnChanged;
             _subscribed.Remove(stale);
+            _collapsedSections.Remove(stale);
         }
     }
+
+    private bool IsSectionCollapsed(FlowWorkspaceService app, string section)
+        => _collapsedSections.TryGetValue(app, out var sections) && sections.Contains(section);
+
+    private void ToggleSection(FlowWorkspaceService app, string section)
+    {
+        if (!_collapsedSections.TryGetValue(app, out var sections))
+        {
+            _collapsedSections[app] = [section];
+            return;
+        }
+
+        if (!sections.Add(section))
+            sections.Remove(section);
+
+        if (sections.Count == 0)
+            _collapsedSections.Remove(app);
+    }
+
+    private void ExpandSection(FlowWorkspaceService app, string section)
+    {
+        if (!_collapsedSections.TryGetValue(app, out var sections))
+            return;
+
+        sections.Remove(section);
+        if (sections.Count == 0)
+            _collapsedSections.Remove(app);
+    }
+
+    private static string CollapseIcon(bool isCollapsed)
+        => isCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore;
 
     private Task CloseAsync(FlowWorkspaceService app) => Projects.CloseProjectAsync(app).AsTask();
 
@@ -191,6 +361,7 @@ else
                 : r.Profile.Name.Trim().ToLowerInvariant().Replace(' ', '-');
             app.UpsertConnectionResource(resourceKey, r.Profile);
             Live.AddConnectionIfAbsent(r.Profile, r.Subscription, resourceKey);
+            ExpandSection(app, BrokerSection);
         }
     }
 
@@ -203,6 +374,41 @@ else
         {
             app.AddWorkflow(name.Trim());
             app.SetActiveWorkflow(name.Trim());
+            ExpandSection(app, PipelineSection);
+        }
+    }
+
+    private async Task AddDashboardAsync(FlowWorkspaceService app)
+    {
+        Projects.SetActive(app);
+        var dialog = await DialogService.ShowAsync<NewPipelineDialog>(
+            "New Dashboard",
+            new DialogParameters
+            {
+                [nameof(NewPipelineDialog.Title)] = "New Dashboard"
+            });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string name } && !string.IsNullOrWhiteSpace(name))
+        {
+            app.AddDashboard(name.Trim());
+            ExpandSection(app, DashboardSection);
+        }
+    }
+
+    private async Task AddTestAsync(FlowWorkspaceService app)
+    {
+        Projects.SetActive(app);
+        var dialog = await DialogService.ShowAsync<NewPipelineDialog>(
+            "New Test",
+            new DialogParameters
+            {
+                [nameof(NewPipelineDialog.Title)] = "New Test"
+            });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string name } && !string.IsNullOrWhiteSpace(name))
+        {
+            app.AddTest(name.Trim());
+            ExpandSection(app, TestSection);
         }
     }
 
@@ -227,5 +433,6 @@ else
         foreach (var app in _subscribed)
             app.Changed -= OnChanged;
         _subscribed.Clear();
+        _collapsedSections.Clear();
     }
 }

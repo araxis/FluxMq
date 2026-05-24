@@ -182,12 +182,75 @@ public sealed class LiveMqttWorkspaceServiceTests
         await service.DisposeAsync();
     }
 
+    [Fact]
+    public async Task RemoveConnectionsAsync_RemovesMatchingWorkspaceConnections()
+    {
+        var service = CreateService(profile => new FakeMqttSession(profile));
+        var profile = new MqttConnectionProfile
+        {
+            Name = "local-broker",
+            Host = "localhost",
+            Port = 1883,
+            ClientId = "runtime-client"
+        };
+
+        service.AddConnectionIfAbsent(profile, "#", "broker1");
+        service.AddConnectionIfAbsent(profile with { Port = 1884 }, "#", "broker2");
+
+        await service.RemoveConnectionsAsync([("broker1", profile)]);
+
+        service.Connections.ShouldHaveSingleItem().ResourceName.ShouldBe("broker2");
+        await service.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task CloseProjectAsync_RemovesClosedAppConnectionsOnlyWhenUnreferenced()
+    {
+        var live = CreateService(profile => new FakeMqttSession(profile));
+        var manager = new ProjectManagerService(new FlowDefinitionComposer(), live: live);
+        var app1 = manager.NewProject();
+        app1.SetDefinitionJson(ProjectWithBroker("broker1", 1883));
+        var app2 = manager.NewProject();
+        app2.SetDefinitionJson(ProjectWithBroker("broker2", 1884));
+        live.AddConnectionIfAbsent(new MqttConnectionProfile { Name = "broker1", Host = "localhost", Port = 1883 }, "#", "broker1");
+        live.AddConnectionIfAbsent(new MqttConnectionProfile { Name = "broker2", Host = "localhost", Port = 1884 }, "#", "broker2");
+
+        await manager.CloseProjectAsync(app1);
+
+        live.Connections.ShouldHaveSingleItem().ResourceName.ShouldBe("broker2");
+        await manager.DisposeAsync();
+        await live.DisposeAsync();
+    }
+
     private static LiveMqttWorkspaceService CreateService(Func<MqttConnectionProfile, IMqttSession> sessionFactory)
         => new(
             new TopicIndex(),
             new FakeSessionRepository(),
             new FakeMessageRepository(),
             sessionFactory);
+
+    private static string ProjectWithBroker(string brokerName, int port)
+        => $$"""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "resources": {
+                "{{brokerName}}": {
+                  "type": "mqtt.connection",
+                  "configuration": {
+                    "profile": {
+                      "name": "{{brokerName}}",
+                      "host": "localhost",
+                      "port": {{port}},
+                      "clientId": "runtime-client"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """;
 
     private sealed class FakeMqttSession(MqttConnectionProfile profile, bool failConnect = false) : IMqttSession
     {

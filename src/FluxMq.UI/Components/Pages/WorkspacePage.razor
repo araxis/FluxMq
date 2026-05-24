@@ -29,15 +29,55 @@
             @foreach (var wf in active.WorkflowNames)
             {
                 var w = wf;
-                var isActive = string.Equals(w, active.ActiveWorkflowName, StringComparison.Ordinal) && !_jsonView;
+                var isActive = active.ActiveArtifactKind == WorkspaceArtifactKind.Pipeline &&
+                    string.Equals(w, active.ActiveWorkflowName, StringComparison.Ordinal) &&
+                    !_jsonView;
                 <div class="project-tab @(isActive ? "project-tab-active" : "")"
                      @onclick="@(() => { active.SetActiveWorkflow(w); _jsonView = false; })">
+                    <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" Class="project-tab-icon" />
                     <span class="project-tab-name">@w</span>
                 </div>
             }
-            <div class="project-tab project-tab-add" @onclick="@AddWorkflowAsync">
-                <span>+</span>
-            </div>
+            @foreach (var dashboard in active.DashboardNames)
+            {
+                var d = dashboard;
+                var isActive = active.ActiveArtifactKind == WorkspaceArtifactKind.Dashboard &&
+                    string.Equals(d, active.ActiveDashboardName, StringComparison.Ordinal) &&
+                    !_jsonView;
+                <div class="project-tab project-tab-dashboard @(isActive ? "project-tab-active" : "")"
+                     @onclick="@(() => { active.SetActiveDashboard(d); _jsonView = false; })">
+                    <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="project-tab-icon" />
+                    <span class="project-tab-name">@d</span>
+                </div>
+            }
+            @foreach (var test in active.TestNames)
+            {
+                var t = test;
+                var isActive = active.ActiveArtifactKind == WorkspaceArtifactKind.Test &&
+                    string.Equals(t, active.ActiveTestName, StringComparison.Ordinal) &&
+                    !_jsonView;
+                <div class="project-tab project-tab-test @(isActive ? "project-tab-active" : "")"
+                     @onclick="@(() => { active.SetActiveTest(t); _jsonView = false; })">
+                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" Class="project-tab-icon" />
+                    <span class="project-tab-name">@t</span>
+                </div>
+            }
+            <MudMenu Dense="true"
+                     Icon="@Icons.Material.Filled.Add"
+                     Size="Size.Small"
+                     AnchorOrigin="Origin.BottomLeft"
+                     TransformOrigin="Origin.TopLeft"
+                     Class="project-tab-menu"
+                     PopoverClass="project-tab-create-menu">
+                <ChildContent>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Timeline"
+                                 OnClick="@AddWorkflowAsync">Pipeline</MudMenuItem>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Dashboard"
+                                 OnClick="@AddDashboardAsync">Dashboard</MudMenuItem>
+                    <MudMenuItem Icon="@Icons.Material.Filled.FactCheck"
+                                 OnClick="@AddTestAsync">Test</MudMenuItem>
+                </ChildContent>
+            </MudMenu>
             <div class="project-tabbar-app">
                 <span class="project-tab-json @(_jsonView ? "project-tab-json-active" : null)"
                       title="View JSON" @onclick="@(() => _jsonView = !_jsonView)">&lt;/&gt;</span>
@@ -52,16 +92,43 @@
                 <AppJsonPanel Project="@active" />
             </div>
         }
-        else if (active.ActiveWorkflowName is null && active.WorkflowNames.Count == 0)
+        else if (active.ActiveArtifactName is null &&
+                 active.WorkflowNames.Count == 0 &&
+                 active.DashboardNames.Count == 0 &&
+                 active.TestNames.Count == 0)
         {
             <div class="workspace-empty">
                 <MudStack AlignItems="AlignItems.Center" Spacing="3">
                     <MudIcon Icon="@Icons.Material.Filled.AccountTree" Style="font-size:64px;opacity:0.18;" />
-                    <MudText Typo="Typo.h6" Color="Color.Secondary">No pipelines</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Secondary">No artifacts</MudText>
                     <MudButton Variant="Variant.Filled" Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.Add"
                                OnClick="@AddWorkflowAsync">Add pipeline</MudButton>
                 </MudStack>
+            </div>
+        }
+        else if (active.ActiveArtifactKind == WorkspaceArtifactKind.Dashboard)
+        {
+            <div class="workspace-tab-content">
+                <div class="artifact-workspace-state">
+                    <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="artifact-workspace-icon dashboard" />
+                    <div>
+                        <div class="artifact-workspace-title">@active.ActiveDashboardName</div>
+                        <div class="artifact-workspace-meta">Dashboard / no widgets</div>
+                    </div>
+                </div>
+            </div>
+        }
+        else if (active.ActiveArtifactKind == WorkspaceArtifactKind.Test)
+        {
+            <div class="workspace-tab-content">
+                <div class="artifact-workspace-state">
+                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Class="artifact-workspace-icon test" />
+                    <div>
+                        <div class="artifact-workspace-title">@active.ActiveTestName</div>
+                        <div class="artifact-workspace-meta">Test / no steps</div>
+                    </div>
+                </div>
             </div>
         }
         else
@@ -164,6 +231,45 @@
         {
             active.AddWorkflow(name.Trim());
             active.SetActiveWorkflow(name.Trim());
+            _jsonView = false;
+        }
+    }
+
+    private async Task AddDashboardAsync()
+    {
+        var active = Projects.ActiveProject;
+        if (active is null) return;
+
+        var dialog = await DialogService.ShowAsync<NewPipelineDialog>(
+            "New Dashboard",
+            new DialogParameters
+            {
+                [nameof(NewPipelineDialog.Title)] = "New Dashboard"
+            });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string name } && !string.IsNullOrWhiteSpace(name))
+        {
+            active.AddDashboard(name.Trim());
+            _jsonView = false;
+        }
+    }
+
+    private async Task AddTestAsync()
+    {
+        var active = Projects.ActiveProject;
+        if (active is null) return;
+
+        var dialog = await DialogService.ShowAsync<NewPipelineDialog>(
+            "New Test",
+            new DialogParameters
+            {
+                [nameof(NewPipelineDialog.Title)] = "New Test"
+            });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string name } && !string.IsNullOrWhiteSpace(name))
+        {
+            active.AddTest(name.Trim());
+            _jsonView = false;
         }
     }
 

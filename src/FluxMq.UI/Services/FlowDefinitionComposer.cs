@@ -338,30 +338,15 @@ public sealed class FlowDefinitionComposer
 
     /// <summary>Returns the ordered list of workflow names in the definition.</summary>
     public IReadOnlyList<string> GetWorkflowNames(string json)
-    {
-        try
-        {
-            using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
-            JsonElement flowApp;
-            if (root.TryGetProperty("FluxMq", out var fluxMq) &&
-                fluxMq.TryGetProperty("FlowApplication", out flowApp) &&
-                flowApp.ValueKind == JsonValueKind.Object)
-            { }
-            else
-            {
-                flowApp = root;
-            }
+        => GetNamedObjectKeys(json, "workflows");
 
-            if (flowApp.TryGetProperty("workflows", out var workflows) &&
-                workflows.ValueKind == JsonValueKind.Object)
-            {
-                return workflows.EnumerateObject().Select(w => w.Name).ToArray();
-            }
-        }
-        catch { }
-        return [];
-    }
+    /// <summary>Returns the ordered list of dashboard names in the definition.</summary>
+    public IReadOnlyList<string> GetDashboardNames(string json)
+        => GetNamedObjectKeys(json, "dashboards");
+
+    /// <summary>Returns the ordered list of test scenario names in the definition.</summary>
+    public IReadOnlyList<string> GetTestNames(string json)
+        => GetNamedObjectKeys(json, "tests");
 
     /// <summary>Adds an empty workflow with the given name if it does not already exist.</summary>
     public string AddWorkflow(string json, string name)
@@ -371,6 +356,37 @@ public sealed class FlowDefinitionComposer
         var workflows = GetOrCreateObject(flowApplication, "workflows");
         if (!workflows.ContainsKey(name))
             workflows[name] = new JsonObject();
+        return root.ToJsonString(Options);
+    }
+
+    /// <summary>Adds an empty dashboard artifact with the given name if it does not already exist.</summary>
+    public string AddDashboard(string json, string name)
+    {
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        var dashboards = GetOrCreateObject(flowApplication, "dashboards");
+        if (!dashboards.ContainsKey(name))
+        {
+            dashboards[name] = CreateDashboard();
+        }
+
+        return root.ToJsonString(Options);
+    }
+
+    /// <summary>Adds an empty test scenario artifact with the given name if it does not already exist.</summary>
+    public string AddTest(string json, string name)
+    {
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        var tests = GetOrCreateObject(flowApplication, "tests");
+        if (!tests.ContainsKey(name))
+        {
+            tests[name] = new JsonObject
+            {
+                ["steps"] = new JsonObject()
+            };
+        }
+
         return root.ToJsonString(Options);
     }
 
@@ -1124,6 +1140,18 @@ public sealed class FlowDefinitionComposer
             ["boundedCapacity"] = 1000
         };
 
+    private static JsonObject CreateDashboard()
+        => new()
+        {
+            ["layout"] = new JsonObject
+            {
+                ["columns"] = new JsonArray("320", "*"),
+                ["rows"] = new JsonArray("180", "*"),
+                ["cells"] = new JsonObject()
+            },
+            ["widgets"] = new JsonObject()
+        };
+
     private static JsonObject CreateRoot()
         => new()
         {
@@ -1148,6 +1176,38 @@ public sealed class FlowDefinitionComposer
     {
         var fluxMq = GetOrCreateObject(root, "FluxMq");
         return GetOrCreateObject(fluxMq, "FlowApplication");
+    }
+
+    private static IReadOnlyList<string> GetNamedObjectKeys(string json, string propertyName)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            var flowApp = TryGetFlowApplication(root, out var app) ? app : root;
+
+            if (flowApp.TryGetProperty(propertyName, out var artifacts) &&
+                artifacts.ValueKind == JsonValueKind.Object)
+            {
+                return artifacts.EnumerateObject().Select(artifact => artifact.Name).ToArray();
+            }
+        }
+        catch { }
+
+        return [];
+    }
+
+    private static bool TryGetFlowApplication(JsonElement root, out JsonElement flowApplication)
+    {
+        if (root.TryGetProperty("FluxMq", out var fluxMq) &&
+            fluxMq.TryGetProperty("FlowApplication", out flowApplication) &&
+            flowApplication.ValueKind == JsonValueKind.Object)
+        {
+            return true;
+        }
+
+        flowApplication = default;
+        return false;
     }
 
     private static JsonObject GetOrCreateObject(JsonObject parent, string propertyName)

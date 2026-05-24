@@ -55,6 +55,9 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     }
 
     private string? _activeWorkflowName;
+    private string? _activeDashboardName;
+    private string? _activeTestName;
+    private WorkspaceArtifactKind _activeArtifactKind = WorkspaceArtifactKind.Pipeline;
     private string? _displayName;
 
     public FlowApplicationHost? Host => _host;
@@ -76,7 +79,19 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         new Dictionary<string, MqttTriggerActivitySnapshot>(StringComparer.Ordinal);
 
     public IReadOnlyList<string> WorkflowNames => _definitionComposer.GetWorkflowNames(DefinitionJson);
+    public IReadOnlyList<string> DashboardNames => _definitionComposer.GetDashboardNames(DefinitionJson);
+    public IReadOnlyList<string> TestNames => _definitionComposer.GetTestNames(DefinitionJson);
     public string? ActiveWorkflowName => _activeWorkflowName;
+    public string? ActiveDashboardName => _activeDashboardName;
+    public string? ActiveTestName => _activeTestName;
+    public WorkspaceArtifactKind ActiveArtifactKind => _activeArtifactKind;
+    public string? ActiveArtifactName => _activeArtifactKind switch
+    {
+        WorkspaceArtifactKind.Pipeline => _activeWorkflowName,
+        WorkspaceArtifactKind.Dashboard => _activeDashboardName,
+        WorkspaceArtifactKind.Test => _activeTestName,
+        _ => null
+    };
 
     public MqttMetricsSnapshot GetMetricsSnapshot(string? workflowName, string nodeName)
     {
@@ -137,8 +152,40 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
     public void SetActiveWorkflow(string name)
     {
-        if (string.Equals(_activeWorkflowName, name, StringComparison.Ordinal)) return;
+        if (string.Equals(_activeWorkflowName, name, StringComparison.Ordinal) &&
+            _activeArtifactKind == WorkspaceArtifactKind.Pipeline)
+        {
+            return;
+        }
+
         _activeWorkflowName = name;
+        _activeArtifactKind = WorkspaceArtifactKind.Pipeline;
+        NotifyChanged();
+    }
+
+    public void SetActiveDashboard(string name)
+    {
+        if (string.Equals(_activeDashboardName, name, StringComparison.Ordinal) &&
+            _activeArtifactKind == WorkspaceArtifactKind.Dashboard)
+        {
+            return;
+        }
+
+        _activeDashboardName = name;
+        _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
+        NotifyChanged();
+    }
+
+    public void SetActiveTest(string name)
+    {
+        if (string.Equals(_activeTestName, name, StringComparison.Ordinal) &&
+            _activeArtifactKind == WorkspaceArtifactKind.Test)
+        {
+            return;
+        }
+
+        _activeTestName = name;
+        _activeArtifactKind = WorkspaceArtifactKind.Test;
         NotifyChanged();
     }
 
@@ -149,6 +196,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         {
             ReplaceDefinition(_definitionComposer.AddWorkflow(DefinitionJson, name));
             _activeWorkflowName ??= name;
+            _activeArtifactKind = WorkspaceArtifactKind.Pipeline;
             State = RuntimeWorkspaceState.Idle;
             Diagnostics = [];
         }
@@ -157,6 +205,46 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             State = RuntimeWorkspaceState.Faulted;
             Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "WorkflowAddFailed", exception.Message)];
         }
+        NotifyChanged();
+    }
+
+    public void AddDashboard(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return;
+        try
+        {
+            ReplaceDefinition(_definitionComposer.AddDashboard(DefinitionJson, name));
+            _activeDashboardName = name;
+            _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "DashboardAddFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
+    public void AddTest(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return;
+        try
+        {
+            ReplaceDefinition(_definitionComposer.AddTest(DefinitionJson, name));
+            _activeTestName = name;
+            _activeArtifactKind = WorkspaceArtifactKind.Test;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "TestAddFailed", exception.Message)];
+        }
+
         NotifyChanged();
     }
 
@@ -511,7 +599,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             var fileJson = await File.ReadAllTextAsync(CurrentFilePath, cancellationToken).ConfigureAwait(false);
             StagedNodePositions = _definitionComposer.ReadNodePositions(fileJson);
             ReplaceDefinitionSilent(_definitionComposer.StripDesignerSection(fileJson));
-            _activeWorkflowName = _definitionComposer.GetWorkflowNames(DefinitionJson).FirstOrDefault();
+            NormalizeActiveArtifactSelection();
             HasUnsavedChanges = false;
             State = RuntimeWorkspaceState.Idle;
             Diagnostics = [];
@@ -543,9 +631,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             if (!string.IsNullOrWhiteSpace(directory))
                 Directory.CreateDirectory(directory);
 
-            var jsonToWrite = GetDiagramState is { } capture
-                ? _definitionComposer.WriteNodePositions(DefinitionJson, capture())
-                : DefinitionJson;
+            var jsonToWrite = GetFullDefinitionJson();
             await File.WriteAllTextAsync(CurrentFilePath, jsonToWrite, cancellationToken).ConfigureAwait(false);
             HasUnsavedChanges = false;
             Diagnostics =
@@ -1140,6 +1226,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         DefinitionJson = json;
         DefinitionRevision++;
         HasUnsavedChanges = true;
+        NormalizeActiveArtifactSelection();
         ClearRuntimeMetricsSnapshots(notify: false);
         ClearRuntimePayloadInspections(notify: false);
         ClearRuntimeTriggerActivitySnapshots(notify: false);
@@ -1152,9 +1239,46 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
         DefinitionJson = json;
         DefinitionRevision++;
+        NormalizeActiveArtifactSelection();
         ClearRuntimeMetricsSnapshots(notify: false);
         ClearRuntimePayloadInspections(notify: false);
         ClearRuntimeTriggerActivitySnapshots(notify: false);
+    }
+
+    private void NormalizeActiveArtifactSelection()
+    {
+        var workflows = WorkflowNames;
+        if (_activeWorkflowName is null || !workflows.Contains(_activeWorkflowName, StringComparer.Ordinal))
+        {
+            _activeWorkflowName = workflows.FirstOrDefault();
+        }
+
+        var dashboards = DashboardNames;
+        if (_activeDashboardName is null || !dashboards.Contains(_activeDashboardName, StringComparer.Ordinal))
+        {
+            _activeDashboardName = dashboards.FirstOrDefault();
+        }
+
+        var tests = TestNames;
+        if (_activeTestName is null || !tests.Contains(_activeTestName, StringComparer.Ordinal))
+        {
+            _activeTestName = tests.FirstOrDefault();
+        }
+
+        if (_activeArtifactKind == WorkspaceArtifactKind.Pipeline && _activeWorkflowName is not null ||
+            _activeArtifactKind == WorkspaceArtifactKind.Dashboard && _activeDashboardName is not null ||
+            _activeArtifactKind == WorkspaceArtifactKind.Test && _activeTestName is not null)
+        {
+            return;
+        }
+
+        _activeArtifactKind = _activeWorkflowName is not null
+            ? WorkspaceArtifactKind.Pipeline
+            : _activeDashboardName is not null
+                ? WorkspaceArtifactKind.Dashboard
+                : _activeTestName is not null
+                    ? WorkspaceArtifactKind.Test
+                    : WorkspaceArtifactKind.Pipeline;
     }
 
     private void NotifyChanged() => Changed?.Invoke(this, EventArgs.Empty);

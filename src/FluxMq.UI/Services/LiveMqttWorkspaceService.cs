@@ -162,6 +162,34 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         NotifyChanged();
     }
 
+    public async Task RemoveConnectionsAsync(
+        IEnumerable<(string ResourceName, MqttConnectionProfile Profile)> connections,
+        CancellationToken cancellationToken = default)
+    {
+        var targets = connections
+            .Where(connection => !string.IsNullOrWhiteSpace(connection.ResourceName))
+            .Select(connection => (
+                ResourceName: NormalizeResourceName(connection.ResourceName),
+                connection.Profile))
+            .ToArray();
+
+        if (targets.Length == 0)
+        {
+            return;
+        }
+
+        var ids = _entries.Values
+            .Where(entry => targets.Any(target => ConnectionMatches(entry.Connection, target.Profile, target.ResourceName)))
+            .Select(entry => entry.Connection.Id)
+            .ToArray();
+
+        foreach (var id in ids)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            await RemoveConnectionAsync(id, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
     public async Task ConnectAsync(Guid id, CancellationToken cancellationToken = default)
     {
         if (!_entries.TryGetValue(id, out var entry)) return;
