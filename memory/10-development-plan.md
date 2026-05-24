@@ -53,6 +53,8 @@ The current trigger activity slice applies the same input-driven rule to `mqtt.t
 The current metrics-rate slice adds both current and since-start message-per-second data to `mqtt.metrics` snapshots. Current rate uses a configurable rolling window; average rate uses all messages observed since the metrics component started. Both rates are based on the stream feeding the metrics component, not broker-wide traffic. The metrics card display is configurable per node with selectable cards such as messages, current rate, average rate, payload, topics, retained count, or average payload size; card columns control the node grid, and rows are calculated from the selected-card count.
 Future metrics refactor note: the current implementation remains MQTT-envelope-specific, which is acceptable for this slice. Longer term, split generic stream metrics from MQTT-specific topic metrics so outputs from dynamic mappers and future protocol components can feed metrics observers without meaningless topic fields.
 The current assertion slice starts `F-031` with a standalone `flow.assertion` component. It evaluates a configurable expression over a configured input type, emits a typed `FlowAssertionResult`, routes the original value to `Passed` or `Failed`, and emits a log entry for each evaluation so pass/fail behavior is visible in the workspace Logs tab without extra wiring. It defaults to `MqttEnvelope` because current source nodes commonly emit MQTT envelopes, but the component is not MQTT-specific.
+The current event-foundation slice intentionally stops before UI. It adds a generic `FlowEvent` stream contract for the debug/tracing/testing/monitoring era. App design/run components keep their normal workflow ports; events are collected by `ApplicationRuntime.Events` as an external side-channel so dashboards, monitors, and field tests can observe behavior without mutating the application definition. Events currently cover meaningful facts such as MQTT message received/published/recorded, file written, JSON schema validated, and assertion evaluated. Expectations should be rebuilt on top of event correlation instead of adding narrow one-purpose components.
+App artifact boundary note: an app should contain pipelines, dashboards, and later tests/scenarios as separate artifact families. The pipeline designer remains for app design/run components such as triggers, mappers, validators, routers, publishers, recorders, and writers. The dashboard designer should have its own grid/layout surface and component panel for monitoring blocks. Assertion and expectation tooling belongs to the test/scenario or monitoring plane, not the pipeline design palette; any current pipeline-facing assertion UI should be treated as migration debt after the event foundation is stable.
 Future logging architecture note: keep the current `FlowLogEntry` stream for graph-visible log data, but plan a standard `Microsoft.Extensions.Logging` bridge so runtime components can use normal .NET logging and the workspace Logs view can subscribe through a single provider/sink instead of component-specific log plumbing.
 Future object-stream architecture note: dynamic mappers make it hard to keep every runtime edge permanently static. Move toward object streams as the underlying runtime model, with typed ports acting as schema/contract metadata for designer validation, editor help, and runtime coercion. This should be done as a dedicated runtime refactor, not hidden inside one component.
 
@@ -342,15 +344,23 @@ Done when:
   - object payloads continue to display as `JSON`
   - arrays and scalar JSON literals display as `Array`, `Number`, `Boolean`, `String`, or `Null`
   - Payload inspection results still retain the parsed JSON value kind for runtime/editor use
+- Started event-foundation support:
+  - added a generic `FlowEvent` contract and shared event type names in the pipeline layer
+  - MQTT trigger, MQTT publisher, MQTT recorder, file writer, JSON schema validator, and flow assertion now implement an event-source side-channel for important runtime facts
+  - `ApplicationRuntime.Events` collects those side-channel streams outside the workflow graph; `Events` is not a normal component output port and should not appear in app definitions
+  - component and runtime factory tests cover event emission and the app/trace boundary before any UI work is added
+- Recorded app artifact direction:
+  - apps contain separate pipelines, dashboards, and future tests/scenarios
+  - dashboards should use their own grid designer, layout model, and monitoring component panel
+  - assertions and expectations should move to the test/scenario or monitoring designer instead of the pipeline component palette
 
 ## Next Action
 
-Review the MQTT assertion slice:
+Review the event-foundation slice:
 
-1. Open `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json`.
-2. Add `Flow Assertion` to a pipeline that has a trigger/source.
-3. Confirm it auto-wires from the source output and exposes `Result`, `Passed`, `Failed`, `Entries`, and `Errors`.
-4. Open the node editor, confirm Input type is `MqttEnvelope`, set expression `qos >= 1`, save, and validate.
-5. Run the app, publish one QoS 0 and one QoS 1 message on a subscribed topic.
-6. Confirm the Logs tab shows assertion failed/passed entries and downstream nodes can be wired from `Passed` or `Failed`.
-7. After confirmation, commit this slice and open a PR.
+1. Run `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore -p:UseSharedCompilation=false`.
+2. Run `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false`.
+3. Run the full solution test pass before acceptance.
+4. Confirm no new UI component or visible `Events` workflow port appears yet; this slice is runtime foundation only.
+5. Confirm tests can observe runtime events through `ApplicationRuntime.Events` without adding nodes or links to app JSON.
+6. After confirmation, commit this slice and open a PR.

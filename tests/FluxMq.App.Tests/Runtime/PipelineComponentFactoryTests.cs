@@ -749,6 +749,7 @@ public sealed class PipelineComponentFactoryTests
     public async Task DynamicFilterAndJsonataMapper_CanPublishMappedRequestsToConnection()
     {
         FakeMqttSession? session = null;
+        var runtimeEvents = new List<FlowEvent>();
         const string mapperExpression = """
         {
           "topic": "mirror/" & topic,
@@ -843,23 +844,35 @@ public sealed class PipelineComponentFactoryTests
 
         result.IsSuccess.ShouldBeTrue();
         await using var runtime = result.Runtime!;
+        var eventSink = new ActionBlock<FlowEvent>(runtimeEvents.Add);
+        runtime.Events.LinkTo(eventSink, new DataflowLinkOptions { PropagateCompletion = true });
+        runtime.Nodes.Single(node => node.Address.Node.Value == "publisher")
+            .FindOutput(new PortName("Events"))
+            .ShouldBeNull();
 
         await runtime.StartAsync();
         session.ShouldNotBeNull();
         session!.CompleteMessages();
-        await runtime.Completion;
+        await Task.WhenAll(runtime.Completion, eventSink.Completion);
 
         var publish = session.Published.ShouldHaveSingleItem();
         publish.Topic.ShouldBe("mirror/factory/b");
         publish.Payload.ShouldBe("mapped:keep"u8.ToArray());
         publish.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtLeastOnce);
         publish.Retain.ShouldBeFalse();
+        var flowEvent = runtimeEvents
+            .Where(flowEvent => flowEvent.Type == FlowEventTypes.MqttMessagePublished)
+            .ShouldHaveSingleItem();
+        flowEvent.Type.ShouldBe(FlowEventTypes.MqttMessagePublished);
+        flowEvent.Topic.ShouldBe("mirror/factory/b");
+        flowEvent.PayloadPreview.ShouldBe("mapped:keep");
     }
 
     [Fact]
     public async Task LiveTriggerAndJsonataMapper_CanPublishMappedRequestsToConnection()
     {
         FakeMqttSession? session = null;
+        var runtimeEvents = new List<FlowEvent>();
         const string mapperExpression = """
         {
           "topic": 'test',
@@ -938,6 +951,11 @@ public sealed class PipelineComponentFactoryTests
 
         result.IsSuccess.ShouldBeTrue();
         await using var runtime = result.Runtime!;
+        var eventSink = new ActionBlock<FlowEvent>(runtimeEvents.Add);
+        runtime.Events.LinkTo(eventSink, new DataflowLinkOptions { PropagateCompletion = true });
+        runtime.Nodes.Single(node => node.Address.Node.Value == "trigger")
+            .FindOutput(new PortName("Events"))
+            .ShouldBeNull();
 
         await runtime.StartAsync();
         session.ShouldNotBeNull();
@@ -950,13 +968,19 @@ public sealed class PipelineComponentFactoryTests
         });
         await WaitUntilAsync(() => session.Published.Count == 1);
         session.CompleteMessages();
-        await runtime.Completion;
+        await Task.WhenAll(runtime.Completion, eventSink.Completion);
 
         var publish = session.Published.ShouldHaveSingleItem();
         publish.Topic.ShouldBe("test");
         publish.Payload.ShouldBe("""{"hello":"fluxmq"}"""u8.ToArray());
         publish.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtLeastOnce);
         publish.Retain.ShouldBeTrue();
+        var receivedEvent = runtimeEvents
+            .Where(flowEvent => flowEvent.Type == FlowEventTypes.MqttMessageReceived)
+            .ShouldHaveSingleItem();
+        receivedEvent.Type.ShouldBe(FlowEventTypes.MqttMessageReceived);
+        receivedEvent.Topic.ShouldBe("factory/source");
+        receivedEvent.PayloadPreview.ShouldBe("""{"hello":"fluxmq"}""");
     }
 
     private static async Task WaitUntilAsync(Func<bool> predicate)

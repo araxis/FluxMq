@@ -215,7 +215,7 @@ Expected mapper editor layout:
 
 **UI/UX:** Use MudBlazor for dense, work-focused panels: app tree, component catalog, diagram, JSON editor, live inspector, session panel, payload inspector.
 
-**Data/Logic:** Workspace state, selected app, selected workflow, selected node, recent messages, stored sessions, validation/run state.
+**Data/Logic:** Workspace state, selected app, selected artifact, selected workflow, selected node, recent messages, stored sessions, validation/run state. Apps are containers for multiple artifact kinds: pipelines for app design/run, dashboards for monitoring, and later tests/scenarios for field verification.
 
 **Acceptance:**
 
@@ -267,13 +267,27 @@ The mapper input type is currently fixed to `MqttEnvelope` in the editor; the ed
 - Build/runtime errors are attached to the responsible node where possible.
 - Running a flow does not require hidden UI-specific behavior.
 
+### F-024 - App Artifact Designers
+
+**Goal:** Keep app design/run, dashboards, and tests separate while still making them part of the same app.
+
+**UI/UX:** The app tree should show artifact groups such as Pipelines, Dashboards, and later Tests/Scenarios. Selecting an artifact opens the matching designer. Pipeline designer uses workflow nodes and links. Dashboard designer uses a grid/layout surface where users can define rows/columns, split or merge cells, and place dashboard blocks from its own component panel. Test/scenario designer uses test steps, expectations, assertions, fixtures, and observed events; those items should not clutter the pipeline component catalog.
+
+**Data/Logic:** Extend the app definition model with artifact collections. Pipelines remain executable app workflow definitions. Dashboards consume runtime event/projection streams and saved query definitions without changing pipeline JSON. Tests/scenarios observe app events and can drive external actions, but are separate from the app design/run graph.
+
+**Acceptance:**
+
+- A pipeline artifact can be edited and run without dashboard/test artifacts.
+- A dashboard artifact can observe a running app without adding workflow nodes or links.
+- Assertion and expectation tooling appears in the test/scenario or monitoring designer, not in the pipeline design palette.
+
 ## P2 - Ops, QA, And Observability
 
 ### F-030 - Metrics Observer And Dashboard Blocks
 
 **Goal:** Measure message count, payload sizes, topic activity, and message rates from any input stream.
 
-**UI/UX:** Metrics should appear both as graph outputs and dashboard/projection widgets.
+**UI/UX:** Metrics should appear both as graph outputs where they are part of app logic and as dashboard/projection widgets where they are part of monitoring. Dashboard widgets belong to the dashboard designer and should use a layout grid with row/column sizing, split/merge, and an independent component panel.
 
 **Data/Logic:** `mqtt.metrics`, snapshots, rate/counter/summary components, projection services. Future refactor: split generic stream metrics such as count, throughput, payload size, and failures from MQTT-specific topic metrics, so mapper outputs and future non-MQTT event streams can still feed metrics nodes cleanly.
 
@@ -287,9 +301,9 @@ The mapper input type is currently fixed to `MqttEnvelope` in the editor; the ed
 
 **Goal:** Let ops/QA users express expected message behavior.
 
-**UI/UX:** Scenario-style components should support statements like: publish request X, expect response Y, validate payload schema Z.
+**UI/UX:** Scenario-style components should support statements like: publish request X, expect response Y, validate payload schema Z. Assertions and expectations belong to test/scenario or monitoring designers, not the pipeline app-design palette.
 
-**Data/Logic:** Assertion components, expectation windows/timeouts, typed pass/fail result outputs. First slice is `flow.assertion`: configured input type in, expression evaluation, `FlowAssertionResult` plus same-type `Passed`/`Failed` branches. Longer term, dynamic mappers push the runtime toward object streams underneath, with typed ports as schema/contract metadata. Logging should eventually use standard `Microsoft.Extensions.Logging` with a workspace Logs bridge, while `FlowLogEntry` remains available as graph data.
+**Data/Logic:** Assertions and expectations should sit on a generic event foundation, not one-off protocol-specific components. This belongs to the debug/tracing/testing/monitoring era, separate from the app design/run era. App components such as triggers, publishers, validators, routers, mappers, and actors keep their normal workflow ports; the runtime exposes `FlowEvent` as an external side-channel so dashboards, monitors, and field tests can observe an app without changing its definition. Events include facts such as `mqtt.message.received`, `mqtt.message.published`, `mqtt.message.recorded`, `file.written`, `json.schema.validated`, and `flow.assertion.evaluated`. Expectations should correlate an anchor event to one or more expected follow-up events within a time window, for example "after request publish, expect response received", while assertions remain expression checks over object streams. Dynamic mappers push the runtime toward object streams underneath, with typed ports as schema/contract metadata. Logging should eventually use standard `Microsoft.Extensions.Logging` with a workspace Logs bridge, while `FlowLogEntry` remains available as graph data.
 
 **Acceptance:**
 

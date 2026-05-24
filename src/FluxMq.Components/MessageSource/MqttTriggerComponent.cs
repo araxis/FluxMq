@@ -14,7 +14,7 @@ namespace FluxMq.Components.MessageSource;
 /// block to the connection's broadcast. Multiple triggers may share one connection;
 /// each gets every envelope but only forwards the ones matching its own filters.
 /// </summary>
-public sealed class MqttTriggerComponent : IFlowNode, IAsyncDisposable
+public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDisposable
 {
     private readonly IMqttSession _session;
     private readonly ISourceBlock<MqttEnvelope> _connectionStream;
@@ -22,6 +22,7 @@ public sealed class MqttTriggerComponent : IFlowNode, IAsyncDisposable
     private readonly string[] _topicFilters;
     private readonly BufferBlock<MqttEnvelope> _output;
     private readonly BroadcastBlock<FlowError> _errors;
+    private readonly BufferBlock<FlowEvent> _events;
     private readonly CancellationTokenSource _cts = new();
     private IDisposable? _link;
     private int _started;
@@ -43,13 +44,18 @@ public sealed class MqttTriggerComponent : IFlowNode, IAsyncDisposable
         }
         _topicFilters = _subscriptions.Select(static s => s.TopicFilter).ToArray();
         _errors = new BroadcastBlock<FlowError>(static error => error);
+        _events = new BufferBlock<FlowEvent>();
         _output = new BufferBlock<MqttEnvelope>(new DataflowBlockOptions
         {
             BoundedCapacity = boundedCapacity
         });
 
         _output.Completion.ContinueWith(
-            _ => _errors.Complete(),
+            _ =>
+            {
+                _errors.Complete();
+                _events.Complete();
+            },
             CancellationToken.None,
             TaskContinuationOptions.ExecuteSynchronously,
             TaskScheduler.Default);
@@ -72,6 +78,7 @@ public sealed class MqttTriggerComponent : IFlowNode, IAsyncDisposable
 
     public FlowNodeId Id { get; }
     public ISourceBlock<FlowError> Errors => _errors;
+    public ISourceBlock<FlowEvent> Events => _events;
     public Task Completion => _output.Completion;
     public ISourceBlock<MqttEnvelope> Output => _output;
     public IReadOnlyList<MqttSubscription> Subscriptions => _subscriptions;
@@ -103,6 +110,23 @@ public sealed class MqttTriggerComponent : IFlowNode, IAsyncDisposable
                 if (MqttTopicFilterMatcher.MatchesAny(_topicFilters, envelope.Topic))
                 {
                     await _output.SendAsync(envelope, _cts.Token).ConfigureAwait(false);
+                    _events.Post(new FlowEvent
+                    {
+                        Timestamp = DateTimeOffset.UtcNow,
+                        Type = FlowEventTypes.MqttMessageReceived,
+                        Source = "MqttTrigger",
+                        SourceNodeId = Id,
+                        Subject = envelope.Topic,
+                        Status = "received",
+                        Topic = envelope.Topic,
+                        PayloadBytes = envelope.Payload.Length,
+                        PayloadPreview = FlowEventPayloadPreview.FromBytes(envelope.Payload),
+                        Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
+                        {
+                            ["qos"] = ((int)envelope.QualityOfService).ToString(System.Globalization.CultureInfo.InvariantCulture),
+                            ["retain"] = envelope.Retain.ToString()
+                        }
+                    });
                 }
             }, new ExecutionDataflowBlockOptions
             {
@@ -161,4 +185,5 @@ public sealed class MqttTriggerComponent : IFlowNode, IAsyncDisposable
             Context = _session.Profile.Name
         });
     }
+
 }

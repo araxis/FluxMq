@@ -4,10 +4,11 @@ using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.FileWriter;
 
-public sealed class FileWriterComponent : IFlowNode
+public sealed class FileWriterComponent : IFlowNode, IFlowEventSource
 {
     private readonly ActionBlock<FileWriteRequest> _block;
     private readonly BroadcastBlock<FlowError> _errors;
+    private readonly BufferBlock<FlowEvent> _events;
 
     public FileWriterComponent(
         FlowNodeId? id = null,
@@ -21,6 +22,7 @@ public sealed class FileWriterComponent : IFlowNode
 
         Id = id ?? FlowNodeId.New();
         _errors = new BroadcastBlock<FlowError>(static error => error);
+        _events = new BufferBlock<FlowEvent>();
         _block = new ActionBlock<FileWriteRequest>(
             WriteAsync,
             new ExecutionDataflowBlockOptions
@@ -31,7 +33,11 @@ public sealed class FileWriterComponent : IFlowNode
             });
 
         _block.Completion.ContinueWith(
-            _ => _errors.Complete(),
+            _ =>
+            {
+                _errors.Complete();
+                _events.Complete();
+            },
             CancellationToken.None,
             TaskContinuationOptions.ExecuteSynchronously,
             TaskScheduler.Default);
@@ -39,6 +45,7 @@ public sealed class FileWriterComponent : IFlowNode
 
     public FlowNodeId Id { get; }
     public ISourceBlock<FlowError> Errors => _errors;
+    public ISourceBlock<FlowEvent> Events => _events;
     public Task Completion => _block.Completion;
     public ITargetBlock<FileWriteRequest> Input => _block;
 
@@ -79,6 +86,24 @@ public sealed class FileWriterComponent : IFlowNode
                 default:
                     throw new InvalidOperationException($"Unsupported file write mode '{request.Mode}'.");
             }
+
+            _events.Post(new FlowEvent
+            {
+                Timestamp = DateTimeOffset.UtcNow,
+                Type = FlowEventTypes.FileWritten,
+                Source = "FileWriter",
+                SourceNodeId = Id,
+                Subject = request.Path,
+                Status = "written",
+                PayloadBytes = request.Content.Length,
+                PayloadPreview = FlowEventPayloadPreview.FromBytes(request.Content),
+                Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["path"] = request.Path,
+                    ["mode"] = request.Mode.ToString(),
+                    ["createDirectory"] = request.CreateDirectory.ToString()
+                }
+            });
         }
         catch (Exception exception)
         {
@@ -97,4 +122,5 @@ public sealed class FileWriterComponent : IFlowNode
             Context = context
         });
     }
+
 }

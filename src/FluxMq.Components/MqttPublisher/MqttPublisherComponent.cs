@@ -6,12 +6,13 @@ using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.MqttPublisher;
 
-public sealed class MqttPublisherComponent : IFlowNode
+public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource
 {
     private readonly IMqttSession _session;
     private readonly ActionBlock<MqttPublishRequest> _block;
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly BroadcastBlock<FlowLogEntry> _entries;
+    private readonly BufferBlock<FlowEvent> _events;
     private int _publishedCount;
     private string? _lastPublishedTopic;
 
@@ -30,6 +31,7 @@ public sealed class MqttPublisherComponent : IFlowNode
         _session = session ?? throw new ArgumentNullException(nameof(session));
         _errors = new BroadcastBlock<FlowError>(static error => error);
         _entries = new BroadcastBlock<FlowLogEntry>(static entry => entry);
+        _events = new BufferBlock<FlowEvent>();
         _block = new ActionBlock<MqttPublishRequest>(
             PublishAsync,
             new ExecutionDataflowBlockOptions
@@ -44,6 +46,7 @@ public sealed class MqttPublisherComponent : IFlowNode
             {
                 _errors.Complete();
                 _entries.Complete();
+                _events.Complete();
             },
             CancellationToken.None,
             TaskContinuationOptions.ExecuteSynchronously,
@@ -53,6 +56,7 @@ public sealed class MqttPublisherComponent : IFlowNode
     public FlowNodeId Id { get; }
     public ISourceBlock<FlowError> Errors => _errors;
     public ISourceBlock<FlowLogEntry> Entries => _entries;
+    public ISourceBlock<FlowEvent> Events => _events;
     public Task Completion => _block.Completion;
     public ITargetBlock<MqttPublishRequest> Input => _block;
     public int PublishedCount => Volatile.Read(ref _publishedCount);
@@ -89,6 +93,23 @@ public sealed class MqttPublisherComponent : IFlowNode
                 PayloadBytes = request.Payload.Length,
                 Context = $"qos={(int)request.QualityOfService}; retain={request.Retain}"
             });
+            _events.Post(new FlowEvent
+            {
+                Timestamp = DateTimeOffset.UtcNow,
+                Type = FlowEventTypes.MqttMessagePublished,
+                Source = "MqttPublisher",
+                SourceNodeId = Id,
+                Subject = request.Topic,
+                Status = "published",
+                Topic = request.Topic,
+                PayloadBytes = request.Payload.Length,
+                PayloadPreview = FlowEventPayloadPreview.FromBytes(request.Payload),
+                Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["qos"] = ((int)request.QualityOfService).ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    ["retain"] = request.Retain.ToString()
+                }
+            });
         }
         catch (Exception exception)
         {
@@ -107,4 +128,5 @@ public sealed class MqttPublisherComponent : IFlowNode
             Context = context
         });
     }
+
 }

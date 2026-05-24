@@ -1,7 +1,9 @@
 using Shouldly;
 using FluxMq.Core.Models;
 using FluxMq.Components.MessageSource;
+using FluxMq.Pipeline.Components;
 using MQTTnet.Protocol;
+using System.Text;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.Tests.Components;
@@ -42,6 +44,48 @@ public sealed class MqttTriggerComponentTests
         var options = session.SubscriptionOptions.ShouldHaveSingleItem();
         options.ReceiveRetainedMessages.ShouldBeFalse();
         options.RetainAsPublished.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task StartAsync_EmitsReceiveEventsForForwardedMessages()
+    {
+        var session = new TestMqttSession();
+        var connection = new MqttConnectionComponent(session, disposeSessionOnDispose: false);
+        var trigger = new MqttTriggerComponent(connection,
+        [
+            new MqttSubscription("sensors/#", MqttQualityOfServiceLevel.AtMostOnce)
+        ]);
+        var events = new List<FlowEvent>();
+        var eventSink = new ActionBlock<FlowEvent>(events.Add);
+        var outputSink = new ActionBlock<MqttEnvelope>(_ => { });
+
+        trigger.Events.LinkTo(eventSink, new DataflowLinkOptions { PropagateCompletion = true });
+        trigger.Output.LinkTo(outputSink, new DataflowLinkOptions { PropagateCompletion = true });
+
+        await connection.StartAsync();
+        await trigger.StartAsync();
+
+        await session.WriteAsync(new MqttEnvelope
+        {
+            Topic = "sensors/temp",
+            Payload = Encoding.UTF8.GetBytes("12"),
+            QualityOfService = MqttQualityOfServiceLevel.AtLeastOnce,
+            Retain = true
+        });
+        await session.WriteAsync(TestMqttSession.Message("lights/kitchen"));
+        session.CompleteMessages();
+
+        await Task.WhenAll(eventSink.Completion, outputSink.Completion).WaitAsync(TimeSpan.FromSeconds(5));
+
+        var flowEvent = events.ShouldHaveSingleItem();
+        flowEvent.Type.ShouldBe(FlowEventTypes.MqttMessageReceived);
+        flowEvent.Source.ShouldBe("MqttTrigger");
+        flowEvent.SourceNodeId.ShouldBe(trigger.Id);
+        flowEvent.Topic.ShouldBe("sensors/temp");
+        flowEvent.PayloadBytes.ShouldBe(2);
+        flowEvent.PayloadPreview.ShouldBe("12");
+        flowEvent.GetAttribute("qos").ShouldBe("1");
+        flowEvent.GetAttribute("retain").ShouldBe("True");
     }
 
     [Fact]

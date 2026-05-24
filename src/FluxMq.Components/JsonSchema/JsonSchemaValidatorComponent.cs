@@ -9,13 +9,14 @@ using SchemaDocument = Json.Schema.JsonSchema;
 
 namespace FluxMq.Components.JsonSchema;
 
-public sealed class JsonSchemaValidatorComponent : IFlowNode
+public sealed class JsonSchemaValidatorComponent : IFlowNode, IFlowEventSource
 {
     private readonly ActionBlock<MqttEnvelope> _block;
     private readonly BufferBlock<JsonSchemaValidationResult> _result;
     private readonly BufferBlock<MqttEnvelope> _valid;
     private readonly BufferBlock<MqttEnvelope> _invalid;
     private readonly BroadcastBlock<FlowError> _errors;
+    private readonly BufferBlock<FlowEvent> _events;
     private readonly SchemaDocument _schema;
     private readonly string _schemaId;
 
@@ -31,6 +32,7 @@ public sealed class JsonSchemaValidatorComponent : IFlowNode
         _schema = SchemaDocument.FromText(definition.SchemaJson);
         _schemaId = string.IsNullOrWhiteSpace(definition.SchemaId) ? "inline" : definition.SchemaId.Trim();
         _errors = new BroadcastBlock<FlowError>(static error => error);
+        _events = new BufferBlock<FlowEvent>();
         _result = new BufferBlock<JsonSchemaValidationResult>(new DataflowBlockOptions
         {
             BoundedCapacity = boundedCapacity
@@ -60,6 +62,7 @@ public sealed class JsonSchemaValidatorComponent : IFlowNode
 
     public FlowNodeId Id { get; }
     public ISourceBlock<FlowError> Errors => _errors;
+    public ISourceBlock<FlowEvent> Events => _events;
     public Task Completion => _block.Completion;
     public ITargetBlock<MqttEnvelope> Input => _block;
     public ISourceBlock<JsonSchemaValidationResult> Result => _result;
@@ -78,6 +81,7 @@ public sealed class JsonSchemaValidatorComponent : IFlowNode
     {
         var result = Validate(envelope);
         await _result.SendAsync(result).ConfigureAwait(false);
+        PublishEvent(result);
 
         var branch = result.IsValid ? _valid : _invalid;
         await branch.SendAsync(result.Envelope).ConfigureAwait(false);
@@ -144,6 +148,7 @@ public sealed class JsonSchemaValidatorComponent : IFlowNode
             ((IDataflowBlock)_valid).Fault(exception);
             ((IDataflowBlock)_invalid).Fault(exception);
             _errors.Complete();
+            _events.Complete();
             return;
         }
 
@@ -151,6 +156,7 @@ public sealed class JsonSchemaValidatorComponent : IFlowNode
         _valid.Complete();
         _invalid.Complete();
         _errors.Complete();
+        _events.Complete();
     }
 
     private static IReadOnlyList<JsonSchemaValidationIssue> CollectIssues(EvaluationResults results)
@@ -208,6 +214,27 @@ public sealed class JsonSchemaValidatorComponent : IFlowNode
             Message = message,
             Exception = exception,
             Context = context
+        });
+    }
+
+    private void PublishEvent(JsonSchemaValidationResult result)
+    {
+        _events.Post(new FlowEvent
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Type = FlowEventTypes.JsonSchemaValidated,
+            Source = "JsonSchemaValidator",
+            SourceNodeId = Id,
+            Subject = result.Envelope.Topic,
+            Status = result.IsValid ? "valid" : "invalid",
+            Topic = result.Envelope.Topic,
+            PayloadBytes = result.Envelope.Payload.Length,
+            Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["schemaId"] = result.SchemaId,
+                ["isValid"] = result.IsValid.ToString(),
+                ["issueCount"] = result.Issues.Count.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            }
         });
     }
 }
