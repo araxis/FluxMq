@@ -51,7 +51,169 @@ public sealed class ApplicationDefinitionValidator
             ValidateLinks(workflow.Key, workflow.Value.Nodes, definition, errors);
         }
 
+        foreach (var dashboard in definition.Dashboards)
+        {
+            ValidateDashboard(dashboard.Key, dashboard.Value, errors);
+        }
+
+        foreach (var test in definition.Tests)
+        {
+            ValidateScenario(test.Key, test.Value, errors);
+        }
+
         return new ApplicationDefinitionValidationResult(errors);
+    }
+
+    private static void ValidateDashboard(
+        string dashboardName,
+        DashboardDefinition dashboard,
+        List<ApplicationDefinitionValidationError> errors)
+    {
+        if (string.IsNullOrWhiteSpace(dashboardName))
+        {
+            errors.Add(new(
+                ApplicationDefinitionValidationErrorCode.EmptyDashboardName,
+                "Dashboard name cannot be empty."));
+        }
+
+        if (dashboard.Layout.Columns.Count == 0)
+        {
+            errors.Add(new(
+                ApplicationDefinitionValidationErrorCode.InvalidDashboardLayout,
+                $"Dashboard '{dashboardName}' must define at least one column track."));
+        }
+
+        if (dashboard.Layout.Rows.Count == 0)
+        {
+            errors.Add(new(
+                ApplicationDefinitionValidationErrorCode.InvalidDashboardLayout,
+                $"Dashboard '{dashboardName}' must define at least one row track."));
+        }
+
+        ValidateTracks(dashboardName, "column", dashboard.Layout.Columns, errors);
+        ValidateTracks(dashboardName, "row", dashboard.Layout.Rows, errors);
+
+        foreach (var widget in dashboard.Widgets)
+        {
+            if (string.IsNullOrWhiteSpace(widget.Key))
+            {
+                errors.Add(new(
+                    ApplicationDefinitionValidationErrorCode.EmptyDashboardWidgetName,
+                    $"Dashboard '{dashboardName}' has an empty widget name."));
+            }
+
+            if (string.IsNullOrWhiteSpace(widget.Value.Type))
+            {
+                errors.Add(new(
+                    ApplicationDefinitionValidationErrorCode.EmptyDashboardWidgetType,
+                    $"Dashboard '{dashboardName}' widget '{widget.Key}' has an empty type."));
+            }
+        }
+
+        foreach (var cell in dashboard.Layout.Cells)
+        {
+            if (string.IsNullOrWhiteSpace(cell.Key))
+            {
+                errors.Add(new(
+                    ApplicationDefinitionValidationErrorCode.EmptyDashboardCellName,
+                    $"Dashboard '{dashboardName}' has an empty cell name."));
+            }
+
+            if (cell.Value.Row < 0 ||
+                cell.Value.Column < 0 ||
+                cell.Value.RowSpan <= 0 ||
+                cell.Value.ColumnSpan <= 0)
+            {
+                errors.Add(new(
+                    ApplicationDefinitionValidationErrorCode.InvalidDashboardCell,
+                    $"Dashboard '{dashboardName}' cell '{cell.Key}' has an invalid grid position or span."));
+            }
+
+            if (cell.Value.Row >= 0 &&
+                cell.Value.RowSpan > 0 &&
+                dashboard.Layout.Rows.Count > 0 &&
+                cell.Value.Row + cell.Value.RowSpan > dashboard.Layout.Rows.Count)
+            {
+                errors.Add(new(
+                    ApplicationDefinitionValidationErrorCode.InvalidDashboardCell,
+                    $"Dashboard '{dashboardName}' cell '{cell.Key}' extends beyond the defined row tracks."));
+            }
+
+            if (cell.Value.Column >= 0 &&
+                cell.Value.ColumnSpan > 0 &&
+                dashboard.Layout.Columns.Count > 0 &&
+                cell.Value.Column + cell.Value.ColumnSpan > dashboard.Layout.Columns.Count)
+            {
+                errors.Add(new(
+                    ApplicationDefinitionValidationErrorCode.InvalidDashboardCell,
+                    $"Dashboard '{dashboardName}' cell '{cell.Key}' extends beyond the defined column tracks."));
+            }
+
+            if (!string.IsNullOrWhiteSpace(cell.Value.Widget) &&
+                !dashboard.Widgets.ContainsKey(cell.Value.Widget))
+            {
+                errors.Add(new(
+                    ApplicationDefinitionValidationErrorCode.MissingDashboardWidget,
+                    $"Dashboard '{dashboardName}' cell '{cell.Key}' references missing widget '{cell.Value.Widget}'."));
+            }
+        }
+    }
+
+    private static void ValidateTracks(
+        string dashboardName,
+        string axis,
+        IReadOnlyList<DashboardGridTrackDefinition> tracks,
+        List<ApplicationDefinitionValidationError> errors)
+    {
+        for (var i = 0; i < tracks.Count; i++)
+        {
+            var track = tracks[i];
+            if (track.Value <= 0 ||
+                double.IsNaN(track.Value) ||
+                double.IsInfinity(track.Value))
+            {
+                errors.Add(new(
+                    ApplicationDefinitionValidationErrorCode.InvalidDashboardLayout,
+                    $"Dashboard '{dashboardName}' {axis} track {i} must be a positive finite size."));
+            }
+
+            if (track.Unit == DashboardGridTrackUnit.Percent && track.Value > 100)
+            {
+                errors.Add(new(
+                    ApplicationDefinitionValidationErrorCode.InvalidDashboardLayout,
+                    $"Dashboard '{dashboardName}' {axis} track {i} percent size cannot exceed 100."));
+            }
+        }
+    }
+
+    private static void ValidateScenario(
+        string scenarioName,
+        ScenarioDefinition scenario,
+        List<ApplicationDefinitionValidationError> errors)
+    {
+        if (string.IsNullOrWhiteSpace(scenarioName))
+        {
+            errors.Add(new(
+                ApplicationDefinitionValidationErrorCode.EmptyScenarioName,
+                "Test scenario name cannot be empty."));
+        }
+
+        foreach (var step in scenario.Steps)
+        {
+            if (string.IsNullOrWhiteSpace(step.Key))
+            {
+                errors.Add(new(
+                    ApplicationDefinitionValidationErrorCode.EmptyScenarioStepName,
+                    $"Test scenario '{scenarioName}' has an empty step name."));
+            }
+
+            if (string.IsNullOrWhiteSpace(step.Value.Type))
+            {
+                errors.Add(new(
+                    ApplicationDefinitionValidationErrorCode.EmptyScenarioStepType,
+                    $"Test scenario '{scenarioName}' step '{step.Key}' has an empty type."));
+            }
+        }
     }
 
     private static void ValidateNode(

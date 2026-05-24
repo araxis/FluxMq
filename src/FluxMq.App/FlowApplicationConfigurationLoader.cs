@@ -33,7 +33,9 @@ public sealed class FlowApplicationConfigurationLoader
             return definition with
             {
                 Resources = definition.Resources ?? [],
-                Workflows = definition.Workflows ?? []
+                Workflows = definition.Workflows ?? [],
+                Dashboards = definition.Dashboards ?? [],
+                Tests = definition.Tests ?? []
             };
         }
         catch (JsonException exception)

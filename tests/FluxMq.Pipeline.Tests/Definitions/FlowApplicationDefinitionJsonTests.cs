@@ -82,6 +82,89 @@ public sealed class FlowApplicationDefinitionJsonTests
     }
 
     [Fact]
+    public void Deserialize_SupportsDashboardAndTestArtifacts()
+    {
+        const string json = """
+            {
+              "workflows": {
+                "observeTraffic": {
+                  "source": {
+                    "type": "mqtt.trigger"
+                  }
+                }
+              },
+              "dashboards": {
+                "ops": {
+                  "layout": {
+                    "columns": ["280", "2*", "25%"],
+                    "rows": ["96", "*"],
+                    "cells": {
+                      "main": {
+                        "row": 0,
+                        "column": 0,
+                        "rowSpan": 2,
+                        "columnSpan": 3,
+                        "widget": "messageRate"
+                      }
+                    }
+                  },
+                  "widgets": {
+                    "messageRate": {
+                      "type": "metric.card",
+                      "configuration": {
+                        "source": "runtime.events",
+                        "metric": "messagesPerSecond"
+                      }
+                    }
+                  }
+                }
+              },
+              "tests": {
+                "mqttRoundTrip": {
+                  "steps": {
+                    "publishRequest": {
+                      "type": "mqtt.publish",
+                      "configuration": {
+                        "connection": "local-broker"
+                      }
+                    },
+                    "expectResponse": {
+                      "type": "expect.event",
+                      "configuration": {
+                        "eventType": "mqtt.message.received"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """;
+
+        var definition = JsonSerializer.Deserialize<ApplicationDefinition>(
+            json,
+            ApplicationDefinitionJson.CreateSerializerOptions());
+
+        definition.ShouldNotBeNull();
+        var dashboard = definition!.Dashboards["ops"];
+        dashboard.Layout.Columns.ShouldBe([
+            DashboardGridTrackDefinition.Fixed(280),
+            DashboardGridTrackDefinition.Star(2),
+            DashboardGridTrackDefinition.Percent(25)
+        ]);
+        dashboard.Layout.Rows.ShouldBe([
+            DashboardGridTrackDefinition.Fixed(96),
+            DashboardGridTrackDefinition.Star()
+        ]);
+        dashboard.Layout.Cells["main"].Widget.ShouldBe("messageRate");
+        dashboard.Widgets["messageRate"].Type.ShouldBe("metric.card");
+        dashboard.Widgets["messageRate"].Configuration["metric"].GetString().ShouldBe("messagesPerSecond");
+
+        var scenario = definition.Tests["mqttRoundTrip"];
+        scenario.Steps["publishRequest"].Type.ShouldBe("mqtt.publish");
+        scenario.Steps["expectResponse"].Configuration["eventType"].GetString().ShouldBe("mqtt.message.received");
+    }
+
+    [Fact]
     public void Serialize_KeepsWorkflowsAndNodesAsObjectProperties()
     {
         var definition = new ApplicationDefinition
@@ -117,5 +200,98 @@ public sealed class FlowApplicationDefinitionJsonTests
         json.ShouldContain("\"Input\": \"source.Output\"");
         json.ShouldNotContain("\"nodes\"");
         json.ShouldNotContain("\"connections\"");
+    }
+
+    [Fact]
+    public void Serialize_KeepsDashboardAndTestArtifactsAsNamedObjects()
+    {
+        var definition = new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["observeTraffic"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = new NodeDefinition { Type = new NodeType("mqtt.trigger") }
+                    }
+                }
+            },
+            Dashboards =
+            {
+                ["ops"] = new DashboardDefinition
+                {
+                    Layout = new DashboardLayoutDefinition
+                    {
+                        Columns =
+                        [
+                            DashboardGridTrackDefinition.Fixed(280),
+                            DashboardGridTrackDefinition.Star(),
+                            DashboardGridTrackDefinition.Percent(25)
+                        ],
+                        Rows =
+                        [
+                            DashboardGridTrackDefinition.Fixed(96),
+                            DashboardGridTrackDefinition.Star()
+                        ],
+                        Cells =
+                        {
+                            ["main"] = new DashboardCellDefinition
+                            {
+                                Row = 0,
+                                Column = 0,
+                                RowSpan = 2,
+                                ColumnSpan = 3,
+                                Widget = "latest"
+                            }
+                        }
+                    },
+                    Widgets =
+                    {
+                        ["latest"] = new DashboardWidgetDefinition { Type = "payload.latest" }
+                    }
+                }
+            },
+            Tests =
+            {
+                ["roundTrip"] = new ScenarioDefinition
+                {
+                    Steps =
+                    {
+                        ["expect"] = new ScenarioStepDefinition { Type = "expect.event" }
+                    }
+                }
+            }
+        };
+
+        var json = JsonSerializer.Serialize(definition, ApplicationDefinitionJson.CreateSerializerOptions());
+
+        json.ShouldContain("\"dashboards\"");
+        json.ShouldContain("\"ops\"");
+        json.ShouldContain("\"columns\": [");
+        json.ShouldContain("\"280\"");
+        json.ShouldContain("\"*\"");
+        json.ShouldContain("\"25%\"");
+        json.ShouldContain("\"widgets\"");
+        json.ShouldContain("\"tests\"");
+        json.ShouldContain("\"roundTrip\"");
+        json.ShouldContain("\"expect.event\"");
+    }
+
+    [Theory]
+    [InlineData("320", DashboardGridTrackUnit.Fixed, 320)]
+    [InlineData("320px", DashboardGridTrackUnit.Fixed, 320)]
+    [InlineData("25%", DashboardGridTrackUnit.Percent, 25)]
+    [InlineData("*", DashboardGridTrackUnit.Star, 1)]
+    [InlineData("2*", DashboardGridTrackUnit.Star, 2)]
+    public void DashboardGridTrackDefinition_ParseSupportsWpfLikeSizes(
+        string size,
+        DashboardGridTrackUnit expectedUnit,
+        double expectedValue)
+    {
+        var track = DashboardGridTrackDefinition.Parse(size);
+
+        track.Unit.ShouldBe(expectedUnit);
+        track.Value.ShouldBe(expectedValue);
     }
 }
