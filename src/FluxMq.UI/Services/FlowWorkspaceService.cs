@@ -1,6 +1,7 @@
 using FluxMq.App;
 using FluxMq.Components.MqttMetrics;
 using FluxMq.Components.MqttPayloadInspector;
+using FluxMq.Components.MessageSource;
 using FluxMq.Core.Models;
 using FluxMq.Core.Session;
 using FluxMq.Components.Logging;
@@ -27,9 +28,11 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     private readonly object _logSync = new();
     private readonly object _metricsSync = new();
     private readonly object _payloadInspectionSync = new();
+    private readonly object _triggerActivitySync = new();
     private readonly List<WorkspaceLogEntry> _logs = [];
     private readonly Dictionary<string, MqttMetricsSnapshot> _metricsSnapshots = new(StringComparer.Ordinal);
     private readonly Dictionary<string, InspectedMqttMessage> _payloadInspections = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, MqttTriggerActivitySnapshot> _triggerActivitySnapshots = new(StringComparer.Ordinal);
     private readonly List<IDisposable> _runtimeProjectionLinks = [];
     private readonly List<IDataflowBlock> _runtimeProjectionTargets = [];
     private FlowApplicationHost? _host;
@@ -64,6 +67,8 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         new Dictionary<string, MqttMetricsSnapshot>(StringComparer.Ordinal);
     public IReadOnlyDictionary<string, InspectedMqttMessage> PayloadInspections { get; private set; } =
         new Dictionary<string, InspectedMqttMessage>(StringComparer.Ordinal);
+    public IReadOnlyDictionary<string, MqttTriggerActivitySnapshot> TriggerActivitySnapshots { get; private set; } =
+        new Dictionary<string, MqttTriggerActivitySnapshot>(StringComparer.Ordinal);
 
     public IReadOnlyList<string> WorkflowNames => _definitionComposer.GetWorkflowNames(DefinitionJson);
     public string? ActiveWorkflowName => _activeWorkflowName;
@@ -85,6 +90,16 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             return _payloadInspections.TryGetValue(RuntimeProjectionKey(workflowName, nodeName), out var inspection)
                 ? inspection
                 : null;
+        }
+    }
+
+    public MqttTriggerActivitySnapshot GetTriggerActivitySnapshot(string? workflowName, string nodeName)
+    {
+        lock (_triggerActivitySync)
+        {
+            return _triggerActivitySnapshots.TryGetValue(RuntimeProjectionKey(workflowName, nodeName), out var snapshot)
+                ? snapshot
+                : new MqttTriggerActivitySnapshot();
         }
     }
 
@@ -493,6 +508,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             await DisposeHostAsync().ConfigureAwait(false);
             ClearRuntimeMetricsSnapshots(notify: false);
             ClearRuntimePayloadInspections(notify: false);
+            ClearRuntimeTriggerActivitySnapshots(notify: false);
             _host = FlowApplicationHost.CreateDefault(CreateConfiguration(DefinitionJson), _messageRepository, _runtimeSessionFactory);
             var result = _host.Build();
             Diagnostics = CollectDiagnostics(result);
@@ -523,6 +539,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             await DisposeHostAsync().ConfigureAwait(false);
             ClearRuntimeMetricsSnapshots(notify: false);
             ClearRuntimePayloadInspections(notify: false);
+            ClearRuntimeTriggerActivitySnapshots(notify: false);
             _host = FlowApplicationHost.CreateDefault(CreateConfiguration(DefinitionJson), _messageRepository, _runtimeSessionFactory);
             var result = _host.Build();
             if (result.IsSuccess)
@@ -689,6 +706,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             AttachRuntimeLogOutputs(node);
             AttachRuntimeMetricsOutputs(node);
             AttachRuntimePayloadInspectionOutputs(node);
+            AttachRuntimeTriggerActivityOutputs(node);
         }
     }
 
@@ -736,6 +754,37 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
         _runtimeProjectionTargets.Add(target);
         _runtimeProjectionLinks.Add(inspections.LinkTo(target, new DataflowLinkOptions { PropagateCompletion = true }));
+    }
+
+    private void AttachRuntimeTriggerActivityOutputs(RuntimeNode node)
+    {
+        if (node.Node is not MqttTriggerComponent)
+        {
+            return;
+        }
+
+        foreach (var output in node.Outputs.OfType<OutputPort<MqttEnvelope>>())
+        {
+            if (string.Equals(output.Address.Port.Value, "Output", StringComparison.OrdinalIgnoreCase))
+            {
+                AttachRuntimeTriggerActivity(node, output.Source);
+            }
+        }
+    }
+
+    private void AttachRuntimeTriggerActivity(RuntimeNode node, ISourceBlock<MqttEnvelope> envelopes)
+    {
+        var address = node.Address;
+        var target = new ActionBlock<MqttEnvelope>(
+            envelope => StoreRuntimeTriggerActivity(address, envelope),
+            new ExecutionDataflowBlockOptions
+            {
+                EnsureOrdered = true,
+                MaxDegreeOfParallelism = 1
+            });
+
+        _runtimeProjectionTargets.Add(target);
+        _runtimeProjectionLinks.Add(envelopes.LinkTo(target, new DataflowLinkOptions { PropagateCompletion = true }));
     }
 
     private void AttachRuntimeLogOutputs(RuntimeNode node)
@@ -818,6 +867,28 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         NotifyRuntimeProjectionChanged();
     }
 
+    private void StoreRuntimeTriggerActivity(NodeAddress address, MqttEnvelope envelope)
+    {
+        lock (_triggerActivitySync)
+        {
+            var key = RuntimeProjectionKey(address.Scope, address.Node.Value);
+            var current = _triggerActivitySnapshots.TryGetValue(key, out var snapshot)
+                ? snapshot
+                : new MqttTriggerActivitySnapshot();
+
+            _triggerActivitySnapshots[key] = current with
+            {
+                MessageCount = current.MessageCount + 1,
+                LastTopic = envelope.Topic,
+                LastPayloadBytes = envelope.Payload.Length,
+                LastReceivedAt = envelope.ReceivedAt
+            };
+            TriggerActivitySnapshots = new Dictionary<string, MqttTriggerActivitySnapshot>(_triggerActivitySnapshots, StringComparer.Ordinal);
+        }
+
+        NotifyRuntimeProjectionChanged();
+    }
+
     private void ClearRuntimeMetricsSnapshots(bool notify)
     {
         lock (_metricsSync)
@@ -838,6 +909,20 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         {
             _payloadInspections.Clear();
             PayloadInspections = new Dictionary<string, InspectedMqttMessage>(StringComparer.Ordinal);
+        }
+
+        if (notify)
+        {
+            NotifyChanged();
+        }
+    }
+
+    private void ClearRuntimeTriggerActivitySnapshots(bool notify)
+    {
+        lock (_triggerActivitySync)
+        {
+            _triggerActivitySnapshots.Clear();
+            TriggerActivitySnapshots = new Dictionary<string, MqttTriggerActivitySnapshot>(StringComparer.Ordinal);
         }
 
         if (notify)
@@ -983,6 +1068,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         HasUnsavedChanges = true;
         ClearRuntimeMetricsSnapshots(notify: false);
         ClearRuntimePayloadInspections(notify: false);
+        ClearRuntimeTriggerActivitySnapshots(notify: false);
     }
 
     private void ReplaceDefinitionSilent(string json)
@@ -994,6 +1080,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         DefinitionRevision++;
         ClearRuntimeMetricsSnapshots(notify: false);
         ClearRuntimePayloadInspections(notify: false);
+        ClearRuntimeTriggerActivitySnapshots(notify: false);
     }
 
     private void NotifyChanged() => Changed?.Invoke(this, EventArgs.Empty);

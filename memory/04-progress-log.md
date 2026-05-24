@@ -628,3 +628,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 46 tests.
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 23 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 78 tests.
+
+## 2026-05-24 - Input-driven trigger activity slice
+
+- Added runtime projection state for MQTT trigger activity in the workspace service.
+- `mqtt.trigger` diagram activity now counts envelopes emitted by that trigger's own `Output` stream instead of using broker-wide live monitor message counts.
+- Non-matching broker messages do not increment the trigger card activity because the projection attaches after the trigger subscription filter.
+- Broker-wide live message counts remain in the Live Inspector panel.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 99 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -m:1` passes with 327 tests.
