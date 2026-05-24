@@ -55,6 +55,7 @@ Future metrics refactor note: the current implementation remains MQTT-envelope-s
 The current assertion slice starts `F-031` with a standalone `flow.assertion` component. It evaluates a configurable expression over a configured input type, emits a typed `FlowAssertionResult`, routes the original value to `Passed` or `Failed`, and emits a log entry for each evaluation so pass/fail behavior is visible in the workspace Logs tab without extra wiring. It defaults to `MqttEnvelope` because current source nodes commonly emit MQTT envelopes, but the component is not MQTT-specific.
 The current event-foundation slice intentionally stops before UI. It adds a generic `FlowEvent` stream contract for the debug/tracing/testing/monitoring era. App design/run components keep their normal workflow ports; events are collected by `ApplicationRuntime.Events` as an external side-channel so dashboards, monitors, and field tests can observe behavior without mutating the application definition. Events currently cover meaningful facts such as MQTT message received/published/recorded, file written, JSON schema validated, and assertion evaluated. Expectations should be rebuilt on top of event correlation instead of adding narrow one-purpose components.
 App artifact boundary note: an app should contain pipelines, dashboards, and later tests/scenarios as separate artifact families. The pipeline designer remains for app design/run components such as triggers, mappers, validators, routers, publishers, recorders, and writers. The dashboard designer should have its own grid/layout surface and component panel for monitoring blocks. Assertion and expectation tooling belongs to the test/scenario or monitoring plane, not the pipeline design palette; any current pipeline-facing assertion UI should be treated as migration debt after the event foundation is stable.
+The current app-artifact model slice adds definition-layer support for dashboards and test/scenario artifacts without adding UI. `ApplicationDefinition` now keeps `dashboards` and `tests` beside `resources` and `workflows`; dashboards have a grid layout plus named widgets, and tests have named steps. Dashboard rows and columns use WPF-like track sizing strings such as `320`, `25%`, `*`, and `2*`, so the future designer can support fixed, percent, and weighted star layouts. Runtime execution still builds from workflows only.
 Future logging architecture note: keep the current `FlowLogEntry` stream for graph-visible log data, but plan a standard `Microsoft.Extensions.Logging` bridge so runtime components can use normal .NET logging and the workspace Logs view can subscribe through a single provider/sink instead of component-specific log plumbing.
 Future object-stream architecture note: dynamic mappers make it hard to keep every runtime edge permanently static. Move toward object streams as the underlying runtime model, with typed ports acting as schema/contract metadata for designer validation, editor help, and runtime coercion. This should be done as a dedicated runtime refactor, not hidden inside one component.
 
@@ -353,14 +354,19 @@ Done when:
   - apps contain separate pipelines, dashboards, and future tests/scenarios
   - dashboards should use their own grid designer, layout model, and monitoring component panel
   - assertions and expectations should move to the test/scenario or monitoring designer instead of the pipeline component palette
+- Started app-artifact model support:
+  - `ApplicationDefinition` now has `dashboards` and `tests` artifact collections in addition to `resources` and `workflows`
+  - dashboard definitions include WPF-like row/column tracks, cells, spans, and named widgets
+  - test/scenario definitions include named steps with type and configuration
+  - JSON, validator, and configuration loader tests cover the new artifacts before any designer UI is added
 
 ## Next Action
 
-Review the event-foundation slice:
+Review the app-artifact model slice:
 
-1. Run `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore -p:UseSharedCompilation=false`.
-2. Run `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false`.
+1. Run `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore -p:UseSharedCompilation=false --filter FullyQualifiedName~Definitions`.
+2. Run `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false --filter FullyQualifiedName~FlowApplicationConfigurationLoaderTests`.
 3. Run the full solution test pass before acceptance.
-4. Confirm no new UI component or visible `Events` workflow port appears yet; this slice is runtime foundation only.
-5. Confirm tests can observe runtime events through `ApplicationRuntime.Events` without adding nodes or links to app JSON.
+4. Confirm no new UI designer has been added yet; this slice only adds the app artifact model.
+5. Confirm existing workflow runtime behavior still works and ignores dashboard/test artifacts until their own runners/designers exist.
 6. After confirmation, commit this slice and open a PR.

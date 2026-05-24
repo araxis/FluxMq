@@ -12,5 +12,15 @@ public enum ApplicationDefinitionValidationErrorCode
     MissingSourceNode = 8,
     EmptySourcePort = 9,
     EmptyTargetPort = 10,
-    DuplicateLink = 11
+    DuplicateLink = 11,
+    EmptyDashboardName = 12,
+    InvalidDashboardLayout = 13,
+    EmptyDashboardWidgetName = 14,
+    EmptyDashboardWidgetType = 15,
+    EmptyDashboardCellName = 16,
+    InvalidDashboardCell = 17,
+    MissingDashboardWidget = 18,
+    EmptyScenarioName = 19,
+    EmptyScenarioStepName = 20,
+    EmptyScenarioStepType = 21
 }

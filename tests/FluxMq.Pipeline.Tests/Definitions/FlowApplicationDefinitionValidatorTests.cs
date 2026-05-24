@@ -147,6 +147,202 @@ public sealed class FlowApplicationDefinitionValidatorTests
     }
 
     [Fact]
+    public void Validate_AcceptsDashboardsAndTestsAsSeparateAppArtifacts()
+    {
+        var definition = new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("mqtt.trigger")
+                    }
+                }
+            },
+            Dashboards =
+            {
+                ["ops"] = new DashboardDefinition
+                {
+                    Layout = new DashboardLayoutDefinition
+                    {
+                        Columns =
+                        [
+                            DashboardGridTrackDefinition.Fixed(280),
+                            DashboardGridTrackDefinition.Star(2),
+                            DashboardGridTrackDefinition.Percent(25)
+                        ],
+                        Rows =
+                        [
+                            DashboardGridTrackDefinition.Fixed(96),
+                            DashboardGridTrackDefinition.Star()
+                        ],
+                        Cells =
+                        {
+                            ["messages"] = new DashboardCellDefinition
+                            {
+                                Row = 0,
+                                Column = 0,
+                                ColumnSpan = 3,
+                                Widget = "messageRate"
+                            }
+                        }
+                    },
+                    Widgets =
+                    {
+                        ["messageRate"] = new DashboardWidgetDefinition { Type = "metric.card" }
+                    }
+                }
+            },
+            Tests =
+            {
+                ["roundTrip"] = new ScenarioDefinition
+                {
+                    Steps =
+                    {
+                        ["expect"] = new ScenarioStepDefinition { Type = "expect.event" }
+                    }
+                }
+            }
+        };
+
+        var result = _validator.Validate(definition);
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Validate_ReportsInvalidDashboardLayoutAndMissingWidget()
+    {
+        var definition = new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("mqtt.trigger")
+                    }
+                }
+            },
+            Dashboards =
+            {
+                ["ops"] = new DashboardDefinition
+                {
+                    Layout = new DashboardLayoutDefinition
+                    {
+                        Columns = [],
+                        Rows =
+                        [
+                            DashboardGridTrackDefinition.Fixed(-1)
+                        ],
+                        Cells =
+                        {
+                            ["broken"] = new DashboardCellDefinition
+                            {
+                                Row = -1,
+                                Column = 0,
+                                Widget = "missing"
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        var result = _validator.Validate(definition);
+
+        result.Errors.ShouldContain(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidDashboardLayout);
+        result.Errors.ShouldContain(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidDashboardCell);
+        result.Errors.ShouldContain(error => error.Code == ApplicationDefinitionValidationErrorCode.MissingDashboardWidget);
+    }
+
+    [Fact]
+    public void Validate_ReportsDashboardCellOutsideDefinedTracks()
+    {
+        var definition = new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("mqtt.trigger")
+                    }
+                }
+            },
+            Dashboards =
+            {
+                ["ops"] = new DashboardDefinition
+                {
+                    Layout = new DashboardLayoutDefinition
+                    {
+                        Columns =
+                        [
+                            DashboardGridTrackDefinition.Star(),
+                            DashboardGridTrackDefinition.Star()
+                        ],
+                        Rows =
+                        [
+                            DashboardGridTrackDefinition.Fixed(120)
+                        ],
+                        Cells =
+                        {
+                            ["overflow"] = new DashboardCellDefinition
+                            {
+                                Row = 0,
+                                Column = 1,
+                                RowSpan = 2,
+                                ColumnSpan = 2
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        var result = _validator.Validate(definition);
+
+        result.Errors.Count(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidDashboardCell)
+            .ShouldBe(2);
+    }
+
+    [Fact]
+    public void Validate_ReportsEmptyScenarioStepType()
+    {
+        var definition = new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("mqtt.trigger")
+                    }
+                }
+            },
+            Tests =
+            {
+                ["roundTrip"] = new ScenarioDefinition
+                {
+                    Steps =
+                    {
+                        ["expect"] = new ScenarioStepDefinition()
+                    }
+                }
+            }
+        };
+
+        var result = _validator.Validate(definition);
+
+        result.Errors.ShouldContain(error => error.Code == ApplicationDefinitionValidationErrorCode.EmptyScenarioStepType);
+    }
+
+    [Fact]
     public void Validate_ReportsInvalidLinkShape()
     {
         var definition = new ApplicationDefinition
