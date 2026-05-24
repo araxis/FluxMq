@@ -274,12 +274,44 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
     public string GetFullDefinitionJson()
     {
-        IReadOnlyDictionary<string, (double X, double Y, bool Collapsed)>? positions =
-            GetDiagramState?.Invoke() ??
-            (LastNodePositions.Count > 0 ? LastNodePositions : null);
-        return positions is not null
+        var positions = CollectDesignerNodePositions();
+        return positions.Count > 0
             ? _definitionComposer.WriteNodePositions(DefinitionJson, positions)
             : DefinitionJson;
+    }
+
+    private IReadOnlyDictionary<string, (double X, double Y, bool Collapsed)> CollectDesignerNodePositions()
+    {
+        var positions = new Dictionary<string, (double X, double Y, bool Collapsed)>(StringComparer.Ordinal);
+
+        if (StagedNodePositions is { Count: > 0 })
+        {
+            foreach (var (key, position) in StagedNodePositions)
+            {
+                positions[key] = position;
+            }
+        }
+
+        foreach (var (key, position) in LastNodePositions)
+        {
+            positions[key] = position;
+        }
+
+        if (GetDiagramState?.Invoke() is { } livePositions)
+        {
+            foreach (var (key, position) in livePositions)
+            {
+                positions[key] = position;
+            }
+        }
+
+        LastNodePositions.Clear();
+        foreach (var (key, position) in positions)
+        {
+            LastNodePositions[key] = position;
+        }
+
+        return positions;
     }
 
     public void SetDefinitionJson(string json)
@@ -598,6 +630,11 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         {
             var fileJson = await File.ReadAllTextAsync(CurrentFilePath, cancellationToken).ConfigureAwait(false);
             StagedNodePositions = _definitionComposer.ReadNodePositions(fileJson);
+            LastNodePositions.Clear();
+            foreach (var (key, position) in StagedNodePositions)
+            {
+                LastNodePositions[key] = position;
+            }
             ReplaceDefinitionSilent(_definitionComposer.StripDesignerSection(fileJson));
             NormalizeActiveArtifactSelection();
             HasUnsavedChanges = false;

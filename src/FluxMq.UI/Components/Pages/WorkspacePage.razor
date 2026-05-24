@@ -110,11 +110,18 @@
         else if (active.ActiveArtifactKind == WorkspaceArtifactKind.Dashboard)
         {
             <div class="workspace-tab-content">
-                <div class="artifact-workspace-state">
-                    <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="artifact-workspace-icon dashboard" />
-                    <div>
-                        <div class="artifact-workspace-title">@active.ActiveDashboardName</div>
-                        <div class="artifact-workspace-meta">Dashboard / no widgets</div>
+                <div class="workspace-artifact-shell">
+                    <aside class="workspace-artifact-tools">
+                        <ComponentCatalogPanel ArtifactKind="@WorkspaceArtifactKind.Dashboard" />
+                    </aside>
+                    <div class="workspace-artifact-region">
+                        <div class="artifact-workspace-state">
+                            <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="artifact-workspace-icon dashboard" />
+                            <div>
+                                <div class="artifact-workspace-title">@active.ActiveDashboardName</div>
+                                <div class="artifact-workspace-meta">Dashboard / no widgets</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -122,11 +129,18 @@
         else if (active.ActiveArtifactKind == WorkspaceArtifactKind.Test)
         {
             <div class="workspace-tab-content">
-                <div class="artifact-workspace-state">
-                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Class="artifact-workspace-icon test" />
-                    <div>
-                        <div class="artifact-workspace-title">@active.ActiveTestName</div>
-                        <div class="artifact-workspace-meta">Test / no steps</div>
+                <div class="workspace-artifact-shell">
+                    <aside class="workspace-artifact-tools">
+                        <ComponentCatalogPanel ArtifactKind="@WorkspaceArtifactKind.Test" />
+                    </aside>
+                    <div class="workspace-artifact-region">
+                        <div class="artifact-workspace-state">
+                            <MudIcon Icon="@Icons.Material.Filled.FactCheck" Class="artifact-workspace-icon test" />
+                            <div>
+                                <div class="artifact-workspace-title">@active.ActiveTestName</div>
+                                <div class="artifact-workspace-meta">Test / no steps</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -135,8 +149,13 @@
         {
             <CascadingValue Value="@active" @key="@active">
                 <div class="workspace-tab-content">
-                    <div class="workspace-designer-region">
-                        <FlowDesigner />
+                    <div class="workspace-artifact-shell">
+                        <aside class="workspace-artifact-tools">
+                            <ComponentCatalogPanel ArtifactKind="@WorkspaceArtifactKind.Pipeline" />
+                        </aside>
+                        <div class="workspace-designer-region">
+                            <FlowDesigner />
+                        </div>
                     </div>
                 </div>
             </CascadingValue>
