@@ -110,18 +110,15 @@
         else if (active.ActiveArtifactKind == WorkspaceArtifactKind.Dashboard)
         {
             <div class="workspace-tab-content">
-                <div class="workspace-artifact-shell">
-                    <aside class="workspace-artifact-tools">
-                        <ComponentCatalogPanel ArtifactKind="@WorkspaceArtifactKind.Dashboard" />
-                    </aside>
+                <div class="workspace-artifact-shell @(!_dashboardEditMode ? "workspace-artifact-shell-live" : null)">
+                    @if (_dashboardEditMode)
+                    {
+                        <aside class="workspace-artifact-tools">
+                            <ComponentCatalogPanel ArtifactKind="@WorkspaceArtifactKind.Dashboard" />
+                        </aside>
+                    }
                     <div class="workspace-artifact-region">
-                        <div class="artifact-workspace-state">
-                            <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="artifact-workspace-icon dashboard" />
-                            <div>
-                                <div class="artifact-workspace-title">@active.ActiveDashboardName</div>
-                                <div class="artifact-workspace-meta">Dashboard / no widgets</div>
-                            </div>
-                        </div>
+                        <DashboardDesigner Project="@active" EditModeChanged="@OnDashboardEditModeChanged" />
                     </div>
                 </div>
             </div>
@@ -169,6 +166,7 @@
     private FlowWorkspaceService? _lastActiveProject;
     private WorkspaceArtifactKind? _lastActiveArtifactKind;
     private string? _lastActiveArtifactName;
+    private bool _dashboardEditMode = true;
 
     protected override void OnInitialized()
     {
@@ -203,6 +201,7 @@
         if (artifactChanged)
         {
             _jsonView = false;
+            _dashboardEditMode = true;
         }
 
         _lastActiveProject = active;
@@ -319,6 +318,16 @@
             active.AddTest(name.Trim());
             _jsonView = false;
         }
+    }
+
+    private void OnDashboardEditModeChanged(bool isEditMode)
+    {
+        if (_dashboardEditMode == isEditMode)
+        {
+            return;
+        }
+
+        _dashboardEditMode = isEditMode;
     }
 
     public void Dispose()

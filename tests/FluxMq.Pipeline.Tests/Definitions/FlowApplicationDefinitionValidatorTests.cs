@@ -238,6 +238,8 @@ public sealed class FlowApplicationDefinitionValidatorTests
                         [
                             DashboardGridTrackDefinition.Fixed(-1)
                         ],
+                        ColumnPadding = [-1],
+                        RowPadding = [double.PositiveInfinity],
                         Cells =
                         {
                             ["broken"] = new DashboardCellDefinition

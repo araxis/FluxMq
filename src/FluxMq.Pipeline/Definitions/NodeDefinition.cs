@@ -5,13 +5,26 @@ namespace FluxMq.Pipeline.Definitions;
 
 public sealed record NodeDefinition
 {
+    private Dictionary<string, JsonElement>? _configuration = [];
+    private Dictionary<string, JsonElement>? _ports = [];
+
     public required NodeType Type { get; init; }
-    public Dictionary<string, JsonElement> Configuration { get; init; } = [];
+
+    public Dictionary<string, JsonElement> Configuration
+    {
+        get => _configuration ??= [];
+        init => _configuration = value ?? [];
+    }
+
     public string? When { get; init; }
     public int Phase { get; init; } = 0;
 
     [JsonExtensionData]
-    public Dictionary<string, JsonElement> Ports { get; init; } = [];
+    public Dictionary<string, JsonElement> Ports
+    {
+        get => _ports ??= [];
+        init => _ports = value ?? [];
+    }
 
     public IReadOnlyList<LinkDefinition> GetPortLinks(string portName, string workflowName)
     {

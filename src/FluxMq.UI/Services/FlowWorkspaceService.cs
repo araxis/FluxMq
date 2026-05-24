@@ -248,6 +248,158 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         NotifyChanged();
     }
 
+    public DashboardLayoutSnapshot? GetActiveDashboardLayout()
+        => string.IsNullOrWhiteSpace(_activeDashboardName)
+            ? null
+            : _definitionComposer.GetDashboardLayout(DefinitionJson, _activeDashboardName);
+
+    public void UpdateDashboardGridTracks(IEnumerable<string> columns, IEnumerable<string> rows)
+    {
+        if (string.IsNullOrWhiteSpace(_activeDashboardName))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.UpdateDashboardGridTracks(DefinitionJson, _activeDashboardName, columns, rows));
+            _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "DashboardUpdateFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
+    public void ResizeDashboardGrid(int rows, int columns)
+    {
+        if (string.IsNullOrWhiteSpace(_activeDashboardName))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.ResizeDashboardGrid(DefinitionJson, _activeDashboardName, rows, columns));
+            _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "DashboardResizeFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
+    public void UpdateDashboardTrack(string axis, int index, string size, double padding)
+        => UpdateDashboardTopology(
+            json => _definitionComposer.UpdateDashboardTrack(json, _activeDashboardName!, axis, index, size, padding),
+            "DashboardTrackUpdateFailed");
+
+    public void AddDashboardRow()
+        => UpdateDashboardTopology(json => _definitionComposer.AddDashboardRow(json, _activeDashboardName!), "DashboardRowAddFailed");
+
+    public void RemoveDashboardRow()
+        => UpdateDashboardTopology(json => _definitionComposer.RemoveDashboardRow(json, _activeDashboardName!), "DashboardRowRemoveFailed");
+
+    public void AddDashboardColumn()
+        => UpdateDashboardTopology(json => _definitionComposer.AddDashboardColumn(json, _activeDashboardName!), "DashboardColumnAddFailed");
+
+    public void RemoveDashboardColumn()
+        => UpdateDashboardTopology(json => _definitionComposer.RemoveDashboardColumn(json, _activeDashboardName!), "DashboardColumnRemoveFailed");
+
+    public void AddDashboardCell()
+    {
+        if (string.IsNullOrWhiteSpace(_activeDashboardName))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.AddDashboardCell(DefinitionJson, _activeDashboardName));
+            _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "DashboardCellAddFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
+    public void MergeDashboardCells(IEnumerable<DashboardCellSnapshot> selectedCells)
+        => UpdateDashboardTopology(
+            json => _definitionComposer.MergeDashboardCells(json, _activeDashboardName!, selectedCells),
+            "DashboardCellMergeFailed");
+
+    public void SplitDashboardCell(string cellName)
+        => UpdateDashboardTopology(
+            json => _definitionComposer.SplitDashboardCell(json, _activeDashboardName!, cellName),
+            "DashboardCellSplitFailed");
+
+    public void SubdivideDashboardCell(DashboardCellSnapshot selectedCell, int rowParts, int columnParts)
+        => UpdateDashboardTopology(
+            json => _definitionComposer.SubdivideDashboardCell(json, _activeDashboardName!, selectedCell, rowParts, columnParts),
+            "DashboardCellSubdivideFailed");
+
+    public void RemoveDashboardCell(string cellName)
+    {
+        if (string.IsNullOrWhiteSpace(_activeDashboardName) || string.IsNullOrWhiteSpace(cellName))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.RemoveDashboardCell(DefinitionJson, _activeDashboardName, cellName));
+            _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "DashboardCellRemoveFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
+    private void UpdateDashboardTopology(Func<string, string> update, string errorCode)
+    {
+        if (string.IsNullOrWhiteSpace(_activeDashboardName))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(update(DefinitionJson));
+            _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", errorCode, exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
     public void RemoveWorkflow(string name)
     {
         try

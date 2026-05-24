@@ -1,0 +1,425 @@
+.dashboard-designer {
+    background: var(--flux-canvas);
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.dashboard-toolbar {
+    align-items: center;
+    background: color-mix(in srgb, var(--flux-surface) 86%, transparent);
+    border-bottom: 1px solid var(--flux-border);
+    display: flex;
+    flex: 0 0 auto;
+    gap: 12px;
+    min-width: 0;
+    padding: 8px 12px;
+}
+
+.dashboard-heading {
+    align-items: center;
+    display: flex;
+    flex: 1 1 auto;
+    gap: 10px;
+    min-width: 180px;
+}
+
+.dashboard-heading-icon {
+    color: var(--mud-palette-info);
+}
+
+.dashboard-title {
+    color: var(--mud-palette-text-primary);
+    font-size: 13px;
+    font-weight: 750;
+    line-height: 1.25;
+}
+
+.dashboard-meta {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10.5px;
+    line-height: 1.25;
+    margin-top: 2px;
+}
+
+.dashboard-command-strip {
+    align-items: center;
+    display: flex;
+    flex: 0 1 auto;
+    gap: 4px;
+    min-width: 0;
+}
+
+.dashboard-mode-toggle {
+    flex: 0 0 auto;
+}
+
+.dashboard-toolbar-separator {
+    background: var(--flux-border);
+    height: 22px;
+    margin: 0 3px;
+    width: 1px;
+}
+
+.dashboard-grid-picker {
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    font-size: 11px;
+    gap: 6px;
+    min-width: 0;
+    position: relative;
+}
+
+.dashboard-picker-backdrop {
+    background: transparent;
+    border: 0;
+    bottom: 0;
+    cursor: default;
+    left: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 20;
+}
+
+.dashboard-grid-picker-popover {
+    background: var(--flux-surface);
+    border: 1px solid var(--flux-border-strong);
+    border-radius: 7px;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.42);
+    left: 0;
+    padding: 9px;
+    position: absolute;
+    top: 34px;
+    z-index: 21;
+}
+
+.dashboard-grid-picker-cells {
+    display: grid;
+    gap: 3px;
+    grid-template-columns: repeat(12, 12px);
+}
+
+.split-picker-cells {
+    grid-template-columns: repeat(6, 12px);
+}
+
+.dashboard-grid-picker-cell {
+    background: color-mix(in srgb, var(--mud-palette-text-primary) 8%, transparent);
+    border: 1px solid var(--flux-border-soft);
+    border-radius: 2px;
+    height: 12px;
+    padding: 0;
+    width: 12px;
+}
+
+.dashboard-grid-picker-cell.active {
+    background: var(--flux-accent);
+    border-color: var(--flux-accent);
+}
+
+.dashboard-grid-picker-cell.current {
+    box-shadow: 0 0 0 1px var(--mud-palette-warning);
+}
+
+.dashboard-grid-picker-cell.disabled {
+    cursor: not-allowed;
+    opacity: 0.35;
+}
+
+.dashboard-picker-label {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10.5px;
+    margin-top: 7px;
+    text-align: center;
+}
+
+.dashboard-selection-summary {
+    color: var(--mud-palette-text-secondary);
+    font-size: 11px;
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+.dashboard-error {
+    border-radius: 0;
+    flex: 0 0 auto;
+}
+
+.dashboard-grid-frame {
+    background:
+        linear-gradient(color-mix(in srgb, var(--flux-border-soft) 70%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, var(--flux-border-soft) 70%, transparent) 1px, transparent 1px),
+        color-mix(in srgb, var(--flux-surface) 30%, transparent);
+    background-size: 32px 32px;
+    border: 1px solid var(--flux-border);
+    border-radius: 8px;
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    overflow: auto;
+    padding: 20px;
+}
+
+.dashboard-grid-stage {
+    display: grid;
+    flex: 1 1 auto;
+    grid-template-columns: 80px minmax(0, 1fr);
+    grid-template-rows: 62px minmax(0, 1fr);
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
+}
+
+.dashboard-column-handles,
+.dashboard-row-handles {
+    align-items: center;
+    display: grid;
+    justify-items: center;
+}
+
+.dashboard-column-handles {
+    grid-column: 2;
+    grid-row: 1;
+    padding: 0 9px;
+}
+
+.dashboard-row-handles {
+    grid-column: 1;
+    grid-row: 2;
+    padding: 9px 0;
+}
+
+.dashboard-track-handle {
+    align-items: center;
+    background: color-mix(in srgb, var(--flux-accent) 16%, var(--flux-surface-2));
+    border: 1px solid color-mix(in srgb, var(--flux-accent) 45%, var(--flux-border));
+    border-radius: 999px;
+    color: var(--mud-palette-text-secondary);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    font-size: 10px;
+    gap: 1px;
+    justify-content: center;
+    min-height: 32px;
+    min-width: 56px;
+    padding: 3px 12px;
+    transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.dashboard-track-handle:hover {
+    background: color-mix(in srgb, var(--flux-accent) 26%, var(--flux-surface-2));
+    border-color: var(--flux-accent);
+    color: var(--mud-palette-text-primary);
+}
+
+.dashboard-track-handle span {
+    color: var(--mud-palette-text-primary);
+    font-weight: 700;
+}
+
+.dashboard-track-handle small {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 9px;
+    line-height: 1;
+}
+
+.dashboard-track-padding {
+    color: var(--flux-accent);
+}
+
+.dashboard-grid {
+    background: color-mix(in srgb, var(--flux-surface-2) 78%, transparent);
+    border: 2px solid color-mix(in srgb, var(--mud-palette-text-secondary) 62%, var(--flux-border));
+    border-radius: 8px;
+    display: grid;
+    gap: 8px;
+    grid-column: 2;
+    grid-row: 2;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    padding: 9px;
+    position: relative;
+    width: 100%;
+}
+
+.dashboard-cell {
+    background: color-mix(in srgb, var(--flux-surface-2) 90%, var(--flux-canvas));
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-secondary) 18%, var(--flux-border));
+    border-radius: 6px;
+    color: var(--mud-palette-text-primary);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    position: relative;
+    transition: background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+    z-index: 1;
+}
+
+.dashboard-cell:hover {
+    background: color-mix(in srgb, var(--flux-accent) 10%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--flux-accent) 48%, var(--flux-border));
+}
+
+.dashboard-cell.explicit {
+    background: var(--flux-surface-2);
+    border-style: solid;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+    z-index: 2;
+}
+
+.dashboard-cell.selected {
+    border-color: var(--flux-accent);
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--flux-accent) 72%, transparent), 0 10px 24px rgba(0, 0, 0, 0.28);
+    z-index: 3;
+}
+
+.dashboard-cell.merged {
+    background: color-mix(in srgb, var(--flux-accent) 13%, var(--flux-surface-2));
+}
+
+.dashboard-cell-content {
+    align-items: center;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 5px;
+    justify-content: flex-start;
+    min-height: 0;
+    min-width: 0;
+    padding: 13px 10px;
+}
+
+.dashboard-cell-name {
+    color: color-mix(in srgb, var(--mud-palette-info) 65%, var(--mud-palette-text-primary));
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.15;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dashboard-cell-span {
+    color: var(--mud-palette-text-secondary);
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 10px;
+    line-height: 1;
+}
+
+.dashboard-cell-widget {
+    color: var(--mud-palette-info);
+}
+
+.dashboard-live-frame {
+    background:
+        linear-gradient(color-mix(in srgb, var(--flux-border-soft) 70%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, var(--flux-border-soft) 70%, transparent) 1px, transparent 1px),
+        color-mix(in srgb, var(--flux-surface) 30%, transparent);
+    background-size: 32px 32px;
+    border: 1px solid var(--flux-border);
+    border-radius: 8px;
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    overflow: auto;
+    padding: 20px;
+}
+
+.dashboard-live-grid {
+    background: color-mix(in srgb, var(--flux-surface-2) 78%, transparent);
+    border: 2px solid color-mix(in srgb, var(--mud-palette-text-secondary) 62%, var(--flux-border));
+    border-radius: 8px;
+    display: grid;
+    flex: 1 1 auto;
+    gap: 8px;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    padding: 9px;
+    width: 100%;
+}
+
+.dashboard-live-cell {
+    background: color-mix(in srgb, var(--flux-surface-2) 82%, var(--flux-canvas));
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-secondary) 12%, var(--flux-border));
+    border-radius: 6px;
+    display: flex;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.dashboard-live-cell.has-widget {
+    background: color-mix(in srgb, var(--flux-accent) 12%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--flux-accent) 42%, var(--flux-border));
+}
+
+.dashboard-live-cell.merged {
+    background: color-mix(in srgb, var(--flux-accent) 10%, var(--flux-surface-2));
+}
+
+.dashboard-live-widget {
+    align-items: center;
+    color: var(--mud-palette-text-primary);
+    display: flex;
+    flex: 1 1 auto;
+    font-size: 13px;
+    font-weight: 750;
+    gap: 8px;
+    justify-content: center;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    padding: 12px;
+}
+
+.dashboard-live-widget span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dashboard-empty {
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: center;
+    min-height: 0;
+}
+
+.dashboard-empty-icon {
+    color: var(--mud-palette-info);
+    font-size: 48px;
+    opacity: 0.55;
+}
+
+@media (max-width: 1200px) {
+    .dashboard-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .dashboard-command-strip {
+        flex-wrap: wrap;
+    }
+}

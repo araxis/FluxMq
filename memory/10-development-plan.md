@@ -58,6 +58,8 @@ App artifact boundary note: an app should contain pipelines, dashboards, and lat
 The current app-artifact model slice adds definition-layer support for dashboards and test/scenario artifacts without adding UI. `ApplicationDefinition` now keeps `dashboards` and `tests` beside `resources` and `workflows`; dashboards have a grid layout plus named widgets, and tests have named steps. Dashboard rows and columns use WPF-like track sizing strings such as `320`, `25%`, `*`, and `2*`, so the future designer can support fixed, percent, and weighted star layouts. Runtime execution still builds from workflows only.
 Future logging architecture note: keep the current `FlowLogEntry` stream for graph-visible log data, but plan a standard `Microsoft.Extensions.Logging` bridge so runtime components can use normal .NET logging and the workspace Logs view can subscribe through a single provider/sink instead of component-specific log plumbing.
 Future object-stream architecture note: dynamic mappers make it hard to keep every runtime edge permanently static. Move toward object streams as the underlying runtime model, with typed ports acting as schema/contract metadata for designer validation, editor help, and runtime coercion. This should be done as a dedicated runtime refactor, not hidden inside one component.
+The current artifact navigation slice moves app structure controls into first-level top-bar menus for connections, pipelines, dashboards, and tests. The left side now stays focused on the active artifact tool panel, so pipeline components, future dashboard widgets, and future test steps can each have their own panel without an always-open app tree taking workspace width.
+The current dashboard layout designer slice turns dashboard tabs from placeholders into a real layout editor. The UI reads and writes the dashboard JSON model, renders a full-size grid surface, and can add/remove dashboard cells while keeping widgets separate for a later monitoring-block slice. The grid interaction is inspired by the OpenGarden surface editor: users can choose a row/column layout from a picker, add/remove rows and columns, select cells, merge rectangular selections, split merged cells, and subdivide a selected cell into rows, columns, or a 2 x 2 region. Row and column handles are now the track editors: clicking a handle opens a sizing dialog for fixed, percent, or star sizing plus per-track padding; the old raw row/column text fields are gone.
 
 ## Step-by-Step Plan
 
@@ -362,11 +364,24 @@ Done when:
 
 ## Next Action
 
-Review the app-artifact model slice:
+Working rule:
 
-1. Run `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore -p:UseSharedCompilation=false --filter FullyQualifiedName~Definitions`.
-2. Run `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false --filter FullyQualifiedName~FlowApplicationConfigurationLoaderTests`.
-3. Run the full solution test pass before acceptance.
-4. Confirm no new UI designer has been added yet; this slice only adds the app artifact model.
-5. Confirm existing workflow runtime behavior still works and ignores dashboard/test artifacts until their own runners/designers exist.
-6. After confirmation, commit this slice and open a PR.
+- After each fix or feature slice, update the progress/task notes before handing it back for review.
+- Tell the reviewer exactly what to check in the running app when visual or runtime confirmation matters.
+- Wait for confirmation before commit, push, PR, or merge steps.
+
+Review the dashboard layout designer slice:
+
+1. Open `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` in the UI and run it; confirm dashboards/tests with empty cells/widgets/steps no longer crash validation.
+2. Open an app with a dashboard tab and confirm the dashboard tab shows a grid designer instead of the old placeholder.
+3. Use the grid picker to change the dashboard to a 3 x 2 or 4 x 3 layout; confirm row and column track labels update.
+4. Click a column handle and set it to fixed, percent, and star values; set a non-zero padding and confirm the cell spacing changes.
+5. Click a row handle and set height plus padding; save and reopen the app to confirm the values round-trip under `dashboards.layout`.
+6. Select multiple adjacent cells with Ctrl/Shift and merge them.
+7. Select one cell, open Split, choose a row/column split from the mini grid, and confirm track sizes and padding split while neighboring cells keep their visual spans.
+8. Confirm the dashboard reads as a single framed board: track controls are pills outside the board, cells show coordinates, and merged cells are not cut by internal guide lines.
+9. Switch between Edit and Live mode on the dashboard tab; confirm Edit shows layout controls and the dashboard widget panel, while Live hides the widget panel and shows the same board as a read-only surface.
+10. Confirm there are no visible add/remove row, column, or cell commands in the dashboard toolbar.
+11. Confirm the dashboard fills the available tab body without needing manual zoom or a fixed preview size.
+12. Confirm pipeline tabs still render and preserve their node positions after switching between pipeline and dashboard tabs.
+13. After confirmation, commit this slice and open a PR.

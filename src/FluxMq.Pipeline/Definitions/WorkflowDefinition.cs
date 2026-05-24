@@ -2,5 +2,11 @@ namespace FluxMq.Pipeline.Definitions;
 
 public sealed record WorkflowDefinition
 {
-    public Dictionary<string, NodeDefinition> Nodes { get; init; } = [];
+    private Dictionary<string, NodeDefinition>? _nodes = [];
+
+    public Dictionary<string, NodeDefinition> Nodes
+    {
+        get => _nodes ??= [];
+        init => _nodes = value ?? [];
+    }
 }

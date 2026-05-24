@@ -92,6 +92,8 @@ public sealed class ApplicationDefinitionValidator
 
         ValidateTracks(dashboardName, "column", dashboard.Layout.Columns, errors);
         ValidateTracks(dashboardName, "row", dashboard.Layout.Rows, errors);
+        ValidateTrackPadding(dashboardName, "column", dashboard.Layout.ColumnPadding, errors);
+        ValidateTrackPadding(dashboardName, "row", dashboard.Layout.RowPadding, errors);
 
         foreach (var widget in dashboard.Widgets)
         {
@@ -182,6 +184,23 @@ public sealed class ApplicationDefinitionValidator
                 errors.Add(new(
                     ApplicationDefinitionValidationErrorCode.InvalidDashboardLayout,
                     $"Dashboard '{dashboardName}' {axis} track {i} percent size cannot exceed 100."));
+            }
+        }
+    }
+
+    private static void ValidateTrackPadding(
+        string dashboardName,
+        string axis,
+        IReadOnlyList<double> padding,
+        List<ApplicationDefinitionValidationError> errors)
+    {
+        for (var i = 0; i < padding.Count; i++)
+        {
+            if (padding[i] < 0 || double.IsNaN(padding[i]) || double.IsInfinity(padding[i]))
+            {
+                errors.Add(new(
+                    ApplicationDefinitionValidationErrorCode.InvalidDashboardLayout,
+                    $"Dashboard '{dashboardName}' {axis} track {i} padding must be a non-negative finite size."));
             }
         }
     }

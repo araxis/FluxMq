@@ -1,0 +1,104 @@
+@using FluxMq.Pipeline.Definitions
+@using System.Globalization
+
+<MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true })">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@Title</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="2">
+            <MudSelect T="string"
+                       Label="Size mode"
+                       @bind-Value="_unit"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense">
+                <MudSelectItem T="string" Value="@StarUnit">Star</MudSelectItem>
+                <MudSelectItem T="string" Value="@PercentUnit">Percent</MudSelectItem>
+                <MudSelectItem T="string" Value="@FixedUnit">Fixed</MudSelectItem>
+            </MudSelect>
+            <MudNumericField T="double"
+                             Label="@ValueLabel"
+                             @bind-Value="_value"
+                             Min="0.001"
+                             Variant="Variant.Outlined"
+                             Margin="Margin.Dense" />
+            <MudNumericField T="double"
+                             Label="Padding"
+                             @bind-Value="_padding"
+                             Min="0"
+                             Variant="Variant.Outlined"
+                             Margin="Margin.Dense" />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@Submit">Apply</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private const string StarUnit = "star";
+    private const string PercentUnit = "percent";
+    private const string FixedUnit = "fixed";
+
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public string Axis { get; set; } = "column";
+    [Parameter] public int Index { get; set; }
+    [Parameter] public string Size { get; set; } = "*";
+    [Parameter] public double Padding { get; set; }
+
+    private string _unit = StarUnit;
+    private double _value = 1;
+    private double _padding;
+
+    protected override void OnInitialized()
+    {
+        _padding = Math.Max(0, Padding);
+        try
+        {
+            var track = DashboardGridTrackDefinition.Parse(Size);
+            _unit = track.Unit switch
+            {
+                DashboardGridTrackUnit.Percent => PercentUnit,
+                DashboardGridTrackUnit.Fixed => FixedUnit,
+                _ => StarUnit
+            };
+            _value = Math.Max(0.001, track.Value);
+        }
+        catch
+        {
+            _unit = StarUnit;
+            _value = 1;
+        }
+    }
+
+    private string Title => $"{CultureInfo.InvariantCulture.TextInfo.ToTitleCase(Axis)} {Index + 1}";
+
+    private string ValueLabel => _unit switch
+    {
+        PercentUnit => "Percent",
+        FixedUnit => "Pixels",
+        _ => "Weight"
+    };
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Submit()
+    {
+        var value = Math.Max(0.001, _value);
+        var size = _unit switch
+        {
+            PercentUnit => $"{Format(value)}%",
+            FixedUnit => Format(value),
+            _ => value == 1 ? "*" : $"{Format(value)}*"
+        };
+
+        MudDialog.Close(DialogResult.Ok(new DashboardTrackUpdate(size, Math.Max(0, _padding))));
+    }
+
+    private static string Format(double value)
+        => value.ToString("0.###", CultureInfo.InvariantCulture);
+
+    public sealed record DashboardTrackUpdate(string Size, double Padding);
+}
