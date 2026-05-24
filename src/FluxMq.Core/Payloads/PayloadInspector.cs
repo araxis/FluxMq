@@ -25,9 +25,9 @@ public static class PayloadInspector
 
         var trimmed = text.Trim();
 
-        if (TryFormatJson(trimmed, out var formattedJson))
+        if (TryFormatJson(trimmed, out var formattedJson, out var jsonValueKind))
         {
-            return BuildResult(PayloadFormat.Json, payload, isText: true, rawText: text, formattedText: formattedJson);
+            return BuildResult(JsonPayloadFormat(jsonValueKind), payload, isText: true, rawText: text, formattedText: formattedJson, jsonValueKind);
         }
 
         if (TryFormatXml(trimmed, out var formattedXml))
@@ -54,12 +54,18 @@ public static class PayloadInspector
         byte[] payload,
         bool isText,
         string rawText,
-        string formattedText)
+        string formattedText,
+        JsonValueKind jsonValueKind = JsonValueKind.Undefined)
     {
         var label = format switch
         {
             PayloadFormat.Empty => "Empty",
             PayloadFormat.Json => "JSON",
+            PayloadFormat.Array => "Array",
+            PayloadFormat.String => "String",
+            PayloadFormat.Number => "Number",
+            PayloadFormat.Boolean => "Boolean",
+            PayloadFormat.Null => "Null",
             PayloadFormat.Xml => "XML",
             PayloadFormat.Base64 => "Base64",
             PayloadFormat.Text => "Text",
@@ -73,12 +79,25 @@ public static class PayloadInspector
             SizeBytes = payload.Length,
             IsText = isText,
             ContentTypeLabel = label,
+            JsonValueKind = jsonValueKind,
             RawText = rawText,
             FormattedText = formattedText,
             HexDump = BuildHexDump(payload),
             Metadata = $"{payload.Length} bytes | {label}"
         };
     }
+
+    private static PayloadFormat JsonPayloadFormat(JsonValueKind jsonValueKind)
+        => jsonValueKind switch
+        {
+            JsonValueKind.Object => PayloadFormat.Json,
+            JsonValueKind.Array => PayloadFormat.Array,
+            JsonValueKind.String => PayloadFormat.String,
+            JsonValueKind.Number => PayloadFormat.Number,
+            JsonValueKind.True or JsonValueKind.False => PayloadFormat.Boolean,
+            JsonValueKind.Null => PayloadFormat.Null,
+            _ => PayloadFormat.Text
+        };
 
     private static bool TryDecodeUtf8(byte[] payload, out string text)
     {
@@ -95,11 +114,12 @@ public static class PayloadInspector
         }
     }
 
-    private static bool TryFormatJson(string text, out string formatted)
+    private static bool TryFormatJson(string text, out string formatted, out JsonValueKind valueKind)
     {
         formatted = string.Empty;
+        valueKind = JsonValueKind.Undefined;
 
-        if (string.IsNullOrWhiteSpace(text) || (text[0] != '{' && text[0] != '['))
+        if (string.IsNullOrWhiteSpace(text))
         {
             return false;
         }
@@ -107,6 +127,7 @@ public static class PayloadInspector
         try
         {
             using var document = JsonDocument.Parse(text);
+            valueKind = document.RootElement.ValueKind;
             formatted = JsonSerializer.Serialize(document.RootElement, new JsonSerializerOptions { WriteIndented = true });
             return true;
         }

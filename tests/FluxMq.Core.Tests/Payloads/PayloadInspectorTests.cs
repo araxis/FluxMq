@@ -13,8 +13,25 @@ public sealed class PayloadInspectorTests
 
         result.Format.ShouldBe(PayloadFormat.Json);
         result.ContentTypeLabel.ShouldBe("JSON");
+        result.DisplayTypeLabel.ShouldBe("JSON");
         result.FormattedText.ShouldContain("\"device\": \"pump-1\"");
         result.HexDump.ShouldContain("00000000");
+    }
+
+    [Theory]
+    [InlineData("1", PayloadFormat.Number, "Number")]
+    [InlineData("true", PayloadFormat.Boolean, "Boolean")]
+    [InlineData("false", PayloadFormat.Boolean, "Boolean")]
+    [InlineData("null", PayloadFormat.Null, "Null")]
+    [InlineData("\"hello\"", PayloadFormat.String, "String")]
+    [InlineData("[1,2]", PayloadFormat.Array, "Array")]
+    public void Inspect_DetectsJsonValueKind(string payload, PayloadFormat expectedFormat, string expectedLabel)
+    {
+        var result = PayloadInspector.Inspect(Encoding.UTF8.GetBytes(payload));
+
+        result.Format.ShouldBe(expectedFormat);
+        result.ContentTypeLabel.ShouldBe(expectedLabel);
+        result.DisplayTypeLabel.ShouldBe(expectedLabel);
     }
 
     [Fact]
