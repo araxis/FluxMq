@@ -275,7 +275,7 @@ The mapper input type is currently fixed to `MqttEnvelope` in the editor; the ed
 
 **UI/UX:** Metrics should appear both as graph outputs and dashboard/projection widgets.
 
-**Data/Logic:** `mqtt.metrics`, snapshots, rate/counter/summary components, projection services.
+**Data/Logic:** `mqtt.metrics`, snapshots, rate/counter/summary components, projection services. Future refactor: split generic stream metrics such as count, throughput, payload size, and failures from MQTT-specific topic metrics, so mapper outputs and future non-MQTT event streams can still feed metrics nodes cleanly.
 
 **Acceptance:**
 

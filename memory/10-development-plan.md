@@ -25,7 +25,7 @@ This is the active implementation plan. Keep it updated after every meaningful d
 ## Current Target
 
 **Phase:** 6 - metrics, assertions, and scenarios
-**Active feature:** `F-033 - Input-driven Trigger Activity`
+**Active feature:** `F-030 - Metrics Message Rate`
 **Status:** In progress
 **Started:** 2026-05-24
 
@@ -50,6 +50,8 @@ The metrics slice aligned the UI with the runtime component contract. `mqtt.metr
 The payload inspector projection slice applies the same rule to `mqtt.payload-inspector`: broker-wide payload inspection stays in the Live Inspector panel, while the diagram node activity renders the latest inspection produced by that node's own runtime `Output` stream.
 The current payload type slice improves inspection semantics: MQTT payloads remain bytes, but UTF-8 payloads that decode to common literal values now expose human-facing payload kinds so scalar payloads such as `1`, `true`, `"text"`, `null`, and `[1,2]` are not mislabeled as plain text or JSON objects.
 The current trigger activity slice applies the same input-driven rule to `mqtt.trigger`: the node card activity should count envelopes emitted by that trigger's configured subscriptions, while broker-wide message counts remain in the Live Inspector panel.
+The current metrics-rate slice adds both current and since-start message-per-second data to `mqtt.metrics` snapshots. Current rate uses a configurable rolling window; average rate uses all messages observed since the metrics component started. Both rates are based on the stream feeding the metrics component, not broker-wide traffic. The metrics card display is configurable per node with selectable cards such as messages, current rate, average rate, payload, topics, retained count, or average payload size; card columns control the node grid, and rows are calculated from the selected-card count.
+Future metrics refactor note: the current implementation remains MQTT-envelope-specific, which is acceptable for this slice. Longer term, split generic stream metrics from MQTT-specific topic metrics so outputs from dynamic mappers and future protocol components can feed metrics observers without meaningless topic fields.
 
 ## Step-by-Step Plan
 
@@ -340,11 +342,11 @@ Done when:
 
 ## Next Action
 
-Review the Payload Inspector value-kind slice:
+Review the Metrics message-rate slice:
 
 1. Open `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json`.
-2. Run the app and publish payloads `1`, `true`, `"hello"`, `null`, `{"x":1}`, `[1,2]`, and `plain text`.
-3. Confirm inspector labels show `Number`, `Boolean`, `String`, `Null`, `JSON`, `Array`, and `Text`.
-4. Confirm JSON formatted/raw/hex/meta tabs still behave normally.
-5. Confirm payload inspector node activity and the publish panel payload meta use the same value-kind labels.
+2. Open a MQTT Metrics node editor.
+3. Select more than four metric cards, such as Messages, Now / sec, Avg / sec, Payload, Topics, Retained, and Avg payload.
+4. Adjust Card columns, save, and confirm the node grid calculates rows instead of disabling extra metrics.
+5. Run the app and publish matching MQTT messages; confirm Messages, Now / sec, Avg / sec, and Payload update from the node input stream.
 6. After confirmation, commit this slice and open a PR.

@@ -259,7 +259,12 @@ public static class RuntimeNodeFactoryRegistryExtensions
 
     private static RuntimeNode CreateMqttMetrics(NodeAddress address, NodeDefinition definition)
     {
-        var component = new MqttMetricsComponent(boundedCapacity: GetBoundedCapacity(definition));
+        var component = new MqttMetricsComponent(
+            boundedCapacity: GetBoundedCapacity(definition),
+            rateWindow: TimeSpan.FromSeconds(GetDoubleOrDefault(
+                definition,
+                "rateWindowSeconds",
+                MqttMetricsComponent.DefaultRateWindow.TotalSeconds)));
 
         return RuntimeNode.Create(
             address,

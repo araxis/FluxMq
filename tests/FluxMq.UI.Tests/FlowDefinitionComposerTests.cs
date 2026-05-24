@@ -271,6 +271,31 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void AddComponent_AddsMetricsRateConfiguration()
+    {
+        var composer = new FlowDefinitionComposer();
+
+        var updated = composer.AddComponent(composer.CreateEmptyDefinition(), "mqtt.metrics");
+
+        using var document = JsonDocument.Parse(updated);
+        var metrics = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty("metrics");
+
+        metrics.GetProperty("configuration").GetProperty("boundedCapacity").GetInt32().ShouldBe(1000);
+        metrics.GetProperty("configuration").GetProperty("rateWindowSeconds").GetDouble().ShouldBe(60);
+        metrics.GetProperty("configuration").TryGetProperty("metricCardRows", out _).ShouldBeFalse();
+        metrics.GetProperty("configuration").GetProperty("metricCardColumns").GetInt32().ShouldBe(4);
+        metrics.GetProperty("configuration").GetProperty("displayMetrics")
+            .EnumerateArray()
+            .Select(static item => item.GetString())
+            .ShouldBe(["messages", "currentRate", "averageRate", "payloadBytes"]);
+    }
+
+    [Fact]
     public void AddComponent_DoesNotWireActorDirectlyToEnvelopeSource()
     {
         var composer = new FlowDefinitionComposer();

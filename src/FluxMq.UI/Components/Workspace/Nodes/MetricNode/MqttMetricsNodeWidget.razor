@@ -7,24 +7,25 @@
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
 
-<NodeWidgetShell Node="@Node" HeaderIcon="@Icons.Material.Filled.Insights" CategoryColor="@Color.Tertiary">
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.Insights"
+                 CategoryColor="@Color.Tertiary"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
     <Body>
-        <div class="metrics-grid">
-            <div class="metrics-tile metrics-tile-primary">
-                <MudIcon Icon="@Icons.Material.Filled.Speed" Size="Size.Small" />
-                <span class="metrics-value">@FormatNumber(_snapshot.MessageCount)</span>
-                <span class="metrics-label">messages</span>
-            </div>
-            <div class="metrics-tile metrics-tile-secondary">
-                <MudIcon Icon="@Icons.Material.Filled.DataUsage" Size="Size.Small" />
-                <span class="metrics-value">@FormatBytes(_snapshot.TotalPayloadBytes)</span>
-                <span class="metrics-label">payload</span>
-            </div>
-            <div class="metrics-tile metrics-tile-tertiary">
-                <MudIcon Icon="@Icons.Material.Filled.Topic" Size="Size.Small" />
-                <span class="metrics-value">@_snapshot.UniqueTopicCount</span>
-                <span class="metrics-label">topics</span>
-            </div>
+        @{
+            var metricCards = MetricCards;
+            var metricColumns = MqttMetricsNodeModel.NormalizeMetricCardColumns(Model.MetricCardColumns);
+        }
+        <div class="metrics-grid" style="--metric-columns:@metricColumns">
+            @foreach (var card in metricCards)
+            {
+                <div class="metrics-tile @card.CssClass">
+                    <MudIcon Icon="@card.Icon" Size="Size.Small" />
+                    <span class="metrics-value">@card.Value</span>
+                    <span class="metrics-label">@card.Label</span>
+                </div>
+            }
         </div>
 
         @if (_topTopics.Count > 0)
@@ -60,12 +61,61 @@
             </div>
         }
     </Body>
+    <Editor>
+        <MudStack Spacing="2">
+            <MudNumericField T="int"
+                             Label="Input buffer"
+                             @bind-Value="_boundedCapacity"
+                             Min="1"
+                             Max="100000"
+                             Step="100"
+                             Variant="Variant.Outlined"
+                             Margin="Margin.Dense" />
+            <MudNumericField T="double"
+                             Label="Current-rate window seconds"
+                             @bind-Value="_rateWindowSeconds"
+                             Min="1"
+                             Step="1"
+                             Variant="Variant.Outlined"
+                             Margin="Margin.Dense"
+                             HelperText="Current rate uses this rolling window. Average rate always uses all messages since this metrics node started." />
+            <MudGrid Spacing="2">
+                <MudItem xs="12">
+                    <MudNumericField T="int"
+                                     Label="Card columns"
+                                     @bind-Value="_metricCardColumns"
+                                     Min="@MqttMetricsNodeModel.MinMetricCardColumns"
+                                     Max="@MqttMetricsNodeModel.MaxMetricCardColumns"
+                                     Step="1"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     HelperText="Rows are calculated from the selected cards." />
+                </MudItem>
+            </MudGrid>
+            <MudDivider />
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Metric cards</MudText>
+            <div class="metrics-display-options">
+                @foreach (var option in DisplayOptions)
+                {
+                    var selected = IsDisplayMetricSelected(option.Id);
+                    var disabled = selected && _displayMetrics.Count == 1;
+
+                    <MudCheckBox T="bool"
+                                 Value="@selected"
+                                 ValueChanged="@(value => ToggleDisplayMetric(option.Id, value))"
+                                 Disabled="@disabled"
+                                 Dense="true"
+                                 Label="@option.Label" />
+                }
+            </div>
+        </MudStack>
+    </Editor>
 </NodeWidgetShell>
 
 <style>
     .metrics-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-columns: repeat(var(--metric-columns), minmax(0, 1fr));
         gap: 6px;
         margin-bottom: 8px;
     }
@@ -80,10 +130,13 @@
         border: 1px solid rgba(255,255,255,0.08);
     }
     .metrics-tile-primary { border-color: var(--mud-palette-primary); }
+    .metrics-tile-rate { border-color: var(--mud-palette-info); }
     .metrics-tile-secondary { border-color: var(--mud-palette-secondary); }
     .metrics-tile-tertiary { border-color: var(--mud-palette-tertiary); }
+    .metrics-tile-payload { border-color: var(--mud-palette-success); }
+    .metrics-tile-retained { border-color: var(--mud-palette-warning); }
     .metrics-value {
-        font-size: 1.05rem;
+        font-size: 0.95rem;
         font-weight: 600;
         line-height: 1;
         margin-top: 2px;
@@ -156,17 +209,45 @@
         font-variant-numeric: tabular-nums;
         opacity: 0.65;
     }
+    .metrics-display-options {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 2px 12px;
+    }
 </style>
 
 @code {
     [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
 
+    private MqttMetricsNodeModel Model => (MqttMetricsNodeModel)Node;
+
     private MqttMetricsSnapshot _snapshot = new();
     private IReadOnlyList<MqttTopicMetric> _topTopics = [];
+    private int _boundedCapacity = MqttMetricsNodeModel.DefaultBoundedCapacity;
+    private double _rateWindowSeconds = MqttMetricsNodeModel.DefaultRateWindowSeconds;
+    private int _metricCardColumns = MqttMetricsNodeModel.DefaultMetricCardColumns;
+    private List<string> _displayMetrics = [.. MqttMetricsNodeModel.DefaultDisplayMetrics];
+
+    private static readonly IReadOnlyList<MetricDisplayOption> DisplayOptions =
+    [
+        new(MqttMetricsNodeModel.MetricMessages, "Messages"),
+        new(MqttMetricsNodeModel.MetricCurrentRate, "Now / sec"),
+        new(MqttMetricsNodeModel.MetricAverageRate, "Avg / sec"),
+        new(MqttMetricsNodeModel.MetricPayloadBytes, "Payload"),
+        new(MqttMetricsNodeModel.MetricTopics, "Topics"),
+        new(MqttMetricsNodeModel.MetricRetained, "Retained"),
+        new(MqttMetricsNodeModel.MetricAveragePayload, "Avg payload")
+    ];
+
+    private IReadOnlyList<MetricDisplayCard> MetricCards
+        => MqttMetricsNodeModel.NormalizeDisplayMetrics(Model.DisplayMetrics)
+            .Select(ToMetricDisplayCard)
+            .ToArray();
 
     protected override void OnInitialized()
     {
         Flow.Changed += OnFlowChanged;
+        LoadDraft();
         Recompute();
     }
 
@@ -188,6 +269,87 @@
 
     public void Dispose() => Flow.Changed -= OnFlowChanged;
 
+    private void LoadDraft()
+    {
+        _boundedCapacity = MqttMetricsNodeModel.NormalizeBoundedCapacity(Model.BoundedCapacity);
+        _rateWindowSeconds = MqttMetricsNodeModel.NormalizeRateWindowSeconds(Model.RateWindowSeconds);
+        _displayMetrics = [.. MqttMetricsNodeModel.NormalizeDisplayMetrics(Model.DisplayMetrics)];
+        _metricCardColumns = MqttMetricsNodeModel.NormalizeMetricCardColumns(Model.MetricCardColumns);
+    }
+
+    private Task SaveAsync()
+    {
+        var metricCardColumns = MqttMetricsNodeModel.NormalizeMetricCardColumns(_metricCardColumns);
+        var displayMetrics = MqttMetricsNodeModel.NormalizeDisplayMetrics(_displayMetrics);
+
+        Model.BoundedCapacity = MqttMetricsNodeModel.NormalizeBoundedCapacity(_boundedCapacity);
+        Model.RateWindowSeconds = MqttMetricsNodeModel.NormalizeRateWindowSeconds(_rateWindowSeconds);
+        Model.MetricCardColumns = metricCardColumns;
+        Model.DisplayMetrics = [.. displayMetrics];
+        Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
+        return Task.CompletedTask;
+    }
+
+    private bool IsDisplayMetricSelected(string id)
+        => _displayMetrics.Contains(id, StringComparer.Ordinal);
+
+    private void ToggleDisplayMetric(string id, bool selected)
+    {
+        if (selected)
+        {
+            if (!IsDisplayMetricSelected(id))
+            {
+                _displayMetrics.Add(id);
+            }
+
+            return;
+        }
+
+        if (_displayMetrics.Count > 1)
+        {
+            _displayMetrics.RemoveAll(metric => string.Equals(metric, id, StringComparison.Ordinal));
+        }
+    }
+
+    private MetricDisplayCard ToMetricDisplayCard(string id) => id switch
+    {
+        MqttMetricsNodeModel.MetricCurrentRate => new(
+            Icons.Material.Filled.Speed,
+            FormatRate(_snapshot.MessagesPerSecond),
+            "now / sec",
+            "metrics-tile-rate"),
+        MqttMetricsNodeModel.MetricAverageRate => new(
+            Icons.Material.Filled.QueryStats,
+            FormatRate(_snapshot.AverageMessagesPerSecond),
+            "avg / sec",
+            "metrics-tile-secondary"),
+        MqttMetricsNodeModel.MetricPayloadBytes => new(
+            Icons.Material.Filled.DataUsage,
+            FormatBytes(_snapshot.TotalPayloadBytes),
+            "payload",
+            "metrics-tile-payload"),
+        MqttMetricsNodeModel.MetricTopics => new(
+            Icons.Material.Filled.Topic,
+            _snapshot.UniqueTopicCount.ToString(),
+            "topics",
+            "metrics-tile-tertiary"),
+        MqttMetricsNodeModel.MetricRetained => new(
+            Icons.Material.Filled.PushPin,
+            FormatNumber(_snapshot.RetainedMessageCount),
+            "retained",
+            "metrics-tile-retained"),
+        MqttMetricsNodeModel.MetricAveragePayload => new(
+            Icons.Material.Filled.DataUsage,
+            FormatBytes(_snapshot.AveragePayloadBytes),
+            "avg payload",
+            "metrics-tile-payload"),
+        _ => new(
+            Icons.Material.Filled.MailOutline,
+            FormatNumber(_snapshot.MessageCount),
+            "messages",
+            "metrics-tile-primary")
+    };
+
     private static string FormatNumber(long value) => value switch
     {
         < 1_000 => value.ToString(),
@@ -196,12 +358,22 @@
         _ => $"{value / 1_000_000_000.0:0.#}B"
     };
 
-    private static string FormatBytes(long bytes) => bytes switch
+    private static string FormatBytes(long bytes) => FormatBytes((double)bytes);
+
+    private static string FormatBytes(double bytes) => bytes switch
     {
-        < 1_024 => $"{bytes} B",
+        < 1_024 => $"{bytes.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)} B",
         < 1_048_576 => $"{bytes / 1024.0:0.#} KB",
         < 1_073_741_824 => $"{bytes / 1_048_576.0:0.#} MB",
         _ => $"{bytes / 1_073_741_824.0:0.#} GB"
+    };
+
+    private static string FormatRate(double value) => value switch
+    {
+        < 0.005 => "0",
+        < 1 => value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture),
+        < 10 => value.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture),
+        _ => value.ToString("0", System.Globalization.CultureInfo.InvariantCulture)
     };
 
     private static string TrimTopic(string topic)
@@ -217,4 +389,7 @@
         if (delta.TotalHours < 24) return $"{(int)delta.TotalHours}h ago";
         return when.Value.ToString("HH:mm:ss");
     }
+
+    private sealed record MetricDisplayOption(string Id, string Label);
+    private sealed record MetricDisplayCard(string Icon, string Value, string Label, string CssClass);
 }

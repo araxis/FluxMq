@@ -158,7 +158,7 @@ public sealed class FlowComponentCatalog
             "mqtt.metrics",
             "MQTT Metrics",
             "Observer",
-            "Observes MQTT messages and emits message counts, payload sizes, topic activity, and latest-topic snapshots.",
+            "Observes MQTT messages and emits message counts, rates, payload sizes, topic activity, and latest-topic snapshots.",
             IsResource: false,
             [
                 new("Input", "MqttEnvelope", IsInput: true),

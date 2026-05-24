@@ -1,5 +1,6 @@
 using FluxMq.Core.Models;
 using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
+using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
 using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
 using FluxMq.UI.Components.Workspace.Nodes.Sources;
 using System.Text.Json;
@@ -58,7 +59,8 @@ public sealed class FlowDefinitionComposer
                 [MetricsNodeName] = new JsonObject
                 {
                     ["type"] = "mqtt.metrics",
-                    ["Input"] = $"{TriggerNodeName}.Output"
+                    ["Input"] = $"{TriggerNodeName}.Output",
+                    ["configuration"] = CreateMetricsConfiguration()
                 }
             }
         };
@@ -443,6 +445,10 @@ public sealed class FlowDefinitionComposer
         else if (componentType == "flow.logger")
         {
             node["configuration"] = CreateLoggerConfiguration();
+        }
+        else if (componentType == "mqtt.metrics")
+        {
+            node["configuration"] = CreateMetricsConfiguration();
         }
         else if (componentType is "mqtt.recorder" or "file.writer")
         {
@@ -1084,6 +1090,15 @@ public sealed class FlowDefinitionComposer
             ["maxEntries"] = 500,
             ["includePayloadPreview"] = true,
             ["maxPayloadPreviewChars"] = 512
+        };
+
+    private static JsonObject CreateMetricsConfiguration()
+        => new()
+        {
+            ["boundedCapacity"] = MqttMetricsNodeModel.DefaultBoundedCapacity,
+            ["rateWindowSeconds"] = MqttMetricsNodeModel.DefaultRateWindowSeconds,
+            ["metricCardColumns"] = MqttMetricsNodeModel.DefaultMetricCardColumns,
+            ["displayMetrics"] = MqttMetricsNodeModel.BuildDisplayMetrics(MqttMetricsNodeModel.DefaultDisplayMetrics)
         };
 
     private static JsonObject CreateActorCapacityConfiguration()

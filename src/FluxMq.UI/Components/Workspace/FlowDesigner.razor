@@ -452,7 +452,7 @@
                     : $"{count} stored messages",
                 "generated.source" => "Configured message list",
                 "mqtt.payload-inspector" => PayloadInspectorActivity(node.NodeName),
-                "mqtt.metrics" => $"{Flow.GetMetricsSnapshot(Flow.ActiveWorkflowName, node.NodeName).MessageCount} messages observed",
+                "mqtt.metrics" => MetricsActivity(node.NodeName),
                 "mqtt.publisher" => PublisherActivity(node.NodeName),
                 _ => null
             };
@@ -473,6 +473,12 @@
 
         var noun = snapshot.MessageCount == 1 ? "message" : "messages";
         return $"{snapshot.MessageCount} {noun} | {ShortTopic(snapshot.LastTopic ?? string.Empty)}";
+    }
+
+    private string MetricsActivity(string nodeName)
+    {
+        var snapshot = Flow.GetMetricsSnapshot(Flow.ActiveWorkflowName, nodeName);
+        return $"{snapshot.MessageCount} messages | now {FormatRate(snapshot.MessagesPerSecond)}/s | avg {FormatRate(snapshot.AverageMessagesPerSecond)}/s";
     }
 
     private string PayloadInspectorActivity(string nodeName)
@@ -624,6 +630,14 @@
 
     private static string ShortTopic(string topic)
         => topic.Length <= 42 ? topic : $"{topic[..18]}...{topic[^18..]}";
+
+    private static string FormatRate(double value) => value switch
+    {
+        < 0.005 => "0",
+        < 1 => value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture),
+        < 10 => value.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture),
+        _ => value.ToString("0", System.Globalization.CultureInfo.InvariantCulture)
+    };
 
     private static bool IsErrorLink(string? sourcePortName, string targetPortName)
         => string.Equals(sourcePortName, "Errors", StringComparison.OrdinalIgnoreCase) ||
