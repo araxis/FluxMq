@@ -8,7 +8,10 @@
 @inject FlowComponentCatalog Catalog
 @inject DragStateService DragState
 
-<div class="flow-designer-root">
+<div class="flow-designer-root"
+     @onpointerenter="HandleDesignerPointerEnter"
+     @onpointermove="HandleDesignerPointerMove"
+     @onpointerleave="HandleDesignerPointerLeave">
     <div class="flow-canvas">
         <CascadingValue Value="_diagram">
             <DiagramCanvas>
@@ -119,6 +122,21 @@
     private void OnDragStateChanged(object? sender, EventArgs e)
     {
         InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleDesignerPointerEnter(PointerEventArgs args)
+    {
+        DragState.SetComponentDragOverDesigner(args.PointerId, true);
+    }
+
+    private void HandleDesignerPointerMove(PointerEventArgs args)
+    {
+        DragState.SetComponentDragOverDesigner(args.PointerId, true);
+    }
+
+    private void HandleDesignerPointerLeave(PointerEventArgs args)
+    {
+        DragState.SetComponentDragOverDesigner(args.PointerId, false);
     }
 
     private void RebuildDiagram()

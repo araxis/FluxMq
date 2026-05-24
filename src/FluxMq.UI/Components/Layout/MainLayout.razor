@@ -10,7 +10,10 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<div class="@ShellClass">
+<div class="@ShellClass"
+     @onpointermove="HandleShellPointerMove"
+     @onpointerup="HandleShellPointerUp"
+     @onpointercancel="HandleShellPointerCancel">
     <header class="flux-topbar">
         <div class="flux-brand">
             <span class="flux-brand-mark" aria-hidden="true"></span>
@@ -218,7 +221,7 @@
     </footer>
 </div>
 
-@if (DragState.ActiveComponentDrag is { } activeDrag)
+@if (DragState.ActiveComponentDrag is { DidDrag: true } activeDrag)
 {
     <div class="@DragPreviewClass" style="@DragPreviewStyle">
         <MudIcon Icon="@Icons.Material.Filled.Extension" Size="Size.Small" />
@@ -295,7 +298,7 @@
     }
 
     private string ShellClass =>
-        $"flux-shell {(ThemeService.IsDarkMode ? "flux-theme-dark" : "flux-theme-light")}{(!_leftOpen ? " left-collapsed" : "")}{(!_rightOpen ? " right-collapsed" : "")}";
+        $"flux-shell {(ThemeService.IsDarkMode ? "flux-theme-dark" : "flux-theme-light")}{(!_leftOpen ? " left-collapsed" : "")}{(!_rightOpen ? " right-collapsed" : "")}{(DragState.ActiveComponentDrag?.DidDrag == true ? " flux-component-drag-active" : "")}";
 
     private string DragPreviewClass =>
         $"flux-drag-preview {(DragState.ActiveComponentDrag?.IsOverDesigner == true ? "over-designer" : null)}";
@@ -520,6 +523,25 @@
     {
         ThemeService.SetPreference(preference);
         StateHasChanged();
+    }
+
+    private void HandleShellPointerMove(PointerEventArgs args)
+    {
+        DragState.MoveComponentDrag(args.PointerId, args.ClientX, args.ClientY);
+    }
+
+    private void HandleShellPointerUp(PointerEventArgs args)
+    {
+        var completed = DragState.FinishComponentDrag(args.PointerId, args.ClientX, args.ClientY);
+        if (completed is { DidDrag: false })
+        {
+            Projects.ActiveProject?.AddComponent(completed.ComponentType);
+        }
+    }
+
+    private void HandleShellPointerCancel(PointerEventArgs args)
+    {
+        DragState.CancelComponentDrag(args.PointerId);
     }
 
     private void OnThemeChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);

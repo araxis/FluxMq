@@ -1,16 +1,14 @@
 @inject FlowComponentCatalog Catalog
 @inject ProjectManagerService Projects
 @inject DragStateService DragState
-@inject IJSRuntime JS
-@implements IAsyncDisposable
 
-<MudStack Spacing="0" Class="component-catalog">
-    <MudText Typo="Typo.subtitle2" Class="catalog-title">Components</MudText>
+<div class="component-catalog">
+    <div class="catalog-title">Components</div>
     @foreach (var group in Catalog.Components.GroupBy(c => c.Category))
     {
-        <MudText Typo="Typo.overline" Color="Color.Secondary" Class="catalog-group">
+        <div class="catalog-group">
             @group.Key
-        </MudText>
+        </div>
         <div class="catalog-drop-zone">
             @foreach (var component in group)
             {
@@ -18,81 +16,39 @@
             }
         </div>
     }
-</MudStack>
+</div>
 
 @code {
-    private IJSObjectReference? _dragModule;
-    private DotNetObjectReference<ComponentCatalogPanel>? _dragReference;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender)
-        {
-            return;
-        }
-
-        _dragModule = await JS.InvokeAsync<IJSObjectReference>("import", "./fluxmq-drag.js");
-        _dragReference = DotNetObjectReference.Create(this);
-    }
-
     private RenderFragment<FlowComponentDragItem> RenderComponentCard => dragItem =>
         @<div class="catalog-item @(Projects.ActiveProject is null ? "disabled" : null)"
               role="button"
               tabindex="@(Projects.ActiveProject is null ? "-1" : "0")"
               title="Drag or click to add component"
-              @onpointerdown="@((PointerEventArgs args) => BeginComponentDragAsync(args, dragItem.Component))"
+              @onpointerdown="@((PointerEventArgs args) => BeginComponentDrag(args, dragItem.Component))"
               @onkeydown="@((KeyboardEventArgs args) => AddComponentFromKeyboard(args, dragItem.Component.Type))"
               @key="dragItem.Id">
-            <MudIcon Icon="@IconFor(dragItem.Component)" Color="@ColorFor(dragItem.Component)" Size="Size.Small" />
-            <span class="catalog-item-copy">
-                <span class="catalog-item-name">@dragItem.Component.DisplayName</span>
-                <span class="catalog-item-category">@dragItem.Component.Category</span>
+            <span class="@IconTileClass(dragItem.Component.Category)" aria-hidden="true">
+                <MudIcon Icon="@IconFor(dragItem.Component)" Size="Size.Small" />
             </span>
-            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" Class="catalog-add-glyph" />
+            <span class="catalog-item-name">@dragItem.Component.DisplayName</span>
+            <span class="catalog-add-button" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+            </span>
         </div>;
 
-    private async Task BeginComponentDragAsync(PointerEventArgs args, FlowComponentDescriptor component)
+    private void BeginComponentDrag(PointerEventArgs args, FlowComponentDescriptor component)
     {
         if (Projects.ActiveProject is null || args.Button != 0)
         {
             return;
         }
 
-        _dragModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./fluxmq-drag.js");
-        _dragReference ??= DotNetObjectReference.Create(this);
-        await _dragModule.InvokeVoidAsync(
-            "startComponentDrag",
-            _dragReference,
+        DragState.BeginComponentDrag(
             component.Type,
             component.DisplayName,
             args.PointerId,
             args.ClientX,
             args.ClientY);
-    }
-
-    [JSInvokable]
-    public void OnComponentDragMove(string componentType, string displayName, double clientX, double clientY, bool isOverDesigner)
-    {
-        DragState.UpdateComponentDrag(componentType, displayName, clientX, clientY, isOverDesigner);
-    }
-
-    [JSInvokable]
-    public void OnComponentDragEnd(string componentType, string displayName, double clientX, double clientY, bool didDrag, bool isOverDesigner)
-    {
-        if (didDrag)
-        {
-            DragState.FinishComponentDrag(componentType, displayName, clientX, clientY, isOverDesigner);
-            return;
-        }
-
-        DragState.CancelComponentDrag();
-        Projects.ActiveProject?.AddComponent(componentType);
-    }
-
-    [JSInvokable]
-    public void OnComponentDragCancel()
-    {
-        DragState.CancelComponentDrag();
     }
 
     private void AddComponentFromKeyboard(KeyboardEventArgs args, string componentType)
@@ -118,24 +74,15 @@
         _ => Icons.Material.Filled.Extension
     };
 
-    private static Color ColorFor(FlowComponentDescriptor component) => component.Category switch
+    private static string IconTileClass(string category) => category switch
     {
-        "Source" => Color.Primary,
-        "Mapper" => Color.Secondary,
-        "Validator" => Color.Info,
-        "Actor" => Color.Tertiary,
-        "Sink" => Color.Tertiary,
-        _ => Color.Default
+        "Source" => "catalog-icon-tile source",
+        "Mapper" => "catalog-icon-tile mapper",
+        "Validator" => "catalog-icon-tile validator",
+        "Assertion" => "catalog-icon-tile assertion",
+        "Observer" => "catalog-icon-tile observer",
+        "Actor" => "catalog-icon-tile actor",
+        "Sink" => "catalog-icon-tile actor",
+        _ => "catalog-icon-tile"
     };
-
-    public async ValueTask DisposeAsync()
-    {
-        DragState.CancelComponentDrag();
-        _dragReference?.Dispose();
-
-        if (_dragModule is not null)
-        {
-            await _dragModule.DisposeAsync();
-        }
-    }
 }
