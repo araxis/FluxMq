@@ -19,17 +19,23 @@ public sealed class MqttRecorderComponentTests
         var sessionId = SessionId.New();
         var repository = new FakeMessageRepository();
         var component = new MqttRecorderComponent(repository);
+        var events = new List<FlowEvent>();
+        var eventSink = new ActionBlock<FlowEvent>(events.Add);
 
+        component.Events.LinkTo(eventSink, new DataflowLinkOptions { PropagateCompletion = true });
         component.Input.Post(Record(sessionId, "factory/1", [1]));
         component.Input.Post(Record(sessionId, "factory/2", [2]));
         component.Complete();
 
-        await component.Completion;
+        await Task.WhenAll(component.Completion, eventSink.Completion);
 
         repository.Recorded.Select(record => record.SessionId)
             .ShouldBe(new[] { sessionId, sessionId });
         repository.Recorded.Select(record => record.Envelope.Topic)
             .ShouldBe(new[] { "factory/1", "factory/2" });
+        events.Select(flowEvent => flowEvent.Type).ShouldBe([FlowEventTypes.MqttMessageRecorded, FlowEventTypes.MqttMessageRecorded]);
+        events.Select(flowEvent => flowEvent.Topic).ShouldBe(["factory/1", "factory/2"]);
+        events[0].GetAttribute("sessionId").ShouldBe(sessionId.ToString());
     }
 
     [Fact]

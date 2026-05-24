@@ -5,11 +5,12 @@ using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.Replay;
 
-public sealed class MqttRecorderComponent : IFlowNode
+public sealed class MqttRecorderComponent : IFlowNode, IFlowEventSource
 {
     private readonly IMessageRepository _messages;
     private readonly ActionBlock<MqttRecordingRequest> _block;
     private readonly BroadcastBlock<FlowError> _errors;
+    private readonly BufferBlock<FlowEvent> _events;
 
     public MqttRecorderComponent(
         IMessageRepository messages,
@@ -25,6 +26,7 @@ public sealed class MqttRecorderComponent : IFlowNode
         Id = id ?? FlowNodeId.New();
         _messages = messages ?? throw new ArgumentNullException(nameof(messages));
         _errors = new BroadcastBlock<FlowError>(static error => error);
+        _events = new BufferBlock<FlowEvent>();
         _block = new ActionBlock<MqttRecordingRequest>(
             Record,
             new ExecutionDataflowBlockOptions
@@ -35,7 +37,11 @@ public sealed class MqttRecorderComponent : IFlowNode
             });
 
         _block.Completion.ContinueWith(
-            _ => _errors.Complete(),
+            _ =>
+            {
+                _errors.Complete();
+                _events.Complete();
+            },
             CancellationToken.None,
             TaskContinuationOptions.ExecuteSynchronously,
             TaskScheduler.Default);
@@ -43,6 +49,7 @@ public sealed class MqttRecorderComponent : IFlowNode
 
     public FlowNodeId Id { get; }
     public ISourceBlock<FlowError> Errors => _errors;
+    public ISourceBlock<FlowEvent> Events => _events;
     public Task Completion => _block.Completion;
     public ITargetBlock<MqttRecordingRequest> Input => _block;
 
@@ -59,6 +66,24 @@ public sealed class MqttRecorderComponent : IFlowNode
         try
         {
             _messages.Add(request.SessionId, request.Envelope);
+            _events.Post(new FlowEvent
+            {
+                Timestamp = DateTimeOffset.UtcNow,
+                Type = FlowEventTypes.MqttMessageRecorded,
+                Source = "MqttRecorder",
+                SourceNodeId = Id,
+                Subject = request.Envelope.Topic,
+                Status = "recorded",
+                Topic = request.Envelope.Topic,
+                PayloadBytes = request.Envelope.Payload.Length,
+                PayloadPreview = FlowEventPayloadPreview.FromBytes(request.Envelope.Payload),
+                Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["sessionId"] = request.SessionId.ToString(),
+                    ["qos"] = ((int)request.Envelope.QualityOfService).ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    ["retain"] = request.Envelope.Retain.ToString()
+                }
+            });
         }
         catch (Exception exception)
         {
@@ -77,4 +102,5 @@ public sealed class MqttRecorderComponent : IFlowNode
             Context = context
         });
     }
+
 }

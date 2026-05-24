@@ -64,6 +64,58 @@ public sealed class MqttPublisherComponentTests
     }
 
     [Fact]
+    public async Task Input_EmitsPublishEvent()
+    {
+        var session = new FakeMqttSession();
+        var component = new MqttPublisherComponent(session);
+        var events = new BufferBlock<FlowEvent>();
+
+        component.Events.LinkTo(events, new DataflowLinkOptions { PropagateCompletion = true });
+        component.Input.Post(new MqttPublishRequest
+        {
+            Topic = "factory/event",
+            Payload = "12"u8.ToArray(),
+            QualityOfService = MqttQualityOfServiceLevel.AtLeastOnce,
+            Retain = true
+        });
+        component.Complete();
+
+        var flowEvent = await events.ReceiveAsync();
+        await component.Completion;
+
+        flowEvent.Type.ShouldBe(FlowEventTypes.MqttMessagePublished);
+        flowEvent.Source.ShouldBe("MqttPublisher");
+        flowEvent.SourceNodeId.ShouldBe(component.Id);
+        flowEvent.Topic.ShouldBe("factory/event");
+        flowEvent.PayloadBytes.ShouldBe(2);
+        flowEvent.PayloadPreview.ShouldBe("12");
+        flowEvent.GetAttribute("qos").ShouldBe("1");
+        flowEvent.GetAttribute("retain").ShouldBe("True");
+    }
+
+    [Fact]
+    public async Task Input_EmitsPublishEventWithoutPreviewForBinaryPayload()
+    {
+        var session = new FakeMqttSession();
+        var component = new MqttPublisherComponent(session);
+        var events = new BufferBlock<FlowEvent>();
+
+        component.Events.LinkTo(events, new DataflowLinkOptions { PropagateCompletion = true });
+        component.Input.Post(new MqttPublishRequest
+        {
+            Topic = "factory/binary",
+            Payload = [0xff, 0xfe, 0xfd]
+        });
+        component.Complete();
+
+        var flowEvent = await events.ReceiveAsync();
+        await component.Completion;
+
+        flowEvent.PayloadBytes.ShouldBe(3);
+        flowEvent.PayloadPreview.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task Input_PreservesPublishOrder()
     {
         var session = new FakeMqttSession();

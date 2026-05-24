@@ -1,3 +1,4 @@
+using FluxMq.Pipeline.Components;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Pipeline.Runtime;
@@ -12,6 +13,7 @@ public sealed class ApplicationRuntime(
     private readonly IReadOnlyList<RuntimeNode> _resourceEntryNodes = resourceEntryNodes ?? throw new ArgumentNullException(nameof(resourceEntryNodes));
     private readonly IReadOnlyList<IDisposable> _resourceLinks = resourceLinks ?? [];
     private readonly BroadcastBlock<ApplicationStateChanged> _stateChanges = new(s => s);
+    private readonly FlowEventCollector _eventCollector = new(resources.Concat(workflows.SelectMany(workflow => workflow.Nodes)));
     private readonly object _stateLock = new();
     private bool _disposed;
     private ApplicationState _state = ApplicationState.Idle;
@@ -24,6 +26,8 @@ public sealed class ApplicationRuntime(
     public ApplicationState State => _state;
 
     public ISourceBlock<ApplicationStateChanged> StateChanges => _stateChanges;
+
+    public ISourceBlock<FlowEvent> Events => _eventCollector.Events;
 
     public Task Completion => Task.WhenAll(Nodes.Select(node => node.Node.Completion));
 
@@ -63,6 +67,7 @@ public sealed class ApplicationRuntime(
         SetState(ApplicationState.Running);
 
         var completion = Completion;
+        _eventCollector.CompleteWhen(completion);
         _ = completion.ContinueWith(t =>
         {
             if (_state == ApplicationState.Faulted) return;
@@ -118,6 +123,8 @@ public sealed class ApplicationRuntime(
             link.Dispose();
         }
 
+        _eventCollector.Dispose();
+
         foreach (var disposable in Resources.Select(node => node.Node).OfType<IDisposable>())
         {
             disposable.Dispose();
@@ -142,6 +149,8 @@ public sealed class ApplicationRuntime(
         {
             link.Dispose();
         }
+
+        _eventCollector.Dispose();
 
         foreach (var disposable in Resources.Select(node => node.Node).OfType<IAsyncDisposable>())
         {

@@ -26,21 +26,24 @@ public sealed class FlowAssertionComponentTests
         var passed = new List<string>();
         var failed = new List<string>();
         var entries = new List<FlowLogEntry>();
+        var events = new List<FlowEvent>();
         var resultSink = new ActionBlock<FlowAssertionResult>(results.Add);
         var passedSink = new ActionBlock<MqttEnvelope>(message => passed.Add(message.Topic));
         var failedSink = new ActionBlock<MqttEnvelope>(message => failed.Add(message.Topic));
         var entrySink = new ActionBlock<FlowLogEntry>(entries.Add);
+        var eventSink = new ActionBlock<FlowEvent>(events.Add);
 
         component.Result.LinkTo(resultSink, new DataflowLinkOptions { PropagateCompletion = true });
         component.Passed.LinkTo(passedSink, new DataflowLinkOptions { PropagateCompletion = true });
         component.Failed.LinkTo(failedSink, new DataflowLinkOptions { PropagateCompletion = true });
         component.Entries.LinkTo(entrySink, new DataflowLinkOptions { PropagateCompletion = true });
+        component.Events.LinkTo(eventSink, new DataflowLinkOptions { PropagateCompletion = true });
 
         component.Input.Post(Message("factory/qos0", MqttQualityOfServiceLevel.AtMostOnce));
         component.Input.Post(Message("factory/qos1", MqttQualityOfServiceLevel.AtLeastOnce));
         component.Complete();
 
-        await Task.WhenAll(component.Completion, resultSink.Completion, passedSink.Completion, failedSink.Completion, entrySink.Completion);
+        await Task.WhenAll(component.Completion, resultSink.Completion, passedSink.Completion, failedSink.Completion, entrySink.Completion, eventSink.Completion);
 
         results.Select(result => result.Passed).ShouldBe([false, true]);
         results[0].AssertionName.ShouldBe("QoS at least once");
@@ -53,6 +56,9 @@ public sealed class FlowAssertionComponentTests
             "Assertion failed: QoS at least once.",
             "Assertion passed: QoS at least once."
         ]);
+        events.Select(flowEvent => flowEvent.Type).ShouldBe([FlowEventTypes.AssertionEvaluated, FlowEventTypes.AssertionEvaluated]);
+        events.Select(flowEvent => flowEvent.Status).ShouldBe(["failed", "passed"]);
+        events[0].GetAttribute("assertionName").ShouldBe("QoS at least once");
         component.Id.ShouldNotBe(FlowNodeId.Empty);
     }
 

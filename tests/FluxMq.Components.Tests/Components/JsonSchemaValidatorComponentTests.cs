@@ -1,5 +1,6 @@
 using FluxMq.Components.JsonSchema;
 using FluxMq.Core.Models;
+using FluxMq.Pipeline.Components;
 using MQTTnet.Protocol;
 using Shouldly;
 using System.Text;
@@ -95,6 +96,40 @@ public sealed class JsonSchemaValidatorComponentTests
 
         validTopics.ShouldBe(["factory/valid"]);
         invalidTopics.ShouldBe(["factory/invalid"]);
+    }
+
+    [Fact]
+    public async Task Input_EmitsValidationEvents()
+    {
+        var component = new JsonSchemaValidatorComponent(new JsonSchemaValidatorDefinition
+        {
+            SchemaId = "status-schema",
+            SchemaJson = """
+            {
+              "type": "object",
+              "required": ["status"],
+              "properties": {
+                "status": { "const": "ok" }
+              }
+            }
+            """
+        });
+        var events = new List<FlowEvent>();
+        var eventSink = new ActionBlock<FlowEvent>(events.Add);
+
+        component.Events.LinkTo(eventSink, new DataflowLinkOptions { PropagateCompletion = true });
+        component.Input.Post(CreateEnvelope("""{"status":"ok"}""", "factory/valid"));
+        component.Input.Post(CreateEnvelope("""{"status":"fault"}""", "factory/invalid"));
+        component.Complete();
+
+        await Task.WhenAll(component.Completion, eventSink.Completion);
+
+        events.Select(flowEvent => flowEvent.Type).ShouldBe([FlowEventTypes.JsonSchemaValidated, FlowEventTypes.JsonSchemaValidated]);
+        events.Select(flowEvent => flowEvent.Topic).ShouldBe(["factory/valid", "factory/invalid"]);
+        events.Select(flowEvent => flowEvent.Status).ShouldBe(["valid", "invalid"]);
+        events[0].GetAttribute("schemaId").ShouldBe("status-schema");
+        events[0].GetAttribute("issueCount").ShouldBe("0");
+        events[1].GetAttribute("issueCount").ShouldBe("2");
     }
 
     private static MqttEnvelope CreateEnvelope(string payload, string topic = "factory/status")

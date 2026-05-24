@@ -12,7 +12,7 @@ using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.Assertions;
 
-public sealed class FlowAssertionComponent<TInput> : IFlowNode
+public sealed class FlowAssertionComponent<TInput> : IFlowNode, IFlowEventSource
 {
     private const string DefaultAssertionName = "Message assertion";
     private const string DefaultFailureMessage = "Assertion failed.";
@@ -23,6 +23,7 @@ public sealed class FlowAssertionComponent<TInput> : IFlowNode
     private readonly BufferBlock<TInput> _failed;
     private readonly BroadcastBlock<FlowLogEntry> _entries;
     private readonly BroadcastBlock<FlowError> _errors;
+    private readonly BufferBlock<FlowEvent> _events;
     private readonly IFlowPredicate<TInput> _predicate;
     private readonly string _assertionName;
     private readonly string _expression;
@@ -46,6 +47,7 @@ public sealed class FlowAssertionComponent<TInput> : IFlowNode
         _failureMessage = string.IsNullOrWhiteSpace(failureMessage) ? DefaultFailureMessage : failureMessage.Trim();
         _errors = new BroadcastBlock<FlowError>(static error => error);
         _entries = new BroadcastBlock<FlowLogEntry>(static entry => entry);
+        _events = new BufferBlock<FlowEvent>();
         _result = new BufferBlock<FlowAssertionResult>(new DataflowBlockOptions
         {
             BoundedCapacity = boundedCapacity
@@ -79,6 +81,7 @@ public sealed class FlowAssertionComponent<TInput> : IFlowNode
     public ISourceBlock<TInput> Passed => _passed;
     public ISourceBlock<TInput> Failed => _failed;
     public ISourceBlock<FlowLogEntry> Entries => _entries;
+    public ISourceBlock<FlowEvent> Events => _events;
     public ISourceBlock<FlowError> Errors => _errors;
     public Task Completion => _block.Completion;
 
@@ -116,6 +119,7 @@ public sealed class FlowAssertionComponent<TInput> : IFlowNode
         await _result.SendAsync(result).ConfigureAwait(false);
         await (passed ? _passed : _failed).SendAsync(value).ConfigureAwait(false);
         PublishEntry(value, passed);
+        PublishEvent(value, result);
     }
 
     private void CompleteOutputs(Task completion)
@@ -127,6 +131,7 @@ public sealed class FlowAssertionComponent<TInput> : IFlowNode
             ((IDataflowBlock)_failed).Fault(exception);
             _errors.Complete();
             _entries.Complete();
+            _events.Complete();
             return;
         }
 
@@ -135,6 +140,7 @@ public sealed class FlowAssertionComponent<TInput> : IFlowNode
         _failed.Complete();
         _errors.Complete();
         _entries.Complete();
+        _events.Complete();
     }
 
     private void PublishError(int code, string message, Exception exception, string? context = null)
@@ -164,6 +170,28 @@ public sealed class FlowAssertionComponent<TInput> : IFlowNode
             Topic = topic,
             PayloadBytes = payloadBytes,
             Context = $"passed={passed}; inputType={typeof(TInput).Name}; expression={_expression}"
+        });
+    }
+
+    private void PublishEvent(TInput value, FlowAssertionResult result)
+    {
+        var (topic, payloadBytes) = GetLogShape(value);
+        _events.Post(new FlowEvent
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Type = FlowEventTypes.AssertionEvaluated,
+            Source = "FlowAssertion",
+            SourceNodeId = Id,
+            Subject = _assertionName,
+            Status = result.Passed ? "passed" : "failed",
+            Topic = topic,
+            PayloadBytes = payloadBytes,
+            Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["assertionName"] = _assertionName,
+                ["inputType"] = typeof(TInput).Name,
+                ["passed"] = result.Passed.ToString()
+            }
         });
     }
 
