@@ -638,3 +638,23 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verified:
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 99 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -m:1` passes with 327 tests.
+
+## 2026-05-24 - Metrics message-rate slice
+
+- Extended `MqttMetricsSnapshot` with current and average message-rate fields:
+  - total messages in the current rolling window
+  - current messages per second
+  - average messages per second since the metrics component started
+  - per-topic message rates
+- Added `rateWindowSeconds` runtime configuration for `mqtt.metrics`, defaulting to 60 seconds.
+- Metrics rates are based on observer input time, so they measure the stream feeding the metrics component rather than broker-wide monitor traffic.
+- Current snapshots prune the rolling window before reporting, so current rate decays when traffic stops while average rate remains since-start.
+- Updated the metrics node face and activity text to show current and average rates.
+- Restored payload size as a default metrics card and made visible metric cards configurable per node.
+- Added metrics edit settings for input buffer, current-rate rolling window seconds, displayed metric cards, and card column count.
+- The metrics card selector no longer caps selected cards at four; the node grid calculates rows from selected cards and columns.
+- Recorded a future refactor note: separate generic stream metrics from MQTT-specific topic metrics so mapper outputs and future protocol streams can use metrics observers cleanly.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 105 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 101 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -m:1` passes with 331 tests.

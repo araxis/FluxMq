@@ -42,6 +42,82 @@ public sealed class MqttMetricsComponentTests
             new MqttTopicMetric("factory/1", 2),
             new MqttTopicMetric("factory/2", 1)
         ]);
+        current.RollingMessageCount.ShouldBe(3);
+        current.MessagesPerSecond.ShouldBe(0.05);
+        current.AverageMessagesPerSecond.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task Input_TracksRollingMessageRate()
+    {
+        var clock = new ManualTimeProvider(DateTimeOffset.Parse("2026-05-24T10:00:00Z"));
+        var component = new MqttMetricsComponent(
+            rateWindow: TimeSpan.FromSeconds(2),
+            timeProvider: clock);
+
+        await component.Input.SendAsync(Message("factory/1", [1]));
+        await WaitUntilAsync(() => component.Current.MessageCount == 1);
+
+        component.Current.RollingMessageCount.ShouldBe(1);
+        component.Current.MessagesPerSecond.ShouldBe(0.5);
+        component.Current.AverageMessagesPerSecond.ShouldBe(1);
+        component.Current.TopicRates.ShouldBe([new MqttTopicRateMetric("factory/1", 1, 0.5)]);
+
+        clock.Advance(TimeSpan.FromSeconds(1));
+        await component.Input.SendAsync(Message("factory/2", [1]));
+        await WaitUntilAsync(() => component.Current.MessageCount == 2);
+
+        component.Current.RollingMessageCount.ShouldBe(2);
+        component.Current.MessagesPerSecond.ShouldBe(1);
+        component.Current.AverageMessagesPerSecond.ShouldBe(2);
+        component.Current.TopicRates.ShouldBe(
+        [
+            new MqttTopicRateMetric("factory/1", 1, 0.5),
+            new MqttTopicRateMetric("factory/2", 1, 0.5)
+        ]);
+
+        clock.Advance(TimeSpan.FromSeconds(3));
+        component.Current.RollingMessageCount.ShouldBe(0);
+        component.Current.MessagesPerSecond.ShouldBe(0);
+        component.Current.AverageMessagesPerSecond.ShouldBe(0.5);
+
+        await component.Input.SendAsync(Message("factory/2", [1]));
+        await WaitUntilAsync(() => component.Current.MessageCount == 3);
+
+        component.Current.RollingMessageCount.ShouldBe(1);
+        component.Current.MessagesPerSecond.ShouldBe(0.5);
+        component.Current.AverageMessagesPerSecond.ShouldBe(0.75);
+        component.Current.TopicRates.ShouldBe([new MqttTopicRateMetric("factory/2", 1, 0.5)]);
+
+        component.Complete();
+        await component.Completion;
+    }
+
+    [Fact]
+    public async Task Snapshots_EmitsRateDecayWhenTrafficStops()
+    {
+        var clock = new ManualTimeProvider(DateTimeOffset.Parse("2026-05-24T10:00:00Z"));
+        var component = new MqttMetricsComponent(
+            rateWindow: TimeSpan.FromSeconds(1),
+            rateRefreshInterval: TimeSpan.FromMilliseconds(10),
+            timeProvider: clock);
+        var snapshots = new List<MqttMetricsSnapshot>();
+        var sink = new ActionBlock<MqttMetricsSnapshot>(snapshots.Add);
+
+        component.Snapshots.LinkTo(sink, new DataflowLinkOptions { PropagateCompletion = true });
+
+        await component.Input.SendAsync(Message("factory/1", [1]));
+        await WaitUntilAsync(() => snapshots.Any(snapshot => snapshot.RollingMessageCount == 1));
+
+        clock.Advance(TimeSpan.FromSeconds(2));
+        await WaitUntilAsync(() => snapshots.Any(snapshot =>
+            snapshot.MessageCount == 1 &&
+            snapshot.RollingMessageCount == 0 &&
+            snapshot.MessagesPerSecond == 0 &&
+            snapshot.AverageMessagesPerSecond > 0));
+
+        component.Complete();
+        await Task.WhenAll(component.Completion, sink.Completion);
     }
 
     [Fact]
@@ -113,4 +189,28 @@ public sealed class MqttMetricsComponentTests
             ReceivedAt = receivedAt ?? DateTimeOffset.UtcNow,
             Retain = retain
         };
+
+    private static async Task WaitUntilAsync(Func<bool> predicate)
+    {
+        for (var attempt = 0; attempt < 40; attempt++)
+        {
+            if (predicate())
+            {
+                return;
+            }
+
+            await Task.Delay(25);
+        }
+
+        predicate().ShouldBeTrue();
+    }
+
+    private sealed class ManualTimeProvider(DateTimeOffset initialUtcNow) : TimeProvider
+    {
+        private DateTimeOffset _utcNow = initialUtcNow;
+
+        public override DateTimeOffset GetUtcNow() => _utcNow;
+
+        public void Advance(TimeSpan delta) => _utcNow += delta;
+    }
 }

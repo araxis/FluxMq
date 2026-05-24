@@ -1,9 +1,11 @@
 using Shouldly;
 using FluxMq.UI.Components.Diagram;
 using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
+using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
 using FluxMq.UI.Models;
 using FluxMq.UI.Services;
 using Blazor.Diagrams.Core.Models;
+using System.Text.Json.Nodes;
 using DiagramPoint = Blazor.Diagrams.Core.Geometry.Point;
 
 namespace FluxMq.UI.Tests;
@@ -242,5 +244,50 @@ public sealed class FlowDiagramNodeModelTests
         model.NodeType.ShouldBe("mqtt.metrics");
         model.DisplayName.ShouldBe("MQTT Metrics");
         model.PortDescriptors.ShouldContain(port => port.Name == "Input" && port.IsInput);
+    }
+
+    [Fact]
+    public void MqttMetricsNodeModel_BuildsRateConfiguration()
+    {
+        var catalog = new FlowComponentCatalog();
+        var descriptor = catalog.Find("mqtt.metrics").ShouldNotBeNull();
+        var model = new MqttMetricsNodeModel(
+            "workflow1.metrics",
+            new DiagramPoint(10, 20),
+            "metrics",
+            descriptor,
+            isResource: false);
+
+        model.LoadConfiguration(new JsonObject
+        {
+            ["boundedCapacity"] = 250,
+            ["rateWindowSeconds"] = 15,
+            ["metricCardColumns"] = 3,
+            ["displayMetrics"] = new JsonArray(
+                MqttMetricsNodeModel.MetricMessages,
+                MqttMetricsNodeModel.MetricPayloadBytes,
+                MqttMetricsNodeModel.MetricTopics,
+                MqttMetricsNodeModel.MetricCurrentRate,
+                MqttMetricsNodeModel.MetricAverageRate,
+                MqttMetricsNodeModel.MetricRetained,
+                MqttMetricsNodeModel.MetricAveragePayload)
+        });
+
+        var config = model.BuildConfiguration();
+
+        config["boundedCapacity"]!.GetValue<int>().ShouldBe(250);
+        config["rateWindowSeconds"]!.GetValue<double>().ShouldBe(15);
+        config["metricCardColumns"]!.GetValue<int>().ShouldBe(3);
+        config.ContainsKey("metricCardRows").ShouldBeFalse();
+        config["displayMetrics"]!.AsArray().Select(static node => node!.GetValue<string>())
+            .ShouldBe([
+                MqttMetricsNodeModel.MetricMessages,
+                MqttMetricsNodeModel.MetricPayloadBytes,
+                MqttMetricsNodeModel.MetricTopics,
+                MqttMetricsNodeModel.MetricCurrentRate,
+                MqttMetricsNodeModel.MetricAverageRate,
+                MqttMetricsNodeModel.MetricRetained,
+                MqttMetricsNodeModel.MetricAveragePayload
+            ]);
     }
 }
