@@ -3,7 +3,7 @@
 <MudPaper Elevation="0" Outlined="true" Class="pa-2 payload-inspector">
 
     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
-        <MudChip T="string" Size="Size.Small" Color="@FormatColor">@_inspection.ContentTypeLabel</MudChip>
+        <MudChip T="string" Size="Size.Small" Color="@FormatColor">@_inspection.DisplayTypeLabel</MudChip>
         @if (!string.IsNullOrWhiteSpace(Topic))
         {
             <MudText Typo="Typo.caption" Style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:0;flex:1 1 0">@Topic</MudText>
@@ -37,7 +37,7 @@
     else
     {
         <MudStack Spacing="1" Class="mt-1">
-            <MudText Typo="Typo.body2">Type: @_inspection.ContentTypeLabel</MudText>
+            <MudText Typo="Typo.body2">Type: @_inspection.DisplayTypeLabel</MudText>
             <MudText Typo="Typo.body2">Size: @_inspection.SizeBytes bytes</MudText>
             <MudText Typo="Typo.body2">Text payload: @(_inspection.IsText ? "Yes" : "No")</MudText>
         </MudStack>
@@ -57,6 +57,11 @@
     private Color FormatColor => _inspection.Format switch
     {
         PayloadFormat.Json => Color.Success,
+        PayloadFormat.Array => Color.Info,
+        PayloadFormat.String => Color.Default,
+        PayloadFormat.Number => Color.Primary,
+        PayloadFormat.Boolean => Color.Primary,
+        PayloadFormat.Null => Color.Secondary,
         PayloadFormat.Xml => Color.Info,
         PayloadFormat.Base64 => Color.Warning,
         PayloadFormat.Binary => Color.Error,

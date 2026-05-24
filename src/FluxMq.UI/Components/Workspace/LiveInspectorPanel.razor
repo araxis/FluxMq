@@ -336,9 +336,15 @@
         }
     }
 
-    private string PayloadMeta => LooksLikeJson(_publishPayload)
-        ? $"JSON / {Encoding.UTF8.GetByteCount(_publishPayload)} B"
-        : $"{Encoding.UTF8.GetByteCount(_publishPayload)} B";
+    private string PayloadMeta
+    {
+        get
+        {
+            var payload = Encoding.UTF8.GetBytes(_publishPayload);
+            var inspection = PayloadInspector.Inspect(payload);
+            return $"{inspection.DisplayTypeLabel} / {payload.Length} B";
+        }
+    }
 
     protected override void OnInitialized()
     {
@@ -402,12 +408,6 @@
         string.IsNullOrWhiteSpace(_selectedTopic) ||
         string.Equals(topic, _selectedTopic, StringComparison.Ordinal) ||
         topic.StartsWith($"{_selectedTopic}/", StringComparison.Ordinal);
-
-    private static bool LooksLikeJson(string value)
-    {
-        var trimmed = value.TrimStart();
-        return trimmed.StartsWith('{') || trimmed.StartsWith('[');
-    }
 
     private void ClearProjectLogs() => Projects.ActiveProject?.ClearLogs();
 

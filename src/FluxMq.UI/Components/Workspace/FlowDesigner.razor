@@ -466,7 +466,7 @@
         var inspection = Flow.GetPayloadInspection(Flow.ActiveWorkflowName, nodeName);
         return inspection is null
             ? "Waiting for payload"
-            : $"{inspection.Payload.ContentTypeLabel} | {inspection.Payload.SizeBytes} bytes | {ShortTopic(inspection.Envelope.Topic)}";
+            : $"{inspection.Payload.DisplayTypeLabel} | {inspection.Payload.SizeBytes} bytes | {ShortTopic(inspection.Envelope.Topic)}";
     }
 
     private string? PublisherActivity(string nodeName)

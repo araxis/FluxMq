@@ -25,7 +25,7 @@ This is the active implementation plan. Keep it updated after every meaningful d
 ## Current Target
 
 **Phase:** 6 - metrics, assertions, and scenarios
-**Active feature:** `F-031 - Input-driven Payload Inspector Projection`
+**Active feature:** `F-032 - Payload Inspector JSON Value Kind`
 **Status:** In progress
 **Started:** 2026-05-24
 
@@ -47,7 +47,8 @@ Runtime log collection now subscribes to all `FlowLogEntry` output ports by defa
 MQTT trigger subscription QoS is now explicit in the node editor. Short-form subscriptions such as `"#"` default to QoS 1, which keeps the default router expression `qos >= 1` useful during live broker tests while still allowing QoS 0 or QoS 2 per subscription.
 Pipeline MQTT triggers are now treated as configured subscriber blocks: each row owns topic filter, QoS, retained-message delivery, and retain-flag preservation. Broker-wide live monitoring is separate from pipeline design and auto-subscribes each broker monitor to `#,$SYS/#` for topic tree, counts, rates, and payload inspection.
 The metrics slice aligned the UI with the runtime component contract. `mqtt.metrics` observes only its `Input` stream, and the metrics node face now renders snapshots produced by that node's runtime `Snapshots` output rather than broker-wide live monitor messages.
-The current payload inspector slice applies the same rule to `mqtt.payload-inspector`: broker-wide payload inspection stays in the Live Inspector panel, while the diagram node activity must render the latest inspection produced by that node's own runtime `Output` stream.
+The payload inspector projection slice applies the same rule to `mqtt.payload-inspector`: broker-wide payload inspection stays in the Live Inspector panel, while the diagram node activity renders the latest inspection produced by that node's own runtime `Output` stream.
+The current payload type slice improves inspection semantics: MQTT payloads remain bytes, but UTF-8 payloads that decode to common literal values now expose human-facing payload kinds so scalar payloads such as `1`, `true`, `"text"`, `null`, and `[1,2]` are not mislabeled as plain text or JSON objects.
 
 ## Step-by-Step Plan
 
@@ -331,14 +332,18 @@ Done when:
 - Started input-driven payload inspector polish:
   - the workspace collects each runtime Payload Inspector node's `Output` stream by workflow/node key
   - Payload Inspector node activity now renders the node-local inspected message instead of the broker-wide latest message
+- Started payload inspector JSON value-kind polish:
+  - object payloads continue to display as `JSON`
+  - arrays and scalar JSON literals display as `Array`, `Number`, `Boolean`, `String`, or `Null`
+  - Payload inspection results still retain the parsed JSON value kind for runtime/editor use
 
 ## Next Action
 
-Review the input-driven Payload Inspector slice:
+Review the Payload Inspector value-kind slice:
 
 1. Open `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json`.
-2. In a pipeline, place `mqtt.payload-inspector` downstream of a filter or router branch rather than directly after the trigger.
-3. Run the app and publish messages where only some messages pass into that inspector node.
-4. Confirm the Payload Inspector node activity reflects only messages that reached that node.
-5. Confirm the right-side Live Inspector and Topics views still show broker-wide monitoring separately from the inspector node.
+2. Run the app and publish payloads `1`, `true`, `"hello"`, `null`, `{"x":1}`, `[1,2]`, and `plain text`.
+3. Confirm inspector labels show `Number`, `Boolean`, `String`, `Null`, `JSON`, `Array`, and `Text`.
+4. Confirm JSON formatted/raw/hex/meta tabs still behave normally.
+5. Confirm payload inspector node activity and the publish panel payload meta use the same value-kind labels.
 6. After confirmation, commit this slice and open a PR.
