@@ -25,7 +25,7 @@ This is the active implementation plan. Keep it updated after every meaningful d
 ## Current Target
 
 **Phase:** 6 - metrics, assertions, and scenarios
-**Active feature:** `F-032 - Payload Inspector JSON Value Kind`
+**Active feature:** `F-033 - Input-driven Trigger Activity`
 **Status:** In progress
 **Started:** 2026-05-24
 
@@ -49,6 +49,7 @@ Pipeline MQTT triggers are now treated as configured subscriber blocks: each row
 The metrics slice aligned the UI with the runtime component contract. `mqtt.metrics` observes only its `Input` stream, and the metrics node face now renders snapshots produced by that node's runtime `Snapshots` output rather than broker-wide live monitor messages.
 The payload inspector projection slice applies the same rule to `mqtt.payload-inspector`: broker-wide payload inspection stays in the Live Inspector panel, while the diagram node activity renders the latest inspection produced by that node's own runtime `Output` stream.
 The current payload type slice improves inspection semantics: MQTT payloads remain bytes, but UTF-8 payloads that decode to common literal values now expose human-facing payload kinds so scalar payloads such as `1`, `true`, `"text"`, `null`, and `[1,2]` are not mislabeled as plain text or JSON objects.
+The current trigger activity slice applies the same input-driven rule to `mqtt.trigger`: the node card activity should count envelopes emitted by that trigger's configured subscriptions, while broker-wide message counts remain in the Live Inspector panel.
 
 ## Step-by-Step Plan
 

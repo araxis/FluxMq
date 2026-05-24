@@ -446,7 +446,7 @@
         {
             var activity = node.NodeType switch
             {
-                "mqtt.trigger" => $"{Live.State} | {count} messages",
+                "mqtt.trigger" => TriggerActivity(node.NodeName),
                 "session.source" or "replay.source" => Live.SelectedStoredSession is null
                     ? null
                     : $"{count} stored messages",
@@ -459,6 +459,20 @@
 
             node.SetActivity(activity);
         }
+    }
+
+    private string TriggerActivity(string nodeName)
+    {
+        var snapshot = Flow.GetTriggerActivitySnapshot(Flow.ActiveWorkflowName, nodeName);
+        if (snapshot.MessageCount == 0)
+        {
+            return Flow.State == RuntimeWorkspaceState.Running
+                ? "Waiting for subscribed messages"
+                : "0 messages emitted";
+        }
+
+        var noun = snapshot.MessageCount == 1 ? "message" : "messages";
+        return $"{snapshot.MessageCount} {noun} | {ShortTopic(snapshot.LastTopic ?? string.Empty)}";
     }
 
     private string PayloadInspectorActivity(string nodeName)

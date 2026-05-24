@@ -517,6 +517,58 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public async Task RunAsync_CollectsTriggerActivityFromTriggerOutputStream()
+    {
+        var session = new FakeRuntimeMqttSession();
+        await using var service = new FlowWorkspaceService(new FlowDefinitionComposer(), runtimeSessionFactory: _ => session);
+        var receivedAt = DateTimeOffset.Parse("2026-05-24T18:30:00Z");
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "resources": {
+                "local-broker": {
+                  "type": "mqtt.connection",
+                  "configuration": {
+                    "profile": {
+                      "name": "local-broker",
+                      "host": "localhost",
+                      "port": 1883,
+                      "clientId": "test-client"
+                    }
+                  }
+                }
+              },
+              "workflows": {
+                "flow": {
+                  "trigger": {
+                    "type": "mqtt.trigger",
+                    "configuration": {
+                      "connection": "local-broker",
+                      "subscriptions": ["factory/#"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+
+        await service.RunAsync();
+        await session.WriteAsync(new MqttEnvelope { Topic = "other/skip", Payload = [1] });
+        await session.WriteAsync(new MqttEnvelope { Topic = "factory/one", Payload = [1, 2, 3], ReceivedAt = receivedAt });
+        await WaitUntilAsync(() => service.GetTriggerActivitySnapshot("flow", "trigger").MessageCount == 1);
+
+        var snapshot = service.GetTriggerActivitySnapshot("flow", "trigger");
+        snapshot.MessageCount.ShouldBe(1);
+        snapshot.LastTopic.ShouldBe("factory/one");
+        snapshot.LastPayloadBytes.ShouldBe(3);
+        snapshot.LastReceivedAt.ShouldBe(receivedAt);
+        service.TriggerActivitySnapshots.Keys.ShouldContain("flow/trigger");
+    }
+
+    [Fact]
     public void UpdateNodeConfiguration_UpdatesActiveWorkflowWhenNodeNamesRepeat()
     {
         var service = new FlowWorkspaceService(new FlowDefinitionComposer());
@@ -687,6 +739,8 @@ public sealed class FlowWorkspaceServiceTests
             Published.Add(new PublishedMessage(topic, payload, qos, retain));
             return Task.CompletedTask;
         }
+
+        public Task WriteAsync(MqttEnvelope message) => _messages.Writer.WriteAsync(message).AsTask();
 
         public ValueTask DisposeAsync()
         {
