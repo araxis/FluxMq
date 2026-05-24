@@ -1,0 +1,59 @@
+.app-structure {
+    align-items: center;
+    display: inline-flex;
+    gap: 6px;
+    min-width: 0;
+}
+
+.app-structure-app,
+.app-structure-empty {
+    align-items: center;
+    color: var(--mud-palette-text-primary);
+    display: inline-flex;
+    font-size: 12.5px;
+    font-weight: 650;
+    gap: 7px;
+    min-width: 0;
+    padding: 0 4px;
+    white-space: nowrap;
+}
+
+.app-structure-app ::deep .mud-icon-root {
+    color: var(--mud-palette-text-secondary);
+}
+
+.app-structure-menu {
+    min-width: 0;
+}
+
+.app-structure-menu ::deep .mud-button-root {
+    border-radius: 6px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 12px;
+    height: 30px;
+    max-width: 160px;
+    min-width: 0;
+    padding: 0 8px;
+}
+
+.app-structure-menu ::deep .mud-button-root:hover {
+    background: var(--flux-surface-2);
+    color: var(--mud-palette-text-primary);
+}
+
+.app-structure-menu ::deep .mud-button-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-structure-meta {
+    color: var(--mud-palette-text-secondary);
+    font-size: 11.5px;
+    margin-left: 4px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

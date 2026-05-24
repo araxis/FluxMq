@@ -1,0 +1,381 @@
+@implements IDisposable
+@inject ProjectManagerService Projects
+@inject LiveMqttWorkspaceService Live
+@inject IDialogService DialogService
+
+<div class="app-structure">
+    @if (Projects.ActiveProject is not { } active)
+    {
+        <span class="app-structure-empty">
+            <MudIcon Icon="@Icons.Material.Filled.FolderOff" Size="Size.Small" />
+            <span>No app open</span>
+        </span>
+    }
+    else
+    {
+        var conns = GetConnections(active);
+
+        <span class="app-structure-app">
+            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+            <span>@active.Name</span>
+        </span>
+
+        <MudMenu Dense="true"
+                 Label="@($"Connections ({conns.Count})")"
+                 StartIcon="@Icons.Material.Filled.Hub"
+                 EndIcon="@Icons.Material.Filled.ExpandMore"
+                 Size="Size.Small"
+                 Variant="Variant.Text"
+                 Class="app-structure-menu"
+                 PopoverClass="app-structure-popover"
+                 AnchorOrigin="Origin.BottomLeft"
+                 TransformOrigin="Origin.TopLeft">
+            <ChildContent>
+                @if (conns.Count == 0)
+                {
+                    <MudMenuItem Disabled="true" Class="app-menu-muted">No connections</MudMenuItem>
+                }
+                else
+                {
+                    @foreach (var conn in conns)
+                    {
+                        var c = conn;
+                        <MudMenuItem Icon="@BrokerActionIcon(c)"
+                                     Disabled="@BrokerActionDisabled(c)"
+                                     OnClick="@(() => ToggleBrokerAsync(c))"
+                                     Class="@BrokerItemClass(c)">
+                            <div class="app-menu-broker">
+                                <span>@BrokerActionLabel(c)</span>
+                                <span>@c.ResourceName - @c.Profile.Host:@c.Profile.Port</span>
+                            </div>
+                        </MudMenuItem>
+                    }
+                }
+
+                <MudDivider Class="app-menu-divider" />
+                <MudMenuItem Icon="@Icons.Material.Filled.Add"
+                             OnClick="@(() => AddConnectionAsync(active))"
+                             Class="app-menu-child app-menu-add">Add connection</MudMenuItem>
+            </ChildContent>
+        </MudMenu>
+
+        <MudMenu Dense="true"
+                 Label="@($"Pipelines ({active.WorkflowNames.Count})")"
+                 StartIcon="@Icons.Material.Filled.Timeline"
+                 EndIcon="@Icons.Material.Filled.ExpandMore"
+                 Size="Size.Small"
+                 Variant="Variant.Text"
+                 Class="app-structure-menu"
+                 PopoverClass="app-structure-popover"
+                 AnchorOrigin="Origin.BottomLeft"
+                 TransformOrigin="Origin.TopLeft">
+            <ChildContent>
+                @if (active.WorkflowNames.Count == 0)
+                {
+                    <MudMenuItem Disabled="true" Class="app-menu-muted">No pipelines</MudMenuItem>
+                }
+                else
+                {
+                    @foreach (var workflow in active.WorkflowNames)
+                    {
+                        var w = workflow;
+                        <MudMenuItem Icon="@Icons.Material.Filled.Timeline"
+                                     OnClick="@(() => SelectPipeline(active, w))"
+                                     Class="@ArtifactItemClass(active, WorkspaceArtifactKind.Pipeline, w)">
+                            @w
+                        </MudMenuItem>
+                    }
+                }
+
+                <MudDivider Class="app-menu-divider" />
+                <MudMenuItem Icon="@Icons.Material.Filled.Add"
+                             OnClick="@(() => AddPipelineAsync(active))"
+                             Class="app-menu-child app-menu-add">Add pipeline</MudMenuItem>
+            </ChildContent>
+        </MudMenu>
+
+        <MudMenu Dense="true"
+                 Label="@($"Dashboards ({active.DashboardNames.Count})")"
+                 StartIcon="@Icons.Material.Filled.Dashboard"
+                 EndIcon="@Icons.Material.Filled.ExpandMore"
+                 Size="Size.Small"
+                 Variant="Variant.Text"
+                 Class="app-structure-menu"
+                 PopoverClass="app-structure-popover"
+                 AnchorOrigin="Origin.BottomLeft"
+                 TransformOrigin="Origin.TopLeft">
+            <ChildContent>
+                @if (active.DashboardNames.Count == 0)
+                {
+                    <MudMenuItem Disabled="true" Class="app-menu-muted">No dashboards</MudMenuItem>
+                }
+                else
+                {
+                    @foreach (var dashboard in active.DashboardNames)
+                    {
+                        var d = dashboard;
+                        <MudMenuItem Icon="@Icons.Material.Filled.Dashboard"
+                                     OnClick="@(() => SelectDashboard(active, d))"
+                                     Class="@ArtifactItemClass(active, WorkspaceArtifactKind.Dashboard, d)">
+                            @d
+                        </MudMenuItem>
+                    }
+                }
+
+                <MudDivider Class="app-menu-divider" />
+                <MudMenuItem Icon="@Icons.Material.Filled.Add"
+                             OnClick="@(() => AddDashboardAsync(active))"
+                             Class="app-menu-child app-menu-add">Add dashboard</MudMenuItem>
+            </ChildContent>
+        </MudMenu>
+
+        <MudMenu Dense="true"
+                 Label="@($"Tests ({active.TestNames.Count})")"
+                 StartIcon="@Icons.Material.Filled.FactCheck"
+                 EndIcon="@Icons.Material.Filled.ExpandMore"
+                 Size="Size.Small"
+                 Variant="Variant.Text"
+                 Class="app-structure-menu"
+                 PopoverClass="app-structure-popover"
+                 AnchorOrigin="Origin.BottomLeft"
+                 TransformOrigin="Origin.TopLeft">
+            <ChildContent>
+                @if (active.TestNames.Count == 0)
+                {
+                    <MudMenuItem Disabled="true" Class="app-menu-muted">No tests</MudMenuItem>
+                }
+                else
+                {
+                    @foreach (var test in active.TestNames)
+                    {
+                        var t = test;
+                        <MudMenuItem Icon="@Icons.Material.Filled.FactCheck"
+                                     OnClick="@(() => SelectTest(active, t))"
+                                     Class="@ArtifactItemClass(active, WorkspaceArtifactKind.Test, t)">
+                            @t
+                        </MudMenuItem>
+                    }
+                }
+
+                <MudDivider Class="app-menu-divider" />
+                <MudMenuItem Icon="@Icons.Material.Filled.Add"
+                             OnClick="@(() => AddTestAsync(active))"
+                             Class="app-menu-child app-menu-add">Add test</MudMenuItem>
+            </ChildContent>
+        </MudMenu>
+
+        <span class="app-structure-meta">@BuildActiveMeta(active)</span>
+    }
+</div>
+
+@code {
+    private readonly HashSet<FlowWorkspaceService> _subscribed = [];
+
+    protected override void OnInitialized()
+    {
+        Projects.Changed += OnChanged;
+        Live.Changed += OnChanged;
+        SyncSubscriptions();
+    }
+
+    private List<ManagedConnection> GetConnections(FlowWorkspaceService app)
+    {
+        var profiles = app.GetConnectionProfiles();
+        var connectionNames = app.GetConnectionNames();
+        return Live.Connections.Where(c =>
+            profiles.Any(p =>
+                string.Equals(p.Profile.Host, c.Profile.Host, StringComparison.OrdinalIgnoreCase) &&
+                p.Profile.Port == c.Profile.Port) ||
+            connectionNames.Any(name => string.Equals(name, c.ResourceName, StringComparison.Ordinal))).ToList();
+    }
+
+    private static string BuildActiveMeta(FlowWorkspaceService app)
+    {
+        var artifact = app.ActiveArtifactKind switch
+        {
+            WorkspaceArtifactKind.Dashboard => app.ActiveDashboardName,
+            WorkspaceArtifactKind.Test => app.ActiveTestName,
+            _ => app.ActiveWorkflowName
+        };
+
+        var prefix = app.ActiveArtifactKind switch
+        {
+            WorkspaceArtifactKind.Dashboard => "dashboard",
+            WorkspaceArtifactKind.Test => "test",
+            _ => "pipeline"
+        };
+
+        return string.IsNullOrWhiteSpace(artifact)
+            ? BuildAppMeta(app)
+            : $"{prefix}: {artifact}";
+    }
+
+    private static string BuildAppMeta(FlowWorkspaceService app)
+    {
+        var parts = new[]
+        {
+            CountLabel(app.WorkflowNames.Count, "pipeline"),
+            CountLabel(app.DashboardNames.Count, "dashboard"),
+            CountLabel(app.TestNames.Count, "test")
+        };
+
+        return string.Join(" / ", parts);
+    }
+
+    private static string CountLabel(int count, string singular)
+        => count == 1 ? $"1 {singular}" : $"{count} {singular}s";
+
+    private static string BrokerActionIcon(ManagedConnection connection) => connection.State switch
+    {
+        MqttSessionState.Connected => Icons.Material.Filled.Stop,
+        MqttSessionState.Connecting or MqttSessionState.Reconnecting => Icons.Material.Filled.Sync,
+        MqttSessionState.Faulted => Icons.Material.Filled.PlayArrow,
+        _ => Icons.Material.Filled.PlayArrow
+    };
+
+    private static bool BrokerActionDisabled(ManagedConnection connection)
+        => connection.State is MqttSessionState.Connecting or MqttSessionState.Reconnecting;
+
+    private static string BrokerActionLabel(ManagedConnection connection) => connection.State switch
+    {
+        MqttSessionState.Connected => $"Disconnect {connection.ResourceName}",
+        MqttSessionState.Connecting => $"Connecting {connection.ResourceName}",
+        MqttSessionState.Reconnecting => $"Reconnecting {connection.ResourceName}",
+        _ => $"Connect {connection.ResourceName}"
+    };
+
+    private static string BrokerItemClass(ManagedConnection connection) => connection.State switch
+    {
+        MqttSessionState.Connected => "app-menu-child broker-live",
+        MqttSessionState.Faulted => "app-menu-child broker-faulted",
+        MqttSessionState.Connecting or MqttSessionState.Reconnecting => "app-menu-child broker-pending",
+        _ => "app-menu-child"
+    };
+
+    private string ArtifactItemClass(FlowWorkspaceService app, WorkspaceArtifactKind kind, string name)
+    {
+        var active = app == Projects.ActiveProject &&
+                     app.ActiveArtifactKind == kind &&
+                     string.Equals(app.ActiveArtifactName, name, StringComparison.Ordinal);
+
+        return active ? "app-menu-child active-artifact" : "app-menu-child";
+    }
+
+    private async Task ToggleBrokerAsync(ManagedConnection connection)
+    {
+        if (connection.State is MqttSessionState.Connected)
+        {
+            await Live.DisconnectAsync(connection.Id);
+            return;
+        }
+
+        await Live.ConnectAsync(connection.Id);
+    }
+
+    private void SelectPipeline(FlowWorkspaceService app, string name)
+    {
+        Projects.SetActive(app);
+        app.SetActiveWorkflow(name);
+    }
+
+    private void SelectDashboard(FlowWorkspaceService app, string name)
+    {
+        Projects.SetActive(app);
+        app.SetActiveDashboard(name);
+    }
+
+    private void SelectTest(FlowWorkspaceService app, string name)
+    {
+        Projects.SetActive(app);
+        app.SetActiveTest(name);
+    }
+
+    private async Task AddConnectionAsync(FlowWorkspaceService app)
+    {
+        Projects.SetActive(app);
+        var dialog = await DialogService.ShowAsync<AddConnectionDialog>(
+            "New Connection",
+            new DialogOptions { MaxWidth = MaxWidth.Medium });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: AddConnectionDialog.AddConnectionResult r })
+        {
+            var resourceKey = string.IsNullOrWhiteSpace(r.Profile.Name)
+                ? "connection"
+                : r.Profile.Name.Trim().ToLowerInvariant().Replace(' ', '-');
+            app.UpsertConnectionResource(resourceKey, r.Profile);
+            Live.AddConnectionIfAbsent(r.Profile, r.Subscription, resourceKey);
+        }
+    }
+
+    private async Task AddPipelineAsync(FlowWorkspaceService app)
+    {
+        Projects.SetActive(app);
+        var dialog = await DialogService.ShowAsync<NewPipelineDialog>("New Pipeline");
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string name } && !string.IsNullOrWhiteSpace(name))
+        {
+            app.AddWorkflow(name.Trim());
+            app.SetActiveWorkflow(name.Trim());
+        }
+    }
+
+    private async Task AddDashboardAsync(FlowWorkspaceService app)
+    {
+        Projects.SetActive(app);
+        var dialog = await DialogService.ShowAsync<NewPipelineDialog>(
+            "New Dashboard",
+            new DialogParameters
+            {
+                [nameof(NewPipelineDialog.Title)] = "New Dashboard"
+            });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string name } && !string.IsNullOrWhiteSpace(name))
+        {
+            app.AddDashboard(name.Trim());
+        }
+    }
+
+    private async Task AddTestAsync(FlowWorkspaceService app)
+    {
+        Projects.SetActive(app);
+        var dialog = await DialogService.ShowAsync<NewPipelineDialog>(
+            "New Test",
+            new DialogParameters
+            {
+                [nameof(NewPipelineDialog.Title)] = "New Test"
+            });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string name } && !string.IsNullOrWhiteSpace(name))
+        {
+            app.AddTest(name.Trim());
+        }
+    }
+
+    private void SyncSubscriptions()
+    {
+        foreach (var app in Projects.Projects)
+            if (_subscribed.Add(app))
+                app.Changed += OnChanged;
+
+        foreach (var stale in _subscribed.Where(p => !Projects.Projects.Contains(p)).ToList())
+        {
+            stale.Changed -= OnChanged;
+            _subscribed.Remove(stale);
+        }
+    }
+
+    private void OnChanged(object? sender, EventArgs e)
+    {
+        SyncSubscriptions();
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Projects.Changed -= OnChanged;
+        Live.Changed -= OnChanged;
+        foreach (var app in _subscribed)
+            app.Changed -= OnChanged;
+        _subscribed.Clear();
+    }
+}

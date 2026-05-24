@@ -166,20 +166,49 @@
 @code {
     private readonly HashSet<FlowWorkspaceService> _subscribed = [];
     private bool _jsonView;
+    private FlowWorkspaceService? _lastActiveProject;
+    private WorkspaceArtifactKind? _lastActiveArtifactKind;
+    private string? _lastActiveArtifactName;
 
     protected override void OnInitialized()
     {
         Projects.Changed += OnProjectsChanged;
         SyncSubscriptions();
+        SyncActiveArtifactState();
     }
 
     private void OnProjectsChanged(object? sender, EventArgs e)
     {
         SyncSubscriptions();
+        SyncActiveArtifactState();
         InvokeAsync(StateHasChanged);
     }
 
-    private void OnProjectChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
+    private void OnProjectChanged(object? sender, EventArgs e)
+    {
+        SyncActiveArtifactState();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void SyncActiveArtifactState()
+    {
+        var active = Projects.ActiveProject;
+        var kind = active?.ActiveArtifactKind;
+        var name = active?.ActiveArtifactName;
+        var artifactChanged =
+            !ReferenceEquals(active, _lastActiveProject) ||
+            kind != _lastActiveArtifactKind ||
+            !string.Equals(name, _lastActiveArtifactName, StringComparison.Ordinal);
+
+        if (artifactChanged)
+        {
+            _jsonView = false;
+        }
+
+        _lastActiveProject = active;
+        _lastActiveArtifactKind = kind;
+        _lastActiveArtifactName = name;
+    }
 
     private void SyncSubscriptions()
     {

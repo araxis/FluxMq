@@ -23,7 +23,7 @@
         <nav class="flux-breadcrumb" aria-label="Current workspace">
             <span>Workspace</span>
             <span class="flux-breadcrumb-separator">/</span>
-            <span class="flux-breadcrumb-current">@(Projects.ActiveProject?.Name ?? "No app open")</span>
+            <AppStructureMenu />
         </nav>
 
         <div class="flux-toolbar">
@@ -130,17 +130,10 @@
     </header>
 
     <aside class="flux-rail" aria-label="Workspace navigation">
-        <MudTooltip Text="Explorer" Placement="Placement.Right">
-            <button type="button"
-                    class="flux-rail-button @(_railTab == ExplorerRailTab ? "active" : null)"
-                    @onclick="@(() => { _railTab = ExplorerRailTab; _leftOpen = true; })">
-                <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
-            </button>
-        </MudTooltip>
         <MudTooltip Text="Sessions" Placement="Placement.Right">
             <button type="button"
-                    class="flux-rail-button @(_railTab == SessionsRailTab ? "active" : null)"
-                    @onclick="@(() => { _railTab = SessionsRailTab; _leftOpen = true; })">
+                    class="flux-rail-button @(_leftOpen ? "active" : null)"
+                    @onclick="@(() => _leftOpen = true)">
                 <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" />
             </button>
         </MudTooltip>
@@ -158,18 +151,11 @@
             <div class="flux-panel-header">
                 <div>
                     <div class="flux-panel-kicker">FluxMQ</div>
-                    <div class="flux-panel-title">@LeftPanelTitle</div>
+                    <div class="flux-panel-title">Sessions</div>
                 </div>
             </div>
             <div class="flux-panel-body">
-                @if (_railTab == ExplorerRailTab)
-                {
-                    <AppTreePanel />
-                }
-                else
-                {
-                    <SessionPanel />
-                }
+                <SessionPanel />
             </div>
         </aside>
     }
@@ -219,14 +205,10 @@
 }
 
 @code {
-    private const int ExplorerRailTab = 0;
-    private const int SessionsRailTab = 1;
-
-    private bool _leftOpen = true;
+    private bool _leftOpen;
     private bool _rightOpen = true;
     private bool _busy;
     private bool _stopping;
-    private int _railTab;
     private readonly HashSet<FlowWorkspaceService> _subscribedProjects = [];
 
     private readonly MudTheme _theme = new()
@@ -298,13 +280,6 @@
     private string DragPreviewStyle => DragState.ActiveComponentDrag is { } activeDrag
         ? $"left:{activeDrag.ClientX.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}px;top:{activeDrag.ClientY.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}px;"
         : string.Empty;
-
-
-    private string LeftPanelTitle => _railTab switch
-    {
-        SessionsRailTab => "Sessions",
-        _ => "Explorer"
-    };
 
     private string RunStateClass => Live.State switch
     {

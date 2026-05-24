@@ -37,10 +37,13 @@
 .workspace-artifact-tools {
     background: color-mix(in srgb, var(--flux-surface) 82%, transparent);
     border-right: 1px solid var(--flux-border);
+    display: flex;
+    flex-direction: column;
     min-height: 0;
     min-width: 0;
     overflow: auto;
     padding: 8px;
+    position: relative;
 }
 
 .workspace-artifact-region {
