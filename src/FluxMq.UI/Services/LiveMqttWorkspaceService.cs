@@ -12,6 +12,9 @@ namespace FluxMq.UI.Services;
 
 public sealed class LiveMqttWorkspaceService : IAsyncDisposable
 {
+    public const string DefaultBrokerMonitorSubscription = "#,$SYS/#";
+    private static readonly TimeSpan MessageChangeNotificationInterval = TimeSpan.FromMilliseconds(250);
+
     private sealed class ConnectionEntry(ManagedConnection connection)
     {
         public ManagedConnection Connection { get; } = connection;
@@ -31,6 +34,8 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
     private StoredSession? _selectedStoredSession;
     private IReadOnlyList<MqttEnvelope> _selectedSessionMessages = [];
     private long _recordedMessageCount;
+    private int _messageChangeNotificationQueued;
+    private int _disposed;
 
     public LiveMqttWorkspaceService(
         ITopicIndex topicIndex,
@@ -91,14 +96,14 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
 
     public event EventHandler? Changed;
 
-    public void AddConnection(MqttConnectionProfile profile, string subscription = "#", string? resourceName = null)
+    public void AddConnection(MqttConnectionProfile profile, string subscription = DefaultBrokerMonitorSubscription, string? resourceName = null)
     {
         var conn = new ManagedConnection(profile, subscription, resourceName);
         _entries[conn.Id] = new ConnectionEntry(conn);
         NotifyChanged();
     }
 
-    public ManagedConnection AddConnectionIfAbsent(MqttConnectionProfile profile, string subscription = "#", string? resourceName = null)
+    public ManagedConnection AddConnectionIfAbsent(MqttConnectionProfile profile, string subscription = DefaultBrokerMonitorSubscription, string? resourceName = null)
     {
         var normalizedResourceName = NormalizeResourceName(resourceName);
         var existing = _entries.Values.FirstOrDefault(e => ConnectionMatches(e.Connection, profile, normalizedResourceName));
@@ -377,6 +382,11 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        if (Interlocked.Exchange(ref _disposed, 1) == 1)
+        {
+            return;
+        }
+
         _autoStartedConnectionIds.Clear();
         foreach (var entry in _entries.Values)
             await DisconnectEntryAsync(entry, CancellationToken.None).ConfigureAwait(false);
@@ -424,7 +434,7 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
             {
                 RecordMessage(message);
                 await _projection.ApplyAsync(message, cancellationToken).ConfigureAwait(false);
-                NotifyChanged();
+                NotifyMessageChanged();
             }
         }
         catch (OperationCanceledException)
@@ -464,7 +474,44 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         }
     }
 
-    private void NotifyChanged() => Changed?.Invoke(this, EventArgs.Empty);
+    private void NotifyMessageChanged()
+    {
+        if (Volatile.Read(ref _disposed) == 1)
+        {
+            return;
+        }
+
+        if (Interlocked.Exchange(ref _messageChangeNotificationQueued, 1) == 1)
+        {
+            return;
+        }
+
+        _ = NotifyMessageChangedAsync();
+    }
+
+    private async Task NotifyMessageChangedAsync()
+    {
+        try
+        {
+            await Task.Delay(MessageChangeNotificationInterval).ConfigureAwait(false);
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _messageChangeNotificationQueued, 0);
+        }
+
+        NotifyChanged();
+    }
+
+    private void NotifyChanged()
+    {
+        if (Volatile.Read(ref _disposed) == 1)
+        {
+            return;
+        }
+
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
 
     private static string NormalizeProject(string? projectName)
         => string.IsNullOrWhiteSpace(projectName) ? "Default" : projectName.Trim();

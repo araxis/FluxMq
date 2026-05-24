@@ -1,5 +1,6 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
+using FluxMq.Components.Logging;
 using FluxMq.Pipeline.Components;
 using System.Threading.Tasks.Dataflow;
 
@@ -8,6 +9,7 @@ namespace FluxMq.Components.MqttConditionRouter;
 public sealed class MqttConditionRouterComponent : IFlowNode
 {
     private readonly BroadcastBlock<FlowError> _errors;
+    private readonly BroadcastBlock<FlowLogEntry> _entries;
     private readonly TransformManyBlock<MqttEnvelope, RoutedMqttMessage> _block;
     private readonly TransformBlock<RoutedMqttMessage, MqttEnvelope> _whenTrue;
     private readonly TransformBlock<RoutedMqttMessage, MqttEnvelope> _whenFalse;
@@ -21,6 +23,7 @@ public sealed class MqttConditionRouterComponent : IFlowNode
         Id = id ?? FlowNodeId.New();
         _condition = condition ?? throw new ArgumentNullException(nameof(condition));
         _errors = new BroadcastBlock<FlowError>(static error => error);
+        _entries = new BroadcastBlock<FlowLogEntry>(static entry => entry);
         _block = new TransformManyBlock<MqttEnvelope, RoutedMqttMessage>(
             Route,
             new ExecutionDataflowBlockOptions
@@ -37,7 +40,11 @@ public sealed class MqttConditionRouterComponent : IFlowNode
         _block.LinkTo(_whenFalse, propagate, route => !route.Matched);
 
         _block.Completion.ContinueWith(
-            _ => _errors.Complete(),
+            _ =>
+            {
+                _errors.Complete();
+                _entries.Complete();
+            },
             CancellationToken.None,
             TaskContinuationOptions.ExecuteSynchronously,
             TaskScheduler.Default);
@@ -45,6 +52,7 @@ public sealed class MqttConditionRouterComponent : IFlowNode
 
     public FlowNodeId Id { get; }
     public ISourceBlock<FlowError> Errors => _errors;
+    public ISourceBlock<FlowLogEntry> Entries => _entries;
     public Task Completion => Task.WhenAll(_block.Completion, _whenTrue.Completion, _whenFalse.Completion);
     public ITargetBlock<MqttEnvelope> Input => _block;
     public ISourceBlock<MqttEnvelope> WhenTrue => _whenTrue;
@@ -80,6 +88,7 @@ public sealed class MqttConditionRouterComponent : IFlowNode
             yield break;
         }
 
+        PublishRoute(envelope, matched);
         yield return new RoutedMqttMessage(envelope, matched);
     }
 
@@ -99,6 +108,23 @@ public sealed class MqttConditionRouterComponent : IFlowNode
             Message = message,
             Exception = exception,
             Context = context
+        });
+    }
+
+    private void PublishRoute(MqttEnvelope envelope, bool matched)
+    {
+        _entries.Post(new FlowLogEntry
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Severity = FlowLogSeverity.Info,
+            Source = "MqttConditionRouter",
+            Message = matched
+                ? "Routed MQTT message to WhenTrue."
+                : "Routed MQTT message to WhenFalse.",
+            RelatedNodeId = Id,
+            Topic = envelope.Topic,
+            PayloadBytes = envelope.Payload.Length,
+            Context = $"matched={matched}; qos={(int)envelope.QualityOfService}; retain={envelope.Retain}"
         });
     }
 

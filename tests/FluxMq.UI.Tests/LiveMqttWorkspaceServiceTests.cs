@@ -46,6 +46,34 @@ public sealed class LiveMqttWorkspaceServiceTests
     }
 
     [Fact]
+    public async Task AddConnection_UsesBrokerMonitorSubscriptionByDefault()
+    {
+        var createdSessions = new List<FakeMqttSession>();
+        var service = CreateService(profile =>
+        {
+            var session = new FakeMqttSession(profile);
+            createdSessions.Add(session);
+            return session;
+        });
+
+        service.AddConnection(new MqttConnectionProfile
+        {
+            Name = "local-broker",
+            Host = "localhost",
+            Port = 1883,
+            ClientId = "workspace-client"
+        });
+
+        await service.ConnectAsync(service.Connections.ShouldHaveSingleItem().Id);
+
+        createdSessions.ShouldHaveSingleItem().Subscriptions
+            .Select(subscription => subscription.TopicFilter)
+            .ShouldBe(["#", "$SYS/#"], ignoreOrder: true);
+
+        await service.DisposeAsync();
+    }
+
+    [Fact]
     public async Task EnsureConnectionsAsync_DoesNotReconnectAlreadyConnectedBroker()
     {
         var createdSessions = new List<FakeMqttSession>();
@@ -204,6 +232,14 @@ public sealed class LiveMqttWorkspaceServiceTests
         public Task SubscribeAsync(
             string topicFilter,
             MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce,
+            CancellationToken ct = default)
+            => SubscribeAsync(topicFilter, qos, receiveRetainedMessages: true, retainAsPublished: true, ct);
+
+        public Task SubscribeAsync(
+            string topicFilter,
+            MqttQualityOfServiceLevel qos,
+            bool receiveRetainedMessages,
+            bool retainAsPublished = true,
             CancellationToken ct = default)
         {
             if (State != MqttSessionState.Connected)

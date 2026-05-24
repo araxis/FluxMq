@@ -58,7 +58,7 @@
     @if (Node.PortDescriptors.Count > 0)
     {
         <div class="flow-node-port-list">
-            @foreach (var descriptor in Node.PortDescriptors.OrderBy(p => p.IsInput ? 0 : 1).ThenBy(p => p.Name))
+            @foreach (var descriptor in Node.PortDescriptors.OrderBy(PortSortKey).ThenBy(p => p.IsInput ? 0 : 1).ThenBy(p => p.Name))
             {
                 var leftPort = Node.Ports.OfType<FlowPortModel>()
                     .FirstOrDefault(p => p.Alignment == PortAlignment.Left && p.PortName == descriptor.Name);
@@ -76,7 +76,7 @@
                             </PortRenderer>
                         }
                     </div>
-                    <span class="flow-port-name @(descriptor.IsInput ? "flow-port-input" : "flow-port-output")">
+                    <span class="flow-port-name @PortLabelClass(descriptor)">
                         @descriptor.Name
                     </span>
                     <div class="flow-port-side flow-port-side-right">
@@ -141,6 +141,24 @@
 
     private static string PortClass(bool isInput, FlowPortModel port)
         => isInput ? "port-input" : "port-output";
+
+    private static int PortSortKey(ComponentPortDescriptor descriptor)
+        => IsErrorPort(descriptor) ? 1 : 0;
+
+    private static string PortLabelClass(ComponentPortDescriptor descriptor)
+    {
+        if (IsErrorPort(descriptor))
+        {
+            return "flow-port-error";
+        }
+
+        return descriptor.IsInput ? "flow-port-input" : "flow-port-output";
+    }
+
+    private static bool IsErrorPort(ComponentPortDescriptor descriptor)
+        => string.Equals(descriptor.Name, "Errors", StringComparison.OrdinalIgnoreCase) ||
+           string.Equals(descriptor.Name, "FlowErrors", StringComparison.OrdinalIgnoreCase) ||
+           string.Equals(descriptor.ValueType, "FlowError", StringComparison.OrdinalIgnoreCase);
 
     private static string DiagnosticIcon(WorkspaceDiagnostic diagnostic)
         => diagnostic.Severity switch

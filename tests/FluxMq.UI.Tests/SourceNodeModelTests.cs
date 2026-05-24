@@ -1,4 +1,5 @@
 using FluxMq.UI.Components.Workspace.Nodes.Sources;
+using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
 using FluxMq.UI.Services;
 using Shouldly;
 using System.Text.Json.Nodes;
@@ -28,6 +29,58 @@ public sealed class SourceNodeModelTests
         model.Category.ShouldBe("Source");
         model.PortDescriptors.ShouldContain(port => port.Name == "Output" && !port.IsInput);
         model.PortDescriptors.ShouldContain(port => port.Name == "Errors" && !port.IsInput);
+    }
+
+    [Fact]
+    public void MqttTriggerNodeModel_BuildsSubscriptionsWithExplicitQualityOfService()
+    {
+        var catalog = new FlowComponentCatalog();
+        var descriptor = catalog.Find("mqtt.trigger").ShouldNotBeNull();
+        var model = new MqttTriggerNodeModel(
+            "workflow1.trigger",
+            new DiagramPoint(10, 20),
+            "trigger",
+            descriptor,
+            isResource: false)
+        {
+            Connection = "broker",
+            Subscriptions = [new("factory/#", 2, ReceiveRetainedMessages: false, RetainAsPublished: true)],
+            BoundedCapacity = 500
+        };
+
+        var config = model.BuildConfiguration();
+        var subscription = config["subscriptions"]!.AsArray().Single()!.AsObject();
+
+        subscription["topicFilter"]!.GetValue<string>().ShouldBe("factory/#");
+        subscription["qos"]!.GetValue<int>().ShouldBe(2);
+        subscription["receiveRetained"]!.GetValue<bool>().ShouldBeFalse();
+        subscription["retainAsPublished"]!.GetValue<bool>().ShouldBeTrue();
+        config["connection"]!.GetValue<string>().ShouldBe("broker");
+        config["boundedCapacity"]!.GetValue<int>().ShouldBe(500);
+    }
+
+    [Fact]
+    public void MqttTriggerNodeModel_ReadsShortSubscriptionsWithRouterFriendlyQualityOfService()
+    {
+        var catalog = new FlowComponentCatalog();
+        var descriptor = catalog.Find("mqtt.trigger").ShouldNotBeNull();
+        var model = new MqttTriggerNodeModel(
+            "workflow1.trigger",
+            new DiagramPoint(10, 20),
+            "trigger",
+            descriptor,
+            isResource: false);
+
+        model.LoadConfiguration(new JsonObject
+        {
+            ["subscriptions"] = new JsonArray("factory/#")
+        });
+
+        var subscription = model.Subscriptions.ShouldHaveSingleItem();
+        subscription.TopicFilter.ShouldBe("factory/#");
+        subscription.QualityOfService.ShouldBe(1);
+        subscription.ReceiveRetainedMessages.ShouldBeTrue();
+        subscription.RetainAsPublished.ShouldBeTrue();
     }
 
     [Fact]

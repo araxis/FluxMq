@@ -52,6 +52,23 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void ComponentCatalog_ExposesRouteableDecisionPorts()
+    {
+        var catalog = new FlowComponentCatalog();
+
+        var router = catalog.Find("mqtt.condition-router").ShouldNotBeNull();
+        router.Ports.ShouldContain(port => port.Name == "WhenTrue" && port.ValueType == "MqttEnvelope" && !port.IsInput);
+        router.Ports.ShouldContain(port => port.Name == "WhenFalse" && port.ValueType == "MqttEnvelope" && !port.IsInput);
+        router.Ports.ShouldContain(port => port.Name == "Entries" && port.ValueType == "FlowLogEntry" && !port.IsInput);
+
+        var validator = catalog.Find("json.schema-validator").ShouldNotBeNull();
+        validator.Ports.ShouldContain(port => port.Name == "Result" && port.ValueType == "JsonSchemaValidationResult" && !port.IsInput);
+        validator.Ports.ShouldContain(port => port.Name == "Valid" && port.ValueType == "MqttEnvelope" && !port.IsInput);
+        validator.Ports.ShouldContain(port => port.Name == "Invalid" && port.ValueType == "MqttEnvelope" && !port.IsInput);
+        validator.Ports.Last().Name.ShouldBe("Errors");
+    }
+
+    [Fact]
     public void ComponentCatalog_ResolvesMetricsSinkAlias()
     {
         var catalog = new FlowComponentCatalog();
@@ -148,14 +165,56 @@ public sealed class FlowDefinitionComposerTests
             .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
             .GetProperty(FlowDefinitionComposer.TriggerNodeName);
 
-        trigger.GetProperty("configuration").GetProperty("subscriptions")[0].GetString()
+        var subscription = trigger.GetProperty("configuration").GetProperty("subscriptions")[0];
+        subscription.GetProperty("topicFilter").GetString()
             .ShouldBe("devices/#");
+        subscription.GetProperty("qos").GetInt32().ShouldBe(1);
+        subscription.GetProperty("receiveRetained").GetBoolean().ShouldBeTrue();
+        subscription.GetProperty("retainAsPublished").GetBoolean().ShouldBeTrue();
 
         flowApplication
             .GetProperty("workflows")
             .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
             .TryGetProperty(FlowDefinitionComposer.InspectorNodeName, out _)
             .ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ReadConnectionResources_UsesBrokerMonitorSubscriptionInsteadOfTriggerSubscription()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = """
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "resources": {
+                "broker1": {
+                  "type": "mqtt.connection",
+                  "configuration": {
+                    "profile": { "name": "broker1", "host": "localhost", "port": 1883 }
+                  }
+                }
+              },
+              "workflows": {
+                "pipe": {
+                  "trigger": {
+                    "type": "mqtt.trigger",
+                    "configuration": {
+                      "connection": "broker1",
+                      "subscriptions": [{ "topicFilter": "factory/#", "qos": 2 }]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """;
+
+        var connection = composer.ReadConnectionResourcesFromDefinition(json).ShouldHaveSingleItem();
+
+        connection.Name.ShouldBe("broker1");
+        connection.Subscription.ShouldBe(LiveMqttWorkspaceService.DefaultBrokerMonitorSubscription);
     }
 
     [Fact]
@@ -287,6 +346,34 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void AddComponent_CreatesUniqueNamesForRepeatedActors()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var withFirstPublisher = composer.AddComponent(initial, "mqtt.publisher");
+        var updated = composer.AddComponent(withFirstPublisher, "mqtt.publisher");
+
+        using var document = JsonDocument.Parse(updated);
+        var workflow = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName);
+
+        workflow.GetProperty(FlowDefinitionComposer.PublisherNodeName)
+            .GetProperty("type")
+            .GetString()
+            .ShouldBe("mqtt.publisher");
+        workflow.GetProperty($"{FlowDefinitionComposer.PublisherNodeName}2")
+            .GetProperty("type")
+            .GetString()
+            .ShouldBe("mqtt.publisher");
+    }
+
+    [Fact]
     public void AddComponent_WiresFlowLoggerToSourceAndAddsConfiguration()
     {
         var composer = new FlowDefinitionComposer();
@@ -333,6 +420,37 @@ public sealed class FlowDefinitionComposerTests
             .GetProperty(FlowDefinitionComposer.LoggerNodeName);
 
         logger.TryGetProperty("FlowErrors", out _).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void AddComponent_ConditionRouterCreatesDefaultExpressionAndBuildableDefinition()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var updated = composer.AddComponent(initial, "mqtt.condition-router");
+
+        using var document = JsonDocument.Parse(updated);
+        var router = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty(FlowDefinitionComposer.RouterNodeName);
+
+        router.GetProperty("configuration").GetProperty("expression").GetString().ShouldBe("qos >= 1");
+
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(updated));
+        var configuration = new ConfigurationBuilder()
+            .AddJsonStream(stream)
+            .Build();
+
+        using var host = FlowApplicationHost.CreateDefault(configuration);
+        var result = host.Build();
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.RuntimeBuild?.Errors.Select(error => error.Message) ?? []));
     }
 
     [Fact]

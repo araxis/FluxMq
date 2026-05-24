@@ -2,6 +2,7 @@
 @using FluxMq.Core.Models
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
 @inject LiveMqttWorkspaceService Live
+@inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.Bolt"
@@ -13,14 +14,14 @@
             <Stat Icon="@Icons.Material.Filled.Cable" Label="Broker" Value="@(Model.Connection.Length > 0 ? Model.Connection : "—")" />
         </MudStack>
         <div class="flow-node-filters mt-1 d-flex flex-wrap gap-1">
-            @foreach (var filter in Model.Subscriptions)
+            @foreach (var subscription in Model.Subscriptions)
             {
                 <MudChip T="string"
                          Size="Size.Small"
                          Variant="Variant.Filled"
-                         Color="@(filter.StartsWith('$') ? Color.Warning : Color.Primary)"
+                         Color="@(subscription.TopicFilter.StartsWith('$') ? Color.Warning : Color.Primary)"
                          Icon="@Icons.Material.Filled.Topic">
-                    @filter
+                    @subscription.TopicFilter · QoS @subscription.QualityOfService
                 </MudChip>
             }
         </div>
@@ -49,26 +50,53 @@
                           HelperText="Add a broker connection in the left panel to enable the dropdown." />
         }
         <MudText Typo="Typo.caption" Color="Color.Secondary">Subscriptions</MudText>
-        @for (var i = 0; i < _draftFilters.Count; i++)
+        @for (var i = 0; i < _draftSubscriptions.Count; i++)
         {
             var index = i;
             <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
                 <MudTextField T="string"
-                              Value="@_draftFilters[index]"
-                              ValueChanged="@(v => _draftFilters[index] = v ?? string.Empty)"
+                              Value="@_draftSubscriptions[index].TopicFilter"
+                              ValueChanged="@(v => _draftSubscriptions[index] = _draftSubscriptions[index] with { TopicFilter = v ?? string.Empty })"
                               Placeholder="topic/#"
                               Variant="Variant.Outlined"
                               Margin="Margin.Dense"
                               Class="flex-grow-1" />
+                <MudSelect T="int"
+                           Value="@_draftSubscriptions[index].QualityOfService"
+                           ValueChanged="@(value => _draftSubscriptions[index] = _draftSubscriptions[index] with { QualityOfService = value })"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Dense="true"
+                           Class="trigger-qos-select"
+                           Style="width: 112px; min-width: 112px;"
+                           Label="QoS">
+                    <MudSelectItem Value="0">QoS 0</MudSelectItem>
+                    <MudSelectItem Value="1">QoS 1</MudSelectItem>
+                    <MudSelectItem Value="2">QoS 2</MudSelectItem>
+                </MudSelect>
+                <MudTooltip Text="Ask the broker to send retained messages when this subscription starts.">
+                    <MudCheckBox T="bool"
+                                 Value="@_draftSubscriptions[index].ReceiveRetainedMessages"
+                                 ValueChanged="@(value => _draftSubscriptions[index] = _draftSubscriptions[index] with { ReceiveRetainedMessages = value })"
+                                 Dense="true"
+                                 Label="Receive retained" />
+                </MudTooltip>
+                <MudTooltip Text="Keep the original MQTT retain flag on messages delivered to the pipeline.">
+                    <MudCheckBox T="bool"
+                                 Value="@_draftSubscriptions[index].RetainAsPublished"
+                                 ValueChanged="@(value => _draftSubscriptions[index] = _draftSubscriptions[index] with { RetainAsPublished = value })"
+                                 Dense="true"
+                                 Label="Keep retain flag" />
+                </MudTooltip>
                 <MudIconButton Size="Size.Small"
                                Icon="@Icons.Material.Filled.Close"
-                               OnClick="@(() => _draftFilters.RemoveAt(index))" />
+                               OnClick="@(() => RemoveRowAsync(index))" />
             </MudStack>
         }
         <MudButton Size="Size.Small"
                    Variant="Variant.Outlined"
                    StartIcon="@Icons.Material.Filled.Add"
-                   OnClick="@AddRow">Add filter</MudButton>
+                   OnClick="@AddRow">Add subscription</MudButton>
     </Editor>
 </NodeWidgetShell>
 
@@ -78,7 +106,8 @@
     private MqttTriggerNodeModel Model => (MqttTriggerNodeModel)Node;
 
     private string _connection = string.Empty;
-    private readonly List<string> _draftFilters = [];
+    private readonly List<MqttTriggerSubscriptionDraft> _draftSubscriptions = [];
+    private MqttTriggerNodeModel? _loadedModel;
 
     private IReadOnlyList<BrokerOption> BrokerOptions
     {
@@ -118,28 +147,56 @@
         }
     }
 
-    protected override void OnParametersSet() => LoadDraft();
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(_loadedModel, Model))
+        {
+            return;
+        }
+
+        LoadDraft();
+    }
 
     private void LoadDraft()
     {
+        _loadedModel = Model;
         _connection = Model.Connection;
-        _draftFilters.Clear();
-        _draftFilters.AddRange(Model.Subscriptions);
-        if (_draftFilters.Count == 0) _draftFilters.Add("#");
+        _draftSubscriptions.Clear();
+        _draftSubscriptions.AddRange(Model.Subscriptions);
+        if (_draftSubscriptions.Count == 0) _draftSubscriptions.Add(new("#", MqttTriggerNodeModel.DefaultSubscriptionQos));
     }
 
-    private void AddRow() => _draftFilters.Add(string.Empty);
+    private async Task AddRow()
+    {
+        _draftSubscriptions.Add(new(string.Empty, MqttTriggerNodeModel.DefaultSubscriptionQos));
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task RemoveRowAsync(int index)
+    {
+        if (index < 0 || index >= _draftSubscriptions.Count)
+        {
+            return;
+        }
+
+        _draftSubscriptions.RemoveAt(index);
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
 
     private Task SaveAsync()
     {
-        var trimmed = _draftFilters
-            .Select(f => f?.Trim() ?? string.Empty)
-            .Where(f => f.Length > 0)
-            .ToArray();
-        if (trimmed.Length == 0) trimmed = ["#"];
+        var subscriptions = _draftSubscriptions
+            .Select(subscription => new MqttTriggerSubscriptionDraft(
+                subscription.TopicFilter?.Trim() ?? string.Empty,
+                MqttTriggerNodeModel.NormalizeQualityOfService(subscription.QualityOfService),
+                subscription.ReceiveRetainedMessages,
+                subscription.RetainAsPublished))
+            .Where(subscription => subscription.TopicFilter.Length > 0)
+            .ToList();
+        if (subscriptions.Count == 0) subscriptions.Add(new("#", MqttTriggerNodeModel.DefaultSubscriptionQos));
 
         Model.Connection = _connection;
-        Model.Subscriptions = trimmed;
+        Model.Subscriptions = subscriptions;
 
         var isExistingAppResource = Flow.GetConnectionNames()
             .Any(name => string.Equals(name, _connection, StringComparison.Ordinal));

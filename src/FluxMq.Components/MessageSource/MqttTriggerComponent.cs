@@ -90,7 +90,12 @@ public sealed class MqttTriggerComponent : IFlowNode, IAsyncDisposable
         {
             foreach (var subscription in _subscriptions)
             {
-                await _session.SubscribeAsync(subscription.TopicFilter, subscription.QualityOfService, ct).ConfigureAwait(false);
+                await _session.SubscribeAsync(
+                    subscription.TopicFilter,
+                    subscription.QualityOfService,
+                    subscription.ReceiveRetainedMessages,
+                    subscription.RetainAsPublished,
+                    ct).ConfigureAwait(false);
             }
 
             var pump = new ActionBlock<MqttEnvelope>(async envelope =>

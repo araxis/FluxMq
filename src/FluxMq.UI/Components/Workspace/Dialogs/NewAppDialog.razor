@@ -54,11 +54,11 @@
                                      Style="width:90px;" />
                 </MudStack>
                 <MudTextField T="string"
-                              Label="Subscription(s)"
+                              Label="Initial trigger topic(s)"
                               @bind-Value="_subscription"
                               Variant="Variant.Outlined"
                               Margin="Margin.Dense"
-                              HelperText="Separate multiple topics with commas"
+                              HelperText="Creates the first MQTT Trigger subscriber. Add QoS/retained options in the trigger editor."
                               OnKeyDown="@OnKeyDown" />
                 <MudStack Row="true" Spacing="2">
                     <MudTextField T="string"

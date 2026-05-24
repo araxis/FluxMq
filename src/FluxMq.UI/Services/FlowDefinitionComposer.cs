@@ -1,5 +1,6 @@
 using FluxMq.Core.Models;
 using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
+using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
 using FluxMq.UI.Components.Workspace.Nodes.Sources;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -387,7 +388,7 @@ public sealed class FlowDefinitionComposer
         var workflows = GetOrCreateObject(flowApplication, "workflows");
         var workflow = GetOrCreateObject(workflows, targetWorkflowName ?? DefaultWorkflowName);
 
-        var nodeName = componentType switch
+        var preferredNodeName = componentType switch
         {
             "mqtt.payload-inspector" => InspectorNodeName,
             "mqtt.metrics" => MetricsNodeName,
@@ -408,6 +409,7 @@ public sealed class FlowDefinitionComposer
             "session.source" => StoredSourceNodeName,
             _ => MakeNodeName(componentType)
         };
+        var nodeName = MakeUniqueNodeName(workflow, preferredNodeName);
 
         var node = new JsonObject
         {
@@ -421,6 +423,10 @@ public sealed class FlowDefinitionComposer
         else if (componentType == "json.schema-validator")
         {
             node["configuration"] = CreateJsonSchemaValidatorConfiguration();
+        }
+        else if (componentType == "mqtt.condition-router")
+        {
+            node["configuration"] = CreateConditionRouterConfiguration();
         }
         else if (componentType == "mqtt.publisher")
         {
@@ -508,7 +514,7 @@ public sealed class FlowDefinitionComposer
     /// <summary>
     /// Reads all connection profiles from a definition.
     /// Covers two storage shapes:
-    ///   1. <c>resources[name].type == "mqtt.connection"</c> with subscription from the first <c>mqtt.trigger</c> that references it.
+    ///   1. <c>resources[name].type == "mqtt.connection"</c> with the workspace monitor subscription.
     ///   2. Future workflow nodes that embed broker profile objects directly.
     /// </summary>
     public IReadOnlyList<(MqttConnectionProfile Profile, string Subscription)> ReadConnectionsFromDefinition(string json)
@@ -535,8 +541,6 @@ public sealed class FlowDefinitionComposer
             }
 
             var resourceProfiles = new Dictionary<string, MqttConnectionProfile>(StringComparer.Ordinal);
-            var triggerSubscriptions = new Dictionary<string, string>(StringComparer.Ordinal);
-
             if (flowApp.TryGetProperty("resources", out var resources) &&
                 resources.ValueKind == JsonValueKind.Object)
             {
@@ -551,31 +555,8 @@ public sealed class FlowDefinitionComposer
                 }
             }
 
-            if (flowApp.TryGetProperty("workflows", out var workflows) &&
-                workflows.ValueKind == JsonValueKind.Object)
-            {
-                foreach (var workflow in workflows.EnumerateObject())
-                {
-                    if (workflow.Value.ValueKind != JsonValueKind.Object) continue;
-                    foreach (var node in workflow.Value.EnumerateObject())
-                    {
-                        if (!node.Value.TryGetProperty("type", out var nodeType)) continue;
-                        var typeStr = nodeType.GetString();
-                        if (!node.Value.TryGetProperty("configuration", out var conf)) continue;
-
-                        if (typeStr == "mqtt.trigger")
-                        {
-                            if (!conf.TryGetProperty("connection", out var connRef) ||
-                                connRef.GetString() is not { Length: > 0 } connName) continue;
-                            if (!triggerSubscriptions.ContainsKey(connName))
-                                triggerSubscriptions[connName] = ReadSubscriptionString(conf);
-                        }
-                    }
-                }
-            }
-
             foreach (var (name, profile) in resourceProfiles)
-                result.Add((name, profile, triggerSubscriptions.TryGetValue(name, out var sub) ? sub : "#"));
+                result.Add((name, profile, LiveMqttWorkspaceService.DefaultBrokerMonitorSubscription));
         }
         catch { }
 
@@ -592,42 +573,6 @@ public sealed class FlowDefinitionComposer
         KeepAlive = TimeSpan.FromSeconds(profileEl.TryGetProperty("keepAliveSeconds", out var ka) ? ka.GetInt32() : 60),
         CleanStart = !profileEl.TryGetProperty("cleanStart", out var cs) || cs.GetBoolean()
     };
-
-    private static string ReadSubscriptionString(JsonElement conf)
-    {
-        if (!conf.TryGetProperty("subscriptions", out var subs))
-        {
-            return "#";
-        }
-
-        if (subs.ValueKind == JsonValueKind.String)
-        {
-            return subs.GetString() is { Length: > 0 } single ? single : "#";
-        }
-
-        if (subs.ValueKind != JsonValueKind.Array)
-        {
-            return "#";
-        }
-
-        var parts = new List<string>();
-        foreach (var s in subs.EnumerateArray())
-        {
-            if (s.ValueKind == JsonValueKind.String && s.GetString() is { Length: > 0 } str)
-            {
-                parts.Add(str);
-            }
-            else if (s.ValueKind == JsonValueKind.Object &&
-                     s.TryGetProperty("topicFilter", out var topic) &&
-                     topic.ValueKind == JsonValueKind.String &&
-                     topic.GetString() is { Length: > 0 } topicFilter)
-            {
-                parts.Add(topicFilter);
-            }
-        }
-
-        return parts.Count > 0 ? string.Join(", ", parts) : "#";
-    }
 
     /// <summary>
     /// Returns the JSON with the <c>FluxMq.Designer</c> section removed so that
@@ -722,7 +667,13 @@ public sealed class FlowDefinitionComposer
             ["configuration"] = new JsonObject
             {
                 ["connection"] = connectionRef,
-                ["subscriptions"] = new JsonArray(string.IsNullOrWhiteSpace(subscription) ? "#" : subscription),
+                ["subscriptions"] = new JsonArray(new JsonObject
+                {
+                    ["topicFilter"] = string.IsNullOrWhiteSpace(subscription) ? "#" : subscription,
+                    ["qos"] = MqttTriggerNodeModel.DefaultSubscriptionQos,
+                    ["receiveRetained"] = true,
+                    ["retainAsPublished"] = true
+                }),
                 ["boundedCapacity"] = 1000
             }
         };
@@ -1069,6 +1020,13 @@ public sealed class FlowDefinitionComposer
               "type": "object"
             }
             """
+        };
+
+    private static JsonObject CreateConditionRouterConfiguration()
+        => new()
+        {
+            ["expression"] = "qos >= 1",
+            ["boundedCapacity"] = 1000
         };
 
     private static JsonObject CreateMqttPublisherConfiguration(string? connectionName = null)

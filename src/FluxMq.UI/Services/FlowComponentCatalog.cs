@@ -127,17 +127,20 @@ public sealed class FlowComponentCatalog
                 new("Input", "MqttEnvelope", IsInput: true),
                 new("WhenTrue", "MqttEnvelope", IsInput: false),
                 new("WhenFalse", "MqttEnvelope", IsInput: false),
+                new("Entries", "FlowLogEntry", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
             "json.schema-validator",
             "JSON Schema Validator",
             "Validator",
-            "Validates MQTT payload JSON against a configured JSON Schema.",
+            "Validates MQTT payload JSON and splits valid/invalid envelopes into routeable branches.",
             IsResource: false,
             [
                 new("Input", "MqttEnvelope", IsInput: true),
-                new("Output", "JsonSchemaValidationResult", IsInput: false),
+                new("Result", "JsonSchemaValidationResult", IsInput: false),
+                new("Valid", "MqttEnvelope", IsInput: false),
+                new("Invalid", "MqttEnvelope", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
@@ -182,6 +185,7 @@ public sealed class FlowComponentCatalog
             IsResource: false,
             [
                 new("Input", "MqttPublishRequest", IsInput: true),
+                new("Entries", "FlowLogEntry", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(

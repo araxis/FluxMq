@@ -12,7 +12,10 @@ public sealed class ManagedConnection
     public MqttSessionState State { get; internal set; } = MqttSessionState.Disconnected;
     public string? LastError { get; internal set; }
 
-    public ManagedConnection(MqttConnectionProfile profile, string subscription = "#", string? resourceName = null)
+    public ManagedConnection(
+        MqttConnectionProfile profile,
+        string subscription = LiveMqttWorkspaceService.DefaultBrokerMonitorSubscription,
+        string? resourceName = null)
     {
         ResourceName = string.IsNullOrWhiteSpace(resourceName)
             ? DeriveResourceName(profile)

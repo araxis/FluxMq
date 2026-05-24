@@ -141,6 +141,7 @@ public sealed class MqttPublisherComponentTests
         public Task ConnectAsync(CancellationToken ct = default) => Task.CompletedTask;
         public Task DisconnectAsync(CancellationToken ct = default) => Task.CompletedTask;
         public Task SubscribeAsync(string topicFilter, MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce, CancellationToken ct = default) => Task.CompletedTask;
+        public Task SubscribeAsync(string topicFilter, MqttQualityOfServiceLevel qos, bool receiveRetainedMessages, bool retainAsPublished = true, CancellationToken ct = default) => Task.CompletedTask;
         public Task UnsubscribeAsync(string topicFilter, CancellationToken ct = default) => Task.CompletedTask;
 
         public Task PublishAsync(

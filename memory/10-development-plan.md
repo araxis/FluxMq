@@ -25,9 +25,9 @@ This is the active implementation plan. Keep it updated after every meaningful d
 ## Current Target
 
 **Phase:** 5 - desktop workspace authoring polish
-**Active feature:** `F-021 - Visual Flow Diagram`
-**Status:** Review
-**Started:** 2026-05-23
+**Active feature:** `F-011/F-014 - Routeable Decisions`
+**Status:** In progress
+**Started:** 2026-05-24
 
 The mapper workbench now follows a JSONata Exerciser-like shape: Monaco JSON input on the left, Monaco mapper expression in the middle, and live JSON result on the right. MQTT envelope samples use `{ topic, qos, retain, receivedAt, payload }`; arbitrary JSON input is treated as payload for quick experimentation. Mapper output configuration now separates the runtime target type from the result contract: `typed`, `any`, or `json-schema-file`. `json.schema-validator` exists as a standalone runtime/UI component backed by JsonSchema.Net, so schema validation is a reusable runtime capability rather than mapper-only UI behavior.
 
@@ -41,6 +41,11 @@ The current visual-link slice makes the diagram a real editor for workflow links
 Deleting a workflow node from the designer now removes it from the active workflow JSON and cleans downstream references to that node, so deleted components do not return after the next add/rebuild action.
 MQTT Publisher now emits successful publish log entries to the workspace `Logs` tab by default and updates node activity with published count plus the last topic. This keeps actor execution observable without wiring every actor to an explicit logger block.
 Runtime linking now drains unconnected non-diagnostic outputs automatically, so observer/mapper/result outputs left unwired do not block runtime completion or cause Stop to time out. Diagnostic `FlowError` outputs stay available for the workspace `Logs` tab.
+The current routeable-decision slice makes decision nodes executable and branchable: `mqtt.condition-router` is registered in the runtime, and `json.schema-validator` exposes `Result`, `Valid`, and `Invalid` outputs so validation details and envelope branches are distinct.
+Runtime `OutputPort<T>` now enforces the first-class broadcast contract for every component output. Component internals may use buffers, transforms, or action blocks, but every runtime-facing output is presented as a broadcast stream, so one output wired to multiple inputs delivers the same message to each target.
+Runtime log collection now subscribes to all `FlowLogEntry` output ports by default, not just hand-picked logger/publisher components. `mqtt.condition-router` emits route entries for `WhenTrue` and `WhenFalse`, so a false branch with no downstream wire is still visible in the workspace Logs tab while testing.
+MQTT trigger subscription QoS is now explicit in the node editor. Short-form subscriptions such as `"#"` default to QoS 1, which keeps the default router expression `qos >= 1` useful during live broker tests while still allowing QoS 0 or QoS 2 per subscription.
+Pipeline MQTT triggers are now treated as configured subscriber blocks: each row owns topic filter, QoS, retained-message delivery, and retain-flag preservation. Broker-wide live monitoring is separate from pipeline design and auto-subscribes each broker monitor to `#,$SYS/#` for topic tree, counts, rates, and payload inspection.
 
 ## Step-by-Step Plan
 
@@ -147,7 +152,7 @@ Tasks:
   - fail-open/fail-closed behavior where useful
 - Add typed ports:
   - `Input: MqttEnvelope`
-  - `Output: JsonSchemaValidationResult`
+  - `Result: JsonSchemaValidationResult`
   - optional pass/fail envelope ports later if needed
   - `Errors: FlowError`
 - Harden Jsonata mapping:
@@ -301,14 +306,32 @@ Done when:
   - unlinked transform/source outputs are connected to a discard target during runtime build
   - diagnostic `FlowError` outputs are not drained, preserving default workspace log collection
   - regression coverage proves both the generic runtime shape and an unlinked Payload Inspector output complete cleanly
+- Started routeable decision outputs:
+  - registered `mqtt.condition-router` in the runtime factory registry
+  - condition router nodes now get a default `qos >= 1` expression when added from the designer
+  - `json.schema-validator` now emits `Result: JsonSchemaValidationResult`, `Valid: MqttEnvelope`, and `Invalid: MqttEnvelope`
+  - UI catalog/designer ports expose those routeable branches for visual linking
+  - repeated actor additions now use unique node names such as `publisher2` instead of replacing the existing actor
+  - error ports are styled separately and ordered after normal input/output ports in node widgets
+- Hardened routeable runtime semantics:
+  - every runtime `OutputPort<T>` wraps its component source with a broadcast stream as a first-class port contract
+  - one source output linked to inspector, metrics, router, and validator now reaches all targets instead of behaving like competing consumers
+  - workspace runtime log collection attaches to any `FlowLogEntry` output port automatically
+  - `mqtt.condition-router` now emits route log entries for true and false decisions
+  - MQTT trigger subscriptions now expose QoS in the editor and short-form subscriptions default to QoS 1
+  - MQTT trigger subscription rows now include retained-message delivery and retain-flag preservation settings
+  - broker live monitoring no longer derives its topic filters from pipeline triggers; it uses its own `#,$SYS/#` monitor subscription per broker
 
 ## Next Action
 
-Review the unconnected-output stop slice:
+Review the routeable decision slice:
 
 1. Open `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json`.
-2. Use a pipeline where `trigger.Output` feeds `inspect.Input` and `inspect.Output` is not connected to another node.
-3. Run the app, publish one message into the trigger topic, then click `Stop`.
-4. Confirm Stop completes without the warning `Flow application stop timed out; runtime was disposed.`
-5. Confirm the `Logs` tab still receives validation/runtime/publisher/error entries as before.
-6. After confirmation, commit this slice and open a PR. Next slice can move to pass/fail routing or clearer rejected-link feedback.
+2. In `pip1`, keep `trigger.Output` linked to `inspect`, `metrics`, `jsonSchemaValidator`, and `router`.
+3. Open the trigger editor and confirm each subscriber row has topic filter, QoS, Retained, and Flag controls. Existing short-form rows should show QoS 1.
+4. Run the app and publish one message with QoS 0. Confirm the Logs tab shows the router sent it to `WhenFalse`.
+5. Publish one message with QoS 1. Confirm the Logs tab shows the router sent it to `WhenTrue`, and the downstream mapper/publisher path runs.
+6. Confirm the broker-wide Topics tab still tracks broker traffic even if the trigger subscriber topic is narrowed to something other than `#`.
+7. Confirm repeated publisher additions still create unique nodes such as `publisher2`.
+8. Confirm the JSON Schema Validator shows `Result`, `Valid`, and `Invalid` outputs, with `Errors` last.
+9. After confirmation, commit this slice and open a PR.
