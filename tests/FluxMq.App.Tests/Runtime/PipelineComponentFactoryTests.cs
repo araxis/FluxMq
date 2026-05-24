@@ -41,6 +41,7 @@ public sealed class PipelineComponentFactoryTests
             PipelineFlowNodeTypes.MqttMetricsSink,
             PipelineFlowNodeTypes.FlowLogger,
             PipelineFlowNodeTypes.MessageFilter,
+            PipelineFlowNodeTypes.ConditionRouter,
             PipelineFlowNodeTypes.JsonSchemaValidator,
             PipelineFlowNodeTypes.DynamicMapper,
             PipelineFlowNodeTypes.PublishRequestMapper,
@@ -243,6 +244,83 @@ public sealed class PipelineComponentFactoryTests
     }
 
     [Fact]
+    public async Task ConditionRouterFactory_RoutesEnvelopesToTrueAndFalsePorts()
+    {
+        TestSourceNode? source = null;
+        TestSinkNode<MqttEnvelope>? trueSink = null;
+        TestSinkNode<MqttEnvelope>? falseSink = null;
+        TestSinkNode<FlowLogEntry>? logSink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.source"), (address, _) =>
+            {
+                source = new TestSourceNode();
+                return SourceNode(address, source);
+            })
+            .Register(new NodeType("test.envelope-sink"), (address, _) =>
+            {
+                if (address.Node.Value == "trueSink")
+                {
+                    trueSink = new TestSinkNode<MqttEnvelope>();
+                    return SinkNode(address, trueSink);
+                }
+
+                falseSink = new TestSinkNode<MqttEnvelope>();
+                return SinkNode(address, falseSink);
+            })
+            .Register(new NodeType("test.log-sink"), (address, _) =>
+            {
+                logSink = new TestSinkNode<FlowLogEntry>();
+                return SinkNode(address, logSink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("test.source"),
+                        ["router"] = new NodeDefinition
+                        {
+                            Type = PipelineFlowNodeTypes.ConditionRouter,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["expression"] = JsonDocument.Parse("\"qos >= 1\"").RootElement.Clone()
+                            }
+                        },
+                        ["trueSink"] = NodeWithPort("test.envelope-sink", "Input", "\"router.WhenTrue\""),
+                        ["falseSink"] = NodeWithPort("test.envelope-sink", "Input", "\"router.WhenFalse\""),
+                        ["logSink"] = NodeWithPort("test.log-sink", "Input", "\"router.Entries\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue();
+
+        source!.Post(new MqttEnvelope { Topic = "factory/qos0", Payload = [], QualityOfService = MqttQualityOfServiceLevel.AtMostOnce });
+        source.Post(new MqttEnvelope { Topic = "factory/qos1", Payload = [], QualityOfService = MqttQualityOfServiceLevel.AtLeastOnce });
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion;
+
+        trueSink!.Values.Select(envelope => envelope.Topic).ShouldBe(["factory/qos1"]);
+        falseSink!.Values.Select(envelope => envelope.Topic).ShouldBe(["factory/qos0"]);
+        logSink!.Values.Select(entry => entry.Message).ShouldBe([
+            "Routed MQTT message to WhenFalse.",
+            "Routed MQTT message to WhenTrue."
+        ]);
+    }
+
+    [Fact]
     public async Task JsonSchemaValidatorFactory_CreatesLinkableRuntimeNode()
     {
         TestSourceNode? source = null;
@@ -292,7 +370,7 @@ public sealed class PipelineComponentFactoryTests
                                 ["schema"] = JsonDocument.Parse(JsonSerializer.Serialize(schemaJson)).RootElement.Clone()
                             }
                         },
-                        ["sink"] = NodeWithPort("test.validation-sink", "Input", "\"validator.Output\"")
+                        ["sink"] = NodeWithPort("test.validation-sink", "Input", "\"validator.Result\"")
                     }
                 }
             }
@@ -310,6 +388,82 @@ public sealed class PipelineComponentFactoryTests
         sink.Values[0].IsValid.ShouldBeTrue();
         sink.Values[1].IsValid.ShouldBeFalse();
         sink.Values[1].SchemaId.ShouldBe("status-schema");
+    }
+
+    [Fact]
+    public async Task JsonSchemaValidatorFactory_RoutesValidAndInvalidEnvelopes()
+    {
+        TestSourceNode? source = null;
+        TestSinkNode<MqttEnvelope>? validSink = null;
+        TestSinkNode<MqttEnvelope>? invalidSink = null;
+        const string schemaJson = """
+        {
+          "type": "object",
+          "required": ["status"],
+          "properties": {
+            "status": { "const": "ok" }
+          }
+        }
+        """;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.source"), (address, _) =>
+            {
+                source = new TestSourceNode();
+                return SourceNode(address, source);
+            })
+            .Register(new NodeType("test.envelope-sink"), (address, _) =>
+            {
+                if (address.Node.Value == "validSink")
+                {
+                    validSink = new TestSinkNode<MqttEnvelope>();
+                    return SinkNode(address, validSink);
+                }
+
+                invalidSink = new TestSinkNode<MqttEnvelope>();
+                return SinkNode(address, invalidSink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("test.source"),
+                        ["validator"] = new NodeDefinition
+                        {
+                            Type = PipelineFlowNodeTypes.JsonSchemaValidator,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["schemaId"] = JsonDocument.Parse("\"status-schema\"").RootElement.Clone(),
+                                ["schema"] = JsonDocument.Parse(JsonSerializer.Serialize(schemaJson)).RootElement.Clone()
+                            }
+                        },
+                        ["validSink"] = NodeWithPort("test.envelope-sink", "Input", "\"validator.Valid\""),
+                        ["invalidSink"] = NodeWithPort("test.envelope-sink", "Input", "\"validator.Invalid\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue();
+
+        source!.Post(new MqttEnvelope { Topic = "factory/valid", Payload = """{"status":"ok"}"""u8.ToArray() });
+        source.Post(new MqttEnvelope { Topic = "factory/invalid", Payload = """{"status":"fault"}"""u8.ToArray() });
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion;
+
+        validSink!.Values.Select(envelope => envelope.Topic).ShouldBe(["factory/valid"]);
+        invalidSink!.Values.Select(envelope => envelope.Topic).ShouldBe(["factory/invalid"]);
     }
 
     [Fact]
@@ -374,7 +528,7 @@ public sealed class PipelineComponentFactoryTests
         session!.ConnectCalls.ShouldBe(1);
         session.Subscriptions.ShouldContain(subscription =>
             subscription.TopicFilter == "factory/#" &&
-            subscription.QualityOfService == MqttQualityOfServiceLevel.AtMostOnce);
+            subscription.QualityOfService == MqttQualityOfServiceLevel.AtLeastOnce);
 
         await session.WriteAsync(new MqttEnvelope
         {
@@ -388,6 +542,65 @@ public sealed class PipelineComponentFactoryTests
         sink!.Values.ShouldNotBeEmpty();
         sink.Values[^1].MessageCount.ShouldBe(1);
         sink.Values[^1].TotalPayloadBytes.ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task TriggerFactory_UsesExplicitSubscriberOptions()
+    {
+        FakeMqttSession? session = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories(_ =>
+            {
+                session = new FakeMqttSession();
+                return session;
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Resources =
+            {
+                ["broker"] = new NodeDefinition
+                {
+                    Type = PipelineFlowNodeTypes.Connection,
+                    Configuration =
+                    {
+                        ["profile"] = JsonDocument.Parse("""{"name":"factory-broker","host":"localhost","port":1883}""").RootElement.Clone()
+                    }
+                }
+            },
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["trigger"] = new NodeDefinition
+                        {
+                            Type = PipelineFlowNodeTypes.Trigger,
+                            Configuration =
+                            {
+                                ["connection"] = JsonDocument.Parse("\"broker\"").RootElement.Clone(),
+                                ["subscriptions"] = JsonDocument.Parse("""[{ "topicFilter": "factory/#", "qos": 2, "receiveRetained": false, "retainAsPublished": false }]""").RootElement.Clone()
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue();
+        await using var runtime = result.Runtime!;
+
+        await runtime.StartAsync();
+        runtime.Complete();
+        await runtime.Completion;
+
+        var subscription = session!.SubscriptionOptions.ShouldHaveSingleItem();
+        subscription.TopicFilter.ShouldBe("factory/#");
+        subscription.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.ExactlyOnce);
+        subscription.ReceiveRetainedMessages.ShouldBeFalse();
+        subscription.RetainAsPublished.ShouldBeFalse();
     }
 
     [Fact]
@@ -1075,6 +1288,7 @@ public sealed class PipelineComponentFactoryTests
     {
         private readonly Channel<MqttEnvelope> _messages = Channel.CreateUnbounded<MqttEnvelope>();
         private readonly List<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService)> _subscriptions = [];
+        private readonly List<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService, bool ReceiveRetainedMessages, bool RetainAsPublished)> _subscriptionOptions = [];
 
         public MqttConnectionProfile Profile { get; } = new() { Name = "factory-test" };
         public MqttSessionState State { get; private set; } = MqttSessionState.Disconnected;
@@ -1082,6 +1296,7 @@ public sealed class PipelineComponentFactoryTests
         public int ConnectCalls { get; private set; }
         public List<PublishedMessage> Published { get; } = [];
         public IReadOnlyList<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService)> Subscriptions => _subscriptions;
+        public IReadOnlyList<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService, bool ReceiveRetainedMessages, bool RetainAsPublished)> SubscriptionOptions => _subscriptionOptions;
 
         public event EventHandler<MqttSessionState>? StateChanged
         {
@@ -1104,8 +1319,17 @@ public sealed class PipelineComponentFactoryTests
         }
 
         public Task SubscribeAsync(string topicFilter, MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce, CancellationToken ct = default)
+            => SubscribeAsync(topicFilter, qos, receiveRetainedMessages: true, retainAsPublished: true, ct);
+
+        public Task SubscribeAsync(
+            string topicFilter,
+            MqttQualityOfServiceLevel qos,
+            bool receiveRetainedMessages,
+            bool retainAsPublished = true,
+            CancellationToken ct = default)
         {
             _subscriptions.Add((topicFilter, qos));
+            _subscriptionOptions.Add((topicFilter, qos, receiveRetainedMessages, retainAsPublished));
             return Task.CompletedTask;
         }
 

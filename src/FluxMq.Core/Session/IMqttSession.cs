@@ -15,6 +15,12 @@ public interface IMqttSession : IAsyncDisposable
     Task ConnectAsync(CancellationToken ct = default);
     Task DisconnectAsync(CancellationToken ct = default);
     Task SubscribeAsync(string topicFilter, MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce, CancellationToken ct = default);
+    Task SubscribeAsync(
+        string topicFilter,
+        MqttQualityOfServiceLevel qos,
+        bool receiveRetainedMessages,
+        bool retainAsPublished = true,
+        CancellationToken ct = default);
     Task UnsubscribeAsync(string topicFilter, CancellationToken ct = default);
     Task PublishAsync(string topic, byte[] payload, MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce, bool retain = false, CancellationToken ct = default);
 }

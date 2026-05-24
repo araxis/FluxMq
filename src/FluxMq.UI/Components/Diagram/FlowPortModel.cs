@@ -19,6 +19,7 @@ public sealed class FlowPortModel(
     public bool SingleLink { get; } = singleLink;
     public bool RepresentsInput { get; } = representsInput ?? alignment == PortAlignment.Left;
     public string ValueType { get; } = string.IsNullOrWhiteSpace(valueType) ? "Any" : valueType.Trim();
+    public bool IsErrorPort { get; } = IsErrorPortName(portName) || string.Equals(valueType?.Trim(), "FlowError", StringComparison.OrdinalIgnoreCase);
     public bool IsPulsing { get; set; }
 
     public override DiagramShape GetShape() => new FlowPortShape(this);
@@ -78,6 +79,10 @@ public sealed class FlowPortModel(
     private static bool IsWildcard(string valueType)
         => string.Equals(valueType.Trim(), "Any", StringComparison.OrdinalIgnoreCase) ||
            string.Equals(valueType.Trim(), "Configured output type", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsErrorPortName(string value)
+        => string.Equals(value.Trim(), "Errors", StringComparison.OrdinalIgnoreCase) ||
+           string.Equals(value.Trim(), "FlowErrors", StringComparison.OrdinalIgnoreCase);
 
     private sealed class FlowPortShape(PortModel port) : DiagramShape
     {

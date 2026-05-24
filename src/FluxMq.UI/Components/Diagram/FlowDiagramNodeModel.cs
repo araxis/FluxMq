@@ -60,8 +60,8 @@ public class FlowDiagramNodeModel : NodeModel
         .ThenBy(static diagnostic => diagnostic.Code, StringComparer.Ordinal)
         .FirstOrDefault();
 
-    /// <summary>Called by the designer after the node is created to parse the JSON configuration.</summary>
-    internal void LoadConfiguration(JsonObject? config) => OnConfigurationLoaded(config);
+    /// <summary>Called after the node is created to parse the JSON configuration.</summary>
+    public void LoadConfiguration(JsonObject? config) => OnConfigurationLoaded(config);
 
     /// <summary>Override to read typed properties from the JSON configuration object.</summary>
     protected virtual void OnConfigurationLoaded(JsonObject? config) { }

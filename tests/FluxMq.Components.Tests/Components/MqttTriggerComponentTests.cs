@@ -15,7 +15,11 @@ public sealed class MqttTriggerComponentTests
         var connection = new MqttConnectionComponent(session, disposeSessionOnDispose: false);
         var trigger = new MqttTriggerComponent(connection,
         [
-            new MqttSubscription("sensors/+", MqttQualityOfServiceLevel.AtLeastOnce)
+            new MqttSubscription(
+                "sensors/+",
+                MqttQualityOfServiceLevel.AtLeastOnce,
+                ReceiveRetainedMessages: false,
+                RetainAsPublished: true)
         ]);
 
         var received = new List<string>();
@@ -35,6 +39,9 @@ public sealed class MqttTriggerComponentTests
         received.ShouldBe(new[] { "sensors/temp", "sensors/humidity" });
         var sub = session.Subscriptions.ShouldHaveSingleItem();
         sub.ShouldBe(("sensors/+", MqttQualityOfServiceLevel.AtLeastOnce));
+        var options = session.SubscriptionOptions.ShouldHaveSingleItem();
+        options.ReceiveRetainedMessages.ShouldBeFalse();
+        options.RetainAsPublished.ShouldBeTrue();
     }
 
     [Fact]

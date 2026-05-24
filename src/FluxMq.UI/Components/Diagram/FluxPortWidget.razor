@@ -19,9 +19,11 @@
         var isInput = IsInput ?? (Port is FlowPortModel flowPort ? flowPort.RepresentsInput : Port.Alignment == PortAlignment.Left);
         var hasLinks = Port.Links.Count > 0;
         var isPulsing = Port is FlowPortModel fp && fp.IsPulsing;
+        var isError = Port is FlowPortModel { IsErrorPort: true };
 
         var sb = new System.Text.StringBuilder("flux-port-inner");
         sb.Append(isInput ? " flux-port-input" : " flux-port-output");
+        if (isError) sb.Append(" flux-port-error");
         if (hasLinks) sb.Append(" flux-port-connected");
         if (isPulsing) sb.Append(" flux-port-pulse");
         return sb.ToString();

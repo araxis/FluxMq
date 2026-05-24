@@ -2,7 +2,6 @@ using FluxMq.App;
 using FluxMq.Core.Models;
 using FluxMq.Core.Session;
 using FluxMq.Components.Logging;
-using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Storage.Repositories;
 using FluxMq.Pipeline.Components;
 using FluxMq.Pipeline.Definitions;
@@ -646,18 +645,20 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         {
             AttachRuntimeErrorOutputs(node);
 
-            if (node.Node is not FlowLoggerComponent logger)
+            if (node.Node is FlowLoggerComponent logger)
             {
-                if (node.Node is MqttPublisherComponent publisher)
-                {
-                    AttachRuntimeLogEntries(node, publisher.Entries);
-                }
-
-                continue;
+                AppendLogs(logger.RecentEntries.Select(entry => ToWorkspaceLogEntry(node.Address, entry)), notify: false);
             }
 
-            AppendLogs(logger.RecentEntries.Select(entry => ToWorkspaceLogEntry(node.Address, entry)), notify: false);
-            AttachRuntimeLogEntries(node, logger.Entries);
+            AttachRuntimeLogOutputs(node);
+        }
+    }
+
+    private void AttachRuntimeLogOutputs(RuntimeNode node)
+    {
+        foreach (var output in node.Outputs.OfType<OutputPort<FlowLogEntry>>())
+        {
+            AttachRuntimeLogEntries(node, output.Source);
         }
     }
 

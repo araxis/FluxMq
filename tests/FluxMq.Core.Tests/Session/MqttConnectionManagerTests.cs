@@ -220,6 +220,7 @@ sealed class FakeMqttSession(
     }
 
     public Task SubscribeAsync(string topicFilter, MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce, CancellationToken ct = default) => Task.CompletedTask;
+    public Task SubscribeAsync(string topicFilter, MqttQualityOfServiceLevel qos, bool receiveRetainedMessages, bool retainAsPublished = true, CancellationToken ct = default) => Task.CompletedTask;
     public Task UnsubscribeAsync(string topicFilter, CancellationToken ct = default) => Task.CompletedTask;
     public Task PublishAsync(string topic, byte[] payload, MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce, bool retain = false, CancellationToken ct = default) => Task.CompletedTask;
 

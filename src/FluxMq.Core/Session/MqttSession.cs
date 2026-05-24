@@ -66,9 +66,23 @@ public sealed class MqttSession : IMqttSession
     }
 
     public async Task SubscribeAsync(string topicFilter, MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce, CancellationToken ct = default)
+        => await SubscribeAsync(topicFilter, qos, receiveRetainedMessages: true, retainAsPublished: true, ct).ConfigureAwait(false);
+
+    public async Task SubscribeAsync(
+        string topicFilter,
+        MqttQualityOfServiceLevel qos,
+        bool receiveRetainedMessages,
+        bool retainAsPublished = true,
+        CancellationToken ct = default)
     {
         var options = new MqttClientSubscribeOptionsBuilder()
-            .WithTopicFilter(f => f.WithTopic(topicFilter).WithQualityOfServiceLevel(qos))
+            .WithTopicFilter(f => f
+                .WithTopic(topicFilter)
+                .WithQualityOfServiceLevel(qos)
+                .WithRetainHandling(receiveRetainedMessages
+                    ? MqttRetainHandling.SendAtSubscribe
+                    : MqttRetainHandling.DoNotSendOnSubscribe)
+                .WithRetainAsPublished(retainAsPublished))
             .Build();
         await _client.SubscribeAsync(options, ct);
     }

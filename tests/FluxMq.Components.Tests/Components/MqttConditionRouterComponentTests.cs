@@ -1,6 +1,7 @@
 using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
+using FluxMq.Components.Logging;
 using FluxMq.Components.MqttConditionRouter;
 using FluxMq.Pipeline.Components;
 using System.Threading.Tasks.Dataflow;
@@ -15,21 +16,29 @@ public sealed class MqttConditionRouterComponentTests
         var component = MqttConditionRouterComponent.TopicPrefix("factory/");
         var trueTopics = new List<string>();
         var falseTopics = new List<string>();
+        var entries = new List<FlowLogEntry>();
         var trueSink = new ActionBlock<MqttEnvelope>(message => trueTopics.Add(message.Topic));
         var falseSink = new ActionBlock<MqttEnvelope>(message => falseTopics.Add(message.Topic));
+        var entrySink = new ActionBlock<FlowLogEntry>(entries.Add);
 
         component.WhenTrue.LinkTo(trueSink, new DataflowLinkOptions { PropagateCompletion = true });
         component.WhenFalse.LinkTo(falseSink, new DataflowLinkOptions { PropagateCompletion = true });
+        component.Entries.LinkTo(entrySink, new DataflowLinkOptions { PropagateCompletion = true });
 
         component.Input.Post(Message("factory/line-1"));
         component.Input.Post(Message("system/health"));
         component.Input.Post(Message("factory/line-2"));
         component.Complete();
 
-        await Task.WhenAll(component.Completion, trueSink.Completion, falseSink.Completion);
+        await Task.WhenAll(component.Completion, trueSink.Completion, falseSink.Completion, entrySink.Completion);
 
         trueTopics.ShouldBe(new[] { "factory/line-1", "factory/line-2" });
         falseTopics.ShouldBe(new[] { "system/health" });
+        entries.Select(entry => entry.Message).ShouldBe([
+            "Routed MQTT message to WhenTrue.",
+            "Routed MQTT message to WhenFalse.",
+            "Routed MQTT message to WhenTrue."
+        ]);
         component.Id.ShouldNotBe(FlowNodeId.Empty);
     }
 

@@ -27,7 +27,7 @@ public sealed class JsonSchemaValidatorComponentTests
         });
         var output = new BufferBlock<JsonSchemaValidationResult>();
 
-        component.Output.LinkTo(output, new DataflowLinkOptions { PropagateCompletion = true });
+        component.Result.LinkTo(output, new DataflowLinkOptions { PropagateCompletion = true });
         component.Input.Post(CreateEnvelope("""{"status":"ok"}"""));
         component.Input.Post(CreateEnvelope("""{"status":"fault"}"""));
         component.Complete();
@@ -53,7 +53,7 @@ public sealed class JsonSchemaValidatorComponentTests
         });
         var output = new BufferBlock<JsonSchemaValidationResult>();
 
-        component.Output.LinkTo(output, new DataflowLinkOptions { PropagateCompletion = true });
+        component.Result.LinkTo(output, new DataflowLinkOptions { PropagateCompletion = true });
         component.Input.Post(CreateEnvelope("not-json"));
         component.Complete();
 
@@ -65,10 +65,42 @@ public sealed class JsonSchemaValidatorComponentTests
         result.Issues[0].Message.ShouldContain("Payload is not valid JSON");
     }
 
-    private static MqttEnvelope CreateEnvelope(string payload)
+    [Fact]
+    public async Task Input_RoutesValidAndInvalidEnvelopesToBranchOutputs()
+    {
+        var component = new JsonSchemaValidatorComponent(new JsonSchemaValidatorDefinition
+        {
+            SchemaJson = """
+            {
+              "type": "object",
+              "required": ["status"],
+              "properties": {
+                "status": { "const": "ok" }
+              }
+            }
+            """
+        });
+        var validTopics = new List<string>();
+        var invalidTopics = new List<string>();
+        var validSink = new ActionBlock<MqttEnvelope>(envelope => validTopics.Add(envelope.Topic));
+        var invalidSink = new ActionBlock<MqttEnvelope>(envelope => invalidTopics.Add(envelope.Topic));
+
+        component.Valid.LinkTo(validSink, new DataflowLinkOptions { PropagateCompletion = true });
+        component.Invalid.LinkTo(invalidSink, new DataflowLinkOptions { PropagateCompletion = true });
+        component.Input.Post(CreateEnvelope("""{"status":"ok"}""", "factory/valid"));
+        component.Input.Post(CreateEnvelope("""{"status":"fault"}""", "factory/invalid"));
+        component.Complete();
+
+        await Task.WhenAll(component.Completion, validSink.Completion, invalidSink.Completion);
+
+        validTopics.ShouldBe(["factory/valid"]);
+        invalidTopics.ShouldBe(["factory/invalid"]);
+    }
+
+    private static MqttEnvelope CreateEnvelope(string payload, string topic = "factory/status")
         => new()
         {
-            Topic = "factory/status",
+            Topic = topic,
             Payload = Encoding.UTF8.GetBytes(payload),
             QualityOfService = MqttQualityOfServiceLevel.AtLeastOnce,
             Retain = false,

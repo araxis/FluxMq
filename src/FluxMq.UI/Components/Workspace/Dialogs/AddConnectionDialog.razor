@@ -10,9 +10,6 @@
             <MudTextField T="string" Label="Host" @bind-Value="_host" Variant="Variant.Outlined" Margin="Margin.Dense" />
             <MudNumericField T="int" Label="Port" @bind-Value="_port" Min="1" Variant="Variant.Outlined" Margin="Margin.Dense" />
             <MudTextField T="string" Label="Client ID" @bind-Value="_clientId" Variant="Variant.Outlined" Margin="Margin.Dense" />
-            <MudTextField T="string" Label="Subscription(s)" @bind-Value="_subscription"
-                          Variant="Variant.Outlined" Margin="Margin.Dense"
-                          HelperText="Separate multiple topics with commas" />
             <MudCheckBox T="bool" @bind-Value="_useTls" Label="TLS" Dense="true" />
             <MudTextField T="string" Label="Username" @bind-Value="_username" Variant="Variant.Outlined" Margin="Margin.Dense" />
             <MudTextField T="string" Label="Password" @bind-Value="_password"
@@ -32,7 +29,6 @@
     private string _host = "localhost";
     private int _port = 1883;
     private string _clientId = Guid.NewGuid().ToString("N")[..8];
-    private string _subscription = "#";
     private bool _useTls;
     private string? _username;
     private string? _password;
@@ -52,7 +48,9 @@
             UseTls = _useTls,
             CleanStart = true
         };
-        MudDialog.Close(DialogResult.Ok(new AddConnectionResult(profile, _subscription)));
+        MudDialog.Close(DialogResult.Ok(new AddConnectionResult(
+            profile,
+            LiveMqttWorkspaceService.DefaultBrokerMonitorSubscription)));
     }
 
     public record AddConnectionResult(MqttConnectionProfile Profile, string Subscription);

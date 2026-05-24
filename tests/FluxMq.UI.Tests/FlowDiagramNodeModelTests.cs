@@ -168,6 +168,24 @@ public sealed class FlowDiagramNodeModelTests
     }
 
     [Fact]
+    public void FlowPortModel_FlagsErrorPortsForDistinctStyling()
+    {
+        var model = new FlowDiagramNodeModel(
+            "workflow1.source",
+            new DiagramPoint(10, 20),
+            "source",
+            "mqtt.trigger",
+            descriptor: null,
+            isResource: false);
+
+        var errors = new FlowPortModel(model, PortAlignment.Right, "Errors", representsInput: false, valueType: "FlowError");
+        var output = new FlowPortModel(model, PortAlignment.Right, "Output", representsInput: false, valueType: "MqttEnvelope");
+
+        errors.IsErrorPort.ShouldBeTrue();
+        output.IsErrorPort.ShouldBeFalse();
+    }
+
+    [Fact]
     public void DynamicMapperNodeModel_UsesConfiguredOutputTypeForPortType()
     {
         var descriptor = new ComponentPortDescriptor("Output", "Configured output type", IsInput: false);

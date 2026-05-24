@@ -133,6 +133,11 @@
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--mud-palette-success) 18%, transparent);
 }
 
+.flow-designer-root ::deep .flux-port-error {
+    border-color: var(--mud-palette-error);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mud-palette-error) 18%, transparent);
+}
+
 .flow-designer-root ::deep .flux-port-connected.flux-port-input {
     background: var(--mud-palette-info);
 }
@@ -141,12 +146,20 @@
     background: var(--mud-palette-success);
 }
 
+.flow-designer-root ::deep .flux-port-connected.flux-port-error {
+    background: var(--mud-palette-error);
+}
+
 .flow-designer-root ::deep .diagram-port:hover .flux-port-input {
     background: var(--mud-palette-info);
 }
 
 .flow-designer-root ::deep .diagram-port:hover .flux-port-output {
     background: var(--mud-palette-success);
+}
+
+.flow-designer-root ::deep .diagram-port:hover .flux-port-error {
+    background: var(--mud-palette-error);
 }
 
 .flow-designer-root ::deep .diagram-link path,
@@ -220,6 +233,10 @@
 
 .flow-designer-root ::deep .flow-port-output {
     color: var(--mud-palette-success);
+}
+
+.flow-designer-root ::deep .flow-port-error {
+    color: var(--mud-palette-error);
 }
 
 

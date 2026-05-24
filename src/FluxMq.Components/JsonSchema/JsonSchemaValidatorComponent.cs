@@ -11,7 +11,10 @@ namespace FluxMq.Components.JsonSchema;
 
 public sealed class JsonSchemaValidatorComponent : IFlowNode
 {
-    private readonly TransformManyBlock<MqttEnvelope, JsonSchemaValidationResult> _block;
+    private readonly ActionBlock<MqttEnvelope> _block;
+    private readonly BufferBlock<JsonSchemaValidationResult> _result;
+    private readonly BufferBlock<MqttEnvelope> _valid;
+    private readonly BufferBlock<MqttEnvelope> _invalid;
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly SchemaDocument _schema;
     private readonly string _schemaId;
@@ -28,8 +31,20 @@ public sealed class JsonSchemaValidatorComponent : IFlowNode
         _schema = SchemaDocument.FromText(definition.SchemaJson);
         _schemaId = string.IsNullOrWhiteSpace(definition.SchemaId) ? "inline" : definition.SchemaId.Trim();
         _errors = new BroadcastBlock<FlowError>(static error => error);
-        _block = new TransformManyBlock<MqttEnvelope, JsonSchemaValidationResult>(
-            Validate,
+        _result = new BufferBlock<JsonSchemaValidationResult>(new DataflowBlockOptions
+        {
+            BoundedCapacity = boundedCapacity
+        });
+        _valid = new BufferBlock<MqttEnvelope>(new DataflowBlockOptions
+        {
+            BoundedCapacity = boundedCapacity
+        });
+        _invalid = new BufferBlock<MqttEnvelope>(new DataflowBlockOptions
+        {
+            BoundedCapacity = boundedCapacity
+        });
+        _block = new ActionBlock<MqttEnvelope>(
+            ValidateAndRouteAsync,
             new ExecutionDataflowBlockOptions
             {
                 BoundedCapacity = boundedCapacity,
@@ -37,7 +52,7 @@ public sealed class JsonSchemaValidatorComponent : IFlowNode
             });
 
         _block.Completion.ContinueWith(
-            _ => _errors.Complete(),
+            CompleteOutputs,
             CancellationToken.None,
             TaskContinuationOptions.ExecuteSynchronously,
             TaskScheduler.Default);
@@ -47,7 +62,9 @@ public sealed class JsonSchemaValidatorComponent : IFlowNode
     public ISourceBlock<FlowError> Errors => _errors;
     public Task Completion => _block.Completion;
     public ITargetBlock<MqttEnvelope> Input => _block;
-    public ISourceBlock<JsonSchemaValidationResult> Output => _block;
+    public ISourceBlock<JsonSchemaValidationResult> Result => _result;
+    public ISourceBlock<MqttEnvelope> Valid => _valid;
+    public ISourceBlock<MqttEnvelope> Invalid => _invalid;
 
     public void Complete() => _block.Complete();
 
@@ -57,7 +74,16 @@ public sealed class JsonSchemaValidatorComponent : IFlowNode
         ((IDataflowBlock)_block).Fault(exception);
     }
 
-    private IEnumerable<JsonSchemaValidationResult> Validate(MqttEnvelope envelope)
+    private async Task ValidateAndRouteAsync(MqttEnvelope envelope)
+    {
+        var result = Validate(envelope);
+        await _result.SendAsync(result).ConfigureAwait(false);
+
+        var branch = result.IsValid ? _valid : _invalid;
+        await branch.SendAsync(result.Envelope).ConfigureAwait(false);
+    }
+
+    private JsonSchemaValidationResult Validate(MqttEnvelope envelope)
     {
         JsonElement payload;
         try
@@ -67,19 +93,16 @@ public sealed class JsonSchemaValidatorComponent : IFlowNode
         }
         catch (JsonException exception)
         {
-            return
-            [
-                new JsonSchemaValidationResult
-                {
-                    SchemaId = _schemaId,
-                    IsValid = false,
-                    Envelope = envelope,
-                    Issues =
-                    [
-                        new JsonSchemaValidationIssue("$", $"Payload is not valid JSON: {exception.Message}")
-                    ]
-                }
-            ];
+            return new JsonSchemaValidationResult
+            {
+                SchemaId = _schemaId,
+                IsValid = false,
+                Envelope = envelope,
+                Issues =
+                [
+                    new JsonSchemaValidationIssue("$", $"Payload is not valid JSON: {exception.Message}")
+                ]
+            };
         }
 
         try
@@ -89,22 +112,45 @@ public sealed class JsonSchemaValidatorComponent : IFlowNode
                 OutputFormat = OutputFormat.List
             });
 
-            return
-            [
-                new JsonSchemaValidationResult
-                {
-                    SchemaId = _schemaId,
-                    IsValid = results.IsValid,
-                    Envelope = envelope,
-                    Issues = results.IsValid ? [] : CollectIssues(results)
-                }
-            ];
+            return new JsonSchemaValidationResult
+            {
+                SchemaId = _schemaId,
+                IsValid = results.IsValid,
+                Envelope = envelope,
+                Issues = results.IsValid ? [] : CollectIssues(results)
+            };
         }
         catch (Exception exception)
         {
             PublishError(FlowErrorCodes.ProcessingFailed, "JSON Schema validation failed.", exception, envelope.Topic);
-            return [];
+            return new JsonSchemaValidationResult
+            {
+                SchemaId = _schemaId,
+                IsValid = false,
+                Envelope = envelope,
+                Issues =
+                [
+                    new JsonSchemaValidationIssue("$", "JSON Schema validation failed.")
+                ]
+            };
         }
+    }
+
+    private void CompleteOutputs(Task completion)
+    {
+        if (completion.IsFaulted && completion.Exception is { } exception)
+        {
+            ((IDataflowBlock)_result).Fault(exception);
+            ((IDataflowBlock)_valid).Fault(exception);
+            ((IDataflowBlock)_invalid).Fault(exception);
+            _errors.Complete();
+            return;
+        }
+
+        _result.Complete();
+        _valid.Complete();
+        _invalid.Complete();
+        _errors.Complete();
     }
 
     private static IReadOnlyList<JsonSchemaValidationIssue> CollectIssues(EvaluationResults results)

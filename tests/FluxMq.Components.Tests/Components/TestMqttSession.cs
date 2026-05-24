@@ -9,6 +9,7 @@ internal sealed class TestMqttSession : IMqttSession
 {
     private readonly Channel<MqttEnvelope> _messages = Channel.CreateUnbounded<MqttEnvelope>();
     private readonly List<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService)> _subscriptions = [];
+    private readonly List<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService, bool ReceiveRetainedMessages, bool RetainAsPublished)> _subscriptionOptions = [];
     private readonly Task? _connectDelay;
 
     public TestMqttSession(string profileName = "test", Task? connectDelay = null)
@@ -24,6 +25,7 @@ internal sealed class TestMqttSession : IMqttSession
     public int DisposeCalls { get; private set; }
     public bool RequireConnectedForSubscribe { get; set; }
     public IReadOnlyList<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService)> Subscriptions => _subscriptions;
+    public IReadOnlyList<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService, bool ReceiveRetainedMessages, bool RetainAsPublished)> SubscriptionOptions => _subscriptionOptions;
 
     public event EventHandler<MqttSessionState>? StateChanged
     {
@@ -55,6 +57,14 @@ internal sealed class TestMqttSession : IMqttSession
     }
 
     public Task SubscribeAsync(string topicFilter, MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce, CancellationToken ct = default)
+        => SubscribeAsync(topicFilter, qos, receiveRetainedMessages: true, retainAsPublished: true, ct);
+
+    public Task SubscribeAsync(
+        string topicFilter,
+        MqttQualityOfServiceLevel qos,
+        bool receiveRetainedMessages,
+        bool retainAsPublished = true,
+        CancellationToken ct = default)
     {
         if (RequireConnectedForSubscribe && State is not MqttSessionState.Connected)
         {
@@ -62,6 +72,7 @@ internal sealed class TestMqttSession : IMqttSession
         }
 
         _subscriptions.Add((topicFilter, qos));
+        _subscriptionOptions.Add((topicFilter, qos, receiveRetainedMessages, retainAsPublished));
         return Task.CompletedTask;
     }
 

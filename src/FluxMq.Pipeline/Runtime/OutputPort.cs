@@ -25,15 +25,27 @@ public abstract class OutputPort
     public abstract IDisposable LinkToDiscard();
 }
 
-public sealed class OutputPort<T>(
-    PortAddress address,
-    ISourceBlock<T> source,
-    bool drainWhenUnlinked = true)
-    : OutputPort(address, typeof(T))
+public sealed class OutputPort<T> : OutputPort
 {
-    public ISourceBlock<T> Source { get; } = source;
+    private readonly BroadcastBlock<T> _broadcast;
+    private readonly IDisposable _sourceLink;
+
+    public ISourceBlock<T> Source => _broadcast;
     public override Task Completion => Source.Completion;
-    public override bool DrainWhenUnlinked { get; } = drainWhenUnlinked && typeof(T) != typeof(FlowError);
+    public override bool DrainWhenUnlinked { get; }
+
+    public OutputPort(
+        PortAddress address,
+        ISourceBlock<T> source,
+        bool drainWhenUnlinked = true)
+        : base(address, typeof(T))
+    {
+        _broadcast = new BroadcastBlock<T>(static value => value);
+        _sourceLink = source.LinkTo(
+            _broadcast,
+            new DataflowLinkOptions { PropagateCompletion = true });
+        DrainWhenUnlinked = drainWhenUnlinked && typeof(T) != typeof(FlowError);
+    }
 
     public override IDisposable? TryLinkTo(
         InputPort input,

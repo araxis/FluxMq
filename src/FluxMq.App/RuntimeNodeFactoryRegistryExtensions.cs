@@ -6,6 +6,7 @@ using FluxMq.Components.JsonSchema;
 using FluxMq.Components.Logging;
 using FluxMq.Components.MessageFilter;
 using FluxMq.Components.MessageSource;
+using FluxMq.Components.MqttConditionRouter;
 using FluxMq.Components.MqttMetrics;
 using FluxMq.Components.MqttPayloadInspector;
 using FluxMq.Components.MqttPublisher;
@@ -24,8 +25,14 @@ namespace FluxMq.App;
 
 public static class RuntimeNodeFactoryRegistryExtensions
 {
+    private const MqttQualityOfServiceLevel DefaultSubscriptionQos = MqttQualityOfServiceLevel.AtLeastOnce;
     private static readonly PortName InputPort = new("Input");
     private static readonly PortName OutputPort = new("Output");
+    private static readonly PortName ResultPort = new("Result");
+    private static readonly PortName WhenTruePort = new("WhenTrue");
+    private static readonly PortName WhenFalsePort = new("WhenFalse");
+    private static readonly PortName ValidPort = new("Valid");
+    private static readonly PortName InvalidPort = new("Invalid");
     private static readonly PortName SnapshotsPort = new("Snapshots");
     private static readonly PortName EntriesPort = new("Entries");
     private static readonly PortName FlowErrorsPort = new("FlowErrors");
@@ -52,6 +59,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .Register(PipelineFlowNodeTypes.MqttMetricsSink, CreateMqttMetrics)
             .Register(PipelineFlowNodeTypes.FlowLogger, CreateFlowLogger)
             .Register(PipelineFlowNodeTypes.MessageFilter, context => CreateMessageFilter(context.Address, context.Definition, expressionEngine))
+            .Register(PipelineFlowNodeTypes.ConditionRouter, context => CreateConditionRouter(context.Address, context.Definition, expressionEngine))
             .Register(PipelineFlowNodeTypes.JsonSchemaValidator, context => CreateJsonSchemaValidator(context.Address, context.Definition))
             .Register(PipelineFlowNodeTypes.DynamicMapper, context => CreateDynamicMapper(context.Address, context.Definition, expressionEngine))
             .Register(PipelineFlowNodeTypes.PublishRequestMapper, context => CreatePublishRequestMapper(context.Address, context.Definition, expressionEngine))
@@ -223,6 +231,32 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
+    private static RuntimeNode CreateConditionRouter(
+        NodeAddress address,
+        NodeDefinition definition,
+        IFlowExpressionEngine expressionEngine)
+    {
+        var predicate = new MqttEnvelopeExpressionPredicate(
+            expressionEngine,
+            GetRequiredString(definition, "expression"));
+        var component = new MqttConditionRouterComponent(predicate.IsMatch, boundedCapacity: GetBoundedCapacity(definition));
+
+        return RuntimeNode.Create(
+            address,
+            component,
+            inputs:
+            [
+                new InputPort<MqttEnvelope>(address.Port(InputPort), component.Input)
+            ],
+            outputs:
+            [
+                new OutputPort<MqttEnvelope>(address.Port(WhenTruePort), component.WhenTrue),
+                new OutputPort<MqttEnvelope>(address.Port(WhenFalsePort), component.WhenFalse),
+                new OutputPort<FlowLogEntry>(address.Port(EntriesPort), component.Entries),
+                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
+            ]);
+    }
+
     private static RuntimeNode CreateMqttMetrics(NodeAddress address, NodeDefinition definition)
     {
         var component = new MqttMetricsComponent(boundedCapacity: GetBoundedCapacity(definition));
@@ -288,7 +322,9 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ],
             outputs:
             [
-                new OutputPort<JsonSchemaValidationResult>(address.Port(OutputPort), component.Output),
+                new OutputPort<JsonSchemaValidationResult>(address.Port(ResultPort), component.Result),
+                new OutputPort<MqttEnvelope>(address.Port(ValidPort), component.Valid),
+                new OutputPort<MqttEnvelope>(address.Port(InvalidPort), component.Invalid),
                 new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
             ]);
     }
@@ -401,6 +437,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ],
             outputs:
             [
+                new OutputPort<FlowLogEntry>(address.Port(EntriesPort), component.Entries),
                 new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
             ]);
     }
@@ -758,7 +795,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
 
         return subscriptionsElement.ValueKind switch
         {
-            JsonValueKind.String => [new MqttSubscription(ReadTopicFilter(subscriptionsElement.GetString()), MqttQualityOfServiceLevel.AtMostOnce)],
+            JsonValueKind.String => [new MqttSubscription(ReadTopicFilter(subscriptionsElement.GetString()), DefaultSubscriptionQos)],
             JsonValueKind.Array => ParseSubscriptionArray(subscriptionsElement),
             _ => throw new InvalidOperationException("Configuration value 'subscriptions' must be a string or an array.")
         };
@@ -773,13 +810,19 @@ public static class RuntimeNodeFactoryRegistryExtensions
             switch (element.ValueKind)
             {
                 case JsonValueKind.String:
-                    subscriptions.Add(new MqttSubscription(ReadTopicFilter(element.GetString()), MqttQualityOfServiceLevel.AtMostOnce));
+                    subscriptions.Add(new MqttSubscription(ReadTopicFilter(element.GetString()), DefaultSubscriptionQos));
                     break;
                 case JsonValueKind.Object:
                 {
                     var topicFilter = ReadRequiredString(element, "topicFilter");
                     var qualityOfService = ParseQualityOfService(element);
-                    subscriptions.Add(new MqttSubscription(topicFilter, qualityOfService));
+                    var receiveRetainedMessages = ReadBoolOrDefault(element, "receiveRetained", ReadBoolOrDefault(element, "retain", true));
+                    var retainAsPublished = ReadBoolOrDefault(element, "retainAsPublished", true);
+                    subscriptions.Add(new MqttSubscription(
+                        topicFilter,
+                        qualityOfService,
+                        receiveRetainedMessages,
+                        retainAsPublished));
                     break;
                 }
                 default:
