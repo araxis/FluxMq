@@ -4,15 +4,59 @@ namespace FluxMq.Pipeline.Definitions;
 
 public sealed record DashboardDefinition
 {
-    public DashboardLayoutDefinition Layout { get; init; } = new();
-    public Dictionary<string, DashboardWidgetDefinition> Widgets { get; init; } = [];
+    private DashboardLayoutDefinition? _layout = new();
+    private Dictionary<string, DashboardWidgetDefinition>? _widgets = [];
+
+    public DashboardLayoutDefinition Layout
+    {
+        get => _layout ??= new();
+        init => _layout = value ?? new DashboardLayoutDefinition();
+    }
+
+    public Dictionary<string, DashboardWidgetDefinition> Widgets
+    {
+        get => _widgets ??= [];
+        init => _widgets = value ?? [];
+    }
 }
 
 public sealed record DashboardLayoutDefinition
 {
-    public List<DashboardGridTrackDefinition> Columns { get; init; } = [DashboardGridTrackDefinition.Star()];
-    public List<DashboardGridTrackDefinition> Rows { get; init; } = [DashboardGridTrackDefinition.Star()];
-    public Dictionary<string, DashboardCellDefinition> Cells { get; init; } = [];
+    private List<DashboardGridTrackDefinition>? _columns = [DashboardGridTrackDefinition.Star()];
+    private List<DashboardGridTrackDefinition>? _rows = [DashboardGridTrackDefinition.Star()];
+    private List<double>? _columnPadding = [];
+    private List<double>? _rowPadding = [];
+    private Dictionary<string, DashboardCellDefinition>? _cells = [];
+
+    public List<DashboardGridTrackDefinition> Columns
+    {
+        get => _columns ??= [];
+        init => _columns = value ?? [];
+    }
+
+    public List<DashboardGridTrackDefinition> Rows
+    {
+        get => _rows ??= [];
+        init => _rows = value ?? [];
+    }
+
+    public List<double> ColumnPadding
+    {
+        get => _columnPadding ??= [];
+        init => _columnPadding = value ?? [];
+    }
+
+    public List<double> RowPadding
+    {
+        get => _rowPadding ??= [];
+        init => _rowPadding = value ?? [];
+    }
+
+    public Dictionary<string, DashboardCellDefinition> Cells
+    {
+        get => _cells ??= [];
+        init => _cells = value ?? [];
+    }
 }
 
 public sealed record DashboardGridTrackDefinition
@@ -113,6 +157,13 @@ public sealed record DashboardCellDefinition
 
 public sealed record DashboardWidgetDefinition
 {
+    private Dictionary<string, JsonElement>? _configuration = [];
+
     public string Type { get; init; } = string.Empty;
-    public Dictionary<string, JsonElement> Configuration { get; init; } = [];
+
+    public Dictionary<string, JsonElement> Configuration
+    {
+        get => _configuration ??= [];
+        init => _configuration = value ?? [];
+    }
 }

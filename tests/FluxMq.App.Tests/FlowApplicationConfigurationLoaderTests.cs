@@ -80,6 +80,50 @@ public sealed class FlowApplicationConfigurationLoaderTests
     }
 
     [Fact]
+    public void Load_KeepsEmptyDashboardAndTestSectionsUsable()
+    {
+        var configuration = BuildConfiguration(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "workflows": {
+                    "pip1": {
+                      "trigger": {
+                        "type": "mqtt.trigger"
+                      }
+                    }
+                  },
+                  "dashboards": {
+                    "d1": {
+                      "layout": {
+                        "columns": ["320", "*"],
+                        "rows": ["180", "*"],
+                        "cells": {}
+                      },
+                      "widgets": {}
+                    }
+                  },
+                  "tests": {
+                    "t1": {
+                      "steps": {}
+                    }
+                  }
+                }
+              }
+            }
+            """);
+
+        var definition = new FlowApplicationConfigurationLoader().Load(configuration);
+        var result = new ApplicationDefinitionValidator().Validate(definition);
+
+        definition.Dashboards["d1"].Widgets.ShouldBeEmpty();
+        definition.Dashboards["d1"].Layout.Cells.ShouldBeEmpty();
+        definition.Tests["t1"].Steps.ShouldBeEmpty();
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Load_ThrowsWhenSectionIsMissing()
     {
         var configuration = BuildConfiguration("""{ "FluxMq": {} }""");

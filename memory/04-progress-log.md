@@ -678,3 +678,53 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 29 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 103 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -m:1` passes with 337 tests.
+
+## 2026-05-24 - Dashboard layout designer slice
+
+- Moved app structure navigation into top-bar menus for connections, pipelines, dashboards, and tests so the side panel can stay focused on the active artifact's tools.
+- Added a dashboard layout editor surface for dashboard tabs:
+  - editable WPF-like column and row tracks such as `320`, `25%`, `*`, and `2*`
+  - grid preview using the dashboard definition's rows, columns, cells, and spans
+  - cell add/remove commands that round-trip through the existing `dashboards` JSON model
+- Enriched the dashboard grid interaction after reviewing the OpenGarden surface editor:
+  - row/column layout picker
+  - row and column add/remove commands
+  - selectable virtual and explicit cells
+  - merge, split, split-rows, split-columns, and 2 x 2 subdivision commands
+  - topology updates that split track sizes and preserve neighboring cell spans
+- Replaced raw row/column track text fields with per-track editing from the row and column handles:
+  - each track can choose fixed, percent, or star sizing
+  - each row or column owns its padding value
+  - padding is stored in the dashboard JSON and applied visually to cells
+  - the dashboard designer fills the available tab body instead of rendering as a fixed preview
+- Added focused UI tests for dashboard layout reading, grid track updates, invalid track handling, cell add/remove behavior, grid resize, merge/split/subdivision, and workspace-service diagnostics.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1 --filter "FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowWorkspaceServiceTests"` passes with 81 focused tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1` passes with 128 tests.
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1 --filter FullyQualifiedName~Definitions` passes with 24 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1` passes with 30 tests.
+  - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false` passes with 0 warnings.
+  - `dotnet run --project src\FluxMq.Cli\FluxMq.Cli.csproj --no-restore -- validate --config C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` reports the app is valid.
+  - `dotnet run --project src\FluxMq.Cli\FluxMq.Cli.csproj --no-restore -- run --config C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json --duration-ms 10` starts and stops successfully.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -m:1` passes with 381 tests. The solution pass still prints existing WinAppSDK PRI qualifier warnings during UI test build.
+- Hardened definition collection properties so empty/null dashboard widgets, dashboard cells, scenario steps, node configuration, and other definition collections stay usable after configuration loading.
+- Added loader and JSON regression coverage for empty dashboard/test sections to prevent app-open/run crashes when dashboards or tests are present but have no widgets/cells/steps yet.
+- Simplified the dashboard layout toolbar around the cell-slot model:
+  - removed visible add/remove row, column, and cell commands
+  - kept Ctrl/Shift multi-select and merge for creating larger slots
+  - replaced separate split commands with one split grid picker for the selected cell
+  - added row/column guide lines over the dashboard surface so track boundaries remain visible through merged or empty areas
+- Refined the dashboard designer visual model:
+  - the dashboard now renders as a single framed board inside a grid-backed surface
+  - row and column track controls render as centered pills outside the board
+  - cells show layout coordinates instead of internal cell keys
+  - merged cells cover their full slot without guide lines cutting through the merged area
+- Added dashboard tab modes:
+  - Edit mode keeps the layout designer controls and selectable cells
+  - Live mode renders the same dashboard layout as a read-only board
+  - Live mode already respects row/column tracks, spans, padding, and assigned widget slots, ready for real widget renderers
+  - the dashboard widget panel is visible only in Edit mode; Live mode uses the full tab width for viewing
+- Verified:
+  - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false` passes with 0 warnings.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes with 128 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes with 381 tests. The solution pass still prints existing WinAppSDK PRI qualifier warnings during UI test build.

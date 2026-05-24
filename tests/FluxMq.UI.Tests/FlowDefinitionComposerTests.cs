@@ -1,5 +1,6 @@
 using FluxMq.App;
 using FluxMq.Core.Models;
+using FluxMq.UI.Models;
 using FluxMq.UI.Services;
 using Shouldly;
 using Microsoft.Extensions.Configuration;
@@ -681,7 +682,260 @@ public sealed class FlowDefinitionComposerTests
             .EnumerateArray()
             .Select(item => item.GetString())
             .ShouldBe(["320", "*"]);
+        dashboard.GetProperty("layout")
+            .GetProperty("columnPadding")
+            .EnumerateArray()
+            .Select(item => item.GetDouble())
+            .ShouldBe([0d, 0d]);
+        dashboard.GetProperty("layout")
+            .GetProperty("rowPadding")
+            .EnumerateArray()
+            .Select(item => item.GetDouble())
+            .ShouldBe([0d, 0d]);
         dashboard.GetProperty("widgets").EnumerateObject().Count().ShouldBe(0);
+    }
+
+    [Fact]
+    public void GetDashboardLayout_ReadsTracksCellsAndWidgetCount()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = """
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "dashboards": {
+                "ops": {
+                  "layout": {
+                    "columns": ["240", "2*", "25%"],
+                    "rows": ["96", "*"],
+                    "columnPadding": [0, 8, 16],
+                    "rowPadding": [4, 12],
+                    "cells": {
+                      "main": {
+                        "row": 0,
+                        "column": 1,
+                        "rowSpan": 2,
+                        "columnSpan": 2,
+                        "widget": "latest"
+                      }
+                    }
+                  },
+                  "widgets": {
+                    "latest": { "type": "payload.latest" }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """;
+
+        var layout = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull();
+
+        layout.Columns.ShouldBe(["240", "2*", "25%"]);
+        layout.Rows.ShouldBe(["96", "*"]);
+        layout.ColumnPadding.ShouldBe([0d, 8d, 16d]);
+        layout.RowPadding.ShouldBe([4d, 12d]);
+        layout.WidgetCount.ShouldBe(1);
+        var cell = layout.Cells.ShouldHaveSingleItem();
+        cell.Name.ShouldBe("main");
+        cell.Row.ShouldBe(0);
+        cell.Column.ShouldBe(1);
+        cell.RowSpan.ShouldBe(2);
+        cell.ColumnSpan.ShouldBe(2);
+        cell.Widget.ShouldBe("latest");
+    }
+
+    [Fact]
+    public void UpdateDashboardGridTracks_NormalizesWpfLikeSizes()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+
+        var updated = composer.UpdateDashboardGridTracks(
+            json,
+            "ops",
+            ["320px", "2*", "25%"],
+            ["120", "*"]);
+
+        var layout = composer.GetDashboardLayout(updated, "ops").ShouldNotBeNull();
+        layout.Columns.ShouldBe(["320", "2*", "25%"]);
+        layout.Rows.ShouldBe(["120", "*"]);
+        layout.ColumnPadding.ShouldBe([0d, 0d, 0d]);
+        layout.RowPadding.ShouldBe([0d, 0d]);
+    }
+
+    [Fact]
+    public void UpdateDashboardTrack_UpdatesSingleTrackSizeAndPadding()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+
+        json = composer.UpdateDashboardTrack(json, "ops", "column", 1, "48%", 12);
+        json = composer.UpdateDashboardTrack(json, "ops", "row", 0, "260px", 6.5);
+
+        var layout = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull();
+        layout.Columns.ShouldBe(["320", "48%"]);
+        layout.Rows.ShouldBe(["260", "*"]);
+        layout.ColumnPadding.ShouldBe([0d, 12d]);
+        layout.RowPadding.ShouldBe([6.5d, 0d]);
+    }
+
+    [Fact]
+    public void UpdateDashboardGridTracks_RejectsEmptyAndInvalidTracks()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+
+        Should.Throw<FormatException>(() =>
+            composer.UpdateDashboardGridTracks(json, "ops", [], ["*"]));
+
+        Should.Throw<FormatException>(() =>
+            composer.UpdateDashboardGridTracks(json, "ops", ["120%"], ["*"]));
+    }
+
+    [Fact]
+    public void AddDashboardCell_FillsOpenSlotsThenAddsRow()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+        json = composer.UpdateDashboardGridTracks(json, "ops", ["*", "*"], ["*"]);
+
+        json = composer.AddDashboardCell(json, "ops");
+        json = composer.AddDashboardCell(json, "ops");
+        json = composer.AddDashboardCell(json, "ops");
+
+        var layout = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull();
+
+        layout.Rows.ShouldBe(["*", "*"]);
+        layout.Cells.Select(cell => (cell.Name, cell.Row, cell.Column))
+            .ShouldBe([
+                ("cell", 0, 0),
+                ("cell2", 0, 1),
+                ("cell3", 1, 0)
+            ]);
+    }
+
+    [Fact]
+    public void RemoveDashboardCell_RemovesOnlyRequestedCell()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+        json = composer.AddDashboardCell(json, "ops");
+        json = composer.AddDashboardCell(json, "ops");
+
+        var updated = composer.RemoveDashboardCell(json, "ops", "cell");
+
+        var layout = composer.GetDashboardLayout(updated, "ops").ShouldNotBeNull();
+        layout.Cells.Select(cell => cell.Name).ShouldBe(["cell2"]);
+    }
+
+    [Fact]
+    public void ResizeDashboardGrid_KeepsTrackSizesAndRemovesOverflowCells()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+        json = composer.UpdateDashboardGridTracks(json, "ops", ["320", "2*", "25%"], ["180", "*"]);
+        json = composer.UpdateDashboardTrack(json, "ops", "column", 1, "2*", 7);
+        json = composer.UpdateDashboardTrack(json, "ops", "row", 0, "180", 5);
+        json = composer.AddDashboardCell(json, "ops");
+        json = composer.AddDashboardCell(json, "ops");
+        json = composer.AddDashboardCell(json, "ops");
+
+        var updated = composer.ResizeDashboardGrid(json, "ops", rowCount: 1, columnCount: 2);
+
+        var layout = composer.GetDashboardLayout(updated, "ops").ShouldNotBeNull();
+        layout.Columns.ShouldBe(["320", "2*"]);
+        layout.Rows.ShouldBe(["180"]);
+        layout.ColumnPadding.ShouldBe([0d, 7d]);
+        layout.RowPadding.ShouldBe([5d]);
+        layout.Cells.Select(cell => cell.Name).ShouldBe(["cell", "cell2"]);
+    }
+
+    [Fact]
+    public void MergeDashboardCells_CreatesRectangularSpanFromSlots()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+        json = composer.UpdateDashboardGridTracks(json, "ops", ["*", "*"], ["*", "*"]);
+
+        var updated = composer.MergeDashboardCells(
+            json,
+            "ops",
+            [
+                DashboardCellSnapshot.Slot(0, 0),
+                DashboardCellSnapshot.Slot(0, 1),
+                DashboardCellSnapshot.Slot(1, 0),
+                DashboardCellSnapshot.Slot(1, 1)
+            ]);
+
+        var cell = composer.GetDashboardLayout(updated, "ops").ShouldNotBeNull().Cells.ShouldHaveSingleItem();
+        cell.Row.ShouldBe(0);
+        cell.Column.ShouldBe(0);
+        cell.RowSpan.ShouldBe(2);
+        cell.ColumnSpan.ShouldBe(2);
+    }
+
+    [Fact]
+    public void MergeDashboardCells_RejectsNonRectangularSelection()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+        json = composer.UpdateDashboardGridTracks(json, "ops", ["*", "*"], ["*", "*"]);
+
+        var updated = composer.MergeDashboardCells(
+            json,
+            "ops",
+            [DashboardCellSnapshot.Slot(0, 0), DashboardCellSnapshot.Slot(1, 1)]);
+
+        updated.ShouldBe(json);
+    }
+
+    [Fact]
+    public void SplitDashboardCell_RestoresUnitCells()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+        json = composer.UpdateDashboardGridTracks(json, "ops", ["*", "*"], ["*", "*"]);
+        json = composer.MergeDashboardCells(
+            json,
+            "ops",
+            [
+                DashboardCellSnapshot.Slot(0, 0),
+                DashboardCellSnapshot.Slot(0, 1),
+                DashboardCellSnapshot.Slot(1, 0),
+                DashboardCellSnapshot.Slot(1, 1)
+            ]);
+
+        var updated = composer.SplitDashboardCell(json, "ops", "cell");
+
+        var layout = composer.GetDashboardLayout(updated, "ops").ShouldNotBeNull();
+        layout.Cells.Count.ShouldBe(4);
+        layout.Cells.ShouldAllBe(cell => cell.RowSpan == 1 && cell.ColumnSpan == 1);
+    }
+
+    [Fact]
+    public void SubdivideDashboardCell_InsertsTracksAndShiftsNeighbors()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+        json = composer.UpdateDashboardGridTracks(json, "ops", ["80", "1*"], ["50%", "50%"]);
+        json = composer.UpdateDashboardTrack(json, "ops", "column", 0, "80", 6);
+        json = composer.UpdateDashboardTrack(json, "ops", "row", 0, "50%", 4);
+        json = composer.AddDashboardCell(json, "ops");
+        json = composer.AddDashboardCell(json, "ops");
+
+        var updated = composer.SubdivideDashboardCell(json, "ops", DashboardCellSnapshot.Slot(0, 0), rowParts: 2, columnParts: 2);
+
+        var layout = composer.GetDashboardLayout(updated, "ops").ShouldNotBeNull();
+        layout.Rows.ShouldBe(["25%", "25%", "50%"]);
+        layout.Columns.ShouldBe(["40", "40", "*"]);
+        layout.RowPadding.ShouldBe([4d, 4d, 0d]);
+        layout.ColumnPadding.ShouldBe([6d, 6d, 0d]);
+        layout.Cells.Count.ShouldBe(6);
+        layout.Cells.ShouldContain(cell => cell.Row == 0 && cell.Column == 2 && cell.RowSpan == 2);
+        layout.Cells.ShouldContain(cell => cell.Row == 0 && cell.Column == 0 && cell.RowSpan == 1 && cell.ColumnSpan == 1);
+        layout.Cells.ShouldContain(cell => cell.Row == 1 && cell.Column == 1 && cell.RowSpan == 1 && cell.ColumnSpan == 1);
     }
 
     [Fact]

@@ -1,0 +1,634 @@
+@using FluxMq.Pipeline.Definitions
+@using System.Globalization
+@inject IDialogService DialogService
+
+<div class="dashboard-designer">
+    <div class="dashboard-toolbar">
+        <div class="dashboard-heading">
+            <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="dashboard-heading-icon" />
+            <div>
+                <div class="dashboard-title">@Project.ActiveDashboardName</div>
+                <div class="dashboard-meta">@LayoutMeta</div>
+            </div>
+        </div>
+
+        <MudToggleGroup T="string" @bind-Value="DashboardMode" Size="Size.Small" Outlined="true" Color="Color.Primary" Class="dashboard-mode-toggle">
+            <MudToggleItem Value="@DashboardModeEdit" UnselectedIcon="@Icons.Material.Filled.Edit" SelectedIcon="@Icons.Material.Filled.Edit">Edit</MudToggleItem>
+            <MudToggleItem Value="@DashboardModeLive" UnselectedIcon="@Icons.Material.Filled.Visibility" SelectedIcon="@Icons.Material.Filled.Visibility">Live</MudToggleItem>
+        </MudToggleGroup>
+
+        @if (IsEditMode)
+        {
+            <div class="dashboard-command-strip">
+            <div class="dashboard-grid-picker">
+                <MudTooltip Text="Set grid layout">
+                    <MudIconButton Icon="@Icons.Material.Filled.GridOn"
+                                   Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   OnClick="@ToggleGridPicker" />
+                </MudTooltip>
+                <span>@GridPickerSummary</span>
+
+                @if (_isGridPickerOpen)
+                {
+                    <button type="button" class="dashboard-picker-backdrop" @onclick="@CloseGridPicker"></button>
+                    <div class="dashboard-grid-picker-popover">
+                        <div class="dashboard-grid-picker-cells">
+                            @foreach (var row in PickerRows)
+                            {
+                                @foreach (var column in PickerColumns)
+                                {
+                                    var r = row;
+                                    var c = column;
+                                    <button type="button"
+                                            class="@GridPickerCellClass(r, c)"
+                                            title="@($"Set grid to {c} columns x {r} rows")"
+                                            @onmouseenter="@(() => PreviewGrid(r, c))"
+                                            @onclick="@(() => PickGrid(r, c))">
+                                    </button>
+                                }
+                            }
+                        </div>
+                        <div class="dashboard-picker-label">@GridPickerLabel</div>
+                    </div>
+                }
+            </div>
+
+            <span class="dashboard-toolbar-separator"></span>
+
+            <MudTooltip Text="Merge selected cells">
+                <MudIconButton Icon="@Icons.Material.Filled.ViewColumn"
+                               Size="Size.Small"
+                               Disabled="@(!CanMerge)"
+                               OnClick="@MergeSelected" />
+            </MudTooltip>
+            <div class="dashboard-grid-picker">
+                <MudTooltip Text="Split selected cell">
+                    <MudIconButton Icon="@Icons.Material.Filled.Splitscreen"
+                                   Size="Size.Small"
+                                   Disabled="@(!CanOpenSplitPicker)"
+                                   OnClick="@ToggleSplitPicker" />
+                </MudTooltip>
+                <span>@SplitPickerSummary</span>
+
+                @if (_isSplitPickerOpen)
+                {
+                    <button type="button" class="dashboard-picker-backdrop" @onclick="@CloseSplitPicker"></button>
+                    <div class="dashboard-grid-picker-popover">
+                        <div class="dashboard-grid-picker-cells split-picker-cells">
+                            @foreach (var row in SplitPickerRows)
+                            {
+                                @foreach (var column in SplitPickerColumns)
+                                {
+                                    var r = row;
+                                    var c = column;
+                                    <button type="button"
+                                            class="@SplitPickerCellClass(r, c)"
+                                            title="@($"Split selected cell to {c} columns x {r} rows")"
+                                            @onmouseenter="@(() => PreviewSplit(r, c))"
+                                            @onclick="@(() => PickSplit(r, c))">
+                                    </button>
+                                }
+                            }
+                        </div>
+                        <div class="dashboard-picker-label">@SplitPickerLabel</div>
+                    </div>
+                }
+            </div>
+
+            <span class="dashboard-toolbar-separator"></span>
+            <span class="dashboard-selection-summary">@SelectionSummary</span>
+            </div>
+        }
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_error))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="dashboard-error">@_error</MudAlert>
+    }
+
+    @if (_layout is null)
+    {
+        <div class="dashboard-empty">
+            <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="dashboard-empty-icon" />
+            <span>No dashboard selected</span>
+        </div>
+    }
+    else
+    {
+        @if (IsEditMode)
+        {
+            <div class="dashboard-grid-frame">
+            <div class="dashboard-grid-stage">
+                <div class="dashboard-column-handles" style="@ColumnHandleStyle">
+                    @for (var column = 0; column < _layout.Columns.Count; column++)
+                    {
+                        var c = column;
+                        <button type="button"
+                                class="dashboard-track-handle"
+                                title="@($"Edit column {c + 1}")"
+                                @onclick="() => OpenTrackEditorAsync(ColumnAxis, c)">
+                            <span>C@(c + 1)</span>
+                            <small>@_layout.Columns[c]</small>
+                            @if (GetTrackPadding(ColumnAxis, c) > 0)
+                            {
+                                <small class="dashboard-track-padding">pad @FormatNumber(GetTrackPadding(ColumnAxis, c))</small>
+                            }
+                        </button>
+                    }
+                </div>
+                <div class="dashboard-row-handles" style="@RowHandleStyle">
+                    @for (var row = 0; row < _layout.Rows.Count; row++)
+                    {
+                        var r = row;
+                        <button type="button"
+                                class="dashboard-track-handle"
+                                title="@($"Edit row {r + 1}")"
+                                @onclick="() => OpenTrackEditorAsync(RowAxis, r)">
+                            <span>R@(r + 1)</span>
+                            <small>@_layout.Rows[r]</small>
+                            @if (GetTrackPadding(RowAxis, r) > 0)
+                            {
+                                <small class="dashboard-track-padding">pad @FormatNumber(GetTrackPadding(RowAxis, r))</small>
+                            }
+                        </button>
+                    }
+                </div>
+                <div class="dashboard-grid" style="@GridStyle">
+                    @foreach (var cell in VisibleCells)
+                    {
+                        var currentCell = cell;
+                        <section class="@CellClass(currentCell)"
+                                 style="@CellStyle(currentCell)"
+                                 @onclick="@((MouseEventArgs args) => SelectCell(currentCell, args))"
+                                 @key="currentCell.Name">
+                            <div class="dashboard-cell-content">
+                                <span class="dashboard-cell-name">@CellTitle(currentCell)</span>
+                                @if (currentCell.IsMerged)
+                                {
+                                    <span class="dashboard-cell-span">@CellSpan(currentCell)</span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(currentCell.Widget))
+                                {
+                                    <span class="dashboard-cell-widget">@currentCell.Widget</span>
+                                }
+                            </div>
+                        </section>
+                    }
+                </div>
+            </div>
+            </div>
+        }
+        else
+        {
+            <div class="dashboard-live-frame">
+                <div class="dashboard-live-grid" style="@GridStyle">
+                    @foreach (var cell in VisibleCells)
+                    {
+                        var currentCell = cell;
+                        <section class="@LiveCellClass(currentCell)"
+                                 style="@CellStyle(currentCell)"
+                                 @key="currentCell.Name">
+                            @if (!string.IsNullOrWhiteSpace(currentCell.Widget))
+                            {
+                                <div class="dashboard-live-widget">
+                                    <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" />
+                                    <span>@currentCell.Widget</span>
+                                </div>
+                            }
+                        </section>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private const string ColumnAxis = "column";
+    private const string RowAxis = "row";
+    private const string DashboardModeEdit = "edit";
+    private const string DashboardModeLive = "live";
+
+    [Parameter, EditorRequired]
+    public FlowWorkspaceService Project { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<bool> EditModeChanged { get; set; }
+
+    private readonly HashSet<string> _selectedCellIds = new(StringComparer.Ordinal);
+    private DashboardLayoutSnapshot? _layout;
+    private string? _dashboardName;
+    private string? _error;
+    private bool _isGridPickerOpen;
+    private bool _isSplitPickerOpen;
+    private int _previewRows = 1;
+    private int _previewColumns = 1;
+    private int _previewSplitRows = 2;
+    private int _previewSplitColumns = 2;
+    private string _dashboardMode = DashboardModeEdit;
+    private bool? _lastNotifiedEditMode;
+    private long _definitionRevision = -1;
+
+    protected override void OnParametersSet()
+    {
+        if (_definitionRevision != Project.DefinitionRevision ||
+            !string.Equals(_dashboardName, Project.ActiveDashboardName, StringComparison.Ordinal))
+        {
+            LoadLayout();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_lastNotifiedEditMode != IsEditMode)
+        {
+            _lastNotifiedEditMode = IsEditMode;
+            await EditModeChanged.InvokeAsync(IsEditMode);
+        }
+    }
+
+    private static IEnumerable<int> PickerRows => Enumerable.Range(1, 12);
+
+    private static IEnumerable<int> PickerColumns => Enumerable.Range(1, 12);
+
+    private static IEnumerable<int> SplitPickerRows => Enumerable.Range(1, 6);
+
+    private static IEnumerable<int> SplitPickerColumns => Enumerable.Range(1, 6);
+
+    private IReadOnlyList<DashboardCellSnapshot> VisibleCells
+        => _layout is null ? [] : BuildVisibleCells(_layout);
+
+    private IReadOnlyList<DashboardCellSnapshot> SelectedCells
+        => VisibleCells.Where(cell => _selectedCellIds.Contains(cell.Name)).ToArray();
+
+    private bool CanMerge => IsRectangularSelection(SelectedCells);
+
+    private bool CanOpenSplitPicker => SelectedCells.Count == 1;
+
+    private bool IsEditMode => string.Equals(_dashboardMode, DashboardModeEdit, StringComparison.Ordinal);
+
+    private string DashboardMode
+    {
+        get => _dashboardMode;
+        set
+        {
+            var next = string.Equals(value, DashboardModeLive, StringComparison.Ordinal)
+                ? DashboardModeLive
+                : DashboardModeEdit;
+            if (string.Equals(_dashboardMode, next, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _dashboardMode = next;
+            _isGridPickerOpen = false;
+            _isSplitPickerOpen = false;
+            _selectedCellIds.Clear();
+        }
+    }
+
+    private string LayoutMeta => _layout is null
+        ? "Dashboard"
+        : $"{_layout.Columns.Count} columns / {_layout.Rows.Count} rows / {_layout.Cells.Count} cells / {_layout.WidgetCount} widgets";
+
+    private string SelectionSummary => SelectedCells.Count switch
+    {
+        0 => "No cell selected",
+        1 => SelectedCells[0].IsMerged ? $"Selected {SelectedCells[0].ColumnSpan} x {SelectedCells[0].RowSpan} cell" : $"Selected {SelectedCells[0].Label}",
+        _ => $"{SelectedCells.Count} cells selected"
+    };
+
+    private string GridPickerSummary => _layout is null
+        ? "Grid"
+        : $"{_layout.Columns.Count} columns x {_layout.Rows.Count} rows";
+
+    private string GridPickerLabel => $"{_previewColumns} columns x {_previewRows} rows";
+
+    private string SplitPickerSummary => SelectedCells.Count == 1
+        ? "Split"
+        : "Select one cell";
+
+    private string SplitPickerLabel => $"{_previewSplitColumns} columns x {_previewSplitRows} rows";
+
+    private string GridStyle => _layout is null
+        ? string.Empty
+        : $"grid-template-columns:{CssTemplate(_layout.Columns)};grid-template-rows:{CssTemplate(_layout.Rows)};";
+
+    private string ColumnHandleStyle => _layout is null
+        ? string.Empty
+        : $"grid-template-columns:{CssTemplate(_layout.Columns)};";
+
+    private string RowHandleStyle => _layout is null
+        ? string.Empty
+        : $"grid-template-rows:{CssTemplate(_layout.Rows)};";
+
+    private void LoadLayout()
+    {
+        var dashboardChanged = !string.Equals(_dashboardName, Project.ActiveDashboardName, StringComparison.Ordinal);
+        _dashboardName = Project.ActiveDashboardName;
+        _definitionRevision = Project.DefinitionRevision;
+        _layout = Project.GetActiveDashboardLayout();
+        _previewRows = _layout?.Rows.Count ?? 1;
+        _previewColumns = _layout?.Columns.Count ?? 1;
+        _previewSplitRows = 2;
+        _previewSplitColumns = 2;
+        _error = null;
+        if (dashboardChanged)
+        {
+            DashboardMode = DashboardModeEdit;
+        }
+
+        TrimSelection();
+    }
+
+    private async Task OpenTrackEditorAsync(string axis, int index)
+    {
+        if (_layout is null)
+        {
+            return;
+        }
+
+        var isRow = string.Equals(axis, RowAxis, StringComparison.Ordinal);
+        var size = isRow ? _layout.Rows[index] : _layout.Columns[index];
+        var padding = GetTrackPadding(axis, index);
+        var dialog = await DialogService.ShowAsync<DashboardTrackEditorDialog>(
+            $"Edit {axis} {index + 1}",
+            new DialogParameters
+            {
+                [nameof(DashboardTrackEditorDialog.Axis)] = axis,
+                [nameof(DashboardTrackEditorDialog.Index)] = index,
+                [nameof(DashboardTrackEditorDialog.Size)] = size,
+                [nameof(DashboardTrackEditorDialog.Padding)] = padding
+            });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: DashboardTrackEditorDialog.DashboardTrackUpdate update })
+        {
+            Project.UpdateDashboardTrack(axis, index, update.Size, update.Padding);
+            CaptureDashboardError();
+            RefreshLayoutAfterCommand();
+        }
+    }
+
+    private void MergeSelected()
+    {
+        Project.MergeDashboardCells(SelectedCells);
+        _selectedCellIds.Clear();
+        _isSplitPickerOpen = false;
+        CaptureDashboardError();
+        RefreshLayoutAfterCommand();
+    }
+
+    private void SelectCell(DashboardCellSnapshot cell, MouseEventArgs args)
+    {
+        var extendSelection = args.CtrlKey || args.ShiftKey || args.MetaKey;
+        if (!extendSelection)
+        {
+            _selectedCellIds.Clear();
+        }
+
+        if (!_selectedCellIds.Add(cell.Name) && extendSelection)
+        {
+            _selectedCellIds.Remove(cell.Name);
+        }
+    }
+
+    private void ToggleGridPicker()
+    {
+        if (!_isGridPickerOpen && _layout is not null)
+        {
+            _previewRows = _layout.Rows.Count;
+            _previewColumns = _layout.Columns.Count;
+        }
+
+        _isSplitPickerOpen = false;
+        _isGridPickerOpen = !_isGridPickerOpen;
+    }
+
+    private void CloseGridPicker()
+    {
+        _isGridPickerOpen = false;
+    }
+
+    private void ToggleSplitPicker()
+    {
+        var selected = SelectedCells.SingleOrDefault();
+        if (selected is null)
+        {
+            return;
+        }
+
+        if (!_isSplitPickerOpen)
+        {
+            _previewSplitRows = Math.Min(6, Math.Max(2, selected.RowSpan));
+            _previewSplitColumns = Math.Min(6, Math.Max(2, selected.ColumnSpan));
+        }
+
+        _isGridPickerOpen = false;
+        _isSplitPickerOpen = !_isSplitPickerOpen;
+    }
+
+    private void CloseSplitPicker()
+    {
+        _isSplitPickerOpen = false;
+    }
+
+    private void PreviewGrid(int rows, int columns)
+    {
+        _previewRows = rows;
+        _previewColumns = columns;
+    }
+
+    private void PreviewSplit(int rows, int columns)
+    {
+        _previewSplitRows = rows;
+        _previewSplitColumns = columns;
+    }
+
+    private void PickGrid(int rows, int columns)
+    {
+        CloseGridPicker();
+        Project.ResizeDashboardGrid(rows, columns);
+        _selectedCellIds.Clear();
+        CaptureDashboardError();
+        RefreshLayoutAfterCommand();
+    }
+
+    private void PickSplit(int rows, int columns)
+    {
+        if (rows == 1 && columns == 1)
+        {
+            return;
+        }
+
+        var cell = SelectedCells.SingleOrDefault();
+        if (cell is null || !CanSubdivide(rows, columns))
+        {
+            return;
+        }
+
+        CloseSplitPicker();
+        Project.SubdivideDashboardCell(cell, rows, columns);
+        _selectedCellIds.Clear();
+        CaptureDashboardError();
+        RefreshLayoutAfterCommand();
+    }
+
+    private void RefreshLayoutAfterCommand()
+    {
+        _definitionRevision = Project.DefinitionRevision;
+        _layout = Project.GetActiveDashboardLayout();
+        _previewRows = _layout?.Rows.Count ?? _previewRows;
+        _previewColumns = _layout?.Columns.Count ?? _previewColumns;
+        TrimSelection();
+    }
+
+    private void TrimSelection()
+    {
+        var knownIds = VisibleCells.Select(static cell => cell.Name).ToHashSet(StringComparer.Ordinal);
+        _selectedCellIds.RemoveWhere(id => !knownIds.Contains(id));
+    }
+
+    private void CaptureDashboardError()
+    {
+        _error = Project.Diagnostics
+            .FirstOrDefault(diagnostic => diagnostic.Code.StartsWith("Dashboard", StringComparison.Ordinal))
+            ?.Message;
+    }
+
+    private bool CanSubdivide(int rowParts, int columnParts)
+    {
+        if (_layout is null || SelectedCells.Count != 1 || rowParts <= 0 || columnParts <= 0)
+        {
+            return false;
+        }
+
+        var selected = SelectedCells[0];
+        var rowInsertCount = Math.Max(0, rowParts - selected.RowSpan);
+        var columnInsertCount = Math.Max(0, columnParts - selected.ColumnSpan);
+
+        return (rowParts > 1 || columnParts > 1)
+            && _layout.Rows.Count + rowInsertCount <= 12
+            && _layout.Columns.Count + columnInsertCount <= 12;
+    }
+
+    private string GridPickerCellClass(int rows, int columns)
+        => $"dashboard-grid-picker-cell {(rows <= _previewRows && columns <= _previewColumns ? "active" : null)} {(_layout is not null && rows == _layout.Rows.Count && columns == _layout.Columns.Count ? "current" : null)}";
+
+    private string SplitPickerCellClass(int rows, int columns)
+        => $"dashboard-grid-picker-cell {(rows <= _previewSplitRows && columns <= _previewSplitColumns ? "active" : null)} {(rows == 1 && columns == 1 || !CanSubdivide(rows, columns) ? "disabled" : null)}";
+
+    private string CellClass(DashboardCellSnapshot cell)
+        => $"dashboard-cell {(cell.IsExplicit ? "explicit" : "virtual")} {(cell.IsMerged ? "merged" : null)} {(_selectedCellIds.Contains(cell.Name) ? "selected" : null)}";
+
+    private static string LiveCellClass(DashboardCellSnapshot cell)
+        => $"dashboard-live-cell {(cell.IsMerged ? "merged" : null)} {(!string.IsNullOrWhiteSpace(cell.Widget) ? "has-widget" : "empty")}";
+
+    private string CellStyle(DashboardCellSnapshot cell)
+    {
+        var rowPadding = GetCellRowPadding(cell);
+        var columnPadding = GetCellColumnPadding(cell);
+        return $"grid-row:{cell.Row + 1} / span {cell.RowSpan};grid-column:{cell.Column + 1} / span {cell.ColumnSpan};margin:{FormatNumber(rowPadding)}px {FormatNumber(columnPadding)}px;";
+    }
+
+    private double GetCellRowPadding(DashboardCellSnapshot cell)
+        => Enumerable.Range(cell.Row, cell.RowSpan).Select(index => GetTrackPadding(RowAxis, index)).DefaultIfEmpty(0).Max();
+
+    private double GetCellColumnPadding(DashboardCellSnapshot cell)
+        => Enumerable.Range(cell.Column, cell.ColumnSpan).Select(index => GetTrackPadding(ColumnAxis, index)).DefaultIfEmpty(0).Max();
+
+    private double GetTrackPadding(string axis, int index)
+    {
+        if (_layout is null)
+        {
+            return 0;
+        }
+
+        var values = string.Equals(axis, RowAxis, StringComparison.Ordinal)
+            ? _layout.RowPadding
+            : _layout.ColumnPadding;
+        return index >= 0 && index < values.Count ? values[index] : 0;
+    }
+
+    private static string CellTitle(DashboardCellSnapshot cell)
+        => $"{cell.Column + 1},{cell.Row + 1}";
+
+    private static string CellSpan(DashboardCellSnapshot cell)
+        => $"{cell.ColumnSpan} x {cell.RowSpan}";
+
+    private static string CssTemplate(IReadOnlyList<string> sizes)
+        => string.Join(" ", sizes.Select(ToCssTrack));
+
+    private static IReadOnlyList<DashboardCellSnapshot> BuildVisibleCells(DashboardLayoutSnapshot layout)
+    {
+        var visible = new List<DashboardCellSnapshot>(layout.Cells);
+        for (var row = 0; row < layout.Rows.Count; row++)
+        {
+            for (var column = 0; column < layout.Columns.Count; column++)
+            {
+                if (!layout.Cells.Any(cell => Covers(cell, row, column)))
+                {
+                    visible.Add(DashboardCellSnapshot.Slot(row, column));
+                }
+            }
+        }
+
+        return visible
+            .OrderBy(static cell => cell.Row)
+            .ThenBy(static cell => cell.Column)
+            .ThenByDescending(static cell => cell.IsExplicit)
+            .ToArray();
+    }
+
+    private static bool Covers(DashboardCellSnapshot cell, int row, int column)
+        => row >= cell.Row &&
+           row < cell.Row + cell.RowSpan &&
+           column >= cell.Column &&
+           column < cell.Column + cell.ColumnSpan;
+
+    private static bool IsRectangularSelection(IReadOnlyList<DashboardCellSnapshot> cells)
+    {
+        if (cells.Count < 2)
+        {
+            return false;
+        }
+
+        var coordinates = cells.SelectMany(static cell => cell.CoveredCoordinates()).ToArray();
+        var unique = coordinates.ToHashSet();
+        if (coordinates.Length != unique.Count)
+        {
+            return false;
+        }
+
+        var minRow = unique.Min(static coordinate => coordinate.Row);
+        var maxRow = unique.Max(static coordinate => coordinate.Row);
+        var minColumn = unique.Min(static coordinate => coordinate.Column);
+        var maxColumn = unique.Max(static coordinate => coordinate.Column);
+
+        return unique.Count == (maxRow - minRow + 1) * (maxColumn - minColumn + 1);
+    }
+
+    private static string ToCssTrack(string size)
+    {
+        try
+        {
+            var track = DashboardGridTrackDefinition.Parse(size);
+            var value = FormatNumber(track.Value);
+            return track.Unit switch
+            {
+                DashboardGridTrackUnit.Fixed => $"minmax(0,{value}px)",
+                DashboardGridTrackUnit.Percent => $"minmax(0,{value}%)",
+                DashboardGridTrackUnit.Star => $"minmax(0,{value}fr)",
+                _ => "minmax(0,1fr)"
+            };
+        }
+        catch
+        {
+            return "minmax(0,1fr)";
+        }
+    }
+
+    private static string FormatNumber(double value)
+        => value.ToString("0.###", CultureInfo.InvariantCulture);
+}

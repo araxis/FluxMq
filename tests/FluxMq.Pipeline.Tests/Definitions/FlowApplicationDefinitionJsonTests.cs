@@ -98,6 +98,8 @@ public sealed class FlowApplicationDefinitionJsonTests
                   "layout": {
                     "columns": ["280", "2*", "25%"],
                     "rows": ["96", "*"],
+                    "columnPadding": [0, 8, 12],
+                    "rowPadding": [4, 0],
                     "cells": {
                       "main": {
                         "row": 0,
@@ -155,6 +157,8 @@ public sealed class FlowApplicationDefinitionJsonTests
             DashboardGridTrackDefinition.Fixed(96),
             DashboardGridTrackDefinition.Star()
         ]);
+        dashboard.Layout.ColumnPadding.ShouldBe([0d, 8d, 12d]);
+        dashboard.Layout.RowPadding.ShouldBe([4d, 0d]);
         dashboard.Layout.Cells["main"].Widget.ShouldBe("messageRate");
         dashboard.Widgets["messageRate"].Type.ShouldBe("metric.card");
         dashboard.Widgets["messageRate"].Configuration["metric"].GetString().ShouldBe("messagesPerSecond");
@@ -162,6 +166,48 @@ public sealed class FlowApplicationDefinitionJsonTests
         var scenario = definition.Tests["mqttRoundTrip"];
         scenario.Steps["publishRequest"].Type.ShouldBe("mqtt.publish");
         scenario.Steps["expectResponse"].Configuration["eventType"].GetString().ShouldBe("mqtt.message.received");
+    }
+
+    [Fact]
+    public void Deserialize_TreatsNullCollectionsAsEmptyCollections()
+    {
+        const string json = """
+            {
+              "workflows": {
+                "observeTraffic": {
+                  "source": {
+                    "type": "mqtt.trigger",
+                    "configuration": null
+                  }
+                }
+              },
+              "dashboards": {
+                "ops": {
+                  "layout": {
+                    "columns": ["*"],
+                    "rows": ["*"],
+                    "cells": null
+                  },
+                  "widgets": null
+                }
+              },
+              "tests": {
+                "roundTrip": {
+                  "steps": null
+                }
+              }
+            }
+            """;
+
+        var definition = JsonSerializer.Deserialize<ApplicationDefinition>(
+            json,
+            ApplicationDefinitionJson.CreateSerializerOptions());
+
+        definition.ShouldNotBeNull();
+        definition!.Workflows["observeTraffic"].Nodes["source"].Configuration.ShouldBeEmpty();
+        definition.Dashboards["ops"].Layout.Cells.ShouldBeEmpty();
+        definition.Dashboards["ops"].Widgets.ShouldBeEmpty();
+        definition.Tests["roundTrip"].Steps.ShouldBeEmpty();
     }
 
     [Fact]
@@ -234,6 +280,8 @@ public sealed class FlowApplicationDefinitionJsonTests
                             DashboardGridTrackDefinition.Fixed(96),
                             DashboardGridTrackDefinition.Star()
                         ],
+                        ColumnPadding = [0, 8, 12],
+                        RowPadding = [4, 0],
                         Cells =
                         {
                             ["main"] = new DashboardCellDefinition
@@ -272,6 +320,9 @@ public sealed class FlowApplicationDefinitionJsonTests
         json.ShouldContain("\"280\"");
         json.ShouldContain("\"*\"");
         json.ShouldContain("\"25%\"");
+        json.ShouldContain("\"columnPadding\": [");
+        json.ShouldContain("8");
+        json.ShouldContain("\"rowPadding\": [");
         json.ShouldContain("\"widgets\"");
         json.ShouldContain("\"tests\"");
         json.ShouldContain("\"roundTrip\"");

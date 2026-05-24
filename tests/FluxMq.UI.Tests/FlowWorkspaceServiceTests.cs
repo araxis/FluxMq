@@ -411,6 +411,33 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public void ActiveDashboardLayoutCommands_UpdateDefinitionAndDiagnostics()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddWorkflow("pipe");
+        service.AddDashboard("ops");
+        service.SetActiveDashboard("ops");
+
+        service.UpdateDashboardGridTracks(["320", "*"], ["160"]);
+        service.UpdateDashboardTrack("column", 1, "2*", 9);
+        service.AddDashboardCell();
+
+        var layout = service.GetActiveDashboardLayout().ShouldNotBeNull();
+        layout.Columns.ShouldBe(["320", "2*"]);
+        layout.Rows.ShouldBe(["160"]);
+        layout.ColumnPadding.ShouldBe([0d, 9d]);
+        layout.Cells.ShouldHaveSingleItem().Name.ShouldBe("cell");
+        service.ActiveArtifactKind.ShouldBe(WorkspaceArtifactKind.Dashboard);
+        service.Diagnostics.ShouldBeEmpty();
+        service.HasUnsavedChanges.ShouldBeTrue();
+
+        service.UpdateDashboardGridTracks(["150%"], ["*"]);
+
+        service.State.ShouldBe(RuntimeWorkspaceState.Faulted);
+        service.Diagnostics.ShouldContain(diagnostic => diagnostic.Code == "DashboardUpdateFailed");
+    }
+
+    [Fact]
     public async Task SaveAndLoad_RoundTripsDashboardAndTestArtifacts()
     {
         var service = new FlowWorkspaceService(new FlowDefinitionComposer());

@@ -4,11 +4,24 @@ namespace FluxMq.Pipeline.Definitions;
 
 public sealed record ScenarioDefinition
 {
-    public Dictionary<string, ScenarioStepDefinition> Steps { get; init; } = [];
+    private Dictionary<string, ScenarioStepDefinition>? _steps = [];
+
+    public Dictionary<string, ScenarioStepDefinition> Steps
+    {
+        get => _steps ??= [];
+        init => _steps = value ?? [];
+    }
 }
 
 public sealed record ScenarioStepDefinition
 {
+    private Dictionary<string, JsonElement>? _configuration = [];
+
     public string Type { get; init; } = string.Empty;
-    public Dictionary<string, JsonElement> Configuration { get; init; } = [];
+
+    public Dictionary<string, JsonElement> Configuration
+    {
+        get => _configuration ??= [];
+        init => _configuration = value ?? [];
+    }
 }

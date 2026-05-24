@@ -34,6 +34,10 @@
     overflow: hidden;
 }
 
+.workspace-artifact-shell-live {
+    grid-template-columns: minmax(0, 1fr);
+}
+
 .workspace-artifact-tools {
     background: color-mix(in srgb, var(--flux-surface) 82%, transparent);
     border-right: 1px solid var(--flux-border);
