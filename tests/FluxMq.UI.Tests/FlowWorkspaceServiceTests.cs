@@ -142,6 +142,94 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public void GetFullDefinitionJson_MergesLiveAndLastNodePositions()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddWorkflow("pip1");
+        service.AddWorkflow("pip2");
+        service.LastNodePositions["pip1.trigger"] = (110d, 120d, false);
+        service.GetDiagramState = () => new Dictionary<string, (double X, double Y, bool Collapsed)>(StringComparer.Ordinal)
+        {
+            ["pip2.trigger"] = (210d, 220d, true)
+        };
+
+        var json = service.GetFullDefinitionJson();
+
+        using var document = System.Text.Json.JsonDocument.Parse(json);
+        var nodes = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("Designer")
+            .GetProperty("nodes");
+
+        nodes.GetProperty("pip1.trigger").GetProperty("x").GetDouble().ShouldBe(110d);
+        nodes.GetProperty("pip2.trigger").GetProperty("x").GetDouble().ShouldBe(210d);
+        nodes.GetProperty("pip2.trigger").GetProperty("collapsed").GetBoolean().ShouldBeTrue();
+        service.LastNodePositions.Keys.ShouldContain("pip1.trigger");
+        service.LastNodePositions.Keys.ShouldContain("pip2.trigger");
+    }
+
+    [Fact]
+    public async Task LoadAndSave_PreservesPositionsForInactivePipelines()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        var path = Path.Combine(Path.GetTempPath(), $"fluxmq-{Guid.NewGuid():N}.json");
+        service.SetFilePath(path);
+        await File.WriteAllTextAsync(path, """
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "pip1": {
+                  "trigger": { "type": "mqtt.trigger" }
+                },
+                "pip2": {
+                  "trigger": { "type": "mqtt.trigger" }
+                }
+              }
+            },
+            "Designer": {
+              "nodes": {
+                "pip1.trigger": { "x": 110, "y": 120, "collapsed": false },
+                "pip2.trigger": { "x": 210, "y": 220, "collapsed": false }
+              }
+            }
+          }
+        }
+        """);
+
+        try
+        {
+            await service.LoadFromFileAsync();
+            service.SetActiveWorkflow("pip2");
+            service.GetDiagramState = () => new Dictionary<string, (double X, double Y, bool Collapsed)>(StringComparer.Ordinal)
+            {
+                ["pip2.trigger"] = (310d, 320d, true)
+            };
+
+            await service.SaveToFileAsync();
+
+            using var document = System.Text.Json.JsonDocument.Parse(await File.ReadAllTextAsync(path));
+            var nodes = document.RootElement
+                .GetProperty("FluxMq")
+                .GetProperty("Designer")
+                .GetProperty("nodes");
+
+            nodes.GetProperty("pip1.trigger").GetProperty("x").GetDouble().ShouldBe(110d);
+            nodes.GetProperty("pip1.trigger").GetProperty("y").GetDouble().ShouldBe(120d);
+            nodes.GetProperty("pip2.trigger").GetProperty("x").GetDouble().ShouldBe(310d);
+            nodes.GetProperty("pip2.trigger").GetProperty("y").GetDouble().ShouldBe(320d);
+            nodes.GetProperty("pip2.trigger").GetProperty("collapsed").GetBoolean().ShouldBeTrue();
+        }
+        finally
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+    }
+
+    [Fact]
     public async Task ValidateAsync_ConvertsInvalidJsonToDiagnostic()
     {
         var service = new FlowWorkspaceService(new FlowDefinitionComposer());

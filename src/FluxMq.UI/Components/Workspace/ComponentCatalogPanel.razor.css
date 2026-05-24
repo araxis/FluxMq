@@ -1,13 +1,32 @@
 .component-catalog {
+    display: flex;
+    flex-direction: column;
     min-width: 0;
-    padding: 0 2px 8px;
+    padding: 0 0 8px;
     width: 100%;
 }
 
 .catalog-title {
-    font-size: 13px;
-    font-weight: 650;
-    padding: 2px 2px 8px;
+    align-items: center;
+    color: var(--mud-palette-text-primary);
+    display: flex;
+    font-size: 12.5px;
+    font-weight: 700;
+    gap: 8px;
+    min-height: 32px;
+    padding: 2px 2px 7px;
+}
+
+.catalog-title-icon {
+    color: var(--flux-accent);
+}
+
+.component-catalog.dashboard .catalog-title-icon {
+    color: var(--mud-palette-info);
+}
+
+.component-catalog.test .catalog-title-icon {
+    color: var(--mud-palette-warning);
 }
 
 .catalog-group {
@@ -17,6 +36,17 @@
     letter-spacing: 0.04em;
     line-height: 1;
     padding: 10px 2px 6px;
+}
+
+.catalog-empty {
+    align-items: center;
+    border: 1px dashed var(--flux-border);
+    border-radius: 6px;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    font-size: 11.5px;
+    min-height: 42px;
+    padding: 0 10px;
 }
 
 .catalog-drop-zone {
@@ -91,6 +121,10 @@
 }
 
 .catalog-icon-tile.actor {
+    color: var(--mud-palette-warning);
+}
+
+.catalog-icon-tile.assertion {
     color: var(--mud-palette-warning);
 }
 

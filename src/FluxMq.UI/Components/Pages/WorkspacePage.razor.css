@@ -25,6 +25,31 @@
     overflow: hidden;
 }
 
+.workspace-artifact-shell {
+    display: grid;
+    flex: 1 1 auto;
+    grid-template-columns: minmax(220px, 252px) minmax(0, 1fr);
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.workspace-artifact-tools {
+    background: color-mix(in srgb, var(--flux-surface) 82%, transparent);
+    border-right: 1px solid var(--flux-border);
+    min-height: 0;
+    min-width: 0;
+    overflow: auto;
+    padding: 8px;
+}
+
+.workspace-artifact-region {
+    display: flex;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
 .workspace-designer-region {
     display: flex;
     flex: 1 1 auto;
