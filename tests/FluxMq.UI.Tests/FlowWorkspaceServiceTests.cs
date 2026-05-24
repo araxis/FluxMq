@@ -65,6 +65,48 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public void AddComponent_WithRequestedPosition_StagesNodeAtRequestedPosition()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddWorkflow("pipe");
+
+        service.AddComponent("flow.mapper", (111d, 222d));
+
+        var staged = service.StagedNodePositions;
+        staged.ShouldNotBeNull();
+        var position = staged["pipe.mapper"];
+        position.X.ShouldBe(111d);
+        position.Y.ShouldBe(222d);
+        position.Collapsed.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void AddComponent_WithoutRequestedPosition_StagesNodeNearCanvasStart()
+    {
+        var composer = new FlowDefinitionComposer();
+        var service = new FlowWorkspaceService(composer);
+        service.SetDefinitionJson(composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#"));
+        service.SetActiveWorkflow(FlowDefinitionComposer.DefaultWorkflowName);
+        service.GetDiagramState = () => new Dictionary<string, (double X, double Y, bool Collapsed)>(StringComparer.Ordinal)
+        {
+            [$"{FlowDefinitionComposer.DefaultWorkflowName}.trigger"] = (380d, 60d, false),
+            [$"{FlowDefinitionComposer.DefaultWorkflowName}.inspect"] = (680d, 60d, false),
+            [$"{FlowDefinitionComposer.DefaultWorkflowName}.metrics"] = (980d, 60d, false)
+        };
+
+        service.AddComponent("flow.mapper");
+
+        var staged = service.StagedNodePositions;
+        staged.ShouldNotBeNull();
+        var position = staged[$"{FlowDefinitionComposer.DefaultWorkflowName}.mapper"];
+        position.X.ShouldBe(420d);
+        position.Y.ShouldBe(290d);
+        position.Collapsed.ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task ValidateAsync_ConvertsInvalidJsonToDiagnostic()
     {
         var service = new FlowWorkspaceService(new FlowDefinitionComposer());

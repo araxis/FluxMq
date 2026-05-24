@@ -33,6 +33,23 @@
     z-index: 20;
 }
 
+.flow-canvas-drop-highlight {
+    align-items: center;
+    border: 2px solid color-mix(in srgb, var(--flux-accent) 62%, transparent);
+    border-radius: 8px;
+    color: var(--flux-accent);
+    display: flex;
+    font-size: 12px;
+    font-weight: 650;
+    inset: 8px;
+    justify-content: center;
+    letter-spacing: 0.04em;
+    pointer-events: none;
+    position: absolute;
+    text-transform: uppercase;
+    z-index: 19;
+}
+
 .flow-canvas ::deep .diagram-canvas {
     height: 100%;
     width: 100%;

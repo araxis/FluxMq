@@ -19,6 +19,11 @@ namespace FluxMq.UI.Services;
 public sealed class FlowWorkspaceService : IAsyncDisposable
 {
     private const int MaxWorkspaceLogs = 1000;
+    private const double DefaultAddedNodeX = 420d;
+    private const double DefaultAddedNodeY = 120d;
+    private const double AddedNodeColumnSpacing = 300d;
+    private const double AddedNodeRowSpacing = 170d;
+    private const int AddedNodeRowsBeforeNewColumn = 4;
     private static readonly TimeSpan RuntimeStopTimeout = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan RuntimeProjectionNotificationInterval = TimeSpan.FromMilliseconds(250);
     private readonly FlowDefinitionComposer _definitionComposer;
@@ -255,11 +260,26 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         }
     }
 
-    public void AddComponent(string componentType)
+    public void AddComponent(string componentType, (double X, double Y)? requestedPosition = null)
     {
         try
         {
-            ReplaceDefinition(_definitionComposer.AddComponent(DefinitionJson, componentType, _activeWorkflowName));
+            var targetWorkflowName = _activeWorkflowName ?? FlowDefinitionComposer.DefaultWorkflowName;
+            var existingNodes = _definitionComposer.GetWorkflowNodes(DefinitionJson, targetWorkflowName)
+                .Select(static node => node.Name)
+                .ToHashSet(StringComparer.Ordinal);
+
+            var updatedJson = _definitionComposer.AddComponent(DefinitionJson, componentType, _activeWorkflowName);
+            var addedNodeName = FindAddedWorkflowNode(updatedJson, targetWorkflowName, existingNodes);
+
+            ReplaceDefinition(updatedJson);
+            _activeWorkflowName ??= WorkflowNames.FirstOrDefault();
+
+            if (!string.IsNullOrWhiteSpace(addedNodeName))
+            {
+                StageAddedNodePosition(targetWorkflowName, addedNodeName, requestedPosition);
+            }
+
             State = RuntimeWorkspaceState.Idle;
             Diagnostics = [];
         }
@@ -274,6 +294,60 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
         NotifyChanged();
     }
+
+    private string? FindAddedWorkflowNode(string updatedJson, string workflowName, IReadOnlySet<string> existingNodes)
+        => _definitionComposer.GetWorkflowNodes(updatedJson, workflowName)
+            .Select(static node => node.Name)
+            .FirstOrDefault(nodeName => !existingNodes.Contains(nodeName));
+
+    private void StageAddedNodePosition(string workflowName, string nodeName, (double X, double Y)? requestedPosition)
+    {
+        var positions = new Dictionary<string, (double X, double Y, bool Collapsed)>(StringComparer.Ordinal);
+        var capturedPositions = GetDiagramState?.Invoke()
+                                ?? (LastNodePositions.Count > 0 ? LastNodePositions : null);
+
+        if (capturedPositions is not null)
+        {
+            foreach (var (key, capturedPosition) in capturedPositions)
+            {
+                positions[key] = capturedPosition;
+            }
+        }
+
+        var position = requestedPosition ?? FindOpenAddedNodePosition(positions);
+        var positionKey = $"{workflowName}.{nodeName}";
+        positions[positionKey] = (position.X, position.Y, false);
+        StagedNodePositions = positions;
+        LastNodePositions[positionKey] = (position.X, position.Y, false);
+    }
+
+    private static (double X, double Y) FindOpenAddedNodePosition(
+        IReadOnlyDictionary<string, (double X, double Y, bool Collapsed)> positions)
+    {
+        for (var column = 0; column < 8; column++)
+        {
+            for (var row = 0; row < AddedNodeRowsBeforeNewColumn; row++)
+            {
+                var x = DefaultAddedNodeX + column * AddedNodeColumnSpacing;
+                var y = DefaultAddedNodeY + row * AddedNodeRowSpacing;
+
+                if (!IsNodePositionOccupied(positions, x, y))
+                {
+                    return (x, y);
+                }
+            }
+        }
+
+        return (DefaultAddedNodeX, DefaultAddedNodeY);
+    }
+
+    private static bool IsNodePositionOccupied(
+        IReadOnlyDictionary<string, (double X, double Y, bool Collapsed)> positions,
+        double x,
+        double y)
+        => positions.Values.Any(position =>
+            Math.Abs(position.X - x) < 260d &&
+            Math.Abs(position.Y - y) < 140d);
 
     public void UpdateNodeConfiguration(string nodeName, System.Text.Json.Nodes.JsonObject configuration)
     {

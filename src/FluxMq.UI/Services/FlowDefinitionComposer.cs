@@ -1,4 +1,5 @@
 using FluxMq.Core.Models;
+using FluxMq.UI.Components.Workspace.Nodes.FlowAssertion;
 using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
 using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
 using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
@@ -21,6 +22,7 @@ public sealed class FlowDefinitionComposer
     public const string MetricsNodeName = "metrics";
     public const string FilterNodeName = "filter";
     public const string RouterNodeName = "router";
+    public const string AssertionNodeName = "assertion";
     public const string MapperNodeName = "mapper";
     public const string LoggerNodeName = "logger";
     public const string RecorderNodeName = "recorder";
@@ -396,6 +398,7 @@ public sealed class FlowDefinitionComposer
             "mqtt.metrics" => MetricsNodeName,
             "mqtt.message-filter" => FilterNodeName,
             "mqtt.condition-router" => RouterNodeName,
+            "flow.assertion" => AssertionNodeName,
             "json.schema-validator" => "jsonSchemaValidator",
             "flow.mapper" => MakeUniqueNodeName(workflow, MapperNodeName),
             "flow.logger" => MakeUniqueNodeName(workflow, LoggerNodeName),
@@ -429,6 +432,10 @@ public sealed class FlowDefinitionComposer
         else if (componentType == "mqtt.condition-router")
         {
             node["configuration"] = CreateConditionRouterConfiguration();
+        }
+        else if (componentType == "flow.assertion")
+        {
+            node["configuration"] = CreateAssertionConfiguration();
         }
         else if (componentType == "mqtt.publisher")
         {
@@ -1033,6 +1040,16 @@ public sealed class FlowDefinitionComposer
         {
             ["expression"] = "qos >= 1",
             ["boundedCapacity"] = 1000
+        };
+
+    private static JsonObject CreateAssertionConfiguration()
+        => new()
+        {
+            ["assertionName"] = FlowAssertionNodeModel.DefaultAssertionName,
+            ["inputType"] = FlowAssertionNodeModel.DefaultInputType,
+            ["expression"] = FlowAssertionNodeModel.DefaultExpression,
+            ["failureMessage"] = FlowAssertionNodeModel.DefaultFailureMessage,
+            ["boundedCapacity"] = FlowAssertionNodeModel.DefaultBoundedCapacity
         };
 
     private static JsonObject CreateMqttPublisherConfiguration(string? connectionName = null)

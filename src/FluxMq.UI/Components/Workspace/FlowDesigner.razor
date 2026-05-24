@@ -9,10 +9,7 @@
 @inject DragStateService DragState
 
 <div class="flow-designer-root">
-    <div class="flow-canvas"
-         ondragover="event.preventDefault();"
-         @ondragover:preventDefault
-         @ondrop="@OnDrop">
+    <div class="flow-canvas">
         <CascadingValue Value="_diagram">
             <DiagramCanvas>
                 <Widgets>
@@ -29,6 +26,10 @@
             </DiagramCanvas>
         </CascadingValue>
     </div>
+    @if (DragState.ActiveComponentDrag is { IsOverDesigner: true })
+    {
+        <div class="flow-canvas-drop-highlight">Drop to add node</div>
+    }
     <div class="flow-canvas-toolbar">
         <MudTooltip Text="Zoom to fit">
             <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong"
@@ -66,6 +67,8 @@
     private readonly Dictionary<string, DiagramNodeState> _nodeStates = new(StringComparer.Ordinal);
     private readonly Dictionary<string, long> _filterPassCounts = new(StringComparer.Ordinal);
     private static readonly LinkMarker FlowTargetMarker = new("M 0 -4 6 0 0 4 z", 13d);
+    private const double DroppedNodeCenterOffsetX = 130d;
+    private const double DroppedNodeCenterOffsetY = 45d;
     private System.Threading.Timer? _pulseTimer;
     private int _portMeasurementGeneration;
     private bool _isRebuildingDiagram;
@@ -89,6 +92,8 @@
         _diagram.Links.Removed += OnDiagramLinkRemoved;
         Flow.Changed += OnFlowChanged;
         Live.Changed += OnLiveChanged;
+        DragState.Changed += OnDragStateChanged;
+        DragState.ComponentDropRequested += OnComponentDropRequested;
     }
 
     protected override Task OnAfterRenderAsync(bool firstRender)
@@ -98,16 +103,23 @@
         return Task.CompletedTask;
     }
 
-    private void OnDrop(DragEventArgs args)
+    private void ZoomToFit() => _diagram.ZoomToFit(80);
+
+    private void OnComponentDropRequested(object? sender, ComponentDropRequestedEventArgs args)
     {
-        if (!string.IsNullOrWhiteSpace(DragState.ComponentType))
+        InvokeAsync(() =>
         {
-            Flow.AddComponent(DragState.ComponentType);
-            DragState.ComponentType = null;
-        }
+            var dropPoint = _diagram.GetRelativeMousePoint(args.ClientX, args.ClientY);
+            Flow.AddComponent(
+                args.ComponentType,
+                (dropPoint.X - DroppedNodeCenterOffsetX, dropPoint.Y - DroppedNodeCenterOffsetY));
+        });
     }
 
-    private void ZoomToFit() => _diagram.ZoomToFit(80);
+    private void OnDragStateChanged(object? sender, EventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
 
     private void RebuildDiagram()
     {
@@ -743,6 +755,8 @@
         _diagram.Links.Removed -= OnDiagramLinkRemoved;
         Flow.Changed -= OnFlowChanged;
         Live.Changed -= OnLiveChanged;
+        DragState.Changed -= OnDragStateChanged;
+        DragState.ComponentDropRequested -= OnComponentDropRequested;
         _portMeasurementGeneration++;
     }
 

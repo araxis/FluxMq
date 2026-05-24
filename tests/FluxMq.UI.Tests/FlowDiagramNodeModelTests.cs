@@ -1,6 +1,7 @@
 using Shouldly;
 using FluxMq.UI.Components.Diagram;
 using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
+using FluxMq.UI.Components.Workspace.Nodes.FlowAssertion;
 using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
 using FluxMq.UI.Models;
 using FluxMq.UI.Services;
@@ -244,6 +245,38 @@ public sealed class FlowDiagramNodeModelTests
         model.NodeType.ShouldBe("mqtt.metrics");
         model.DisplayName.ShouldBe("MQTT Metrics");
         model.PortDescriptors.ShouldContain(port => port.Name == "Input" && port.IsInput);
+    }
+
+    [Fact]
+    public void FlowAssertionNodeModel_BuildsAssertionConfiguration()
+    {
+        var catalog = new FlowComponentCatalog();
+        var descriptor = catalog.Find("flow.assertion").ShouldNotBeNull();
+        var model = new FlowAssertionNodeModel(
+            "workflow1.assertion",
+            new DiagramPoint(10, 20),
+            "assertion",
+            descriptor,
+            isResource: false);
+
+        model.LoadConfiguration(new JsonObject
+        {
+            ["assertionName"] = "Topic starts with factory",
+            ["inputType"] = "MqttPublishRequest",
+            ["expression"] = "topic.StartsWith(\"factory/\")",
+            ["failureMessage"] = "Topic did not match factory.",
+            ["boundedCapacity"] = 250
+        });
+
+        var config = model.BuildConfiguration();
+
+        config["assertionName"]!.GetValue<string>().ShouldBe("Topic starts with factory");
+        config["inputType"]!.GetValue<string>().ShouldBe("MqttPublishRequest");
+        config["expression"]!.GetValue<string>().ShouldBe("topic.StartsWith(\"factory/\")");
+        config["failureMessage"]!.GetValue<string>().ShouldBe("Topic did not match factory.");
+        config["boundedCapacity"]!.GetValue<int>().ShouldBe(250);
+        model.ResolvePortValueType(new ComponentPortDescriptor("Passed", "Configured input type", IsInput: false))
+            .ShouldBe("MqttPublishRequest");
     }
 
     [Fact]

@@ -25,6 +25,7 @@ public static class PipelineFlowNodeTypes
     public static readonly NodeType FlowLogger = new("flow.logger");
     public static readonly NodeType MessageFilter = new("mqtt.message-filter");
     public static readonly NodeType ConditionRouter = new("mqtt.condition-router");
+    public static readonly NodeType FlowAssertion = new("flow.assertion");
     public static readonly NodeType JsonSchemaValidator = new("json.schema-validator");
 
     /// <summary>User-facing mapper node. Configuration chooses input/output types and mapping engine.</summary>

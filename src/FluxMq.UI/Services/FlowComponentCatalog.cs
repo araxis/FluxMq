@@ -131,6 +131,20 @@ public sealed class FlowComponentCatalog
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
+            "flow.assertion",
+            "Flow Assertion",
+            "Assertion",
+            "Checks a configured input stream against an expected condition and emits pass/fail result streams.",
+            IsResource: false,
+            [
+                new("Input", "Configured input type", IsInput: true),
+                new("Result", "FlowAssertionResult", IsInput: false),
+                new("Passed", "Configured input type", IsInput: false),
+                new("Failed", "Configured input type", IsInput: false),
+                new("Entries", "FlowLogEntry", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
             "json.schema-validator",
             "JSON Schema Validator",
             "Validator",

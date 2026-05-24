@@ -289,7 +289,7 @@ The mapper input type is currently fixed to `MqttEnvelope` in the editor; the ed
 
 **UI/UX:** Scenario-style components should support statements like: publish request X, expect response Y, validate payload schema Z.
 
-**Data/Logic:** Assertion components, expectation windows/timeouts, typed pass/fail result outputs.
+**Data/Logic:** Assertion components, expectation windows/timeouts, typed pass/fail result outputs. First slice is `flow.assertion`: configured input type in, expression evaluation, `FlowAssertionResult` plus same-type `Passed`/`Failed` branches. Longer term, dynamic mappers push the runtime toward object streams underneath, with typed ports as schema/contract metadata. Logging should eventually use standard `Microsoft.Extensions.Logging` with a workspace Logs bridge, while `FlowLogEntry` remains available as graph data.
 
 **Acceptance:**
 

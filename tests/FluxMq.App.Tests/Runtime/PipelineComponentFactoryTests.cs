@@ -4,6 +4,7 @@ using FluxMq.Core.Models;
 using FluxMq.Core.Payloads;
 using FluxMq.Core.Session;
 using FluxMq.App;
+using FluxMq.Components.Assertions;
 using FluxMq.Components.JsonSchema;
 using FluxMq.Components.Logging;
 using FluxMq.Components.MqttMetrics;
@@ -42,6 +43,7 @@ public sealed class PipelineComponentFactoryTests
             PipelineFlowNodeTypes.FlowLogger,
             PipelineFlowNodeTypes.MessageFilter,
             PipelineFlowNodeTypes.ConditionRouter,
+            PipelineFlowNodeTypes.FlowAssertion,
             PipelineFlowNodeTypes.JsonSchemaValidator,
             PipelineFlowNodeTypes.DynamicMapper,
             PipelineFlowNodeTypes.PublishRequestMapper,
@@ -317,6 +319,94 @@ public sealed class PipelineComponentFactoryTests
         logSink!.Values.Select(entry => entry.Message).ShouldBe([
             "Routed MQTT message to WhenFalse.",
             "Routed MQTT message to WhenTrue."
+        ]);
+    }
+
+    [Fact]
+    public async Task FlowAssertionFactory_RoutesResultsAndWritesEntries()
+    {
+        TestSourceNode? source = null;
+        TestSinkNode<FlowAssertionResult>? resultSink = null;
+        TestSinkNode<MqttEnvelope>? passedSink = null;
+        TestSinkNode<MqttEnvelope>? failedSink = null;
+        TestSinkNode<FlowLogEntry>? logSink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.source"), (address, _) =>
+            {
+                source = new TestSourceNode();
+                return SourceNode(address, source);
+            })
+            .Register(new NodeType("test.assertion-sink"), (address, _) =>
+            {
+                resultSink = new TestSinkNode<FlowAssertionResult>();
+                return SinkNode(address, resultSink);
+            })
+            .Register(new NodeType("test.envelope-sink"), (address, _) =>
+            {
+                if (address.Node.Value == "passedSink")
+                {
+                    passedSink = new TestSinkNode<MqttEnvelope>();
+                    return SinkNode(address, passedSink);
+                }
+
+                failedSink = new TestSinkNode<MqttEnvelope>();
+                return SinkNode(address, failedSink);
+            })
+            .Register(new NodeType("test.log-sink"), (address, _) =>
+            {
+                logSink = new TestSinkNode<FlowLogEntry>();
+                return SinkNode(address, logSink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("test.source"),
+                        ["assertion"] = new NodeDefinition
+                        {
+                            Type = PipelineFlowNodeTypes.FlowAssertion,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["assertionName"] = JsonDocument.Parse("\"QoS at least once\"").RootElement.Clone(),
+                                ["inputType"] = JsonDocument.Parse("\"MqttEnvelope\"").RootElement.Clone(),
+                                ["expression"] = JsonDocument.Parse("\"qos >= 1\"").RootElement.Clone(),
+                                ["failureMessage"] = JsonDocument.Parse("\"Expected QoS to be at least 1.\"").RootElement.Clone()
+                            }
+                        },
+                        ["resultSink"] = NodeWithPort("test.assertion-sink", "Input", "\"assertion.Result\""),
+                        ["passedSink"] = NodeWithPort("test.envelope-sink", "Input", "\"assertion.Passed\""),
+                        ["failedSink"] = NodeWithPort("test.envelope-sink", "Input", "\"assertion.Failed\""),
+                        ["logSink"] = NodeWithPort("test.log-sink", "Input", "\"assertion.Entries\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue();
+
+        source!.Post(new MqttEnvelope { Topic = "factory/qos0", Payload = [], QualityOfService = MqttQualityOfServiceLevel.AtMostOnce });
+        source.Post(new MqttEnvelope { Topic = "factory/qos1", Payload = [], QualityOfService = MqttQualityOfServiceLevel.AtLeastOnce });
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion;
+
+        resultSink!.Values.Select(value => value.Passed).ShouldBe([false, true]);
+        passedSink!.Values.Select(envelope => envelope.Topic).ShouldBe(["factory/qos1"]);
+        failedSink!.Values.Select(envelope => envelope.Topic).ShouldBe(["factory/qos0"]);
+        logSink!.Values.Select(entry => entry.Message).ShouldBe([
+            "Assertion failed: QoS at least once.",
+            "Assertion passed: QoS at least once."
         ]);
     }
 

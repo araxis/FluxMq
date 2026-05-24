@@ -3,6 +3,7 @@ using FluxMq.UI.Components.Workspace.Nodes.Actors;
 using FluxMq.UI.Components.Workspace.Nodes.ConditionRouter;
 using FluxMq.UI.Components.Workspace.Nodes.ConnectionStateTrigger;
 using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
+using FluxMq.UI.Components.Workspace.Nodes.FlowAssertion;
 using FluxMq.UI.Components.Workspace.Nodes.JsonSchemaValidator;
 using FluxMq.UI.Components.Workspace.Nodes.MessageFilter;
 using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
@@ -29,6 +30,7 @@ public static class FlowNodeModelFactory
         "mqtt.connection-state-trigger" => new ConnectionStateTriggerNodeModel(id, position, nodeName, descriptor, isResource),
         "mqtt.message-filter" => new MessageFilterNodeModel(id, position, nodeName, descriptor, isResource),
         "mqtt.condition-router" => new ConditionRouterNodeModel(id, position, nodeName, descriptor, isResource),
+        "flow.assertion" => new FlowAssertionNodeModel(id, position, nodeName, descriptor, isResource),
         "json.schema-validator" => new JsonSchemaValidatorNodeModel(id, position, nodeName, descriptor, isResource),
         "flow.mapper" => new DynamicMapperNodeModel(id, position, nodeName, descriptor, isResource),
         "generated.source" => new GeneratedSourceNodeModel(id, position, nodeName, descriptor, isResource),

@@ -16,6 +16,32 @@ body {
     text-rendering: optimizeLegibility;
 }
 
+.flux-component-drag-active {
+    user-select: none;
+}
+
+.flux-drag-preview {
+    align-items: center;
+    background: var(--flux-surface);
+    border: 1px solid var(--flux-border-strong);
+    border-radius: 6px;
+    box-shadow: var(--flux-shadow-pop);
+    color: var(--mud-palette-text-primary);
+    display: inline-flex;
+    gap: 8px;
+    max-width: 240px;
+    padding: 8px 10px;
+    pointer-events: none;
+    position: fixed;
+    transform: translate(12px, 12px);
+    z-index: 10000;
+}
+
+.flux-drag-preview.over-designer {
+    border-color: var(--flux-accent);
+    box-shadow: 0 0 0 2px var(--flux-accent-dim), var(--flux-shadow-pop);
+}
+
 * {
     box-sizing: border-box;
 }

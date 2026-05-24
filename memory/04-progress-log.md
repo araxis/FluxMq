@@ -658,3 +658,23 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 105 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 101 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -m:1` passes with 331 tests.
+
+## 2026-05-24 - MQTT assertion slice
+
+- Started the assertions/expectations feature with a standalone `flow.assertion` component.
+- The assertion component:
+  - accepts a configured input type
+  - evaluates a configurable expression such as `qos >= 1`
+  - emits `FlowAssertionResult` on `Result`
+  - routes the original value to `Passed` or `Failed` using the same configured input type
+  - emits pass/fail log entries on `Entries`
+  - emits expression/runtime failures on `Errors`
+- Added the assertion node to the runtime factory registry, UI catalog, definition composer, node model factory, and node widget registry.
+- Added a node editor for assertion name, input type, expression, failure message, and input buffer.
+- Recorded a future object-stream architecture note: dynamic mappers mean the runtime should eventually use object streams underneath with typed port contracts as schema/validation metadata.
+- Recorded a future logging architecture note: use standard `Microsoft.Extensions.Logging` as the main component logging path and bridge it into the workspace Logs view through a provider/sink, while retaining `FlowLogEntry` streams for graph-visible log data.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 109 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 29 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false` passes with 103 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -m:1` passes with 337 tests.
