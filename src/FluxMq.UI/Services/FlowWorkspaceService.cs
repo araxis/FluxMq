@@ -1,4 +1,5 @@
 using FluxMq.App;
+using FluxMq.Components.MqttMetrics;
 using FluxMq.Core.Models;
 using FluxMq.Core.Session;
 using FluxMq.Components.Logging;
@@ -17,15 +18,19 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 {
     private const int MaxWorkspaceLogs = 1000;
     private static readonly TimeSpan RuntimeStopTimeout = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan RuntimeProjectionNotificationInterval = TimeSpan.FromMilliseconds(250);
     private readonly FlowDefinitionComposer _definitionComposer;
     private readonly IMessageRepository? _messageRepository;
     private readonly Func<MqttConnectionProfile, IMqttSession>? _runtimeSessionFactory;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly object _logSync = new();
+    private readonly object _metricsSync = new();
     private readonly List<WorkspaceLogEntry> _logs = [];
+    private readonly Dictionary<string, MqttMetricsSnapshot> _metricsSnapshots = new(StringComparer.Ordinal);
     private readonly List<IDisposable> _runtimeLogLinks = [];
     private readonly List<IDataflowBlock> _runtimeLogTargets = [];
     private FlowApplicationHost? _host;
+    private int _runtimeProjectionNotificationQueued;
 
     public FlowWorkspaceService(
         FlowDefinitionComposer definitionComposer,
@@ -52,9 +57,21 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     public RuntimeWorkspaceState State { get; private set; } = RuntimeWorkspaceState.Idle;
     public IReadOnlyList<WorkspaceDiagnostic> Diagnostics { get; private set; } = [];
     public IReadOnlyList<WorkspaceLogEntry> Logs { get; private set; } = [];
+    public IReadOnlyDictionary<string, MqttMetricsSnapshot> MetricsSnapshots { get; private set; } =
+        new Dictionary<string, MqttMetricsSnapshot>(StringComparer.Ordinal);
 
     public IReadOnlyList<string> WorkflowNames => _definitionComposer.GetWorkflowNames(DefinitionJson);
     public string? ActiveWorkflowName => _activeWorkflowName;
+
+    public MqttMetricsSnapshot GetMetricsSnapshot(string? workflowName, string nodeName)
+    {
+        lock (_metricsSync)
+        {
+            return _metricsSnapshots.TryGetValue(MetricsKey(workflowName, nodeName), out var snapshot)
+                ? snapshot
+                : new MqttMetricsSnapshot();
+        }
+    }
 
     public IReadOnlyList<(string Name, string Type)> GetWorkflowNodes(string workflowName)
         => _definitionComposer.GetWorkflowNodes(DefinitionJson, workflowName);
@@ -459,6 +476,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         try
         {
             await DisposeHostAsync().ConfigureAwait(false);
+            ClearRuntimeMetricsSnapshots(notify: false);
             _host = FlowApplicationHost.CreateDefault(CreateConfiguration(DefinitionJson), _messageRepository, _runtimeSessionFactory);
             var result = _host.Build();
             Diagnostics = CollectDiagnostics(result);
@@ -487,6 +505,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         try
         {
             await DisposeHostAsync().ConfigureAwait(false);
+            ClearRuntimeMetricsSnapshots(notify: false);
             _host = FlowApplicationHost.CreateDefault(CreateConfiguration(DefinitionJson), _messageRepository, _runtimeSessionFactory);
             var result = _host.Build();
             if (result.IsSuccess)
@@ -651,7 +670,31 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             }
 
             AttachRuntimeLogOutputs(node);
+            AttachRuntimeMetricsOutputs(node);
         }
+    }
+
+    private void AttachRuntimeMetricsOutputs(RuntimeNode node)
+    {
+        foreach (var output in node.Outputs.OfType<OutputPort<MqttMetricsSnapshot>>())
+        {
+            AttachRuntimeMetricsSnapshots(node, output.Source);
+        }
+    }
+
+    private void AttachRuntimeMetricsSnapshots(RuntimeNode node, ISourceBlock<MqttMetricsSnapshot> snapshots)
+    {
+        var address = node.Address;
+        var target = new ActionBlock<MqttMetricsSnapshot>(
+            snapshot => StoreRuntimeMetricsSnapshot(address, snapshot),
+            new ExecutionDataflowBlockOptions
+            {
+                EnsureOrdered = true,
+                MaxDegreeOfParallelism = 1
+            });
+
+        _runtimeLogTargets.Add(target);
+        _runtimeLogLinks.Add(snapshots.LinkTo(target, new DataflowLinkOptions { PropagateCompletion = true }));
     }
 
     private void AttachRuntimeLogOutputs(RuntimeNode node)
@@ -710,6 +753,55 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
         _runtimeLogLinks.Clear();
         _runtimeLogTargets.Clear();
+    }
+
+    private void StoreRuntimeMetricsSnapshot(NodeAddress address, MqttMetricsSnapshot snapshot)
+    {
+        lock (_metricsSync)
+        {
+            _metricsSnapshots[MetricsKey(address.Scope, address.Node.Value)] = snapshot;
+            MetricsSnapshots = new Dictionary<string, MqttMetricsSnapshot>(_metricsSnapshots, StringComparer.Ordinal);
+        }
+
+        NotifyRuntimeProjectionChanged();
+    }
+
+    private void ClearRuntimeMetricsSnapshots(bool notify)
+    {
+        lock (_metricsSync)
+        {
+            _metricsSnapshots.Clear();
+            MetricsSnapshots = new Dictionary<string, MqttMetricsSnapshot>(StringComparer.Ordinal);
+        }
+
+        if (notify)
+        {
+            NotifyChanged();
+        }
+    }
+
+    private void NotifyRuntimeProjectionChanged()
+    {
+        if (Interlocked.Exchange(ref _runtimeProjectionNotificationQueued, 1) == 1)
+        {
+            return;
+        }
+
+        _ = NotifyRuntimeProjectionChangedAsync();
+    }
+
+    private async Task NotifyRuntimeProjectionChangedAsync()
+    {
+        try
+        {
+            await Task.Delay(RuntimeProjectionNotificationInterval).ConfigureAwait(false);
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _runtimeProjectionNotificationQueued, 0);
+        }
+
+        NotifyChanged();
     }
 
     private void AppendDiagnosticsToLogs(IEnumerable<WorkspaceDiagnostic> diagnostics, bool notify = true)
@@ -823,6 +915,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         DefinitionJson = json;
         DefinitionRevision++;
         HasUnsavedChanges = true;
+        ClearRuntimeMetricsSnapshots(notify: false);
     }
 
     private void ReplaceDefinitionSilent(string json)
@@ -832,7 +925,11 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
         DefinitionJson = json;
         DefinitionRevision++;
+        ClearRuntimeMetricsSnapshots(notify: false);
     }
 
     private void NotifyChanged() => Changed?.Invoke(this, EventArgs.Empty);
+
+    private static string MetricsKey(string? workflowName, string nodeName)
+        => $"{workflowName ?? string.Empty}/{nodeName}";
 }

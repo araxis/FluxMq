@@ -1,5 +1,7 @@
 namespace FluxMq.Components.MqttMetrics;
 
+public sealed record MqttTopicMetric(string Topic, long Count);
+
 public sealed record MqttMetricsSnapshot
 {
     public long MessageCount { get; init; }
@@ -10,5 +12,6 @@ public sealed record MqttMetricsSnapshot
     public int UniqueTopicCount { get; init; }
     public string? LastTopic { get; init; }
     public DateTimeOffset? LastReceivedAt { get; init; }
+    public IReadOnlyList<MqttTopicMetric> TopicCounts { get; init; } = [];
     public double AveragePayloadBytes => MessageCount == 0 ? 0 : (double)TotalPayloadBytes / MessageCount;
 }

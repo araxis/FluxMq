@@ -37,6 +37,11 @@ public sealed class MqttMetricsComponentTests
         current.UniqueTopicCount.ShouldBe(2);
         current.LastTopic.ShouldBe("factory/1");
         current.LastReceivedAt.ShouldBe(start.AddSeconds(2));
+        current.TopicCounts.ShouldBe(
+        [
+            new MqttTopicMetric("factory/1", 2),
+            new MqttTopicMetric("factory/2", 1)
+        ]);
     }
 
     [Fact]

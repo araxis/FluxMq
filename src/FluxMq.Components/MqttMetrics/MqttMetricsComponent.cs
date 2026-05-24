@@ -8,7 +8,7 @@ namespace FluxMq.Components.MqttMetrics;
 public sealed class MqttMetricsComponent : IFlowNode
 {
     private readonly Lock _sync = new();
-    private readonly HashSet<string> _topics = [];
+    private readonly Dictionary<string, long> _topicCounts = new(StringComparer.Ordinal);
     private readonly ActionBlock<MqttEnvelope> _block;
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly BroadcastBlock<MqttMetricsSnapshot> _snapshots;
@@ -86,7 +86,9 @@ public sealed class MqttMetricsComponent : IFlowNode
                 _maxPayloadBytes = Math.Max(_maxPayloadBytes, payloadLength);
                 _lastTopic = envelope.Topic;
                 _lastReceivedAt = envelope.ReceivedAt;
-                _topics.Add(envelope.Topic);
+                _topicCounts[envelope.Topic] = _topicCounts.TryGetValue(envelope.Topic, out var count)
+                    ? count + 1
+                    : 1;
 
                 if (envelope.Retain)
                 {
@@ -111,9 +113,14 @@ public sealed class MqttMetricsComponent : IFlowNode
         MinPayloadBytes = _messageCount == 0 ? 0 : _minPayloadBytes,
         MaxPayloadBytes = _maxPayloadBytes,
         RetainedMessageCount = _retainedMessageCount,
-        UniqueTopicCount = _topics.Count,
+        UniqueTopicCount = _topicCounts.Count,
         LastTopic = _lastTopic,
-        LastReceivedAt = _lastReceivedAt
+        LastReceivedAt = _lastReceivedAt,
+        TopicCounts = _topicCounts
+            .OrderByDescending(static pair => pair.Value)
+            .ThenBy(static pair => pair.Key, StringComparer.Ordinal)
+            .Select(static pair => new MqttTopicMetric(pair.Key, pair.Value))
+            .ToArray()
     };
 
     private void PublishError(int code, string message, Exception exception, string? context = null)

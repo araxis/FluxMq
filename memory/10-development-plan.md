@@ -24,8 +24,8 @@ This is the active implementation plan. Keep it updated after every meaningful d
 
 ## Current Target
 
-**Phase:** 5 - desktop workspace authoring polish
-**Active feature:** `F-011/F-014 - Routeable Decisions`
+**Phase:** 6 - metrics, assertions, and scenarios
+**Active feature:** `F-030 - Input-driven Metrics Observer`
 **Status:** In progress
 **Started:** 2026-05-24
 
@@ -46,6 +46,7 @@ Runtime `OutputPort<T>` now enforces the first-class broadcast contract for ever
 Runtime log collection now subscribes to all `FlowLogEntry` output ports by default, not just hand-picked logger/publisher components. `mqtt.condition-router` emits route entries for `WhenTrue` and `WhenFalse`, so a false branch with no downstream wire is still visible in the workspace Logs tab while testing.
 MQTT trigger subscription QoS is now explicit in the node editor. Short-form subscriptions such as `"#"` default to QoS 1, which keeps the default router expression `qos >= 1` useful during live broker tests while still allowing QoS 0 or QoS 2 per subscription.
 Pipeline MQTT triggers are now treated as configured subscriber blocks: each row owns topic filter, QoS, retained-message delivery, and retain-flag preservation. Broker-wide live monitoring is separate from pipeline design and auto-subscribes each broker monitor to `#,$SYS/#` for topic tree, counts, rates, and payload inspection.
+The current metrics slice is aligning the UI with the runtime component contract. `mqtt.metrics` observes only its `Input` stream, so the metrics node face must render snapshots produced by that node's runtime `Snapshots` output rather than broker-wide live monitor messages.
 
 ## Step-by-Step Plan
 
@@ -321,17 +322,19 @@ Done when:
   - MQTT trigger subscriptions now expose QoS in the editor and short-form subscriptions default to QoS 1
   - MQTT trigger subscription rows now include retained-message delivery and retain-flag preservation settings
   - broker live monitoring no longer derives its topic filters from pipeline triggers; it uses its own `#,$SYS/#` monitor subscription per broker
+- Started input-driven metrics polish:
+  - `MqttMetricsSnapshot` now carries per-topic counts produced by the metrics component itself
+  - the workspace collects each runtime metrics node's `Snapshots` output by workflow/node key
+  - the MQTT Metrics node widget and node activity text render the node-local runtime snapshot instead of `Live.RecentMessages`
+  - the old live-message metrics helper was removed so the UI path matches the standalone component contract
 
 ## Next Action
 
-Review the routeable decision slice:
+Review the input-driven metrics slice:
 
 1. Open `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json`.
-2. In `pip1`, keep `trigger.Output` linked to `inspect`, `metrics`, `jsonSchemaValidator`, and `router`.
-3. Open the trigger editor and confirm each subscriber row has topic filter, QoS, Retained, and Flag controls. Existing short-form rows should show QoS 1.
-4. Run the app and publish one message with QoS 0. Confirm the Logs tab shows the router sent it to `WhenFalse`.
-5. Publish one message with QoS 1. Confirm the Logs tab shows the router sent it to `WhenTrue`, and the downstream mapper/publisher path runs.
-6. Confirm the broker-wide Topics tab still tracks broker traffic even if the trigger subscriber topic is narrowed to something other than `#`.
-7. Confirm repeated publisher additions still create unique nodes such as `publisher2`.
-8. Confirm the JSON Schema Validator shows `Result`, `Valid`, and `Invalid` outputs, with `Errors` last.
-9. After confirmation, commit this slice and open a PR.
+2. In a pipeline, place `mqtt.metrics` downstream of a filter or router branch rather than directly after the trigger.
+3. Run the app and publish messages where only some messages pass into that metrics node.
+4. Confirm the MQTT Metrics node count, payload bytes, topics, top-topic bars, and activity text reflect only messages that reached that node.
+5. Confirm the right-side Topics tab still shows broker-wide monitoring separately from the metrics node.
+6. After confirmation, commit this slice and open a PR.

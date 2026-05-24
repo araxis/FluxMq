@@ -423,6 +423,52 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public async Task RunAsync_CollectsMetricsSnapshotsFromNodeInputStream()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "flow": {
+                  "generated": {
+                    "type": "generated.source",
+                    "configuration": {
+                      "messages": [
+                        { "topic": "factory/qos0", "payload": "low", "qos": 0 },
+                        { "topic": "factory/qos1", "payload": "high", "qos": 1 }
+                      ]
+                    }
+                  },
+                  "filter": {
+                    "type": "mqtt.message-filter",
+                    "Input": "generated.Output",
+                    "configuration": {
+                      "expression": "qos >= 1"
+                    }
+                  },
+                  "metrics": {
+                    "type": "mqtt.metrics",
+                    "Input": "filter.Output"
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+
+        await service.RunAsync();
+        await WaitUntilAsync(() => service.GetMetricsSnapshot("flow", "metrics").MessageCount == 1);
+
+        var snapshot = service.GetMetricsSnapshot("flow", "metrics");
+        snapshot.MessageCount.ShouldBe(1);
+        snapshot.LastTopic.ShouldBe("factory/qos1");
+        snapshot.TopicCounts.ShouldBe([new FluxMq.Components.MqttMetrics.MqttTopicMetric("factory/qos1", 1)]);
+    }
+
+    [Fact]
     public void UpdateNodeConfiguration_UpdatesActiveWorkflowWhenNodeNamesRepeat()
     {
         var service = new FlowWorkspaceService(new FlowDefinitionComposer());

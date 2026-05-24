@@ -458,7 +458,7 @@
                 "mqtt.payload-inspector" => inspectedMessage is null
                     ? "Waiting for payload"
                     : $"{latestInspection.ContentTypeLabel} | {latestInspection.SizeBytes} bytes | {ShortTopic(inspectedMessage.Topic)}",
-                "mqtt.metrics" => $"{count} messages observed",
+                "mqtt.metrics" => $"{Flow.GetMetricsSnapshot(Flow.ActiveWorkflowName, node.NodeName).MessageCount} messages observed",
                 "mqtt.publisher" => PublisherActivity(node.NodeName),
                 _ => null
             };

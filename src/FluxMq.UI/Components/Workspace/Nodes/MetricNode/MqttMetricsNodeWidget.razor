@@ -1,13 +1,11 @@
 @*
-    Live metrics widget. When expanded, surfaces the in-flight workspace stats:
-    total message count, bytes, unique topics, top-3 topics with bars, last
-    activity line. Subscribes to LiveMqttWorkspaceService.Changed so it ticks
-    in real time without a render loop.
+    Metrics widget for this node's own input stream. Runtime snapshots arrive
+    through FlowWorkspaceService, keyed by workflow and node name.
 *@
 @implements IDisposable
+@using FluxMq.Components.MqttMetrics
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
-@inject LiveMqttWorkspaceService Live
 
 <NodeWidgetShell Node="@Node" HeaderIcon="@Icons.Material.Filled.Insights" CategoryColor="@Color.Tertiary">
     <Body>
@@ -161,16 +159,18 @@
 </style>
 
 @code {
-    private FluxMq.Components.MqttMetrics.MqttMetricsSnapshot _snapshot = new();
-    private IReadOnlyList<LiveMetricsCalculator.TopicCount> _topTopics = [];
+    [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
+
+    private MqttMetricsSnapshot _snapshot = new();
+    private IReadOnlyList<MqttTopicMetric> _topTopics = [];
 
     protected override void OnInitialized()
     {
-        Live.Changed += OnLiveChanged;
+        Flow.Changed += OnFlowChanged;
         Recompute();
     }
 
-    private void OnLiveChanged(object? sender, EventArgs e)
+    private void OnFlowChanged(object? sender, EventArgs e)
     {
         Recompute();
         InvokeAsync(StateHasChanged);
@@ -178,12 +178,15 @@
 
     private void Recompute()
     {
-        var messages = Live.RecentMessages;
-        _snapshot = LiveMetricsCalculator.Compute(messages);
-        _topTopics = LiveMetricsCalculator.TopTopics(messages, take: 3);
+        _snapshot = Flow.GetMetricsSnapshot(Flow.ActiveWorkflowName, Node.NodeName);
+        _topTopics = _snapshot.TopicCounts
+            .OrderByDescending(static topic => topic.Count)
+            .ThenBy(static topic => topic.Topic, StringComparer.Ordinal)
+            .Take(3)
+            .ToArray();
     }
 
-    public void Dispose() => Live.Changed -= OnLiveChanged;
+    public void Dispose() => Flow.Changed -= OnFlowChanged;
 
     private static string FormatNumber(long value) => value switch
     {
