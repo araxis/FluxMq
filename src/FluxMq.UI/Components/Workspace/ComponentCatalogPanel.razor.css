@@ -1,32 +1,128 @@
 .component-catalog {
-    padding: 0;
+    min-width: 0;
+    padding: 0 2px 8px;
+    width: 100%;
 }
 
 .catalog-title {
     font-size: 13px;
     font-weight: 650;
-    padding: 2px 2px 10px;
+    padding: 2px 2px 8px;
 }
 
 .catalog-group {
-    font-size: 10.5px;
+    color: var(--mud-palette-info);
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.08em;
-    padding: 8px 2px 5px;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    padding: 10px 2px 6px;
+}
+
+.catalog-drop-zone {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
 }
 
 .catalog-item {
+    align-items: center;
     background: var(--flux-surface-2);
-    border: 1px solid var(--flux-border);
+    border: 1px solid transparent;
     border-radius: 6px;
+    box-sizing: border-box;
+    color: inherit;
     cursor: grab;
-    margin-bottom: 6px;
-    padding: 8px;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 24px minmax(0, 1fr) 24px;
+    min-height: 36px;
+    min-width: 0;
+    padding: 5px 6px;
+    text-align: left;
+    touch-action: none;
     transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+    user-select: none;
+    width: 100%;
 }
 
 .catalog-item:hover {
     background: var(--flux-surface-3);
     border-color: var(--flux-border-strong);
-    transform: translateY(-1px);
+}
+
+.catalog-item:active {
+    cursor: grabbing;
+}
+
+.catalog-icon-tile,
+.catalog-add-button {
+    align-items: center;
+    border-radius: 5px;
+    display: flex;
+    height: 24px;
+    justify-content: center;
+    width: 24px;
+}
+
+.catalog-icon-tile {
+    background: color-mix(in srgb, var(--mud-palette-text-primary) 7%, transparent);
+    color: var(--mud-palette-text-secondary);
+}
+
+.catalog-icon-tile.source {
+    color: var(--flux-accent);
+}
+
+.catalog-icon-tile.mapper {
+    color: var(--mud-palette-info);
+}
+
+.catalog-icon-tile.validator {
+    color: var(--mud-palette-info);
+}
+
+.catalog-icon-tile.assertion,
+.catalog-icon-tile.observer {
+    color: var(--mud-palette-text-secondary);
+}
+
+.catalog-icon-tile.actor {
+    color: var(--mud-palette-warning);
+}
+
+.catalog-item-name {
+    color: var(--mud-palette-text-primary);
+    font-size: 11.5px;
+    font-weight: 550;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.catalog-add-button {
+    color: var(--mud-palette-text-secondary);
+    justify-self: end;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.catalog-item:hover .catalog-add-button {
+    background: var(--flux-accent-soft);
+    color: var(--flux-accent);
+}
+
+.catalog-add-button ::deep .mud-icon-root,
+.catalog-icon-tile ::deep .mud-icon-root {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+}
+
+.catalog-item.disabled {
+    cursor: default;
+    opacity: 0.55;
+    pointer-events: none;
 }

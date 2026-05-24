@@ -25,7 +25,7 @@ This is the active implementation plan. Keep it updated after every meaningful d
 ## Current Target
 
 **Phase:** 6 - metrics, assertions, and scenarios
-**Active feature:** `F-030 - Metrics Message Rate`
+**Active feature:** `F-031 - Assertions And Expectations`
 **Status:** In progress
 **Started:** 2026-05-24
 
@@ -52,6 +52,9 @@ The current payload type slice improves inspection semantics: MQTT payloads rema
 The current trigger activity slice applies the same input-driven rule to `mqtt.trigger`: the node card activity should count envelopes emitted by that trigger's configured subscriptions, while broker-wide message counts remain in the Live Inspector panel.
 The current metrics-rate slice adds both current and since-start message-per-second data to `mqtt.metrics` snapshots. Current rate uses a configurable rolling window; average rate uses all messages observed since the metrics component started. Both rates are based on the stream feeding the metrics component, not broker-wide traffic. The metrics card display is configurable per node with selectable cards such as messages, current rate, average rate, payload, topics, retained count, or average payload size; card columns control the node grid, and rows are calculated from the selected-card count.
 Future metrics refactor note: the current implementation remains MQTT-envelope-specific, which is acceptable for this slice. Longer term, split generic stream metrics from MQTT-specific topic metrics so outputs from dynamic mappers and future protocol components can feed metrics observers without meaningless topic fields.
+The current assertion slice starts `F-031` with a standalone `flow.assertion` component. It evaluates a configurable expression over a configured input type, emits a typed `FlowAssertionResult`, routes the original value to `Passed` or `Failed`, and emits a log entry for each evaluation so pass/fail behavior is visible in the workspace Logs tab without extra wiring. It defaults to `MqttEnvelope` because current source nodes commonly emit MQTT envelopes, but the component is not MQTT-specific.
+Future logging architecture note: keep the current `FlowLogEntry` stream for graph-visible log data, but plan a standard `Microsoft.Extensions.Logging` bridge so runtime components can use normal .NET logging and the workspace Logs view can subscribe through a single provider/sink instead of component-specific log plumbing.
+Future object-stream architecture note: dynamic mappers make it hard to keep every runtime edge permanently static. Move toward object streams as the underlying runtime model, with typed ports acting as schema/contract metadata for designer validation, editor help, and runtime coercion. This should be done as a dedicated runtime refactor, not hidden inside one component.
 
 ## Step-by-Step Plan
 
@@ -201,7 +204,7 @@ Done when:
 
 ### Phase 6 - Metrics, Assertions, And Scenarios
 
-Status: Not started
+Status: In progress
 
 Goal: Add the ops/QA layer on top of the same runtime primitives.
 
@@ -342,11 +345,12 @@ Done when:
 
 ## Next Action
 
-Review the Metrics message-rate slice:
+Review the MQTT assertion slice:
 
 1. Open `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json`.
-2. Open a MQTT Metrics node editor.
-3. Select more than four metric cards, such as Messages, Now / sec, Avg / sec, Payload, Topics, Retained, and Avg payload.
-4. Adjust Card columns, save, and confirm the node grid calculates rows instead of disabling extra metrics.
-5. Run the app and publish matching MQTT messages; confirm Messages, Now / sec, Avg / sec, and Payload update from the node input stream.
-6. After confirmation, commit this slice and open a PR.
+2. Add `Flow Assertion` to a pipeline that has a trigger/source.
+3. Confirm it auto-wires from the source output and exposes `Result`, `Passed`, `Failed`, `Entries`, and `Errors`.
+4. Open the node editor, confirm Input type is `MqttEnvelope`, set expression `qos >= 1`, save, and validate.
+5. Run the app, publish one QoS 0 and one QoS 1 message on a subscribed topic.
+6. Confirm the Logs tab shows assertion failed/passed entries and downstream nodes can be wired from `Passed` or `Failed`.
+7. After confirmation, commit this slice and open a PR.

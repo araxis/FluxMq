@@ -1,37 +1,69 @@
 @inject FlowComponentCatalog Catalog
-@inject DragStateService DragState
 @inject ProjectManagerService Projects
+@inject DragStateService DragState
 
-<MudStack Spacing="0" Class="component-catalog">
-    <MudText Typo="Typo.subtitle2" Class="catalog-title">Components</MudText>
+<div class="component-catalog">
+    <div class="catalog-title">Components</div>
     @foreach (var group in Catalog.Components.GroupBy(c => c.Category))
     {
-        <MudText Typo="Typo.overline" Color="Color.Secondary" Class="catalog-group">
+        <div class="catalog-group">
             @group.Key
-        </MudText>
-        @foreach (var component in group)
-        {
-            <MudPaper Elevation="0"
-                      Class="catalog-item"
-                      draggable="true"
-                      @ondragstart="@(() => DragState.ComponentType = component.Type)">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                    <MudIcon Icon="@IconFor(component)" Color="@ColorFor(component)" Size="Size.Small" />
-                    <MudStack Spacing="0" Class="flex-grow-1">
-                        <MudText Typo="Typo.body2">@component.DisplayName</MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">@component.Category</MudText>
-                    </MudStack>
-                    <MudIconButton Size="Size.Small"
-                                   Icon="@Icons.Material.Filled.Add"
-                                   Disabled="@(Projects.ActiveProject is null)"
-                                   OnClick="@(() => Projects.ActiveProject?.AddComponent(component.Type))" />
-                </MudStack>
-            </MudPaper>
-        }
+        </div>
+        <div class="catalog-drop-zone">
+            @foreach (var component in group)
+            {
+                @RenderComponentCard(FlowComponentDragItem.FromPalette(component))
+            }
+        </div>
     }
-</MudStack>
+</div>
 
 @code {
+    private RenderFragment<FlowComponentDragItem> RenderComponentCard => dragItem =>
+        @<div class="catalog-item @(Projects.ActiveProject is null ? "disabled" : null)"
+              role="button"
+              tabindex="@(Projects.ActiveProject is null ? "-1" : "0")"
+              title="Drag or click to add component"
+              @onpointerdown="@((PointerEventArgs args) => BeginComponentDrag(args, dragItem.Component))"
+              @onkeydown="@((KeyboardEventArgs args) => AddComponentFromKeyboard(args, dragItem.Component.Type))"
+              @key="dragItem.Id">
+            <span class="@IconTileClass(dragItem.Component.Category)" aria-hidden="true">
+                <MudIcon Icon="@IconFor(dragItem.Component)" Size="Size.Small" />
+            </span>
+            <span class="catalog-item-name">@dragItem.Component.DisplayName</span>
+            <span class="catalog-add-button" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+            </span>
+        </div>;
+
+    private void BeginComponentDrag(PointerEventArgs args, FlowComponentDescriptor component)
+    {
+        if (Projects.ActiveProject is null || args.Button != 0)
+        {
+            return;
+        }
+
+        DragState.BeginComponentDrag(
+            component.Type,
+            component.DisplayName,
+            args.PointerId,
+            args.ClientX,
+            args.ClientY);
+    }
+
+    private void AddComponentFromKeyboard(KeyboardEventArgs args, string componentType)
+    {
+        if (Projects.ActiveProject is null)
+        {
+            return;
+        }
+
+        if (args.Key is "Enter" or " ")
+        {
+            Projects.ActiveProject.AddComponent(componentType);
+        }
+    }
+
     private static string IconFor(FlowComponentDescriptor component) => component.Category switch
     {
         "Source" => Icons.Material.Filled.Sensors,
@@ -42,13 +74,15 @@
         _ => Icons.Material.Filled.Extension
     };
 
-    private static Color ColorFor(FlowComponentDescriptor component) => component.Category switch
+    private static string IconTileClass(string category) => category switch
     {
-        "Source" => Color.Primary,
-        "Mapper" => Color.Secondary,
-        "Validator" => Color.Info,
-        "Actor" => Color.Tertiary,
-        "Sink" => Color.Tertiary,
-        _ => Color.Default
+        "Source" => "catalog-icon-tile source",
+        "Mapper" => "catalog-icon-tile mapper",
+        "Validator" => "catalog-icon-tile validator",
+        "Assertion" => "catalog-icon-tile assertion",
+        "Observer" => "catalog-icon-tile observer",
+        "Actor" => "catalog-icon-tile actor",
+        "Sink" => "catalog-icon-tile actor",
+        _ => "catalog-icon-tile"
     };
 }

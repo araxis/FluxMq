@@ -66,6 +66,15 @@ public sealed class FlowDefinitionComposerTests
         validator.Ports.ShouldContain(port => port.Name == "Valid" && port.ValueType == "MqttEnvelope" && !port.IsInput);
         validator.Ports.ShouldContain(port => port.Name == "Invalid" && port.ValueType == "MqttEnvelope" && !port.IsInput);
         validator.Ports.Last().Name.ShouldBe("Errors");
+
+        var assertion = catalog.Find("flow.assertion").ShouldNotBeNull();
+        assertion.Category.ShouldBe("Assertion");
+        assertion.Ports.ShouldContain(port => port.Name == "Input" && port.ValueType == "Configured input type" && port.IsInput);
+        assertion.Ports.ShouldContain(port => port.Name == "Result" && port.ValueType == "FlowAssertionResult" && !port.IsInput);
+        assertion.Ports.ShouldContain(port => port.Name == "Passed" && port.ValueType == "Configured input type" && !port.IsInput);
+        assertion.Ports.ShouldContain(port => port.Name == "Failed" && port.ValueType == "Configured input type" && !port.IsInput);
+        assertion.Ports.ShouldContain(port => port.Name == "Entries" && port.ValueType == "FlowLogEntry" && !port.IsInput);
+        assertion.Ports.Last().Name.ShouldBe("Errors");
     }
 
     [Fact]
@@ -466,6 +475,42 @@ public sealed class FlowDefinitionComposerTests
             .GetProperty(FlowDefinitionComposer.RouterNodeName);
 
         router.GetProperty("configuration").GetProperty("expression").GetString().ShouldBe("qos >= 1");
+
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(updated));
+        var configuration = new ConfigurationBuilder()
+            .AddJsonStream(stream)
+            .Build();
+
+        using var host = FlowApplicationHost.CreateDefault(configuration);
+        var result = host.Build();
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.RuntimeBuild?.Errors.Select(error => error.Message) ?? []));
+    }
+
+    [Fact]
+    public void AddComponent_FlowAssertionCreatesDefaultExpressionAndBuildableDefinition()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var updated = composer.AddComponent(initial, "flow.assertion");
+
+        using var document = JsonDocument.Parse(updated);
+        var assertion = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty(FlowDefinitionComposer.AssertionNodeName);
+
+        assertion.GetProperty("Input").GetString().ShouldBe($"{FlowDefinitionComposer.TriggerNodeName}.Output");
+        assertion.GetProperty("configuration").GetProperty("assertionName").GetString().ShouldBe("QoS at least once");
+        assertion.GetProperty("configuration").GetProperty("inputType").GetString().ShouldBe("MqttEnvelope");
+        assertion.GetProperty("configuration").GetProperty("expression").GetString().ShouldBe("qos >= 1");
+        assertion.GetProperty("configuration").GetProperty("failureMessage").GetString().ShouldBe("Expected QoS to be at least 1.");
+        assertion.GetProperty("configuration").GetProperty("boundedCapacity").GetInt32().ShouldBe(1000);
 
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(updated));
         var configuration = new ConfigurationBuilder()

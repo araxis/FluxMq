@@ -8,11 +8,11 @@
 @inject FlowComponentCatalog Catalog
 @inject DragStateService DragState
 
-<div class="flow-designer-root">
-    <div class="flow-canvas"
-         ondragover="event.preventDefault();"
-         @ondragover:preventDefault
-         @ondrop="@OnDrop">
+<div class="flow-designer-root"
+     @onpointerenter="HandleDesignerPointerEnter"
+     @onpointermove="HandleDesignerPointerMove"
+     @onpointerleave="HandleDesignerPointerLeave">
+    <div class="flow-canvas">
         <CascadingValue Value="_diagram">
             <DiagramCanvas>
                 <Widgets>
@@ -29,6 +29,10 @@
             </DiagramCanvas>
         </CascadingValue>
     </div>
+    @if (DragState.ActiveComponentDrag is { IsOverDesigner: true })
+    {
+        <div class="flow-canvas-drop-highlight">Drop to add node</div>
+    }
     <div class="flow-canvas-toolbar">
         <MudTooltip Text="Zoom to fit">
             <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong"
@@ -66,8 +70,15 @@
     private readonly Dictionary<string, DiagramNodeState> _nodeStates = new(StringComparer.Ordinal);
     private readonly Dictionary<string, long> _filterPassCounts = new(StringComparer.Ordinal);
     private static readonly LinkMarker FlowTargetMarker = new("M 0 -4 6 0 0 4 z", 13d);
+    private const double DroppedNodeCenterOffsetX = 130d;
+    private const double DroppedNodeCenterOffsetY = 45d;
+    private const int ZoomToFitMargin = 80;
+    private const int AutoZoomFirstPassDelayMs = 140;
+    private const int AutoZoomSecondPassDelayMs = 160;
     private System.Threading.Timer? _pulseTimer;
     private int _portMeasurementGeneration;
+    private int _autoZoomGeneration;
+    private bool _isDisposed;
     private bool _isRebuildingDiagram;
     private bool _isApplyingLinkEdit;
 
@@ -89,25 +100,84 @@
         _diagram.Links.Removed += OnDiagramLinkRemoved;
         Flow.Changed += OnFlowChanged;
         Live.Changed += OnLiveChanged;
+        DragState.Changed += OnDragStateChanged;
+        DragState.ComponentDropRequested += OnComponentDropRequested;
     }
 
     protected override Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return Task.CompletedTask;
         RebuildDiagram();
+        ScheduleAutoZoomToFit();
         return Task.CompletedTask;
     }
 
-    private void OnDrop(DragEventArgs args)
+    private void ZoomToFit() => _diagram.ZoomToFit(ZoomToFitMargin);
+
+    private void ScheduleAutoZoomToFit()
     {
-        if (!string.IsNullOrWhiteSpace(DragState.ComponentType))
+        var generation = ++_autoZoomGeneration;
+        _ = AutoZoomToFitAsync(generation);
+    }
+
+    private async Task AutoZoomToFitAsync(int generation)
+    {
+        try
         {
-            Flow.AddComponent(DragState.ComponentType);
-            DragState.ComponentType = null;
+            await Task.Delay(AutoZoomFirstPassDelayMs);
+            await InvokeAutoZoomToFitAsync(generation);
+            await Task.Delay(AutoZoomSecondPassDelayMs);
+            await InvokeAutoZoomToFitAsync(generation);
+        }
+        catch (InvalidOperationException) when (_isDisposed)
+        {
         }
     }
 
-    private void ZoomToFit() => _diagram.ZoomToFit(80);
+    private Task InvokeAutoZoomToFitAsync(int generation)
+        => InvokeAsync(() =>
+        {
+            if (_isDisposed ||
+                generation != _autoZoomGeneration ||
+                !_diagram.Nodes.Any())
+            {
+                return;
+            }
+
+            ZoomToFit();
+            _diagram.Refresh();
+        });
+
+    private void OnComponentDropRequested(object? sender, ComponentDropRequestedEventArgs args)
+    {
+        InvokeAsync(() =>
+        {
+            var dropPoint = _diagram.GetRelativeMousePoint(args.ClientX, args.ClientY);
+            Flow.AddComponent(
+                args.ComponentType,
+                (dropPoint.X - DroppedNodeCenterOffsetX, dropPoint.Y - DroppedNodeCenterOffsetY));
+        });
+    }
+
+    private void OnDragStateChanged(object? sender, EventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleDesignerPointerEnter(PointerEventArgs args)
+    {
+        DragState.SetComponentDragOverDesigner(args.PointerId, true);
+    }
+
+    private void HandleDesignerPointerMove(PointerEventArgs args)
+    {
+        DragState.SetComponentDragOverDesigner(args.PointerId, true);
+    }
+
+    private void HandleDesignerPointerLeave(PointerEventArgs args)
+    {
+        DragState.SetComponentDragOverDesigner(args.PointerId, false);
+    }
 
     private void RebuildDiagram()
     {
@@ -543,13 +613,29 @@
             .Select(static node => node.Id)
             .ToHashSet(StringComparer.Ordinal);
 
-        foreach (var removedKey in _nodeStates.Keys.Where(key => !currentNodeIds.Contains(key)).ToArray())
+        foreach (var removedKey in _nodeStates.Keys.Where(key => ShouldPrunePositionKey(key, currentNodeIds, _renderedWorkflowName)).ToArray())
         {
             _nodeStates.Remove(removedKey);
         }
 
         foreach (var node in _diagram.Nodes.OfType<FlowDiagramNodeModel>())
             _nodeStates[node.Id] = new DiagramNodeState(node.Position, node.IsCollapsed);
+    }
+
+    private static bool ShouldPrunePositionKey(string key, IReadOnlySet<string> currentNodeIds, string? renderedWorkflowName)
+    {
+        if (currentNodeIds.Contains(key))
+        {
+            return false;
+        }
+
+        if (renderedWorkflowName is { Length: > 0 })
+        {
+            return key.StartsWith($"{renderedWorkflowName}.", StringComparison.Ordinal) ||
+                   !key.Contains('.', StringComparison.Ordinal);
+        }
+
+        return false;
     }
 
     private void SchedulePortMeasurementRefresh()
@@ -702,10 +788,17 @@
     {
         InvokeAsync(() =>
         {
-            if (_renderedDefinitionRevision != Flow.DefinitionRevision ||
-            _renderedWorkflowName != Flow.ActiveWorkflowName ||
-            Flow.StagedNodePositions is { Count: > 0 })
+            var workflowChanged = _renderedWorkflowName != Flow.ActiveWorkflowName;
+            var shouldRebuild = _renderedDefinitionRevision != Flow.DefinitionRevision ||
+                workflowChanged ||
+                Flow.StagedNodePositions is { Count: > 0 };
+
+            if (shouldRebuild)
+            {
                 RebuildDiagram();
+                if (workflowChanged)
+                    ScheduleAutoZoomToFit();
+            }
             else
             {
                 UpdateDiagramActivity();
@@ -729,6 +822,8 @@
 
     public void Dispose()
     {
+        _isDisposed = true;
+        _autoZoomGeneration++;
         _pulseTimer?.Dispose();
         _pulseTimer = null;
         if (Flow.GetDiagramState is { } capture)
@@ -743,6 +838,8 @@
         _diagram.Links.Removed -= OnDiagramLinkRemoved;
         Flow.Changed -= OnFlowChanged;
         Live.Changed -= OnLiveChanged;
+        DragState.Changed -= OnDragStateChanged;
+        DragState.ComponentDropRequested -= OnComponentDropRequested;
         _portMeasurementGeneration++;
     }
 

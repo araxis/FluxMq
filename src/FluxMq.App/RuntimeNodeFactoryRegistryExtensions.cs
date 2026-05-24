@@ -1,6 +1,7 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Session;
+using FluxMq.Components.Assertions;
 using FluxMq.Components.FileWriter;
 using FluxMq.Components.JsonSchema;
 using FluxMq.Components.Logging;
@@ -29,6 +30,8 @@ public static class RuntimeNodeFactoryRegistryExtensions
     private static readonly PortName InputPort = new("Input");
     private static readonly PortName OutputPort = new("Output");
     private static readonly PortName ResultPort = new("Result");
+    private static readonly PortName PassedPort = new("Passed");
+    private static readonly PortName FailedPort = new("Failed");
     private static readonly PortName WhenTruePort = new("WhenTrue");
     private static readonly PortName WhenFalsePort = new("WhenFalse");
     private static readonly PortName ValidPort = new("Valid");
@@ -60,6 +63,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .Register(PipelineFlowNodeTypes.FlowLogger, CreateFlowLogger)
             .Register(PipelineFlowNodeTypes.MessageFilter, context => CreateMessageFilter(context.Address, context.Definition, expressionEngine))
             .Register(PipelineFlowNodeTypes.ConditionRouter, context => CreateConditionRouter(context.Address, context.Definition, expressionEngine))
+            .Register(PipelineFlowNodeTypes.FlowAssertion, context => CreateFlowAssertion(context.Address, context.Definition, expressionEngine))
             .Register(PipelineFlowNodeTypes.JsonSchemaValidator, context => CreateJsonSchemaValidator(context.Address, context.Definition))
             .Register(PipelineFlowNodeTypes.DynamicMapper, context => CreateDynamicMapper(context.Address, context.Definition, expressionEngine))
             .Register(PipelineFlowNodeTypes.PublishRequestMapper, context => CreatePublishRequestMapper(context.Address, context.Definition, expressionEngine))
@@ -252,6 +256,59 @@ public static class RuntimeNodeFactoryRegistryExtensions
             [
                 new OutputPort<MqttEnvelope>(address.Port(WhenTruePort), component.WhenTrue),
                 new OutputPort<MqttEnvelope>(address.Port(WhenFalsePort), component.WhenFalse),
+                new OutputPort<FlowLogEntry>(address.Port(EntriesPort), component.Entries),
+                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
+            ]);
+    }
+
+    private static RuntimeNode CreateFlowAssertion(
+        NodeAddress address,
+        NodeDefinition definition,
+        IFlowExpressionEngine expressionEngine)
+    {
+        var inputType = NormalizeMapperTypeName(GetStringOrDefault(definition, "inputType", "MqttEnvelope"));
+        return inputType switch
+        {
+            "MqttEnvelope" => CreateFlowAssertion<MqttEnvelope>(address, definition, expressionEngine),
+            "MqttPublishRequest" => CreateFlowAssertion<MqttPublishRequest>(address, definition, expressionEngine),
+            "MqttRecordingRequest" => CreateFlowAssertion<MqttRecordingRequest>(address, definition, expressionEngine),
+            "FileWriteRequest" => CreateFlowAssertion<FileWriteRequest>(address, definition, expressionEngine),
+            "JsonSchemaValidationResult" => CreateFlowAssertion<JsonSchemaValidationResult>(address, definition, expressionEngine),
+            "InspectedMqttMessage" => CreateFlowAssertion<InspectedMqttMessage>(address, definition, expressionEngine),
+            "MqttMetricsSnapshot" => CreateFlowAssertion<MqttMetricsSnapshot>(address, definition, expressionEngine),
+            "FlowLogEntry" => CreateFlowAssertion<FlowLogEntry>(address, definition, expressionEngine),
+            "FlowError" => CreateFlowAssertion<FlowError>(address, definition, expressionEngine),
+            _ => throw new InvalidOperationException(
+                $"Flow assertion inputType '{inputType}' is not supported yet. Supported inputType values: MqttEnvelope, MqttPublishRequest, MqttRecordingRequest, FileWriteRequest, JsonSchemaValidationResult, InspectedMqttMessage, MqttMetricsSnapshot, FlowLogEntry, FlowError.")
+        };
+    }
+
+    private static RuntimeNode CreateFlowAssertion<TInput>(
+        NodeAddress address,
+        NodeDefinition definition,
+        IFlowExpressionEngine expressionEngine)
+    {
+        var expression = GetRequiredString(definition, "expression");
+        var predicate = new FlowAssertionExpressionPredicate<TInput>(expressionEngine, expression);
+        var component = new FlowAssertionComponent<TInput>(
+            predicate,
+            GetStringOrDefault(definition, "assertionName", "Message assertion"),
+            expression,
+            GetNullableString(definition, "failureMessage"),
+            boundedCapacity: GetBoundedCapacity(definition));
+
+        return RuntimeNode.Create(
+            address,
+            component,
+            inputs:
+            [
+                new InputPort<TInput>(address.Port(InputPort), component.Input)
+            ],
+            outputs:
+            [
+                new OutputPort<FlowAssertionResult>(address.Port(ResultPort), component.Result),
+                new OutputPort<TInput>(address.Port(PassedPort), component.Passed),
+                new OutputPort<TInput>(address.Port(FailedPort), component.Failed),
                 new OutputPort<FlowLogEntry>(address.Port(EntriesPort), component.Entries),
                 new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
             ]);
