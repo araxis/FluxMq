@@ -392,6 +392,83 @@ public sealed class FlowDefinitionComposer
         return root.ToJsonString(Options);
     }
 
+    public string AddScenarioStep(string json, string testName, string stepType)
+    {
+        if (string.IsNullOrWhiteSpace(testName))
+        {
+            return json;
+        }
+
+        var normalizedType = string.IsNullOrWhiteSpace(stepType)
+            ? "expect.event"
+            : stepType.Trim();
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        var tests = GetOrCreateObject(flowApplication, "tests");
+        var scenario = GetOrCreateObject(tests, testName);
+        var steps = GetOrCreateObject(scenario, "steps");
+        var stepName = MakeUniqueScenarioStepName(steps, ScenarioStepNamePrefix(normalizedType));
+        steps[stepName] = CreateScenarioStepObject(flowApplication, normalizedType);
+
+        return root.ToJsonString(Options);
+    }
+
+    public string UpdateScenarioStep(
+        string json,
+        string testName,
+        string stepName,
+        string stepType,
+        IReadOnlyDictionary<string, string> configuration)
+    {
+        if (string.IsNullOrWhiteSpace(testName) ||
+            string.IsNullOrWhiteSpace(stepName))
+        {
+            return json;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["tests"] is not JsonObject tests ||
+            tests[testName] is not JsonObject scenario)
+        {
+            return json;
+        }
+
+        var steps = GetOrCreateObject(scenario, "steps");
+        if (steps[stepName] is not JsonObject step)
+        {
+            return json;
+        }
+
+        var normalizedType = string.IsNullOrWhiteSpace(stepType)
+            ? ReadString(step, "type") ?? "expect.event"
+            : stepType.Trim();
+        step["type"] = normalizedType;
+        step["configuration"] = CreateScenarioStepConfiguration(normalizedType, configuration);
+        return root.ToJsonString(Options);
+    }
+
+    public string RemoveScenarioStep(string json, string testName, string stepName)
+    {
+        if (string.IsNullOrWhiteSpace(testName) ||
+            string.IsNullOrWhiteSpace(stepName))
+        {
+            return json;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["tests"] is not JsonObject tests ||
+            tests[testName] is not JsonObject scenario ||
+            scenario["steps"] is not JsonObject steps ||
+            !steps.Remove(stepName))
+        {
+            return json;
+        }
+
+        return root.ToJsonString(Options);
+    }
+
     public DashboardLayoutSnapshot? GetDashboardLayout(string json, string dashboardName)
     {
         if (string.IsNullOrWhiteSpace(dashboardName))
@@ -421,6 +498,25 @@ public sealed class FlowDefinitionComposer
             NormalizePaddingValues(ReadPaddingValues(layout, "rowPadding"), rows.Count),
             ReadDashboardCells(cells),
             ReadDashboardWidgets(widgets));
+    }
+
+    public TestScenarioSnapshot? GetTestScenario(string json, string testName)
+    {
+        if (string.IsNullOrWhiteSpace(testName))
+        {
+            return null;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["tests"] is not JsonObject tests ||
+            tests[testName] is not JsonObject scenario)
+        {
+            return null;
+        }
+
+        var steps = scenario["steps"] as JsonObject ?? new JsonObject();
+        return new TestScenarioSnapshot(testName, ReadScenarioSteps(steps));
     }
 
     public string AddDashboardWidget(string json, string dashboardName, string widgetType, string? cellName = null)
@@ -470,6 +566,45 @@ public sealed class FlowDefinitionComposer
 
         widget["configuration"] = CreateConfigurationObject(configuration);
         return root.ToJsonString(Options);
+    }
+
+    public string RemoveDashboardWidget(string json, string dashboardName, string widgetName)
+    {
+        if (string.IsNullOrWhiteSpace(dashboardName) ||
+            string.IsNullOrWhiteSpace(widgetName))
+        {
+            return json;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["dashboards"] is not JsonObject dashboards ||
+            dashboards[dashboardName] is not JsonObject dashboard)
+        {
+            return json;
+        }
+
+        var changed = false;
+        if (dashboard["widgets"] is JsonObject widgets)
+        {
+            changed = widgets.Remove(widgetName);
+        }
+
+        if (dashboard["layout"] is JsonObject layout &&
+            layout["cells"] is JsonObject cells)
+        {
+            foreach (var (_, cell) in cells.ToArray())
+            {
+                if (cell is JsonObject cellObject &&
+                    string.Equals(ReadString(cellObject, "widget"), widgetName, StringComparison.Ordinal))
+                {
+                    cellObject.Remove("widget");
+                    changed = true;
+                }
+            }
+        }
+
+        return changed ? root.ToJsonString(Options) : json;
     }
 
     public string UpdateDashboardTrack(
@@ -1306,6 +1441,26 @@ public sealed class FlowDefinitionComposer
         return result;
     }
 
+    private static IReadOnlyList<ScenarioStepSnapshot> ReadScenarioSteps(JsonObject steps)
+    {
+        var result = new List<ScenarioStepSnapshot>();
+        foreach (var step in steps)
+        {
+            if (step.Value is not JsonObject stepObject)
+            {
+                continue;
+            }
+
+            var configuration = stepObject["configuration"] as JsonObject ?? new JsonObject();
+            result.Add(new ScenarioStepSnapshot(
+                step.Key,
+                ReadString(stepObject, "type") ?? string.Empty,
+                ReadConfigurationStrings(configuration)));
+        }
+
+        return result;
+    }
+
     private static IReadOnlyDictionary<string, string> ReadConfigurationStrings(JsonObject configuration)
     {
         var result = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -1727,6 +1882,135 @@ public sealed class FlowDefinitionComposer
         return result;
     }
 
+    private static JsonObject CreateScenarioStepObject(JsonObject flowApplication, string stepType)
+        => new()
+        {
+            ["type"] = stepType,
+            ["configuration"] = CreateScenarioStepConfiguration(
+                stepType,
+                CreateDefaultScenarioStepConfiguration(flowApplication, stepType))
+        };
+
+    private static IReadOnlyDictionary<string, string> CreateDefaultScenarioStepConfiguration(
+        JsonObject flowApplication,
+        string stepType)
+        => stepType switch
+        {
+            "mqtt.publish" => new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["connection"] = ReadFirstConnectionResourceName(flowApplication),
+                ["topic"] = "fluxmq/test",
+                ["payload"] = """{"hello":"fluxmq"}""",
+                ["payloadEncoding"] = "json",
+                ["qos"] = "0",
+                ["retain"] = "false"
+            },
+            _ => new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["eventType"] = "mqtt.message.published",
+                ["topicStartsWith"] = string.Empty,
+                ["subjectStartsWith"] = string.Empty,
+                ["status"] = "published",
+                ["payloadContains"] = string.Empty,
+                ["timeoutMs"] = "5000"
+            }
+        };
+
+    private static JsonObject CreateScenarioStepConfiguration(
+        string stepType,
+        IReadOnlyDictionary<string, string> configuration)
+    {
+        var result = new JsonObject();
+        if (string.Equals(stepType, "mqtt.publish", StringComparison.Ordinal))
+        {
+            AddString(result, configuration, "connection");
+            AddString(result, configuration, "topic");
+            AddPayload(result, configuration);
+            AddString(result, configuration, "payloadEncoding");
+            AddInt(result, configuration, "qos", 0);
+            AddBool(result, configuration, "retain", false);
+            return result;
+        }
+
+        AddString(result, configuration, "eventType");
+        AddString(result, configuration, "topicStartsWith");
+        AddString(result, configuration, "subjectStartsWith");
+        AddString(result, configuration, "status");
+        AddString(result, configuration, "source");
+        AddString(result, configuration, "payloadContains");
+        AddInt(result, configuration, "timeoutMs", 5000);
+        return result;
+    }
+
+    private static void AddString(JsonObject target, IReadOnlyDictionary<string, string> configuration, string key)
+        => target[key] = configuration.TryGetValue(key, out var value) ? value ?? string.Empty : string.Empty;
+
+    private static void AddInt(
+        JsonObject target,
+        IReadOnlyDictionary<string, string> configuration,
+        string key,
+        int fallback)
+    {
+        target[key] = configuration.TryGetValue(key, out var value) &&
+                      int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var parsed)
+            ? parsed
+            : fallback;
+    }
+
+    private static void AddBool(
+        JsonObject target,
+        IReadOnlyDictionary<string, string> configuration,
+        string key,
+        bool fallback)
+    {
+        target[key] = configuration.TryGetValue(key, out var value) &&
+                      bool.TryParse(value, out var parsed)
+            ? parsed
+            : fallback;
+    }
+
+    private static void AddPayload(JsonObject target, IReadOnlyDictionary<string, string> configuration)
+    {
+        var payload = configuration.TryGetValue("payload", out var value) ? value ?? string.Empty : string.Empty;
+        var encoding = configuration.TryGetValue("payloadEncoding", out var configuredEncoding)
+            ? configuredEncoding
+            : string.Empty;
+        if (string.Equals(encoding, "json", StringComparison.OrdinalIgnoreCase) &&
+            !string.IsNullOrWhiteSpace(payload))
+        {
+            try
+            {
+                target["payload"] = JsonNode.Parse(payload);
+                return;
+            }
+            catch (JsonException)
+            {
+                // Store the raw value so the user can fix it without losing their input.
+            }
+        }
+
+        target["payload"] = payload;
+    }
+
+    private static string ReadFirstConnectionResourceName(JsonObject flowApplication)
+    {
+        if (flowApplication["resources"] is not JsonObject resources)
+        {
+            return string.Empty;
+        }
+
+        foreach (var resource in resources)
+        {
+            if (resource.Value is JsonObject resourceObject &&
+                string.Equals(ReadString(resourceObject, "type"), "mqtt.connection", StringComparison.Ordinal))
+            {
+                return resource.Key;
+            }
+        }
+
+        return string.Empty;
+    }
+
     private static JsonObject GetOrCreateDashboardObject(JsonObject flowApplication, string dashboardName)
     {
         var dashboards = GetOrCreateObject(flowApplication, "dashboards");
@@ -1772,12 +2056,36 @@ public sealed class FlowDefinitionComposer
         return $"{preferred}{index}";
     }
 
+    private static string MakeUniqueScenarioStepName(JsonObject steps, string preferred)
+    {
+        if (!steps.ContainsKey(preferred))
+        {
+            return preferred;
+        }
+
+        var index = 2;
+        while (steps.ContainsKey($"{preferred}{index}"))
+        {
+            index++;
+        }
+
+        return $"{preferred}{index}";
+    }
+
     private static string WidgetNamePrefix(string widgetType)
         => widgetType switch
         {
             DashboardWidgetCatalog.EventCounterType => "eventCounter",
             DashboardWidgetCatalog.LatestEventType => "latestEvent",
             _ => "widget"
+        };
+
+    private static string ScenarioStepNamePrefix(string stepType)
+        => stepType switch
+        {
+            "mqtt.publish" => "publishMessage",
+            "expect.event" => "expectEvent",
+            _ => "step"
         };
 
     private static JsonObject CreateDashboardWidgetObject(string widgetType)

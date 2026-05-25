@@ -189,6 +189,13 @@
                                                 @onclick="@(() => OpenWidgetEditorAsync(currentCell.Widget))">
                                             <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
                                         </button>
+                                        <button type="button"
+                                                class="dashboard-cell-widget-action danger"
+                                                title="Delete widget"
+                                                @onclick:stopPropagation="true"
+                                                @onclick="@(() => RemoveWidget(currentCell.Widget))">
+                                            <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" />
+                                        </button>
                                     </div>
                                 }
                             </div>
@@ -429,6 +436,18 @@
             CaptureDashboardError();
             RefreshLayoutAfterCommand();
         }
+    }
+
+    private void RemoveWidget(string? widgetName)
+    {
+        if (string.IsNullOrWhiteSpace(widgetName))
+        {
+            return;
+        }
+
+        Project.RemoveDashboardWidget(widgetName);
+        CaptureDashboardError();
+        RefreshLayoutAfterCommand();
     }
 
     private void MergeSelected()

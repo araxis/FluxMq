@@ -64,6 +64,7 @@ The current scenario expectation foundation slice starts the test/scenario plane
 The current scenario host slice wires test/scenario execution into `FlowApplicationHost`. The host keeps the loaded app definition, can run a named scenario via `RunScenarioAsync`, starts the runtime when needed, and feeds the scenario runner from `ApplicationRuntime.Events`. This creates the boundary future desktop and CLI test runners should call instead of reaching into pipeline internals.
 The current scenario action slice adds a generic `ScenarioStepServices` boundary and the first app-level action step, `mqtt.publish`. Scenario steps can now ask for runtime capabilities through typed services, and the publish step resolves a named MQTT connection resource from the running app and publishes a configured message without inserting test behavior into workflow nodes.
 Testing-era boundary: tests/scenarios are a separate plane from app design/run pipelines. Their extra value is integration testing: a test can start or use an app runtime, run arrange/action steps against real or fake resources, observe runtime events, and assert behavior across MQTT, files, HTTP, databases, and future transports. This means we should support different test scenarios and, when needed, test-only orchestration pipelines without polluting production workflow components.
+The current CLI scenario runner slice makes tests/scenarios executable outside the desktop UI. `fluxmq scenario --config <path> --name <scenario>` loads the app, starts the host through `RunScenarioAsync`, and returns text or JSON results with per-step status. This is the first command-line entry point for integration-test workflows.
 
 ## Step-by-Step Plan
 
@@ -397,6 +398,25 @@ Done when:
   - `mqtt.publish` publishes a configured MQTT message through a named runtime connection resource
   - MQTT scenario actions live in the app layer, while the pipeline runner stays generic
   - tests cover service passing, successful publish, and missing connection failure
+- Started CLI scenario execution:
+  - added `fluxmq scenario --config <path> --name <scenario>`
+  - scenario command uses `FlowApplicationHost.RunScenarioAsync`
+  - text and JSON outputs include scenario and step status details
+  - scenarios that run but fail return `ScenarioFailed`
+  - CLI tests cover pass, fail, JSON, and missing scenario cases
+- Started scenario visibility in the test tab:
+  - test scenarios now expose ordered step snapshots to the workspace UI
+  - the test tab renders loaded scenario steps as cards instead of a hardcoded empty placeholder
+  - the test tab can run the active scenario and displays scenario/step result status after execution
+  - step cards are rendered as an explicit sequence rather than unrelated blocks
+  - test scenario steps can now be added, edited, and deleted from the test tab
+  - the test tab now has a dedicated test-step palette with click and drag/drop support
+  - expectation step editing uses event-type metadata so only relevant filter fields are visible
+  - the test scenario row now fills the available tab height, with horizontal scrolling anchored at the bottom for long step sequences
+  - `app1.json` has a sample `t1` MQTT round-trip scenario for manual testing
+- Fixed dashboard widget cleanup:
+  - dashboard cells now have a delete action for assigned widgets
+  - deleting a widget removes the widget definition and clears the cell assignment
 
 ## Next Action
 
@@ -407,12 +427,18 @@ Working rule:
 - Wait for confirmation before commit, push, PR, or merge steps.
 - For every review or verification step, write both what we are going to do and the expected result.
 
-Review the scenario action slice:
+Review the scenario execution and visibility slice:
 
-1. Do: review `ScenarioStepServices` and `ScenarioRunner.RunAsync`. Expected: service passing is generic and not tied to MQTT or any single action family.
-2. Do: review `MqttPublishScenarioStepRunner`. Expected: `mqtt.publish` reads one configured publish command and delegates broker access to an app-level service.
-3. Do: review `FlowApplicationHost.RunScenarioAsync`. Expected: scenario services are created from the running runtime and test/scenario behavior stays outside workflow nodes.
-4. Do: run `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1`. Expected: pipeline scenario tests pass.
-5. Do: run `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1`. Expected: app-host scenario action tests pass.
-6. Do: run `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1`. Expected: the full solution stays healthy.
-7. Do: after confirmation, commit this slice and open a PR. Expected: the branch is reviewable and can be merged when checks are green.
+1. Do: review `ScenarioCliCommand`. Expected: it requires `--config` and `--name`, and supports text/json output like the other CLI commands.
+2. Do: review `CliRunner.RunScenario`. Expected: it uses `FlowApplicationHost.RunScenarioAsync` and returns `ScenarioFailed` only when a scenario runs but fails.
+3. Do: review `ScenarioRunResultRenderer`. Expected: text output is readable and JSON output has scenario/step status details for automation.
+4. Do: reopen `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` and select test tab `t1`. Expected: three ordered cards appear for `publishSampleRequest`, `expectTriggerReceive`, and `expectMappedPublish`.
+5. Do: click `Run test`. Expected: the scenario starts the app runtime if needed, publishes the sample message, waits for the two expected events, then marks each step with its result.
+6. Do: edit one step from the card action. Expected: the dialog changes the persisted step configuration and clears the previous run result.
+7. Do: add a scenario step from the left test-step palette by click and drag/drop. Expected: the card list updates and the JSON `tests.t1.steps` section changes.
+8. Do: add enough scenario steps to overflow horizontally. Expected: the test surface still fills the tab height, with the horizontal scrollbar at the bottom of the test surface.
+9. Do: in the Expect event editor, switch event type between Any event, MQTT message received, File written, and Assertion evaluated. Expected: topic/path/assertion filter fields appear only where relevant.
+10. Do: in dashboard edit mode, delete a widget from a cell. Expected: the widget disappears from the cell and from `dashboards.<name>.widgets`.
+11. Do: run `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1`. Expected: CLI tests pass.
+12. Do: run `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1`. Expected: the full solution stays healthy.
+13. Do: after confirmation, commit this slice and open a PR. Expected: the branch is reviewable and can be merged when checks are green.

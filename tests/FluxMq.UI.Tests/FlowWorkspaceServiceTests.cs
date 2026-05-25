@@ -411,6 +411,115 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public void GetActiveTestScenario_ReflectsLoadedSteps()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "tests": {
+                "t1": {
+                  "steps": {
+                    "publishSampleRequest": {
+                      "type": "mqtt.publish",
+                      "configuration": {
+                        "connection": "local-broker",
+                        "topic": "fluxmq/sample/request"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+
+        service.SetActiveTest("t1");
+
+        var scenario = service.GetActiveTestScenario().ShouldNotBeNull();
+        scenario.StepCount.ShouldBe(1);
+        scenario.Steps[0].Name.ShouldBe("publishSampleRequest");
+        scenario.Steps[0].ReadString("topic").ShouldBe("fluxmq/sample/request");
+    }
+
+    [Fact]
+    public async Task RunActiveTestScenarioAsync_RunsSelectedScenarioAndStoresResult()
+    {
+        await using var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "observe": {
+                  "source": {
+                    "type": "generated.source"
+                  }
+                }
+              },
+              "tests": {
+                "smoke": {
+                  "steps": {}
+                }
+              }
+            }
+          }
+        }
+        """);
+        service.SetActiveTest("smoke");
+
+        var result = await service.RunActiveTestScenarioAsync();
+
+        result.ShouldNotBeNull();
+        result.Name.ShouldBe("smoke");
+        result.IsSuccess.ShouldBeTrue();
+        service.LastScenarioRunResult.ShouldBe(result);
+        service.IsScenarioRunning.ShouldBeFalse();
+        service.Logs.ShouldContain(log => log.Source == "Scenario" && log.Code == "Passed");
+    }
+
+    [Fact]
+    public async Task RunActiveTestScenarioAsync_StoresFailedScenarioResult()
+    {
+        await using var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "observe": {
+                  "source": {
+                    "type": "generated.source"
+                  }
+                }
+              },
+              "tests": {
+                "broken": {
+                  "steps": {
+                    "unknown": {
+                      "type": "unknown.step"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+        service.SetActiveTest("broken");
+
+        var result = await service.RunActiveTestScenarioAsync();
+
+        result.ShouldNotBeNull();
+        result.IsSuccess.ShouldBeFalse();
+        result.Steps.ShouldHaveSingleItem().Message.ShouldBe("Scenario step type 'unknown.step' is not registered.");
+        service.LastScenarioRunResult.ShouldBe(result);
+        service.Logs.ShouldContain(log => log.Source == "Scenario" && log.Code == "Failed");
+    }
+
+    [Fact]
     public void ActiveDashboardLayoutCommands_UpdateDefinitionAndDiagnostics()
     {
         var service = new FlowWorkspaceService(new FlowDefinitionComposer());
@@ -879,6 +988,57 @@ public sealed class FlowWorkspaceServiceTests
         widget.Configuration["topicStartsWith"].ShouldBe("factory/");
         widget.Configuration["subjectStartsWith"].ShouldBe("factory/");
         widget.Configuration["status"].ShouldBe("received");
+    }
+
+    [Fact]
+    public void RemoveDashboardWidget_ClearsAssignedCell()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddDashboard("ops");
+        service.SetActiveDashboard("ops");
+        service.AddDashboardWidget("event.counter", "slot:0:0");
+
+        service.RemoveDashboardWidget("eventCounter");
+
+        var layout = service.GetActiveDashboardLayout().ShouldNotBeNull();
+        layout.Widgets.ContainsKey("eventCounter").ShouldBeFalse();
+        layout.Cells.ShouldContain(cell => cell.Row == 0 && cell.Column == 0 && string.IsNullOrWhiteSpace(cell.Widget));
+        service.HasUnsavedChanges.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void TestScenarioStepCommands_UpdateActiveScenario()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddTest("t1");
+        service.SetActiveTest("t1");
+
+        service.AddTestScenarioStep("expect.event");
+
+        var scenario = service.GetActiveTestScenario().ShouldNotBeNull();
+        var step = scenario.Steps.ShouldHaveSingleItem();
+        step.Name.ShouldBe("expectEvent");
+
+        service.UpdateTestScenarioStep(
+            step.Name,
+            step.Type,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["eventType"] = FlowEventTypes.MqttMessageReceived,
+                ["topicStartsWith"] = "factory/",
+                ["subjectStartsWith"] = "",
+                ["status"] = "received",
+                ["payloadContains"] = "ok",
+                ["timeoutMs"] = "2500"
+            });
+
+        scenario = service.GetActiveTestScenario().ShouldNotBeNull();
+        scenario.Steps[0].Configuration["topicStartsWith"].ShouldBe("factory/");
+        scenario.Steps[0].Configuration["timeoutMs"].ShouldBe("2500");
+
+        service.RemoveTestScenarioStep(step.Name);
+
+        service.GetActiveTestScenario().ShouldNotBeNull().Steps.ShouldBeEmpty();
     }
 
     [Fact]

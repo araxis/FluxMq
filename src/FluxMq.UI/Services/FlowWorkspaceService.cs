@@ -9,6 +9,7 @@ using FluxMq.Components.Storage.Repositories;
 using FluxMq.Pipeline.Components;
 using FluxMq.Pipeline.Definitions;
 using FluxMq.Pipeline.Runtime;
+using FluxMq.Pipeline.Scenarios;
 using FluxMq.UI.Models;
 using Microsoft.Extensions.Configuration;
 using System.Text;
@@ -84,6 +85,8 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     public IReadOnlyDictionary<string, MqttTriggerActivitySnapshot> TriggerActivitySnapshots { get; private set; } =
         new Dictionary<string, MqttTriggerActivitySnapshot>(StringComparer.Ordinal);
     public IReadOnlyList<FlowEvent> RuntimeEvents { get; private set; } = [];
+    public bool IsScenarioRunning { get; private set; }
+    public ScenarioRunResult? LastScenarioRunResult { get; private set; }
 
     public IReadOnlyList<string> WorkflowNames => _definitionComposer.GetWorkflowNames(DefinitionJson);
     public IReadOnlyList<string> DashboardNames => _definitionComposer.GetDashboardNames(DefinitionJson);
@@ -141,6 +144,11 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             return new DashboardEventSnapshot(matching.Length, matching.LastOrDefault());
         }
     }
+
+    public TestScenarioSnapshot? GetActiveTestScenario()
+        => string.IsNullOrWhiteSpace(_activeTestName)
+            ? null
+            : _definitionComposer.GetTestScenario(DefinitionJson, _activeTestName);
 
     public IReadOnlyList<(string Name, string Type)> GetWorkflowNodes(string workflowName)
         => _definitionComposer.GetWorkflowNodes(DefinitionJson, workflowName);
@@ -338,6 +346,112 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         {
             State = RuntimeWorkspaceState.Faulted;
             Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "DashboardWidgetUpdateFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
+    public void RemoveDashboardWidget(string widgetName)
+    {
+        if (string.IsNullOrWhiteSpace(_activeDashboardName) ||
+            string.IsNullOrWhiteSpace(widgetName))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.RemoveDashboardWidget(DefinitionJson, _activeDashboardName, widgetName));
+            _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "DashboardWidgetRemoveFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
+    public void AddTestScenarioStep(string stepType)
+    {
+        if (string.IsNullOrWhiteSpace(_activeTestName))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.AddScenarioStep(DefinitionJson, _activeTestName, stepType));
+            _activeArtifactKind = WorkspaceArtifactKind.Test;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+            LastScenarioRunResult = null;
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "ScenarioStepAddFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
+    public void UpdateTestScenarioStep(
+        string stepName,
+        string stepType,
+        IReadOnlyDictionary<string, string> configuration)
+    {
+        if (string.IsNullOrWhiteSpace(_activeTestName) ||
+            string.IsNullOrWhiteSpace(stepName))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.UpdateScenarioStep(
+                DefinitionJson,
+                _activeTestName,
+                stepName,
+                stepType,
+                configuration));
+            _activeArtifactKind = WorkspaceArtifactKind.Test;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+            LastScenarioRunResult = null;
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "ScenarioStepUpdateFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
+    public void RemoveTestScenarioStep(string stepName)
+    {
+        if (string.IsNullOrWhiteSpace(_activeTestName) ||
+            string.IsNullOrWhiteSpace(stepName))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.RemoveScenarioStep(DefinitionJson, _activeTestName, stepName));
+            _activeArtifactKind = WorkspaceArtifactKind.Test;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+            LastScenarioRunResult = null;
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "ScenarioStepRemoveFailed", exception.Message)];
         }
 
         NotifyChanged();
@@ -1004,6 +1118,78 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         }
         finally
         {
+            _gate.Release();
+            NotifyChanged();
+        }
+    }
+
+    public async Task<ScenarioRunResult?> RunActiveTestScenarioAsync(CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(_activeTestName))
+        {
+            return null;
+        }
+
+        var scenarioName = _activeTestName;
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        IsScenarioRunning = true;
+        LastScenarioRunResult = null;
+        NotifyChanged();
+
+        try
+        {
+            if (_host is null || State != RuntimeWorkspaceState.Running)
+            {
+                await DisposeHostAsync().ConfigureAwait(false);
+                ClearRuntimeMetricsSnapshots(notify: false);
+                ClearRuntimePayloadInspections(notify: false);
+                ClearRuntimeTriggerActivitySnapshots(notify: false);
+                ClearRuntimeEvents(notify: false);
+
+                _host = FlowApplicationHost.CreateDefault(CreateConfiguration(DefinitionJson), _messageRepository, _runtimeSessionFactory);
+                var buildResult = _host.Build();
+                if (buildResult.IsSuccess)
+                {
+                    AttachRuntimeProjections();
+                    buildResult = await _host.StartBuiltAsync(cancellationToken).ConfigureAwait(false);
+                }
+
+                Diagnostics = CollectDiagnostics(buildResult);
+                State = buildResult.IsSuccess ? RuntimeWorkspaceState.Running : RuntimeWorkspaceState.Faulted;
+                AppendDiagnosticsToLogs(Diagnostics, notify: false);
+
+                if (!buildResult.IsSuccess)
+                {
+                    return null;
+                }
+            }
+
+            var result = await _host.RunScenarioAsync(scenarioName, cancellationToken).ConfigureAwait(false);
+            LastScenarioRunResult = result;
+            Diagnostics =
+            [
+                new WorkspaceDiagnostic(
+                    result.IsSuccess ? "Info" : "Error",
+                    "Scenario",
+                    result.Status.ToString(),
+                    $"Test scenario '{result.Name}' {result.Status.ToString().ToLowerInvariant()}.")
+            ];
+            AppendDiagnosticsToLogs(Diagnostics, notify: false);
+            return result;
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics =
+            [
+                new WorkspaceDiagnostic("Error", "Scenario", "RunFailed", exception.Message)
+            ];
+            AppendDiagnosticsToLogs(Diagnostics, notify: false);
+            return null;
+        }
+        finally
+        {
+            IsScenarioRunning = false;
             _gate.Release();
             NotifyChanged();
         }

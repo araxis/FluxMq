@@ -1,6 +1,7 @@
 using FluxMq.App;
 using FluxMq.Cli.Commands;
 using FluxMq.Pipeline.Runtime;
+using FluxMq.Pipeline.Scenarios;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
@@ -33,6 +34,7 @@ public sealed class CliRunner
             config.SetApplicationName("fluxmq");
             config.AddCommand<ValidateCliCommand>(CliOptions.ValidateCommand);
             config.AddCommand<RunCliCommand>(CliOptions.RunCommand);
+            config.AddCommand<ScenarioCliCommand>(CliOptions.ScenarioCommand);
         });
 
         try
@@ -123,6 +125,45 @@ public sealed class CliRunner
         }
     }
 
+    internal async Task<int> RunScenario(CliOptions options, CancellationToken cancellationToken)
+    {
+        if (!TryBuildHost(options, out var host, out var exitCode))
+        {
+            return exitCode;
+        }
+
+        await using (var flowHost = host ?? throw new InvalidOperationException("Host was not created."))
+        {
+            try
+            {
+                var result = await flowHost
+                    .RunScenarioAsync(options.ScenarioName ?? string.Empty, cancellationToken)
+                    .ConfigureAwait(false);
+                var commandResult = CreateScenarioResult(result);
+                var output = options.OutputFormat == CliOutputFormat.Json || commandResult.IsSuccess ? _output : _error;
+
+                ScenarioRunResultRenderer.Write(commandResult, options.OutputFormat, output);
+                return commandResult.IsSuccess ? (int)CliExitCode.Success : (int)CliExitCode.ScenarioFailed;
+            }
+            catch (InvalidOperationException exception)
+            {
+                if (options.OutputFormat == CliOutputFormat.Json)
+                {
+                    ScenarioRunResultRenderer.Write(
+                        CreateScenarioFailureResult(options.ScenarioName ?? string.Empty, exception.Message),
+                        options.OutputFormat,
+                        _output);
+                }
+                else
+                {
+                    _error.WriteLine(exception.Message);
+                }
+
+                return (int)CliExitCode.ValidationError;
+            }
+        }
+    }
+
     private bool TryBuildHost(CliOptions options, out FlowApplicationHost? host, out int exitCode)
     {
         var configurationPath = Path.GetFullPath(options.ConfigurationPath!);
@@ -182,6 +223,45 @@ public sealed class CliRunner
             runtime?.Workflows.Count ?? 0,
             runtime?.Resources.Count ?? 0,
             diagnostics);
+    }
+
+    private static ScenarioRunCommandResult CreateScenarioResult(ScenarioRunResult result)
+        => new(
+            result.Name,
+            result.IsSuccess,
+            result.Status.ToString(),
+            result.StartedAt,
+            result.FinishedAt,
+            (result.FinishedAt - result.StartedAt).TotalMilliseconds,
+            result.Steps.Select(step => new ScenarioStepCommandResult(
+                step.Name,
+                step.Type,
+                step.Status.ToString(),
+                step.Message,
+                step.MatchedEvent?.Type,
+                step.MatchedEvent?.Topic,
+                step.MatchedEvent?.Status)).ToArray());
+
+    private static ScenarioRunCommandResult CreateScenarioFailureResult(string name, string message)
+    {
+        var now = DateTimeOffset.UtcNow;
+        return new ScenarioRunCommandResult(
+            name,
+            false,
+            ScenarioRunStatus.Failed.ToString(),
+            now,
+            now,
+            0,
+            [
+                new ScenarioStepCommandResult(
+                    "startup",
+                    "host",
+                    ScenarioStepRunStatus.Failed.ToString(),
+                    message,
+                    null,
+                    null,
+                    null)
+            ]);
     }
 
     private static async Task<string> WaitForRunExit(TimeSpan? duration, CancellationToken cancellationToken)

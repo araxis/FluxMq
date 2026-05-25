@@ -821,3 +821,48 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1` passes with 67 tests.
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1` passes with 34 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes with 401 tests.
+
+## 2026-05-25 - CLI scenario runner slice
+
+- Added a `scenario` CLI command that runs a named test/scenario from an app configuration file.
+- The command uses the same `FlowApplicationHost.RunScenarioAsync` boundary as the desktop/runtime path.
+- Added text and JSON result output for scenario runs, including step status/message and matched event details.
+- Added a distinct `ScenarioFailed` exit code for scenarios that run but fail their steps.
+- Added CLI tests for:
+  - successful scenario execution by name
+  - failed scenario steps
+  - JSON output shape
+  - missing scenario names
+- Verified:
+  - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1` passes with 12 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes with 406 tests.
+
+## 2026-05-25 - Test scenario visibility slice
+
+- Added a sample `t1` scenario to `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json`:
+  - `publishSampleRequest` publishes a JSON MQTT message to `fluxmq/sample/request`
+  - `expectTriggerReceive` waits for the trigger receive event on `fluxmq/sample/`
+  - `expectMappedPublish` waits for the mapped MQTT publish event on topic `test`
+- Fixed the test tab placeholder so loaded scenario steps are projected from the app definition and rendered as ordered step cards.
+- Added a `Run test` command to the test tab:
+  - the active test scenario runs through the same app host/runtime path as command-line scenario execution
+  - the test UI shows sequential step relation with arrows
+  - completed runs show scenario status and per-step status/message/matched event details
+- Added first-step scenario editing:
+  - test scenarios can add MQTT publish or expect-event steps from the test tab
+  - existing test steps can be edited through a settings dialog
+  - test steps can be deleted without touching raw JSON
+- Added a test-step palette beside the test tab, matching the pipeline/dashboard tab structure:
+  - `MQTT publish` and `Expect event` are now palette entries
+  - test steps can be clicked or dragged into the test scenario designer
+- Adjusted the test scenario designer so the step row fills the available tab height and long scenarios scroll horizontally at the bottom of the test surface.
+- Refined the expect-event editor so event type controls the visible filter fields:
+  - `Any event` shows no topic/subject filter
+  - MQTT/schema events show topic filtering
+  - file-write events show path/subject filtering
+  - assertion events show topic and assertion-name filtering
+- Fixed dashboard editing so assigned widgets can be deleted from a dashboard cell; deleting a widget also clears the cell reference.
+- Added workspace/composer snapshots for test scenarios and step configurations.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1` passes with 147 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes with 415 tests.

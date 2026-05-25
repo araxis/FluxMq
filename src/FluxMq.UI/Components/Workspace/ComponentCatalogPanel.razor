@@ -60,10 +60,7 @@
         WorkspaceArtifactKind.Dashboard => DashboardWidgets.Widgets
             .Select(CatalogEntry.FromWidget)
             .ToArray(),
-        WorkspaceArtifactKind.Test => Catalog.Components
-            .Where(component => string.Equals(component.Category, "Assertion", StringComparison.Ordinal))
-            .Select(CatalogEntry.FromComponent)
-            .ToArray(),
+        WorkspaceArtifactKind.Test => TestStepEntries,
         _ => Array.Empty<CatalogEntry>()
     };
 
@@ -71,7 +68,7 @@
     {
         WorkspaceArtifactKind.Pipeline => Projects.ActiveProject?.ActiveArtifactKind == WorkspaceArtifactKind.Pipeline,
         WorkspaceArtifactKind.Dashboard => Projects.ActiveProject?.ActiveArtifactKind == WorkspaceArtifactKind.Dashboard,
-        WorkspaceArtifactKind.Test => false,
+        WorkspaceArtifactKind.Test => Projects.ActiveProject?.ActiveArtifactKind == WorkspaceArtifactKind.Test,
         _ => false
     };
 
@@ -113,7 +110,7 @@
 
     private void BeginItemDrag(PointerEventArgs args, CatalogEntry item)
     {
-        if (ArtifactKind is not (WorkspaceArtifactKind.Pipeline or WorkspaceArtifactKind.Dashboard) ||
+        if (ArtifactKind is not (WorkspaceArtifactKind.Pipeline or WorkspaceArtifactKind.Dashboard or WorkspaceArtifactKind.Test) ||
             !CanUseItem ||
             args.Button != 0)
         {
@@ -140,6 +137,10 @@
         {
             active.AddDashboardWidget(item.Type);
         }
+        else if (ArtifactKind == WorkspaceArtifactKind.Test)
+        {
+            active.AddTestScenarioStep(item.Type);
+        }
     }
 
     private void AddItemFromKeyboard(KeyboardEventArgs args, CatalogEntry item)
@@ -158,6 +159,10 @@
             else if (ArtifactKind == WorkspaceArtifactKind.Dashboard)
             {
                 active.AddDashboardWidget(item.Type);
+            }
+            else if (ArtifactKind == WorkspaceArtifactKind.Test)
+            {
+                active.AddTestScenarioStep(item.Type);
             }
         }
     }
@@ -184,8 +189,26 @@
         "Actor" => "catalog-icon-tile actor",
         "Sink" => "catalog-icon-tile actor",
         "Events" => "catalog-icon-tile dashboard",
+        "Action" => "catalog-icon-tile actor",
+        "Expectation" => "catalog-icon-tile assertion",
         _ => "catalog-icon-tile"
     };
+
+    private static IReadOnlyList<CatalogEntry> TestStepEntries { get; } =
+    [
+        new(
+            "mqtt.publish",
+            "MQTT publish",
+            "Action",
+            "Publish a message through an app broker.",
+            Icons.Material.Filled.Send),
+        new(
+            "expect.event",
+            "Expect event",
+            "Expectation",
+            "Wait for a runtime event that matches configured filters.",
+            Icons.Material.Filled.Rule)
+    ];
 
     private sealed record CatalogEntry(
         string Type,
