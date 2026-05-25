@@ -367,6 +367,13 @@ Done when:
   - widget definitions stay under `dashboards.widgets`, while cells only reference widget keys
   - dashboard widgets can be clicked into the selected/next cell or dragged directly onto a dashboard cell
   - Live mode renders the dashboard grid with a small overall padding and neutral app-border styling, leaving only widget cards as the main visible containers
+- Started dashboard widget settings:
+  - assigned dashboard cells now open a settings dialog for the widget title and runtime event filters
+  - widget configuration updates are persisted under `dashboards.widgets.<widget>.configuration`
+  - event counter and latest-event widgets now share the same title, event type, topic prefix, and status filter shape
+  - filter controls are now event-type aware: topic, subject/path/name, and status options follow the selected event type
+  - event filter metadata now lives in `DashboardEventFilterCatalog`, which drives both the settings dialog and runtime dashboard matching
+  - `Any event` stays generic and does not show event-specific topic or subject filters
 
 ## Next Action
 
@@ -376,13 +383,14 @@ Working rule:
 - Tell the reviewer exactly what to check in the running app when visual or runtime confirmation matters.
 - Wait for confirmation before commit, push, PR, or merge steps.
 
-Review the dashboard live widget slice:
+Review the dashboard widget settings slice:
 
 1. Open an app with a dashboard tab.
-2. In Edit mode, select an empty cell and click `Event Counter` in the dashboard widgets panel; confirm the cell shows a widget key.
-3. Drag `Latest Event` from the dashboard widgets panel onto a different cell; confirm the target cell highlights during hover and receives the widget.
-4. Save and reopen the app; confirm the widgets round-trip under `dashboards.widgets` and cell `widget` references.
-5. Switch the dashboard to Live mode; confirm the component panel disappears and the dashboard fills the tab body with a small outer padding and consistent neutral borders.
-6. Run a pipeline that emits MQTT receive or publish events; confirm `Event Counter` increments and `Latest Event` updates.
-7. Confirm pipeline tabs still render normally and pipeline component drag/drop still adds nodes to the diagram.
-8. After confirmation, commit this slice and open a PR.
+2. In Edit mode, add an `Event Counter` or `Latest Event` widget to a cell.
+3. Confirm the assigned cell shows the widget title and a small settings action.
+4. Open the settings action and confirm filter controls change with the event type.
+5. Apply the dialog and confirm the cell title updates immediately.
+6. Save and reopen the app; confirm the widget settings round-trip under `dashboards.widgets.<widget>.configuration`.
+7. Switch to Live mode, run a pipeline that emits matching and non-matching events, and confirm the widget respects the selected filters.
+8. Confirm merge/split/select and dashboard widget drag/drop still work in Edit mode.
+9. After confirmation, commit this slice and open a PR.

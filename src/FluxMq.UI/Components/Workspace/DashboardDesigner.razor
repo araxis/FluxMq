@@ -3,6 +3,7 @@
 @implements IDisposable
 @inject IDialogService DialogService
 @inject DragStateService DragState
+@inject DashboardWidgetCatalog DashboardWidgets
 
 <div class="dashboard-designer">
     <div class="dashboard-toolbar">
@@ -179,7 +180,16 @@
                                 }
                                 @if (!string.IsNullOrWhiteSpace(currentCell.Widget))
                                 {
-                                    <span class="dashboard-cell-widget">@currentCell.Widget</span>
+                                    <div class="dashboard-cell-widget">
+                                        <span class="dashboard-cell-widget-label">@WidgetLabel(currentCell.Widget)</span>
+                                        <button type="button"
+                                                class="dashboard-cell-widget-action"
+                                                title="Edit widget"
+                                                @onclick:stopPropagation="true"
+                                                @onclick="@(() => OpenWidgetEditorAsync(currentCell.Widget))">
+                                            <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
+                                        </button>
+                                    </div>
                                 }
                             </div>
                         </section>
@@ -392,6 +402,30 @@
         if (result is { Canceled: false, Data: DashboardTrackEditorDialog.DashboardTrackUpdate update })
         {
             Project.UpdateDashboardTrack(axis, index, update.Size, update.Padding);
+            CaptureDashboardError();
+            RefreshLayoutAfterCommand();
+        }
+    }
+
+    private async Task OpenWidgetEditorAsync(string? widgetName)
+    {
+        var widget = FindWidget(widgetName);
+        if (widget is null)
+        {
+            return;
+        }
+
+        var dialog = await DialogService.ShowAsync<DashboardWidgetEditorDialog>(
+            $"Edit {WidgetLabel(widgetName)}",
+            new DialogParameters
+            {
+                [nameof(DashboardWidgetEditorDialog.Widget)] = widget
+            },
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: DashboardWidgetEditorDialog.DashboardWidgetUpdate update })
+        {
+            Project.UpdateDashboardWidget(widget.Name, update.Configuration);
             CaptureDashboardError();
             RefreshLayoutAfterCommand();
         }
@@ -664,6 +698,19 @@
            _layout?.Widgets.TryGetValue(widgetName, out var widget) == true
             ? widget
             : null;
+
+    private string WidgetLabel(string? widgetName)
+    {
+        var widget = FindWidget(widgetName);
+        if (widget is null)
+        {
+            return string.IsNullOrWhiteSpace(widgetName) ? "Widget" : widgetName;
+        }
+
+        return widget.ReadString("title") ??
+               DashboardWidgets.Find(widget.Type)?.DisplayName ??
+               widget.Name;
+    }
 
     private static string CssTemplate(IReadOnlyList<string> sizes)
         => string.Join(" ", sizes.Select(ToCssTrack));

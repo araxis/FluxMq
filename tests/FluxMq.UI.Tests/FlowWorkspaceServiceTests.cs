@@ -853,6 +853,35 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public void UpdateDashboardWidget_UpdatesActiveDashboardWidgetConfiguration()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddDashboard("ops");
+        service.SetActiveDashboard("ops");
+        service.AddDashboardWidget("event.counter", "slot:0:0");
+
+        service.UpdateDashboardWidget(
+            "eventCounter",
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["title"] = "Received from factory",
+                ["eventType"] = FlowEventTypes.MqttMessageReceived,
+                ["topicStartsWith"] = "factory/",
+                ["subjectStartsWith"] = "factory/",
+                ["status"] = "received"
+            });
+
+        var widget = service.GetActiveDashboardLayout()
+            .ShouldNotBeNull()
+            .Widgets["eventCounter"];
+        widget.Configuration["title"].ShouldBe("Received from factory");
+        widget.Configuration["eventType"].ShouldBe(FlowEventTypes.MqttMessageReceived);
+        widget.Configuration["topicStartsWith"].ShouldBe("factory/");
+        widget.Configuration["subjectStartsWith"].ShouldBe("factory/");
+        widget.Configuration["status"].ShouldBe("received");
+    }
+
+    [Fact]
     public async Task RunAsync_CollectsRuntimeEventsForDashboardWidgets()
     {
         var session = new FakeRuntimeMqttSession();
@@ -903,7 +932,9 @@ public sealed class FlowWorkspaceServiceTests
                       "type": "event.counter",
                       "configuration": {
                         "eventType": "mqtt.message.received",
-                        "topicStartsWith": "factory/"
+                        "topicStartsWith": "factory/",
+                        "subjectStartsWith": "factory/",
+                        "status": "received"
                       }
                     }
                   }

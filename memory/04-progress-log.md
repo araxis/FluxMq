@@ -750,3 +750,31 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --filter "FullyQualifiedName~DragStateServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowWorkspaceServiceTests"` passes with 86 focused tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes with 133 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes with 386 tests.
+
+## 2026-05-25 - Dashboard widget settings slice
+
+- Added a dashboard widget settings dialog for assigned dashboard cells:
+  - title
+  - event type
+  - topic prefix
+  - status
+- Dashboard edit cells now show the widget display title and a compact settings action instead of only the raw widget key.
+- The dashboard JSON composer can update a named widget's configuration without changing grid cells, spans, or layout tracks.
+- The workspace service now exposes dashboard widget configuration updates as a dashboard designer command.
+- New dashboard widgets now include an explicit empty `status` filter so the persisted shape matches the runtime filtering model.
+- Added regression coverage for widget configuration round-tripping and workspace-service updates.
+- Refined event filters so dashboard widget settings are event-type aware:
+  - MQTT, schema validation, and assertion events can filter by topic when they carry one
+  - file-write events expose a path prefix filter through event subject matching
+  - assertion events can also filter by assertion name through subject matching
+  - status choices now narrow to the selected event type
+- Replaced the dialog-local event switch logic with `DashboardEventFilterCatalog` metadata:
+  - event type descriptors declare their display label, filter fields, field readers, and status options
+  - the widget settings dialog renders fields from descriptors
+  - runtime dashboard matching evaluates the same descriptors instead of keeping a separate set of conditions
+  - `Any event` intentionally has no event-specific filter fields; choosing it clears topic/subject filters and leaves only status filtering
+- Verified:
+  - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutDir=%TEMP%\FluxMqVerifyUiBuild` passes. The build still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutDir=%TEMP%\FluxMqVerifyUiTests -m:1 --filter "FullyQualifiedName~DashboardEventFilterCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowWorkspaceServiceTests"` passes with 89 focused tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutDir=%TEMP%\FluxMqVerifyUiTestsFull -m:1` passes with 138 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=%TEMP%\FluxMqVerifySolution -m:1` passes with 391 tests. The solution pass still prints existing WinAppSDK PRI qualifier warnings.

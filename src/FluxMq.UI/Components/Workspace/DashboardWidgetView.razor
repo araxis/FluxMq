@@ -83,6 +83,10 @@
         {
             parts.Add(flowEvent.Topic);
         }
+        else if (!string.IsNullOrWhiteSpace(flowEvent.Subject))
+        {
+            parts.Add(flowEvent.Subject);
+        }
 
         if (!string.IsNullOrWhiteSpace(flowEvent.Status))
         {

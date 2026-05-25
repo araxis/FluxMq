@@ -446,6 +446,32 @@ public sealed class FlowDefinitionComposer
         return root.ToJsonString(Options);
     }
 
+    public string UpdateDashboardWidgetConfiguration(
+        string json,
+        string dashboardName,
+        string widgetName,
+        IReadOnlyDictionary<string, string> configuration)
+    {
+        if (string.IsNullOrWhiteSpace(dashboardName) ||
+            string.IsNullOrWhiteSpace(widgetName))
+        {
+            return json;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["dashboards"] is not JsonObject dashboards ||
+            dashboards[dashboardName] is not JsonObject dashboard ||
+            dashboard["widgets"] is not JsonObject widgets ||
+            widgets[widgetName] is not JsonObject widget)
+        {
+            return json;
+        }
+
+        widget["configuration"] = CreateConfigurationObject(configuration);
+        return root.ToJsonString(Options);
+    }
+
     public string UpdateDashboardTrack(
         string json,
         string dashboardName,
@@ -1687,6 +1713,20 @@ public sealed class FlowDefinitionComposer
         return array;
     }
 
+    private static JsonObject CreateConfigurationObject(IReadOnlyDictionary<string, string> configuration)
+    {
+        var result = new JsonObject();
+        foreach (var (key, value) in configuration.OrderBy(static pair => pair.Key, StringComparer.Ordinal))
+        {
+            if (!string.IsNullOrWhiteSpace(key))
+            {
+                result[key] = value ?? string.Empty;
+            }
+        }
+
+        return result;
+    }
+
     private static JsonObject GetOrCreateDashboardObject(JsonObject flowApplication, string dashboardName)
     {
         var dashboards = GetOrCreateObject(flowApplication, "dashboards");
@@ -1748,22 +1788,22 @@ public sealed class FlowDefinitionComposer
         };
 
     private static JsonObject CreateDashboardWidgetConfiguration(string widgetType)
-        => widgetType switch
+    {
+        var title = widgetType switch
         {
-            DashboardWidgetCatalog.EventCounterType => new JsonObject
-            {
-                ["title"] = "Events",
-                ["eventType"] = string.Empty,
-                ["topicStartsWith"] = string.Empty
-            },
-            DashboardWidgetCatalog.LatestEventType => new JsonObject
-            {
-                ["title"] = "Latest event",
-                ["eventType"] = string.Empty,
-                ["topicStartsWith"] = string.Empty
-            },
-            _ => new JsonObject()
+            DashboardWidgetCatalog.EventCounterType => "Events",
+            DashboardWidgetCatalog.LatestEventType => "Latest event",
+            _ => null
         };
+        if (title is null)
+        {
+            return new JsonObject();
+        }
+
+        var configuration = CreateConfigurationObject(DashboardEventFilterCatalog.Shared.CreateEmptyConfiguration());
+        configuration["title"] = title;
+        return configuration;
+    }
 
     private static JsonObject CreateConnection(MqttConnectionProfile profile)
         => new()

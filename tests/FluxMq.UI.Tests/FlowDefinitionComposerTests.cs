@@ -757,6 +757,8 @@ public sealed class FlowDefinitionComposerTests
         var layout = composer.GetDashboardLayout(updated, "ops").ShouldNotBeNull();
         layout.Widgets.Keys.ShouldBe(["eventCounter"]);
         layout.Widgets["eventCounter"].Type.ShouldBe("event.counter");
+        layout.Widgets["eventCounter"].Configuration["status"].ShouldBe(string.Empty);
+        layout.Widgets["eventCounter"].Configuration["subjectStartsWith"].ShouldBe(string.Empty);
 
         var cell = layout.Cells.ShouldHaveSingleItem();
         cell.Row.ShouldBe(0);
@@ -780,6 +782,55 @@ public sealed class FlowDefinitionComposerTests
             ("cell", "eventCounter"),
             ("cell2", "eventCounter2")
         ]);
+    }
+
+    [Fact]
+    public void UpdateDashboardWidgetConfiguration_ReplacesWidgetConfiguration()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+        json = composer.AddDashboardWidget(json, "ops", "event.counter", "slot:0:0");
+
+        var updated = composer.UpdateDashboardWidgetConfiguration(
+            json,
+            "ops",
+            "eventCounter",
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["title"] = "Factory errors",
+                ["eventType"] = "mqtt.message.received",
+                ["topicStartsWith"] = "factory/",
+                ["subjectStartsWith"] = "factory/",
+                ["status"] = "failed"
+            });
+
+        var widget = composer.GetDashboardLayout(updated, "ops")
+            .ShouldNotBeNull()
+            .Widgets["eventCounter"];
+        widget.Type.ShouldBe("event.counter");
+        widget.Configuration["title"].ShouldBe("Factory errors");
+        widget.Configuration["eventType"].ShouldBe("mqtt.message.received");
+        widget.Configuration["topicStartsWith"].ShouldBe("factory/");
+        widget.Configuration["subjectStartsWith"].ShouldBe("factory/");
+        widget.Configuration["status"].ShouldBe("failed");
+    }
+
+    [Fact]
+    public void UpdateDashboardWidgetConfiguration_UnknownWidgetLeavesDefinitionUnchanged()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+
+        var updated = composer.UpdateDashboardWidgetConfiguration(
+            json,
+            "ops",
+            "missing",
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["title"] = "Ignored"
+            });
+
+        updated.ShouldBe(json);
     }
 
     [Fact]
