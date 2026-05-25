@@ -420,7 +420,30 @@ public sealed class FlowDefinitionComposer
             NormalizePaddingValues(ReadPaddingValues(layout, "columnPadding"), columns.Count),
             NormalizePaddingValues(ReadPaddingValues(layout, "rowPadding"), rows.Count),
             ReadDashboardCells(cells),
-            widgets.Count);
+            ReadDashboardWidgets(widgets));
+    }
+
+    public string AddDashboardWidget(string json, string dashboardName, string widgetType, string? cellName = null)
+    {
+        if (string.IsNullOrWhiteSpace(dashboardName))
+        {
+            return json;
+        }
+
+        var normalizedType = string.IsNullOrWhiteSpace(widgetType)
+            ? DashboardWidgetCatalog.EventCounterType
+            : widgetType.Trim();
+        var root = ParseOrCreate(json);
+        var dashboard = GetOrCreateDashboardObject(GetFlowApplication(root), dashboardName);
+        var layout = GetOrCreateObject(dashboard, "layout");
+        var cells = GetOrCreateObject(layout, "cells");
+        var widgets = GetOrCreateObject(dashboard, "widgets");
+
+        var widgetName = MakeUniqueDashboardWidgetName(widgets, WidgetNamePrefix(normalizedType));
+        widgets[widgetName] = CreateDashboardWidgetObject(normalizedType);
+        AssignWidgetToDashboardCell(layout, cells, widgetName, cellName);
+
+        return root.ToJsonString(Options);
     }
 
     public string UpdateDashboardTrack(
@@ -1237,6 +1260,58 @@ public sealed class FlowDefinitionComposer
             .ToArray();
     }
 
+    private static IReadOnlyDictionary<string, DashboardWidgetSnapshot> ReadDashboardWidgets(JsonObject widgets)
+    {
+        var result = new Dictionary<string, DashboardWidgetSnapshot>(StringComparer.Ordinal);
+        foreach (var widget in widgets)
+        {
+            if (widget.Value is not JsonObject widgetObject)
+            {
+                continue;
+            }
+
+            var configuration = widgetObject["configuration"] as JsonObject ?? new JsonObject();
+            result[widget.Key] = new DashboardWidgetSnapshot(
+                widget.Key,
+                ReadString(widgetObject, "type") ?? string.Empty,
+                ReadConfigurationStrings(configuration));
+        }
+
+        return result;
+    }
+
+    private static IReadOnlyDictionary<string, string> ReadConfigurationStrings(JsonObject configuration)
+    {
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var property in configuration)
+        {
+            if (property.Value is JsonValue value)
+            {
+                if (value.TryGetValue<string>(out var text))
+                {
+                    result[property.Key] = text;
+                    continue;
+                }
+
+                if (value.TryGetValue<bool>(out var boolean))
+                {
+                    result[property.Key] = boolean ? "true" : "false";
+                    continue;
+                }
+
+                if (value.TryGetValue<double>(out var number))
+                {
+                    result[property.Key] = number.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
+                    continue;
+                }
+            }
+
+            result[property.Key] = property.Value?.ToJsonString() ?? string.Empty;
+        }
+
+        return result;
+    }
+
     private static int ReadInt(JsonObject obj, string propertyName, int fallback = 0)
     {
         if (obj[propertyName] is not JsonValue value)
@@ -1276,6 +1351,84 @@ public sealed class FlowDefinitionComposer
         }
 
         return null;
+    }
+
+    private static void AssignWidgetToDashboardCell(JsonObject layout, JsonObject cells, string widgetName, string? requestedCellName)
+    {
+        var columns = ReadTrackStrings(layout, "columns", ["*"]).ToList();
+        var rows = ReadTrackStrings(layout, "rows", ["*"]).ToList();
+        var existingCells = ReadDashboardCells(cells);
+
+        if (!string.IsNullOrWhiteSpace(requestedCellName))
+        {
+            if (cells[requestedCellName] is JsonObject existingCell)
+            {
+                existingCell["widget"] = widgetName;
+                return;
+            }
+
+            if (TryParseSlotCellName(requestedCellName, out var requestedRow, out var requestedColumn) &&
+                requestedRow >= 0 &&
+                requestedColumn >= 0 &&
+                requestedRow < rows.Count &&
+                requestedColumn < columns.Count)
+            {
+                var coveringCell = existingCells.FirstOrDefault(cell => CoversDashboardSlot(cell, requestedRow, requestedColumn));
+                if (coveringCell is not null && cells[coveringCell.Name] is JsonObject coveringCellObject)
+                {
+                    coveringCellObject["widget"] = widgetName;
+                    return;
+                }
+
+                var cellName = MakeUniqueDashboardCellName(cells, "cell");
+                cells[cellName] = CreateDashboardCellObject(new DashboardCellSnapshot(
+                    cellName,
+                    requestedRow,
+                    requestedColumn,
+                    1,
+                    1,
+                    widgetName));
+                return;
+            }
+        }
+
+        var emptyCell = existingCells.FirstOrDefault(static cell => string.IsNullOrWhiteSpace(cell.Widget));
+        if (emptyCell is not null && cells[emptyCell.Name] is JsonObject emptyCellObject)
+        {
+            emptyCellObject["widget"] = widgetName;
+            return;
+        }
+
+        var openPosition = FindFirstOpenDashboardCell(columns.Count, rows.Count, existingCells);
+        if (openPosition is null)
+        {
+            rows.Add("*");
+            var rowPadding = NormalizePaddingValues(ReadPaddingValues(layout, "rowPadding"), rows.Count - 1).ToList();
+            rowPadding.Add(0);
+            layout["rows"] = CreateTrackArray(rows);
+            layout["rowPadding"] = CreateNumberArray(rowPadding);
+            openPosition = (rows.Count - 1, 0);
+        }
+
+        var name = MakeUniqueDashboardCellName(cells, "cell");
+        cells[name] = CreateDashboardCellObject(new DashboardCellSnapshot(
+            name,
+            openPosition.Value.Row,
+            openPosition.Value.Column,
+            1,
+            1,
+            widgetName));
+    }
+
+    private static bool TryParseSlotCellName(string name, out int row, out int column)
+    {
+        row = 0;
+        column = 0;
+        var parts = name.Split(':');
+        return parts.Length == 3 &&
+               string.Equals(parts[0], "slot", StringComparison.Ordinal) &&
+               int.TryParse(parts[1], out row) &&
+               int.TryParse(parts[2], out column);
     }
 
     private static bool TryGetSelectionBounds(
@@ -1562,6 +1715,55 @@ public sealed class FlowDefinitionComposer
 
         return $"{preferred}{index}";
     }
+
+    private static string MakeUniqueDashboardWidgetName(JsonObject widgets, string preferred)
+    {
+        if (!widgets.ContainsKey(preferred))
+        {
+            return preferred;
+        }
+
+        var index = 2;
+        while (widgets.ContainsKey($"{preferred}{index}"))
+        {
+            index++;
+        }
+
+        return $"{preferred}{index}";
+    }
+
+    private static string WidgetNamePrefix(string widgetType)
+        => widgetType switch
+        {
+            DashboardWidgetCatalog.EventCounterType => "eventCounter",
+            DashboardWidgetCatalog.LatestEventType => "latestEvent",
+            _ => "widget"
+        };
+
+    private static JsonObject CreateDashboardWidgetObject(string widgetType)
+        => new()
+        {
+            ["type"] = widgetType,
+            ["configuration"] = CreateDashboardWidgetConfiguration(widgetType)
+        };
+
+    private static JsonObject CreateDashboardWidgetConfiguration(string widgetType)
+        => widgetType switch
+        {
+            DashboardWidgetCatalog.EventCounterType => new JsonObject
+            {
+                ["title"] = "Events",
+                ["eventType"] = string.Empty,
+                ["topicStartsWith"] = string.Empty
+            },
+            DashboardWidgetCatalog.LatestEventType => new JsonObject
+            {
+                ["title"] = "Latest event",
+                ["eventType"] = string.Empty,
+                ["topicStartsWith"] = string.Empty
+            },
+            _ => new JsonObject()
+        };
 
     private static JsonObject CreateConnection(MqttConnectionProfile profile)
         => new()

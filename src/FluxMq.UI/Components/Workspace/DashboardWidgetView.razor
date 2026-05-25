@@ -1,0 +1,103 @@
+@using FluxMq.Pipeline.Components
+@using System.Globalization
+
+<div class="dashboard-widget @WidgetClass">
+    <div class="dashboard-widget-header">
+        <MudIcon Icon="@WidgetIcon" Size="Size.Small" />
+        <span>@WidgetTitle</span>
+    </div>
+
+    @if (IsEventCounter)
+    {
+        var snapshot = Project.GetDashboardEventSnapshot(Widget);
+        <div class="dashboard-widget-value">@snapshot.Count</div>
+        <div class="dashboard-widget-meta">@CounterMeta(snapshot)</div>
+    }
+    else if (IsLatestEvent)
+    {
+        var snapshot = Project.GetDashboardEventSnapshot(Widget);
+        if (snapshot.LatestEvent is { } latest)
+        {
+            <div class="dashboard-widget-event-type">@latest.Type</div>
+            <div class="dashboard-widget-meta">@EventMeta(latest)</div>
+            @if (!string.IsNullOrWhiteSpace(latest.PayloadPreview))
+            {
+                <pre class="dashboard-widget-payload">@latest.PayloadPreview</pre>
+            }
+        }
+        else
+        {
+            <div class="dashboard-widget-empty">No events yet</div>
+        }
+    }
+    else
+    {
+        <div class="dashboard-widget-empty">@Widget.Type</div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public FlowWorkspaceService Project { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public DashboardWidgetSnapshot Widget { get; set; } = null!;
+
+    private bool IsEventCounter => string.Equals(Widget.Type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal);
+
+    private bool IsLatestEvent => string.Equals(Widget.Type, DashboardWidgetCatalog.LatestEventType, StringComparison.Ordinal);
+
+    private string WidgetTitle
+        => Widget.ReadString("title") ?? Widget.Type switch
+        {
+            DashboardWidgetCatalog.EventCounterType => "Events",
+            DashboardWidgetCatalog.LatestEventType => "Latest event",
+            _ => Widget.Name
+        };
+
+    private string WidgetIcon
+        => Widget.Type switch
+        {
+            DashboardWidgetCatalog.EventCounterType => Icons.Material.Filled.Numbers,
+            DashboardWidgetCatalog.LatestEventType => Icons.Material.Filled.Bolt,
+            _ => Icons.Material.Filled.Widgets
+        };
+
+    private string WidgetClass
+        => Widget.Type switch
+        {
+            DashboardWidgetCatalog.EventCounterType => "event-counter",
+            DashboardWidgetCatalog.LatestEventType => "latest-event",
+            _ => "unknown"
+        };
+
+    private static string CounterMeta(DashboardEventSnapshot snapshot)
+        => snapshot.LatestEvent is null
+            ? "waiting"
+            : $"latest {FormatEventTime(snapshot.LatestEvent)}";
+
+    private static string EventMeta(FlowEvent flowEvent)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(flowEvent.Topic))
+        {
+            parts.Add(flowEvent.Topic);
+        }
+
+        if (!string.IsNullOrWhiteSpace(flowEvent.Status))
+        {
+            parts.Add(flowEvent.Status);
+        }
+
+        if (flowEvent.PayloadBytes is { } bytes)
+        {
+            parts.Add($"{bytes} B");
+        }
+
+        parts.Add(FormatEventTime(flowEvent));
+        return string.Join(" / ", parts);
+    }
+
+    private static string FormatEventTime(FlowEvent flowEvent)
+        => flowEvent.Timestamp.ToLocalTime().ToString("HH:mm:ss", CultureInfo.InvariantCulture);
+}

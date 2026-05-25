@@ -1,3 +1,5 @@
+using FluxMq.UI.Models;
+
 namespace FluxMq.UI.Services;
 
 public sealed class DragStateService
@@ -9,11 +11,18 @@ public sealed class DragStateService
     public event EventHandler? Changed;
     public event EventHandler<ComponentDropRequestedEventArgs>? ComponentDropRequested;
 
-    public void BeginComponentDrag(string componentType, string displayName, long pointerId, double clientX, double clientY)
+    public void BeginComponentDrag(
+        string componentType,
+        string displayName,
+        long pointerId,
+        double clientX,
+        double clientY,
+        WorkspaceArtifactKind targetKind = WorkspaceArtifactKind.Pipeline)
     {
         ActiveComponentDrag = new ActiveComponentDrag(
             componentType,
             displayName,
+            targetKind,
             pointerId,
             clientX,
             clientY,
@@ -71,6 +80,7 @@ public sealed class DragStateService
         var completed = new CompletedComponentDrag(
             active.ComponentType,
             active.DisplayName,
+            active.TargetKind,
             clientX,
             clientY,
             active.IsOverDesigner,
@@ -86,6 +96,7 @@ public sealed class DragStateService
                 new ComponentDropRequestedEventArgs(
                     completed.ComponentType,
                     completed.DisplayName,
+                    completed.TargetKind,
                     completed.ClientX,
                     completed.ClientY));
         }
@@ -115,6 +126,7 @@ public sealed class DragStateService
 public sealed record ActiveComponentDrag(
     string ComponentType,
     string DisplayName,
+    WorkspaceArtifactKind TargetKind,
     long PointerId,
     double StartX,
     double StartY,
@@ -126,6 +138,7 @@ public sealed record ActiveComponentDrag(
 public sealed record CompletedComponentDrag(
     string ComponentType,
     string DisplayName,
+    WorkspaceArtifactKind TargetKind,
     double ClientX,
     double ClientY,
     bool IsOverDesigner,
@@ -134,5 +147,6 @@ public sealed record CompletedComponentDrag(
 public sealed record ComponentDropRequestedEventArgs(
     string ComponentType,
     string DisplayName,
+    WorkspaceArtifactKind TargetKind,
     double ClientX,
     double ClientY);

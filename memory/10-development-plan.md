@@ -361,6 +361,12 @@ Done when:
   - dashboard definitions include WPF-like row/column tracks, cells, spans, and named widgets
   - test/scenario definitions include named steps with type and configuration
   - JSON, validator, and configuration loader tests cover the new artifacts before any designer UI is added
+- Started dashboard live widget support:
+  - dashboard widgets are separate from pipeline components and are added from the dashboard tool panel
+  - `event.counter` and `event.latest` read the runtime event stream from `ApplicationRuntime.Events`
+  - widget definitions stay under `dashboards.widgets`, while cells only reference widget keys
+  - dashboard widgets can be clicked into the selected/next cell or dragged directly onto a dashboard cell
+  - Live mode renders the dashboard grid with a small overall padding and neutral app-border styling, leaving only widget cards as the main visible containers
 
 ## Next Action
 
@@ -370,18 +376,13 @@ Working rule:
 - Tell the reviewer exactly what to check in the running app when visual or runtime confirmation matters.
 - Wait for confirmation before commit, push, PR, or merge steps.
 
-Review the dashboard layout designer slice:
+Review the dashboard live widget slice:
 
-1. Open `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` in the UI and run it; confirm dashboards/tests with empty cells/widgets/steps no longer crash validation.
-2. Open an app with a dashboard tab and confirm the dashboard tab shows a grid designer instead of the old placeholder.
-3. Use the grid picker to change the dashboard to a 3 x 2 or 4 x 3 layout; confirm row and column track labels update.
-4. Click a column handle and set it to fixed, percent, and star values; set a non-zero padding and confirm the cell spacing changes.
-5. Click a row handle and set height plus padding; save and reopen the app to confirm the values round-trip under `dashboards.layout`.
-6. Select multiple adjacent cells with Ctrl/Shift and merge them.
-7. Select one cell, open Split, choose a row/column split from the mini grid, and confirm track sizes and padding split while neighboring cells keep their visual spans.
-8. Confirm the dashboard reads as a single framed board: track controls are pills outside the board, cells show coordinates, and merged cells are not cut by internal guide lines.
-9. Switch between Edit and Live mode on the dashboard tab; confirm Edit shows layout controls and the dashboard widget panel, while Live hides the widget panel and shows the same board as a read-only surface.
-10. Confirm there are no visible add/remove row, column, or cell commands in the dashboard toolbar.
-11. Confirm the dashboard fills the available tab body without needing manual zoom or a fixed preview size.
-12. Confirm pipeline tabs still render and preserve their node positions after switching between pipeline and dashboard tabs.
-13. After confirmation, commit this slice and open a PR.
+1. Open an app with a dashboard tab.
+2. In Edit mode, select an empty cell and click `Event Counter` in the dashboard widgets panel; confirm the cell shows a widget key.
+3. Drag `Latest Event` from the dashboard widgets panel onto a different cell; confirm the target cell highlights during hover and receives the widget.
+4. Save and reopen the app; confirm the widgets round-trip under `dashboards.widgets` and cell `widget` references.
+5. Switch the dashboard to Live mode; confirm the component panel disappears and the dashboard fills the tab body with a small outer padding and consistent neutral borders.
+6. Run a pipeline that emits MQTT receive or publish events; confirm `Event Counter` increments and `Latest Event` updates.
+7. Confirm pipeline tabs still render normally and pipeline component drag/drop still adds nodes to the diagram.
+8. After confirmation, commit this slice and open a PR.

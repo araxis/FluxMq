@@ -6,7 +6,21 @@ public sealed record DashboardLayoutSnapshot(
     IReadOnlyList<double> ColumnPadding,
     IReadOnlyList<double> RowPadding,
     IReadOnlyList<DashboardCellSnapshot> Cells,
-    int WidgetCount);
+    IReadOnlyDictionary<string, DashboardWidgetSnapshot> Widgets)
+{
+    public int WidgetCount => Widgets.Count;
+}
+
+public sealed record DashboardWidgetSnapshot(
+    string Name,
+    string Type,
+    IReadOnlyDictionary<string, string> Configuration)
+{
+    public string? ReadString(string key)
+        => Configuration.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value)
+            ? value
+            : null;
+}
 
 public sealed record DashboardCellSnapshot(
     string Name,

@@ -728,3 +728,25 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false` passes with 0 warnings.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes with 128 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes with 381 tests. The solution pass still prints existing WinAppSDK PRI qualifier warnings during UI test build.
+
+## 2026-05-24 - Dashboard live widget slice
+
+- Started the monitoring/dashboard plane on top of runtime events instead of pipeline links:
+  - dashboard cells still only reference widget keys
+  - dashboard widgets live under `dashboards.widgets`
+  - Live mode reads the app runtime event stream collected from `ApplicationRuntime.Events`
+- Added a dashboard widget catalog with first-class monitoring widgets:
+  - `event.counter` counts runtime events with optional `eventType`, `topicStartsWith`, and `status` filters
+  - `event.latest` renders the latest matching event with topic, status, payload size, time, and payload preview
+- The dashboard component panel now shows dashboard widgets when a dashboard is in Edit mode.
+- Adding a widget places it in the selected dashboard cell, or the next available cell when nothing is selected.
+- Runtime events are kept as bounded workspace state and cleared with runtime projection state when the app definition changes or a new run starts.
+- Dashboard widget palette items now support pointer drag/drop onto dashboard cells, while click-add still places a widget in the selected or next available cell.
+- The shared palette drag state now carries a target artifact kind, so pipeline component drops and dashboard widget drops do not cross wires.
+- Dashboard Live mode now uses the full tab body with the grid flush to the container and removes redundant outer grid/cell borders around widget cards.
+- Dashboard Live mode now keeps a small overall padding and uses neutral app border tones for widget cards and empty cells instead of type-colored outlines.
+- Verified:
+  - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false` passes; it still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --filter "FullyQualifiedName~DragStateServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowWorkspaceServiceTests"` passes with 86 focused tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes with 133 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes with 386 tests.
