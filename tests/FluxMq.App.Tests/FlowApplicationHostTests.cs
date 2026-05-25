@@ -184,10 +184,116 @@ public sealed class FlowApplicationHostTests
             .Message.ShouldBe("start failed");
     }
 
+    [Fact]
+    public async Task RunScenarioAsync_StartsRuntimeAndObservesEvents()
+    {
+        EventSourceNode? source = null;
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .Register(new NodeType("test.events"), (address, _) =>
+            {
+                source = new EventSourceNode();
+                return RuntimeNode.Create(address, source);
+            }));
+
+        await using var host = new FlowApplicationHost(
+            BuildConfiguration(
+                """
+                {
+                  "FluxMq": {
+                    "FlowApplication": {
+                      "workflows": {
+                        "observe": {
+                          "events": {
+                            "type": "test.events"
+                          }
+                        }
+                      },
+                      "tests": {
+                        "roundTrip": {
+                          "steps": {
+                            "expectResponse": {
+                              "type": "expect.event",
+                              "configuration": {
+                                "eventType": "mqtt.message.received",
+                                "topicStartsWith": "factory/response/",
+                                "status": "received",
+                                "timeoutMs": 1000
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+                """),
+            builder);
+
+        var runTask = host.RunScenarioAsync("roundTrip");
+        await WaitUntilAsync(() => source is not null);
+
+        source!.Post(new FlowEvent
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Type = FlowEventTypes.MqttMessageReceived,
+            Source = "test",
+            Topic = "factory/response/42",
+            Status = "received"
+        });
+
+        var result = await runTask.WaitAsync(TimeSpan.FromSeconds(2));
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Steps.ShouldHaveSingleItem()
+            .MatchedEvent!.Topic.ShouldBe("factory/response/42");
+        host.State.ShouldBe(FlowApplicationHostState.Running);
+    }
+
+    [Fact]
+    public async Task RunScenarioAsync_ReportsMissingScenarioName()
+    {
+        await using var host = FlowApplicationHost.CreateDefault(BuildConfiguration(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "workflows": {
+                    "observe": {
+                      "metrics": {
+                        "type": "mqtt.metrics"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """));
+
+        var exception = await Should.ThrowAsync<InvalidOperationException>(
+            () => host.RunScenarioAsync("missing"));
+
+        exception.Message.ShouldBe("Scenario 'missing' does not exist.");
+        host.State.ShouldBe(FlowApplicationHostState.Empty);
+    }
+
     private static IConfiguration BuildConfiguration(string json)
         => new ConfigurationBuilder()
             .AddJsonStream(new MemoryStream(Encoding.UTF8.GetBytes(json)))
             .Build();
+
+    private static async Task WaitUntilAsync(Func<bool> predicate)
+    {
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(2);
+        while (!predicate())
+        {
+            if (DateTimeOffset.UtcNow > deadline)
+            {
+                throw new TimeoutException("Condition was not reached.");
+            }
+
+            await Task.Delay(10);
+        }
+    }
 
     private sealed class FaultingNode : IFlowNode
     {
@@ -225,5 +331,34 @@ public sealed class FlowApplicationHostTests
         public void Complete() => _errors.Complete();
 
         public void Fault(Exception exception) => _errors.Complete();
+    }
+
+    private sealed class EventSourceNode : IFlowNode, IFlowEventSource
+    {
+        private readonly TaskCompletionSource _completion = new();
+        private readonly BufferBlock<FlowError> _errors = new();
+        private readonly BufferBlock<FlowEvent> _events = new();
+
+        public FlowNodeId Id { get; } = FlowNodeId.New();
+        public ISourceBlock<FlowError> Errors => _errors;
+        public ISourceBlock<FlowEvent> Events => _events;
+        public Task Completion => _completion.Task;
+
+        public void Post(FlowEvent flowEvent)
+            => _events.Post(flowEvent);
+
+        public void Complete()
+        {
+            _events.Complete();
+            _errors.Complete();
+            _completion.TrySetResult();
+        }
+
+        public void Fault(Exception exception)
+        {
+            ((IDataflowBlock)_events).Fault(exception);
+            ((IDataflowBlock)_errors).Fault(exception);
+            _completion.TrySetException(exception);
+        }
     }
 }

@@ -61,6 +61,7 @@ Future object-stream architecture note: dynamic mappers make it hard to keep eve
 The current artifact navigation slice moves app structure controls into first-level top-bar menus for connections, pipelines, dashboards, and tests. The left side now stays focused on the active artifact tool panel, so pipeline components, future dashboard widgets, and future test steps can each have their own panel without an always-open app tree taking workspace width.
 The current dashboard layout designer slice turns dashboard tabs from placeholders into a real layout editor. The UI reads and writes the dashboard JSON model, renders a full-size grid surface, and can add/remove dashboard cells while keeping widgets separate for a later monitoring-block slice. The grid interaction is inspired by the OpenGarden surface editor: users can choose a row/column layout from a picker, add/remove rows and columns, select cells, merge rectangular selections, split merged cells, and subdivide a selected cell into rows, columns, or a 2 x 2 region. Row and column handles are now the track editors: clicking a handle opens a sizing dialog for fixed, percent, or star sizing plus per-track padding; the old raw row/column text fields are gone.
 The current scenario expectation foundation slice starts the test/scenario plane below the UI. `ScenarioRunner` executes registered scenario step runners against the external `FlowEvent` stream, and `expect.event` waits for matching runtime events using event type, topic prefix, subject prefix, status, source, payload preview, and attribute filters. Runtime events now broadcast to multiple observers, so dashboards and scenarios can observe the same app run without stealing events from each other.
+The current scenario host slice wires test/scenario execution into `FlowApplicationHost`. The host keeps the loaded app definition, can run a named scenario via `RunScenarioAsync`, starts the runtime when needed, and feeds the scenario runner from `ApplicationRuntime.Events`. This creates the boundary future desktop and CLI test runners should call instead of reaching into pipeline internals.
 
 ## Step-by-Step Plan
 
@@ -383,6 +384,12 @@ Done when:
   - unknown scenario step types fail with a clear step result instead of throwing through the runner
   - `ApplicationRuntime.Events` now broadcasts runtime events to multiple observers, allowing dashboards and scenarios to share one app run
   - verified with 66 pipeline tests and 392 full solution tests
+- Started scenario host integration:
+  - `FlowApplicationHost` keeps the loaded `ApplicationDefinition`
+  - `RunScenarioAsync` runs a named test/scenario against the host runtime events
+  - the host starts the app runtime if a scenario is requested before the app is running
+  - missing scenarios fail early with a clear exception
+  - app-host tests cover scenario execution and missing scenario names
 
 ## Next Action
 
@@ -391,13 +398,13 @@ Working rule:
 - After each fix or feature slice, update the progress/task notes before handing it back for review.
 - Tell the reviewer exactly what to check in the running app when visual or runtime confirmation matters.
 - Wait for confirmation before commit, push, PR, or merge steps.
+- For every review or verification step, write both what we are going to do and the expected result.
 
-Review the scenario event expectation foundation slice:
+Review the scenario host runner slice:
 
-1. There is no desktop UI to check in this slice; it is intentionally below the UI.
-2. Review `src/FluxMq.Pipeline/Scenarios` and confirm the runner shape is generic enough for future publish/action steps.
-3. Confirm `expect.event` reads configuration through a scenario step runner, not through pipeline components.
-4. Confirm `ApplicationRuntime.Events` is broadcast-friendly so dashboards and scenarios can observe the same run.
-5. Run `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1`.
-6. Run `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1`.
-7. After confirmation, commit this slice and open a PR.
+1. Do: skip desktop UI validation for this slice because it is intentionally below the UI. Expected: there is no visual surface to confirm yet.
+2. Do: review `FlowApplicationHost.RunScenarioAsync`. Expected: this is the boundary future desktop and CLI test runners can call.
+3. Do: review the app definition model usage. Expected: test/scenario steps stay separate from pipeline workflow definitions.
+4. Do: run `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1`. Expected: app-host scenario tests pass.
+5. Do: run `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1`. Expected: the full solution stays healthy.
+6. Do: after confirmation, commit this slice and open a PR. Expected: the branch is reviewable and can be merged when checks are green.
