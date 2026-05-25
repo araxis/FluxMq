@@ -82,7 +82,7 @@
 }
 
 .test-step-list {
-    align-items: stretch;
+    align-items: flex-start;
     display: flex;
     flex: 1 1 auto;
     gap: 10px;
@@ -121,9 +121,11 @@
 
 .test-step-link {
     align-items: center;
+    align-self: flex-start;
     color: var(--mud-palette-text-secondary);
     display: flex;
     flex: 0 0 28px;
+    min-height: 156px;
     justify-content: center;
     opacity: 0.8;
 }
@@ -180,6 +182,16 @@
 .test-step-action:hover {
     background: color-mix(in srgb, var(--flux-accent) 18%, transparent);
     color: var(--flux-accent);
+}
+
+.test-step-action:disabled {
+    cursor: default;
+    opacity: 0.35;
+}
+
+.test-step-action:disabled:hover {
+    background: transparent;
+    color: var(--mud-palette-text-secondary);
 }
 
 .test-step-action.danger:hover {

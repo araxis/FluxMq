@@ -457,6 +457,32 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         NotifyChanged();
     }
 
+    public void MoveTestScenarioStep(string stepName, int offset)
+    {
+        if (string.IsNullOrWhiteSpace(_activeTestName) ||
+            string.IsNullOrWhiteSpace(stepName) ||
+            offset == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.MoveScenarioStep(DefinitionJson, _activeTestName, stepName, offset));
+            _activeArtifactKind = WorkspaceArtifactKind.Test;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+            LastScenarioRunResult = null;
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "ScenarioStepMoveFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
     public void UpdateDashboardGridTracks(IEnumerable<string> columns, IEnumerable<string> rows)
     {
         if (string.IsNullOrWhiteSpace(_activeDashboardName))

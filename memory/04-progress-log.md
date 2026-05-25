@@ -866,3 +866,16 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verified:
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1` passes with 147 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes with 415 tests.
+
+## 2026-05-25 - Scenario step ordering slice
+
+- Started ordered scenario editing in the test tab:
+  - scenario step cards now expose earlier/later controls
+  - moving a step rewrites the ordered `tests.<name>.steps` object without changing step names or configurations
+  - the workspace service clears the previous scenario result when step order changes
+- Adjusted the test scenario designer layout so the test surface can fill available height while individual step cards keep their natural content height.
+- Added focused workspace/composer tests for persisted scenario step ordering.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$out -m:1 --filter "FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowWorkspaceServiceTests"` passes with 97 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$out -m:1` passes with 149 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$out -m:1` passes with 417 tests.

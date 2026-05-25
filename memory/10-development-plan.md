@@ -414,6 +414,10 @@ Done when:
   - expectation step editing uses event-type metadata so only relevant filter fields are visible
   - the test scenario row now fills the available tab height, with horizontal scrolling anchored at the bottom for long step sequences
   - `app1.json` has a sample `t1` MQTT round-trip scenario for manual testing
+- Started scenario step ordering in the test tab:
+  - test scenario cards can move earlier/later without changing step names or settings
+  - moving a step updates the ordered `tests.<name>.steps` object and clears the previous run result
+  - cards keep natural content height while the test surface fills the available tab height
 - Fixed dashboard widget cleanup:
   - dashboard cells now have a delete action for assigned widgets
   - deleting a widget removes the widget definition and clears the cell assignment
@@ -427,18 +431,10 @@ Working rule:
 - Wait for confirmation before commit, push, PR, or merge steps.
 - For every review or verification step, write both what we are going to do and the expected result.
 
-Review the scenario execution and visibility slice:
+Review the scenario step ordering slice:
 
-1. Do: review `ScenarioCliCommand`. Expected: it requires `--config` and `--name`, and supports text/json output like the other CLI commands.
-2. Do: review `CliRunner.RunScenario`. Expected: it uses `FlowApplicationHost.RunScenarioAsync` and returns `ScenarioFailed` only when a scenario runs but fails.
-3. Do: review `ScenarioRunResultRenderer`. Expected: text output is readable and JSON output has scenario/step status details for automation.
-4. Do: reopen `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` and select test tab `t1`. Expected: three ordered cards appear for `publishSampleRequest`, `expectTriggerReceive`, and `expectMappedPublish`.
-5. Do: click `Run test`. Expected: the scenario starts the app runtime if needed, publishes the sample message, waits for the two expected events, then marks each step with its result.
-6. Do: edit one step from the card action. Expected: the dialog changes the persisted step configuration and clears the previous run result.
-7. Do: add a scenario step from the left test-step palette by click and drag/drop. Expected: the card list updates and the JSON `tests.t1.steps` section changes.
-8. Do: add enough scenario steps to overflow horizontally. Expected: the test surface still fills the tab height, with the horizontal scrollbar at the bottom of the test surface.
-9. Do: in the Expect event editor, switch event type between Any event, MQTT message received, File written, and Assertion evaluated. Expected: topic/path/assertion filter fields appear only where relevant.
-10. Do: in dashboard edit mode, delete a widget from a cell. Expected: the widget disappears from the cell and from `dashboards.<name>.widgets`.
-11. Do: run `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1`. Expected: CLI tests pass.
-12. Do: run `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1`. Expected: the full solution stays healthy.
-13. Do: after confirmation, commit this slice and open a PR. Expected: the branch is reviewable and can be merged when checks are green.
+1. Do: reopen `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` and select test tab `t1`. Expected: step cards stay compact near the top of the test surface instead of stretching to full height.
+2. Do: click the move-earlier and move-later controls on a middle step card. Expected: sequence numbers and card order update immediately.
+3. Do: save, close, and reopen the JSON file. Expected: the card order is preserved from `tests.t1.steps`.
+4. Do: run the focused UI tests. Expected: scenario step ordering tests pass.
+5. Do: after confirmation, commit this slice and open a PR. Expected: the branch is reviewable and can be merged when checks are green.

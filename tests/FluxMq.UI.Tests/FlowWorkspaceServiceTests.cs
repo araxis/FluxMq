@@ -1042,6 +1042,26 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public void MoveTestScenarioStep_ReordersActiveScenario()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddTest("t1");
+        service.SetActiveTest("t1");
+        service.AddTestScenarioStep("mqtt.publish");
+        service.AddTestScenarioStep("expect.event");
+        service.AddTestScenarioStep("expect.event");
+
+        service.MoveTestScenarioStep("expectEvent2", -1);
+
+        service.GetActiveTestScenario()
+            .ShouldNotBeNull()
+            .Steps
+            .Select(step => step.Name)
+            .ShouldBe(["publishMessage", "expectEvent2", "expectEvent"]);
+        service.HasUnsavedChanges.ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task RunAsync_CollectsRuntimeEventsForDashboardWidgets()
     {
         var session = new FakeRuntimeMqttSession();
