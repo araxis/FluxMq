@@ -792,3 +792,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verified:
   - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1` passes with 66 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes with 392 tests. The solution pass still prints existing WinAppSDK PRI qualifier warnings during UI test build.
+
+## 2026-05-25 - Scenario host runner slice
+
+- Wired test/scenario execution into `FlowApplicationHost`:
+  - the host keeps the loaded `ApplicationDefinition`
+  - `RunScenarioAsync` runs a named scenario against `ApplicationRuntime.Events`
+  - the host starts the runtime when a scenario is requested before the app is already running
+  - missing scenario names fail with a clear message before runtime startup
+- Added app-host regression tests for running a scenario against a live runtime event source and for missing scenario names.
+- Verified:
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1` passes with 32 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes with 399 tests.
