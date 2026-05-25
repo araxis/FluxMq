@@ -1,9 +1,11 @@
 @using FluxMq.Pipeline.Scenarios
+@using FluxMq.UI.Models
 @using FluxMq.UI.Services
 @implements IDisposable
 @inject LiveMqttWorkspaceService Live
 @inject IDialogService DialogService
 @inject DragStateService DragState
+@inject ScenarioStepCatalog ScenarioSteps
 
 <div class="@DesignerClass"
      @onpointerenter="HandleDesignerPointerEnter"
@@ -38,10 +40,12 @@
                          AnchorOrigin="Origin.BottomLeft"
                          TransformOrigin="Origin.TopLeft">
                     <ChildContent>
-                        <MudMenuItem Icon="@Icons.Material.Filled.Send"
-                                     OnClick="@AddMqttPublishStep">MQTT publish</MudMenuItem>
-                        <MudMenuItem Icon="@Icons.Material.Filled.Rule"
-                                     OnClick="@AddExpectEventStep">Expect event</MudMenuItem>
+                        @foreach (var step in ScenarioSteps.Steps)
+                        {
+                            var descriptor = step;
+                            <MudMenuItem Icon="@descriptor.Icon"
+                                         OnClick="@(() => AddStep(descriptor.Type))">@descriptor.DisplayName</MudMenuItem>
+                        }
                     </ChildContent>
                 </MudMenu>
                 <MudButton Variant="Variant.Filled"
@@ -74,7 +78,7 @@
                         <div class="test-step-body">
                             <div class="test-step-topline">
                                 <span class="test-step-name">@step.Name</span>
-                                <span class="@StepTypeClass(step.Type)">@StepTypeLabel(step.Type)</span>
+                                <span class="@StepTypeClass(step)">@StepTypeLabel(step)</span>
                                 @if (stepResult is not null)
                                 {
                                     <span class="@StepStatusClass(stepResult.Status)">@stepResult.Status</span>
@@ -176,14 +180,11 @@
             _ => "no steps"
         };
 
-    private static string StepTypeLabel(string type)
-        => type switch
-        {
-            "mqtt.publish" => "MQTT publish",
-            "expect.event" => "Expect event",
-            _ when string.IsNullOrWhiteSpace(type) => "Untyped",
-            _ => type
-        };
+    private ScenarioStepDescriptor StepDescriptor(ScenarioStepSnapshot step)
+        => ScenarioSteps.Describe(step.Type);
+
+    private string StepTypeLabel(ScenarioStepSnapshot step)
+        => StepDescriptor(step).DisplayName;
 
     private ScenarioStepResult? FindStepResult(ScenarioStepSnapshot step)
         => Project.LastScenarioRunResult?.Steps.FirstOrDefault(result =>
@@ -199,11 +200,11 @@
             _ => "test-step-card"
         };
 
-    private static string StepTypeClass(string type)
-        => type switch
+    private string StepTypeClass(ScenarioStepSnapshot step)
+        => ScenarioSteps.Find(step.Type)?.EditorKind switch
         {
-            "mqtt.publish" => "test-step-type publish",
-            "expect.event" => "test-step-type expect",
+            ScenarioStepEditorKind.MqttPublish => "test-step-type publish",
+            ScenarioStepEditorKind.ExpectEvent => "test-step-type expect",
             _ => "test-step-type"
         };
 
@@ -226,15 +227,22 @@
             _ => "test-run-status"
         };
 
-    private static string BuildStepSummary(ScenarioStepSnapshot step)
-        => step.Type switch
+    private string BuildStepSummary(ScenarioStepSnapshot step)
+    {
+        var descriptor = ScenarioSteps.Find(step.Type);
+        if (descriptor is null)
         {
-            "mqtt.publish" => JoinParts(
+            return string.IsNullOrWhiteSpace(step.Type) ? "No step type" : step.Type;
+        }
+
+        return descriptor.EditorKind switch
+        {
+            ScenarioStepEditorKind.MqttPublish => JoinParts(
                 step.ReadString("connection"),
                 step.ReadString("topic"),
                 FormatQos(step.ReadString("qos")),
                 FormatRetain(step.ReadString("retain"))),
-            "expect.event" => JoinParts(
+            ScenarioStepEditorKind.ExpectEvent => JoinParts(
                 step.ReadString("eventType"),
                 PrefixSummary("topic", step.ReadString("topicStartsWith")),
                 PrefixSummary("subject", step.ReadString("subjectStartsWith")),
@@ -243,6 +251,7 @@
                 TimeoutSummary(step.ReadString("timeoutMs"))),
             _ => string.IsNullOrWhiteSpace(step.Type) ? "No step type" : step.Type
         };
+    }
 
     private static IEnumerable<KeyValuePair<string, string>> VisibleConfiguration(ScenarioStepSnapshot step)
         => step.Configuration.Where(static item => !string.IsNullOrWhiteSpace(item.Value));
@@ -299,12 +308,6 @@
 
         await Project.RunActiveTestScenarioAsync();
     }
-
-    private void AddMqttPublishStep()
-        => AddStep("mqtt.publish");
-
-    private void AddExpectEventStep()
-        => AddStep("expect.event");
 
     private void AddStep(string stepType)
         => Project.AddTestScenarioStep(stepType);

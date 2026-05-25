@@ -1,5 +1,6 @@
 using FluxMq.Core.Models;
 using FluxMq.Pipeline.Definitions;
+using FluxMq.Pipeline.Scenarios;
 using FluxMq.UI.Components.Workspace.Nodes.FlowAssertion;
 using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
 using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
@@ -400,7 +401,7 @@ public sealed class FlowDefinitionComposer
         }
 
         var normalizedType = string.IsNullOrWhiteSpace(stepType)
-            ? "expect.event"
+            ? ScenarioStepTypes.ExpectEvent
             : stepType.Trim();
         var root = ParseOrCreate(json);
         var flowApplication = GetFlowApplication(root);
@@ -441,7 +442,7 @@ public sealed class FlowDefinitionComposer
         }
 
         var normalizedType = string.IsNullOrWhiteSpace(stepType)
-            ? ReadString(step, "type") ?? "expect.event"
+            ? ReadString(step, "type") ?? ScenarioStepTypes.ExpectEvent
             : stepType.Trim();
         step["type"] = normalizedType;
         step["configuration"] = CreateScenarioStepConfiguration(normalizedType, configuration);
@@ -1966,7 +1967,7 @@ public sealed class FlowDefinitionComposer
         string stepType)
         => stepType switch
         {
-            "mqtt.publish" => new Dictionary<string, string>(StringComparer.Ordinal)
+            ScenarioStepTypes.MqttPublish => new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["connection"] = ReadFirstConnectionResourceName(flowApplication),
                 ["topic"] = "fluxmq/test",
@@ -1993,7 +1994,7 @@ public sealed class FlowDefinitionComposer
         IReadOnlyDictionary<string, string> configuration)
     {
         var result = new JsonObject();
-        if (string.Equals(stepType, "mqtt.publish", StringComparison.Ordinal))
+        if (IsMqttPublishScenarioStep(stepType))
         {
             AddString(result, configuration, "connection");
             AddString(result, configuration, "topic");
@@ -2014,6 +2015,9 @@ public sealed class FlowDefinitionComposer
         AddAttributes(result, configuration);
         return result;
     }
+
+    private static bool IsMqttPublishScenarioStep(string stepType)
+        => ScenarioStepCatalog.Shared.Find(stepType)?.EditorKind == ScenarioStepEditorKind.MqttPublish;
 
     private static void AddString(JsonObject target, IReadOnlyDictionary<string, string> configuration, string key)
         => target[key] = configuration.TryGetValue(key, out var value) ? value ?? string.Empty : string.Empty;
@@ -2172,12 +2176,7 @@ public sealed class FlowDefinitionComposer
         };
 
     private static string ScenarioStepNamePrefix(string stepType)
-        => stepType switch
-        {
-            "mqtt.publish" => "publishMessage",
-            "expect.event" => "expectEvent",
-            _ => "step"
-        };
+        => ScenarioStepCatalog.Shared.Find(stepType)?.NamePrefix ?? "step";
 
     private static JsonObject CreateDashboardWidgetObject(string widgetType)
         => new()

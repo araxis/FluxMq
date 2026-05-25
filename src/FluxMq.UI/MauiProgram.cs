@@ -31,6 +31,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<ISessionRepository, LiteDbSessionRepository>();
         builder.Services.AddSingleton<FlowComponentCatalog>();
         builder.Services.AddSingleton<DashboardWidgetCatalog>();
+        builder.Services.AddSingleton(ScenarioStepCatalog.Shared);
         builder.Services.AddSingleton(DashboardEventFilterCatalog.Shared);
         builder.Services.AddSingleton<NodeWidgetRegistry>();
         builder.Services.AddSingleton<FlowDefinitionComposer>();

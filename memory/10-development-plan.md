@@ -422,6 +422,10 @@ Done when:
   - the shared event filter catalog can now describe fields backed by `FlowEvent.Attributes`
   - JSON schema validation events expose a Schema id filter for dashboards and test expectations
   - scenario expectation editing writes attribute filters into the nested `attributes` step configuration
+- Started scenario step catalog cleanup:
+  - step type ids now have a shared scenario contract
+  - the test-step palette, card labels, edit dialog title, and scenario step naming use one descriptor catalog
+  - composer defaults now route through the descriptor model instead of repeating publish/expect strings
 - Fixed dashboard widget cleanup:
   - dashboard cells now have a delete action for assigned widgets
   - deleting a widget removes the widget definition and clears the cell assignment
@@ -435,11 +439,10 @@ Working rule:
 - Wait for confirmation before commit, push, PR, or merge steps.
 - For every review or verification step, write both what we are going to do and the expected result.
 
-Review the event attribute filter slice:
+Review the scenario step catalog slice:
 
-1. Do: open a dashboard widget settings dialog and choose `JSON schema validated`. Expected: the filter fields show `Topic prefix`, `Schema id`, and valid/invalid status options.
-2. Do: open a test expectation step editor and choose `JSON schema validated`. Expected: the same `Schema id` field appears, driven by the shared event filter catalog.
-3. Do: set `Schema id` to `temperature`, apply, save, and inspect JSON. Expected: the step stores `"attributes": { "schemaId": "temperature" }`.
-4. Do: reopen the test tab. Expected: the card summary/config shows `schema: temperature` / `schemaId temperature` without showing raw empty fields.
-5. Do: run the focused UI tests. Expected: event attribute filter and composer tests pass.
-6. Do: after confirmation, commit this slice and open a PR. Expected: the branch is reviewable and can be merged when checks are green.
+1. Do: open a test tab and inspect the test-step palette. Expected: `MQTT publish` and `Expect event` still appear under the same categories, with the same click/drag behavior.
+2. Do: add one publish step and two expectation steps. Expected: generated names still become `publishMessage`, `expectEvent`, and `expectEvent2`.
+3. Do: edit each kind of step. Expected: publish steps still show broker/topic/payload fields, and expectation steps still show event filter fields.
+4. Do: run the focused UI tests. Expected: scenario catalog, composer, and workspace tests pass.
+5. Do: after confirmation, commit this slice and open a PR. Expected: the branch is reviewable and can be merged when checks are green.

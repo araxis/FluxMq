@@ -1,5 +1,6 @@
 @using FluxMq.UI.Models
 @inject DashboardEventFilterCatalog EventFilters
+@inject ScenarioStepCatalog ScenarioSteps
 
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
     <TitleContent>
@@ -140,9 +141,11 @@
     private string _payloadContains = string.Empty;
     private int _timeoutMs = 5000;
 
-    private bool IsMqttPublish => string.Equals(Step.Type, "mqtt.publish", StringComparison.Ordinal);
+    private ScenarioStepDescriptor StepDescriptor => ScenarioSteps.Describe(Step.Type);
 
-    private string DialogTitle => IsMqttPublish ? "MQTT publish step" : "Expectation step";
+    private bool IsMqttPublish => StepDescriptor.EditorKind == ScenarioStepEditorKind.MqttPublish;
+
+    private string DialogTitle => $"{StepDescriptor.DisplayName} step";
 
     private DashboardEventTypeDescriptor CurrentEventType => EventFilters.Find(_eventType);
 
