@@ -30,6 +30,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     private readonly FlowDefinitionComposer _definitionComposer;
     private readonly IMessageRepository? _messageRepository;
     private readonly Func<MqttConnectionProfile, IMqttSession>? _runtimeSessionFactory;
+    private readonly DashboardEventFilterCatalog _dashboardEventFilters;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly object _logSync = new();
     private readonly object _metricsSync = new();
@@ -49,11 +50,13 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     public FlowWorkspaceService(
         FlowDefinitionComposer definitionComposer,
         IMessageRepository? messageRepository = null,
-        Func<MqttConnectionProfile, IMqttSession>? runtimeSessionFactory = null)
+        Func<MqttConnectionProfile, IMqttSession>? runtimeSessionFactory = null,
+        DashboardEventFilterCatalog? dashboardEventFilters = null)
     {
         _definitionComposer = definitionComposer;
         _messageRepository = messageRepository;
         _runtimeSessionFactory = runtimeSessionFactory;
+        _dashboardEventFilters = dashboardEventFilters ?? DashboardEventFilterCatalog.Shared;
         DefinitionJson = _definitionComposer.CreateEmptyDefinition();
     }
 
@@ -307,6 +310,34 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         {
             State = RuntimeWorkspaceState.Faulted;
             Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "DashboardWidgetAddFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
+    public void UpdateDashboardWidget(string widgetName, IReadOnlyDictionary<string, string> configuration)
+    {
+        if (string.IsNullOrWhiteSpace(_activeDashboardName) ||
+            string.IsNullOrWhiteSpace(widgetName))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.UpdateDashboardWidgetConfiguration(
+                DefinitionJson,
+                _activeDashboardName,
+                widgetName,
+                configuration));
+            _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "DashboardWidgetUpdateFailed", exception.Message)];
         }
 
         NotifyChanged();
@@ -1593,30 +1624,6 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     private static string RuntimeProjectionKey(string? workflowName, string nodeName)
         => $"{workflowName ?? string.Empty}/{nodeName}";
 
-    private static bool MatchesDashboardEventWidget(DashboardWidgetSnapshot widget, FlowEvent flowEvent)
-    {
-        var eventType = widget.ReadString("eventType");
-        if (!string.IsNullOrWhiteSpace(eventType) &&
-            !string.Equals(flowEvent.Type, eventType, StringComparison.Ordinal))
-        {
-            return false;
-        }
-
-        var topicStartsWith = widget.ReadString("topicStartsWith");
-        if (!string.IsNullOrWhiteSpace(topicStartsWith) &&
-            (string.IsNullOrWhiteSpace(flowEvent.Topic) ||
-             !flowEvent.Topic.StartsWith(topicStartsWith, StringComparison.Ordinal)))
-        {
-            return false;
-        }
-
-        var status = widget.ReadString("status");
-        if (!string.IsNullOrWhiteSpace(status) &&
-            !string.Equals(flowEvent.Status, status, StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        return true;
-    }
+    private bool MatchesDashboardEventWidget(DashboardWidgetSnapshot widget, FlowEvent flowEvent)
+        => _dashboardEventFilters.Matches(widget, flowEvent);
 }

@@ -8,16 +8,19 @@ public sealed class ProjectManagerService : IAsyncDisposable
     private readonly FlowDefinitionComposer _composer;
     private readonly IMessageRepository? _messageRepository;
     private readonly LiveMqttWorkspaceService? _live;
+    private readonly DashboardEventFilterCatalog _eventFilters;
     private readonly List<FlowWorkspaceService> _projects = [];
 
     public ProjectManagerService(
         FlowDefinitionComposer composer,
         IMessageRepository? messageRepository = null,
-        LiveMqttWorkspaceService? live = null)
+        LiveMqttWorkspaceService? live = null,
+        DashboardEventFilterCatalog? eventFilters = null)
     {
         _composer = composer;
         _messageRepository = messageRepository;
         _live = live;
+        _eventFilters = eventFilters ?? DashboardEventFilterCatalog.Shared;
     }
 
     public IReadOnlyList<FlowWorkspaceService> Projects => _projects;
@@ -102,7 +105,7 @@ public sealed class ProjectManagerService : IAsyncDisposable
         _projects.Clear();
     }
 
-    private FlowWorkspaceService CreateProject() => new(_composer, _messageRepository);
+    private FlowWorkspaceService CreateProject() => new(_composer, _messageRepository, dashboardEventFilters: _eventFilters);
 
     private async Task RemoveClosedProjectConnectionsAsync(
         IReadOnlyList<(string ResourceName, MqttConnectionProfile Profile)> closedConnections)
