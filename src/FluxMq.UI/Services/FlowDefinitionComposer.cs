@@ -469,6 +469,53 @@ public sealed class FlowDefinitionComposer
         return root.ToJsonString(Options);
     }
 
+    public string MoveScenarioStep(string json, string testName, string stepName, int offset)
+    {
+        if (string.IsNullOrWhiteSpace(testName) ||
+            string.IsNullOrWhiteSpace(stepName) ||
+            offset == 0)
+        {
+            return json;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["tests"] is not JsonObject tests ||
+            tests[testName] is not JsonObject scenario ||
+            scenario["steps"] is not JsonObject steps)
+        {
+            return json;
+        }
+
+        var entries = steps
+            .Select(step => (step.Key, Value: step.Value?.DeepClone()))
+            .ToList();
+        var currentIndex = entries.FindIndex(step => string.Equals(step.Key, stepName, StringComparison.Ordinal));
+        if (currentIndex < 0)
+        {
+            return json;
+        }
+
+        var targetIndex = Math.Clamp(currentIndex + offset, 0, entries.Count - 1);
+        if (targetIndex == currentIndex)
+        {
+            return json;
+        }
+
+        var moved = entries[currentIndex];
+        entries.RemoveAt(currentIndex);
+        entries.Insert(targetIndex, moved);
+
+        var reordered = new JsonObject();
+        foreach (var (key, value) in entries)
+        {
+            reordered[key] = value;
+        }
+
+        scenario["steps"] = reordered;
+        return root.ToJsonString(Options);
+    }
+
     public DashboardLayoutSnapshot? GetDashboardLayout(string json, string dashboardName)
     {
         if (string.IsNullOrWhiteSpace(dashboardName))

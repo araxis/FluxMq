@@ -81,6 +81,20 @@
                                 <span class="test-step-actions">
                                     <button type="button"
                                             class="test-step-action"
+                                            title="Move earlier"
+                                            disabled="@(index == 0)"
+                                            @onclick="@(() => MoveStep(step.Name, -1))">
+                                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowLeft" Size="Size.Small" />
+                                    </button>
+                                    <button type="button"
+                                            class="test-step-action"
+                                            title="Move later"
+                                            disabled="@(index >= Scenario.Steps.Count - 1)"
+                                            @onclick="@(() => MoveStep(step.Name, 1))">
+                                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowRight" Size="Size.Small" />
+                                    </button>
+                                    <button type="button"
+                                            class="test-step-action"
                                             title="Edit step"
                                             @onclick="@(() => OpenStepEditorAsync(step))">
                                         <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
@@ -290,6 +304,9 @@
 
     private void RemoveStep(string stepName)
         => Project.RemoveTestScenarioStep(stepName);
+
+    private void MoveStep(string stepName, int offset)
+        => Project.MoveTestScenarioStep(stepName, offset);
 
     private void HandleDesignerPointerEnter(PointerEventArgs args)
     {

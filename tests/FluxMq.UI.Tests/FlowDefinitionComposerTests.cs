@@ -1148,6 +1148,33 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void MoveScenarioStep_ReordersScenarioSteps()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.CreateEmptyDefinition();
+        json = composer.AddTest(json, "t1");
+        json = composer.AddScenarioStep(json, "t1", "mqtt.publish");
+        json = composer.AddScenarioStep(json, "t1", "expect.event");
+        json = composer.AddScenarioStep(json, "t1", "expect.event");
+
+        json = composer.MoveScenarioStep(json, "t1", "expectEvent2", -1);
+
+        composer.GetTestScenario(json, "t1")
+            .ShouldNotBeNull()
+            .Steps
+            .Select(step => step.Name)
+            .ShouldBe(["publishMessage", "expectEvent2", "expectEvent"]);
+
+        json = composer.MoveScenarioStep(json, "t1", "publishMessage", 10);
+
+        composer.GetTestScenario(json, "t1")
+            .ShouldNotBeNull()
+            .Steps
+            .Select(step => step.Name)
+            .ShouldBe(["expectEvent2", "expectEvent", "publishMessage"]);
+    }
+
+    [Fact]
     public void RemoveWorkflow_RemovesNamedWorkflow()
     {
         var composer = new FlowDefinitionComposer();
