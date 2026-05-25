@@ -418,6 +418,10 @@ Done when:
   - test scenario cards can move earlier/later without changing step names or settings
   - moving a step updates the ordered `tests.<name>.steps` object and clears the previous run result
   - cards keep natural content height while the test surface fills the available tab height
+- Started event-specific attribute filters:
+  - the shared event filter catalog can now describe fields backed by `FlowEvent.Attributes`
+  - JSON schema validation events expose a Schema id filter for dashboards and test expectations
+  - scenario expectation editing writes attribute filters into the nested `attributes` step configuration
 - Fixed dashboard widget cleanup:
   - dashboard cells now have a delete action for assigned widgets
   - deleting a widget removes the widget definition and clears the cell assignment
@@ -431,10 +435,11 @@ Working rule:
 - Wait for confirmation before commit, push, PR, or merge steps.
 - For every review or verification step, write both what we are going to do and the expected result.
 
-Review the scenario step ordering slice:
+Review the event attribute filter slice:
 
-1. Do: reopen `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` and select test tab `t1`. Expected: step cards stay compact near the top of the test surface instead of stretching to full height.
-2. Do: click the move-earlier and move-later controls on a middle step card. Expected: sequence numbers and card order update immediately.
-3. Do: save, close, and reopen the JSON file. Expected: the card order is preserved from `tests.t1.steps`.
-4. Do: run the focused UI tests. Expected: scenario step ordering tests pass.
-5. Do: after confirmation, commit this slice and open a PR. Expected: the branch is reviewable and can be merged when checks are green.
+1. Do: open a dashboard widget settings dialog and choose `JSON schema validated`. Expected: the filter fields show `Topic prefix`, `Schema id`, and valid/invalid status options.
+2. Do: open a test expectation step editor and choose `JSON schema validated`. Expected: the same `Schema id` field appears, driven by the shared event filter catalog.
+3. Do: set `Schema id` to `temperature`, apply, save, and inspect JSON. Expected: the step stores `"attributes": { "schemaId": "temperature" }`.
+4. Do: reopen the test tab. Expected: the card summary/config shows `schema: temperature` / `schemaId temperature` without showing raw empty fields.
+5. Do: run the focused UI tests. Expected: event attribute filter and composer tests pass.
+6. Do: after confirmation, commit this slice and open a PR. Expected: the branch is reviewable and can be merged when checks are green.

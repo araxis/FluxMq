@@ -14,6 +14,7 @@ public sealed class DashboardEventFilterCatalogTests
 
         var any = catalog.Find(string.Empty);
         var fileWritten = catalog.Find(FlowEventTypes.FileWritten);
+        var schemaValidated = catalog.Find(FlowEventTypes.JsonSchemaValidated);
         var assertion = catalog.Find(FlowEventTypes.AssertionEvaluated);
 
         any.Fields.ShouldBeEmpty();
@@ -21,6 +22,12 @@ public sealed class DashboardEventFilterCatalogTests
         var fileField = fileWritten.Fields.ShouldHaveSingleItem();
         fileField.Key.ShouldBe(DashboardEventFilterCatalog.SubjectStartsWithKey);
         fileField.Label.ShouldBe("Path prefix");
+
+        schemaValidated.Fields.Select(static field => field.Key).ShouldBe([
+            DashboardEventFilterCatalog.TopicStartsWithKey,
+            DashboardEventFilterCatalog.AttributeFilterKey("schemaId")
+        ]);
+        schemaValidated.Fields[1].AttributeName.ShouldBe("schemaId");
 
         assertion.Fields.Select(static field => field.Key).ShouldBe([
             DashboardEventFilterCatalog.TopicStartsWithKey,
@@ -49,7 +56,43 @@ public sealed class DashboardEventFilterCatalogTests
         catalog.Matches(widget, Event(FlowEventTypes.FileWritten, topic: "logs/a.json", subject: "archive/a.json", status: "written")).ShouldBeFalse();
     }
 
-    private static FlowEvent Event(string type, string? topic = null, string? subject = null, string? status = null)
+    [Fact]
+    public void Matches_UsesAttributeFieldForJsonSchemaEvents()
+    {
+        var catalog = new DashboardEventFilterCatalog();
+        var widget = new DashboardWidgetSnapshot(
+            "schema",
+            DashboardWidgetCatalog.EventCounterType,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [DashboardEventFilterCatalog.EventTypeKey] = FlowEventTypes.JsonSchemaValidated,
+                [DashboardEventFilterCatalog.TopicStartsWithKey] = "factory/",
+                [DashboardEventFilterCatalog.AttributeFilterKey("schemaId")] = "temperature",
+                [DashboardEventFilterCatalog.StatusKey] = "valid"
+            });
+
+        catalog.Matches(
+            widget,
+            Event(
+                FlowEventTypes.JsonSchemaValidated,
+                topic: "factory/line-a",
+                status: "valid",
+                attributes: new Dictionary<string, string> { ["schemaId"] = "temperature" })).ShouldBeTrue();
+        catalog.Matches(
+            widget,
+            Event(
+                FlowEventTypes.JsonSchemaValidated,
+                topic: "factory/line-a",
+                status: "valid",
+                attributes: new Dictionary<string, string> { ["schemaId"] = "pressure" })).ShouldBeFalse();
+    }
+
+    private static FlowEvent Event(
+        string type,
+        string? topic = null,
+        string? subject = null,
+        string? status = null,
+        IReadOnlyDictionary<string, string>? attributes = null)
         => new()
         {
             Timestamp = DateTimeOffset.Parse("2026-05-25T10:00:00Z"),
@@ -57,6 +100,7 @@ public sealed class DashboardEventFilterCatalogTests
             Source = "test",
             Topic = topic,
             Subject = subject,
-            Status = status
+            Status = status,
+            Attributes = attributes ?? new Dictionary<string, string>(StringComparer.Ordinal)
         };
 }

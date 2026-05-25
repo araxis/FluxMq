@@ -9,7 +9,8 @@ public sealed record DashboardEventFilterFieldDescriptor(
     string Label,
     string? Placeholder,
     string HelperText,
-    Func<FlowEvent, string?> ReadValue);
+    Func<FlowEvent, string?> ReadValue,
+    string? AttributeName = null);
 
 public sealed record DashboardEventTypeDescriptor(
     string Value,

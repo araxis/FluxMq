@@ -1513,31 +1513,54 @@ public sealed class FlowDefinitionComposer
         var result = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var property in configuration)
         {
-            if (property.Value is JsonValue value)
+            if (string.Equals(property.Key, "attributes", StringComparison.Ordinal) &&
+                property.Value is JsonObject attributes)
             {
-                if (value.TryGetValue<string>(out var text))
+                foreach (var attribute in attributes)
                 {
-                    result[property.Key] = text;
-                    continue;
+                    if (TryReadConfigurationString(attribute.Value, out var attributeValue))
+                    {
+                        result[DashboardEventFilterCatalog.AttributeFilterKey(attribute.Key)] = attributeValue;
+                    }
                 }
 
-                if (value.TryGetValue<bool>(out var boolean))
-                {
-                    result[property.Key] = boolean ? "true" : "false";
-                    continue;
-                }
-
-                if (value.TryGetValue<double>(out var number))
-                {
-                    result[property.Key] = number.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
-                    continue;
-                }
+                continue;
             }
 
-            result[property.Key] = property.Value?.ToJsonString() ?? string.Empty;
+            if (TryReadConfigurationString(property.Value, out var configurationValue))
+            {
+                result[property.Key] = configurationValue;
+            }
         }
 
         return result;
+    }
+
+    private static bool TryReadConfigurationString(JsonNode? node, out string value)
+    {
+        if (node is JsonValue jsonValue)
+        {
+            if (jsonValue.TryGetValue<string>(out var text))
+            {
+                value = text;
+                return true;
+            }
+
+            if (jsonValue.TryGetValue<bool>(out var boolean))
+            {
+                value = boolean ? "true" : "false";
+                return true;
+            }
+
+            if (jsonValue.TryGetValue<double>(out var number))
+            {
+                value = number.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
+                return true;
+            }
+        }
+
+        value = node?.ToJsonString() ?? string.Empty;
+        return true;
     }
 
     private static int ReadInt(JsonObject obj, string propertyName, int fallback = 0)
@@ -1958,7 +1981,9 @@ public sealed class FlowDefinitionComposer
                 ["topicStartsWith"] = string.Empty,
                 ["subjectStartsWith"] = string.Empty,
                 ["status"] = "published",
+                ["source"] = string.Empty,
                 ["payloadContains"] = string.Empty,
+                [DashboardEventFilterCatalog.AttributeFilterKey("schemaId")] = string.Empty,
                 ["timeoutMs"] = "5000"
             }
         };
@@ -1986,6 +2011,7 @@ public sealed class FlowDefinitionComposer
         AddString(result, configuration, "source");
         AddString(result, configuration, "payloadContains");
         AddInt(result, configuration, "timeoutMs", 5000);
+        AddAttributes(result, configuration);
         return result;
     }
 
@@ -2014,6 +2040,24 @@ public sealed class FlowDefinitionComposer
                       bool.TryParse(value, out var parsed)
             ? parsed
             : fallback;
+    }
+
+    private static void AddAttributes(JsonObject target, IReadOnlyDictionary<string, string> configuration)
+    {
+        var attributes = new JsonObject();
+        foreach (var (key, value) in configuration.OrderBy(static pair => pair.Key, StringComparer.Ordinal))
+        {
+            if (DashboardEventFilterCatalog.TryGetAttributeName(key, out var attributeName) &&
+                !string.IsNullOrWhiteSpace(value))
+            {
+                attributes[attributeName] = value.Trim();
+            }
+        }
+
+        if (attributes.Count > 0)
+        {
+            target["attributes"] = attributes;
+        }
     }
 
     private static void AddPayload(JsonObject target, IReadOnlyDictionary<string, string> configuration)

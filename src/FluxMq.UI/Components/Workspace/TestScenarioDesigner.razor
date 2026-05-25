@@ -1,4 +1,5 @@
 @using FluxMq.Pipeline.Scenarios
+@using FluxMq.UI.Services
 @implements IDisposable
 @inject LiveMqttWorkspaceService Live
 @inject IDialogService DialogService
@@ -119,13 +120,13 @@
                                     <span>@BuildEventSummary(matched)</span>
                                 </div>
                             }
-                            @if (step.Configuration.Count > 0)
+                            @if (VisibleConfiguration(step).Any())
                             {
                                 <dl class="test-step-config">
-                                    @foreach (var item in step.Configuration)
+                                    @foreach (var item in VisibleConfiguration(step))
                                     {
                                         <div class="test-step-config-row">
-                                            <dt>@item.Key</dt>
+                                            <dt>@FormatConfigurationKey(item.Key)</dt>
                                             <dd title="@item.Value">@item.Value</dd>
                                         </div>
                                     }
@@ -237,10 +238,33 @@
                 step.ReadString("eventType"),
                 PrefixSummary("topic", step.ReadString("topicStartsWith")),
                 PrefixSummary("subject", step.ReadString("subjectStartsWith")),
+                PrefixSummary("schema", step.ReadString(DashboardEventFilterCatalog.AttributeFilterKey("schemaId"))),
                 StatusSummary(step.ReadString("status")),
                 TimeoutSummary(step.ReadString("timeoutMs"))),
             _ => string.IsNullOrWhiteSpace(step.Type) ? "No step type" : step.Type
         };
+
+    private static IEnumerable<KeyValuePair<string, string>> VisibleConfiguration(ScenarioStepSnapshot step)
+        => step.Configuration.Where(static item => !string.IsNullOrWhiteSpace(item.Value));
+
+    private static string FormatConfigurationKey(string key)
+    {
+        if (DashboardEventFilterCatalog.TryGetAttributeName(key, out var attributeName))
+        {
+            return attributeName;
+        }
+
+        return key switch
+        {
+            "eventType" => "event type",
+            "topicStartsWith" => "topic prefix",
+            "subjectStartsWith" => "subject prefix",
+            "payloadContains" => "payload contains",
+            "payloadEncoding" => "payload encoding",
+            "timeoutMs" => "timeout ms",
+            _ => key
+        };
+    }
 
     private static string JoinParts(params string?[] parts)
     {
