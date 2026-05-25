@@ -5,7 +5,7 @@ namespace FluxMq.Pipeline.Runtime;
 
 internal sealed class FlowEventCollector : IDisposable
 {
-    private readonly BufferBlock<FlowEvent> _events = new();
+    private readonly BroadcastBlock<FlowEvent> _events = new(static flowEvent => flowEvent);
     private readonly IReadOnlyList<IDisposable> _links;
     private readonly IReadOnlyList<Task> _sourceCompletions;
     private int _completed;
