@@ -131,13 +131,7 @@
                         <ComponentCatalogPanel ArtifactKind="@WorkspaceArtifactKind.Test" />
                     </aside>
                     <div class="workspace-artifact-region">
-                        <div class="artifact-workspace-state">
-                            <MudIcon Icon="@Icons.Material.Filled.FactCheck" Class="artifact-workspace-icon test" />
-                            <div>
-                                <div class="artifact-workspace-title">@active.ActiveTestName</div>
-                                <div class="artifact-workspace-meta">Test / no steps</div>
-                            </div>
-                        </div>
+                        <TestScenarioDesigner Project="@active" />
                     </div>
                 </div>
             </div>

@@ -1,0 +1,348 @@
+@using FluxMq.Pipeline.Scenarios
+@implements IDisposable
+@inject LiveMqttWorkspaceService Live
+@inject IDialogService DialogService
+@inject DragStateService DragState
+
+<div class="@DesignerClass"
+     @onpointerenter="HandleDesignerPointerEnter"
+     @onpointermove="HandleDesignerPointerMove"
+     @onpointerleave="HandleDesignerPointerLeave">
+    @if (Scenario is null)
+    {
+        <div class="test-scenario-empty">
+            <MudIcon Icon="@Icons.Material.Filled.FactCheck" Class="test-scenario-empty-icon" />
+            <span>No test selected</span>
+        </div>
+    }
+    else
+    {
+        <div class="test-scenario-header">
+            <div class="test-scenario-heading">
+                <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" Class="test-scenario-heading-icon" />
+                <div>
+                    <div class="test-scenario-title">@Scenario.Name</div>
+                    <div class="test-scenario-meta">@StepCountText / sequential run</div>
+                </div>
+            </div>
+
+            <div class="test-scenario-actions">
+                @if (Project.LastScenarioRunResult is { } result)
+                {
+                    <span class="@RunStatusClass(result.Status)">@result.Status</span>
+                }
+                <MudMenu Dense="true"
+                         Icon="@Icons.Material.Filled.Add"
+                         Size="Size.Small"
+                         AnchorOrigin="Origin.BottomLeft"
+                         TransformOrigin="Origin.TopLeft">
+                    <ChildContent>
+                        <MudMenuItem Icon="@Icons.Material.Filled.Send"
+                                     OnClick="@AddMqttPublishStep">MQTT publish</MudMenuItem>
+                        <MudMenuItem Icon="@Icons.Material.Filled.Rule"
+                                     OnClick="@AddExpectEventStep">Expect event</MudMenuItem>
+                    </ChildContent>
+                </MudMenu>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           StartIcon="@RunButtonIcon"
+                           Disabled="@Project.IsScenarioRunning"
+                           OnClick="@RunScenarioAsync">
+                    @RunButtonText
+                </MudButton>
+            </div>
+        </div>
+
+        @if (Scenario.Steps.Count == 0)
+        {
+            <div class="test-scenario-empty">
+                <MudIcon Icon="@Icons.Material.Filled.FactCheck" Class="test-scenario-empty-icon" />
+                <span>No steps</span>
+            </div>
+        }
+        else
+        {
+            <div class="test-step-list">
+                @for (var index = 0; index < Scenario.Steps.Count; index++)
+                {
+                    var step = Scenario.Steps[index];
+                    var stepResult = FindStepResult(step);
+                    <section class="@StepCardClass(stepResult)" @key="step.Name">
+                        <div class="test-step-index">@(index + 1)</div>
+                        <div class="test-step-body">
+                            <div class="test-step-topline">
+                                <span class="test-step-name">@step.Name</span>
+                                <span class="@StepTypeClass(step.Type)">@StepTypeLabel(step.Type)</span>
+                                @if (stepResult is not null)
+                                {
+                                    <span class="@StepStatusClass(stepResult.Status)">@stepResult.Status</span>
+                                }
+                                <span class="test-step-actions">
+                                    <button type="button"
+                                            class="test-step-action"
+                                            title="Edit step"
+                                            @onclick="@(() => OpenStepEditorAsync(step))">
+                                        <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
+                                    </button>
+                                    <button type="button"
+                                            class="test-step-action danger"
+                                            title="Delete step"
+                                            @onclick="@(() => RemoveStep(step.Name))">
+                                        <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" />
+                                    </button>
+                                </span>
+                            </div>
+                            <div class="test-step-summary">@BuildStepSummary(step)</div>
+                            @if (!string.IsNullOrWhiteSpace(stepResult?.Message))
+                            {
+                                <div class="test-step-result-message">@stepResult.Message</div>
+                            }
+                            @if (stepResult?.MatchedEvent is { } matched)
+                            {
+                                <div class="test-step-event">
+                                    <MudIcon Icon="@Icons.Material.Filled.Bolt" Size="Size.Small" />
+                                    <span>@BuildEventSummary(matched)</span>
+                                </div>
+                            }
+                            @if (step.Configuration.Count > 0)
+                            {
+                                <dl class="test-step-config">
+                                    @foreach (var item in step.Configuration)
+                                    {
+                                        <div class="test-step-config-row">
+                                            <dt>@item.Key</dt>
+                                            <dd title="@item.Value">@item.Value</dd>
+                                        </div>
+                                    }
+                                </dl>
+                            }
+                        </div>
+                    </section>
+                    @if (index < Scenario.Steps.Count - 1)
+                    {
+                        <div class="test-step-link" aria-hidden="true">
+                            <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                        </div>
+                    }
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public FlowWorkspaceService Project { get; set; } = null!;
+
+    private TestScenarioSnapshot? Scenario => Project.GetActiveTestScenario();
+
+    protected override void OnInitialized()
+    {
+        DragState.Changed += OnDragStateChanged;
+        DragState.ComponentDropRequested += OnComponentDropRequested;
+    }
+
+    private string DesignerClass
+        => $"test-scenario-designer {(IsTestStepDrag && DragState.ActiveComponentDrag?.IsOverDesigner == true ? "drop-active" : null)}";
+
+    private bool IsTestStepDrag
+        => DragState.ActiveComponentDrag is { TargetKind: WorkspaceArtifactKind.Test };
+
+    private string RunButtonText => Project.IsScenarioRunning ? "Running" : "Run test";
+
+    private string? RunButtonIcon => Project.IsScenarioRunning ? null : Icons.Material.Filled.PlayArrow;
+
+    private string StepCountText
+        => Scenario?.StepCount switch
+        {
+            1 => "1 step",
+            > 1 => $"{Scenario.StepCount} steps",
+            _ => "no steps"
+        };
+
+    private static string StepTypeLabel(string type)
+        => type switch
+        {
+            "mqtt.publish" => "MQTT publish",
+            "expect.event" => "Expect event",
+            _ when string.IsNullOrWhiteSpace(type) => "Untyped",
+            _ => type
+        };
+
+    private ScenarioStepResult? FindStepResult(ScenarioStepSnapshot step)
+        => Project.LastScenarioRunResult?.Steps.FirstOrDefault(result =>
+            string.Equals(result.Name, step.Name, StringComparison.Ordinal));
+
+    private static string StepCardClass(ScenarioStepResult? result)
+        => result?.Status switch
+        {
+            ScenarioStepRunStatus.Passed => "test-step-card passed",
+            ScenarioStepRunStatus.Failed => "test-step-card failed",
+            ScenarioStepRunStatus.TimedOut => "test-step-card timed-out",
+            ScenarioStepRunStatus.Canceled => "test-step-card canceled",
+            _ => "test-step-card"
+        };
+
+    private static string StepTypeClass(string type)
+        => type switch
+        {
+            "mqtt.publish" => "test-step-type publish",
+            "expect.event" => "test-step-type expect",
+            _ => "test-step-type"
+        };
+
+    private static string StepStatusClass(ScenarioStepRunStatus status)
+        => status switch
+        {
+            ScenarioStepRunStatus.Passed => "test-step-status passed",
+            ScenarioStepRunStatus.Failed => "test-step-status failed",
+            ScenarioStepRunStatus.TimedOut => "test-step-status timed-out",
+            ScenarioStepRunStatus.Canceled => "test-step-status canceled",
+            _ => "test-step-status"
+        };
+
+    private static string RunStatusClass(ScenarioRunStatus status)
+        => status switch
+        {
+            ScenarioRunStatus.Passed => "test-run-status passed",
+            ScenarioRunStatus.Failed => "test-run-status failed",
+            ScenarioRunStatus.Canceled => "test-run-status canceled",
+            _ => "test-run-status"
+        };
+
+    private static string BuildStepSummary(ScenarioStepSnapshot step)
+        => step.Type switch
+        {
+            "mqtt.publish" => JoinParts(
+                step.ReadString("connection"),
+                step.ReadString("topic"),
+                FormatQos(step.ReadString("qos")),
+                FormatRetain(step.ReadString("retain"))),
+            "expect.event" => JoinParts(
+                step.ReadString("eventType"),
+                PrefixSummary("topic", step.ReadString("topicStartsWith")),
+                PrefixSummary("subject", step.ReadString("subjectStartsWith")),
+                StatusSummary(step.ReadString("status")),
+                TimeoutSummary(step.ReadString("timeoutMs"))),
+            _ => string.IsNullOrWhiteSpace(step.Type) ? "No step type" : step.Type
+        };
+
+    private static string JoinParts(params string?[] parts)
+    {
+        var value = string.Join(" / ", parts.Where(part => !string.IsNullOrWhiteSpace(part)));
+        return string.IsNullOrWhiteSpace(value) ? "No summary" : value;
+    }
+
+    private static string? PrefixSummary(string label, string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : $"{label}: {value}";
+
+    private static string? StatusSummary(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : $"status: {value}";
+
+    private static string? TimeoutSummary(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : $"{value} ms";
+
+    private static string? FormatQos(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : $"QoS {value}";
+
+    private static string? FormatRetain(string? value)
+        => string.Equals(value, "true", StringComparison.OrdinalIgnoreCase)
+            ? "retain"
+            : null;
+
+    private async Task RunScenarioAsync()
+    {
+        var ready = await Live.EnsureConnectionsAsync(Project.GetConnectionResources());
+        if (!ready)
+        {
+            return;
+        }
+
+        await Project.RunActiveTestScenarioAsync();
+    }
+
+    private void AddMqttPublishStep()
+        => AddStep("mqtt.publish");
+
+    private void AddExpectEventStep()
+        => AddStep("expect.event");
+
+    private void AddStep(string stepType)
+        => Project.AddTestScenarioStep(stepType);
+
+    private async Task OpenStepEditorAsync(ScenarioStepSnapshot step)
+    {
+        var dialog = await DialogService.ShowAsync<ScenarioStepEditorDialog>(
+            $"Edit {step.Name}",
+            new DialogParameters
+            {
+                [nameof(ScenarioStepEditorDialog.Step)] = step,
+                [nameof(ScenarioStepEditorDialog.ConnectionNames)] = Project.GetConnectionNames()
+            },
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: ScenarioStepEditorDialog.ScenarioStepUpdate update })
+        {
+            Project.UpdateTestScenarioStep(step.Name, update.Type, update.Configuration);
+        }
+    }
+
+    private void RemoveStep(string stepName)
+        => Project.RemoveTestScenarioStep(stepName);
+
+    private void HandleDesignerPointerEnter(PointerEventArgs args)
+    {
+        if (IsTestStepDrag)
+        {
+            DragState.SetComponentDragOverDesigner(args.PointerId, true);
+        }
+    }
+
+    private void HandleDesignerPointerMove(PointerEventArgs args)
+    {
+        if (IsTestStepDrag)
+        {
+            DragState.SetComponentDragOverDesigner(args.PointerId, true);
+        }
+    }
+
+    private void HandleDesignerPointerLeave(PointerEventArgs args)
+    {
+        if (IsTestStepDrag)
+        {
+            DragState.SetComponentDragOverDesigner(args.PointerId, false);
+        }
+    }
+
+    private void OnComponentDropRequested(object? sender, ComponentDropRequestedEventArgs args)
+    {
+        if (args.TargetKind != WorkspaceArtifactKind.Test)
+        {
+            return;
+        }
+
+        InvokeAsync(() =>
+        {
+            Project.AddTestScenarioStep(args.ComponentType);
+            StateHasChanged();
+        });
+    }
+
+    private void OnDragStateChanged(object? sender, EventArgs e)
+        => InvokeAsync(StateHasChanged);
+
+    private static string BuildEventSummary(FluxMq.Pipeline.Components.FlowEvent flowEvent)
+        => JoinParts(
+            flowEvent.Type,
+            flowEvent.Topic,
+            flowEvent.Subject,
+            flowEvent.Status,
+            flowEvent.PayloadBytes is null ? null : $"{flowEvent.PayloadBytes} B");
+
+    public void Dispose()
+    {
+        DragState.Changed -= OnDragStateChanged;
+        DragState.ComponentDropRequested -= OnComponentDropRequested;
+    }
+}

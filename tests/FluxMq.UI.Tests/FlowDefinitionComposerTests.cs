@@ -834,6 +834,21 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void RemoveDashboardWidget_RemovesWidgetAndClearsCellReference()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.CreateEmptyDefinition();
+        json = composer.AddDashboard(json, "ops");
+        json = composer.AddDashboardWidget(json, "ops", "event.counter", "slot:0:0");
+
+        var updated = composer.RemoveDashboardWidget(json, "ops", "eventCounter");
+
+        var layout = composer.GetDashboardLayout(updated, "ops").ShouldNotBeNull();
+        layout.Widgets.ContainsKey("eventCounter").ShouldBeFalse();
+        layout.Cells.ShouldContain(cell => cell.Row == 0 && cell.Column == 0 && string.IsNullOrWhiteSpace(cell.Widget));
+    }
+
+    [Fact]
     public void UpdateDashboardGridTracks_NormalizesWpfLikeSizes()
     {
         var composer = new FlowDefinitionComposer();
@@ -1041,6 +1056,95 @@ public sealed class FlowDefinitionComposerTests
             .GetProperty("roundTrip");
 
         scenario.GetProperty("steps").EnumerateObject().Count().ShouldBe(0);
+    }
+
+    [Fact]
+    public void GetTestScenario_ReadsOrderedScenarioSteps()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = """
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "tests": {
+                "t1": {
+                  "steps": {
+                    "publishSampleRequest": {
+                      "type": "mqtt.publish",
+                      "configuration": {
+                        "connection": "local-broker",
+                        "topic": "fluxmq/sample/request",
+                        "payload": {
+                          "value": 12
+                        },
+                        "payloadEncoding": "json",
+                        "qos": 1,
+                        "retain": false
+                      }
+                    },
+                    "expectMappedPublish": {
+                      "type": "expect.event",
+                      "configuration": {
+                        "eventType": "mqtt.message.published",
+                        "topicStartsWith": "test",
+                        "timeoutMs": 5000
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """;
+
+        var scenario = composer.GetTestScenario(json, "t1").ShouldNotBeNull();
+
+        scenario.Name.ShouldBe("t1");
+        scenario.Steps.Select(step => step.Name).ShouldBe(["publishSampleRequest", "expectMappedPublish"]);
+        scenario.Steps[0].Type.ShouldBe("mqtt.publish");
+        scenario.Steps[0].Configuration["connection"].ShouldBe("local-broker");
+        scenario.Steps[0].Configuration["payload"].ShouldBe("""{"value":12}""");
+        scenario.Steps[1].Configuration["timeoutMs"].ShouldBe("5000");
+    }
+
+    [Fact]
+    public void AddUpdateRemoveScenarioStep_ModifiesScenarioSteps()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.CreateEmptyDefinition();
+        json = composer.AddTest(json, "t1");
+
+        json = composer.AddScenarioStep(json, "t1", "mqtt.publish");
+        var scenario = composer.GetTestScenario(json, "t1").ShouldNotBeNull();
+        var step = scenario.Steps.ShouldHaveSingleItem();
+        step.Name.ShouldBe("publishMessage");
+        step.Type.ShouldBe("mqtt.publish");
+
+        json = composer.UpdateScenarioStep(
+            json,
+            "t1",
+            step.Name,
+            step.Type,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["connection"] = "local-broker",
+                ["topic"] = "factory/request",
+                ["payload"] = """{"value":42}""",
+                ["payloadEncoding"] = "json",
+                ["qos"] = "1",
+                ["retain"] = "true"
+            });
+
+        scenario = composer.GetTestScenario(json, "t1").ShouldNotBeNull();
+        scenario.Steps[0].Configuration["topic"].ShouldBe("factory/request");
+        scenario.Steps[0].Configuration["payload"].ShouldBe("""{"value":42}""");
+        scenario.Steps[0].Configuration["qos"].ShouldBe("1");
+        scenario.Steps[0].Configuration["retain"].ShouldBe("true");
+
+        json = composer.RemoveScenarioStep(json, "t1", step.Name);
+
+        composer.GetTestScenario(json, "t1").ShouldNotBeNull().Steps.ShouldBeEmpty();
     }
 
     [Fact]

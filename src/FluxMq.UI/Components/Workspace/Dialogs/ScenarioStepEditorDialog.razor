@@ -1,0 +1,246 @@
+@using FluxMq.UI.Models
+@inject DashboardEventFilterCatalog EventFilters
+
+<MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@DialogTitle</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="2">
+            @if (IsMqttPublish)
+            {
+                @if (ConnectionNames.Count > 0)
+                {
+                    <MudSelect T="string"
+                               Label="Broker"
+                               @bind-Value="_connection"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        @foreach (var connectionName in ConnectionNames)
+                        {
+                            <MudSelectItem T="string" Value="@connectionName">@connectionName</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+                else
+                {
+                    <MudTextField T="string"
+                                  Label="Broker"
+                                  @bind-Value="_connection"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                }
+                <MudTextField T="string"
+                              Label="Topic"
+                              @bind-Value="_topic"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense" />
+                <MudTextField T="string"
+                              Label="Payload"
+                              @bind-Value="_payload"
+                              Lines="6"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense" />
+                <MudSelect T="string"
+                           Label="Payload encoding"
+                           @bind-Value="_payloadEncoding"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense">
+                    <MudSelectItem T="string" Value="@("json")">JSON</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("text")">Text</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("base64")">Base64</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("bytes")">Bytes</MudSelectItem>
+                </MudSelect>
+                <MudSelect T="string"
+                           Label="QoS"
+                           @bind-Value="_qos"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense">
+                    <MudSelectItem T="string" Value="@("0")">0</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("1")">1</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("2")">2</MudSelectItem>
+                </MudSelect>
+                <MudCheckBox T="bool" Label="Retain" @bind-Value="_retain" Dense="true" />
+            }
+            else
+            {
+                <MudSelect T="string"
+                           Label="Event type"
+                           Value="@_eventType"
+                           ValueChanged="@SetEventType"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense">
+                    @foreach (var option in EventFilters.EventTypes)
+                    {
+                        <MudSelectItem T="string" Value="@option.Value">@option.Label</MudSelectItem>
+                    }
+                </MudSelect>
+                @foreach (var field in CurrentEventType.Fields)
+                {
+                    var currentField = field;
+                    <MudTextField T="string"
+                                  Label="@currentField.Label"
+                                  Value="@GetFilterValue(currentField.Key)"
+                                  ValueChanged="@((string? value) => SetFilterValue(currentField.Key, value))"
+                                  Placeholder="@currentField.Placeholder"
+                                  HelperText="@currentField.HelperText"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                }
+                <MudSelect T="string"
+                           Label="Status"
+                           @bind-Value="_status"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense">
+                    @foreach (var option in CurrentEventType.StatusOptions)
+                    {
+                        <MudSelectItem T="string" Value="@option.Value">@option.Label</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudTextField T="string"
+                              Label="Payload contains"
+                              @bind-Value="_payloadContains"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense" />
+                <MudNumericField T="int"
+                                 Label="Timeout ms"
+                                 @bind-Value="_timeoutMs"
+                                 Min="1"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense" />
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@Submit">Apply</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private const string AnyValue = "";
+
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public ScenarioStepSnapshot Step { get; set; } = null!;
+
+    [Parameter]
+    public IReadOnlyList<string> ConnectionNames { get; set; } = [];
+
+    private string _connection = string.Empty;
+    private string _topic = string.Empty;
+    private string _payload = string.Empty;
+    private string _payloadEncoding = "json";
+    private string _qos = "0";
+    private bool _retain;
+    private readonly Dictionary<string, string> _filterValues = new(StringComparer.Ordinal);
+    private string _eventType = AnyValue;
+    private string _status = AnyValue;
+    private string _payloadContains = string.Empty;
+    private int _timeoutMs = 5000;
+
+    private bool IsMqttPublish => string.Equals(Step.Type, "mqtt.publish", StringComparison.Ordinal);
+
+    private string DialogTitle => IsMqttPublish ? "MQTT publish step" : "Expectation step";
+
+    private DashboardEventTypeDescriptor CurrentEventType => EventFilters.Find(_eventType);
+
+    protected override void OnInitialized()
+    {
+        _connection = Step.ReadString("connection") ?? ConnectionNames.FirstOrDefault() ?? string.Empty;
+        _topic = Step.ReadString("topic") ?? string.Empty;
+        _payload = Step.ReadString("payload") ?? string.Empty;
+        _payloadEncoding = NormalizeChoice(Step.ReadString("payloadEncoding"), "json");
+        _qos = NormalizeQos(Step.ReadString("qos"));
+        _retain = bool.TryParse(Step.ReadString("retain"), out var retain) && retain;
+        _eventType = Step.ReadString(DashboardEventFilterCatalog.EventTypeKey) ?? AnyValue;
+        foreach (var key in EventFilters.FilterKeys)
+        {
+            _filterValues[key] = Step.ReadString(key) ?? string.Empty;
+        }
+
+        _status = Step.ReadString(DashboardEventFilterCatalog.StatusKey) ?? AnyValue;
+        _payloadContains = Step.ReadString("payloadContains") ?? string.Empty;
+        _timeoutMs = int.TryParse(Step.ReadString("timeoutMs"), out var timeout) && timeout > 0 ? timeout : 5000;
+        TrimFiltersToEventType();
+        ResetStatusWhenUnsupported();
+    }
+
+    private void SetEventType(string? value)
+    {
+        _eventType = Normalize(value);
+        TrimFiltersToEventType();
+        ResetStatusWhenUnsupported();
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Submit()
+    {
+        var configuration = IsMqttPublish
+            ? new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["connection"] = Normalize(_connection),
+                ["topic"] = Normalize(_topic),
+                ["payload"] = _payload ?? string.Empty,
+                ["payloadEncoding"] = NormalizeChoice(_payloadEncoding, "json"),
+                ["qos"] = NormalizeQos(_qos),
+                ["retain"] = _retain.ToString()
+            }
+            : new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [DashboardEventFilterCatalog.EventTypeKey] = Normalize(_eventType),
+                [DashboardEventFilterCatalog.StatusKey] = Normalize(_status),
+                ["payloadContains"] = Normalize(_payloadContains),
+                ["timeoutMs"] = Math.Max(1, _timeoutMs).ToString(System.Globalization.CultureInfo.InvariantCulture)
+            };
+
+        if (!IsMqttPublish)
+        {
+            var activeFieldKeys = CurrentEventType.Fields.Select(static field => field.Key).ToHashSet(StringComparer.Ordinal);
+            foreach (var key in EventFilters.FilterKeys)
+            {
+                configuration[key] = activeFieldKeys.Contains(key)
+                    ? Normalize(GetFilterValue(key))
+                    : string.Empty;
+            }
+        }
+
+        MudDialog.Close(DialogResult.Ok(new ScenarioStepUpdate(Step.Type, configuration)));
+    }
+
+    private string GetFilterValue(string key)
+        => _filterValues.TryGetValue(key, out var value) ? value : string.Empty;
+
+    private void SetFilterValue(string key, string? value)
+        => _filterValues[key] = Normalize(value);
+
+    private void TrimFiltersToEventType()
+    {
+        var activeFieldKeys = CurrentEventType.Fields.Select(static field => field.Key).ToHashSet(StringComparer.Ordinal);
+        foreach (var key in EventFilters.FilterKeys.Where(key => !activeFieldKeys.Contains(key)))
+        {
+            _filterValues[key] = string.Empty;
+        }
+    }
+
+    private void ResetStatusWhenUnsupported()
+    {
+        if (!CurrentEventType.StatusOptions.Any(option => string.Equals(option.Value, _status, StringComparison.Ordinal)))
+        {
+            _status = AnyValue;
+        }
+    }
+
+    private static string Normalize(string? value)
+        => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
+
+    private static string NormalizeChoice(string? value, string fallback)
+        => string.IsNullOrWhiteSpace(value) ? fallback : value.Trim().ToLowerInvariant();
+
+    private static string NormalizeQos(string? value)
+        => value is "1" or "2" ? value : "0";
+
+    public sealed record ScenarioStepUpdate(string Type, IReadOnlyDictionary<string, string> Configuration);
+}

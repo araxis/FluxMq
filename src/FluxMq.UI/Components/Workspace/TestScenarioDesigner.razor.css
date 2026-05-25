@@ -1,0 +1,331 @@
+.test-scenario-designer {
+    background:
+        radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--flux-grid-dot) 80%, transparent) 1px, transparent 1.3px),
+        var(--flux-canvas);
+    background-size: 18px 18px;
+    color: var(--mud-palette-text-primary);
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.test-scenario-designer.drop-active::after {
+    background: color-mix(in srgb, var(--flux-accent) 8%, transparent);
+    border: 2px dashed color-mix(in srgb, var(--flux-accent) 70%, transparent);
+    border-radius: 8px;
+    content: "";
+    inset: 12px;
+    pointer-events: none;
+    position: absolute;
+    z-index: 10;
+}
+
+.test-scenario-header {
+    align-items: center;
+    background: color-mix(in srgb, var(--flux-surface) 84%, transparent);
+    border-bottom: 1px solid var(--flux-border);
+    display: flex;
+    flex: 0 0 auto;
+    min-height: 52px;
+    padding: 8px 18px;
+}
+
+.test-scenario-actions {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.test-scenario-heading {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    min-width: 0;
+}
+
+.test-scenario-heading-icon {
+    color: var(--mud-palette-warning);
+}
+
+.test-scenario-title {
+    color: var(--mud-palette-text-primary);
+    font-size: 15px;
+    font-weight: 750;
+    line-height: 1.2;
+}
+
+.test-scenario-meta {
+    color: var(--mud-palette-text-secondary);
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+.test-scenario-empty {
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: center;
+    min-height: 0;
+}
+
+.test-scenario-empty-icon {
+    font-size: 42px;
+    opacity: 0.55;
+}
+
+.test-step-list {
+    align-items: stretch;
+    display: flex;
+    flex: 1 1 auto;
+    gap: 10px;
+    min-height: 0;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 18px;
+}
+
+.test-step-card {
+    align-items: flex-start;
+    background: color-mix(in srgb, var(--flux-surface) 90%, transparent);
+    border: 1px solid var(--flux-border);
+    border-radius: 8px;
+    display: flex;
+    gap: 12px;
+    min-height: 156px;
+    min-width: 360px;
+    padding: 14px;
+    width: 420px;
+}
+
+.test-step-card.passed {
+    border-color: color-mix(in srgb, var(--flux-accent) 46%, var(--flux-border));
+}
+
+.test-step-card.failed,
+.test-step-card.timed-out {
+    border-color: color-mix(in srgb, var(--mud-palette-error) 54%, var(--flux-border));
+}
+
+.test-step-card.canceled {
+    border-color: color-mix(in srgb, var(--mud-palette-warning) 50%, var(--flux-border));
+}
+
+.test-step-link {
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    flex: 0 0 28px;
+    justify-content: center;
+    opacity: 0.8;
+}
+
+.test-step-index {
+    align-items: center;
+    background: color-mix(in srgb, var(--mud-palette-warning) 16%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-warning) 36%, transparent);
+    border-radius: 999px;
+    color: var(--mud-palette-warning);
+    display: flex;
+    flex: 0 0 auto;
+    font-size: 12px;
+    font-weight: 800;
+    height: 28px;
+    justify-content: center;
+    width: 28px;
+}
+
+.test-step-body {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.test-step-topline {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    min-width: 0;
+}
+
+.test-step-actions {
+    align-items: center;
+    display: inline-flex;
+    gap: 2px;
+    margin-left: auto;
+}
+
+.test-step-action {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    height: 24px;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.12s ease, color 0.12s ease;
+    width: 24px;
+}
+
+.test-step-action:hover {
+    background: color-mix(in srgb, var(--flux-accent) 18%, transparent);
+    color: var(--flux-accent);
+}
+
+.test-step-action.danger:hover {
+    background: color-mix(in srgb, var(--mud-palette-error) 14%, transparent);
+    color: var(--mud-palette-error);
+}
+
+.test-step-name {
+    color: var(--mud-palette-text-primary);
+    font-size: 14px;
+    font-weight: 750;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.test-step-type {
+    border: 1px solid var(--flux-border-strong);
+    border-radius: 999px;
+    color: var(--mud-palette-text-secondary);
+    flex: 0 0 auto;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0;
+    line-height: 1;
+    padding: 5px 8px;
+    text-transform: uppercase;
+}
+
+.test-step-type.publish {
+    background: color-mix(in srgb, var(--flux-accent) 12%, transparent);
+    border-color: color-mix(in srgb, var(--flux-accent) 36%, transparent);
+    color: var(--flux-accent);
+}
+
+.test-step-type.expect {
+    background: color-mix(in srgb, var(--mud-palette-info) 12%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-info) 34%, transparent);
+    color: var(--mud-palette-info);
+}
+
+.test-step-status,
+.test-run-status {
+    border: 1px solid var(--flux-border-strong);
+    border-radius: 999px;
+    color: var(--mud-palette-text-secondary);
+    flex: 0 0 auto;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+    padding: 5px 8px;
+    text-transform: uppercase;
+}
+
+.test-run-status {
+    font-size: 11px;
+}
+
+.test-step-status.passed,
+.test-run-status.passed {
+    background: color-mix(in srgb, var(--flux-accent) 12%, transparent);
+    border-color: color-mix(in srgb, var(--flux-accent) 38%, transparent);
+    color: var(--flux-accent);
+}
+
+.test-step-status.failed,
+.test-step-status.timed-out,
+.test-run-status.failed {
+    background: color-mix(in srgb, var(--mud-palette-error) 12%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-error) 42%, transparent);
+    color: var(--mud-palette-error);
+}
+
+.test-step-status.canceled,
+.test-run-status.canceled {
+    background: color-mix(in srgb, var(--mud-palette-warning) 12%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-warning) 42%, transparent);
+    color: var(--mud-palette-warning);
+}
+
+.test-step-summary {
+    color: var(--mud-palette-text-secondary);
+    font-size: 12px;
+    line-height: 1.35;
+    margin-top: 6px;
+}
+
+.test-step-result-message {
+    background: color-mix(in srgb, var(--flux-canvas) 76%, transparent);
+    border: 1px solid var(--flux-border-soft);
+    border-radius: 6px;
+    color: var(--mud-palette-text-primary);
+    font-size: 12px;
+    line-height: 1.35;
+    margin-top: 10px;
+    padding: 8px;
+}
+
+.test-step-event {
+    align-items: center;
+    color: var(--mud-palette-info);
+    display: flex;
+    font-size: 11px;
+    gap: 6px;
+    margin-top: 8px;
+    min-width: 0;
+}
+
+.test-step-event span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.test-step-config {
+    display: grid;
+    gap: 6px;
+    margin: 12px 0 0;
+}
+
+.test-step-config-row {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(92px, 132px) minmax(0, 1fr);
+    min-width: 0;
+}
+
+.test-step-config-row dt,
+.test-step-config-row dd {
+    font-size: 11px;
+    line-height: 1.25;
+    margin: 0;
+    min-width: 0;
+}
+
+.test-step-config-row dt {
+    color: var(--mud-palette-text-secondary);
+    font-weight: 700;
+}
+
+.test-step-config-row dd {
+    color: var(--mud-palette-text-primary);
+    font-family: Consolas, "Courier New", monospace;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

@@ -270,6 +270,155 @@ public sealed class CliRunnerTests
         message.ShouldContain("boundedCapacity");
     }
 
+    [Fact]
+    public async Task RunAsync_RunsScenarioByName()
+    {
+        using var temp = TemporaryJsonFile(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "workflows": {
+                    "observe": {
+                      "source": {
+                        "type": "generated.source"
+                      }
+                    }
+                  },
+                  "tests": {
+                    "smoke": {
+                      "steps": {}
+                    }
+                  }
+                }
+              }
+            }
+            """);
+
+        var output = new TestOutput();
+        var error = new TestOutput();
+        var runner = new CliRunner(output, error);
+
+        var exitCode = await runner.RunAsync(["scenario", "--config", temp.Path, "--name", "smoke"]);
+
+        exitCode.ShouldBe((int)CliExitCode.Success);
+        error.Lines.ShouldBeEmpty();
+        output.Lines.ShouldContain(line => line.Contains("Scenario 'smoke' passed."));
+    }
+
+    [Fact]
+    public async Task RunAsync_ReturnsScenarioFailedWhenScenarioStepFails()
+    {
+        using var temp = TemporaryJsonFile(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "workflows": {
+                    "observe": {
+                      "source": {
+                        "type": "generated.source"
+                      }
+                    }
+                  },
+                  "tests": {
+                    "broken": {
+                      "steps": {
+                        "unknown": {
+                          "type": "unknown.step"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """);
+
+        var output = new TestOutput();
+        var error = new TestOutput();
+        var runner = new CliRunner(output, error);
+
+        var exitCode = await runner.RunAsync(["scenario", "--config", temp.Path, "--name", "broken"]);
+
+        exitCode.ShouldBe((int)CliExitCode.ScenarioFailed);
+        output.Lines.ShouldBeEmpty();
+        error.Lines.ShouldContain(line => line.Contains("Scenario 'broken' failed."));
+        error.Lines.ShouldContain(line => line.Contains("unknown.step"));
+    }
+
+    [Fact]
+    public async Task RunAsync_WritesJsonToStdoutForScenarioCommand()
+    {
+        using var temp = TemporaryJsonFile(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "workflows": {
+                    "observe": {
+                      "source": {
+                        "type": "generated.source"
+                      }
+                    }
+                  },
+                  "tests": {
+                    "smoke": {
+                      "steps": {}
+                    }
+                  }
+                }
+              }
+            }
+            """);
+
+        var output = new TestOutput();
+        var error = new TestOutput();
+        var runner = new CliRunner(output, error);
+
+        var exitCode = await runner.RunAsync(["scenario", "--config", temp.Path, "--name", "smoke", "--output", "json"]);
+
+        exitCode.ShouldBe((int)CliExitCode.Success);
+        error.Lines.ShouldBeEmpty();
+
+        using var document = JsonDocument.Parse(string.Join(Environment.NewLine, output.Lines));
+        document.RootElement.GetProperty("name").GetString().ShouldBe("smoke");
+        document.RootElement.GetProperty("isSuccess").GetBoolean().ShouldBeTrue();
+        document.RootElement.GetProperty("status").GetString().ShouldBe("Passed");
+        document.RootElement.GetProperty("steps").GetArrayLength().ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task RunAsync_ReturnsValidationErrorWhenScenarioDoesNotExist()
+    {
+        using var temp = TemporaryJsonFile(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "workflows": {
+                    "observe": {
+                      "source": {
+                        "type": "generated.source"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """);
+
+        var output = new TestOutput();
+        var error = new TestOutput();
+        var runner = new CliRunner(output, error);
+
+        var exitCode = await runner.RunAsync(["scenario", "--config", temp.Path, "--name", "missing"]);
+
+        exitCode.ShouldBe((int)CliExitCode.ValidationError);
+        output.Lines.ShouldBeEmpty();
+        error.Lines.ShouldContain(line => line.Contains("Scenario 'missing' does not exist."));
+    }
+
     private static TemporaryFile TemporaryJsonFile(string content)
     {
         var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");

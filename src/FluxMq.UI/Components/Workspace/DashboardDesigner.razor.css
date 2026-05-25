@@ -372,6 +372,11 @@
     color: var(--flux-accent);
 }
 
+.dashboard-cell-widget-action.danger:hover {
+    background: color-mix(in srgb, var(--mud-palette-error) 14%, transparent);
+    color: var(--mud-palette-error);
+}
+
 .dashboard-live-frame {
     background: transparent;
     border: 0;

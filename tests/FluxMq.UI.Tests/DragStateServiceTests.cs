@@ -46,4 +46,30 @@ public sealed class DragStateServiceTests
         completed.ShouldNotBeNull();
         completed.TargetKind.ShouldBe(WorkspaceArtifactKind.Pipeline);
     }
+
+    [Fact]
+    public void FinishComponentDrag_EmitsTestTargetKindForScenarioStepDrop()
+    {
+        var service = new DragStateService();
+        ComponentDropRequestedEventArgs? captured = null;
+        service.ComponentDropRequested += (_, args) => captured = args;
+
+        service.BeginComponentDrag(
+            "expect.event",
+            "Expect event",
+            pointerId: 9,
+            clientX: 10,
+            clientY: 10,
+            WorkspaceArtifactKind.Test);
+        service.MoveComponentDrag(pointerId: 9, clientX: 25, clientY: 25);
+        service.SetComponentDragOverDesigner(pointerId: 9, isOverDesigner: true);
+
+        var completed = service.FinishComponentDrag(pointerId: 9, clientX: 25, clientY: 25);
+
+        completed.ShouldNotBeNull();
+        completed.TargetKind.ShouldBe(WorkspaceArtifactKind.Test);
+        captured.ShouldNotBeNull();
+        captured.TargetKind.ShouldBe(WorkspaceArtifactKind.Test);
+        captured.ComponentType.ShouldBe("expect.event");
+    }
 }
