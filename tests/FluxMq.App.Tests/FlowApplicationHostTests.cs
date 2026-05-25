@@ -1,11 +1,15 @@
 using Shouldly;
 using FluxMq.Core.Ids;
+using FluxMq.Core.Models;
+using FluxMq.Core.Session;
 using FluxMq.Pipeline.Components;
 using FluxMq.Pipeline.Definitions;
 using FluxMq.Pipeline.Runtime;
 using FluxMq.App;
 using Microsoft.Extensions.Configuration;
+using MQTTnet.Protocol;
 using System.Text;
+using System.Threading.Channels;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.App.Tests;
@@ -250,6 +254,124 @@ public sealed class FlowApplicationHostTests
     }
 
     [Fact]
+    public async Task RunScenarioAsync_CanPublishMqttMessageThroughNamedConnection()
+    {
+        var session = new FakeMqttSession();
+        await using var host = FlowApplicationHost.CreateDefault(
+            BuildConfiguration(
+                """
+                {
+                  "FluxMq": {
+                    "FlowApplication": {
+                      "resources": {
+                        "localBroker": {
+                          "type": "mqtt.connection",
+                          "configuration": {
+                            "profile": {
+                              "name": "local-broker",
+                              "host": "localhost",
+                              "port": 1883
+                            }
+                          }
+                        }
+                      },
+                      "workflows": {
+                        "idle": {
+                          "messages": {
+                            "type": "generated.source"
+                          }
+                        }
+                      },
+                      "tests": {
+                        "publishMessage": {
+                          "steps": {
+                            "publish": {
+                              "type": "mqtt.publish",
+                              "configuration": {
+                                "connection": "localBroker",
+                                "topic": "topica/b/c",
+                                "payload": 12,
+                                "qos": 1,
+                                "retain": true
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+                """),
+            sessionFactory: _ => session);
+
+        var result = await host.RunScenarioAsync("publishMessage");
+
+        result.IsSuccess.ShouldBeTrue();
+        var publish = session.Published.ShouldHaveSingleItem();
+        publish.Topic.ShouldBe("topica/b/c");
+        Encoding.UTF8.GetString(publish.Payload).ShouldBe("12");
+        publish.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtLeastOnce);
+        publish.Retain.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task RunScenarioAsync_ReportsMissingScenarioMqttConnection()
+    {
+        var session = new FakeMqttSession();
+        await using var host = FlowApplicationHost.CreateDefault(
+            BuildConfiguration(
+                """
+                {
+                  "FluxMq": {
+                    "FlowApplication": {
+                      "resources": {
+                        "localBroker": {
+                          "type": "mqtt.connection",
+                          "configuration": {
+                            "profile": {
+                              "name": "local-broker",
+                              "host": "localhost",
+                              "port": 1883
+                            }
+                          }
+                        }
+                      },
+                      "workflows": {
+                        "idle": {
+                          "messages": {
+                            "type": "generated.source"
+                          }
+                        }
+                      },
+                      "tests": {
+                        "publishMessage": {
+                          "steps": {
+                            "publish": {
+                              "type": "mqtt.publish",
+                              "configuration": {
+                                "connection": "missingBroker",
+                                "topic": "topica/b/c",
+                                "payload": "hello"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+                """),
+            sessionFactory: _ => session);
+
+        var result = await host.RunScenarioAsync("publishMessage");
+
+        result.IsSuccess.ShouldBeFalse();
+        result.Steps.ShouldHaveSingleItem()
+            .Message.ShouldBe("MQTT connection resource 'missingBroker' does not exist.");
+        session.Published.ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task RunScenarioAsync_ReportsMissingScenarioName()
     {
         await using var host = FlowApplicationHost.CreateDefault(BuildConfiguration(
@@ -360,5 +482,71 @@ public sealed class FlowApplicationHostTests
             ((IDataflowBlock)_errors).Fault(exception);
             _completion.TrySetException(exception);
         }
+    }
+
+    private sealed class FakeMqttSession : IMqttSession
+    {
+        private readonly Channel<MqttEnvelope> _messages = Channel.CreateUnbounded<MqttEnvelope>();
+
+        public MqttConnectionProfile Profile { get; } = new() { Name = "local-broker" };
+        public MqttSessionState State { get; private set; } = MqttSessionState.Disconnected;
+        public ChannelReader<MqttEnvelope> Messages => _messages.Reader;
+        public List<PublishedMessage> Published { get; } = [];
+
+        public event EventHandler<MqttSessionState>? StateChanged;
+
+        public Task ConnectAsync(CancellationToken ct = default)
+        {
+            State = MqttSessionState.Connected;
+            StateChanged?.Invoke(this, State);
+            return Task.CompletedTask;
+        }
+
+        public Task DisconnectAsync(CancellationToken ct = default)
+        {
+            State = MqttSessionState.Disconnected;
+            StateChanged?.Invoke(this, State);
+            return Task.CompletedTask;
+        }
+
+        public Task SubscribeAsync(
+            string topicFilter,
+            MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce,
+            CancellationToken ct = default)
+            => Task.CompletedTask;
+
+        public Task SubscribeAsync(
+            string topicFilter,
+            MqttQualityOfServiceLevel qos,
+            bool receiveRetainedMessages,
+            bool retainAsPublished = true,
+            CancellationToken ct = default)
+            => Task.CompletedTask;
+
+        public Task UnsubscribeAsync(string topicFilter, CancellationToken ct = default)
+            => Task.CompletedTask;
+
+        public Task PublishAsync(
+            string topic,
+            byte[] payload,
+            MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce,
+            bool retain = false,
+            CancellationToken ct = default)
+        {
+            Published.Add(new PublishedMessage(topic, payload, qos, retain));
+            return Task.CompletedTask;
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            _messages.Writer.TryComplete();
+            return ValueTask.CompletedTask;
+        }
+
+        public sealed record PublishedMessage(
+            string Topic,
+            byte[] Payload,
+            MqttQualityOfServiceLevel QualityOfService,
+            bool Retain);
     }
 }

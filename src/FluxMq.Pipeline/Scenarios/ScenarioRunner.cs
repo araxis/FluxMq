@@ -13,9 +13,23 @@ public sealed class ScenarioRunner(ScenarioStepRunnerRegistry? registry = null)
         ScenarioDefinition scenario,
         ISourceBlock<FlowEvent> events,
         CancellationToken cancellationToken = default)
+        => await RunAsync(
+            name,
+            scenario,
+            events,
+            ScenarioStepServices.Empty,
+            cancellationToken).ConfigureAwait(false);
+
+    public async Task<ScenarioRunResult> RunAsync(
+        string name,
+        ScenarioDefinition scenario,
+        ISourceBlock<FlowEvent> events,
+        ScenarioStepServices services,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(scenario);
         ArgumentNullException.ThrowIfNull(events);
+        ArgumentNullException.ThrowIfNull(services);
 
         var startedAt = DateTimeOffset.UtcNow;
         var results = new List<ScenarioStepResult>();
@@ -30,6 +44,7 @@ public sealed class ScenarioRunner(ScenarioStepRunnerRegistry? registry = null)
                 step.Key,
                 step.Value,
                 journal,
+                services,
                 eventOffset,
                 cancellationToken).ConfigureAwait(false);
 
@@ -58,6 +73,7 @@ public sealed class ScenarioRunner(ScenarioStepRunnerRegistry? registry = null)
         string stepName,
         ScenarioStepDefinition step,
         ScenarioEventJournal events,
+        ScenarioStepServices services,
         int eventOffset,
         CancellationToken cancellationToken)
     {
@@ -85,6 +101,7 @@ public sealed class ScenarioRunner(ScenarioStepRunnerRegistry? registry = null)
                     StepName = stepName,
                     Step = step,
                     Events = events,
+                    Services = services,
                     EventOffset = eventOffset
                 },
                 cancellationToken).ConfigureAwait(false);

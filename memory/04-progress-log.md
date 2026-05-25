@@ -804,3 +804,20 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verified:
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1` passes with 32 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes with 399 tests.
+
+## 2026-05-25 - Scenario action service and MQTT publish step
+
+- Added a generic `ScenarioStepServices` service bag and passed it through `ScenarioRunner`.
+- Added an app-level `mqtt.publish` scenario step runner that:
+  - reads `connection`, `topic`, `payload`, `payloadEncoding`, `qos`, and `retain`
+  - resolves the named MQTT connection from the running app runtime
+  - publishes through that connection without adding any workflow nodes
+- Added host services so future app-level scenario steps can depend on runtime capabilities without adding pipeline-specific switches.
+- Added regression tests for:
+  - scenario services reaching a step runner
+  - publishing a numeric payload through a named MQTT connection
+  - reporting a missing MQTT connection as a failed scenario step
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1` passes with 67 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1` passes with 34 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes with 401 tests.
