@@ -9,6 +9,7 @@ public sealed class DashboardEventFilterCatalog
     public const string TopicStartsWithKey = "topicStartsWith";
     public const string SubjectStartsWithKey = "subjectStartsWith";
     public const string StatusKey = "status";
+    public const string AttributeKeyPrefix = "attribute:";
 
     private const string AnyValue = "";
 
@@ -36,7 +37,10 @@ public sealed class DashboardEventFilterCatalog
             new(FlowEventTypes.MqttMessagePublished, "MQTT message published", [TopicField("Topic prefix", "factory/line-a/", "Filters by published message topic.")], StatusOptions("published")),
             new(FlowEventTypes.MqttMessageRecorded, "MQTT message recorded", [TopicField("Topic prefix", "factory/line-a/", "Filters by recorded message topic.")], StatusOptions("recorded")),
             new(FlowEventTypes.FileWritten, "File written", [SubjectField("Path prefix", null, "Filters by written file path.")], StatusOptions("written")),
-            new(FlowEventTypes.JsonSchemaValidated, "JSON schema validated", [TopicField("Topic prefix", "factory/line-a/", "Filters by validated message topic.")], StatusOptions("valid", "invalid")),
+            new(FlowEventTypes.JsonSchemaValidated, "JSON schema validated", [
+                TopicField("Topic prefix", "factory/line-a/", "Filters by validated message topic."),
+                AttributeField("schemaId", "Schema id", "temperature", "Filters by schema id.")
+            ], StatusOptions("valid", "invalid")),
             new(FlowEventTypes.AssertionEvaluated, "Assertion evaluated", [
                 TopicField("Topic prefix", "factory/line-a/", "Filters by assertion event topic when present."),
                 SubjectField("Assertion name prefix", null, "Filters by assertion name.")
@@ -57,6 +61,22 @@ public sealed class DashboardEventFilterCatalog
     public DashboardEventTypeDescriptor Find(string? eventType)
         => EventTypes.FirstOrDefault(option => string.Equals(option.Value, eventType ?? AnyValue, StringComparison.Ordinal)) ??
            EventTypes[0];
+
+    public static string AttributeFilterKey(string attributeName)
+        => $"{AttributeKeyPrefix}{attributeName}";
+
+    public static bool TryGetAttributeName(string key, out string attributeName)
+    {
+        if (key.StartsWith(AttributeKeyPrefix, StringComparison.Ordinal) &&
+            key.Length > AttributeKeyPrefix.Length)
+        {
+            attributeName = key[AttributeKeyPrefix.Length..];
+            return true;
+        }
+
+        attributeName = string.Empty;
+        return false;
+    }
 
     public IReadOnlyDictionary<string, string> CreateEmptyConfiguration()
     {
@@ -108,6 +128,19 @@ public sealed class DashboardEventFilterCatalog
 
     private static DashboardEventFilterFieldDescriptor SubjectField(string label, string? placeholder, string helperText)
         => new(SubjectStartsWithKey, label, placeholder, helperText, static flowEvent => flowEvent.Subject);
+
+    private static DashboardEventFilterFieldDescriptor AttributeField(
+        string attributeName,
+        string label,
+        string? placeholder,
+        string helperText)
+        => new(
+            AttributeFilterKey(attributeName),
+            label,
+            placeholder,
+            helperText,
+            flowEvent => flowEvent.GetAttribute(attributeName),
+            attributeName);
 
     private static IReadOnlyList<DashboardEventFilterOption> StatusOptions(params string[] statuses)
         => [new(AnyValue, "Any status"), .. AllStatusOptions.Where(option => statuses.Contains(option.Value, StringComparer.Ordinal))];

@@ -1148,6 +1148,47 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void UpdateScenarioStep_WritesEventAttributeFilters()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.CreateEmptyDefinition();
+        json = composer.AddTest(json, "t1");
+        json = composer.AddScenarioStep(json, "t1", "expect.event");
+        var step = composer.GetTestScenario(json, "t1").ShouldNotBeNull().Steps.ShouldHaveSingleItem();
+
+        json = composer.UpdateScenarioStep(
+            json,
+            "t1",
+            step.Name,
+            step.Type,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["eventType"] = "json.schema.validated",
+                ["topicStartsWith"] = "factory/",
+                ["status"] = "valid",
+                [DashboardEventFilterCatalog.AttributeFilterKey("schemaId")] = "temperature",
+                ["timeoutMs"] = "2500"
+            });
+
+        var scenario = composer.GetTestScenario(json, "t1").ShouldNotBeNull();
+        scenario.Steps[0].Configuration[DashboardEventFilterCatalog.AttributeFilterKey("schemaId")]
+            .ShouldBe("temperature");
+
+        using var document = JsonDocument.Parse(json);
+        var attributes = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("tests")
+            .GetProperty("t1")
+            .GetProperty("steps")
+            .GetProperty(step.Name)
+            .GetProperty("configuration")
+            .GetProperty("attributes");
+
+        attributes.GetProperty("schemaId").GetString().ShouldBe("temperature");
+    }
+
+    [Fact]
     public void MoveScenarioStep_ReordersScenarioSteps()
     {
         var composer = new FlowDefinitionComposer();
