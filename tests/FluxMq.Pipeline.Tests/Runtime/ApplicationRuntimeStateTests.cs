@@ -134,6 +134,38 @@ public sealed class ApplicationRuntimeStateTests
         change.Current.ShouldBe(WorkflowState.Starting);
     }
 
+    [Fact]
+    public async Task Events_BroadcastToMultipleObservers()
+    {
+        var node = new EventSourceNode();
+        var address = new NodeAddress(WellKnownScopes.Resources, new NodeName("events"));
+        var runtimeNode = RuntimeNode.Create(address, node);
+        var runtime = new ApplicationRuntime([runtimeNode], [], [runtimeNode]);
+        var firstObserver = new BufferBlock<FlowEvent>();
+        var secondObserver = new BufferBlock<FlowEvent>();
+        runtime.Events.LinkTo(firstObserver);
+        runtime.Events.LinkTo(secondObserver);
+
+        await runtime.StartAsync();
+
+        node.Post(new FlowEvent
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Type = FlowEventTypes.MqttMessageReceived,
+            Source = "test",
+            Topic = "factory/one"
+        });
+
+        var first = await firstObserver.ReceiveAsync(TimeSpan.FromSeconds(1));
+        var second = await secondObserver.ReceiveAsync(TimeSpan.FromSeconds(1));
+
+        first.Topic.ShouldBe("factory/one");
+        second.Topic.ShouldBe("factory/one");
+
+        runtime.Complete();
+        await runtime.Completion.WaitAsync(TimeSpan.FromSeconds(1));
+    }
+
     private static (ApplicationRuntime Runtime, TestNode Node) MakeRuntime()
     {
         var node = new TestNode();
@@ -176,6 +208,35 @@ public sealed class ApplicationRuntimeStateTests
         {
             _completion.TrySetException(exception);
             ((IDataflowBlock)_errors).Fault(exception);
+        }
+    }
+
+    private sealed class EventSourceNode : IFlowNode, IFlowEventSource
+    {
+        private readonly TaskCompletionSource _completion = new();
+        private readonly BufferBlock<FlowError> _errors = new();
+        private readonly BufferBlock<FlowEvent> _events = new();
+
+        public FlowNodeId Id { get; } = FlowNodeId.New();
+        public ISourceBlock<FlowError> Errors => _errors;
+        public ISourceBlock<FlowEvent> Events => _events;
+        public Task Completion => _completion.Task;
+
+        public void Post(FlowEvent flowEvent)
+            => _events.Post(flowEvent);
+
+        public void Complete()
+        {
+            _events.Complete();
+            _errors.Complete();
+            _completion.TrySetResult();
+        }
+
+        public void Fault(Exception exception)
+        {
+            ((IDataflowBlock)_events).Fault(exception);
+            ((IDataflowBlock)_errors).Fault(exception);
+            _completion.TrySetException(exception);
         }
     }
 }

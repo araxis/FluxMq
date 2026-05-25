@@ -60,6 +60,7 @@ Future logging architecture note: keep the current `FlowLogEntry` stream for gra
 Future object-stream architecture note: dynamic mappers make it hard to keep every runtime edge permanently static. Move toward object streams as the underlying runtime model, with typed ports acting as schema/contract metadata for designer validation, editor help, and runtime coercion. This should be done as a dedicated runtime refactor, not hidden inside one component.
 The current artifact navigation slice moves app structure controls into first-level top-bar menus for connections, pipelines, dashboards, and tests. The left side now stays focused on the active artifact tool panel, so pipeline components, future dashboard widgets, and future test steps can each have their own panel without an always-open app tree taking workspace width.
 The current dashboard layout designer slice turns dashboard tabs from placeholders into a real layout editor. The UI reads and writes the dashboard JSON model, renders a full-size grid surface, and can add/remove dashboard cells while keeping widgets separate for a later monitoring-block slice. The grid interaction is inspired by the OpenGarden surface editor: users can choose a row/column layout from a picker, add/remove rows and columns, select cells, merge rectangular selections, split merged cells, and subdivide a selected cell into rows, columns, or a 2 x 2 region. Row and column handles are now the track editors: clicking a handle opens a sizing dialog for fixed, percent, or star sizing plus per-track padding; the old raw row/column text fields are gone.
+The current scenario expectation foundation slice starts the test/scenario plane below the UI. `ScenarioRunner` executes registered scenario step runners against the external `FlowEvent` stream, and `expect.event` waits for matching runtime events using event type, topic prefix, subject prefix, status, source, payload preview, and attribute filters. Runtime events now broadcast to multiple observers, so dashboards and scenarios can observe the same app run without stealing events from each other.
 
 ## Step-by-Step Plan
 
@@ -374,6 +375,14 @@ Done when:
   - filter controls are now event-type aware: topic, subject/path/name, and status options follow the selected event type
   - event filter metadata now lives in `DashboardEventFilterCatalog`, which drives both the settings dialog and runtime dashboard matching
   - `Any event` stays generic and does not show event-specific topic or subject filters
+- Started scenario event expectation foundation:
+  - added `ScenarioRunner`, scenario run/step result models, and a step-runner registry
+  - added `expect.event` as the first scenario step runner over the external runtime event stream
+  - event expectations can match event type, topic prefix, subject prefix, status, source, payload preview text, and string attributes
+  - matched events advance an event offset so later expectations do not reuse the same event
+  - unknown scenario step types fail with a clear step result instead of throwing through the runner
+  - `ApplicationRuntime.Events` now broadcasts runtime events to multiple observers, allowing dashboards and scenarios to share one app run
+  - verified with 66 pipeline tests and 392 full solution tests
 
 ## Next Action
 
@@ -383,14 +392,12 @@ Working rule:
 - Tell the reviewer exactly what to check in the running app when visual or runtime confirmation matters.
 - Wait for confirmation before commit, push, PR, or merge steps.
 
-Review the dashboard widget settings slice:
+Review the scenario event expectation foundation slice:
 
-1. Open an app with a dashboard tab.
-2. In Edit mode, add an `Event Counter` or `Latest Event` widget to a cell.
-3. Confirm the assigned cell shows the widget title and a small settings action.
-4. Open the settings action and confirm filter controls change with the event type.
-5. Apply the dialog and confirm the cell title updates immediately.
-6. Save and reopen the app; confirm the widget settings round-trip under `dashboards.widgets.<widget>.configuration`.
-7. Switch to Live mode, run a pipeline that emits matching and non-matching events, and confirm the widget respects the selected filters.
-8. Confirm merge/split/select and dashboard widget drag/drop still work in Edit mode.
-9. After confirmation, commit this slice and open a PR.
+1. There is no desktop UI to check in this slice; it is intentionally below the UI.
+2. Review `src/FluxMq.Pipeline/Scenarios` and confirm the runner shape is generic enough for future publish/action steps.
+3. Confirm `expect.event` reads configuration through a scenario step runner, not through pipeline components.
+4. Confirm `ApplicationRuntime.Events` is broadcast-friendly so dashboards and scenarios can observe the same run.
+5. Run `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1`.
+6. Run `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1`.
+7. After confirmation, commit this slice and open a PR.

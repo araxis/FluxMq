@@ -778,3 +778,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutDir=%TEMP%\FluxMqVerifyUiTests -m:1 --filter "FullyQualifiedName~DashboardEventFilterCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowWorkspaceServiceTests"` passes with 89 focused tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutDir=%TEMP%\FluxMqVerifyUiTestsFull -m:1` passes with 138 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=%TEMP%\FluxMqVerifySolution -m:1` passes with 391 tests. The solution pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-25 - Scenario event expectation foundation slice
+
+- Started the test/scenario plane under the UI:
+  - added `ScenarioRunner`, scenario run/step result models, and a step-runner registry
+  - added `expect.event` as the first scenario step runner over the external runtime event stream
+  - event expectations can match event type, topic prefix, subject prefix, status, source, payload preview text, and string attributes
+  - matched events advance an event offset so later expectations do not reuse the same event
+  - unknown scenario step types fail with a clear step result instead of throwing through the runner
+- Changed `ApplicationRuntime.Events` collection to broadcast runtime events to multiple observers, so dashboards and scenarios can both listen to the same app run.
+- Kept this slice below the desktop UI; the next UI slice can expose test/scenario authoring against this foundation.
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1` passes with 66 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes with 392 tests. The solution pass still prints existing WinAppSDK PRI qualifier warnings during UI test build.

@@ -1,0 +1,131 @@
+using FluxMq.Pipeline.Components;
+using FluxMq.Pipeline.Definitions;
+using System.Threading.Tasks.Dataflow;
+
+namespace FluxMq.Pipeline.Scenarios;
+
+public sealed class ScenarioRunner(ScenarioStepRunnerRegistry? registry = null)
+{
+    private readonly ScenarioStepRunnerRegistry _registry = registry ?? ScenarioStepRunnerRegistry.CreateDefault();
+
+    public async Task<ScenarioRunResult> RunAsync(
+        string name,
+        ScenarioDefinition scenario,
+        ISourceBlock<FlowEvent> events,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(scenario);
+        ArgumentNullException.ThrowIfNull(events);
+
+        var startedAt = DateTimeOffset.UtcNow;
+        var results = new List<ScenarioStepResult>();
+        var eventOffset = 0;
+
+        using var journal = new ScenarioEventJournal(events);
+
+        foreach (var step in scenario.Steps)
+        {
+            var result = await RunStepAsync(
+                name,
+                step.Key,
+                step.Value,
+                journal,
+                eventOffset,
+                cancellationToken).ConfigureAwait(false);
+
+            results.Add(result);
+            eventOffset = result.NextEventOffset;
+
+            if (!result.IsSuccess)
+            {
+                break;
+            }
+        }
+
+        var finishedAt = DateTimeOffset.UtcNow;
+        return new ScenarioRunResult
+        {
+            Name = name,
+            Status = ResolveStatus(results),
+            StartedAt = startedAt,
+            FinishedAt = finishedAt,
+            Steps = results
+        };
+    }
+
+    private async Task<ScenarioStepResult> RunStepAsync(
+        string scenarioName,
+        string stepName,
+        ScenarioStepDefinition step,
+        ScenarioEventJournal events,
+        int eventOffset,
+        CancellationToken cancellationToken)
+    {
+        var startedAt = DateTimeOffset.UtcNow;
+        if (!_registry.TryGet(step.Type, out var runner))
+        {
+            return new ScenarioStepResult
+            {
+                Name = stepName,
+                Type = step.Type,
+                Status = ScenarioStepRunStatus.Failed,
+                StartedAt = startedAt,
+                FinishedAt = DateTimeOffset.UtcNow,
+                Message = $"Scenario step type '{step.Type}' is not registered.",
+                NextEventOffset = eventOffset
+            };
+        }
+
+        try
+        {
+            return await runner.RunAsync(
+                new ScenarioStepRunContext
+                {
+                    ScenarioName = scenarioName,
+                    StepName = stepName,
+                    Step = step,
+                    Events = events,
+                    EventOffset = eventOffset
+                },
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return new ScenarioStepResult
+            {
+                Name = stepName,
+                Type = step.Type,
+                Status = ScenarioStepRunStatus.Canceled,
+                StartedAt = startedAt,
+                FinishedAt = DateTimeOffset.UtcNow,
+                Message = "Scenario step was canceled.",
+                NextEventOffset = eventOffset
+            };
+        }
+        catch (Exception exception)
+        {
+            return new ScenarioStepResult
+            {
+                Name = stepName,
+                Type = step.Type,
+                Status = ScenarioStepRunStatus.Failed,
+                StartedAt = startedAt,
+                FinishedAt = DateTimeOffset.UtcNow,
+                Message = exception.Message,
+                NextEventOffset = eventOffset
+            };
+        }
+    }
+
+    private static ScenarioRunStatus ResolveStatus(IReadOnlyList<ScenarioStepResult> results)
+    {
+        if (results.Any(step => step.Status == ScenarioStepRunStatus.Canceled))
+        {
+            return ScenarioRunStatus.Canceled;
+        }
+
+        return results.All(step => step.IsSuccess)
+            ? ScenarioRunStatus.Passed
+            : ScenarioRunStatus.Failed;
+    }
+}
