@@ -62,6 +62,8 @@ The current artifact navigation slice moves app structure controls into first-le
 The current dashboard layout designer slice turns dashboard tabs from placeholders into a real layout editor. The UI reads and writes the dashboard JSON model, renders a full-size grid surface, and can add/remove dashboard cells while keeping widgets separate for a later monitoring-block slice. The grid interaction is inspired by the OpenGarden surface editor: users can choose a row/column layout from a picker, add/remove rows and columns, select cells, merge rectangular selections, split merged cells, and subdivide a selected cell into rows, columns, or a 2 x 2 region. Row and column handles are now the track editors: clicking a handle opens a sizing dialog for fixed, percent, or star sizing plus per-track padding; the old raw row/column text fields are gone.
 The current scenario expectation foundation slice starts the test/scenario plane below the UI. `ScenarioRunner` executes registered scenario step runners against the external `FlowEvent` stream, and `expect.event` waits for matching runtime events using event type, topic prefix, subject prefix, status, source, payload preview, and attribute filters. Runtime events now broadcast to multiple observers, so dashboards and scenarios can observe the same app run without stealing events from each other.
 The current scenario host slice wires test/scenario execution into `FlowApplicationHost`. The host keeps the loaded app definition, can run a named scenario via `RunScenarioAsync`, starts the runtime when needed, and feeds the scenario runner from `ApplicationRuntime.Events`. This creates the boundary future desktop and CLI test runners should call instead of reaching into pipeline internals.
+The current scenario action slice adds a generic `ScenarioStepServices` boundary and the first app-level action step, `mqtt.publish`. Scenario steps can now ask for runtime capabilities through typed services, and the publish step resolves a named MQTT connection resource from the running app and publishes a configured message without inserting test behavior into workflow nodes.
+Testing-era boundary: tests/scenarios are a separate plane from app design/run pipelines. Their extra value is integration testing: a test can start or use an app runtime, run arrange/action steps against real or fake resources, observe runtime events, and assert behavior across MQTT, files, HTTP, databases, and future transports. This means we should support different test scenarios and, when needed, test-only orchestration pipelines without polluting production workflow components.
 
 ## Step-by-Step Plan
 
@@ -390,6 +392,11 @@ Done when:
   - the host starts the app runtime if a scenario is requested before the app is running
   - missing scenarios fail early with a clear exception
   - app-host tests cover scenario execution and missing scenario names
+- Started scenario action integration:
+  - `ScenarioStepServices` passes typed runtime services into scenario step runners
+  - `mqtt.publish` publishes a configured MQTT message through a named runtime connection resource
+  - MQTT scenario actions live in the app layer, while the pipeline runner stays generic
+  - tests cover service passing, successful publish, and missing connection failure
 
 ## Next Action
 
@@ -400,11 +407,12 @@ Working rule:
 - Wait for confirmation before commit, push, PR, or merge steps.
 - For every review or verification step, write both what we are going to do and the expected result.
 
-Review the scenario host runner slice:
+Review the scenario action slice:
 
-1. Do: skip desktop UI validation for this slice because it is intentionally below the UI. Expected: there is no visual surface to confirm yet.
-2. Do: review `FlowApplicationHost.RunScenarioAsync`. Expected: this is the boundary future desktop and CLI test runners can call.
-3. Do: review the app definition model usage. Expected: test/scenario steps stay separate from pipeline workflow definitions.
-4. Do: run `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1`. Expected: app-host scenario tests pass.
-5. Do: run `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1`. Expected: the full solution stays healthy.
-6. Do: after confirmation, commit this slice and open a PR. Expected: the branch is reviewable and can be merged when checks are green.
+1. Do: review `ScenarioStepServices` and `ScenarioRunner.RunAsync`. Expected: service passing is generic and not tied to MQTT or any single action family.
+2. Do: review `MqttPublishScenarioStepRunner`. Expected: `mqtt.publish` reads one configured publish command and delegates broker access to an app-level service.
+3. Do: review `FlowApplicationHost.RunScenarioAsync`. Expected: scenario services are created from the running runtime and test/scenario behavior stays outside workflow nodes.
+4. Do: run `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1`. Expected: pipeline scenario tests pass.
+5. Do: run `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -m:1`. Expected: app-host scenario action tests pass.
+6. Do: run `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1`. Expected: the full solution stays healthy.
+7. Do: after confirmation, commit this slice and open a PR. Expected: the branch is reviewable and can be merged when checks are green.

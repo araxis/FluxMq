@@ -2,8 +2,21 @@ using System.Text.Json;
 
 namespace FluxMq.Pipeline.Scenarios;
 
-internal static class ScenarioStepConfigurationReader
+public static class ScenarioStepConfigurationReader
 {
+    public static string ReadRequiredString(
+        IReadOnlyDictionary<string, JsonElement> configuration,
+        string key)
+    {
+        var value = ReadString(configuration, key);
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new InvalidOperationException($"Scenario configuration value '{key}' is required and must be a string.");
+        }
+
+        return value;
+    }
+
     public static string? ReadString(
         IReadOnlyDictionary<string, JsonElement> configuration,
         string key)
@@ -21,6 +34,25 @@ internal static class ScenarioStepConfigurationReader
 
         var text = value.GetString();
         return string.IsNullOrWhiteSpace(text) ? null : text;
+    }
+
+    public static bool ReadBoolOrDefault(
+        IReadOnlyDictionary<string, JsonElement> configuration,
+        string key,
+        bool defaultValue)
+    {
+        if (!configuration.TryGetValue(key, out var value))
+        {
+            return defaultValue;
+        }
+
+        if (value.ValueKind != JsonValueKind.True &&
+            value.ValueKind != JsonValueKind.False)
+        {
+            throw new InvalidOperationException($"Scenario configuration value '{key}' must be a boolean.");
+        }
+
+        return value.GetBoolean();
     }
 
     public static int ReadIntOrDefault(

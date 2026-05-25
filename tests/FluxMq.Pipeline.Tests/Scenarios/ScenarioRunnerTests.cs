@@ -162,6 +162,30 @@ public sealed class ScenarioRunnerTests
             .Message.ShouldBe("Scenario step type 'unknown.step' is not registered.");
     }
 
+    [Fact]
+    public async Task RunAsync_PassesServicesToStepRunners()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        var registry = new ScenarioStepRunnerRegistry()
+            .Register(new CaptureScenarioServiceStepRunner());
+        var scenario = new ScenarioDefinition
+        {
+            Steps =
+            {
+                ["capture"] = new ScenarioStepDefinition { Type = CaptureScenarioServiceStepRunner.StepType }
+            }
+        };
+        var services = ScenarioStepServices.Empty
+            .Add(new CapturedScenarioService("ready"));
+
+        var result = await new ScenarioRunner(registry)
+            .RunAsync("services", scenario, events, services);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Steps.ShouldHaveSingleItem()
+            .Message.ShouldBe("ready");
+    }
+
     private static ScenarioStepDefinition ExpectEvent(params (string Key, object Value)[] values)
     {
         var configuration = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
@@ -195,4 +219,30 @@ public sealed class ScenarioRunnerTests
             PayloadPreview = payloadPreview,
             Attributes = attributes ?? new Dictionary<string, string>(StringComparer.Ordinal)
         };
+
+    private sealed record CapturedScenarioService(string Value);
+
+    private sealed class CaptureScenarioServiceStepRunner : IScenarioStepRunner
+    {
+        public const string StepType = "test.capture-service";
+
+        public string Type => StepType;
+
+        public Task<ScenarioStepResult> RunAsync(
+            ScenarioStepRunContext context,
+            CancellationToken cancellationToken = default)
+        {
+            var service = context.Services.GetRequired<CapturedScenarioService>();
+            return Task.FromResult(new ScenarioStepResult
+            {
+                Name = context.StepName,
+                Type = context.Step.Type,
+                Status = ScenarioStepRunStatus.Passed,
+                StartedAt = DateTimeOffset.UtcNow,
+                FinishedAt = DateTimeOffset.UtcNow,
+                Message = service.Value,
+                NextEventOffset = context.EventOffset
+            });
+        }
+    }
 }

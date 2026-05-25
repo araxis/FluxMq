@@ -1,5 +1,6 @@
 using FluxMq.Core.Models;
 using FluxMq.Core.Session;
+using FluxMq.App.Scenarios;
 using FluxMq.Components.Storage.Repositories;
 using FluxMq.Pipeline.Definitions;
 using FluxMq.Pipeline.Runtime;
@@ -19,7 +20,7 @@ public sealed class FlowApplicationHost(
     private readonly IConfiguration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     private readonly ApplicationRuntimeBuilder _runtimeBuilder = runtimeBuilder ?? throw new ArgumentNullException(nameof(runtimeBuilder));
     private readonly FlowApplicationConfigurationLoader _configurationLoader = configurationLoader ?? new FlowApplicationConfigurationLoader();
-    private readonly ScenarioRunner _scenarioRunner = scenarioRunner ?? new ScenarioRunner();
+    private readonly ScenarioRunner _scenarioRunner = scenarioRunner ?? CreateDefaultScenarioRunner();
     private ApplicationDefinition? _definition;
     private ApplicationRuntime? _runtime;
     private bool _disposed;
@@ -40,6 +41,11 @@ public sealed class FlowApplicationHost(
 
         return new FlowApplicationHost(configuration, new ApplicationRuntimeBuilder(factories));
     }
+
+    public static ScenarioRunner CreateDefaultScenarioRunner()
+        => new(new ScenarioStepRunnerRegistry()
+            .Register(new ExpectEventScenarioStepRunner())
+            .Register(new MqttPublishScenarioStepRunner()));
 
     public FlowApplicationHostBuildResult Build()
     {
@@ -181,7 +187,12 @@ public sealed class FlowApplicationHost(
 
         var scenario = definition.Tests[scenarioName];
         return await _scenarioRunner
-            .RunAsync(scenarioName, scenario, _runtime.Events, cancellationToken)
+            .RunAsync(
+                scenarioName,
+                scenario,
+                _runtime.Events,
+                CreateScenarioStepServices(_runtime),
+                cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -249,6 +260,10 @@ public sealed class FlowApplicationHost(
             _runtime = null;
         }
     }
+
+    private static ScenarioStepServices CreateScenarioStepServices(ApplicationRuntime runtime)
+        => ScenarioStepServices.Empty
+            .Add<IMqttScenarioPublisher>(new RuntimeMqttScenarioPublisher(runtime));
 
     private void ThrowIfDisposed()
     {
