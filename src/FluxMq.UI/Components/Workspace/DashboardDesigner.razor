@@ -1,6 +1,8 @@
 @using FluxMq.Pipeline.Definitions
 @using System.Globalization
+@implements IDisposable
 @inject IDialogService DialogService
+@inject DragStateService DragState
 
 <div class="dashboard-designer">
     <div class="dashboard-toolbar">
@@ -119,7 +121,10 @@
     {
         @if (IsEditMode)
         {
-            <div class="dashboard-grid-frame">
+            <div class="dashboard-grid-frame"
+                 @onpointerenter="HandleDesignerPointerEnter"
+                 @onpointermove="HandleDesignerPointerMove"
+                 @onpointerleave="HandleDesignerPointerLeave">
             <div class="dashboard-grid-stage">
                 <div class="dashboard-column-handles" style="@ColumnHandleStyle">
                     @for (var column = 0; column < _layout.Columns.Count; column++)
@@ -161,6 +166,9 @@
                         var currentCell = cell;
                         <section class="@CellClass(currentCell)"
                                  style="@CellStyle(currentCell)"
+                                 @onpointerenter="@((PointerEventArgs args) => TrackDropCell(currentCell, args))"
+                                 @onpointermove="@((PointerEventArgs args) => TrackDropCell(currentCell, args))"
+                                 @onpointerleave="@((PointerEventArgs args) => ClearDropCell(currentCell, args))"
                                  @onclick="@((MouseEventArgs args) => SelectCell(currentCell, args))"
                                  @key="currentCell.Name">
                             <div class="dashboard-cell-content">
@@ -192,10 +200,18 @@
                                  @key="currentCell.Name">
                             @if (!string.IsNullOrWhiteSpace(currentCell.Widget))
                             {
-                                <div class="dashboard-live-widget">
-                                    <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" />
-                                    <span>@currentCell.Widget</span>
-                                </div>
+                                var widget = FindWidget(currentCell.Widget);
+                                if (widget is not null)
+                                {
+                                    <DashboardWidgetView Project="@Project" Widget="@widget" />
+                                }
+                                else
+                                {
+                                    <div class="dashboard-live-widget">
+                                        <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" />
+                                        <span>@currentCell.Widget</span>
+                                    </div>
+                                }
                             }
                         </section>
                     }
@@ -228,8 +244,16 @@
     private int _previewSplitRows = 2;
     private int _previewSplitColumns = 2;
     private string _dashboardMode = DashboardModeEdit;
+    private string? _hoveredDropCellName;
     private bool? _lastNotifiedEditMode;
     private long _definitionRevision = -1;
+    private bool _isDisposed;
+
+    protected override void OnInitialized()
+    {
+        DragState.Changed += OnDragStateChanged;
+        DragState.ComponentDropRequested += OnComponentDropRequested;
+    }
 
     protected override void OnParametersSet()
     {
@@ -286,6 +310,7 @@
             _isGridPickerOpen = false;
             _isSplitPickerOpen = false;
             _selectedCellIds.Clear();
+            _hoveredDropCellName = null;
         }
     }
 
@@ -338,6 +363,7 @@
         if (dashboardChanged)
         {
             DashboardMode = DashboardModeEdit;
+            Project.SetActiveDashboardCell(null);
         }
 
         TrimSelection();
@@ -392,6 +418,78 @@
         {
             _selectedCellIds.Remove(cell.Name);
         }
+
+        Project.SetActiveDashboardCell(_selectedCellIds.Count == 1 ? _selectedCellIds.Single() : null);
+    }
+
+    private void HandleDesignerPointerEnter(PointerEventArgs args)
+    {
+        if (IsDashboardWidgetDrag)
+        {
+            DragState.SetComponentDragOverDesigner(args.PointerId, true);
+        }
+    }
+
+    private void HandleDesignerPointerMove(PointerEventArgs args)
+    {
+        if (IsDashboardWidgetDrag)
+        {
+            DragState.SetComponentDragOverDesigner(args.PointerId, true);
+        }
+    }
+
+    private void HandleDesignerPointerLeave(PointerEventArgs args)
+    {
+        if (IsDashboardWidgetDrag)
+        {
+            _hoveredDropCellName = null;
+            DragState.SetComponentDragOverDesigner(args.PointerId, false);
+        }
+    }
+
+    private void TrackDropCell(DashboardCellSnapshot cell, PointerEventArgs args)
+    {
+        if (!IsDashboardWidgetDrag)
+        {
+            return;
+        }
+
+        _hoveredDropCellName = cell.Name;
+        DragState.SetComponentDragOverDesigner(args.PointerId, true);
+    }
+
+    private void ClearDropCell(DashboardCellSnapshot cell, PointerEventArgs args)
+    {
+        if (IsDashboardWidgetDrag && string.Equals(_hoveredDropCellName, cell.Name, StringComparison.Ordinal))
+        {
+            _hoveredDropCellName = null;
+        }
+    }
+
+    private void OnComponentDropRequested(object? sender, ComponentDropRequestedEventArgs args)
+    {
+        if (args.TargetKind != WorkspaceArtifactKind.Dashboard)
+        {
+            return;
+        }
+
+        InvokeAsync(() =>
+        {
+            if (_isDisposed)
+            {
+                return;
+            }
+
+            Project.AddDashboardWidget(args.ComponentType, _hoveredDropCellName);
+            _hoveredDropCellName = null;
+            CaptureDashboardError();
+            RefreshLayoutAfterCommand();
+        });
+    }
+
+    private void OnDragStateChanged(object? sender, EventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
     }
 
     private void ToggleGridPicker()
@@ -488,6 +586,7 @@
     {
         var knownIds = VisibleCells.Select(static cell => cell.Name).ToHashSet(StringComparer.Ordinal);
         _selectedCellIds.RemoveWhere(id => !knownIds.Contains(id));
+        Project.SetActiveDashboardCell(_selectedCellIds.Count == 1 ? _selectedCellIds.Single() : null);
     }
 
     private void CaptureDashboardError()
@@ -519,8 +618,11 @@
     private string SplitPickerCellClass(int rows, int columns)
         => $"dashboard-grid-picker-cell {(rows <= _previewSplitRows && columns <= _previewSplitColumns ? "active" : null)} {(rows == 1 && columns == 1 || !CanSubdivide(rows, columns) ? "disabled" : null)}";
 
+    private bool IsDashboardWidgetDrag
+        => DragState.ActiveComponentDrag is { TargetKind: WorkspaceArtifactKind.Dashboard };
+
     private string CellClass(DashboardCellSnapshot cell)
-        => $"dashboard-cell {(cell.IsExplicit ? "explicit" : "virtual")} {(cell.IsMerged ? "merged" : null)} {(_selectedCellIds.Contains(cell.Name) ? "selected" : null)}";
+        => $"dashboard-cell {(cell.IsExplicit ? "explicit" : "virtual")} {(cell.IsMerged ? "merged" : null)} {(_selectedCellIds.Contains(cell.Name) ? "selected" : null)} {(IsDashboardWidgetDrag && string.Equals(_hoveredDropCellName, cell.Name, StringComparison.Ordinal) ? "dropping" : null)}";
 
     private static string LiveCellClass(DashboardCellSnapshot cell)
         => $"dashboard-live-cell {(cell.IsMerged ? "merged" : null)} {(!string.IsNullOrWhiteSpace(cell.Widget) ? "has-widget" : "empty")}";
@@ -556,6 +658,12 @@
 
     private static string CellSpan(DashboardCellSnapshot cell)
         => $"{cell.ColumnSpan} x {cell.RowSpan}";
+
+    private DashboardWidgetSnapshot? FindWidget(string? widgetName)
+        => !string.IsNullOrWhiteSpace(widgetName) &&
+           _layout?.Widgets.TryGetValue(widgetName, out var widget) == true
+            ? widget
+            : null;
 
     private static string CssTemplate(IReadOnlyList<string> sizes)
         => string.Join(" ", sizes.Select(ToCssTrack));
@@ -631,4 +739,11 @@
 
     private static string FormatNumber(double value)
         => value.ToString("0.###", CultureInfo.InvariantCulture);
+
+    public void Dispose()
+    {
+        _isDisposed = true;
+        DragState.Changed -= OnDragStateChanged;
+        DragState.ComponentDropRequested -= OnComponentDropRequested;
+    }
 }

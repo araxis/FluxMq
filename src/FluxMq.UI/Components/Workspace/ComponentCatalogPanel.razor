@@ -1,4 +1,5 @@
 @inject FlowComponentCatalog Catalog
+@inject DashboardWidgetCatalog DashboardWidgets
 @inject ProjectManagerService Projects
 @inject DragStateService DragState
 
@@ -7,21 +8,21 @@
         <MudIcon Icon="@CatalogIcon" Size="Size.Small" Class="catalog-title-icon" />
         <span>@CatalogTitle</span>
     </div>
-    @if (VisibleComponents.Count == 0)
+    @if (VisibleItems.Count == 0)
     {
         <div class="catalog-empty">@EmptyLabel</div>
     }
     else
     {
-        @foreach (var group in VisibleComponents.GroupBy(c => c.Category))
+        @foreach (var group in VisibleItems.GroupBy(c => c.Category))
         {
             <div class="catalog-group">
                 @group.Key
             </div>
             <div class="catalog-drop-zone">
-                @foreach (var component in group)
+                @foreach (var item in group)
                 {
-                    @RenderComponentCard(FlowComponentDragItem.FromPalette(component))
+                    @RenderCatalogItem(item)
                 }
             </div>
         }
@@ -32,37 +33,47 @@
     [Parameter]
     public WorkspaceArtifactKind ArtifactKind { get; set; } = WorkspaceArtifactKind.Pipeline;
 
-    private RenderFragment<FlowComponentDragItem> RenderComponentCard => dragItem =>
-        @<div class="catalog-item @(!CanUseComponent ? "disabled" : null)"
+    private RenderFragment<CatalogEntry> RenderCatalogItem => item =>
+        @<div class="catalog-item @(!CanUseItem ? "disabled" : null)"
               role="button"
-              tabindex="@(!CanUseComponent ? "-1" : "0")"
+              tabindex="@(!CanUseItem ? "-1" : "0")"
               title="@CatalogItemTitle"
-              @onpointerdown="@((PointerEventArgs args) => BeginComponentDrag(args, dragItem.Component))"
-              @onkeydown="@((KeyboardEventArgs args) => AddComponentFromKeyboard(args, dragItem.Component.Type))"
-              @key="dragItem.Id">
-            <span class="@IconTileClass(dragItem.Component.Category)" aria-hidden="true">
-                <MudIcon Icon="@IconFor(dragItem.Component)" Size="Size.Small" />
+              @onpointerdown="@((PointerEventArgs args) => BeginItemDrag(args, item))"
+              @onclick="@(() => AddItem(item))"
+              @onkeydown="@((KeyboardEventArgs args) => AddItemFromKeyboard(args, item))"
+              @key="item.Type">
+            <span class="@IconTileClass(item.Category)" aria-hidden="true">
+                <MudIcon Icon="@item.Icon" Size="Size.Small" />
             </span>
-            <span class="catalog-item-name">@dragItem.Component.DisplayName</span>
+            <span class="catalog-item-name">@item.DisplayName</span>
             <span class="catalog-add-button" aria-hidden="true">
                 <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
             </span>
         </div>;
 
-    private IReadOnlyList<FlowComponentDescriptor> VisibleComponents => ArtifactKind switch
+    private IReadOnlyList<CatalogEntry> VisibleItems => ArtifactKind switch
     {
         WorkspaceArtifactKind.Pipeline => Catalog.Components
             .Where(component => !string.Equals(component.Category, "Assertion", StringComparison.Ordinal))
+            .Select(CatalogEntry.FromComponent)
+            .ToArray(),
+        WorkspaceArtifactKind.Dashboard => DashboardWidgets.Widgets
+            .Select(CatalogEntry.FromWidget)
             .ToArray(),
         WorkspaceArtifactKind.Test => Catalog.Components
             .Where(component => string.Equals(component.Category, "Assertion", StringComparison.Ordinal))
+            .Select(CatalogEntry.FromComponent)
             .ToArray(),
-        _ => Array.Empty<FlowComponentDescriptor>()
+        _ => Array.Empty<CatalogEntry>()
     };
 
-    private bool CanUseComponent =>
-        ArtifactKind == WorkspaceArtifactKind.Pipeline &&
-        Projects.ActiveProject?.ActiveArtifactKind == WorkspaceArtifactKind.Pipeline;
+    private bool CanUseItem => ArtifactKind switch
+    {
+        WorkspaceArtifactKind.Pipeline => Projects.ActiveProject?.ActiveArtifactKind == WorkspaceArtifactKind.Pipeline,
+        WorkspaceArtifactKind.Dashboard => Projects.ActiveProject?.ActiveArtifactKind == WorkspaceArtifactKind.Dashboard,
+        WorkspaceArtifactKind.Test => false,
+        _ => false
+    };
 
     private string CatalogTitle => ArtifactKind switch
     {
@@ -92,35 +103,62 @@
         _ => Icons.Material.Filled.Extension
     };
 
-    private string CatalogItemTitle => CanUseComponent
-        ? "Drag or click to add component"
-        : "Unavailable in this tab";
-
-    private void BeginComponentDrag(PointerEventArgs args, FlowComponentDescriptor component)
+    private string CatalogItemTitle => ArtifactKind switch
     {
-        if (!CanUseComponent || args.Button != 0)
+        WorkspaceArtifactKind.Pipeline when CanUseItem => "Drag to add component",
+        WorkspaceArtifactKind.Dashboard when CanUseItem => "Drag to a cell or click to add widget",
+        WorkspaceArtifactKind.Test when CanUseItem => "Add test step",
+        _ => "Unavailable in this tab"
+    };
+
+    private void BeginItemDrag(PointerEventArgs args, CatalogEntry item)
+    {
+        if (ArtifactKind is not (WorkspaceArtifactKind.Pipeline or WorkspaceArtifactKind.Dashboard) ||
+            !CanUseItem ||
+            args.Button != 0)
         {
             return;
         }
 
         DragState.BeginComponentDrag(
-            component.Type,
-            component.DisplayName,
+            item.Type,
+            item.DisplayName,
             args.PointerId,
             args.ClientX,
-            args.ClientY);
+            args.ClientY,
+            ArtifactKind);
     }
 
-    private void AddComponentFromKeyboard(KeyboardEventArgs args, string componentType)
+    private void AddItem(CatalogEntry item)
     {
-        if (!CanUseComponent || Projects.ActiveProject is not { } active)
+        if (!CanUseItem || Projects.ActiveProject is not { } active || DragState.ActiveComponentDrag is not null)
+        {
+            return;
+        }
+
+        if (ArtifactKind == WorkspaceArtifactKind.Dashboard)
+        {
+            active.AddDashboardWidget(item.Type);
+        }
+    }
+
+    private void AddItemFromKeyboard(KeyboardEventArgs args, CatalogEntry item)
+    {
+        if (!CanUseItem || Projects.ActiveProject is not { } active)
         {
             return;
         }
 
         if (args.Key is "Enter" or " ")
         {
-            active.AddComponent(componentType);
+            if (ArtifactKind == WorkspaceArtifactKind.Pipeline)
+            {
+                active.AddComponent(item.Type);
+            }
+            else if (ArtifactKind == WorkspaceArtifactKind.Dashboard)
+            {
+                active.AddDashboardWidget(item.Type);
+            }
         }
     }
 
@@ -145,6 +183,31 @@
         "Observer" => "catalog-icon-tile observer",
         "Actor" => "catalog-icon-tile actor",
         "Sink" => "catalog-icon-tile actor",
+        "Events" => "catalog-icon-tile dashboard",
         _ => "catalog-icon-tile"
     };
+
+    private sealed record CatalogEntry(
+        string Type,
+        string DisplayName,
+        string Category,
+        string Description,
+        string Icon)
+    {
+        public static CatalogEntry FromComponent(FlowComponentDescriptor descriptor)
+            => new(
+                descriptor.Type,
+                descriptor.DisplayName,
+                descriptor.Category,
+                descriptor.Summary,
+                IconFor(descriptor));
+
+        public static CatalogEntry FromWidget(DashboardWidgetDescriptor descriptor)
+            => new(
+                descriptor.Type,
+                descriptor.DisplayName,
+                descriptor.Category,
+                descriptor.Description,
+                descriptor.Icon);
+    }
 }

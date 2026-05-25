@@ -853,6 +853,84 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public async Task RunAsync_CollectsRuntimeEventsForDashboardWidgets()
+    {
+        var session = new FakeRuntimeMqttSession();
+        await using var service = new FlowWorkspaceService(new FlowDefinitionComposer(), runtimeSessionFactory: _ => session);
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "resources": {
+                "local-broker": {
+                  "type": "mqtt.connection",
+                  "configuration": {
+                    "profile": {
+                      "name": "local-broker",
+                      "host": "localhost",
+                      "port": 1883,
+                      "clientId": "test-client"
+                    }
+                  }
+                }
+              },
+              "workflows": {
+                "flow": {
+                  "trigger": {
+                    "type": "mqtt.trigger",
+                    "configuration": {
+                      "connection": "local-broker",
+                      "subscriptions": ["factory/#"]
+                    }
+                  }
+                }
+              },
+              "dashboards": {
+                "ops": {
+                  "layout": {
+                    "columns": ["*"],
+                    "rows": ["*"],
+                    "cells": {
+                      "events": {
+                        "row": 0,
+                        "column": 0,
+                        "widget": "received"
+                      }
+                    }
+                  },
+                  "widgets": {
+                    "received": {
+                      "type": "event.counter",
+                      "configuration": {
+                        "eventType": "mqtt.message.received",
+                        "topicStartsWith": "factory/"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+        service.SetActiveDashboard("ops");
+
+        await service.RunAsync();
+        await session.WriteAsync(new MqttEnvelope { Topic = "other/skip", Payload = [1] });
+        await session.WriteAsync(new MqttEnvelope { Topic = "factory/one", Payload = [1, 2, 3] });
+
+        var widget = service.GetActiveDashboardLayout()
+            .ShouldNotBeNull()
+            .Widgets["received"];
+        await WaitUntilAsync(() => service.GetDashboardEventSnapshot(widget).Count == 1);
+
+        var snapshot = service.GetDashboardEventSnapshot(widget);
+        snapshot.Count.ShouldBe(1);
+        snapshot.LatestEvent.ShouldNotBeNull();
+        snapshot.LatestEvent.Topic.ShouldBe("factory/one");
+    }
+
+    [Fact]
     public void UpdateNodeConfiguration_UpdatesActiveWorkflowWhenNodeNamesRepeat()
     {
         var service = new FlowWorkspaceService(new FlowDefinitionComposer());

@@ -499,7 +499,7 @@
     private void HandleShellPointerUp(PointerEventArgs args)
     {
         var completed = DragState.FinishComponentDrag(args.PointerId, args.ClientX, args.ClientY);
-        if (completed is { DidDrag: false })
+        if (completed is { DidDrag: false, TargetKind: WorkspaceArtifactKind.Pipeline })
         {
             Projects.ActiveProject?.AddComponent(completed.ComponentType);
         }

@@ -29,7 +29,7 @@
             </DiagramCanvas>
         </CascadingValue>
     </div>
-    @if (DragState.ActiveComponentDrag is { IsOverDesigner: true })
+    @if (DragState.ActiveComponentDrag is { IsOverDesigner: true, TargetKind: WorkspaceArtifactKind.Pipeline })
     {
         <div class="flow-canvas-drop-highlight">Drop to add node</div>
     }
@@ -150,6 +150,11 @@
 
     private void OnComponentDropRequested(object? sender, ComponentDropRequestedEventArgs args)
     {
+        if (args.TargetKind != WorkspaceArtifactKind.Pipeline)
+        {
+            return;
+        }
+
         InvokeAsync(() =>
         {
             var dropPoint = _diagram.GetRelativeMousePoint(args.ClientX, args.ClientY);
@@ -166,17 +171,26 @@
 
     private void HandleDesignerPointerEnter(PointerEventArgs args)
     {
-        DragState.SetComponentDragOverDesigner(args.PointerId, true);
+        if (DragState.ActiveComponentDrag is { TargetKind: WorkspaceArtifactKind.Pipeline })
+        {
+            DragState.SetComponentDragOverDesigner(args.PointerId, true);
+        }
     }
 
     private void HandleDesignerPointerMove(PointerEventArgs args)
     {
-        DragState.SetComponentDragOverDesigner(args.PointerId, true);
+        if (DragState.ActiveComponentDrag is { TargetKind: WorkspaceArtifactKind.Pipeline })
+        {
+            DragState.SetComponentDragOverDesigner(args.PointerId, true);
+        }
     }
 
     private void HandleDesignerPointerLeave(PointerEventArgs args)
     {
-        DragState.SetComponentDragOverDesigner(args.PointerId, false);
+        if (DragState.ActiveComponentDrag is { TargetKind: WorkspaceArtifactKind.Pipeline })
+        {
+            DragState.SetComponentDragOverDesigner(args.PointerId, false);
+        }
     }
 
     private void RebuildDiagram()

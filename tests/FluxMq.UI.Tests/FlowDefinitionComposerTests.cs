@@ -747,6 +747,42 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void AddDashboardWidget_AddsWidgetAndAssignsSelectedSlot()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+
+        var updated = composer.AddDashboardWidget(json, "ops", "event.counter", "slot:0:1");
+
+        var layout = composer.GetDashboardLayout(updated, "ops").ShouldNotBeNull();
+        layout.Widgets.Keys.ShouldBe(["eventCounter"]);
+        layout.Widgets["eventCounter"].Type.ShouldBe("event.counter");
+
+        var cell = layout.Cells.ShouldHaveSingleItem();
+        cell.Row.ShouldBe(0);
+        cell.Column.ShouldBe(1);
+        cell.Widget.ShouldBe("eventCounter");
+    }
+
+    [Fact]
+    public void AddDashboardWidget_AppendsUniqueWidgetsWithoutReplacingCells()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+        json = composer.AddDashboardCell(json, "ops");
+
+        json = composer.AddDashboardWidget(json, "ops", "event.counter", "cell");
+        json = composer.AddDashboardWidget(json, "ops", "event.counter", "slot:1:0");
+
+        var layout = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull();
+        layout.Widgets.Keys.ShouldBe(["eventCounter", "eventCounter2"]);
+        layout.Cells.Select(cell => (cell.Name, cell.Widget)).ShouldBe([
+            ("cell", "eventCounter"),
+            ("cell2", "eventCounter2")
+        ]);
+    }
+
+    [Fact]
     public void UpdateDashboardGridTracks_NormalizesWpfLikeSizes()
     {
         var composer = new FlowDefinitionComposer();

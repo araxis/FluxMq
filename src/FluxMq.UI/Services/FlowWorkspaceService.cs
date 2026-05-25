@@ -19,6 +19,7 @@ namespace FluxMq.UI.Services;
 public sealed class FlowWorkspaceService : IAsyncDisposable
 {
     private const int MaxWorkspaceLogs = 1000;
+    private const int MaxRuntimeEvents = 1000;
     private const double DefaultAddedNodeX = 420d;
     private const double DefaultAddedNodeY = 120d;
     private const double AddedNodeColumnSpacing = 300d;
@@ -34,7 +35,9 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     private readonly object _metricsSync = new();
     private readonly object _payloadInspectionSync = new();
     private readonly object _triggerActivitySync = new();
+    private readonly object _runtimeEventSync = new();
     private readonly List<WorkspaceLogEntry> _logs = [];
+    private readonly List<FlowEvent> _runtimeEvents = [];
     private readonly Dictionary<string, MqttMetricsSnapshot> _metricsSnapshots = new(StringComparer.Ordinal);
     private readonly Dictionary<string, InspectedMqttMessage> _payloadInspections = new(StringComparer.Ordinal);
     private readonly Dictionary<string, MqttTriggerActivitySnapshot> _triggerActivitySnapshots = new(StringComparer.Ordinal);
@@ -77,12 +80,14 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         new Dictionary<string, InspectedMqttMessage>(StringComparer.Ordinal);
     public IReadOnlyDictionary<string, MqttTriggerActivitySnapshot> TriggerActivitySnapshots { get; private set; } =
         new Dictionary<string, MqttTriggerActivitySnapshot>(StringComparer.Ordinal);
+    public IReadOnlyList<FlowEvent> RuntimeEvents { get; private set; } = [];
 
     public IReadOnlyList<string> WorkflowNames => _definitionComposer.GetWorkflowNames(DefinitionJson);
     public IReadOnlyList<string> DashboardNames => _definitionComposer.GetDashboardNames(DefinitionJson);
     public IReadOnlyList<string> TestNames => _definitionComposer.GetTestNames(DefinitionJson);
     public string? ActiveWorkflowName => _activeWorkflowName;
     public string? ActiveDashboardName => _activeDashboardName;
+    public string? ActiveDashboardCellName { get; private set; }
     public string? ActiveTestName => _activeTestName;
     public WorkspaceArtifactKind ActiveArtifactKind => _activeArtifactKind;
     public string? ActiveArtifactName => _activeArtifactKind switch
@@ -123,6 +128,17 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         }
     }
 
+    public DashboardEventSnapshot GetDashboardEventSnapshot(DashboardWidgetSnapshot widget)
+    {
+        lock (_runtimeEventSync)
+        {
+            var matching = _runtimeEvents
+                .Where(flowEvent => MatchesDashboardEventWidget(widget, flowEvent))
+                .ToArray();
+            return new DashboardEventSnapshot(matching.Length, matching.LastOrDefault());
+        }
+    }
+
     public IReadOnlyList<(string Name, string Type)> GetWorkflowNodes(string workflowName)
         => _definitionComposer.GetWorkflowNodes(DefinitionJson, workflowName);
 
@@ -159,6 +175,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         }
 
         _activeWorkflowName = name;
+        ActiveDashboardCellName = null;
         _activeArtifactKind = WorkspaceArtifactKind.Pipeline;
         NotifyChanged();
     }
@@ -172,6 +189,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         }
 
         _activeDashboardName = name;
+        ActiveDashboardCellName = null;
         _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
         NotifyChanged();
     }
@@ -185,6 +203,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         }
 
         _activeTestName = name;
+        ActiveDashboardCellName = null;
         _activeArtifactKind = WorkspaceArtifactKind.Test;
         NotifyChanged();
     }
@@ -215,6 +234,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         {
             ReplaceDefinition(_definitionComposer.AddDashboard(DefinitionJson, name));
             _activeDashboardName = name;
+            ActiveDashboardCellName = null;
             _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
             State = RuntimeWorkspaceState.Idle;
             Diagnostics = [];
@@ -252,6 +272,45 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         => string.IsNullOrWhiteSpace(_activeDashboardName)
             ? null
             : _definitionComposer.GetDashboardLayout(DefinitionJson, _activeDashboardName);
+
+    public void SetActiveDashboardCell(string? cellName)
+    {
+        var normalized = string.IsNullOrWhiteSpace(cellName) ? null : cellName;
+        if (string.Equals(ActiveDashboardCellName, normalized, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        ActiveDashboardCellName = normalized;
+        NotifyChanged();
+    }
+
+    public void AddDashboardWidget(string widgetType, string? cellName = null)
+    {
+        if (string.IsNullOrWhiteSpace(_activeDashboardName))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.AddDashboardWidget(
+                DefinitionJson,
+                _activeDashboardName,
+                widgetType,
+                string.IsNullOrWhiteSpace(cellName) ? ActiveDashboardCellName : cellName));
+            _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "DashboardWidgetAddFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
 
     public void UpdateDashboardGridTracks(IEnumerable<string> columns, IEnumerable<string> rows)
     {
@@ -858,6 +917,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             ClearRuntimeMetricsSnapshots(notify: false);
             ClearRuntimePayloadInspections(notify: false);
             ClearRuntimeTriggerActivitySnapshots(notify: false);
+            ClearRuntimeEvents(notify: false);
             _host = FlowApplicationHost.CreateDefault(CreateConfiguration(DefinitionJson), _messageRepository, _runtimeSessionFactory);
             var result = _host.Build();
             Diagnostics = CollectDiagnostics(result);
@@ -889,6 +949,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             ClearRuntimeMetricsSnapshots(notify: false);
             ClearRuntimePayloadInspections(notify: false);
             ClearRuntimeTriggerActivitySnapshots(notify: false);
+            ClearRuntimeEvents(notify: false);
             _host = FlowApplicationHost.CreateDefault(CreateConfiguration(DefinitionJson), _messageRepository, _runtimeSessionFactory);
             var result = _host.Build();
             if (result.IsSuccess)
@@ -1043,6 +1104,8 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             return;
         }
 
+        AttachRuntimeEvents(_host.Runtime.Events);
+
         foreach (var node in _host.Runtime.Nodes)
         {
             AttachRuntimeErrorOutputs(node);
@@ -1057,6 +1120,20 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             AttachRuntimePayloadInspectionOutputs(node);
             AttachRuntimeTriggerActivityOutputs(node);
         }
+    }
+
+    private void AttachRuntimeEvents(ISourceBlock<FlowEvent> events)
+    {
+        var target = new ActionBlock<FlowEvent>(
+            StoreRuntimeEvent,
+            new ExecutionDataflowBlockOptions
+            {
+                EnsureOrdered = true,
+                MaxDegreeOfParallelism = 1
+            });
+
+        _runtimeProjectionTargets.Add(target);
+        _runtimeProjectionLinks.Add(events.LinkTo(target, new DataflowLinkOptions { PropagateCompletion = true }));
     }
 
     private void AttachRuntimeMetricsOutputs(RuntimeNode node)
@@ -1194,6 +1271,22 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         _runtimeProjectionTargets.Clear();
     }
 
+    private void StoreRuntimeEvent(FlowEvent flowEvent)
+    {
+        lock (_runtimeEventSync)
+        {
+            _runtimeEvents.Add(flowEvent);
+            if (_runtimeEvents.Count > MaxRuntimeEvents)
+            {
+                _runtimeEvents.RemoveRange(0, _runtimeEvents.Count - MaxRuntimeEvents);
+            }
+
+            RuntimeEvents = _runtimeEvents.ToArray();
+        }
+
+        NotifyRuntimeProjectionChanged();
+    }
+
     private void StoreRuntimeMetricsSnapshot(NodeAddress address, MqttMetricsSnapshot snapshot)
     {
         lock (_metricsSync)
@@ -1236,6 +1329,20 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         }
 
         NotifyRuntimeProjectionChanged();
+    }
+
+    private void ClearRuntimeEvents(bool notify)
+    {
+        lock (_runtimeEventSync)
+        {
+            _runtimeEvents.Clear();
+            RuntimeEvents = [];
+        }
+
+        if (notify)
+        {
+            NotifyChanged();
+        }
     }
 
     private void ClearRuntimeMetricsSnapshots(bool notify)
@@ -1419,6 +1526,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         ClearRuntimeMetricsSnapshots(notify: false);
         ClearRuntimePayloadInspections(notify: false);
         ClearRuntimeTriggerActivitySnapshots(notify: false);
+        ClearRuntimeEvents(notify: false);
     }
 
     private void ReplaceDefinitionSilent(string json)
@@ -1432,6 +1540,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         ClearRuntimeMetricsSnapshots(notify: false);
         ClearRuntimePayloadInspections(notify: false);
         ClearRuntimeTriggerActivitySnapshots(notify: false);
+        ClearRuntimeEvents(notify: false);
     }
 
     private void NormalizeActiveArtifactSelection()
@@ -1446,6 +1555,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         if (_activeDashboardName is null || !dashboards.Contains(_activeDashboardName, StringComparer.Ordinal))
         {
             _activeDashboardName = dashboards.FirstOrDefault();
+            ActiveDashboardCellName = null;
         }
 
         var tests = TestNames;
@@ -1468,6 +1578,11 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
                 : _activeTestName is not null
                     ? WorkspaceArtifactKind.Test
                     : WorkspaceArtifactKind.Pipeline;
+
+        if (_activeArtifactKind != WorkspaceArtifactKind.Dashboard)
+        {
+            ActiveDashboardCellName = null;
+        }
     }
 
     private void NotifyChanged() => Changed?.Invoke(this, EventArgs.Empty);
@@ -1477,4 +1592,31 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
     private static string RuntimeProjectionKey(string? workflowName, string nodeName)
         => $"{workflowName ?? string.Empty}/{nodeName}";
+
+    private static bool MatchesDashboardEventWidget(DashboardWidgetSnapshot widget, FlowEvent flowEvent)
+    {
+        var eventType = widget.ReadString("eventType");
+        if (!string.IsNullOrWhiteSpace(eventType) &&
+            !string.Equals(flowEvent.Type, eventType, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var topicStartsWith = widget.ReadString("topicStartsWith");
+        if (!string.IsNullOrWhiteSpace(topicStartsWith) &&
+            (string.IsNullOrWhiteSpace(flowEvent.Topic) ||
+             !flowEvent.Topic.StartsWith(topicStartsWith, StringComparison.Ordinal)))
+        {
+            return false;
+        }
+
+        var status = widget.ReadString("status");
+        if (!string.IsNullOrWhiteSpace(status) &&
+            !string.Equals(flowEvent.Status, status, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return true;
+    }
 }

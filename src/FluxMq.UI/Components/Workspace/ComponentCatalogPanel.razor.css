@@ -124,6 +124,10 @@
     color: var(--mud-palette-warning);
 }
 
+.catalog-icon-tile.dashboard {
+    color: var(--mud-palette-info);
+}
+
 .catalog-icon-tile.assertion {
     color: var(--mud-palette-warning);
 }
