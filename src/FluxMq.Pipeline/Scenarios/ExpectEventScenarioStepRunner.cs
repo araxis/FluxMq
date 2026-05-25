@@ -2,7 +2,7 @@ namespace FluxMq.Pipeline.Scenarios;
 
 public sealed class ExpectEventScenarioStepRunner : IScenarioStepRunner
 {
-    public const string StepType = "expect.event";
+    public const string StepType = ScenarioStepTypes.ExpectEvent;
 
     public string Type => StepType;
 

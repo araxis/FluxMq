@@ -1,5 +1,6 @@
 @inject FlowComponentCatalog Catalog
 @inject DashboardWidgetCatalog DashboardWidgets
+@inject ScenarioStepCatalog ScenarioSteps
 @inject ProjectManagerService Projects
 @inject DragStateService DragState
 
@@ -60,7 +61,9 @@
         WorkspaceArtifactKind.Dashboard => DashboardWidgets.Widgets
             .Select(CatalogEntry.FromWidget)
             .ToArray(),
-        WorkspaceArtifactKind.Test => TestStepEntries,
+        WorkspaceArtifactKind.Test => ScenarioSteps.Steps
+            .Select(CatalogEntry.FromStep)
+            .ToArray(),
         _ => Array.Empty<CatalogEntry>()
     };
 
@@ -194,22 +197,6 @@
         _ => "catalog-icon-tile"
     };
 
-    private static IReadOnlyList<CatalogEntry> TestStepEntries { get; } =
-    [
-        new(
-            "mqtt.publish",
-            "MQTT publish",
-            "Action",
-            "Publish a message through an app broker.",
-            Icons.Material.Filled.Send),
-        new(
-            "expect.event",
-            "Expect event",
-            "Expectation",
-            "Wait for a runtime event that matches configured filters.",
-            Icons.Material.Filled.Rule)
-    ];
-
     private sealed record CatalogEntry(
         string Type,
         string DisplayName,
@@ -226,6 +213,14 @@
                 IconFor(descriptor));
 
         public static CatalogEntry FromWidget(DashboardWidgetDescriptor descriptor)
+            => new(
+                descriptor.Type,
+                descriptor.DisplayName,
+                descriptor.Category,
+                descriptor.Description,
+                descriptor.Icon);
+
+        public static CatalogEntry FromStep(ScenarioStepDescriptor descriptor)
             => new(
                 descriptor.Type,
                 descriptor.DisplayName,
