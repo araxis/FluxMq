@@ -62,10 +62,7 @@ public sealed class ScenarioStepCatalog
     public IReadOnlyList<ScenarioStepDescriptor> Steps => _steps;
 
     public ScenarioStepDescriptor? Find(string? type)
-    {
-        var canonicalType = ScenarioStepTypes.ToCanonical(type);
-        return _steps.FirstOrDefault(step => string.Equals(step.Type, canonicalType, StringComparison.Ordinal));
-    }
+        => _steps.FirstOrDefault(step => string.Equals(step.Type, type, StringComparison.Ordinal));
 
     public ScenarioStepDescriptor Describe(string? type)
         => Find(type) ?? new ScenarioStepDescriptor(

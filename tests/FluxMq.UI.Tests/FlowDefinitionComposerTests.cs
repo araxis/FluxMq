@@ -616,6 +616,7 @@ public sealed class FlowDefinitionComposerTests
 
     [Theory]
     [InlineData("generated.source", FlowDefinitionComposer.GeneratedNodeName, "messages")]
+    [InlineData("session.source", FlowDefinitionComposer.StoredSourceNodeName, "sessionId")]
     [InlineData("replay.source", FlowDefinitionComposer.ReplayNodeName, "speed")]
     public void AddComponent_AddsSourceConfiguration(string componentType, string nodeName, string expectedProperty)
     {
@@ -1116,7 +1117,7 @@ public sealed class FlowDefinitionComposerTests
                 "t1": {
                   "steps": {
                     "publishSampleRequest": {
-                      "type": "mqtt.publish",
+                      "type": "mqtt.publisher",
                       "configuration": {
                         "connection": "local-broker",
                         "topic": "fluxmq/sample/request",
@@ -1148,7 +1149,7 @@ public sealed class FlowDefinitionComposerTests
 
         scenario.Name.ShouldBe("t1");
         scenario.Steps.Select(step => step.Name).ShouldBe(["publishSampleRequest", "expectMappedPublish"]);
-        scenario.Steps[0].Type.ShouldBe("mqtt.publish");
+        scenario.Steps[0].Type.ShouldBe("mqtt.publisher");
         scenario.Steps[0].Configuration["connection"].ShouldBe("local-broker");
         scenario.Steps[0].Configuration["payload"].ShouldBe("""{"value":12}""");
         scenario.Steps[1].Configuration["timeoutMs"].ShouldBe("5000");
@@ -1196,21 +1197,6 @@ public sealed class FlowDefinitionComposerTests
         json = composer.RemoveScenarioStep(json, "t1", step.Name);
 
         composer.GetTestScenario(json, "t1").ShouldNotBeNull().Steps.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void AddScenarioStep_AcceptsLegacyMqttPublishStepType()
-    {
-        var composer = new FlowDefinitionComposer();
-        var json = composer.CreateEmptyDefinition();
-        json = composer.AddTest(json, "t1");
-
-        json = composer.AddScenarioStep(json, "t1", ScenarioStepTypes.MqttPublish);
-
-        var step = composer.GetTestScenario(json, "t1").ShouldNotBeNull().Steps.ShouldHaveSingleItem();
-        step.Type.ShouldBe(ScenarioStepTypes.MqttPublish);
-        step.Configuration[ScenarioStepCatalog.TopicKey].ShouldBe("fluxmq/test");
-        step.Configuration[ScenarioStepCatalog.PayloadEncodingKey].ShouldBe("json");
     }
 
     [Fact]

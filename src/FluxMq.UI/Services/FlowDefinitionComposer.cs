@@ -1083,6 +1083,10 @@ public sealed class FlowDefinitionComposer
         {
             node["configuration"] = CreateGeneratedSourceConfiguration();
         }
+        else if (componentType == "session.source")
+        {
+            node["configuration"] = CreateStoredSessionSourceConfiguration();
+        }
         else if (componentType == "replay.source")
         {
             node["configuration"] = CreateReplaySourceConfiguration();
@@ -2639,6 +2643,15 @@ public sealed class FlowDefinitionComposer
         => new()
         {
             ["sessionId"] = string.Empty,
+            ["speed"] = 1,
+            ["boundedCapacity"] = 1000
+        };
+
+    private static JsonObject CreateStoredSessionSourceConfiguration()
+        => new()
+        {
+            ["sessionId"] = string.Empty,
+            ["preserveTiming"] = false,
             ["speed"] = 1,
             ["boundedCapacity"] = 1000
         };

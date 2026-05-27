@@ -96,6 +96,12 @@ public static class RuntimeNodeFactoryRegistryExtensions
         NodeDefinition definition,
         IMessageRepository? messageRepository)
     {
+        var sessionId = GetOptionalSessionId(definition, "sessionId");
+        if (sessionId is null)
+        {
+            return CreateEmptyMqttSource(address, definition);
+        }
+
         if (messageRepository is null)
         {
             throw new InvalidOperationException("Stored session source requires a message repository.");
@@ -103,7 +109,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
 
         var component = new StoredSessionSourceComponent(
             messageRepository,
-            GetRequiredSessionId(definition, "sessionId"),
+            sessionId.Value,
             preserveTiming: GetBoolOrDefault(definition, "preserveTiming", false),
             speed: GetDoubleOrDefault(definition, "speed", 1),
             boundedCapacity: GetBoundedCapacity(definition));
@@ -116,6 +122,12 @@ public static class RuntimeNodeFactoryRegistryExtensions
         NodeDefinition definition,
         IMessageRepository? messageRepository)
     {
+        var sessionId = GetOptionalSessionId(definition, "sessionId");
+        if (sessionId is null)
+        {
+            return CreateEmptyMqttSource(address, definition);
+        }
+
         if (messageRepository is null)
         {
             throw new InvalidOperationException("Replay source requires a message repository.");
@@ -123,12 +135,21 @@ public static class RuntimeNodeFactoryRegistryExtensions
 
         var factory = new RecordedSessionReplayFactory(messageRepository);
         var component = factory.Create(
-            GetRequiredSessionId(definition, "sessionId"),
+            sessionId.Value,
             new RecordedSessionReplayOptions
             {
                 Speed = GetDoubleOrDefault(definition, "speed", 1),
                 BoundedCapacity = GetBoundedCapacity(definition)
             });
+
+        return SourceRuntimeNode(address, component, component.Output);
+    }
+
+    private static RuntimeNode CreateEmptyMqttSource(NodeAddress address, NodeDefinition definition)
+    {
+        var component = new GeneratedMqttSourceComponent(
+            [],
+            boundedCapacity: GetBoundedCapacity(definition));
 
         return SourceRuntimeNode(address, component, component.Output);
     }
@@ -943,6 +964,22 @@ public static class RuntimeNodeFactoryRegistryExtensions
     private static SessionId GetRequiredSessionId(NodeDefinition definition, string key)
     {
         var value = GetRequiredString(definition, key);
+        if (!Guid.TryParse(value, out var guid) || guid == Guid.Empty)
+        {
+            throw new InvalidOperationException($"Configuration value '{key}' must be a non-empty GUID.");
+        }
+
+        return new SessionId(guid);
+    }
+
+    private static SessionId? GetOptionalSessionId(NodeDefinition definition, string key)
+    {
+        var value = GetNullableString(definition, key);
+        if (value is null)
+        {
+            return null;
+        }
+
         if (!Guid.TryParse(value, out var guid) || guid == Guid.Empty)
         {
             throw new InvalidOperationException($"Configuration value '{key}' must be a non-empty GUID.");

@@ -436,7 +436,7 @@ public sealed class FlowWorkspaceServiceTests
                 "t1": {
                   "steps": {
                     "publishSampleRequest": {
-                      "type": "mqtt.publish",
+                      "type": "mqtt.publisher",
                       "configuration": {
                         "connection": "local-broker",
                         "topic": "fluxmq/sample/request"
@@ -569,7 +569,7 @@ public sealed class FlowWorkspaceServiceTests
                 "publishOnly": {
                   "steps": {
                     "publish": {
-                      "type": "mqtt.publish",
+                      "type": "mqtt.publisher",
                       "configuration": {
                         "connection": "local-broker",
                         "topic": "fluxmq/sample/request",
@@ -642,7 +642,7 @@ public sealed class FlowWorkspaceServiceTests
                 "publishOnly": {
                   "steps": {
                     "publish": {
-                      "type": "mqtt.publish",
+                      "type": "mqtt.publisher",
                       "configuration": {
                         "connection": "local-broker",
                         "topic": "test",
@@ -708,7 +708,7 @@ public sealed class FlowWorkspaceServiceTests
                 "t1": {
                   "steps": {
                     "aPublishSampleRequest": {
-                      "type": "mqtt.publish",
+                      "type": "mqtt.publisher",
                       "configuration": {
                         "connection": "local-broker",
                         "topic": "fluxmq/sample/request",
@@ -887,7 +887,7 @@ public sealed class FlowWorkspaceServiceTests
                 "t1": {
                   "steps": {
                     "publishSampleRequest": {
-                      "type": "mqtt.publish",
+                      "type": "mqtt.publisher",
                       "configuration": {
                         "connection": "local-broker",
                         "topic": "fluxmq/sample/request",
@@ -1057,7 +1057,7 @@ public sealed class FlowWorkspaceServiceTests
                 "smoke": {
                   "steps": {
                     "publishMessage": {
-                      "type": "mqtt.publish",
+                      "type": "mqtt.publisher",
                       "configuration": {
                         "topic": "factory/request",
                         "qos": "1"
@@ -1082,7 +1082,7 @@ public sealed class FlowWorkspaceServiceTests
                 new ScenarioStepResult
                 {
                     Name = "publishMessage",
-                    Type = ScenarioStepTypes.MqttPublish,
+                    Type = ScenarioStepTypes.MqttPublisher,
                     Status = ScenarioStepRunStatus.Passed,
                     StartedAt = started,
                     FinishedAt = started.AddMilliseconds(50),
@@ -1710,7 +1710,7 @@ public sealed class FlowWorkspaceServiceTests
         var service = new FlowWorkspaceService(new FlowDefinitionComposer());
         service.AddTest("t1");
         service.SetActiveTest("t1");
-        service.AddTestScenarioStep("mqtt.publish");
+        service.AddTestScenarioStep("mqtt.publisher");
         service.AddTestScenarioStep("expect.event");
         service.AddTestScenarioStep("expect.event");
 

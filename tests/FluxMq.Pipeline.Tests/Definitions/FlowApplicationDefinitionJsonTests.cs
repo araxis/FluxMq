@@ -125,7 +125,7 @@ public sealed class FlowApplicationDefinitionJsonTests
                 "mqttRoundTrip": {
                   "steps": {
                     "publishRequest": {
-                      "type": "mqtt.publish",
+                      "type": "mqtt.publisher",
                       "configuration": {
                         "connection": "local-broker"
                       }
@@ -164,7 +164,7 @@ public sealed class FlowApplicationDefinitionJsonTests
         dashboard.Widgets["messageRate"].Configuration["metric"].GetString().ShouldBe("messagesPerSecond");
 
         var scenario = definition.Tests["mqttRoundTrip"];
-        scenario.Steps["publishRequest"].Type.ShouldBe("mqtt.publish");
+        scenario.Steps["publishRequest"].Type.ShouldBe("mqtt.publisher");
         scenario.Steps["expectResponse"].Configuration["eventType"].GetString().ShouldBe("mqtt.message.received");
     }
 

@@ -344,31 +344,6 @@ public sealed class ScenarioRunnerTests
             .Message.ShouldBe("ready");
     }
 
-    [Fact]
-    public async Task RunAsync_ResolvesRegisteredStepRunnerAliases()
-    {
-        var events = new BufferBlock<FlowEvent>();
-        var registry = new ScenarioStepRunnerRegistry()
-            .Register(new CaptureScenarioServiceStepRunner())
-            .RegisterAlias("test.capture-service-legacy", CaptureScenarioServiceStepRunner.StepType);
-        var scenario = new ScenarioDefinition
-        {
-            Steps =
-            {
-                ["capture"] = new ScenarioStepDefinition { Type = "test.capture-service-legacy" }
-            }
-        };
-        var services = ScenarioStepServices.Empty
-            .Add(new CapturedScenarioService("alias-ready"));
-
-        var result = await new ScenarioRunner(registry)
-            .RunAsync("services", scenario, events, services);
-
-        result.IsSuccess.ShouldBeTrue();
-        result.Steps.ShouldHaveSingleItem()
-            .Message.ShouldBe("alias-ready");
-    }
-
     private static ScenarioStepDefinition ExpectEvent(params (string Key, object Value)[] values)
     {
         var configuration = new Dictionary<string, JsonElement>(StringComparer.Ordinal);

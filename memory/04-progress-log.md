@@ -1445,9 +1445,8 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Aligned the test/scenario MQTT publish action with the normal pipeline component vocabulary:
   - `ScenarioStepTypes.MqttPublisher` is now the canonical scenario action id, with value `mqtt.publisher`.
   - `ScenarioStepCatalog` exposes the palette/editor descriptor as `mqtt.publisher` and labels it `MQTT publisher`.
-  - `ScenarioStepRunnerRegistry` can register aliases, and `FlowApplicationHost` maps legacy `mqtt.publish` scenarios to the same runner.
-  - The existing `MqttPublishScenarioStepRunner` keeps the implementation but now registers as `mqtt.publisher`; step results preserve the saved step type that was executed, so older reports remain honest.
-  - Composer/catalog defaults accept both `mqtt.publisher` and `mqtt.publish`; new UI-added steps use `mqtt.publisher`, while older saved JSON keeps working.
+  - The existing `MqttPublishScenarioStepRunner` keeps the implementation but now registers as `mqtt.publisher`.
+  - Composer/catalog defaults use `mqtt.publisher`.
 - Updated `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` so `t1.publishSampleRequest` now uses the canonical `mqtt.publisher` step type.
 - Left `app.css` untouched.
 - Verified:
@@ -1455,3 +1454,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunnerTests|FullyQualifiedName~FlowApplicationDefinitionJsonTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioPublisherAliasPipeline\ -m:1` passes with 22 tests.
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowApplicationHostTests|FullyQualifiedName~MqttScenarioClientFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioPublisherAliasApp2\ -m:1` passes with 14 tests.
   - `dotnet run --project src\FluxMq.Cli\FluxMq.Cli.csproj --no-restore -- validate --config C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` reports `Flow application is valid. Workflows: 2. Resources: 2.`
+
+## 2026-05-27 - Blank stored-session source no longer factory-fails
+
+- Fixed the stored/replay source blank configuration path:
+  - `session.source` and `replay.source` now build an empty MQTT source when `sessionId` is blank, so a newly added designer node no longer fails runtime factory creation before a session is selected.
+  - Non-empty invalid session ids still fail with the explicit GUID validation error.
+  - new `session.source` nodes now get the same small default configuration shape as `replay.source`: `sessionId`, timing settings, and `boundedCapacity`.
+- Removed the scenario-step `mqtt.publish` compatibility alias because FluxMQ is still pre-release and new/test files should use the clean `mqtt.publisher` id only.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~ScenarioRunReportFormatterTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqStoredSourceFixUi\ -m:1` passes with 121 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~PipelineComponentFactoryTests|FullyQualifiedName~FlowApplicationHostTests|FullyQualifiedName~MqttScenarioClientFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqStoredSourceFixApp\ -m:1` passes with 37 tests.
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunnerTests|FullyQualifiedName~FlowApplicationDefinitionJsonTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqStoredSourceFixPipeline\ -m:1` passes with 21 tests.
+  - `dotnet run --project src\FluxMq.Cli\FluxMq.Cli.csproj --no-restore -- validate --config C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` reports `Flow application is valid. Workflows: 2. Resources: 2.`
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqStoredSourceFixAll\ -m:1` passes with 459 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

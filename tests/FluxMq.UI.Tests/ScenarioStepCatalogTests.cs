@@ -60,19 +60,6 @@ public sealed class ScenarioStepCatalogTests
     }
 
     [Fact]
-    public void Find_AcceptsLegacyMqttPublishStepType()
-    {
-        var catalog = new ScenarioStepCatalog();
-
-        var descriptor = catalog.Find(ScenarioStepTypes.MqttPublish).ShouldNotBeNull();
-        var defaults = catalog.CreateDefaultConfiguration(ScenarioStepTypes.MqttPublish, "local-broker");
-
-        descriptor.Type.ShouldBe(ScenarioStepTypes.MqttPublisher);
-        defaults[ScenarioStepCatalog.ConnectionKey].ShouldBe("local-broker");
-        defaults[ScenarioStepCatalog.TopicKey].ShouldBe("fluxmq/test");
-    }
-
-    [Fact]
     public void ScenarioStepFieldDescriptor_NormalizesMissingOptions()
     {
         var descriptor = new ScenarioStepFieldDescriptor(

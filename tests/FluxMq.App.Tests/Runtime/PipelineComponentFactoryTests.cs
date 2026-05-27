@@ -1119,6 +1119,38 @@ public sealed class PipelineComponentFactoryTests
         repository.StreamedSessionIds.ShouldBe(new[] { sessionId });
     }
 
+    [Theory]
+    [InlineData("session.source")]
+    [InlineData("replay.source")]
+    public void StoredSourceFactories_BuildEmptySourceWhenSessionIdIsBlank(string componentType)
+    {
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories());
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["stored"] = new NodeDefinition
+                        {
+                            Type = new NodeType(componentType),
+                            Configuration =
+                            {
+                                ["sessionId"] = JsonDocument.Parse("\"\"").RootElement.Clone()
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+    }
+
     [Fact]
     public async Task ReplaySourceFactory_CreatesReplaySource()
     {
