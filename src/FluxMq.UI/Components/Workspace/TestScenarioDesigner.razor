@@ -1,11 +1,13 @@
 @using FluxMq.Pipeline.Scenarios
 @using FluxMq.UI.Models
 @using FluxMq.UI.Services
+@using System.Globalization
 @implements IDisposable
 @inject LiveMqttWorkspaceService Live
 @inject IDialogService DialogService
 @inject DragStateService DragState
 @inject ScenarioStepCatalog ScenarioSteps
+@inject ISnackbar Snackbar
 
 <div class="@DesignerClass"
      @onpointerenter="HandleDesignerPointerEnter"
@@ -33,7 +35,63 @@
                 @if (Project.LastScenarioRunResult is { } result)
                 {
                     <span class="@RunStatusClass(result.Status)">@result.Status</span>
+                    <MudTooltip Text="@ActiveRunTooltip">
+                        <MudChip T="string"
+                                 Text="@ActiveRunChipText"
+                                 Icon="@ActiveRunChipIcon"
+                                 Size="Size.Small"
+                                 Color="@ActiveRunChipColor"
+                                 Variant="Variant.Outlined" />
+                    </MudTooltip>
                 }
+                <MudTooltip Text="@ViewReportTooltip">
+                    <MudIconButton Icon="@Icons.Material.Filled.Article"
+                                   Size="Size.Small"
+                                   Disabled="@(Project.LastScenarioRunResult is null)"
+                                   OnClick="@OpenReportAsync" />
+                </MudTooltip>
+                <MudTooltip Text="@CopyReportTooltip">
+                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                   Size="Size.Small"
+                                   Disabled="@(Project.LastScenarioRunResult is null)"
+                                   OnClick="@CopyLatestReportAsync" />
+                </MudTooltip>
+                <MudTooltip Text="@SaveReportTooltip">
+                    <MudIconButton Icon="@Icons.Material.Filled.FileDownload"
+                                   Size="Size.Small"
+                                   Disabled="@(Project.LastScenarioRunResult is null)"
+                                   OnClick="@SaveLatestReportAsync" />
+                </MudTooltip>
+                <MudMenu Dense="true"
+                         Icon="@Icons.Material.Filled.History"
+                         Size="Size.Small"
+                         AnchorOrigin="Origin.BottomLeft"
+                         TransformOrigin="Origin.TopLeft">
+                    <ChildContent>
+                        @if (RecentRuns.Count == 0)
+                        {
+                            <MudMenuItem Disabled="true" Label="No recent runs" />
+                        }
+                        else
+                        {
+                            @if (IsViewingHistoricalRun)
+                            {
+                                <MudMenuItem Icon="@Icons.Material.Filled.Schedule"
+                                             IconColor="Color.Primary"
+                                             Label="Show latest run"
+                                             OnClick="@ShowLatestRun" />
+                            }
+                            @foreach (var run in RecentRuns)
+                            {
+                                var historyRun = run;
+                                <MudMenuItem Icon="@RunHistoryIcon(historyRun)"
+                                             IconColor="@RunHistoryIconColor(historyRun)"
+                                             Label="@RunHistoryLabel(historyRun)"
+                                             OnClick="@(() => SelectRun(historyRun))" />
+                            }
+                        }
+                    </ChildContent>
+                </MudMenu>
                 <MudMenu Dense="true"
                          Icon="@Icons.Material.Filled.Add"
                          Size="Size.Small"
@@ -172,6 +230,44 @@
 
     private string? RunButtonIcon => Project.IsScenarioRunning ? null : Icons.Material.Filled.PlayArrow;
 
+    private IReadOnlyList<ScenarioRunResult> RecentRuns
+        => Scenario is null
+            ? []
+            : Project.ScenarioRunHistory
+                .Where(result => string.Equals(result.Name, Scenario.Name, StringComparison.Ordinal))
+                .Take(5)
+                .ToArray();
+
+    private ScenarioRunResult? LatestRun => RecentRuns.FirstOrDefault();
+
+    private bool IsViewingHistoricalRun
+        => Project.LastScenarioRunResult is { } activeRun &&
+           LatestRun is { } latestRun &&
+           !ReferenceEquals(activeRun, latestRun);
+
+    private string ActiveRunScopeText => IsViewingHistoricalRun ? "selected history" : "latest";
+
+    private string ViewReportTooltip => $"View {ActiveRunScopeText} scenario report";
+
+    private string CopyReportTooltip => $"Copy {ActiveRunScopeText} scenario report";
+
+    private string SaveReportTooltip => $"Save {ActiveRunScopeText} scenario report";
+
+    private string ActiveRunChipText
+        => Project.LastScenarioRunResult is { } result
+            ? $"{(IsViewingHistoricalRun ? "History" : "Latest")} {FormatRunTime(result)}"
+            : "No run";
+
+    private string ActiveRunChipIcon
+        => IsViewingHistoricalRun ? Icons.Material.Filled.History : Icons.Material.Filled.Schedule;
+
+    private Color ActiveRunChipColor => IsViewingHistoricalRun ? Color.Info : Color.Default;
+
+    private string ActiveRunTooltip
+        => Project.LastScenarioRunResult is { } result
+            ? $"Viewing {(IsViewingHistoricalRun ? "a historical" : "the latest")} run from {FormatRunTimestamp(result)}."
+            : "No scenario run selected.";
+
     private string StepCountText
         => Scenario?.StepCount switch
         {
@@ -227,6 +323,60 @@
             _ => "test-run-status"
         };
 
+    private static string RunStatusIcon(ScenarioRunStatus status)
+        => status switch
+        {
+            ScenarioRunStatus.Passed => Icons.Material.Filled.CheckCircle,
+            ScenarioRunStatus.Failed => Icons.Material.Filled.Error,
+            ScenarioRunStatus.Canceled => Icons.Material.Filled.Cancel,
+            _ => Icons.Material.Filled.History
+        };
+
+    private static Color RunStatusColor(ScenarioRunStatus status)
+        => status switch
+        {
+            ScenarioRunStatus.Passed => Color.Success,
+            ScenarioRunStatus.Failed => Color.Error,
+            ScenarioRunStatus.Canceled => Color.Warning,
+            _ => Color.Default
+        };
+
+    private string RunHistoryIcon(ScenarioRunResult result)
+        => IsSelectedRun(result) ? Icons.Material.Filled.Visibility : RunStatusIcon(result.Status);
+
+    private Color RunHistoryIconColor(ScenarioRunResult result)
+        => IsSelectedRun(result) ? Color.Primary : RunStatusColor(result.Status);
+
+    private string RunHistoryLabel(ScenarioRunResult result)
+    {
+        var duration = result.FinishedAt - result.StartedAt;
+        return $"{RunHistoryPrefix(result)} · {result.Status} · {FormatRunTime(result)} · {result.Steps.Count} steps · {FormatDuration(duration)}";
+    }
+
+    private string RunHistoryPrefix(ScenarioRunResult result)
+    {
+        if (IsSelectedRun(result))
+        {
+            return "Viewing";
+        }
+
+        return IsLatestRun(result) ? "Latest" : "History";
+    }
+
+    private bool IsSelectedRun(ScenarioRunResult result)
+        => Project.LastScenarioRunResult is { } selected &&
+           ReferenceEquals(selected, result);
+
+    private bool IsLatestRun(ScenarioRunResult result)
+        => LatestRun is { } latest &&
+           ReferenceEquals(latest, result);
+
+    private static string FormatRunTime(ScenarioRunResult result)
+        => result.FinishedAt.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture);
+
+    private static string FormatRunTimestamp(ScenarioRunResult result)
+        => result.FinishedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.CurrentCulture);
+
     private string BuildStepSummary(ScenarioStepSnapshot step)
     {
         var descriptor = ScenarioSteps.Find(step.Type);
@@ -246,6 +396,8 @@
                 step.ReadString("eventType"),
                 PrefixSummary("topic", step.ReadString("topicStartsWith")),
                 PrefixSummary("subject", step.ReadString("subjectStartsWith")),
+                PrefixSummary("QoS", step.ReadString(DashboardEventFilterCatalog.AttributeFilterKey("qos"))),
+                RetainExpectationSummary(step.ReadString(DashboardEventFilterCatalog.AttributeFilterKey("retain"))),
                 PrefixSummary("schema", step.ReadString(DashboardEventFilterCatalog.AttributeFilterKey("schemaId"))),
                 StatusSummary(step.ReadString("status")),
                 TimeoutSummary(step.ReadString("timeoutMs"))),
@@ -260,7 +412,12 @@
     {
         if (DashboardEventFilterCatalog.TryGetAttributeName(key, out var attributeName))
         {
-            return attributeName;
+            return attributeName switch
+            {
+                "qos" => "QoS",
+                "retain" => "retain",
+                _ => attributeName
+            };
         }
 
         return key switch
@@ -290,6 +447,36 @@
     private static string? TimeoutSummary(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : $"{value} ms";
 
+    private static string FormatDuration(TimeSpan duration)
+        => duration.TotalSeconds >= 1
+            ? $"{duration.TotalSeconds:0.0}s"
+            : $"{Math.Max(0, duration.TotalMilliseconds):0}ms";
+
+    private static string FormatStepCount(int count)
+        => count == 1 ? "1 step" : $"{count} steps";
+
+    private static string FormatReportStepCount(ScenarioStepStatusSummary summary)
+        => summary.Planned != summary.Executed || summary.NotRun > 0
+            ? $"{summary.Executed}/{summary.Planned} steps"
+            : FormatStepCount(summary.Executed);
+
+    private static ScenarioStepResult? FirstIssue(ScenarioRunResult result)
+        => result.Steps.FirstOrDefault(step => step.Status != ScenarioStepRunStatus.Passed);
+
+    private static string FirstIssueText(ScenarioRunResult result)
+        => FirstIssue(result) is { } issue
+            ? $"Issue: {issue.Name} {issue.Status}"
+            : string.Empty;
+
+    private static Color FirstIssueColor(ScenarioRunResult result)
+        => FirstIssue(result)?.Status switch
+        {
+            ScenarioStepRunStatus.Failed => Color.Error,
+            ScenarioStepRunStatus.TimedOut => Color.Warning,
+            ScenarioStepRunStatus.Canceled => Color.Warning,
+            _ => Color.Default
+        };
+
     private static string? FormatQos(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : $"QoS {value}";
 
@@ -297,6 +484,18 @@
         => string.Equals(value, "true", StringComparison.OrdinalIgnoreCase)
             ? "retain"
             : null;
+
+    private static string? RetainExpectationSummary(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return bool.TryParse(value, out var retain) && retain
+            ? "retain"
+            : "no retain";
+    }
 
     private async Task RunScenarioAsync()
     {
@@ -307,6 +506,200 @@
         }
 
         await Project.RunActiveTestScenarioAsync();
+    }
+
+    private async Task OpenReportAsync()
+    {
+        if (Project.LastScenarioRunResult is not { } result)
+        {
+            Snackbar.Add("No scenario report to view", Severity.Warning);
+            return;
+        }
+
+        var scenario = Scenario;
+        var report = ScenarioRunReportFormatter.Create(result, scenario);
+        var textReport = ScenarioRunReportFormatter.ToText(report);
+        var jsonReport = ScenarioRunReportFormatter.ToJson(report);
+        var dialog = await DialogService.ShowAsync<ScenarioRunReportDialog>(
+            "Scenario report",
+            new DialogParameters
+            {
+                [nameof(ScenarioRunReportDialog.Title)] = $"Scenario report: {result.Name}",
+                [nameof(ScenarioRunReportDialog.RunScopeText)] = IsViewingHistoricalRun ? "Historical run" : "Latest run",
+                [nameof(ScenarioRunReportDialog.RunScopeIcon)] = ActiveRunChipIcon,
+                [nameof(ScenarioRunReportDialog.RunScopeColor)] = ActiveRunChipColor,
+                [nameof(ScenarioRunReportDialog.RunIdText)] = FormatRunIdChip(report.RunId),
+                [nameof(ScenarioRunReportDialog.RunStatusText)] = result.Status.ToString(),
+                [nameof(ScenarioRunReportDialog.RunStatusColor)] = RunStatusColor(result.Status),
+                [nameof(ScenarioRunReportDialog.RunStepSummaryText)] = FormatReportStepCount(report.StepSummary),
+                [nameof(ScenarioRunReportDialog.RunIssueText)] = FirstIssueText(result),
+                [nameof(ScenarioRunReportDialog.RunIssueColor)] = FirstIssueColor(result),
+                [nameof(ScenarioRunReportDialog.RunFinishedAtText)] = FormatRunTimestamp(result),
+                [nameof(ScenarioRunReportDialog.RunDurationText)] = FormatDuration(result.FinishedAt - result.StartedAt),
+                [nameof(ScenarioRunReportDialog.TextReport)] = textReport,
+                [nameof(ScenarioRunReportDialog.JsonReport)] = jsonReport
+            },
+            new DialogOptions
+            {
+                MaxWidth = MaxWidth.Medium,
+                FullWidth = true,
+                BackdropClick = false
+            });
+
+        var dialogResult = await dialog.Result;
+        if (dialogResult is not { Canceled: false, Data: ScenarioRunReportDialog.ReportDialogAction action })
+        {
+            return;
+        }
+
+        if (action == ScenarioRunReportDialog.ReportDialogAction.SaveSummary)
+        {
+            await SaveScenarioReportTextAsync(result, textReport);
+        }
+        else if (action == ScenarioRunReportDialog.ReportDialogAction.SaveJson)
+        {
+            await SaveScenarioReportJsonAsync(result, jsonReport);
+        }
+    }
+
+    private async Task CopyLatestReportAsync()
+    {
+        if (Project.LastScenarioRunResult is not { } result)
+        {
+            Snackbar.Add("No scenario report to copy", Severity.Warning);
+            return;
+        }
+
+        var jsonReport = ScenarioRunReportFormatter.ToJson(result, Scenario);
+        await Clipboard.Default.SetTextAsync(jsonReport);
+        Snackbar.Add("Scenario report copied to clipboard", Severity.Success);
+    }
+
+    private async Task SaveLatestReportAsync()
+    {
+        if (Project.LastScenarioRunResult is not { } result)
+        {
+            Snackbar.Add("No scenario report to save", Severity.Warning);
+            return;
+        }
+
+        var jsonReport = ScenarioRunReportFormatter.ToJson(result, Scenario);
+        await SaveScenarioReportJsonAsync(result, jsonReport);
+    }
+
+    private async Task SaveScenarioReportJsonAsync(ScenarioRunResult result, string jsonReport)
+        => await SaveScenarioReportContentAsync(
+            result,
+            jsonReport,
+            "json",
+            "Save scenario report",
+            "Full path including .scenario-report.json extension",
+            "Scenario report saved",
+            "Scenario report save failed");
+
+    private async Task SaveScenarioReportTextAsync(ScenarioRunResult result, string textReport)
+        => await SaveScenarioReportContentAsync(
+            result,
+            textReport,
+            "txt",
+            "Save scenario summary",
+            "Full path including .scenario-report.txt extension",
+            "Scenario summary saved",
+            "Scenario summary save failed");
+
+    private async Task SaveScenarioReportContentAsync(
+        ScenarioRunResult result,
+        string content,
+        string extension,
+        string title,
+        string helperText,
+        string successMessage,
+        string failureMessagePrefix)
+    {
+        var dialog = await DialogService.ShowAsync<SaveAsDialog>(
+            title,
+            new DialogParameters
+            {
+                [nameof(SaveAsDialog.SuggestedPath)] = SuggestedReportPath(result, extension),
+                [nameof(SaveAsDialog.DialogTitle)] = title,
+                [nameof(SaveAsDialog.HelperText)] = helperText
+            },
+            new DialogOptions
+            {
+                MaxWidth = MaxWidth.Small,
+                FullWidth = true,
+                BackdropClick = false
+            });
+
+        var dialogResult = await dialog.Result;
+        if (dialogResult is not { Canceled: false, Data: string path } || string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        try
+        {
+            if (string.Equals(extension, "json", StringComparison.OrdinalIgnoreCase))
+            {
+                await FlowWorkspaceService.SaveScenarioReportJsonAsync(content, path);
+            }
+            else
+            {
+                await FlowWorkspaceService.SaveScenarioReportTextAsync(content, path);
+            }
+
+            Snackbar.Add(successMessage, Severity.Success);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            Snackbar.Add($"{failureMessagePrefix}: {exception.Message}", Severity.Error);
+        }
+    }
+
+    private string SuggestedReportPath(ScenarioRunResult result, string extension = "json")
+    {
+        var directory = !string.IsNullOrWhiteSpace(Project.CurrentFilePath)
+            ? Path.GetDirectoryName(Project.CurrentFilePath)
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "FluxMQ");
+        var name = SafeFileName(result.Name);
+        var stamp = result.FinishedAt.ToLocalTime().ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
+
+        return Path.Combine(directory ?? string.Empty, $"{name}-{stamp}.scenario-report.{extension}");
+    }
+
+    private static string SafeFileName(string value)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        var safe = new string(value.Select(character => invalid.Contains(character) ? '-' : character).ToArray());
+        return string.IsNullOrWhiteSpace(safe) ? "scenario" : safe;
+    }
+
+    private static string FormatRunIdChip(string runId)
+        => runId.Length <= 36 ? $"Run {runId}" : $"Run {runId[..33]}...";
+
+    private void ShowLatestRun()
+    {
+        if (LatestRun is { } latestRun)
+        {
+            SelectRun(latestRun);
+        }
+    }
+
+    private void SelectRun(ScenarioRunResult result)
+    {
+        if (IsSelectedRun(result))
+        {
+            return;
+        }
+
+        var message = IsLatestRun(result)
+            ? "Showing latest scenario run"
+            : "Scenario run restored from history";
+
+        if (Project.SelectScenarioRunHistoryResult(result))
+        {
+            Snackbar.Add(message, Severity.Info);
+        }
     }
 
     private void AddStep(string stepType)
@@ -321,7 +714,12 @@
                 [nameof(ScenarioStepEditorDialog.Step)] = step,
                 [nameof(ScenarioStepEditorDialog.ConnectionNames)] = Project.GetConnectionNames()
             },
-            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+            new DialogOptions
+            {
+                MaxWidth = MaxWidth.Small,
+                FullWidth = true,
+                BackdropClick = false
+            });
         var result = await dialog.Result;
         if (result is { Canceled: false, Data: ScenarioStepEditorDialog.ScenarioStepUpdate update })
         {

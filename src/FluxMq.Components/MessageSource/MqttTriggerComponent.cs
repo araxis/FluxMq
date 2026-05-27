@@ -109,24 +109,8 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
             {
                 if (MqttTopicFilterMatcher.MatchesAny(_topicFilters, envelope.Topic))
                 {
+                    await _events.SendAsync(CreateReceivedEvent(envelope), _cts.Token).ConfigureAwait(false);
                     await _output.SendAsync(envelope, _cts.Token).ConfigureAwait(false);
-                    _events.Post(new FlowEvent
-                    {
-                        Timestamp = DateTimeOffset.UtcNow,
-                        Type = FlowEventTypes.MqttMessageReceived,
-                        Source = "MqttTrigger",
-                        SourceNodeId = Id,
-                        Subject = envelope.Topic,
-                        Status = "received",
-                        Topic = envelope.Topic,
-                        PayloadBytes = envelope.Payload.Length,
-                        PayloadPreview = FlowEventPayloadPreview.FromBytes(envelope.Payload),
-                        Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
-                        {
-                            ["qos"] = ((int)envelope.QualityOfService).ToString(System.Globalization.CultureInfo.InvariantCulture),
-                            ["retain"] = envelope.Retain.ToString()
-                        }
-                    });
                 }
             }, new ExecutionDataflowBlockOptions
             {
@@ -185,5 +169,24 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
             Context = _session.Profile.Name
         });
     }
+
+    private FlowEvent CreateReceivedEvent(MqttEnvelope envelope)
+        => new()
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Type = FlowEventTypes.MqttMessageReceived,
+            Source = "MqttTrigger",
+            SourceNodeId = Id,
+            Subject = envelope.Topic,
+            Status = "received",
+            Topic = envelope.Topic,
+            PayloadBytes = envelope.Payload.Length,
+            PayloadPreview = FlowEventPayloadPreview.FromBytes(envelope.Payload),
+            Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["qos"] = ((int)envelope.QualityOfService).ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ["retain"] = envelope.Retain.ToString()
+            }
+        };
 
 }

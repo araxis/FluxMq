@@ -95,13 +95,26 @@ public static class ScenarioStepConfigurationReader
         var result = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var property in value.EnumerateObject())
         {
-            if (property.Value.ValueKind != JsonValueKind.String)
+            if (property.Value.ValueKind == JsonValueKind.String)
             {
-                throw new InvalidOperationException(
-                    $"Scenario configuration value '{key}.{property.Name}' must be a string.");
+                result[property.Name] = property.Value.GetString() ?? string.Empty;
+                continue;
             }
 
-            result[property.Name] = property.Value.GetString() ?? string.Empty;
+            if (property.Value.ValueKind is JsonValueKind.True or JsonValueKind.False)
+            {
+                result[property.Name] = property.Value.GetBoolean().ToString();
+                continue;
+            }
+
+            if (property.Value.ValueKind == JsonValueKind.Number)
+            {
+                result[property.Name] = property.Value.GetRawText();
+                continue;
+            }
+
+            throw new InvalidOperationException(
+                $"Scenario configuration value '{key}.{property.Name}' must be a string, boolean, or number.");
         }
 
         return result;

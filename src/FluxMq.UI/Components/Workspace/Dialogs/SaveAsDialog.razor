@@ -1,21 +1,24 @@
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
     <TitleContent>
-        <MudText Typo="Typo.h6">Save As</MudText>
+        <MudText Typo="Typo.h6">@DialogTitle</MudText>
     </TitleContent>
     <DialogContent>
         <MudTextField T="string" Label="File path" @bind-Value="_path"
                       Variant="Variant.Outlined" Margin="Margin.Dense"
-                      HelperText="Full path including .json extension" />
+                      HelperText="@HelperText" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@Submit">Save</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@Submit">@SubmitText</MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
     [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public string SuggestedPath { get; set; } = string.Empty;
+    [Parameter] public string DialogTitle { get; set; } = "Save As";
+    [Parameter] public string HelperText { get; set; } = "Full path including .json extension";
+    [Parameter] public string SubmitText { get; set; } = "Save";
 
     private string _path = string.Empty;
 

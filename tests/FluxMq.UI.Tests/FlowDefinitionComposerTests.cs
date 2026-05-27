@@ -227,6 +227,51 @@ public sealed class FlowDefinitionComposerTests
         connection.Subscription.ShouldBe(LiveMqttWorkspaceService.DefaultBrokerMonitorSubscription);
     }
 
+    [Theory]
+    [InlineData("workflow-nodes")]
+    [InlineData("node-positions")]
+    [InlineData("connection-resources")]
+    [InlineData("artifact-names")]
+    public void DefinitionReaders_ThrowHelpfulErrorForMalformedJson(string reader)
+    {
+        var composer = new FlowDefinitionComposer();
+        Action action = reader switch
+        {
+            "workflow-nodes" => () => _ = composer.GetWorkflowNodes("{", "pipe"),
+            "node-positions" => () => _ = composer.ReadNodePositions("{"),
+            "connection-resources" => () => _ = composer.ReadConnectionResourcesFromDefinition("{"),
+            "artifact-names" => () => _ = composer.GetWorkflowNames("{"),
+            _ => throw new InvalidOperationException($"Unknown reader '{reader}'.")
+        };
+
+        var exception = Should.Throw<InvalidOperationException>(action);
+
+        exception.Message.ShouldContain("flow definition JSON is invalid");
+        exception.InnerException.ShouldBeAssignableTo<JsonException>();
+    }
+
+    [Fact]
+    public void ReadNodePositions_ThrowsWhenPositionShapeIsInvalid()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = """
+        {
+          "FluxMq": {
+            "Designer": {
+              "nodes": {
+                "pipe/source": {
+                  "x": "left",
+                  "y": 20
+                }
+              }
+            }
+          }
+        }
+        """;
+
+        Should.Throw<InvalidOperationException>(() => composer.ReadNodePositions(json));
+    }
+
     [Fact]
     public void AddComponent_WiresInspectorToTriggerOutput()
     {
@@ -1120,6 +1165,11 @@ public sealed class FlowDefinitionComposerTests
         var step = scenario.Steps.ShouldHaveSingleItem();
         step.Name.ShouldBe("publishMessage");
         step.Type.ShouldBe("mqtt.publish");
+        step.Configuration[ScenarioStepCatalog.TopicKey].ShouldBe("fluxmq/test");
+        step.Configuration[ScenarioStepCatalog.PayloadKey].ShouldBe("""{"hello":"fluxmq"}""");
+        step.Configuration[ScenarioStepCatalog.PayloadEncodingKey].ShouldBe("json");
+        step.Configuration[ScenarioStepCatalog.QosKey].ShouldBe("0");
+        step.Configuration[ScenarioStepCatalog.RetainKey].ShouldBe("false");
 
         json = composer.UpdateScenarioStep(
             json,
@@ -1166,6 +1216,8 @@ public sealed class FlowDefinitionComposerTests
                 ["eventType"] = "json.schema.validated",
                 ["topicStartsWith"] = "factory/",
                 ["status"] = "valid",
+                [DashboardEventFilterCatalog.AttributeFilterKey("qos")] = "1",
+                [DashboardEventFilterCatalog.AttributeFilterKey("retain")] = "false",
                 [DashboardEventFilterCatalog.AttributeFilterKey("schemaId")] = "temperature",
                 ["timeoutMs"] = "2500"
             });
@@ -1186,6 +1238,8 @@ public sealed class FlowDefinitionComposerTests
             .GetProperty("attributes");
 
         attributes.GetProperty("schemaId").GetString().ShouldBe("temperature");
+        attributes.GetProperty("qos").GetString().ShouldBe("1");
+        attributes.GetProperty("retain").GetString().ShouldBe("false");
     }
 
     [Fact]

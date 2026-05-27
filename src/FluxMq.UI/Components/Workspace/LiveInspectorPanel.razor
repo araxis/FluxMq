@@ -23,11 +23,6 @@
                 @onclick="@(() => _activeTab = InspectorTab.Topics)">
             Topics <span class="tab-count">@DisplayedMessages.Count</span>
         </button>
-        <button type="button"
-                class="inspector-tab @(_activeTab == InspectorTab.Logs ? "active" : null)"
-                @onclick="@(() => _activeTab = InspectorTab.Logs)">
-            Logs <span class="tab-count">@ProjectLogs.Count</span>
-        </button>
     </div>
 
     @if (_activeTab == InspectorTab.Publish)
@@ -181,71 +176,6 @@
             }
         </div>
     }
-    else if (_activeTab == InspectorTab.Logs)
-    {
-        <div class="inspector-panel fill">
-            <div class="section-label">
-                <span>Logs</span>
-                <span class="section-badge">@ProjectLogs.Count entries</span>
-            </div>
-
-            <div class="topic-toolbar">
-                <button type="button"
-                        class="icon-toggle"
-                        disabled="@(ProjectLogs.Count == 0)"
-                        title="Clear logs"
-                        @onclick="ClearProjectLogs">
-                    <MudIcon Icon="@Icons.Material.Filled.DeleteSweep" Size="Size.Small" />
-                </button>
-                <input class="topic-filter"
-                       placeholder="Filter logs..."
-                       @bind="_logFilter"
-                       @bind:event="oninput" />
-            </div>
-
-            <div class="log-list">
-                @if (FilteredLogs.Count == 0)
-                {
-                    <div class="empty-topic-row">No logs yet</div>
-                }
-                else
-                {
-                    @foreach (var entry in FilteredLogs)
-                    {
-                        <article class="log-row @LogSeverityClass(entry)">
-                            <div class="log-level-icon"
-                                 title="@LogLevelLabel(entry)"
-                                 aria-label="@LogLevelLabel(entry)">
-                                <MudIcon Icon="@LogSeverityIcon(entry)" Size="Size.Small" />
-                            </div>
-                            <div class="log-row-content">
-                                <div class="log-row-header">
-                                    <span class="log-time">@FormatLogTime(entry)</span>
-                                    <span class="log-severity">@LogLevelLabel(entry)</span>
-                                    <span class="log-code">@LogSourceCode(entry)</span>
-                                </div>
-                                <div class="log-message">@entry.Message</div>
-                                @if (LogScope(entry) is { Length: > 0 } scope)
-                                {
-                                    <div class="log-context">
-                                        <span>Scope</span>
-                                        <strong>@scope</strong>
-                                    </div>
-                                }
-                                @if (!string.IsNullOrWhiteSpace(entry.Context))
-                                {
-                                    <div class="log-context">
-                                        <span>Context</span>
-                                        <strong>@entry.Context</strong>
-                                    </div>
-                                }
-                            </div>
-                        </article>
-                    }
-                }
-            </div>
-        </div>
-    }
     else
     {
         <div class="inspector-panel fill">
@@ -268,7 +198,6 @@
     private bool _retain;
     private string? _selectedTopic;
     private string _filter = string.Empty;
-    private string _logFilter = string.Empty;
     private System.Threading.Timer? _clock;
     private FlowWorkspaceService? _activeProject;
 
@@ -287,18 +216,7 @@
 
     private IReadOnlyList<LiveTopicRow> LiveTopicRows => BuildLiveTopicRows();
 
-    private IReadOnlyList<WorkspaceLogEntry> ProjectLogs => Projects.ActiveProject?.Logs ?? [];
-
     private IReadOnlyList<ManagedConnection> PublishConnections => BuildPublishConnections();
-
-    private IReadOnlyList<WorkspaceLogEntry> FilteredLogs =>
-        string.IsNullOrWhiteSpace(_logFilter)
-            ? ProjectLogs.Reverse().Take(200).ToArray()
-            : ProjectLogs
-                .Where(LogMatchesFilter)
-                .Reverse()
-                .Take(200)
-                .ToArray();
 
     private MqttEnvelope? LastPayloadMessage => MessageSource
         .OrderByDescending(m => m.ReceivedAt)
@@ -364,8 +282,20 @@
             var connectionId = Guid.TryParse(_publishConnectionId, out var parsedConnectionId)
                 ? parsedConnectionId
                 : (Guid?)null;
+            var selectedConnection = connectionId is { } id
+                ? PublishConnections.FirstOrDefault(connection => connection.Id == id)
+                : null;
 
-            await Live.PublishAsync(connectionId, _publishTopic, _publishPayload, _publishQos, _retain);
+            var published = await Live.PublishAsync(connectionId, _publishTopic, _publishPayload, _publishQos, _retain);
+            if (published)
+            {
+                Projects.ActiveProject?.RecordManualMqttPublish(
+                    _publishTopic,
+                    _publishPayload,
+                    (int)_publishQos,
+                    _retain,
+                    selectedConnection?.ResourceName);
+            }
         }
         finally { _busy = false; StateHasChanged(); }
     }
@@ -408,8 +338,6 @@
         string.IsNullOrWhiteSpace(_selectedTopic) ||
         string.Equals(topic, _selectedTopic, StringComparison.Ordinal) ||
         topic.StartsWith($"{_selectedTopic}/", StringComparison.Ordinal);
-
-    private void ClearProjectLogs() => Projects.ActiveProject?.ClearLogs();
 
     private IReadOnlyList<ManagedConnection> BuildPublishConnections()
     {
@@ -464,78 +392,6 @@
         }
     }
 
-    private bool LogMatchesFilter(WorkspaceLogEntry entry)
-    {
-        var filter = _logFilter.Trim();
-        return entry.Message.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
-               entry.Source.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
-               entry.Code.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
-               (entry.WorkflowName?.Contains(filter, StringComparison.OrdinalIgnoreCase) ?? false) ||
-               (entry.NodeName?.Contains(filter, StringComparison.OrdinalIgnoreCase) ?? false) ||
-               (entry.PortName?.Contains(filter, StringComparison.OrdinalIgnoreCase) ?? false) ||
-               (entry.Context?.Contains(filter, StringComparison.OrdinalIgnoreCase) ?? false);
-    }
-
-    private static string FormatLogTime(WorkspaceLogEntry entry)
-        => entry.Timestamp.ToLocalTime().ToString("HH:mm:ss");
-
-    private static string LogLevelLabel(WorkspaceLogEntry entry)
-        => $"Level: {NormalizeLogSeverity(entry)}";
-
-    private static string LogSourceCode(WorkspaceLogEntry entry)
-        => string.IsNullOrWhiteSpace(entry.Code)
-            ? entry.Source
-            : $"{entry.Source} / {entry.Code}";
-
-    private static string NormalizeLogSeverity(WorkspaceLogEntry entry)
-    {
-        var severity = entry.Severity.Trim();
-        return string.IsNullOrWhiteSpace(severity) ? "Info" : severity;
-    }
-
-    private static string LogSeverityClass(WorkspaceLogEntry entry)
-        => NormalizeLogSeverity(entry).ToLowerInvariant() switch
-        {
-            "critical" or "fatal" => "critical",
-            "error" => "error",
-            "warning" or "warn" => "warning",
-            "debug" => "debug",
-            "trace" => "trace",
-            _ => "info"
-        };
-
-    private static string LogSeverityIcon(WorkspaceLogEntry entry)
-        => LogSeverityClass(entry) switch
-        {
-            "critical" => Icons.Material.Filled.Report,
-            "error" => Icons.Material.Filled.ErrorOutline,
-            "warning" => Icons.Material.Filled.WarningAmber,
-            "debug" => Icons.Material.Filled.BugReport,
-            "trace" => Icons.Material.Filled.Timeline,
-            _ => Icons.Material.Filled.Info
-        };
-
-    private static string? LogScope(WorkspaceLogEntry entry)
-    {
-        var parts = new List<string>();
-        if (!string.IsNullOrWhiteSpace(entry.WorkflowName))
-        {
-            parts.Add(entry.WorkflowName);
-        }
-
-        if (!string.IsNullOrWhiteSpace(entry.NodeName))
-        {
-            parts.Add(entry.NodeName);
-        }
-
-        if (!string.IsNullOrWhiteSpace(entry.PortName))
-        {
-            parts.Add(entry.PortName);
-        }
-
-        return parts.Count == 0 ? null : string.Join(" / ", parts);
-    }
-
     private IReadOnlyList<LiveTopicRow> BuildLiveTopicRows()
     {
         var now = DateTimeOffset.UtcNow;
@@ -578,7 +434,6 @@
     {
         Inspect,
         Publish,
-        Topics,
-        Logs
+        Topics
     }
 }

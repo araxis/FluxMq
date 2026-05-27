@@ -34,8 +34,9 @@ public sealed class ScenarioRunner(ScenarioStepRunnerRegistry? registry = null)
         var startedAt = DateTimeOffset.UtcNow;
         var results = new List<ScenarioStepResult>();
         var eventOffset = 0;
+        var consumedEventIndexes = new HashSet<int>();
 
-        using var journal = new ScenarioEventJournal(events);
+        using var journal = new ScenarioEventJournal(events, startedAt);
 
         foreach (var step in scenario.Steps)
         {
@@ -46,9 +47,15 @@ public sealed class ScenarioRunner(ScenarioStepRunnerRegistry? registry = null)
                 journal,
                 services,
                 eventOffset,
+                consumedEventIndexes,
                 cancellationToken).ConfigureAwait(false);
 
             results.Add(result);
+            if (result.MatchedEventIndex is { } matchedEventIndex)
+            {
+                consumedEventIndexes.Add(matchedEventIndex);
+            }
+
             eventOffset = result.NextEventOffset;
 
             if (!result.IsSuccess)
@@ -75,6 +82,7 @@ public sealed class ScenarioRunner(ScenarioStepRunnerRegistry? registry = null)
         ScenarioEventJournal events,
         ScenarioStepServices services,
         int eventOffset,
+        IReadOnlySet<int> consumedEventIndexes,
         CancellationToken cancellationToken)
     {
         var startedAt = DateTimeOffset.UtcNow;
@@ -102,7 +110,8 @@ public sealed class ScenarioRunner(ScenarioStepRunnerRegistry? registry = null)
                     Step = step,
                     Events = events,
                     Services = services,
-                    EventOffset = eventOffset
+                    EventOffset = eventOffset,
+                    ConsumedEventIndexes = consumedEventIndexes
                 },
                 cancellationToken).ConfigureAwait(false);
         }

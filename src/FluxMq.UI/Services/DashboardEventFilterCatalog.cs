@@ -33,9 +33,9 @@ public sealed class DashboardEventFilterCatalog
         EventTypes =
         [
             new(AnyValue, "Any event", [], AllStatusOptions),
-            new(FlowEventTypes.MqttMessageReceived, "MQTT message received", [TopicField("Topic prefix", "factory/line-a/", "Filters by received message topic.")], StatusOptions("received")),
-            new(FlowEventTypes.MqttMessagePublished, "MQTT message published", [TopicField("Topic prefix", "factory/line-a/", "Filters by published message topic.")], StatusOptions("published")),
-            new(FlowEventTypes.MqttMessageRecorded, "MQTT message recorded", [TopicField("Topic prefix", "factory/line-a/", "Filters by recorded message topic.")], StatusOptions("recorded")),
+            new(FlowEventTypes.MqttMessageReceived, "MQTT message received", MqttEventFields("received"), StatusOptions("received")),
+            new(FlowEventTypes.MqttMessagePublished, "MQTT message published", MqttEventFields("published"), StatusOptions("published")),
+            new(FlowEventTypes.MqttMessageRecorded, "MQTT message recorded", MqttEventFields("recorded"), StatusOptions("recorded")),
             new(FlowEventTypes.FileWritten, "File written", [SubjectField("Path prefix", null, "Filters by written file path.")], StatusOptions("written")),
             new(FlowEventTypes.JsonSchemaValidated, "JSON schema validated", [
                 TopicField("Topic prefix", "factory/line-a/", "Filters by validated message topic."),
@@ -120,11 +120,27 @@ public sealed class DashboardEventFilterCatalog
     }
 
     private static bool StartsWith(string? actual, string expectedPrefix)
-        => !string.IsNullOrWhiteSpace(actual) &&
-           actual.StartsWith(expectedPrefix, StringComparison.Ordinal);
+    {
+        if (bool.TryParse(actual, out var actualBoolean) &&
+            bool.TryParse(expectedPrefix, out var expectedBoolean))
+        {
+            return actualBoolean == expectedBoolean;
+        }
+
+        return !string.IsNullOrWhiteSpace(actual) &&
+               actual.StartsWith(expectedPrefix, StringComparison.Ordinal);
+    }
 
     private static DashboardEventFilterFieldDescriptor TopicField(string label, string? placeholder, string helperText)
         => new(TopicStartsWithKey, label, placeholder, helperText, static flowEvent => flowEvent.Topic);
+
+    private static IReadOnlyList<DashboardEventFilterFieldDescriptor> MqttEventFields(string eventVerb)
+        =>
+        [
+            TopicField("Topic prefix", "factory/line-a/", $"Filters by {eventVerb} message topic."),
+            AttributeField("qos", "QoS", "1", "Filters by MQTT QoS."),
+            AttributeField("retain", "Retain", "false", "Filters by MQTT retain flag.")
+        ];
 
     private static DashboardEventFilterFieldDescriptor SubjectField(string label, string? placeholder, string helperText)
         => new(SubjectStartsWithKey, label, placeholder, helperText, static flowEvent => flowEvent.Subject);

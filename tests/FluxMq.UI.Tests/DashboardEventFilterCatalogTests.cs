@@ -19,6 +19,13 @@ public sealed class DashboardEventFilterCatalogTests
 
         any.Fields.ShouldBeEmpty();
 
+        var mqttReceived = catalog.Find(FlowEventTypes.MqttMessageReceived);
+        mqttReceived.Fields.Select(static field => field.Key).ShouldBe([
+            DashboardEventFilterCatalog.TopicStartsWithKey,
+            DashboardEventFilterCatalog.AttributeFilterKey("qos"),
+            DashboardEventFilterCatalog.AttributeFilterKey("retain")
+        ]);
+
         var fileField = fileWritten.Fields.ShouldHaveSingleItem();
         fileField.Key.ShouldBe(DashboardEventFilterCatalog.SubjectStartsWithKey);
         fileField.Label.ShouldBe("Path prefix");
@@ -85,6 +92,46 @@ public sealed class DashboardEventFilterCatalogTests
                 topic: "factory/line-a",
                 status: "valid",
                 attributes: new Dictionary<string, string> { ["schemaId"] = "pressure" })).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Matches_UsesMqttQosAndRetainAttributes()
+    {
+        var catalog = new DashboardEventFilterCatalog();
+        var widget = new DashboardWidgetSnapshot(
+            "published",
+            DashboardWidgetCatalog.EventCounterType,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [DashboardEventFilterCatalog.EventTypeKey] = FlowEventTypes.MqttMessagePublished,
+                [DashboardEventFilterCatalog.TopicStartsWithKey] = "test",
+                [DashboardEventFilterCatalog.AttributeFilterKey("qos")] = "1",
+                [DashboardEventFilterCatalog.AttributeFilterKey("retain")] = "false",
+                [DashboardEventFilterCatalog.StatusKey] = "published"
+            });
+
+        catalog.Matches(
+            widget,
+            Event(
+                FlowEventTypes.MqttMessagePublished,
+                topic: "test",
+                status: "published",
+                attributes: new Dictionary<string, string>
+                {
+                    ["qos"] = "1",
+                    ["retain"] = "False"
+                })).ShouldBeTrue();
+        catalog.Matches(
+            widget,
+            Event(
+                FlowEventTypes.MqttMessagePublished,
+                topic: "test",
+                status: "published",
+                attributes: new Dictionary<string, string>
+                {
+                    ["qos"] = "1",
+                    ["retain"] = "True"
+                })).ShouldBeFalse();
     }
 
     private static FlowEvent Event(

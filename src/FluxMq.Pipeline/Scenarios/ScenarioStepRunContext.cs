@@ -10,4 +10,5 @@ public sealed record ScenarioStepRunContext
     public required ScenarioEventJournal Events { get; init; }
     public ScenarioStepServices Services { get; init; } = ScenarioStepServices.Empty;
     public int EventOffset { get; init; }
+    public IReadOnlySet<int> ConsumedEventIndexes { get; init; } = new HashSet<int>();
 }

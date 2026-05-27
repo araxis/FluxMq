@@ -189,7 +189,7 @@ public sealed class FlowApplicationHostTests
     }
 
     [Fact]
-    public async Task RunScenarioAsync_StartsRuntimeAndObservesEvents()
+    public async Task RunScenarioAsync_UsesRunningRuntimeAndObservesEvents()
     {
         EventSourceNode? source = null;
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
@@ -233,9 +233,11 @@ public sealed class FlowApplicationHostTests
                 """),
             builder);
 
-        var runTask = host.RunScenarioAsync("roundTrip");
+        var startResult = await host.StartAsync();
+        startResult.IsSuccess.ShouldBeTrue();
         await WaitUntilAsync(() => source is not null);
 
+        var runTask = host.RunScenarioAsync("roundTrip");
         source!.Post(new FlowEvent
         {
             Timestamp = DateTimeOffset.UtcNow,
@@ -251,6 +253,37 @@ public sealed class FlowApplicationHostTests
         result.Steps.ShouldHaveSingleItem()
             .MatchedEvent!.Topic.ShouldBe("factory/response/42");
         host.State.ShouldBe(FlowApplicationHostState.Running);
+    }
+
+    [Fact]
+    public async Task RunScenarioAsync_RequiresExplicitlyRunningRuntime()
+    {
+        await using var host = FlowApplicationHost.CreateDefault(BuildConfiguration(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "workflows": {
+                    "idle": {
+                      "messages": {
+                        "type": "generated.source"
+                      }
+                    }
+                  },
+                  "tests": {
+                    "smoke": {
+                      "steps": {}
+                    }
+                  }
+                }
+              }
+            }
+            """));
+
+        var exception = await Should.ThrowAsync<InvalidOperationException>(
+            () => host.RunScenarioAsync("smoke"));
+
+        exception.Message.ShouldContain("app runtime is not running");
     }
 
     [Fact]
@@ -303,6 +336,9 @@ public sealed class FlowApplicationHostTests
                 }
                 """),
             sessionFactory: _ => session);
+
+        var startResult = await host.StartAsync();
+        startResult.IsSuccess.ShouldBeTrue();
 
         var result = await host.RunScenarioAsync("publishMessage");
 
@@ -362,6 +398,9 @@ public sealed class FlowApplicationHostTests
                 }
                 """),
             sessionFactory: _ => session);
+
+        var startResult = await host.StartAsync();
+        startResult.IsSuccess.ShouldBeTrue();
 
         var result = await host.RunScenarioAsync("publishMessage");
 

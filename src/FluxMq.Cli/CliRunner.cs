@@ -1,10 +1,15 @@
 using FluxMq.App;
+using FluxMq.App.Scenarios;
 using FluxMq.Cli.Commands;
+using FluxMq.Pipeline.Components;
+using FluxMq.Pipeline.Definitions;
 using FluxMq.Pipeline.Runtime;
 using FluxMq.Pipeline.Scenarios;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
+using System.Text.Json;
+using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Cli;
 
@@ -127,41 +132,122 @@ public sealed class CliRunner
 
     internal async Task<int> RunScenario(CliOptions options, CancellationToken cancellationToken)
     {
-        if (!TryBuildHost(options, out var host, out var exitCode))
+        if (!TryLoadApplicationDefinition(options, out var definition, out var exitCode))
         {
             return exitCode;
         }
 
-        await using (var flowHost = host ?? throw new InvalidOperationException("Host was not created."))
+        var applicationDefinition = definition ?? throw new InvalidOperationException("Application definition was not loaded.");
+        var scenarioName = options.ScenarioName ?? string.Empty;
+        var emptyEvents = new BroadcastBlock<FlowEvent>(static flowEvent => flowEvent);
+        try
         {
-            try
+            if (!applicationDefinition.Tests.TryGetValue(scenarioName, out var scenario))
             {
-                var result = await flowHost
-                    .RunScenarioAsync(options.ScenarioName ?? string.Empty, cancellationToken)
-                    .ConfigureAwait(false);
-                var commandResult = CreateScenarioResult(result);
-                var output = options.OutputFormat == CliOutputFormat.Json || commandResult.IsSuccess ? _output : _error;
-
-                ScenarioRunResultRenderer.Write(commandResult, options.OutputFormat, output);
-                return commandResult.IsSuccess ? (int)CliExitCode.Success : (int)CliExitCode.ScenarioFailed;
+                throw new InvalidOperationException($"Scenario '{scenarioName}' does not exist.");
             }
-            catch (InvalidOperationException exception)
+
+            if (ScenarioRequiresRuntimeEvents(scenario))
             {
-                if (options.OutputFormat == CliOutputFormat.Json)
-                {
-                    ScenarioRunResultRenderer.Write(
-                        CreateScenarioFailureResult(options.ScenarioName ?? string.Empty, exception.Message),
-                        options.OutputFormat,
-                        _output);
-                }
-                else
-                {
-                    _error.WriteLine(exception.Message);
-                }
-
-                return (int)CliExitCode.ValidationError;
+                throw new InvalidOperationException(
+                    $"Scenario '{scenarioName}' contains expect.event steps, but the CLI scenario command is publish-only and does not start or attach to an app runtime event stream. Run the app runtime and execute the test from the UI or host API, or remove expect.event steps from this CLI scenario.");
             }
+
+            var mqttClientFactory = new ApplicationDefinitionMqttScenarioClientFactory(applicationDefinition);
+            var services = ScenarioStepServices.Empty
+                .Add<IMqttScenarioClientFactory>(mqttClientFactory)
+                .Add<IMqttScenarioPublisher>(new ApplicationDefinitionMqttScenarioPublisher(mqttClientFactory));
+            var result = await FlowApplicationHost.CreateDefaultScenarioRunner()
+                .RunAsync(
+                    scenarioName,
+                    scenario,
+                    emptyEvents,
+                    services,
+                    cancellationToken)
+                .ConfigureAwait(false);
+            var commandResult = CreateScenarioResult(result);
+            var output = options.OutputFormat == CliOutputFormat.Json || commandResult.IsSuccess ? _output : _error;
+
+            ScenarioRunResultRenderer.Write(commandResult, options.OutputFormat, output);
+            return commandResult.IsSuccess ? (int)CliExitCode.Success : (int)CliExitCode.ScenarioFailed;
         }
+        catch (InvalidOperationException exception)
+        {
+            if (options.OutputFormat == CliOutputFormat.Json)
+            {
+                ScenarioRunResultRenderer.Write(
+                    CreateScenarioFailureResult(scenarioName, exception.Message),
+                    options.OutputFormat,
+                    _output);
+            }
+            else
+            {
+                _error.WriteLine(exception.Message);
+            }
+
+            return (int)CliExitCode.ValidationError;
+        }
+        finally
+        {
+            emptyEvents.Complete();
+        }
+    }
+
+    private static bool ScenarioRequiresRuntimeEvents(ScenarioDefinition scenario)
+        => scenario.Steps.Values.Any(step =>
+            string.Equals(step.Type, ScenarioStepTypes.ExpectEvent, StringComparison.Ordinal));
+
+    private bool TryLoadApplicationDefinition(CliOptions options, out ApplicationDefinition? definition, out int exitCode)
+    {
+        var configurationPath = Path.GetFullPath(options.ConfigurationPath!);
+        if (!File.Exists(configurationPath))
+        {
+            _error.WriteLine($"Configuration file was not found: {configurationPath}");
+            definition = null;
+            exitCode = (int)CliExitCode.UsageError;
+            return false;
+        }
+
+        var json = File.ReadAllText(configurationPath);
+        using var document = JsonDocument.Parse(json);
+        var root = document.RootElement;
+
+        if (TrySelectSection(root, options.SectionName, out var configuredSection))
+        {
+            root = configuredSection;
+        }
+        else if (root.TryGetProperty("FluxMq", out var fluxMq) &&
+            fluxMq.TryGetProperty("FlowApplication", out var flowApplication))
+        {
+            root = flowApplication;
+        }
+        else if (root.TryGetProperty("FlowApplication", out var directFlowApplication))
+        {
+            root = directFlowApplication;
+        }
+
+        definition = root.Deserialize<ApplicationDefinition>(ApplicationDefinitionJson.CreateSerializerOptions())
+            ?? throw new InvalidOperationException("Flow application definition is empty.");
+        exitCode = (int)CliExitCode.Success;
+        return true;
+    }
+
+    private static bool TrySelectSection(JsonElement root, string sectionName, out JsonElement section)
+    {
+        section = root;
+        foreach (var segment in sectionName.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (section.ValueKind != JsonValueKind.Object ||
+                !section.TryGetProperty(segment, out var child))
+            {
+                section = default;
+                return false;
+            }
+
+            section = child;
+        }
+
+        return true;
     }
 
     private bool TryBuildHost(CliOptions options, out FlowApplicationHost? host, out int exitCode)

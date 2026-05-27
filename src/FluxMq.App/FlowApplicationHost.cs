@@ -10,17 +10,22 @@ using Microsoft.Extensions.Configuration;
 namespace FluxMq.App;
 
 public sealed class FlowApplicationHost(
-    IConfiguration configuration,
+    IConfiguration? configuration,
     ApplicationRuntimeBuilder runtimeBuilder,
     FlowApplicationConfigurationLoader? configurationLoader = null,
     string sectionName = FlowApplicationConfigurationLoader.DefaultSectionName,
-    ScenarioRunner? scenarioRunner = null)
+    ScenarioRunner? scenarioRunner = null,
+    Func<MqttConnectionProfile, IMqttSession>? scenarioClientFactory = null,
+    ApplicationDefinition? applicationDefinition = null)
     : IAsyncDisposable, IDisposable
 {
-    private readonly IConfiguration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+    private readonly IConfiguration? _configuration = configuration;
     private readonly ApplicationRuntimeBuilder _runtimeBuilder = runtimeBuilder ?? throw new ArgumentNullException(nameof(runtimeBuilder));
     private readonly FlowApplicationConfigurationLoader _configurationLoader = configurationLoader ?? new FlowApplicationConfigurationLoader();
     private readonly ScenarioRunner _scenarioRunner = scenarioRunner ?? CreateDefaultScenarioRunner();
+    private readonly Func<MqttConnectionProfile, IMqttSession> _scenarioClientFactory =
+        scenarioClientFactory ?? (static profile => new MqttSession(profile));
+    private readonly ApplicationDefinition? _applicationDefinition = applicationDefinition;
     private ApplicationDefinition? _definition;
     private ApplicationRuntime? _runtime;
     private bool _disposed;
@@ -36,10 +41,32 @@ public sealed class FlowApplicationHost(
         IMessageRepository? messageRepository = null,
         Func<MqttConnectionProfile, IMqttSession>? sessionFactory = null)
     {
+        sessionFactory ??= static profile => new MqttSession(profile);
         var factories = new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories(sessionFactory, messageRepository);
 
-        return new FlowApplicationHost(configuration, new ApplicationRuntimeBuilder(factories));
+        return new FlowApplicationHost(
+            configuration,
+            new ApplicationRuntimeBuilder(factories),
+            scenarioClientFactory: sessionFactory);
+    }
+
+    public static FlowApplicationHost CreateDefault(
+        ApplicationDefinition definition,
+        IMessageRepository? messageRepository = null,
+        Func<MqttConnectionProfile, IMqttSession>? sessionFactory = null)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+
+        sessionFactory ??= static profile => new MqttSession(profile);
+        var factories = new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories(sessionFactory, messageRepository);
+
+        return new FlowApplicationHost(
+            null,
+            new ApplicationRuntimeBuilder(factories),
+            scenarioClientFactory: sessionFactory,
+            applicationDefinition: definition);
     }
 
     public static ScenarioRunner CreateDefaultScenarioRunner()
@@ -56,7 +83,7 @@ public sealed class FlowApplicationHost(
         try
         {
             LastException = null;
-            var definition = _configurationLoader.Load(_configuration, sectionName);
+            var definition = _applicationDefinition ?? LoadDefinitionFromConfiguration();
             _definition = definition;
             var runtimeBuild = _runtimeBuilder.Build(definition);
 
@@ -168,7 +195,7 @@ public sealed class FlowApplicationHost(
             throw new ArgumentException("Scenario name cannot be empty.", nameof(scenarioName));
         }
 
-        var definition = _definition ?? _configurationLoader.Load(_configuration, sectionName);
+        var definition = _definition ?? _applicationDefinition ?? LoadDefinitionFromConfiguration();
         if (!definition.Tests.TryGetValue(scenarioName, out _))
         {
             throw new InvalidOperationException($"Scenario '{scenarioName}' does not exist.");
@@ -176,13 +203,8 @@ public sealed class FlowApplicationHost(
 
         if (_runtime is null || State != FlowApplicationHostState.Running)
         {
-            var startResult = await StartAsync(cancellationToken).ConfigureAwait(false);
-            if (!startResult.IsSuccess || _runtime is null || _definition is null)
-            {
-                throw new InvalidOperationException($"Scenario '{scenarioName}' cannot run because the app runtime did not start.");
-            }
-
-            definition = _definition;
+            throw new InvalidOperationException(
+                $"Scenario '{scenarioName}' cannot run against this host because the app runtime is not running. Start the app explicitly or run the scenario with an external test runner.");
         }
 
         var scenario = definition.Tests[scenarioName];
@@ -261,9 +283,23 @@ public sealed class FlowApplicationHost(
         }
     }
 
-    private static ScenarioStepServices CreateScenarioStepServices(ApplicationRuntime runtime)
-        => ScenarioStepServices.Empty
-            .Add<IMqttScenarioPublisher>(new RuntimeMqttScenarioPublisher(runtime));
+    private ApplicationDefinition LoadDefinitionFromConfiguration()
+    {
+        if (_configuration is null)
+        {
+            throw new InvalidOperationException("A flow application configuration was not provided.");
+        }
+
+        return _configurationLoader.Load(_configuration, sectionName);
+    }
+
+    private ScenarioStepServices CreateScenarioStepServices(ApplicationRuntime runtime)
+    {
+        var mqttClientFactory = new RuntimeMqttScenarioClientFactory(runtime, _scenarioClientFactory);
+        return ScenarioStepServices.Empty
+            .Add<IMqttScenarioClientFactory>(mqttClientFactory)
+            .Add<IMqttScenarioPublisher>(new RuntimeMqttScenarioPublisher(mqttClientFactory));
+    }
 
     private void ThrowIfDisposed()
     {

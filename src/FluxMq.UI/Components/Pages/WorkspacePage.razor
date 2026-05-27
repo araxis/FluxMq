@@ -62,6 +62,14 @@
                     <span class="project-tab-name">@t</span>
                 </div>
             }
+            @{
+                var logsActive = active.ActiveArtifactKind == WorkspaceArtifactKind.Logs && !_jsonView;
+            }
+            <div class="project-tab @(logsActive ? "project-tab-active" : "")"
+                 @onclick="@(() => { active.SetActiveLogs(); _jsonView = false; })">
+                <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Small" Class="project-tab-icon" />
+                <span class="project-tab-name">Logs</span>
+            </div>
             <MudMenu Dense="true"
                      Icon="@Icons.Material.Filled.Add"
                      Size="Size.Small"
@@ -90,6 +98,15 @@
         {
             <div class="workspace-tab-content">
                 <AppJsonPanel Project="@active" />
+            </div>
+        }
+        else if (active.ActiveArtifactKind == WorkspaceArtifactKind.Logs)
+        {
+            <div class="workspace-tab-content">
+                <WorkspaceLogPanel Logs="@active.Logs"
+                                   OnClear="@active.ClearLogs"
+                                   Title="Logs"
+                                   MaxEntries="1000" />
             </div>
         }
         else if (active.ActiveArtifactName is null &&

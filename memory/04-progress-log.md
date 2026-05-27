@@ -904,3 +904,538 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verified:
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$out -m:1 --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowWorkspaceServiceTests"` passes with 100 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$out -m:1` passes with 421 tests.
+
+## 2026-05-25 - Scenario step field descriptor slice
+
+- Extended `ScenarioStepCatalog` from display metadata into editable field metadata:
+  - `mqtt.publish` owns broker, topic, payload, payload encoding, QoS, and retain field descriptors
+  - select options and default values now live in the catalog instead of the dialog and composer
+  - the publish step editor renders from field descriptors while keeping the same visible controls
+  - composer defaults for new publish scenario steps use the same descriptor defaults as the editor
+  - field descriptors normalize missing option lists to an empty list, preventing editor crashes while rendering descriptor-driven selects
+  - initially tried dialog-safe MudSelect popover settings, and app dialogs no longer close on backdrop click
+  - the lower Payload encoding and QoS popover approach was superseded on 2026-05-26 by MudBlazor segmented toggle groups
+  - the publish step editor now caches descriptor fields and option lists during initialization, so Payload encoding and QoS bind to stable concrete collections
+- Added regression coverage for publish field descriptors, selectable values, generated publish-step defaults, and missing field options.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyStepFieldsFocused6\ -m:1 --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowWorkspaceServiceTests"` passes with 102 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyStepFieldsFull6\ -m:1` passes with 423 tests. The solution pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet restore FluxMq.sln -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64` restores the Release-style target assets.
+  - `dotnet test FluxMq.sln --configuration Release --no-restore --verbosity minimal -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyStepFieldsRelease6\ -m:1` passes with 423 tests. The solution pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyStepFieldsFocused9\ -m:1 --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowWorkspaceServiceTests"` passes with 102 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyStepFieldsFull9\ -m:1` passes with 423 tests. The solution pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet restore FluxMq.sln -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64` restores the Release-style target assets.
+  - `dotnet test FluxMq.sln --configuration Release --no-restore --verbosity minimal -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyStepFieldsRelease9\ -m:1` passes with 423 tests. The solution pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyStepFieldsFocused11\ -m:1 --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowWorkspaceServiceTests"` passes with 102 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyStepFieldsFocused12\ -m:1 --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowWorkspaceServiceTests"` passes with 102 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyStepFieldsFocused13\ -m:1 --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowWorkspaceServiceTests"` passes with 102 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.Core.Tests\FluxMq.Core.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyCoreReconnect13\ -m:1 --filter "FullyQualifiedName~MqttConnectionManagerTests.Reconnect_TriggersReconnecting_State_OnFault"` passes with 1 test after the first full run exposed a transient reconnect-disposal race.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyStepFieldsFull14\ -m:1` passes with 423 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario step lower control cleanup
+
+- Removed the remaining scenario-step editor dropdown problem by replacing the lower MQTT publish dropdowns with MudBlazor single-selection toggle groups:
+  - Payload encoding and QoS now use `MudToggleGroup` plus `MudToggleItem` with `SelectionMode.SingleSelection`, `Outlined`, and `Delimiters`.
+  - Toggle item labels are rendered through the documented `Text` parameter; the earlier empty-rail failure came from using child content, which suppresses `Text` and receives a special selected-state parameter.
+  - Failed `MudSelect`, radio, and button-row attempts were rejected because they either depended on dialog popovers, looked too much like generic form controls, or could still leave blank labels if option metadata arrived empty.
+  - The editor now falls back to built-in MQTT publish options if descriptor options are ever empty, so Payload encoding and QoS cannot render as labels without choices.
+  - Broker, event type, and status use ordinary MudBlazor `MudSelect` behavior without scenario-specific popover classes.
+  - Removed the scenario-step popover/dialog override block from `wwwroot/app.css`, shrinking the global CSS and avoiding more z-index/overflow customization.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioChoiceButtonsFocused\ -m:1 --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowWorkspaceServiceTests"` passes with 102 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioChoiceButtonsFull\ -m:1` passes with 423 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioRadioFocused\ -m:1 --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowWorkspaceServiceTests"` passes with 102 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioRadioFull\ -m:1` passes with 423 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioToggleFocused\ -m:1 --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowWorkspaceServiceTests"` passes with 102 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioToggleFull\ -m:1` passes with 423 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario run history slice
+
+- Added bounded in-memory scenario run history to the workspace service:
+  - completed scenario runs are kept newest-first in `ScenarioRunHistory`
+  - the history is limited to the latest 20 results and cleared when the app definition changes
+  - switching the active test now restores that test's latest result instead of showing stale status from a different test
+- Added a compact MudBlazor `MudMenu` history action to the test scenario header:
+  - the menu lists the latest five runs for the selected test with status icon, finish time, step count, and duration
+  - the existing latest-result badges and per-step result display remain unchanged
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioHistoryFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests"` passes with 103 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioHistoryFull\ -m:1` passes with 424 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario report copy slice
+
+- Added a stable scenario run report formatter for desktop reporting:
+  - JSON reports include scenario status, start/finish time, duration, step status/message, and matched event details
+  - text reports summarize the same result in a CLI-like readable form for future reuse
+  - report DTOs avoid copying raw runtime objects directly into UI/export surfaces
+- Added a MudBlazor tooltip/icon action to the test scenario header for copying the latest scenario report JSON to the clipboard.
+- Added formatter tests for JSON shape and text output.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 105 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportFull\ -m:1` passes with 426 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario report file export slice
+
+- Added a second MudBlazor tooltip/icon action to the test scenario header for saving the latest scenario report JSON to disk.
+- Reused the existing `SaveAsDialog` instead of adding a new custom picker surface:
+  - the dialog now accepts title/helper/action text parameters while preserving the existing save-as defaults
+  - report saves suggest a file beside the current project when available, otherwise under `Documents\FluxMQ`
+  - generated report file names include the scenario name and local finish timestamp with invalid filename characters sanitized
+- Added `FlowWorkspaceService.SaveScenarioReportAsync` so report file writing stays behind the workspace service rather than in the Razor component.
+- Added regression coverage proving the workspace service writes the stable report JSON shape.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportExportFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 106 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportExportFull\ -m:1` passes with 427 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario history selection slice
+
+- Made the test scenario run history menu actionable:
+  - recent run rows are now clickable MudBlazor `MudMenuItem` commands instead of disabled status-only rows
+  - selecting a run restores it as `LastScenarioRunResult`, so the existing status, step result display, copy report, and save report actions target that historical run
+  - selection is guarded in `FlowWorkspaceService` so only runs from the currently active test can be restored
+- Added regression coverage for restoring an older run and rejecting a run from another active test.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioHistorySelectionFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 107 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioHistorySelectionFull\ -m:1` passes with 428 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario report input capture slice
+
+- Enriched copied and saved scenario reports with each step's configured inputs:
+  - `ScenarioRunReportFormatter` now accepts an optional `TestScenarioSnapshot`
+  - per-step report DTOs include a stable `configuration` object
+  - readable text reports include a compact `config:` line for configured steps
+  - the test scenario copy action passes the active scenario snapshot
+  - file saves resolve the active scenario through `FlowWorkspaceService`
+- Updated report formatter and save-to-file tests so JSON reports prove step input/configuration capture.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportConfigFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 107 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportConfigFull\ -m:1` passes with 428 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario report preview dialog slice
+
+- Added a MudBlazor-only report preview dialog for the selected scenario run:
+  - the test scenario header now has a report view icon next to copy/save
+  - the dialog uses `MudTabs` for Summary and JSON views
+  - both views use read-only multiline `MudTextField` content so users can inspect or select report text without a custom viewer
+  - the preview uses the same selected/latest historical run and scenario snapshot as copy/save
+- No CSS was added or changed for the dialog.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportDialogFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 107 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportDialogFull\ -m:1` passes with 428 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario report preview copy actions slice
+
+- Added MudBlazor copy actions inside the scenario report preview dialog:
+  - Summary and JSON tabs now have adjacent dialog action buttons for copying the displayed report text
+  - copy feedback uses the existing MudBlazor snackbar path
+  - no CSS was added or changed
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportDialogCopyFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 107 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportDialogCopyFull\ -m:1` passes with 428 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario history active-run indicator slice
+
+- Clarified which scenario run is currently displayed after history selection:
+  - the test scenario header now shows a small MudBlazor chip for the active run, either `Latest HH:mm:ss` or `History HH:mm:ss`
+  - report action tooltips now say `latest` or `selected history` to match the run they will use
+  - history menu rows are labeled as `Viewing`, `Latest`, or `History`, and the active row uses a visibility icon
+  - no CSS was added or changed
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioHistoryActiveRunFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 107 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioHistoryActiveRunFull\ -m:1` passes with 428 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario history return-to-latest slice
+
+- Added a direct MudBlazor history-menu command for leaving a selected historical run:
+  - when a historical run is active, the history menu shows `Show latest run`
+  - choosing it restores the newest run and shows `Showing latest scenario run`
+  - clicking the already-active history row is now a no-op, avoiding misleading snackbar feedback
+  - no CSS was added or changed
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioHistoryReturnLatestFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 107 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioHistoryReturnLatestFull\ -m:1` passes with 428 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario report dialog metadata slice
+
+- Added selected-run metadata to the MudBlazor report preview dialog:
+  - the dialog title area now shows chips for latest/historical scope, scenario status, finish timestamp, and duration
+  - the metadata comes from the same selected run used by preview/copy/save, so restored history is visible inside the report dialog too
+  - no CSS was added or changed
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportDialogMetadataFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 107 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportDialogMetadataFull\ -m:1` passes with 428 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario report dialog save action slice
+
+- Added a MudBlazor `Save JSON` action inside the report preview dialog:
+  - the dialog returns a typed save action result instead of writing files itself
+  - the parent component reuses the same SaveAs/workspace report save path as the header save action
+  - report file writing remains in `FlowWorkspaceService.SaveScenarioReportAsync`
+  - no CSS was added or changed
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportDialogSaveFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 107 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportDialogSaveFull\ -m:1` passes with 428 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario report step summary slice
+
+- Added aggregate step status counts to scenario reports:
+  - report JSON now includes `stepSummary` with total, passed, failed, timed out, and canceled counts
+  - readable text reports include the same summary in the first line
+  - the MudBlazor report preview dialog title area shows a step-count chip for the selected run
+  - no CSS was added or changed
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportStepSummaryFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 107 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportStepSummaryFull\ -m:1` passes with 428 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario report first-issue slice
+
+- Added first-issue reporting for non-passing scenario runs:
+  - report JSON now includes `firstIssue` with step name, step type, status, and message for the first non-passing step
+  - passing reports keep `firstIssue` as `null`
+  - readable text reports show a `First issue:` line before the step list when a run has a failed, timed-out, or canceled step
+  - the MudBlazor report preview dialog shows an issue chip for non-passing runs
+  - no CSS was added or changed
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportFirstIssueFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 107 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportFirstIssueFull\ -m:1` passes with 428 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario report timing slice
+
+- Added per-step timing metadata to scenario reports:
+  - report JSON now includes each step's `sequence`, `startedOffsetMilliseconds`, `finishedOffsetMilliseconds`, and `durationMilliseconds`
+  - readable text reports include a `timing:` line per step so report exports can be used to line up slow or failing steps without opening raw timestamps
+  - the change stays inside report formatting and tests; no UI layout or CSS was changed
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportTimingFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 107 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportTimingFull\ -m:1` passes with 428 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario report matched-event offset slice
+
+- Added matched-event relative timing to scenario reports:
+  - matched event JSON now includes `scenarioOffsetMilliseconds` and `stepOffsetMilliseconds`
+  - readable text reports show matched event offsets beside the matched event type/topic/status
+  - the change stays inside report formatting and tests; no UI layout or CSS was changed
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportEventOffsetsFocused2\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 107 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportEventOffsetsFull2\ -m:1` passes with 428 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario report metadata slice
+
+- Added root metadata to scenario reports:
+  - JSON reports now include `schemaVersion` with the stable `scenario-run-report.v1` value
+  - JSON reports now include `generatedAt`, defaulting to the UTC export time
+  - readable text reports start with a report metadata line before the scenario summary
+  - tests can pass an explicit generation timestamp to keep report shape assertions deterministic
+  - the change stays inside report formatting and tests; no UI layout or CSS was changed
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportMetadataFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 107 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportMetadataFull\ -m:1` passes with 428 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario report issue list slice
+
+- Added a full issue list to scenario reports:
+  - report JSON now includes root `issues` with every failed, timed-out, or canceled step
+  - each issue includes step sequence, name, type, status, and message
+  - passing reports serialize `issues` as an empty array while keeping `firstIssue` as `null`
+  - readable text reports include an `Issues:` section before the step details for non-passing runs
+  - the change stays inside report formatting and tests; no UI layout or CSS was changed
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportIssuesFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 107 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportIssuesFull\ -m:1` passes with 428 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario report run identity slice
+
+- Added stable run identity to scenario reports:
+  - report JSON now includes root `runId`
+  - `runId` is derived from the scenario name plus UTC run start timestamp, so copy/save/export of the same selected historical run can be correlated even when `generatedAt` changes
+  - readable text reports include the run id in the metadata line
+  - the change stays inside report formatting and tests; no UI layout or CSS was changed
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportRunIdFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 107 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportRunIdFull\ -m:1` passes with 428 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario report snapshot consistency slice
+
+- Made previewed/saved scenario reports use one report snapshot:
+  - `ScenarioRunReportFormatter` can now render JSON and text from an already-created `ScenarioRunReport`
+  - the preview dialog creates one report snapshot, renders Summary and JSON from it, and shows the run id in a native MudBlazor chip
+  - Save JSON from the preview writes the exact JSON shown in the preview instead of regenerating `generatedAt`
+  - header save/copy paths still create a single report JSON for the selected latest or historical run
+  - `FlowWorkspaceService.SaveScenarioReportJsonAsync` writes pre-rendered report JSON while the existing `SaveScenarioReportAsync` remains available
+  - no CSS was added or changed
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportSnapshotFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 108 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportSnapshotFull\ -m:1` passes with 429 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario report text save slice
+
+- Added readable text report export from the preview dialog:
+  - the MudBlazor report dialog now has a `Save summary` action beside `Save JSON`
+  - `Save summary` opens the existing `SaveAsDialog` with a `.scenario-report.txt` suggestion
+  - the saved summary uses the exact text shown in the Summary tab for the selected latest or historical run
+  - `FlowWorkspaceService.SaveScenarioReportTextAsync` writes pre-rendered text report content
+  - no CSS was added or changed
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportTextSaveFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 109 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportTextSaveFull\ -m:1` passes with 430 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario report text event detail slice
+
+- Enriched readable text reports with matched-event details:
+  - matched event text now includes a separate `event:` line for source, subject, payload byte count, and payload preview when present
+  - matched event attributes are rendered on a separate `attributes:` line when present
+  - configuration and attribute key/value output is ordered by key for stable text reports
+  - the change stays inside report formatting and tests; no UI layout or CSS was changed
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportEventDetailsFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 109 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportEventDetailsFull\ -m:1` passes with 430 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario report not-run steps slice
+
+- Added planned-but-not-run steps to scenario reports:
+  - report JSON now includes root `notRunSteps`
+  - each not-run step includes planned sequence, name, type, and captured configuration
+  - passing reports or reports without a matching scenario snapshot serialize `notRunSteps` as an empty array
+  - readable text reports include a `Not run:` section before executed step details when a scenario stopped before later planned steps
+  - the change stays inside report formatting and tests; no UI layout or CSS was changed
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportNotRunFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 109 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportNotRunFull\ -m:1` passes with 430 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario report planned summary slice
+
+- Made scenario report step summaries aware of planned versus executed steps:
+  - `stepSummary` now keeps the existing executed `total` and adds explicit `planned`, `executed`, and `notRun` counts
+  - readable text reports say, for example, `3 planned, 2 run, 1 not run` when a scenario stops early
+  - the MudBlazor report preview step-count chip uses the same planned/executed summary, so failed-early reports no longer look like only the executed steps existed
+  - no CSS was added or changed
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportPlannedSummaryFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 109 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportPlannedSummaryFull\ -m:1` passes with 430 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario report planned-step snapshot slice
+
+- Added the full planned scenario step snapshot to JSON reports:
+  - report JSON now includes root `plannedSteps` with planned sequence, step name, step type, and captured configuration
+  - `notRunSteps` is derived from the same planned-step snapshot, keeping planned and skipped-step export data consistent
+  - readable Summary output remains compact and continues to use the planned/executed/not-run counts plus the `Not run:` section
+  - no CSS was added or changed
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportPlannedStepsFocused\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests"` passes with 109 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioReportPlannedStepsFull\ -m:1` passes with 430 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario expectation timeout diagnostics slice
+
+- Clarified scenario expectation timeout messages:
+  - timed-out `expect.event` steps now say whether any app runtime events were observed while the step was waiting
+  - observed non-matching events are summarized by type, topic, status, source, and payload preview
+  - `mqtt.message.published` expectations now explicitly say that the matching event must be emitted by a running app MQTT publisher node
+  - timeout text now reminds users that finished runs do not keep listening and must be rerun to match later events
+  - no CSS was added or changed
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioExpectationDiagnosticsFocused2\ -m:1 --filter "FullyQualifiedName~ScenarioRunnerTests"` passes with 7 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioExpectationDiagnosticsFull\ -m:1` passes with 431 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario expectation event ordering fix
+
+- Fixed the `t1` false timeout path where a downstream `mqtt.message.published` event could be recorded before the earlier `mqtt.message.received` expectation matched:
+  - `ScenarioRunner` now tracks consumed matched event indexes instead of advancing the expectation cursor past every earlier non-matching event
+  - later expectations can still match an already-observed but previously-unmatched event, while identical later expectations cannot reuse the same matched event
+  - timeout diagnostics now omit already-consumed matched events from the observed-event snapshot
+  - `MqttTriggerComponent` now accepts the `mqtt.message.received` event before forwarding the envelope downstream, improving causal event ordering
+  - confirmed `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` has the right `t1` shape: step 1 publishes `fluxmq/sample/request`, the trigger subscribes to `fluxmq/#`, the mapper publishes to `test`, and step 3 expects the app-emitted `mqtt.message.published` event on `test`
+  - no UI CSS or `app.css` changes were made
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyPipelineOrdering3\ -m:1 --filter "FullyQualifiedName~ScenarioRunnerTests"` passes with 8 tests.
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyComponentOrdering4\ -m:1 --filter "FullyQualifiedName~MqttTriggerComponentTests"` passes with 5 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyAppOrdering\ -m:1 --filter "FullyQualifiedName~LiveTriggerAndJsonataMapper_CanPublishMappedRequestsToConnection|FullyQualifiedName~MqttPublishScenario"` passes with 1 test.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyAppScenarioHost\ -m:1 --filter "FullyQualifiedName~FlowApplicationHostTests.RunScenarioAsync"` passes with 4 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyFullOrdering2\ -m:1` passes with 432 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Runtime events mirrored into workspace logs
+
+- Fixed the too-empty Logs tab while scenarios and dashboards were seeing runtime events:
+  - `FlowWorkspaceService` now projects every app `FlowEvent` into `Logs` as an info entry while still storing it in `RuntimeEvents`
+  - runtime event log entries include event type, source, workflow/node scope when the source node is known, topic, status, payload byte count, sorted attributes, and payload preview
+  - this makes `mqtt.message.received` and `mqtt.message.published` visible in Logs even when no explicit `FlowLoggerComponent` is present
+  - added coverage for a scenario publish/receive flow and for publisher runtime-event log entries
+  - no UI CSS or `app.css` changes were made
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyRuntimeEventsLogsFocused2\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests"` passes with 45 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyRuntimeEventsLogsUiBroad\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~ScenarioRunReportFormatterTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests"` passes with 110 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyRuntimeEventsLogsFull\ -m:1` passes with 433 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `git diff --check` passes; Git reports only existing LF-to-CRLF working-copy warnings.
+  - `git diff -- src\FluxMq.UI\wwwroot\app.css` is empty.
+
+## 2026-05-26 - Scenario run event start boundary and MQTT retain expectations
+
+- Tightened scenario event isolation and made MQTT delivery flags first-class expectation filters:
+  - `ScenarioRunner` now creates its event journal with the scenario start timestamp, so broadcast-block replay or retained/stale runtime events emitted before the run cannot satisfy or pollute a fresh test run
+  - `expect.event` attribute matching now treats boolean strings case-insensitively, so config `retain=false` matches MQTT event attribute `retain=False`
+  - scenario attribute configuration now accepts string, boolean, and number JSON values, so `attributes: { "retain": false, "qos": 1 }` is valid
+  - MQTT received/published/recorded event filter descriptors now expose `QoS` and `Retain`
+  - the MudBlazor scenario step editor renders `QoS` and `Retain` expectation filters with toggle groups, using existing MudBlazor components and no CSS
+  - test step summaries show `QoS` and retain/no-retain expectation filters
+  - no UI CSS or `app.css` changes were made
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyMqttRetainExpectationPipeline\ -m:1 --filter "FullyQualifiedName~ScenarioRunnerTests"` passes with 10 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyMqttRetainExpectationUi\ -m:1 --filter "FullyQualifiedName~DashboardEventFilterCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowWorkspaceServiceTests"` passes with 112 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyMqttRetainExpectationFull\ -m:1` passes with 436 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `git diff --check` passes; Git reports only existing LF-to-CRLF working-copy warnings.
+  - `git diff -- src\FluxMq.UI\wwwroot\app.css` is empty.
+
+## 2026-05-26 - App1 test runner publish boundary and saved JSON order fix
+
+- Fixed the remaining `app1.json` `t1` false timeout where the first step looked correct in the UI but the downstream publish expectation still failed:
+  - confirmed the saved file at `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` has the correct `t1` test order and expected shape
+  - `RuntimeMqttScenarioPublisher` now publishes test MQTT messages through a separate short-lived scenario MQTT client cloned from the selected connection profile, instead of publishing through the running app MQTT client
+  - this makes the scenario publish step behave like an external MQTT client, so `pip1.trigger` can receive `fluxmq/sample/request` and the app can route/map/publish to `test`
+  - `FlowWorkspaceService` now creates `FlowApplicationHost` from a raw `ApplicationDefinition` parsed with `System.Text.Json`, preserving saved JSON object order for test steps instead of going through `IConfiguration`
+  - this prevents visual step order from being scrambled before execution
+  - added a regression test using an `app1`-shaped flow and a shared fake MQTT broker: scenario publishes `fluxmq/sample/request`, `pip1` receives it, mapper/publisher emits `mqtt.message.published` on `test`, and QoS/retain expectations match
+  - no UI CSS or `app.css` changes were made
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyApp1Scenario\ -m:1 --filter "FullyQualifiedName~RunActiveTestScenarioAsync_CanObserveMappedPublisherEventFromAppFlow"` passes with 1 test.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyUiScenarioSlice\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~DashboardEventFilterCatalogTests"` passes with 113 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyPipelineScenarios\ -m:1 --filter "FullyQualifiedName~Scenario"` passes with 11 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyAppScenarios\ -m:1 --filter "FullyQualifiedName~FlowApplicationHostTests"` passes with 10 tests.
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyComponentTriggers2\ -m:1 --filter "FullyQualifiedName~MqttTriggerComponentTests"` passes with 5 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyFullScenarioClient\ -m:1` passes with 437 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `git diff --check` passes; Git reports only existing LF-to-CRLF working-copy warnings.
+  - `git diff -- src\FluxMq.UI\wwwroot\app.css` is empty.
+
+## 2026-05-26 - Scenario runner no longer auto-starts app runtime
+
+- Split the first test-runner boundary away from the app runtime lifecycle:
+  - `FlowWorkspaceService.RunActiveTestScenarioAsync` no longer builds or starts the current app runtime when the user clicks Run test
+  - the CLI `scenario` command also runs through the isolated scenario runner instead of host-bound auto-start behavior
+  - scenario MQTT publish steps now resolve connection profiles directly from the saved `ApplicationDefinition` through `ApplicationDefinitionMqttScenarioPublisher`, so publish-only scenarios can run as an isolated test runner without an app host
+  - `FlowApplicationHost.RunScenarioAsync` now requires the host runtime to already be running and reports a clear error if callers try to use host-bound scenario execution before explicit app start
+  - existing `expect.event` can still observe the explicitly running local app target for now; the next integration-test slice should move toward composing the test runner from normal pipeline blocks (`mqtt.publisher`, `mqtt.trigger`, condition/router behavior) plus narrow test-specific `expect`/`when` blocks, rather than adding a separate broker-probe engine
+  - added coverage proving publish-only scenario execution does not start the UI app runtime, and updated host tests to start runtime explicitly when testing local-runtime events
+  - no UI CSS or `app.css` changes were made
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyIsolationUiFocused2\ -m:1 --filter "FullyQualifiedName~RunActiveTestScenarioAsync"` passes with 5 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyIsolationAppTests2\ -m:1 --filter "FullyQualifiedName~FlowApplicationHostTests"` passes with 11 tests.
+  - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyIsolationCli\ -m:1` passes with 12 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyIsolationUiSlice\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~DashboardEventFilterCatalogTests"` passes with 114 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyIsolationPipeline\ -m:1 --filter "FullyQualifiedName~Scenario"` passes with 11 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyFullIsolationBoundary2\ -m:1` passes with 439 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `git diff --check` passes; Git reports only existing LF-to-CRLF working-copy warnings.
+  - `git diff -- src\FluxMq.UI\wwwroot\app.css` is empty.
+
+## 2026-05-26 - Scoped workspace logs page
+
+- Promoted logs from a right-inspector-only list into an app-level Logs tab:
+  - `WorkspaceLogEntry` now carries explicit `Scope`, `ArtifactKind`, and `ArtifactName` metadata
+  - app runtime events, flow log entries, and component errors are scoped as `App` and tagged with their pipeline artifact when known
+  - scenario pass/fail diagnostics are scoped as `Test runner` and tagged with the active test artifact
+  - validation/designer/file diagnostics infer a `System` scope unless they are tied to a pipeline artifact
+  - added a shared `WorkspaceLogFilter`/`WorkspaceLogQuery` helper for scope, level, and search filtering
+  - added a MudBlazor-first `WorkspaceLogPanel` using `MudSelect`, `MudTextField`, `MudTable`, chips, tooltips, and icon buttons without custom CSS
+  - corrected the log filter toolbar so Scope, Level, and Search use compact fixed working widths instead of flex-growing across the whole logs page
+  - the workspace now has a first-level `Logs` tab beside pipelines, dashboards, and tests; the duplicate right-inspector Logs tab was removed
+  - no UI CSS or `app.css` changes were made
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqUiLogsScope\ -m:1` passes with 170 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqFullLogsScope\ -m:1` passes with 443 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `git diff --check` passes; Git reports only existing LF-to-CRLF working-copy warnings.
+  - `git diff -- src\FluxMq.UI\wwwroot\app.css` is empty.
+
+## 2026-05-26 - Test runner pipeline direction correction
+
+- Corrected the next integration-test direction after design review:
+  - do not add a special `mqtt.expect` broker-probe side channel
+  - do not reimplement a test runner runtime from the ground up
+  - keep the current scenario runner as a thin orchestrator for now
+  - evolve scenario/test execution toward a normal pipeline composition that can reuse existing runtime components
+  - test-runner pipelines should use normal MQTT blocks where possible, especially `mqtt.publisher`, `mqtt.trigger`, and existing condition/router behavior
+  - reserve test-specific nodes for assertion/control semantics such as `expect`, `when`, and reporting
+  - this keeps integration tests aligned with app/runtime architecture and avoids a parallel MQTT/test engine
+- Cleaned up the abandoned `mqtt.expect` probe attempt before it became part of the codebase.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqPivotScenarioRunner\ -m:1 --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests"` passes with 111 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - Scenario runner MQTT client factory boundary
+
+- Refactored the scenario/test runner MQTT boundary before adding more test-specific components:
+  - added `IMqttScenarioClientFactory` as the reusable contract for creating runner-owned MQTT clients from shared app-level connection resources
+  - added saved-definition and running-runtime factory implementations so UI scenario runs, CLI scenario runs, and host-bound scenario runs use the same app-resource-to-MQTT-client boundary
+  - `ApplicationDefinitionMqttScenarioPublisher` and `RuntimeMqttScenarioPublisher` now only publish through the factory instead of owning resource lookup and profile cloning themselves
+  - scenario services now register both `IMqttScenarioClientFactory` and `IMqttScenarioPublisher`, preparing future normal test-runner `mqtt.trigger`/`expect`/`when` components to use the same app resource names without coupling to app runtime MQTT clients
+  - shared app resources remain the source of truth; each scenario/test runner MQTT client still clones the MQTT profile with its own short-lived profile id, MQTT client id, and `CleanStart = true`
+  - no UI CSS or `app.css` changes were made
+- Verified:
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioClientFactory2\ -m:1 --filter "FullyQualifiedName~MqttScenarioClientFactoryTests|FullyQualifiedName~FlowApplicationHostTests"` passes with 14 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioClientFactoryUi\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests"` passes with 111 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioClientFactoryCli\ -m:1 --filter "FullyQualifiedName~CliRunnerTests"` passes with 12 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioClientFactoryFull2\ -m:1` passes with 446 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `git diff --check` passes; Git reports only existing LF-to-CRLF working-copy warnings.
+  - `git diff -- src\FluxMq.UI\wwwroot\app.css` is empty.
+
+## 2026-05-26 - App1 sample aligned with isolated test runner
+
+- Updated `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` to better match the current test-runner behavior:
+  - `pip2.trigger` now subscribes to `$SYS/#` instead of broad `#`, so the sample `t1` receive expectation cannot be masked by a second pipeline listening to all application topics
+  - `t1` expectations use explicit `source` filters: `MqttTrigger` for the received event and `MqttPublisher` for the published event
+  - `t1` expectation attributes now use typed JSON values, `qos: 1` and `retain: false`, matching the new scenario attribute reader support
+- Verified:
+  - `dotnet run --project src\FluxMq.Cli\FluxMq.Cli.csproj --no-restore -- validate --config C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` reports `Flow application is valid. Workflows: 2. Resources: 2.`
+
+## 2026-05-26 - MQTT client naming alignment
+
+- Tightened the new scenario/test runner code to use the agreed domain wording:
+  - `IMqttScenarioClientFactory` now exposes `CreateClient` instead of `CreateSession`
+  - scenario MQTT factories and publishers now use `clientFactory` and `client` names at the test-runner boundary
+  - `FlowWorkspaceService` now takes `runtimeClientFactory` instead of `runtimeSessionFactory`
+  - memory notes for the new resource boundary now describe live MQTT clients rather than sessions
+- Deferred a broader core rename of the older `IMqttSession` type because it is spread across the existing app and should be a dedicated mechanical rename slice.
+- Verified:
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqClientNamingApp\ -m:1 --filter "FullyQualifiedName~MqttScenarioClientFactoryTests|FullyQualifiedName~FlowApplicationHostTests"` passes with 14 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqClientNamingUi\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests"` passes with 48 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqClientNamingFull\ -m:1` passes with 446 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-26 - App1 published MQTT dashboard counter
+
+- Investigated the MQTT published-message dashboard counter path:
+  - `MqttPublisherComponent` already emits `mqtt.message.published` runtime events with topic, status, payload preview, QoS, retain, source, and source node id.
+  - `DashboardEventFilterCatalog` already matches published MQTT event type, topic prefix, status, QoS, and retain filters.
+  - The saved sample dashboard counter in `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` was still configured as an any-event counter with `status: received`, so it could not count mapped publish events.
+- Updated `app1.json` `d1.eventCounter` to count publishes to `test`:
+  - `eventType: mqtt.message.published`
+  - `topicStartsWith: test`
+  - `status: published`
+  - title changed to `Published to test`
+  - no QoS or retain filter is applied, so both the pipeline's QoS 1 publish and the right-inspector manual QoS 0 publish can count.
+- Added a regression assertion to `RunActiveTestScenarioAsync_CanObserveMappedPublisherEventFromAppFlow` so the UI workspace test now verifies that a dashboard `event.counter` configured for `mqtt.message.published` counts the app-emitted mapped publish event.
+- Added manual publish projection for the right-inspector Publish panel:
+  - `LiveMqttWorkspaceService.PublishAsync` now returns `true` only after the MQTT client publish succeeds, and `false` for no connection or publish failure
+  - after a successful manual publish, `LiveInspectorPanel` records a `LivePublisher` `mqtt.message.published` event on the active app workspace
+  - manual publish events include topic, status `published`, payload preview, QoS, retain, and connection name attributes, so dashboard counters and Logs can see the action
+- No UI CSS or `app.css` changes were made.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~RunActiveTestScenarioAsync_CanObserveMappedPublisherEventFromAppFlow" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqDashboardPublishedCounterAfter2\ -m:1` passes. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~RecordManualMqttPublish_UpdatesPublishedDashboardCounter|FullyQualifiedName~PublishAsync_Returns" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqManualPublishCounter2\ -m:1` passes with 3 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet run --project src\FluxMq.Cli\FluxMq.Cli.csproj --no-restore -- validate --config C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` reports `Flow application is valid. Workflows: 2. Resources: 2.`
+
+## 2026-05-27 - Scenario review blockers addressed
+
+- Addressed the review blockers from `report.md` before merge:
+  - CLI `scenario` now rejects scenarios containing `expect.event` with a clear validation error because that command is publish-only and has no app runtime event stream
+  - UI scenario runs now choose `RuntimeMqttScenarioClientFactory` plus `RuntimeMqttScenarioPublisher` when the app runtime is actually running, so scenario MQTT clients resolve connection profiles from the running runtime instead of a possibly different definition snapshot
+  - publish-only UI scenario runs without a running app still use the saved-definition MQTT scenario factory
+  - `FlowDefinitionComposer` readers no longer use empty `catch { }` blocks for workflow nodes, designer positions, connection resources, or artifact names; malformed JSON now throws a contextual `InvalidOperationException`, and unexpected designer shape errors surface instead of becoming empty lists
+  - invalid in-progress JSON can still be placed in the workspace editor and converted to validation diagnostics; active artifact normalization skips only that invalid-json read path while validation reports the real error
+- Added regressions for:
+  - CLI `expect.event` rejection
+  - UI running-runtime MQTT profile resolution
+  - malformed JSON reader failures across the affected composer readers
+  - invalid designer position shapes no longer being swallowed
+- Verified:
+  - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore --filter "FullyQualifiedName~CliRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqReviewFixCli\ -m:1` passes with 13 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~FlowDefinitionComposerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqReviewFixUi3\ -m:1` passes with 114 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowApplicationHostTests.RunScenarioAsync|FullyQualifiedName~MqttScenarioClientFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqReviewFixApp\ -m:1` passes with 8 tests.
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqReviewFixPipeline\ -m:1` passes with 10 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqReviewFixFull\ -m:1` passes with 456 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `git diff --check` passes; Git reports only existing LF-to-CRLF working-copy warnings.
+  - `git diff -- src\FluxMq.UI\wwwroot\app.css` is empty.

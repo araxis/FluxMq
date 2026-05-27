@@ -24,7 +24,7 @@ public sealed record FlowEventExpectation
                MatchesExact(flowEvent.Status, Status) &&
                MatchesExact(flowEvent.Source, Source) &&
                MatchesContains(flowEvent.PayloadPreview, PayloadContains) &&
-               Attributes.All(attribute => MatchesExact(flowEvent.GetAttribute(attribute.Key), attribute.Value));
+               Attributes.All(attribute => MatchesAttribute(flowEvent.GetAttribute(attribute.Key), attribute.Value));
     }
 
     private static bool MatchesExact(string? actual, string? expected)
@@ -40,4 +40,20 @@ public sealed record FlowEventExpectation
         => string.IsNullOrWhiteSpace(expectedValue) ||
            (!string.IsNullOrEmpty(actual) &&
             actual.Contains(expectedValue, StringComparison.Ordinal));
+
+    private static bool MatchesAttribute(string? actual, string? expected)
+    {
+        if (string.IsNullOrWhiteSpace(expected))
+        {
+            return true;
+        }
+
+        if (bool.TryParse(actual, out var actualBoolean) &&
+            bool.TryParse(expected, out var expectedBoolean))
+        {
+            return actualBoolean == expectedBoolean;
+        }
+
+        return string.Equals(actual, expected, StringComparison.Ordinal);
+    }
 }

@@ -7,16 +7,18 @@ public sealed class ScenarioEventJournal : IDisposable
 {
     private readonly object _gate = new();
     private readonly List<FlowEvent> _events = [];
+    private readonly DateTimeOffset? _minimumTimestamp;
     private readonly ActionBlock<FlowEvent> _target;
     private readonly IDisposable _link;
     private TaskCompletionSource _changed = NewChangeSource();
     private bool _completed;
     private bool _disposed;
 
-    public ScenarioEventJournal(ISourceBlock<FlowEvent> source)
+    public ScenarioEventJournal(ISourceBlock<FlowEvent> source, DateTimeOffset? minimumTimestamp = null)
     {
         ArgumentNullException.ThrowIfNull(source);
 
+        _minimumTimestamp = minimumTimestamp;
         _target = new ActionBlock<FlowEvent>(Record);
         _link = source.LinkTo(_target, new DataflowLinkOptions { PropagateCompletion = true });
         _ = _target.Completion.ContinueWith(
@@ -37,10 +39,39 @@ public sealed class ScenarioEventJournal : IDisposable
         }
     }
 
+    public IReadOnlyList<FlowEvent> SnapshotFrom(
+        int startIndex,
+        int maxCount = 5,
+        IReadOnlySet<int>? excludedIndexes = null)
+    {
+        if (maxCount <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxCount), maxCount, "Maximum count must be positive.");
+        }
+
+        lock (_gate)
+        {
+            var cursor = Math.Max(0, startIndex);
+            var events = new List<FlowEvent>(maxCount);
+            for (var index = cursor; index < _events.Count && events.Count < maxCount; index++)
+            {
+                if (excludedIndexes?.Contains(index) == true)
+                {
+                    continue;
+                }
+
+                events.Add(_events[index]);
+            }
+
+            return events.ToArray();
+        }
+    }
+
     public async Task<ScenarioEventMatch?> WaitForMatchAsync(
         int startIndex,
         Predicate<FlowEvent> predicate,
         TimeSpan timeout,
+        IReadOnlySet<int>? excludedIndexes = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(predicate);
@@ -59,6 +90,11 @@ public sealed class ScenarioEventJournal : IDisposable
             {
                 for (var index = cursor; index < _events.Count; index++)
                 {
+                    if (excludedIndexes?.Contains(index) == true)
+                    {
+                        continue;
+                    }
+
                     if (predicate(_events[index]))
                     {
                         return new ScenarioEventMatch(_events[index], index);
@@ -101,6 +137,12 @@ public sealed class ScenarioEventJournal : IDisposable
 
     private void Record(FlowEvent flowEvent)
     {
+        if (_minimumTimestamp is { } minimumTimestamp &&
+            flowEvent.Timestamp < minimumTimestamp)
+        {
+            return;
+        }
+
         TaskCompletionSource changed;
         lock (_gate)
         {

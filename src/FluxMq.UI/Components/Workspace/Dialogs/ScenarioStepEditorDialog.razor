@@ -2,7 +2,7 @@
 @inject DashboardEventFilterCatalog EventFilters
 @inject ScenarioStepCatalog ScenarioSteps
 
-<MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
+<MudDialog Options="@EditorDialogOptions">
     <TitleContent>
         <MudText Typo="Typo.h6">@DialogTitle</MudText>
     </TitleContent>
@@ -13,10 +13,11 @@
                 @if (ConnectionNames.Count > 0)
                 {
                     <MudSelect T="string"
-                               Label="Broker"
+                               Label="@_connectionField.Label"
                                @bind-Value="_connection"
                                Variant="Variant.Outlined"
-                               Margin="Margin.Dense">
+                               Margin="Margin.Dense"
+                               Dense="true">
                         @foreach (var connectionName in ConnectionNames)
                         {
                             <MudSelectItem T="string" Value="@connectionName">@connectionName</MudSelectItem>
@@ -26,42 +27,62 @@
                 else
                 {
                     <MudTextField T="string"
-                                  Label="Broker"
+                                  Label="@_connectionField.Label"
                                   @bind-Value="_connection"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense" />
                 }
                 <MudTextField T="string"
-                              Label="Topic"
+                              Label="@_topicField.Label"
                               @bind-Value="_topic"
                               Variant="Variant.Outlined"
                               Margin="Margin.Dense" />
                 <MudTextField T="string"
-                              Label="Payload"
+                              Label="@_payloadField.Label"
                               @bind-Value="_payload"
-                              Lines="6"
+                              Lines="@PayloadLines"
                               Variant="Variant.Outlined"
                               Margin="Margin.Dense" />
-                <MudSelect T="string"
-                           Label="Payload encoding"
-                           @bind-Value="_payloadEncoding"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense">
-                    <MudSelectItem T="string" Value="@("json")">JSON</MudSelectItem>
-                    <MudSelectItem T="string" Value="@("text")">Text</MudSelectItem>
-                    <MudSelectItem T="string" Value="@("base64")">Base64</MudSelectItem>
-                    <MudSelectItem T="string" Value="@("bytes")">Bytes</MudSelectItem>
-                </MudSelect>
-                <MudSelect T="string"
-                           Label="QoS"
-                           @bind-Value="_qos"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense">
-                    <MudSelectItem T="string" Value="@("0")">0</MudSelectItem>
-                    <MudSelectItem T="string" Value="@("1")">1</MudSelectItem>
-                    <MudSelectItem T="string" Value="@("2")">2</MudSelectItem>
-                </MudSelect>
-                <MudCheckBox T="bool" Label="Retain" @bind-Value="_retain" Dense="true" />
+                <MudStack Spacing="1">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@_payloadEncodingField.Label</MudText>
+                    <MudToggleGroup T="string"
+                                    Value="@_payloadEncoding"
+                                    ValueChanged="@SetPayloadEncoding"
+                                    SelectionMode="SelectionMode.SingleSelection"
+                                    Size="Size.Small"
+                                    Color="Color.Primary"
+                                    Outlined="true"
+                                    Delimiters="true">
+                        @foreach (var option in PayloadEncodingOptions)
+                        {
+                            <MudToggleItem T="string"
+                                           Value="@option.Value"
+                                           Text="@option.Label" />
+                        }
+                    </MudToggleGroup>
+                </MudStack>
+                <MudStack Spacing="1">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@_qosField.Label</MudText>
+                    <MudToggleGroup T="string"
+                                    Value="@_qos"
+                                    ValueChanged="@SetQos"
+                                    SelectionMode="SelectionMode.SingleSelection"
+                                    Size="Size.Small"
+                                    Color="Color.Primary"
+                                    Outlined="true"
+                                    Delimiters="true">
+                        @foreach (var option in QosOptions)
+                        {
+                            <MudToggleItem T="string"
+                                           Value="@option.Value"
+                                           Text="@option.Label" />
+                        }
+                    </MudToggleGroup>
+                </MudStack>
+                <MudCheckBox T="bool"
+                             Label="@_retainField.Label"
+                             @bind-Value="_retain"
+                             Dense="true" />
             }
             else
             {
@@ -70,7 +91,8 @@
                            Value="@_eventType"
                            ValueChanged="@SetEventType"
                            Variant="Variant.Outlined"
-                           Margin="Margin.Dense">
+                           Margin="Margin.Dense"
+                           Dense="true">
                     @foreach (var option in EventFilters.EventTypes)
                     {
                         <MudSelectItem T="string" Value="@option.Value">@option.Label</MudSelectItem>
@@ -79,20 +101,66 @@
                 @foreach (var field in CurrentEventType.Fields)
                 {
                     var currentField = field;
-                    <MudTextField T="string"
-                                  Label="@currentField.Label"
-                                  Value="@GetFilterValue(currentField.Key)"
-                                  ValueChanged="@((string? value) => SetFilterValue(currentField.Key, value))"
-                                  Placeholder="@currentField.Placeholder"
-                                  HelperText="@currentField.HelperText"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense" />
+                    @if (IsQosFilter(currentField))
+                    {
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@currentField.Label</MudText>
+                            <MudToggleGroup T="string"
+                                            Value="@GetFilterValue(currentField.Key)"
+                                            ValueChanged="@((string value) => SetFilterValue(currentField.Key, value))"
+                                            SelectionMode="SelectionMode.SingleSelection"
+                                            Size="Size.Small"
+                                            Color="Color.Primary"
+                                            Outlined="true"
+                                            Delimiters="true">
+                                @foreach (var option in ExpectQosOptions)
+                                {
+                                    <MudToggleItem T="string"
+                                                   Value="@option.Value"
+                                                   Text="@option.Label" />
+                                }
+                            </MudToggleGroup>
+                        </MudStack>
+                    }
+                    else if (IsRetainFilter(currentField))
+                    {
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@currentField.Label</MudText>
+                            <MudToggleGroup T="string"
+                                            Value="@GetFilterValue(currentField.Key)"
+                                            ValueChanged="@((string value) => SetFilterValue(currentField.Key, value))"
+                                            SelectionMode="SelectionMode.SingleSelection"
+                                            Size="Size.Small"
+                                            Color="Color.Primary"
+                                            Outlined="true"
+                                            Delimiters="true">
+                                @foreach (var option in ExpectRetainOptions)
+                                {
+                                    <MudToggleItem T="string"
+                                                   Value="@option.Value"
+                                                   Text="@option.Label" />
+                                }
+                            </MudToggleGroup>
+                        </MudStack>
+                    }
+                    else
+                    {
+                        <MudTextField T="string"
+                                      Label="@currentField.Label"
+                                      Value="@GetFilterValue(currentField.Key)"
+                                      ValueChanged="@((string? value) => SetFilterValue(currentField.Key, value))"
+                                      Placeholder="@currentField.Placeholder"
+                                      HelperText="@currentField.HelperText"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    }
                 }
                 <MudSelect T="string"
                            Label="Status"
                            @bind-Value="_status"
                            Variant="Variant.Outlined"
-                           Margin="Margin.Dense">
+                           Margin="Margin.Dense"
+                           Dense="true">
                     @foreach (var option in CurrentEventType.StatusOptions)
                     {
                         <MudSelectItem T="string" Value="@option.Value">@option.Label</MudSelectItem>
@@ -120,6 +188,42 @@
 
 @code {
     private const string AnyValue = "";
+    private static readonly IReadOnlyList<ScenarioStepFieldOption> DefaultPayloadEncodingOptions =
+    [
+        new("json", "JSON"),
+        new("text", "Text"),
+        new("base64", "Base64"),
+        new("bytes", "Bytes")
+    ];
+
+    private static readonly IReadOnlyList<ScenarioStepFieldOption> DefaultQosOptions =
+    [
+        new("0", "0"),
+        new("1", "1"),
+        new("2", "2")
+    ];
+
+    private static readonly IReadOnlyList<ScenarioStepFieldOption> ExpectQosOptions =
+    [
+        new(AnyValue, "Any"),
+        new("0", "0"),
+        new("1", "1"),
+        new("2", "2")
+    ];
+
+    private static readonly IReadOnlyList<ScenarioStepFieldOption> ExpectRetainOptions =
+    [
+        new(AnyValue, "Any"),
+        new("true", "Retain"),
+        new("false", "No retain")
+    ];
+
+    private static readonly DialogOptions EditorDialogOptions = new()
+    {
+        MaxWidth = MaxWidth.Small,
+        FullWidth = true,
+        BackdropClick = false
+    };
 
     [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
 
@@ -132,14 +236,22 @@
     private string _connection = string.Empty;
     private string _topic = string.Empty;
     private string _payload = string.Empty;
-    private string _payloadEncoding = "json";
-    private string _qos = "0";
+    private string _payloadEncoding = string.Empty;
+    private string _qos = string.Empty;
     private bool _retain;
     private readonly Dictionary<string, string> _filterValues = new(StringComparer.Ordinal);
     private string _eventType = AnyValue;
     private string _status = AnyValue;
     private string _payloadContains = string.Empty;
     private int _timeoutMs = 5000;
+    private ScenarioStepFieldDescriptor _connectionField = EmptyPublishField(ScenarioStepCatalog.ConnectionKey);
+    private ScenarioStepFieldDescriptor _topicField = EmptyPublishField(ScenarioStepCatalog.TopicKey);
+    private ScenarioStepFieldDescriptor _payloadField = EmptyPublishField(ScenarioStepCatalog.PayloadKey);
+    private ScenarioStepFieldDescriptor _payloadEncodingField = EmptyPublishField(ScenarioStepCatalog.PayloadEncodingKey);
+    private ScenarioStepFieldDescriptor _qosField = EmptyPublishField(ScenarioStepCatalog.QosKey);
+    private ScenarioStepFieldDescriptor _retainField = EmptyPublishField(ScenarioStepCatalog.RetainKey);
+    private IReadOnlyList<ScenarioStepFieldOption> _payloadEncodingOptions = [];
+    private IReadOnlyList<ScenarioStepFieldOption> _qosOptions = [];
 
     private ScenarioStepDescriptor StepDescriptor => ScenarioSteps.Describe(Step.Type);
 
@@ -149,25 +261,25 @@
 
     private DashboardEventTypeDescriptor CurrentEventType => EventFilters.Find(_eventType);
 
+    private int PayloadLines => Math.Max(1, _payloadField.Lines);
+
+    private IReadOnlyList<ScenarioStepFieldOption> PayloadEncodingOptions
+        => OptionsOrDefault(_payloadEncodingOptions, DefaultPayloadEncodingOptions);
+
+    private IReadOnlyList<ScenarioStepFieldOption> QosOptions
+        => OptionsOrDefault(_qosOptions, DefaultQosOptions);
+
     protected override void OnInitialized()
     {
-        _connection = Step.ReadString("connection") ?? ConnectionNames.FirstOrDefault() ?? string.Empty;
-        _topic = Step.ReadString("topic") ?? string.Empty;
-        _payload = Step.ReadString("payload") ?? string.Empty;
-        _payloadEncoding = NormalizeChoice(Step.ReadString("payloadEncoding"), "json");
-        _qos = NormalizeQos(Step.ReadString("qos"));
-        _retain = bool.TryParse(Step.ReadString("retain"), out var retain) && retain;
-        _eventType = Step.ReadString(DashboardEventFilterCatalog.EventTypeKey) ?? AnyValue;
-        foreach (var key in EventFilters.FilterKeys)
+        CacheScenarioFields();
+
+        if (IsMqttPublish)
         {
-            _filterValues[key] = Step.ReadString(key) ?? string.Empty;
+            InitializeMqttPublish();
+            return;
         }
 
-        _status = Step.ReadString(DashboardEventFilterCatalog.StatusKey) ?? AnyValue;
-        _payloadContains = Step.ReadString("payloadContains") ?? string.Empty;
-        _timeoutMs = int.TryParse(Step.ReadString("timeoutMs"), out var timeout) && timeout > 0 ? timeout : 5000;
-        TrimFiltersToEventType();
-        ResetStatusWhenUnsupported();
+        InitializeExpectEvent();
     }
 
     private void SetEventType(string? value)
@@ -177,40 +289,94 @@
         ResetStatusWhenUnsupported();
     }
 
+    private void SetPayloadEncoding(string value)
+        => _payloadEncoding = NormalizeSelect(value, PayloadEncodingOptions);
+
+    private void SetQos(string value)
+        => _qos = NormalizeSelect(value, QosOptions);
+
     private void Cancel() => MudDialog.Cancel();
 
     private void Submit()
     {
         var configuration = IsMqttPublish
-            ? new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["connection"] = Normalize(_connection),
-                ["topic"] = Normalize(_topic),
-                ["payload"] = _payload ?? string.Empty,
-                ["payloadEncoding"] = NormalizeChoice(_payloadEncoding, "json"),
-                ["qos"] = NormalizeQos(_qos),
-                ["retain"] = _retain.ToString()
-            }
-            : new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                [DashboardEventFilterCatalog.EventTypeKey] = Normalize(_eventType),
-                [DashboardEventFilterCatalog.StatusKey] = Normalize(_status),
-                ["payloadContains"] = Normalize(_payloadContains),
-                ["timeoutMs"] = Math.Max(1, _timeoutMs).ToString(System.Globalization.CultureInfo.InvariantCulture)
-            };
-
-        if (!IsMqttPublish)
-        {
-            var activeFieldKeys = CurrentEventType.Fields.Select(static field => field.Key).ToHashSet(StringComparer.Ordinal);
-            foreach (var key in EventFilters.FilterKeys)
-            {
-                configuration[key] = activeFieldKeys.Contains(key)
-                    ? Normalize(GetFilterValue(key))
-                    : string.Empty;
-            }
-        }
+            ? CreateMqttPublishConfiguration()
+            : CreateExpectEventConfiguration();
 
         MudDialog.Close(DialogResult.Ok(new ScenarioStepUpdate(Step.Type, configuration)));
+    }
+
+    private void InitializeMqttPublish()
+    {
+        _connection = Step.ReadString(ScenarioStepCatalog.ConnectionKey) ??
+                      FieldDefault(_connectionField);
+        _topic = Step.ReadString(ScenarioStepCatalog.TopicKey) ??
+                 FieldDefault(_topicField);
+        _payload = Step.ReadString(ScenarioStepCatalog.PayloadKey) ??
+                   FieldDefault(_payloadField);
+        _payloadEncoding = NormalizeSelect(
+            Step.ReadString(ScenarioStepCatalog.PayloadEncodingKey) ??
+            FieldDefault(_payloadEncodingField),
+            PayloadEncodingOptions);
+        _qos = NormalizeSelect(
+            Step.ReadString(ScenarioStepCatalog.QosKey) ??
+            FieldDefault(_qosField),
+            QosOptions);
+        _retain = bool.TryParse(
+            Step.ReadString(ScenarioStepCatalog.RetainKey) ??
+            FieldDefault(_retainField),
+            out var retain) && retain;
+    }
+
+    private void InitializeExpectEvent()
+    {
+        _eventType = Step.ReadString(DashboardEventFilterCatalog.EventTypeKey) ?? AnyValue;
+        foreach (var key in EventFilters.FilterKeys)
+        {
+            _filterValues[key] = Step.ReadString(key) ?? string.Empty;
+        }
+
+        _status = Step.ReadString(DashboardEventFilterCatalog.StatusKey) ?? AnyValue;
+        _payloadContains = Step.ReadString("payloadContains") ?? string.Empty;
+        _timeoutMs = ReadTimeout();
+        TrimFiltersToEventType();
+        ResetStatusWhenUnsupported();
+    }
+
+    private Dictionary<string, string> CreateExpectEventConfiguration()
+    {
+        var configuration = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [DashboardEventFilterCatalog.EventTypeKey] = Normalize(_eventType),
+            [DashboardEventFilterCatalog.StatusKey] = Normalize(_status),
+            ["payloadContains"] = Normalize(_payloadContains),
+            ["timeoutMs"] = Math.Max(1, _timeoutMs).ToString(System.Globalization.CultureInfo.InvariantCulture)
+        };
+
+        var activeFieldKeys = CurrentEventType.Fields.Select(static field => field.Key).ToHashSet(StringComparer.Ordinal);
+        foreach (var key in EventFilters.FilterKeys)
+        {
+            configuration[key] = activeFieldKeys.Contains(key)
+                ? Normalize(GetFilterValue(key))
+                : string.Empty;
+        }
+
+        return configuration;
+    }
+
+    private Dictionary<string, string> CreateMqttPublishConfiguration()
+    {
+        var configuration = new Dictionary<string, string>(StringComparer.Ordinal);
+        configuration[ScenarioStepCatalog.ConnectionKey] = Normalize(_connection);
+        configuration[ScenarioStepCatalog.TopicKey] = Normalize(_topic);
+        configuration[ScenarioStepCatalog.PayloadKey] = _payload ?? string.Empty;
+        configuration[ScenarioStepCatalog.PayloadEncodingKey] = NormalizeSelect(
+            _payloadEncoding,
+            PayloadEncodingOptions);
+        configuration[ScenarioStepCatalog.QosKey] = NormalizeSelect(_qos, QosOptions);
+        configuration[ScenarioStepCatalog.RetainKey] = _retain ? "true" : "false";
+
+        return configuration;
     }
 
     private string GetFilterValue(string key)
@@ -218,6 +384,12 @@
 
     private void SetFilterValue(string key, string? value)
         => _filterValues[key] = Normalize(value);
+
+    private static bool IsQosFilter(DashboardEventFilterFieldDescriptor field)
+        => string.Equals(field.Key, DashboardEventFilterCatalog.AttributeFilterKey("qos"), StringComparison.Ordinal);
+
+    private static bool IsRetainFilter(DashboardEventFilterFieldDescriptor field)
+        => string.Equals(field.Key, DashboardEventFilterCatalog.AttributeFilterKey("retain"), StringComparison.Ordinal);
 
     private void TrimFiltersToEventType()
     {
@@ -239,11 +411,56 @@
     private static string Normalize(string? value)
         => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
 
-    private static string NormalizeChoice(string? value, string fallback)
-        => string.IsNullOrWhiteSpace(value) ? fallback : value.Trim().ToLowerInvariant();
+    private void CacheScenarioFields()
+    {
+        _connectionField = StepField(ScenarioStepCatalog.ConnectionKey);
+        _topicField = StepField(ScenarioStepCatalog.TopicKey);
+        _payloadField = StepField(ScenarioStepCatalog.PayloadKey);
+        _payloadEncodingField = StepField(ScenarioStepCatalog.PayloadEncodingKey);
+        _qosField = StepField(ScenarioStepCatalog.QosKey);
+        _retainField = StepField(ScenarioStepCatalog.RetainKey);
+        _payloadEncodingOptions = _payloadEncodingField.Options;
+        _qosOptions = _qosField.Options;
+    }
 
-    private static string NormalizeQos(string? value)
-        => value is "1" or "2" ? value : "0";
+    private ScenarioStepFieldDescriptor StepField(string key)
+        => StepDescriptor.Fields.FirstOrDefault(field => string.Equals(field.Key, key, StringComparison.Ordinal)) ??
+           EmptyPublishField(key);
+
+    private static ScenarioStepFieldDescriptor EmptyPublishField(string key)
+        => new(key, key, ScenarioStepFieldKind.Text, string.Empty, []);
+
+    private string FieldDefault(ScenarioStepFieldDescriptor field)
+        => field.Kind == ScenarioStepFieldKind.Connection && ConnectionNames.Count > 0
+            ? ConnectionNames[0]
+            : field.DefaultValue;
+
+    private int ReadTimeout()
+    {
+        var value = Step.ReadString("timeoutMs");
+        return int.TryParse(value, out var timeout) && timeout > 0 ? timeout : 5000;
+    }
+
+    private static IReadOnlyList<ScenarioStepFieldOption> OptionsOrDefault(
+        IReadOnlyList<ScenarioStepFieldOption> options,
+        IReadOnlyList<ScenarioStepFieldOption> fallback)
+        => options.Count > 0 ? options : fallback;
+
+    private static string NormalizeSelect(string? value, IReadOnlyList<ScenarioStepFieldOption> options)
+    {
+        var normalized = Normalize(value);
+        if (options.Count == 0)
+        {
+            return normalized;
+        }
+
+        if (options.Any(option => string.Equals(option.Value, normalized, StringComparison.Ordinal)))
+        {
+            return normalized;
+        }
+
+        return options[0].Value;
+    }
 
     public sealed record ScenarioStepUpdate(string Type, IReadOnlyDictionary<string, string> Configuration);
 }

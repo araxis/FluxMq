@@ -183,6 +183,57 @@ public sealed class LiveMqttWorkspaceServiceTests
     }
 
     [Fact]
+    public async Task PublishAsync_ReturnsTrueWhenMessageWasPublished()
+    {
+        var createdSessions = new List<FakeMqttSession>();
+        var service = CreateService(profile =>
+        {
+            var session = new FakeMqttSession(profile);
+            createdSessions.Add(session);
+            return session;
+        });
+        var connection = service.AddConnectionIfAbsent(
+            new MqttConnectionProfile
+            {
+                Name = "local-broker",
+                Host = "localhost",
+                Port = 1883,
+                ClientId = "workspace-client"
+            },
+            "#",
+            "local-broker");
+        await service.ConnectAsync(connection.Id);
+
+        var published = await service.PublishAsync(
+            connection.Id,
+            "test",
+            """{"hello":"fluxmq"}""",
+            MqttQualityOfServiceLevel.AtMostOnce,
+            retain: false);
+
+        published.ShouldBeTrue();
+        service.Diagnostics.ShouldContain(diagnostic => diagnostic.Code == "Published");
+        var message = createdSessions.ShouldHaveSingleItem().Published.ShouldHaveSingleItem();
+        message.Topic.ShouldBe("test");
+        message.Payload.ShouldBe("""{"hello":"fluxmq"}"""u8.ToArray());
+        message.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtMostOnce);
+        message.Retain.ShouldBeFalse();
+        await service.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task PublishAsync_ReturnsFalseWhenNoConnectedConnectionExists()
+    {
+        var service = CreateService(profile => new FakeMqttSession(profile));
+
+        var published = await service.PublishAsync("test", "{}");
+
+        published.ShouldBeFalse();
+        service.Diagnostics.ShouldContain(diagnostic => diagnostic.Code == "NotConnected");
+        await service.DisposeAsync();
+    }
+
+    [Fact]
     public async Task RemoveConnectionsAsync_RemovesMatchingWorkspaceConnections()
     {
         var service = CreateService(profile => new FakeMqttSession(profile));
@@ -263,6 +314,7 @@ public sealed class LiveMqttWorkspaceServiceTests
         public ChannelReader<MqttEnvelope> Messages => _messages.Reader;
         public int ConnectCalls { get; private set; }
         public IReadOnlyList<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService)> Subscriptions => _subscriptions;
+        public List<PublishedMessage> Published { get; } = [];
 
         public event EventHandler<MqttSessionState>? StateChanged;
 
@@ -322,7 +374,10 @@ public sealed class LiveMqttWorkspaceServiceTests
             MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce,
             bool retain = false,
             CancellationToken ct = default)
-            => Task.CompletedTask;
+        {
+            Published.Add(new PublishedMessage(topic, payload, qos, retain));
+            return Task.CompletedTask;
+        }
 
         public ValueTask DisposeAsync()
         {
@@ -330,6 +385,12 @@ public sealed class LiveMqttWorkspaceServiceTests
             return ValueTask.CompletedTask;
         }
     }
+
+    private sealed record PublishedMessage(
+        string Topic,
+        byte[] Payload,
+        MqttQualityOfServiceLevel QualityOfService,
+        bool Retain);
 
     private sealed class FakeSessionRepository : ISessionRepository
     {

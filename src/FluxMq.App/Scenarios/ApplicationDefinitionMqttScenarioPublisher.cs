@@ -1,22 +1,22 @@
 using FluxMq.Components.MqttPublisher;
 using FluxMq.Core.Models;
 using FluxMq.Core.Session;
-using FluxMq.Pipeline.Runtime;
+using FluxMq.Pipeline.Definitions;
 
 namespace FluxMq.App.Scenarios;
 
-public sealed class RuntimeMqttScenarioPublisher : IMqttScenarioPublisher
+public sealed class ApplicationDefinitionMqttScenarioPublisher : IMqttScenarioPublisher
 {
     private readonly IMqttScenarioClientFactory _clientFactory;
 
-    public RuntimeMqttScenarioPublisher(
-        ApplicationRuntime runtime,
+    public ApplicationDefinitionMqttScenarioPublisher(
+        ApplicationDefinition definition,
         Func<MqttConnectionProfile, IMqttSession>? clientFactory = null)
-        : this(new RuntimeMqttScenarioClientFactory(runtime, clientFactory))
+        : this(new ApplicationDefinitionMqttScenarioClientFactory(definition, clientFactory))
     {
     }
 
-    public RuntimeMqttScenarioPublisher(IMqttScenarioClientFactory clientFactory)
+    public ApplicationDefinitionMqttScenarioPublisher(IMqttScenarioClientFactory clientFactory)
         => _clientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
 
     public async Task PublishAsync(

@@ -275,7 +275,7 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         NotifyChanged();
     }
 
-    public async Task PublishAsync(
+    public async Task<bool> PublishAsync(
         string topic,
         string payload,
         MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce,
@@ -289,7 +289,7 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
             retain,
             cancellationToken).ConfigureAwait(false);
 
-    public async Task PublishAsync(
+    public async Task<bool> PublishAsync(
         Guid? connectionId,
         string topic,
         string payload,
@@ -305,7 +305,7 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         {
             Diagnostics = [new WorkspaceDiagnostic("Warning", "MQTT", "NotConnected", "Connect before publishing.")];
             NotifyChanged();
-            return;
+            return false;
         }
 
         try
@@ -318,13 +318,15 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
                 cancellationToken).ConfigureAwait(false);
 
             Diagnostics = [new WorkspaceDiagnostic("Info", "MQTT", "Published", $"Published to {topic} through {entry.Connection.ResourceName}.")];
+            NotifyChanged();
+            return true;
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             Diagnostics = [new WorkspaceDiagnostic("Error", "MQTT", "PublishFailed", exception.Message)];
+            NotifyChanged();
+            return false;
         }
-
-        NotifyChanged();
     }
 
     public void StartRecording(string sessionName, string projectName)

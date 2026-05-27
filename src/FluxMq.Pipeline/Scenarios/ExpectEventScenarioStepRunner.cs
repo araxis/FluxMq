@@ -1,3 +1,5 @@
+using FluxMq.Pipeline.Components;
+
 namespace FluxMq.Pipeline.Scenarios;
 
 public sealed class ExpectEventScenarioStepRunner : IScenarioStepRunner
@@ -18,11 +20,15 @@ public sealed class ExpectEventScenarioStepRunner : IScenarioStepRunner
             context.EventOffset,
             expectation.Matches,
             expectation.Timeout,
+            context.ConsumedEventIndexes,
             cancellationToken).ConfigureAwait(false);
 
         var finishedAt = DateTimeOffset.UtcNow;
         if (match is null)
         {
+            var observedEvents = context.Events.SnapshotFrom(
+                context.EventOffset,
+                excludedIndexes: context.ConsumedEventIndexes);
             return new ScenarioStepResult
             {
                 Name = context.StepName,
@@ -30,7 +36,7 @@ public sealed class ExpectEventScenarioStepRunner : IScenarioStepRunner
                 Status = ScenarioStepRunStatus.TimedOut,
                 StartedAt = startedAt,
                 FinishedAt = finishedAt,
-                Message = DescribeTimeout(expectation),
+                Message = DescribeTimeout(expectation, observedEvents),
                 NextEventOffset = context.EventOffset
             };
         }
@@ -44,7 +50,8 @@ public sealed class ExpectEventScenarioStepRunner : IScenarioStepRunner
             FinishedAt = finishedAt,
             Message = "Expected event observed.",
             MatchedEvent = match.Event,
-            NextEventOffset = match.Index + 1
+            MatchedEventIndex = match.Index,
+            NextEventOffset = context.EventOffset
         };
     }
 
@@ -66,7 +73,9 @@ public sealed class ExpectEventScenarioStepRunner : IScenarioStepRunner
                 1))
         };
 
-    private static string DescribeTimeout(FlowEventExpectation expectation)
+    private static string DescribeTimeout(
+        FlowEventExpectation expectation,
+        IReadOnlyList<FlowEvent> observedEvents)
     {
         var parts = new List<string>();
         Add(parts, "type", expectation.EventType);
@@ -85,7 +94,18 @@ public sealed class ExpectEventScenarioStepRunner : IScenarioStepRunner
             ? "any event"
             : string.Join(", ", parts);
 
-        return $"Expected event was not observed within {expectation.Timeout.TotalMilliseconds:0} ms ({detail}).";
+        var observed = observedEvents.Count == 0
+            ? "Observed 0 app runtime events while waiting."
+            : $"Observed while waiting: {string.Join("; ", observedEvents.Select(DescribeObservedEvent))}.";
+        var guidance =
+            "Finished runs do not keep listening; rerun the test and produce a matching app runtime event before the timeout.";
+
+        if (string.Equals(expectation.EventType, FlowEventTypes.MqttMessagePublished, StringComparison.Ordinal))
+        {
+            guidance += " A mqtt.message.published expectation must be emitted by a running app MQTT publisher node.";
+        }
+
+        return $"Expected event was not observed within {expectation.Timeout.TotalMilliseconds:0} ms ({detail}). {observed} {guidance}";
     }
 
     private static void Add(List<string> parts, string label, string? value)
@@ -95,4 +115,22 @@ public sealed class ExpectEventScenarioStepRunner : IScenarioStepRunner
             parts.Add($"{label} '{value}'");
         }
     }
+
+    private static string DescribeObservedEvent(FlowEvent flowEvent)
+    {
+        var parts = new List<string> { flowEvent.Type };
+        Add(parts, "topic", flowEvent.Topic);
+        Add(parts, "status", flowEvent.Status);
+        Add(parts, "source", flowEvent.Source);
+
+        if (!string.IsNullOrWhiteSpace(flowEvent.PayloadPreview))
+        {
+            Add(parts, "payload", Shorten(flowEvent.PayloadPreview));
+        }
+
+        return string.Join(", ", parts);
+    }
+
+    private static string Shorten(string value)
+        => value.Length <= 80 ? value : $"{value[..77]}...";
 }

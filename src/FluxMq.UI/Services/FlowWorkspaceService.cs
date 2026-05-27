@@ -1,4 +1,6 @@
 using FluxMq.App;
+using FluxMq.App.Scenarios;
+using FluxMq.Core.Ids;
 using FluxMq.Components.MqttMetrics;
 using FluxMq.Components.MqttPayloadInspector;
 using FluxMq.Components.MessageSource;
@@ -11,8 +13,8 @@ using FluxMq.Pipeline.Definitions;
 using FluxMq.Pipeline.Runtime;
 using FluxMq.Pipeline.Scenarios;
 using FluxMq.UI.Models;
-using Microsoft.Extensions.Configuration;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.UI.Services;
@@ -21,6 +23,8 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 {
     private const int MaxWorkspaceLogs = 1000;
     private const int MaxRuntimeEvents = 1000;
+    private const int MaxScenarioRunHistory = 20;
+    private const int MaxFlowEventPayloadPreviewChars = 512;
     private const double DefaultAddedNodeX = 420d;
     private const double DefaultAddedNodeY = 120d;
     private const double AddedNodeColumnSpacing = 300d;
@@ -28,9 +32,10 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     private const int AddedNodeRowsBeforeNewColumn = 4;
     private static readonly TimeSpan RuntimeStopTimeout = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan RuntimeProjectionNotificationInterval = TimeSpan.FromMilliseconds(250);
+    private static readonly Encoding StrictUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
     private readonly FlowDefinitionComposer _definitionComposer;
     private readonly IMessageRepository? _messageRepository;
-    private readonly Func<MqttConnectionProfile, IMqttSession>? _runtimeSessionFactory;
+    private readonly Func<MqttConnectionProfile, IMqttSession>? _runtimeClientFactory;
     private readonly DashboardEventFilterCatalog _dashboardEventFilters;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly object _logSync = new();
@@ -38,8 +43,10 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     private readonly object _payloadInspectionSync = new();
     private readonly object _triggerActivitySync = new();
     private readonly object _runtimeEventSync = new();
+    private readonly object _scenarioHistorySync = new();
     private readonly List<WorkspaceLogEntry> _logs = [];
     private readonly List<FlowEvent> _runtimeEvents = [];
+    private readonly List<ScenarioRunResult> _scenarioRunHistory = [];
     private readonly Dictionary<string, MqttMetricsSnapshot> _metricsSnapshots = new(StringComparer.Ordinal);
     private readonly Dictionary<string, InspectedMqttMessage> _payloadInspections = new(StringComparer.Ordinal);
     private readonly Dictionary<string, MqttTriggerActivitySnapshot> _triggerActivitySnapshots = new(StringComparer.Ordinal);
@@ -51,12 +58,12 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     public FlowWorkspaceService(
         FlowDefinitionComposer definitionComposer,
         IMessageRepository? messageRepository = null,
-        Func<MqttConnectionProfile, IMqttSession>? runtimeSessionFactory = null,
+        Func<MqttConnectionProfile, IMqttSession>? runtimeClientFactory = null,
         DashboardEventFilterCatalog? dashboardEventFilters = null)
     {
         _definitionComposer = definitionComposer;
         _messageRepository = messageRepository;
-        _runtimeSessionFactory = runtimeSessionFactory;
+        _runtimeClientFactory = runtimeClientFactory;
         _dashboardEventFilters = dashboardEventFilters ?? DashboardEventFilterCatalog.Shared;
         DefinitionJson = _definitionComposer.CreateEmptyDefinition();
     }
@@ -87,6 +94,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     public IReadOnlyList<FlowEvent> RuntimeEvents { get; private set; } = [];
     public bool IsScenarioRunning { get; private set; }
     public ScenarioRunResult? LastScenarioRunResult { get; private set; }
+    public IReadOnlyList<ScenarioRunResult> ScenarioRunHistory { get; private set; } = [];
 
     public IReadOnlyList<string> WorkflowNames => _definitionComposer.GetWorkflowNames(DefinitionJson);
     public IReadOnlyList<string> DashboardNames => _definitionComposer.GetDashboardNames(DefinitionJson);
@@ -101,6 +109,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         WorkspaceArtifactKind.Pipeline => _activeWorkflowName,
         WorkspaceArtifactKind.Dashboard => _activeDashboardName,
         WorkspaceArtifactKind.Test => _activeTestName,
+        WorkspaceArtifactKind.Logs => "Logs",
         _ => null
     };
 
@@ -143,6 +152,46 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
                 .ToArray();
             return new DashboardEventSnapshot(matching.Length, matching.LastOrDefault());
         }
+    }
+
+    public void RecordManualMqttPublish(
+        string topic,
+        string payload,
+        int qualityOfService,
+        bool retain,
+        string? connectionName = null)
+    {
+        if (string.IsNullOrWhiteSpace(topic))
+        {
+            return;
+        }
+
+        var payloadBytes = Encoding.UTF8.GetBytes(payload ?? string.Empty);
+        var attributes = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["qos"] = qualityOfService.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ["retain"] = retain.ToString()
+        };
+
+        if (!string.IsNullOrWhiteSpace(connectionName))
+        {
+            attributes["connection"] = connectionName.Trim();
+        }
+
+        var flowEvent = new FlowEvent
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Type = FlowEventTypes.MqttMessagePublished,
+            Source = "LivePublisher",
+            Subject = topic.Trim(),
+            Status = "published",
+            Topic = topic.Trim(),
+            PayloadBytes = payloadBytes.Length,
+            PayloadPreview = CreatePayloadPreview(payloadBytes),
+            Attributes = attributes
+        };
+
+        StoreWorkspaceEvent(flowEvent, address: null);
     }
 
     public TestScenarioSnapshot? GetActiveTestScenario()
@@ -216,6 +265,19 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         _activeTestName = name;
         ActiveDashboardCellName = null;
         _activeArtifactKind = WorkspaceArtifactKind.Test;
+        LastScenarioRunResult = LatestScenarioRunForTest(name);
+        NotifyChanged();
+    }
+
+    public void SetActiveLogs()
+    {
+        if (_activeArtifactKind == WorkspaceArtifactKind.Logs)
+        {
+            return;
+        }
+
+        ActiveDashboardCellName = null;
+        _activeArtifactKind = WorkspaceArtifactKind.Logs;
         NotifyChanged();
     }
 
@@ -1079,6 +1141,84 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         await SaveToFileAsync(cancellationToken);
     }
 
+    public async Task SaveScenarioReportAsync(
+        ScenarioRunResult result,
+        string path,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            throw new ArgumentException("Scenario report path cannot be empty.", nameof(path));
+        }
+
+        await SaveScenarioReportJsonAsync(
+            ScenarioRunReportFormatter.ToJson(result, GetActiveTestScenario()),
+            path,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    public static async Task SaveScenarioReportJsonAsync(
+        string json,
+        string path,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(json);
+        await WriteScenarioReportContentAsync(json, path, cancellationToken).ConfigureAwait(false);
+    }
+
+    public static async Task SaveScenarioReportTextAsync(
+        string text,
+        string path,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        await WriteScenarioReportContentAsync(text, path, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task WriteScenarioReportContentAsync(
+        string content,
+        string path,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            throw new ArgumentException("Scenario report path cannot be empty.", nameof(path));
+        }
+
+        var fullPath = Path.GetFullPath(path);
+        var directory = Path.GetDirectoryName(fullPath);
+        if (!string.IsNullOrWhiteSpace(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        await File.WriteAllTextAsync(fullPath, content, cancellationToken).ConfigureAwait(false);
+    }
+
+    public bool SelectScenarioRunHistoryResult(ScenarioRunResult result)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        if (string.IsNullOrWhiteSpace(_activeTestName) ||
+            !string.Equals(result.Name, _activeTestName, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        lock (_scenarioHistorySync)
+        {
+            if (!_scenarioRunHistory.Any(historyResult => ReferenceEquals(historyResult, result)))
+            {
+                return false;
+            }
+
+            LastScenarioRunResult = result;
+        }
+
+        NotifyChanged();
+        return true;
+    }
+
     public async Task ValidateAsync(CancellationToken cancellationToken = default)
     {
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -1089,7 +1229,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             ClearRuntimePayloadInspections(notify: false);
             ClearRuntimeTriggerActivitySnapshots(notify: false);
             ClearRuntimeEvents(notify: false);
-            _host = FlowApplicationHost.CreateDefault(CreateConfiguration(DefinitionJson), _messageRepository, _runtimeSessionFactory);
+            _host = FlowApplicationHost.CreateDefault(CreateApplicationDefinition(DefinitionJson), _messageRepository, _runtimeClientFactory);
             var result = _host.Build();
             Diagnostics = CollectDiagnostics(result);
             State = result.IsSuccess ? RuntimeWorkspaceState.Valid : RuntimeWorkspaceState.Faulted;
@@ -1121,7 +1261,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             ClearRuntimePayloadInspections(notify: false);
             ClearRuntimeTriggerActivitySnapshots(notify: false);
             ClearRuntimeEvents(notify: false);
-            _host = FlowApplicationHost.CreateDefault(CreateConfiguration(DefinitionJson), _messageRepository, _runtimeSessionFactory);
+            _host = FlowApplicationHost.CreateDefault(CreateApplicationDefinition(DefinitionJson), _messageRepository, _runtimeClientFactory);
             var result = _host.Build();
             if (result.IsSuccess)
             {
@@ -1164,34 +1304,36 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
         try
         {
-            if (_host is null || State != RuntimeWorkspaceState.Running)
+            var definition = CreateApplicationDefinition(DefinitionJson);
+            if (!definition.Tests.TryGetValue(scenarioName, out var scenario))
             {
-                await DisposeHostAsync().ConfigureAwait(false);
-                ClearRuntimeMetricsSnapshots(notify: false);
-                ClearRuntimePayloadInspections(notify: false);
-                ClearRuntimeTriggerActivitySnapshots(notify: false);
-                ClearRuntimeEvents(notify: false);
+                throw new InvalidOperationException($"Scenario '{scenarioName}' does not exist.");
+            }
 
-                _host = FlowApplicationHost.CreateDefault(CreateConfiguration(DefinitionJson), _messageRepository, _runtimeSessionFactory);
-                var buildResult = _host.Build();
-                if (buildResult.IsSuccess)
+            var isolatedEvents = CreateScenarioEventSource(out var shouldCompleteScenarioEvents);
+            var services = CreateScenarioStepServices(definition);
+            ScenarioRunResult result;
+            try
+            {
+                result = await FlowApplicationHost.CreateDefaultScenarioRunner()
+                    .RunAsync(
+                        scenarioName,
+                        scenario,
+                        isolatedEvents,
+                        services,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            finally
+            {
+                if (shouldCompleteScenarioEvents is not null)
                 {
-                    AttachRuntimeProjections();
-                    buildResult = await _host.StartBuiltAsync(cancellationToken).ConfigureAwait(false);
-                }
-
-                Diagnostics = CollectDiagnostics(buildResult);
-                State = buildResult.IsSuccess ? RuntimeWorkspaceState.Running : RuntimeWorkspaceState.Faulted;
-                AppendDiagnosticsToLogs(Diagnostics, notify: false);
-
-                if (!buildResult.IsSuccess)
-                {
-                    return null;
+                    shouldCompleteScenarioEvents.Complete();
                 }
             }
 
-            var result = await _host.RunScenarioAsync(scenarioName, cancellationToken).ConfigureAwait(false);
             LastScenarioRunResult = result;
+            AddScenarioRunHistory(result);
             Diagnostics =
             [
                 new WorkspaceDiagnostic(
@@ -1200,7 +1342,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
                     result.Status.ToString(),
                     $"Test scenario '{result.Name}' {result.Status.ToString().ToLowerInvariant()}.")
             ];
-            AppendDiagnosticsToLogs(Diagnostics, notify: false);
+            AppendScenarioDiagnosticsToLogs(Diagnostics, scenarioName, notify: false);
             return result;
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
@@ -1210,7 +1352,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             [
                 new WorkspaceDiagnostic("Error", "Scenario", "RunFailed", exception.Message)
             ];
-            AppendDiagnosticsToLogs(Diagnostics, notify: false);
+            AppendScenarioDiagnosticsToLogs(Diagnostics, scenarioName, notify: false);
             return null;
         }
         finally
@@ -1219,6 +1361,35 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             _gate.Release();
             NotifyChanged();
         }
+    }
+
+    private ISourceBlock<FlowEvent> CreateScenarioEventSource(out IDataflowBlock? ownedEventSource)
+    {
+        if (_host?.Runtime is not null && State == RuntimeWorkspaceState.Running)
+        {
+            ownedEventSource = null;
+            return _host.Runtime.Events;
+        }
+
+        var emptyEvents = new BroadcastBlock<FlowEvent>(static flowEvent => flowEvent);
+        ownedEventSource = emptyEvents;
+        return emptyEvents;
+    }
+
+    private ScenarioStepServices CreateScenarioStepServices(ApplicationDefinition definition)
+    {
+        if (_host?.Runtime is { } runtime && State == RuntimeWorkspaceState.Running)
+        {
+            var runtimeClientFactory = new RuntimeMqttScenarioClientFactory(runtime, _runtimeClientFactory);
+            return ScenarioStepServices.Empty
+                .Add<IMqttScenarioClientFactory>(runtimeClientFactory)
+                .Add<IMqttScenarioPublisher>(new RuntimeMqttScenarioPublisher(runtimeClientFactory));
+        }
+
+        var definitionClientFactory = new ApplicationDefinitionMqttScenarioClientFactory(definition, _runtimeClientFactory);
+        return ScenarioStepServices.Empty
+            .Add<IMqttScenarioClientFactory>(definitionClientFactory)
+            .Add<IMqttScenarioPublisher>(new ApplicationDefinitionMqttScenarioPublisher(definitionClientFactory));
     }
 
     public async Task StopAsync(CancellationToken cancellationToken = default)
@@ -1277,12 +1448,23 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         _gate.Dispose();
     }
 
-    private static IConfiguration CreateConfiguration(string json)
+    private static ApplicationDefinition CreateApplicationDefinition(string json)
     {
-        var bytes = Encoding.UTF8.GetBytes(json);
-        return new ConfigurationBuilder()
-            .AddJsonStream(new MemoryStream(bytes))
-            .Build();
+        using var document = JsonDocument.Parse(json);
+        var root = document.RootElement;
+
+        if (root.TryGetProperty("FluxMq", out var fluxMq) &&
+            fluxMq.TryGetProperty("FlowApplication", out var flowApplication))
+        {
+            root = flowApplication;
+        }
+        else if (root.TryGetProperty("FlowApplication", out var directFlowApplication))
+        {
+            root = directFlowApplication;
+        }
+
+        return root.Deserialize<ApplicationDefinition>(ApplicationDefinitionJson.CreateSerializerOptions())
+            ?? throw new InvalidOperationException("Flow application definition is empty.");
     }
 
     private static IReadOnlyList<WorkspaceDiagnostic> CollectDiagnostics(FlowApplicationHostBuildResult result)
@@ -1347,7 +1529,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             return;
         }
 
-        AttachRuntimeEvents(_host.Runtime.Events);
+        AttachRuntimeEvents(_host.Runtime);
 
         foreach (var node in _host.Runtime.Nodes)
         {
@@ -1365,10 +1547,14 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         }
     }
 
-    private void AttachRuntimeEvents(ISourceBlock<FlowEvent> events)
+    private void AttachRuntimeEvents(ApplicationRuntime runtime)
     {
+        var eventSourceAddresses = runtime.Nodes
+            .Where(node => node.Node is IFlowEventSource)
+            .ToDictionary(node => node.Node.Id, node => node.Address);
+
         var target = new ActionBlock<FlowEvent>(
-            StoreRuntimeEvent,
+            flowEvent => StoreRuntimeEvent(flowEvent, eventSourceAddresses),
             new ExecutionDataflowBlockOptions
             {
                 EnsureOrdered = true,
@@ -1376,7 +1562,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             });
 
         _runtimeProjectionTargets.Add(target);
-        _runtimeProjectionLinks.Add(events.LinkTo(target, new DataflowLinkOptions { PropagateCompletion = true }));
+        _runtimeProjectionLinks.Add(runtime.Events.LinkTo(target, new DataflowLinkOptions { PropagateCompletion = true }));
     }
 
     private void AttachRuntimeMetricsOutputs(RuntimeNode node)
@@ -1514,7 +1700,20 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         _runtimeProjectionTargets.Clear();
     }
 
-    private void StoreRuntimeEvent(FlowEvent flowEvent)
+    private void StoreRuntimeEvent(
+        FlowEvent flowEvent,
+        IReadOnlyDictionary<FlowNodeId, NodeAddress> eventSourceAddresses)
+    {
+        NodeAddress? address = null;
+        if (flowEvent.SourceNodeId is { } sourceNodeId)
+        {
+            eventSourceAddresses.TryGetValue(sourceNodeId, out address);
+        }
+
+        StoreWorkspaceEvent(flowEvent, address);
+    }
+
+    private void StoreWorkspaceEvent(FlowEvent flowEvent, NodeAddress? address)
     {
         lock (_runtimeEventSync)
         {
@@ -1527,6 +1726,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             RuntimeEvents = _runtimeEvents.ToArray();
         }
 
+        AppendLogs([ToWorkspaceLogEntry(flowEvent, address)], notify: false);
         NotifyRuntimeProjectionChanged();
     }
 
@@ -1655,7 +1855,17 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     }
 
     private void AppendDiagnosticsToLogs(IEnumerable<WorkspaceDiagnostic> diagnostics, bool notify = true)
-        => AppendLogs(diagnostics.Select(WorkspaceLogEntry.FromDiagnostic), notify);
+        => AppendLogs(diagnostics.Select(diagnostic => WorkspaceLogEntry.FromDiagnostic(diagnostic)), notify);
+
+    private void AppendScenarioDiagnosticsToLogs(
+        IEnumerable<WorkspaceDiagnostic> diagnostics,
+        string scenarioName,
+        bool notify = true)
+        => AppendLogs(diagnostics.Select(diagnostic => WorkspaceLogEntry.FromDiagnostic(
+            diagnostic,
+            WorkspaceLogScopes.TestRunner,
+            WorkspaceLogArtifactKinds.Test,
+            scenarioName)), notify);
 
     private void AppendLog(WorkspaceLogEntry entry)
         => AppendLogs([entry]);
@@ -1699,7 +1909,10 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             address.Scope,
             address.Node.Value,
             null,
-            BuildRuntimeLogContext(entry));
+            BuildRuntimeLogContext(entry),
+            WorkspaceLogScopes.App,
+            WorkspaceLogArtifactKinds.Pipeline,
+            address.Scope);
 
     private static WorkspaceLogEntry ToWorkspaceLogEntry(NodeAddress address, string portName, FlowError error)
         => new(
@@ -1711,7 +1924,36 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             address.Scope,
             address.Node.Value,
             portName,
-            BuildFlowErrorContext(error));
+            BuildFlowErrorContext(error),
+            WorkspaceLogScopes.App,
+            WorkspaceLogArtifactKinds.Pipeline,
+            address.Scope);
+
+    private static WorkspaceLogEntry ToWorkspaceLogEntry(FlowEvent flowEvent, NodeAddress? address)
+        => new(
+            flowEvent.Timestamp,
+            "Info",
+            string.IsNullOrWhiteSpace(flowEvent.Source) ? "RuntimeEvent" : flowEvent.Source,
+            flowEvent.Type,
+            BuildRuntimeEventMessage(flowEvent),
+            address?.Scope,
+            address?.Node.Value,
+            null,
+            BuildRuntimeEventContext(flowEvent),
+            WorkspaceLogScopes.App,
+            address is null ? null : WorkspaceLogArtifactKinds.Pipeline,
+            address?.Scope);
+
+    private static string BuildRuntimeEventMessage(FlowEvent flowEvent)
+    {
+        var target = !string.IsNullOrWhiteSpace(flowEvent.Topic)
+            ? flowEvent.Topic
+            : flowEvent.Subject;
+
+        return string.IsNullOrWhiteSpace(target)
+            ? $"Observed runtime event '{flowEvent.Type}'."
+            : $"Observed runtime event '{flowEvent.Type}' for '{target}'.";
+    }
 
     private static string? BuildRuntimeLogContext(FlowLogEntry entry)
     {
@@ -1740,6 +1982,64 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         return parts.Count == 0 ? null : string.Join("; ", parts);
     }
 
+    private static string? BuildRuntimeEventContext(FlowEvent flowEvent)
+    {
+        var parts = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(flowEvent.Topic))
+        {
+            parts.Add($"topic={flowEvent.Topic}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(flowEvent.Subject) &&
+            !string.Equals(flowEvent.Subject, flowEvent.Topic, StringComparison.Ordinal))
+        {
+            parts.Add($"subject={flowEvent.Subject}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(flowEvent.Status))
+        {
+            parts.Add($"status={flowEvent.Status}");
+        }
+
+        if (flowEvent.PayloadBytes is not null)
+        {
+            parts.Add($"payloadBytes={flowEvent.PayloadBytes}");
+        }
+
+        foreach (var attribute in flowEvent.Attributes.OrderBy(attribute => attribute.Key, StringComparer.Ordinal))
+        {
+            parts.Add($"{attribute.Key}={attribute.Value}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(flowEvent.PayloadPreview))
+        {
+            parts.Add($"payload={flowEvent.PayloadPreview}");
+        }
+
+        return parts.Count == 0 ? null : string.Join("; ", parts);
+    }
+
+    private static string? CreatePayloadPreview(byte[] payload)
+    {
+        if (payload.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            var text = StrictUtf8.GetString(payload);
+            return text.Length <= MaxFlowEventPayloadPreviewChars
+                ? text
+                : text[..MaxFlowEventPayloadPreviewChars];
+        }
+        catch (DecoderFallbackException)
+        {
+            return null;
+        }
+    }
+
     private static string? BuildFlowErrorContext(FlowError error)
     {
         var parts = new List<string>();
@@ -1765,11 +2065,12 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         DefinitionJson = json;
         DefinitionRevision++;
         HasUnsavedChanges = true;
-        NormalizeActiveArtifactSelection();
+        TryNormalizeActiveArtifactSelection();
         ClearRuntimeMetricsSnapshots(notify: false);
         ClearRuntimePayloadInspections(notify: false);
         ClearRuntimeTriggerActivitySnapshots(notify: false);
         ClearRuntimeEvents(notify: false);
+        ClearScenarioRunHistory();
     }
 
     private void ReplaceDefinitionSilent(string json)
@@ -1779,11 +2080,50 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
         DefinitionJson = json;
         DefinitionRevision++;
-        NormalizeActiveArtifactSelection();
+        TryNormalizeActiveArtifactSelection();
         ClearRuntimeMetricsSnapshots(notify: false);
         ClearRuntimePayloadInspections(notify: false);
         ClearRuntimeTriggerActivitySnapshots(notify: false);
         ClearRuntimeEvents(notify: false);
+        ClearScenarioRunHistory();
+    }
+
+    private void AddScenarioRunHistory(ScenarioRunResult result)
+    {
+        lock (_scenarioHistorySync)
+        {
+            _scenarioRunHistory.Insert(0, result);
+            if (_scenarioRunHistory.Count > MaxScenarioRunHistory)
+            {
+                _scenarioRunHistory.RemoveRange(MaxScenarioRunHistory, _scenarioRunHistory.Count - MaxScenarioRunHistory);
+            }
+
+            ScenarioRunHistory = _scenarioRunHistory.ToArray();
+        }
+    }
+
+    private ScenarioRunResult? LatestScenarioRunForTest(string? testName)
+    {
+        if (string.IsNullOrWhiteSpace(testName))
+        {
+            return null;
+        }
+
+        lock (_scenarioHistorySync)
+        {
+            return _scenarioRunHistory.FirstOrDefault(result =>
+                string.Equals(result.Name, testName, StringComparison.Ordinal));
+        }
+    }
+
+    private void ClearScenarioRunHistory()
+    {
+        lock (_scenarioHistorySync)
+        {
+            _scenarioRunHistory.Clear();
+            ScenarioRunHistory = [];
+            LastScenarioRunResult = null;
+        }
     }
 
     private void NormalizeActiveArtifactSelection()
@@ -1807,6 +2147,12 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             _activeTestName = tests.FirstOrDefault();
         }
 
+        if (_activeArtifactKind == WorkspaceArtifactKind.Logs)
+        {
+            ActiveDashboardCellName = null;
+            return;
+        }
+
         if (_activeArtifactKind == WorkspaceArtifactKind.Pipeline && _activeWorkflowName is not null ||
             _activeArtifactKind == WorkspaceArtifactKind.Dashboard && _activeDashboardName is not null ||
             _activeArtifactKind == WorkspaceArtifactKind.Test && _activeTestName is not null)
@@ -1825,6 +2171,18 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         if (_activeArtifactKind != WorkspaceArtifactKind.Dashboard)
         {
             ActiveDashboardCellName = null;
+        }
+    }
+
+    private void TryNormalizeActiveArtifactSelection()
+    {
+        try
+        {
+            NormalizeActiveArtifactSelection();
+        }
+        catch (InvalidOperationException exception) when (exception.InnerException is JsonException)
+        {
+            // Invalid in-progress JSON is reported by validation; keep the current selection meanwhile.
         }
     }
 

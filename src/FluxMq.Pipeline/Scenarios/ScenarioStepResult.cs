@@ -11,6 +11,7 @@ public sealed record ScenarioStepResult
     public required DateTimeOffset FinishedAt { get; init; }
     public string? Message { get; init; }
     public FlowEvent? MatchedEvent { get; init; }
+    public int? MatchedEventIndex { get; init; }
     public int NextEventOffset { get; init; }
 
     public bool IsSuccess => Status == ScenarioStepRunStatus.Passed;

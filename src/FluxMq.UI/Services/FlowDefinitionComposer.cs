@@ -309,33 +309,31 @@ public sealed class FlowDefinitionComposer
     public IReadOnlyList<(string Name, string Type)> GetWorkflowNodes(string json, string workflowName)
     {
         var result = new List<(string, string)>();
-        try
+        using var doc = ParseDefinitionJson(json, "Read workflow nodes");
+        var root = doc.RootElement;
+        JsonElement flowApp;
+        if (root.TryGetProperty("FluxMq", out var fluxMq) &&
+            fluxMq.TryGetProperty("FlowApplication", out flowApp) &&
+            flowApp.ValueKind == JsonValueKind.Object)
         {
-            using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
-            JsonElement flowApp;
-            if (root.TryGetProperty("FluxMq", out var fluxMq) &&
-                fluxMq.TryGetProperty("FlowApplication", out flowApp) &&
-                flowApp.ValueKind == JsonValueKind.Object)
-            { }
-            else
-            {
-                flowApp = root;
-            }
+        }
+        else
+        {
+            flowApp = root;
+        }
 
-            if (flowApp.TryGetProperty("workflows", out var workflows) &&
-                workflows.ValueKind == JsonValueKind.Object &&
-                workflows.TryGetProperty(workflowName, out var workflow) &&
-                workflow.ValueKind == JsonValueKind.Object)
+        if (flowApp.TryGetProperty("workflows", out var workflows) &&
+            workflows.ValueKind == JsonValueKind.Object &&
+            workflows.TryGetProperty(workflowName, out var workflow) &&
+            workflow.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var node in workflow.EnumerateObject())
             {
-                foreach (var node in workflow.EnumerateObject())
-                {
-                    var type = node.Value.TryGetProperty("type", out var t) ? t.GetString() ?? "" : "";
-                    result.Add((node.Name, type));
-                }
+                var type = node.Value.TryGetProperty("type", out var t) ? t.GetString() ?? "" : "";
+                result.Add((node.Name, type));
             }
         }
-        catch { }
+
         return result;
     }
 
@@ -1142,25 +1140,22 @@ public sealed class FlowDefinitionComposer
     public IReadOnlyDictionary<string, (double X, double Y, bool Collapsed)> ReadNodePositions(string json)
     {
         var result = new Dictionary<string, (double X, double Y, bool Collapsed)>(StringComparer.Ordinal);
-        try
+        using var doc = ParseDefinitionJson(json, "Read node positions");
+        var root = doc.RootElement;
+        if (root.TryGetProperty("FluxMq", out var fluxMq) &&
+            fluxMq.TryGetProperty("Designer", out var designer) &&
+            designer.TryGetProperty("nodes", out var nodes) &&
+            nodes.ValueKind == JsonValueKind.Object)
         {
-            using var doc = System.Text.Json.JsonDocument.Parse(json);
-            var root = doc.RootElement;
-            if (root.TryGetProperty("FluxMq", out var fluxMq) &&
-                fluxMq.TryGetProperty("Designer", out var designer) &&
-                designer.TryGetProperty("nodes", out var nodes) &&
-                nodes.ValueKind == System.Text.Json.JsonValueKind.Object)
+            foreach (var node in nodes.EnumerateObject())
             {
-                foreach (var node in nodes.EnumerateObject())
-                {
-                    var x = node.Value.TryGetProperty("x", out var xp) ? xp.GetDouble() : 0;
-                    var y = node.Value.TryGetProperty("y", out var yp) ? yp.GetDouble() : 0;
-                    var collapsed = node.Value.TryGetProperty("collapsed", out var cp) && cp.GetBoolean();
-                    result[node.Name] = (x, y, collapsed);
-                }
+                var x = node.Value.TryGetProperty("x", out var xp) ? xp.GetDouble() : 0;
+                var y = node.Value.TryGetProperty("y", out var yp) ? yp.GetDouble() : 0;
+                var collapsed = node.Value.TryGetProperty("collapsed", out var cp) && cp.GetBoolean();
+                result[node.Name] = (x, y, collapsed);
             }
         }
-        catch { }
+
         return result;
     }
 
@@ -1178,40 +1173,37 @@ public sealed class FlowDefinitionComposer
     public IReadOnlyList<(string Name, MqttConnectionProfile Profile, string Subscription)> ReadConnectionResourcesFromDefinition(string json)
     {
         var result = new List<(string, MqttConnectionProfile, string)>();
-        try
+        using var doc = ParseDefinitionJson(json, "Read connection resources");
+        var root = doc.RootElement;
+
+        JsonElement flowApp;
+        if (root.TryGetProperty("FluxMq", out var fluxMq) &&
+            fluxMq.TryGetProperty("FlowApplication", out flowApp) &&
+            flowApp.ValueKind == JsonValueKind.Object)
         {
-            using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
-
-            JsonElement flowApp;
-            if (root.TryGetProperty("FluxMq", out var fluxMq) &&
-                fluxMq.TryGetProperty("FlowApplication", out flowApp) &&
-                flowApp.ValueKind == JsonValueKind.Object)
-            { }
-            else
-            {
-                flowApp = root;
-            }
-
-            var resourceProfiles = new Dictionary<string, MqttConnectionProfile>(StringComparer.Ordinal);
-            if (flowApp.TryGetProperty("resources", out var resources) &&
-                resources.ValueKind == JsonValueKind.Object)
-            {
-                foreach (var resource in resources.EnumerateObject())
-                {
-                    if (!resource.Value.TryGetProperty("type", out var type) ||
-                        type.GetString() != "mqtt.connection") continue;
-                    if (!resource.Value.TryGetProperty("configuration", out var config) ||
-                        !config.TryGetProperty("profile", out var profileEl)) continue;
-
-                    resourceProfiles[resource.Name] = ReadProfile(profileEl);
-                }
-            }
-
-            foreach (var (name, profile) in resourceProfiles)
-                result.Add((name, profile, LiveMqttWorkspaceService.DefaultBrokerMonitorSubscription));
         }
-        catch { }
+        else
+        {
+            flowApp = root;
+        }
+
+        var resourceProfiles = new Dictionary<string, MqttConnectionProfile>(StringComparer.Ordinal);
+        if (flowApp.TryGetProperty("resources", out var resources) &&
+            resources.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var resource in resources.EnumerateObject())
+            {
+                if (!resource.Value.TryGetProperty("type", out var type) ||
+                    type.GetString() != "mqtt.connection") continue;
+                if (!resource.Value.TryGetProperty("configuration", out var config) ||
+                    !config.TryGetProperty("profile", out var profileEl)) continue;
+
+                resourceProfiles[resource.Name] = ReadProfile(profileEl);
+            }
+        }
+
+        foreach (var (name, profile) in resourceProfiles)
+            result.Add((name, profile, LiveMqttWorkspaceService.DefaultBrokerMonitorSubscription));
 
         return result;
     }
@@ -1965,29 +1957,29 @@ public sealed class FlowDefinitionComposer
     private static IReadOnlyDictionary<string, string> CreateDefaultScenarioStepConfiguration(
         JsonObject flowApplication,
         string stepType)
-        => stepType switch
+    {
+        var step = ScenarioStepCatalog.Shared.Find(stepType);
+        if (step?.EditorKind == ScenarioStepEditorKind.MqttPublish)
         {
-            ScenarioStepTypes.MqttPublish => new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["connection"] = ReadFirstConnectionResourceName(flowApplication),
-                ["topic"] = "fluxmq/test",
-                ["payload"] = """{"hello":"fluxmq"}""",
-                ["payloadEncoding"] = "json",
-                ["qos"] = "0",
-                ["retain"] = "false"
-            },
-            _ => new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["eventType"] = "mqtt.message.published",
-                ["topicStartsWith"] = string.Empty,
-                ["subjectStartsWith"] = string.Empty,
-                ["status"] = "published",
-                ["source"] = string.Empty,
-                ["payloadContains"] = string.Empty,
-                [DashboardEventFilterCatalog.AttributeFilterKey("schemaId")] = string.Empty,
-                ["timeoutMs"] = "5000"
-            }
+            return ScenarioStepCatalog.Shared.CreateDefaultConfiguration(
+                stepType,
+                ReadFirstConnectionResourceName(flowApplication));
+        }
+
+        return new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["eventType"] = "mqtt.message.published",
+            ["topicStartsWith"] = string.Empty,
+            ["subjectStartsWith"] = string.Empty,
+            ["status"] = "published",
+            ["source"] = string.Empty,
+            ["payloadContains"] = string.Empty,
+            [DashboardEventFilterCatalog.AttributeFilterKey("qos")] = string.Empty,
+            [DashboardEventFilterCatalog.AttributeFilterKey("retain")] = string.Empty,
+            [DashboardEventFilterCatalog.AttributeFilterKey("schemaId")] = string.Empty,
+            ["timeoutMs"] = "5000"
         };
+    }
 
     private static JsonObject CreateScenarioStepConfiguration(
         string stepType,
@@ -1996,12 +1988,12 @@ public sealed class FlowDefinitionComposer
         var result = new JsonObject();
         if (IsMqttPublishScenarioStep(stepType))
         {
-            AddString(result, configuration, "connection");
-            AddString(result, configuration, "topic");
+            AddString(result, configuration, ScenarioStepCatalog.ConnectionKey);
+            AddString(result, configuration, ScenarioStepCatalog.TopicKey);
             AddPayload(result, configuration);
-            AddString(result, configuration, "payloadEncoding");
-            AddInt(result, configuration, "qos", 0);
-            AddBool(result, configuration, "retain", false);
+            AddString(result, configuration, ScenarioStepCatalog.PayloadEncodingKey);
+            AddInt(result, configuration, ScenarioStepCatalog.QosKey, 0);
+            AddBool(result, configuration, ScenarioStepCatalog.RetainKey, false);
             return result;
         }
 
@@ -2066,8 +2058,10 @@ public sealed class FlowDefinitionComposer
 
     private static void AddPayload(JsonObject target, IReadOnlyDictionary<string, string> configuration)
     {
-        var payload = configuration.TryGetValue("payload", out var value) ? value ?? string.Empty : string.Empty;
-        var encoding = configuration.TryGetValue("payloadEncoding", out var configuredEncoding)
+        var payload = configuration.TryGetValue(ScenarioStepCatalog.PayloadKey, out var value)
+            ? value ?? string.Empty
+            : string.Empty;
+        var encoding = configuration.TryGetValue(ScenarioStepCatalog.PayloadEncodingKey, out var configuredEncoding)
             ? configuredEncoding
             : string.Empty;
         if (string.Equals(encoding, "json", StringComparison.OrdinalIgnoreCase) &&
@@ -2075,7 +2069,7 @@ public sealed class FlowDefinitionComposer
         {
             try
             {
-                target["payload"] = JsonNode.Parse(payload);
+                target[ScenarioStepCatalog.PayloadKey] = JsonNode.Parse(payload);
                 return;
             }
             catch (JsonException)
@@ -2084,7 +2078,7 @@ public sealed class FlowDefinitionComposer
             }
         }
 
-        target["payload"] = payload;
+        target[ScenarioStepCatalog.PayloadKey] = payload;
     }
 
     private static string ReadFirstConnectionResourceName(JsonObject flowApplication)
@@ -2715,21 +2709,29 @@ public sealed class FlowDefinitionComposer
 
     private static IReadOnlyList<string> GetNamedObjectKeys(string json, string propertyName)
     {
-        try
-        {
-            using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
-            var flowApp = TryGetFlowApplication(root, out var app) ? app : root;
+        using var doc = ParseDefinitionJson(json, $"Read {propertyName} names");
+        var root = doc.RootElement;
+        var flowApp = TryGetFlowApplication(root, out var app) ? app : root;
 
-            if (flowApp.TryGetProperty(propertyName, out var artifacts) &&
-                artifacts.ValueKind == JsonValueKind.Object)
-            {
-                return artifacts.EnumerateObject().Select(artifact => artifact.Name).ToArray();
-            }
+        if (flowApp.TryGetProperty(propertyName, out var artifacts) &&
+            artifacts.ValueKind == JsonValueKind.Object)
+        {
+            return artifacts.EnumerateObject().Select(artifact => artifact.Name).ToArray();
         }
-        catch { }
 
         return [];
+    }
+
+    private static JsonDocument ParseDefinitionJson(string json, string operation)
+    {
+        try
+        {
+            return JsonDocument.Parse(json);
+        }
+        catch (JsonException exception)
+        {
+            throw new InvalidOperationException($"{operation} failed because the flow definition JSON is invalid: {exception.Message}", exception);
+        }
     }
 
     private static bool TryGetFlowApplication(JsonElement root, out JsonElement flowApplication)

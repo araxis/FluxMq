@@ -195,6 +195,7 @@
         {
             WorkspaceArtifactKind.Dashboard => app.ActiveDashboardName,
             WorkspaceArtifactKind.Test => app.ActiveTestName,
+            WorkspaceArtifactKind.Logs => "Logs",
             _ => app.ActiveWorkflowName
         };
 
@@ -202,6 +203,7 @@
         {
             WorkspaceArtifactKind.Dashboard => "dashboard",
             WorkspaceArtifactKind.Test => "test",
+            WorkspaceArtifactKind.Logs => "page",
             _ => "pipeline"
         };
 

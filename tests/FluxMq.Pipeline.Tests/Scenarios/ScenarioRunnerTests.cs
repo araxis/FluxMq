@@ -91,6 +91,50 @@ public sealed class ScenarioRunnerTests
     }
 
     [Fact]
+    public async Task RunAsync_MatchesMqttQosAndRetainAttributes()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        var scenario = new ScenarioDefinition
+        {
+            Steps =
+            {
+                ["expectPublished"] = ExpectEvent(
+                    ("eventType", FlowEventTypes.MqttMessagePublished),
+                    ("topicStartsWith", "test"),
+                    ("attributes", new Dictionary<string, object>
+                    {
+                        ["qos"] = 1,
+                        ["retain"] = false
+                    }),
+                    ("timeoutMs", 1000))
+            }
+        };
+
+        var runTask = new ScenarioRunner().RunAsync("mqttAttributes", scenario, events);
+        events.Post(Event(
+            FlowEventTypes.MqttMessagePublished,
+            topic: "test",
+            attributes: new Dictionary<string, string>
+            {
+                ["qos"] = "1",
+                ["retain"] = "True"
+            }));
+        events.Post(Event(
+            FlowEventTypes.MqttMessagePublished,
+            topic: "test",
+            attributes: new Dictionary<string, string>
+            {
+                ["qos"] = "1",
+                ["retain"] = "False"
+            }));
+
+        var result = await runTask.WaitAsync(TimeSpan.FromSeconds(2));
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Steps[0].MatchedEvent!.GetAttribute("retain").ShouldBe("False");
+    }
+
+    [Fact]
     public async Task RunAsync_TimesOutWhenExpectedEventDoesNotArrive()
     {
         var events = new BufferBlock<FlowEvent>();
@@ -112,7 +156,79 @@ public sealed class ScenarioRunnerTests
         result.Status.ShouldBe(ScenarioRunStatus.Failed);
         var step = result.Steps.ShouldHaveSingleItem();
         step.Status.ShouldBe(ScenarioStepRunStatus.TimedOut);
-        step.Message!.ShouldContain("Expected event was not observed");
+        var message = step.Message.ShouldNotBeNull();
+        message.ShouldContain("Expected event was not observed");
+        message.ShouldContain("Observed 0 app runtime events while waiting.");
+    }
+
+    [Fact]
+    public async Task RunAsync_IgnoresBroadcastReplayFromBeforeScenarioStarted()
+    {
+        var events = new BroadcastBlock<FlowEvent>(static flowEvent => flowEvent);
+        var scenario = new ScenarioDefinition
+        {
+            Steps =
+            {
+                ["expectPublished"] = ExpectEvent(
+                    ("eventType", FlowEventTypes.MqttMessagePublished),
+                    ("topicStartsWith", "test"),
+                    ("status", "published"),
+                    ("payloadContains", "\"value\":12"),
+                    ("timeoutMs", 20))
+            }
+        };
+
+        events.Post(Event(
+            FlowEventTypes.MqttMessagePublished,
+            topic: "test",
+            status: "published",
+            payloadPreview: """{"value":12}""",
+            timestamp: DateTimeOffset.UtcNow.AddMinutes(-1)));
+
+        var result = await new ScenarioRunner()
+            .RunAsync("roundTrip", scenario, events)
+            .WaitAsync(TimeSpan.FromSeconds(2));
+
+        result.Status.ShouldBe(ScenarioRunStatus.Failed);
+        var step = result.Steps.ShouldHaveSingleItem();
+        step.Status.ShouldBe(ScenarioStepRunStatus.TimedOut);
+        step.Message.ShouldNotBeNull().ShouldContain("Observed 0 app runtime events while waiting.");
+    }
+
+    [Fact]
+    public async Task RunAsync_DescribesObservedNonMatchingEventsOnTimeout()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        var scenario = new ScenarioDefinition
+        {
+            Steps =
+            {
+                ["expectPublished"] = ExpectEvent(
+                    ("eventType", FlowEventTypes.MqttMessagePublished),
+                    ("topicStartsWith", "test"),
+                    ("status", "published"),
+                    ("payloadContains", "\"value\":12"),
+                    ("timeoutMs", 50))
+            }
+        };
+
+        var runTask = new ScenarioRunner().RunAsync("roundTrip", scenario, events);
+
+        events.Post(Event(
+            FlowEventTypes.MqttMessageReceived,
+            topic: "fluxmq/sample",
+            status: "received",
+            payloadPreview: "1"));
+
+        var result = await runTask.WaitAsync(TimeSpan.FromSeconds(2));
+
+        var step = result.Steps.ShouldHaveSingleItem();
+        step.Status.ShouldBe(ScenarioStepRunStatus.TimedOut);
+        var message = step.Message.ShouldNotBeNull();
+        message.ShouldContain("Observed while waiting: mqtt.message.received");
+        message.ShouldContain("topic 'fluxmq/sample'");
+        message.ShouldContain("payload '1'");
+        message.ShouldContain("A mqtt.message.published expectation must be emitted by a running app MQTT publisher node.");
     }
 
     [Fact]
@@ -141,6 +257,48 @@ public sealed class ScenarioRunnerTests
         result.Steps.Count.ShouldBe(2);
         result.Steps[0].Status.ShouldBe(ScenarioStepRunStatus.Passed);
         result.Steps[1].Status.ShouldBe(ScenarioStepRunStatus.TimedOut);
+    }
+
+    [Fact]
+    public async Task RunAsync_DoesNotSkipUnmatchedEventsRecordedBeforePreviousMatch()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        var scenario = new ScenarioDefinition
+        {
+            Steps =
+            {
+                ["expectReceive"] = ExpectEvent(
+                    ("eventType", FlowEventTypes.MqttMessageReceived),
+                    ("topicStartsWith", "fluxmq/sample"),
+                    ("status", "received"),
+                    ("payloadContains", "\"value\":12"),
+                    ("timeoutMs", 1000)),
+                ["expectPublish"] = ExpectEvent(
+                    ("eventType", FlowEventTypes.MqttMessagePublished),
+                    ("topicStartsWith", "test"),
+                    ("status", "published"),
+                    ("payloadContains", "\"value\":12"),
+                    ("timeoutMs", 1000))
+            }
+        };
+
+        var runTask = new ScenarioRunner().RunAsync("mappedPublish", scenario, events);
+        events.Post(Event(
+            FlowEventTypes.MqttMessagePublished,
+            topic: "test",
+            status: "published",
+            payloadPreview: """{"value":12}"""));
+        events.Post(Event(
+            FlowEventTypes.MqttMessageReceived,
+            topic: "fluxmq/sample/request",
+            status: "received",
+            payloadPreview: """{"value":12}"""));
+
+        var result = await runTask.WaitAsync(TimeSpan.FromSeconds(2));
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Steps[0].MatchedEvent!.Type.ShouldBe(FlowEventTypes.MqttMessageReceived);
+        result.Steps[1].MatchedEvent!.Type.ShouldBe(FlowEventTypes.MqttMessagePublished);
     }
 
     [Fact]
@@ -207,10 +365,11 @@ public sealed class ScenarioRunnerTests
         string? status = null,
         string? subject = null,
         string? payloadPreview = null,
-        IReadOnlyDictionary<string, string>? attributes = null)
+        IReadOnlyDictionary<string, string>? attributes = null,
+        DateTimeOffset? timestamp = null)
         => new()
         {
-            Timestamp = DateTimeOffset.UtcNow,
+            Timestamp = timestamp ?? DateTimeOffset.UtcNow,
             Type = type,
             Source = "test",
             Topic = topic,

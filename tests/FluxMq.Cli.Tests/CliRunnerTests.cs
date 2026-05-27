@@ -307,6 +307,45 @@ public sealed class CliRunnerTests
     }
 
     [Fact]
+    public async Task RunAsync_ReturnsValidationErrorWhenCliScenarioRequiresRuntimeEvents()
+    {
+        using var temp = TemporaryJsonFile(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "tests": {
+                    "roundTrip": {
+                      "steps": {
+                        "expect": {
+                          "type": "expect.event",
+                          "configuration": {
+                            "eventType": "mqtt.message.published",
+                            "topicStartsWith": "test"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """);
+
+        var output = new TestOutput();
+        var error = new TestOutput();
+        var runner = new CliRunner(output, error);
+
+        var exitCode = await runner.RunAsync(["scenario", "--config", temp.Path, "--name", "roundTrip"]);
+
+        exitCode.ShouldBe((int)CliExitCode.ValidationError);
+        output.Lines.ShouldBeEmpty();
+        error.Lines.ShouldContain(line =>
+            line.Contains("contains expect.event steps", StringComparison.Ordinal) &&
+            line.Contains("does not start or attach to an app runtime event stream", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task RunAsync_ReturnsScenarioFailedWhenScenarioStepFails()
     {
         using var temp = TemporaryJsonFile(

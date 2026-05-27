@@ -65,6 +65,12 @@ The current scenario host slice wires test/scenario execution into `FlowApplicat
 The current scenario action slice adds a generic `ScenarioStepServices` boundary and the first app-level action step, `mqtt.publish`. Scenario steps can now ask for runtime capabilities through typed services, and the publish step resolves a named MQTT connection resource from the running app and publishes a configured message without inserting test behavior into workflow nodes.
 Testing-era boundary: tests/scenarios are a separate plane from app design/run pipelines. Their extra value is integration testing: a test can start or use an app runtime, run arrange/action steps against real or fake resources, observe runtime events, and assert behavior across MQTT, files, HTTP, databases, and future transports. This means we should support different test scenarios and, when needed, test-only orchestration pipelines without polluting production workflow components.
 The current CLI scenario runner slice makes tests/scenarios executable outside the desktop UI. `fluxmq scenario --config <path> --name <scenario>` loads the app, starts the host through `RunScenarioAsync`, and returns text or JSON results with per-step status. This is the first command-line entry point for integration-test workflows.
+The current scenario step field slice extends `ScenarioStepCatalog` so each step descriptor can own editable field metadata. MQTT publish step fields, defaults, and options now come from the catalog; the editor renders publish controls from descriptors, and the composer uses the same descriptors for new-step defaults. Field descriptors normalize missing option lists to empty lists. Short finite publish choices use MudBlazor `MudToggleGroup`/`MudToggleItem` single-selection groups instead of dropdown popovers, which keeps the scenario editor out of custom z-index/overflow CSS. Toggle labels use the documented `MudToggleItem.Text` parameter rather than child content. The editor also has built-in MQTT fallback options so finite fields cannot render as labels without choices if descriptor options are empty. This is the reusable path for future scenario action/expectation step editors without spreading property-specific controls across each UI surface.
+The current scenario result history slice keeps a bounded in-memory list of recent scenario runs in the workspace service. Completed runs are stored newest-first, switching between test artifacts restores the latest result for the selected test, and the test scenario header exposes the latest five selected-test runs through a compact MudBlazor history menu. This is still session-local history; persisted reports/exports remain a future slice.
+The current scenario report export slice adds a stable desktop reporting shape for scenario runs. `ScenarioRunReportFormatter` turns a run result into JSON or text with root schema/run/generation metadata, scenario status, duration, aggregate issue summaries, planned-but-not-run steps, per-step configuration, per-step sequence/timing, per-step status/message, matched event details, and matched event offsets relative to the scenario and owning step. Text reports now include matched event source, subject, payload size/preview, and attributes when present, so `.scenario-report.txt` remains useful without opening JSON. The test scenario header can preview the selected scenario report in a MudBlazor tabs dialog, copy the selected scenario report JSON to the clipboard, or save it to disk through MudBlazor tooltip/icon actions. The report preview now creates one report snapshot and renders Summary/JSON/save from that same object, so the displayed report and saved JSON agree on `runId` and `generatedAt`; the same dialog can also save the readable Summary tab as `.scenario-report.txt`. File export reuses the existing `SaveAsDialog` with report-specific parameters and writes through `FlowWorkspaceService` helpers, so the Razor component stays a composition surface instead of a file writer. Scenario history rows are now clickable MudBlazor menu items; selecting a prior run restores it as the active result for review and reporting, guarded so another test's run cannot be selected into the current test.
+The current scoped-log slice gives logs a clearer observability boundary. Workspace logs now have explicit `Scope`, `ArtifactKind`, and `ArtifactName` metadata so app runtime rows, test-runner rows, and system/validation rows can be filtered without parsing message text. A first-level Logs tab uses a MudBlazor-native `WorkspaceLogPanel` with compact scope, level, and search filters; the duplicate right-inspector Logs tab was removed. This is still one in-memory project log stream, but it is ready for later per-runtime sinks such as service-hosted app logs, dashboard logs, and external integration-test runner logs without mixing ownership.
+The current test-runner resource boundary refactor keeps app-level resources as the only connection definition surface while giving scenarios their own reusable MQTT client factory. `IMqttScenarioClientFactory` resolves shared app MQTT resources and creates short-lived runner-owned MQTT clients with separate profile/client ids for saved-definition, CLI, and running-runtime scenario paths. `mqtt.publish` now consumes that boundary through `IMqttScenarioPublisher`, and future test-runner `mqtt.trigger`, `expect`, and `when` blocks should reuse the same factory instead of introducing a parallel broker-probe engine or tying tests to the app runtime's live MQTT clients.
+Naming rule: use "MQTT client" for live connected MQTT objects in developer-facing and domain-facing code. The older core `IMqttSession` type still exists and should be renamed in a dedicated mechanical slice; new scenario/test-runner boundaries should not introduce new "session" wording.
 
 ## Step-by-Step Plan
 
@@ -398,6 +404,7 @@ Done when:
   - `mqtt.publish` publishes a configured MQTT message through a named runtime connection resource
   - MQTT scenario actions live in the app layer, while the pipeline runner stays generic
   - tests cover service passing, successful publish, and missing connection failure
+  - scenario MQTT clients now come from `IMqttScenarioClientFactory`, which resolves shared app-level connection resources and creates runner-owned MQTT clients for both saved-definition and running-runtime paths
 - Started CLI scenario execution:
   - added `fluxmq scenario --config <path> --name <scenario>`
   - scenario command uses `FlowApplicationHost.RunScenarioAsync`
@@ -426,9 +433,128 @@ Done when:
   - step type ids now have a shared scenario contract
   - the test-step palette, card labels, edit dialog title, and scenario step naming use one descriptor catalog
   - composer defaults now route through the descriptor model instead of repeating publish/expect strings
+- Started scenario step field descriptors:
+  - `mqtt.publish` step fields now live in `ScenarioStepCatalog`
+  - the publish step editor renders broker, topic, payload, encoding, QoS, and retain from field descriptors
+  - scenario step selects that remain, such as broker/event/status, use ordinary MudBlazor `MudSelect`; dialogs no longer close on backdrop click
+  - lower finite publish choices avoid popovers completely by using `MudToggleGroup`/`MudToggleItem` segmented toggles for Payload encoding and QoS
+  - the publish step editor caches descriptor fields and option lists during initialization before rendering controls
+  - composer defaults for new publish scenario steps use the same descriptor defaults as the editor
+  - tests cover field order, select options, generated publish defaults, and missing field options
 - Fixed dashboard widget cleanup:
   - dashboard cells now have a delete action for assigned widgets
   - deleting a widget removes the widget definition and clears the cell assignment
+- Fixed the lower scenario-step control cleanup:
+  - Payload encoding and QoS now use plain `MudToggleGroup`/`MudToggleItem` single-selection controls instead of dropdowns, removing the failing popover path from the lower half of the MQTT publish step dialog.
+  - The scenario-specific dropdown popover CSS was removed from `app.css`; Broker, event type, and status use plain MudBlazor select behavior.
+- Added scenario run history:
+  - completed runs are kept newest-first in a bounded workspace history
+  - switching active tests restores each test's latest result rather than leaking the previous test's status
+  - the test scenario header now has a compact MudBlazor history menu for recent runs
+- Added scenario report copy:
+  - latest scenario run reports can be copied as stable JSON from the test scenario header
+  - report formatting has both JSON and text paths for later file export or CLI alignment
+- Added scenario report file export:
+  - latest scenario run reports can be saved as JSON from the test scenario header
+  - the existing MudBlazor save-as dialog is parameterized for report-specific title/helper text
+  - report writing lives in `FlowWorkspaceService.SaveScenarioReportAsync`
+- Added scenario history selection:
+  - run history rows can restore an older run as the active displayed result
+  - copy and save report actions target the restored historical run
+  - service-level guards prevent selecting a run from another active test
+- Added scenario report input capture:
+  - report JSON now includes each step's saved configuration when the scenario snapshot is available
+  - copied reports and saved files both include those inputs
+  - text report output includes compact configuration lines for configured steps
+- Added scenario report preview:
+  - selected scenario reports can be inspected before copy/save
+  - the preview dialog uses MudBlazor tabs for Summary and JSON without custom CSS
+- Added scenario report preview copy actions:
+  - the preview dialog can copy either the Summary or JSON report directly with MudBlazor action buttons
+- Added scenario history active-run indicators:
+  - the test scenario header shows whether the displayed result is the latest run or a selected historical run
+  - history menu rows label the active row as Viewing, while report action tooltips follow the active run scope
+- Added scenario history return-to-latest action:
+  - when a historical run is active, the history menu includes `Show latest run`
+  - choosing the active row no longer emits misleading restore feedback
+- Added scenario report dialog metadata:
+  - the report preview dialog title shows latest/history scope, status, finish timestamp, and duration for the selected run
+- Added scenario report dialog save action:
+  - the report preview dialog can initiate the same JSON save flow as the header save action
+- Added scenario report step summary:
+  - report JSON/text now includes aggregate step status counts, and the preview dialog shows a step-count chip
+- Added scenario report first-issue summary:
+  - non-passing reports now identify the first failed, timed-out, or canceled step in JSON/text and in the preview dialog
+- Added scenario report matched-event offsets:
+  - matched event JSON now includes offsets relative to the scenario start and matched step start
+  - text report matched lines include those offsets for quick timeline diagnosis
+- Added scenario report metadata:
+  - report JSON now includes root `schemaVersion` and `generatedAt`
+  - text reports start with a report metadata line before the scenario summary
+- Added scenario report issue list:
+  - non-passing reports now include all failed, timed-out, and canceled steps in a root `issues` array
+  - text reports include an `Issues:` section before step details
+- Added scenario report run identity:
+  - report JSON now includes root `runId` derived from the scenario name and UTC run start time
+  - text reports include the same run id in the report metadata line
+  - re-exporting the same selected historical run keeps `runId` stable even when `generatedAt` changes
+- Added scenario report snapshot consistency:
+  - formatter overloads can render JSON and text from an already-created `ScenarioRunReport`
+  - report preview creates one report snapshot, shows the run id in a MudBlazor chip, and saves the same JSON shown in the preview
+  - `FlowWorkspaceService` can write pre-rendered scenario report JSON without regenerating metadata
+- Added scenario report text export:
+  - report preview can save the readable Summary tab as `.scenario-report.txt`
+  - text export uses the same selected latest or historical report snapshot shown in the dialog
+  - `FlowWorkspaceService` can write pre-rendered scenario report text
+- Added scenario report text matched-event details:
+  - Summary text now includes matched event source, subject, payload byte count, payload preview, and sorted attributes when present
+  - key/value formatting is stable for both step configuration and event attributes
+- Added scenario report not-run planned steps:
+  - report JSON now includes root `notRunSteps` for planned scenario steps that did not execute
+  - Summary text includes a `Not run:` section with planned sequence, step name, type, and configuration
+- Added scenario report planned/executed step summary:
+  - report JSON `stepSummary` now includes `planned`, `executed`, and `notRun` counts while preserving the existing executed `total`
+  - Summary text and the MudBlazor report preview chip show planned-versus-run counts when a scenario stops early
+- Added scenario report planned-step snapshot:
+  - report JSON now includes root `plannedSteps` with planned sequence, step name, step type, and configuration
+  - `notRunSteps` is derived from that same planned-step snapshot so exported plan/result data stays consistent
+- Added scenario expectation timeout diagnostics:
+  - timed-out `expect.event` messages now report whether app runtime events were observed while waiting
+  - non-matching observed events are summarized so users can see whether they produced the wrong type/topic/status/payload
+  - `mqtt.message.published` timeouts explain that the match must come from a running app MQTT publisher node, and finished runs do not keep listening
+- Fixed scenario expectation event ordering:
+  - scenario expectations now track consumed matched event indexes instead of advancing past every earlier non-matching event
+  - this prevents a downstream publish event from being skipped when it reaches the journal before the receive event that a previous step was waiting for
+  - identical later expectations still cannot reuse the same matched event
+  - MQTT triggers accept their `mqtt.message.received` event before forwarding the envelope downstream, improving causal event order
+  - `app1.json` `t1` is valid for this flow: the publish step sends `fluxmq/sample/request`, the app trigger receives it, the mapper/publisher emits `mqtt.message.published` on `test`
+- Fixed scenario MQTT publish ownership and saved JSON step order:
+  - `mqtt.publish` test steps now publish through a separate short-lived scenario MQTT client cloned from the selected connection, so the test runner acts like an external publisher instead of reusing the running app MQTT client
+  - this matters for `app1.json` because the app's own `pip1.trigger` must receive `fluxmq/sample/request`; a broad `pip2` subscription can otherwise make a receive expectation pass while masking that `pip1` never saw the test message
+  - the UI workspace now builds the runtime from a raw `ApplicationDefinition` parsed with `System.Text.Json`, preserving saved JSON object order for test steps instead of round-tripping through `IConfiguration`
+  - the regression shape for `t1` is: step 1 scenario client publishes `fluxmq/sample/request`, step 2 observes app `mqtt.message.received`, step 3 observes app `mqtt.message.published` on `test`
+- Split test-runner execution from app runtime startup:
+  - `Run test` no longer builds or starts the current app runtime as a side effect
+  - the CLI `scenario` command uses the same isolated scenario-runner direction instead of host-bound runtime startup
+  - publish-only scenarios can execute from the saved definition using the test runner's own MQTT client and connection profile resolver
+  - host-bound `RunScenarioAsync` now requires an explicitly running host runtime
+  - current `expect.event` still represents an app/runtime event stream; when using the local app as a target, run it explicitly first
+  - next integration-test slice should move toward compiling scenario/test steps into a small normal pipeline that reuses existing runtime blocks such as `mqtt.publisher`, `mqtt.trigger`, condition/router behavior, and narrow test-specific blocks like `expect` and `when`; avoid a separate `mqtt.expect` broker-probe side channel
+- Mirrored runtime events into workspace logs:
+  - runtime `FlowEvent`s now appear in the Logs tab in addition to dashboards/tests
+  - visible log rows include source, event type, workflow/node scope when known, topic, status, payload bytes, sorted attributes, and payload preview
+  - this makes app-emitted `mqtt.message.received` and `mqtt.message.published` events visible even when the flow has no explicit logger node
+- Added scoped workspace logs:
+  - log rows now carry scope metadata for `App`, `Test runner`, and `System`
+  - the app-level `Logs` tab can filter by scope, level, and search text using MudBlazor controls
+  - the duplicate right inspector Logs tab was removed so log review has one clear home
+- Isolated scenario runs from pre-run event replay:
+  - each scenario event journal ignores runtime events with timestamps before the run started
+  - this prevents retained/stale broadcast replay from being treated as evidence for a fresh test run
+- Made MQTT delivery flags explicit in expectations:
+  - MQTT received/published/recorded expectations now expose `QoS` and `Retain` filters
+  - retain matching accepts config `true/false` and event `True/False`
+  - expectation JSON attributes can use strings, booleans, or numbers, so `attributes: { "retain": false, "qos": 1 }` is valid
 
 ## Next Action
 
@@ -439,10 +565,17 @@ Working rule:
 - Wait for confirmation before commit, push, PR, or merge steps.
 - For every review or verification step, write both what we are going to do and the expected result.
 
-Review the scenario step catalog slice:
+Immediate smoke check: rebuild/restart the app, explicitly run the local app target, then rerun `t1` from `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json`. Expected: step 1 publishes `fluxmq/sample/request` from the scenario runner's separate MQTT client, step 2 matches a `MqttTrigger` `mqtt.message.received` event on `fluxmq/sample/request`, and step 3 matches a `MqttPublisher` `mqtt.message.published` event on topic `test` without needing a manual publish after the run. `pip2.trigger` in the sample now listens to `$SYS/#` rather than broad `#`, so `t1` is focused on the `pip1` path. UI scenario runs with `expect.event` require the target app runtime to be running, while publish-only UI scenarios can still execute without it. The CLI `scenario` command is intentionally publish-only for now and rejects `expect.event` steps with a validation error instead of silently timing out. Dashboard `d1` has an event counter titled `Published to test` that is configured for `mqtt.message.published`, topic prefix `test`, and status `published`; it deliberately has no QoS or retain filter, so both the pipeline's QoS 1 mapped publish and the right-inspector manual QoS 0 publish to `test` can increment it. In the Logs page, expect to see app runtime event rows such as `MqttTrigger / mqtt.message.received`, `MqttPublisher / mqtt.message.published`, and right-inspector `LivePublisher / mqtt.message.published` rows with topic/status/payload context when those events occur, plus the scenario pass/fail summary. The `t1` expectation attributes use typed JSON values (`qos: 1`, `retain: false`). The next architecture slice should not add a special `mqtt.expect`; it should gradually let the test runner be composed like another pipeline, using normal MQTT publisher/trigger and existing condition behavior plus narrow test-specific `expect`/`when` blocks.
 
-1. Do: open a test tab and inspect the test-step palette. Expected: `MQTT publish` and `Expect event` still appear under the same categories, with the same click/drag behavior.
-2. Do: add one publish step and two expectation steps. Expected: generated names still become `publishMessage`, `expectEvent`, and `expectEvent2`.
-3. Do: edit each kind of step. Expected: publish steps still show broker/topic/payload fields, and expectation steps still show event filter fields.
-4. Do: run the focused UI tests. Expected: scenario catalog, composer, and workspace tests pass.
-5. Do: after confirmation, commit this slice and open a PR. Expected: the branch is reviewable and can be merged when checks are green.
+Review the scenario report/history/export slice:
+
+1. Do: open `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json`, switch to the `t1` test tab, and run the scenario more than once. Expected: the header still shows the latest status, a `Latest HH:mm:ss` run chip, and the history icon opens a compact list of recent `t1` runs.
+2. Do: open the history menu and click an older run. Expected: the header/step cards restore that historical result, the run chip changes to `History HH:mm:ss`, the selected history row is labeled `Viewing`, and a snackbar says the run was restored from history.
+3. Do: while viewing an older run, open the history menu and click `Show latest run`. Expected: the header/step cards switch back to the newest run, the run chip changes back to `Latest HH:mm:ss`, and a snackbar says the latest scenario run is showing.
+4. Do: click the view-report icon after restoring an older run. Expected: a normal MudBlazor dialog opens with Summary and JSON tabs for the selected run; title chips show historical/latest scope, run id, status, planned/executed step count, finish timestamp, and duration; non-passing runs also show an issue chip; Summary matched-event entries include source, subject, payload, and attributes when present; failed-early runs include `3 planned, 2 run, 1 not run` style summary text plus a `Not run:` section for planned steps that never executed; timed-out expectations say whether any app runtime events were observed while waiting and remind that finished runs do not keep listening; Copy summary and Copy JSON buttons copy the displayed report text and show snackbar feedback; Save summary writes the displayed Summary tab to `.scenario-report.txt`; Save JSON opens the same save-as flow used by the header save action.
+5. Do: click the copy-report icon after restoring an older run. Expected: the clipboard contains the restored run's formatted JSON, not necessarily the newest run, the root has `schemaVersion`, `runId`, `generatedAt`, `stepSummary`, `plannedSteps`, `issues`, and `notRunSteps`, `stepSummary` includes `planned`, `executed`, and `notRun`, each planned step has sequence/name/type/configuration, each configured executed step has a `configuration` object plus `sequence`, `startedOffsetMilliseconds`, `finishedOffsetMilliseconds`, and `durationMilliseconds`, matched events include `scenarioOffsetMilliseconds` and `stepOffsetMilliseconds`, and non-passing runs include a `firstIssue` object.
+6. Do: click the save-report icon after a completed or restored run, or click Save JSON inside the report preview, and accept or adjust the suggested path. Expected: the save dialog is a normal MudBlazor dialog and the written `.scenario-report.json` file contains the selected report JSON with root metadata including stable `runId`, full `plannedSteps`, issue list, not-run planned steps when any exist, step configuration, step timing metadata, matched event offsets, `stepSummary` with planned/executed/not-run counts, and `firstIssue` for non-passing runs. When saving JSON from the preview dialog, the file content matches the JSON tab that was displayed. When saving Summary from the preview dialog, the file content matches the Summary tab that was displayed.
+7. Do: switch to another test, or create another test and switch between them after running each. Expected: each test shows only its own latest result/history; a status from the previous test does not leak into the header.
+8. Do: edit a scenario step after a run. Expected: the stale latest result clears because the definition changed.
+9. Do: run the focused and full tests if you want to double-check locally. Expected: focused UI tests pass with 114 tests; app host tests pass with 11 tests; CLI tests pass with 12 tests; scenario tests pass with 11 tests; full solution tests pass with 439 tests.
+10. Do: after confirmation, commit this slice and open a PR. Expected: the branch is reviewable and can be merged when checks are green.
