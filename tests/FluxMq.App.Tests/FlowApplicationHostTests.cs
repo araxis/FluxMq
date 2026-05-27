@@ -319,7 +319,7 @@ public sealed class FlowApplicationHostTests
                         "publishMessage": {
                           "steps": {
                             "publish": {
-                              "type": "mqtt.publish",
+                              "type": "mqtt.publisher",
                               "configuration": {
                                 "connection": "localBroker",
                                 "topic": "topica/b/c",

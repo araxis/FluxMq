@@ -8,7 +8,7 @@ namespace FluxMq.App.Scenarios;
 
 public sealed class MqttPublishScenarioStepRunner : IScenarioStepRunner
 {
-    public const string StepType = ScenarioStepTypes.MqttPublish;
+    public const string StepType = ScenarioStepTypes.MqttPublisher;
 
     public string Type => StepType;
 

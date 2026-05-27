@@ -13,10 +13,10 @@ public sealed class ScenarioStepCatalogTests
         var catalog = new ScenarioStepCatalog();
 
         catalog.Steps.Select(step => step.Type)
-            .ShouldBe([ScenarioStepTypes.MqttPublish, ScenarioStepTypes.ExpectEvent]);
+            .ShouldBe([ScenarioStepTypes.MqttPublisher, ScenarioStepTypes.ExpectEvent]);
 
-        var publish = catalog.Find(ScenarioStepTypes.MqttPublish).ShouldNotBeNull();
-        publish.DisplayName.ShouldBe("MQTT publish");
+        var publish = catalog.Find(ScenarioStepTypes.MqttPublisher).ShouldNotBeNull();
+        publish.DisplayName.ShouldBe("MQTT publisher");
         publish.Category.ShouldBe("Action");
         publish.NamePrefix.ShouldBe("publishMessage");
         publish.EditorKind.ShouldBe(ScenarioStepEditorKind.MqttPublish);
@@ -49,7 +49,7 @@ public sealed class ScenarioStepCatalogTests
     {
         var catalog = new ScenarioStepCatalog();
 
-        var defaults = catalog.CreateDefaultConfiguration(ScenarioStepTypes.MqttPublish, "local-broker");
+        var defaults = catalog.CreateDefaultConfiguration(ScenarioStepTypes.MqttPublisher, "local-broker");
 
         defaults[ScenarioStepCatalog.ConnectionKey].ShouldBe("local-broker");
         defaults[ScenarioStepCatalog.TopicKey].ShouldBe("fluxmq/test");
@@ -57,6 +57,19 @@ public sealed class ScenarioStepCatalogTests
         defaults[ScenarioStepCatalog.PayloadEncodingKey].ShouldBe("json");
         defaults[ScenarioStepCatalog.QosKey].ShouldBe("0");
         defaults[ScenarioStepCatalog.RetainKey].ShouldBe("false");
+    }
+
+    [Fact]
+    public void Find_AcceptsLegacyMqttPublishStepType()
+    {
+        var catalog = new ScenarioStepCatalog();
+
+        var descriptor = catalog.Find(ScenarioStepTypes.MqttPublish).ShouldNotBeNull();
+        var defaults = catalog.CreateDefaultConfiguration(ScenarioStepTypes.MqttPublish, "local-broker");
+
+        descriptor.Type.ShouldBe(ScenarioStepTypes.MqttPublisher);
+        defaults[ScenarioStepCatalog.ConnectionKey].ShouldBe("local-broker");
+        defaults[ScenarioStepCatalog.TopicKey].ShouldBe("fluxmq/test");
     }
 
     [Fact]

@@ -174,7 +174,7 @@ public sealed class ScenarioRunReportFormatterTests
                     }),
                 new ScenarioStepSnapshot(
                     "publishCleanup",
-                    ScenarioStepTypes.MqttPublish,
+                    ScenarioStepTypes.MqttPublisher,
                     new Dictionary<string, string>
                     {
                         ["payload"] = """{"cleanup":true}""",
@@ -191,7 +191,7 @@ public sealed class ScenarioRunReportFormatterTests
         text.ShouldContain("#1 unknown [unknown.step] Failed: Scenario step type 'unknown.step' is not registered.");
         text.ShouldContain("#2 expectLater [expect.event] TimedOut: Timed out after 500 ms.");
         text.ShouldContain("Not run: 1.");
-        text.ShouldContain("#3 publishCleanup [mqtt.publish]");
+        text.ShouldContain("#3 publishCleanup [mqtt.publisher]");
         text.ShouldContain("""config: payload={"cleanup":true}; topic=factory/cleanup""");
         text.ShouldContain("- unknown [unknown.step] Failed: Scenario step type 'unknown.step' is not registered.");
         text.ShouldContain("config: timeoutMs=250");
@@ -215,7 +215,7 @@ public sealed class ScenarioRunReportFormatterTests
         plannedSteps[1].GetProperty("configuration").GetProperty("eventType").GetString().ShouldBe("mqtt.message.published");
         plannedSteps[2].GetProperty("sequence").GetInt32().ShouldBe(3);
         plannedSteps[2].GetProperty("stepName").GetString().ShouldBe("publishCleanup");
-        plannedSteps[2].GetProperty("stepType").GetString().ShouldBe(ScenarioStepTypes.MqttPublish);
+        plannedSteps[2].GetProperty("stepType").GetString().ShouldBe(ScenarioStepTypes.MqttPublisher);
         plannedSteps[2].GetProperty("configuration").GetProperty("payload").GetString().ShouldBe("""{"cleanup":true}""");
         var firstIssue = document.RootElement.GetProperty("firstIssue");
         firstIssue.GetProperty("stepName").GetString().ShouldBe("unknown");
@@ -233,7 +233,7 @@ public sealed class ScenarioRunReportFormatterTests
         notRunSteps.GetArrayLength().ShouldBe(1);
         notRunSteps[0].GetProperty("sequence").GetInt32().ShouldBe(3);
         notRunSteps[0].GetProperty("stepName").GetString().ShouldBe("publishCleanup");
-        notRunSteps[0].GetProperty("stepType").GetString().ShouldBe(ScenarioStepTypes.MqttPublish);
+        notRunSteps[0].GetProperty("stepType").GetString().ShouldBe(ScenarioStepTypes.MqttPublisher);
         var notRunConfiguration = notRunSteps[0].GetProperty("configuration");
         notRunConfiguration.GetProperty("payload").GetString().ShouldBe("""{"cleanup":true}""");
         notRunConfiguration.GetProperty("topic").GetString().ShouldBe("factory/cleanup");

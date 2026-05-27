@@ -33,8 +33,8 @@ public sealed class ScenarioStepCatalog
     private readonly IReadOnlyList<ScenarioStepDescriptor> _steps =
     [
         new(
-            ScenarioStepTypes.MqttPublish,
-            "MQTT publish",
+            ScenarioStepTypes.MqttPublisher,
+            "MQTT publisher",
             "Action",
             "Publish a message through an app broker.",
             Icons.Material.Filled.Send,
@@ -62,7 +62,10 @@ public sealed class ScenarioStepCatalog
     public IReadOnlyList<ScenarioStepDescriptor> Steps => _steps;
 
     public ScenarioStepDescriptor? Find(string? type)
-        => _steps.FirstOrDefault(step => string.Equals(step.Type, type, StringComparison.Ordinal));
+    {
+        var canonicalType = ScenarioStepTypes.ToCanonical(type);
+        return _steps.FirstOrDefault(step => string.Equals(step.Type, canonicalType, StringComparison.Ordinal));
+    }
 
     public ScenarioStepDescriptor Describe(string? type)
         => Find(type) ?? new ScenarioStepDescriptor(

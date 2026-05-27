@@ -1439,3 +1439,19 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqReviewFixFull\ -m:1` passes with 456 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `git diff --check` passes; Git reports only existing LF-to-CRLF working-copy warnings.
   - `git diff -- src\FluxMq.UI\wwwroot\app.css` is empty.
+
+## 2026-05-27 - Scenario MQTT publisher naming alignment
+
+- Aligned the test/scenario MQTT publish action with the normal pipeline component vocabulary:
+  - `ScenarioStepTypes.MqttPublisher` is now the canonical scenario action id, with value `mqtt.publisher`.
+  - `ScenarioStepCatalog` exposes the palette/editor descriptor as `mqtt.publisher` and labels it `MQTT publisher`.
+  - `ScenarioStepRunnerRegistry` can register aliases, and `FlowApplicationHost` maps legacy `mqtt.publish` scenarios to the same runner.
+  - The existing `MqttPublishScenarioStepRunner` keeps the implementation but now registers as `mqtt.publisher`; step results preserve the saved step type that was executed, so older reports remain honest.
+  - Composer/catalog defaults accept both `mqtt.publisher` and `mqtt.publish`; new UI-added steps use `mqtt.publisher`, while older saved JSON keeps working.
+- Updated `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` so `t1.publishSampleRequest` now uses the canonical `mqtt.publisher` step type.
+- Left `app.css` untouched.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~ScenarioRunReportFormatterTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioPublisherAliasUi\ -m:1` passes with 122 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunnerTests|FullyQualifiedName~FlowApplicationDefinitionJsonTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioPublisherAliasPipeline\ -m:1` passes with 22 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowApplicationHostTests|FullyQualifiedName~MqttScenarioClientFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioPublisherAliasApp2\ -m:1` passes with 14 tests.
+  - `dotnet run --project src\FluxMq.Cli\FluxMq.Cli.csproj --no-restore -- validate --config C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` reports `Flow application is valid. Workflows: 2. Resources: 2.`
