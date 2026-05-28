@@ -6,12 +6,12 @@ namespace FluxMq.UI.Services;
 
 public sealed class ScenarioStepCatalog
 {
-    public const string ConnectionKey = "connection";
-    public const string TopicKey = "topic";
-    public const string PayloadKey = "payload";
-    public const string PayloadEncodingKey = "payloadEncoding";
-    public const string QosKey = "qos";
-    public const string RetainKey = "retain";
+    public const string ConnectionKey = ScenarioStepConfigurationKeys.Connection;
+    public const string TopicKey = ScenarioStepConfigurationKeys.Topic;
+    public const string PayloadKey = ScenarioStepConfigurationKeys.Payload;
+    public const string PayloadEncodingKey = ScenarioStepConfigurationKeys.PayloadEncoding;
+    public const string QosKey = ScenarioStepConfigurationKeys.Qos;
+    public const string RetainKey = ScenarioStepConfigurationKeys.Retain;
 
     public static ScenarioStepCatalog Shared { get; } = new();
 

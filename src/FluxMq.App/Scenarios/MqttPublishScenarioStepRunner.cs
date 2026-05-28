@@ -23,13 +23,20 @@ public sealed class MqttPublishScenarioStepRunner : IScenarioStepRunner
 
         var startedAt = DateTimeOffset.UtcNow;
         var configuration = context.Step.Configuration;
-        var connectionName = ScenarioStepConfigurationReader.ReadRequiredString(configuration, "connection");
+        var connectionName = ScenarioStepConfigurationReader.ReadRequiredString(
+            configuration,
+            ScenarioStepConfigurationKeys.Connection);
         var request = new MqttPublishRequest
         {
-            Topic = ScenarioStepConfigurationReader.ReadRequiredString(configuration, "topic"),
+            Topic = ScenarioStepConfigurationReader.ReadRequiredString(
+                configuration,
+                ScenarioStepConfigurationKeys.Topic),
             Payload = ReadPayload(configuration),
             QualityOfService = ReadQualityOfService(configuration),
-            Retain = ScenarioStepConfigurationReader.ReadBoolOrDefault(configuration, "retain", false)
+            Retain = ScenarioStepConfigurationReader.ReadBoolOrDefault(
+                configuration,
+                ScenarioStepConfigurationKeys.Retain,
+                false)
         };
 
         var clientFactory = context.Services.GetRequired<IMqttScenarioClientFactory>();
@@ -96,7 +103,11 @@ public sealed class MqttPublishScenarioStepRunner : IScenarioStepRunner
     private static MqttQualityOfServiceLevel ReadQualityOfService(
         IReadOnlyDictionary<string, JsonElement> configuration)
     {
-        var value = ScenarioStepConfigurationReader.ReadIntOrDefault(configuration, "qos", 0, 0);
+        var value = ScenarioStepConfigurationReader.ReadIntOrDefault(
+            configuration,
+            ScenarioStepConfigurationKeys.Qos,
+            0,
+            0);
         return value switch
         {
             0 => MqttQualityOfServiceLevel.AtMostOnce,
@@ -108,13 +119,15 @@ public sealed class MqttPublishScenarioStepRunner : IScenarioStepRunner
 
     private static byte[] ReadPayload(IReadOnlyDictionary<string, JsonElement> configuration)
     {
-        if (!configuration.TryGetValue("payload", out var payload) ||
+        if (!configuration.TryGetValue(ScenarioStepConfigurationKeys.Payload, out var payload) ||
             payload.ValueKind == JsonValueKind.Null)
         {
             return [];
         }
 
-        var encoding = ScenarioStepConfigurationReader.ReadString(configuration, "payloadEncoding") ?? "utf8";
+        var encoding = ScenarioStepConfigurationReader.ReadString(
+            configuration,
+            ScenarioStepConfigurationKeys.PayloadEncoding) ?? "utf8";
         return encoding.Trim().ToLowerInvariant() switch
         {
             "utf8" or "text" => ReadUtf8Payload(payload),

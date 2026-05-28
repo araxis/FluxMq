@@ -23,5 +23,7 @@ public enum ApplicationDefinitionValidationErrorCode
     EmptyScenarioName = 19,
     EmptyScenarioStepName = 20,
     EmptyScenarioStepType = 21,
-    UnknownScenarioStepType = 22
+    UnknownScenarioStepType = 22,
+    MissingScenarioStepResource = 23,
+    InvalidScenarioStepConfiguration = 24
 }

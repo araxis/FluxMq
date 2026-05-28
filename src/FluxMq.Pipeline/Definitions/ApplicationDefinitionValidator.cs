@@ -60,7 +60,7 @@ public sealed class ApplicationDefinitionValidator
 
         foreach (var test in definition.Tests)
         {
-            ValidateScenario(test.Key, test.Value, errors);
+            ValidateScenario(test.Key, test.Value, definition, errors);
         }
 
         return new ApplicationDefinitionValidationResult(errors);
@@ -210,6 +210,7 @@ public sealed class ApplicationDefinitionValidator
     private static void ValidateScenario(
         string scenarioName,
         ScenarioDefinition scenario,
+        ApplicationDefinition definition,
         List<ApplicationDefinitionValidationError> errors)
     {
         if (string.IsNullOrWhiteSpace(scenarioName))
@@ -239,6 +240,15 @@ public sealed class ApplicationDefinitionValidator
                 errors.Add(new(
                     ApplicationDefinitionValidationErrorCode.UnknownScenarioStepType,
                     $"Test scenario '{scenarioName}' step '{step.Key}' has unknown type '{step.Value.Type}'."));
+            }
+            else
+            {
+                ScenarioStepDefinitionValidator.Validate(
+                    scenarioName,
+                    step.Key,
+                    step.Value,
+                    definition,
+                    errors);
             }
         }
     }

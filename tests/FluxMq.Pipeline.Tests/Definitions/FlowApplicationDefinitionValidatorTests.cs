@@ -1,5 +1,6 @@
 using Shouldly;
 using FluxMq.Pipeline.Definitions;
+using FluxMq.Pipeline.Scenarios;
 using System.Text.Json;
 
 namespace FluxMq.Pipeline.Tests.Definitions;
@@ -379,6 +380,188 @@ public sealed class FlowApplicationDefinitionValidatorTests
     }
 
     [Fact]
+    public void Validate_AcceptsMqttPublisherScenarioStepWithAppConnection()
+    {
+        var definition = new ApplicationDefinition
+        {
+            Resources =
+            {
+                ["local-broker"] = Node("mqtt.connection")
+            },
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("mqtt.trigger")
+                    }
+                }
+            },
+            Tests =
+            {
+                ["roundTrip"] = new ScenarioDefinition
+                {
+                    Steps =
+                    {
+                        ["publish"] = new ScenarioStepDefinition
+                        {
+                            Type = ScenarioStepTypes.MqttPublisher,
+                            Configuration = Config(
+                                ("connection", "local-broker"),
+                                ("topic", "fluxmq/sample/request"),
+                                ("payloadEncoding", "json"),
+                                ("payload", new { value = 12 }),
+                                ("qos", 1),
+                                ("retain", false))
+                        }
+                    }
+                }
+            }
+        };
+
+        var result = _validator.Validate(definition);
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Validate_ReportsMqttPublisherScenarioStepMissingConnectionResource()
+    {
+        var definition = new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("mqtt.trigger")
+                    }
+                }
+            },
+            Tests =
+            {
+                ["roundTrip"] = new ScenarioDefinition
+                {
+                    Steps =
+                    {
+                        ["publish"] = new ScenarioStepDefinition
+                        {
+                            Type = ScenarioStepTypes.MqttPublisher,
+                            Configuration = Config(
+                                ("connection", "missing-broker"),
+                                ("topic", "fluxmq/sample/request"))
+                        }
+                    }
+                }
+            }
+        };
+
+        var result = _validator.Validate(definition);
+
+        var error = result.Errors.Single(error => error.Code == ApplicationDefinitionValidationErrorCode.MissingScenarioStepResource);
+        error.Message.ShouldContain("roundTrip");
+        error.Message.ShouldContain("publish");
+        error.Message.ShouldContain("missing-broker");
+    }
+
+    [Fact]
+    public void Validate_ReportsInvalidMqttPublisherScenarioStepConfiguration()
+    {
+        var definition = new ApplicationDefinition
+        {
+            Resources =
+            {
+                ["local-broker"] = Node("mqtt.connection")
+            },
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("mqtt.trigger")
+                    }
+                }
+            },
+            Tests =
+            {
+                ["roundTrip"] = new ScenarioDefinition
+                {
+                    Steps =
+                    {
+                        ["publish"] = new ScenarioStepDefinition
+                        {
+                            Type = ScenarioStepTypes.MqttPublisher,
+                            Configuration = Config(
+                                ("connection", "local-broker"),
+                                ("topic", "fluxmq/sample/request"),
+                                ("payloadEncoding", "base64"),
+                                ("payload", "not-base64"),
+                                ("qos", 3),
+                                ("retain", "false"))
+                        }
+                    }
+                }
+            }
+        };
+
+        var result = _validator.Validate(definition);
+
+        var errors = result.Errors
+            .Where(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidScenarioStepConfiguration)
+            .Select(error => error.Message)
+            .ToArray();
+        errors.ShouldContain(message => message.Contains("payload", StringComparison.Ordinal));
+        errors.ShouldContain(message => message.Contains("qos", StringComparison.Ordinal));
+        errors.ShouldContain(message => message.Contains("retain", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Validate_ReportsInvalidExpectEventScenarioStepConfiguration()
+    {
+        var definition = new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("mqtt.trigger")
+                    }
+                }
+            },
+            Tests =
+            {
+                ["roundTrip"] = new ScenarioDefinition
+                {
+                    Steps =
+                    {
+                        ["expect"] = new ScenarioStepDefinition
+                        {
+                            Type = ScenarioStepTypes.ExpectEvent,
+                            Configuration = Config(
+                                ("timeoutMs", 0),
+                                ("attributes", new { nested = new { value = 1 } }))
+                        }
+                    }
+                }
+            }
+        };
+
+        var result = _validator.Validate(definition);
+
+        var errors = result.Errors
+            .Where(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidScenarioStepConfiguration)
+            .Select(error => error.Message)
+            .ToArray();
+        errors.ShouldContain(message => message.Contains("timeoutMs", StringComparison.Ordinal));
+        errors.ShouldContain(message => message.Contains("attributes.nested", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Validate_ReportsInvalidLinkShape()
     {
         var definition = new ApplicationDefinition
@@ -465,4 +648,15 @@ public sealed class FlowApplicationDefinitionValidatorTests
             [portName] = JsonDocument.Parse(linkJson).RootElement.Clone()
         }
     };
+
+    private static Dictionary<string, JsonElement> Config(params (string Key, object? Value)[] values)
+    {
+        var configuration = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
+        foreach (var (key, value) in values)
+        {
+            configuration[key] = JsonSerializer.SerializeToElement(value);
+        }
+
+        return configuration;
+    }
 }

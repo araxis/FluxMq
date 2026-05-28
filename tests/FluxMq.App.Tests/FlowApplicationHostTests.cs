@@ -351,7 +351,7 @@ public sealed class FlowApplicationHostTests
     }
 
     [Fact]
-    public async Task RunScenarioAsync_ReportsMissingScenarioMqttConnection()
+    public async Task StartAsync_ReportsMissingScenarioMqttConnection()
     {
         var session = new FakeFluxMqttClient();
         await using var host = FlowApplicationHost.CreateDefault(
@@ -400,13 +400,12 @@ public sealed class FlowApplicationHostTests
             clientFactory: _ => session);
 
         var startResult = await host.StartAsync();
-        startResult.IsSuccess.ShouldBeTrue();
-
-        var result = await host.RunScenarioAsync("publishMessage");
-
-        result.IsSuccess.ShouldBeFalse();
-        result.Steps.ShouldHaveSingleItem()
-            .Message.ShouldBe("MQTT connection resource 'missingBroker' does not exist.");
+        startResult.IsSuccess.ShouldBeFalse();
+        var validationError = startResult.RuntimeBuild!.Validation.Errors.Single(
+            error => error.Code == ApplicationDefinitionValidationErrorCode.MissingScenarioStepResource);
+        validationError.Message.ShouldContain("publishMessage");
+        validationError.Message.ShouldContain("publish");
+        validationError.Message.ShouldContain("missingBroker");
         session.Published.ShouldBeEmpty();
     }
 

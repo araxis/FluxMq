@@ -59,16 +59,16 @@ public sealed class ExpectEventScenarioStepRunner : IScenarioStepRunner
         IReadOnlyDictionary<string, System.Text.Json.JsonElement> configuration)
         => new()
         {
-            EventType = ScenarioStepConfigurationReader.ReadString(configuration, "eventType"),
-            TopicStartsWith = ScenarioStepConfigurationReader.ReadString(configuration, "topicStartsWith"),
-            SubjectStartsWith = ScenarioStepConfigurationReader.ReadString(configuration, "subjectStartsWith"),
-            Status = ScenarioStepConfigurationReader.ReadString(configuration, "status"),
-            Source = ScenarioStepConfigurationReader.ReadString(configuration, "source"),
-            PayloadContains = ScenarioStepConfigurationReader.ReadString(configuration, "payloadContains"),
-            Attributes = ScenarioStepConfigurationReader.ReadStringMap(configuration, "attributes"),
+            EventType = ScenarioStepConfigurationReader.ReadString(configuration, ScenarioStepConfigurationKeys.EventType),
+            TopicStartsWith = ScenarioStepConfigurationReader.ReadString(configuration, ScenarioStepConfigurationKeys.TopicStartsWith),
+            SubjectStartsWith = ScenarioStepConfigurationReader.ReadString(configuration, ScenarioStepConfigurationKeys.SubjectStartsWith),
+            Status = ScenarioStepConfigurationReader.ReadString(configuration, ScenarioStepConfigurationKeys.Status),
+            Source = ScenarioStepConfigurationReader.ReadString(configuration, ScenarioStepConfigurationKeys.Source),
+            PayloadContains = ScenarioStepConfigurationReader.ReadString(configuration, ScenarioStepConfigurationKeys.PayloadContains),
+            Attributes = ScenarioStepConfigurationReader.ReadStringMap(configuration, ScenarioStepConfigurationKeys.Attributes),
             Timeout = TimeSpan.FromMilliseconds(ScenarioStepConfigurationReader.ReadIntOrDefault(
                 configuration,
-                "timeoutMs",
+                ScenarioStepConfigurationKeys.TimeoutMs,
                 5000,
                 1))
         };

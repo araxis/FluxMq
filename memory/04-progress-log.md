@@ -1614,3 +1614,18 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore --filter "FullyQualifiedName~CliRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepTypeValidationCli\ -m:1` passes with 13 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepTypeAlignmentUi\ -m:1` passes with 5 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepTypeValidationFull\ -m:1` passes with 466 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-28 - Scenario step configuration validation
+
+- Moved scenario/test step validation another notch earlier:
+  - `mqtt.publisher` steps must now reference an app-level `mqtt.connection` resource and provide a valid topic.
+  - `mqtt.publisher` QoS, retain, payload encoding, base64 payloads, and byte payloads are validated before runtime build.
+  - `expect.event` string filters, timeout, and attribute filter shapes are validated before scenario execution.
+- Added `ScenarioStepConfigurationKeys` so pipeline runners, app runners, validation, and UI catalog use the same saved JSON field names.
+- Missing scenario MQTT resources now fail app start/build validation instead of surfacing later as a scenario-run failure.
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowApplicationDefinitionValidatorTests|FullyQualifiedName~ScenarioRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioConfigValidationPipeline2\ -m:1` passes with 29 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowApplicationConfigurationLoaderTests|FullyQualifiedName~FlowApplicationHostTests|FullyQualifiedName~MqttScenarioClientFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioConfigValidationApp4\ -m:1` passes with 17 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowWorkspaceServiceTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioConfigValidationUi\ -m:1` passes with 122 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet run --project src\FluxMq.Cli\FluxMq.Cli.csproj --no-restore -- validate --config C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` reports `Flow application is valid. Workflows: 2. Resources: 2.`
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioConfigValidationFull\ -m:1` passes with 470 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
