@@ -1558,3 +1558,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttScenarioClientFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioClientIdApp\ -m:1` passes with 3 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowWorkspaceServiceTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqProjectionNotifyUi\ -m:1` passes with 50 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqReviewRobustnessFull\ -m:1` passes with 460 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-28 - Connection state trigger is buildable
+
+- Fixed the dangling `mqtt.connection-state-trigger` surface:
+  - the UI catalog exposed the component, but the runtime factory registry did not build it.
+  - the node now binds to an app-level `mqtt.connection` resource through `configuration.connection`, matching the app resource ownership direction.
+  - the UI catalog no longer advertises a graph `Connection` input port for it; broker choice is configuration/resource based.
+- Extended `ConnectionStateTriggerComponent` so it can listen to either an `IMqttConnectionManager` or a specific `IFluxMqttClient`.
+- Updated the composer so newly added connection-state trigger nodes get a default connection resource reference.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore --filter "FullyQualifiedName~ConnectionStateTriggerComponentTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqConnectionStateTriggerComponents\ -m:1` passes with 3 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~PipelineComponentFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqConnectionStateTriggerApp\ -m:1` passes with 24 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowDiagramNodeModelTests|FullyQualifiedName~SourceNodeModelTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqConnectionStateTriggerUi\ -m:1` passes with 86 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqConnectionStateTriggerFull\ -m:1` passes with 463 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

@@ -34,6 +34,7 @@ public sealed class PipelineComponentFactoryTests
         {
             PipelineFlowNodeTypes.Connection,
             PipelineFlowNodeTypes.Trigger,
+            PipelineFlowNodeTypes.ConnectionStateTrigger,
             PipelineFlowNodeTypes.StoredSessionSource,
             PipelineFlowNodeTypes.ReplaySource,
             PipelineFlowNodeTypes.GeneratedSource,
@@ -687,6 +688,52 @@ public sealed class PipelineComponentFactoryTests
         subscription.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.ExactlyOnce);
         subscription.ReceiveRetainedMessages.ShouldBeFalse();
         subscription.RetainAsPublished.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ConnectionStateTriggerFactory_UsesConfiguredConnectionResource()
+    {
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories(_ => new FakeFluxMqttClient()));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Resources =
+            {
+                ["broker"] = new NodeDefinition
+                {
+                    Type = PipelineFlowNodeTypes.Connection,
+                    Configuration =
+                    {
+                        ["profile"] = JsonDocument.Parse("""{"name":"factory-broker","host":"localhost","port":1883}""").RootElement.Clone()
+                    }
+                }
+            },
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["state"] = new NodeDefinition
+                        {
+                            Type = PipelineFlowNodeTypes.ConnectionStateTrigger,
+                            Configuration =
+                            {
+                                ["connection"] = JsonDocument.Parse("\"broker\"").RootElement.Clone()
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+        using var runtime = result.Runtime!;
+        var node = runtime.Workflows.ShouldHaveSingleItem().Nodes.ShouldHaveSingleItem();
+        node.Outputs.ShouldContain(output =>
+            output.Address.Port.Value == "Output" &&
+            output.ValueType == typeof(MqttClientStateChangedEventArgs));
     }
 
     [Fact]

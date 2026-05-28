@@ -5,6 +5,7 @@ using FluxMq.Core.Mqtt;
 using FluxMq.Components.ConnectionStateTrigger;
 using FluxMq.Pipeline.Components;
 using MQTTnet.Protocol;
+using System.Threading.Channels;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.Tests.Components;
@@ -37,6 +38,32 @@ public sealed class ConnectionStateTriggerComponentTests
         received.ShouldHaveSingleItem().State.ShouldBe(MqttClientState.Connected);
         component.Id.ShouldBe(nodeId);
         component.Completion.IsCompletedSuccessfully.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Output_BroadcastsClientStateChanges()
+    {
+        var profile = new MqttConnectionProfile
+        {
+            Id = ConnectionProfileId.New(),
+            Name = "Local",
+            Host = "localhost",
+            Port = 1883
+        };
+        var client = new FakeFluxMqttClient(profile);
+        using var component = new ConnectionStateTriggerComponent(client);
+        var received = new List<MqttClientStateChangedEventArgs>();
+        var sink = new ActionBlock<MqttClientStateChangedEventArgs>(received.Add);
+
+        component.Output.LinkTo(sink, new DataflowLinkOptions { PropagateCompletion = true });
+
+        client.Emit(MqttClientState.Connected);
+        component.Dispose();
+        await sink.Completion;
+
+        var state = received.ShouldHaveSingleItem();
+        state.Profile.ShouldBeSameAs(profile);
+        state.State.ShouldBe(MqttClientState.Connected);
     }
 
     [Fact]
@@ -82,6 +109,50 @@ public sealed class ConnectionStateTriggerComponentTests
         public void Emit(MqttConnectionProfile profile, MqttClientState state)
         {
             StateChanged?.Invoke(this, new MqttClientStateChangedEventArgs(profile.Id, profile, state));
+        }
+    }
+
+    private sealed class FakeFluxMqttClient(MqttConnectionProfile profile) : IFluxMqttClient
+    {
+        public MqttConnectionProfile Profile { get; } = profile;
+        public MqttClientState State { get; private set; } = MqttClientState.Disconnected;
+        public ChannelReader<MqttEnvelope> Messages => throw new NotSupportedException();
+
+        public event EventHandler<MqttClientState>? StateChanged;
+
+        public Task ConnectAsync(CancellationToken ct = default) => Task.CompletedTask;
+        public Task DisconnectAsync(CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task SubscribeAsync(
+            string topicFilter,
+            MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce,
+            CancellationToken ct = default)
+            => Task.CompletedTask;
+
+        public Task SubscribeAsync(
+            string topicFilter,
+            MqttQualityOfServiceLevel qos,
+            bool receiveRetainedMessages,
+            bool retainAsPublished = true,
+            CancellationToken ct = default)
+            => Task.CompletedTask;
+
+        public Task UnsubscribeAsync(string topicFilter, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task PublishAsync(
+            string topic,
+            byte[] payload,
+            MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce,
+            bool retain = false,
+            CancellationToken ct = default)
+            => Task.CompletedTask;
+
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+
+        public void Emit(MqttClientState state)
+        {
+            State = state;
+            StateChanged?.Invoke(this, state);
         }
     }
 }

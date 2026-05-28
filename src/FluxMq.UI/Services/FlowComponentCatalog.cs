@@ -180,7 +180,6 @@ public sealed class FlowComponentCatalog
             "Emits events when a broker connection state changes.",
             IsResource: false,
             [
-                new("Connection", "MqttConnection", IsInput: true),
                 new("Output", "MqttClientStateChanged", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ])

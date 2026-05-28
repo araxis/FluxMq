@@ -569,6 +569,9 @@ Done when:
   - scenario event waits cancel their internal timeout delay after early match/completion/cancellation
   - runtime projection notification failures are contained inside the background refresh task
   - test-runner MQTT client ids keep the full GUID-based value
+- Made `mqtt.connection-state-trigger` buildable from app-level connection resources:
+  - it now uses `configuration.connection`, like the normal MQTT trigger/publisher resource reference direction
+  - the UI no longer exposes a dangling graph `Connection` input port for that node
 
 ## Next Action
 

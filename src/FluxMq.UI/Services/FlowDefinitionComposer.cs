@@ -1076,6 +1076,10 @@ public sealed class FlowDefinitionComposer
         {
             node["configuration"] = CreateMqttPublisherConfiguration(FindFirstConnectionResourceName(flowApplication));
         }
+        else if (componentType == "mqtt.connection-state-trigger")
+        {
+            node["configuration"] = CreateConnectionReferenceConfiguration(FindFirstConnectionResourceName(flowApplication));
+        }
         else if (componentType == "generated.source")
         {
             node["configuration"] = CreateGeneratedSourceConfiguration();
@@ -2601,6 +2605,12 @@ public sealed class FlowDefinitionComposer
         {
             ["connection"] = string.IsNullOrWhiteSpace(connectionName) ? BrokerResourceName : connectionName,
             ["boundedCapacity"] = 1000
+        };
+
+    private static JsonObject CreateConnectionReferenceConfiguration(string? connectionName = null)
+        => new()
+        {
+            ["connection"] = string.IsNullOrWhiteSpace(connectionName) ? BrokerResourceName : connectionName
         };
 
     private static string? FindFirstConnectionResourceName(JsonObject flowApplication)

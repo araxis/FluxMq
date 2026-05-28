@@ -7,7 +7,8 @@ namespace FluxMq.Components.ConnectionStateTrigger;
 
 public sealed class ConnectionStateTriggerComponent : IFlowNode, IDisposable
 {
-    private readonly IMqttConnectionManager _connectionManager;
+    private readonly IMqttConnectionManager? _connectionManager;
+    private readonly IFluxMqttClient? _client;
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly BroadcastBlock<MqttClientStateChangedEventArgs> _output;
 
@@ -18,6 +19,15 @@ public sealed class ConnectionStateTriggerComponent : IFlowNode, IDisposable
         _errors = new BroadcastBlock<FlowError>(static error => error);
         _output = new BroadcastBlock<MqttClientStateChangedEventArgs>(static state => state);
         _connectionManager.StateChanged += OnStateChanged;
+    }
+
+    public ConnectionStateTriggerComponent(IFluxMqttClient client, FlowNodeId? id = null)
+    {
+        Id = id ?? FlowNodeId.New();
+        _client = client ?? throw new ArgumentNullException(nameof(client));
+        _errors = new BroadcastBlock<FlowError>(static error => error);
+        _output = new BroadcastBlock<MqttClientStateChangedEventArgs>(static state => state);
+        _client.StateChanged += OnClientStateChanged;
     }
 
     public FlowNodeId Id { get; }
@@ -37,16 +47,46 @@ public sealed class ConnectionStateTriggerComponent : IFlowNode, IDisposable
         }
     }
 
+    private void OnClientStateChanged(object? sender, MqttClientState state)
+    {
+        if (_client is null)
+        {
+            return;
+        }
+
+        OnStateChanged(
+            sender,
+            new MqttClientStateChangedEventArgs(_client.Profile.Id, _client.Profile, state));
+    }
+
     public void Complete()
     {
-        _connectionManager.StateChanged -= OnStateChanged;
+        if (_connectionManager is not null)
+        {
+            _connectionManager.StateChanged -= OnStateChanged;
+        }
+
+        if (_client is not null)
+        {
+            _client.StateChanged -= OnClientStateChanged;
+        }
+
         _output.Complete();
         _errors.Complete();
     }
 
     public void Fault(Exception exception)
     {
-        _connectionManager.StateChanged -= OnStateChanged;
+        if (_connectionManager is not null)
+        {
+            _connectionManager.StateChanged -= OnStateChanged;
+        }
+
+        if (_client is not null)
+        {
+            _client.StateChanged -= OnClientStateChanged;
+        }
+
         PublishError(FlowErrorCodes.NodeFaulted, "Connection state trigger faulted.", exception);
         ((IDataflowBlock)_output).Fault(exception);
         _errors.Complete();

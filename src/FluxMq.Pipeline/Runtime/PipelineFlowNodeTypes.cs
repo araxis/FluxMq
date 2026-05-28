@@ -10,6 +10,9 @@ public static class PipelineFlowNodeTypes
     /// <summary>Workflow node: bound to a connection, owns its own subscription list, emits envelopes.</summary>
     public static readonly NodeType Trigger = new("mqtt.trigger");
 
+    /// <summary>Workflow node: bound to a connection, emits MQTT client state changes.</summary>
+    public static readonly NodeType ConnectionStateTrigger = new("mqtt.connection-state-trigger");
+
     /// <summary>Workflow node: streams envelopes from a stored session.</summary>
     public static readonly NodeType StoredSessionSource = new("session.source");
 

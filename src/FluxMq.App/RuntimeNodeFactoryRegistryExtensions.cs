@@ -2,6 +2,7 @@ using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Mqtt;
 using FluxMq.Components.Assertions;
+using FluxMq.Components.ConnectionStateTrigger;
 using FluxMq.Components.FileWriter;
 using FluxMq.Components.JsonSchema;
 using FluxMq.Components.Logging;
@@ -54,6 +55,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
         return registry
             .Register(PipelineFlowNodeTypes.Connection, context => CreateConnection(context.Address, context.Definition, clientFactory))
             .Register(PipelineFlowNodeTypes.Trigger, context => CreateTrigger(context.Address, context.Definition, context))
+            .Register(PipelineFlowNodeTypes.ConnectionStateTrigger, context => CreateConnectionStateTrigger(context.Address, context.Definition, context))
             .Register(PipelineFlowNodeTypes.StoredSessionSource, context => CreateStoredSessionSource(context.Address, context.Definition, messageRepository))
             .Register(PipelineFlowNodeTypes.ReplaySource, context => CreateReplaySource(context.Address, context.Definition, messageRepository))
             .Register(PipelineFlowNodeTypes.GeneratedSource, context => CreateGeneratedMqttSource(context.Address, context.Definition))
@@ -199,6 +201,31 @@ public static class RuntimeNodeFactoryRegistryExtensions
             outputs:
             [
                 new OutputPort<MqttEnvelope>(address.Port(OutputPort), component.Output),
+                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
+            ]);
+    }
+
+    private static RuntimeNode CreateConnectionStateTrigger(
+        NodeAddress address,
+        NodeDefinition definition,
+        RuntimeNodeFactoryContext context)
+    {
+        var connectionRef = GetRequiredString(definition, "connection");
+        var resource = context.GetResource(new NodeName(connectionRef));
+        if (resource.Node is not MqttConnectionComponent connection)
+        {
+            throw new InvalidOperationException(
+                $"Resource '{connectionRef}' must be of type '{PipelineFlowNodeTypes.Connection.Value}' to be used by an mqtt.connection-state-trigger.");
+        }
+
+        var component = new ConnectionStateTriggerComponent(connection.Client);
+
+        return RuntimeNode.Create(
+            address,
+            component,
+            outputs:
+            [
+                new OutputPort<MqttClientStateChangedEventArgs>(address.Port(OutputPort), component.Output),
                 new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
             ]);
     }

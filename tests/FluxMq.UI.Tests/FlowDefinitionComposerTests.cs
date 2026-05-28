@@ -40,6 +40,10 @@ public sealed class FlowDefinitionComposerTests
         descriptor.Ports.ShouldNotContain(port => port.Name == "Connection");
         descriptor.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "MqttEnvelope" && !port.IsInput);
         descriptor.Ports.ShouldContain(port => port.Name == "Errors" && port.ValueType == "FlowError" && !port.IsInput);
+
+        var stateTrigger = catalog.Find("mqtt.connection-state-trigger").ShouldNotBeNull();
+        stateTrigger.Ports.ShouldNotContain(port => port.Name == "Connection");
+        stateTrigger.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "MqttClientStateChanged" && !port.IsInput);
     }
 
     [Fact]
@@ -525,6 +529,38 @@ public sealed class FlowDefinitionComposerTests
             .GetProperty(FlowDefinitionComposer.RouterNodeName);
 
         router.GetProperty("configuration").GetProperty("expression").GetString().ShouldBe("qos >= 1");
+
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(updated));
+        var configuration = new ConfigurationBuilder()
+            .AddJsonStream(stream)
+            .Build();
+
+        using var host = FlowApplicationHost.CreateDefault(configuration);
+        var result = host.Build();
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.RuntimeBuild?.Errors.Select(error => error.Message) ?? []));
+    }
+
+    [Fact]
+    public void AddComponent_ConnectionStateTriggerCreatesDefaultConnectionAndBuildableDefinition()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var updated = composer.AddComponent(initial, "mqtt.connection-state-trigger");
+
+        using var document = JsonDocument.Parse(updated);
+        var state = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty(FlowDefinitionComposer.StateSourceNodeName);
+
+        state.GetProperty("configuration").GetProperty("connection").GetString()
+            .ShouldBe(FlowDefinitionComposer.BrokerResourceName);
 
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(updated));
         var configuration = new ConfigurationBuilder()
