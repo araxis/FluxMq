@@ -76,9 +76,9 @@ Reasoning:
 
 Status: Accepted.
 
-### 2026-05-06 - Message/session pipeline is the architectural spine
+### 2026-05-06 - Message/client pipeline is the architectural spine
 
-Decision: Center the architecture around MQTT sessions, message ingestion, processing, storage, and UI projection.
+Decision: Center the architecture around MQTT clients, message ingestion, processing, storage, and UI projection.
 
 Reasoning:
 - FluxMQ's real value comes from high-throughput debugging and replay, not just UI panels.
@@ -276,14 +276,14 @@ When to introduce:
 
 Status: Planned — target Stage 8.
 
-### 2026-05-07 - MqttConnectionManager uses a session factory for testability
+### 2026-05-07 - MqttConnectionManager uses a client factory for testability
 
-Decision: `MqttConnectionManager` accepts a `Func<MqttConnectionProfile, IMqttSession>` factory instead of hard-coding `new MqttSession(profile)`.
+Decision: `MqttConnectionManager` accepts a `Func<MqttConnectionProfile, IFluxMqttClient>` factory instead of hard-coding `new FluxMqttClient(profile)`.
 
 Reasoning:
-- Allows tests to inject `FakeMqttSession` without a live broker.
-- The default factory (`profile => new MqttSession(profile)`) keeps production behaviour unchanged.
-- This is also the natural seam where Polly reconnect logic will be introduced — the factory or the manager's `ConnectAsync` wraps the call in a retry policy.
+- Allows tests to inject `FakeFluxMqttClient` without a live broker.
+- The default factory (`profile => new FluxMqttClient(profile)`) keeps production behaviour unchanged.
+- This is also the natural boundary where Polly reconnect logic will be introduced: the factory or the manager's `ConnectAsync` wraps the call in a retry policy.
 
 Status: Accepted.
 
@@ -305,7 +305,7 @@ Decision: Replace the hand-rolled `MessagePipeline` + `IMessageProcessor` with T
 Reasoning:
 - The pipeline topology is a graph (fan-out to topic index, storage, metrics, UI state), not a simple sequential list — Dataflow expresses this naturally.
 - Dataflow provides backpressure, per-block parallelism, completion/fault propagation, and filtered linking out of the box.
-- `FluxMq.Core` is unchanged — `MqttSession` still produces `Channel<MqttEnvelope>`. Dataflow is strictly a `FluxMq.Pipeline` concern.
+- `FluxMq.Core` is unchanged — `FluxMqttClient` still produces `Channel<MqttEnvelope>`. Dataflow is strictly a `FluxMq.Pipeline` concern.
 
 Design:
 - `MqttPipeline` feeds the channel into a `BufferBlock` (bounded, absorbs bursts).
@@ -472,7 +472,7 @@ Status: Accepted.
 
 ### 2026-05-09 - Split MQTT intake into connection resources and trigger nodes
 
-Decision: Register `mqtt.connection` as the shared MQTT session resource and `mqtt.trigger` as the workflow node that subscribes through that resource and emits matching messages.
+Decision: Register `mqtt.connection` as the shared MQTT client resource and `mqtt.trigger` as the workflow node that subscribes through that resource and emits matching messages.
 
 Reasoning:
 - The runtime lifecycle path for resource start/dispose should be exercised by a real component, not only no-service components.
@@ -480,7 +480,7 @@ Reasoning:
 - Connections and subscriptions have different lifetimes: a connection can be shared across workflows, while each trigger owns the topic filters that define when it emits.
 - This matches the object-shaped definition model: shared broker configuration lives under `resources`, and workflow behavior lives under named workflow nodes.
 - Factory-level parsing gives clear build errors for invalid `profile`, `subscriptions`, or `qos` values before runtime start.
-- Keeping a session factory parameter on registration preserves deterministic testability while production stays on `MqttSession`.
+- Keeping a client factory parameter on registration preserves deterministic testability while production stays on `FluxMqttClient`.
 
 Status: Accepted.
 

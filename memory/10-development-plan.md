@@ -70,7 +70,7 @@ The current scenario result history slice keeps a bounded in-memory list of rece
 The current scenario report export slice adds a stable desktop reporting shape for scenario runs. `ScenarioRunReportFormatter` turns a run result into JSON or text with root schema/run/generation metadata, scenario status, duration, aggregate issue summaries, planned-but-not-run steps, per-step configuration, per-step sequence/timing, per-step status/message, matched event details, and matched event offsets relative to the scenario and owning step. Text reports now include matched event source, subject, payload size/preview, and attributes when present, so `.scenario-report.txt` remains useful without opening JSON. The test scenario header can preview the selected scenario report in a MudBlazor tabs dialog, copy the selected scenario report JSON to the clipboard, or save it to disk through MudBlazor tooltip/icon actions. The report preview now creates one report snapshot and renders Summary/JSON/save from that same object, so the displayed report and saved JSON agree on `runId` and `generatedAt`; the same dialog can also save the readable Summary tab as `.scenario-report.txt`. File export reuses the existing `SaveAsDialog` with report-specific parameters and writes through `FlowWorkspaceService` helpers, so the Razor component stays a composition surface instead of a file writer. Scenario history rows are now clickable MudBlazor menu items; selecting a prior run restores it as the active result for review and reporting, guarded so another test's run cannot be selected into the current test.
 The current scoped-log slice gives logs a clearer observability boundary. Workspace logs now have explicit `Scope`, `ArtifactKind`, and `ArtifactName` metadata so app runtime rows, test-runner rows, and system/validation rows can be filtered without parsing message text. A first-level Logs tab uses a MudBlazor-native `WorkspaceLogPanel` with compact scope, level, and search filters; the duplicate right-inspector Logs tab was removed. This is still one in-memory project log stream, but it is ready for later per-runtime sinks such as service-hosted app logs, dashboard logs, and external integration-test runner logs without mixing ownership.
 The current test-runner resource boundary refactor keeps app-level resources as the only connection definition surface while giving scenarios their own reusable MQTT client factory. `IMqttScenarioClientFactory` resolves shared app MQTT resources and creates short-lived runner-owned MQTT clients with separate profile/client ids for saved-definition, CLI, and running-runtime scenario paths. `mqtt.publisher` now consumes that boundary through `IMqttScenarioPublisher`, and future test-runner `mqtt.trigger`, `expect`, and `when` blocks should reuse the same factory instead of introducing a parallel broker-probe engine or tying tests to the app runtime's live MQTT clients.
-Naming rule: use "MQTT client" for live connected MQTT objects in developer-facing and domain-facing code. The older core `IMqttSession` type still exists and should be renamed in a dedicated mechanical slice; new scenario/test-runner boundaries should not introduce new "session" wording.
+Naming rule: use "MQTT client" for live connected MQTT objects in developer-facing and domain-facing code. The older core `IFluxMqttClient` type still exists and should be renamed in a dedicated mechanical slice; new scenario/test-runner boundaries should not introduce new "session" wording.
 Scenario step naming rule: use the same component vocabulary across pipelines and tests where the behavior is the same. The MQTT publish action is `mqtt.publisher`, matching the normal pipeline actor. The product is still pre-release, so do not add saved-project compatibility aliases unless they simplify current development.
 
 ## Step-by-Step Plan
@@ -100,7 +100,7 @@ Goal: Make FluxMQ useful as a local MQTT workbench.
 
 Tasks:
 
-- Implement connection profiles and MQTT session lifecycle.
+- Implement connection profiles and MQTT client lifecycle.
 - Receive and publish MQTT messages.
 - Persist connection profiles, sessions, and messages in LiteDB.
 - Add payload inspection for common payload formats.
@@ -312,8 +312,8 @@ Done when:
   - the right-side Publish panel can target a selected broker
   - MQTT Trigger, Connection State Trigger, and MQTT Publisher editors select broker resources by app resource key with endpoint labels
 - Fixed app-run broker ownership:
-  - `Run` marks only the live broker sessions it had to start
-  - `Stop` disconnects those app-started sessions and preserves manually connected broker sessions
+  - `Run` marks only the live broker clients it had to start
+  - `Stop` disconnects those app-started clients and preserves manually connected broker clients
   - workspace stop has a bounded timeout so the top toolbar does not stay busy if runtime completion stalls
 - Improved control feedback and publisher defaults:
   - `Stop` shows a compact spinner beside the `Stop` label during the async stop path

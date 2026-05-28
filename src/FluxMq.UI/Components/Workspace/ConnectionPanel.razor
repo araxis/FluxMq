@@ -36,7 +36,7 @@ else
                                 <MudText Typo="Typo.caption" Color="Color.Error">@conn.LastError</MudText>
                             }
                         </MudStack>
-                        @if (conn.State is MqttSessionState.Disconnected or MqttSessionState.Faulted)
+                        @if (conn.State is MqttClientState.Disconnected or MqttClientState.Faulted)
                         {
                             <MudIconButton Size="Size.Small"
                                            Icon="@Icons.Material.Filled.PlayArrow"
@@ -79,11 +79,11 @@ else
     private Task DisconnectAsync(Guid id) => Live.DisconnectAsync(id);
     private Task RemoveAsync(Guid id) => Live.RemoveConnectionAsync(id);
 
-    private static Color StateColor(MqttSessionState state) => state switch
+    private static Color StateColor(MqttClientState state) => state switch
     {
-        MqttSessionState.Connected => Color.Success,
-        MqttSessionState.Connecting or MqttSessionState.Reconnecting => Color.Warning,
-        MqttSessionState.Faulted => Color.Error,
+        MqttClientState.Connected => Color.Success,
+        MqttClientState.Connecting or MqttClientState.Reconnecting => Color.Warning,
+        MqttClientState.Faulted => Color.Error,
         _ => Color.Default
     };
 

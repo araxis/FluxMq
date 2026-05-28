@@ -5,7 +5,7 @@ using FluxMq.Components.MqttMetrics;
 using FluxMq.Components.MqttPayloadInspector;
 using FluxMq.Components.MessageSource;
 using FluxMq.Core.Models;
-using FluxMq.Core.Session;
+using FluxMq.Core.Mqtt;
 using FluxMq.Components.Logging;
 using FluxMq.Components.Storage.Repositories;
 using FluxMq.Pipeline.Components;
@@ -35,7 +35,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     private static readonly Encoding StrictUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
     private readonly FlowDefinitionComposer _definitionComposer;
     private readonly IMessageRepository? _messageRepository;
-    private readonly Func<MqttConnectionProfile, IMqttSession>? _runtimeClientFactory;
+    private readonly Func<MqttConnectionProfile, IFluxMqttClient>? _runtimeClientFactory;
     private readonly DashboardEventFilterCatalog _dashboardEventFilters;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly object _logSync = new();
@@ -58,7 +58,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     public FlowWorkspaceService(
         FlowDefinitionComposer definitionComposer,
         IMessageRepository? messageRepository = null,
-        Func<MqttConnectionProfile, IMqttSession>? runtimeClientFactory = null,
+        Func<MqttConnectionProfile, IFluxMqttClient>? runtimeClientFactory = null,
         DashboardEventFilterCatalog? dashboardEventFilters = null)
     {
         _definitionComposer = definitionComposer;

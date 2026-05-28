@@ -195,7 +195,7 @@ public sealed class FlowComponentCatalog
             "mqtt.publisher",
             "MQTT Publisher",
             "Actor",
-            "Publishes MqttPublishRequest values through a broker session. Add a Dynamic Mapper upstream when starting from MQTT envelopes.",
+            "Publishes MqttPublishRequest values through a broker client. Add a Dynamic Mapper upstream when starting from MQTT envelopes.",
             IsResource: false,
             [
                 new("Input", "MqttPublishRequest", IsInput: true),

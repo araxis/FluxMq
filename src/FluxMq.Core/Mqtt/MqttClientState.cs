@@ -1,6 +1,6 @@
-namespace FluxMq.Core.Session;
+namespace FluxMq.Core.Mqtt;
 
-public enum MqttSessionState
+public enum MqttClientState
 {
     Disconnected,
     Connecting,

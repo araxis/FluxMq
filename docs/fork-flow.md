@@ -47,7 +47,7 @@ Broadcasts MQTT connection state changes as flow events.
 
 ### MqttConnectionComponent
 
-Owns the MQTT session lifecycle as a shared resource.
+Owns the MQTT client lifecycle as a shared resource.
 
 ### MqttTriggerComponent
 
@@ -77,7 +77,7 @@ Request-specific mapper component classes may exist as runtime implementation de
 
 ### MqttPublisherComponent
 
-Publishes `MqttPublishRequest` values through an MQTT session and reports publish failures through the error port.
+Publishes `MqttPublishRequest` values through an MQTT client and reports publish failures through the error port.
 
 ### MqttRecorderComponent
 
@@ -326,7 +326,7 @@ The preferred alpha source registrations use the shared connection/trigger pair 
   - `Errors`: `FlowError`
 - `mqtt.connection`
   - Shared resource node.
-  - Owns the `IMqttSession` lifecycle and broadcasts received envelopes internally to triggers.
+  - Owns the `IFluxMqttClient` lifecycle and broadcasts received envelopes internally to triggers.
   - `Errors`: `FlowError`
 - `mqtt.trigger`
   - Workflow trigger node.

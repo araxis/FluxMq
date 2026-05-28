@@ -31,7 +31,7 @@ Not every component has an input port. Source and trigger components produce eve
 ```mermaid
 flowchart LR
     Manager["IMqttConnectionManager.StateChanged"] --> Trigger["ConnectionStateTriggerComponent"]
-    Trigger --> State["Output: SessionStateChangedEventArgs"]
+    Trigger --> State["Output: MqttClientStateChangedEventArgs"]
     Trigger --> Errors["Errors: FlowError"]
 ```
 
@@ -98,15 +98,15 @@ The stored-session mode requires the host to provide `IMessageRepository` when r
 
 ## MQTT Connection and Trigger
 
-`MqttConnectionComponent` owns the MQTT session lifecycle. `MqttTriggerComponent` references that shared connection, installs its own subscriptions, and emits matching `MqttEnvelope` values.
+`MqttConnectionComponent` owns the MQTT client lifecycle. `MqttTriggerComponent` references that shared connection, installs its own subscriptions, and emits matching `MqttEnvelope` values.
 
 ### Behavior
 
 ```mermaid
 flowchart LR
     Profile["Connection profile"] --> Connection["MqttConnectionComponent"]
-    Connection --> Session["IMqttSession"]
-    Session --> Broadcast["Shared message broadcast"]
+    Connection --> Client["IFluxMqttClient"]
+    Client --> Broadcast["Shared message broadcast"]
     Trigger["MqttTriggerComponent"] --> Subscribe["Subscribe topic filters"]
     Broadcast --> Trigger
     Trigger --> Out["Output: MqttEnvelope"]
@@ -117,7 +117,7 @@ flowchart LR
 ### Usage
 
 ```csharp
-var connection = new MqttConnectionComponent(session, disposeSessionOnDispose: false);
+var connection = new MqttConnectionComponent(client, disposeClientOnDispose: false);
 var trigger = new MqttTriggerComponent(connection,
 [
     new MqttSubscription("factory/#", MqttQualityOfServiceLevel.AtMostOnce)
@@ -449,14 +449,14 @@ Invalid payloads produce `JsonSchemaValidationResult` values with `IsValid = fal
 
 ## MQTT Publisher
 
-`MqttPublisherComponent` consumes `MqttPublishRequest` commands and publishes them through an active MQTT session.
+`MqttPublisherComponent` consumes `MqttPublishRequest` commands and publishes them through an active MQTT client.
 
 ### Behavior
 
 ```mermaid
 flowchart LR
     In["Input: MqttPublishRequest"] --> Publisher["MqttPublisherComponent"]
-    Publisher --> Session["IMqttSession.PublishAsync"]
+    Publisher --> Client["IFluxMqttClient.PublishAsync"]
     Publisher -->|publish failure| Errors["Errors: FlowError code 2000"]
 ```
 
@@ -616,7 +616,7 @@ flowchart LR
 Equivalent code shape:
 
 ```csharp
-var connection = new MqttConnectionComponent(session, disposeSessionOnDispose: false);
+var connection = new MqttConnectionComponent(client, disposeClientOnDispose: false);
 var source = new MqttTriggerComponent(connection,
 [
     new MqttSubscription("factory/#", MqttQualityOfServiceLevel.AtMostOnce)
@@ -665,7 +665,7 @@ flowchart LR
     Recorder --> ErrorLog
 ```
 
-This flow replays a recorded session back through an MQTT session.
+This flow replays a recorded session back through an MQTT client.
 
 ```mermaid
 flowchart LR

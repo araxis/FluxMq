@@ -73,8 +73,8 @@ Chronological progress record.
 
 ## 2026-05-07
 
-- Implemented Stage 1 — core MQTT session and pipeline foundation (PR #4):
-  - `FluxMq.Core`: `MqttConnectionProfile`, `MqttEnvelope`, `MqttSessionState`, `IMqttSession`, `MqttSession` (MQTTnet wrapper, messages → bounded `Channel<MqttEnvelope>`).
+- Implemented Stage 1 — core MQTT client and pipeline foundation (PR #4):
+  - `FluxMq.Core`: `MqttConnectionProfile`, `MqttEnvelope`, `MqttClientState`, `IFluxMqttClient`, `FluxMqttClient` (MQTTnet wrapper, messages → bounded `Channel<MqttEnvelope>`).
   - `FluxMq.Pipeline`: initial `IMessageProcessor` + `MessagePipeline` (sequential fan-out).
   - 13 tests passing.
 - Replaced sequential pipeline with TPL Dataflow (PR #5):
@@ -84,13 +84,13 @@ Chronological progress record.
   - 15 tests passing (8 core, 6 pipeline, 1 storage placeholder).
 
 - Added connection state management:
-  - `IMqttSession.StateChanged` event — fires on every state transition.
-  - `MqttSession` wires `IMqttClient.DisconnectedAsync` to detect unexpected drops; sets `Faulted` if exception present, `Disconnected` otherwise.
+  - `IFluxMqttClient.StateChanged` event — fires on every state transition.
+  - `FluxMqttClient` wires `IMqttClient.DisconnectedAsync` to detect unexpected drops; sets `Faulted` if exception present, `Disconnected` otherwise.
   - `SetState` helper centralises all state writes and event firing.
-  - `SessionStateChangedEventArgs` — carries session ID, profile, and new state.
+  - `MqttClientStateChangedEventArgs` — carries session ID, profile, and new state.
   - `IMqttConnectionManager` / `MqttConnectionManager` — creates, tracks, and disposes sessions; forwards `StateChanged`; uses injected factory for testability.
   - Reconnect hook (Polly) left as a comment in `OnSessionStateChanged`.
-  - 6 new connection manager tests using `FakeMqttSession` (no broker required). 21 tests total passing.
+  - 6 new connection manager tests using `FakeFluxMqttClient` (no broker required). 21 tests total passing.
 
 - Decided on visual pipeline editor direction (Stage 8):
   - Blazor.Diagrams for drag-and-drop topology editing.
@@ -100,8 +100,8 @@ Chronological progress record.
   - Module contracts from Stage 2 onwards must be designed with node metadata (ports, configurable properties) in mind.
 
 - Implemented Polly reconnect in `MqttConnectionManager`:
-  - Added `MqttSessionState.Reconnecting` — surfaced to UI on each retry attempt.
-  - `MqttSession.OnClientDisconnectedAsync` no longer completes the channel on unexpected drops — channel stays open so reconnect resumes message flow seamlessly.
+  - Added `MqttClientState.Reconnecting` — surfaced to UI on each retry attempt.
+  - `FluxMqttClient.OnClientDisconnectedAsync` no longer completes the channel on unexpected drops — channel stays open so reconnect resumes message flow seamlessly.
   - `MqttConnectionManager` schedules a background reconnect task on `Faulted` or unexpected `Disconnected`; uses an injectable `ResiliencePipeline` (default: exponential backoff 1s → 30s with jitter, infinite retries).
   - `DisconnectAsync` and `RemoveAsync` cancel any in-progress reconnect before acting.
   - `BuildDefaultReconnectPipeline()` is the production default; tests inject `InstantRetry` (zero delay, 5 attempts).
@@ -170,7 +170,7 @@ Chronological progress record.
 - Added a GitHub Pages workflow for the docs site and a Dependabot configuration for docs-site packages and GitHub Actions.
 - Updated the Pages workflow to `actions/configure-pages@v6` and ignored local VitePress cache output.
 - Started the next Fork Flow component after replay and publish support: live MQTT intake from an active session.
-- Added an MQTT intake prototype to bridge `IMqttSession.Messages` into Dataflow-backed Fork Flow graphs.
+- Added an MQTT intake prototype to bridge `IFluxMqttClient.Messages` into Dataflow-backed Fork Flow graphs.
 - Added tests for message order, reader completion, reader failure conversion to `FlowError`, clean completion, and explicit fault behavior.
 - Added `MqttConditionRouterComponent` to route `MqttEnvelope` values into true/false branches.
 - Added tests for topic-prefix routing, predicate failure conversion to `FlowError`, pending-error completion, and explicit fault behavior.
@@ -594,10 +594,10 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - live workspace connections now retain the app broker resource name, such as `broker1` or `broker2`
   - the right-side Publish panel can target a specific connected broker instead of always using the first connected session
   - MQTT Trigger, Connection State Trigger, and MQTT Publisher editors now select broker resources by app resource name with endpoint labels
-  - desktop live sessions use a separate workspace client id so the live tools do not collide with runtime client ids
+  - desktop live clients use a separate workspace client id so the live tools do not collide with runtime client ids
 - Fixed app-run broker ownership:
-  - live broker sessions started automatically by `Run` are tracked as app-started sessions
-  - `Stop` now disconnects those app-started sessions while leaving manually connected broker sessions alone
+  - live broker clients started automatically by `Run` are tracked as app-started clients
+  - `Stop` now disconnects those app-started clients while leaving manually connected broker clients alone
   - workspace stop has a bounded timeout so a stalled runtime stop cannot keep the top toolbar busy indefinitely
 - Improved runtime controls and publisher defaults:
   - the top-bar `Stop` action now shows a compact spinner beside the `Stop` label while the async stop operation is in progress
@@ -1389,7 +1389,7 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - scenario MQTT factories and publishers now use `clientFactory` and `client` names at the test-runner boundary
   - `FlowWorkspaceService` now takes `runtimeClientFactory` instead of `runtimeSessionFactory`
   - memory notes for the new resource boundary now describe live MQTT clients rather than sessions
-- Deferred a broader core rename of the older `IMqttSession` type because it is spread across the existing app and should be a dedicated mechanical rename slice.
+- Deferred a broader core rename of the older `IFluxMqttClient` type because it is spread across the existing app and should be a dedicated mechanical rename slice.
 - Verified:
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqClientNamingApp\ -m:1 --filter "FullyQualifiedName~MqttScenarioClientFactoryTests|FullyQualifiedName~FlowApplicationHostTests"` passes with 14 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqClientNamingUi\ -m:1 --filter "FullyQualifiedName~FlowWorkspaceServiceTests"` passes with 48 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
@@ -1488,3 +1488,22 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqBrandingUi\ -m:1` passes with 180 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqSplashHoldUi\ -m:1` passes with 180 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `git diff --check` passes; Git reports only existing LF-to-CRLF working-copy warnings.
+
+## 2026-05-28 - Live MQTT client terminology alignment
+
+- Renamed the live MQTT runtime layer from session wording to client wording:
+  - `FluxMq.Core.Session` moved to `FluxMq.Core.Mqtt`
+  - `IMqttSession` -> `IFluxMqttClient`
+  - `MqttSession` -> `FluxMqttClient`
+  - `MqttSessionState` -> `MqttClientState`
+  - `SessionStateChangedEventArgs` -> `MqttClientStateChangedEventArgs`
+- Updated live MQTT owner APIs:
+  - `IMqttConnectionManager.Sessions` is now `Clients`
+  - `MqttConnectionComponent.Session` is now `Client`
+  - runtime/UI factory parameters use `clientFactory`
+- Kept stored/recorded session vocabulary intact for `StoredSession`, `SessionId`, `session.source`, replay, and recording features.
+- Updated app/docs/memory wording so live broker resources are described as MQTT clients and recorded traffic remains described as sessions.
+- Verified:
+  - `dotnet build FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - focused core/components/app/UI MQTT tests pass: 8 core, 21 components, 37 app, and 60 UI tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqMqttClientNamingFull\ -m:1` passes with 459 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

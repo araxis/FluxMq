@@ -1,14 +1,14 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 
-namespace FluxMq.Core.Session;
+namespace FluxMq.Core.Mqtt;
 
-public sealed class SessionStateChangedEventArgs(
+public sealed class MqttClientStateChangedEventArgs(
     ConnectionProfileId profileId,
     MqttConnectionProfile profile,
-    MqttSessionState state) : EventArgs
+    MqttClientState state) : EventArgs
 {
     public ConnectionProfileId ProfileId { get; } = profileId;
     public MqttConnectionProfile Profile { get; } = profile;
-    public MqttSessionState State { get; } = state;
+    public MqttClientState State { get; } = state;
 }

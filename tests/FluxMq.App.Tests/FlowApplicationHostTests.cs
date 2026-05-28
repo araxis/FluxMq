@@ -1,7 +1,7 @@
 using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
-using FluxMq.Core.Session;
+using FluxMq.Core.Mqtt;
 using FluxMq.Pipeline.Components;
 using FluxMq.Pipeline.Definitions;
 using FluxMq.Pipeline.Runtime;
@@ -289,7 +289,7 @@ public sealed class FlowApplicationHostTests
     [Fact]
     public async Task RunScenarioAsync_CanPublishMqttMessageThroughNamedConnection()
     {
-        var session = new FakeMqttSession();
+        var session = new FakeFluxMqttClient();
         await using var host = FlowApplicationHost.CreateDefault(
             BuildConfiguration(
                 """
@@ -335,7 +335,7 @@ public sealed class FlowApplicationHostTests
                   }
                 }
                 """),
-            sessionFactory: _ => session);
+            clientFactory: _ => session);
 
         var startResult = await host.StartAsync();
         startResult.IsSuccess.ShouldBeTrue();
@@ -353,7 +353,7 @@ public sealed class FlowApplicationHostTests
     [Fact]
     public async Task RunScenarioAsync_ReportsMissingScenarioMqttConnection()
     {
-        var session = new FakeMqttSession();
+        var session = new FakeFluxMqttClient();
         await using var host = FlowApplicationHost.CreateDefault(
             BuildConfiguration(
                 """
@@ -397,7 +397,7 @@ public sealed class FlowApplicationHostTests
                   }
                 }
                 """),
-            sessionFactory: _ => session);
+            clientFactory: _ => session);
 
         var startResult = await host.StartAsync();
         startResult.IsSuccess.ShouldBeTrue();
@@ -523,27 +523,27 @@ public sealed class FlowApplicationHostTests
         }
     }
 
-    private sealed class FakeMqttSession : IMqttSession
+    private sealed class FakeFluxMqttClient : IFluxMqttClient
     {
         private readonly Channel<MqttEnvelope> _messages = Channel.CreateUnbounded<MqttEnvelope>();
 
         public MqttConnectionProfile Profile { get; } = new() { Name = "local-broker" };
-        public MqttSessionState State { get; private set; } = MqttSessionState.Disconnected;
+        public MqttClientState State { get; private set; } = MqttClientState.Disconnected;
         public ChannelReader<MqttEnvelope> Messages => _messages.Reader;
         public List<PublishedMessage> Published { get; } = [];
 
-        public event EventHandler<MqttSessionState>? StateChanged;
+        public event EventHandler<MqttClientState>? StateChanged;
 
         public Task ConnectAsync(CancellationToken ct = default)
         {
-            State = MqttSessionState.Connected;
+            State = MqttClientState.Connected;
             StateChanged?.Invoke(this, State);
             return Task.CompletedTask;
         }
 
         public Task DisconnectAsync(CancellationToken ct = default)
         {
-            State = MqttSessionState.Disconnected;
+            State = MqttClientState.Disconnected;
             StateChanged?.Invoke(this, State);
             return Task.CompletedTask;
         }

@@ -39,11 +39,11 @@ Initial status:
 
 ### FluxMq.Core
 
-Core domain model and MQTT session behavior.
+Core domain model and MQTT client behavior.
 
 Responsibilities:
 - Connection profiles.
-- MQTT session lifecycle.
+- MQTT client lifecycle.
 - Topic model.
 - Message envelope model.
 - Broker capability abstractions.
@@ -142,7 +142,7 @@ Initial status:
 
 ```text
 MQTTnet Client
-  -> MqttSession
+  -> FluxMqttClient
   -> Channel<MqttEnvelope>
   -> Dataflow source adapter
   -> Flow Application Runtime
@@ -221,7 +221,7 @@ Early types to define:
 
 ```text
 MqttConnectionProfile
-MqttSession
+FluxMqttClient
 MqttEnvelope
 DecodedPayload
 TopicNode

@@ -2,7 +2,7 @@ using FluxMq.App.Scenarios;
 using FluxMq.Components.MessageSource;
 using FluxMq.Components.MqttPublisher;
 using FluxMq.Core.Models;
-using FluxMq.Core.Session;
+using FluxMq.Core.Mqtt;
 using FluxMq.Pipeline.Definitions;
 using FluxMq.Pipeline.Runtime;
 using MQTTnet.Protocol;
@@ -43,7 +43,7 @@ public sealed class MqttScenarioClientFactoryTests
             profile =>
             {
                 capturedProfiles.Add(profile);
-                return new FakeMqttSession(profile);
+                return new FakeFluxMqttClient(profile);
             });
 
         await using var client = factory.CreateClient("shared-broker");
@@ -75,8 +75,8 @@ public sealed class MqttScenarioClientFactoryTests
             CleanStart = false
         };
         var connection = new MqttConnectionComponent(
-            new FakeMqttSession(appProfile),
-            disposeSessionOnDispose: false);
+            new FakeFluxMqttClient(appProfile),
+            disposeClientOnDispose: false);
         var resource = RuntimeNode.Create(
             new NodeAddress(WellKnownScopes.Resources, new NodeName("runtime-broker")),
             connection);
@@ -90,7 +90,7 @@ public sealed class MqttScenarioClientFactoryTests
             profile =>
             {
                 capturedProfiles.Add(profile);
-                return new FakeMqttSession(profile);
+                return new FakeFluxMqttClient(profile);
             });
 
         await using var client = factory.CreateClient("runtime-broker");
@@ -109,7 +109,7 @@ public sealed class MqttScenarioClientFactoryTests
     [Fact]
     public async Task Publisher_PublishesThroughScenarioClientFactory()
     {
-        var client = new FakeMqttSession(new MqttConnectionProfile { Name = "shared-broker" });
+        var client = new FakeFluxMqttClient(new MqttConnectionProfile { Name = "shared-broker" });
         var factory = new FakeScenarioClientFactory(client);
         var publisher = new ApplicationDefinitionMqttScenarioPublisher(factory);
         var payload = Encoding.UTF8.GetBytes("""{"value":12}""");
@@ -144,41 +144,41 @@ public sealed class MqttScenarioClientFactoryTests
             }
         };
 
-    private sealed class FakeScenarioClientFactory(FakeMqttSession client) : IMqttScenarioClientFactory
+    private sealed class FakeScenarioClientFactory(FakeFluxMqttClient client) : IMqttScenarioClientFactory
     {
         public List<string> ConnectionNames { get; } = [];
 
-        public IMqttSession CreateClient(string connectionName)
+        public IFluxMqttClient CreateClient(string connectionName)
         {
             ConnectionNames.Add(connectionName);
             return client;
         }
     }
 
-    private sealed class FakeMqttSession(MqttConnectionProfile profile) : IMqttSession
+    private sealed class FakeFluxMqttClient(MqttConnectionProfile profile) : IFluxMqttClient
     {
         private readonly Channel<MqttEnvelope> _messages = Channel.CreateUnbounded<MqttEnvelope>();
 
         public MqttConnectionProfile Profile { get; } = profile;
-        public MqttSessionState State { get; private set; } = MqttSessionState.Disconnected;
+        public MqttClientState State { get; private set; } = MqttClientState.Disconnected;
         public ChannelReader<MqttEnvelope> Messages => _messages.Reader;
         public int ConnectCount { get; private set; }
         public int DisposeCount { get; private set; }
         public List<PublishedMessage> Published { get; } = [];
 
-        public event EventHandler<MqttSessionState>? StateChanged;
+        public event EventHandler<MqttClientState>? StateChanged;
 
         public Task ConnectAsync(CancellationToken ct = default)
         {
             ConnectCount++;
-            State = MqttSessionState.Connected;
+            State = MqttClientState.Connected;
             StateChanged?.Invoke(this, State);
             return Task.CompletedTask;
         }
 
         public Task DisconnectAsync(CancellationToken ct = default)
         {
-            State = MqttSessionState.Disconnected;
+            State = MqttClientState.Disconnected;
             StateChanged?.Invoke(this, State);
             return Task.CompletedTask;
         }

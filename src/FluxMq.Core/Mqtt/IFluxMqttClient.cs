@@ -2,15 +2,15 @@ using FluxMq.Core.Models;
 using MQTTnet.Protocol;
 using System.Threading.Channels;
 
-namespace FluxMq.Core.Session;
+namespace FluxMq.Core.Mqtt;
 
-public interface IMqttSession : IAsyncDisposable
+public interface IFluxMqttClient : IAsyncDisposable
 {
     MqttConnectionProfile Profile { get; }
-    MqttSessionState State { get; }
+    MqttClientState State { get; }
     ChannelReader<MqttEnvelope> Messages { get; }
 
-    event EventHandler<MqttSessionState>? StateChanged;
+    event EventHandler<MqttClientState>? StateChanged;
 
     Task ConnectAsync(CancellationToken ct = default);
     Task DisconnectAsync(CancellationToken ct = default);

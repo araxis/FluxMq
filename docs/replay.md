@@ -93,7 +93,7 @@ flowchart LR
 
 ## Replay To MQTT
 
-Recorded sessions can be replayed back through an MQTT session by mapping each replayed envelope into a `MqttPublishRequest`, then linking the request stream to `MqttPublisherComponent`.
+Recorded sessions can be replayed back through an MQTT client by mapping each replayed envelope into a `MqttPublishRequest`, then linking the request stream to `MqttPublisherComponent`.
 
 ```mermaid
 flowchart LR

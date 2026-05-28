@@ -2,7 +2,7 @@ using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Payloads;
-using FluxMq.Core.Session;
+using FluxMq.Core.Mqtt;
 using FluxMq.App;
 using FluxMq.Components.Assertions;
 using FluxMq.Components.JsonSchema;
@@ -559,13 +559,13 @@ public sealed class PipelineComponentFactoryTests
     [Fact]
     public async Task ConnectionAndTriggerFactories_StartSessionAndFeedWorkflowNodes()
     {
-        FakeMqttSession? session = null;
+        FakeFluxMqttClient? session = null;
         TestSinkNode<MqttMetricsSnapshot>? sink = null;
 
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories(_ =>
             {
-                session = new FakeMqttSession();
+                session = new FakeFluxMqttClient();
                 return session;
             })
             .Register(new NodeType("test.snapshot-sink"), (address, _) =>
@@ -637,12 +637,12 @@ public sealed class PipelineComponentFactoryTests
     [Fact]
     public async Task TriggerFactory_UsesExplicitSubscriberOptions()
     {
-        FakeMqttSession? session = null;
+        FakeFluxMqttClient? session = null;
 
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories(_ =>
             {
-                session = new FakeMqttSession();
+                session = new FakeFluxMqttClient();
                 return session;
             }));
 
@@ -748,7 +748,7 @@ public sealed class PipelineComponentFactoryTests
     [Fact]
     public async Task DynamicFilterAndJsonataMapper_CanPublishMappedRequestsToConnection()
     {
-        FakeMqttSession? session = null;
+        FakeFluxMqttClient? session = null;
         var runtimeEvents = new List<FlowEvent>();
         const string mapperExpression = """
         {
@@ -762,7 +762,7 @@ public sealed class PipelineComponentFactoryTests
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories(_ =>
             {
-                session = new FakeMqttSession();
+                session = new FakeFluxMqttClient();
                 return session;
             }));
 
@@ -871,7 +871,7 @@ public sealed class PipelineComponentFactoryTests
     [Fact]
     public async Task LiveTriggerAndJsonataMapper_CanPublishMappedRequestsToConnection()
     {
-        FakeMqttSession? session = null;
+        FakeFluxMqttClient? session = null;
         var runtimeEvents = new List<FlowEvent>();
         const string mapperExpression = """
         {
@@ -885,7 +885,7 @@ public sealed class PipelineComponentFactoryTests
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories(profile =>
             {
-                session = new FakeMqttSession();
+                session = new FakeFluxMqttClient();
                 return session;
             }));
 
@@ -1430,21 +1430,21 @@ public sealed class PipelineComponentFactoryTests
         }
     }
 
-    private sealed class FakeMqttSession : IMqttSession
+    private sealed class FakeFluxMqttClient : IFluxMqttClient
     {
         private readonly Channel<MqttEnvelope> _messages = Channel.CreateUnbounded<MqttEnvelope>();
         private readonly List<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService)> _subscriptions = [];
         private readonly List<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService, bool ReceiveRetainedMessages, bool RetainAsPublished)> _subscriptionOptions = [];
 
         public MqttConnectionProfile Profile { get; } = new() { Name = "factory-test" };
-        public MqttSessionState State { get; private set; } = MqttSessionState.Disconnected;
+        public MqttClientState State { get; private set; } = MqttClientState.Disconnected;
         public ChannelReader<MqttEnvelope> Messages => _messages.Reader;
         public int ConnectCalls { get; private set; }
         public List<PublishedMessage> Published { get; } = [];
         public IReadOnlyList<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService)> Subscriptions => _subscriptions;
         public IReadOnlyList<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService, bool ReceiveRetainedMessages, bool RetainAsPublished)> SubscriptionOptions => _subscriptionOptions;
 
-        public event EventHandler<MqttSessionState>? StateChanged
+        public event EventHandler<MqttClientState>? StateChanged
         {
             add { }
             remove { }
@@ -1453,13 +1453,13 @@ public sealed class PipelineComponentFactoryTests
         public Task ConnectAsync(CancellationToken ct = default)
         {
             ConnectCalls++;
-            State = MqttSessionState.Connected;
+            State = MqttClientState.Connected;
             return Task.CompletedTask;
         }
 
         public Task DisconnectAsync(CancellationToken ct = default)
         {
-            State = MqttSessionState.Disconnected;
+            State = MqttClientState.Disconnected;
             _messages.Writer.TryComplete();
             return Task.CompletedTask;
         }

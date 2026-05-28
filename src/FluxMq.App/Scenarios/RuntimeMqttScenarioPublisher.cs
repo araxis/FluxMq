@@ -1,6 +1,6 @@
 using FluxMq.Components.MqttPublisher;
 using FluxMq.Core.Models;
-using FluxMq.Core.Session;
+using FluxMq.Core.Mqtt;
 using FluxMq.Pipeline.Runtime;
 
 namespace FluxMq.App.Scenarios;
@@ -11,7 +11,7 @@ public sealed class RuntimeMqttScenarioPublisher : IMqttScenarioPublisher
 
     public RuntimeMqttScenarioPublisher(
         ApplicationRuntime runtime,
-        Func<MqttConnectionProfile, IMqttSession>? clientFactory = null)
+        Func<MqttConnectionProfile, IFluxMqttClient>? clientFactory = null)
         : this(new RuntimeMqttScenarioClientFactory(runtime, clientFactory))
     {
     }
@@ -28,7 +28,7 @@ public sealed class RuntimeMqttScenarioPublisher : IMqttScenarioPublisher
         ArgumentNullException.ThrowIfNull(request);
 
         await using var client = _clientFactory.CreateClient(connectionName);
-        if (client.State is not MqttSessionState.Connected)
+        if (client.State is not MqttClientState.Connected)
         {
             await client.ConnectAsync(cancellationToken).ConfigureAwait(false);
         }

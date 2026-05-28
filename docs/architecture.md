@@ -4,7 +4,7 @@ FluxMQ is built around MQTT message/session flow.
 
 ```mermaid
 flowchart LR
-    Broker["MQTT Broker"] --> Session["MqttSession"]
+    Broker["MQTT Broker"] --> Session["FluxMqttClient"]
     Session --> Channel["Channel<MqttEnvelope>"]
     Channel --> Pipeline["Dataflow Pipeline"]
     Pipeline --> Storage["LiteDB Storage"]

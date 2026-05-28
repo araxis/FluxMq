@@ -8,7 +8,7 @@ FluxMQ is also a dynamic ELT app. Sources extract message streams, mapper nodes 
 
 ## Current Capabilities
 
-- MQTT session model and connection manager.
+- MQTT client model and connection manager.
 - TPL Dataflow-based message pipeline foundation.
 - Topic index and topic tree UI components.
 - LiteDB persistence for profiles, sessions, and messages.

@@ -1,4 +1,4 @@
-using FluxMq.Core.Session;
+using FluxMq.Core.Mqtt;
 using FluxMq.Core.TopicIndex;
 using FluxMq.Components.Storage;
 using FluxMq.Components.Storage.Repositories;

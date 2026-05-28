@@ -3,21 +3,21 @@ using MQTTnet;
 using MQTTnet.Protocol;
 using System.Threading.Channels;
 
-namespace FluxMq.Core.Session;
+namespace FluxMq.Core.Mqtt;
 
-public sealed class MqttSession : IMqttSession
+public sealed class FluxMqttClient : IFluxMqttClient
 {
     private readonly IMqttClient _client;
     private readonly Channel<MqttEnvelope> _channel;
-    private volatile MqttSessionState _state = MqttSessionState.Disconnected;
+    private volatile MqttClientState _state = MqttClientState.Disconnected;
 
     public MqttConnectionProfile Profile { get; }
-    public MqttSessionState State => _state;
+    public MqttClientState State => _state;
     public ChannelReader<MqttEnvelope> Messages => _channel.Reader;
 
-    public event EventHandler<MqttSessionState>? StateChanged;
+    public event EventHandler<MqttClientState>? StateChanged;
 
-    public MqttSession(MqttConnectionProfile profile)
+    public FluxMqttClient(MqttConnectionProfile profile)
     {
         Profile = profile;
         _channel = Channel.CreateBounded<MqttEnvelope>(new BoundedChannelOptions(1000)
@@ -32,7 +32,7 @@ public sealed class MqttSession : IMqttSession
 
     public async Task ConnectAsync(CancellationToken ct = default)
     {
-        SetState(MqttSessionState.Connecting);
+        SetState(MqttClientState.Connecting);
         try
         {
             var builder = new MqttClientOptionsBuilder()
@@ -48,20 +48,20 @@ public sealed class MqttSession : IMqttSession
                 builder = builder.WithTlsOptions(o => o.UseTls());
 
             await _client.ConnectAsync(builder.Build(), ct);
-            SetState(MqttSessionState.Connected);
+            SetState(MqttClientState.Connected);
         }
         catch
         {
-            SetState(MqttSessionState.Faulted);
+            SetState(MqttClientState.Faulted);
             throw;
         }
     }
 
     public async Task DisconnectAsync(CancellationToken ct = default)
     {
-        SetState(MqttSessionState.Disconnecting);
+        SetState(MqttClientState.Disconnecting);
         await _client.DisconnectAsync(cancellationToken: ct);
-        SetState(MqttSessionState.Disconnected);
+        SetState(MqttClientState.Disconnected);
         _channel.Writer.TryComplete();
     }
 
@@ -110,12 +110,12 @@ public sealed class MqttSession : IMqttSession
     // Reconnect policy (Polly) will hook here in a future step.
     private Task OnClientDisconnectedAsync(MqttClientDisconnectedEventArgs args)
     {
-        if (_state is MqttSessionState.Disconnecting or MqttSessionState.Disconnected)
+        if (_state is MqttClientState.Disconnecting or MqttClientState.Disconnected)
             return Task.CompletedTask;
 
         var next = args.Exception is not null
-            ? MqttSessionState.Faulted
-            : MqttSessionState.Disconnected;
+            ? MqttClientState.Faulted
+            : MqttClientState.Disconnected;
 
         SetState(next);
         // Do NOT complete the channel here — reconnect will resume message flow.
@@ -141,7 +141,7 @@ public sealed class MqttSession : IMqttSession
         return Task.CompletedTask;
     }
 
-    private void SetState(MqttSessionState state)
+    private void SetState(MqttClientState state)
     {
         _state = state;
         StateChanged?.Invoke(this, state);

@@ -16,7 +16,7 @@ public sealed record RuntimeNodeFactoryContext(
 
     /// <summary>
     /// Looks up a resource node (connection, etc.) by name. Used by workflow factories
-    /// that need to inject a resource handle (e.g. an MQTT session) into their component.
+    /// that need to inject a resource handle (e.g. an MQTT client) into their component.
     /// </summary>
     public RuntimeNode GetResource(NodeName resourceName)
     {

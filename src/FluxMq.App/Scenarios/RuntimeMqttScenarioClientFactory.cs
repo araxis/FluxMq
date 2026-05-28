@@ -1,5 +1,5 @@
 using FluxMq.Core.Models;
-using FluxMq.Core.Session;
+using FluxMq.Core.Mqtt;
 using FluxMq.Pipeline.Runtime;
 
 namespace FluxMq.App.Scenarios;
@@ -7,17 +7,17 @@ namespace FluxMq.App.Scenarios;
 public sealed class RuntimeMqttScenarioClientFactory : IMqttScenarioClientFactory
 {
     private readonly ApplicationRuntime _runtime;
-    private readonly Func<MqttConnectionProfile, IMqttSession> _clientFactory;
+    private readonly Func<MqttConnectionProfile, IFluxMqttClient> _clientFactory;
 
     public RuntimeMqttScenarioClientFactory(
         ApplicationRuntime runtime,
-        Func<MqttConnectionProfile, IMqttSession>? clientFactory = null)
+        Func<MqttConnectionProfile, IFluxMqttClient>? clientFactory = null)
     {
         _runtime = runtime ?? throw new ArgumentNullException(nameof(runtime));
-        _clientFactory = clientFactory ?? (static profile => new MqttSession(profile));
+        _clientFactory = clientFactory ?? (static profile => new FluxMqttClient(profile));
     }
 
-    public IMqttSession CreateClient(string connectionName)
+    public IFluxMqttClient CreateClient(string connectionName)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionName);
 

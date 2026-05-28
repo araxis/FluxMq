@@ -10,7 +10,7 @@ Live broker traffic, stored sessions, replay, imported data, generated data, and
 
 ### Live Path Lives In UI Code
 
-`LiveMqttWorkspaceService` currently reads `IMqttSession.Messages`, updates the topic index, records messages, computes payload inspection, and notifies the UI.
+`LiveMqttWorkspaceService` currently reads `IFluxMqttClient.Messages`, updates the topic index, records messages, computes payload inspection, and notifies the UI.
 
 That creates a second runtime beside Fork Flow. Anything built there must be rebuilt again for offline data, dashboard blocks, CLI, tests, and future hosts.
 

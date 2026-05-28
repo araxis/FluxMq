@@ -1,6 +1,6 @@
 using Shouldly;
 using FluxMq.Components.MessageSource;
-using FluxMq.Core.Session;
+using FluxMq.Core.Mqtt;
 using FluxMq.Pipeline.Components;
 using System.Threading.Tasks.Dataflow;
 
@@ -11,7 +11,7 @@ public sealed class MqttConnectionComponentTests
     [Fact]
     public async Task StartAsync_ConnectsTheUnderlyingSession()
     {
-        var session = new TestMqttSession();
+        var session = new TestFluxMqttClient();
         var component = new MqttConnectionComponent(session);
 
         await component.StartAsync();
@@ -23,25 +23,25 @@ public sealed class MqttConnectionComponentTests
     public async Task StartAsync_WaitsForConnectionBeforeReturning()
     {
         var connectGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var session = new TestMqttSession(connectDelay: connectGate.Task);
+        var session = new TestFluxMqttClient(connectDelay: connectGate.Task);
         var component = new MqttConnectionComponent(session);
 
         var startTask = component.StartAsync();
         await Task.Delay(50);
 
         startTask.IsCompleted.ShouldBeFalse();
-        session.State.ShouldBe(MqttSessionState.Connecting);
+        session.State.ShouldBe(MqttClientState.Connecting);
 
         connectGate.SetResult();
 
         await startTask.WaitAsync(TimeSpan.FromSeconds(5));
-        session.State.ShouldBe(MqttSessionState.Connected);
+        session.State.ShouldBe(MqttClientState.Connected);
     }
 
     [Fact]
     public async Task StartAsync_IsIdempotent()
     {
-        var session = new TestMqttSession();
+        var session = new TestFluxMqttClient();
         var component = new MqttConnectionComponent(session);
 
         await component.StartAsync();
@@ -51,19 +51,19 @@ public sealed class MqttConnectionComponentTests
     }
 
     [Fact]
-    public void Session_ExposesUnderlyingSession()
+    public void Client_ExposesUnderlyingClient()
     {
-        var session = new TestMqttSession();
+        var session = new TestFluxMqttClient();
         var component = new MqttConnectionComponent(session);
 
-        component.Session.ShouldBeSameAs(session);
+        component.Client.ShouldBeSameAs(session);
     }
 
     [Fact]
     public async Task DisposeAsync_DisposesOwnedSession()
     {
-        var session = new TestMqttSession();
-        var component = new MqttConnectionComponent(session, disposeSessionOnDispose: true);
+        var session = new TestFluxMqttClient();
+        var component = new MqttConnectionComponent(session, disposeClientOnDispose: true);
 
         await component.DisposeAsync();
 
@@ -73,8 +73,8 @@ public sealed class MqttConnectionComponentTests
     [Fact]
     public async Task DisposeAsync_LeavesSessionAlone_WhenNotOwned()
     {
-        var session = new TestMqttSession();
-        var component = new MqttConnectionComponent(session, disposeSessionOnDispose: false);
+        var session = new TestFluxMqttClient();
+        var component = new MqttConnectionComponent(session, disposeClientOnDispose: false);
 
         await component.DisposeAsync();
 
@@ -84,7 +84,7 @@ public sealed class MqttConnectionComponentTests
     [Fact]
     public async Task Fault_PublishesErrorAndFaultsCompletion()
     {
-        var component = new MqttConnectionComponent(new TestMqttSession());
+        var component = new MqttConnectionComponent(new TestFluxMqttClient());
         var errors = new List<FlowError>();
         var sink = new ActionBlock<FlowError>(errors.Add);
         component.Errors.LinkTo(sink, new DataflowLinkOptions { PropagateCompletion = true });

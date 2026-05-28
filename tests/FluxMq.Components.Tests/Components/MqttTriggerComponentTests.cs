@@ -13,8 +13,8 @@ public sealed class MqttTriggerComponentTests
     [Fact]
     public async Task StartAsync_InstallsSubscriptionsAndForwardsMatchingMessages()
     {
-        var session = new TestMqttSession();
-        var connection = new MqttConnectionComponent(session, disposeSessionOnDispose: false);
+        var session = new TestFluxMqttClient();
+        var connection = new MqttConnectionComponent(session, disposeClientOnDispose: false);
         var trigger = new MqttTriggerComponent(connection,
         [
             new MqttSubscription(
@@ -31,9 +31,9 @@ public sealed class MqttTriggerComponentTests
         await connection.StartAsync();
         await trigger.StartAsync();
 
-        await session.WriteAsync(TestMqttSession.Message("sensors/temp"));
-        await session.WriteAsync(TestMqttSession.Message("lights/kitchen"));    // filtered out
-        await session.WriteAsync(TestMqttSession.Message("sensors/humidity"));
+        await session.WriteAsync(TestFluxMqttClient.Message("sensors/temp"));
+        await session.WriteAsync(TestFluxMqttClient.Message("lights/kitchen"));    // filtered out
+        await session.WriteAsync(TestFluxMqttClient.Message("sensors/humidity"));
         session.CompleteMessages();
 
         await sink.Completion.WaitAsync(TimeSpan.FromSeconds(5));
@@ -49,8 +49,8 @@ public sealed class MqttTriggerComponentTests
     [Fact]
     public async Task StartAsync_EmitsReceiveEventsForForwardedMessages()
     {
-        var session = new TestMqttSession();
-        var connection = new MqttConnectionComponent(session, disposeSessionOnDispose: false);
+        var session = new TestFluxMqttClient();
+        var connection = new MqttConnectionComponent(session, disposeClientOnDispose: false);
         var trigger = new MqttTriggerComponent(connection,
         [
             new MqttSubscription("sensors/#", MqttQualityOfServiceLevel.AtMostOnce)
@@ -72,7 +72,7 @@ public sealed class MqttTriggerComponentTests
             QualityOfService = MqttQualityOfServiceLevel.AtLeastOnce,
             Retain = true
         });
-        await session.WriteAsync(TestMqttSession.Message("lights/kitchen"));
+        await session.WriteAsync(TestFluxMqttClient.Message("lights/kitchen"));
         session.CompleteMessages();
 
         await Task.WhenAll(eventSink.Completion, outputSink.Completion).WaitAsync(TimeSpan.FromSeconds(5));
@@ -91,8 +91,8 @@ public sealed class MqttTriggerComponentTests
     [Fact]
     public async Task TwoTriggersSharingAConnection_EachReceiveOnlyTheirTopics()
     {
-        var session = new TestMqttSession();
-        var connection = new MqttConnectionComponent(session, disposeSessionOnDispose: false);
+        var session = new TestFluxMqttClient();
+        var connection = new MqttConnectionComponent(session, disposeClientOnDispose: false);
         var sensorsTrigger = new MqttTriggerComponent(connection,
         [
             new MqttSubscription("sensors/#", MqttQualityOfServiceLevel.AtMostOnce)
@@ -113,9 +113,9 @@ public sealed class MqttTriggerComponentTests
         await sensorsTrigger.StartAsync();
         await sysTrigger.StartAsync();
 
-        await session.WriteAsync(TestMqttSession.Message("sensors/temp"));
-        await session.WriteAsync(TestMqttSession.Message("$SYS/broker/uptime"));
-        await session.WriteAsync(TestMqttSession.Message("lights/kitchen"));
+        await session.WriteAsync(TestFluxMqttClient.Message("sensors/temp"));
+        await session.WriteAsync(TestFluxMqttClient.Message("$SYS/broker/uptime"));
+        await session.WriteAsync(TestFluxMqttClient.Message("lights/kitchen"));
         session.CompleteMessages();
 
         await Task.WhenAll(sensorSink.Completion, sysSink.Completion).WaitAsync(TimeSpan.FromSeconds(5));
@@ -130,8 +130,8 @@ public sealed class MqttTriggerComponentTests
     [Fact]
     public void Constructor_RequiresAtLeastOneSubscription()
     {
-        var session = new TestMqttSession();
-        var connection = new MqttConnectionComponent(session, disposeSessionOnDispose: false);
+        var session = new TestFluxMqttClient();
+        var connection = new MqttConnectionComponent(session, disposeClientOnDispose: false);
         var act = () => new MqttTriggerComponent(connection, []);
         var ex = Should.Throw<ArgumentException>(act);
         ex.Message.ShouldContain("at least one subscription");
@@ -140,8 +140,8 @@ public sealed class MqttTriggerComponentTests
     [Fact]
     public async Task DisposeAsync_StopsTheTrigger()
     {
-        var session = new TestMqttSession();
-        var connection = new MqttConnectionComponent(session, disposeSessionOnDispose: false);
+        var session = new TestFluxMqttClient();
+        var connection = new MqttConnectionComponent(session, disposeClientOnDispose: false);
         var trigger = new MqttTriggerComponent(connection,
         [
             new MqttSubscription("#", MqttQualityOfServiceLevel.AtMostOnce)

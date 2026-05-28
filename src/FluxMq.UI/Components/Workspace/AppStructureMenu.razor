@@ -229,28 +229,28 @@
 
     private static string BrokerActionIcon(ManagedConnection connection) => connection.State switch
     {
-        MqttSessionState.Connected => Icons.Material.Filled.Stop,
-        MqttSessionState.Connecting or MqttSessionState.Reconnecting => Icons.Material.Filled.Sync,
-        MqttSessionState.Faulted => Icons.Material.Filled.PlayArrow,
+        MqttClientState.Connected => Icons.Material.Filled.Stop,
+        MqttClientState.Connecting or MqttClientState.Reconnecting => Icons.Material.Filled.Sync,
+        MqttClientState.Faulted => Icons.Material.Filled.PlayArrow,
         _ => Icons.Material.Filled.PlayArrow
     };
 
     private static bool BrokerActionDisabled(ManagedConnection connection)
-        => connection.State is MqttSessionState.Connecting or MqttSessionState.Reconnecting;
+        => connection.State is MqttClientState.Connecting or MqttClientState.Reconnecting;
 
     private static string BrokerActionLabel(ManagedConnection connection) => connection.State switch
     {
-        MqttSessionState.Connected => $"Disconnect {connection.ResourceName}",
-        MqttSessionState.Connecting => $"Connecting {connection.ResourceName}",
-        MqttSessionState.Reconnecting => $"Reconnecting {connection.ResourceName}",
+        MqttClientState.Connected => $"Disconnect {connection.ResourceName}",
+        MqttClientState.Connecting => $"Connecting {connection.ResourceName}",
+        MqttClientState.Reconnecting => $"Reconnecting {connection.ResourceName}",
         _ => $"Connect {connection.ResourceName}"
     };
 
     private static string BrokerItemClass(ManagedConnection connection) => connection.State switch
     {
-        MqttSessionState.Connected => "app-menu-child broker-live",
-        MqttSessionState.Faulted => "app-menu-child broker-faulted",
-        MqttSessionState.Connecting or MqttSessionState.Reconnecting => "app-menu-child broker-pending",
+        MqttClientState.Connected => "app-menu-child broker-live",
+        MqttClientState.Faulted => "app-menu-child broker-faulted",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "app-menu-child broker-pending",
         _ => "app-menu-child"
     };
 
@@ -265,7 +265,7 @@
 
     private async Task ToggleBrokerAsync(ManagedConnection connection)
     {
-        if (connection.State is MqttSessionState.Connected)
+        if (connection.State is MqttClientState.Connected)
         {
             await Live.DisconnectAsync(connection.Id);
             return;

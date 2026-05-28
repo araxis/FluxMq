@@ -1,7 +1,7 @@
 using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
-using FluxMq.Core.Session;
+using FluxMq.Core.Mqtt;
 using FluxMq.Components.ConnectionStateTrigger;
 using FluxMq.Pipeline.Components;
 using MQTTnet.Protocol;
@@ -17,8 +17,8 @@ public sealed class ConnectionStateTriggerComponentTests
         var manager = new FakeConnectionManager();
         var nodeId = FlowNodeId.New();
         using var component = new ConnectionStateTriggerComponent(manager, nodeId);
-        var received = new List<SessionStateChangedEventArgs>();
-        var sink = new ActionBlock<SessionStateChangedEventArgs>(received.Add);
+        var received = new List<MqttClientStateChangedEventArgs>();
+        var sink = new ActionBlock<MqttClientStateChangedEventArgs>(received.Add);
 
         component.Output.LinkTo(sink, new DataflowLinkOptions { PropagateCompletion = true });
 
@@ -30,11 +30,11 @@ public sealed class ConnectionStateTriggerComponentTests
             Port = 1883
         };
 
-        manager.Emit(profile, MqttSessionState.Connected);
+        manager.Emit(profile, MqttClientState.Connected);
         component.Dispose();
         await sink.Completion;
 
-        received.ShouldHaveSingleItem().State.ShouldBe(MqttSessionState.Connected);
+        received.ShouldHaveSingleItem().State.ShouldBe(MqttClientState.Connected);
         component.Id.ShouldBe(nodeId);
         component.Completion.IsCompletedSuccessfully.ShouldBeTrue();
     }
@@ -63,12 +63,12 @@ public sealed class ConnectionStateTriggerComponentTests
 
     private sealed class FakeConnectionManager : IMqttConnectionManager
     {
-        public IReadOnlyDictionary<ConnectionProfileId, IMqttSession> Sessions { get; } =
-            new Dictionary<ConnectionProfileId, IMqttSession>();
+        public IReadOnlyDictionary<ConnectionProfileId, IFluxMqttClient> Clients { get; } =
+            new Dictionary<ConnectionProfileId, IFluxMqttClient>();
 
-        public event EventHandler<SessionStateChangedEventArgs>? StateChanged;
+        public event EventHandler<MqttClientStateChangedEventArgs>? StateChanged;
 
-        public Task<IMqttSession> ConnectAsync(MqttConnectionProfile profile, CancellationToken ct = default)
+        public Task<IFluxMqttClient> ConnectAsync(MqttConnectionProfile profile, CancellationToken ct = default)
             => throw new NotSupportedException();
 
         public Task DisconnectAsync(ConnectionProfileId profileId, CancellationToken ct = default)
@@ -79,9 +79,9 @@ public sealed class ConnectionStateTriggerComponentTests
 
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 
-        public void Emit(MqttConnectionProfile profile, MqttSessionState state)
+        public void Emit(MqttConnectionProfile profile, MqttClientState state)
         {
-            StateChanged?.Invoke(this, new SessionStateChangedEventArgs(profile.Id, profile, state));
+            StateChanged?.Invoke(this, new MqttClientStateChangedEventArgs(profile.Id, profile, state));
         }
     }
 }

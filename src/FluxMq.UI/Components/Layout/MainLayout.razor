@@ -283,9 +283,9 @@
 
     private string RunStateClass => Live.State switch
     {
-        MqttSessionState.Connected => "flux-runstate live",
-        MqttSessionState.Connecting or MqttSessionState.Reconnecting => "flux-runstate pending",
-        MqttSessionState.Faulted => "flux-runstate faulted",
+        MqttClientState.Connected => "flux-runstate live",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "flux-runstate pending",
+        MqttClientState.Faulted => "flux-runstate faulted",
         _ => "flux-runstate"
     };
 
@@ -331,9 +331,9 @@
 
     private string StatusDotClass => Live.State switch
     {
-        MqttSessionState.Connected => "flux-status-dot live",
-        MqttSessionState.Connecting or MqttSessionState.Reconnecting => "flux-status-dot pending",
-        MqttSessionState.Faulted => "flux-status-dot faulted",
+        MqttClientState.Connected => "flux-status-dot live",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "flux-status-dot pending",
+        MqttClientState.Faulted => "flux-status-dot faulted",
         _ => "flux-status-dot"
     };
 

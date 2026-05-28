@@ -24,6 +24,6 @@ internal static class RuntimeMqttConnectionProfileResolver
             throw new InvalidOperationException($"Resource '{connectionName}' is not an MQTT connection.");
         }
 
-        return connection.Session.Profile;
+        return connection.Client.Profile;
     }
 }

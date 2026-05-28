@@ -1,6 +1,6 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
-using FluxMq.Core.Session;
+using FluxMq.Core.Mqtt;
 using FluxMq.Components.Assertions;
 using FluxMq.Components.FileWriter;
 using FluxMq.Components.JsonSchema;
@@ -43,16 +43,16 @@ public static class RuntimeNodeFactoryRegistryExtensions
 
     public static RuntimeNodeFactoryRegistry RegisterPipelineComponentFactories(
         this RuntimeNodeFactoryRegistry registry,
-        Func<MqttConnectionProfile, IMqttSession>? sessionFactory = null,
+        Func<MqttConnectionProfile, IFluxMqttClient>? clientFactory = null,
         IMessageRepository? messageRepository = null,
         IFlowExpressionEngine? expressionEngine = null)
     {
         ArgumentNullException.ThrowIfNull(registry);
-        sessionFactory ??= static profile => new MqttSession(profile);
+        clientFactory ??= static profile => new FluxMqttClient(profile);
         expressionEngine ??= new DynamicExpressoFlowExpressionEngine();
 
         return registry
-            .Register(PipelineFlowNodeTypes.Connection, context => CreateConnection(context.Address, context.Definition, sessionFactory))
+            .Register(PipelineFlowNodeTypes.Connection, context => CreateConnection(context.Address, context.Definition, clientFactory))
             .Register(PipelineFlowNodeTypes.Trigger, context => CreateTrigger(context.Address, context.Definition, context))
             .Register(PipelineFlowNodeTypes.StoredSessionSource, context => CreateStoredSessionSource(context.Address, context.Definition, messageRepository))
             .Register(PipelineFlowNodeTypes.ReplaySource, context => CreateReplaySource(context.Address, context.Definition, messageRepository))
@@ -77,10 +77,10 @@ public static class RuntimeNodeFactoryRegistryExtensions
     private static RuntimeNode CreateConnection(
         NodeAddress address,
         NodeDefinition definition,
-        Func<MqttConnectionProfile, IMqttSession> sessionFactory)
+        Func<MqttConnectionProfile, IFluxMqttClient> clientFactory)
     {
         var profile = GetConnectionProfile(definition, PipelineFlowNodeTypes.Connection.Value);
-        var component = new MqttConnectionComponent(sessionFactory(profile), disposeSessionOnDispose: true);
+        var component = new MqttConnectionComponent(clientFactory(profile), disposeClientOnDispose: true);
 
         return RuntimeNode.Create(
             address,
@@ -509,7 +509,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
                 $"Resource '{connectionRef}' must be of type '{PipelineFlowNodeTypes.Connection.Value}' to be used by an mqtt.publisher.");
         }
 
-        var component = new MqttPublisherComponent(connection.Session, boundedCapacity: GetBoundedCapacity(definition));
+        var component = new MqttPublisherComponent(connection.Client, boundedCapacity: GetBoundedCapacity(definition));
 
         return RuntimeNode.Create(
             address,

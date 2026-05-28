@@ -1,5 +1,5 @@
 using FluxMq.Core.Ids;
-using FluxMq.Core.Session;
+using FluxMq.Core.Mqtt;
 using FluxMq.Components.Logging;
 using FluxMq.Pipeline.Components;
 using System.Threading.Tasks.Dataflow;
@@ -8,7 +8,7 @@ namespace FluxMq.Components.MqttPublisher;
 
 public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource
 {
-    private readonly IMqttSession _session;
+    private readonly IFluxMqttClient _client;
     private readonly ActionBlock<MqttPublishRequest> _block;
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly BroadcastBlock<FlowLogEntry> _entries;
@@ -17,7 +17,7 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource
     private string? _lastPublishedTopic;
 
     public MqttPublisherComponent(
-        IMqttSession session,
+        IFluxMqttClient client,
         FlowNodeId? id = null,
         int boundedCapacity = 1000,
         int maxDegreeOfParallelism = 1)
@@ -28,7 +28,7 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource
         }
 
         Id = id ?? FlowNodeId.New();
-        _session = session ?? throw new ArgumentNullException(nameof(session));
+        _client = client ?? throw new ArgumentNullException(nameof(client));
         _errors = new BroadcastBlock<FlowError>(static error => error);
         _entries = new BroadcastBlock<FlowLogEntry>(static entry => entry);
         _events = new BufferBlock<FlowEvent>();
@@ -74,7 +74,7 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource
     {
         try
         {
-            await _session.PublishAsync(
+            await _client.PublishAsync(
                 request.Topic,
                 request.Payload,
                 request.QualityOfService,

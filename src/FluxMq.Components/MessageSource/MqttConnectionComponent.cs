@@ -1,41 +1,41 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
-using FluxMq.Core.Session;
+using FluxMq.Core.Mqtt;
 using FluxMq.Pipeline.Components;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.MessageSource;
 
 /// <summary>
-/// Resource node that owns an <see cref="IMqttSession"/>: connection settings,
-/// connect / disconnect lifecycle, reconnect (handled by the session itself).
+/// Resource node that owns an <see cref="IFluxMqttClient"/>: connection settings,
+/// connect / disconnect lifecycle, reconnect (handled by the client itself).
 ///
-/// On start, pumps the session's single-consumer message channel into a
+/// On start, pumps the client's single-consumer message channel into a
 /// <see cref="BroadcastBlock{T}"/> so multiple triggers can fan out from the
 /// same connection without racing for the channel.
 ///
 /// Topic subscriptions are NOT this node's concern. <see cref="MqttTriggerComponent"/>
 /// instances reference a connection by name, install their own filters against the
-/// session, and link their inputs to <see cref="Messages"/>.
+/// client, and link their inputs to <see cref="Messages"/>.
 /// </summary>
 public sealed class MqttConnectionComponent : IFlowNode, IAsyncDisposable
 {
-    private readonly IMqttSession _session;
+    private readonly IFluxMqttClient _client;
     private readonly BroadcastBlock<MqttEnvelope> _broadcast;
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly CancellationTokenSource _cts = new();
-    private readonly bool _disposeSessionOnDispose;
+    private readonly bool _disposeClientOnDispose;
     private Task? _pumpTask;
     private int _started;
 
     public MqttConnectionComponent(
-        IMqttSession session,
-        bool disposeSessionOnDispose = true,
+        IFluxMqttClient client,
+        bool disposeClientOnDispose = true,
         FlowNodeId? id = null)
     {
         Id = id ?? FlowNodeId.New();
-        _session = session ?? throw new ArgumentNullException(nameof(session));
-        _disposeSessionOnDispose = disposeSessionOnDispose;
+        _client = client ?? throw new ArgumentNullException(nameof(client));
+        _disposeClientOnDispose = disposeClientOnDispose;
         _errors = new BroadcastBlock<FlowError>(static error => error);
         _broadcast = new BroadcastBlock<MqttEnvelope>(static envelope => envelope);
     }
@@ -44,10 +44,10 @@ public sealed class MqttConnectionComponent : IFlowNode, IAsyncDisposable
     public ISourceBlock<FlowError> Errors => _errors;
     public Task Completion => _broadcast.Completion;
 
-    /// <summary>The live session this connection owns. Triggers subscribe through it.</summary>
-    public IMqttSession Session => _session;
+    /// <summary>The live MQTT client this connection owns. Triggers subscribe through it.</summary>
+    public IFluxMqttClient Client => _client;
 
-    /// <summary>Broadcast of every envelope received by the session. Triggers link their filters here.</summary>
+    /// <summary>Broadcast of every envelope received by the client. Triggers link their filters here.</summary>
     public ISourceBlock<MqttEnvelope> Messages => _broadcast;
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
@@ -60,12 +60,12 @@ public sealed class MqttConnectionComponent : IFlowNode, IAsyncDisposable
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, cancellationToken);
         try
         {
-            if (_session.State is not MqttSessionState.Connected)
+            if (_client.State is not MqttClientState.Connected)
             {
-                await _session.ConnectAsync(linkedCts.Token).ConfigureAwait(false);
+                await _client.ConnectAsync(linkedCts.Token).ConfigureAwait(false);
             }
 
-            if (_session.State is not MqttSessionState.Connected)
+            if (_client.State is not MqttClientState.Connected)
             {
                 throw new InvalidOperationException("MQTT connection did not reach the connected state.");
             }
@@ -117,9 +117,9 @@ public sealed class MqttConnectionComponent : IFlowNode, IAsyncDisposable
         {
             await _pumpTask.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         }
-        if (_disposeSessionOnDispose)
+        if (_disposeClientOnDispose)
         {
-            await _session.DisposeAsync().ConfigureAwait(false);
+            await _client.DisposeAsync().ConfigureAwait(false);
         }
         _cts.Dispose();
     }
@@ -131,7 +131,7 @@ public sealed class MqttConnectionComponent : IFlowNode, IAsyncDisposable
 
         try
         {
-            await foreach (var message in _session.Messages.ReadAllAsync(ct).ConfigureAwait(false))
+            await foreach (var message in _client.Messages.ReadAllAsync(ct).ConfigureAwait(false))
             {
                 if (!await _broadcast.SendAsync(message, ct).ConfigureAwait(false))
                 {
@@ -163,7 +163,7 @@ public sealed class MqttConnectionComponent : IFlowNode, IAsyncDisposable
             Code = code,
             Message = message,
             Exception = exception,
-            Context = _session.Profile.Name
+            Context = _client.Profile.Name
         });
     }
 }

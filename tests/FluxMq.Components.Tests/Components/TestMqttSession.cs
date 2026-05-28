@@ -1,25 +1,25 @@
 using FluxMq.Core.Models;
-using FluxMq.Core.Session;
+using FluxMq.Core.Mqtt;
 using MQTTnet.Protocol;
 using System.Threading.Channels;
 
 namespace FluxMq.Components.Tests.Components;
 
-internal sealed class TestMqttSession : IMqttSession
+internal sealed class TestFluxMqttClient : IFluxMqttClient
 {
     private readonly Channel<MqttEnvelope> _messages = Channel.CreateUnbounded<MqttEnvelope>();
     private readonly List<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService)> _subscriptions = [];
     private readonly List<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService, bool ReceiveRetainedMessages, bool RetainAsPublished)> _subscriptionOptions = [];
     private readonly Task? _connectDelay;
 
-    public TestMqttSession(string profileName = "test", Task? connectDelay = null)
+    public TestFluxMqttClient(string profileName = "test", Task? connectDelay = null)
     {
         Profile = new MqttConnectionProfile { Name = profileName };
         _connectDelay = connectDelay;
     }
 
     public MqttConnectionProfile Profile { get; }
-    public MqttSessionState State { get; private set; } = MqttSessionState.Disconnected;
+    public MqttClientState State { get; private set; } = MqttClientState.Disconnected;
     public ChannelReader<MqttEnvelope> Messages => _messages.Reader;
     public int ConnectCalls { get; private set; }
     public int DisposeCalls { get; private set; }
@@ -27,7 +27,7 @@ internal sealed class TestMqttSession : IMqttSession
     public IReadOnlyList<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService)> Subscriptions => _subscriptions;
     public IReadOnlyList<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService, bool ReceiveRetainedMessages, bool RetainAsPublished)> SubscriptionOptions => _subscriptionOptions;
 
-    public event EventHandler<MqttSessionState>? StateChanged
+    public event EventHandler<MqttClientState>? StateChanged
     {
         add { }
         remove { }
@@ -40,18 +40,18 @@ internal sealed class TestMqttSession : IMqttSession
     public async Task ConnectAsync(CancellationToken ct = default)
     {
         ConnectCalls++;
-        State = MqttSessionState.Connecting;
+        State = MqttClientState.Connecting;
         if (_connectDelay is not null)
         {
             await _connectDelay.WaitAsync(ct);
         }
 
-        State = MqttSessionState.Connected;
+        State = MqttClientState.Connected;
     }
 
     public Task DisconnectAsync(CancellationToken ct = default)
     {
-        State = MqttSessionState.Disconnected;
+        State = MqttClientState.Disconnected;
         _messages.Writer.TryComplete();
         return Task.CompletedTask;
     }
@@ -66,7 +66,7 @@ internal sealed class TestMqttSession : IMqttSession
         bool retainAsPublished = true,
         CancellationToken ct = default)
     {
-        if (RequireConnectedForSubscribe && State is not MqttSessionState.Connected)
+        if (RequireConnectedForSubscribe && State is not MqttClientState.Connected)
         {
             throw new InvalidOperationException("MQTT client is not connected.");
         }

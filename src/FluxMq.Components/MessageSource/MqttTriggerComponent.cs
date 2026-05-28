@@ -1,13 +1,13 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
-using FluxMq.Core.Session;
+using FluxMq.Core.Mqtt;
 using FluxMq.Pipeline.Components;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.MessageSource;
 
 /// <summary>
-/// Trigger node: bound to a connection (session + broadcast stream),
+/// Trigger node: bound to a connection (client + broadcast stream),
 /// owns its own subscription list, and emits envelopes that match its filters.
 ///
 /// On start it installs its subscriptions on the broker and links a topic-filter
@@ -16,7 +16,7 @@ namespace FluxMq.Components.MessageSource;
 /// </summary>
 public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDisposable
 {
-    private readonly IMqttSession _session;
+    private readonly IFluxMqttClient _client;
     private readonly ISourceBlock<MqttEnvelope> _connectionStream;
     private readonly IReadOnlyList<MqttSubscription> _subscriptions;
     private readonly string[] _topicFilters;
@@ -28,14 +28,14 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
     private int _started;
 
     public MqttTriggerComponent(
-        IMqttSession session,
+        IFluxMqttClient client,
         ISourceBlock<MqttEnvelope> connectionStream,
         IEnumerable<MqttSubscription> subscriptions,
         FlowNodeId? id = null,
         int boundedCapacity = 1000)
     {
         Id = id ?? FlowNodeId.New();
-        _session = session ?? throw new ArgumentNullException(nameof(session));
+        _client = client ?? throw new ArgumentNullException(nameof(client));
         _connectionStream = connectionStream ?? throw new ArgumentNullException(nameof(connectionStream));
         _subscriptions = subscriptions?.ToArray() ?? throw new ArgumentNullException(nameof(subscriptions));
         if (_subscriptions.Count == 0)
@@ -68,7 +68,7 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
         FlowNodeId? id = null,
         int boundedCapacity = 1000)
         : this(
-            (connection ?? throw new ArgumentNullException(nameof(connection))).Session,
+            (connection ?? throw new ArgumentNullException(nameof(connection))).Client,
             connection.Messages,
             subscriptions,
             id,
@@ -97,7 +97,7 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
         {
             foreach (var subscription in _subscriptions)
             {
-                await _session.SubscribeAsync(
+                await _client.SubscribeAsync(
                     subscription.TopicFilter,
                     subscription.QualityOfService,
                     subscription.ReceiveRetainedMessages,
@@ -166,7 +166,7 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
             Code = code,
             Message = message,
             Exception = exception,
-            Context = _session.Profile.Name
+            Context = _client.Profile.Name
         });
     }
 

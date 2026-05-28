@@ -1,8 +1,8 @@
-using FluxMq.Core.Session;
+using FluxMq.Core.Mqtt;
 
 namespace FluxMq.App.Scenarios;
 
 public interface IMqttScenarioClientFactory
 {
-    IMqttSession CreateClient(string connectionName);
+    IFluxMqttClient CreateClient(string connectionName);
 }

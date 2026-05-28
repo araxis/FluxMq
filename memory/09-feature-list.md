@@ -39,7 +39,7 @@ Priority:
 
 **UI/UX:** Connection state should be visible and boring: clear connected/disconnected/reconnecting states, explicit publish controls, no hidden broker actions.
 
-**Data/Logic:** `MqttConnectionProfile`, `MqttSession`, `MqttEnvelope`, topic subscriptions, publish API, lifecycle state.
+**Data/Logic:** `MqttConnectionProfile`, `FluxMqttClient`, `MqttEnvelope`, topic subscriptions, publish API, lifecycle state.
 
 **Acceptance:**
 

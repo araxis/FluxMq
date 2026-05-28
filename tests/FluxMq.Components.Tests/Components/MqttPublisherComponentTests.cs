@@ -1,7 +1,7 @@
 using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
-using FluxMq.Core.Session;
+using FluxMq.Core.Mqtt;
 using FluxMq.Components.Logging;
 using FluxMq.Components.MqttPublisher;
 using FluxMq.Pipeline.Components;
@@ -16,7 +16,7 @@ public sealed class MqttPublisherComponentTests
     [Fact]
     public async Task Input_PublishesMessagesToSession()
     {
-        var session = new FakeMqttSession();
+        var session = new FakeFluxMqttClient();
         var component = new MqttPublisherComponent(session);
 
         component.Input.Post(new MqttPublishRequest
@@ -40,7 +40,7 @@ public sealed class MqttPublisherComponentTests
     [Fact]
     public async Task Input_EmitsPublishLogEntry()
     {
-        var session = new FakeMqttSession();
+        var session = new FakeFluxMqttClient();
         var component = new MqttPublisherComponent(session);
         var entries = new BufferBlock<FlowLogEntry>();
 
@@ -66,7 +66,7 @@ public sealed class MqttPublisherComponentTests
     [Fact]
     public async Task Input_EmitsPublishEvent()
     {
-        var session = new FakeMqttSession();
+        var session = new FakeFluxMqttClient();
         var component = new MqttPublisherComponent(session);
         var events = new BufferBlock<FlowEvent>();
 
@@ -96,7 +96,7 @@ public sealed class MqttPublisherComponentTests
     [Fact]
     public async Task Input_EmitsPublishEventWithoutPreviewForBinaryPayload()
     {
-        var session = new FakeMqttSession();
+        var session = new FakeFluxMqttClient();
         var component = new MqttPublisherComponent(session);
         var events = new BufferBlock<FlowEvent>();
 
@@ -118,7 +118,7 @@ public sealed class MqttPublisherComponentTests
     [Fact]
     public async Task Input_PreservesPublishOrder()
     {
-        var session = new FakeMqttSession();
+        var session = new FakeFluxMqttClient();
         var component = new MqttPublisherComponent(session);
 
         component.Input.Post(new MqttPublishRequest { Topic = "factory/1", Payload = [] });
@@ -135,7 +135,7 @@ public sealed class MqttPublisherComponentTests
     [Fact]
     public async Task PublishFailure_PublishesErrorAndKeepsProcessing()
     {
-        var session = new FakeMqttSession(topicToFail: "factory/fail");
+        var session = new FakeFluxMqttClient(topicToFail: "factory/fail");
         var component = new MqttPublisherComponent(session);
         var errors = new List<FlowError>();
         var errorSink = new ActionBlock<FlowError>(errors.Add);
@@ -161,7 +161,7 @@ public sealed class MqttPublisherComponentTests
     [Fact]
     public async Task Fault_PublishesErrorAndFaultsCompletion()
     {
-        var component = new MqttPublisherComponent(new FakeMqttSession(), FlowNodeId.New());
+        var component = new MqttPublisherComponent(new FakeFluxMqttClient(), FlowNodeId.New());
         var errors = new List<FlowError>();
         var errorSink = new ActionBlock<FlowError>(errors.Add);
         var failure = new InvalidOperationException("publisher failed");
@@ -177,14 +177,14 @@ public sealed class MqttPublisherComponentTests
         errors.ShouldHaveSingleItem().Code.ShouldBe(FlowErrorCodes.NodeFaulted);
     }
 
-    private sealed class FakeMqttSession(string? topicToFail = null) : IMqttSession
+    private sealed class FakeFluxMqttClient(string? topicToFail = null) : IFluxMqttClient
     {
         public MqttConnectionProfile Profile { get; } = new() { Name = "test" };
-        public MqttSessionState State { get; private set; } = MqttSessionState.Connected;
+        public MqttClientState State { get; private set; } = MqttClientState.Connected;
         public ChannelReader<MqttEnvelope> Messages { get; } = Channel.CreateUnbounded<MqttEnvelope>().Reader;
         public List<PublishedMessage> Published { get; } = [];
 
-        public event EventHandler<MqttSessionState>? StateChanged
+        public event EventHandler<MqttClientState>? StateChanged
         {
             add { }
             remove { }

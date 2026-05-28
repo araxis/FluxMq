@@ -4,7 +4,7 @@ namespace FluxMq.Components.MessageSource;
 
 /// <summary>
 /// MQTT 5 topic-filter matcher (single + / multi # wildcards).
-/// Used by triggers that share a session: each trigger filters
+/// Used by triggers that share a client: each trigger filters
 /// the broker stream down to its own subscription set so only
 /// matching envelopes flow into its output.
 /// </summary>

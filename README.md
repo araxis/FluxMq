@@ -35,7 +35,7 @@ FluxMQ will be built around the message/session flow first:
 
 ```text
 MQTTnet Client
-  -> MqttSession
+  -> FluxMqttClient
   -> Channel<MqttEnvelope>
   -> Flow Application Runtime
   -> Storage / Metrics / Topic Index

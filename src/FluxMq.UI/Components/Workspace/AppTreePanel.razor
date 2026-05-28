@@ -89,7 +89,7 @@ else
                                     <div class="conn-endpoint">@c.Profile.Host:@c.Profile.Port</div>
                                 </div>
                                 <div class="conn-actions">
-                                    @if (c.State is MqttSessionState.Disconnected or MqttSessionState.Faulted)
+                                    @if (c.State is MqttClientState.Disconnected or MqttClientState.Faulted)
                                     {
                                         <MudTooltip Text="Connect">
                                             <MudIconButton Size="Size.Small"
@@ -412,11 +412,11 @@ else
         }
     }
 
-    private static string StateDotClass(MqttSessionState state) => state switch
+    private static string StateDotClass(MqttClientState state) => state switch
     {
-        MqttSessionState.Connected => "conn-dot live",
-        MqttSessionState.Connecting or MqttSessionState.Reconnecting => "conn-dot pending",
-        MqttSessionState.Faulted => "conn-dot faulted",
+        MqttClientState.Connected => "conn-dot live",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "conn-dot pending",
+        MqttClientState.Faulted => "conn-dot faulted",
         _ => "conn-dot"
     };
 
