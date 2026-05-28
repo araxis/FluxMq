@@ -370,6 +370,35 @@ public sealed class ScenarioRunnerTests
             .Message.ShouldBe("ready");
     }
 
+    [Fact]
+    public async Task RunAsync_AllowsStepRunnersToAppendEventsForLaterExpectations()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        var registry = ScenarioStepRunnerRegistry.CreateEventExpectationOnly()
+            .Register(new AppendScenarioEventStepRunner());
+        var scenario = new ScenarioDefinition
+        {
+            Steps =
+            {
+                ["trigger"] = new ScenarioStepDefinition { Type = AppendScenarioEventStepRunner.StepType },
+                ["expect"] = ExpectEvent(
+                    ("eventType", FlowEventTypes.MqttMessageReceived),
+                    ("topicStartsWith", "runner/topic"),
+                    ("status", "received"),
+                    ("timeoutMs", 1000))
+            }
+        };
+
+        var result = await new ScenarioRunner(registry)
+            .RunAsync("runnerEvents", scenario, events)
+            .WaitAsync(TimeSpan.FromSeconds(2));
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Steps.Count.ShouldBe(2);
+        result.Steps[1].MatchedEvent!.Source.ShouldBe("AppendScenarioEventStepRunner");
+        result.Steps[1].MatchedEvent!.Topic.ShouldBe("runner/topic/value");
+    }
+
     private static ScenarioRunner CreateRunner()
         => new(ScenarioStepRunnerRegistry.CreateEventExpectationOnly());
 
@@ -429,6 +458,41 @@ public sealed class ScenarioRunnerTests
                 StartedAt = DateTimeOffset.UtcNow,
                 FinishedAt = DateTimeOffset.UtcNow,
                 Message = service.Value,
+                NextEventOffset = context.EventOffset
+            });
+        }
+    }
+
+    private sealed class AppendScenarioEventStepRunner : IScenarioStepRunner
+    {
+        public const string StepType = "test.append-event";
+
+        public string Type => StepType;
+
+        public Task<ScenarioStepResult> RunAsync(
+            ScenarioStepRunContext context,
+            CancellationToken cancellationToken = default)
+        {
+            context.Events.Append(new FlowEvent
+            {
+                Timestamp = DateTimeOffset.UtcNow,
+                Type = FlowEventTypes.MqttMessageReceived,
+                Source = nameof(AppendScenarioEventStepRunner),
+                Topic = "runner/topic/value",
+                Subject = "runner/topic/value",
+                Status = "received",
+                PayloadPreview = "42",
+                PayloadBytes = 2
+            });
+
+            return Task.FromResult(new ScenarioStepResult
+            {
+                Name = context.StepName,
+                Type = context.Step.Type,
+                Status = ScenarioStepRunStatus.Passed,
+                StartedAt = DateTimeOffset.UtcNow,
+                FinishedAt = DateTimeOffset.UtcNow,
+                Message = "Appended runner event.",
                 NextEventOffset = context.EventOffset
             });
         }

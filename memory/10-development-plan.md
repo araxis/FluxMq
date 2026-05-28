@@ -73,6 +73,7 @@ The current test-runner resource boundary refactor keeps app-level resources as 
 Naming rule: use "MQTT client" for live connected MQTT objects in developer-facing and domain-facing code. The older core `IFluxMqttClient` type still exists and should be renamed in a dedicated mechanical slice; new scenario/test-runner boundaries should not introduce new "session" wording.
 Scenario step naming rule: use the same component vocabulary across pipelines and tests where the behavior is the same. The MQTT publish action is `mqtt.publisher`, matching the normal pipeline actor. The product is still pre-release, so do not add saved-project compatibility aliases unless they simplify current development.
 Scenario definition validation now checks known step ids and step configuration shape before app runtime build. `mqtt.publisher` steps must point at app-level `mqtt.connection` resources, and `expect.event` filters must use the same field contracts the runner reads. Keep this validator in sync when adding test-specific blocks such as `when` or a future scenario MQTT trigger.
+Future UI portability note: keep workspace workflow logic, app/test/dashboard state, validation, report formatting, and command orchestration outside Razor/MudBlazor-specific components where practical. Blazor/MudBlazor remains the current UI for this version, but future Avalonia/Linux support should be able to reuse the application services and view-model-like state instead of reimplementing behavior from Razor files.
 
 ## Step-by-Step Plan
 

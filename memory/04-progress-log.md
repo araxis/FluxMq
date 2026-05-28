@@ -1629,3 +1629,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowWorkspaceServiceTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioConfigValidationUi\ -m:1` passes with 122 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet run --project src\FluxMq.Cli\FluxMq.Cli.csproj --no-restore -- validate --config C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` reports `Flow application is valid. Workflows: 2. Resources: 2.`
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioConfigValidationFull\ -m:1` passes with 470 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-28 - Runner-owned scenario events foundation
+
+- Added a small event-journal hook so scenario step runners can append runner-owned `FlowEvent` entries into the same stream that `expect.event` already observes.
+- This is the foundation for future test-runner-as-pipeline steps such as a runner-owned `mqtt.trigger`: the trigger can reuse normal component/runtime behavior, append received events to the scenario journal, and then downstream `expect.event`/`when` steps can operate on those events.
+- Recorded the future UI-portability rule: keep reusable app/test/dashboard workflow state and orchestration out of Razor-specific components so a later Avalonia/Linux UI can reuse the same logic.
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioRunnerOwnedEventsPipeline\ -m:1` passes with 12 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioRunnerOwnedEventsFull\ -m:1` passes with 471 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
