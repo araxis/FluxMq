@@ -25,7 +25,7 @@ public sealed class ScenarioRunnerTests
             }
         };
 
-        var runTask = new ScenarioRunner().RunAsync("roundTrip", scenario, events);
+        var runTask = CreateRunner().RunAsync("roundTrip", scenario, events);
 
         events.Post(Event(
             FlowEventTypes.MqttMessageReceived,
@@ -62,7 +62,7 @@ public sealed class ScenarioRunnerTests
             }
         };
 
-        var runTask = new ScenarioRunner().RunAsync("schema", scenario, events);
+        var runTask = CreateRunner().RunAsync("schema", scenario, events);
 
         events.Post(Event(
             FlowEventTypes.JsonSchemaValidated,
@@ -110,7 +110,7 @@ public sealed class ScenarioRunnerTests
             }
         };
 
-        var runTask = new ScenarioRunner().RunAsync("mqttAttributes", scenario, events);
+        var runTask = CreateRunner().RunAsync("mqttAttributes", scenario, events);
         events.Post(Event(
             FlowEventTypes.MqttMessagePublished,
             topic: "test",
@@ -149,7 +149,7 @@ public sealed class ScenarioRunnerTests
             }
         };
 
-        var result = await new ScenarioRunner()
+        var result = await CreateRunner()
             .RunAsync("roundTrip", scenario, events)
             .WaitAsync(TimeSpan.FromSeconds(2));
 
@@ -177,7 +177,7 @@ public sealed class ScenarioRunnerTests
             }
         };
 
-        var result = await new ScenarioRunner()
+        var result = await CreateRunner()
             .RunAsync("roundTrip", scenario, events, cts.Token)
             .WaitAsync(TimeSpan.FromSeconds(2));
 
@@ -211,7 +211,7 @@ public sealed class ScenarioRunnerTests
             payloadPreview: """{"value":12}""",
             timestamp: DateTimeOffset.UtcNow.AddMinutes(-1)));
 
-        var result = await new ScenarioRunner()
+        var result = await CreateRunner()
             .RunAsync("roundTrip", scenario, events)
             .WaitAsync(TimeSpan.FromSeconds(2));
 
@@ -238,7 +238,7 @@ public sealed class ScenarioRunnerTests
             }
         };
 
-        var runTask = new ScenarioRunner().RunAsync("roundTrip", scenario, events);
+        var runTask = CreateRunner().RunAsync("roundTrip", scenario, events);
 
         events.Post(Event(
             FlowEventTypes.MqttMessageReceived,
@@ -274,7 +274,7 @@ public sealed class ScenarioRunnerTests
             }
         };
 
-        var runTask = new ScenarioRunner().RunAsync("ordered", scenario, events);
+        var runTask = CreateRunner().RunAsync("ordered", scenario, events);
         events.Post(Event(FlowEventTypes.MqttMessageReceived));
 
         var result = await runTask.WaitAsync(TimeSpan.FromSeconds(2));
@@ -308,7 +308,7 @@ public sealed class ScenarioRunnerTests
             }
         };
 
-        var runTask = new ScenarioRunner().RunAsync("mappedPublish", scenario, events);
+        var runTask = CreateRunner().RunAsync("mappedPublish", scenario, events);
         events.Post(Event(
             FlowEventTypes.MqttMessagePublished,
             topic: "test",
@@ -339,7 +339,7 @@ public sealed class ScenarioRunnerTests
             }
         };
 
-        var result = await new ScenarioRunner().RunAsync("broken", scenario, events);
+        var result = await CreateRunner().RunAsync("broken", scenario, events);
 
         result.Status.ShouldBe(ScenarioRunStatus.Failed);
         result.Steps.ShouldHaveSingleItem()
@@ -369,6 +369,9 @@ public sealed class ScenarioRunnerTests
         result.Steps.ShouldHaveSingleItem()
             .Message.ShouldBe("ready");
     }
+
+    private static ScenarioRunner CreateRunner()
+        => new(ScenarioStepRunnerRegistry.CreateEventExpectationOnly());
 
     private static ScenarioStepDefinition ExpectEvent(params (string Key, object Value)[] values)
     {

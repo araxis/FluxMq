@@ -1589,3 +1589,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepCatalogRunnerGuardUi\ -m:1` passes with 5 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowApplicationHostTests|FullyQualifiedName~MqttScenarioClientFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepCatalogRunnerGuardApp\ -m:1` passes with 14 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepCatalogRunnerGuardFull\ -m:1` passes with 465 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-28 - Explicit scenario runner registries
+
+- Removed the hidden event-expectation-only default from `ScenarioRunner`; callers must pass the runner registry they intend to use.
+- Renamed the pipeline helper registry to `CreateEventExpectationOnly()` so it does not compete with the app default scenario runner registry.
+- App/UI/CLI paths still use `FlowApplicationHost.CreateDefaultScenarioRunner()`, which includes both `expect.event` and `mqtt.publisher`.
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqExplicitScenarioRunnerPipeline\ -m:1` passes with 11 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowApplicationHostTests|FullyQualifiedName~MqttScenarioClientFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqExplicitScenarioRunnerApp\ -m:1` passes with 14 tests.
+  - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore --filter "FullyQualifiedName~CliRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqExplicitScenarioRunnerCli\ -m:1` passes with 13 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowWorkspaceServiceTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqExplicitScenarioRunnerUi\ -m:1` passes with 55 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqExplicitScenarioRunnerFull\ -m:1` passes with 465 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

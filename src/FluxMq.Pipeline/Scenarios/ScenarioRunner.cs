@@ -4,9 +4,9 @@ using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Pipeline.Scenarios;
 
-public sealed class ScenarioRunner(ScenarioStepRunnerRegistry? registry = null)
+public sealed class ScenarioRunner(ScenarioStepRunnerRegistry registry)
 {
-    private readonly ScenarioStepRunnerRegistry _registry = registry ?? ScenarioStepRunnerRegistry.CreateDefault();
+    private readonly ScenarioStepRunnerRegistry _registry = registry ?? throw new ArgumentNullException(nameof(registry));
 
     public async Task<ScenarioRunResult> RunAsync(
         string name,

@@ -6,7 +6,7 @@ public sealed class ScenarioStepRunnerRegistry
 
     public IReadOnlyDictionary<string, IScenarioStepRunner> Runners => _runners;
 
-    public static ScenarioStepRunnerRegistry CreateDefault()
+    public static ScenarioStepRunnerRegistry CreateEventExpectationOnly()
         => new ScenarioStepRunnerRegistry()
             .Register(new ExpectEventScenarioStepRunner());
 
