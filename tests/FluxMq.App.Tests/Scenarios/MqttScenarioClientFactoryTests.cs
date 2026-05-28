@@ -1,15 +1,15 @@
 using FluxMq.App.Scenarios;
 using FluxMq.Components.MessageSource;
-using FluxMq.Components.MqttPublisher;
 using FluxMq.Core.Models;
 using FluxMq.Core.Mqtt;
 using FluxMq.Pipeline.Definitions;
 using FluxMq.Pipeline.Runtime;
+using FluxMq.Pipeline.Scenarios;
 using MQTTnet.Protocol;
 using Shouldly;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
+using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.App.Tests.Scenarios;
 
@@ -107,31 +107,48 @@ public sealed class MqttScenarioClientFactoryTests
     }
 
     [Fact]
-    public async Task Publisher_PublishesThroughScenarioClientFactory()
+    public async Task MqttPublishStep_UsesNormalPublisherComponentThroughScenarioClientFactory()
     {
         var client = new FakeFluxMqttClient(new MqttConnectionProfile { Name = "shared-broker" });
         var factory = new FakeScenarioClientFactory(client);
-        var publisher = new ApplicationDefinitionMqttScenarioPublisher(factory);
-        var payload = Encoding.UTF8.GetBytes("""{"value":12}""");
-
-        await publisher.PublishAsync(
-            "shared-broker",
-            new MqttPublishRequest
+        var events = new BroadcastBlock<FluxMq.Pipeline.Components.FlowEvent>(static flowEvent => flowEvent);
+        var scenario = new ScenarioDefinition
+        {
+            Steps =
             {
-                Topic = "fluxmq/sample/request",
-                Payload = payload,
-                QualityOfService = MqttQualityOfServiceLevel.AtLeastOnce,
-                Retain = true
-            });
+                ["publish"] = new ScenarioStepDefinition
+                {
+                    Type = ScenarioStepTypes.MqttPublisher,
+                    Configuration =
+                    {
+                        ["connection"] = JsonSerializer.SerializeToElement("shared-broker"),
+                        ["topic"] = JsonSerializer.SerializeToElement("fluxmq/sample/request"),
+                        ["payload"] = JsonSerializer.SerializeToElement(new { value = 12 }),
+                        ["payloadEncoding"] = JsonSerializer.SerializeToElement("json"),
+                        ["qos"] = JsonSerializer.SerializeToElement(1),
+                        ["retain"] = JsonSerializer.SerializeToElement(true)
+                    }
+                }
+            }
+        };
+        var services = ScenarioStepServices.Empty
+            .Add<IMqttScenarioClientFactory>(factory);
+        var runner = new ScenarioRunner(
+            new ScenarioStepRunnerRegistry()
+                .Register(new MqttPublishScenarioStepRunner()));
 
+        var result = await runner.RunAsync("publish", scenario, events, services);
+
+        result.IsSuccess.ShouldBeTrue();
         factory.ConnectionNames.ShouldBe(["shared-broker"]);
         client.ConnectCount.ShouldBe(1);
         client.DisposeCount.ShouldBe(1);
         var published = client.Published.ShouldHaveSingleItem();
         published.Topic.ShouldBe("fluxmq/sample/request");
-        published.Payload.ShouldBe(payload);
+        JsonDocument.Parse(published.Payload).RootElement.GetProperty("value").GetInt32().ShouldBe(12);
         published.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtLeastOnce);
         published.Retain.ShouldBeTrue();
+        events.Complete();
     }
 
     private static NodeDefinition MqttConnectionResource(string profileJson)

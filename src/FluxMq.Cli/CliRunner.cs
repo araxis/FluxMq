@@ -155,8 +155,7 @@ public sealed class CliRunner
 
             var mqttClientFactory = new ApplicationDefinitionMqttScenarioClientFactory(applicationDefinition);
             var services = ScenarioStepServices.Empty
-                .Add<IMqttScenarioClientFactory>(mqttClientFactory)
-                .Add<IMqttScenarioPublisher>(new ApplicationDefinitionMqttScenarioPublisher(mqttClientFactory));
+                .Add<IMqttScenarioClientFactory>(mqttClientFactory);
             var result = await FlowApplicationHost.CreateDefaultScenarioRunner()
                 .RunAsync(
                     scenarioName,

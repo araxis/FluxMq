@@ -1507,3 +1507,22 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet build FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - focused core/components/app/UI MQTT tests pass: 8 core, 21 components, 37 app, and 60 UI tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqMqttClientNamingFull\ -m:1` passes with 459 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-28 - Scenario MQTT publish step reuses normal publisher component
+
+- Started the next test-runner-as-pipeline refactor in the smallest useful place:
+  - `mqtt.publisher` scenario/test steps now resolve a short-lived runner-owned MQTT client through `IMqttScenarioClientFactory`
+  - the step publishes by sending a `MqttPublishRequest` through the normal `MqttPublisherComponent`
+  - publish component errors are collected and returned as failed scenario step results
+- Removed the duplicate scenario-only publishing service path:
+  - `IMqttScenarioPublisher`
+  - `ApplicationDefinitionMqttScenarioPublisher`
+  - `RuntimeMqttScenarioPublisher`
+- Scenario service setup now provides the MQTT client factory only; app, CLI, and UI scenario runs all use the same publish component path.
+- This keeps the existing `expect.event` behavior intact while moving scenario execution toward normal pipeline composition with narrow test-specific blocks like `expect` and `when`.
+- Verified:
+  - `dotnet build FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttScenarioClientFactoryTests|FullyQualifiedName~FlowApplicationHostTests.RunScenarioAsync" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioPublisherComponentApp\ -m:1` passes with 8 tests.
+  - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore --filter "FullyQualifiedName~CliRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioPublisherComponentCli\ -m:1` passes with 13 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~ScenarioRunReportFormatterTests|FullyQualifiedName~ScenarioStepCatalogTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioPublisherComponentUi\ -m:1` passes with 56 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioPublisherComponentFull\ -m:1` passes with 459 tests.

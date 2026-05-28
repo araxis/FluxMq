@@ -297,8 +297,7 @@ public sealed class FlowApplicationHost(
     {
         var mqttClientFactory = new RuntimeMqttScenarioClientFactory(runtime, _scenarioClientFactory);
         return ScenarioStepServices.Empty
-            .Add<IMqttScenarioClientFactory>(mqttClientFactory)
-            .Add<IMqttScenarioPublisher>(new RuntimeMqttScenarioPublisher(mqttClientFactory));
+            .Add<IMqttScenarioClientFactory>(mqttClientFactory);
     }
 
     private void ThrowIfDisposed()

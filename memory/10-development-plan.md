@@ -556,6 +556,11 @@ Done when:
   - MQTT received/published/recorded expectations now expose `QoS` and `Retain` filters
   - retain matching accepts config `true/false` and event `True/False`
   - expectation JSON attributes can use strings, booleans, or numbers, so `attributes: { "retain": false, "qos": 1 }` is valid
+- Started normal-component scenario publish execution:
+  - `mqtt.publisher` test steps now reuse `MqttPublisherComponent` instead of a duplicate scenario-only publisher service
+  - scenario runs still use a short-lived test-runner MQTT client cloned from the selected app-level connection resource
+  - app, CLI, and UI scenario services now share the same publish-step path through `IMqttScenarioClientFactory`
+  - keep moving in this direction: normal MQTT publisher/trigger/condition components plus narrow test-specific `expect`/`when` blocks, with no special `mqtt.expect` side channel
 
 ## Next Action
 

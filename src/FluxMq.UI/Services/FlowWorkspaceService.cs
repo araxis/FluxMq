@@ -1382,14 +1382,12 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         {
             var runtimeClientFactory = new RuntimeMqttScenarioClientFactory(runtime, _runtimeClientFactory);
             return ScenarioStepServices.Empty
-                .Add<IMqttScenarioClientFactory>(runtimeClientFactory)
-                .Add<IMqttScenarioPublisher>(new RuntimeMqttScenarioPublisher(runtimeClientFactory));
+                .Add<IMqttScenarioClientFactory>(runtimeClientFactory);
         }
 
         var definitionClientFactory = new ApplicationDefinitionMqttScenarioClientFactory(definition, _runtimeClientFactory);
         return ScenarioStepServices.Empty
-            .Add<IMqttScenarioClientFactory>(definitionClientFactory)
-            .Add<IMqttScenarioPublisher>(new ApplicationDefinitionMqttScenarioPublisher(definitionClientFactory));
+            .Add<IMqttScenarioClientFactory>(definitionClientFactory);
     }
 
     public async Task StopAsync(CancellationToken cancellationToken = default)

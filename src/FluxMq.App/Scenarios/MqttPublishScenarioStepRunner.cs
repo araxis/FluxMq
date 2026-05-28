@@ -1,8 +1,11 @@
 using FluxMq.Components.MqttPublisher;
+using FluxMq.Core.Mqtt;
+using FluxMq.Pipeline.Components;
 using FluxMq.Pipeline.Scenarios;
 using MQTTnet.Protocol;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.App.Scenarios;
 
@@ -29,8 +32,39 @@ public sealed class MqttPublishScenarioStepRunner : IScenarioStepRunner
             Retain = ScenarioStepConfigurationReader.ReadBoolOrDefault(configuration, "retain", false)
         };
 
-        var publisher = context.Services.GetRequired<IMqttScenarioPublisher>();
-        await publisher.PublishAsync(connectionName, request, cancellationToken).ConfigureAwait(false);
+        var clientFactory = context.Services.GetRequired<IMqttScenarioClientFactory>();
+        await using var client = clientFactory.CreateClient(connectionName);
+        if (client.State is not MqttClientState.Connected)
+        {
+            await client.ConnectAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        var publisher = new MqttPublisherComponent(client);
+        var errors = new List<FlowError>();
+        var errorSink = new ActionBlock<FlowError>(errors.Add);
+        using var errorLink = publisher.Errors.LinkTo(
+            errorSink,
+            new DataflowLinkOptions { PropagateCompletion = true });
+
+        if (!await publisher.Input.SendAsync(request, cancellationToken).ConfigureAwait(false))
+        {
+            return Failed(
+                context,
+                startedAt,
+                "MQTT publisher did not accept the scenario publish request.");
+        }
+
+        publisher.Complete();
+        await publisher.Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await errorSink.Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+        if (errors.FirstOrDefault() is { } error)
+        {
+            var message = error.Exception is null
+                ? error.Message
+                : $"{error.Message} {error.Exception.Message}";
+            return Failed(context, startedAt, message);
+        }
 
         return new ScenarioStepResult
         {
@@ -43,6 +77,21 @@ public sealed class MqttPublishScenarioStepRunner : IScenarioStepRunner
             NextEventOffset = context.EventOffset
         };
     }
+
+    private static ScenarioStepResult Failed(
+        ScenarioStepRunContext context,
+        DateTimeOffset startedAt,
+        string message)
+        => new()
+        {
+            Name = context.StepName,
+            Type = context.Step.Type,
+            Status = ScenarioStepRunStatus.Failed,
+            StartedAt = startedAt,
+            FinishedAt = DateTimeOffset.UtcNow,
+            Message = message,
+            NextEventOffset = context.EventOffset
+        };
 
     private static MqttQualityOfServiceLevel ReadQualityOfService(
         IReadOnlyDictionary<string, JsonElement> configuration)
