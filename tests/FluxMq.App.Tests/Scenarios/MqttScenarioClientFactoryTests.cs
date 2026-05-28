@@ -59,7 +59,7 @@ public sealed class MqttScenarioClientFactoryTests
         scenarioProfile.KeepAlive.ShouldBe(TimeSpan.FromSeconds(30));
         scenarioProfile.CleanStart.ShouldBeTrue();
         scenarioProfile.ClientId.ShouldStartWith("fluxmq-test-");
-        scenarioProfile.ClientId.Length.ShouldBeLessThanOrEqualTo(23);
+        scenarioProfile.ClientId.Length.ShouldBe(44);
         scenarioProfile.ClientId.ShouldNotBe("app-client");
     }
 

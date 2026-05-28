@@ -80,42 +80,56 @@ public sealed class ScenarioEventJournal : IDisposable
             throw new ArgumentOutOfRangeException(nameof(timeout), timeout, "Timeout must be greater than zero.");
         }
 
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var cursor = Math.Max(0, startIndex);
-        var timeoutTask = Task.Delay(timeout, cancellationToken);
+        var timeoutTask = Task.Delay(timeout, timeoutCts.Token);
 
-        while (true)
+        try
         {
-            Task changedTask;
-            lock (_gate)
+            while (true)
             {
-                for (var index = cursor; index < _events.Count; index++)
+                cancellationToken.ThrowIfCancellationRequested();
+
+                Task changedTask;
+                lock (_gate)
                 {
-                    if (excludedIndexes?.Contains(index) == true)
+                    for (var index = cursor; index < _events.Count; index++)
                     {
-                        continue;
+                        if (excludedIndexes?.Contains(index) == true)
+                        {
+                            continue;
+                        }
+
+                        if (predicate(_events[index]))
+                        {
+                            return new ScenarioEventMatch(_events[index], index);
+                        }
                     }
 
-                    if (predicate(_events[index]))
+                    cursor = _events.Count;
+                    if (_completed)
                     {
-                        return new ScenarioEventMatch(_events[index], index);
+                        return null;
                     }
+
+                    changedTask = _changed.Task;
                 }
 
-                cursor = _events.Count;
-                if (_completed)
+                var completed = await Task.WhenAny(changedTask, timeoutTask).ConfigureAwait(false);
+                if (completed == timeoutTask)
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        await timeoutTask.ConfigureAwait(false);
+                    }
+
                     return null;
                 }
-
-                changedTask = _changed.Task;
             }
-
-            var completed = await Task.WhenAny(changedTask, timeoutTask).ConfigureAwait(false);
-            if (completed == timeoutTask)
-            {
-                await timeoutTask.ConfigureAwait(false);
-                return null;
-            }
+        }
+        finally
+        {
+            timeoutCts.Cancel();
         }
     }
 

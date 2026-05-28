@@ -14,8 +14,5 @@ internal static class MqttScenarioClientProfiles
         };
 
     private static string CreateScenarioClientId()
-    {
-        var value = $"fluxmq-test-{Guid.NewGuid():N}";
-        return value.Length <= 23 ? value : value[..23];
-    }
+        => $"fluxmq-test-{Guid.NewGuid():N}";
 }

@@ -162,6 +162,32 @@ public sealed class ScenarioRunnerTests
     }
 
     [Fact]
+    public async Task RunAsync_ReturnsCanceledWhenExpectationWaitIsCanceled()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(20));
+        var scenario = new ScenarioDefinition
+        {
+            Steps =
+            {
+                ["expectResponse"] = ExpectEvent(
+                    ("eventType", FlowEventTypes.MqttMessageReceived),
+                    ("topicStartsWith", "factory/response/"),
+                    ("timeoutMs", 10000))
+            }
+        };
+
+        var result = await new ScenarioRunner()
+            .RunAsync("roundTrip", scenario, events, cts.Token)
+            .WaitAsync(TimeSpan.FromSeconds(2));
+
+        result.Status.ShouldBe(ScenarioRunStatus.Canceled);
+        var step = result.Steps.ShouldHaveSingleItem();
+        step.Status.ShouldBe(ScenarioStepRunStatus.Canceled);
+        step.Message.ShouldBe("Scenario step was canceled.");
+    }
+
+    [Fact]
     public async Task RunAsync_IgnoresBroadcastReplayFromBeforeScenarioStarted()
     {
         var events = new BroadcastBlock<FlowEvent>(static flowEvent => flowEvent);

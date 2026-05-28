@@ -565,6 +565,10 @@ Done when:
   - canonical metrics nodes are `mqtt.metrics`; `app1.json` no longer uses `mqtt.metrics-sink`
   - direct request mapper node ids are not part of the runtime/UI surface; use `flow.mapper` plus actor nodes instead
   - request mapper component classes remain as internal typed mapper implementations for `flow.mapper`
+- Applied remaining robustness follow-ups from the scenario/report review:
+  - scenario event waits cancel their internal timeout delay after early match/completion/cancellation
+  - runtime projection notification failures are contained inside the background refresh task
+  - test-runner MQTT client ids keep the full GUID-based value
 
 ## Next Action
 

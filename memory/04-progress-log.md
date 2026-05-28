@@ -1545,3 +1545,16 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowDiagramNodeModelTests|FullyQualifiedName~FlowWorkspaceServiceTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqAliasCleanupUi\ -m:1` passes with 129 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet run --project src\FluxMq.Cli\FluxMq.Cli.csproj --no-restore -- validate --config C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` reports `Flow application is valid. Workflows: 2. Resources: 2.`
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqAliasCleanupFull\ -m:1` passes with 459 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-28 - Scenario/report review robustness follow-up
+
+- Addressed remaining small robustness items from `report.md`:
+  - `ScenarioEventJournal.WaitForMatchAsync` now cancels its internal timeout delay when a match, completion, or cancellation ends the wait early.
+  - scenario waits explicitly check cancellation each loop iteration and still return a canceled step result through `ScenarioRunner`.
+  - runtime projection refresh notifications now catch subscriber failures inside the fire-and-forget task, keeping the notification throttle healthy.
+  - test-runner MQTT client ids now keep the full `fluxmq-test-{Guid:N}` value instead of truncating to 23 chars.
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioJournalRobustnessPipeline\ -m:1` passes with 11 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttScenarioClientFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioClientIdApp\ -m:1` passes with 3 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowWorkspaceServiceTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqProjectionNotifyUi\ -m:1` passes with 50 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqReviewRobustnessFull\ -m:1` passes with 460 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

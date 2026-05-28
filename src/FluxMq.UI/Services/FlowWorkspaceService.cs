@@ -1843,13 +1843,17 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         try
         {
             await Task.Delay(RuntimeProjectionNotificationInterval).ConfigureAwait(false);
+            NotifyChanged();
+        }
+        catch
+        {
+            // Projection notifications are best-effort UI refresh signals.
+            // Keep the background throttle healthy even if a subscriber fails.
         }
         finally
         {
             Interlocked.Exchange(ref _runtimeProjectionNotificationQueued, 0);
         }
-
-        NotifyChanged();
     }
 
     private void AppendDiagnosticsToLogs(IEnumerable<WorkspaceDiagnostic> diagnostics, bool notify = true)
