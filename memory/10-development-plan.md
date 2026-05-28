@@ -575,6 +575,7 @@ Done when:
 - Added a designer catalog/runtime guard test so catalog components cannot silently drift away from registered runtime factories again.
 - Added a scenario step catalog/app-runner guard so test designer palette steps cannot silently drift away from executable scenario runners.
 - Made scenario runner registries explicit: pipeline tests use the event-expectation-only registry, while app/UI/CLI paths use the app default runner registry with both `expect.event` and `mqtt.publisher`.
+- Added scenario step type validation so saved test definitions with unknown step types fail validation before scenario execution.
 
 ## Next Action
 

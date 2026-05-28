@@ -1,3 +1,5 @@
+using FluxMq.Pipeline.Scenarios;
+
 namespace FluxMq.Pipeline.Definitions;
 
 public sealed class ApplicationDefinitionValidator
@@ -231,6 +233,12 @@ public sealed class ApplicationDefinitionValidator
                 errors.Add(new(
                     ApplicationDefinitionValidationErrorCode.EmptyScenarioStepType,
                     $"Test scenario '{scenarioName}' step '{step.Key}' has an empty type."));
+            }
+            else if (!ScenarioStepTypes.All.Contains(step.Value.Type))
+            {
+                errors.Add(new(
+                    ApplicationDefinitionValidationErrorCode.UnknownScenarioStepType,
+                    $"Test scenario '{scenarioName}' step '{step.Key}' has unknown type '{step.Value.Type}'."));
             }
         }
     }

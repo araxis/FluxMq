@@ -22,5 +22,6 @@ public enum ApplicationDefinitionValidationErrorCode
     MissingDashboardWidget = 18,
     EmptyScenarioName = 19,
     EmptyScenarioStepName = 20,
-    EmptyScenarioStepType = 21
+    EmptyScenarioStepType = 21,
+    UnknownScenarioStepType = 22
 }

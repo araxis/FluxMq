@@ -345,6 +345,40 @@ public sealed class FlowApplicationDefinitionValidatorTests
     }
 
     [Fact]
+    public void Validate_ReportsUnknownScenarioStepType()
+    {
+        var definition = new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("mqtt.trigger")
+                    }
+                }
+            },
+            Tests =
+            {
+                ["roundTrip"] = new ScenarioDefinition
+                {
+                    Steps =
+                    {
+                        ["custom"] = new ScenarioStepDefinition { Type = "custom.step" }
+                    }
+                }
+            }
+        };
+
+        var result = _validator.Validate(definition);
+
+        var error = result.Errors.Single(error => error.Code == ApplicationDefinitionValidationErrorCode.UnknownScenarioStepType);
+        error.Message.ShouldContain("Test scenario 'roundTrip' step 'custom'");
+        error.Message.ShouldContain("custom.step");
+    }
+
+    [Fact]
     public void Validate_ReportsInvalidLinkShape()
     {
         var definition = new ApplicationDefinition
