@@ -1579,3 +1579,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - This protects against the same class of failure where a node is draggable in the designer but cannot be built or run.
 - Verified:
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDefinitionComposerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqCatalogRuntimeGuardUi\ -m:1` passes with 67 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-28 - Scenario step catalog/runner guard
+
+- Exposed the app default scenario-step runner registry from `FlowApplicationHost`.
+- Added a UI regression test that checks every scenario step shown in the test designer palette has an application runner.
+- This protects against showing test steps such as `mqtt.publisher` or `expect.event` that the app scenario runner cannot execute.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepCatalogRunnerGuardUi\ -m:1` passes with 5 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowApplicationHostTests|FullyQualifiedName~MqttScenarioClientFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepCatalogRunnerGuardApp\ -m:1` passes with 14 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepCatalogRunnerGuardFull\ -m:1` passes with 465 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

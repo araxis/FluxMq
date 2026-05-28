@@ -573,6 +573,7 @@ Done when:
   - it now uses `configuration.connection`, like the normal MQTT trigger/publisher resource reference direction
   - the UI no longer exposes a dangling graph `Connection` input port for that node
 - Added a designer catalog/runtime guard test so catalog components cannot silently drift away from registered runtime factories again.
+- Added a scenario step catalog/app-runner guard so test designer palette steps cannot silently drift away from executable scenario runners.
 
 ## Next Action
 
