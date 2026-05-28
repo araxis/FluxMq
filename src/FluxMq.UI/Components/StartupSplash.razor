@@ -1,0 +1,52 @@
+@implements IDisposable
+
+@if (!_removed)
+{
+    <div class="startup-splash @(_hiding ? "is-hiding" : null)" aria-hidden="true">
+        <div class="startup-splash-content">
+            <img class="startup-splash-mark" src="brand/fluxmq-loader.svg" alt="" />
+            <img class="startup-splash-wordmark" src="brand/fluxmq-wordmark.svg" alt="" />
+            <div class="startup-splash-subtitle">MQTT flow studio</div>
+            <div class="startup-splash-rail"></div>
+        </div>
+    </div>
+}
+
+@code {
+    private const int MinimumVisibleMilliseconds = 1100;
+    private const int FadeMilliseconds = 260;
+    private bool _hiding;
+    private bool _removed;
+    private CancellationTokenSource? _hideTokenSource;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        _hideTokenSource = new CancellationTokenSource();
+        var token = _hideTokenSource.Token;
+
+        try
+        {
+            await Task.Delay(MinimumVisibleMilliseconds, token);
+            _hiding = true;
+            await InvokeAsync(StateHasChanged);
+
+            await Task.Delay(FadeMilliseconds, token);
+            _removed = true;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    public void Dispose()
+    {
+        _hideTokenSource?.Cancel();
+        _hideTokenSource?.Dispose();
+    }
+}

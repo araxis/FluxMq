@@ -16,6 +16,18 @@
     min-height: 0;
 }
 
+.workspace-empty-mark {
+    filter: drop-shadow(0 18px 30px rgba(45, 212, 191, 0.16));
+    height: 72px;
+    opacity: 0.9;
+    width: 72px;
+}
+
+.workspace-empty-mark.compact {
+    height: 60px;
+    width: 60px;
+}
+
 .workspace-tab-content {
     display: flex;
     flex: 1 1 auto;

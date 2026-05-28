@@ -1468,3 +1468,23 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunnerTests|FullyQualifiedName~FlowApplicationDefinitionJsonTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqStoredSourceFixPipeline\ -m:1` passes with 21 tests.
   - `dotnet run --project src\FluxMq.Cli\FluxMq.Cli.csproj --no-restore -- validate --config C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` reports `Flow application is valid. Workflows: 2. Resources: 2.`
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqStoredSourceFixAll\ -m:1` passes with 459 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-28 - FluxMQ app branding assets
+
+- Replaced the old arrow-like shell mark and basic generated app resources with MQTT-flow themed SVG branding:
+  - native MAUI app icon and foreground icon
+  - native static splash SVG
+  - reusable web brand mark, wordmark, animated loader SVG, and SVG favicon
+- Wired the brand assets into the app:
+  - top bar uses the SVG mark instead of CSS-drawn arrow geometry
+  - empty workspace states use the SVG mark
+  - Blazor WebView startup screen uses the animated loader and wordmark
+  - `MauiIcon` and `MauiSplashScreen` use the updated resources and dark app background color
+- Added a short in-app startup overlay so the splash remains visible for about 1.1 seconds, then fades out while the app shell is already rendered underneath.
+- Verified:
+  - all new/updated SVG files parse as XML.
+  - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - inspected MAUI-generated app icon and splash PNG outputs from `obj\Debug\net10.0-windows10.0.19041.0\win-x64\resizetizer`.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqBrandingUi\ -m:1` passes with 180 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqSplashHoldUi\ -m:1` passes with 180 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `git diff --check` passes; Git reports only existing LF-to-CRLF working-copy warnings.

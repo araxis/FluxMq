@@ -1,0 +1,94 @@
+<svg width="224" height="224" viewBox="0 0 224 224" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="FluxMQ loading">
+  <defs>
+    <linearGradient id="orbit" x1="31" y1="30" x2="193" y2="194" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#67E8F9"/>
+      <stop offset="0.5" stop-color="#2DD4BF"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="flow" x1="61" y1="73" x2="165" y2="151" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#67E8F9"/>
+      <stop offset="0.5" stop-color="#2DD4BF"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="packet" x1="90" y1="73" x2="148" y2="151" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FBBF24"/>
+      <stop offset="1" stop-color="#F97316"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.176 0 0 0 0 0.831 0 0 0 0 0.749 0 0 0 0.72 0" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <style><![CDATA[
+      .orbit-ring {
+        animation: orbit-dash 2.4s linear infinite;
+        transform-origin: 112px 112px;
+      }
+
+      .mark {
+        animation: mark-breathe 2.4s ease-in-out infinite;
+        transform-origin: 112px 112px;
+      }
+
+      .node-a { animation: node-pulse 1.8s ease-in-out infinite; }
+      .node-b { animation: node-pulse 1.8s ease-in-out 0.22s infinite; }
+      .node-c { animation: node-pulse 1.8s ease-in-out 0.44s infinite; }
+      .node-d { animation: node-pulse 1.8s ease-in-out 0.66s infinite; }
+
+      @keyframes orbit-dash {
+        to {
+          stroke-dashoffset: -184;
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes mark-breathe {
+        0%, 100% { transform: scale(0.985); opacity: 0.92; }
+        50% { transform: scale(1.015); opacity: 1; }
+      }
+
+      @keyframes node-pulse {
+        0%, 100% { opacity: 0.72; }
+        45% { opacity: 1; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .orbit-ring,
+        .mark,
+        .node-a,
+        .node-b,
+        .node-c,
+        .node-d {
+          animation: none;
+        }
+      }
+    ]]></style>
+  </defs>
+
+  <circle cx="112" cy="112" r="94" fill="#0A0D12"/>
+  <circle cx="112" cy="112" r="82" fill="none" stroke="#102431" stroke-width="2"/>
+  <circle class="orbit-ring" cx="112" cy="112" r="82" fill="none" stroke="url(#orbit)" stroke-width="4" stroke-linecap="round" stroke-dasharray="26 20" stroke-dashoffset="0" opacity="0.95"/>
+
+  <g class="mark" filter="url(#glow)">
+    <path d="M62 78H112C133 78 150 95 150 116V122" fill="none" stroke="url(#flow)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M62 112H130" fill="none" stroke="url(#flow)" stroke-width="15" stroke-linecap="round"/>
+    <path d="M62 146H111C133 146 151 128 151 106V100" fill="none" stroke="url(#flow)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M124 77L166 112L124 147" fill="none" stroke="#A7F3D0" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M116 91L137 112L116 133H141L168 112L141 91H116Z" fill="url(#packet)"/>
+
+    <circle class="node-a" cx="62" cy="78" r="13" fill="#0A0D12" stroke="#67E8F9" stroke-width="7"/>
+    <circle class="node-b" cx="62" cy="112" r="13" fill="#0A0D12" stroke="#2DD4BF" stroke-width="7"/>
+    <circle class="node-c" cx="62" cy="146" r="13" fill="#0A0D12" stroke="#60A5FA" stroke-width="7"/>
+    <circle class="node-d" cx="159" cy="112" r="14" fill="#0A0D12" stroke="#FBBF24" stroke-width="7"/>
+  </g>
+
+  <circle r="5" fill="#FBBF24">
+    <animateMotion dur="1.9s" repeatCount="indefinite" path="M62 78 H112 C133 78 150 95 150 116 V122"/>
+  </circle>
+  <circle r="4" fill="#67E8F9">
+    <animateMotion dur="2.2s" begin="0.42s" repeatCount="indefinite" path="M62 146 H111 C133 146 151 128 151 106 V100"/>
+  </circle>
+</svg>

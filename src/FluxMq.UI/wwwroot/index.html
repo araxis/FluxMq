@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>FluxMQ</title>
     <base href="/" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
     <link href="_content/Z.Blazor.Diagrams/style.css" rel="stylesheet" />
     <link href="_content/Z.Blazor.Diagrams/default.styles.css" rel="stylesheet" />
@@ -12,55 +13,123 @@
     <link href="app.css" rel="stylesheet" />
 
     <style>
-        /* 1. Setup Theme-Aware Variables */
         :root {
-            --bg-color: #ffffff;
-            --brand-color: #594AE2; /* MudBlazor Default Primary */
+            --boot-bg: #0A0D12;
+            --boot-surface: rgba(17, 21, 28, 0.78);
+            --boot-border: rgba(103, 232, 249, 0.16);
+            --boot-primary: #2DD4BF;
+            --boot-secondary: #60A5FA;
+            --boot-text: #E8ECF2;
+            --boot-muted: #7B8796;
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg-color: #32333d; /* MudBlazor Dark Background */
-                --brand-color: #776be7;
+                --boot-bg: #0A0D12;
+                --boot-surface: rgba(17, 21, 28, 0.78);
+                --boot-border: rgba(103, 232, 249, 0.16);
             }
         }
 
-        /* 2. Center the Container */
         .loading-container {
+            align-items: center;
+            background:
+                radial-gradient(circle at 48% 38%, rgba(45, 212, 191, 0.12), transparent 28%),
+                radial-gradient(circle at 58% 62%, rgba(96, 165, 250, 0.10), transparent 32%),
+                linear-gradient(180deg, #0E141D 0%, var(--boot-bg) 70%);
+            color: var(--boot-text);
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            gap: 18px;
             height: 100vh;
-            background-color: var(--bg-color);
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
         }
 
-        /* 3. The Animation */
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-top: 4px solid var(--brand-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        .loading-container::before {
+            background:
+                linear-gradient(rgba(103, 232, 249, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(103, 232, 249, 0.05) 1px, transparent 1px);
+            background-size: 28px 28px;
+            content: "";
+            inset: 0;
+            mask-image: radial-gradient(circle at center, #000 0%, #000 35%, transparent 70%);
+            opacity: 0.7;
+            position: absolute;
         }
 
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
+        .loading-brand {
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .loading-mark {
+            height: 176px;
+            width: 176px;
+        }
+
+        .loading-wordmark {
+            height: 48px;
+            width: 183px;
+        }
+
+        .loading-subtitle {
+            color: var(--boot-muted);
+            font: 500 12px/1.4 "Segoe UI", Roboto, Arial, sans-serif;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .loading-rail {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            height: 3px;
+            overflow: hidden;
+            position: relative;
+            width: 168px;
+            z-index: 1;
+        }
+
+        .loading-rail::after {
+            animation: boot-progress 1.8s ease-in-out infinite;
+            background: linear-gradient(90deg, transparent, var(--boot-primary), var(--boot-secondary), transparent);
+            content: "";
+            height: 100%;
+            left: -55%;
+            position: absolute;
+            top: 0;
+            width: 55%;
+        }
+
+        @keyframes boot-progress {
+            to {
+                left: 100%;
             }
+        }
 
-            100% {
-                transform: rotate(360deg);
+        @media (prefers-reduced-motion: reduce) {
+            .loading-rail::after {
+                animation: none;
+                left: 0;
+                width: 100%;
             }
         }
     </style>
 </head>
 <body>
     <div id="app">
-        <!-- This content is replaced once Blazor loads -->
         <div class="loading-container">
-            <div class="spinner"></div>
+            <div class="loading-brand">
+                <img class="loading-mark" src="brand/fluxmq-loader.svg" alt="FluxMQ loading" />
+                <img class="loading-wordmark" src="brand/fluxmq-wordmark.svg" alt="FluxMQ" />
+                <div class="loading-subtitle">MQTT flow studio</div>
+            </div>
+            <div class="loading-rail" aria-hidden="true"></div>
         </div>
     </div>
     <script src="_content/BlazorMonaco/jsInterop.js"></script>

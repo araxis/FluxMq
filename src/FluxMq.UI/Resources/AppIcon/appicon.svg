@@ -1,6 +1,39 @@
 <svg width="456" height="456" viewBox="0 0 456 456" xmlns="http://www.w3.org/2000/svg">
-  <rect width="456" height="456" rx="96" fill="#17212B"/>
-  <path d="M112 244h82l-34 88 184-128h-82l34-88L112 244z" fill="#29B6A8"/>
-  <circle cx="144" cy="228" r="18" fill="#F4B860"/>
-  <circle cx="312" cy="228" r="18" fill="#F4B860"/>
+  <defs>
+    <linearGradient id="bg" x1="74" y1="54" x2="382" y2="402" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#132132"/>
+      <stop offset="0.58" stop-color="#0A0D12"/>
+      <stop offset="1" stop-color="#05070B"/>
+    </linearGradient>
+    <linearGradient id="flow" x1="116" y1="132" x2="338" y2="316" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#67E8F9"/>
+      <stop offset="0.48" stop-color="#2DD4BF"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="packet" x1="178" y1="150" x2="294" y2="292" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FBBF24"/>
+      <stop offset="1" stop-color="#F97316"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="456" height="456" rx="104" fill="url(#bg)"/>
+  <path d="M52 248H105M351 248H404M228 52V102M228 354V404" stroke="#1E293B" stroke-width="8" stroke-linecap="round" opacity="0.62"/>
+  <path d="M78 148H126M330 148H378M78 310H126M330 310H378" stroke="#12333B" stroke-width="6" stroke-linecap="round" opacity="0.7"/>
+  <circle cx="228" cy="228" r="158" fill="none" stroke="#102431" stroke-width="3" stroke-dasharray="10 18"/>
+
+  <path d="M132 150H228C268 150 300 182 300 222V234" fill="none" stroke="url(#flow)" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M132 228H260" fill="none" stroke="url(#flow)" stroke-width="30" stroke-linecap="round"/>
+  <path d="M132 306H226C268 306 302 272 302 230V218" fill="none" stroke="url(#flow)" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <path d="M248 146L330 228L248 310" fill="none" stroke="#A7F3D0" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M230 176L274 228L230 280H284L336 228L284 176H230Z" fill="url(#packet)"/>
+
+  <circle cx="132" cy="150" r="28" fill="#0A0D12" stroke="#67E8F9" stroke-width="14"/>
+  <circle cx="132" cy="228" r="28" fill="#0A0D12" stroke="#2DD4BF" stroke-width="14"/>
+  <circle cx="132" cy="306" r="28" fill="#0A0D12" stroke="#60A5FA" stroke-width="14"/>
+  <circle cx="316" cy="228" r="31" fill="#0A0D12" stroke="#FBBF24" stroke-width="14"/>
+  <circle cx="132" cy="150" r="8" fill="#ECFEFF"/>
+  <circle cx="132" cy="228" r="8" fill="#ECFEFF"/>
+  <circle cx="132" cy="306" r="8" fill="#DBEAFE"/>
+  <circle cx="316" cy="228" r="9" fill="#FFF7ED"/>
 </svg>

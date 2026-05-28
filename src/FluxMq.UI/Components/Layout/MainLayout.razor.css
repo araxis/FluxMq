@@ -64,22 +64,10 @@
 }
 
 .flux-brand-mark {
-    background: linear-gradient(135deg, var(--flux-accent), #0f9f97);
-    border-radius: 5px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24), 0 8px 20px -14px var(--flux-accent);
-    display: inline-block;
-    height: 22px;
-    position: relative;
-    width: 22px;
-}
-
-.flux-brand-mark::after {
-    background: var(--flux-surface);
-    border-radius: 2px;
-    clip-path: polygon(0 50%, 50% 0, 50% 35%, 100% 35%, 100% 65%, 50% 65%, 50% 100%);
-    content: "";
-    inset: 5px;
-    position: absolute;
+    display: block;
+    filter: drop-shadow(0 8px 14px rgba(45, 212, 191, 0.2));
+    height: 24px;
+    width: 24px;
 }
 
 .flux-brand-name {
