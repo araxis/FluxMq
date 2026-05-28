@@ -39,18 +39,14 @@ public sealed class PipelineComponentFactoryTests
             PipelineFlowNodeTypes.GeneratedSource,
             PipelineFlowNodeTypes.PayloadInspector,
             PipelineFlowNodeTypes.MqttMetrics,
-            PipelineFlowNodeTypes.MqttMetricsSink,
             PipelineFlowNodeTypes.FlowLogger,
             PipelineFlowNodeTypes.MessageFilter,
             PipelineFlowNodeTypes.ConditionRouter,
             PipelineFlowNodeTypes.FlowAssertion,
             PipelineFlowNodeTypes.JsonSchemaValidator,
             PipelineFlowNodeTypes.DynamicMapper,
-            PipelineFlowNodeTypes.PublishRequestMapper,
             PipelineFlowNodeTypes.MqttPublisher,
-            PipelineFlowNodeTypes.RecordingRequestMapper,
             PipelineFlowNodeTypes.MqttRecorder,
-            PipelineFlowNodeTypes.FileWriteRequestMapper,
             PipelineFlowNodeTypes.FileWriter
         }, ignoreOrder: true);
     }

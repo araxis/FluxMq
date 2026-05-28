@@ -89,7 +89,7 @@ Chronological progress record.
   - `SetState` helper centralises all state writes and event firing.
   - `MqttClientStateChangedEventArgs` — carries session ID, profile, and new state.
   - `IMqttConnectionManager` / `MqttConnectionManager` — creates, tracks, and disposes sessions; forwards `StateChanged`; uses injected factory for testability.
-  - Reconnect hook (Polly) left as a comment in `OnSessionStateChanged`.
+  - Reconnect hook (Polly) left as a comment in `OnClientStateChanged`.
   - 6 new connection manager tests using `FakeFluxMqttClient` (no broker required). 21 tests total passing.
 
 - Decided on visual pipeline editor direction (Stage 8):
@@ -1526,3 +1526,22 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore --filter "FullyQualifiedName~CliRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioPublisherComponentCli\ -m:1` passes with 13 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowWorkspaceServiceTests|FullyQualifiedName~ScenarioRunReportFormatterTests|FullyQualifiedName~ScenarioStepCatalogTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioPublisherComponentUi\ -m:1` passes with 56 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioPublisherComponentFull\ -m:1` passes with 459 tests.
+
+## 2026-05-28 - Pre-release component alias cleanup
+
+- Cleaned project-local generated build output with `dotnet clean FluxMq.sln`.
+- Removed pre-release compatibility node ids from the runtime/UI surface:
+  - direct runtime registration for `mqtt.metrics-sink`
+  - direct runtime registration for request mapper node ids `mqtt.publish-request`, `mqtt.recording-request`, and `file.write-request`
+  - hidden UI catalog and widget/model aliases for those ids
+- Kept the request mapper component classes because `flow.mapper` still uses them internally for typed outputs such as `MqttPublishRequest`, `MqttRecordingRequest`, and `FileWriteRequest`.
+- Updated `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` so sample metrics nodes use canonical `mqtt.metrics`.
+- Cleaned stale live-client wording in memory:
+  - reconnect notes refer to `OnClientStateChanged` and `client.ConnectAsync`
+  - the active test-runner resource-boundary note says `mqtt.publisher` uses `MqttPublisherComponent`, not the removed `IMqttScenarioPublisher`
+- Verified:
+  - `dotnet build FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~PipelineComponentFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqAliasCleanupApp\ -m:1` passes with 23 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowDiagramNodeModelTests|FullyQualifiedName~FlowWorkspaceServiceTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqAliasCleanupUi\ -m:1` passes with 129 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet run --project src\FluxMq.Cli\FluxMq.Cli.csproj --no-restore -- validate --config C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` reports `Flow application is valid. Workflows: 2. Resources: 2.`
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqAliasCleanupFull\ -m:1` passes with 459 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

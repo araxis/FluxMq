@@ -13,7 +13,7 @@ namespace FluxMq.UI.Tests;
 public sealed class FlowDefinitionComposerTests
 {
     [Fact]
-    public void ComponentCatalog_ExposesDynamicMapperInsteadOfRequestAliases()
+    public void ComponentCatalog_ExposesDynamicMapperWithoutRequestAliases()
     {
         var catalog = new FlowComponentCatalog();
 
@@ -24,7 +24,10 @@ public sealed class FlowDefinitionComposerTests
         catalog.Components.ShouldNotContain(component => component.Type == "mqtt.recording-request");
         catalog.Components.ShouldNotContain(component => component.Type == "file.write-request");
 
-        catalog.Find("mqtt.publish-request").ShouldNotBeNull();
+        catalog.Find("mqtt.publish-request").ShouldBeNull();
+        catalog.Find("mqtt.recording-request").ShouldBeNull();
+        catalog.Find("file.write-request").ShouldBeNull();
+        catalog.Find("mqtt.metrics-sink").ShouldBeNull();
     }
 
     [Fact]
@@ -80,11 +83,11 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
-    public void ComponentCatalog_ResolvesMetricsSinkAlias()
+    public void ComponentCatalog_ExposesMetrics()
     {
         var catalog = new FlowComponentCatalog();
 
-        var descriptor = catalog.Find("mqtt.metrics-sink").ShouldNotBeNull();
+        var descriptor = catalog.Find("mqtt.metrics").ShouldNotBeNull();
 
         descriptor.DisplayName.ShouldBe("MQTT Metrics");
         descriptor.Ports.ShouldContain(port => port.Name == "Input" && port.IsInput);

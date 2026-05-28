@@ -289,12 +289,12 @@ Status: Accepted.
 
 ### 2026-05-07 - Reconnect policy deferred to next step (Polly)
 
-Decision: Reconnect on unexpected disconnect is not implemented yet. A comment in `MqttConnectionManager.OnSessionStateChanged` marks the exact extension point.
+Decision: Reconnect on unexpected disconnect is not implemented yet. A comment in `MqttConnectionManager.OnClientStateChanged` marks the exact extension point.
 
 Reasoning:
 - Polly is the agreed library for retry/reconnect.
 - Getting the state notification pipeline right first (this step) is a prerequisite.
-- The seam is clear: `OnSessionStateChanged` detects `Faulted`/`Disconnected` from an unexpected drop; Polly retry wraps `session.ConnectAsync` on next step.
+- The seam is clear: `OnClientStateChanged` detects `Faulted`/`Disconnected` from an unexpected drop; Polly retry wraps `client.ConnectAsync` on next step.
 
 Status: Deferred — next step.
 

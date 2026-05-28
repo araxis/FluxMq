@@ -59,18 +59,14 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .Register(PipelineFlowNodeTypes.GeneratedSource, context => CreateGeneratedMqttSource(context.Address, context.Definition))
             .Register(PipelineFlowNodeTypes.PayloadInspector, CreatePayloadInspector)
             .Register(PipelineFlowNodeTypes.MqttMetrics, CreateMqttMetrics)
-            .Register(PipelineFlowNodeTypes.MqttMetricsSink, CreateMqttMetrics)
             .Register(PipelineFlowNodeTypes.FlowLogger, CreateFlowLogger)
             .Register(PipelineFlowNodeTypes.MessageFilter, context => CreateMessageFilter(context.Address, context.Definition, expressionEngine))
             .Register(PipelineFlowNodeTypes.ConditionRouter, context => CreateConditionRouter(context.Address, context.Definition, expressionEngine))
             .Register(PipelineFlowNodeTypes.FlowAssertion, context => CreateFlowAssertion(context.Address, context.Definition, expressionEngine))
             .Register(PipelineFlowNodeTypes.JsonSchemaValidator, context => CreateJsonSchemaValidator(context.Address, context.Definition))
             .Register(PipelineFlowNodeTypes.DynamicMapper, context => CreateDynamicMapper(context.Address, context.Definition, expressionEngine))
-            .Register(PipelineFlowNodeTypes.PublishRequestMapper, context => CreatePublishRequestMapper(context.Address, context.Definition, expressionEngine))
             .Register(PipelineFlowNodeTypes.MqttPublisher, context => CreatePublisher(context.Address, context.Definition, context))
-            .Register(PipelineFlowNodeTypes.RecordingRequestMapper, context => CreateRecordingRequestMapper(context.Address, context.Definition, expressionEngine))
             .Register(PipelineFlowNodeTypes.MqttRecorder, context => CreateRecorder(context.Address, context.Definition, messageRepository))
-            .Register(PipelineFlowNodeTypes.FileWriteRequestMapper, context => CreateFileWriteRequestMapper(context.Address, context.Definition, expressionEngine))
             .Register(PipelineFlowNodeTypes.FileWriter, CreateFileWriter);
     }
 
@@ -706,9 +702,6 @@ public static class RuntimeNodeFactoryRegistryExtensions
         var trimmed = value.Trim();
         return trimmed switch
         {
-            "mqtt.publish-request" => "MqttPublishRequest",
-            "mqtt.recording-request" => "MqttRecordingRequest",
-            "file.write-request" => "FileWriteRequest",
             _ when trimmed.Contains('.') => trimmed[(trimmed.LastIndexOf('.') + 1)..],
             _ => trimmed
         };

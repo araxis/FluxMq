@@ -40,7 +40,7 @@ public static class FlowNodeModelFactory
         "mqtt.recorder" => new MqttRecorderNodeModel(id, position, nodeName, descriptor, isResource),
         "file.writer" => new FileWriterNodeModel(id, position, nodeName, descriptor, isResource),
         "mqtt.payload-inspector" => new PayloadInspectorNodeModel(id, position, nodeName, descriptor, isResource),
-        "mqtt.metrics" or "mqtt.metrics-sink" => new MqttMetricsNodeModel(id, position, nodeName, descriptor, isResource),
+        "mqtt.metrics" => new MqttMetricsNodeModel(id, position, nodeName, descriptor, isResource),
         _ => new FlowDiagramNodeModel(id, position, nodeName, nodeType, descriptor, isResource)
     };
 }

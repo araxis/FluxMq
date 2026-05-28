@@ -4,55 +4,6 @@ namespace FluxMq.UI.Services;
 
 public sealed class FlowComponentCatalog
 {
-    private readonly IReadOnlyDictionary<string, FlowComponentDescriptor> _hiddenComponents =
-        new Dictionary<string, FlowComponentDescriptor>(StringComparer.Ordinal)
-        {
-            ["mqtt.publish-request"] = new(
-                "mqtt.publish-request",
-                "Publish Request Mapper",
-                "Mapper",
-                "Compatibility mapper for older definitions. Use Dynamic Mapper for new flows.",
-                IsResource: false,
-                [
-                    new("Input", "MqttEnvelope", IsInput: true),
-                    new("Output", "MqttPublishRequest", IsInput: false),
-                    new("Errors", "FlowError", IsInput: false)
-                ]),
-            ["mqtt.recording-request"] = new(
-                "mqtt.recording-request",
-                "Recording Request Mapper",
-                "Mapper",
-                "Compatibility mapper for older definitions. Use Dynamic Mapper for new flows.",
-                IsResource: false,
-                [
-                    new("Input", "MqttEnvelope", IsInput: true),
-                    new("Output", "MqttRecordingRequest", IsInput: false),
-                    new("Errors", "FlowError", IsInput: false)
-                ]),
-            ["file.write-request"] = new(
-                "file.write-request",
-                "File Write Request Mapper",
-                "Mapper",
-                "Compatibility mapper for older definitions. Use Dynamic Mapper for new flows.",
-                IsResource: false,
-                [
-                    new("Input", "MqttEnvelope", IsInput: true),
-                    new("Output", "FileWriteRequest", IsInput: false),
-                    new("Errors", "FlowError", IsInput: false)
-                ]),
-            ["mqtt.metrics-sink"] = new(
-                "mqtt.metrics-sink",
-                "MQTT Metrics",
-                "Observer",
-                "Compatibility alias for older definitions. Use MQTT Metrics for new flows.",
-                IsResource: false,
-                [
-                    new("Input", "MqttEnvelope", IsInput: true),
-                    new("Snapshots", "MqttMetricsSnapshot", IsInput: false),
-                    new("Errors", "FlowError", IsInput: false)
-                ])
-        };
-
     private readonly IReadOnlyList<FlowComponentDescriptor> _components =
     [
         new(
@@ -230,7 +181,7 @@ public sealed class FlowComponentCatalog
             IsResource: false,
             [
                 new("Connection", "MqttConnection", IsInput: true),
-                new("Output", "SessionStateChanged", IsInput: false),
+                new("Output", "MqttClientStateChanged", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ])
     ];
@@ -238,6 +189,5 @@ public sealed class FlowComponentCatalog
     public IReadOnlyList<FlowComponentDescriptor> Components => _components;
 
     public FlowComponentDescriptor? Find(string type)
-        => _components.FirstOrDefault(component => string.Equals(component.Type, type, StringComparison.Ordinal)) ??
-           (_hiddenComponents.TryGetValue(type, out var descriptor) ? descriptor : null);
+        => _components.FirstOrDefault(component => string.Equals(component.Type, type, StringComparison.Ordinal));
 }

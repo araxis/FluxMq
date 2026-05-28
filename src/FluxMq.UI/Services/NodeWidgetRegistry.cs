@@ -4,7 +4,6 @@ using FluxMq.UI.Components.Workspace.Nodes.ConditionRouter;
 using FluxMq.UI.Components.Workspace.Nodes.ConnectionStateTrigger;
 using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
 using FluxMq.UI.Components.Workspace.Nodes.FlowAssertion;
-using FluxMq.UI.Components.Workspace.Nodes.Generic;
 using FluxMq.UI.Components.Workspace.Nodes.JsonSchemaValidator;
 using FluxMq.UI.Components.Workspace.Nodes.MessageFilter;
 using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
@@ -36,15 +35,10 @@ public sealed class NodeWidgetRegistry
         ["flow.assertion"] = typeof(FlowAssertionNodeWidget),
         ["json.schema-validator"] = typeof(JsonSchemaValidatorNodeWidget),
         ["flow.mapper"] = typeof(DynamicMapperNodeWidget),
-        // Hidden compatibility aliases for definitions created before flow.mapper.
-        ["mqtt.publish-request"] = typeof(GenericFlowNodeWidget),
         ["mqtt.publisher"] = typeof(MqttPublisherNodeWidget),
-        ["mqtt.recording-request"] = typeof(GenericFlowNodeWidget),
         ["mqtt.recorder"] = typeof(MqttRecorderNodeWidget),
-        ["file.write-request"] = typeof(GenericFlowNodeWidget),
         ["file.writer"] = typeof(FileWriterNodeWidget),
-        ["mqtt.metrics"] = typeof(MqttMetricsNodeWidget),
-        ["mqtt.metrics-sink"] = typeof(MqttMetricsNodeWidget)
+        ["mqtt.metrics"] = typeof(MqttMetricsNodeWidget)
     };
 
     /// <summary>Returns the widget type for the given node type, or the fallback default widget.</summary>

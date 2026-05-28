@@ -810,7 +810,7 @@ public sealed class FlowWorkspaceServiceTests
                     }
                   },
                   "metrics": {
-                    "type": "mqtt.metrics-sink",
+                    "type": "mqtt.metrics",
                     "Input": "trigger.Output"
                   },
                   "jsonSchemaValidator": {

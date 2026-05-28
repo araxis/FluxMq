@@ -229,16 +229,16 @@ public sealed class FlowDiagramNodeModelTests
     }
 
     [Fact]
-    public void FlowNodeModelFactory_NormalizesMetricsSinkAlias()
+    public void FlowNodeModelFactory_CreatesMetricsNodeModel()
     {
         var catalog = new FlowComponentCatalog();
-        var descriptor = catalog.Find("mqtt.metrics-sink").ShouldNotBeNull();
+        var descriptor = catalog.Find("mqtt.metrics").ShouldNotBeNull();
 
         var model = FlowNodeModelFactory.Create(
             "workflow1.metrics",
             new DiagramPoint(10, 20),
             "metrics",
-            "mqtt.metrics-sink",
+            "mqtt.metrics",
             descriptor,
             isResource: false);
 
