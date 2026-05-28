@@ -1638,3 +1638,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verified:
   - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioRunnerOwnedEventsPipeline\ -m:1` passes with 12 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioRunnerOwnedEventsFull\ -m:1` passes with 471 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-28 - Scenario run lifetime resources
+
+- Added `ScenarioRunLifetime` and exposed it through `ScenarioStepRunContext`.
+- Scenario step runners can now register `IDisposable`, `IAsyncDisposable`, or async cleanup callbacks that live beyond the current step and are disposed when the scenario ends.
+- The runner disposes lifetime resources after both passed and failed runs. Cleanup failures are reported as a synthetic failed `scenario.cleanup` result instead of escaping as unstructured exceptions.
+- This keeps the path clear for a future runner-owned `mqtt.trigger` step that starts a normal trigger component, keeps it alive while later `expect.event` or `when` steps run, and stops it deterministically at scenario completion.
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioRunLifetimePipeline2\ -m:1` passes with 15 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowApplicationHostTests|FullyQualifiedName~MqttScenarioClientFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioRunLifetimeApp\ -m:1` passes with 14 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioRunLifetimeFull\ -m:1` passes with 474 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

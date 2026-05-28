@@ -399,6 +399,77 @@ public sealed class ScenarioRunnerTests
         result.Steps[1].MatchedEvent!.Topic.ShouldBe("runner/topic/value");
     }
 
+    [Fact]
+    public async Task RunAsync_DisposesRegisteredLifetimeResourcesAfterPassedRun()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        var resource = new TestLifetimeResource();
+        var registry = new ScenarioStepRunnerRegistry()
+            .Register(new RegisterLifetimeResourceStepRunner(resource));
+        var scenario = new ScenarioDefinition
+        {
+            Steps =
+            {
+                ["register"] = new ScenarioStepDefinition { Type = RegisterLifetimeResourceStepRunner.StepType }
+            }
+        };
+
+        var result = await new ScenarioRunner(registry)
+            .RunAsync("lifetime", scenario, events);
+
+        result.IsSuccess.ShouldBeTrue();
+        resource.DisposeCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task RunAsync_DisposesRegisteredLifetimeResourcesAfterFailedRun()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        var resource = new TestLifetimeResource();
+        var registry = new ScenarioStepRunnerRegistry()
+            .Register(new RegisterLifetimeResourceStepRunner(resource));
+        var scenario = new ScenarioDefinition
+        {
+            Steps =
+            {
+                ["register"] = new ScenarioStepDefinition { Type = RegisterLifetimeResourceStepRunner.StepType },
+                ["unknown"] = new ScenarioStepDefinition { Type = "unknown.step" }
+            }
+        };
+
+        var result = await new ScenarioRunner(registry)
+            .RunAsync("lifetime", scenario, events);
+
+        result.IsSuccess.ShouldBeFalse();
+        resource.DisposeCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task RunAsync_ReportsCleanupFailureAsScenarioFailure()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        var registry = new ScenarioStepRunnerRegistry()
+            .Register(new RegisterLifetimeResourceStepRunner(new TestLifetimeResource(failDispose: true)));
+        var scenario = new ScenarioDefinition
+        {
+            Steps =
+            {
+                ["register"] = new ScenarioStepDefinition { Type = RegisterLifetimeResourceStepRunner.StepType }
+            }
+        };
+
+        var result = await new ScenarioRunner(registry)
+            .RunAsync("lifetime", scenario, events);
+
+        result.IsSuccess.ShouldBeFalse();
+        result.Steps.Count.ShouldBe(2);
+        var cleanup = result.Steps[1];
+        cleanup.Name.ShouldBe("cleanup");
+        cleanup.Type.ShouldBe("scenario.cleanup");
+        cleanup.Status.ShouldBe(ScenarioStepRunStatus.Failed);
+        cleanup.Message.ShouldNotBeNull().ShouldContain("cleanup boom");
+    }
+
     private static ScenarioRunner CreateRunner()
         => new(ScenarioStepRunnerRegistry.CreateEventExpectationOnly());
 
@@ -495,6 +566,46 @@ public sealed class ScenarioRunnerTests
                 Message = "Appended runner event.",
                 NextEventOffset = context.EventOffset
             });
+        }
+    }
+
+    private sealed class RegisterLifetimeResourceStepRunner(TestLifetimeResource resource) : IScenarioStepRunner
+    {
+        public const string StepType = "test.register-lifetime";
+
+        public string Type => StepType;
+
+        public Task<ScenarioStepResult> RunAsync(
+            ScenarioStepRunContext context,
+            CancellationToken cancellationToken = default)
+        {
+            context.Lifetime.Register(resource);
+            return Task.FromResult(new ScenarioStepResult
+            {
+                Name = context.StepName,
+                Type = context.Step.Type,
+                Status = ScenarioStepRunStatus.Passed,
+                StartedAt = DateTimeOffset.UtcNow,
+                FinishedAt = DateTimeOffset.UtcNow,
+                Message = "Registered lifetime resource.",
+                NextEventOffset = context.EventOffset
+            });
+        }
+    }
+
+    private sealed class TestLifetimeResource(bool failDispose = false) : IAsyncDisposable
+    {
+        public int DisposeCount { get; private set; }
+
+        public ValueTask DisposeAsync()
+        {
+            DisposeCount++;
+            if (failDispose)
+            {
+                throw new InvalidOperationException("cleanup boom");
+            }
+
+            return ValueTask.CompletedTask;
         }
     }
 }
