@@ -1,5 +1,6 @@
 using FluxMq.App;
 using FluxMq.Core.Models;
+using FluxMq.Pipeline.Runtime;
 using FluxMq.Pipeline.Scenarios;
 using FluxMq.UI.Models;
 using FluxMq.UI.Services;
@@ -28,6 +29,26 @@ public sealed class FlowDefinitionComposerTests
         catalog.Find("mqtt.recording-request").ShouldBeNull();
         catalog.Find("file.write-request").ShouldBeNull();
         catalog.Find("mqtt.metrics-sink").ShouldBeNull();
+    }
+
+    [Fact]
+    public void ComponentCatalog_AllDesignerComponentsHaveRegisteredRuntimeFactory()
+    {
+        var catalogTypes = new FlowComponentCatalog()
+            .Components
+            .Select(component => component.Type)
+            .ToArray();
+
+        var runtimeTypes = new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Factories
+            .Keys
+            .Select(type => type.Value)
+            .ToHashSet(StringComparer.Ordinal);
+
+        catalogTypes
+            .Where(type => !runtimeTypes.Contains(type))
+            .ShouldBeEmpty();
     }
 
     [Fact]

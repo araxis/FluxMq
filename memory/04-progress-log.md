@@ -1572,3 +1572,10 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~PipelineComponentFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqConnectionStateTriggerApp\ -m:1` passes with 24 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowDiagramNodeModelTests|FullyQualifiedName~SourceNodeModelTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqConnectionStateTriggerUi\ -m:1` passes with 86 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqConnectionStateTriggerFull\ -m:1` passes with 463 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-28 - Designer catalog/runtime guard
+
+- Added a UI regression test that checks every designer catalog component type has a registered runtime factory.
+- This protects against the same class of failure where a node is draggable in the designer but cannot be built or run.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDefinitionComposerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqCatalogRuntimeGuardUi\ -m:1` passes with 67 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
