@@ -1606,9 +1606,11 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 
 - Added the canonical known scenario step type set to `ScenarioStepTypes`.
 - Application validation now rejects unknown test step types with `UnknownScenarioStepType` instead of allowing them to fail later at scenario execution time.
+- Extended the scenario step catalog guard so the validation known-step list, app runner registry, and UI test-step palette must stay aligned.
 - This keeps saved JSON honest while the test runner moves toward normal pipeline-style composition with a small set of explicit test blocks.
 - Verified:
   - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowApplicationDefinitionValidatorTests|FullyQualifiedName~ScenarioRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepTypeValidationPipeline\ -m:1` passes with 25 tests.
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowApplicationConfigurationLoaderTests|FullyQualifiedName~FlowApplicationHostTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepTypeValidationApp\ -m:1` passes with 14 tests.
   - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore --filter "FullyQualifiedName~CliRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepTypeValidationCli\ -m:1` passes with 13 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepTypeAlignmentUi\ -m:1` passes with 5 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepTypeValidationFull\ -m:1` passes with 466 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

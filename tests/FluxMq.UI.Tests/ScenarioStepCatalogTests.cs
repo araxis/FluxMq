@@ -46,7 +46,7 @@ public sealed class ScenarioStepCatalogTests
     }
 
     [Fact]
-    public void Steps_AllPaletteStepsHaveApplicationScenarioRunner()
+    public void Steps_AllKnownStepsHavePaletteAndApplicationScenarioRunner()
     {
         var paletteTypes = new ScenarioStepCatalog()
             .Steps
@@ -58,6 +58,9 @@ public sealed class ScenarioStepCatalogTests
             .Runners
             .Keys
             .ToHashSet(StringComparer.Ordinal);
+
+        paletteTypes.ShouldBe(ScenarioStepTypes.All, ignoreOrder: true);
+        runnerTypes.ShouldBe(ScenarioStepTypes.All, ignoreOrder: true);
 
         paletteTypes
             .Where(type => !runnerTypes.Contains(type))
