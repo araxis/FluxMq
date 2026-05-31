@@ -108,7 +108,7 @@ public sealed class MqttScenarioClientFactoryTests
     }
 
     [Fact]
-    public async Task MqttPublishStep_UsesNormalPublisherComponentThroughScenarioClientFactory()
+    public async Task MqttPublishStep_UsesNormalPublisherComponentAndAppendsScenarioEvents()
     {
         var client = new FakeFluxMqttClient(new MqttConnectionProfile { Name = "shared-broker" });
         var factory = new FakeScenarioClientFactory(client);
@@ -129,6 +129,18 @@ public sealed class MqttScenarioClientFactoryTests
                         ["qos"] = JsonSerializer.SerializeToElement(1),
                         ["retain"] = JsonSerializer.SerializeToElement(true)
                     }
+                },
+                ["expectPublished"] = new ScenarioStepDefinition
+                {
+                    Type = ScenarioStepTypes.ExpectEvent,
+                    Configuration =
+                    {
+                        ["eventType"] = JsonSerializer.SerializeToElement(FlowEventTypes.MqttMessagePublished),
+                        ["topicStartsWith"] = JsonSerializer.SerializeToElement("fluxmq/sample/request"),
+                        ["status"] = JsonSerializer.SerializeToElement("published"),
+                        ["payloadContains"] = JsonSerializer.SerializeToElement("\"value\":12"),
+                        ["timeoutMs"] = JsonSerializer.SerializeToElement(1000)
+                    }
                 }
             }
         };
@@ -136,7 +148,8 @@ public sealed class MqttScenarioClientFactoryTests
             .Add<IMqttScenarioClientFactory>(factory);
         var runner = new ScenarioRunner(
             new ScenarioStepRunnerRegistry()
-                .Register(new MqttPublishScenarioStepRunner()));
+                .Register(new MqttPublishScenarioStepRunner())
+                .Register(new ExpectEventScenarioStepRunner()));
 
         var result = await runner.RunAsync("publish", scenario, events, services);
 
@@ -149,6 +162,8 @@ public sealed class MqttScenarioClientFactoryTests
         JsonDocument.Parse(published.Payload).RootElement.GetProperty("value").GetInt32().ShouldBe(12);
         published.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtLeastOnce);
         published.Retain.ShouldBeTrue();
+        result.Steps.Count.ShouldBe(2);
+        result.Steps[1].MatchedEvent.ShouldNotBeNull().Topic.ShouldBe("fluxmq/sample/request");
         events.Complete();
     }
 

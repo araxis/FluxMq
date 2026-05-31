@@ -49,8 +49,12 @@ public sealed class MqttPublishScenarioStepRunner : IScenarioStepRunner
         var publisher = new MqttPublisherComponent(client);
         var errors = new List<FlowError>();
         var errorSink = new ActionBlock<FlowError>(errors.Add);
+        var eventSink = new ActionBlock<FlowEvent>(context.Events.Append);
         using var errorLink = publisher.Errors.LinkTo(
             errorSink,
+            new DataflowLinkOptions { PropagateCompletion = true });
+        using var eventLink = publisher.Events.LinkTo(
+            eventSink,
             new DataflowLinkOptions { PropagateCompletion = true });
 
         if (!await publisher.Input.SendAsync(request, cancellationToken).ConfigureAwait(false))
@@ -64,6 +68,7 @@ public sealed class MqttPublishScenarioStepRunner : IScenarioStepRunner
         publisher.Complete();
         await publisher.Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
         await errorSink.Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await eventSink.Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
 
         if (errors.FirstOrDefault() is { } error)
         {

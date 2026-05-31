@@ -1684,3 +1684,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqWhenEventPipeline2\ -m:1` passes with 17 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqWhenEventUi\ -m:1` passes with 9 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqWhenEventFull\ -m:1` passes with 483 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - Scenario publisher events enter the runner journal
+
+- `mqtt.publisher` scenario steps now append the normal `MqttPublisherComponent` `mqtt.message.published` event into the scenario event journal.
+- CLI scenarios can now run `mqtt.publisher` followed by `expect.event` without a separate `mqtt.trigger`, because the publisher action is also a runner-owned event source.
+- The CLI fast-fail guidance now says to add a scenario `mqtt.publisher` or `mqtt.trigger` before expectations that are not attached to an app runtime stream.
+- Verified:
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttScenarioClientFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqPublisherEventsApp\ -m:1` passes with 4 tests.
+  - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore --filter "FullyQualifiedName~CliRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqPublisherEventsCli3\ -m:1` passes with 15 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqPublisherEventsFull\ -m:1` passes with 484 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

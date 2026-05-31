@@ -157,7 +157,7 @@ public sealed class CliRunner
             if (ScenarioRequiresExternalRuntimeEvents(scenario))
             {
                 throw new InvalidOperationException(
-                    $"Scenario '{scenarioName}' contains expect.event steps before any runner-owned event source. Add a scenario mqtt.trigger step before the expectation, run the app runtime and execute the test from the UI or host API, or remove expect.event steps from this CLI scenario.");
+                    $"Scenario '{scenarioName}' contains expect.event steps before any runner-owned event source. Add a scenario mqtt.publisher or mqtt.trigger step before the expectation, run the app runtime and execute the test from the UI or host API, or remove expect.event steps from this CLI scenario.");
             }
 
             var mqttClientFactory = _scenarioClientFactoryFactory(applicationDefinition);
@@ -204,7 +204,7 @@ public sealed class CliRunner
         var hasRunnerOwnedEventSource = false;
         foreach (var step in scenario.Steps.Values)
         {
-            if (string.Equals(step.Type, ScenarioStepTypes.MqttTrigger, StringComparison.Ordinal))
+            if (IsRunnerOwnedEventSourceStep(step.Type))
             {
                 hasRunnerOwnedEventSource = true;
                 continue;
@@ -219,6 +219,10 @@ public sealed class CliRunner
 
         return false;
     }
+
+    private static bool IsRunnerOwnedEventSourceStep(string type)
+        => string.Equals(type, ScenarioStepTypes.MqttPublisher, StringComparison.Ordinal) ||
+           string.Equals(type, ScenarioStepTypes.MqttTrigger, StringComparison.Ordinal);
 
     private bool TryLoadApplicationDefinition(CliOptions options, out ApplicationDefinition? definition, out int exitCode)
     {
