@@ -601,6 +601,9 @@ Done when:
 - Mirrored runner-owned scenario events into scoped workspace logs:
   - scenario-owned MQTT publisher/trigger events now appear in Logs with `Test runner` scope and `Test` artifact metadata
   - app/source events still stay on the existing app runtime event path, so dashboard counters are not incremented by isolated test-runner events
+- Cleaned live MQTT fake-client naming in tests:
+  - component, app-runtime, app-host, and UI workspace tests now use `mqttClient` for live fake MQTT clients
+  - stored recording session terminology and `session.source` ids remain unchanged because those are persisted message sessions
 - Tightened the CLI runner-owned event-source guard:
   - `when.event` now follows the same fast-fail rule as `expect.event` when it appears before any scenario-owned `mqtt.publisher` or `mqtt.trigger`
   - this prevents a CLI-only conditional guard from silently skipping because there is no event stream attached

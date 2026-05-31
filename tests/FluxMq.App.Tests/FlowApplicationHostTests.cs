@@ -289,7 +289,7 @@ public sealed class FlowApplicationHostTests
     [Fact]
     public async Task RunScenarioAsync_CanPublishMqttMessageThroughNamedConnection()
     {
-        var session = new FakeFluxMqttClient();
+        var mqttClient = new FakeFluxMqttClient();
         await using var host = FlowApplicationHost.CreateDefault(
             BuildConfiguration(
                 """
@@ -335,7 +335,7 @@ public sealed class FlowApplicationHostTests
                   }
                 }
                 """),
-            clientFactory: _ => session);
+            clientFactory: _ => mqttClient);
 
         var startResult = await host.StartAsync();
         startResult.IsSuccess.ShouldBeTrue();
@@ -343,7 +343,7 @@ public sealed class FlowApplicationHostTests
         var result = await host.RunScenarioAsync("publishMessage");
 
         result.IsSuccess.ShouldBeTrue();
-        var publish = session.Published.ShouldHaveSingleItem();
+        var publish = mqttClient.Published.ShouldHaveSingleItem();
         publish.Topic.ShouldBe("topica/b/c");
         Encoding.UTF8.GetString(publish.Payload).ShouldBe("12");
         publish.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtLeastOnce);
@@ -353,7 +353,7 @@ public sealed class FlowApplicationHostTests
     [Fact]
     public async Task StartAsync_ReportsMissingScenarioMqttConnection()
     {
-        var session = new FakeFluxMqttClient();
+        var mqttClient = new FakeFluxMqttClient();
         await using var host = FlowApplicationHost.CreateDefault(
             BuildConfiguration(
                 """
@@ -397,7 +397,7 @@ public sealed class FlowApplicationHostTests
                   }
                 }
                 """),
-            clientFactory: _ => session);
+            clientFactory: _ => mqttClient);
 
         var startResult = await host.StartAsync();
         startResult.IsSuccess.ShouldBeFalse();
@@ -406,7 +406,7 @@ public sealed class FlowApplicationHostTests
         validationError.Message.ShouldContain("publishMessage");
         validationError.Message.ShouldContain("publish");
         validationError.Message.ShouldContain("missingBroker");
-        session.Published.ShouldBeEmpty();
+        mqttClient.Published.ShouldBeEmpty();
     }
 
     [Fact]

@@ -1732,3 +1732,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioEventJournalTests|FullyQualifiedName~ScenarioRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioEventObserverPipeline\ -m:1` passes with 18 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowWorkspaceServiceTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioEventObserverUi\ -m:1` passes with 53 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioEventObserverFull\ -m:1` passes with 500 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - MQTT client naming cleanup in tests
+
+- Replaced remaining live MQTT fake-client variable names that used `session` in component, app-runtime, app-host, and UI workspace tests with `mqttClient`.
+- Renamed the component test helper file from `TestMqttSession.cs` to `TestMqttClient.cs`.
+- Left stored recording session language and `session.source` component ids unchanged because those refer to persisted message sessions, not live MQTT clients.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttConnectionComponentTests|FullyQualifiedName~MqttPublisherComponentTests|FullyQualifiedName~MqttTriggerComponentTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqMqttClientNamingComponents\ -m:1` passes with 19 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowApplicationHostTests|FullyQualifiedName~PipelineComponentFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqMqttClientNamingApp\ -m:1` passes with 35 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowWorkspaceServiceTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqMqttClientNamingUi\ -m:1` passes with 53 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

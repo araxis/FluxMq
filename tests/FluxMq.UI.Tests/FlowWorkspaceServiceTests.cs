@@ -546,8 +546,8 @@ public sealed class FlowWorkspaceServiceTests
     [Fact]
     public async Task RunActiveTestScenarioAsync_PublishesWithoutStartingRuntime()
     {
-        var session = new FakeRuntimeFluxMqttClient();
-        await using var service = new FlowWorkspaceService(new FlowDefinitionComposer(), runtimeClientFactory: _ => session);
+        var mqttClient = new FakeRuntimeFluxMqttClient();
+        await using var service = new FlowWorkspaceService(new FlowDefinitionComposer(), runtimeClientFactory: _ => mqttClient);
         service.SetDefinitionJson("""
         {
           "FluxMq": {
@@ -593,7 +593,7 @@ public sealed class FlowWorkspaceServiceTests
         result.IsSuccess.ShouldBeTrue();
         service.State.ShouldNotBe(RuntimeWorkspaceState.Running);
         service.RuntimeEvents.ShouldBeEmpty();
-        var publish = session.Published.ShouldHaveSingleItem();
+        var publish = mqttClient.Published.ShouldHaveSingleItem();
         publish.Topic.ShouldBe("fluxmq/sample/request");
         Encoding.UTF8.GetString(publish.Payload).ShouldBe("""{"value":12}""");
         publish.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtLeastOnce);
@@ -615,8 +615,8 @@ public sealed class FlowWorkspaceServiceTests
     [Fact]
     public async Task RunActiveTestScenarioAsync_AllowsWhenEventAfterRunnerOwnedPublisherWithoutStartingRuntime()
     {
-        var session = new FakeRuntimeFluxMqttClient();
-        await using var service = new FlowWorkspaceService(new FlowDefinitionComposer(), runtimeClientFactory: _ => session);
+        var mqttClient = new FakeRuntimeFluxMqttClient();
+        await using var service = new FlowWorkspaceService(new FlowDefinitionComposer(), runtimeClientFactory: _ => mqttClient);
         service.SetDefinitionJson("""
         {
           "FluxMq": {
@@ -675,14 +675,14 @@ public sealed class FlowWorkspaceServiceTests
         result.Steps[1].MatchedEvent.ShouldNotBeNull().Topic.ShouldBe("test");
         service.State.ShouldNotBe(RuntimeWorkspaceState.Running);
         service.RuntimeEvents.ShouldBeEmpty();
-        session.Published.ShouldHaveSingleItem().Topic.ShouldBe("test");
+        mqttClient.Published.ShouldHaveSingleItem().Topic.ShouldBe("test");
     }
 
     [Fact]
     public async Task RunActiveTestScenarioAsync_SkipsRemainingStepsWhenWhenEventDoesNotMatch()
     {
-        var session = new FakeRuntimeFluxMqttClient();
-        await using var service = new FlowWorkspaceService(new FlowDefinitionComposer(), runtimeClientFactory: _ => session);
+        var mqttClient = new FakeRuntimeFluxMqttClient();
+        await using var service = new FlowWorkspaceService(new FlowDefinitionComposer(), runtimeClientFactory: _ => mqttClient);
         service.SetDefinitionJson("""
         {
           "FluxMq": {
@@ -746,7 +746,7 @@ public sealed class FlowWorkspaceServiceTests
         result.Steps[1].Status.ShouldBe(ScenarioStepRunStatus.Skipped);
         service.LastScenarioRunResult.ShouldBe(result);
         service.ScenarioRunHistory.ShouldBe([result]);
-        session.Published.ShouldHaveSingleItem().Topic.ShouldBe("test");
+        mqttClient.Published.ShouldHaveSingleItem().Topic.ShouldBe("test");
     }
 
     [Fact]
@@ -867,8 +867,8 @@ public sealed class FlowWorkspaceServiceTests
     [Fact]
     public async Task RunActiveTestScenarioAsync_MirrorsRuntimeEventsToLogs()
     {
-        var session = new FakeRuntimeFluxMqttClient(echoPublishes: true);
-        await using var service = new FlowWorkspaceService(new FlowDefinitionComposer(), runtimeClientFactory: _ => session);
+        var mqttClient = new FakeRuntimeFluxMqttClient(echoPublishes: true);
+        await using var service = new FlowWorkspaceService(new FlowDefinitionComposer(), runtimeClientFactory: _ => mqttClient);
         service.SetDefinitionJson("""
         {
           "FluxMq": {
@@ -1595,8 +1595,8 @@ public sealed class FlowWorkspaceServiceTests
     [Fact]
     public async Task RunAsync_CollectsPublisherEntriesWithoutFlowLogger()
     {
-        var session = new FakeRuntimeFluxMqttClient();
-        var service = new FlowWorkspaceService(new FlowDefinitionComposer(), runtimeClientFactory: _ => session);
+        var mqttClient = new FakeRuntimeFluxMqttClient();
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer(), runtimeClientFactory: _ => mqttClient);
         service.SetDefinitionJson("""
         {
           "FluxMq": {
@@ -1655,7 +1655,7 @@ public sealed class FlowWorkspaceServiceTests
             log.Context is not null &&
             log.Context.Contains("topic=test", StringComparison.Ordinal)));
 
-        session.Published.ShouldHaveSingleItem().Topic.ShouldBe("test");
+        mqttClient.Published.ShouldHaveSingleItem().Topic.ShouldBe("test");
         service.Logs.Any(log =>
             log.Source == "MqttPublisher" &&
             log.WorkflowName == "pip1" &&
@@ -1768,8 +1768,8 @@ public sealed class FlowWorkspaceServiceTests
     [Fact]
     public async Task RunAsync_CollectsTriggerActivityFromTriggerOutputStream()
     {
-        var session = new FakeRuntimeFluxMqttClient();
-        await using var service = new FlowWorkspaceService(new FlowDefinitionComposer(), runtimeClientFactory: _ => session);
+        var mqttClient = new FakeRuntimeFluxMqttClient();
+        await using var service = new FlowWorkspaceService(new FlowDefinitionComposer(), runtimeClientFactory: _ => mqttClient);
         var receivedAt = DateTimeOffset.Parse("2026-05-24T18:30:00Z");
         service.SetDefinitionJson("""
         {
@@ -1805,8 +1805,8 @@ public sealed class FlowWorkspaceServiceTests
         """);
 
         await service.RunAsync();
-        await session.WriteAsync(new MqttEnvelope { Topic = "other/skip", Payload = [1] });
-        await session.WriteAsync(new MqttEnvelope { Topic = "factory/one", Payload = [1, 2, 3], ReceivedAt = receivedAt });
+        await mqttClient.WriteAsync(new MqttEnvelope { Topic = "other/skip", Payload = [1] });
+        await mqttClient.WriteAsync(new MqttEnvelope { Topic = "factory/one", Payload = [1, 2, 3], ReceivedAt = receivedAt });
         await WaitUntilAsync(() => service.GetTriggerActivitySnapshot("flow", "trigger").MessageCount == 1);
 
         var snapshot = service.GetTriggerActivitySnapshot("flow", "trigger");
@@ -1979,8 +1979,8 @@ public sealed class FlowWorkspaceServiceTests
     [Fact]
     public async Task RunAsync_CollectsRuntimeEventsForDashboardWidgets()
     {
-        var session = new FakeRuntimeFluxMqttClient();
-        await using var service = new FlowWorkspaceService(new FlowDefinitionComposer(), runtimeClientFactory: _ => session);
+        var mqttClient = new FakeRuntimeFluxMqttClient();
+        await using var service = new FlowWorkspaceService(new FlowDefinitionComposer(), runtimeClientFactory: _ => mqttClient);
         service.SetDefinitionJson("""
         {
           "FluxMq": {
@@ -2042,8 +2042,8 @@ public sealed class FlowWorkspaceServiceTests
         service.SetActiveDashboard("ops");
 
         await service.RunAsync();
-        await session.WriteAsync(new MqttEnvelope { Topic = "other/skip", Payload = [1] });
-        await session.WriteAsync(new MqttEnvelope { Topic = "factory/one", Payload = [1, 2, 3] });
+        await mqttClient.WriteAsync(new MqttEnvelope { Topic = "other/skip", Payload = [1] });
+        await mqttClient.WriteAsync(new MqttEnvelope { Topic = "factory/one", Payload = [1, 2, 3] });
 
         var widget = service.GetActiveDashboardLayout()
             .ShouldNotBeNull()
@@ -2198,17 +2198,17 @@ public sealed class FlowWorkspaceServiceTests
     private sealed class SharedFakeBroker
     {
         private readonly object _sync = new();
-        private readonly List<BrokerSession> _sessions = [];
+        private readonly List<BrokerMqttClient> _mqttClients = [];
 
         public IFluxMqttClient CreateClient(MqttConnectionProfile profile)
         {
-            var session = new BrokerSession(this, profile);
+            var mqttClient = new BrokerMqttClient(this, profile);
             lock (_sync)
             {
-                _sessions.Add(session);
+                _mqttClients.Add(mqttClient);
             }
 
-            return session;
+            return mqttClient;
         }
 
         private Task PublishAsync(
@@ -2217,17 +2217,17 @@ public sealed class FlowWorkspaceServiceTests
             MqttQualityOfServiceLevel qos,
             bool retain)
         {
-            BrokerSession[] sessions;
+            BrokerMqttClient[] mqttClients;
             lock (_sync)
             {
-                sessions = _sessions
-                    .Where(session => session.State == MqttClientState.Connected && session.Matches(topic))
+                mqttClients = _mqttClients
+                    .Where(mqttClient => mqttClient.State == MqttClientState.Connected && mqttClient.Matches(topic))
                     .ToArray();
             }
 
-            foreach (var session in sessions)
+            foreach (var mqttClient in mqttClients)
             {
-                session.Write(new MqttEnvelope
+                mqttClient.Write(new MqttEnvelope
                 {
                     Topic = topic,
                     Payload = payload,
@@ -2239,15 +2239,15 @@ public sealed class FlowWorkspaceServiceTests
             return Task.CompletedTask;
         }
 
-        private void Remove(BrokerSession session)
+        private void Remove(BrokerMqttClient mqttClient)
         {
             lock (_sync)
             {
-                _sessions.Remove(session);
+                _mqttClients.Remove(mqttClient);
             }
         }
 
-        private sealed class BrokerSession(SharedFakeBroker broker, MqttConnectionProfile profile) : IFluxMqttClient
+        private sealed class BrokerMqttClient(SharedFakeBroker broker, MqttConnectionProfile profile) : IFluxMqttClient
         {
             private readonly Channel<MqttEnvelope> _messages = Channel.CreateUnbounded<MqttEnvelope>();
             private readonly List<string> _subscriptions = [];
