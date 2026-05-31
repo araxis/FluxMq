@@ -33,17 +33,17 @@ Priority:
 
 ## P0 - Runtime And Local MQTT Foundation
 
-### F-001 - Core MQTT Session
+### F-001 - Core MQTT Client
 
-**Goal:** Connect, disconnect, subscribe, receive, and publish MQTT messages through a reusable domain boundary.
+**Goal:** Connect, disconnect, subscribe, receive, and publish MQTT messages through a reusable MQTT client boundary.
 
 **UI/UX:** Connection state should be visible and boring: clear connected/disconnected/reconnecting states, explicit publish controls, no hidden broker actions.
 
-**Data/Logic:** `MqttConnectionProfile`, `FluxMqttClient`, `MqttEnvelope`, topic subscriptions, publish API, lifecycle state.
+**Data/Logic:** `MqttConnectionProfile`, `IMqttBrokerClient`, `MqttBrokerClient`, `MqttEnvelope`, topic subscriptions, publish API, lifecycle state.
 
 **Acceptance:**
 
-- Session connects and disconnects deterministically.
+- MQTT client connects and disconnects deterministically.
 - Subscriptions receive matching `MqttEnvelope` values.
 - Publish calls surface failures without crashing the host.
 
@@ -235,7 +235,7 @@ Expected mapper editor layout:
 
 - Adding a component creates a valid definition node.
 - Links are typed and can round-trip to JSON.
-- Hidden compatibility aliases still load, but new catalog choices are clean.
+- New definitions use clean catalog choices; pre-release saved-project compatibility aliases are avoided unless they simplify current development.
 
 ### F-022 - Node Editors
 

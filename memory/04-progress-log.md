@@ -1770,3 +1770,8 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `rg -n "NotImplementedException|throw new NotImplemented" src tests -g "*.cs" -g "*.razor"` finds no matches.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDiagramNodeModelTests|FullyQualifiedName~ActorNodeModelTests|FullyQualifiedName~SourceNodeModelTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqDiagramPlaceholderUi\ -m:1` passes with 25 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqDiagramPlaceholderUiFull\ -m:1` passes with 197 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - Active planning language sync
+
+- Updated the active feature list and roadmap to use `Core MQTT Client`, `IMqttBrokerClient`, and `MqttBrokerClient` language after the broker-client rename.
+- Updated the visual diagram acceptance note so pre-release development avoids saved-project compatibility aliases by default.
