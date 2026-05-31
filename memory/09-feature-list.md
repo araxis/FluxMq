@@ -235,7 +235,7 @@ Expected mapper editor layout:
 
 - Adding a component creates a valid definition node.
 - Links are typed and can round-trip to JSON.
-- New definitions use clean catalog choices; pre-release saved-project compatibility aliases are avoided unless they simplify current development.
+- New definitions use clean catalog choices; pre-release saved-project compatibility aliases are avoided.
 
 ### F-022 - Node Editors
 
