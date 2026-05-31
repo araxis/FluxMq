@@ -1761,3 +1761,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verified:
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepDisplayTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioRunReportFormatterTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepDisplayUi\ -m:1` passes with 85 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepDisplayUiFull\ -m:1` passes with 197 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - Diagram link factory cleanup
+
+- Removed the remaining `NotImplementedException` from the flow designer link factory.
+- Unexpected Blazor.Diagrams link source shapes now fail with a clear invalid-operation diagnostic that names the unsupported source type.
+- Verified:
+  - `rg -n "NotImplementedException|throw new NotImplemented" src tests -g "*.cs" -g "*.razor"` finds no matches.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDiagramNodeModelTests|FullyQualifiedName~ActorNodeModelTests|FullyQualifiedName~SourceNodeModelTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqDiagramPlaceholderUi\ -m:1` passes with 25 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqDiagramPlaceholderUiFull\ -m:1` passes with 197 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

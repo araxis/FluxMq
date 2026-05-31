@@ -58,7 +58,8 @@
                 {
                     NodeModel node => new Blazor.Diagrams.Core.Anchors.ShapeIntersectionAnchor(node),
                     PortModel port => new Blazor.Diagrams.Core.Anchors.SinglePortAnchor(port),
-                    _ => throw new NotImplementedException()
+                    _ => throw new InvalidOperationException(
+                        $"Unsupported diagram link source '{source.GetType().Name}'.")
                 };
                 return CreateStyledLink(sourceAnchor, targetAnchor);
             }
