@@ -250,6 +250,67 @@ public sealed class FlowDefinitionComposer
         return root.ToJsonString(Options);
     }
 
+    public string UpdateWorkflowPortLinkCondition(
+        string json,
+        string? workflowName,
+        string sourceNodeName,
+        string sourcePortName,
+        string targetNodeName,
+        string targetPortName,
+        string? condition)
+    {
+        if (string.IsNullOrWhiteSpace(workflowName) ||
+            string.IsNullOrWhiteSpace(sourceNodeName) ||
+            string.IsNullOrWhiteSpace(targetNodeName) ||
+            string.IsNullOrWhiteSpace(targetPortName))
+        {
+            return json;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["workflows"] is not JsonObject workflows ||
+            workflows[workflowName] is not JsonObject workflow ||
+            workflow[targetNodeName] is not JsonObject targetNode ||
+            !UpdateLinkCondition(targetNode, targetPortName, sourceNodeName, sourcePortName, condition))
+        {
+            return json;
+        }
+
+        return root.ToJsonString(Options);
+    }
+
+    public string? GetWorkflowPortLinkCondition(
+        string json,
+        string? workflowName,
+        string sourceNodeName,
+        string sourcePortName,
+        string targetNodeName,
+        string targetPortName)
+    {
+        if (string.IsNullOrWhiteSpace(workflowName) ||
+            string.IsNullOrWhiteSpace(sourceNodeName) ||
+            string.IsNullOrWhiteSpace(targetNodeName) ||
+            string.IsNullOrWhiteSpace(targetPortName))
+        {
+            return null;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["workflows"] is not JsonObject workflows ||
+            workflows[workflowName] is not JsonObject workflow ||
+            workflow[targetNodeName] is not JsonObject targetNode ||
+            targetNode[targetPortName] is not { } link)
+        {
+            return null;
+        }
+
+        return TryGetLinkCondition(link, sourceNodeName, sourcePortName, out var condition)
+            ? condition
+            : null;
+    }
+
     public string RemoveWorkflowNode(string json, string? workflowName, string nodeName)
     {
         if (string.IsNullOrWhiteSpace(workflowName) || string.IsNullOrWhiteSpace(nodeName))
@@ -2300,6 +2361,153 @@ public sealed class FlowDefinitionComposer
         }
 
         return true;
+    }
+
+    private static bool TryGetLinkCondition(
+        JsonNode node,
+        string sourceNodeName,
+        string sourcePortName,
+        out string? condition)
+    {
+        condition = null;
+
+        if (node is JsonValue value &&
+            value.TryGetValue<string>(out var reference) &&
+            ReferenceMatches(reference, sourceNodeName, sourcePortName))
+        {
+            return true;
+        }
+
+        if (node is JsonArray array)
+        {
+            foreach (var item in array)
+            {
+                if (item is not null && TryGetLinkCondition(item, sourceNodeName, sourcePortName, out condition))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        if (node is JsonObject obj &&
+            (obj.TryGetPropertyValue("from", out var fromNode) ||
+             obj.TryGetPropertyValue("From", out fromNode)) &&
+            fromNode is not null &&
+            ContainsLinkReference(fromNode, BuildPortReference(sourceNodeName, sourcePortName)))
+        {
+            if ((obj.TryGetPropertyValue("when", out var whenNode) ||
+                 obj.TryGetPropertyValue("When", out whenNode)) &&
+                whenNode is JsonValue whenValue &&
+                whenValue.TryGetValue<string>(out var conditionValue))
+            {
+                condition = conditionValue;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool UpdateLinkCondition(
+        JsonObject targetNode,
+        string targetPortName,
+        string sourceNodeName,
+        string sourcePortName,
+        string? condition)
+    {
+        if (targetNode[targetPortName] is not { } existing)
+        {
+            return false;
+        }
+
+        var updated = UpdateLinkCondition(existing, sourceNodeName, sourcePortName, condition, out var changed);
+        if (!changed)
+        {
+            return false;
+        }
+
+        targetNode[targetPortName] = updated;
+        return true;
+    }
+
+    private static JsonNode UpdateLinkCondition(
+        JsonNode node,
+        string sourceNodeName,
+        string sourcePortName,
+        string? condition,
+        out bool changed)
+    {
+        changed = false;
+        var normalizedCondition = string.IsNullOrWhiteSpace(condition) ? null : condition.Trim();
+
+        if (node is JsonValue value &&
+            value.TryGetValue<string>(out var reference) &&
+            ReferenceMatches(reference, sourceNodeName, sourcePortName))
+        {
+            changed = true;
+            return normalizedCondition is null
+                ? JsonValue.Create(reference)!
+                : new JsonObject
+                {
+                    ["from"] = reference,
+                    ["when"] = normalizedCondition
+                };
+        }
+
+        if (node is JsonArray array)
+        {
+            var updatedArray = new JsonArray();
+            foreach (var item in array)
+            {
+                if (item is null)
+                {
+                    updatedArray.Add(null);
+                    continue;
+                }
+
+                var updatedItem = UpdateLinkCondition(item, sourceNodeName, sourcePortName, normalizedCondition, out var itemChanged);
+                changed |= itemChanged;
+                updatedArray.Add(updatedItem);
+            }
+
+            return changed ? updatedArray : node.DeepClone();
+        }
+
+        if (node is JsonObject obj &&
+            (obj.TryGetPropertyValue("from", out var fromNode) ||
+             obj.TryGetPropertyValue("From", out fromNode)) &&
+            fromNode is not null &&
+            ContainsLinkReference(fromNode, BuildPortReference(sourceNodeName, sourcePortName)))
+        {
+            changed = true;
+            var updatedObject = (JsonObject)node.DeepClone();
+            updatedObject["from"] = fromNode.DeepClone();
+            updatedObject.Remove("From");
+            updatedObject.Remove("When");
+
+            if (normalizedCondition is null)
+            {
+                updatedObject.Remove("when");
+                if (updatedObject.Count == 1 &&
+                    updatedObject.TryGetPropertyValue("from", out var normalizedFrom) &&
+                    normalizedFrom is JsonValue normalizedValue &&
+                    normalizedValue.TryGetValue<string>(out var normalizedReference))
+                {
+                    return JsonValue.Create(normalizedReference)!;
+                }
+            }
+            else
+            {
+                updatedObject["when"] = normalizedCondition;
+            }
+
+            return updatedObject;
+        }
+
+        return node.DeepClone();
     }
 
     private static JsonNode? RemoveLinkReference(

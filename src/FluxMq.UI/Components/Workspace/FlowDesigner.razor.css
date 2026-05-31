@@ -33,6 +33,45 @@
     z-index: 20;
 }
 
+.flow-link-condition-panel {
+    align-items: center;
+    background: var(--flux-surface);
+    border: 1px solid var(--flux-border);
+    border-radius: 6px;
+    box-shadow: var(--flux-shadow-1);
+    display: flex;
+    gap: 4px;
+    max-width: min(520px, calc(100% - 92px));
+    padding: 4px;
+    position: absolute;
+    right: 58px;
+    top: 12px;
+    z-index: 20;
+}
+
+.flow-link-condition-panel ::deep .flow-link-condition-input {
+    width: min(380px, 48vw);
+}
+
+.flow-link-condition-panel ::deep .mud-input-control {
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+@media (max-width: 720px) {
+    .flow-link-condition-panel {
+        left: 12px;
+        max-width: none;
+        right: 12px;
+        top: 52px;
+    }
+
+    .flow-link-condition-panel ::deep .flow-link-condition-input {
+        flex: 1 1 auto;
+        width: auto;
+    }
+}
+
 .flow-canvas-drop-highlight {
     align-items: center;
     border: 2px solid color-mix(in srgb, var(--flux-accent) 62%, transparent);

@@ -631,10 +631,11 @@ Working rule:
 - Wait for confirmation before commit, push, PR, or merge steps.
 - For every review or verification step, write both what we are going to do and the expected result.
 
-Review the scenario event-step field catalog slice:
+Review the conditional-link designer editor slice:
 
-1. Do: add a new `Expect event` step and a new `When event` step from the test designer palette. Expected: both are created with the existing defaults, `eventType` set to `mqtt.message.published`, `status` set to `published`, and `timeoutMs` set to `5000`.
-2. Do: edit either step and change event type, topic prefix, status, payload contains, QoS, retain, schema id, and timeout. Expected: the same MudBlazor editor opens as before, values round-trip into the scenario JSON, and unsupported event-specific filter fields are cleared when the event type changes.
-3. Do: run the UI tests for this slice. Expected: focused scenario catalog/composer tests pass with 76 tests, and the UI test project passes with 199 tests.
+1. Do: select a workflow link in the pipeline designer. Expected: a compact `When` field appears next to the canvas toolbar.
+2. Do: enter a condition such as `input.Topic.StartsWith("factory/")` and apply it. Expected: the link turns into a conditional link, is highlighted, and the JSON stores the condition on that link only.
+3. Do: select the link again and clear the condition. Expected: the link returns to a normal unconditional link without changing unrelated links.
+4. Do: run the UI tests for this slice. Expected: focused composer tests pass with 73 tests, and the UI test project passes with 204 tests.
 
-Next implementation slice: expose conditional links cleanly in the designer/workspace model where useful, then return to scenario/test composition around normal components plus narrow test-specific `expect.event`/`when.event` blocks. Prefer catalog/runner/shared-service changes over adding one-off logic inside Razor components.
+Next implementation slice: continue scenario/test composition around normal components plus narrow test-specific `expect.event`/`when.event` blocks. Prefer catalog/runner/shared-service changes over adding one-off logic inside Razor components.

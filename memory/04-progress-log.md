@@ -1894,3 +1894,21 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet build FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes.
   - `dotnet test FluxMq.sln --no-build -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 479 tests.
   - `dotnet test FluxMq.sln --configuration Release --no-restore --verbosity minimal -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes with 479 tests.
+
+## 2026-05-31 - Conditional link designer support
+
+- Added workspace/composer support for setting and clearing per-link `when` expressions without rewriting unrelated links.
+- The flow designer now preserves conditional link objects when rebuilding the canvas and highlights conditional links with the existing warning color treatment.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDefinitionComposerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 71 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 202 tests.
+
+## 2026-05-31 - Conditional link designer editor
+
+- Added a selected-link editor on the workflow canvas for reading, applying, and clearing per-link `when` expressions.
+- Kept the UI to MudBlazor field and icon controls with small local layout CSS only.
+- Added composer coverage for reading conditional and unconditional link conditions.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDefinitionComposerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 73 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 204 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 484 tests.

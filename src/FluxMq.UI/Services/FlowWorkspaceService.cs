@@ -996,6 +996,51 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         NotifyChanged();
     }
 
+    public void UpdateWorkflowPortLinkCondition(
+        string sourceNodeName,
+        string sourcePortName,
+        string targetNodeName,
+        string targetPortName,
+        string? condition)
+    {
+        try
+        {
+            ReplaceDefinition(_definitionComposer.UpdateWorkflowPortLinkCondition(
+                DefinitionJson,
+                _activeWorkflowName,
+                sourceNodeName,
+                sourcePortName,
+                targetNodeName,
+                targetPortName,
+                condition));
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics =
+            [
+                new WorkspaceDiagnostic("Error", "Designer", "PortConditionUpdateFailed", exception.Message, _activeWorkflowName, targetNodeName, targetPortName)
+            ];
+        }
+
+        NotifyChanged();
+    }
+
+    public string? GetWorkflowPortLinkCondition(
+        string sourceNodeName,
+        string sourcePortName,
+        string targetNodeName,
+        string targetPortName)
+        => _definitionComposer.GetWorkflowPortLinkCondition(
+            DefinitionJson,
+            _activeWorkflowName,
+            sourceNodeName,
+            sourcePortName,
+            targetNodeName,
+            targetPortName);
+
     public void RemoveWorkflowNode(string nodeName)
     {
         try
