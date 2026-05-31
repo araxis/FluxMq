@@ -2,11 +2,16 @@ using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Components.Storage.Models;
 using LiteDB;
+using System.Runtime.CompilerServices;
 
 namespace FluxMq.Components.Storage;
 
 public sealed class FluxDbContext : IDisposable
 {
+    private static readonly object MapperRegistrationLock = new();
+    private static readonly ConditionalWeakTable<BsonMapper, object> RegisteredMappers = new();
+    private static readonly object MapperRegistrationMarker = new();
+
     private readonly ILiteDatabase _db;
 
     public ILiteCollection<MqttConnectionProfile> ConnectionProfiles
@@ -32,17 +37,27 @@ public sealed class FluxDbContext : IDisposable
 
     private void RegisterMappers()
     {
-        _db.Mapper.RegisterType<ConnectionProfileId>(
-            serialize: id => new BsonValue(id.Value),
-            deserialize: bson => new ConnectionProfileId(bson.AsGuid));
+        lock (MapperRegistrationLock)
+        {
+            if (RegisteredMappers.TryGetValue(_db.Mapper, out _))
+            {
+                return;
+            }
 
-        _db.Mapper.RegisterType<SessionId>(
-            serialize: id => new BsonValue(id.Value),
-            deserialize: bson => new SessionId(bson.AsGuid));
+            _db.Mapper.RegisterType<ConnectionProfileId>(
+                serialize: id => new BsonValue(id.Value),
+                deserialize: bson => new ConnectionProfileId(bson.AsGuid));
 
-        _db.Mapper.RegisterType<MessageId>(
-            serialize: id => new BsonValue(id.Value),
-            deserialize: bson => new MessageId(bson.AsGuid));
+            _db.Mapper.RegisterType<SessionId>(
+                serialize: id => new BsonValue(id.Value),
+                deserialize: bson => new SessionId(bson.AsGuid));
+
+            _db.Mapper.RegisterType<MessageId>(
+                serialize: id => new BsonValue(id.Value),
+                deserialize: bson => new MessageId(bson.AsGuid));
+
+            RegisteredMappers.Add(_db.Mapper, MapperRegistrationMarker);
+        }
     }
 
     private void EnsureIndexes()

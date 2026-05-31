@@ -567,6 +567,54 @@ public sealed class FluxMqApplicationDefinitionValidatorTests
     }
 
     [Fact]
+    public void Validate_ReportsMqttPublisherScenarioStepPayloadEncodingOutsideCatalog()
+    {
+        var definition = new FluxMqApplicationDefinition
+        {
+            Resources =
+            {
+                ["local-broker"] = Node("mqtt.connection")
+            },
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("mqtt.trigger")
+                    }
+                }
+            },
+            Tests =
+            {
+                ["roundTrip"] = new ScenarioDefinition
+                {
+                    Steps =
+                    {
+                        ["publish"] = new ScenarioStepDefinition
+                        {
+                            Type = ScenarioStepTypes.MqttPublisher,
+                            Configuration = Config(
+                                ("connection", "local-broker"),
+                                ("topic", "fluxmq/sample/request"),
+                                ("payloadEncoding", "utf8"),
+                                ("payload", "hello"))
+                        }
+                    }
+                }
+            }
+        };
+
+        var result = _validator.Validate(definition);
+
+        var error = result.Errors.Single(error =>
+            error.Code == FluxMqApplicationDefinitionValidationErrorCode.InvalidScenarioStepConfiguration);
+        error.Message.ShouldContain("payloadEncoding");
+        error.Message.ShouldContain("json");
+        error.Message.ShouldContain("bytes");
+    }
+
+    [Fact]
     public void Validate_ReportsInvalidMqttTriggerScenarioStepConfiguration()
     {
         var definition = new FluxMqApplicationDefinition

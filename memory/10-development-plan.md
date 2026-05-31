@@ -640,4 +640,4 @@ Review the conditional-link designer editor slice:
 
 Next implementation slice: continue scenario/test composition around normal components plus narrow test-specific `expect.event`/`when.event` blocks. Prefer catalog/runner/shared-service changes over adding one-off logic inside Razor components.
 
-Latest slice: scenario step definitions, defaults, finite options, and attribute filter key helpers now live in `FluxMq.Scenarios`; the UI catalog wraps those definitions only to add icons and editor kind. This keeps scenario/test logic portable for later non-MAUI shells while preserving the current MudBlazor editor surface.
+Latest slice: app-side scenario validation now resolves supported step types and finite payload encoding/QoS options through `ScenarioStepDefinitionCatalog`. This keeps validation aligned with scenario defaults/options in the lower scenario layer instead of repeating those lists in the app validator.
