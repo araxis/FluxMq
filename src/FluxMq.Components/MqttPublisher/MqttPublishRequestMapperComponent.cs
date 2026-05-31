@@ -36,14 +36,6 @@ public sealed class MqttPublishRequestMapperComponent : IFlowNode
             TaskScheduler.Default);
     }
 
-    public MqttPublishRequestMapperComponent(
-        Func<MqttEnvelope, MqttPublishRequest> map,
-        FlowNodeId? id = null,
-        int boundedCapacity = 1000)
-        : this(new DelegateFlowMapper<MqttEnvelope, MqttPublishRequest>(map), id, boundedCapacity)
-    {
-    }
-
     public FlowNodeId Id { get; }
     public ISourceBlock<FlowError> Errors => _errors;
     public Task Completion => _block.Completion;
@@ -57,14 +49,6 @@ public sealed class MqttPublishRequestMapperComponent : IFlowNode
         PublishError(FlowErrorCodes.NodeFaulted, "MQTT publish request mapper faulted.", exception);
         ((IDataflowBlock)_block).Fault(exception);
     }
-
-    public static MqttPublishRequest PreserveEnvelope(MqttEnvelope envelope) => new()
-    {
-        Topic = envelope.Topic,
-        Payload = envelope.Payload,
-        QualityOfService = envelope.QualityOfService,
-        Retain = envelope.Retain
-    };
 
     private IEnumerable<MqttPublishRequest> Map(MqttEnvelope envelope)
     {

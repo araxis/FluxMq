@@ -1782,5 +1782,6 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - `flow.mapper` now requires `expression` for `MqttPublishRequest`, `MqttRecordingRequest`, and `FileWriteRequest` outputs.
 - Removed the recording mapper constructor path that hid `SessionId` in mapper configuration; recording request mappers now emit a full `MqttRecordingRequest`.
 - Removed the `mapper` engine alias so saved mapper configuration uses the single `engine` key.
+- Removed the publish mapper shortcut that converted an envelope directly into a publish request outside an explicit mapper.
 - Verified:
-  - `dotnet test FluxMq.sln --no-restore /p:UseSharedCompilation=false /p:UseAppHost=false /p:BaseOutputPath="$env:TEMP\FluxMqMapperCleanFull5\" -m:1 -v minimal` passes with 511 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore /p:UseSharedCompilation=false /p:UseAppHost=false /p:BaseOutputPath="$env:TEMP\FluxMqMapperCleanFull6\" -m:1 -v minimal` passes with 511 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

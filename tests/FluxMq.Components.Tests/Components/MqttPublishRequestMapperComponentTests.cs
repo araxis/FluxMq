@@ -13,7 +13,7 @@ public sealed class MqttPublishRequestMapperComponentTests
     [Fact]
     public async Task Input_MapsEnvelopeToPublishRequest()
     {
-        var component = new MqttPublishRequestMapperComponent(MqttPublishRequestMapperComponent.PreserveEnvelope);
+        var component = new MqttPublishRequestMapperComponent(new TestPublishMapper());
         var output = new BufferBlock<MqttPublishRequest>();
 
         component.Output.LinkTo(output, new DataflowLinkOptions { PropagateCompletion = true });
@@ -109,5 +109,17 @@ public sealed class MqttPublishRequestMapperComponentTests
         request.Payload.ShouldBe("""{"hello":"fluxmq"}"""u8.ToArray());
         request.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtLeastOnce);
         request.Retain.ShouldBeTrue();
+    }
+
+    private sealed class TestPublishMapper : IFlowMapper<MqttEnvelope, MqttPublishRequest>
+    {
+        public MqttPublishRequest Map(MqttEnvelope input, FlowMapContext context)
+            => new()
+            {
+                Topic = input.Topic,
+                Payload = input.Payload,
+                QualityOfService = input.QualityOfService,
+                Retain = input.Retain
+            };
     }
 }
