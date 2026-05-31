@@ -1797,3 +1797,11 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verified:
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioEventFieldsFocused2\ -m:1 --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests"` passes with 76 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioEventFieldsUi\ -m:1` passes with 199 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - Engine package migration start
+
+- Started `work/engine-package-migration` after locally fast-forwarding `main` with the completed scenario event-field catalog slice.
+- Added the `FluxFlow.Engine` `0.3.0-alpha.1` package to `FluxMq.App` as the migration target.
+- Added a FluxMQ-owned workspace definition that keeps dashboards and tests in FluxMQ while projecting only executable resources and workflows into the engine definition.
+- Verified:
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 47 tests.
