@@ -56,7 +56,7 @@ public sealed class FlowAssertionComponentTests
             "Assertion failed: QoS at least once.",
             "Assertion passed: QoS at least once."
         ]);
-        events.Select(flowEvent => flowEvent.Type).ShouldBe([FlowEventTypes.AssertionEvaluated, FlowEventTypes.AssertionEvaluated]);
+        events.Select(flowEvent => flowEvent.Type).ShouldBe([FluxMqEventTypes.AssertionEvaluated, FluxMqEventTypes.AssertionEvaluated]);
         events.Select(flowEvent => flowEvent.Status).ShouldBe(["failed", "passed"]);
         events[0].GetAttribute("assertionName").ShouldBe("QoS at least once");
         component.Id.ShouldNotBe(FlowNodeId.Empty);

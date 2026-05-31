@@ -13,13 +13,13 @@ public sealed class DashboardEventFilterCatalogTests
         var catalog = new DashboardEventFilterCatalog();
 
         var any = catalog.Find(string.Empty);
-        var fileWritten = catalog.Find(FlowEventTypes.FileWritten);
-        var schemaValidated = catalog.Find(FlowEventTypes.JsonSchemaValidated);
-        var assertion = catalog.Find(FlowEventTypes.AssertionEvaluated);
+        var fileWritten = catalog.Find(FluxMqEventTypes.FileWritten);
+        var schemaValidated = catalog.Find(FluxMqEventTypes.JsonSchemaValidated);
+        var assertion = catalog.Find(FluxMqEventTypes.AssertionEvaluated);
 
         any.Fields.ShouldBeEmpty();
 
-        var mqttReceived = catalog.Find(FlowEventTypes.MqttMessageReceived);
+        var mqttReceived = catalog.Find(FluxMqEventTypes.MqttMessageReceived);
         mqttReceived.Fields.Select(static field => field.Key).ShouldBe([
             DashboardEventFilterCatalog.TopicStartsWithKey,
             DashboardEventFilterCatalog.AttributeFilterKey("qos"),
@@ -52,15 +52,15 @@ public sealed class DashboardEventFilterCatalogTests
             DashboardWidgetCatalog.EventCounterType,
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
-                [DashboardEventFilterCatalog.EventTypeKey] = FlowEventTypes.FileWritten,
+                [DashboardEventFilterCatalog.EventTypeKey] = FluxMqEventTypes.FileWritten,
                 [DashboardEventFilterCatalog.SubjectStartsWithKey] = "logs/",
                 [DashboardEventFilterCatalog.TopicStartsWithKey] = string.Empty,
                 [DashboardEventFilterCatalog.StatusKey] = "written"
             });
 
-        catalog.Matches(widget, Event(FlowEventTypes.FileWritten, subject: "logs/a.json", status: "written")).ShouldBeTrue();
-        catalog.Matches(widget, Event(FlowEventTypes.FileWritten, subject: "archive/a.json", status: "written")).ShouldBeFalse();
-        catalog.Matches(widget, Event(FlowEventTypes.FileWritten, topic: "logs/a.json", subject: "archive/a.json", status: "written")).ShouldBeFalse();
+        catalog.Matches(widget, Event(FluxMqEventTypes.FileWritten, subject: "logs/a.json", status: "written")).ShouldBeTrue();
+        catalog.Matches(widget, Event(FluxMqEventTypes.FileWritten, subject: "archive/a.json", status: "written")).ShouldBeFalse();
+        catalog.Matches(widget, Event(FluxMqEventTypes.FileWritten, topic: "logs/a.json", subject: "archive/a.json", status: "written")).ShouldBeFalse();
     }
 
     [Fact]
@@ -72,7 +72,7 @@ public sealed class DashboardEventFilterCatalogTests
             DashboardWidgetCatalog.EventCounterType,
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
-                [DashboardEventFilterCatalog.EventTypeKey] = FlowEventTypes.JsonSchemaValidated,
+                [DashboardEventFilterCatalog.EventTypeKey] = FluxMqEventTypes.JsonSchemaValidated,
                 [DashboardEventFilterCatalog.TopicStartsWithKey] = "factory/",
                 [DashboardEventFilterCatalog.AttributeFilterKey("schemaId")] = "temperature",
                 [DashboardEventFilterCatalog.StatusKey] = "valid"
@@ -81,14 +81,14 @@ public sealed class DashboardEventFilterCatalogTests
         catalog.Matches(
             widget,
             Event(
-                FlowEventTypes.JsonSchemaValidated,
+                FluxMqEventTypes.JsonSchemaValidated,
                 topic: "factory/line-a",
                 status: "valid",
                 attributes: new Dictionary<string, string> { ["schemaId"] = "temperature" })).ShouldBeTrue();
         catalog.Matches(
             widget,
             Event(
-                FlowEventTypes.JsonSchemaValidated,
+                FluxMqEventTypes.JsonSchemaValidated,
                 topic: "factory/line-a",
                 status: "valid",
                 attributes: new Dictionary<string, string> { ["schemaId"] = "pressure" })).ShouldBeFalse();
@@ -103,7 +103,7 @@ public sealed class DashboardEventFilterCatalogTests
             DashboardWidgetCatalog.EventCounterType,
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
-                [DashboardEventFilterCatalog.EventTypeKey] = FlowEventTypes.MqttMessagePublished,
+                [DashboardEventFilterCatalog.EventTypeKey] = FluxMqEventTypes.MqttMessagePublished,
                 [DashboardEventFilterCatalog.TopicStartsWithKey] = "test",
                 [DashboardEventFilterCatalog.AttributeFilterKey("qos")] = "1",
                 [DashboardEventFilterCatalog.AttributeFilterKey("retain")] = "false",
@@ -113,7 +113,7 @@ public sealed class DashboardEventFilterCatalogTests
         catalog.Matches(
             widget,
             Event(
-                FlowEventTypes.MqttMessagePublished,
+                FluxMqEventTypes.MqttMessagePublished,
                 topic: "test",
                 status: "published",
                 attributes: new Dictionary<string, string>
@@ -124,7 +124,7 @@ public sealed class DashboardEventFilterCatalogTests
         catalog.Matches(
             widget,
             Event(
-                FlowEventTypes.MqttMessagePublished,
+                FluxMqEventTypes.MqttMessagePublished,
                 topic: "test",
                 status: "published",
                 attributes: new Dictionary<string, string>

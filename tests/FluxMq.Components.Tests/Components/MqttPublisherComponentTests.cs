@@ -83,7 +83,7 @@ public sealed class MqttPublisherComponentTests
         var flowEvent = await events.ReceiveAsync();
         await component.Completion;
 
-        flowEvent.Type.ShouldBe(FlowEventTypes.MqttMessagePublished);
+        flowEvent.Type.ShouldBe(FluxMqEventTypes.MqttMessagePublished);
         flowEvent.Source.ShouldBe("MqttPublisher");
         flowEvent.SourceNodeId.ShouldBe(component.Id);
         flowEvent.Topic.ShouldBe("factory/event");

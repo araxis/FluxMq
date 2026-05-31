@@ -181,7 +181,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         var flowEvent = new FlowEvent
         {
             Timestamp = DateTimeOffset.UtcNow,
-            Type = FlowEventTypes.MqttMessagePublished,
+            Type = FluxMqEventTypes.MqttMessagePublished,
             Source = "LivePublisher",
             Subject = topic.Trim(),
             Status = "published",

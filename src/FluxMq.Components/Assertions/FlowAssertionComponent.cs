@@ -179,7 +179,7 @@ public sealed class FlowAssertionComponent<TInput> : IFlowNode, IFlowEventSource
         _events.Post(new FlowEvent
         {
             Timestamp = DateTimeOffset.UtcNow,
-            Type = FlowEventTypes.AssertionEvaluated,
+            Type = FluxMqEventTypes.AssertionEvaluated,
             Source = "FlowAssertion",
             SourceNodeId = Id,
             Subject = _assertionName,

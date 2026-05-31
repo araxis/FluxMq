@@ -135,7 +135,7 @@ public sealed class MqttScenarioClientFactoryTests
                     Type = ScenarioStepTypes.ExpectEvent,
                     Configuration =
                     {
-                        ["eventType"] = JsonSerializer.SerializeToElement(FlowEventTypes.MqttMessagePublished),
+                        ["eventType"] = JsonSerializer.SerializeToElement(FluxMqEventTypes.MqttMessagePublished),
                         ["topicStartsWith"] = JsonSerializer.SerializeToElement("fluxmq/sample/request"),
                         ["status"] = JsonSerializer.SerializeToElement("published"),
                         ["payloadContains"] = JsonSerializer.SerializeToElement("\"value\":12"),
@@ -194,7 +194,7 @@ public sealed class MqttScenarioClientFactoryTests
                     Type = ScenarioStepTypes.ExpectEvent,
                     Configuration =
                     {
-                        ["eventType"] = JsonSerializer.SerializeToElement(FlowEventTypes.MqttMessageReceived),
+                        ["eventType"] = JsonSerializer.SerializeToElement(FluxMqEventTypes.MqttMessageReceived),
                         ["topicStartsWith"] = JsonSerializer.SerializeToElement("sample/"),
                         ["status"] = JsonSerializer.SerializeToElement("received"),
                         ["payloadContains"] = JsonSerializer.SerializeToElement("hello"),
@@ -239,7 +239,7 @@ public sealed class MqttScenarioClientFactoryTests
     private static NodeDefinition MqttConnectionResource(string profileJson)
         => new()
         {
-            Type = PipelineFlowNodeTypes.Connection,
+            Type = FluxMqNodeTypes.Connection,
             Configuration =
             {
                 ["profile"] = JsonDocument.Parse(profileJson).RootElement.Clone()

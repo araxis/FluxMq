@@ -241,7 +241,7 @@ public sealed class FlowApplicationHostTests
         source!.Post(new FlowEvent
         {
             Timestamp = DateTimeOffset.UtcNow,
-            Type = FlowEventTypes.MqttMessageReceived,
+            Type = FluxMqEventTypes.MqttMessageReceived,
             Source = "test",
             Topic = "factory/response/42",
             Status = "received"

@@ -1805,3 +1805,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Added a FluxMQ-owned workspace definition that keeps dashboards and tests in FluxMQ while projecting only executable resources and workflows into the engine definition.
 - Verified:
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 47 tests.
+
+## 2026-05-31 - FluxMQ runtime constant ownership
+
+- Added FluxMQ-owned event type and node type catalogs outside the old pipeline layer.
+- Updated components, app runtime registration, UI catalogs, and affected tests to use the FluxMQ-owned constants.
+- Left the old pipeline constants in place only for the old pipeline project and its own tests while the package migration is still in progress.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 115 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 47 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 199 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

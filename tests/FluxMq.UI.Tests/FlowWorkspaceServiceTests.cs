@@ -600,7 +600,7 @@ public sealed class FlowWorkspaceServiceTests
         publish.Retain.ShouldBeFalse();
         service.Logs.ShouldContain(log =>
             log.Source == "MqttPublisher" &&
-            log.Code == FlowEventTypes.MqttMessagePublished &&
+            log.Code == FluxMqEventTypes.MqttMessagePublished &&
             log.Scope == WorkspaceLogScopes.TestRunner &&
             log.ArtifactKind == WorkspaceLogArtifactKinds.Test &&
             log.ArtifactName == "publishOnly" &&
@@ -938,7 +938,7 @@ public sealed class FlowWorkspaceServiceTests
             result.Steps.Select(step => $"{step.Name}: {step.Status} - {step.Message}")));
         await WaitUntilAsync(() => service.Logs.Any(log =>
             log.Source == "MqttTrigger" &&
-            log.Code == FlowEventTypes.MqttMessageReceived &&
+            log.Code == FluxMqEventTypes.MqttMessageReceived &&
             log.Scope == WorkspaceLogScopes.App &&
             log.ArtifactKind == WorkspaceLogArtifactKinds.Pipeline &&
             log.ArtifactName == "pip1" &&
@@ -949,7 +949,7 @@ public sealed class FlowWorkspaceServiceTests
             log.Context.Contains("status=received", StringComparison.Ordinal) &&
             log.Context.Contains("payload={\"value\":12}", StringComparison.Ordinal)));
         service.RuntimeEvents.ShouldContain(flowEvent =>
-            flowEvent.Type == FlowEventTypes.MqttMessageReceived &&
+            flowEvent.Type == FluxMqEventTypes.MqttMessageReceived &&
             flowEvent.Topic == "fluxmq/sample/request");
     }
 
@@ -1133,7 +1133,7 @@ public sealed class FlowWorkspaceServiceTests
 
         result.IsSuccess.ShouldBeTrue(CreateScenarioFailureDetails(result, service.Logs));
         service.RuntimeEvents.ShouldContain(flowEvent =>
-            flowEvent.Type == FlowEventTypes.MqttMessagePublished &&
+            flowEvent.Type == FluxMqEventTypes.MqttMessagePublished &&
             flowEvent.Topic == "test" &&
             flowEvent.PayloadPreview == """{"value":12,"unit":"c","status":"ok"}""");
         var widget = service.GetActiveDashboardLayout()
@@ -1664,7 +1664,7 @@ public sealed class FlowWorkspaceServiceTests
             log.Context.Contains("qos=1", StringComparison.Ordinal)).ShouldBeTrue();
         await WaitUntilAsync(() => service.Logs.Any(log =>
             log.Source == "MqttPublisher" &&
-            log.Code == FlowEventTypes.MqttMessagePublished &&
+            log.Code == FluxMqEventTypes.MqttMessagePublished &&
             log.WorkflowName == "pip1" &&
             log.NodeName == "publisher" &&
             log.Context is not null &&
@@ -1830,7 +1830,7 @@ public sealed class FlowWorkspaceServiceTests
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["title"] = "Received from factory",
-                ["eventType"] = FlowEventTypes.MqttMessageReceived,
+                ["eventType"] = FluxMqEventTypes.MqttMessageReceived,
                 ["topicStartsWith"] = "factory/",
                 ["subjectStartsWith"] = "factory/",
                 ["status"] = "received"
@@ -1840,7 +1840,7 @@ public sealed class FlowWorkspaceServiceTests
             .ShouldNotBeNull()
             .Widgets["eventCounter"];
         widget.Configuration["title"].ShouldBe("Received from factory");
-        widget.Configuration["eventType"].ShouldBe(FlowEventTypes.MqttMessageReceived);
+        widget.Configuration["eventType"].ShouldBe(FluxMqEventTypes.MqttMessageReceived);
         widget.Configuration["topicStartsWith"].ShouldBe("factory/");
         widget.Configuration["subjectStartsWith"].ShouldBe("factory/");
         widget.Configuration["status"].ShouldBe("received");
@@ -1880,7 +1880,7 @@ public sealed class FlowWorkspaceServiceTests
             step.Type,
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
-                ["eventType"] = FlowEventTypes.MqttMessageReceived,
+                ["eventType"] = FluxMqEventTypes.MqttMessageReceived,
                 ["topicStartsWith"] = "factory/",
                 ["subjectStartsWith"] = "",
                 ["status"] = "received",
@@ -1970,7 +1970,7 @@ public sealed class FlowWorkspaceServiceTests
         snapshot.LatestEvent.GetAttribute("retain").ShouldBe("False");
         service.Logs.ShouldContain(log =>
             log.Source == "LivePublisher" &&
-            log.Code == FlowEventTypes.MqttMessagePublished &&
+            log.Code == FluxMqEventTypes.MqttMessagePublished &&
             log.Context != null &&
             log.Context.Contains("topic=test", StringComparison.Ordinal) &&
             log.Context.Contains("connection=local-broker", StringComparison.Ordinal));

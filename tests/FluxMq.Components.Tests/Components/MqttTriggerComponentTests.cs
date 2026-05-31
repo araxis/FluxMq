@@ -78,7 +78,7 @@ public sealed class MqttTriggerComponentTests
         await Task.WhenAll(eventSink.Completion, outputSink.Completion).WaitAsync(TimeSpan.FromSeconds(5));
 
         var flowEvent = events.ShouldHaveSingleItem();
-        flowEvent.Type.ShouldBe(FlowEventTypes.MqttMessageReceived);
+        flowEvent.Type.ShouldBe(FluxMqEventTypes.MqttMessageReceived);
         flowEvent.Source.ShouldBe("MqttTrigger");
         flowEvent.SourceNodeId.ShouldBe(trigger.Id);
         flowEvent.Topic.ShouldBe("sensors/temp");

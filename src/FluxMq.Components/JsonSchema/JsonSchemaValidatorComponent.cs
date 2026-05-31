@@ -222,7 +222,7 @@ public sealed class JsonSchemaValidatorComponent : IFlowNode, IFlowEventSource
         _events.Post(new FlowEvent
         {
             Timestamp = DateTimeOffset.UtcNow,
-            Type = FlowEventTypes.JsonSchemaValidated,
+            Type = FluxMqEventTypes.JsonSchemaValidated,
             Source = "JsonSchemaValidator",
             SourceNodeId = Id,
             Subject = result.Envelope.Topic,

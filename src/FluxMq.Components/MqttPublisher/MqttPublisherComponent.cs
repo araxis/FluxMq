@@ -96,7 +96,7 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource
             _events.Post(new FlowEvent
             {
                 Timestamp = DateTimeOffset.UtcNow,
-                Type = FlowEventTypes.MqttMessagePublished,
+                Type = FluxMqEventTypes.MqttMessagePublished,
                 Source = "MqttPublisher",
                 SourceNodeId = Id,
                 Subject = request.Topic,

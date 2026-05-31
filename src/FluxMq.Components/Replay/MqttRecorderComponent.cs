@@ -69,7 +69,7 @@ public sealed class MqttRecorderComponent : IFlowNode, IFlowEventSource
             _events.Post(new FlowEvent
             {
                 Timestamp = DateTimeOffset.UtcNow,
-                Type = FlowEventTypes.MqttMessageRecorded,
+                Type = FluxMqEventTypes.MqttMessageRecorded,
                 Source = "MqttRecorder",
                 SourceNodeId = Id,
                 Subject = request.Envelope.Topic,

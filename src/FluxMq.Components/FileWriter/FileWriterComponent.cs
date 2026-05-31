@@ -90,7 +90,7 @@ public sealed class FileWriterComponent : IFlowNode, IFlowEventSource
             _events.Post(new FlowEvent
             {
                 Timestamp = DateTimeOffset.UtcNow,
-                Type = FlowEventTypes.FileWritten,
+                Type = FluxMqEventTypes.FileWritten,
                 Source = "FileWriter",
                 SourceNodeId = Id,
                 Subject = request.Path,

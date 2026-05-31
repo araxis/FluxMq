@@ -32,23 +32,23 @@ public sealed class PipelineComponentFactoryTests
 
         registry.Factories.Keys.ShouldBe(new[]
         {
-            PipelineFlowNodeTypes.Connection,
-            PipelineFlowNodeTypes.Trigger,
-            PipelineFlowNodeTypes.ConnectionStateTrigger,
-            PipelineFlowNodeTypes.StoredSessionSource,
-            PipelineFlowNodeTypes.ReplaySource,
-            PipelineFlowNodeTypes.GeneratedSource,
-            PipelineFlowNodeTypes.PayloadInspector,
-            PipelineFlowNodeTypes.MqttMetrics,
-            PipelineFlowNodeTypes.FlowLogger,
-            PipelineFlowNodeTypes.MessageFilter,
-            PipelineFlowNodeTypes.ConditionRouter,
-            PipelineFlowNodeTypes.FlowAssertion,
-            PipelineFlowNodeTypes.JsonSchemaValidator,
-            PipelineFlowNodeTypes.DynamicMapper,
-            PipelineFlowNodeTypes.MqttPublisher,
-            PipelineFlowNodeTypes.MqttRecorder,
-            PipelineFlowNodeTypes.FileWriter
+            FluxMqNodeTypes.Connection,
+            FluxMqNodeTypes.Trigger,
+            FluxMqNodeTypes.ConnectionStateTrigger,
+            FluxMqNodeTypes.StoredSessionSource,
+            FluxMqNodeTypes.ReplaySource,
+            FluxMqNodeTypes.GeneratedSource,
+            FluxMqNodeTypes.PayloadInspector,
+            FluxMqNodeTypes.MqttMetrics,
+            FluxMqNodeTypes.FlowLogger,
+            FluxMqNodeTypes.MessageFilter,
+            FluxMqNodeTypes.ConditionRouter,
+            FluxMqNodeTypes.FlowAssertion,
+            FluxMqNodeTypes.JsonSchemaValidator,
+            FluxMqNodeTypes.DynamicMapper,
+            FluxMqNodeTypes.MqttPublisher,
+            FluxMqNodeTypes.MqttRecorder,
+            FluxMqNodeTypes.FileWriter
         }, ignoreOrder: true);
     }
 
@@ -80,7 +80,7 @@ public sealed class PipelineComponentFactoryTests
                     Nodes =
                     {
                         ["source"] = Node("test.source"),
-                        ["inspect"] = NodeWithPort(PipelineFlowNodeTypes.PayloadInspector, "Input", "\"source.Output\""),
+                        ["inspect"] = NodeWithPort(FluxMqNodeTypes.PayloadInspector, "Input", "\"source.Output\""),
                         ["sink"] = NodeWithPort("test.inspected-sink", "Input", "\"inspect.Output\"")
                     }
                 }
@@ -121,7 +121,7 @@ public sealed class PipelineComponentFactoryTests
                     Nodes =
                     {
                         ["source"] = Node("test.source"),
-                        ["inspect"] = NodeWithPort(PipelineFlowNodeTypes.PayloadInspector, "Input", "\"source.Output\"")
+                        ["inspect"] = NodeWithPort(FluxMqNodeTypes.PayloadInspector, "Input", "\"source.Output\"")
                     }
                 }
             }
@@ -163,7 +163,7 @@ public sealed class PipelineComponentFactoryTests
                     Nodes =
                     {
                         ["source"] = Node("test.source"),
-                        ["metrics"] = NodeWithPort(PipelineFlowNodeTypes.MqttMetrics, "Input", "\"source.Output\""),
+                        ["metrics"] = NodeWithPort(FluxMqNodeTypes.MqttMetrics, "Input", "\"source.Output\""),
                         ["sink"] = NodeWithPort("test.snapshot-sink", "Input", "\"metrics.Snapshots\"")
                     }
                 }
@@ -213,7 +213,7 @@ public sealed class PipelineComponentFactoryTests
                         ["source"] = Node("test.source"),
                         ["logger"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.FlowLogger,
+                            Type = FluxMqNodeTypes.FlowLogger,
                             Ports =
                             {
                                 ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
@@ -285,7 +285,7 @@ public sealed class PipelineComponentFactoryTests
                         ["source"] = Node("test.source"),
                         ["router"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.ConditionRouter,
+                            Type = FluxMqNodeTypes.ConditionRouter,
                             Ports =
                             {
                                 ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
@@ -368,7 +368,7 @@ public sealed class PipelineComponentFactoryTests
                         ["source"] = Node("test.source"),
                         ["assertion"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.FlowAssertion,
+                            Type = FluxMqNodeTypes.FlowAssertion,
                             Ports =
                             {
                                 ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
@@ -446,7 +446,7 @@ public sealed class PipelineComponentFactoryTests
                         ["source"] = Node("test.source"),
                         ["validator"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.JsonSchemaValidator,
+                            Type = FluxMqNodeTypes.JsonSchemaValidator,
                             Ports =
                             {
                                 ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
@@ -523,7 +523,7 @@ public sealed class PipelineComponentFactoryTests
                         ["source"] = Node("test.source"),
                         ["validator"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.JsonSchemaValidator,
+                            Type = FluxMqNodeTypes.JsonSchemaValidator,
                             Ports =
                             {
                                 ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
@@ -577,7 +577,7 @@ public sealed class PipelineComponentFactoryTests
             {
                 ["broker"] = new NodeDefinition
                 {
-                    Type = PipelineFlowNodeTypes.Connection,
+                    Type = FluxMqNodeTypes.Connection,
                     Configuration =
                     {
                         ["profile"] = JsonDocument.Parse("""{"name":"factory-broker","host":"localhost","port":1883}""").RootElement.Clone()
@@ -592,14 +592,14 @@ public sealed class PipelineComponentFactoryTests
                     {
                         ["trigger"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.Trigger,
+                            Type = FluxMqNodeTypes.Trigger,
                             Configuration =
                             {
                                 ["connection"] = JsonDocument.Parse("\"broker\"").RootElement.Clone(),
                                 ["subscriptions"] = JsonDocument.Parse("""["factory/#"]""").RootElement.Clone()
                             }
                         },
-                        ["metrics"] = NodeWithPort(PipelineFlowNodeTypes.MqttMetrics, "Input", "\"trigger.Output\""),
+                        ["metrics"] = NodeWithPort(FluxMqNodeTypes.MqttMetrics, "Input", "\"trigger.Output\""),
                         ["sink"] = NodeWithPort("test.snapshot-sink", "Input", "\"metrics.Snapshots\"")
                     }
                 }
@@ -649,7 +649,7 @@ public sealed class PipelineComponentFactoryTests
             {
                 ["broker"] = new NodeDefinition
                 {
-                    Type = PipelineFlowNodeTypes.Connection,
+                    Type = FluxMqNodeTypes.Connection,
                     Configuration =
                     {
                         ["profile"] = JsonDocument.Parse("""{"name":"factory-broker","host":"localhost","port":1883}""").RootElement.Clone()
@@ -664,7 +664,7 @@ public sealed class PipelineComponentFactoryTests
                     {
                         ["trigger"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.Trigger,
+                            Type = FluxMqNodeTypes.Trigger,
                             Configuration =
                             {
                                 ["connection"] = JsonDocument.Parse("\"broker\"").RootElement.Clone(),
@@ -702,7 +702,7 @@ public sealed class PipelineComponentFactoryTests
             {
                 ["broker"] = new NodeDefinition
                 {
-                    Type = PipelineFlowNodeTypes.Connection,
+                    Type = FluxMqNodeTypes.Connection,
                     Configuration =
                     {
                         ["profile"] = JsonDocument.Parse("""{"name":"factory-broker","host":"localhost","port":1883}""").RootElement.Clone()
@@ -717,7 +717,7 @@ public sealed class PipelineComponentFactoryTests
                     {
                         ["state"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.ConnectionStateTrigger,
+                            Type = FluxMqNodeTypes.ConnectionStateTrigger,
                             Configuration =
                             {
                                 ["connection"] = JsonDocument.Parse("\"broker\"").RootElement.Clone()
@@ -759,7 +759,7 @@ public sealed class PipelineComponentFactoryTests
                     {
                         ["generated"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.GeneratedSource,
+                            Type = FluxMqNodeTypes.GeneratedSource,
                             Configuration =
                             {
                                 ["messages"] = JsonDocument.Parse("""
@@ -770,7 +770,7 @@ public sealed class PipelineComponentFactoryTests
                                 """).RootElement.Clone()
                             }
                         },
-                        ["metrics"] = NodeWithPort(PipelineFlowNodeTypes.MqttMetrics, "Input", "\"generated.Output\""),
+                        ["metrics"] = NodeWithPort(FluxMqNodeTypes.MqttMetrics, "Input", "\"generated.Output\""),
                         ["sink"] = NodeWithPort("test.snapshot-sink", "Input", "\"metrics.Snapshots\"")
                     }
                 }
@@ -815,7 +815,7 @@ public sealed class PipelineComponentFactoryTests
             {
                 ["broker2"] = new NodeDefinition
                 {
-                    Type = PipelineFlowNodeTypes.Connection,
+                    Type = FluxMqNodeTypes.Connection,
                     Configuration =
                     {
                         ["profile"] = JsonDocument.Parse("""{"name":"broker-2","host":"localhost","port":1884}""").RootElement.Clone()
@@ -830,7 +830,7 @@ public sealed class PipelineComponentFactoryTests
                     {
                         ["traffic"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.GeneratedSource,
+                            Type = FluxMqNodeTypes.GeneratedSource,
                             Configuration =
                             {
                                 ["messages"] = JsonDocument.Parse("""
@@ -843,7 +843,7 @@ public sealed class PipelineComponentFactoryTests
                         },
                         ["filter"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.MessageFilter,
+                            Type = FluxMqNodeTypes.MessageFilter,
                             Ports =
                             {
                                 ["Input"] = JsonDocument.Parse("\"traffic.Output\"").RootElement.Clone()
@@ -855,7 +855,7 @@ public sealed class PipelineComponentFactoryTests
                         },
                         ["map"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.DynamicMapper,
+                            Type = FluxMqNodeTypes.DynamicMapper,
                             Ports =
                             {
                                 ["Input"] = JsonDocument.Parse("\"filter.Output\"").RootElement.Clone()
@@ -870,7 +870,7 @@ public sealed class PipelineComponentFactoryTests
                         },
                         ["publisher"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.MqttPublisher,
+                            Type = FluxMqNodeTypes.MqttPublisher,
                             Ports =
                             {
                                 ["Input"] = JsonDocument.Parse("\"map.Output\"").RootElement.Clone()
@@ -904,9 +904,9 @@ public sealed class PipelineComponentFactoryTests
         publish.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtLeastOnce);
         publish.Retain.ShouldBeFalse();
         var flowEvent = runtimeEvents
-            .Where(flowEvent => flowEvent.Type == FlowEventTypes.MqttMessagePublished)
+            .Where(flowEvent => flowEvent.Type == FluxMqEventTypes.MqttMessagePublished)
             .ShouldHaveSingleItem();
-        flowEvent.Type.ShouldBe(FlowEventTypes.MqttMessagePublished);
+        flowEvent.Type.ShouldBe(FluxMqEventTypes.MqttMessagePublished);
         flowEvent.Topic.ShouldBe("mirror/factory/b");
         flowEvent.PayloadPreview.ShouldBe("mapped:keep");
     }
@@ -938,7 +938,7 @@ public sealed class PipelineComponentFactoryTests
             {
                 ["local-broker"] = new NodeDefinition
                 {
-                    Type = PipelineFlowNodeTypes.Connection,
+                    Type = FluxMqNodeTypes.Connection,
                     Configuration =
                     {
                         ["profile"] = JsonDocument.Parse("""{"name":"local-broker","host":"localhost","port":1883,"clientId":"test-client"}""").RootElement.Clone()
@@ -953,7 +953,7 @@ public sealed class PipelineComponentFactoryTests
                     {
                         ["trigger"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.Trigger,
+                            Type = FluxMqNodeTypes.Trigger,
                             Configuration =
                             {
                                 ["connection"] = JsonDocument.Parse("\"local-broker\"").RootElement.Clone(),
@@ -962,7 +962,7 @@ public sealed class PipelineComponentFactoryTests
                         },
                         ["mapper"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.DynamicMapper,
+                            Type = FluxMqNodeTypes.DynamicMapper,
                             Ports =
                             {
                                 ["Input"] = JsonDocument.Parse("\"trigger.Output\"").RootElement.Clone()
@@ -977,7 +977,7 @@ public sealed class PipelineComponentFactoryTests
                         },
                         ["publisher"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.MqttPublisher,
+                            Type = FluxMqNodeTypes.MqttPublisher,
                             Ports =
                             {
                                 ["Input"] = JsonDocument.Parse("\"mapper.Output\"").RootElement.Clone()
@@ -1019,9 +1019,9 @@ public sealed class PipelineComponentFactoryTests
         publish.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtLeastOnce);
         publish.Retain.ShouldBeTrue();
         var receivedEvent = runtimeEvents
-            .Where(flowEvent => flowEvent.Type == FlowEventTypes.MqttMessageReceived)
+            .Where(flowEvent => flowEvent.Type == FluxMqEventTypes.MqttMessageReceived)
             .ShouldHaveSingleItem();
-        receivedEvent.Type.ShouldBe(FlowEventTypes.MqttMessageReceived);
+        receivedEvent.Type.ShouldBe(FluxMqEventTypes.MqttMessageReceived);
         receivedEvent.Topic.ShouldBe("factory/source");
         receivedEvent.PayloadPreview.ShouldBe("""{"hello":"fluxmq"}""");
     }
@@ -1068,7 +1068,7 @@ public sealed class PipelineComponentFactoryTests
                     {
                         ["traffic"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.GeneratedSource,
+                            Type = FluxMqNodeTypes.GeneratedSource,
                             Configuration =
                             {
                                 ["messages"] = JsonDocument.Parse("""
@@ -1081,7 +1081,7 @@ public sealed class PipelineComponentFactoryTests
                         },
                         ["map"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.DynamicMapper,
+                            Type = FluxMqNodeTypes.DynamicMapper,
                             Ports =
                             {
                                 ["Input"] = JsonDocument.Parse("\"traffic.Output\"").RootElement.Clone()
@@ -1094,7 +1094,7 @@ public sealed class PipelineComponentFactoryTests
                                 ["expression"] = JsonDocument.Parse(JsonSerializer.Serialize(expression)).RootElement.Clone()
                             }
                         },
-                        ["writer"] = NodeWithPort(PipelineFlowNodeTypes.FileWriter, "Input", "\"map.Output\"")
+                        ["writer"] = NodeWithPort(FluxMqNodeTypes.FileWriter, "Input", "\"map.Output\"")
                     }
                 }
             }
@@ -1138,13 +1138,13 @@ public sealed class PipelineComponentFactoryTests
                     {
                         ["stored"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.StoredSessionSource,
+                            Type = FluxMqNodeTypes.StoredSessionSource,
                             Configuration =
                             {
                                 ["sessionId"] = JsonDocument.Parse($"\"{sessionId}\"").RootElement.Clone()
                             }
                         },
-                        ["metrics"] = NodeWithPort(PipelineFlowNodeTypes.MqttMetrics, "Input", "\"stored.Output\""),
+                        ["metrics"] = NodeWithPort(FluxMqNodeTypes.MqttMetrics, "Input", "\"stored.Output\""),
                         ["sink"] = NodeWithPort("test.snapshot-sink", "Input", "\"metrics.Snapshots\"")
                     }
                 }
@@ -1221,14 +1221,14 @@ public sealed class PipelineComponentFactoryTests
                     {
                         ["replay"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.ReplaySource,
+                            Type = FluxMqNodeTypes.ReplaySource,
                             Configuration =
                             {
                                 ["sessionId"] = JsonDocument.Parse($"\"{sessionId}\"").RootElement.Clone(),
                                 ["speed"] = JsonDocument.Parse("1000").RootElement.Clone()
                             }
                         },
-                        ["metrics"] = NodeWithPort(PipelineFlowNodeTypes.MqttMetrics, "Input", "\"replay.Output\""),
+                        ["metrics"] = NodeWithPort(FluxMqNodeTypes.MqttMetrics, "Input", "\"replay.Output\""),
                         ["sink"] = NodeWithPort("test.snapshot-sink", "Input", "\"metrics.Snapshots\"")
                     }
                 }
@@ -1263,7 +1263,7 @@ public sealed class PipelineComponentFactoryTests
                     {
                         ["replay"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.ReplaySource,
+                            Type = FluxMqNodeTypes.ReplaySource,
                             Configuration =
                             {
                                 ["sessionId"] = JsonDocument.Parse($"\"{sessionId}\"").RootElement.Clone()
@@ -1295,7 +1295,7 @@ public sealed class PipelineComponentFactoryTests
                     {
                         ["stored"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.StoredSessionSource,
+                            Type = FluxMqNodeTypes.StoredSessionSource,
                             Configuration =
                             {
                                 ["sessionId"] = JsonDocument.Parse($"\"{sessionId}\"").RootElement.Clone()
@@ -1326,7 +1326,7 @@ public sealed class PipelineComponentFactoryTests
                     {
                         ["trigger"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.Trigger,
+                            Type = FluxMqNodeTypes.Trigger,
                             Configuration =
                             {
                                 ["subscriptions"] = JsonDocument.Parse("""["#"]""").RootElement.Clone()
@@ -1357,7 +1357,7 @@ public sealed class PipelineComponentFactoryTests
                     {
                         ["inspect"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.PayloadInspector,
+                            Type = FluxMqNodeTypes.PayloadInspector,
                             Configuration =
                             {
                                 ["boundedCapacity"] = JsonDocument.Parse("0").RootElement.Clone()
@@ -1395,7 +1395,7 @@ public sealed class PipelineComponentFactoryTests
                     {
                         ["mapper"] = new NodeDefinition
                         {
-                            Type = PipelineFlowNodeTypes.DynamicMapper,
+                            Type = FluxMqNodeTypes.DynamicMapper,
                             Configuration =
                             {
                                 ["engine"] = JsonDocument.Parse("\"jsonata\"").RootElement.Clone(),

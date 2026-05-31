@@ -33,7 +33,7 @@ public sealed class MqttRecorderComponentTests
             .ShouldBe(new[] { sessionId, sessionId });
         repository.Recorded.Select(record => record.Envelope.Topic)
             .ShouldBe(new[] { "factory/1", "factory/2" });
-        events.Select(flowEvent => flowEvent.Type).ShouldBe([FlowEventTypes.MqttMessageRecorded, FlowEventTypes.MqttMessageRecorded]);
+        events.Select(flowEvent => flowEvent.Type).ShouldBe([FluxMqEventTypes.MqttMessageRecorded, FluxMqEventTypes.MqttMessageRecorded]);
         events.Select(flowEvent => flowEvent.Topic).ShouldBe(["factory/1", "factory/2"]);
         events[0].GetAttribute("sessionId").ShouldBe(sessionId.ToString());
     }

@@ -174,7 +174,7 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
         => new()
         {
             Timestamp = DateTimeOffset.UtcNow,
-            Type = FlowEventTypes.MqttMessageReceived,
+            Type = FluxMqEventTypes.MqttMessageReceived,
             Source = "MqttTrigger",
             SourceNodeId = Id,
             Subject = envelope.Topic,

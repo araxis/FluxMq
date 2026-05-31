@@ -46,12 +46,12 @@ public sealed class ScenarioStepCatalog
     private static readonly IReadOnlyList<ScenarioStepFieldOption> EventTypeOptions =
     [
         new(string.Empty, "Any event"),
-        new(FlowEventTypes.MqttMessageReceived, "MQTT message received"),
-        new(FlowEventTypes.MqttMessagePublished, "MQTT message published"),
-        new(FlowEventTypes.MqttMessageRecorded, "MQTT message recorded"),
-        new(FlowEventTypes.FileWritten, "File written"),
-        new(FlowEventTypes.JsonSchemaValidated, "JSON schema validated"),
-        new(FlowEventTypes.AssertionEvaluated, "Assertion evaluated")
+        new(FluxMqEventTypes.MqttMessageReceived, "MQTT message received"),
+        new(FluxMqEventTypes.MqttMessagePublished, "MQTT message published"),
+        new(FluxMqEventTypes.MqttMessageRecorded, "MQTT message recorded"),
+        new(FluxMqEventTypes.FileWritten, "File written"),
+        new(FluxMqEventTypes.JsonSchemaValidated, "JSON schema validated"),
+        new(FluxMqEventTypes.AssertionEvaluated, "Assertion evaluated")
     ];
 
     private static readonly IReadOnlyList<ScenarioStepFieldOption> EventStatusOptions =
@@ -84,7 +84,7 @@ public sealed class ScenarioStepCatalog
 
     private static readonly IReadOnlyList<ScenarioStepFieldDescriptor> EventExpectationFields =
     [
-        new(EventTypeKey, "Event type", ScenarioStepFieldKind.Select, FlowEventTypes.MqttMessagePublished, EventTypeOptions),
+        new(EventTypeKey, "Event type", ScenarioStepFieldKind.Select, FluxMqEventTypes.MqttMessagePublished, EventTypeOptions),
         new(TopicStartsWithKey, "Topic prefix", ScenarioStepFieldKind.Text, string.Empty, []),
         new(SubjectStartsWithKey, "Subject prefix", ScenarioStepFieldKind.Text, string.Empty, []),
         new(StatusKey, "Status", ScenarioStepFieldKind.Select, "published", EventStatusOptions),
