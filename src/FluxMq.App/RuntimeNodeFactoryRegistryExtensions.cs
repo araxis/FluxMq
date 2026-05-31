@@ -16,7 +16,7 @@ using FluxMq.Components.Replay;
 using FluxMq.Components.Storage.Repositories;
 using FluxMq.Pipeline.Components;
 using FluxMq.Pipeline.Definitions;
-using FluxMq.Pipeline.Mapping;
+using FluxFlow.Engine.Mapping;
 using FluxMq.Pipeline.Runtime;
 using MQTTnet.Protocol;
 using System.Text;

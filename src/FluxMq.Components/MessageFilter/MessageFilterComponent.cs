@@ -1,7 +1,7 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Pipeline.Components;
-using FluxMq.Pipeline.Mapping;
+using FluxFlow.Engine.Mapping;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.MessageFilter;

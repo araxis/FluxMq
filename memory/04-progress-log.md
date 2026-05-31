@@ -1824,3 +1824,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verified:
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~FluxMqApplicationDefinitionTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 2 tests.
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 47 tests.
+
+## 2026-05-31 - Engine package mapping boundary
+
+- Switched app, component, UI preview, and component test mapping consumers from the old pipeline mapping namespace to the engine package mapping namespace.
+- Added the engine package reference directly to `FluxMq.Components` because components now compile against package mapping contracts.
+- Left old pipeline mapping code in place only for the old pipeline project and its own tests during migration.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 115 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 47 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DynamicMapperWorkbenchPreview|FullyQualifiedName~FlowWorkspaceServiceTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 63 tests.

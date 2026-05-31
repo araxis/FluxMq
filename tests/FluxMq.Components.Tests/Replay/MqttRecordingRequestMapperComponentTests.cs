@@ -2,7 +2,7 @@ using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Components.Mapping;
 using FluxMq.Components.Replay;
-using FluxMq.Pipeline.Mapping;
+using FluxFlow.Engine.Mapping;
 using Shouldly;
 using System.Threading.Tasks.Dataflow;
 
