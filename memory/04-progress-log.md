@@ -1969,3 +1969,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 80 tests.
   - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 115 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 495 tests.
+
+## 2026-05-31 - Scenario runner catalog guard split
+
+- Moved the app default scenario runner coverage guard from UI tests into `FluxMq.App.Tests`.
+- The app-layer guard now compares `FlowApplicationHost.CreateDefaultScenarioStepRunnerRegistry()` with `ScenarioStepDefinitionCatalog.Shared`, so executable scenario support is checked where runner ownership lives.
+- The UI scenario catalog test now stays focused on palette and editor descriptors.
+- Verified:
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~CreateDefaultScenarioStepRunnerRegistry_CoversKnownScenarioDefinitions" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 1 test.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 6 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 495 tests.

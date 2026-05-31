@@ -640,4 +640,4 @@ Review the conditional-link designer editor slice:
 
 Next implementation slice: continue scenario/test composition around normal components plus narrow test-specific `expect.event`/`when.event` blocks. Prefer catalog/runner/shared-service changes over adding one-off logic inside Razor components.
 
-Latest slice: app-side scenario validation now resolves supported step types and finite payload encoding/QoS options through `ScenarioStepDefinitionCatalog`. This keeps validation aligned with scenario defaults/options in the lower scenario layer instead of repeating those lists in the app validator.
+Latest slice: app default scenario runner coverage is now guarded in `FluxMq.App.Tests` against `ScenarioStepDefinitionCatalog.Shared`. UI catalog tests stay focused on palette/editor metadata while runner ownership is checked in the app layer.

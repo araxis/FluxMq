@@ -7,6 +7,7 @@ using FluxFlow.Engine.Definitions;
 using FluxFlow.Engine.Runtime;
 using FluxMq.App.Definitions;
 using FluxMq.App;
+using FluxMq.Scenarios;
 using Microsoft.Extensions.Configuration;
 using MQTTnet.Protocol;
 using System.Text;
@@ -17,6 +18,24 @@ namespace FluxMq.App.Tests;
 
 public sealed class FlowApplicationHostTests
 {
+    [Fact]
+    public void CreateDefaultScenarioStepRunnerRegistry_CoversKnownScenarioDefinitions()
+    {
+        var definitionTypes = ScenarioStepDefinitionCatalog
+            .Shared
+            .Steps
+            .Select(step => step.Type)
+            .ToArray();
+
+        var runnerTypes = FlowApplicationHost
+            .CreateDefaultScenarioStepRunnerRegistry()
+            .Runners
+            .Keys
+            .ToArray();
+
+        runnerTypes.ShouldBe(definitionTypes, ignoreOrder: true);
+    }
+
     [Fact]
     public void Start_BuildsRuntimeFromConfiguration()
     {
