@@ -219,9 +219,9 @@ public static class DynamicMapperWorkbenchPreview
 
             return outputType switch
             {
-                "FileWriteRequest" => PreviewFileWriteRequest(expressionEngine, expression, envelope, context),
-                "MqttRecordingRequest" => PreviewRecordingRequest(expressionEngine, expression, envelope, context),
-                _ => PreviewPublishRequest(expressionEngine, expression, envelope, context)
+                "FileWriteRequest" => PreviewFileWriteRequest(expressionEngine, expression, context),
+                "MqttRecordingRequest" => PreviewRecordingRequest(expressionEngine, expression, context),
+                _ => PreviewPublishRequest(expressionEngine, expression, context)
             };
         }
         catch (Exception exception)
@@ -238,17 +238,10 @@ public static class DynamicMapperWorkbenchPreview
     private static DynamicMapperPreviewResult PreviewPublishRequest(
         IFlowExpressionEngine engine,
         string expression,
-        MqttEnvelope envelope,
         FlowMapContext context)
     {
-        var mapper = new MqttPublishRequestExpressionMapper(
-            engine,
-            new MqttPublishRequestMapDefinition
-            {
-                Expression = expression
-            });
-
-        var request = mapper.Map(envelope, context);
+        var mapper = new FluxMqRequestMappingExpressionEngine(engine);
+        var request = (MqttPublishRequest)mapper.Evaluate(expression, context, typeof(MqttPublishRequest))!;
         var payloadText = Encoding.UTF8.GetString(request.Payload);
         return new DynamicMapperPreviewResult(
             true,
@@ -271,17 +264,10 @@ public static class DynamicMapperWorkbenchPreview
     private static DynamicMapperPreviewResult PreviewFileWriteRequest(
         IFlowExpressionEngine engine,
         string expression,
-        MqttEnvelope envelope,
         FlowMapContext context)
     {
-        var mapper = new FileWriteRequestExpressionMapper(
-            engine,
-            new FileWriteRequestMapDefinition
-            {
-                Expression = expression
-            });
-
-        var request = mapper.Map(envelope, context);
+        var mapper = new FluxMqRequestMappingExpressionEngine(engine);
+        var request = (FileWriteRequest)mapper.Evaluate(expression, context, typeof(FileWriteRequest))!;
         var contentText = Encoding.UTF8.GetString(request.Content);
         return new DynamicMapperPreviewResult(
             true,
@@ -304,11 +290,10 @@ public static class DynamicMapperWorkbenchPreview
     private static DynamicMapperPreviewResult PreviewRecordingRequest(
         IFlowExpressionEngine engine,
         string expression,
-        MqttEnvelope envelope,
         FlowMapContext context)
     {
-        var mapper = new MqttRecordingRequestExpressionMapper(engine, expression);
-        var request = mapper.Map(envelope, context);
+        var mapper = new FluxMqRequestMappingExpressionEngine(engine);
+        var request = (MqttRecordingRequest)mapper.Evaluate(expression, context, typeof(MqttRecordingRequest))!;
 
         return new DynamicMapperPreviewResult(
             true,

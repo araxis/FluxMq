@@ -1434,12 +1434,11 @@ public sealed class PipelineComponentFactoryTests
     }
 
     [Theory]
-    [InlineData("MqttPublishRequest", "MQTT publish request mapper")]
-    [InlineData("MqttRecordingRequest", "MQTT recording request mapper")]
-    [InlineData("FileWriteRequest", "File write request mapper")]
+    [InlineData("MqttPublishRequest")]
+    [InlineData("MqttRecordingRequest")]
+    [InlineData("FileWriteRequest")]
     public void DynamicMapperFactory_ReturnsBuildErrorWhenExpressionIsMissing(
-        string outputType,
-        string expectedMessage)
+        string outputType)
     {
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories());
@@ -1470,7 +1469,7 @@ public sealed class PipelineComponentFactoryTests
         result.IsSuccess.ShouldBeFalse();
         result.Errors.ShouldContain(error =>
             error.Code == ApplicationRuntimeBuildErrorCode.FactoryFailed &&
-            error.Message.Contains(expectedMessage) &&
+            error.Message.Contains("flow.mapper") &&
             error.Message.Contains("expression"));
     }
 

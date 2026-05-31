@@ -73,7 +73,7 @@ Replays ordered `MqttEnvelope` values with relative timing and speed control.
 
 The user-facing `flow.mapper` node maps `MqttEnvelope` values into the explicit request type required by the next actor. Examples include `MqttPublishRequest`, `MqttRecordingRequest`, and `FileWriteRequest`.
 
-Request-specific mapper component classes may exist as runtime implementation details and compatibility aliases, but they are not separate product components in the visual catalog.
+Runtime mapping is delegated to the package-backed generic mapper. FluxMQ only supplies app-specific type aliases, the `MqttEnvelope` variable context, and request-shape coercion.
 
 ### MqttPublisherComponent
 

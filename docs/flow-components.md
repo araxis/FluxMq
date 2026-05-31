@@ -361,7 +361,9 @@ await replay.StartAsync();
 
 `flow.mapper` is the user-facing mapper node. It explicitly maps one typed input into the typed request object required by an actor. FluxMQ must not insert this node automatically: if `mqtt.trigger` emits `MqttEnvelope` and `mqtt.publisher` accepts `MqttPublishRequest`, the user adds a mapper between them and configures the mapping expressions.
 
-The current runtime supports `MqttEnvelope` input and these output request types:
+Runtime execution is provided by the package-backed `flow.mapper` component. FluxMQ registers app-specific type aliases and an `MqttEnvelope` mapping context so existing mapper expressions can use variables such as `topic`, `payloadText`, `qos`, and `retain`.
+
+The current FluxMQ mapper context supports `MqttEnvelope` input and these output request types:
 
 - `MqttPublishRequest`
 - `FileWriteRequest`
@@ -373,7 +375,7 @@ The mapper editor also records an output contract:
 - `any`: preview the expression result as arbitrary JSON.
 - `json-schema-file`: record the schema file that should validate the expression result.
 
-Today, runtime execution still uses the typed `outputType` path for actor wiring. JSON Schema validation is implemented as a standalone validator component so the same runtime capability can be reused by mapper hardening, ops checks, and future assertion nodes.
+Runtime execution uses the typed `outputType` path for actor wiring. JSON Schema validation is implemented as a standalone validator component so the same runtime capability can be reused by mapper hardening, ops checks, and future assertion nodes.
 
 Supported mapper engines:
 
@@ -416,7 +418,7 @@ flowchart LR
 
 ### Failure Behavior
 
-If mapping fails for one message, the mapper publishes a `FlowError` with the topic in `Context` and continues processing later messages.
+If mapping fails for one message, the mapper publishes a `FlowError` and continues processing later messages.
 
 ## JSON Schema Validator
 
@@ -714,6 +716,6 @@ Equivalent definition shape:
 
 ## Future Component Types
 
-Dynamic mapper components should use `FlowError.Code` for routing and diagnostics instead of relying on exception message text. Request-specific mapper node types remain compatibility/runtime implementation details; new user-facing definitions should use `flow.mapper`.
+Dynamic mapper components should use `FlowError.Code` for routing and diagnostics instead of relying on exception message text. User-facing definitions should use `flow.mapper`; FluxMQ no longer keeps request-specific mapper node implementations.
 
 OpenTelemetry support is planned as an observability export layer, not as a replacement for local flow components.
