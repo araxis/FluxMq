@@ -12,6 +12,9 @@ public sealed class ScenarioStepCatalog
     public const string PayloadEncodingKey = ScenarioStepConfigurationKeys.PayloadEncoding;
     public const string QosKey = ScenarioStepConfigurationKeys.Qos;
     public const string RetainKey = ScenarioStepConfigurationKeys.Retain;
+    public const string SubscriptionsKey = ScenarioStepConfigurationKeys.Subscriptions;
+    public const string ReceiveRetainedKey = ScenarioStepConfigurationKeys.ReceiveRetained;
+    public const string RetainAsPublishedKey = ScenarioStepConfigurationKeys.RetainAsPublished;
 
     public static ScenarioStepCatalog Shared { get; } = new();
 
@@ -47,6 +50,21 @@ public sealed class ScenarioStepCatalog
                 new(PayloadEncodingKey, "Payload encoding", ScenarioStepFieldKind.Select, "json", PayloadEncodingOptions),
                 new(QosKey, "QoS", ScenarioStepFieldKind.Select, "0", QosOptions),
                 new(RetainKey, "Retain", ScenarioStepFieldKind.CheckBox, "false", [])
+            ]),
+        new(
+            ScenarioStepTypes.MqttTrigger,
+            "MQTT trigger",
+            "Action",
+            "Listen for MQTT messages through an app broker.",
+            Icons.Material.Filled.Sensors,
+            "triggerMqtt",
+            ScenarioStepEditorKind.MqttTrigger,
+            [
+                new(ConnectionKey, "Broker", ScenarioStepFieldKind.Connection, string.Empty, []),
+                new(SubscriptionsKey, "Topic filter", ScenarioStepFieldKind.Text, "fluxmq/test/#", []),
+                new(QosKey, "QoS", ScenarioStepFieldKind.Select, "1", QosOptions),
+                new(ReceiveRetainedKey, "Receive retained", ScenarioStepFieldKind.CheckBox, "false", []),
+                new(RetainAsPublishedKey, "Retain as published", ScenarioStepFieldKind.CheckBox, "true", [])
             ]),
         new(
             ScenarioStepTypes.ExpectEvent,

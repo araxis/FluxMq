@@ -14,7 +14,7 @@ public sealed class ScenarioStepCatalogTests
         var catalog = new ScenarioStepCatalog();
 
         catalog.Steps.Select(step => step.Type)
-            .ShouldBe([ScenarioStepTypes.MqttPublisher, ScenarioStepTypes.ExpectEvent]);
+            .ShouldBe([ScenarioStepTypes.MqttPublisher, ScenarioStepTypes.MqttTrigger, ScenarioStepTypes.ExpectEvent]);
 
         var publish = catalog.Find(ScenarioStepTypes.MqttPublisher).ShouldNotBeNull();
         publish.DisplayName.ShouldBe("MQTT publisher");
@@ -36,6 +36,20 @@ public sealed class ScenarioStepCatalogTests
         publish.Fields.First(field => field.Key == ScenarioStepCatalog.QosKey)
             .Options.Select(option => option.Value)
             .ShouldBe(["0", "1", "2"]);
+
+        var trigger = catalog.Find(ScenarioStepTypes.MqttTrigger).ShouldNotBeNull();
+        trigger.DisplayName.ShouldBe("MQTT trigger");
+        trigger.Category.ShouldBe("Action");
+        trigger.NamePrefix.ShouldBe("triggerMqtt");
+        trigger.EditorKind.ShouldBe(ScenarioStepEditorKind.MqttTrigger);
+        trigger.Fields.Select(field => field.Key).ShouldBe(
+        [
+            ScenarioStepCatalog.ConnectionKey,
+            ScenarioStepCatalog.SubscriptionsKey,
+            ScenarioStepCatalog.QosKey,
+            ScenarioStepCatalog.ReceiveRetainedKey,
+            ScenarioStepCatalog.RetainAsPublishedKey
+        ]);
 
         var expect = catalog.Find(ScenarioStepTypes.ExpectEvent).ShouldNotBeNull();
         expect.DisplayName.ShouldBe("Expect event");
@@ -80,6 +94,20 @@ public sealed class ScenarioStepCatalogTests
         defaults[ScenarioStepCatalog.PayloadEncodingKey].ShouldBe("json");
         defaults[ScenarioStepCatalog.QosKey].ShouldBe("0");
         defaults[ScenarioStepCatalog.RetainKey].ShouldBe("false");
+    }
+
+    [Fact]
+    public void CreateDefaultConfiguration_UsesTriggerFieldDefaults()
+    {
+        var catalog = new ScenarioStepCatalog();
+
+        var defaults = catalog.CreateDefaultConfiguration(ScenarioStepTypes.MqttTrigger, "local-broker");
+
+        defaults[ScenarioStepCatalog.ConnectionKey].ShouldBe("local-broker");
+        defaults[ScenarioStepCatalog.SubscriptionsKey].ShouldBe("fluxmq/test/#");
+        defaults[ScenarioStepCatalog.QosKey].ShouldBe("1");
+        defaults[ScenarioStepCatalog.ReceiveRetainedKey].ShouldBe("false");
+        defaults[ScenarioStepCatalog.RetainAsPublishedKey].ShouldBe("true");
     }
 
     [Fact]

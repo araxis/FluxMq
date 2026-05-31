@@ -8,6 +8,9 @@ public static class ScenarioStepConfigurationKeys
     public const string PayloadEncoding = "payloadEncoding";
     public const string Qos = "qos";
     public const string Retain = "retain";
+    public const string Subscriptions = "subscriptions";
+    public const string ReceiveRetained = "receiveRetained";
+    public const string RetainAsPublished = "retainAsPublished";
 
     public const string EventType = "eventType";
     public const string TopicStartsWith = "topicStartsWith";

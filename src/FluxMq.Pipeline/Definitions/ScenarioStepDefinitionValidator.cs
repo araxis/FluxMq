@@ -18,6 +18,9 @@ internal static class ScenarioStepDefinitionValidator
             case ScenarioStepTypes.MqttPublisher:
                 ValidateMqttPublisherStep(scenarioName, stepName, step.Configuration, definition, errors);
                 break;
+            case ScenarioStepTypes.MqttTrigger:
+                ValidateMqttTriggerStep(scenarioName, stepName, step.Configuration, definition, errors);
+                break;
             case ScenarioStepTypes.ExpectEvent:
                 ValidateExpectEventStep(scenarioName, stepName, step.Configuration, errors);
                 break;
@@ -45,21 +48,7 @@ internal static class ScenarioStepDefinitionValidator
             ScenarioStepConfigurationKeys.Topic,
             errors);
 
-        if (!string.IsNullOrWhiteSpace(connection))
-        {
-            if (!definition.Resources.TryGetValue(connection, out var resource))
-            {
-                errors.Add(new(
-                    ApplicationDefinitionValidationErrorCode.MissingScenarioStepResource,
-                    $"Test scenario '{scenarioName}' step '{stepName}' references missing app resource '{connection}'."));
-            }
-            else if (resource.Type != PipelineFlowNodeTypes.Connection)
-            {
-                errors.Add(new(
-                    ApplicationDefinitionValidationErrorCode.InvalidScenarioStepConfiguration,
-                    $"Test scenario '{scenarioName}' step '{stepName}' connection '{connection}' must reference an app resource of type '{PipelineFlowNodeTypes.Connection.Value}'."));
-            }
-        }
+        ValidateConnectionResource(scenarioName, stepName, connection, definition, errors);
 
         if (TryReadOptionalString(
                 scenarioName,
@@ -88,6 +77,79 @@ internal static class ScenarioStepDefinitionValidator
             configuration,
             ScenarioStepConfigurationKeys.Retain,
             errors);
+    }
+
+    private static void ValidateMqttTriggerStep(
+        string scenarioName,
+        string stepName,
+        IReadOnlyDictionary<string, JsonElement> configuration,
+        ApplicationDefinition definition,
+        List<ApplicationDefinitionValidationError> errors)
+    {
+        var connection = ReadRequiredString(
+            scenarioName,
+            stepName,
+            configuration,
+            ScenarioStepConfigurationKeys.Connection,
+            errors);
+
+        ValidateConnectionResource(scenarioName, stepName, connection, definition, errors);
+
+        ReadRequiredString(
+            scenarioName,
+            stepName,
+            configuration,
+            ScenarioStepConfigurationKeys.Subscriptions,
+            errors);
+
+        ValidateOptionalInt(
+            scenarioName,
+            stepName,
+            configuration,
+            ScenarioStepConfigurationKeys.Qos,
+            0,
+            2,
+            errors);
+
+        ValidateOptionalBool(
+            scenarioName,
+            stepName,
+            configuration,
+            ScenarioStepConfigurationKeys.ReceiveRetained,
+            errors);
+
+        ValidateOptionalBool(
+            scenarioName,
+            stepName,
+            configuration,
+            ScenarioStepConfigurationKeys.RetainAsPublished,
+            errors);
+    }
+
+    private static void ValidateConnectionResource(
+        string scenarioName,
+        string stepName,
+        string? connection,
+        ApplicationDefinition definition,
+        List<ApplicationDefinitionValidationError> errors)
+    {
+        if (string.IsNullOrWhiteSpace(connection))
+        {
+            return;
+        }
+
+        if (!definition.Resources.TryGetValue(connection, out var resource))
+        {
+            errors.Add(new(
+                ApplicationDefinitionValidationErrorCode.MissingScenarioStepResource,
+                $"Test scenario '{scenarioName}' step '{stepName}' references missing app resource '{connection}'."));
+        }
+        else if (resource.Type != PipelineFlowNodeTypes.Connection)
+        {
+            errors.Add(new(
+                ApplicationDefinitionValidationErrorCode.InvalidScenarioStepConfiguration,
+                $"Test scenario '{scenarioName}' step '{stepName}' connection '{connection}' must reference an app resource of type '{PipelineFlowNodeTypes.Connection.Value}'."));
+        }
     }
 
     private static void ValidatePayloadEncoding(

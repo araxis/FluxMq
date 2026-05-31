@@ -3,6 +3,7 @@ using FluxMq.Components.MessageSource;
 using FluxMq.Core.Models;
 using FluxMq.Core.Mqtt;
 using FluxMq.Pipeline.Definitions;
+using FluxMq.Pipeline.Components;
 using FluxMq.Pipeline.Runtime;
 using FluxMq.Pipeline.Scenarios;
 using MQTTnet.Protocol;
@@ -151,6 +152,75 @@ public sealed class MqttScenarioClientFactoryTests
         events.Complete();
     }
 
+    [Fact]
+    public async Task MqttTriggerStep_UsesNormalTriggerComponentAndAppendsScenarioEvents()
+    {
+        var client = new FakeFluxMqttClient(new MqttConnectionProfile { Name = "shared-broker" });
+        var factory = new FakeScenarioClientFactory(client);
+        var appEvents = new BroadcastBlock<FluxMq.Pipeline.Components.FlowEvent>(static flowEvent => flowEvent);
+        var scenario = new ScenarioDefinition
+        {
+            Steps =
+            {
+                ["trigger"] = new ScenarioStepDefinition
+                {
+                    Type = ScenarioStepTypes.MqttTrigger,
+                    Configuration =
+                    {
+                        ["connection"] = JsonSerializer.SerializeToElement("shared-broker"),
+                        ["subscriptions"] = JsonSerializer.SerializeToElement("sample/#"),
+                        ["qos"] = JsonSerializer.SerializeToElement(1),
+                        ["receiveRetained"] = JsonSerializer.SerializeToElement(false),
+                        ["retainAsPublished"] = JsonSerializer.SerializeToElement(true)
+                    }
+                },
+                ["expect"] = new ScenarioStepDefinition
+                {
+                    Type = ScenarioStepTypes.ExpectEvent,
+                    Configuration =
+                    {
+                        ["eventType"] = JsonSerializer.SerializeToElement(FlowEventTypes.MqttMessageReceived),
+                        ["topicStartsWith"] = JsonSerializer.SerializeToElement("sample/"),
+                        ["status"] = JsonSerializer.SerializeToElement("received"),
+                        ["payloadContains"] = JsonSerializer.SerializeToElement("hello"),
+                        ["timeoutMs"] = JsonSerializer.SerializeToElement(1000)
+                    }
+                }
+            }
+        };
+        var services = ScenarioStepServices.Empty
+            .Add<IMqttScenarioClientFactory>(factory);
+        var runner = new ScenarioRunner(
+            new ScenarioStepRunnerRegistry()
+                .Register(new MqttTriggerScenarioStepRunner())
+                .Register(new ExpectEventScenarioStepRunner()));
+
+        var runTask = runner.RunAsync("trigger", scenario, appEvents, services);
+        await WaitUntilAsync(() => client.SubscriptionOptions.Count == 1);
+
+        await client.WriteAsync(new MqttEnvelope
+        {
+            Topic = "sample/response",
+            Payload = "hello"u8.ToArray(),
+            QualityOfService = MqttQualityOfServiceLevel.AtLeastOnce,
+            Retain = false
+        });
+
+        var result = await runTask.WaitAsync(TimeSpan.FromSeconds(2));
+
+        result.IsSuccess.ShouldBeTrue();
+        factory.ConnectionNames.ShouldBe(["shared-broker"]);
+        client.ConnectCount.ShouldBe(1);
+        client.DisposeCount.ShouldBe(1);
+        var subscription = client.SubscriptionOptions.ShouldHaveSingleItem();
+        subscription.TopicFilter.ShouldBe("sample/#");
+        subscription.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtLeastOnce);
+        subscription.ReceiveRetainedMessages.ShouldBeFalse();
+        subscription.RetainAsPublished.ShouldBeTrue();
+        result.Steps[1].MatchedEvent.ShouldNotBeNull().Topic.ShouldBe("sample/response");
+        appEvents.Complete();
+    }
+
     private static NodeDefinition MqttConnectionResource(string profileJson)
         => new()
         {
@@ -182,6 +252,7 @@ public sealed class MqttScenarioClientFactoryTests
         public int ConnectCount { get; private set; }
         public int DisposeCount { get; private set; }
         public List<PublishedMessage> Published { get; } = [];
+        public List<Subscription> SubscriptionOptions { get; } = [];
 
         public event EventHandler<MqttClientState>? StateChanged;
 
@@ -204,7 +275,7 @@ public sealed class MqttScenarioClientFactoryTests
             string topicFilter,
             MqttQualityOfServiceLevel qos = MqttQualityOfServiceLevel.AtMostOnce,
             CancellationToken ct = default)
-            => Task.CompletedTask;
+            => SubscribeAsync(topicFilter, qos, receiveRetainedMessages: true, retainAsPublished: true, ct);
 
         public Task SubscribeAsync(
             string topicFilter,
@@ -212,7 +283,14 @@ public sealed class MqttScenarioClientFactoryTests
             bool receiveRetainedMessages,
             bool retainAsPublished = true,
             CancellationToken ct = default)
-            => Task.CompletedTask;
+        {
+            SubscriptionOptions.Add(new Subscription(
+                topicFilter,
+                qos,
+                receiveRetainedMessages,
+                retainAsPublished));
+            return Task.CompletedTask;
+        }
 
         public Task UnsubscribeAsync(string topicFilter, CancellationToken ct = default)
             => Task.CompletedTask;
@@ -235,10 +313,33 @@ public sealed class MqttScenarioClientFactoryTests
             return ValueTask.CompletedTask;
         }
 
+        public ValueTask WriteAsync(MqttEnvelope envelope)
+            => _messages.Writer.WriteAsync(envelope);
+
         public sealed record PublishedMessage(
             string Topic,
             byte[] Payload,
             MqttQualityOfServiceLevel QualityOfService,
             bool Retain);
+
+        public sealed record Subscription(
+            string TopicFilter,
+            MqttQualityOfServiceLevel QualityOfService,
+            bool ReceiveRetainedMessages,
+            bool RetainAsPublished);
+    }
+
+    private static async Task WaitUntilAsync(Func<bool> predicate)
+    {
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(2);
+        while (!predicate())
+        {
+            if (DateTimeOffset.UtcNow > deadline)
+            {
+                throw new TimeoutException("Condition was not reached.");
+            }
+
+            await Task.Delay(10);
+        }
     }
 }

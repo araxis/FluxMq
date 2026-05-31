@@ -3,7 +3,8 @@ namespace FluxMq.UI.Models;
 public enum ScenarioStepEditorKind
 {
     ExpectEvent,
-    MqttPublish
+    MqttPublish,
+    MqttTrigger
 }
 
 public enum ScenarioStepFieldKind

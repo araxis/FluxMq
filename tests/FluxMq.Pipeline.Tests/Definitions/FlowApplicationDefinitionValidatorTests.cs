@@ -426,6 +426,51 @@ public sealed class FlowApplicationDefinitionValidatorTests
     }
 
     [Fact]
+    public void Validate_AcceptsMqttTriggerScenarioStepWithAppConnection()
+    {
+        var definition = new ApplicationDefinition
+        {
+            Resources =
+            {
+                ["local-broker"] = Node("mqtt.connection")
+            },
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("mqtt.trigger")
+                    }
+                }
+            },
+            Tests =
+            {
+                ["roundTrip"] = new ScenarioDefinition
+                {
+                    Steps =
+                    {
+                        ["trigger"] = new ScenarioStepDefinition
+                        {
+                            Type = ScenarioStepTypes.MqttTrigger,
+                            Configuration = Config(
+                                ("connection", "local-broker"),
+                                ("subscriptions", "fluxmq/sample/#"),
+                                ("qos", 1),
+                                ("receiveRetained", false),
+                                ("retainAsPublished", true))
+                        }
+                    }
+                }
+            }
+        };
+
+        var result = _validator.Validate(definition);
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Validate_ReportsMqttPublisherScenarioStepMissingConnectionResource()
     {
         var definition = new ApplicationDefinition
@@ -516,6 +561,58 @@ public sealed class FlowApplicationDefinitionValidatorTests
         errors.ShouldContain(message => message.Contains("payload", StringComparison.Ordinal));
         errors.ShouldContain(message => message.Contains("qos", StringComparison.Ordinal));
         errors.ShouldContain(message => message.Contains("retain", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Validate_ReportsInvalidMqttTriggerScenarioStepConfiguration()
+    {
+        var definition = new ApplicationDefinition
+        {
+            Resources =
+            {
+                ["local-broker"] = Node("mqtt.connection")
+            },
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("mqtt.trigger")
+                    }
+                }
+            },
+            Tests =
+            {
+                ["roundTrip"] = new ScenarioDefinition
+                {
+                    Steps =
+                    {
+                        ["trigger"] = new ScenarioStepDefinition
+                        {
+                            Type = ScenarioStepTypes.MqttTrigger,
+                            Configuration = Config(
+                                ("connection", "local-broker"),
+                                ("subscriptions", ""),
+                                ("qos", 3),
+                                ("receiveRetained", "false"),
+                                ("retainAsPublished", "true"))
+                        }
+                    }
+                }
+            }
+        };
+
+        var result = _validator.Validate(definition);
+
+        var errors = result.Errors
+            .Where(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidScenarioStepConfiguration)
+            .Select(error => error.Message)
+            .ToArray();
+        errors.ShouldContain(message => message.Contains("subscriptions", StringComparison.Ordinal));
+        errors.ShouldContain(message => message.Contains("qos", StringComparison.Ordinal));
+        errors.ShouldContain(message => message.Contains("receiveRetained", StringComparison.Ordinal));
+        errors.ShouldContain(message => message.Contains("retainAsPublished", StringComparison.Ordinal));
     }
 
     [Fact]

@@ -84,6 +84,64 @@
                              @bind-Value="_retain"
                              Dense="true" />
             }
+            else if (IsMqttTrigger)
+            {
+                @if (ConnectionNames.Count > 0)
+                {
+                    <MudSelect T="string"
+                               Label="@_connectionField.Label"
+                               @bind-Value="_connection"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true">
+                        @foreach (var connectionName in ConnectionNames)
+                        {
+                            <MudSelectItem T="string" Value="@connectionName">@connectionName</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+                else
+                {
+                    <MudTextField T="string"
+                                  Label="@_connectionField.Label"
+                                  @bind-Value="_connection"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                }
+                <MudTextField T="string"
+                              Label="@_subscriptionsField.Label"
+                              @bind-Value="_subscriptions"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense" />
+                <MudStack Spacing="1">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@_qosField.Label</MudText>
+                    <MudToggleGroup T="string"
+                                    Value="@_qos"
+                                    ValueChanged="@SetQos"
+                                    SelectionMode="SelectionMode.SingleSelection"
+                                    Size="Size.Small"
+                                    Color="Color.Primary"
+                                    Outlined="true"
+                                    Delimiters="true">
+                        @foreach (var option in QosOptions)
+                        {
+                            <MudToggleItem T="string"
+                                           Value="@option.Value"
+                                           Text="@option.Label" />
+                        }
+                    </MudToggleGroup>
+                </MudStack>
+                <MudStack Row="true" Spacing="2">
+                    <MudCheckBox T="bool"
+                                 Label="@_receiveRetainedField.Label"
+                                 @bind-Value="_receiveRetained"
+                                 Dense="true" />
+                    <MudCheckBox T="bool"
+                                 Label="@_retainAsPublishedField.Label"
+                                 @bind-Value="_retainAsPublished"
+                                 Dense="true" />
+                </MudStack>
+            }
             else
             {
                 <MudSelect T="string"
@@ -238,7 +296,10 @@
     private string _payload = string.Empty;
     private string _payloadEncoding = string.Empty;
     private string _qos = string.Empty;
+    private string _subscriptions = string.Empty;
     private bool _retain;
+    private bool _receiveRetained;
+    private bool _retainAsPublished;
     private readonly Dictionary<string, string> _filterValues = new(StringComparer.Ordinal);
     private string _eventType = AnyValue;
     private string _status = AnyValue;
@@ -250,12 +311,17 @@
     private ScenarioStepFieldDescriptor _payloadEncodingField = EmptyPublishField(ScenarioStepCatalog.PayloadEncodingKey);
     private ScenarioStepFieldDescriptor _qosField = EmptyPublishField(ScenarioStepCatalog.QosKey);
     private ScenarioStepFieldDescriptor _retainField = EmptyPublishField(ScenarioStepCatalog.RetainKey);
+    private ScenarioStepFieldDescriptor _subscriptionsField = EmptyPublishField(ScenarioStepCatalog.SubscriptionsKey);
+    private ScenarioStepFieldDescriptor _receiveRetainedField = EmptyPublishField(ScenarioStepCatalog.ReceiveRetainedKey);
+    private ScenarioStepFieldDescriptor _retainAsPublishedField = EmptyPublishField(ScenarioStepCatalog.RetainAsPublishedKey);
     private IReadOnlyList<ScenarioStepFieldOption> _payloadEncodingOptions = [];
     private IReadOnlyList<ScenarioStepFieldOption> _qosOptions = [];
 
     private ScenarioStepDescriptor StepDescriptor => ScenarioSteps.Describe(Step.Type);
 
     private bool IsMqttPublish => StepDescriptor.EditorKind == ScenarioStepEditorKind.MqttPublish;
+
+    private bool IsMqttTrigger => StepDescriptor.EditorKind == ScenarioStepEditorKind.MqttTrigger;
 
     private string DialogTitle => $"{StepDescriptor.DisplayName} step";
 
@@ -276,6 +342,12 @@
         if (IsMqttPublish)
         {
             InitializeMqttPublish();
+            return;
+        }
+
+        if (IsMqttTrigger)
+        {
+            InitializeMqttTrigger();
             return;
         }
 
@@ -301,7 +373,9 @@
     {
         var configuration = IsMqttPublish
             ? CreateMqttPublishConfiguration()
-            : CreateExpectEventConfiguration();
+            : IsMqttTrigger
+                ? CreateMqttTriggerConfiguration()
+                : CreateExpectEventConfiguration();
 
         MudDialog.Close(DialogResult.Ok(new ScenarioStepUpdate(Step.Type, configuration)));
     }
@@ -343,6 +417,26 @@
         ResetStatusWhenUnsupported();
     }
 
+    private void InitializeMqttTrigger()
+    {
+        _connection = Step.ReadString(ScenarioStepCatalog.ConnectionKey) ??
+                      FieldDefault(_connectionField);
+        _subscriptions = Step.ReadString(ScenarioStepCatalog.SubscriptionsKey) ??
+                         FieldDefault(_subscriptionsField);
+        _qos = NormalizeSelect(
+            Step.ReadString(ScenarioStepCatalog.QosKey) ??
+            FieldDefault(_qosField),
+            QosOptions);
+        _receiveRetained = bool.TryParse(
+            Step.ReadString(ScenarioStepCatalog.ReceiveRetainedKey) ??
+            FieldDefault(_receiveRetainedField),
+            out var receiveRetained) && receiveRetained;
+        _retainAsPublished = !bool.TryParse(
+                                  Step.ReadString(ScenarioStepCatalog.RetainAsPublishedKey) ??
+                                  FieldDefault(_retainAsPublishedField),
+                                  out var retainAsPublished) || retainAsPublished;
+    }
+
     private Dictionary<string, string> CreateExpectEventConfiguration()
     {
         var configuration = new Dictionary<string, string>(StringComparer.Ordinal)
@@ -375,6 +469,18 @@
             PayloadEncodingOptions);
         configuration[ScenarioStepCatalog.QosKey] = NormalizeSelect(_qos, QosOptions);
         configuration[ScenarioStepCatalog.RetainKey] = _retain ? "true" : "false";
+
+        return configuration;
+    }
+
+    private Dictionary<string, string> CreateMqttTriggerConfiguration()
+    {
+        var configuration = new Dictionary<string, string>(StringComparer.Ordinal);
+        configuration[ScenarioStepCatalog.ConnectionKey] = Normalize(_connection);
+        configuration[ScenarioStepCatalog.SubscriptionsKey] = Normalize(_subscriptions);
+        configuration[ScenarioStepCatalog.QosKey] = NormalizeSelect(_qos, QosOptions);
+        configuration[ScenarioStepCatalog.ReceiveRetainedKey] = _receiveRetained ? "true" : "false";
+        configuration[ScenarioStepCatalog.RetainAsPublishedKey] = _retainAsPublished ? "true" : "false";
 
         return configuration;
     }
@@ -419,6 +525,9 @@
         _payloadEncodingField = StepField(ScenarioStepCatalog.PayloadEncodingKey);
         _qosField = StepField(ScenarioStepCatalog.QosKey);
         _retainField = StepField(ScenarioStepCatalog.RetainKey);
+        _subscriptionsField = StepField(ScenarioStepCatalog.SubscriptionsKey);
+        _receiveRetainedField = StepField(ScenarioStepCatalog.ReceiveRetainedKey);
+        _retainAsPublishedField = StepField(ScenarioStepCatalog.RetainAsPublishedKey);
         _payloadEncodingOptions = _payloadEncodingField.Options;
         _qosOptions = _qosField.Options;
     }
