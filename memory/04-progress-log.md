@@ -1987,3 +1987,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verified:
   - `dotnet test tests\FluxMq.Scenarios.Tests\FluxMq.Scenarios.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 35 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 495 tests.
+
+## 2026-05-31 - Scenario event source wording cleanup
+
+- Reworded the isolated scenario event-stream diagnostic from internal runner ownership language to `scenario event source`.
+- Renamed the shared requirement helper's private terms and affected tests to the same language.
+- Verified:
+  - `dotnet test tests\FluxMq.Scenarios.Tests\FluxMq.Scenarios.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioEventSourceRequirementsTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 9 tests.
+  - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore --filter "FullyQualifiedName~RunAsync_ReturnsValidationErrorWhenCliScenario" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 2 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~RunActiveTestScenarioAsync_FailsFastWhenEventObserverHasNoEventSource" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 1 test.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 495 tests.

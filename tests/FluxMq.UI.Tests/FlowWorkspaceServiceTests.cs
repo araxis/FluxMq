@@ -784,7 +784,7 @@ public sealed class FlowWorkspaceServiceTests
         service.LastScenarioRunResult.ShouldBeNull();
         var diagnostic = service.Diagnostics.ShouldHaveSingleItem();
         diagnostic.Code.ShouldBe("RunFailed");
-        diagnostic.Message.ShouldContain("contains event-observing steps before any runner-owned event source");
+        diagnostic.Message.ShouldContain("contains event-observing steps before any scenario event source");
         diagnostic.Message.ShouldContain("start the app runtime");
         service.Logs.ShouldContain(log =>
             log.Scope == WorkspaceLogScopes.TestRunner &&
