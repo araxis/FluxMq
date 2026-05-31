@@ -281,6 +281,7 @@ public static class ScenarioRunReportFormatter
             executed,
             notRunSteps.Count,
             steps.Count(step => step.Status == ScenarioStepRunStatus.Passed),
+            steps.Count(step => step.Status == ScenarioStepRunStatus.Skipped),
             steps.Count(step => step.Status == ScenarioStepRunStatus.Failed),
             steps.Count(step => step.Status == ScenarioStepRunStatus.TimedOut),
             steps.Count(step => step.Status == ScenarioStepRunStatus.Canceled));
@@ -306,6 +307,11 @@ public static class ScenarioRunReportFormatter
 
         parts.Add($"{summary.Passed} passed");
 
+        if (summary.Skipped > 0)
+        {
+            parts.Add($"{summary.Skipped} skipped");
+        }
+
         if (summary.Failed > 0)
         {
             parts.Add($"{summary.Failed} failed");
@@ -327,7 +333,7 @@ public static class ScenarioRunReportFormatter
     private static ScenarioFirstIssueReport? CreateFirstIssue(IReadOnlyList<ScenarioStepRunReport> steps)
     {
         var firstIssue = steps.FirstOrDefault(step =>
-            !string.Equals(step.Status, ScenarioStepRunStatus.Passed.ToString(), StringComparison.Ordinal));
+            IsIssueStatus(step.Status));
 
         return firstIssue is null
             ? null
@@ -340,7 +346,7 @@ public static class ScenarioRunReportFormatter
 
     private static IReadOnlyList<ScenarioIssueReport> CreateIssues(IReadOnlyList<ScenarioStepRunReport> steps)
         => steps
-            .Where(step => !string.Equals(step.Status, ScenarioStepRunStatus.Passed.ToString(), StringComparison.Ordinal))
+            .Where(step => IsIssueStatus(step.Status))
             .Select(step => new ScenarioIssueReport(
                 step.Sequence,
                 step.Name,
@@ -348,6 +354,10 @@ public static class ScenarioRunReportFormatter
                 step.Status,
                 step.Message))
             .ToArray();
+
+    private static bool IsIssueStatus(string status)
+        => !string.Equals(status, ScenarioStepRunStatus.Passed.ToString(), StringComparison.Ordinal) &&
+           !string.Equals(status, ScenarioStepRunStatus.Skipped.ToString(), StringComparison.Ordinal);
 
     private static IReadOnlyList<ScenarioPlannedStepReport> CreatePlannedSteps(
         IReadOnlyList<ScenarioStepSnapshot> scenarioSteps)
@@ -423,6 +433,7 @@ public sealed record ScenarioStepStatusSummary(
     int Executed,
     int NotRun,
     int Passed,
+    int Skipped,
     int Failed,
     int TimedOut,
     int Canceled);

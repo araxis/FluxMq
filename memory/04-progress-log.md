@@ -492,7 +492,7 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - triggers as explicit workflow starters
   - JSON tools that expose input structures, schemas, and selectable fields
 - Added `F-015 - JSONata Mapper Workbench UI` to the feature list.
-- Updated the active development target to `F-015`, so the next mapper UI slice should provide input tree, output request shape, per-field expressions, preview, and validation instead of only a raw text editor.
+- Updated the active development target to `F-015`, so the next mapper UI slice should provide input tree, output request shape, whole-request expression editing, preview, and validation instead of only a raw text editor.
 - Added the first JSONata mapper workbench implementation slice:
   - `MqttEnvelopeExpressionContextFactory` now exposes parsed `payloadJson` when payload text is valid JSON.
   - Added `DynamicMapperWorkbenchPreview` to derive input variables, output request fields, engine-aware examples, and preview results through the same mapper engines used at runtime.
@@ -1227,10 +1227,10 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 ## 2026-05-26 - Scenario expectation timeout diagnostics slice
 
 - Clarified scenario expectation timeout messages:
-  - timed-out `expect.event` steps now say whether any app runtime events were observed while the step was waiting
+  - timed-out `expect.event` steps now say whether any scenario/app events were observed while the step was waiting
   - observed non-matching events are summarized by type, topic, status, source, and payload preview
-  - `mqtt.message.published` expectations now explicitly say that the matching event must be emitted by a running app MQTT publisher node
-  - timeout text now reminds users that finished runs do not keep listening and must be rerun to match later events
+  - `mqtt.message.published` expectations now explicitly say that the matching event can come from a scenario `mqtt.publisher` event or a running app MQTT publisher node event
+  - timeout text now reminds users that finished scenario runs do not keep listening and must be rerun to match later events
   - no CSS was added or changed
 - Verified:
   - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioExpectationDiagnosticsFocused2\ -m:1 --filter "FullyQualifiedName~ScenarioRunnerTests"` passes with 7 tests.
@@ -1614,3 +1614,177 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore --filter "FullyQualifiedName~CliRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepTypeValidationCli\ -m:1` passes with 13 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepTypeAlignmentUi\ -m:1` passes with 5 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepTypeValidationFull\ -m:1` passes with 466 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-28 - Scenario step configuration validation
+
+- Moved scenario/test step validation another notch earlier:
+  - `mqtt.publisher` steps must now reference an app-level `mqtt.connection` resource and provide a valid topic.
+  - `mqtt.publisher` QoS, retain, payload encoding, base64 payloads, and byte payloads are validated before runtime build.
+  - `expect.event` string filters, timeout, and attribute filter shapes are validated before scenario execution.
+- Added `ScenarioStepConfigurationKeys` so pipeline runners, app runners, validation, and UI catalog use the same saved JSON field names.
+- Missing scenario MQTT resources now fail app start/build validation instead of surfacing later as a scenario-run failure.
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowApplicationDefinitionValidatorTests|FullyQualifiedName~ScenarioRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioConfigValidationPipeline2\ -m:1` passes with 29 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowApplicationConfigurationLoaderTests|FullyQualifiedName~FlowApplicationHostTests|FullyQualifiedName~MqttScenarioClientFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioConfigValidationApp4\ -m:1` passes with 17 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowWorkspaceServiceTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioConfigValidationUi\ -m:1` passes with 122 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet run --project src\FluxMq.Cli\FluxMq.Cli.csproj --no-restore -- validate --config C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` reports `Flow application is valid. Workflows: 2. Resources: 2.`
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioConfigValidationFull\ -m:1` passes with 470 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-28 - Runner-owned scenario events foundation
+
+- Added a small event-journal hook so scenario step runners can append runner-owned `FlowEvent` entries into the same stream that `expect.event` already observes.
+- This is the foundation for future test-runner-as-pipeline steps such as a runner-owned `mqtt.trigger`: the trigger can reuse normal component/runtime behavior, append received events to the scenario journal, and then downstream `expect.event`/`when` steps can operate on those events.
+- Recorded the future UI-portability rule: keep reusable app/test/dashboard workflow state and orchestration out of Razor-specific components so a later Avalonia/Linux UI can reuse the same logic.
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioRunnerOwnedEventsPipeline\ -m:1` passes with 12 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioRunnerOwnedEventsFull\ -m:1` passes with 471 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-28 - Scenario run lifetime resources
+
+- Added `ScenarioRunLifetime` and exposed it through `ScenarioStepRunContext`.
+- Scenario step runners can now register `IDisposable`, `IAsyncDisposable`, or async cleanup callbacks that live beyond the current step and are disposed when the scenario ends.
+- The runner disposes lifetime resources after both passed and failed runs. Cleanup failures are reported as a synthetic failed `scenario.cleanup` result instead of escaping as unstructured exceptions.
+- This keeps the path clear for a future runner-owned `mqtt.trigger` step that starts a normal trigger component, keeps it alive while later `expect.event` or `when` steps run, and stops it deterministically at scenario completion.
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioRunLifetimePipeline2\ -m:1` passes with 15 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowApplicationHostTests|FullyQualifiedName~MqttScenarioClientFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioRunLifetimeApp\ -m:1` passes with 14 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioRunLifetimeFull\ -m:1` passes with 474 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-28 - Scenario-owned MQTT trigger step
+
+- Added `mqtt.trigger` as a first-class scenario/test step, matching the normal pipeline component vocabulary.
+- The scenario trigger uses app-level `mqtt.connection` resources through the existing `IMqttScenarioClientFactory`, creates a separate runner-owned MQTT client, starts the normal `MqttConnectionComponent` plus `MqttTriggerComponent`, and registers the runtime with `ScenarioRunLifetime`.
+- Trigger-emitted `mqtt.message.received` events are appended into the scenario journal, so later `expect.event` steps can observe messages received by the runner-owned trigger without adding a special MQTT expectation side channel.
+- Scenario validation, the app default scenario runner registry, the UI step catalog, and the scenario step editor now understand `mqtt.trigger` configuration: connection, topic filter, QoS, receive retained, and retain-as-published.
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowApplicationDefinitionValidatorTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioMqttTriggerPipeline\ -m:1` passes with 20 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttScenarioClientFactoryTests|FullyQualifiedName~FlowApplicationHostTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioMqttTriggerApp3\ -m:1` passes with 15 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioMqttTriggerUi\ -m:1` passes with 74 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore --filter "FullyQualifiedName~CliRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioMqttTriggerCli\ -m:1` passes with 13 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioMqttTriggerFull\ -m:1` passes with 479 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - CLI runner-owned scenario event source guard
+
+- Relaxed the CLI scenario guard so `expect.event` can run when a prior scenario-owned event source has started.
+- The first supported runner-owned event source is `mqtt.trigger`, so CLI scenarios can now run `mqtt.trigger` followed by `expect.event` without attaching to an app runtime event stream.
+- A bare `expect.event`, or an expectation before any runner-owned event source, still fails fast with guidance to add a scenario `mqtt.trigger` or run against an app runtime through the UI/host API.
+- Verified:
+  - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore --filter "FullyQualifiedName~CliRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioCliRunnerOwnedEvents\ -m:1` passes with 14 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioCliRunnerOwnedEventsFull\ -m:1` passes with 480 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - Scenario when event condition step
+
+- Added `when.event` as the first narrow test-specific condition step.
+- `when.event` reuses the same `FlowEventExpectation` filters as `expect.event` and the same MudBlazor event-filter editor path in the test designer.
+- When the configured event matches, the step passes and the scenario continues. When it does not match before timeout, the step is marked `Skipped`, the remaining flat scenario steps are not executed, and the overall run remains successful.
+- Extracted shared event expectation reading and timeout/observation messages so `expect.event` and `when.event` stay aligned.
+- Scenario reports now count skipped steps separately and do not treat skipped `when.event` guards as issues.
+- Validation, app runner registration, the test-step catalog, and alignment guard tests now include `when.event`.
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqWhenEventPipeline2\ -m:1` passes with 17 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqWhenEventUi\ -m:1` passes with 9 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqWhenEventFull\ -m:1` passes with 483 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - Scenario publisher events enter the runner journal
+
+- `mqtt.publisher` scenario steps now append the normal `MqttPublisherComponent` `mqtt.message.published` event into the scenario event journal.
+- CLI scenarios can now run `mqtt.publisher` followed by `expect.event` without a separate `mqtt.trigger`, because the publisher action is also a runner-owned event source.
+- The CLI fast-fail guidance now says to add a scenario `mqtt.publisher` or `mqtt.trigger` before expectations that are not attached to an app runtime stream.
+- Verified:
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttScenarioClientFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqPublisherEventsApp\ -m:1` passes with 4 tests.
+  - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore --filter "FullyQualifiedName~CliRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqPublisherEventsCli3\ -m:1` passes with 15 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqPublisherEventsFull\ -m:1` passes with 484 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - CLI event-observer scenario guard
+
+- Tightened the CLI scenario fast-fail guard so both `expect.event` and `when.event` require a prior runner-owned event source.
+- A CLI scenario that starts with `when.event` now fails validation with guidance to add a scenario `mqtt.publisher` or `mqtt.trigger`, instead of silently skipping because no event stream is attached.
+- Added positive CLI coverage showing `mqtt.publisher` followed by `when.event` passes when the guard matches the publisher event.
+- Moved the event-source requirement into a shared scenario helper and applied it to desktop test runs that are not attached to a running app runtime.
+- A desktop test run with a leading `when.event` now fails immediately with a `RunFailed` diagnostic instead of waiting for the step timeout.
+- Added positive desktop coverage showing an isolated `mqtt.publisher` step can still feed a following `when.event` through the scenario journal without starting the app runtime.
+- Scenario setup failures in the desktop test runner no longer mark the app runtime state as faulted; they stay scoped to scenario diagnostics/logs.
+- Added CLI and desktop coverage for the skipped guard path: `mqtt.publisher` followed by a non-matching `when.event` keeps the scenario successful, reports the guard as skipped, and does not run later planned steps.
+- Added direct pipeline tests for the shared event-source requirement helper so the rule is owned by the scenario layer, not only by CLI/UI callers.
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioEventSourceRequirementsTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioEventSourceRequirementsPipeline\ -m:1` passes with 9 tests.
+  - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore --filter "FullyQualifiedName~CliRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqWhenSkipCli\ -m:1` passes with 18 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowWorkspaceServiceTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqWhenSkipUi\ -m:1` passes with 53 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqWhenSkipFull\ -m:1` passes with 498 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - Scenario timeout wording follows runner-owned events
+
+- Updated event expectation timeout wording after the runner-owned MQTT source refactor.
+- Timeout diagnostics now describe observed scenario/app events generically instead of assuming every observed event came from the app runtime.
+- `mqtt.message.published` timeout guidance now names both valid sources: a scenario `mqtt.publisher` event or a running app MQTT publisher node event.
+- Updated scenario step catalog descriptions so `expect.event` and `when.event` describe matching scenario or app events, not only app runtime events.
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqExpectationMessagePipeline\ -m:1` passes with 17 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioCatalogTextUi\ -m:1` passes with 6 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqExpectationMessageFull\ -m:1` passes with 499 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - Scenario-owned events mirror to scoped logs
+
+- Added a small scenario event observer hook so runner-owned events appended directly into the scenario journal can also be observed by the desktop workspace.
+- Source/app events that arrive through the scenario event stream still stay on the existing app runtime event path; only runner-owned events notify the scenario observer.
+- Desktop test runs now mirror runner-owned MQTT events into Logs with `Test runner` scope and `Test` artifact metadata, without adding those events to the app/dashboard runtime event stream.
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioEventJournalTests|FullyQualifiedName~ScenarioRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioEventObserverPipeline\ -m:1` passes with 18 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowWorkspaceServiceTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioEventObserverUi\ -m:1` passes with 53 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioEventObserverFull\ -m:1` passes with 500 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - MQTT client naming cleanup in tests
+
+- Replaced remaining live MQTT fake-client variable names that used `session` in component, app-runtime, app-host, and UI workspace tests with `mqttClient`.
+- Renamed the component test helper file from `TestMqttSession.cs` to `TestMqttBrokerClient.cs`.
+- Left stored recording session language and `session.source` component ids unchanged because those refer to persisted message sessions, not live MQTT clients.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttConnectionComponentTests|FullyQualifiedName~MqttPublisherComponentTests|FullyQualifiedName~MqttTriggerComponentTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqMqttClientNamingComponents\ -m:1` passes with 19 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowApplicationHostTests|FullyQualifiedName~PipelineComponentFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqMqttClientNamingApp\ -m:1` passes with 35 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowWorkspaceServiceTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqMqttClientNamingUi\ -m:1` passes with 53 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - Core MQTT broker client naming
+
+- Renamed the shared live MQTT client contract from `IFluxMqttClient` to `IMqttBrokerClient`.
+- Renamed the concrete MQTTnet wrapper from `FluxMqttClient` to `MqttBrokerClient`, leaving MQTTnet's own `IMqttClient` name unshadowed.
+- Updated app/runtime/scenario/UI factories, components, and tests to use the new broker-client vocabulary.
+- Renamed live fake/test MQTT clients to match the same naming direction while leaving persisted stored-session types unchanged.
+- Verified:
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqMqttBrokerClientRenameFull\ -m:1` passes with 500 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - Scenario test designer display states
+
+- Moved scenario step card display logic into `ScenarioStepDisplay` so summary text, CSS classes, and configuration labels are testable outside the Razor component.
+- Added first-class test-card styling and summary formatting for scenario-owned `mqtt.trigger` steps.
+- Added a distinct display state for `when.event` guards and for skipped guard results, keeping skipped guards visibly successful rather than generic or error-colored.
+- Updated trigger configuration labels such as `topic filter`, `receive retained`, `retain as published`, and `QoS` in the test card details.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepDisplayTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioRunReportFormatterTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepDisplayUi\ -m:1` passes with 85 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepDisplayUiFull\ -m:1` passes with 197 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - Diagram link factory cleanup
+
+- Removed the remaining `NotImplementedException` from the flow designer link factory.
+- Unexpected Blazor.Diagrams link source shapes now fail with a clear invalid-operation diagnostic that names the unsupported source type.
+- Verified:
+  - `rg -n "NotImplementedException|throw new NotImplemented" src tests -g "*.cs" -g "*.razor"` finds no matches.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDiagramNodeModelTests|FullyQualifiedName~ActorNodeModelTests|FullyQualifiedName~SourceNodeModelTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqDiagramPlaceholderUi\ -m:1` passes with 25 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqDiagramPlaceholderUiFull\ -m:1` passes with 197 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - Active planning language sync
+
+- Updated the active feature list and roadmap to use `Core MQTT Client`, `IMqttBrokerClient`, and `MqttBrokerClient` language after the broker-client rename.
+- Updated the visual diagram acceptance note so pre-release development avoids saved-project compatibility aliases by default.
+
+## 2026-05-31 - Dynamic mapper configuration cleanup
+
+- Removed pre-release per-field mapper configuration from runtime dynamic mapper creation.
+- `flow.mapper` now requires `expression` for `MqttPublishRequest`, `MqttRecordingRequest`, and `FileWriteRequest` outputs.
+- Removed the recording mapper constructor path that hid `SessionId` in mapper configuration; recording request mappers now emit a full `MqttRecordingRequest`.
+- Removed the `mapper` engine alias so saved mapper configuration uses the single `engine` key.
+- Removed the publish mapper shortcut that converted an envelope directly into a publish request outside an explicit mapper.
+- Updated definition validator tests so MQTT app nodes use normal workflow inputs rather than old resource-port examples.
+- Removed the unused required-session-id runtime helper left after the mapper cleanup.
+- Verified:
+  - `dotnet test FluxMq.sln --no-restore /p:UseSharedCompilation=false /p:UseAppHost=false /p:BaseOutputPath="$env:TEMP\FluxMqMapperCleanFull6\" -m:1 -v minimal` passes with 511 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore /p:UseSharedCompilation=false /p:UseAppHost=false /p:BaseOutputPath="$env:TEMP\FluxMqValidatorShapePipeline\" -m:1 -v minimal` passes with 95 tests.

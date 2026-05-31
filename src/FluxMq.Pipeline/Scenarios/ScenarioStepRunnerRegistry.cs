@@ -8,6 +8,7 @@ public sealed class ScenarioStepRunnerRegistry
 
     public static ScenarioStepRunnerRegistry CreateEventExpectationOnly()
         => new ScenarioStepRunnerRegistry()
+            .Register(new WhenEventScenarioStepRunner())
             .Register(new ExpectEventScenarioStepRunner());
 
     public ScenarioStepRunnerRegistry Register(IScenarioStepRunner runner)

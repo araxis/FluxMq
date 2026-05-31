@@ -9,82 +9,82 @@ namespace FluxMq.Components.Tests.Components;
 public sealed class MqttConnectionComponentTests
 {
     [Fact]
-    public async Task StartAsync_ConnectsTheUnderlyingSession()
+    public async Task StartAsync_ConnectsTheUnderlyingClient()
     {
-        var session = new TestFluxMqttClient();
-        var component = new MqttConnectionComponent(session);
+        var mqttClient = new TestMqttBrokerClient();
+        var component = new MqttConnectionComponent(mqttClient);
 
         await component.StartAsync();
 
-        session.ConnectCalls.ShouldBe(1);
+        mqttClient.ConnectCalls.ShouldBe(1);
     }
 
     [Fact]
     public async Task StartAsync_WaitsForConnectionBeforeReturning()
     {
         var connectGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var session = new TestFluxMqttClient(connectDelay: connectGate.Task);
-        var component = new MqttConnectionComponent(session);
+        var mqttClient = new TestMqttBrokerClient(connectDelay: connectGate.Task);
+        var component = new MqttConnectionComponent(mqttClient);
 
         var startTask = component.StartAsync();
         await Task.Delay(50);
 
         startTask.IsCompleted.ShouldBeFalse();
-        session.State.ShouldBe(MqttClientState.Connecting);
+        mqttClient.State.ShouldBe(MqttClientState.Connecting);
 
         connectGate.SetResult();
 
         await startTask.WaitAsync(TimeSpan.FromSeconds(5));
-        session.State.ShouldBe(MqttClientState.Connected);
+        mqttClient.State.ShouldBe(MqttClientState.Connected);
     }
 
     [Fact]
     public async Task StartAsync_IsIdempotent()
     {
-        var session = new TestFluxMqttClient();
-        var component = new MqttConnectionComponent(session);
+        var mqttClient = new TestMqttBrokerClient();
+        var component = new MqttConnectionComponent(mqttClient);
 
         await component.StartAsync();
         await component.StartAsync();
 
-        session.ConnectCalls.ShouldBe(1);
+        mqttClient.ConnectCalls.ShouldBe(1);
     }
 
     [Fact]
     public void Client_ExposesUnderlyingClient()
     {
-        var session = new TestFluxMqttClient();
-        var component = new MqttConnectionComponent(session);
+        var mqttClient = new TestMqttBrokerClient();
+        var component = new MqttConnectionComponent(mqttClient);
 
-        component.Client.ShouldBeSameAs(session);
+        component.Client.ShouldBeSameAs(mqttClient);
     }
 
     [Fact]
-    public async Task DisposeAsync_DisposesOwnedSession()
+    public async Task DisposeAsync_DisposesOwnedClient()
     {
-        var session = new TestFluxMqttClient();
-        var component = new MqttConnectionComponent(session, disposeClientOnDispose: true);
+        var mqttClient = new TestMqttBrokerClient();
+        var component = new MqttConnectionComponent(mqttClient, disposeClientOnDispose: true);
 
         await component.DisposeAsync();
 
-        session.DisposeCalls.ShouldBe(1);
+        mqttClient.DisposeCalls.ShouldBe(1);
     }
 
     [Fact]
-    public async Task DisposeAsync_LeavesSessionAlone_WhenNotOwned()
+    public async Task DisposeAsync_LeavesClientAlone_WhenNotOwned()
     {
-        var session = new TestFluxMqttClient();
-        var component = new MqttConnectionComponent(session, disposeClientOnDispose: false);
+        var mqttClient = new TestMqttBrokerClient();
+        var component = new MqttConnectionComponent(mqttClient, disposeClientOnDispose: false);
 
         await component.DisposeAsync();
 
-        session.DisposeCalls.ShouldBe(0);
+        mqttClient.DisposeCalls.ShouldBe(0);
     }
 
     [Fact]
     public async Task Fault_PublishesErrorAndFaultsCompletion()
     {
-        var component = new MqttConnectionComponent(new TestFluxMqttClient());
+        var component = new MqttConnectionComponent(new TestMqttBrokerClient());
         var errors = new List<FlowError>();
         var sink = new ActionBlock<FlowError>(errors.Add);
         component.Errors.LinkTo(sink, new DataflowLinkOptions { PropagateCompletion = true });

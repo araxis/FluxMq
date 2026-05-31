@@ -158,7 +158,7 @@ public sealed class ScenarioRunnerTests
         step.Status.ShouldBe(ScenarioStepRunStatus.TimedOut);
         var message = step.Message.ShouldNotBeNull();
         message.ShouldContain("Expected event was not observed");
-        message.ShouldContain("Observed 0 app runtime events while waiting.");
+        message.ShouldContain("Observed 0 events while waiting.");
     }
 
     [Fact]
@@ -218,7 +218,7 @@ public sealed class ScenarioRunnerTests
         result.Status.ShouldBe(ScenarioRunStatus.Failed);
         var step = result.Steps.ShouldHaveSingleItem();
         step.Status.ShouldBe(ScenarioStepRunStatus.TimedOut);
-        step.Message.ShouldNotBeNull().ShouldContain("Observed 0 app runtime events while waiting.");
+        step.Message.ShouldNotBeNull().ShouldContain("Observed 0 events while waiting.");
     }
 
     [Fact]
@@ -254,7 +254,7 @@ public sealed class ScenarioRunnerTests
         message.ShouldContain("Observed while waiting: mqtt.message.received");
         message.ShouldContain("topic 'fluxmq/sample'");
         message.ShouldContain("payload '1'");
-        message.ShouldContain("A mqtt.message.published expectation must be emitted by a running app MQTT publisher node.");
+        message.ShouldContain("A mqtt.message.published expectation must match a scenario mqtt.publisher event or a running app MQTT publisher node event.");
     }
 
     [Fact]
@@ -283,6 +283,71 @@ public sealed class ScenarioRunnerTests
         result.Steps.Count.ShouldBe(2);
         result.Steps[0].Status.ShouldBe(ScenarioStepRunStatus.Passed);
         result.Steps[1].Status.ShouldBe(ScenarioStepRunStatus.TimedOut);
+    }
+
+    [Fact]
+    public async Task RunAsync_ContinuesAfterWhenEventMatches()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        var scenario = new ScenarioDefinition
+        {
+            Steps =
+            {
+                ["whenReady"] = WhenEvent(
+                    ("eventType", FlowEventTypes.MqttMessageReceived),
+                    ("topicStartsWith", "factory/ready"),
+                    ("timeoutMs", 1000)),
+                ["expectPublish"] = ExpectEvent(
+                    ("eventType", FlowEventTypes.MqttMessagePublished),
+                    ("topicStartsWith", "factory/result"),
+                    ("timeoutMs", 1000))
+            }
+        };
+
+        var runTask = CreateRunner().RunAsync("conditional", scenario, events);
+        events.Post(Event(FlowEventTypes.MqttMessageReceived, topic: "factory/ready"));
+        events.Post(Event(FlowEventTypes.MqttMessagePublished, topic: "factory/result"));
+
+        var result = await runTask.WaitAsync(TimeSpan.FromSeconds(2));
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Steps.Count.ShouldBe(2);
+        result.Steps[0].Status.ShouldBe(ScenarioStepRunStatus.Passed);
+        result.Steps[1].Status.ShouldBe(ScenarioStepRunStatus.Passed);
+    }
+
+    [Fact]
+    public async Task RunAsync_SkipsRemainingStepsWhenWhenEventDoesNotMatch()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        var scenario = new ScenarioDefinition
+        {
+            Steps =
+            {
+                ["whenReady"] = WhenEvent(
+                    ("eventType", FlowEventTypes.MqttMessageReceived),
+                    ("topicStartsWith", "factory/ready"),
+                    ("timeoutMs", 20)),
+                ["expectPublish"] = ExpectEvent(
+                    ("eventType", FlowEventTypes.MqttMessagePublished),
+                    ("topicStartsWith", "factory/result"),
+                    ("timeoutMs", 1000))
+            }
+        };
+
+        var runTask = CreateRunner()
+            .RunAsync("conditional", scenario, events);
+        events.Post(Event(FlowEventTypes.MqttMessageReceived, topic: "factory/other"));
+
+        var result = await runTask
+            .WaitAsync(TimeSpan.FromSeconds(2));
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Status.ShouldBe(ScenarioRunStatus.Passed);
+        var step = result.Steps.ShouldHaveSingleItem();
+        step.Status.ShouldBe(ScenarioStepRunStatus.Skipped);
+        step.Message.ShouldNotBeNull().ShouldContain("Remaining steps were skipped.");
+        step.Message.ShouldContain("Observed while waiting: mqtt.message.received");
     }
 
     [Fact]
@@ -370,10 +435,116 @@ public sealed class ScenarioRunnerTests
             .Message.ShouldBe("ready");
     }
 
+    [Fact]
+    public async Task RunAsync_AllowsStepRunnersToAppendEventsForLaterExpectations()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        var registry = ScenarioStepRunnerRegistry.CreateEventExpectationOnly()
+            .Register(new AppendScenarioEventStepRunner());
+        var scenario = new ScenarioDefinition
+        {
+            Steps =
+            {
+                ["trigger"] = new ScenarioStepDefinition { Type = AppendScenarioEventStepRunner.StepType },
+                ["expect"] = ExpectEvent(
+                    ("eventType", FlowEventTypes.MqttMessageReceived),
+                    ("topicStartsWith", "runner/topic"),
+                    ("status", "received"),
+                    ("timeoutMs", 1000))
+            }
+        };
+
+        var result = await new ScenarioRunner(registry)
+            .RunAsync("runnerEvents", scenario, events)
+            .WaitAsync(TimeSpan.FromSeconds(2));
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Steps.Count.ShouldBe(2);
+        result.Steps[1].MatchedEvent!.Source.ShouldBe("AppendScenarioEventStepRunner");
+        result.Steps[1].MatchedEvent!.Topic.ShouldBe("runner/topic/value");
+    }
+
+    [Fact]
+    public async Task RunAsync_DisposesRegisteredLifetimeResourcesAfterPassedRun()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        var resource = new TestLifetimeResource();
+        var registry = new ScenarioStepRunnerRegistry()
+            .Register(new RegisterLifetimeResourceStepRunner(resource));
+        var scenario = new ScenarioDefinition
+        {
+            Steps =
+            {
+                ["register"] = new ScenarioStepDefinition { Type = RegisterLifetimeResourceStepRunner.StepType }
+            }
+        };
+
+        var result = await new ScenarioRunner(registry)
+            .RunAsync("lifetime", scenario, events);
+
+        result.IsSuccess.ShouldBeTrue();
+        resource.DisposeCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task RunAsync_DisposesRegisteredLifetimeResourcesAfterFailedRun()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        var resource = new TestLifetimeResource();
+        var registry = new ScenarioStepRunnerRegistry()
+            .Register(new RegisterLifetimeResourceStepRunner(resource));
+        var scenario = new ScenarioDefinition
+        {
+            Steps =
+            {
+                ["register"] = new ScenarioStepDefinition { Type = RegisterLifetimeResourceStepRunner.StepType },
+                ["unknown"] = new ScenarioStepDefinition { Type = "unknown.step" }
+            }
+        };
+
+        var result = await new ScenarioRunner(registry)
+            .RunAsync("lifetime", scenario, events);
+
+        result.IsSuccess.ShouldBeFalse();
+        resource.DisposeCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task RunAsync_ReportsCleanupFailureAsScenarioFailure()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        var registry = new ScenarioStepRunnerRegistry()
+            .Register(new RegisterLifetimeResourceStepRunner(new TestLifetimeResource(failDispose: true)));
+        var scenario = new ScenarioDefinition
+        {
+            Steps =
+            {
+                ["register"] = new ScenarioStepDefinition { Type = RegisterLifetimeResourceStepRunner.StepType }
+            }
+        };
+
+        var result = await new ScenarioRunner(registry)
+            .RunAsync("lifetime", scenario, events);
+
+        result.IsSuccess.ShouldBeFalse();
+        result.Steps.Count.ShouldBe(2);
+        var cleanup = result.Steps[1];
+        cleanup.Name.ShouldBe("cleanup");
+        cleanup.Type.ShouldBe("scenario.cleanup");
+        cleanup.Status.ShouldBe(ScenarioStepRunStatus.Failed);
+        cleanup.Message.ShouldNotBeNull().ShouldContain("cleanup boom");
+    }
+
     private static ScenarioRunner CreateRunner()
         => new(ScenarioStepRunnerRegistry.CreateEventExpectationOnly());
 
     private static ScenarioStepDefinition ExpectEvent(params (string Key, object Value)[] values)
+        => EventStep(ExpectEventScenarioStepRunner.StepType, values);
+
+    private static ScenarioStepDefinition WhenEvent(params (string Key, object Value)[] values)
+        => EventStep(WhenEventScenarioStepRunner.StepType, values);
+
+    private static ScenarioStepDefinition EventStep(string stepType, params (string Key, object Value)[] values)
     {
         var configuration = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
         foreach (var (key, value) in values)
@@ -383,7 +554,7 @@ public sealed class ScenarioRunnerTests
 
         return new ScenarioStepDefinition
         {
-            Type = ExpectEventScenarioStepRunner.StepType,
+            Type = stepType,
             Configuration = configuration
         };
     }
@@ -431,6 +602,81 @@ public sealed class ScenarioRunnerTests
                 Message = service.Value,
                 NextEventOffset = context.EventOffset
             });
+        }
+    }
+
+    private sealed class AppendScenarioEventStepRunner : IScenarioStepRunner
+    {
+        public const string StepType = "test.append-event";
+
+        public string Type => StepType;
+
+        public Task<ScenarioStepResult> RunAsync(
+            ScenarioStepRunContext context,
+            CancellationToken cancellationToken = default)
+        {
+            context.Events.Append(new FlowEvent
+            {
+                Timestamp = DateTimeOffset.UtcNow,
+                Type = FlowEventTypes.MqttMessageReceived,
+                Source = nameof(AppendScenarioEventStepRunner),
+                Topic = "runner/topic/value",
+                Subject = "runner/topic/value",
+                Status = "received",
+                PayloadPreview = "42",
+                PayloadBytes = 2
+            });
+
+            return Task.FromResult(new ScenarioStepResult
+            {
+                Name = context.StepName,
+                Type = context.Step.Type,
+                Status = ScenarioStepRunStatus.Passed,
+                StartedAt = DateTimeOffset.UtcNow,
+                FinishedAt = DateTimeOffset.UtcNow,
+                Message = "Appended runner event.",
+                NextEventOffset = context.EventOffset
+            });
+        }
+    }
+
+    private sealed class RegisterLifetimeResourceStepRunner(TestLifetimeResource resource) : IScenarioStepRunner
+    {
+        public const string StepType = "test.register-lifetime";
+
+        public string Type => StepType;
+
+        public Task<ScenarioStepResult> RunAsync(
+            ScenarioStepRunContext context,
+            CancellationToken cancellationToken = default)
+        {
+            context.Lifetime.Register(resource);
+            return Task.FromResult(new ScenarioStepResult
+            {
+                Name = context.StepName,
+                Type = context.Step.Type,
+                Status = ScenarioStepRunStatus.Passed,
+                StartedAt = DateTimeOffset.UtcNow,
+                FinishedAt = DateTimeOffset.UtcNow,
+                Message = "Registered lifetime resource.",
+                NextEventOffset = context.EventOffset
+            });
+        }
+    }
+
+    private sealed class TestLifetimeResource(bool failDispose = false) : IAsyncDisposable
+    {
+        public int DisposeCount { get; private set; }
+
+        public ValueTask DisposeAsync()
+        {
+            DisposeCount++;
+            if (failDispose)
+            {
+                throw new InvalidOperationException("cleanup boom");
+            }
+
+            return ValueTask.CompletedTask;
         }
     }
 }

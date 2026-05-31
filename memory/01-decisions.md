@@ -4,6 +4,17 @@ This file records project decisions so they do not get lost across sessions.
 
 ## Accepted Decisions
 
+### 2026-05-31 - Test when steps are successful guards
+
+Decision: Model `when.event` as a conditional guard over the scenario event stream. A matching event passes and lets the flat scenario continue; a timeout marks the guard step `Skipped`, stops remaining flat scenario steps, and keeps the scenario run successful.
+
+Reasoning:
+- `when.event` should not duplicate `expect.event`; it answers whether later steps are applicable, while `expect.event` asserts required behavior.
+- This gives the test plane a useful conditional block without introducing a separate MQTT probe engine or branching DSL.
+- Reports should count skipped guards separately from failures so optional paths are visible but not treated as issues.
+
+Status: Accepted.
+
 ### 2026-05-22 - Components use explicit actor command inputs for side effects
 
 Decision: Side-effecting flow components should consume explicit request/command input types instead of raw `MqttEnvelope` values when the operation needs intent beyond "observe this message." User-facing names should prefer actor language such as MQTT Publisher, File Writer, Recorder, HTTP Sender, or Email Sender instead of generic "sink" names.

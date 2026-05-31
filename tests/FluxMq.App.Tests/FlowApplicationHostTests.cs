@@ -289,7 +289,7 @@ public sealed class FlowApplicationHostTests
     [Fact]
     public async Task RunScenarioAsync_CanPublishMqttMessageThroughNamedConnection()
     {
-        var session = new FakeFluxMqttClient();
+        var mqttClient = new FakeMqttBrokerClient();
         await using var host = FlowApplicationHost.CreateDefault(
             BuildConfiguration(
                 """
@@ -335,7 +335,7 @@ public sealed class FlowApplicationHostTests
                   }
                 }
                 """),
-            clientFactory: _ => session);
+            clientFactory: _ => mqttClient);
 
         var startResult = await host.StartAsync();
         startResult.IsSuccess.ShouldBeTrue();
@@ -343,7 +343,7 @@ public sealed class FlowApplicationHostTests
         var result = await host.RunScenarioAsync("publishMessage");
 
         result.IsSuccess.ShouldBeTrue();
-        var publish = session.Published.ShouldHaveSingleItem();
+        var publish = mqttClient.Published.ShouldHaveSingleItem();
         publish.Topic.ShouldBe("topica/b/c");
         Encoding.UTF8.GetString(publish.Payload).ShouldBe("12");
         publish.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtLeastOnce);
@@ -351,9 +351,9 @@ public sealed class FlowApplicationHostTests
     }
 
     [Fact]
-    public async Task RunScenarioAsync_ReportsMissingScenarioMqttConnection()
+    public async Task StartAsync_ReportsMissingScenarioMqttConnection()
     {
-        var session = new FakeFluxMqttClient();
+        var mqttClient = new FakeMqttBrokerClient();
         await using var host = FlowApplicationHost.CreateDefault(
             BuildConfiguration(
                 """
@@ -397,17 +397,16 @@ public sealed class FlowApplicationHostTests
                   }
                 }
                 """),
-            clientFactory: _ => session);
+            clientFactory: _ => mqttClient);
 
         var startResult = await host.StartAsync();
-        startResult.IsSuccess.ShouldBeTrue();
-
-        var result = await host.RunScenarioAsync("publishMessage");
-
-        result.IsSuccess.ShouldBeFalse();
-        result.Steps.ShouldHaveSingleItem()
-            .Message.ShouldBe("MQTT connection resource 'missingBroker' does not exist.");
-        session.Published.ShouldBeEmpty();
+        startResult.IsSuccess.ShouldBeFalse();
+        var validationError = startResult.RuntimeBuild!.Validation.Errors.Single(
+            error => error.Code == ApplicationDefinitionValidationErrorCode.MissingScenarioStepResource);
+        validationError.Message.ShouldContain("publishMessage");
+        validationError.Message.ShouldContain("publish");
+        validationError.Message.ShouldContain("missingBroker");
+        mqttClient.Published.ShouldBeEmpty();
     }
 
     [Fact]
@@ -523,7 +522,7 @@ public sealed class FlowApplicationHostTests
         }
     }
 
-    private sealed class FakeFluxMqttClient : IFluxMqttClient
+    private sealed class FakeMqttBrokerClient : IMqttBrokerClient
     {
         private readonly Channel<MqttEnvelope> _messages = Channel.CreateUnbounded<MqttEnvelope>();
 

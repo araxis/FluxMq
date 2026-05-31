@@ -1,10 +1,8 @@
-using FluxMq.Pipeline.Components;
-
 namespace FluxMq.Pipeline.Scenarios;
 
-public sealed class ExpectEventScenarioStepRunner : IScenarioStepRunner
+public sealed class WhenEventScenarioStepRunner : IScenarioStepRunner
 {
-    public const string StepType = ScenarioStepTypes.ExpectEvent;
+    public const string StepType = ScenarioStepTypes.WhenEvent;
 
     public string Type => StepType;
 
@@ -33,10 +31,10 @@ public sealed class ExpectEventScenarioStepRunner : IScenarioStepRunner
             {
                 Name = context.StepName,
                 Type = Type,
-                Status = ScenarioStepRunStatus.TimedOut,
+                Status = ScenarioStepRunStatus.Skipped,
                 StartedAt = startedAt,
                 FinishedAt = finishedAt,
-                Message = FlowEventExpectationMessages.DescribeExpectTimeout(expectation, observedEvents),
+                Message = FlowEventExpectationMessages.DescribeWhenSkipped(expectation, observedEvents),
                 NextEventOffset = context.EventOffset
             };
         }
@@ -48,7 +46,7 @@ public sealed class ExpectEventScenarioStepRunner : IScenarioStepRunner
             Status = ScenarioStepRunStatus.Passed,
             StartedAt = startedAt,
             FinishedAt = finishedAt,
-            Message = "Expected event observed.",
+            Message = "When condition matched; continuing scenario.",
             MatchedEvent = match.Event,
             MatchedEventIndex = match.Index,
             NextEventOffset = context.EventOffset

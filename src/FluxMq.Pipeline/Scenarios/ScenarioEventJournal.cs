@@ -8,18 +8,23 @@ public sealed class ScenarioEventJournal : IDisposable
     private readonly object _gate = new();
     private readonly List<FlowEvent> _events = [];
     private readonly DateTimeOffset? _minimumTimestamp;
+    private readonly IScenarioEventObserver? _runnerOwnedEventObserver;
     private readonly ActionBlock<FlowEvent> _target;
     private readonly IDisposable _link;
     private TaskCompletionSource _changed = NewChangeSource();
     private bool _completed;
     private bool _disposed;
 
-    public ScenarioEventJournal(ISourceBlock<FlowEvent> source, DateTimeOffset? minimumTimestamp = null)
+    public ScenarioEventJournal(
+        ISourceBlock<FlowEvent> source,
+        DateTimeOffset? minimumTimestamp = null,
+        IScenarioEventObserver? runnerOwnedEventObserver = null)
     {
         ArgumentNullException.ThrowIfNull(source);
 
         _minimumTimestamp = minimumTimestamp;
-        _target = new ActionBlock<FlowEvent>(Record);
+        _runnerOwnedEventObserver = runnerOwnedEventObserver;
+        _target = new ActionBlock<FlowEvent>(AppendFromSource);
         _link = source.LinkTo(_target, new DataflowLinkOptions { PropagateCompletion = true });
         _ = _target.Completion.ContinueWith(
             _ => Complete(),
@@ -65,6 +70,44 @@ public sealed class ScenarioEventJournal : IDisposable
 
             return events.ToArray();
         }
+    }
+
+    public void Append(FlowEvent flowEvent)
+    {
+        if (AppendCore(flowEvent))
+        {
+            _runnerOwnedEventObserver?.Observe(flowEvent);
+        }
+    }
+
+    private void AppendFromSource(FlowEvent flowEvent)
+        => AppendCore(flowEvent);
+
+    private bool AppendCore(FlowEvent flowEvent)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
+        if (_minimumTimestamp is { } minimumTimestamp &&
+            flowEvent.Timestamp < minimumTimestamp)
+        {
+            return false;
+        }
+
+        TaskCompletionSource changed;
+        lock (_gate)
+        {
+            if (_completed)
+            {
+                return false;
+            }
+
+            _events.Add(flowEvent);
+            changed = _changed;
+            _changed = NewChangeSource();
+        }
+
+        changed.TrySetResult();
+        return true;
     }
 
     public async Task<ScenarioEventMatch?> WaitForMatchAsync(
@@ -148,25 +191,6 @@ public sealed class ScenarioEventJournal : IDisposable
 
     private static TaskCompletionSource NewChangeSource()
         => new(TaskCreationOptions.RunContinuationsAsynchronously);
-
-    private void Record(FlowEvent flowEvent)
-    {
-        if (_minimumTimestamp is { } minimumTimestamp &&
-            flowEvent.Timestamp < minimumTimestamp)
-        {
-            return;
-        }
-
-        TaskCompletionSource changed;
-        lock (_gate)
-        {
-            _events.Add(flowEvent);
-            changed = _changed;
-            _changed = NewChangeSource();
-        }
-
-        changed.TrySetResult();
-    }
 
     private void Complete()
     {

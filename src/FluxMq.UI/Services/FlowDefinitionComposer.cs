@@ -1964,7 +1964,7 @@ public sealed class FlowDefinitionComposer
         string stepType)
     {
         var step = ScenarioStepCatalog.Shared.Find(stepType);
-        if (step?.EditorKind == ScenarioStepEditorKind.MqttPublish)
+        if (step?.EditorKind is ScenarioStepEditorKind.MqttPublish or ScenarioStepEditorKind.MqttTrigger)
         {
             return ScenarioStepCatalog.Shared.CreateDefaultConfiguration(
                 stepType,
@@ -2002,6 +2002,16 @@ public sealed class FlowDefinitionComposer
             return result;
         }
 
+        if (IsMqttTriggerScenarioStep(stepType))
+        {
+            AddString(result, configuration, ScenarioStepCatalog.ConnectionKey);
+            AddString(result, configuration, ScenarioStepCatalog.SubscriptionsKey);
+            AddInt(result, configuration, ScenarioStepCatalog.QosKey, 1);
+            AddBool(result, configuration, ScenarioStepCatalog.ReceiveRetainedKey, false);
+            AddBool(result, configuration, ScenarioStepCatalog.RetainAsPublishedKey, true);
+            return result;
+        }
+
         AddString(result, configuration, "eventType");
         AddString(result, configuration, "topicStartsWith");
         AddString(result, configuration, "subjectStartsWith");
@@ -2015,6 +2025,9 @@ public sealed class FlowDefinitionComposer
 
     private static bool IsMqttPublishScenarioStep(string stepType)
         => ScenarioStepCatalog.Shared.Find(stepType)?.EditorKind == ScenarioStepEditorKind.MqttPublish;
+
+    private static bool IsMqttTriggerScenarioStep(string stepType)
+        => ScenarioStepCatalog.Shared.Find(stepType)?.EditorKind == ScenarioStepEditorKind.MqttTrigger;
 
     private static void AddString(JsonObject target, IReadOnlyDictionary<string, string> configuration, string key)
         => target[key] = configuration.TryGetValue(key, out var value) ? value ?? string.Empty : string.Empty;

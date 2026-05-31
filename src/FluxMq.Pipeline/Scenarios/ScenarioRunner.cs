@@ -35,8 +35,10 @@ public sealed class ScenarioRunner(ScenarioStepRunnerRegistry registry)
         var results = new List<ScenarioStepResult>();
         var eventOffset = 0;
         var consumedEventIndexes = new HashSet<int>();
+        services.TryGet<IScenarioEventObserver>(out var eventObserver);
 
-        using var journal = new ScenarioEventJournal(events, startedAt);
+        var lifetime = new ScenarioRunLifetime();
+        using var journal = new ScenarioEventJournal(events, startedAt, eventObserver);
 
         foreach (var step in scenario.Steps)
         {
@@ -45,6 +47,7 @@ public sealed class ScenarioRunner(ScenarioStepRunnerRegistry registry)
                 step.Key,
                 step.Value,
                 journal,
+                lifetime,
                 services,
                 eventOffset,
                 consumedEventIndexes,
@@ -62,6 +65,16 @@ public sealed class ScenarioRunner(ScenarioStepRunnerRegistry registry)
             {
                 break;
             }
+
+            if (result.Status == ScenarioStepRunStatus.Skipped)
+            {
+                break;
+            }
+        }
+
+        if (await DisposeLifetimeAsync(lifetime, eventOffset).ConfigureAwait(false) is { } cleanupResult)
+        {
+            results.Add(cleanupResult);
         }
 
         var finishedAt = DateTimeOffset.UtcNow;
@@ -80,6 +93,7 @@ public sealed class ScenarioRunner(ScenarioStepRunnerRegistry registry)
         string stepName,
         ScenarioStepDefinition step,
         ScenarioEventJournal events,
+        ScenarioRunLifetime lifetime,
         ScenarioStepServices services,
         int eventOffset,
         IReadOnlySet<int> consumedEventIndexes,
@@ -109,6 +123,7 @@ public sealed class ScenarioRunner(ScenarioStepRunnerRegistry registry)
                     StepName = stepName,
                     Step = step,
                     Events = events,
+                    Lifetime = lifetime,
                     Services = services,
                     EventOffset = eventOffset,
                     ConsumedEventIndexes = consumedEventIndexes
@@ -153,5 +168,29 @@ public sealed class ScenarioRunner(ScenarioStepRunnerRegistry registry)
         return results.All(step => step.IsSuccess)
             ? ScenarioRunStatus.Passed
             : ScenarioRunStatus.Failed;
+    }
+
+    private static async Task<ScenarioStepResult?> DisposeLifetimeAsync(
+        ScenarioRunLifetime lifetime,
+        int eventOffset)
+    {
+        try
+        {
+            await lifetime.DisposeAsync().ConfigureAwait(false);
+            return null;
+        }
+        catch (Exception exception)
+        {
+            return new ScenarioStepResult
+            {
+                Name = "cleanup",
+                Type = "scenario.cleanup",
+                Status = ScenarioStepRunStatus.Failed,
+                StartedAt = DateTimeOffset.UtcNow,
+                FinishedAt = DateTimeOffset.UtcNow,
+                Message = $"Scenario cleanup failed: {exception.Message}",
+                NextEventOffset = eventOffset
+            };
+        }
     }
 }

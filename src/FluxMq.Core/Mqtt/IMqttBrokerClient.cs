@@ -4,7 +4,7 @@ using System.Threading.Channels;
 
 namespace FluxMq.Core.Mqtt;
 
-public interface IFluxMqttClient : IAsyncDisposable
+public interface IMqttBrokerClient : IAsyncDisposable
 {
     MqttConnectionProfile Profile { get; }
     MqttClientState State { get; }

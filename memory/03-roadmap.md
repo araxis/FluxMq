@@ -13,7 +13,7 @@ Goals:
 Deliverable:
 - Buildable core library solution.
 
-## Stage 1 - Core MQTT Session
+## Stage 1 - Core MQTT Client
 
 Goals:
 - Define connection profile model.

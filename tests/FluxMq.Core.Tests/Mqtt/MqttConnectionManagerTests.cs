@@ -17,12 +17,12 @@ public class MqttConnectionManagerTests
             .AddRetry(new RetryStrategyOptions { MaxRetryAttempts = 5, Delay = TimeSpan.Zero })
             .Build();
 
-    private static (MqttConnectionManager manager, FakeFluxMqttClient client) BuildManager(
+    private static (MqttConnectionManager manager, FakeMqttBrokerClient client) BuildManager(
         MqttConnectionProfile? profile = null,
         Func<Task>? onConnect = null)
     {
         profile ??= new MqttConnectionProfile { Name = "test" };
-        var client = new FakeFluxMqttClient(profile, onConnect);
+        var client = new FakeMqttBrokerClient(profile, onConnect);
         var manager = new MqttConnectionManager(_ => client, InstantRetry);
         return (manager, client);
     }
@@ -108,7 +108,7 @@ public class MqttConnectionManagerTests
         var reconnectedTcs = new TaskCompletionSource();
 
         // Fail once, then succeed — reconnect loop should complete after 1 retry
-        var client = new FakeFluxMqttClient(profile, onConnect: () =>
+        var client = new FakeMqttBrokerClient(profile, onConnect: () =>
         {
             connectCount++;
             if (connectCount == 1) return Task.CompletedTask; // initial connect
@@ -136,7 +136,7 @@ public class MqttConnectionManagerTests
         var connectGate = new SemaphoreSlim(0);
         var connectCount = 0;
 
-        var client = new FakeFluxMqttClient(profile, onConnect: async () =>
+        var client = new FakeMqttBrokerClient(profile, onConnect: async () =>
         {
             connectCount++;
             if (connectCount > 1)
@@ -165,10 +165,10 @@ public class MqttConnectionManagerTests
             .Select(_ => new MqttConnectionProfile())
             .ToList();
 
-        var clients = new List<FakeFluxMqttClient>();
+        var clients = new List<FakeMqttBrokerClient>();
         var manager = new MqttConnectionManager(p =>
         {
-            var s = new FakeFluxMqttClient(p);
+            var s = new FakeMqttBrokerClient(p);
             clients.Add(s);
             return s;
         }, InstantRetry);
@@ -182,10 +182,10 @@ public class MqttConnectionManagerTests
     }
 }
 
-sealed class FakeFluxMqttClient(
+sealed class FakeMqttBrokerClient(
     MqttConnectionProfile profile,
     Func<Task>? onConnect = null,
-    MqttClientState initialState = MqttClientState.Disconnected) : IFluxMqttClient
+    MqttClientState initialState = MqttClientState.Disconnected) : IMqttBrokerClient
 {
     private readonly Channel<MqttEnvelope> _channel = Channel.CreateUnbounded<MqttEnvelope>();
 

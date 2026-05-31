@@ -50,7 +50,7 @@ public sealed class ConnectionStateTriggerComponentTests
             Host = "localhost",
             Port = 1883
         };
-        var client = new FakeFluxMqttClient(profile);
+        var client = new FakeMqttBrokerClient(profile);
         using var component = new ConnectionStateTriggerComponent(client);
         var received = new List<MqttClientStateChangedEventArgs>();
         var sink = new ActionBlock<MqttClientStateChangedEventArgs>(received.Add);
@@ -90,12 +90,12 @@ public sealed class ConnectionStateTriggerComponentTests
 
     private sealed class FakeConnectionManager : IMqttConnectionManager
     {
-        public IReadOnlyDictionary<ConnectionProfileId, IFluxMqttClient> Clients { get; } =
-            new Dictionary<ConnectionProfileId, IFluxMqttClient>();
+        public IReadOnlyDictionary<ConnectionProfileId, IMqttBrokerClient> Clients { get; } =
+            new Dictionary<ConnectionProfileId, IMqttBrokerClient>();
 
         public event EventHandler<MqttClientStateChangedEventArgs>? StateChanged;
 
-        public Task<IFluxMqttClient> ConnectAsync(MqttConnectionProfile profile, CancellationToken ct = default)
+        public Task<IMqttBrokerClient> ConnectAsync(MqttConnectionProfile profile, CancellationToken ct = default)
             => throw new NotSupportedException();
 
         public Task DisconnectAsync(ConnectionProfileId profileId, CancellationToken ct = default)
@@ -112,7 +112,7 @@ public sealed class ConnectionStateTriggerComponentTests
         }
     }
 
-    private sealed class FakeFluxMqttClient(MqttConnectionProfile profile) : IFluxMqttClient
+    private sealed class FakeMqttBrokerClient(MqttConnectionProfile profile) : IMqttBrokerClient
     {
         public MqttConnectionProfile Profile { get; } = profile;
         public MqttClientState State { get; private set; } = MqttClientState.Disconnected;

@@ -18,7 +18,7 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
     private sealed class ConnectionEntry(ManagedConnection connection)
     {
         public ManagedConnection Connection { get; } = connection;
-        public IFluxMqttClient? Client { get; set; }
+        public IMqttBrokerClient? Client { get; set; }
         public CancellationTokenSource? Cts { get; set; }
         public Task? ReaderTask { get; set; }
         public EventHandler<MqttClientState>? StateChangedHandler { get; set; }
@@ -28,7 +28,7 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
     private readonly ISessionRepository _sessionRepository;
     private readonly IMessageRepository _messageRepository;
     private readonly WorkspaceMessageProjection _projection;
-    private readonly Func<MqttConnectionProfile, IFluxMqttClient> _clientFactory;
+    private readonly Func<MqttConnectionProfile, IMqttBrokerClient> _clientFactory;
     private readonly HashSet<Guid> _autoStartedConnectionIds = [];
     private StoredSession? _recordingSession;
     private StoredSession? _selectedStoredSession;
@@ -41,7 +41,7 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         ITopicIndex topicIndex,
         ISessionRepository sessionRepository,
         IMessageRepository messageRepository)
-        : this(topicIndex, sessionRepository, messageRepository, static profile => new FluxMqttClient(profile))
+        : this(topicIndex, sessionRepository, messageRepository, static profile => new MqttBrokerClient(profile))
     {
     }
 
@@ -49,7 +49,7 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         ITopicIndex topicIndex,
         ISessionRepository sessionRepository,
         IMessageRepository messageRepository,
-        Func<MqttConnectionProfile, IFluxMqttClient> clientFactory)
+        Func<MqttConnectionProfile, IMqttBrokerClient> clientFactory)
     {
         _sessionRepository = sessionRepository;
         _messageRepository = messageRepository;

@@ -57,8 +57,8 @@ public sealed class MqttSourceComponentTests
     {
         var source = new GeneratedMqttSourceComponent(
         [
-            TestFluxMqttClient.Message("factory/one"),
-            TestFluxMqttClient.Message("factory/two")
+            TestMqttBrokerClient.Message("factory/one"),
+            TestMqttBrokerClient.Message("factory/two")
         ]);
         var received = new List<string>();
         var sink = new ActionBlock<MqttEnvelope>(message => received.Add(message.Topic));

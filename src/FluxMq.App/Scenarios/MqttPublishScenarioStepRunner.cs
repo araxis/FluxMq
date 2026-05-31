@@ -23,13 +23,20 @@ public sealed class MqttPublishScenarioStepRunner : IScenarioStepRunner
 
         var startedAt = DateTimeOffset.UtcNow;
         var configuration = context.Step.Configuration;
-        var connectionName = ScenarioStepConfigurationReader.ReadRequiredString(configuration, "connection");
+        var connectionName = ScenarioStepConfigurationReader.ReadRequiredString(
+            configuration,
+            ScenarioStepConfigurationKeys.Connection);
         var request = new MqttPublishRequest
         {
-            Topic = ScenarioStepConfigurationReader.ReadRequiredString(configuration, "topic"),
+            Topic = ScenarioStepConfigurationReader.ReadRequiredString(
+                configuration,
+                ScenarioStepConfigurationKeys.Topic),
             Payload = ReadPayload(configuration),
             QualityOfService = ReadQualityOfService(configuration),
-            Retain = ScenarioStepConfigurationReader.ReadBoolOrDefault(configuration, "retain", false)
+            Retain = ScenarioStepConfigurationReader.ReadBoolOrDefault(
+                configuration,
+                ScenarioStepConfigurationKeys.Retain,
+                false)
         };
 
         var clientFactory = context.Services.GetRequired<IMqttScenarioClientFactory>();
@@ -42,8 +49,12 @@ public sealed class MqttPublishScenarioStepRunner : IScenarioStepRunner
         var publisher = new MqttPublisherComponent(client);
         var errors = new List<FlowError>();
         var errorSink = new ActionBlock<FlowError>(errors.Add);
+        var eventSink = new ActionBlock<FlowEvent>(context.Events.Append);
         using var errorLink = publisher.Errors.LinkTo(
             errorSink,
+            new DataflowLinkOptions { PropagateCompletion = true });
+        using var eventLink = publisher.Events.LinkTo(
+            eventSink,
             new DataflowLinkOptions { PropagateCompletion = true });
 
         if (!await publisher.Input.SendAsync(request, cancellationToken).ConfigureAwait(false))
@@ -57,6 +68,7 @@ public sealed class MqttPublishScenarioStepRunner : IScenarioStepRunner
         publisher.Complete();
         await publisher.Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
         await errorSink.Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await eventSink.Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
 
         if (errors.FirstOrDefault() is { } error)
         {
@@ -96,7 +108,11 @@ public sealed class MqttPublishScenarioStepRunner : IScenarioStepRunner
     private static MqttQualityOfServiceLevel ReadQualityOfService(
         IReadOnlyDictionary<string, JsonElement> configuration)
     {
-        var value = ScenarioStepConfigurationReader.ReadIntOrDefault(configuration, "qos", 0, 0);
+        var value = ScenarioStepConfigurationReader.ReadIntOrDefault(
+            configuration,
+            ScenarioStepConfigurationKeys.Qos,
+            0,
+            0);
         return value switch
         {
             0 => MqttQualityOfServiceLevel.AtMostOnce,
@@ -108,13 +124,15 @@ public sealed class MqttPublishScenarioStepRunner : IScenarioStepRunner
 
     private static byte[] ReadPayload(IReadOnlyDictionary<string, JsonElement> configuration)
     {
-        if (!configuration.TryGetValue("payload", out var payload) ||
+        if (!configuration.TryGetValue(ScenarioStepConfigurationKeys.Payload, out var payload) ||
             payload.ValueKind == JsonValueKind.Null)
         {
             return [];
         }
 
-        var encoding = ScenarioStepConfigurationReader.ReadString(configuration, "payloadEncoding") ?? "utf8";
+        var encoding = ScenarioStepConfigurationReader.ReadString(
+            configuration,
+            ScenarioStepConfigurationKeys.PayloadEncoding) ?? "utf8";
         return encoding.Trim().ToLowerInvariant() switch
         {
             "utf8" or "text" => ReadUtf8Payload(payload),

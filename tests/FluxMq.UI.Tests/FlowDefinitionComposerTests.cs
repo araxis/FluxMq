@@ -1305,6 +1305,53 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void UpdateScenarioStep_WritesMqttTriggerConfiguration()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.CreateEmptyDefinition();
+        json = composer.AddTest(json, "t1");
+        json = composer.AddScenarioStep(json, "t1", ScenarioStepTypes.MqttTrigger);
+        var step = composer.GetTestScenario(json, "t1").ShouldNotBeNull().Steps.ShouldHaveSingleItem();
+
+        step.Name.ShouldBe("triggerMqtt");
+        step.Type.ShouldBe(ScenarioStepTypes.MqttTrigger);
+        step.Configuration[ScenarioStepCatalog.SubscriptionsKey].ShouldBe("fluxmq/test/#");
+        step.Configuration[ScenarioStepCatalog.QosKey].ShouldBe("1");
+        step.Configuration[ScenarioStepCatalog.ReceiveRetainedKey].ShouldBe("false");
+        step.Configuration[ScenarioStepCatalog.RetainAsPublishedKey].ShouldBe("true");
+
+        json = composer.UpdateScenarioStep(
+            json,
+            "t1",
+            step.Name,
+            step.Type,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["connection"] = "local-broker",
+                ["subscriptions"] = "factory/response/+",
+                ["qos"] = "2",
+                ["receiveRetained"] = "true",
+                ["retainAsPublished"] = "false"
+            });
+
+        using var document = JsonDocument.Parse(json);
+        var configuration = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("tests")
+            .GetProperty("t1")
+            .GetProperty("steps")
+            .GetProperty(step.Name)
+            .GetProperty("configuration");
+
+        configuration.GetProperty("connection").GetString().ShouldBe("local-broker");
+        configuration.GetProperty("subscriptions").GetString().ShouldBe("factory/response/+");
+        configuration.GetProperty("qos").GetInt32().ShouldBe(2);
+        configuration.GetProperty("receiveRetained").GetBoolean().ShouldBeTrue();
+        configuration.GetProperty("retainAsPublished").GetBoolean().ShouldBeFalse();
+    }
+
+    [Fact]
     public void MoveScenarioStep_ReordersScenarioSteps()
     {
         var composer = new FlowDefinitionComposer();

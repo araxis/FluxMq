@@ -110,6 +110,10 @@
     border-color: color-mix(in srgb, var(--flux-accent) 46%, var(--flux-border));
 }
 
+.test-step-card.skipped {
+    border-color: color-mix(in srgb, var(--mud-palette-info) 44%, var(--flux-border));
+}
+
 .test-step-card.failed,
 .test-step-card.timed-out {
     border-color: color-mix(in srgb, var(--mud-palette-error) 54%, var(--flux-border));
@@ -228,6 +232,18 @@
     color: var(--flux-accent);
 }
 
+.test-step-type.trigger {
+    background: color-mix(in srgb, var(--mud-palette-warning) 12%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-warning) 36%, transparent);
+    color: var(--mud-palette-warning);
+}
+
+.test-step-type.when {
+    background: color-mix(in srgb, var(--mud-palette-success) 12%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-success) 36%, transparent);
+    color: var(--mud-palette-success);
+}
+
 .test-step-type.expect {
     background: color-mix(in srgb, var(--mud-palette-info) 12%, transparent);
     border-color: color-mix(in srgb, var(--mud-palette-info) 34%, transparent);
@@ -256,6 +272,12 @@
     background: color-mix(in srgb, var(--flux-accent) 12%, transparent);
     border-color: color-mix(in srgb, var(--flux-accent) 38%, transparent);
     color: var(--flux-accent);
+}
+
+.test-step-status.skipped {
+    background: color-mix(in srgb, var(--mud-palette-info) 12%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-info) 38%, transparent);
+    color: var(--mud-palette-info);
 }
 
 .test-step-status.failed,

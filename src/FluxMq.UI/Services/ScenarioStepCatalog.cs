@@ -6,12 +6,15 @@ namespace FluxMq.UI.Services;
 
 public sealed class ScenarioStepCatalog
 {
-    public const string ConnectionKey = "connection";
-    public const string TopicKey = "topic";
-    public const string PayloadKey = "payload";
-    public const string PayloadEncodingKey = "payloadEncoding";
-    public const string QosKey = "qos";
-    public const string RetainKey = "retain";
+    public const string ConnectionKey = ScenarioStepConfigurationKeys.Connection;
+    public const string TopicKey = ScenarioStepConfigurationKeys.Topic;
+    public const string PayloadKey = ScenarioStepConfigurationKeys.Payload;
+    public const string PayloadEncodingKey = ScenarioStepConfigurationKeys.PayloadEncoding;
+    public const string QosKey = ScenarioStepConfigurationKeys.Qos;
+    public const string RetainKey = ScenarioStepConfigurationKeys.Retain;
+    public const string SubscriptionsKey = ScenarioStepConfigurationKeys.Subscriptions;
+    public const string ReceiveRetainedKey = ScenarioStepConfigurationKeys.ReceiveRetained;
+    public const string RetainAsPublishedKey = ScenarioStepConfigurationKeys.RetainAsPublished;
 
     public static ScenarioStepCatalog Shared { get; } = new();
 
@@ -49,10 +52,34 @@ public sealed class ScenarioStepCatalog
                 new(RetainKey, "Retain", ScenarioStepFieldKind.CheckBox, "false", [])
             ]),
         new(
+            ScenarioStepTypes.MqttTrigger,
+            "MQTT trigger",
+            "Action",
+            "Listen for MQTT messages through an app broker.",
+            Icons.Material.Filled.Sensors,
+            "triggerMqtt",
+            ScenarioStepEditorKind.MqttTrigger,
+            [
+                new(ConnectionKey, "Broker", ScenarioStepFieldKind.Connection, string.Empty, []),
+                new(SubscriptionsKey, "Topic filter", ScenarioStepFieldKind.Text, "fluxmq/test/#", []),
+                new(QosKey, "QoS", ScenarioStepFieldKind.Select, "1", QosOptions),
+                new(ReceiveRetainedKey, "Receive retained", ScenarioStepFieldKind.CheckBox, "false", []),
+                new(RetainAsPublishedKey, "Retain as published", ScenarioStepFieldKind.CheckBox, "true", [])
+            ]),
+        new(
+            ScenarioStepTypes.WhenEvent,
+            "When event",
+            "Condition",
+            "Continue only when a scenario or app event matches configured filters.",
+            Icons.Material.Filled.AltRoute,
+            "whenEvent",
+            ScenarioStepEditorKind.ExpectEvent,
+            []),
+        new(
             ScenarioStepTypes.ExpectEvent,
             "Expect event",
             "Expectation",
-            "Wait for a runtime event that matches configured filters.",
+            "Wait for a scenario or app event that matches configured filters.",
             Icons.Material.Filled.Rule,
             "expectEvent",
             ScenarioStepEditorKind.ExpectEvent,

@@ -15,7 +15,7 @@ public sealed class FlowApplicationHost(
     FlowApplicationConfigurationLoader? configurationLoader = null,
     string sectionName = FlowApplicationConfigurationLoader.DefaultSectionName,
     ScenarioRunner? scenarioRunner = null,
-    Func<MqttConnectionProfile, IFluxMqttClient>? scenarioClientFactory = null,
+    Func<MqttConnectionProfile, IMqttBrokerClient>? scenarioClientFactory = null,
     ApplicationDefinition? applicationDefinition = null)
     : IAsyncDisposable, IDisposable
 {
@@ -23,8 +23,8 @@ public sealed class FlowApplicationHost(
     private readonly ApplicationRuntimeBuilder _runtimeBuilder = runtimeBuilder ?? throw new ArgumentNullException(nameof(runtimeBuilder));
     private readonly FlowApplicationConfigurationLoader _configurationLoader = configurationLoader ?? new FlowApplicationConfigurationLoader();
     private readonly ScenarioRunner _scenarioRunner = scenarioRunner ?? CreateDefaultScenarioRunner();
-    private readonly Func<MqttConnectionProfile, IFluxMqttClient> _scenarioClientFactory =
-        scenarioClientFactory ?? (static profile => new FluxMqttClient(profile));
+    private readonly Func<MqttConnectionProfile, IMqttBrokerClient> _scenarioClientFactory =
+        scenarioClientFactory ?? (static profile => new MqttBrokerClient(profile));
     private readonly ApplicationDefinition? _applicationDefinition = applicationDefinition;
     private ApplicationDefinition? _definition;
     private ApplicationRuntime? _runtime;
@@ -39,9 +39,9 @@ public sealed class FlowApplicationHost(
     public static FlowApplicationHost CreateDefault(
         IConfiguration configuration,
         IMessageRepository? messageRepository = null,
-        Func<MqttConnectionProfile, IFluxMqttClient>? clientFactory = null)
+        Func<MqttConnectionProfile, IMqttBrokerClient>? clientFactory = null)
     {
-        clientFactory ??= static profile => new FluxMqttClient(profile);
+        clientFactory ??= static profile => new MqttBrokerClient(profile);
         var factories = new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories(clientFactory, messageRepository);
 
@@ -54,11 +54,11 @@ public sealed class FlowApplicationHost(
     public static FlowApplicationHost CreateDefault(
         ApplicationDefinition definition,
         IMessageRepository? messageRepository = null,
-        Func<MqttConnectionProfile, IFluxMqttClient>? clientFactory = null)
+        Func<MqttConnectionProfile, IMqttBrokerClient>? clientFactory = null)
     {
         ArgumentNullException.ThrowIfNull(definition);
 
-        clientFactory ??= static profile => new FluxMqttClient(profile);
+        clientFactory ??= static profile => new MqttBrokerClient(profile);
         var factories = new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories(clientFactory, messageRepository);
 
@@ -75,7 +75,9 @@ public sealed class FlowApplicationHost(
     public static ScenarioStepRunnerRegistry CreateDefaultScenarioStepRunnerRegistry()
         => new ScenarioStepRunnerRegistry()
             .Register(new ExpectEventScenarioStepRunner())
-            .Register(new MqttPublishScenarioStepRunner());
+            .Register(new WhenEventScenarioStepRunner())
+            .Register(new MqttPublishScenarioStepRunner())
+            .Register(new MqttTriggerScenarioStepRunner());
 
     public FlowApplicationHostBuildResult Build()
     {

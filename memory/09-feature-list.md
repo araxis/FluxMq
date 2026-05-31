@@ -33,17 +33,17 @@ Priority:
 
 ## P0 - Runtime And Local MQTT Foundation
 
-### F-001 - Core MQTT Session
+### F-001 - Core MQTT Client
 
-**Goal:** Connect, disconnect, subscribe, receive, and publish MQTT messages through a reusable domain boundary.
+**Goal:** Connect, disconnect, subscribe, receive, and publish MQTT messages through a reusable MQTT client boundary.
 
 **UI/UX:** Connection state should be visible and boring: clear connected/disconnected/reconnecting states, explicit publish controls, no hidden broker actions.
 
-**Data/Logic:** `MqttConnectionProfile`, `FluxMqttClient`, `MqttEnvelope`, topic subscriptions, publish API, lifecycle state.
+**Data/Logic:** `MqttConnectionProfile`, `IMqttBrokerClient`, `MqttBrokerClient`, `MqttEnvelope`, topic subscriptions, publish API, lifecycle state.
 
 **Acceptance:**
 
-- Session connects and disconnects deterministically.
+- MQTT client connects and disconnects deterministically.
 - Subscriptions receive matching `MqttEnvelope` values.
 - Publish calls surface failures without crashing the host.
 
@@ -198,7 +198,7 @@ Expected mapper editor layout:
 - right live JSON result/errors panel for test evaluation
 - helper actions to insert selected input fields into the expression
 
-**Data/Logic:** Mapper output schemas, sample message provider, Monaco-backed expression editor, FluxMQ light/dark editor themes, JSONata language definition, preview evaluation service, shared runtime/UI expression evaluation path where practical. `expression` is the primary mapper configuration; old per-field `map` shapes are only a compatibility/fallback detail while the codebase migrates.
+**Data/Logic:** Mapper output schemas, sample message provider, Monaco-backed expression editor, FluxMQ light/dark editor themes, JSONata language definition, preview evaluation service, shared runtime/UI expression evaluation path where practical. `expression` is the mapper configuration and returns the whole output request object.
 
 **Acceptance:**
 
@@ -235,7 +235,7 @@ Expected mapper editor layout:
 
 - Adding a component creates a valid definition node.
 - Links are typed and can round-trip to JSON.
-- Hidden compatibility aliases still load, but new catalog choices are clean.
+- New definitions use clean catalog choices; pre-release saved-project compatibility aliases are avoided.
 
 ### F-022 - Node Editors
 

@@ -8,7 +8,7 @@ namespace FluxMq.Components.ConnectionStateTrigger;
 public sealed class ConnectionStateTriggerComponent : IFlowNode, IDisposable
 {
     private readonly IMqttConnectionManager? _connectionManager;
-    private readonly IFluxMqttClient? _client;
+    private readonly IMqttBrokerClient? _client;
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly BroadcastBlock<MqttClientStateChangedEventArgs> _output;
 
@@ -21,7 +21,7 @@ public sealed class ConnectionStateTriggerComponent : IFlowNode, IDisposable
         _connectionManager.StateChanged += OnStateChanged;
     }
 
-    public ConnectionStateTriggerComponent(IFluxMqttClient client, FlowNodeId? id = null)
+    public ConnectionStateTriggerComponent(IMqttBrokerClient client, FlowNodeId? id = null)
     {
         Id = id ?? FlowNodeId.New();
         _client = client ?? throw new ArgumentNullException(nameof(client));

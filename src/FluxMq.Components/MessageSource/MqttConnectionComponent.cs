@@ -7,7 +7,7 @@ using System.Threading.Tasks.Dataflow;
 namespace FluxMq.Components.MessageSource;
 
 /// <summary>
-/// Resource node that owns an <see cref="IFluxMqttClient"/>: connection settings,
+/// Resource node that owns an <see cref="IMqttBrokerClient"/>: connection settings,
 /// connect / disconnect lifecycle, reconnect (handled by the client itself).
 ///
 /// On start, pumps the client's single-consumer message channel into a
@@ -20,7 +20,7 @@ namespace FluxMq.Components.MessageSource;
 /// </summary>
 public sealed class MqttConnectionComponent : IFlowNode, IAsyncDisposable
 {
-    private readonly IFluxMqttClient _client;
+    private readonly IMqttBrokerClient _client;
     private readonly BroadcastBlock<MqttEnvelope> _broadcast;
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly CancellationTokenSource _cts = new();
@@ -29,7 +29,7 @@ public sealed class MqttConnectionComponent : IFlowNode, IAsyncDisposable
     private int _started;
 
     public MqttConnectionComponent(
-        IFluxMqttClient client,
+        IMqttBrokerClient client,
         bool disposeClientOnDispose = true,
         FlowNodeId? id = null)
     {
@@ -45,7 +45,7 @@ public sealed class MqttConnectionComponent : IFlowNode, IAsyncDisposable
     public Task Completion => _broadcast.Completion;
 
     /// <summary>The live MQTT client this connection owns. Triggers subscribe through it.</summary>
-    public IFluxMqttClient Client => _client;
+    public IMqttBrokerClient Client => _client;
 
     /// <summary>Broadcast of every envelope received by the client. Triggers link their filters here.</summary>
     public ISourceBlock<MqttEnvelope> Messages => _broadcast;
