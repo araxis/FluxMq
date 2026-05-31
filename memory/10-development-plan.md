@@ -640,4 +640,4 @@ Review the conditional-link designer editor slice:
 
 Next implementation slice: continue scenario/test composition around normal components plus narrow test-specific `expect.event`/`when.event` blocks. Prefer catalog/runner/shared-service changes over adding one-off logic inside Razor components.
 
-Latest slice: readable scenario report text now uses `ScenarioStepCatalog` for step configuration labels and order, matching scenario cards and the editor while leaving machine-readable report JSON on saved configuration keys. Keep moving descriptor defaults, options, summaries, and validation into shared catalog/services so test-step UI can stay thin and portable.
+Latest slice: neutral scenario step field metadata types now live in `FluxMq.Scenarios`, leaving UI-only descriptor pieces such as icons and editor kind in the UI layer. Keep moving descriptor defaults, options, summaries, and validation into shared catalog/services so test-step UI can stay thin and portable.
