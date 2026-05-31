@@ -152,19 +152,6 @@ public sealed class ScenarioStepCatalogTests
     }
 
     [Fact]
-    public void ScenarioStepFieldDescriptor_NormalizesMissingOptions()
-    {
-        var descriptor = new ScenarioStepFieldDescriptor(
-            "field",
-            "Field",
-            ScenarioStepFieldKind.Select,
-            string.Empty,
-            null!);
-
-        descriptor.Options.ShouldBeEmpty();
-    }
-
-    [Fact]
     public void Describe_ReturnsFallbackDescriptorForUnknownStepType()
     {
         var catalog = new ScenarioStepCatalog();

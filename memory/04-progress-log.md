@@ -1938,3 +1938,11 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - The report dialog passes the injected scenario catalog into text generation instead of relying only on raw report data.
 - Verified:
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunReportFormatterTests|FullyQualifiedName~ScenarioStepDisplayTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 14 tests.
+
+## 2026-05-31 - Scenario field metadata layer split
+
+- Moved neutral scenario step field metadata types into `FluxMq.Scenarios`.
+- Kept UI-only scenario descriptor concerns, such as icons and editor kind, in `FluxMq.UI`.
+- Moved the field option normalization test to the scenario test project so the lower layer owns its own contract.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioStepDisplayTests|FullyQualifiedName~ScenarioRunReportFormatterTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 22 tests.
