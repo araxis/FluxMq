@@ -74,14 +74,58 @@ public static class ScenarioStepDisplay
         };
     }
 
-    public static IEnumerable<KeyValuePair<string, string>> VisibleConfiguration(ScenarioStepSnapshot step)
+    public static IEnumerable<KeyValuePair<string, string>> VisibleConfiguration(
+        ScenarioStepSnapshot step,
+        ScenarioStepCatalog catalog)
     {
         ArgumentNullException.ThrowIfNull(step);
+        ArgumentNullException.ThrowIfNull(catalog);
 
-        return step.Configuration.Where(static item => !string.IsNullOrWhiteSpace(item.Value));
+        var descriptor = catalog.Find(step.Type);
+        if (descriptor is null)
+        {
+            foreach (var item in step.Configuration.Where(static item => !string.IsNullOrWhiteSpace(item.Value)))
+            {
+                yield return item;
+            }
+
+            yield break;
+        }
+
+        var handledKeys = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var field in descriptor.Fields)
+        {
+            handledKeys.Add(field.Key);
+            if (step.Configuration.TryGetValue(field.Key, out var value) &&
+                !string.IsNullOrWhiteSpace(value))
+            {
+                yield return new KeyValuePair<string, string>(field.Key, value);
+            }
+        }
+
+        foreach (var item in step.Configuration.Where(item =>
+                     !handledKeys.Contains(item.Key) &&
+                     !string.IsNullOrWhiteSpace(item.Value)))
+        {
+            yield return item;
+        }
     }
 
-    public static string FormatConfigurationKey(string key)
+    public static string FormatConfigurationKey(
+        ScenarioStepSnapshot step,
+        string key,
+        ScenarioStepCatalog catalog)
+    {
+        ArgumentNullException.ThrowIfNull(step);
+        ArgumentNullException.ThrowIfNull(catalog);
+
+        var field = catalog.Find(step.Type)?.Fields
+            .FirstOrDefault(field => string.Equals(field.Key, key, StringComparison.Ordinal));
+
+        return field?.Label ?? FormatUnknownConfigurationKey(key);
+    }
+
+    private static string FormatUnknownConfigurationKey(string key)
     {
         if (DashboardEventFilterCatalog.TryGetAttributeName(key, out var attributeName))
         {
