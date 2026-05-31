@@ -1,4 +1,4 @@
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using FluxMq.UI.Models;
 
 namespace FluxMq.UI.Services;
@@ -132,7 +132,7 @@ public sealed class DashboardEventFilterCatalog
     }
 
     private static DashboardEventFilterFieldDescriptor TopicField(string label, string? placeholder, string helperText)
-        => new(TopicStartsWithKey, label, placeholder, helperText, static flowEvent => flowEvent.Topic);
+        => new(TopicStartsWithKey, label, placeholder, helperText, static flowEvent => flowEvent.Channel);
 
     private static IReadOnlyList<DashboardEventFilterFieldDescriptor> MqttEventFields(string eventVerb)
         =>

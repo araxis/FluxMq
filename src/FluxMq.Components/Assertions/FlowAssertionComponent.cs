@@ -6,7 +6,7 @@ using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Mapping;
 using System.Threading.Tasks.Dataflow;
 
@@ -184,7 +184,7 @@ public sealed class FlowAssertionComponent<TInput> : IFlowNode, IFlowEventSource
             SourceNodeId = Id,
             Subject = _assertionName,
             Status = result.Passed ? "passed" : "failed",
-            Topic = topic,
+            Channel = topic,
             PayloadBytes = payloadBytes,
             Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
             {

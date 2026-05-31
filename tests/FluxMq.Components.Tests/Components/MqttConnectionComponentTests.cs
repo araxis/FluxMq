@@ -1,7 +1,7 @@
 using Shouldly;
 using FluxMq.Components.MessageSource;
 using FluxMq.Core.Mqtt;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.Tests.Components;

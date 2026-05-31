@@ -1,6 +1,6 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Mqtt;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.ConnectionStateTrigger;

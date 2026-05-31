@@ -1,5 +1,5 @@
 using Shouldly;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using FluxMq.Pipeline.Definitions;
 using FluxMq.Pipeline.Scenarios;
 using System.Text.Json;
@@ -38,7 +38,7 @@ public sealed class ScenarioRunnerTests
         var step = result.Steps.ShouldHaveSingleItem();
         step.Status.ShouldBe(ScenarioStepRunStatus.Passed);
         step.MatchedEvent.ShouldNotBeNull();
-        step.MatchedEvent.Topic.ShouldBe("factory/line-a/temperature");
+        step.MatchedEvent.Channel.ShouldBe("factory/line-a/temperature");
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public sealed class ScenarioRunnerTests
         var result = await runTask.WaitAsync(TimeSpan.FromSeconds(2));
 
         result.IsSuccess.ShouldBeTrue();
-        result.Steps[0].MatchedEvent!.Topic.ShouldBe("factory/line-a/temperature");
+        result.Steps[0].MatchedEvent!.Channel.ShouldBe("factory/line-a/temperature");
         result.Steps[0].MatchedEvent!.Status.ShouldBe("valid");
     }
 
@@ -461,7 +461,7 @@ public sealed class ScenarioRunnerTests
         result.IsSuccess.ShouldBeTrue();
         result.Steps.Count.ShouldBe(2);
         result.Steps[1].MatchedEvent!.Source.ShouldBe("AppendScenarioEventStepRunner");
-        result.Steps[1].MatchedEvent!.Topic.ShouldBe("runner/topic/value");
+        result.Steps[1].MatchedEvent!.Channel.ShouldBe("runner/topic/value");
     }
 
     [Fact]
@@ -572,7 +572,7 @@ public sealed class ScenarioRunnerTests
             Timestamp = timestamp ?? DateTimeOffset.UtcNow,
             Type = type,
             Source = "test",
-            Topic = topic,
+            Channel = topic,
             Subject = subject,
             Status = status,
             PayloadPreview = payloadPreview,
@@ -620,7 +620,7 @@ public sealed class ScenarioRunnerTests
                 Timestamp = DateTimeOffset.UtcNow,
                 Type = FlowEventTypes.MqttMessageReceived,
                 Source = nameof(AppendScenarioEventStepRunner),
-                Topic = "runner/topic/value",
+                Channel = "runner/topic/value",
                 Subject = "runner/topic/value",
                 Status = "received",
                 PayloadPreview = "42",

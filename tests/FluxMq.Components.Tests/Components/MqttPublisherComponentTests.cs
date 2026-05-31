@@ -4,7 +4,7 @@ using FluxMq.Core.Models;
 using FluxMq.Core.Mqtt;
 using FluxMq.Components.Logging;
 using FluxMq.Components.MqttPublisher;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using MQTTnet.Protocol;
 using System.Threading.Channels;
 using System.Threading.Tasks.Dataflow;
@@ -86,7 +86,7 @@ public sealed class MqttPublisherComponentTests
         flowEvent.Type.ShouldBe(FluxMqEventTypes.MqttMessagePublished);
         flowEvent.Source.ShouldBe("MqttPublisher");
         flowEvent.SourceNodeId.ShouldBe(component.Id);
-        flowEvent.Topic.ShouldBe("factory/event");
+        flowEvent.Channel.ShouldBe("factory/event");
         flowEvent.PayloadBytes.ShouldBe(2);
         flowEvent.PayloadPreview.ShouldBe("12");
         flowEvent.GetAttribute("qos").ShouldBe("1");

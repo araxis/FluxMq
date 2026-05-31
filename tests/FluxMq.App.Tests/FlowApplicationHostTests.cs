@@ -2,7 +2,7 @@ using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Mqtt;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using FluxMq.Pipeline.Definitions;
 using FluxMq.Pipeline.Runtime;
 using FluxMq.App;
@@ -243,7 +243,7 @@ public sealed class FlowApplicationHostTests
             Timestamp = DateTimeOffset.UtcNow,
             Type = FluxMqEventTypes.MqttMessageReceived,
             Source = "test",
-            Topic = "factory/response/42",
+            Channel = "factory/response/42",
             Status = "received"
         });
 
@@ -251,7 +251,7 @@ public sealed class FlowApplicationHostTests
 
         result.IsSuccess.ShouldBeTrue();
         result.Steps.ShouldHaveSingleItem()
-            .MatchedEvent!.Topic.ShouldBe("factory/response/42");
+            .MatchedEvent!.Channel.ShouldBe("factory/response/42");
         host.State.ShouldBe(FlowApplicationHostState.Running);
     }
 

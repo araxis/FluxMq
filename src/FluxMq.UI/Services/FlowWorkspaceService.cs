@@ -8,7 +8,7 @@ using FluxMq.Core.Models;
 using FluxMq.Core.Mqtt;
 using FluxMq.Components.Logging;
 using FluxMq.Components.Storage.Repositories;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using FluxMq.Pipeline.Definitions;
 using FluxMq.Pipeline.Runtime;
 using FluxMq.Pipeline.Scenarios;
@@ -185,7 +185,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             Source = "LivePublisher",
             Subject = topic.Trim(),
             Status = "published",
-            Topic = topic.Trim(),
+            Channel = topic.Trim(),
             PayloadBytes = payloadBytes.Length,
             PayloadPreview = CreatePayloadPreview(payloadBytes),
             Attributes = attributes
@@ -1974,8 +1974,8 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
     private static string BuildRuntimeEventMessage(FlowEvent flowEvent)
     {
-        var target = !string.IsNullOrWhiteSpace(flowEvent.Topic)
-            ? flowEvent.Topic
+        var target = !string.IsNullOrWhiteSpace(flowEvent.Channel)
+            ? flowEvent.Channel
             : flowEvent.Subject;
 
         return string.IsNullOrWhiteSpace(target)
@@ -1985,8 +1985,8 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
     private static string BuildScenarioEventMessage(FlowEvent flowEvent)
     {
-        var target = !string.IsNullOrWhiteSpace(flowEvent.Topic)
-            ? flowEvent.Topic
+        var target = !string.IsNullOrWhiteSpace(flowEvent.Channel)
+            ? flowEvent.Channel
             : flowEvent.Subject;
 
         return string.IsNullOrWhiteSpace(target)
@@ -2025,13 +2025,13 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     {
         var parts = new List<string>();
 
-        if (!string.IsNullOrWhiteSpace(flowEvent.Topic))
+        if (!string.IsNullOrWhiteSpace(flowEvent.Channel))
         {
-            parts.Add($"topic={flowEvent.Topic}");
+            parts.Add($"topic={flowEvent.Channel}");
         }
 
         if (!string.IsNullOrWhiteSpace(flowEvent.Subject) &&
-            !string.Equals(flowEvent.Subject, flowEvent.Topic, StringComparison.Ordinal))
+            !string.Equals(flowEvent.Subject, flowEvent.Channel, StringComparison.Ordinal))
         {
             parts.Add($"subject={flowEvent.Subject}");
         }

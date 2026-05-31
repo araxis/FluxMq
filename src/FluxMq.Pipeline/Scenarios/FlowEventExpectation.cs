@@ -1,4 +1,4 @@
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using System.Text.Json;
 
 namespace FluxMq.Pipeline.Scenarios;
@@ -38,7 +38,7 @@ public sealed record FlowEventExpectation
         ArgumentNullException.ThrowIfNull(flowEvent);
 
         return MatchesExact(flowEvent.Type, EventType) &&
-               MatchesPrefix(flowEvent.Topic, TopicStartsWith) &&
+               MatchesPrefix(flowEvent.Channel, TopicStartsWith) &&
                MatchesPrefix(flowEvent.Subject, SubjectStartsWith) &&
                MatchesExact(flowEvent.Status, Status) &&
                MatchesExact(flowEvent.Source, Source) &&

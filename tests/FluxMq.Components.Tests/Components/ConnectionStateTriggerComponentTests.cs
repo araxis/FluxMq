@@ -3,7 +3,7 @@ using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Mqtt;
 using FluxMq.Components.ConnectionStateTrigger;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using MQTTnet.Protocol;
 using System.Threading.Channels;
 using System.Threading.Tasks.Dataflow;

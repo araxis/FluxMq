@@ -1,7 +1,7 @@
 using FluxMq.App;
 using FluxMq.App.Scenarios;
 using FluxMq.Cli.Commands;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using FluxMq.Pipeline.Definitions;
 using FluxMq.Pipeline.Runtime;
 using FluxMq.Pipeline.Scenarios;
@@ -326,7 +326,7 @@ public sealed class CliRunner
                 step.Status.ToString(),
                 step.Message,
                 step.MatchedEvent?.Type,
-                step.MatchedEvent?.Topic,
+                step.MatchedEvent?.Channel,
                 step.MatchedEvent?.Status)).ToArray());
 
     private static ScenarioRunCommandResult CreateScenarioFailureResult(string name, string message)

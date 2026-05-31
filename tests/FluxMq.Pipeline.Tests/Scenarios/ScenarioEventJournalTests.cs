@@ -1,4 +1,4 @@
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using FluxMq.Pipeline.Scenarios;
 using Shouldly;
 using System.Threading.Tasks.Dataflow;
@@ -19,7 +19,7 @@ public sealed class ScenarioEventJournalTests
         sourceEvents.Post(Event("source"));
         var sourceMatch = await journal.WaitForMatchAsync(
                 0,
-                flowEvent => flowEvent.Topic == "source",
+                flowEvent => flowEvent.Channel == "source",
                 TimeSpan.FromSeconds(1))
             .WaitAsync(TimeSpan.FromSeconds(2));
 
@@ -30,12 +30,12 @@ public sealed class ScenarioEventJournalTests
 
         var runnerMatch = await journal.WaitForMatchAsync(
                 0,
-                flowEvent => flowEvent.Topic == "runner",
+                flowEvent => flowEvent.Channel == "runner",
                 TimeSpan.FromSeconds(1))
             .WaitAsync(TimeSpan.FromSeconds(2));
 
         runnerMatch.ShouldNotBeNull();
-        observer.Events.ShouldHaveSingleItem().Topic.ShouldBe("runner");
+        observer.Events.ShouldHaveSingleItem().Channel.ShouldBe("runner");
     }
 
     private static FlowEvent Event(string topic)
@@ -44,7 +44,7 @@ public sealed class ScenarioEventJournalTests
             Timestamp = DateTimeOffset.UtcNow,
             Type = FlowEventTypes.MqttMessagePublished,
             Source = "test",
-            Topic = topic,
+            Channel = topic,
             Status = "published"
         };
 

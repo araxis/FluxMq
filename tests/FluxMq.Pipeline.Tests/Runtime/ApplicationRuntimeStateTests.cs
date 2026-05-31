@@ -1,6 +1,6 @@
 using Shouldly;
 using FluxMq.Core.Ids;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using FluxMq.Pipeline.Definitions;
 using FluxMq.Pipeline.Runtime;
 using System.Threading.Tasks.Dataflow;
@@ -153,14 +153,14 @@ public sealed class ApplicationRuntimeStateTests
             Timestamp = DateTimeOffset.UtcNow,
             Type = FlowEventTypes.MqttMessageReceived,
             Source = "test",
-            Topic = "factory/one"
+            Channel = "factory/one"
         });
 
         var first = await firstObserver.ReceiveAsync(TimeSpan.FromSeconds(1));
         var second = await secondObserver.ReceiveAsync(TimeSpan.FromSeconds(1));
 
-        first.Topic.ShouldBe("factory/one");
-        second.Topic.ShouldBe("factory/one");
+        first.Channel.ShouldBe("factory/one");
+        second.Channel.ShouldBe("factory/one");
 
         runtime.Complete();
         await runtime.Completion.WaitAsync(TimeSpan.FromSeconds(1));

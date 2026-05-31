@@ -1,4 +1,4 @@
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using FluxMq.UI.Models;
 using FluxMq.UI.Services;
 using Shouldly;
@@ -145,7 +145,7 @@ public sealed class DashboardEventFilterCatalogTests
             Timestamp = DateTimeOffset.Parse("2026-05-25T10:00:00Z"),
             Type = type,
             Source = "test",
-            Topic = topic,
+            Channel = topic,
             Subject = subject,
             Status = status,
             Attributes = attributes ?? new Dictionary<string, string>(StringComparer.Ordinal)

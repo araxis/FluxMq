@@ -1,7 +1,7 @@
 using FluxMq.Core.Models;
 using FluxMq.Core.Payloads;
 using FluxMq.Core.Mqtt;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using FluxMq.Pipeline.Scenarios;
 using FluxMq.UI.Models;
 using FluxMq.UI.Services;
@@ -672,7 +672,7 @@ public sealed class FlowWorkspaceServiceTests
         result.IsSuccess.ShouldBeTrue(CreateScenarioFailureDetails(result, service.Logs));
         result.Steps.Count.ShouldBe(2);
         result.Steps[1].Status.ShouldBe(ScenarioStepRunStatus.Passed);
-        result.Steps[1].MatchedEvent.ShouldNotBeNull().Topic.ShouldBe("test");
+        result.Steps[1].MatchedEvent.ShouldNotBeNull().Channel.ShouldBe("test");
         service.State.ShouldNotBe(RuntimeWorkspaceState.Running);
         service.RuntimeEvents.ShouldBeEmpty();
         mqttClient.Published.ShouldHaveSingleItem().Topic.ShouldBe("test");
@@ -950,7 +950,7 @@ public sealed class FlowWorkspaceServiceTests
             log.Context.Contains("payload={\"value\":12}", StringComparison.Ordinal)));
         service.RuntimeEvents.ShouldContain(flowEvent =>
             flowEvent.Type == FluxMqEventTypes.MqttMessageReceived &&
-            flowEvent.Topic == "fluxmq/sample/request");
+            flowEvent.Channel == "fluxmq/sample/request");
     }
 
     [Fact]
@@ -1134,7 +1134,7 @@ public sealed class FlowWorkspaceServiceTests
         result.IsSuccess.ShouldBeTrue(CreateScenarioFailureDetails(result, service.Logs));
         service.RuntimeEvents.ShouldContain(flowEvent =>
             flowEvent.Type == FluxMqEventTypes.MqttMessagePublished &&
-            flowEvent.Topic == "test" &&
+            flowEvent.Channel == "test" &&
             flowEvent.PayloadPreview == """{"value":12,"unit":"c","status":"ok"}""");
         var widget = service.GetActiveDashboardLayout()
             .ShouldNotBeNull()
@@ -1142,7 +1142,7 @@ public sealed class FlowWorkspaceServiceTests
         await WaitUntilAsync(() => service.GetDashboardEventSnapshot(widget).Count == 1);
         var snapshot = service.GetDashboardEventSnapshot(widget);
         snapshot.LatestEvent.ShouldNotBeNull();
-        snapshot.LatestEvent.Topic.ShouldBe("test");
+        snapshot.LatestEvent.Channel.ShouldBe("test");
         service.Logs.ShouldContain(log =>
             log.Source == "MqttPublisher" &&
             log.WorkflowName == "pip1" &&
@@ -1965,7 +1965,7 @@ public sealed class FlowWorkspaceServiceTests
         snapshot.Count.ShouldBe(1);
         snapshot.LatestEvent.ShouldNotBeNull();
         snapshot.LatestEvent.Source.ShouldBe("LivePublisher");
-        snapshot.LatestEvent.Topic.ShouldBe("test");
+        snapshot.LatestEvent.Channel.ShouldBe("test");
         snapshot.LatestEvent.GetAttribute("qos").ShouldBe("0");
         snapshot.LatestEvent.GetAttribute("retain").ShouldBe("False");
         service.Logs.ShouldContain(log =>
@@ -2053,7 +2053,7 @@ public sealed class FlowWorkspaceServiceTests
         var snapshot = service.GetDashboardEventSnapshot(widget);
         snapshot.Count.ShouldBe(1);
         snapshot.LatestEvent.ShouldNotBeNull();
-        snapshot.LatestEvent.Topic.ShouldBe("factory/one");
+        snapshot.LatestEvent.Channel.ShouldBe("factory/one");
     }
 
     [Fact]
@@ -2165,7 +2165,7 @@ public sealed class FlowWorkspaceServiceTests
         var stepDetails = string.Join(
             Environment.NewLine,
             result.Steps.Select(step =>
-                $"{step.Name}: {step.Status} - {step.Message} - matched={step.MatchedEvent?.Type}/{step.MatchedEvent?.Topic}/{step.MatchedEvent?.SourceNodeId}"));
+                $"{step.Name}: {step.Status} - {step.Message} - matched={step.MatchedEvent?.Type}/{step.MatchedEvent?.Channel}/{step.MatchedEvent?.SourceNodeId}"));
         var logDetails = string.Join(
             Environment.NewLine,
             logs.Select(log => $"{log.Source}/{log.Code}/{log.WorkflowName}/{log.NodeName}: {log.Message} {log.Context}"));

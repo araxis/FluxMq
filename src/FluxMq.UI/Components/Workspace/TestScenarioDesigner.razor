@@ -683,10 +683,10 @@
     private void OnDragStateChanged(object? sender, EventArgs e)
         => InvokeAsync(StateHasChanged);
 
-    private static string BuildEventSummary(FluxMq.Pipeline.Components.FlowEvent flowEvent)
+    private static string BuildEventSummary(FluxFlow.Engine.Components.FlowEvent flowEvent)
         => JoinParts(
             flowEvent.Type,
-            flowEvent.Topic,
+            flowEvent.Channel,
             flowEvent.Subject,
             flowEvent.Status,
             flowEvent.PayloadBytes is null ? null : $"{flowEvent.PayloadBytes} B");

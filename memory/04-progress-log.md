@@ -1834,3 +1834,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 115 tests.
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 47 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DynamicMapperWorkbenchPreview|FullyQualifiedName~FlowWorkspaceServiceTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 63 tests.
+
+## 2026-05-31 - Engine package flow event boundary
+
+- Switched app, component, CLI, UI, scenario, and old runtime consumers from the old pipeline flow component namespace to the engine package flow component namespace.
+- Mapped the package event `Channel` field into existing MQTT topic UI/log/report surfaces while keeping user-facing labels as MQTT topic.
+- Added engine package references and aliases where needed so live flow node ids now come from the package event/component contract.
+- Left the old pipeline component files in place for now; they are no longer imported by FluxMQ consumers.
+- Verified:
+  - `dotnet test FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 515 tests.

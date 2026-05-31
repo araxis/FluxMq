@@ -11,7 +11,7 @@ using FluxMq.Components.MqttMetrics;
 using FluxMq.Components.MqttPayloadInspector;
 using FluxMq.Components.Storage.Models;
 using FluxMq.Components.Storage.Repositories;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using FluxMq.Pipeline.Definitions;
 using FluxMq.Pipeline.Runtime;
 using MQTTnet.Protocol;
@@ -907,7 +907,7 @@ public sealed class PipelineComponentFactoryTests
             .Where(flowEvent => flowEvent.Type == FluxMqEventTypes.MqttMessagePublished)
             .ShouldHaveSingleItem();
         flowEvent.Type.ShouldBe(FluxMqEventTypes.MqttMessagePublished);
-        flowEvent.Topic.ShouldBe("mirror/factory/b");
+        flowEvent.Channel.ShouldBe("mirror/factory/b");
         flowEvent.PayloadPreview.ShouldBe("mapped:keep");
     }
 
@@ -1022,7 +1022,7 @@ public sealed class PipelineComponentFactoryTests
             .Where(flowEvent => flowEvent.Type == FluxMqEventTypes.MqttMessageReceived)
             .ShouldHaveSingleItem();
         receivedEvent.Type.ShouldBe(FluxMqEventTypes.MqttMessageReceived);
-        receivedEvent.Topic.ShouldBe("factory/source");
+        receivedEvent.Channel.ShouldBe("factory/source");
         receivedEvent.PayloadPreview.ShouldBe("""{"hello":"fluxmq"}""");
     }
 

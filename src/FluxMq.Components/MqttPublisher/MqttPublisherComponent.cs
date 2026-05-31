@@ -1,7 +1,7 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Mqtt;
 using FluxMq.Components.Logging;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.MqttPublisher;
@@ -101,7 +101,7 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource
                 SourceNodeId = Id,
                 Subject = request.Topic,
                 Status = "published",
-                Topic = request.Topic,
+                Channel = request.Topic,
                 PayloadBytes = request.Payload.Length,
                 PayloadPreview = FlowEventPayloadPreview.FromBytes(request.Payload),
                 Attributes = new Dictionary<string, string>(StringComparer.Ordinal)

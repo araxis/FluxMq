@@ -1,4 +1,4 @@
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 
 namespace FluxMq.Pipeline.Scenarios;
 
@@ -52,7 +52,7 @@ internal static class FlowEventExpectationMessages
     private static string DescribeObservedEvent(FlowEvent flowEvent)
     {
         var parts = new List<string> { flowEvent.Type };
-        Add(parts, "topic", flowEvent.Topic);
+        Add(parts, "topic", flowEvent.Channel);
         Add(parts, "status", flowEvent.Status);
         Add(parts, "source", flowEvent.Source);
 

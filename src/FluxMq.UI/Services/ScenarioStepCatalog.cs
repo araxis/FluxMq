@@ -1,4 +1,4 @@
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using FluxMq.Pipeline.Scenarios;
 using FluxMq.UI.Models;
 using MudBlazor;

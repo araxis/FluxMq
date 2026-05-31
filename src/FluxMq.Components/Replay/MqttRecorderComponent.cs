@@ -1,6 +1,6 @@
 using FluxMq.Core.Ids;
 using FluxMq.Components.Storage.Repositories;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.Replay;
@@ -74,7 +74,7 @@ public sealed class MqttRecorderComponent : IFlowNode, IFlowEventSource
                 SourceNodeId = Id,
                 Subject = request.Envelope.Topic,
                 Status = "recorded",
-                Topic = request.Envelope.Topic,
+                Channel = request.Envelope.Topic,
                 PayloadBytes = request.Envelope.Payload.Length,
                 PayloadPreview = FlowEventPayloadPreview.FromBytes(request.Envelope.Payload),
                 Attributes = new Dictionary<string, string>(StringComparer.Ordinal)

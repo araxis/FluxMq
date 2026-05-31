@@ -1,7 +1,7 @@
 using Shouldly;
 using FluxMq.Core.Models;
 using FluxMq.Components.MessageSource;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using MQTTnet.Protocol;
 using System.Text;
 using System.Threading.Tasks.Dataflow;
@@ -81,7 +81,7 @@ public sealed class MqttTriggerComponentTests
         flowEvent.Type.ShouldBe(FluxMqEventTypes.MqttMessageReceived);
         flowEvent.Source.ShouldBe("MqttTrigger");
         flowEvent.SourceNodeId.ShouldBe(trigger.Id);
-        flowEvent.Topic.ShouldBe("sensors/temp");
+        flowEvent.Channel.ShouldBe("sensors/temp");
         flowEvent.PayloadBytes.ShouldBe(2);
         flowEvent.PayloadPreview.ShouldBe("12");
         flowEvent.GetAttribute("qos").ShouldBe("1");
