@@ -1843,3 +1843,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Left the old pipeline component files in place for now; they are no longer imported by FluxMQ consumers.
 - Verified:
   - `dotnet test FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 515 tests.
+
+## 2026-05-31 - Remove duplicate pipeline component and mapping code
+
+- Deleted the old pipeline `Components` and `Mapping` folders after moving FluxMQ consumers to the engine package contracts.
+- Removed old mapping package references from `FluxMq.Pipeline`.
+- Removed the `FluxMq.Components` project dependency on `FluxMq.Pipeline`.
+- Kept a small scenario-owned event type catalog for scenario definitions that still live in the pipeline project.
+- Verified:
+  - `dotnet test FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 515 tests.

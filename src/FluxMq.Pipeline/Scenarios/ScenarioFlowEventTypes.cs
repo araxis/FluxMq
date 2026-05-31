@@ -1,4 +1,4 @@
-namespace FluxMq.Pipeline.Components;
+namespace FluxMq.Pipeline.Scenarios;
 
 public static class FlowEventTypes
 {
