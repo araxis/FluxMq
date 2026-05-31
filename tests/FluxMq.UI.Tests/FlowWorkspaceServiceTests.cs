@@ -667,6 +667,77 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public async Task RunActiveTestScenarioAsync_SkipsRemainingStepsWhenWhenEventDoesNotMatch()
+    {
+        var session = new FakeRuntimeFluxMqttClient();
+        await using var service = new FlowWorkspaceService(new FlowDefinitionComposer(), runtimeClientFactory: _ => session);
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "resources": {
+                "local-broker": {
+                  "type": "mqtt.connection",
+                  "configuration": {
+                    "profile": {
+                      "name": "local-broker",
+                      "host": "localhost",
+                      "port": 1883,
+                      "clientId": "test-client"
+                    }
+                  }
+                }
+              },
+              "tests": {
+                "conditionalPublish": {
+                  "steps": {
+                    "publish": {
+                      "type": "mqtt.publisher",
+                      "configuration": {
+                        "connection": "local-broker",
+                        "topic": "test",
+                        "payload": { "hello": "fluxmq" },
+                        "payloadEncoding": "json"
+                      }
+                    },
+                    "when": {
+                      "type": "when.event",
+                      "configuration": {
+                        "eventType": "mqtt.message.published",
+                        "topicStartsWith": "other",
+                        "status": "published",
+                        "timeoutMs": 1
+                      }
+                    },
+                    "afterSkip": {
+                      "type": "mqtt.publisher",
+                      "configuration": {
+                        "connection": "local-broker",
+                        "topic": "after/skip",
+                        "payload": "should-not-publish"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+        service.SetActiveTest("conditionalPublish");
+
+        var result = (await service.RunActiveTestScenarioAsync()).ShouldNotBeNull();
+
+        result.IsSuccess.ShouldBeTrue(CreateScenarioFailureDetails(result, service.Logs));
+        result.Steps.Count.ShouldBe(2);
+        result.Steps[1].Name.ShouldBe("when");
+        result.Steps[1].Status.ShouldBe(ScenarioStepRunStatus.Skipped);
+        service.LastScenarioRunResult.ShouldBe(result);
+        service.ScenarioRunHistory.ShouldBe([result]);
+        session.Published.ShouldHaveSingleItem().Topic.ShouldBe("test");
+    }
+
+    [Fact]
     public async Task RunActiveTestScenarioAsync_FailsFastWhenEventObserverHasNoEventSource()
     {
         await using var service = new FlowWorkspaceService(new FlowDefinitionComposer());

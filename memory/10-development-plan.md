@@ -606,6 +606,7 @@ Done when:
   - running a UI test with `when.event` or `expect.event` before any scenario-owned event source now fails immediately with a diagnostic if the app runtime is not running
   - isolated UI tests can still run `mqtt.publisher` followed by `when.event` because the publisher appends its normal event into the scenario journal
   - scenario setup failures in the desktop test runner stay scoped to scenario diagnostics/logs and no longer mark the app runtime state as faulted
+  - skipped `when.event` guards remain successful, are shown as skipped, and stop later flat scenario steps in both CLI and desktop test paths
   - running against an explicitly started app runtime still lets event-observing steps watch app runtime events
   - pipeline tests cover the helper directly so CLI/UI callers share one rule
 

@@ -524,6 +524,79 @@ public sealed class CliRunnerTests
     }
 
     [Fact]
+    public async Task RunAsync_SkipsRemainingCliScenarioStepsWhenWhenEventDoesNotMatch()
+    {
+        using var temp = TemporaryJsonFile(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "resources": {
+                    "local-broker": {
+                      "type": "mqtt.connection",
+                      "configuration": {
+                        "profile": {
+                          "name": "local-broker",
+                          "host": "localhost",
+                          "port": 1883
+                        }
+                      }
+                    }
+                  },
+                  "tests": {
+                    "conditionalPublish": {
+                      "steps": {
+                        "publish": {
+                          "type": "mqtt.publisher",
+                          "configuration": {
+                            "connection": "local-broker",
+                            "topic": "test",
+                            "payload": { "hello": "fluxmq" },
+                            "payloadEncoding": "json"
+                          }
+                        },
+                        "when": {
+                          "type": "when.event",
+                          "configuration": {
+                            "eventType": "mqtt.message.published",
+                            "topicStartsWith": "other",
+                            "status": "published",
+                            "timeoutMs": 1
+                          }
+                        },
+                        "afterSkip": {
+                          "type": "mqtt.publisher",
+                          "configuration": {
+                            "connection": "local-broker",
+                            "topic": "after/skip",
+                            "payload": "should-not-publish"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """);
+
+        var client = new FakeFluxMqttClient();
+        var output = new TestOutput();
+        var error = new TestOutput();
+        var runner = new CliRunner(output, error, _ => new FakeScenarioClientFactory(client));
+
+        var exitCode = await runner.RunAsync(["scenario", "--config", temp.Path, "--name", "conditionalPublish"]);
+
+        exitCode.ShouldBe((int)CliExitCode.Success);
+        error.Lines.ShouldBeEmpty();
+        output.Lines.ShouldContain(line => line.Contains("Scenario 'conditionalPublish' passed."));
+        output.Lines.ShouldContain(line => line.Contains("- when [when.event] Skipped"));
+        output.Lines.ShouldNotContain(line => line.Contains("afterSkip", StringComparison.Ordinal));
+        client.PublishCalls.ShouldBe(1);
+        client.DisposeCalls.ShouldBe(1);
+    }
+
+    [Fact]
     public async Task RunAsync_RunsScenarioWithRunnerOwnedMqttTriggerAndExpectation()
     {
         using var temp = TemporaryJsonFile(
