@@ -131,6 +131,7 @@
                 {
                     var step = Scenario.Steps[index];
                     var stepResult = FindStepResult(step);
+                    var visibleConfiguration = VisibleConfiguration(step).ToArray();
                     <section class="@StepCardClass(stepResult)" @key="step.Name">
                         <div class="test-step-index">@(index + 1)</div>
                         <div class="test-step-body">
@@ -182,13 +183,13 @@
                                     <span>@BuildEventSummary(matched)</span>
                                 </div>
                             }
-                            @if (VisibleConfiguration(step).Any())
+                            @if (visibleConfiguration.Length > 0)
                             {
                                 <dl class="test-step-config">
-                                    @foreach (var item in VisibleConfiguration(step))
+                                    @foreach (var item in visibleConfiguration)
                                     {
                                         <div class="test-step-config-row">
-                                            <dt>@FormatConfigurationKey(item.Key)</dt>
+                                            <dt>@FormatConfigurationKey(step, item.Key)</dt>
                                             <dd title="@item.Value">@item.Value</dd>
                                         </div>
                                     }
@@ -361,11 +362,11 @@
     private string BuildStepSummary(ScenarioStepSnapshot step)
         => ScenarioStepDisplay.BuildStepSummary(step, ScenarioSteps);
 
-    private static IEnumerable<KeyValuePair<string, string>> VisibleConfiguration(ScenarioStepSnapshot step)
-        => ScenarioStepDisplay.VisibleConfiguration(step);
+    private IEnumerable<KeyValuePair<string, string>> VisibleConfiguration(ScenarioStepSnapshot step)
+        => ScenarioStepDisplay.VisibleConfiguration(step, ScenarioSteps);
 
-    private static string FormatConfigurationKey(string key)
-        => ScenarioStepDisplay.FormatConfigurationKey(key);
+    private string FormatConfigurationKey(ScenarioStepSnapshot step, string key)
+        => ScenarioStepDisplay.FormatConfigurationKey(step, key, ScenarioSteps);
 
     private static string JoinParts(params string?[] parts)
     {

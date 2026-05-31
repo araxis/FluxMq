@@ -640,4 +640,4 @@ Review the conditional-link designer editor slice:
 
 Next implementation slice: continue scenario/test composition around normal components plus narrow test-specific `expect.event`/`when.event` blocks. Prefer catalog/runner/shared-service changes over adding one-off logic inside Razor components.
 
-Latest slice: the scenario step editor now uses `ScenarioStepCatalog` as the source for finite option lists instead of local Razor fallbacks. Keep moving descriptor defaults, options, summaries, and validation into shared catalog/services so test-step UI can stay thin and portable.
+Latest slice: scenario test cards now use `ScenarioStepCatalog` for displayed configuration labels and field order, matching the editor's descriptor-owned field model. Keep moving descriptor defaults, options, summaries, and validation into shared catalog/services so test-step UI can stay thin and portable.

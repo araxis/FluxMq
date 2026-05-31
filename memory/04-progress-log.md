@@ -1921,3 +1921,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verified:
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 8 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 204 tests.
+
+## 2026-05-31 - Scenario card catalog display cleanup
+
+- Scenario test cards now read configuration labels from `ScenarioStepCatalog` field descriptors instead of a local label switch.
+- Visible configuration rows follow catalog field order first, with unknown custom fields appended after known fields.
+- Added coverage for catalog-owned labels, event attribute labels, unknown attribute fallbacks, and display ordering.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepDisplayTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 11 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 207 tests.

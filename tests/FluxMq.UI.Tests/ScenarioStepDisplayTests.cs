@@ -62,12 +62,61 @@ public sealed class ScenarioStepDisplayTests
     }
 
     [Theory]
-    [InlineData(ScenarioStepConfigurationKeys.Subscriptions, "topic filter")]
-    [InlineData(ScenarioStepConfigurationKeys.ReceiveRetained, "receive retained")]
-    [InlineData(ScenarioStepConfigurationKeys.RetainAsPublished, "retain as published")]
+    [InlineData(ScenarioStepConfigurationKeys.Subscriptions, "Topic filter")]
+    [InlineData(ScenarioStepConfigurationKeys.ReceiveRetained, "Receive retained")]
+    [InlineData(ScenarioStepConfigurationKeys.RetainAsPublished, "Retain as published")]
     [InlineData(ScenarioStepConfigurationKeys.Qos, "QoS")]
-    public void FormatConfigurationKey_UsesScenarioLabels(string key, string expected)
-        => ScenarioStepDisplay.FormatConfigurationKey(key).ShouldBe(expected);
+    public void FormatConfigurationKey_UsesCatalogFieldLabels(string key, string expected)
+    {
+        var step = Step(ScenarioStepTypes.MqttTrigger);
+
+        ScenarioStepDisplay.FormatConfigurationKey(step, key, Catalog)
+            .ShouldBe(expected);
+    }
+
+    [Fact]
+    public void FormatConfigurationKey_UsesCatalogAttributeLabels()
+    {
+        var step = Step(ScenarioStepTypes.ExpectEvent);
+
+        ScenarioStepDisplay.FormatConfigurationKey(step, ScenarioStepCatalog.RetainAttributeKey, Catalog)
+            .ShouldBe("Retain");
+        ScenarioStepDisplay.FormatConfigurationKey(step, ScenarioStepCatalog.SchemaIdAttributeKey, Catalog)
+            .ShouldBe("Schema id");
+    }
+
+    [Fact]
+    public void FormatConfigurationKey_FallsBackForUnknownAttributeFields()
+    {
+        var step = Step("custom.step");
+
+        ScenarioStepDisplay.FormatConfigurationKey(step, DashboardEventFilterCatalog.AttributeFilterKey("custom"), Catalog)
+            .ShouldBe("custom");
+    }
+
+    [Fact]
+    public void VisibleConfiguration_UsesCatalogFieldOrder()
+    {
+        var step = Step(
+            ScenarioStepTypes.MqttPublisher,
+            (ScenarioStepCatalog.QosKey, "1"),
+            ("custom", "value"),
+            (ScenarioStepCatalog.TopicKey, "test"),
+            (ScenarioStepCatalog.PayloadKey, "payload"),
+            (ScenarioStepCatalog.ConnectionKey, "local-broker"),
+            (ScenarioStepCatalog.RetainKey, string.Empty));
+
+        var configuration = ScenarioStepDisplay.VisibleConfiguration(step, Catalog).ToArray();
+
+        configuration.Select(item => item.Key)
+            .ShouldBe([
+                ScenarioStepCatalog.ConnectionKey,
+                ScenarioStepCatalog.TopicKey,
+                ScenarioStepCatalog.PayloadKey,
+                ScenarioStepCatalog.QosKey,
+                "custom"
+            ]);
+    }
 
     private static ScenarioStepSnapshot Step(
         string type,
