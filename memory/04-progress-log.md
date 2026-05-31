@@ -1815,3 +1815,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 115 tests.
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 47 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 199 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - Workspace dashboard and test definitions
+
+- Added app-owned dashboard and test definition records for the FluxMQ workspace document.
+- Removed old pipeline definition imports from the package-backed workspace definition and serializer options.
+- Kept the old pipeline definition records untouched for the old runtime and scenario runner until those paths migrate.
+- Verified:
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~FluxMqApplicationDefinitionTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 2 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 47 tests.
