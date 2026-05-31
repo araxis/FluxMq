@@ -172,7 +172,7 @@ Dynamic ELT mapping is explicit in the graph. Source and trigger nodes emit prot
 
 ## Flow Application Runtime Direction
 
-The workflow runtime is provided by the `FluxFlow.Engine` package and can be hosted by the FluxMQ desktop app, console runner, future service process, or command/tool integrations.
+The workflow runtime is provided by the `FluxFlow.Engine` package and can be hosted by the FluxMQ desktop app, console runner, future service process, or command/tool integrations. MQTT publish/subscribe node execution is delegated to the `FluxFlow.Components.Mqtt` package through FluxMQ adapters that preserve app-level connection resources and domain message contracts.
 
 The runtime controller should sit above individual workflow graphs and below the host shell:
 

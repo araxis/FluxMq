@@ -1,31 +1,34 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Mqtt;
+using FluxMq.Components.Mqtt;
+using FluxFlow.Components.Mqtt;
+using FluxFlow.Components.Mqtt.Contracts;
+using FluxFlow.Components.Mqtt.Nodes;
 using FluxFlow.Engine.Components;
+using FluxFlow.Engine.Definitions;
+using FluxFlow.Engine.Runtime;
+using MQTTnet.Protocol;
+using System.Text.Json;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.MessageSource;
 
-/// <summary>
-/// Trigger node: bound to a connection (client + broadcast stream),
-/// owns its own subscription list, and emits envelopes that match its filters.
-///
-/// On start it installs its subscriptions on the broker and links a topic-filter
-/// block to the connection's broadcast. Multiple triggers may share one connection;
-/// each gets every envelope but only forwards the ones matching its own filters.
-/// </summary>
+using ComponentMqttReceivedMessage = FluxFlow.Components.Mqtt.Contracts.MqttReceivedMessage;
+
 public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDisposable
 {
     private readonly IMqttBrokerClient _client;
     private readonly ISourceBlock<MqttEnvelope> _connectionStream;
     private readonly IReadOnlyList<MqttSubscription> _subscriptions;
-    private readonly string[] _topicFilters;
+    private readonly SubscriberRuntime[] _subscribers;
     private readonly BufferBlock<MqttEnvelope> _output;
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly BufferBlock<FlowEvent> _events;
     private readonly CancellationTokenSource _cts = new();
-    private IDisposable? _link;
+    private readonly Task _completion;
     private int _started;
+    private int _stopped;
 
     public MqttTriggerComponent(
         IMqttBrokerClient client,
@@ -42,26 +45,24 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
         {
             throw new ArgumentException("A trigger must declare at least one subscription.", nameof(subscriptions));
         }
-        _topicFilters = _subscriptions.Select(static s => s.TopicFilter).ToArray();
+
         _errors = new BroadcastBlock<FlowError>(static error => error);
         _events = new BufferBlock<FlowEvent>();
         _output = new BufferBlock<MqttEnvelope>(new DataflowBlockOptions
         {
             BoundedCapacity = boundedCapacity
         });
-
-        _output.Completion.ContinueWith(
-            _ =>
-            {
-                _errors.Complete();
-                _events.Complete();
-            },
-            CancellationToken.None,
-            TaskContinuationOptions.ExecuteSynchronously,
-            TaskScheduler.Default);
+        _subscribers = _subscriptions
+            .Select(subscription => CreateSubscriberNode(
+                _client,
+                _connectionStream,
+                _subscriptions,
+                subscription,
+                boundedCapacity))
+            .ToArray();
+        _completion = CompleteWhenSubscribersStopAsync();
     }
 
-    /// <summary>Convenience constructor when you have a connection component.</summary>
     public MqttTriggerComponent(
         MqttConnectionComponent connection,
         IEnumerable<MqttSubscription> subscriptions,
@@ -90,75 +91,188 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
             return;
         }
 
-        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, cancellationToken);
-        var ct = linkedCts.Token;
-
         try
         {
-            foreach (var subscription in _subscriptions)
+            foreach (var subscriber in _subscribers)
             {
-                await _client.SubscribeAsync(
-                    subscription.TopicFilter,
-                    subscription.QualityOfService,
-                    subscription.ReceiveRetainedMessages,
-                    subscription.RetainAsPublished,
-                    ct).ConfigureAwait(false);
+                await subscriber.Node.StartAsync(cancellationToken).ConfigureAwait(false);
             }
-
-            var pump = new ActionBlock<MqttEnvelope>(async envelope =>
-            {
-                if (MqttTopicFilterMatcher.MatchesAny(_topicFilters, envelope.Topic))
-                {
-                    await _events.SendAsync(CreateReceivedEvent(envelope), _cts.Token).ConfigureAwait(false);
-                    await _output.SendAsync(envelope, _cts.Token).ConfigureAwait(false);
-                }
-            }, new ExecutionDataflowBlockOptions
-            {
-                BoundedCapacity = DataflowBlockOptions.Unbounded,
-                CancellationToken = _cts.Token
-            });
-
-            _link = _connectionStream.LinkTo(pump, new DataflowLinkOptions { PropagateCompletion = true });
-
-            _ = pump.Completion.ContinueWith(
-                _ => _output.Complete(),
-                CancellationToken.None,
-                TaskContinuationOptions.ExecuteSynchronously,
-                TaskScheduler.Default);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            PublishError(FlowErrorCodes.NodeFaulted, "MQTT trigger failed to start.", exception);
-            _output.Complete();
+            PublishError(FlowErrorCodes.NodeFaulted, "MQTT trigger failed to start.", exception, _client.Profile.Name);
+            StopSubscribers();
             throw;
         }
     }
 
     public void Complete()
     {
-        Interlocked.Exchange(ref _started, 1);
-        _link?.Dispose();
-        _cts.Cancel();
-        _output.Complete();
+        if (Interlocked.Exchange(ref _stopped, 1) == 1)
+        {
+            return;
+        }
+
+        StopSubscribers();
     }
 
     public void Fault(Exception exception)
     {
-        Interlocked.Exchange(ref _started, 1);
-        _link?.Dispose();
+        ArgumentNullException.ThrowIfNull(exception);
+        Interlocked.Exchange(ref _stopped, 1);
+        PublishError(FlowErrorCodes.NodeFaulted, "MQTT trigger faulted.", exception, _client.Profile.Name);
         _cts.Cancel();
-        PublishError(FlowErrorCodes.NodeFaulted, "MQTT trigger faulted.", exception);
-        ((IDataflowBlock)_output).Fault(exception);
+        foreach (var subscriber in _subscribers)
+        {
+            subscriber.Node.Fault(exception);
+        }
     }
 
     public async ValueTask DisposeAsync()
     {
         Complete();
-        await Completion.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+        await _completion.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+
+        foreach (var subscriber in _subscribers)
+        {
+            subscriber.OutputLink.Dispose();
+            foreach (var output in subscriber.RuntimeNode.Outputs)
+            {
+                await output.DisposeAsync().ConfigureAwait(false);
+            }
+
+            await subscriber.Node.DisposeAsync().ConfigureAwait(false);
+        }
+
         _cts.Dispose();
     }
 
-    private void PublishError(int code, string message, Exception exception)
+    private SubscriberRuntime CreateSubscriberNode(
+        IMqttBrokerClient client,
+        ISourceBlock<MqttEnvelope> connectionStream,
+        IReadOnlyList<MqttSubscription> subscriptions,
+        MqttSubscription subscription,
+        int boundedCapacity)
+    {
+        var definition = new NodeDefinition
+        {
+            Type = MqttComponentTypes.Subscribe,
+            Configuration = new Dictionary<string, JsonElement>
+            {
+                ["topicFilter"] = JsonSerializer.SerializeToElement(subscription.TopicFilter),
+                ["qualityOfService"] = JsonSerializer.SerializeToElement(MqttClientAdapter.ToComponentQualityOfService(subscription.QualityOfService).ToString()),
+                ["boundedCapacity"] = JsonSerializer.SerializeToElement(boundedCapacity)
+            }
+        };
+
+        var context = new RuntimeNodeFactoryContext(
+            new NodeName("trigger"),
+            definition,
+            "mqtt",
+            new Dictionary<NodeName, RuntimeNode>());
+        var runtimeNode = MqttSubscribeNode.Create(
+            context,
+            new MqttClientAdapterFactory(() => new MqttClientAdapter(client, connectionStream, subscriptions)));
+        var outputSink = new ActionBlock<ComponentMqttReceivedMessage>(
+            HandleReceivedMessageAsync,
+            new ExecutionDataflowBlockOptions { BoundedCapacity = boundedCapacity });
+        var outputLink = LinkOutputSink(runtimeNode, outputSink);
+        var subscriber = (MqttSubscribeNode)runtimeNode.Node;
+
+        return new SubscriberRuntime(
+            subscriber,
+            runtimeNode,
+            outputSink,
+            outputLink,
+            PumpErrorsAsync(subscriber));
+    }
+
+    private static IDisposable LinkOutputSink(
+        RuntimeNode runtimeNode,
+        ActionBlock<ComponentMqttReceivedMessage> outputSink)
+    {
+        var output = runtimeNode.FindOutput(new PortName(MqttComponentPorts.Output))
+            ?? throw new InvalidOperationException("MQTT subscribe package node did not expose an Output port.");
+        var input = new InputPort<ComponentMqttReceivedMessage>(
+            new PortAddress("component", new NodeName("trigger"), new PortName("OutputSink")),
+            outputSink);
+
+        var link = output.TryLinkTo(input, propagateCompletion: true, out var error);
+        return link ?? throw new InvalidOperationException(error?.Message ?? "MQTT subscribe package output could not be linked.");
+    }
+
+    private async Task HandleReceivedMessageAsync(ComponentMqttReceivedMessage message)
+    {
+        var envelope = MqttClientAdapter.ToEnvelope(message);
+        await _events.SendAsync(CreateReceivedEvent(envelope), _cts.Token).ConfigureAwait(false);
+        await _output.SendAsync(envelope, _cts.Token).ConfigureAwait(false);
+    }
+
+    private async Task PumpErrorsAsync(MqttSubscribeNode subscriber)
+    {
+        var source = (IReceivableSourceBlock<FlowError>)subscriber.Errors;
+
+        while (await subscriber.Errors.OutputAvailableAsync().ConfigureAwait(false))
+        {
+            while (source.TryReceive(out var error))
+            {
+                PublishMappedError(error);
+            }
+        }
+    }
+
+    private async Task CompleteWhenSubscribersStopAsync()
+    {
+        try
+        {
+            await Task.WhenAll(_subscribers.Select(subscriber => subscriber.OutputSink.Completion)).ConfigureAwait(false);
+            _output.Complete();
+        }
+        catch (OperationCanceledException) when (_cts.IsCancellationRequested)
+        {
+            _output.Complete();
+        }
+        catch (Exception exception)
+        {
+            PublishError(FlowErrorCodes.ProcessingFailed, "MQTT trigger failed.", exception, _client.Profile.Name);
+            ((IDataflowBlock)_output).Fault(exception);
+        }
+        finally
+        {
+            await _output.Completion.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+            foreach (var subscriber in _subscribers)
+            {
+                subscriber.Node.Complete();
+            }
+
+            await Task.WhenAll(_subscribers.Select(subscriber => subscriber.ErrorPump)).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+            _errors.Complete();
+            _events.Complete();
+        }
+    }
+
+    private void StopSubscribers()
+    {
+        _cts.Cancel();
+        foreach (var subscriber in _subscribers)
+        {
+            subscriber.Node.Complete();
+        }
+    }
+
+    private void PublishMappedError(FlowError error)
+    {
+        var context = error.Exception is MqttClientAdapterException adapterException
+            ? adapterException.Topic
+            : error.Context;
+        PublishError(
+            FlowErrorCodes.ProcessingFailed,
+            "MQTT trigger failed.",
+            error.Exception ?? new InvalidOperationException(error.Message),
+            context ?? _client.Profile.Name);
+    }
+
+    private void PublishError(int code, string message, Exception exception, string? context = null)
     {
         _errors.Post(new FlowError
         {
@@ -166,7 +280,7 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
             Code = code,
             Message = message,
             Exception = exception,
-            Context = _client.Profile.Name
+            Context = context
         });
     }
 
@@ -189,4 +303,10 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
             }
         };
 
+    private sealed record SubscriberRuntime(
+        MqttSubscribeNode Node,
+        RuntimeNode RuntimeNode,
+        ActionBlock<ComponentMqttReceivedMessage> OutputSink,
+        IDisposable OutputLink,
+        Task ErrorPump);
 }
