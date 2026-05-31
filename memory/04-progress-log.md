@@ -1957,3 +1957,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Scenarios.Tests\FluxMq.Scenarios.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 35 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 206 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 494 tests.
+
+## 2026-05-31 - Scenario validation catalog alignment
+
+- App scenario validation now uses `ScenarioStepDefinitionCatalog` to resolve supported step types.
+- Payload encoding and QoS validation now read finite allowed values from the scenario definition catalog instead of maintaining separate validator lists/ranges.
+- Added validator coverage for rejecting a payload encoding outside the catalog option set.
+- Hardened LiteDB mapper registration so parallel test/application contexts do not re-register shared custom id mappings while another context is serializing storage entities.
+- Verified:
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~FluxMqApplicationDefinitionValidatorTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 21 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 80 tests.
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 115 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 495 tests.

@@ -51,6 +51,19 @@ public enum FluxMqApplicationDefinitionValidationErrorCode
 public sealed class FluxMqApplicationDefinitionValidator
 {
     private readonly EngineApplicationDefinitionValidator _engineValidator = new();
+    private readonly ScenarioStepDefinitionCatalog _scenarioStepDefinitions;
+
+    public FluxMqApplicationDefinitionValidator()
+        : this(ScenarioStepDefinitionCatalog.Shared)
+    {
+    }
+
+    public FluxMqApplicationDefinitionValidator(ScenarioStepDefinitionCatalog scenarioStepDefinitions)
+    {
+        ArgumentNullException.ThrowIfNull(scenarioStepDefinitions);
+
+        _scenarioStepDefinitions = scenarioStepDefinitions;
+    }
 
     public FluxMqApplicationDefinitionValidationResult Validate(FluxMqApplicationDefinition definition)
     {
@@ -229,7 +242,7 @@ public sealed class FluxMqApplicationDefinitionValidator
         }
     }
 
-    private static void ValidateScenario(
+    private void ValidateScenario(
         string scenarioName,
         ScenarioDefinition scenario,
         FluxMqApplicationDefinition definition,
@@ -257,7 +270,7 @@ public sealed class FluxMqApplicationDefinitionValidator
                     FluxMqApplicationDefinitionValidationErrorCode.EmptyScenarioStepType,
                     $"Test scenario '{scenarioName}' step '{step.Key}' has an empty type."));
             }
-            else if (!ScenarioStepTypes.All.Contains(step.Value.Type))
+            else if (_scenarioStepDefinitions.Find(step.Value.Type) is not { } stepDefinition)
             {
                 errors.Add(new(
                     FluxMqApplicationDefinitionValidationErrorCode.UnknownScenarioStepType,
@@ -269,6 +282,7 @@ public sealed class FluxMqApplicationDefinitionValidator
                     scenarioName,
                     step.Key,
                     step.Value,
+                    stepDefinition,
                     definition,
                     errors);
             }
@@ -282,16 +296,19 @@ internal static class FluxMqScenarioStepDefinitionValidator
         string scenarioName,
         string stepName,
         ScenarioStepDefinition step,
+        ScenarioStepDefinitionDescriptor stepDefinition,
         FluxMqApplicationDefinition definition,
         List<FluxMqApplicationDefinitionValidationError> errors)
     {
+        ArgumentNullException.ThrowIfNull(stepDefinition);
+
         switch (step.Type)
         {
             case ScenarioStepTypes.MqttPublisher:
-                ValidateMqttPublisherStep(scenarioName, stepName, step.Configuration, definition, errors);
+                ValidateMqttPublisherStep(scenarioName, stepName, step.Configuration, stepDefinition, definition, errors);
                 break;
             case ScenarioStepTypes.MqttTrigger:
-                ValidateMqttTriggerStep(scenarioName, stepName, step.Configuration, definition, errors);
+                ValidateMqttTriggerStep(scenarioName, stepName, step.Configuration, stepDefinition, definition, errors);
                 break;
             case ScenarioStepTypes.WhenEvent:
             case ScenarioStepTypes.ExpectEvent:
@@ -304,6 +321,7 @@ internal static class FluxMqScenarioStepDefinitionValidator
         string scenarioName,
         string stepName,
         IReadOnlyDictionary<string, JsonElement> configuration,
+        ScenarioStepDefinitionDescriptor stepDefinition,
         FluxMqApplicationDefinition definition,
         List<FluxMqApplicationDefinitionValidationError> errors)
     {
@@ -332,16 +350,15 @@ internal static class FluxMqScenarioStepDefinitionValidator
                 out var encoding) &&
             !string.IsNullOrWhiteSpace(encoding))
         {
-            ValidatePayloadEncoding(scenarioName, stepName, configuration, encoding, errors);
+            ValidatePayloadEncoding(scenarioName, stepName, configuration, stepDefinition, encoding, errors);
         }
 
-        ValidateOptionalInt(
+        ValidateOptionalIntOption(
             scenarioName,
             stepName,
             configuration,
             ScenarioStepConfigurationKeys.Qos,
-            0,
-            2,
+            stepDefinition,
             errors);
 
         ValidateOptionalBool(
@@ -356,6 +373,7 @@ internal static class FluxMqScenarioStepDefinitionValidator
         string scenarioName,
         string stepName,
         IReadOnlyDictionary<string, JsonElement> configuration,
+        ScenarioStepDefinitionDescriptor stepDefinition,
         FluxMqApplicationDefinition definition,
         List<FluxMqApplicationDefinitionValidationError> errors)
     {
@@ -375,13 +393,12 @@ internal static class FluxMqScenarioStepDefinitionValidator
             ScenarioStepConfigurationKeys.Subscriptions,
             errors);
 
-        ValidateOptionalInt(
+        ValidateOptionalIntOption(
             scenarioName,
             stepName,
             configuration,
             ScenarioStepConfigurationKeys.Qos,
-            0,
-            2,
+            stepDefinition,
             errors);
 
         ValidateOptionalBool(
@@ -429,12 +446,25 @@ internal static class FluxMqScenarioStepDefinitionValidator
         string scenarioName,
         string stepName,
         IReadOnlyDictionary<string, JsonElement> configuration,
+        ScenarioStepDefinitionDescriptor stepDefinition,
         string encoding,
         List<FluxMqApplicationDefinitionValidationError> errors)
     {
-        switch (encoding.Trim().ToLowerInvariant())
+        var normalizedEncoding = encoding.Trim().ToLowerInvariant();
+        if (!FieldOptionValues(stepDefinition, ScenarioStepConfigurationKeys.PayloadEncoding)
+                .Contains(normalizedEncoding, StringComparer.Ordinal))
         {
-            case "utf8":
+            var allowed = string.Join(", ", FieldOptionValues(stepDefinition, ScenarioStepConfigurationKeys.PayloadEncoding));
+            errors.Add(InvalidScenarioConfiguration(
+                scenarioName,
+                stepName,
+                ScenarioStepConfigurationKeys.PayloadEncoding,
+                $"must be one of: {allowed}."));
+            return;
+        }
+
+        switch (normalizedEncoding)
+        {
             case "text":
             case "json":
                 return;
@@ -443,13 +473,6 @@ internal static class FluxMqScenarioStepDefinitionValidator
                 return;
             case "bytes":
                 ValidateBytePayload(scenarioName, stepName, configuration, errors);
-                return;
-            default:
-                errors.Add(InvalidScenarioConfiguration(
-                    scenarioName,
-                    stepName,
-                    ScenarioStepConfigurationKeys.PayloadEncoding,
-                    "must be utf8, text, json, base64, or bytes."));
                 return;
         }
     }
@@ -636,6 +659,44 @@ internal static class FluxMqScenarioStepDefinitionValidator
             errors.Add(InvalidScenarioConfiguration(scenarioName, stepName, key, $"must be an integer {range}."));
         }
     }
+
+    private static void ValidateOptionalIntOption(
+        string scenarioName,
+        string stepName,
+        IReadOnlyDictionary<string, JsonElement> configuration,
+        string key,
+        ScenarioStepDefinitionDescriptor stepDefinition,
+        List<FluxMqApplicationDefinitionValidationError> errors)
+    {
+        if (!configuration.TryGetValue(key, out var element))
+        {
+            return;
+        }
+
+        if (element.ValueKind != JsonValueKind.Number ||
+            !element.TryGetInt32(out var value))
+        {
+            errors.Add(InvalidScenarioConfiguration(scenarioName, stepName, key, "must be an integer."));
+            return;
+        }
+
+        var options = FieldOptionValues(stepDefinition, key);
+        if (!options.Contains(value.ToString(System.Globalization.CultureInfo.InvariantCulture), StringComparer.Ordinal))
+        {
+            errors.Add(InvalidScenarioConfiguration(
+                scenarioName,
+                stepName,
+                key,
+                $"must be one of: {string.Join(", ", options)}."));
+        }
+    }
+
+    private static IReadOnlyList<string> FieldOptionValues(ScenarioStepDefinitionDescriptor stepDefinition, string key)
+        => stepDefinition.Fields
+            .FirstOrDefault(field => string.Equals(field.Key, key, StringComparison.Ordinal))
+            ?.Options
+            .Select(option => option.Value)
+            .ToArray() ?? [];
 
     private static void ValidateAttributes(
         string scenarioName,
