@@ -640,4 +640,4 @@ Review the conditional-link designer editor slice:
 
 Next implementation slice: continue scenario/test composition around normal components plus narrow test-specific `expect.event`/`when.event` blocks. Prefer catalog/runner/shared-service changes over adding one-off logic inside Razor components.
 
-Latest slice: removed the unused `ScenarioStepTypes.All` aggregate so the supported scenario step list lives only in `ScenarioStepDefinitionCatalog`; constants remain as stable type identifiers.
+Latest slice: isolated scenario event-stream diagnostics now say `scenario event source` instead of exposing internal runner ownership language. The behavior is unchanged: event-observing steps need either a prior `mqtt.publisher`/`mqtt.trigger` scenario event source or an attached app runtime event stream.

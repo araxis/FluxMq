@@ -346,7 +346,7 @@ public sealed class CliRunnerTests
         exitCode.ShouldBe((int)CliExitCode.ValidationError);
         output.Lines.ShouldBeEmpty();
         error.Lines.ShouldContain(line =>
-            line.Contains("contains event-observing steps before any runner-owned event source", StringComparison.Ordinal) &&
+            line.Contains("contains event-observing steps before any scenario event source", StringComparison.Ordinal) &&
             line.Contains("Add a scenario mqtt.publisher or mqtt.trigger step before expect.event or when.event", StringComparison.Ordinal));
     }
 
@@ -386,7 +386,7 @@ public sealed class CliRunnerTests
         exitCode.ShouldBe((int)CliExitCode.ValidationError);
         output.Lines.ShouldBeEmpty();
         error.Lines.ShouldContain(line =>
-            line.Contains("contains event-observing steps before any runner-owned event source", StringComparison.Ordinal) &&
+            line.Contains("contains event-observing steps before any scenario event source", StringComparison.Ordinal) &&
             line.Contains("Add a scenario mqtt.publisher or mqtt.trigger step before expect.event or when.event", StringComparison.Ordinal));
     }
 

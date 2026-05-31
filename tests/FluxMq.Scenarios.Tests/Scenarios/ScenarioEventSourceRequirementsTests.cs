@@ -31,7 +31,7 @@ public sealed class ScenarioEventSourceRequirementsTests
     [InlineData(ScenarioStepTypes.MqttPublisher, ScenarioStepTypes.WhenEvent)]
     [InlineData(ScenarioStepTypes.MqttTrigger, ScenarioStepTypes.ExpectEvent)]
     [InlineData(ScenarioStepTypes.MqttTrigger, ScenarioStepTypes.WhenEvent)]
-    public void RequiresAttachedEventStream_ReturnsFalseWhenRunnerOwnedEventSourceComesFirst(
+    public void RequiresAttachedEventStream_ReturnsFalseWhenScenarioEventSourceComesFirst(
         string eventSourceType,
         string observerType)
     {
@@ -44,7 +44,7 @@ public sealed class ScenarioEventSourceRequirementsTests
     }
 
     [Fact]
-    public void RequiresAttachedEventStream_ReturnsTrueWhenObserverComesBeforeRunnerOwnedEventSource()
+    public void RequiresAttachedEventStream_ReturnsTrueWhenObserverComesBeforeScenarioEventSource()
     {
         var scenario = Scenario(
             ("observe", ScenarioStepTypes.ExpectEvent),
