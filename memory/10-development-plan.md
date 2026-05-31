@@ -150,7 +150,7 @@ Tasks:
 - Add runtime mapper/predicate/expression abstractions.
 - Add `flow.mapper` as the user-facing mapper component.
 - Add Dynamic Expresso and Jsonata mapper support.
-- Keep request-specific mapper aliases hidden for older definitions only.
+- Keep request-specific mapper classes internal to `flow.mapper`; do not expose saved-definition aliases.
 - Update UI catalog/composer so actors are not auto-wired to envelope sources.
 
 Done when:
@@ -281,7 +281,7 @@ Done when:
   - `DynamicMapperWorkbenchPreview` builds input variables, output request fields, and runtime preview results through the real mapper engines.
   - `DynamicMapperNodeWidget` now uses a three-pane workbench with input sample, expression editor, output shape, and preview/error feedback.
   - Added focused UI and component tests for payload JSON variables and mapper preview behavior.
-- Corrected the mapper configuration model: `expression` is now the primary shape and returns the whole output object such as `MqttPublishRequest`, `FileWriteRequest`, or `MqttRecordingRequest`; per-field `map` is only a runtime compatibility fallback.
+- Corrected the mapper configuration model: `expression` returns the whole output object such as `MqttPublishRequest`, `FileWriteRequest`, or `MqttRecordingRequest`; saved definitions do not use per-field `map` shapes.
 - Replaced the mapper expression textarea with BlazorMonaco/Monaco Editor so mapping expressions get a real code editor surface.
 - Added FluxMQ Monaco themes and a JSONata language definition, so the mapper editor follows the app theme and highlights JSONata expressions directly.
 - Reworked the mapper input sample into a Monaco JSON editor and the output preview into a read-only Monaco JSON result editor, matching the JSONata Exerciser mental model.

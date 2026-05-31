@@ -80,7 +80,7 @@ Avoid user-facing "sink" naming where an actor name is clearer. Internal code ma
 - Added Dynamic Expresso as the first concrete expression engine in `FluxMq.Pipeline.Mapping`.
 - Added Jsonata as the JSON-oriented mapper engine.
 - Changed `mqtt.message-filter` expression configuration from a placeholder to real Dynamic Expresso evaluation.
-- Added `flow.mapper` as the user-facing dynamic mapper node; request-specific mapper node types are compatibility aliases, not catalog components.
+- Added `flow.mapper` as the user-facing dynamic mapper node; request-specific mapper classes are internal typed implementations, not catalog/runtime node aliases.
 - Added `mqtt.publisher` as the MQTT publish actor node type.
 - Renamed the metrics observer to `MqttMetricsComponent` / `mqtt.metrics`.
 - Added `FileWriteRequest` and `file.writer` as the first non-MQTT proof of the mapper-to-actor pattern.

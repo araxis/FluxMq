@@ -495,15 +495,16 @@ public static class RuntimeNodeFactoryRegistryExtensions
         IFlowExpressionEngine expressionEngine)
     {
         var expression = GetNullableString(definition, "expression");
-        var component = string.IsNullOrWhiteSpace(expression)
-            ? new MqttRecordingRequestMapperComponent(
-                GetRequiredSessionId(definition, "sessionId"),
-                boundedCapacity: GetBoundedCapacity(definition))
-            : new MqttRecordingRequestMapperComponent(
-                new MqttRecordingRequestExpressionMapper(
-                    GetMapperExpressionEngine(definition, expressionEngine),
-                    expression),
-                boundedCapacity: GetBoundedCapacity(definition));
+        if (string.IsNullOrWhiteSpace(expression))
+        {
+            throw new InvalidOperationException("MQTT recording request mapper requires configuration value 'expression'.");
+        }
+
+        var component = new MqttRecordingRequestMapperComponent(
+            new MqttRecordingRequestExpressionMapper(
+                GetMapperExpressionEngine(definition, expressionEngine),
+                expression),
+            boundedCapacity: GetBoundedCapacity(definition));
 
         return RuntimeNode.Create(
             address,
@@ -617,88 +618,28 @@ public static class RuntimeNodeFactoryRegistryExtensions
     private static MqttPublishRequestMapDefinition GetPublishRequestMapDefinition(NodeDefinition definition)
     {
         var expression = GetNullableString(definition, "expression");
-        if (!string.IsNullOrWhiteSpace(expression))
+        if (string.IsNullOrWhiteSpace(expression))
         {
-            return new MqttPublishRequestMapDefinition
-            {
-                Expression = expression
-            };
+            throw new InvalidOperationException("MQTT publish request mapper requires configuration value 'expression'.");
         }
 
-        if (definition.Configuration.TryGetValue("map", out var mapElement))
-        {
-            if (mapElement.ValueKind != JsonValueKind.Object)
-            {
-                throw new InvalidOperationException("Configuration value 'map' must be an object.");
-            }
-
-            return new MqttPublishRequestMapDefinition
-            {
-                TopicExpression = ReadOptionalString(mapElement, "topic") ?? ReadOptionalString(mapElement, "topicExpression"),
-                PayloadExpression = ReadOptionalString(mapElement, "payload") ?? ReadOptionalString(mapElement, "payloadExpression"),
-                QualityOfServiceExpression =
-                    ReadOptionalString(mapElement, "qos") ??
-                    ReadOptionalString(mapElement, "qualityOfService") ??
-                    ReadOptionalString(mapElement, "qosExpression") ??
-                    ReadOptionalString(mapElement, "qualityOfServiceExpression"),
-                RetainExpression = ReadOptionalString(mapElement, "retain") ?? ReadOptionalString(mapElement, "retainExpression")
-            };
-        }
-
-        var fixedTopic = GetNullableString(definition, "topic");
         return new MqttPublishRequestMapDefinition
         {
-            TopicExpression =
-                GetNullableString(definition, "topicExpression") ??
-                (fixedTopic is null ? null : JsonSerializer.Serialize(fixedTopic)),
-            PayloadExpression = GetNullableString(definition, "payloadExpression"),
-            QualityOfServiceExpression =
-                GetNullableString(definition, "qosExpression") ??
-                GetNullableString(definition, "qualityOfServiceExpression"),
-            RetainExpression = GetNullableString(definition, "retainExpression")
+            Expression = expression
         };
     }
 
     private static FileWriteRequestMapDefinition GetFileWriteRequestMapDefinition(NodeDefinition definition)
     {
         var expression = GetNullableString(definition, "expression");
-        if (!string.IsNullOrWhiteSpace(expression))
+        if (string.IsNullOrWhiteSpace(expression))
         {
-            return new FileWriteRequestMapDefinition
-            {
-                Expression = expression
-            };
-        }
-
-        if (definition.Configuration.TryGetValue("map", out var mapElement))
-        {
-            if (mapElement.ValueKind != JsonValueKind.Object)
-            {
-                throw new InvalidOperationException("Configuration value 'map' must be an object.");
-            }
-
-            return new FileWriteRequestMapDefinition
-            {
-                PathExpression =
-                    ReadOptionalString(mapElement, "path") ??
-                    ReadOptionalString(mapElement, "pathExpression") ??
-                    throw new InvalidOperationException("File write request map requires a 'path' expression."),
-                ContentExpression = ReadOptionalString(mapElement, "content") ?? ReadOptionalString(mapElement, "contentExpression"),
-                ModeExpression = ReadOptionalString(mapElement, "mode") ?? ReadOptionalString(mapElement, "modeExpression"),
-                CreateDirectoryExpression =
-                    ReadOptionalString(mapElement, "createDirectory") ??
-                    ReadOptionalString(mapElement, "createDirectoryExpression")
-            };
+            throw new InvalidOperationException("File write request mapper requires configuration value 'expression'.");
         }
 
         return new FileWriteRequestMapDefinition
         {
-            PathExpression =
-                GetNullableString(definition, "pathExpression") ??
-                throw new InvalidOperationException("File write request mapper requires configuration value 'pathExpression' or 'map.path'."),
-            ContentExpression = GetNullableString(definition, "contentExpression"),
-            ModeExpression = GetNullableString(definition, "modeExpression"),
-            CreateDirectoryExpression = GetNullableString(definition, "createDirectoryExpression")
+            Expression = expression
         };
     }
 
@@ -738,7 +679,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
         NodeDefinition definition,
         IFlowExpressionEngine defaultExpressionEngine)
     {
-        var requestedEngine = GetNullableString(definition, "engine") ?? GetNullableString(definition, "mapper");
+        var requestedEngine = GetNullableString(definition, "engine");
         if (requestedEngine is null)
         {
             return defaultExpressionEngine;
@@ -756,22 +697,6 @@ public static class RuntimeNodeFactoryRegistryExtensions
 
         throw new InvalidOperationException(
             $"Mapper engine '{requestedEngine}' is not registered. Supported engines: {defaultExpressionEngine.Name}, jsonata.");
-    }
-
-    private static string? ReadOptionalString(JsonElement element, string propertyName)
-    {
-        if (!element.TryGetProperty(propertyName, out var property) || property.ValueKind == JsonValueKind.Null)
-        {
-            return null;
-        }
-
-        if (property.ValueKind != JsonValueKind.String)
-        {
-            throw new InvalidOperationException($"Configuration value '{propertyName}' must be a string.");
-        }
-
-        var value = property.GetString();
-        return string.IsNullOrWhiteSpace(value) ? null : value;
     }
 
     private static IReadOnlyList<string> GetFilterPatterns(NodeDefinition definition)

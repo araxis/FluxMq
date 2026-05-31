@@ -198,7 +198,7 @@ Expected mapper editor layout:
 - right live JSON result/errors panel for test evaluation
 - helper actions to insert selected input fields into the expression
 
-**Data/Logic:** Mapper output schemas, sample message provider, Monaco-backed expression editor, FluxMQ light/dark editor themes, JSONata language definition, preview evaluation service, shared runtime/UI expression evaluation path where practical. `expression` is the primary mapper configuration; old per-field `map` shapes are only a compatibility/fallback detail while the codebase migrates.
+**Data/Logic:** Mapper output schemas, sample message provider, Monaco-backed expression editor, FluxMQ light/dark editor themes, JSONata language definition, preview evaluation service, shared runtime/UI expression evaluation path where practical. `expression` is the mapper configuration and returns the whole output request object.
 
 **Acceptance:**
 

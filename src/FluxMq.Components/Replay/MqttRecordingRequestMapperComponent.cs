@@ -14,14 +14,6 @@ public sealed class MqttRecordingRequestMapperComponent : IFlowNode
     private readonly IFlowMapper<MqttEnvelope, MqttRecordingRequest> _mapper;
 
     public MqttRecordingRequestMapperComponent(
-        SessionId sessionId,
-        FlowNodeId? id = null,
-        int boundedCapacity = 1000)
-        : this(new StaticSessionRecordingRequestMapper(sessionId), id, boundedCapacity)
-    {
-    }
-
-    public MqttRecordingRequestMapperComponent(
         IFlowMapper<MqttEnvelope, MqttRecordingRequest> mapper,
         FlowNodeId? id = null,
         int boundedCapacity = 1000)
@@ -81,15 +73,5 @@ public sealed class MqttRecordingRequestMapperComponent : IFlowNode
             Message = message,
             Exception = exception
         });
-    }
-
-    private sealed class StaticSessionRecordingRequestMapper(SessionId sessionId) : IFlowMapper<MqttEnvelope, MqttRecordingRequest>
-    {
-        public MqttRecordingRequest Map(MqttEnvelope input, FlowMapContext context)
-            => new()
-            {
-                SessionId = sessionId,
-                Envelope = input
-            };
     }
 }

@@ -1374,6 +1374,47 @@ public sealed class PipelineComponentFactoryTests
             error.Message.Contains("boundedCapacity"));
     }
 
+    [Theory]
+    [InlineData("MqttPublishRequest", "MQTT publish request mapper")]
+    [InlineData("MqttRecordingRequest", "MQTT recording request mapper")]
+    [InlineData("FileWriteRequest", "File write request mapper")]
+    public void DynamicMapperFactory_ReturnsBuildErrorWhenExpressionIsMissing(
+        string outputType,
+        string expectedMessage)
+    {
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories());
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["mapper"] = new NodeDefinition
+                        {
+                            Type = PipelineFlowNodeTypes.DynamicMapper,
+                            Configuration =
+                            {
+                                ["engine"] = JsonDocument.Parse("\"jsonata\"").RootElement.Clone(),
+                                ["inputType"] = JsonDocument.Parse("\"MqttEnvelope\"").RootElement.Clone(),
+                                ["outputType"] = JsonDocument.Parse(JsonSerializer.Serialize(outputType)).RootElement.Clone()
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeFalse();
+        result.Errors.ShouldContain(error =>
+            error.Code == ApplicationRuntimeBuildErrorCode.FactoryFailed &&
+            error.Message.Contains(expectedMessage) &&
+            error.Message.Contains("expression"));
+    }
+
     private static RuntimeNode SourceNode(NodeAddress address, TestSourceNode node)
         => RuntimeNode.Create(
             address,

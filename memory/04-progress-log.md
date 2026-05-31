@@ -492,7 +492,7 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - triggers as explicit workflow starters
   - JSON tools that expose input structures, schemas, and selectable fields
 - Added `F-015 - JSONata Mapper Workbench UI` to the feature list.
-- Updated the active development target to `F-015`, so the next mapper UI slice should provide input tree, output request shape, per-field expressions, preview, and validation instead of only a raw text editor.
+- Updated the active development target to `F-015`, so the next mapper UI slice should provide input tree, output request shape, whole-request expression editing, preview, and validation instead of only a raw text editor.
 - Added the first JSONata mapper workbench implementation slice:
   - `MqttEnvelopeExpressionContextFactory` now exposes parsed `payloadJson` when payload text is valid JSON.
   - Added `DynamicMapperWorkbenchPreview` to derive input variables, output request fields, engine-aware examples, and preview results through the same mapper engines used at runtime.
@@ -1775,3 +1775,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 
 - Updated the active feature list and roadmap to use `Core MQTT Client`, `IMqttBrokerClient`, and `MqttBrokerClient` language after the broker-client rename.
 - Updated the visual diagram acceptance note so pre-release development avoids saved-project compatibility aliases by default.
+
+## 2026-05-31 - Dynamic mapper configuration cleanup
+
+- Removed pre-release per-field mapper configuration from runtime dynamic mapper creation.
+- `flow.mapper` now requires `expression` for `MqttPublishRequest`, `MqttRecordingRequest`, and `FileWriteRequest` outputs.
+- Removed the recording mapper constructor path that hid `SessionId` in mapper configuration; recording request mappers now emit a full `MqttRecordingRequest`.
+- Removed the `mapper` engine alias so saved mapper configuration uses the single `engine` key.
+- Verified:
+  - `dotnet test FluxMq.sln --no-restore /p:UseSharedCompilation=false /p:UseAppHost=false /p:BaseOutputPath="$env:TEMP\FluxMqMapperCleanFull5\" -m:1 -v minimal` passes with 511 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
