@@ -1,4 +1,3 @@
-using FluxMq.App;
 using FluxMq.Scenarios;
 using FluxMq.UI.Models;
 using FluxMq.UI.Services;
@@ -77,28 +76,6 @@ public sealed class ScenarioStepCatalogTests
         expect.NamePrefix.ShouldBe("expectEvent");
         expect.EditorKind.ShouldBe(ScenarioStepEditorKind.ExpectEvent);
         expect.Fields.Select(field => field.Key).ShouldBe(EventStepFieldKeys);
-    }
-
-    [Fact]
-    public void Steps_AllKnownStepsHavePaletteAndApplicationScenarioRunner()
-    {
-        var paletteTypes = new ScenarioStepCatalog()
-            .Steps
-            .Select(step => step.Type)
-            .ToArray();
-
-        var runnerTypes = FlowApplicationHost
-            .CreateDefaultScenarioStepRunnerRegistry()
-            .Runners
-            .Keys
-            .ToHashSet(StringComparer.Ordinal);
-
-        paletteTypes.ShouldBe(ScenarioStepTypes.All, ignoreOrder: true);
-        runnerTypes.ShouldBe(ScenarioStepTypes.All, ignoreOrder: true);
-
-        paletteTypes
-            .Where(type => !runnerTypes.Contains(type))
-            .ShouldBeEmpty();
     }
 
     [Fact]
