@@ -1751,3 +1751,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Renamed live fake/test MQTT clients to match the same naming direction while leaving persisted stored-session types unchanged.
 - Verified:
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqMqttBrokerClientRenameFull\ -m:1` passes with 500 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - Scenario test designer display states
+
+- Moved scenario step card display logic into `ScenarioStepDisplay` so summary text, CSS classes, and configuration labels are testable outside the Razor component.
+- Added first-class test-card styling and summary formatting for scenario-owned `mqtt.trigger` steps.
+- Added a distinct display state for `when.event` guards and for skipped guard results, keeping skipped guards visibly successful rather than generic or error-colored.
+- Updated trigger configuration labels such as `topic filter`, `receive retained`, `retain as published`, and `QoS` in the test card details.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepDisplayTests|FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~ScenarioRunReportFormatterTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepDisplayUi\ -m:1` passes with 85 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioStepDisplayUiFull\ -m:1` passes with 197 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

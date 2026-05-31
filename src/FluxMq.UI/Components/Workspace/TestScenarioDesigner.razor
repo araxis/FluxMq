@@ -287,32 +287,13 @@
             string.Equals(result.Name, step.Name, StringComparison.Ordinal));
 
     private static string StepCardClass(ScenarioStepResult? result)
-        => result?.Status switch
-        {
-            ScenarioStepRunStatus.Passed => "test-step-card passed",
-            ScenarioStepRunStatus.Failed => "test-step-card failed",
-            ScenarioStepRunStatus.TimedOut => "test-step-card timed-out",
-            ScenarioStepRunStatus.Canceled => "test-step-card canceled",
-            _ => "test-step-card"
-        };
+        => ScenarioStepDisplay.StepCardClass(result?.Status);
 
     private string StepTypeClass(ScenarioStepSnapshot step)
-        => ScenarioSteps.Find(step.Type)?.EditorKind switch
-        {
-            ScenarioStepEditorKind.MqttPublish => "test-step-type publish",
-            ScenarioStepEditorKind.ExpectEvent => "test-step-type expect",
-            _ => "test-step-type"
-        };
+        => ScenarioStepDisplay.StepTypeClass(step, ScenarioSteps);
 
     private static string StepStatusClass(ScenarioStepRunStatus status)
-        => status switch
-        {
-            ScenarioStepRunStatus.Passed => "test-step-status passed",
-            ScenarioStepRunStatus.Failed => "test-step-status failed",
-            ScenarioStepRunStatus.TimedOut => "test-step-status timed-out",
-            ScenarioStepRunStatus.Canceled => "test-step-status canceled",
-            _ => "test-step-status"
-        };
+        => ScenarioStepDisplay.StepStatusClass(status);
 
     private static string RunStatusClass(ScenarioRunStatus status)
         => status switch
@@ -378,74 +359,19 @@
         => result.FinishedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.CurrentCulture);
 
     private string BuildStepSummary(ScenarioStepSnapshot step)
-    {
-        var descriptor = ScenarioSteps.Find(step.Type);
-        if (descriptor is null)
-        {
-            return string.IsNullOrWhiteSpace(step.Type) ? "No step type" : step.Type;
-        }
-
-        return descriptor.EditorKind switch
-        {
-            ScenarioStepEditorKind.MqttPublish => JoinParts(
-                step.ReadString("connection"),
-                step.ReadString("topic"),
-                FormatQos(step.ReadString("qos")),
-                FormatRetain(step.ReadString("retain"))),
-            ScenarioStepEditorKind.ExpectEvent => JoinParts(
-                step.ReadString("eventType"),
-                PrefixSummary("topic", step.ReadString("topicStartsWith")),
-                PrefixSummary("subject", step.ReadString("subjectStartsWith")),
-                PrefixSummary("QoS", step.ReadString(DashboardEventFilterCatalog.AttributeFilterKey("qos"))),
-                RetainExpectationSummary(step.ReadString(DashboardEventFilterCatalog.AttributeFilterKey("retain"))),
-                PrefixSummary("schema", step.ReadString(DashboardEventFilterCatalog.AttributeFilterKey("schemaId"))),
-                StatusSummary(step.ReadString("status")),
-                TimeoutSummary(step.ReadString("timeoutMs"))),
-            _ => string.IsNullOrWhiteSpace(step.Type) ? "No step type" : step.Type
-        };
-    }
+        => ScenarioStepDisplay.BuildStepSummary(step, ScenarioSteps);
 
     private static IEnumerable<KeyValuePair<string, string>> VisibleConfiguration(ScenarioStepSnapshot step)
-        => step.Configuration.Where(static item => !string.IsNullOrWhiteSpace(item.Value));
+        => ScenarioStepDisplay.VisibleConfiguration(step);
 
     private static string FormatConfigurationKey(string key)
-    {
-        if (DashboardEventFilterCatalog.TryGetAttributeName(key, out var attributeName))
-        {
-            return attributeName switch
-            {
-                "qos" => "QoS",
-                "retain" => "retain",
-                _ => attributeName
-            };
-        }
-
-        return key switch
-        {
-            "eventType" => "event type",
-            "topicStartsWith" => "topic prefix",
-            "subjectStartsWith" => "subject prefix",
-            "payloadContains" => "payload contains",
-            "payloadEncoding" => "payload encoding",
-            "timeoutMs" => "timeout ms",
-            _ => key
-        };
-    }
+        => ScenarioStepDisplay.FormatConfigurationKey(key);
 
     private static string JoinParts(params string?[] parts)
     {
         var value = string.Join(" / ", parts.Where(part => !string.IsNullOrWhiteSpace(part)));
         return string.IsNullOrWhiteSpace(value) ? "No summary" : value;
     }
-
-    private static string? PrefixSummary(string label, string? value)
-        => string.IsNullOrWhiteSpace(value) ? null : $"{label}: {value}";
-
-    private static string? StatusSummary(string? value)
-        => string.IsNullOrWhiteSpace(value) ? null : $"status: {value}";
-
-    private static string? TimeoutSummary(string? value)
-        => string.IsNullOrWhiteSpace(value) ? null : $"{value} ms";
 
     private static string FormatDuration(TimeSpan duration)
         => duration.TotalSeconds >= 1
@@ -479,26 +405,6 @@
 
     private static bool IsSuccessfulStepStatus(ScenarioStepRunStatus status)
         => status is ScenarioStepRunStatus.Passed or ScenarioStepRunStatus.Skipped;
-
-    private static string? FormatQos(string? value)
-        => string.IsNullOrWhiteSpace(value) ? null : $"QoS {value}";
-
-    private static string? FormatRetain(string? value)
-        => string.Equals(value, "true", StringComparison.OrdinalIgnoreCase)
-            ? "retain"
-            : null;
-
-    private static string? RetainExpectationSummary(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
-
-        return bool.TryParse(value, out var retain) && retain
-            ? "retain"
-            : "no retain";
-    }
 
     private async Task RunScenarioAsync()
     {
