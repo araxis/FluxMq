@@ -136,6 +136,65 @@ public sealed class PipelineComponentFactoryTests
     }
 
     [Fact]
+    public async Task ApplicationRuntimeBuilder_RoutesConditionalLinks()
+    {
+        TestSourceNode? source = null;
+        TestSinkNode<MqttEnvelope>? factorySink = null;
+        TestSinkNode<MqttEnvelope>? alertSink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .Register(new NodeType("test.source"), (address, _) =>
+            {
+                source = new TestSourceNode();
+                return SourceNode(address, source);
+            })
+            .Register(new NodeType("test.factory-sink"), (address, _) =>
+            {
+                factorySink = new TestSinkNode<MqttEnvelope>();
+                return SinkNode(address, factorySink);
+            })
+            .Register(new NodeType("test.alert-sink"), (address, _) =>
+            {
+                alertSink = new TestSinkNode<MqttEnvelope>();
+                return SinkNode(address, alertSink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("test.source"),
+                        ["factorySink"] = NodeWithPort(
+                            "test.factory-sink",
+                            "Input",
+                            """{ "from": "source.Output", "when": "input.Topic.StartsWith(\"factory/\")" }"""),
+                        ["alertSink"] = NodeWithPort(
+                            "test.alert-sink",
+                            "Input",
+                            """{ "from": "source.Output", "when": "input.Topic.StartsWith(\"alerts/\")" }""")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(result.Errors.FirstOrDefault()?.Message);
+
+        source!.Post(new MqttEnvelope { Topic = "factory/one", Payload = [1] });
+        source.Post(new MqttEnvelope { Topic = "alerts/one", Payload = [2] });
+        source.Post(new MqttEnvelope { Topic = "other/one", Payload = [3] });
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+        factorySink!.Values.Select(envelope => envelope.Topic).ShouldBe(["factory/one"]);
+        alertSink!.Values.Select(envelope => envelope.Topic).ShouldBe(["alerts/one"]);
+    }
+
+    [Fact]
     public async Task MqttMetricsFactory_CreatesLinkableRuntimeNode()
     {
         TestSourceNode? source = null;

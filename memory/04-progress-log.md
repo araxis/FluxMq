@@ -1864,3 +1864,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verified:
   - `dotnet build FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet test FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 478 tests.
+
+## 2026-05-31 - Engine package conditional links
+
+- Upgraded `FluxFlow.Engine` references in app, component, and scenario projects to `0.4.0-alpha.1`.
+- Added a FluxMQ runtime regression test proving package-owned conditional links route one MQTT source to separate sinks through per-link `when` expressions.
+- Kept conditional routing at the engine link level, so FluxMQ can remove bespoke router pressure over time instead of duplicating graph semantics.
+- Verified:
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~ApplicationRuntimeBuilder_RoutesConditionalLinks" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 1 test.
+  - `dotnet test FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 479 tests.

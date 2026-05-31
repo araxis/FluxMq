@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <PackageReference Include="FluxFlow.Engine" Version="0.3.0-alpha.1" />
+    <PackageReference Include="FluxFlow.Engine" Version="0.4.0-alpha.1" />
   </ItemGroup>
 
   <PropertyGroup>
