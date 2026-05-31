@@ -21,7 +21,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\FluxMq.Pipeline\FluxMq.Pipeline.csproj" />
-    <ProjectReference Include="..\..\src\FluxMq.Core\FluxMq.Core.csproj" />
   </ItemGroup>
 
 </Project>
