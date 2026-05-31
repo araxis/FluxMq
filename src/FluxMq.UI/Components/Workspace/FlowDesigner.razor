@@ -40,6 +40,31 @@
                            OnClick="@ZoomToFit" />
         </MudTooltip>
     </div>
+    @if (_selectedWorkflowLink is not null)
+    {
+        <div class="flow-link-condition-panel">
+            <MudTextField T="string"
+                          Value="@_selectedLinkCondition"
+                          ValueChanged="@OnSelectedLinkConditionChanged"
+                          Label="When"
+                          Placeholder="input.Topic.StartsWith(&quot;factory/&quot;)"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Immediate="true"
+                          Class="flow-link-condition-input" />
+            <MudTooltip Text="Apply condition">
+                <MudIconButton Icon="@Icons.Material.Filled.Check"
+                               Size="Size.Small"
+                               Color="Color.Primary"
+                               OnClick="@ApplySelectedLinkCondition" />
+            </MudTooltip>
+            <MudTooltip Text="Clear condition">
+                <MudIconButton Icon="@Icons.Material.Filled.Clear"
+                               Size="Size.Small"
+                               OnClick="@ClearSelectedLinkCondition" />
+            </MudTooltip>
+        </div>
+    }
 </div>
 
 @code {
@@ -82,6 +107,8 @@
     private bool _isDisposed;
     private bool _isRebuildingDiagram;
     private bool _isApplyingLinkEdit;
+    private SelectedWorkflowLink? _selectedWorkflowLink;
+    private string _selectedLinkCondition = string.Empty;
 
     protected override void OnInitialized()
     {
@@ -99,6 +126,7 @@
         _diagram.Nodes.Removed += OnDiagramNodeRemoved;
         _diagram.Links.Added += OnDiagramLinkAdded;
         _diagram.Links.Removed += OnDiagramLinkRemoved;
+        _diagram.SelectionChanged += OnDiagramSelectionChanged;
         Flow.Changed += OnFlowChanged;
         Live.Changed += OnLiveChanged;
         DragState.Changed += OnDragStateChanged;
@@ -197,6 +225,7 @@
     private void RebuildDiagram()
     {
         CaptureDiagramState();
+        ClearSelectedWorkflowLinkEditor();
         if (Flow.StagedNodePositions is { Count: > 0 } staged)
         {
             foreach (var (name, (x, y, collapsed)) in staged)
@@ -456,6 +485,77 @@
             ((FlowDiagramNodeModel)targetPort.Parent).NodeName,
             targetPort.PortName,
             ShouldReplaceTargetLinks(targetPort));
+    }
+
+    private void OnDiagramSelectionChanged(SelectableModel model)
+    {
+        if (_isRebuildingDiagram)
+        {
+            return;
+        }
+
+        _ = InvokeAsync(() =>
+        {
+            RefreshSelectedWorkflowLink();
+            StateHasChanged();
+        });
+    }
+
+    private void RefreshSelectedWorkflowLink()
+    {
+        var selectedLink = _diagram.GetSelectedModels()
+            .OfType<BaseLinkModel>()
+            .FirstOrDefault(link => TryResolveWorkflowLink(link, out _, out _));
+
+        if (selectedLink is null ||
+            !TryResolveWorkflowLink(selectedLink, out var sourcePort, out var targetPort))
+        {
+            ClearSelectedWorkflowLinkEditor();
+            return;
+        }
+
+        var sourceNode = (FlowDiagramNodeModel)sourcePort.Parent;
+        var targetNode = (FlowDiagramNodeModel)targetPort.Parent;
+        _selectedWorkflowLink = new SelectedWorkflowLink(
+            sourceNode.NodeName,
+            sourcePort.PortName,
+            targetNode.NodeName,
+            targetPort.PortName);
+        _selectedLinkCondition = Flow.GetWorkflowPortLinkCondition(
+            sourceNode.NodeName,
+            sourcePort.PortName,
+            targetNode.NodeName,
+            targetPort.PortName) ?? string.Empty;
+    }
+
+    private void OnSelectedLinkConditionChanged(string? value)
+        => _selectedLinkCondition = value ?? string.Empty;
+
+    private void ApplySelectedLinkCondition()
+    {
+        if (_selectedWorkflowLink is not { } link)
+        {
+            return;
+        }
+
+        Flow.UpdateWorkflowPortLinkCondition(
+            link.SourceNodeName,
+            link.SourcePortName,
+            link.TargetNodeName,
+            link.TargetPortName,
+            _selectedLinkCondition);
+    }
+
+    private void ClearSelectedLinkCondition()
+    {
+        _selectedLinkCondition = string.Empty;
+        ApplySelectedLinkCondition();
+    }
+
+    private void ClearSelectedWorkflowLinkEditor()
+    {
+        _selectedWorkflowLink = null;
+        _selectedLinkCondition = string.Empty;
     }
 
     private void RemoveUncommittedLink(BaseLinkModel link)
@@ -879,6 +979,7 @@
         _diagram.Nodes.Removed -= OnDiagramNodeRemoved;
         _diagram.Links.Added -= OnDiagramLinkAdded;
         _diagram.Links.Removed -= OnDiagramLinkRemoved;
+        _diagram.SelectionChanged -= OnDiagramSelectionChanged;
         Flow.Changed -= OnFlowChanged;
         Live.Changed -= OnLiveChanged;
         DragState.Changed -= OnDragStateChanged;
@@ -887,4 +988,5 @@
     }
 
     private sealed record DiagramNodeState(Blazor.Diagrams.Core.Geometry.Point Position, bool IsCollapsed);
+    private sealed record SelectedWorkflowLink(string SourceNodeName, string SourcePortName, string TargetNodeName, string TargetPortName);
 }

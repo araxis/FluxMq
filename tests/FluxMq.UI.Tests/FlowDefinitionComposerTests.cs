@@ -1690,6 +1690,72 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void GetWorkflowPortLinkCondition_ReadsConditionalObject()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = """
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "pipe": {
+                  "trigger": { "type": "mqtt.trigger" },
+                  "inspect": {
+                    "type": "mqtt.payload-inspector",
+                    "Input": {
+                      "from": "trigger.Output",
+                      "when": "input.Topic.StartsWith(\"factory/\")"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """;
+
+        var condition = composer.GetWorkflowPortLinkCondition(
+            json,
+            "pipe",
+            "trigger",
+            "Output",
+            "inspect",
+            "Input");
+
+        condition.ShouldBe("input.Topic.StartsWith(\"factory/\")");
+    }
+
+    [Fact]
+    public void GetWorkflowPortLinkCondition_ReturnsNullForUnconditionalLink()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = """
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "pipe": {
+                  "trigger": { "type": "mqtt.trigger" },
+                  "inspect": { "type": "mqtt.payload-inspector", "Input": "trigger.Output" }
+                }
+              }
+            }
+          }
+        }
+        """;
+
+        var condition = composer.GetWorkflowPortLinkCondition(
+            json,
+            "pipe",
+            "trigger",
+            "Output",
+            "inspect",
+            "Input");
+
+        condition.ShouldBeNull();
+    }
+
+    [Fact]
     public void RemoveWorkflowPortLink_RemovesOnlyMatchingReference()
     {
         var composer = new FlowDefinitionComposer();
