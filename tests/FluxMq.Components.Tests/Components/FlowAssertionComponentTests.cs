@@ -4,8 +4,8 @@ using FluxMq.Components.FileWriter;
 using FluxMq.Components.Logging;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
-using FluxMq.Pipeline.Components;
-using FluxMq.Pipeline.Mapping;
+using FluxFlow.Engine.Components;
+using FluxFlow.Engine.Mapping;
 using MQTTnet.Protocol;
 using System.Text;
 using System.Threading.Tasks.Dataflow;
@@ -56,7 +56,7 @@ public sealed class FlowAssertionComponentTests
             "Assertion failed: QoS at least once.",
             "Assertion passed: QoS at least once."
         ]);
-        events.Select(flowEvent => flowEvent.Type).ShouldBe([FlowEventTypes.AssertionEvaluated, FlowEventTypes.AssertionEvaluated]);
+        events.Select(flowEvent => flowEvent.Type).ShouldBe([FluxMqEventTypes.AssertionEvaluated, FluxMqEventTypes.AssertionEvaluated]);
         events.Select(flowEvent => flowEvent.Status).ShouldBe(["failed", "passed"]);
         events[0].GetAttribute("assertionName").ShouldBe("QoS at least once");
         component.Id.ShouldNotBe(FlowNodeId.Empty);

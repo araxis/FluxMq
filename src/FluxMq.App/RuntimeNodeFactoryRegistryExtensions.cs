@@ -14,10 +14,10 @@ using FluxMq.Components.MqttPayloadInspector;
 using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
 using FluxMq.Components.Storage.Repositories;
-using FluxMq.Pipeline.Components;
-using FluxMq.Pipeline.Definitions;
-using FluxMq.Pipeline.Mapping;
-using FluxMq.Pipeline.Runtime;
+using FluxFlow.Engine.Components;
+using FluxFlow.Engine.Definitions;
+using FluxFlow.Engine.Mapping;
+using FluxFlow.Engine.Runtime;
 using MQTTnet.Protocol;
 using System.Text;
 using System.Text.Json;
@@ -53,23 +53,23 @@ public static class RuntimeNodeFactoryRegistryExtensions
         expressionEngine ??= new DynamicExpressoFlowExpressionEngine();
 
         return registry
-            .Register(PipelineFlowNodeTypes.Connection, context => CreateConnection(context.Address, context.Definition, clientFactory))
-            .Register(PipelineFlowNodeTypes.Trigger, context => CreateTrigger(context.Address, context.Definition, context))
-            .Register(PipelineFlowNodeTypes.ConnectionStateTrigger, context => CreateConnectionStateTrigger(context.Address, context.Definition, context))
-            .Register(PipelineFlowNodeTypes.StoredSessionSource, context => CreateStoredSessionSource(context.Address, context.Definition, messageRepository))
-            .Register(PipelineFlowNodeTypes.ReplaySource, context => CreateReplaySource(context.Address, context.Definition, messageRepository))
-            .Register(PipelineFlowNodeTypes.GeneratedSource, context => CreateGeneratedMqttSource(context.Address, context.Definition))
-            .Register(PipelineFlowNodeTypes.PayloadInspector, CreatePayloadInspector)
-            .Register(PipelineFlowNodeTypes.MqttMetrics, CreateMqttMetrics)
-            .Register(PipelineFlowNodeTypes.FlowLogger, CreateFlowLogger)
-            .Register(PipelineFlowNodeTypes.MessageFilter, context => CreateMessageFilter(context.Address, context.Definition, expressionEngine))
-            .Register(PipelineFlowNodeTypes.ConditionRouter, context => CreateConditionRouter(context.Address, context.Definition, expressionEngine))
-            .Register(PipelineFlowNodeTypes.FlowAssertion, context => CreateFlowAssertion(context.Address, context.Definition, expressionEngine))
-            .Register(PipelineFlowNodeTypes.JsonSchemaValidator, context => CreateJsonSchemaValidator(context.Address, context.Definition))
-            .Register(PipelineFlowNodeTypes.DynamicMapper, context => CreateDynamicMapper(context.Address, context.Definition, expressionEngine))
-            .Register(PipelineFlowNodeTypes.MqttPublisher, context => CreatePublisher(context.Address, context.Definition, context))
-            .Register(PipelineFlowNodeTypes.MqttRecorder, context => CreateRecorder(context.Address, context.Definition, messageRepository))
-            .Register(PipelineFlowNodeTypes.FileWriter, CreateFileWriter);
+            .Register(FluxMqNodeTypes.Connection, context => CreateConnection(context.Address, context.Definition, clientFactory))
+            .Register(FluxMqNodeTypes.Trigger, context => CreateTrigger(context.Address, context.Definition, context))
+            .Register(FluxMqNodeTypes.ConnectionStateTrigger, context => CreateConnectionStateTrigger(context.Address, context.Definition, context))
+            .Register(FluxMqNodeTypes.StoredSessionSource, context => CreateStoredSessionSource(context.Address, context.Definition, messageRepository))
+            .Register(FluxMqNodeTypes.ReplaySource, context => CreateReplaySource(context.Address, context.Definition, messageRepository))
+            .Register(FluxMqNodeTypes.GeneratedSource, context => CreateGeneratedMqttSource(context.Address, context.Definition))
+            .Register(FluxMqNodeTypes.PayloadInspector, CreatePayloadInspector)
+            .Register(FluxMqNodeTypes.MqttMetrics, CreateMqttMetrics)
+            .Register(FluxMqNodeTypes.FlowLogger, CreateFlowLogger)
+            .Register(FluxMqNodeTypes.MessageFilter, context => CreateMessageFilter(context.Address, context.Definition, expressionEngine))
+            .Register(FluxMqNodeTypes.ConditionRouter, context => CreateConditionRouter(context.Address, context.Definition, expressionEngine))
+            .Register(FluxMqNodeTypes.FlowAssertion, context => CreateFlowAssertion(context.Address, context.Definition, expressionEngine))
+            .Register(FluxMqNodeTypes.JsonSchemaValidator, context => CreateJsonSchemaValidator(context.Address, context.Definition))
+            .Register(FluxMqNodeTypes.DynamicMapper, context => CreateDynamicMapper(context.Address, context.Definition, expressionEngine))
+            .Register(FluxMqNodeTypes.MqttPublisher, context => CreatePublisher(context.Address, context.Definition, context))
+            .Register(FluxMqNodeTypes.MqttRecorder, context => CreateRecorder(context.Address, context.Definition, messageRepository))
+            .Register(FluxMqNodeTypes.FileWriter, CreateFileWriter);
     }
 
     private static RuntimeNode CreateConnection(
@@ -77,7 +77,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
         NodeDefinition definition,
         Func<MqttConnectionProfile, IMqttBrokerClient> clientFactory)
     {
-        var profile = GetConnectionProfile(definition, PipelineFlowNodeTypes.Connection.Value);
+        var profile = GetConnectionProfile(definition, FluxMqNodeTypes.Connection.Value);
         var component = new MqttConnectionComponent(clientFactory(profile), disposeClientOnDispose: true);
 
         return RuntimeNode.Create(
@@ -186,7 +186,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
         if (resource.Node is not MqttConnectionComponent connection)
         {
             throw new InvalidOperationException(
-                $"Resource '{connectionRef}' must be of type '{PipelineFlowNodeTypes.Connection.Value}' to be used by an mqtt.trigger.");
+                $"Resource '{connectionRef}' must be of type '{FluxMqNodeTypes.Connection.Value}' to be used by an mqtt.trigger.");
         }
 
         var subscriptions = GetSubscriptions(definition);
@@ -215,7 +215,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
         if (resource.Node is not MqttConnectionComponent connection)
         {
             throw new InvalidOperationException(
-                $"Resource '{connectionRef}' must be of type '{PipelineFlowNodeTypes.Connection.Value}' to be used by an mqtt.connection-state-trigger.");
+                $"Resource '{connectionRef}' must be of type '{FluxMqNodeTypes.Connection.Value}' to be used by an mqtt.connection-state-trigger.");
         }
 
         var component = new ConnectionStateTriggerComponent(connection.Client);
@@ -530,7 +530,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
         if (resource.Node is not MqttConnectionComponent connection)
         {
             throw new InvalidOperationException(
-                $"Resource '{connectionRef}' must be of type '{PipelineFlowNodeTypes.Connection.Value}' to be used by an mqtt.publisher.");
+                $"Resource '{connectionRef}' must be of type '{FluxMqNodeTypes.Connection.Value}' to be used by an mqtt.publisher.");
         }
 
         var component = new MqttPublisherComponent(connection.Client, boundedCapacity: GetBoundedCapacity(definition));

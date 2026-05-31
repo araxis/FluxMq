@@ -1,10 +1,10 @@
 using FluxMq.App;
+using FluxMq.App.Definitions;
 using FluxMq.App.Scenarios;
 using FluxMq.Cli.Commands;
-using FluxMq.Pipeline.Components;
-using FluxMq.Pipeline.Definitions;
-using FluxMq.Pipeline.Runtime;
-using FluxMq.Pipeline.Scenarios;
+using FluxFlow.Engine.Components;
+using FluxFlow.Engine.Runtime;
+using FluxMq.Scenarios;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
@@ -17,12 +17,12 @@ public sealed class CliRunner
 {
     private readonly ICliOutput _output;
     private readonly ICliOutput _error;
-    private readonly Func<ApplicationDefinition, IMqttScenarioClientFactory> _scenarioClientFactoryFactory;
+    private readonly Func<FluxMqApplicationDefinition, IMqttScenarioClientFactory> _scenarioClientFactoryFactory;
 
     public CliRunner(
         ICliOutput output,
         ICliOutput error,
-        Func<ApplicationDefinition, IMqttScenarioClientFactory>? scenarioClientFactoryFactory = null)
+        Func<FluxMqApplicationDefinition, IMqttScenarioClientFactory>? scenarioClientFactoryFactory = null)
     {
         _output = output ?? throw new ArgumentNullException(nameof(output));
         _error = error ?? throw new ArgumentNullException(nameof(error));
@@ -198,7 +198,7 @@ public sealed class CliRunner
         }
     }
 
-    private bool TryLoadApplicationDefinition(CliOptions options, out ApplicationDefinition? definition, out int exitCode)
+    private bool TryLoadApplicationDefinition(CliOptions options, out FluxMqApplicationDefinition? definition, out int exitCode)
     {
         var configurationPath = Path.GetFullPath(options.ConfigurationPath!);
         if (!File.Exists(configurationPath))
@@ -227,7 +227,7 @@ public sealed class CliRunner
             root = directFlowApplication;
         }
 
-        definition = root.Deserialize<ApplicationDefinition>(ApplicationDefinitionJson.CreateSerializerOptions())
+        definition = root.Deserialize<FluxMqApplicationDefinition>(FluxMqApplicationDefinitionJson.CreateSerializerOptions())
             ?? throw new InvalidOperationException("Flow application definition is empty.");
         exitCode = (int)CliExitCode.Success;
         return true;
@@ -284,13 +284,16 @@ public sealed class CliRunner
             diagnostics.Add(new ValidateFlowDiagnostic("host", error.Code.ToString(), error.Message));
         }
 
-        if (result.RuntimeBuild is not null)
+        if (result.DefinitionValidation is not null)
         {
-            foreach (var error in result.RuntimeBuild.Validation.Errors)
+            foreach (var error in result.DefinitionValidation.Errors)
             {
                 diagnostics.Add(new ValidateFlowDiagnostic("definition", error.Code.ToString(), error.Message));
             }
+        }
 
+        if (result.RuntimeBuild is not null)
+        {
             foreach (var error in result.RuntimeBuild.Errors)
             {
                 diagnostics.Add(new ValidateFlowDiagnostic(
@@ -326,7 +329,7 @@ public sealed class CliRunner
                 step.Status.ToString(),
                 step.Message,
                 step.MatchedEvent?.Type,
-                step.MatchedEvent?.Topic,
+                step.MatchedEvent?.Channel,
                 step.MatchedEvent?.Status)).ToArray());
 
     private static ScenarioRunCommandResult CreateScenarioFailureResult(string name, string message)

@@ -1,16 +1,16 @@
 using FluxMq.Core.Models;
 using FluxMq.Core.Mqtt;
-using FluxMq.Pipeline.Definitions;
+using FluxMq.App.Definitions;
 
 namespace FluxMq.App.Scenarios;
 
 public sealed class ApplicationDefinitionMqttScenarioClientFactory : IMqttScenarioClientFactory
 {
-    private readonly ApplicationDefinition _definition;
+    private readonly FluxMqApplicationDefinition _definition;
     private readonly Func<MqttConnectionProfile, IMqttBrokerClient> _clientFactory;
 
     public ApplicationDefinitionMqttScenarioClientFactory(
-        ApplicationDefinition definition,
+        FluxMqApplicationDefinition definition,
         Func<MqttConnectionProfile, IMqttBrokerClient>? clientFactory = null)
     {
         _definition = definition ?? throw new ArgumentNullException(nameof(definition));

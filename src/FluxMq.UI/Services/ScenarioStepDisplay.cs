@@ -1,4 +1,4 @@
-using FluxMq.Pipeline.Scenarios;
+using FluxMq.Scenarios;
 using FluxMq.UI.Models;
 
 namespace FluxMq.UI.Services;

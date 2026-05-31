@@ -24,7 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\FluxMq.App\FluxMq.App.csproj" />
     <ProjectReference Include="..\..\src\FluxMq.Core\FluxMq.Core.csproj" />
-    <ProjectReference Include="..\..\src\FluxMq.Pipeline\FluxMq.Pipeline.csproj" />
+    <ProjectReference Include="..\..\src\FluxMq.Scenarios\FluxMq.Scenarios.csproj" />
     <ProjectReference Include="..\..\src\FluxMq.UI\FluxMq.UI.csproj" />
   </ItemGroup>
 

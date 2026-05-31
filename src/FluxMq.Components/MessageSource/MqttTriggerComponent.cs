@@ -1,7 +1,7 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Mqtt;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.MessageSource;
@@ -174,12 +174,12 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
         => new()
         {
             Timestamp = DateTimeOffset.UtcNow,
-            Type = FlowEventTypes.MqttMessageReceived,
+            Type = FluxMqEventTypes.MqttMessageReceived,
             Source = "MqttTrigger",
             SourceNodeId = Id,
             Subject = envelope.Topic,
             Status = "received",
-            Topic = envelope.Topic,
+            Channel = envelope.Topic,
             PayloadBytes = envelope.Payload.Length,
             PayloadPreview = FlowEventPayloadPreview.FromBytes(envelope.Payload),
             Attributes = new Dictionary<string, string>(StringComparer.Ordinal)

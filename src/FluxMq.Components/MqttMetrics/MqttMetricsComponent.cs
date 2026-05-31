@@ -1,6 +1,6 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.MqttMetrics;
@@ -20,7 +20,7 @@ public sealed class MqttMetricsComponent : IFlowNode, IDisposable
     private readonly DateTimeOffset _startedAt;
     private readonly ActionBlock<MqttEnvelope> _block;
     private readonly BroadcastBlock<FlowError> _errors;
-    private readonly BroadcastBlock<MqttMetricsSnapshot> _snapshots;
+    private readonly BufferBlock<MqttMetricsSnapshot> _snapshots;
     private Timer? _rateRefreshTimer;
     private long _messageCount;
     private long _totalPayloadBytes;
@@ -54,7 +54,7 @@ public sealed class MqttMetricsComponent : IFlowNode, IDisposable
         _timeProvider = timeProvider ?? TimeProvider.System;
         _startedAt = _timeProvider.GetUtcNow();
         _errors = new BroadcastBlock<FlowError>(static error => error);
-        _snapshots = new BroadcastBlock<MqttMetricsSnapshot>(static snapshot => snapshot);
+        _snapshots = new BufferBlock<MqttMetricsSnapshot>();
         _block = new ActionBlock<MqttEnvelope>(
             Observe,
             new ExecutionDataflowBlockOptions

@@ -1,11 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\FluxMq.Components\FluxMq.Components.csproj" />
-    <ProjectReference Include="..\FluxMq.Pipeline\FluxMq.Pipeline.csproj" />
+    <ProjectReference Include="..\FluxMq.Scenarios\FluxMq.Scenarios.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluxFlow.Engine" Version="0.4.0-alpha.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.7" />
   </ItemGroup>
 

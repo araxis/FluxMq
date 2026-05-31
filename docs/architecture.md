@@ -4,15 +4,16 @@ FluxMQ is built around MQTT message/session flow.
 
 ```mermaid
 flowchart LR
-    Broker["MQTT Broker"] --> Session["FluxMqttClient"]
-    Session --> Channel["Channel<MqttEnvelope>"]
-    Channel --> Pipeline["Dataflow Pipeline"]
-    Pipeline --> Storage["LiteDB Storage"]
-    Pipeline --> TopicIndex["Topic Index"]
-    Pipeline --> Payloads["Payload Inspection"]
-    Pipeline --> Replay["Replay"]
-    Pipeline --> Telemetry["Optional OpenTelemetry Export"]
-    Pipeline --> UI["UI Projection / Host Integration"]
+    Broker["MQTT Broker"] --> Client["MqttBrokerClient"]
+    Client --> Channel["Channel<MqttEnvelope>"]
+    Channel --> Runtime["FluxFlow.Engine runtime"]
+    Runtime --> Components["FluxMQ components"]
+    Components --> Storage["LiteDB Storage"]
+    Components --> TopicIndex["Topic Index"]
+    Components --> Payloads["Payload Inspection"]
+    Components --> Replay["Replay"]
+    Runtime --> Telemetry["Optional OpenTelemetry Export"]
+    Runtime --> UI["UI Projection / Host Integration"]
 ```
 
 ## Projects
@@ -31,19 +32,19 @@ Responsibilities:
 - topic index
 - payload inspection
 
-### FluxMq.Pipeline
+### FluxFlow.Engine Package
 
-Dataflow-based message movement and Fork Flow runtime primitives.
+Package-owned workflow runtime primitives.
 
 Responsibilities:
 
-- message pipeline foundation
-- application definition model
+- application definition and workflow definition model
 - runtime graph building
 - typed runtime ports
-- expression-engine abstractions for dynamic ELT mapping
+- expression-engine abstractions for dynamic ELT mapping and link conditions
 - lifecycle behavior
 - flow error events
+- package-owned validation for executable resources and workflows
 
 ### FluxMq.Components
 
@@ -63,7 +64,7 @@ Responsibilities:
 - connection profiles
 - sessions
 - stored messages
-- keep concrete component dependencies out of the runtime primitives
+- keep concrete component dependencies outside the package runtime
 
 ### FluxMq.App
 
@@ -71,11 +72,25 @@ Host-independent workflow application boundary.
 
 Responsibilities:
 
-- load flow application definitions from .NET configuration
+- load FluxMQ application definitions from .NET configuration
+- validate FluxMQ-owned dashboards/tests plus engine-owned resources/workflows
+- project executable resources and workflows into `FluxFlow.Engine`
 - build runtimes through registered factories
 - expose start and stop lifecycle
 - keep the future reload boundary outside UI shells
 - provide the composition point for desktop, console, service, and tool hosts
+
+### FluxMq.Scenarios
+
+Scenario and test-runner primitives.
+
+Responsibilities:
+
+- scenario definitions and step results
+- runner-owned MQTT publish/trigger steps
+- event expectations and conditional test steps
+- scenario event journal and report data
+- keep tests outside the production workflow runtime contract
 
 ### FluxMq.UI
 
@@ -121,7 +136,7 @@ Normal services remain normal services:
 - UI components
 - app startup
 
-Flow components are reserved for configurable event movement inside Fork Flow.
+Flow components are reserved for configurable event movement inside Fork Flow. Scenario/test steps live in `FluxMq.Scenarios` unless they are normal runtime components reused by tests.
 
 ## Extension Direction
 
@@ -139,46 +154,47 @@ flowchart TD
 
 Fork Flow is moving toward configuration-driven graph definitions.
 
-The first definition layer describes a host-independent flow application in an object model:
+The package definition layer describes executable resources and workflows:
 
 - shared resources
 - named workflows
 - nodes as workflow object properties
 - node types
 - receiving-port links
+- per-link conditions
 - per-node configuration payloads
 
-Validation runs before graph construction and catches broken references, empty names, empty node types, malformed links, and duplicate links.
+FluxMQ wraps that engine definition in `FluxMqApplicationDefinition`, adding app-owned dashboards and tests. Validation runs before graph construction and catches broken references, empty names, empty node types, malformed links, duplicate links, invalid dashboard layout, and invalid scenario steps.
 
-Runtime graph building, component factories, schema metadata, and hot reload remain separate steps. This keeps the definition model useful without prematurely forcing all components into a large abstraction.
+Runtime graph building, component factories, schema metadata, dashboard projection, scenario execution, and hot reload remain separate steps. This keeps the definition model useful without forcing all app features into the engine package.
 
 Dynamic ELT mapping is explicit in the graph. Source and trigger nodes emit protocol/domain messages such as `MqttEnvelope`; actor nodes consume request contracts such as `MqttPublishRequest` or `FileWriteRequest`. When the port types differ, the user adds a `flow.mapper` node and configures the mapping engine and expressions. Request models are not standalone UI components, and FluxMQ should not insert hidden mappers automatically.
 
 ## Flow Application Runtime Direction
 
-The long-term runtime should be packaged as a class library that can be hosted by a future FluxMQ application host, a console runner, a service process, or command/tool integrations.
+The workflow runtime is provided by the `FluxFlow.Engine` package and can be hosted by the FluxMQ desktop app, console runner, future service process, or command/tool integrations.
 
 The runtime controller should sit above individual workflow graphs and below the host shell:
 
 ```mermaid
 flowchart TD
     Host["Host shell"] --> Runtime["Flow application runtime"]
-    Runtime --> Definition["ApplicationDefinition"]
+    Runtime --> Definition["FluxMQ application definition"]
     Runtime --> Resources["Shared resources"]
     Runtime --> Workflows["Running workflows"]
     Runtime --> Reload["Reload coordinator"]
     Runtime --> Supervision["Lifecycle and error supervision"]
 ```
 
-The host asks the runtime to load, start, stop, or reload an application definition. The runtime validates the next definition, owns shared resource lifetime, starts workflows, propagates completion, converts component failures into flow errors, and applies reloads without making the UI shell responsible for graph mechanics.
+The host asks the runtime boundary to load, start, stop, or reload an application definition. The engine owns executable graph validation, shared resource lifetime, workflow startup, typed links, completion propagation, and component failure events. FluxMQ owns app document features such as dashboards, tests, workspace UI state, and host-specific composition.
 
 `FluxMq.UI` is the first desktop host for this boundary. It is a MAUI Blazor Hybrid app, so the Blazor workspace can use MudBlazor and Blazor.Diagrams while still connecting to local brokers and reading or writing local definition files through native desktop APIs.
 
-The first implemented slice is cold-start graph building. `ApplicationRuntimeBuilder` creates runtime nodes through a factory registry and links declared ports through typed port adapters. It deliberately does not hard-code component construction into the builder; concrete component registrations can evolve as component configuration schemas become stable.
+The first implemented slice is cold-start graph building through the package `ApplicationRuntimeBuilder`. It creates runtime nodes through a factory registry and links declared ports through typed port adapters, including per-link `when` expressions. It deliberately does not hard-code component construction into the builder; concrete component registrations can evolve as component configuration schemas become stable.
 
 Factory calls receive a `RuntimeNodeFactoryContext` with the node address, node definition, optional workflow name, and resource placement. That gives service-backed registrations enough information to distinguish shared resources from workflow nodes without adding host-specific code. Runtime startup uses `NodeDefinition.Phase`; lower phases start first across both resources and workflow nodes. Nodes that need startup work override `IFlowNode.StartAsync`, and disposal releases workflow nodes before shared resources so long-lived connections, stores, or sessions can remain available while dependent workflow nodes shut down.
 
-`FluxMq.App` now provides the first host boundary. `FlowApplicationHost` reads an `ApplicationDefinition` from .NET configuration, builds a runtime, exposes current state, starts the runtime boundary, and completes it on stop. The current default configuration section is `FluxMq:FlowApplication`.
+`FluxMq.App` now provides the first host boundary. `FlowApplicationHost` reads a `FluxMqApplicationDefinition` from .NET configuration, projects it to the engine definition, builds a runtime, exposes current state, starts the runtime boundary, and completes it on stop. The current default configuration section is `FluxMq:FlowApplication`.
 
 Definition sources should remain configuration providers. A JSON file is the first alpha path, but the same host can later accept environment values, command-line values, LiteDB-backed providers, or UI-produced configuration without changing the runtime model.
 

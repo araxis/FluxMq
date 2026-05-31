@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -23,7 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\FluxMq.App\FluxMq.App.csproj" />
     <ProjectReference Include="..\..\src\FluxMq.Components\FluxMq.Components.csproj" />
-    <ProjectReference Include="..\..\src\FluxMq.Pipeline\FluxMq.Pipeline.csproj" />
+    <ProjectReference Include="..\..\src\FluxMq.Scenarios\FluxMq.Scenarios.csproj" />
   </ItemGroup>
 
 </Project>

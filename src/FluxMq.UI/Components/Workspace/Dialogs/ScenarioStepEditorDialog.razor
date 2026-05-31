@@ -404,14 +404,14 @@
 
     private void InitializeExpectEvent()
     {
-        _eventType = Step.ReadString(DashboardEventFilterCatalog.EventTypeKey) ?? AnyValue;
+        _eventType = Step.ReadString(ScenarioStepCatalog.EventTypeKey) ?? AnyValue;
         foreach (var key in EventFilters.FilterKeys)
         {
             _filterValues[key] = Step.ReadString(key) ?? string.Empty;
         }
 
-        _status = Step.ReadString(DashboardEventFilterCatalog.StatusKey) ?? AnyValue;
-        _payloadContains = Step.ReadString("payloadContains") ?? string.Empty;
+        _status = Step.ReadString(ScenarioStepCatalog.StatusKey) ?? AnyValue;
+        _payloadContains = Step.ReadString(ScenarioStepCatalog.PayloadContainsKey) ?? string.Empty;
         _timeoutMs = ReadTimeout();
         TrimFiltersToEventType();
         ResetStatusWhenUnsupported();
@@ -441,10 +441,10 @@
     {
         var configuration = new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            [DashboardEventFilterCatalog.EventTypeKey] = Normalize(_eventType),
-            [DashboardEventFilterCatalog.StatusKey] = Normalize(_status),
-            ["payloadContains"] = Normalize(_payloadContains),
-            ["timeoutMs"] = Math.Max(1, _timeoutMs).ToString(System.Globalization.CultureInfo.InvariantCulture)
+            [ScenarioStepCatalog.EventTypeKey] = Normalize(_eventType),
+            [ScenarioStepCatalog.StatusKey] = Normalize(_status),
+            [ScenarioStepCatalog.PayloadContainsKey] = Normalize(_payloadContains),
+            [ScenarioStepCatalog.TimeoutMsKey] = Math.Max(1, _timeoutMs).ToString(System.Globalization.CultureInfo.InvariantCulture)
         };
 
         var activeFieldKeys = CurrentEventType.Fields.Select(static field => field.Key).ToHashSet(StringComparer.Ordinal);
@@ -492,10 +492,10 @@
         => _filterValues[key] = Normalize(value);
 
     private static bool IsQosFilter(DashboardEventFilterFieldDescriptor field)
-        => string.Equals(field.Key, DashboardEventFilterCatalog.AttributeFilterKey("qos"), StringComparison.Ordinal);
+        => string.Equals(field.Key, ScenarioStepCatalog.QosAttributeKey, StringComparison.Ordinal);
 
     private static bool IsRetainFilter(DashboardEventFilterFieldDescriptor field)
-        => string.Equals(field.Key, DashboardEventFilterCatalog.AttributeFilterKey("retain"), StringComparison.Ordinal);
+        => string.Equals(field.Key, ScenarioStepCatalog.RetainAttributeKey, StringComparison.Ordinal);
 
     private void TrimFiltersToEventType()
     {
@@ -546,7 +546,7 @@
 
     private int ReadTimeout()
     {
-        var value = Step.ReadString("timeoutMs");
+        var value = Step.ReadString(ScenarioStepCatalog.TimeoutMsKey);
         return int.TryParse(value, out var timeout) && timeout > 0 ? timeout : 5000;
     }
 

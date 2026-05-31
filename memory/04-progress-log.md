@@ -1788,3 +1788,101 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verified:
   - `dotnet test FluxMq.sln --no-restore /p:UseSharedCompilation=false /p:UseAppHost=false /p:BaseOutputPath="$env:TEMP\FluxMqMapperCleanFull6\" -m:1 -v minimal` passes with 511 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore /p:UseSharedCompilation=false /p:UseAppHost=false /p:BaseOutputPath="$env:TEMP\FluxMqValidatorShapePipeline\" -m:1 -v minimal` passes with 95 tests.
+
+## 2026-05-31 - Scenario event step field catalog
+
+- Moved `when.event` and `expect.event` editable field keys/defaults into `ScenarioStepCatalog`, matching the catalog-owned shape already used by `mqtt.publisher` and `mqtt.trigger`.
+- Kept the MudBlazor scenario editor behavior intact while replacing raw event-step key strings with shared scenario-step constants.
+- Changed scenario-step creation so default configuration for every known test step comes from the catalog instead of a separate composer branch.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioEventFieldsFocused2\ -m:1 --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests"` passes with 76 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioEventFieldsUi\ -m:1` passes with 199 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - Engine package migration start
+
+- Started `work/engine-package-migration` after locally fast-forwarding `main` with the completed scenario event-field catalog slice.
+- Added the `FluxFlow.Engine` `0.3.0-alpha.1` package to `FluxMq.App` as the migration target.
+- Added a FluxMQ-owned workspace definition that keeps dashboards and tests in FluxMQ while projecting only executable resources and workflows into the engine definition.
+- Verified:
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 47 tests.
+
+## 2026-05-31 - FluxMQ runtime constant ownership
+
+- Added FluxMQ-owned event type and node type catalogs outside the old pipeline layer.
+- Updated components, app runtime registration, UI catalogs, and affected tests to use the FluxMQ-owned constants.
+- Left the old pipeline constants in place only for the old pipeline project and its own tests while the package migration is still in progress.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 115 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 47 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 199 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - Workspace dashboard and test definitions
+
+- Added app-owned dashboard and test definition records for the FluxMQ workspace document.
+- Removed old pipeline definition imports from the package-backed workspace definition and serializer options.
+- Kept the old pipeline definition records untouched for the old runtime and scenario runner until those paths migrate.
+- Verified:
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~FluxMqApplicationDefinitionTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 2 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 47 tests.
+
+## 2026-05-31 - Engine package mapping boundary
+
+- Switched app, component, UI preview, and component test mapping consumers from the old pipeline mapping namespace to the engine package mapping namespace.
+- Added the engine package reference directly to `FluxMq.Components` because components now compile against package mapping contracts.
+- Left old pipeline mapping code in place only for the old pipeline project and its own tests during migration.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 115 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 47 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DynamicMapperWorkbenchPreview|FullyQualifiedName~FlowWorkspaceServiceTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 63 tests.
+
+## 2026-05-31 - Engine package flow event boundary
+
+- Switched app, component, CLI, UI, scenario, and old runtime consumers from the old pipeline flow component namespace to the engine package flow component namespace.
+- Mapped the package event `Channel` field into existing MQTT topic UI/log/report surfaces while keeping user-facing labels as MQTT topic.
+- Added engine package references and aliases where needed so live flow node ids now come from the package event/component contract.
+- Left the old pipeline component files in place for now; they are no longer imported by FluxMQ consumers.
+- Verified:
+  - `dotnet test FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 515 tests.
+
+## 2026-05-31 - Remove duplicate pipeline component and mapping code
+
+- Deleted the old pipeline `Components` and `Mapping` folders after moving FluxMQ consumers to the engine package contracts.
+- Removed old mapping package references from `FluxMq.Pipeline`.
+- Removed the `FluxMq.Components` project dependency on `FluxMq.Pipeline`.
+- Kept a small scenario-owned event type catalog for scenario definitions that still live in the pipeline project.
+- Verified:
+  - `dotnet test FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 515 tests.
+
+## 2026-05-31 - Engine package runtime cleanup
+
+- Moved FluxMQ workspace validation into `FluxMq.App`, keeping dashboards and tests as app-owned artifacts while projecting only resources and workflows into the package engine definition.
+- Replaced the local pipeline runtime/definition copy with the `FluxFlow.Engine` package runtime and definition contracts across app, CLI, UI, components, and tests.
+- Moved scenario/test primitives into the dedicated `FluxMq.Scenarios` project so tests stay outside the engine package and outside production workflow runtime contracts.
+- Removed the unused local `MqttPipeline` prototype and stale scaffold test after confirming nothing outside its own tests referenced it.
+- Preserved app workspace JSON and validation coverage under `FluxMq.App.Tests`; removed local engine-level tests now owned by the package project.
+- Net cleanup from the runtime-copy removal and prototype cleanup removed 3,881 lines before the scenario-project rename.
+- Verified:
+  - `dotnet build FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 478 tests.
+
+## 2026-05-31 - Engine package conditional links
+
+- Upgraded `FluxFlow.Engine` references in app, component, and scenario projects to `0.4.0-alpha.1`.
+- Added a FluxMQ runtime regression test proving package-owned conditional links route one MQTT source to separate sinks through per-link `when` expressions.
+- Kept conditional routing at the engine link level, so FluxMQ can remove bespoke router pressure over time instead of duplicating graph semantics.
+- Verified:
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~ApplicationRuntimeBuilder_RoutesConditionalLinks" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 1 test.
+  - `dotnet test FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 479 tests.
+
+## 2026-05-31 - Package migration documentation cleanup
+
+- Removed stale local build-output folders for the retired pipeline/replay/storage test projects.
+- Updated README and docs to describe the current package-backed runtime boundary, FluxMQ-owned app document shape, scenario project, and active solution layout.
+- Replaced stale MQTT client and local pipeline references in documentation with the current `IMqttBrokerClient`, `FluxFlow.Engine`, and `FluxMq.Scenarios` names.
+
+## 2026-05-31 - CI runtime event projection wait
+
+- Tightened the mapped-publisher scenario UI test to wait for the asynchronous runtime event projection before asserting the runtime event list.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --configuration Release --no-restore --filter "FullyQualifiedName~RunActiveTestScenarioAsync_CanObserveMappedPublisherEventFromAppFlow" -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 1 test.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --configuration Release --no-restore -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 199 tests.

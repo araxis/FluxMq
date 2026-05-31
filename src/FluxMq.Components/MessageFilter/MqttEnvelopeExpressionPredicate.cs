@@ -1,6 +1,6 @@
 using FluxMq.Core.Models;
 using FluxMq.Components.Mapping;
-using FluxMq.Pipeline.Mapping;
+using FluxFlow.Engine.Mapping;
 
 namespace FluxMq.Components.MessageFilter;
 

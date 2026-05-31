@@ -1,6 +1,6 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Mqtt;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.ConnectionStateTrigger;
@@ -10,14 +10,14 @@ public sealed class ConnectionStateTriggerComponent : IFlowNode, IDisposable
     private readonly IMqttConnectionManager? _connectionManager;
     private readonly IMqttBrokerClient? _client;
     private readonly BroadcastBlock<FlowError> _errors;
-    private readonly BroadcastBlock<MqttClientStateChangedEventArgs> _output;
+    private readonly BufferBlock<MqttClientStateChangedEventArgs> _output;
 
     public ConnectionStateTriggerComponent(IMqttConnectionManager connectionManager, FlowNodeId? id = null)
     {
         Id = id ?? FlowNodeId.New();
         _connectionManager = connectionManager;
         _errors = new BroadcastBlock<FlowError>(static error => error);
-        _output = new BroadcastBlock<MqttClientStateChangedEventArgs>(static state => state);
+        _output = new BufferBlock<MqttClientStateChangedEventArgs>();
         _connectionManager.StateChanged += OnStateChanged;
     }
 
@@ -26,7 +26,7 @@ public sealed class ConnectionStateTriggerComponent : IFlowNode, IDisposable
         Id = id ?? FlowNodeId.New();
         _client = client ?? throw new ArgumentNullException(nameof(client));
         _errors = new BroadcastBlock<FlowError>(static error => error);
-        _output = new BroadcastBlock<MqttClientStateChangedEventArgs>(static state => state);
+        _output = new BufferBlock<MqttClientStateChangedEventArgs>();
         _client.StateChanged += OnClientStateChanged;
     }
 

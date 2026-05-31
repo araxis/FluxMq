@@ -1,11 +1,12 @@
 using FluxMq.App.Scenarios;
+using FluxMq.App.Definitions;
 using FluxMq.Components.MessageSource;
 using FluxMq.Core.Models;
 using FluxMq.Core.Mqtt;
-using FluxMq.Pipeline.Definitions;
-using FluxMq.Pipeline.Components;
-using FluxMq.Pipeline.Runtime;
-using FluxMq.Pipeline.Scenarios;
+using FluxFlow.Engine.Components;
+using FluxFlow.Engine.Definitions;
+using FluxFlow.Engine.Runtime;
+using FluxMq.Scenarios;
 using MQTTnet.Protocol;
 using Shouldly;
 using System.Text.Json;
@@ -20,7 +21,7 @@ public sealed class MqttScenarioClientFactoryTests
     public async Task ApplicationDefinitionFactory_CreatesIsolatedClientFromSharedAppResource()
     {
         var capturedProfiles = new List<MqttConnectionProfile>();
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Resources =
             {
@@ -112,7 +113,7 @@ public sealed class MqttScenarioClientFactoryTests
     {
         var client = new FakeMqttBrokerClient(new MqttConnectionProfile { Name = "shared-broker" });
         var factory = new FakeScenarioClientFactory(client);
-        var events = new BroadcastBlock<FluxMq.Pipeline.Components.FlowEvent>(static flowEvent => flowEvent);
+        var events = new BroadcastBlock<FluxFlow.Engine.Components.FlowEvent>(static flowEvent => flowEvent);
         var scenario = new ScenarioDefinition
         {
             Steps =
@@ -135,7 +136,7 @@ public sealed class MqttScenarioClientFactoryTests
                     Type = ScenarioStepTypes.ExpectEvent,
                     Configuration =
                     {
-                        ["eventType"] = JsonSerializer.SerializeToElement(FlowEventTypes.MqttMessagePublished),
+                        ["eventType"] = JsonSerializer.SerializeToElement(FluxMqEventTypes.MqttMessagePublished),
                         ["topicStartsWith"] = JsonSerializer.SerializeToElement("fluxmq/sample/request"),
                         ["status"] = JsonSerializer.SerializeToElement("published"),
                         ["payloadContains"] = JsonSerializer.SerializeToElement("\"value\":12"),
@@ -163,7 +164,7 @@ public sealed class MqttScenarioClientFactoryTests
         published.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtLeastOnce);
         published.Retain.ShouldBeTrue();
         result.Steps.Count.ShouldBe(2);
-        result.Steps[1].MatchedEvent.ShouldNotBeNull().Topic.ShouldBe("fluxmq/sample/request");
+        result.Steps[1].MatchedEvent.ShouldNotBeNull().Channel.ShouldBe("fluxmq/sample/request");
         events.Complete();
     }
 
@@ -172,7 +173,7 @@ public sealed class MqttScenarioClientFactoryTests
     {
         var client = new FakeMqttBrokerClient(new MqttConnectionProfile { Name = "shared-broker" });
         var factory = new FakeScenarioClientFactory(client);
-        var appEvents = new BroadcastBlock<FluxMq.Pipeline.Components.FlowEvent>(static flowEvent => flowEvent);
+        var appEvents = new BroadcastBlock<FluxFlow.Engine.Components.FlowEvent>(static flowEvent => flowEvent);
         var scenario = new ScenarioDefinition
         {
             Steps =
@@ -194,7 +195,7 @@ public sealed class MqttScenarioClientFactoryTests
                     Type = ScenarioStepTypes.ExpectEvent,
                     Configuration =
                     {
-                        ["eventType"] = JsonSerializer.SerializeToElement(FlowEventTypes.MqttMessageReceived),
+                        ["eventType"] = JsonSerializer.SerializeToElement(FluxMqEventTypes.MqttMessageReceived),
                         ["topicStartsWith"] = JsonSerializer.SerializeToElement("sample/"),
                         ["status"] = JsonSerializer.SerializeToElement("received"),
                         ["payloadContains"] = JsonSerializer.SerializeToElement("hello"),
@@ -232,14 +233,14 @@ public sealed class MqttScenarioClientFactoryTests
         subscription.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtLeastOnce);
         subscription.ReceiveRetainedMessages.ShouldBeFalse();
         subscription.RetainAsPublished.ShouldBeTrue();
-        result.Steps[1].MatchedEvent.ShouldNotBeNull().Topic.ShouldBe("sample/response");
+        result.Steps[1].MatchedEvent.ShouldNotBeNull().Channel.ShouldBe("sample/response");
         appEvents.Complete();
     }
 
     private static NodeDefinition MqttConnectionResource(string profileJson)
         => new()
         {
-            Type = PipelineFlowNodeTypes.Connection,
+            Type = FluxMqNodeTypes.Connection,
             Configuration =
             {
                 ["profile"] = JsonDocument.Parse(profileJson).RootElement.Clone()

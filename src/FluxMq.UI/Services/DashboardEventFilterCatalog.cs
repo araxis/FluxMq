@@ -1,4 +1,4 @@
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using FluxMq.UI.Models;
 
 namespace FluxMq.UI.Services;
@@ -33,15 +33,15 @@ public sealed class DashboardEventFilterCatalog
         EventTypes =
         [
             new(AnyValue, "Any event", [], AllStatusOptions),
-            new(FlowEventTypes.MqttMessageReceived, "MQTT message received", MqttEventFields("received"), StatusOptions("received")),
-            new(FlowEventTypes.MqttMessagePublished, "MQTT message published", MqttEventFields("published"), StatusOptions("published")),
-            new(FlowEventTypes.MqttMessageRecorded, "MQTT message recorded", MqttEventFields("recorded"), StatusOptions("recorded")),
-            new(FlowEventTypes.FileWritten, "File written", [SubjectField("Path prefix", null, "Filters by written file path.")], StatusOptions("written")),
-            new(FlowEventTypes.JsonSchemaValidated, "JSON schema validated", [
+            new(FluxMqEventTypes.MqttMessageReceived, "MQTT message received", MqttEventFields("received"), StatusOptions("received")),
+            new(FluxMqEventTypes.MqttMessagePublished, "MQTT message published", MqttEventFields("published"), StatusOptions("published")),
+            new(FluxMqEventTypes.MqttMessageRecorded, "MQTT message recorded", MqttEventFields("recorded"), StatusOptions("recorded")),
+            new(FluxMqEventTypes.FileWritten, "File written", [SubjectField("Path prefix", null, "Filters by written file path.")], StatusOptions("written")),
+            new(FluxMqEventTypes.JsonSchemaValidated, "JSON schema validated", [
                 TopicField("Topic prefix", "factory/line-a/", "Filters by validated message topic."),
                 AttributeField("schemaId", "Schema id", "temperature", "Filters by schema id.")
             ], StatusOptions("valid", "invalid")),
-            new(FlowEventTypes.AssertionEvaluated, "Assertion evaluated", [
+            new(FluxMqEventTypes.AssertionEvaluated, "Assertion evaluated", [
                 TopicField("Topic prefix", "factory/line-a/", "Filters by assertion event topic when present."),
                 SubjectField("Assertion name prefix", null, "Filters by assertion name.")
             ], StatusOptions("passed", "failed"))
@@ -132,7 +132,7 @@ public sealed class DashboardEventFilterCatalog
     }
 
     private static DashboardEventFilterFieldDescriptor TopicField(string label, string? placeholder, string helperText)
-        => new(TopicStartsWithKey, label, placeholder, helperText, static flowEvent => flowEvent.Topic);
+        => new(TopicStartsWithKey, label, placeholder, helperText, static flowEvent => flowEvent.Channel);
 
     private static IReadOnlyList<DashboardEventFilterFieldDescriptor> MqttEventFields(string eventVerb)
         =>

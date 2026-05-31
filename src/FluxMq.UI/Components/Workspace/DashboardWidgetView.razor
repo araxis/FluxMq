@@ -1,4 +1,4 @@
-@using FluxMq.Pipeline.Components
+@using FluxFlow.Engine.Components
 @using System.Globalization
 
 <div class="dashboard-widget @WidgetClass">
@@ -79,9 +79,9 @@
     private static string EventMeta(FlowEvent flowEvent)
     {
         var parts = new List<string>();
-        if (!string.IsNullOrWhiteSpace(flowEvent.Topic))
+        if (!string.IsNullOrWhiteSpace(flowEvent.Channel))
         {
-            parts.Add(flowEvent.Topic);
+            parts.Add(flowEvent.Channel);
         }
         else if (!string.IsNullOrWhiteSpace(flowEvent.Subject))
         {

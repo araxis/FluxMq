@@ -3,7 +3,7 @@ using FluxMq.Components.Mapping;
 using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
 using FluxMq.Core.Models;
-using FluxMq.Pipeline.Mapping;
+using FluxFlow.Engine.Mapping;
 using MQTTnet.Protocol;
 using System.Text;
 using System.Text.Json;

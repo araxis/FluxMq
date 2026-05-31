@@ -78,7 +78,7 @@ IMessageRepository.ReadEnvelopesBySessionAsync(sessionId)
   -> ReplaySourceComponent
 ```
 
-This keeps `FluxMq.Pipeline` independent from concrete storage dependencies.
+This keeps the package runtime independent from concrete storage dependencies.
 
 `FluxMq.Components` owns this orchestration through `RecordedSessionReplayFactory`.
 

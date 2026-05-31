@@ -1,7 +1,7 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Mqtt;
 using FluxMq.Components.Logging;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.MqttPublisher;
@@ -11,7 +11,7 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource
     private readonly IMqttBrokerClient _client;
     private readonly ActionBlock<MqttPublishRequest> _block;
     private readonly BroadcastBlock<FlowError> _errors;
-    private readonly BroadcastBlock<FlowLogEntry> _entries;
+    private readonly BufferBlock<FlowLogEntry> _entries;
     private readonly BufferBlock<FlowEvent> _events;
     private int _publishedCount;
     private string? _lastPublishedTopic;
@@ -30,7 +30,7 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource
         Id = id ?? FlowNodeId.New();
         _client = client ?? throw new ArgumentNullException(nameof(client));
         _errors = new BroadcastBlock<FlowError>(static error => error);
-        _entries = new BroadcastBlock<FlowLogEntry>(static entry => entry);
+        _entries = new BufferBlock<FlowLogEntry>();
         _events = new BufferBlock<FlowEvent>();
         _block = new ActionBlock<MqttPublishRequest>(
             PublishAsync,
@@ -96,12 +96,12 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource
             _events.Post(new FlowEvent
             {
                 Timestamp = DateTimeOffset.UtcNow,
-                Type = FlowEventTypes.MqttMessagePublished,
+                Type = FluxMqEventTypes.MqttMessagePublished,
                 Source = "MqttPublisher",
                 SourceNodeId = Id,
                 Subject = request.Topic,
                 Status = "published",
-                Topic = request.Topic,
+                Channel = request.Topic,
                 PayloadBytes = request.Payload.Length,
                 PayloadPreview = FlowEventPayloadPreview.FromBytes(request.Payload),
                 Attributes = new Dictionary<string, string>(StringComparer.Ordinal)

@@ -2,7 +2,7 @@ using System.Threading.Tasks.Dataflow;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Payloads;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 
 namespace FluxMq.Components.MqttPayloadInspector;
 

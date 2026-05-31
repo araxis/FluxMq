@@ -8,10 +8,11 @@ using FluxMq.Core.Models;
 using FluxMq.Core.Mqtt;
 using FluxMq.Components.Logging;
 using FluxMq.Components.Storage.Repositories;
-using FluxMq.Pipeline.Components;
-using FluxMq.Pipeline.Definitions;
-using FluxMq.Pipeline.Runtime;
-using FluxMq.Pipeline.Scenarios;
+using FluxFlow.Engine.Components;
+using FluxFlow.Engine.Definitions;
+using FluxFlow.Engine.Runtime;
+using FluxMq.App.Definitions;
+using FluxMq.Scenarios;
 using FluxMq.UI.Models;
 using System.Text;
 using System.Text.Json;
@@ -181,11 +182,11 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         var flowEvent = new FlowEvent
         {
             Timestamp = DateTimeOffset.UtcNow,
-            Type = FlowEventTypes.MqttMessagePublished,
+            Type = FluxMqEventTypes.MqttMessagePublished,
             Source = "LivePublisher",
             Subject = topic.Trim(),
             Status = "published",
-            Topic = topic.Trim(),
+            Channel = topic.Trim(),
             PayloadBytes = payloadBytes.Length,
             PayloadPreview = CreatePayloadPreview(payloadBytes),
             Attributes = attributes
@@ -1382,7 +1383,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         return emptyEvents;
     }
 
-    private ScenarioStepServices CreateScenarioStepServices(ApplicationDefinition definition, string scenarioName)
+    private ScenarioStepServices CreateScenarioStepServices(FluxMqApplicationDefinition definition, string scenarioName)
     {
         var scenarioEventObserver = new WorkspaceScenarioEventObserver(
             flowEvent => AppendLog(ToScenarioWorkspaceLogEntry(flowEvent, scenarioName)));
@@ -1457,7 +1458,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         _gate.Dispose();
     }
 
-    private static ApplicationDefinition CreateApplicationDefinition(string json)
+    private static FluxMqApplicationDefinition CreateApplicationDefinition(string json)
     {
         using var document = JsonDocument.Parse(json);
         var root = document.RootElement;
@@ -1472,7 +1473,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             root = directFlowApplication;
         }
 
-        return root.Deserialize<ApplicationDefinition>(ApplicationDefinitionJson.CreateSerializerOptions())
+        return root.Deserialize<FluxMqApplicationDefinition>(FluxMqApplicationDefinitionJson.CreateSerializerOptions())
             ?? throw new InvalidOperationException("Flow application definition is empty.");
     }
 
@@ -1489,9 +1490,9 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             error.NodeName,
             error.PortName)));
 
-        if (result.RuntimeBuild is not null)
+        if (result.DefinitionValidation is not null)
         {
-            diagnostics.AddRange(result.RuntimeBuild.Validation.Errors.Select(error => new WorkspaceDiagnostic(
+            diagnostics.AddRange(result.DefinitionValidation.Errors.Select(error => new WorkspaceDiagnostic(
                 "Error",
                 "Definition",
                 error.Code.ToString(),
@@ -1499,7 +1500,10 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
                 error.WorkflowName,
                 error.NodeName,
                 error.PortName)));
+        }
 
+        if (result.RuntimeBuild is not null)
+        {
             diagnostics.AddRange(result.RuntimeBuild.Errors
                 .Where(error => error.Code != ApplicationRuntimeBuildErrorCode.ValidationFailed)
                 .Select(error => new WorkspaceDiagnostic(
@@ -1578,11 +1582,11 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     {
         foreach (var output in node.Outputs.OfType<OutputPort<MqttMetricsSnapshot>>())
         {
-            AttachRuntimeMetricsSnapshots(node, output.Source);
+            AttachRuntimeMetricsSnapshots(node, output);
         }
     }
 
-    private void AttachRuntimeMetricsSnapshots(RuntimeNode node, ISourceBlock<MqttMetricsSnapshot> snapshots)
+    private void AttachRuntimeMetricsSnapshots(RuntimeNode node, OutputPort<MqttMetricsSnapshot> snapshots)
     {
         var address = node.Address;
         var target = new ActionBlock<MqttMetricsSnapshot>(
@@ -1594,18 +1598,18 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             });
 
         _runtimeProjectionTargets.Add(target);
-        _runtimeProjectionLinks.Add(snapshots.LinkTo(target, new DataflowLinkOptions { PropagateCompletion = true }));
+        _runtimeProjectionLinks.Add(LinkRuntimeOutput(snapshots, target));
     }
 
     private void AttachRuntimePayloadInspectionOutputs(RuntimeNode node)
     {
         foreach (var output in node.Outputs.OfType<OutputPort<InspectedMqttMessage>>())
         {
-            AttachRuntimePayloadInspections(node, output.Source);
+            AttachRuntimePayloadInspections(node, output);
         }
     }
 
-    private void AttachRuntimePayloadInspections(RuntimeNode node, ISourceBlock<InspectedMqttMessage> inspections)
+    private void AttachRuntimePayloadInspections(RuntimeNode node, OutputPort<InspectedMqttMessage> inspections)
     {
         var address = node.Address;
         var target = new ActionBlock<InspectedMqttMessage>(
@@ -1617,7 +1621,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             });
 
         _runtimeProjectionTargets.Add(target);
-        _runtimeProjectionLinks.Add(inspections.LinkTo(target, new DataflowLinkOptions { PropagateCompletion = true }));
+        _runtimeProjectionLinks.Add(LinkRuntimeOutput(inspections, target));
     }
 
     private void AttachRuntimeTriggerActivityOutputs(RuntimeNode node)
@@ -1631,12 +1635,12 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         {
             if (string.Equals(output.Address.Port.Value, "Output", StringComparison.OrdinalIgnoreCase))
             {
-                AttachRuntimeTriggerActivity(node, output.Source);
+                AttachRuntimeTriggerActivity(node, output);
             }
         }
     }
 
-    private void AttachRuntimeTriggerActivity(RuntimeNode node, ISourceBlock<MqttEnvelope> envelopes)
+    private void AttachRuntimeTriggerActivity(RuntimeNode node, OutputPort<MqttEnvelope> envelopes)
     {
         var address = node.Address;
         var target = new ActionBlock<MqttEnvelope>(
@@ -1648,18 +1652,18 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             });
 
         _runtimeProjectionTargets.Add(target);
-        _runtimeProjectionLinks.Add(envelopes.LinkTo(target, new DataflowLinkOptions { PropagateCompletion = true }));
+        _runtimeProjectionLinks.Add(LinkRuntimeOutput(envelopes, target));
     }
 
     private void AttachRuntimeLogOutputs(RuntimeNode node)
     {
         foreach (var output in node.Outputs.OfType<OutputPort<FlowLogEntry>>())
         {
-            AttachRuntimeLogEntries(node, output.Source);
+            AttachRuntimeLogEntries(node, output);
         }
     }
 
-    private void AttachRuntimeLogEntries(RuntimeNode node, ISourceBlock<FlowLogEntry> entries)
+    private void AttachRuntimeLogEntries(RuntimeNode node, OutputPort<FlowLogEntry> entries)
     {
         var address = node.Address;
         var target = new ActionBlock<FlowLogEntry>(
@@ -1671,7 +1675,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             });
 
         _runtimeProjectionTargets.Add(target);
-        _runtimeProjectionLinks.Add(entries.LinkTo(target, new DataflowLinkOptions { PropagateCompletion = true }));
+        _runtimeProjectionLinks.Add(LinkRuntimeOutput(entries, target));
     }
 
     private void AttachRuntimeErrorOutputs(RuntimeNode node)
@@ -1689,7 +1693,28 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
                 });
 
             _runtimeProjectionTargets.Add(target);
-            _runtimeProjectionLinks.Add(output.Source.LinkTo(target, new DataflowLinkOptions { PropagateCompletion = true }));
+            _runtimeProjectionLinks.Add(LinkRuntimeOutput(output, target));
+        }
+    }
+
+    private static IDisposable LinkRuntimeOutput<T>(OutputPort<T> output, ITargetBlock<T> target)
+    {
+        var input = new InputPort<T>(output.Address, target);
+        var link = output.TryLinkTo(input, propagateCompletion: true, out var error);
+        if (error is not null)
+        {
+            throw new InvalidOperationException(error.Message);
+        }
+
+        return link ?? EmptyDisposable.Instance;
+    }
+
+    private sealed class EmptyDisposable : IDisposable
+    {
+        public static readonly EmptyDisposable Instance = new();
+
+        public void Dispose()
+        {
         }
     }
 
@@ -1974,8 +1999,8 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
     private static string BuildRuntimeEventMessage(FlowEvent flowEvent)
     {
-        var target = !string.IsNullOrWhiteSpace(flowEvent.Topic)
-            ? flowEvent.Topic
+        var target = !string.IsNullOrWhiteSpace(flowEvent.Channel)
+            ? flowEvent.Channel
             : flowEvent.Subject;
 
         return string.IsNullOrWhiteSpace(target)
@@ -1985,8 +2010,8 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
     private static string BuildScenarioEventMessage(FlowEvent flowEvent)
     {
-        var target = !string.IsNullOrWhiteSpace(flowEvent.Topic)
-            ? flowEvent.Topic
+        var target = !string.IsNullOrWhiteSpace(flowEvent.Channel)
+            ? flowEvent.Channel
             : flowEvent.Subject;
 
         return string.IsNullOrWhiteSpace(target)
@@ -2025,13 +2050,13 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     {
         var parts = new List<string>();
 
-        if (!string.IsNullOrWhiteSpace(flowEvent.Topic))
+        if (!string.IsNullOrWhiteSpace(flowEvent.Channel))
         {
-            parts.Add($"topic={flowEvent.Topic}");
+            parts.Add($"topic={flowEvent.Channel}");
         }
 
         if (!string.IsNullOrWhiteSpace(flowEvent.Subject) &&
-            !string.Equals(flowEvent.Subject, flowEvent.Topic, StringComparison.Ordinal))
+            !string.Equals(flowEvent.Subject, flowEvent.Channel, StringComparison.Ordinal))
         {
             parts.Add($"subject={flowEvent.Subject}");
         }

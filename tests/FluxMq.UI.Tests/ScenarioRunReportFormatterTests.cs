@@ -1,5 +1,5 @@
-using FluxMq.Pipeline.Components;
-using FluxMq.Pipeline.Scenarios;
+using FluxFlow.Engine.Components;
+using FluxMq.Scenarios;
 using FluxMq.UI.Models;
 using FluxMq.UI.Services;
 using Shouldly;
@@ -36,7 +36,7 @@ public sealed class ScenarioRunReportFormatterTests
                         Type = "mqtt.message.published",
                         Source = "mqtt.publisher",
                         Status = "published",
-                        Topic = "fluxmq/sample/response",
+                        Channel = "fluxmq/sample/response",
                         PayloadBytes = 12,
                         PayloadPreview = """{"ok":true}""",
                         Attributes = new Dictionary<string, string>

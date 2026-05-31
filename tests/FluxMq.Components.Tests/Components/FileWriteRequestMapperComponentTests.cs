@@ -1,7 +1,7 @@
 using FluxMq.Core.Models;
 using FluxMq.Components.FileWriter;
 using FluxMq.Components.Mapping;
-using FluxMq.Pipeline.Mapping;
+using FluxFlow.Engine.Mapping;
 using Shouldly;
 using System.Threading.Tasks.Dataflow;
 

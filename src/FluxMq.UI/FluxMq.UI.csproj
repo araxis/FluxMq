@@ -49,7 +49,7 @@
 		<ProjectReference Include="..\FluxMq.App\FluxMq.App.csproj" />
 		<ProjectReference Include="..\FluxMq.Components\FluxMq.Components.csproj" />
 		<ProjectReference Include="..\FluxMq.Core\FluxMq.Core.csproj" />
-		<ProjectReference Include="..\FluxMq.Pipeline\FluxMq.Pipeline.csproj" />
+		<ProjectReference Include="..\FluxMq.Scenarios\FluxMq.Scenarios.csproj" />
 	</ItemGroup>
 
 </Project>

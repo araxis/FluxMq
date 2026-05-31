@@ -1,13 +1,13 @@
 using FluxMq.Core.Models;
-using FluxMq.Pipeline.Definitions;
-using FluxMq.Pipeline.Runtime;
+using FluxFlow.Engine.Definitions;
+using FluxMq.App.Definitions;
 using System.Text.Json;
 
 namespace FluxMq.App.Scenarios;
 
 internal static class ApplicationDefinitionMqttConnectionProfileResolver
 {
-    public static MqttConnectionProfile Resolve(ApplicationDefinition definition, string connectionName)
+    public static MqttConnectionProfile Resolve(FluxMqApplicationDefinition definition, string connectionName)
     {
         ArgumentNullException.ThrowIfNull(definition);
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionName);
@@ -17,7 +17,7 @@ internal static class ApplicationDefinitionMqttConnectionProfileResolver
             throw new InvalidOperationException($"MQTT connection resource '{connectionName}' does not exist.");
         }
 
-        if (!string.Equals(resource.Type.Value, PipelineFlowNodeTypes.Connection.Value, StringComparison.Ordinal))
+        if (!string.Equals(resource.Type.Value, FluxMqNodeTypes.Connection.Value, StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Resource '{connectionName}' is not an MQTT connection.");
         }
@@ -29,7 +29,7 @@ internal static class ApplicationDefinitionMqttConnectionProfileResolver
     {
         if (!definition.Configuration.TryGetValue("profile", out var profileElement))
         {
-            throw new InvalidOperationException($"Configuration value 'profile' is required for {PipelineFlowNodeTypes.Connection.Value}.");
+            throw new InvalidOperationException($"Configuration value 'profile' is required for {FluxMqNodeTypes.Connection.Value}.");
         }
 
         if (profileElement.ValueKind != JsonValueKind.Object)

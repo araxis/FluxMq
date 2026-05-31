@@ -2,9 +2,10 @@ using Shouldly;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Mqtt;
-using FluxMq.Pipeline.Components;
-using FluxMq.Pipeline.Definitions;
-using FluxMq.Pipeline.Runtime;
+using FluxFlow.Engine.Components;
+using FluxFlow.Engine.Definitions;
+using FluxFlow.Engine.Runtime;
+using FluxMq.App.Definitions;
 using FluxMq.App;
 using Microsoft.Extensions.Configuration;
 using MQTTnet.Protocol;
@@ -241,9 +242,9 @@ public sealed class FlowApplicationHostTests
         source!.Post(new FlowEvent
         {
             Timestamp = DateTimeOffset.UtcNow,
-            Type = FlowEventTypes.MqttMessageReceived,
+            Type = FluxMqEventTypes.MqttMessageReceived,
             Source = "test",
-            Topic = "factory/response/42",
+            Channel = "factory/response/42",
             Status = "received"
         });
 
@@ -251,7 +252,7 @@ public sealed class FlowApplicationHostTests
 
         result.IsSuccess.ShouldBeTrue();
         result.Steps.ShouldHaveSingleItem()
-            .MatchedEvent!.Topic.ShouldBe("factory/response/42");
+            .MatchedEvent!.Channel.ShouldBe("factory/response/42");
         host.State.ShouldBe(FlowApplicationHostState.Running);
     }
 
@@ -401,8 +402,8 @@ public sealed class FlowApplicationHostTests
 
         var startResult = await host.StartAsync();
         startResult.IsSuccess.ShouldBeFalse();
-        var validationError = startResult.RuntimeBuild!.Validation.Errors.Single(
-            error => error.Code == ApplicationDefinitionValidationErrorCode.MissingScenarioStepResource);
+        var validationError = startResult.DefinitionValidation!.Errors.Single(
+            error => error.Code == FluxMqApplicationDefinitionValidationErrorCode.MissingScenarioStepResource);
         validationError.Message.ShouldContain("publishMessage");
         validationError.Message.ShouldContain("publish");
         validationError.Message.ShouldContain("missingBroker");

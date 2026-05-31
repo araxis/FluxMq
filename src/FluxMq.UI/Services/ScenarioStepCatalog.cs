@@ -1,4 +1,5 @@
-using FluxMq.Pipeline.Scenarios;
+using FluxFlow.Engine.Components;
+using FluxMq.Scenarios;
 using FluxMq.UI.Models;
 using MudBlazor;
 
@@ -15,8 +16,17 @@ public sealed class ScenarioStepCatalog
     public const string SubscriptionsKey = ScenarioStepConfigurationKeys.Subscriptions;
     public const string ReceiveRetainedKey = ScenarioStepConfigurationKeys.ReceiveRetained;
     public const string RetainAsPublishedKey = ScenarioStepConfigurationKeys.RetainAsPublished;
+    public const string EventTypeKey = ScenarioStepConfigurationKeys.EventType;
+    public const string TopicStartsWithKey = ScenarioStepConfigurationKeys.TopicStartsWith;
+    public const string SubjectStartsWithKey = ScenarioStepConfigurationKeys.SubjectStartsWith;
+    public const string StatusKey = ScenarioStepConfigurationKeys.Status;
+    public const string SourceKey = ScenarioStepConfigurationKeys.Source;
+    public const string PayloadContainsKey = ScenarioStepConfigurationKeys.PayloadContains;
+    public const string TimeoutMsKey = ScenarioStepConfigurationKeys.TimeoutMs;
 
-    public static ScenarioStepCatalog Shared { get; } = new();
+    public static readonly string QosAttributeKey = DashboardEventFilterCatalog.AttributeFilterKey("qos");
+    public static readonly string RetainAttributeKey = DashboardEventFilterCatalog.AttributeFilterKey("retain");
+    public static readonly string SchemaIdAttributeKey = DashboardEventFilterCatalog.AttributeFilterKey("schemaId");
 
     private static readonly IReadOnlyList<ScenarioStepFieldOption> PayloadEncodingOptions =
     [
@@ -32,6 +42,61 @@ public sealed class ScenarioStepCatalog
         new("1", "1"),
         new("2", "2")
     ];
+
+    private static readonly IReadOnlyList<ScenarioStepFieldOption> EventTypeOptions =
+    [
+        new(string.Empty, "Any event"),
+        new(FluxMqEventTypes.MqttMessageReceived, "MQTT message received"),
+        new(FluxMqEventTypes.MqttMessagePublished, "MQTT message published"),
+        new(FluxMqEventTypes.MqttMessageRecorded, "MQTT message recorded"),
+        new(FluxMqEventTypes.FileWritten, "File written"),
+        new(FluxMqEventTypes.JsonSchemaValidated, "JSON schema validated"),
+        new(FluxMqEventTypes.AssertionEvaluated, "Assertion evaluated")
+    ];
+
+    private static readonly IReadOnlyList<ScenarioStepFieldOption> EventStatusOptions =
+    [
+        new(string.Empty, "Any status"),
+        new("received", "Received"),
+        new("published", "Published"),
+        new("recorded", "Recorded"),
+        new("written", "Written"),
+        new("valid", "Valid"),
+        new("invalid", "Invalid"),
+        new("passed", "Passed"),
+        new("failed", "Failed")
+    ];
+
+    private static readonly IReadOnlyList<ScenarioStepFieldOption> ExpectQosOptions =
+    [
+        new(string.Empty, "Any"),
+        new("0", "0"),
+        new("1", "1"),
+        new("2", "2")
+    ];
+
+    private static readonly IReadOnlyList<ScenarioStepFieldOption> ExpectRetainOptions =
+    [
+        new(string.Empty, "Any"),
+        new("true", "Retain"),
+        new("false", "No retain")
+    ];
+
+    private static readonly IReadOnlyList<ScenarioStepFieldDescriptor> EventExpectationFields =
+    [
+        new(EventTypeKey, "Event type", ScenarioStepFieldKind.Select, FluxMqEventTypes.MqttMessagePublished, EventTypeOptions),
+        new(TopicStartsWithKey, "Topic prefix", ScenarioStepFieldKind.Text, string.Empty, []),
+        new(SubjectStartsWithKey, "Subject prefix", ScenarioStepFieldKind.Text, string.Empty, []),
+        new(StatusKey, "Status", ScenarioStepFieldKind.Select, "published", EventStatusOptions),
+        new(SourceKey, "Source", ScenarioStepFieldKind.Text, string.Empty, []),
+        new(PayloadContainsKey, "Payload contains", ScenarioStepFieldKind.Text, string.Empty, []),
+        new(QosAttributeKey, "QoS", ScenarioStepFieldKind.Select, string.Empty, ExpectQosOptions),
+        new(RetainAttributeKey, "Retain", ScenarioStepFieldKind.Select, string.Empty, ExpectRetainOptions),
+        new(SchemaIdAttributeKey, "Schema id", ScenarioStepFieldKind.Text, string.Empty, []),
+        new(TimeoutMsKey, "Timeout ms", ScenarioStepFieldKind.Text, "5000", [])
+    ];
+
+    public static ScenarioStepCatalog Shared { get; } = new();
 
     private readonly IReadOnlyList<ScenarioStepDescriptor> _steps =
     [
@@ -74,7 +139,7 @@ public sealed class ScenarioStepCatalog
             Icons.Material.Filled.AltRoute,
             "whenEvent",
             ScenarioStepEditorKind.ExpectEvent,
-            []),
+            EventExpectationFields),
         new(
             ScenarioStepTypes.ExpectEvent,
             "Expect event",
@@ -83,7 +148,7 @@ public sealed class ScenarioStepCatalog
             Icons.Material.Filled.Rule,
             "expectEvent",
             ScenarioStepEditorKind.ExpectEvent,
-            [])
+            EventExpectationFields)
     ];
 
     public IReadOnlyList<ScenarioStepDescriptor> Steps => _steps;

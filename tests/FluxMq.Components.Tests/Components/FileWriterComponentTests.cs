@@ -1,5 +1,5 @@
 using FluxMq.Components.FileWriter;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using Shouldly;
 using System.Text;
 using System.Threading.Tasks.Dataflow;
@@ -47,7 +47,7 @@ public sealed class FileWriterComponentTests
         var flowEvent = await events.ReceiveAsync();
         await component.Completion;
 
-        flowEvent.Type.ShouldBe(FlowEventTypes.FileWritten);
+        flowEvent.Type.ShouldBe(FluxMqEventTypes.FileWritten);
         flowEvent.Source.ShouldBe("FileWriter");
         flowEvent.SourceNodeId.ShouldBe(component.Id);
         flowEvent.Subject.ShouldBe(path);

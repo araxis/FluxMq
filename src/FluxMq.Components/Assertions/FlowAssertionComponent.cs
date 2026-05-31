@@ -6,8 +6,8 @@ using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
-using FluxMq.Pipeline.Components;
-using FluxMq.Pipeline.Mapping;
+using FluxFlow.Engine.Components;
+using FluxFlow.Engine.Mapping;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.Assertions;
@@ -21,7 +21,7 @@ public sealed class FlowAssertionComponent<TInput> : IFlowNode, IFlowEventSource
     private readonly BufferBlock<FlowAssertionResult> _result;
     private readonly BufferBlock<TInput> _passed;
     private readonly BufferBlock<TInput> _failed;
-    private readonly BroadcastBlock<FlowLogEntry> _entries;
+    private readonly BufferBlock<FlowLogEntry> _entries;
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly BufferBlock<FlowEvent> _events;
     private readonly IFlowPredicate<TInput> _predicate;
@@ -46,7 +46,7 @@ public sealed class FlowAssertionComponent<TInput> : IFlowNode, IFlowEventSource
         _expression = expression.Trim();
         _failureMessage = string.IsNullOrWhiteSpace(failureMessage) ? DefaultFailureMessage : failureMessage.Trim();
         _errors = new BroadcastBlock<FlowError>(static error => error);
-        _entries = new BroadcastBlock<FlowLogEntry>(static entry => entry);
+        _entries = new BufferBlock<FlowLogEntry>();
         _events = new BufferBlock<FlowEvent>();
         _result = new BufferBlock<FlowAssertionResult>(new DataflowBlockOptions
         {
@@ -179,12 +179,12 @@ public sealed class FlowAssertionComponent<TInput> : IFlowNode, IFlowEventSource
         _events.Post(new FlowEvent
         {
             Timestamp = DateTimeOffset.UtcNow,
-            Type = FlowEventTypes.AssertionEvaluated,
+            Type = FluxMqEventTypes.AssertionEvaluated,
             Source = "FlowAssertion",
             SourceNodeId = Id,
             Subject = _assertionName,
             Status = result.Passed ? "passed" : "failed",
-            Topic = topic,
+            Channel = topic,
             PayloadBytes = payloadBytes,
             Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
             {

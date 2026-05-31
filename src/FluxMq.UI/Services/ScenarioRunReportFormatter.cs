@@ -1,5 +1,5 @@
-using FluxMq.Pipeline.Components;
-using FluxMq.Pipeline.Scenarios;
+using FluxFlow.Engine.Components;
+using FluxMq.Scenarios;
 using FluxMq.UI.Models;
 using System.Globalization;
 using System.Text;
@@ -404,7 +404,7 @@ public static class ScenarioRunReportFormatter
             flowEvent.Source,
             flowEvent.Subject,
             flowEvent.Status,
-            flowEvent.Topic,
+            flowEvent.Channel,
             flowEvent.PayloadBytes,
             flowEvent.PayloadPreview,
             flowEvent.Attributes);

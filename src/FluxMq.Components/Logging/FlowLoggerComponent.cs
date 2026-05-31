@@ -1,6 +1,6 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using System.Text;
 using System.Threading.Tasks.Dataflow;
 
@@ -12,7 +12,7 @@ public sealed class FlowLoggerComponent : IFlowNode
     private readonly Queue<FlowLogEntry> _recentEntries = new();
     private readonly ActionBlock<MqttEnvelope> _input;
     private readonly ActionBlock<FlowError> _flowErrors;
-    private readonly BroadcastBlock<FlowLogEntry> _entries;
+    private readonly BufferBlock<FlowLogEntry> _entries;
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly Task _completion;
     private readonly bool _includePayloadPreview;
@@ -47,7 +47,7 @@ public sealed class FlowLoggerComponent : IFlowNode
         _maxEntries = maxEntries;
         _includePayloadPreview = includePayloadPreview;
         _maxPayloadPreviewChars = maxPayloadPreviewChars;
-        _entries = new BroadcastBlock<FlowLogEntry>(static entry => entry);
+        _entries = new BufferBlock<FlowLogEntry>();
         _errors = new BroadcastBlock<FlowError>(static error => error);
         _input = new ActionBlock<MqttEnvelope>(
             ObserveMessage,

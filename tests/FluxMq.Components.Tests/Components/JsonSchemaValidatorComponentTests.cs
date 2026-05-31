@@ -1,6 +1,6 @@
 using FluxMq.Components.JsonSchema;
 using FluxMq.Core.Models;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using MQTTnet.Protocol;
 using Shouldly;
 using System.Text;
@@ -124,8 +124,8 @@ public sealed class JsonSchemaValidatorComponentTests
 
         await Task.WhenAll(component.Completion, eventSink.Completion);
 
-        events.Select(flowEvent => flowEvent.Type).ShouldBe([FlowEventTypes.JsonSchemaValidated, FlowEventTypes.JsonSchemaValidated]);
-        events.Select(flowEvent => flowEvent.Topic).ShouldBe(["factory/valid", "factory/invalid"]);
+        events.Select(flowEvent => flowEvent.Type).ShouldBe([FluxMqEventTypes.JsonSchemaValidated, FluxMqEventTypes.JsonSchemaValidated]);
+        events.Select(flowEvent => flowEvent.Channel).ShouldBe(["factory/valid", "factory/invalid"]);
         events.Select(flowEvent => flowEvent.Status).ShouldBe(["valid", "invalid"]);
         events[0].GetAttribute("schemaId").ShouldBe("status-schema");
         events[0].GetAttribute("issueCount").ShouldBe("0");

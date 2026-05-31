@@ -4,7 +4,7 @@ using FluxMq.Core.Models;
 using FluxMq.Components.Replay;
 using FluxMq.Components.Storage.Models;
 using FluxMq.Components.Storage.Repositories;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using MQTTnet.Protocol;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks.Dataflow;
@@ -33,8 +33,8 @@ public sealed class MqttRecorderComponentTests
             .ShouldBe(new[] { sessionId, sessionId });
         repository.Recorded.Select(record => record.Envelope.Topic)
             .ShouldBe(new[] { "factory/1", "factory/2" });
-        events.Select(flowEvent => flowEvent.Type).ShouldBe([FlowEventTypes.MqttMessageRecorded, FlowEventTypes.MqttMessageRecorded]);
-        events.Select(flowEvent => flowEvent.Topic).ShouldBe(["factory/1", "factory/2"]);
+        events.Select(flowEvent => flowEvent.Type).ShouldBe([FluxMqEventTypes.MqttMessageRecorded, FluxMqEventTypes.MqttMessageRecorded]);
+        events.Select(flowEvent => flowEvent.Channel).ShouldBe(["factory/1", "factory/2"]);
         events[0].GetAttribute("sessionId").ShouldBe(sessionId.ToString());
     }
 

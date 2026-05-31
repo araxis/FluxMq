@@ -1,6 +1,6 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
-using FluxMq.Pipeline.Components;
+using FluxFlow.Engine.Components;
 using Json.Schema;
 using System.Text;
 using System.Text.Json;
@@ -222,12 +222,12 @@ public sealed class JsonSchemaValidatorComponent : IFlowNode, IFlowEventSource
         _events.Post(new FlowEvent
         {
             Timestamp = DateTimeOffset.UtcNow,
-            Type = FlowEventTypes.JsonSchemaValidated,
+            Type = FluxMqEventTypes.JsonSchemaValidated,
             Source = "JsonSchemaValidator",
             SourceNodeId = Id,
             Subject = result.Envelope.Topic,
             Status = result.IsValid ? "valid" : "invalid",
-            Topic = result.Envelope.Topic,
+            Channel = result.Envelope.Topic,
             PayloadBytes = result.Envelope.Payload.Length,
             Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
             {

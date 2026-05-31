@@ -209,8 +209,8 @@ Conditional link object:
 ```json
 {
   "Input": {
-    "From": "source.Output",
-    "When": "topic.startsWith('factory/')"
+    "from": "source.Output",
+    "when": "input.Topic.StartsWith(\"factory/\")"
   }
 }
 ```
@@ -224,14 +224,14 @@ Default condition for all links on a component:
   "Input": [
     "source.Output",
     {
-      "From": "replay.Output",
-      "When": "topic.startsWith('factory/')"
+      "from": "replay.Output",
+      "when": "input.Topic.StartsWith(\"factory/\")"
     }
   ]
 }
 ```
 
-If a link has its own `When`, it wins. Otherwise the component-level `When` applies.
+If a link has its own `when`, it wins. Otherwise the component-level `when` applies.
 
 `ApplicationDefinitionValidator` currently checks:
 
@@ -245,16 +245,17 @@ If a link has its own `When`, it wins. Otherwise the component-level `When` appl
 - target and source ports are not empty
 - duplicate links are rejected
 
-Runtime graph construction is intentionally separate and will come after this definition shape is exercised.
+Runtime graph construction is package-owned and intentionally separate from FluxMQ-specific dashboards, tests, and UI state.
 
 ## Application Runtime Direction
 
-The runtime boundary is a host-independent class library direction. A desktop app, console runner, Windows service, or tool host should all be able to load the same `ApplicationDefinition`.
+The runtime boundary is the host-independent `FluxFlow.Engine` package. A desktop app, console runner, Windows service, or tool host should all be able to load the same executable resources and workflows.
 
 The first application host boundary is `FluxMq.App`. It is a class library, not a UI project. `FlowApplicationHost` currently:
 
 - reads `FluxMq:FlowApplication` through the .NET configuration system
-- converts the configuration tree into `ApplicationDefinition`
+- converts the configuration tree into `FluxMqApplicationDefinition`
+- projects executable resources and workflows into the engine definition
 - builds a runtime with `ApplicationRuntimeBuilder`
 - exposes build results and host state
 - starts and stops the current runtime
@@ -310,6 +311,7 @@ The first runtime builder slice is intentionally small. `ApplicationRuntimeBuild
 - passes factory context so registrations know whether they are building a shared resource or a workflow node
 - starts nodes by `NodeDefinition.Phase`, with lower phases first across resources and workflow nodes
 - links workflow ports through typed input/output port adapters
+- evaluates per-link `when` expressions before delivering each output item
 - supports shared resources as link sources
 - returns build errors for validation, missing factories, missing ports, type mismatches, and link failures
 - completes only entry nodes so Dataflow completion propagates through linked graphs in order
@@ -326,7 +328,7 @@ The preferred alpha source registrations use the shared connection/trigger pair 
   - `Errors`: `FlowError`
 - `mqtt.connection`
   - Shared resource node.
-  - Owns the `IFluxMqttClient` lifecycle and broadcasts received envelopes internally to triggers.
+  - Owns the `IMqttBrokerClient` lifecycle and broadcasts received envelopes internally to triggers.
   - `Errors`: `FlowError`
 - `mqtt.trigger`
   - Workflow trigger node.

@@ -1,4 +1,4 @@
-using FluxMq.Pipeline.Mapping;
+using FluxFlow.Engine.Mapping;
 
 namespace FluxMq.Components.Assertions;
 
