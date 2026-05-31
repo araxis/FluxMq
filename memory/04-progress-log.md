@@ -1662,3 +1662,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioMqttTriggerUi\ -m:1` passes with 74 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore --filter "FullyQualifiedName~CliRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioMqttTriggerCli\ -m:1` passes with 13 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioMqttTriggerFull\ -m:1` passes with 479 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - CLI runner-owned scenario event source guard
+
+- Relaxed the CLI scenario guard so `expect.event` can run when a prior scenario-owned event source has started.
+- The first supported runner-owned event source is `mqtt.trigger`, so CLI scenarios can now run `mqtt.trigger` followed by `expect.event` without attaching to an app runtime event stream.
+- A bare `expect.event`, or an expectation before any runner-owned event source, still fails fast with guidance to add a scenario `mqtt.trigger` or run against an app runtime through the UI/host API.
+- Verified:
+  - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore --filter "FullyQualifiedName~CliRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioCliRunnerOwnedEvents\ -m:1` passes with 14 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioCliRunnerOwnedEventsFull\ -m:1` passes with 480 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

@@ -17,11 +17,18 @@ public sealed class CliRunner
 {
     private readonly ICliOutput _output;
     private readonly ICliOutput _error;
+    private readonly Func<ApplicationDefinition, IMqttScenarioClientFactory> _scenarioClientFactoryFactory;
 
-    public CliRunner(ICliOutput output, ICliOutput error)
+    public CliRunner(
+        ICliOutput output,
+        ICliOutput error,
+        Func<ApplicationDefinition, IMqttScenarioClientFactory>? scenarioClientFactoryFactory = null)
     {
         _output = output ?? throw new ArgumentNullException(nameof(output));
         _error = error ?? throw new ArgumentNullException(nameof(error));
+        _scenarioClientFactoryFactory =
+            scenarioClientFactoryFactory ??
+            (static definition => new ApplicationDefinitionMqttScenarioClientFactory(definition));
     }
 
     public int Run(string[] args)
@@ -147,13 +154,13 @@ public sealed class CliRunner
                 throw new InvalidOperationException($"Scenario '{scenarioName}' does not exist.");
             }
 
-            if (ScenarioRequiresRuntimeEvents(scenario))
+            if (ScenarioRequiresExternalRuntimeEvents(scenario))
             {
                 throw new InvalidOperationException(
-                    $"Scenario '{scenarioName}' contains expect.event steps, but the CLI scenario command is publish-only and does not start or attach to an app runtime event stream. Run the app runtime and execute the test from the UI or host API, or remove expect.event steps from this CLI scenario.");
+                    $"Scenario '{scenarioName}' contains expect.event steps before any runner-owned event source. Add a scenario mqtt.trigger step before the expectation, run the app runtime and execute the test from the UI or host API, or remove expect.event steps from this CLI scenario.");
             }
 
-            var mqttClientFactory = new ApplicationDefinitionMqttScenarioClientFactory(applicationDefinition);
+            var mqttClientFactory = _scenarioClientFactoryFactory(applicationDefinition);
             var services = ScenarioStepServices.Empty
                 .Add<IMqttScenarioClientFactory>(mqttClientFactory);
             var result = await FlowApplicationHost.CreateDefaultScenarioRunner()
@@ -192,9 +199,26 @@ public sealed class CliRunner
         }
     }
 
-    private static bool ScenarioRequiresRuntimeEvents(ScenarioDefinition scenario)
-        => scenario.Steps.Values.Any(step =>
-            string.Equals(step.Type, ScenarioStepTypes.ExpectEvent, StringComparison.Ordinal));
+    private static bool ScenarioRequiresExternalRuntimeEvents(ScenarioDefinition scenario)
+    {
+        var hasRunnerOwnedEventSource = false;
+        foreach (var step in scenario.Steps.Values)
+        {
+            if (string.Equals(step.Type, ScenarioStepTypes.MqttTrigger, StringComparison.Ordinal))
+            {
+                hasRunnerOwnedEventSource = true;
+                continue;
+            }
+
+            if (string.Equals(step.Type, ScenarioStepTypes.ExpectEvent, StringComparison.Ordinal) &&
+                !hasRunnerOwnedEventSource)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private bool TryLoadApplicationDefinition(CliOptions options, out ApplicationDefinition? definition, out int exitCode)
     {
