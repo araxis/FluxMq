@@ -32,7 +32,9 @@ public sealed class FlowApplicationDefinitionValidatorTests
                 {
                     Nodes =
                     {
-                        ["recorder"] = NodeWithPort("mqtt.recorder", "Connection", "\"$resources.localBroker.Output\"")
+                        ["trigger"] = Node("mqtt.trigger"),
+                        ["mapper"] = NodeWithPort("flow.mapper", "Input", "\"trigger.Output\""),
+                        ["recorder"] = NodeWithPort("mqtt.recorder", "Input", "\"mapper.Output\"")
                     }
                 }
             }
@@ -136,7 +138,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
                 {
                     Nodes =
                     {
-                        ["source"] = NodeWithPort("mqtt.trigger", "Connection", "\"$resources.broker.Output\"")
+                        ["sink"] = NodeWithPort("test.sink", "Input", "\"$resources.broker.Output\"")
                     }
                 }
             }
