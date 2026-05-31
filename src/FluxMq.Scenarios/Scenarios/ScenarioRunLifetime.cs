@@ -1,4 +1,4 @@
-namespace FluxMq.Pipeline.Scenarios;
+namespace FluxMq.Scenarios;
 
 public sealed class ScenarioRunLifetime : IAsyncDisposable
 {

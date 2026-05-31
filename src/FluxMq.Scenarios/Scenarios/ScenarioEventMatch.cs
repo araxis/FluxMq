@@ -1,5 +1,5 @@
 using FluxFlow.Engine.Components;
 
-namespace FluxMq.Pipeline.Scenarios;
+namespace FluxMq.Scenarios;
 
 public sealed record ScenarioEventMatch(FlowEvent Event, int Index);

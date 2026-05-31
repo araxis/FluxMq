@@ -1,6 +1,6 @@
 using FluxFlow.Engine.Components;
 
-namespace FluxMq.Pipeline.Scenarios;
+namespace FluxMq.Scenarios;
 
 public interface IScenarioEventObserver
 {

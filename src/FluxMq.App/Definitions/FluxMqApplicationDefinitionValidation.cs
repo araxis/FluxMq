@@ -1,5 +1,5 @@
 using FluxFlow.Engine.Definitions;
-using FluxMq.Pipeline.Scenarios;
+using FluxMq.Scenarios;
 using System.Text.Json;
 using EngineApplicationDefinitionValidationError = FluxFlow.Engine.Definitions.ApplicationDefinitionValidationError;
 using EngineApplicationDefinitionValidationErrorCode = FluxFlow.Engine.Definitions.ApplicationDefinitionValidationErrorCode;

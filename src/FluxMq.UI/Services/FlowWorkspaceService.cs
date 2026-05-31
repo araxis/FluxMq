@@ -12,7 +12,7 @@ using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Definitions;
 using FluxFlow.Engine.Runtime;
 using FluxMq.App.Definitions;
-using FluxMq.Pipeline.Scenarios;
+using FluxMq.Scenarios;
 using FluxMq.UI.Models;
 using System.Text;
 using System.Text.Json;

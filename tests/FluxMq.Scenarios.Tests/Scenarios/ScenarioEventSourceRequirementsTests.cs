@@ -1,7 +1,7 @@
-using FluxMq.Pipeline.Scenarios;
+using FluxMq.Scenarios;
 using Shouldly;
 
-namespace FluxMq.Pipeline.Tests.Scenarios;
+namespace FluxMq.Scenarios.Tests;
 
 public sealed class ScenarioEventSourceRequirementsTests
 {

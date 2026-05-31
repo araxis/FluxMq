@@ -1,6 +1,6 @@
 using FluxFlow.Engine.Components;
 
-namespace FluxMq.Pipeline.Scenarios;
+namespace FluxMq.Scenarios;
 
 internal static class FlowEventExpectationMessages
 {

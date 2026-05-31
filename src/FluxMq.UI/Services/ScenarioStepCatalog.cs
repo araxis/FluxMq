@@ -1,5 +1,5 @@
 using FluxFlow.Engine.Components;
-using FluxMq.Pipeline.Scenarios;
+using FluxMq.Scenarios;
 using FluxMq.UI.Models;
 using MudBlazor;
 

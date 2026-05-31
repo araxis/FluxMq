@@ -1,10 +1,10 @@
 using Shouldly;
 using FluxFlow.Engine.Components;
-using FluxMq.Pipeline.Scenarios;
+using FluxMq.Scenarios;
 using System.Text.Json;
 using System.Threading.Tasks.Dataflow;
 
-namespace FluxMq.Pipeline.Tests.Scenarios;
+namespace FluxMq.Scenarios.Tests;
 
 public sealed class ScenarioRunnerTests
 {

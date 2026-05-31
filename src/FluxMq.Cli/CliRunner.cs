@@ -4,7 +4,7 @@ using FluxMq.App.Scenarios;
 using FluxMq.Cli.Commands;
 using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Runtime;
-using FluxMq.Pipeline.Scenarios;
+using FluxMq.Scenarios;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;

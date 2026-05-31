@@ -6,7 +6,7 @@ using FluxMq.Core.Mqtt;
 using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Definitions;
 using FluxFlow.Engine.Runtime;
-using FluxMq.Pipeline.Scenarios;
+using FluxMq.Scenarios;
 using MQTTnet.Protocol;
 using Shouldly;
 using System.Text.Json;

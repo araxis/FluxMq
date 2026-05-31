@@ -1,9 +1,9 @@
 using FluxFlow.Engine.Components;
-using FluxMq.Pipeline.Scenarios;
+using FluxMq.Scenarios;
 using Shouldly;
 using System.Threading.Tasks.Dataflow;
 
-namespace FluxMq.Pipeline.Tests.Scenarios;
+namespace FluxMq.Scenarios.Tests;
 
 public sealed class ScenarioEventJournalTests
 {

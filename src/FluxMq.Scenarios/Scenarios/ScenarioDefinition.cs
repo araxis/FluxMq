@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace FluxMq.Pipeline.Scenarios;
+namespace FluxMq.Scenarios;
 
 public sealed record ScenarioDefinition
 {

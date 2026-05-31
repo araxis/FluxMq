@@ -1,7 +1,7 @@
 using FluxFlow.Engine.Components;
 using System.Text.Json;
 
-namespace FluxMq.Pipeline.Scenarios;
+namespace FluxMq.Scenarios;
 
 public sealed record FlowEventExpectation
 {

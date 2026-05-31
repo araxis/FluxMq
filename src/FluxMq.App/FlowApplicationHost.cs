@@ -5,7 +5,7 @@ using FluxFlow.Engine.Runtime;
 using FluxMq.App.Scenarios;
 using FluxMq.App.Definitions;
 using FluxMq.Components.Storage.Repositories;
-using FluxMq.Pipeline.Scenarios;
+using FluxMq.Scenarios;
 using Microsoft.Extensions.Configuration;
 
 namespace FluxMq.App;

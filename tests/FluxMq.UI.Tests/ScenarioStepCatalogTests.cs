@@ -1,5 +1,5 @@
 using FluxMq.App;
-using FluxMq.Pipeline.Scenarios;
+using FluxMq.Scenarios;
 using FluxMq.UI.Models;
 using FluxMq.UI.Services;
 using Shouldly;

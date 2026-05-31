@@ -1,7 +1,7 @@
 using Shouldly;
 using FluxFlow.Engine.Definitions;
 using FluxMq.App.Definitions;
-using FluxMq.Pipeline.Scenarios;
+using FluxMq.Scenarios;
 using System.Text.Json;
 
 namespace FluxMq.App.Tests.Definitions;

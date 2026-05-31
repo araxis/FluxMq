@@ -2,7 +2,7 @@ using FluxMq.Core.Models;
 using FluxMq.Core.Payloads;
 using FluxMq.Core.Mqtt;
 using FluxFlow.Engine.Components;
-using FluxMq.Pipeline.Scenarios;
+using FluxMq.Scenarios;
 using FluxMq.UI.Models;
 using FluxMq.UI.Services;
 using MQTTnet.Protocol;
