@@ -906,17 +906,6 @@ public static class RuntimeNodeFactoryRegistryExtensions
         throw new InvalidOperationException("Configuration value 'qos' must be 0, 1, 2, AtMostOnce, AtLeastOnce, or ExactlyOnce.");
     }
 
-    private static SessionId GetRequiredSessionId(NodeDefinition definition, string key)
-    {
-        var value = GetRequiredString(definition, key);
-        if (!Guid.TryParse(value, out var guid) || guid == Guid.Empty)
-        {
-            throw new InvalidOperationException($"Configuration value '{key}' must be a non-empty GUID.");
-        }
-
-        return new SessionId(guid);
-    }
-
     private static SessionId? GetOptionalSessionId(NodeDefinition definition, string key)
     {
         var value = GetNullableString(definition, key);

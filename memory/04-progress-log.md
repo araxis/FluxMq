@@ -1784,6 +1784,7 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Removed the `mapper` engine alias so saved mapper configuration uses the single `engine` key.
 - Removed the publish mapper shortcut that converted an envelope directly into a publish request outside an explicit mapper.
 - Updated definition validator tests so MQTT app nodes use normal workflow inputs rather than old resource-port examples.
+- Removed the unused required-session-id runtime helper left after the mapper cleanup.
 - Verified:
   - `dotnet test FluxMq.sln --no-restore /p:UseSharedCompilation=false /p:UseAppHost=false /p:BaseOutputPath="$env:TEMP\FluxMqMapperCleanFull6\" -m:1 -v minimal` passes with 511 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore /p:UseSharedCompilation=false /p:UseAppHost=false /p:BaseOutputPath="$env:TEMP\FluxMqValidatorShapePipeline\" -m:1 -v minimal` passes with 95 tests.
