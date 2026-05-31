@@ -51,7 +51,7 @@ Owns the MQTT client lifecycle as a shared resource.
 
 ### MqttTriggerComponent
 
-References a shared MQTT connection, subscribes to topic filters, and broadcasts matching `MqttEnvelope` values.
+References a shared MQTT connection, delegates subscription execution to the package MQTT subscribe node, and broadcasts matching `MqttEnvelope` values.
 
 ### TopicFilterComponent
 
@@ -77,7 +77,7 @@ Request-specific mapper component classes may exist as runtime implementation de
 
 ### MqttPublisherComponent
 
-Publishes `MqttPublishRequest` values through an MQTT client and reports publish failures through the error port.
+Delegates publish execution to the package MQTT publish node, publishes `MqttPublishRequest` values through an MQTT client, and reports publish failures through the error port.
 
 ### MqttRecorderComponent
 

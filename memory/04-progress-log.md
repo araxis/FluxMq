@@ -1997,3 +1997,19 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore --filter "FullyQualifiedName~RunAsync_ReturnsValidationErrorWhenCliScenario" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 2 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~RunActiveTestScenarioAsync_FailsFastWhenEventObserverHasNoEventSource" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 1 test.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 495 tests.
+
+## 2026-05-31 - MQTT component package migration
+
+- Added the `FluxFlow.Components.Mqtt` `0.1.0-alpha.1` package to `FluxMq.Components`.
+- Reworked `MqttPublisherComponent` to delegate publish execution to the package `mqtt.publish` node while preserving FluxMQ's existing `mqtt.publisher` input, log entry, event, and dashboard-facing state.
+- Reworked `MqttTriggerComponent` to delegate subscriptions to package `mqtt.subscribe` nodes while preserving FluxMQ's app-level connection resource, `MqttEnvelope` output, receive events, and retained-message options.
+- Added a small adapter from `IMqttBrokerClient` and shared connection streams into the package MQTT contracts, keeping app files and UI node names stable while moving the duplicated MQTT node execution logic out of FluxMQ.
+- Updated durable architecture/component docs to describe the package-backed MQTT component boundary.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore` passes with 115 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore` passes with 81 tests.
+  - `dotnet test tests\FluxMq.Scenarios.Tests\FluxMq.Scenarios.Tests.csproj --no-restore` passes with 35 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore` passes with 205 tests.
+  - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore` passes with 18 tests.
+  - `dotnet test tests\FluxMq.Core.Tests\FluxMq.Core.Tests.csproj --no-restore` passes with 41 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 495 tests.

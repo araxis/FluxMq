@@ -98,7 +98,7 @@ The stored-session mode requires the host to provide `IMessageRepository` when r
 
 ## MQTT Connection and Trigger
 
-`MqttConnectionComponent` owns the MQTT client lifecycle. `MqttTriggerComponent` references that shared connection, installs its own subscriptions, and emits matching `MqttEnvelope` values.
+`MqttConnectionComponent` owns the MQTT client lifecycle. `MqttTriggerComponent` references that shared connection, delegates subscription execution to the package MQTT subscribe node, and emits matching `MqttEnvelope` values.
 
 ### Behavior
 
@@ -107,8 +107,9 @@ flowchart LR
     Profile["Connection profile"] --> Connection["MqttConnectionComponent"]
     Connection --> Client["IMqttBrokerClient"]
     Client --> Broadcast["Shared message broadcast"]
-    Trigger["MqttTriggerComponent"] --> Subscribe["Subscribe topic filters"]
-    Broadcast --> Trigger
+    Trigger["MqttTriggerComponent"] --> Subscribe["Package mqtt.subscribe node"]
+    Broadcast --> Subscribe
+    Subscribe --> Trigger
     Trigger --> Out["Output: MqttEnvelope"]
     Connection --> ConnectionErrors["Errors: FlowError"]
     Trigger --> TriggerErrors["Errors: FlowError"]
@@ -449,14 +450,15 @@ Invalid payloads produce `JsonSchemaValidationResult` values with `IsValid = fal
 
 ## MQTT Publisher
 
-`MqttPublisherComponent` consumes `MqttPublishRequest` commands and publishes them through an active MQTT client.
+`MqttPublisherComponent` consumes `MqttPublishRequest` commands and delegates execution to the package MQTT publish node through an active MQTT client.
 
 ### Behavior
 
 ```mermaid
 flowchart LR
     In["Input: MqttPublishRequest"] --> Publisher["MqttPublisherComponent"]
-    Publisher --> Client["IMqttBrokerClient.PublishAsync"]
+    Publisher --> Package["Package mqtt.publish node"]
+    Package --> Client["IMqttBrokerClient.PublishAsync"]
     Publisher -->|publish failure| Errors["Errors: FlowError code 2000"]
 ```
 
