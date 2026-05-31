@@ -14,7 +14,12 @@ public sealed class ScenarioStepCatalogTests
         var catalog = new ScenarioStepCatalog();
 
         catalog.Steps.Select(step => step.Type)
-            .ShouldBe([ScenarioStepTypes.MqttPublisher, ScenarioStepTypes.MqttTrigger, ScenarioStepTypes.ExpectEvent]);
+            .ShouldBe([
+                ScenarioStepTypes.MqttPublisher,
+                ScenarioStepTypes.MqttTrigger,
+                ScenarioStepTypes.WhenEvent,
+                ScenarioStepTypes.ExpectEvent
+            ]);
 
         var publish = catalog.Find(ScenarioStepTypes.MqttPublisher).ShouldNotBeNull();
         publish.DisplayName.ShouldBe("MQTT publisher");
@@ -50,6 +55,13 @@ public sealed class ScenarioStepCatalogTests
             ScenarioStepCatalog.ReceiveRetainedKey,
             ScenarioStepCatalog.RetainAsPublishedKey
         ]);
+
+        var when = catalog.Find(ScenarioStepTypes.WhenEvent).ShouldNotBeNull();
+        when.DisplayName.ShouldBe("When event");
+        when.Category.ShouldBe("Condition");
+        when.NamePrefix.ShouldBe("whenEvent");
+        when.EditorKind.ShouldBe(ScenarioStepEditorKind.ExpectEvent);
+        when.Fields.ShouldBeEmpty();
 
         var expect = catalog.Find(ScenarioStepTypes.ExpectEvent).ShouldNotBeNull();
         expect.DisplayName.ShouldBe("Expect event");

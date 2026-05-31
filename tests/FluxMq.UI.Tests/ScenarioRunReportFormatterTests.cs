@@ -81,6 +81,7 @@ public sealed class ScenarioRunReportFormatterTests
         stepSummary.GetProperty("executed").GetInt32().ShouldBe(1);
         stepSummary.GetProperty("notRun").GetInt32().ShouldBe(0);
         stepSummary.GetProperty("passed").GetInt32().ShouldBe(1);
+        stepSummary.GetProperty("skipped").GetInt32().ShouldBe(0);
         stepSummary.GetProperty("failed").GetInt32().ShouldBe(0);
         stepSummary.GetProperty("timedOut").GetInt32().ShouldBe(0);
         stepSummary.GetProperty("canceled").GetInt32().ShouldBe(0);
@@ -206,6 +207,7 @@ public sealed class ScenarioRunReportFormatterTests
         stepSummary.GetProperty("notRun").GetInt32().ShouldBe(1);
         stepSummary.GetProperty("failed").GetInt32().ShouldBe(1);
         stepSummary.GetProperty("timedOut").GetInt32().ShouldBe(1);
+        stepSummary.GetProperty("skipped").GetInt32().ShouldBe(0);
         var plannedSteps = document.RootElement.GetProperty("plannedSteps");
         plannedSteps.GetArrayLength().ShouldBe(3);
         plannedSteps[0].GetProperty("sequence").GetInt32().ShouldBe(1);
@@ -237,5 +239,70 @@ public sealed class ScenarioRunReportFormatterTests
         var notRunConfiguration = notRunSteps[0].GetProperty("configuration");
         notRunConfiguration.GetProperty("payload").GetString().ShouldBe("""{"cleanup":true}""");
         notRunConfiguration.GetProperty("topic").GetString().ShouldBe("factory/cleanup");
+    }
+
+    [Fact]
+    public void Report_TreatsSkippedWhenStepAsSuccessfulGuard()
+    {
+        var started = DateTimeOffset.UtcNow;
+        var result = new ScenarioRunResult
+        {
+            Name = "conditional",
+            Status = ScenarioRunStatus.Passed,
+            StartedAt = started,
+            FinishedAt = started.AddMilliseconds(25),
+            Steps =
+            [
+                new ScenarioStepResult
+                {
+                    Name = "whenReady",
+                    Type = ScenarioStepTypes.WhenEvent,
+                    Status = ScenarioStepRunStatus.Skipped,
+                    StartedAt = started,
+                    FinishedAt = started.AddMilliseconds(25),
+                    Message = "When condition was not met within 20 ms. Remaining steps were skipped."
+                }
+            ]
+        };
+        var scenario = new TestScenarioSnapshot(
+            "conditional",
+            [
+                new ScenarioStepSnapshot(
+                    "whenReady",
+                    ScenarioStepTypes.WhenEvent,
+                    new Dictionary<string, string>
+                    {
+                        ["eventType"] = "mqtt.message.received",
+                        ["topicStartsWith"] = "factory/ready",
+                        ["timeoutMs"] = "20"
+                    }),
+                new ScenarioStepSnapshot(
+                    "expectPublish",
+                    ScenarioStepTypes.ExpectEvent,
+                    new Dictionary<string, string>
+                    {
+                        ["eventType"] = "mqtt.message.published",
+                        ["topicStartsWith"] = "factory/result"
+                    })
+            ]);
+
+        var json = ScenarioRunReportFormatter.ToJson(result, scenario);
+        using var document = JsonDocument.Parse(json);
+        var root = document.RootElement;
+
+        root.GetProperty("isSuccess").GetBoolean().ShouldBeTrue();
+        root.GetProperty("issues").GetArrayLength().ShouldBe(0);
+        root.GetProperty("firstIssue").ValueKind.ShouldBe(JsonValueKind.Null);
+        var summary = root.GetProperty("stepSummary");
+        summary.GetProperty("planned").GetInt32().ShouldBe(2);
+        summary.GetProperty("executed").GetInt32().ShouldBe(1);
+        summary.GetProperty("notRun").GetInt32().ShouldBe(1);
+        summary.GetProperty("skipped").GetInt32().ShouldBe(1);
+        root.GetProperty("notRunSteps")[0].GetProperty("stepName").GetString().ShouldBe("expectPublish");
+
+        var text = ScenarioRunReportFormatter.ToText(result, scenario);
+        text.ShouldContain("Steps: 2 planned, 1 run, 1 not run, 0 passed, 1 skipped.");
+        text.ShouldNotContain("First issue:");
+        text.ShouldNotContain("Issues:");
     }
 }

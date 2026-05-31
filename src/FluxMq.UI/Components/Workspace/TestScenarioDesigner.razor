@@ -461,7 +461,7 @@
             : FormatStepCount(summary.Executed);
 
     private static ScenarioStepResult? FirstIssue(ScenarioRunResult result)
-        => result.Steps.FirstOrDefault(step => step.Status != ScenarioStepRunStatus.Passed);
+        => result.Steps.FirstOrDefault(step => !IsSuccessfulStepStatus(step.Status));
 
     private static string FirstIssueText(ScenarioRunResult result)
         => FirstIssue(result) is { } issue
@@ -476,6 +476,9 @@
             ScenarioStepRunStatus.Canceled => Color.Warning,
             _ => Color.Default
         };
+
+    private static bool IsSuccessfulStepStatus(ScenarioStepRunStatus status)
+        => status is ScenarioStepRunStatus.Passed or ScenarioStepRunStatus.Skipped;
 
     private static string? FormatQos(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : $"QoS {value}";

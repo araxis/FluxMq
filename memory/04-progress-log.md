@@ -1671,3 +1671,16 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verified:
   - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore --filter "FullyQualifiedName~CliRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioCliRunnerOwnedEvents\ -m:1` passes with 14 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioCliRunnerOwnedEventsFull\ -m:1` passes with 480 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - Scenario when event condition step
+
+- Added `when.event` as the first narrow test-specific condition step.
+- `when.event` reuses the same `FlowEventExpectation` filters as `expect.event` and the same MudBlazor event-filter editor path in the test designer.
+- When the configured event matches, the step passes and the scenario continues. When it does not match before timeout, the step is marked `Skipped`, the remaining flat scenario steps are not executed, and the overall run remains successful.
+- Extracted shared event expectation reading and timeout/observation messages so `expect.event` and `when.event` stay aligned.
+- Scenario reports now count skipped steps separately and do not treat skipped `when.event` guards as issues.
+- Validation, app runner registration, the test-step catalog, and alignment guard tests now include `when.event`.
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqWhenEventPipeline2\ -m:1` passes with 17 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioRunReportFormatterTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqWhenEventUi\ -m:1` passes with 9 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqWhenEventFull\ -m:1` passes with 483 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

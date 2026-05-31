@@ -75,6 +75,7 @@ public sealed class FlowApplicationHost(
     public static ScenarioStepRunnerRegistry CreateDefaultScenarioStepRunnerRegistry()
         => new ScenarioStepRunnerRegistry()
             .Register(new ExpectEventScenarioStepRunner())
+            .Register(new WhenEventScenarioStepRunner())
             .Register(new MqttPublishScenarioStepRunner())
             .Register(new MqttTriggerScenarioStepRunner());
 

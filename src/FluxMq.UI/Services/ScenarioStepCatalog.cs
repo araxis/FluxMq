@@ -67,6 +67,15 @@ public sealed class ScenarioStepCatalog
                 new(RetainAsPublishedKey, "Retain as published", ScenarioStepFieldKind.CheckBox, "true", [])
             ]),
         new(
+            ScenarioStepTypes.WhenEvent,
+            "When event",
+            "Condition",
+            "Continue only when a runtime event matches configured filters.",
+            Icons.Material.Filled.AltRoute,
+            "whenEvent",
+            ScenarioStepEditorKind.ExpectEvent,
+            []),
+        new(
             ScenarioStepTypes.ExpectEvent,
             "Expect event",
             "Expectation",

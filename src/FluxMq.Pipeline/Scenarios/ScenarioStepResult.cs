@@ -14,5 +14,5 @@ public sealed record ScenarioStepResult
     public int? MatchedEventIndex { get; init; }
     public int NextEventOffset { get; init; }
 
-    public bool IsSuccess => Status == ScenarioStepRunStatus.Passed;
+    public bool IsSuccess => Status is ScenarioStepRunStatus.Passed or ScenarioStepRunStatus.Skipped;
 }

@@ -64,6 +64,11 @@ public sealed class ScenarioRunner(ScenarioStepRunnerRegistry registry)
             {
                 break;
             }
+
+            if (result.Status == ScenarioStepRunStatus.Skipped)
+            {
+                break;
+            }
         }
 
         if (await DisposeLifetimeAsync(lifetime, eventOffset).ConfigureAwait(false) is { } cleanupResult)

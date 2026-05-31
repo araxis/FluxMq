@@ -21,6 +21,7 @@ internal static class ScenarioStepDefinitionValidator
             case ScenarioStepTypes.MqttTrigger:
                 ValidateMqttTriggerStep(scenarioName, stepName, step.Configuration, definition, errors);
                 break;
+            case ScenarioStepTypes.WhenEvent:
             case ScenarioStepTypes.ExpectEvent:
                 ValidateExpectEventStep(scenarioName, stepName, step.Configuration, errors);
                 break;

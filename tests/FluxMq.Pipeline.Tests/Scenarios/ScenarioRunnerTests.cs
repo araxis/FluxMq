@@ -286,6 +286,71 @@ public sealed class ScenarioRunnerTests
     }
 
     [Fact]
+    public async Task RunAsync_ContinuesAfterWhenEventMatches()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        var scenario = new ScenarioDefinition
+        {
+            Steps =
+            {
+                ["whenReady"] = WhenEvent(
+                    ("eventType", FlowEventTypes.MqttMessageReceived),
+                    ("topicStartsWith", "factory/ready"),
+                    ("timeoutMs", 1000)),
+                ["expectPublish"] = ExpectEvent(
+                    ("eventType", FlowEventTypes.MqttMessagePublished),
+                    ("topicStartsWith", "factory/result"),
+                    ("timeoutMs", 1000))
+            }
+        };
+
+        var runTask = CreateRunner().RunAsync("conditional", scenario, events);
+        events.Post(Event(FlowEventTypes.MqttMessageReceived, topic: "factory/ready"));
+        events.Post(Event(FlowEventTypes.MqttMessagePublished, topic: "factory/result"));
+
+        var result = await runTask.WaitAsync(TimeSpan.FromSeconds(2));
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Steps.Count.ShouldBe(2);
+        result.Steps[0].Status.ShouldBe(ScenarioStepRunStatus.Passed);
+        result.Steps[1].Status.ShouldBe(ScenarioStepRunStatus.Passed);
+    }
+
+    [Fact]
+    public async Task RunAsync_SkipsRemainingStepsWhenWhenEventDoesNotMatch()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        var scenario = new ScenarioDefinition
+        {
+            Steps =
+            {
+                ["whenReady"] = WhenEvent(
+                    ("eventType", FlowEventTypes.MqttMessageReceived),
+                    ("topicStartsWith", "factory/ready"),
+                    ("timeoutMs", 20)),
+                ["expectPublish"] = ExpectEvent(
+                    ("eventType", FlowEventTypes.MqttMessagePublished),
+                    ("topicStartsWith", "factory/result"),
+                    ("timeoutMs", 1000))
+            }
+        };
+
+        var runTask = CreateRunner()
+            .RunAsync("conditional", scenario, events);
+        events.Post(Event(FlowEventTypes.MqttMessageReceived, topic: "factory/other"));
+
+        var result = await runTask
+            .WaitAsync(TimeSpan.FromSeconds(2));
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Status.ShouldBe(ScenarioRunStatus.Passed);
+        var step = result.Steps.ShouldHaveSingleItem();
+        step.Status.ShouldBe(ScenarioStepRunStatus.Skipped);
+        step.Message.ShouldNotBeNull().ShouldContain("Remaining steps were skipped.");
+        step.Message.ShouldContain("Observed while waiting: mqtt.message.received");
+    }
+
+    [Fact]
     public async Task RunAsync_DoesNotSkipUnmatchedEventsRecordedBeforePreviousMatch()
     {
         var events = new BufferBlock<FlowEvent>();
@@ -474,6 +539,12 @@ public sealed class ScenarioRunnerTests
         => new(ScenarioStepRunnerRegistry.CreateEventExpectationOnly());
 
     private static ScenarioStepDefinition ExpectEvent(params (string Key, object Value)[] values)
+        => EventStep(ExpectEventScenarioStepRunner.StepType, values);
+
+    private static ScenarioStepDefinition WhenEvent(params (string Key, object Value)[] values)
+        => EventStep(WhenEventScenarioStepRunner.StepType, values);
+
+    private static ScenarioStepDefinition EventStep(string stepType, params (string Key, object Value)[] values)
     {
         var configuration = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
         foreach (var (key, value) in values)
@@ -483,7 +554,7 @@ public sealed class ScenarioRunnerTests
 
         return new ScenarioStepDefinition
         {
-            Type = ExpectEventScenarioStepRunner.StepType,
+            Type = stepType,
             Configuration = configuration
         };
     }

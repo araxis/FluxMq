@@ -1,4 +1,5 @@
 using FluxMq.Pipeline.Components;
+using System.Text.Json;
 
 namespace FluxMq.Pipeline.Scenarios;
 
@@ -13,6 +14,24 @@ public sealed record FlowEventExpectation
     public IReadOnlyDictionary<string, string> Attributes { get; init; } =
         new Dictionary<string, string>(StringComparer.Ordinal);
     public TimeSpan Timeout { get; init; } = TimeSpan.FromSeconds(5);
+
+    public static FlowEventExpectation FromConfiguration(
+        IReadOnlyDictionary<string, JsonElement> configuration)
+        => new()
+        {
+            EventType = ScenarioStepConfigurationReader.ReadString(configuration, ScenarioStepConfigurationKeys.EventType),
+            TopicStartsWith = ScenarioStepConfigurationReader.ReadString(configuration, ScenarioStepConfigurationKeys.TopicStartsWith),
+            SubjectStartsWith = ScenarioStepConfigurationReader.ReadString(configuration, ScenarioStepConfigurationKeys.SubjectStartsWith),
+            Status = ScenarioStepConfigurationReader.ReadString(configuration, ScenarioStepConfigurationKeys.Status),
+            Source = ScenarioStepConfigurationReader.ReadString(configuration, ScenarioStepConfigurationKeys.Source),
+            PayloadContains = ScenarioStepConfigurationReader.ReadString(configuration, ScenarioStepConfigurationKeys.PayloadContains),
+            Attributes = ScenarioStepConfigurationReader.ReadStringMap(configuration, ScenarioStepConfigurationKeys.Attributes),
+            Timeout = TimeSpan.FromMilliseconds(ScenarioStepConfigurationReader.ReadIntOrDefault(
+                configuration,
+                ScenarioStepConfigurationKeys.TimeoutMs,
+                5000,
+                1))
+        };
 
     public bool Matches(FlowEvent flowEvent)
     {
