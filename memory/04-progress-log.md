@@ -1879,3 +1879,10 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Removed stale local build-output folders for the retired pipeline/replay/storage test projects.
 - Updated README and docs to describe the current package-backed runtime boundary, FluxMQ-owned app document shape, scenario project, and active solution layout.
 - Replaced stale MQTT client and local pipeline references in documentation with the current `IMqttBrokerClient`, `FluxFlow.Engine`, and `FluxMq.Scenarios` names.
+
+## 2026-05-31 - CI runtime event projection wait
+
+- Tightened the mapped-publisher scenario UI test to wait for the asynchronous runtime event projection before asserting the runtime event list.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --configuration Release --no-restore --filter "FullyQualifiedName~RunActiveTestScenarioAsync_CanObserveMappedPublisherEventFromAppFlow" -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 1 test.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --configuration Release --no-restore -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 199 tests.

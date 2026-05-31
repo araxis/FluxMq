@@ -1132,6 +1132,10 @@ public sealed class FlowWorkspaceServiceTests
         var result = (await service.RunActiveTestScenarioAsync()).ShouldNotBeNull();
 
         result.IsSuccess.ShouldBeTrue(CreateScenarioFailureDetails(result, service.Logs));
+        await WaitUntilAsync(() => service.RuntimeEvents.Any(flowEvent =>
+            flowEvent.Type == FluxMqEventTypes.MqttMessagePublished &&
+            flowEvent.Channel == "test" &&
+            flowEvent.PayloadPreview == """{"value":12,"unit":"c","status":"ok"}"""));
         service.RuntimeEvents.ShouldContain(flowEvent =>
             flowEvent.Type == FluxMqEventTypes.MqttMessagePublished &&
             flowEvent.Channel == "test" &&
