@@ -1886,3 +1886,11 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verified:
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --configuration Release --no-restore --filter "FullyQualifiedName~RunActiveTestScenarioAsync_CanObserveMappedPublisherEventFromAppFlow" -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 1 test.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --configuration Release --no-restore -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 199 tests.
+
+## 2026-05-31 - Engine package 0.5 update
+
+- Upgraded `FluxFlow.Engine` references in app, component, and scenario projects to `0.5.0-alpha.1`.
+- Verified:
+  - `dotnet build FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes.
+  - `dotnet test FluxMq.sln --no-build -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 479 tests.
+  - `dotnet test FluxMq.sln --configuration Release --no-restore --verbosity minimal -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passes with 479 tests.
