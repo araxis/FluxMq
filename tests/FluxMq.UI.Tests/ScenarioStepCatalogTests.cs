@@ -63,6 +63,12 @@ public sealed class ScenarioStepCatalogTests
         when.NamePrefix.ShouldBe("whenEvent");
         when.EditorKind.ShouldBe(ScenarioStepEditorKind.ExpectEvent);
         when.Fields.Select(field => field.Key).ShouldBe(EventStepFieldKeys);
+        when.Fields.First(field => field.Key == ScenarioStepCatalog.QosAttributeKey)
+            .Options.Select(option => option.Value)
+            .ShouldBe(["", "0", "1", "2"]);
+        when.Fields.First(field => field.Key == ScenarioStepCatalog.RetainAttributeKey)
+            .Options.Select(option => option.Value)
+            .ShouldBe(["", "true", "false"]);
 
         var expect = catalog.Find(ScenarioStepTypes.ExpectEvent).ShouldNotBeNull();
         expect.DisplayName.ShouldBe("Expect event");

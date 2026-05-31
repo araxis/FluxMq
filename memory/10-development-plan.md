@@ -639,3 +639,5 @@ Review the conditional-link designer editor slice:
 4. Do: run the UI tests for this slice. Expected: focused composer tests pass with 73 tests, and the UI test project passes with 204 tests.
 
 Next implementation slice: continue scenario/test composition around normal components plus narrow test-specific `expect.event`/`when.event` blocks. Prefer catalog/runner/shared-service changes over adding one-off logic inside Razor components.
+
+Latest slice: the scenario step editor now uses `ScenarioStepCatalog` as the source for finite option lists instead of local Razor fallbacks. Keep moving descriptor defaults, options, summaries, and validation into shared catalog/services so test-step UI can stay thin and portable.
