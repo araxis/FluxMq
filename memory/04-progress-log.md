@@ -1227,10 +1227,10 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 ## 2026-05-26 - Scenario expectation timeout diagnostics slice
 
 - Clarified scenario expectation timeout messages:
-  - timed-out `expect.event` steps now say whether any app runtime events were observed while the step was waiting
+  - timed-out `expect.event` steps now say whether any scenario/app events were observed while the step was waiting
   - observed non-matching events are summarized by type, topic, status, source, and payload preview
-  - `mqtt.message.published` expectations now explicitly say that the matching event must be emitted by a running app MQTT publisher node
-  - timeout text now reminds users that finished runs do not keep listening and must be rerun to match later events
+  - `mqtt.message.published` expectations now explicitly say that the matching event can come from a scenario `mqtt.publisher` event or a running app MQTT publisher node event
+  - timeout text now reminds users that finished scenario runs do not keep listening and must be rerun to match later events
   - no CSS was added or changed
 - Verified:
   - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqVerifyScenarioExpectationDiagnosticsFocused2\ -m:1 --filter "FullyQualifiedName~ScenarioRunnerTests"` passes with 7 tests.
@@ -1711,3 +1711,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore --filter "FullyQualifiedName~CliRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqWhenSkipCli\ -m:1` passes with 18 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowWorkspaceServiceTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqWhenSkipUi\ -m:1` passes with 53 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqWhenSkipFull\ -m:1` passes with 498 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - Scenario timeout wording follows runner-owned events
+
+- Updated event expectation timeout wording after the runner-owned MQTT source refactor.
+- Timeout diagnostics now describe observed scenario/app events generically instead of assuming every observed event came from the app runtime.
+- `mqtt.message.published` timeout guidance now names both valid sources: a scenario `mqtt.publisher` event or a running app MQTT publisher node event.
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqExpectationMessagePipeline\ -m:1` passes with 17 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqExpectationMessageFull\ -m:1` passes with 499 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

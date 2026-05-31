@@ -9,11 +9,11 @@ internal static class FlowEventExpectationMessages
         IReadOnlyList<FlowEvent> observedEvents)
     {
         var guidance =
-            "Finished runs do not keep listening; rerun the test and produce a matching app runtime event before the timeout.";
+            "Finished scenario runs do not keep listening; rerun the test and produce a matching event before the timeout.";
 
         if (string.Equals(expectation.EventType, FlowEventTypes.MqttMessagePublished, StringComparison.Ordinal))
         {
-            guidance += " A mqtt.message.published expectation must be emitted by a running app MQTT publisher node.";
+            guidance += " A mqtt.message.published expectation must match a scenario mqtt.publisher event or a running app MQTT publisher node event.";
         }
 
         return $"Expected event was not observed within {expectation.Timeout.TotalMilliseconds:0} ms ({DescribeCriteria(expectation)}). {DescribeObservedEvents(observedEvents)} {guidance}";
@@ -46,7 +46,7 @@ internal static class FlowEventExpectationMessages
 
     private static string DescribeObservedEvents(IReadOnlyList<FlowEvent> observedEvents)
         => observedEvents.Count == 0
-            ? "Observed 0 app runtime events while waiting."
+            ? "Observed 0 events while waiting."
             : $"Observed while waiting: {string.Join("; ", observedEvents.Select(DescribeObservedEvent))}.";
 
     private static string DescribeObservedEvent(FlowEvent flowEvent)

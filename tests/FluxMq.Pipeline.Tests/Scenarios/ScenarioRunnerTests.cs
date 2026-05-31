@@ -158,7 +158,7 @@ public sealed class ScenarioRunnerTests
         step.Status.ShouldBe(ScenarioStepRunStatus.TimedOut);
         var message = step.Message.ShouldNotBeNull();
         message.ShouldContain("Expected event was not observed");
-        message.ShouldContain("Observed 0 app runtime events while waiting.");
+        message.ShouldContain("Observed 0 events while waiting.");
     }
 
     [Fact]
@@ -218,7 +218,7 @@ public sealed class ScenarioRunnerTests
         result.Status.ShouldBe(ScenarioRunStatus.Failed);
         var step = result.Steps.ShouldHaveSingleItem();
         step.Status.ShouldBe(ScenarioStepRunStatus.TimedOut);
-        step.Message.ShouldNotBeNull().ShouldContain("Observed 0 app runtime events while waiting.");
+        step.Message.ShouldNotBeNull().ShouldContain("Observed 0 events while waiting.");
     }
 
     [Fact]
@@ -254,7 +254,7 @@ public sealed class ScenarioRunnerTests
         message.ShouldContain("Observed while waiting: mqtt.message.received");
         message.ShouldContain("topic 'fluxmq/sample'");
         message.ShouldContain("payload '1'");
-        message.ShouldContain("A mqtt.message.published expectation must be emitted by a running app MQTT publisher node.");
+        message.ShouldContain("A mqtt.message.published expectation must match a scenario mqtt.publisher event or a running app MQTT publisher node event.");
     }
 
     [Fact]
