@@ -35,9 +35,10 @@ public sealed class ScenarioRunner(ScenarioStepRunnerRegistry registry)
         var results = new List<ScenarioStepResult>();
         var eventOffset = 0;
         var consumedEventIndexes = new HashSet<int>();
+        services.TryGet<IScenarioEventObserver>(out var eventObserver);
 
         var lifetime = new ScenarioRunLifetime();
-        using var journal = new ScenarioEventJournal(events, startedAt);
+        using var journal = new ScenarioEventJournal(events, startedAt, eventObserver);
 
         foreach (var step in scenario.Steps)
         {

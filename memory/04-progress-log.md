@@ -1722,3 +1722,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqExpectationMessagePipeline\ -m:1` passes with 17 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioCatalogTextUi\ -m:1` passes with 6 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqExpectationMessageFull\ -m:1` passes with 499 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - Scenario-owned events mirror to scoped logs
+
+- Added a small scenario event observer hook so runner-owned events appended directly into the scenario journal can also be observed by the desktop workspace.
+- Source/app events that arrive through the scenario event stream still stay on the existing app runtime event path; only runner-owned events notify the scenario observer.
+- Desktop test runs now mirror runner-owned MQTT events into Logs with `Test runner` scope and `Test` artifact metadata, without adding those events to the app/dashboard runtime event stream.
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioEventJournalTests|FullyQualifiedName~ScenarioRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioEventObserverPipeline\ -m:1` passes with 18 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowWorkspaceServiceTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioEventObserverUi\ -m:1` passes with 53 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioEventObserverFull\ -m:1` passes with 500 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

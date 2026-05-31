@@ -598,6 +598,18 @@ public sealed class FlowWorkspaceServiceTests
         Encoding.UTF8.GetString(publish.Payload).ShouldBe("""{"value":12}""");
         publish.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtLeastOnce);
         publish.Retain.ShouldBeFalse();
+        service.Logs.ShouldContain(log =>
+            log.Source == "MqttPublisher" &&
+            log.Code == FlowEventTypes.MqttMessagePublished &&
+            log.Scope == WorkspaceLogScopes.TestRunner &&
+            log.ArtifactKind == WorkspaceLogArtifactKinds.Test &&
+            log.ArtifactName == "publishOnly" &&
+            log.Context != null &&
+            log.Context.Contains("topic=fluxmq/sample/request", StringComparison.Ordinal) &&
+            log.Context.Contains("status=published", StringComparison.Ordinal) &&
+            log.Context.Contains("qos=1", StringComparison.Ordinal) &&
+            log.Context.Contains("retain=False", StringComparison.Ordinal) &&
+            log.Context.Contains("""payload={"value":12}""", StringComparison.Ordinal));
     }
 
     [Fact]

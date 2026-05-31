@@ -8,18 +8,23 @@ public sealed class ScenarioEventJournal : IDisposable
     private readonly object _gate = new();
     private readonly List<FlowEvent> _events = [];
     private readonly DateTimeOffset? _minimumTimestamp;
+    private readonly IScenarioEventObserver? _runnerOwnedEventObserver;
     private readonly ActionBlock<FlowEvent> _target;
     private readonly IDisposable _link;
     private TaskCompletionSource _changed = NewChangeSource();
     private bool _completed;
     private bool _disposed;
 
-    public ScenarioEventJournal(ISourceBlock<FlowEvent> source, DateTimeOffset? minimumTimestamp = null)
+    public ScenarioEventJournal(
+        ISourceBlock<FlowEvent> source,
+        DateTimeOffset? minimumTimestamp = null,
+        IScenarioEventObserver? runnerOwnedEventObserver = null)
     {
         ArgumentNullException.ThrowIfNull(source);
 
         _minimumTimestamp = minimumTimestamp;
-        _target = new ActionBlock<FlowEvent>(Append);
+        _runnerOwnedEventObserver = runnerOwnedEventObserver;
+        _target = new ActionBlock<FlowEvent>(AppendFromSource);
         _link = source.LinkTo(_target, new DataflowLinkOptions { PropagateCompletion = true });
         _ = _target.Completion.ContinueWith(
             _ => Complete(),
@@ -69,12 +74,23 @@ public sealed class ScenarioEventJournal : IDisposable
 
     public void Append(FlowEvent flowEvent)
     {
+        if (AppendCore(flowEvent))
+        {
+            _runnerOwnedEventObserver?.Observe(flowEvent);
+        }
+    }
+
+    private void AppendFromSource(FlowEvent flowEvent)
+        => AppendCore(flowEvent);
+
+    private bool AppendCore(FlowEvent flowEvent)
+    {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
         if (_minimumTimestamp is { } minimumTimestamp &&
             flowEvent.Timestamp < minimumTimestamp)
         {
-            return;
+            return false;
         }
 
         TaskCompletionSource changed;
@@ -82,7 +98,7 @@ public sealed class ScenarioEventJournal : IDisposable
         {
             if (_completed)
             {
-                return;
+                return false;
             }
 
             _events.Add(flowEvent);
@@ -91,6 +107,7 @@ public sealed class ScenarioEventJournal : IDisposable
         }
 
         changed.TrySetResult();
+        return true;
     }
 
     public async Task<ScenarioEventMatch?> WaitForMatchAsync(

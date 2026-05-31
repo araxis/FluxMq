@@ -1318,7 +1318,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
                     ScenarioEventSourceRequirements.DescribeMissingEventStream(scenarioName));
             }
 
-            var services = CreateScenarioStepServices(definition);
+            var services = CreateScenarioStepServices(definition, scenarioName);
             ScenarioRunResult result;
             try
             {
@@ -1382,18 +1382,23 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         return emptyEvents;
     }
 
-    private ScenarioStepServices CreateScenarioStepServices(ApplicationDefinition definition)
+    private ScenarioStepServices CreateScenarioStepServices(ApplicationDefinition definition, string scenarioName)
     {
+        var scenarioEventObserver = new WorkspaceScenarioEventObserver(
+            flowEvent => AppendLog(ToScenarioWorkspaceLogEntry(flowEvent, scenarioName)));
+
         if (_host?.Runtime is { } runtime && State == RuntimeWorkspaceState.Running)
         {
             var runtimeClientFactory = new RuntimeMqttScenarioClientFactory(runtime, _runtimeClientFactory);
             return ScenarioStepServices.Empty
-                .Add<IMqttScenarioClientFactory>(runtimeClientFactory);
+                .Add<IMqttScenarioClientFactory>(runtimeClientFactory)
+                .Add<IScenarioEventObserver>(scenarioEventObserver);
         }
 
         var definitionClientFactory = new ApplicationDefinitionMqttScenarioClientFactory(definition, _runtimeClientFactory);
         return ScenarioStepServices.Empty
-            .Add<IMqttScenarioClientFactory>(definitionClientFactory);
+            .Add<IMqttScenarioClientFactory>(definitionClientFactory)
+            .Add<IScenarioEventObserver>(scenarioEventObserver);
     }
 
     public async Task StopAsync(CancellationToken cancellationToken = default)
@@ -1952,6 +1957,21 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             address is null ? null : WorkspaceLogArtifactKinds.Pipeline,
             address?.Scope);
 
+    private static WorkspaceLogEntry ToScenarioWorkspaceLogEntry(FlowEvent flowEvent, string scenarioName)
+        => new(
+            flowEvent.Timestamp,
+            "Info",
+            string.IsNullOrWhiteSpace(flowEvent.Source) ? "ScenarioEvent" : flowEvent.Source,
+            flowEvent.Type,
+            BuildScenarioEventMessage(flowEvent),
+            null,
+            null,
+            null,
+            BuildRuntimeEventContext(flowEvent),
+            WorkspaceLogScopes.TestRunner,
+            WorkspaceLogArtifactKinds.Test,
+            scenarioName);
+
     private static string BuildRuntimeEventMessage(FlowEvent flowEvent)
     {
         var target = !string.IsNullOrWhiteSpace(flowEvent.Topic)
@@ -1961,6 +1981,17 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         return string.IsNullOrWhiteSpace(target)
             ? $"Observed runtime event '{flowEvent.Type}'."
             : $"Observed runtime event '{flowEvent.Type}' for '{target}'.";
+    }
+
+    private static string BuildScenarioEventMessage(FlowEvent flowEvent)
+    {
+        var target = !string.IsNullOrWhiteSpace(flowEvent.Topic)
+            ? flowEvent.Topic
+            : flowEvent.Subject;
+
+        return string.IsNullOrWhiteSpace(target)
+            ? $"Observed scenario event '{flowEvent.Type}'."
+            : $"Observed scenario event '{flowEvent.Type}' for '{target}'.";
     }
 
     private static string? BuildRuntimeLogContext(FlowLogEntry entry)
@@ -2204,4 +2235,10 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
     private bool MatchesDashboardEventWidget(DashboardWidgetSnapshot widget, FlowEvent flowEvent)
         => _dashboardEventFilters.Matches(widget, flowEvent);
+
+    private sealed class WorkspaceScenarioEventObserver(Action<FlowEvent> observe) : IScenarioEventObserver
+    {
+        public void Observe(FlowEvent flowEvent)
+            => observe(flowEvent);
+    }
 }
