@@ -1852,3 +1852,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Kept a small scenario-owned event type catalog for scenario definitions that still live in the pipeline project.
 - Verified:
   - `dotnet test FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 515 tests.
+
+## 2026-05-31 - Engine package runtime cleanup
+
+- Moved FluxMQ workspace validation into `FluxMq.App`, keeping dashboards and tests as app-owned artifacts while projecting only resources and workflows into the package engine definition.
+- Replaced the local pipeline runtime/definition copy with the `FluxFlow.Engine` package runtime and definition contracts across app, CLI, UI, components, and tests.
+- Moved scenario/test primitives into the dedicated `FluxMq.Scenarios` project so tests stay outside the engine package and outside production workflow runtime contracts.
+- Removed the unused local `MqttPipeline` prototype and stale scaffold test after confirming nothing outside its own tests referenced it.
+- Preserved app workspace JSON and validation coverage under `FluxMq.App.Tests`; removed local engine-level tests now owned by the package project.
+- Net cleanup from the runtime-copy removal and prototype cleanup removed 3,881 lines before the scenario-project rename.
+- Verified:
+  - `dotnet build FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 478 tests.

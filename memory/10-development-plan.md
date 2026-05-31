@@ -61,7 +61,7 @@ Future object-stream architecture note: dynamic mappers make it hard to keep eve
 The current artifact navigation slice moves app structure controls into first-level top-bar menus for connections, pipelines, dashboards, and tests. The left side now stays focused on the active artifact tool panel, so pipeline components, future dashboard widgets, and future test steps can each have their own panel without an always-open app tree taking workspace width.
 The current dashboard layout designer slice turns dashboard tabs from placeholders into a real layout editor. The UI reads and writes the dashboard JSON model, renders a full-size grid surface, and can add/remove dashboard cells while keeping widgets separate for a later monitoring-block slice. The grid interaction is inspired by the OpenGarden surface editor: users can choose a row/column layout from a picker, add/remove rows and columns, select cells, merge rectangular selections, split merged cells, and subdivide a selected cell into rows, columns, or a 2 x 2 region. Row and column handles are now the track editors: clicking a handle opens a sizing dialog for fixed, percent, or star sizing plus per-track padding; the old raw row/column text fields are gone.
 The current scenario expectation foundation slice starts the test/scenario plane below the UI. `ScenarioRunner` executes registered scenario step runners against the external `FlowEvent` stream, and `expect.event` waits for matching runtime events using event type, topic prefix, subject prefix, status, source, payload preview, and attribute filters. Runtime events now broadcast to multiple observers, so dashboards and scenarios can observe the same app run without stealing events from each other.
-The current scenario host slice wires test/scenario execution into `FlowApplicationHost`. The host keeps the loaded app definition, can run a named scenario via `RunScenarioAsync`, starts the runtime when needed, and feeds the scenario runner from `ApplicationRuntime.Events`. This creates the boundary future desktop and CLI test runners should call instead of reaching into pipeline internals.
+The current scenario host slice wires test/scenario execution into `FlowApplicationHost`. The host keeps the loaded app definition, can run a named scenario via `RunScenarioAsync`, starts the runtime when needed, and feeds the scenario runner from `ApplicationRuntime.Events`. This creates the boundary future desktop and CLI test runners should call instead of reaching into runtime internals.
 The current scenario action slice adds a generic `ScenarioStepServices` boundary and the first app-level action step, `mqtt.publisher`. Scenario steps can now ask for runtime capabilities through typed services, and the publish step resolves a named MQTT connection resource from the running app and publishes a configured message without inserting test behavior into workflow nodes.
 Testing-era boundary: tests/scenarios are a separate plane from app design/run pipelines. Their extra value is integration testing: a test can start or use an app runtime, run arrange/action steps against real or fake resources, observe runtime events, and assert behavior across MQTT, files, HTTP, databases, and future transports. This means we should support different test scenarios and, when needed, test-only orchestration pipelines without polluting production workflow components.
 The current CLI scenario runner slice makes tests/scenarios executable outside the desktop UI. `fluxmq scenario --config <path> --name <scenario>` loads the app, starts the host through `RunScenarioAsync`, and returns text or JSON results with per-step status. This is the first command-line entry point for integration-test workflows.
@@ -582,7 +582,7 @@ Done when:
   - the UI no longer exposes a dangling graph `Connection` input port for that node
 - Added a designer catalog/runtime guard test so catalog components cannot silently drift away from registered runtime factories again.
 - Added a scenario step catalog/app-runner guard so test designer palette steps cannot silently drift away from executable scenario runners.
-- Made scenario runner registries explicit: pipeline tests use the event-expectation-only registry, while app/UI/CLI paths use the app default runner registry with both `expect.event` and `mqtt.publisher`.
+- Made scenario runner registries explicit: scenario tests use the event-expectation-only registry, while app/UI/CLI paths use the app default runner registry with both `expect.event` and `mqtt.publisher`.
 - Added scenario step type validation so saved test definitions with unknown step types fail validation before scenario execution.
 - Extended scenario step alignment guards so validation, app runners, and the UI palette must agree on supported step types.
 - Added scenario-owned `mqtt.trigger`:
@@ -617,7 +617,9 @@ Done when:
   - scenario setup failures in the desktop test runner stay scoped to scenario diagnostics/logs and no longer mark the app runtime state as faulted
   - skipped `when.event` guards remain successful, are shown as skipped, and stop later flat scenario steps in both CLI and desktop test paths
   - running against an explicitly started app runtime still lets event-observing steps watch app runtime events
-  - pipeline tests cover the helper directly so CLI/UI callers share one rule
+  - scenario tests cover the helper directly so CLI/UI callers share one rule
+
+The engine package migration has removed FluxMQ's local workflow runtime and definition copies. `FluxMq.App` now owns workspace validation and projects executable resources/workflows into `FluxFlow.Engine`; `FluxMq.Scenarios` owns the test/scenario runner primitives; normal runtime components stay in `FluxMq.Components`.
 
 ## Next Action
 
@@ -634,4 +636,4 @@ Review the scenario event-step field catalog slice:
 2. Do: edit either step and change event type, topic prefix, status, payload contains, QoS, retain, schema id, and timeout. Expected: the same MudBlazor editor opens as before, values round-trip into the scenario JSON, and unsupported event-specific filter fields are cleared when the event type changes.
 3. Do: run the UI tests for this slice. Expected: focused scenario catalog/composer tests pass with 76 tests, and the UI test project passes with 199 tests.
 
-Next implementation slice: keep tightening scenario/test composition around normal components plus narrow test-specific `expect.event`/`when.event` blocks. Prefer catalog/runner/shared-service changes over adding one-off logic inside Razor components.
+Next implementation slice: finish the package-migration cleanup and review pass, then return to scenario/test composition around normal components plus narrow test-specific `expect.event`/`when.event` blocks. Prefer catalog/runner/shared-service changes over adding one-off logic inside Razor components.
