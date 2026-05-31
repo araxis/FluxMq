@@ -1788,3 +1788,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verified:
   - `dotnet test FluxMq.sln --no-restore /p:UseSharedCompilation=false /p:UseAppHost=false /p:BaseOutputPath="$env:TEMP\FluxMqMapperCleanFull6\" -m:1 -v minimal` passes with 511 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore /p:UseSharedCompilation=false /p:UseAppHost=false /p:BaseOutputPath="$env:TEMP\FluxMqValidatorShapePipeline\" -m:1 -v minimal` passes with 95 tests.
+
+## 2026-05-31 - Scenario event step field catalog
+
+- Moved `when.event` and `expect.event` editable field keys/defaults into `ScenarioStepCatalog`, matching the catalog-owned shape already used by `mqtt.publisher` and `mqtt.trigger`.
+- Kept the MudBlazor scenario editor behavior intact while replacing raw event-step key strings with shared scenario-step constants.
+- Changed scenario-step creation so default configuration for every known test step comes from the catalog instead of a separate composer branch.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioEventFieldsFocused2\ -m:1 --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests"` passes with 76 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioEventFieldsUi\ -m:1` passes with 199 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

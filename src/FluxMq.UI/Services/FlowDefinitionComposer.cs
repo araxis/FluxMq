@@ -1962,29 +1962,9 @@ public sealed class FlowDefinitionComposer
     private static IReadOnlyDictionary<string, string> CreateDefaultScenarioStepConfiguration(
         JsonObject flowApplication,
         string stepType)
-    {
-        var step = ScenarioStepCatalog.Shared.Find(stepType);
-        if (step?.EditorKind is ScenarioStepEditorKind.MqttPublish or ScenarioStepEditorKind.MqttTrigger)
-        {
-            return ScenarioStepCatalog.Shared.CreateDefaultConfiguration(
-                stepType,
-                ReadFirstConnectionResourceName(flowApplication));
-        }
-
-        return new Dictionary<string, string>(StringComparer.Ordinal)
-        {
-            ["eventType"] = "mqtt.message.published",
-            ["topicStartsWith"] = string.Empty,
-            ["subjectStartsWith"] = string.Empty,
-            ["status"] = "published",
-            ["source"] = string.Empty,
-            ["payloadContains"] = string.Empty,
-            [DashboardEventFilterCatalog.AttributeFilterKey("qos")] = string.Empty,
-            [DashboardEventFilterCatalog.AttributeFilterKey("retain")] = string.Empty,
-            [DashboardEventFilterCatalog.AttributeFilterKey("schemaId")] = string.Empty,
-            ["timeoutMs"] = "5000"
-        };
-    }
+        => ScenarioStepCatalog.Shared.CreateDefaultConfiguration(
+            stepType,
+            ReadFirstConnectionResourceName(flowApplication));
 
     private static JsonObject CreateScenarioStepConfiguration(
         string stepType,
@@ -2012,13 +1992,13 @@ public sealed class FlowDefinitionComposer
             return result;
         }
 
-        AddString(result, configuration, "eventType");
-        AddString(result, configuration, "topicStartsWith");
-        AddString(result, configuration, "subjectStartsWith");
-        AddString(result, configuration, "status");
-        AddString(result, configuration, "source");
-        AddString(result, configuration, "payloadContains");
-        AddInt(result, configuration, "timeoutMs", 5000);
+        AddString(result, configuration, ScenarioStepCatalog.EventTypeKey);
+        AddString(result, configuration, ScenarioStepCatalog.TopicStartsWithKey);
+        AddString(result, configuration, ScenarioStepCatalog.SubjectStartsWithKey);
+        AddString(result, configuration, ScenarioStepCatalog.StatusKey);
+        AddString(result, configuration, ScenarioStepCatalog.SourceKey);
+        AddString(result, configuration, ScenarioStepCatalog.PayloadContainsKey);
+        AddInt(result, configuration, ScenarioStepCatalog.TimeoutMsKey, 5000);
         AddAttributes(result, configuration);
         return result;
     }

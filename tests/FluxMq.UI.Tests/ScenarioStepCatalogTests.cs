@@ -62,7 +62,7 @@ public sealed class ScenarioStepCatalogTests
         when.Description.ShouldBe("Continue only when a scenario or app event matches configured filters.");
         when.NamePrefix.ShouldBe("whenEvent");
         when.EditorKind.ShouldBe(ScenarioStepEditorKind.ExpectEvent);
-        when.Fields.ShouldBeEmpty();
+        when.Fields.Select(field => field.Key).ShouldBe(EventStepFieldKeys);
 
         var expect = catalog.Find(ScenarioStepTypes.ExpectEvent).ShouldNotBeNull();
         expect.DisplayName.ShouldBe("Expect event");
@@ -70,7 +70,7 @@ public sealed class ScenarioStepCatalogTests
         expect.Description.ShouldBe("Wait for a scenario or app event that matches configured filters.");
         expect.NamePrefix.ShouldBe("expectEvent");
         expect.EditorKind.ShouldBe(ScenarioStepEditorKind.ExpectEvent);
-        expect.Fields.ShouldBeEmpty();
+        expect.Fields.Select(field => field.Key).ShouldBe(EventStepFieldKeys);
     }
 
     [Fact]
@@ -124,6 +124,27 @@ public sealed class ScenarioStepCatalogTests
         defaults[ScenarioStepCatalog.RetainAsPublishedKey].ShouldBe("true");
     }
 
+    [Theory]
+    [InlineData(ScenarioStepTypes.WhenEvent)]
+    [InlineData(ScenarioStepTypes.ExpectEvent)]
+    public void CreateDefaultConfiguration_UsesEventFieldDefaults(string stepType)
+    {
+        var catalog = new ScenarioStepCatalog();
+
+        var defaults = catalog.CreateDefaultConfiguration(stepType, "local-broker");
+
+        defaults[ScenarioStepCatalog.EventTypeKey].ShouldBe("mqtt.message.published");
+        defaults[ScenarioStepCatalog.TopicStartsWithKey].ShouldBeEmpty();
+        defaults[ScenarioStepCatalog.SubjectStartsWithKey].ShouldBeEmpty();
+        defaults[ScenarioStepCatalog.StatusKey].ShouldBe("published");
+        defaults[ScenarioStepCatalog.SourceKey].ShouldBeEmpty();
+        defaults[ScenarioStepCatalog.PayloadContainsKey].ShouldBeEmpty();
+        defaults[ScenarioStepCatalog.QosAttributeKey].ShouldBeEmpty();
+        defaults[ScenarioStepCatalog.RetainAttributeKey].ShouldBeEmpty();
+        defaults[ScenarioStepCatalog.SchemaIdAttributeKey].ShouldBeEmpty();
+        defaults[ScenarioStepCatalog.TimeoutMsKey].ShouldBe("5000");
+    }
+
     [Fact]
     public void ScenarioStepFieldDescriptor_NormalizesMissingOptions()
     {
@@ -149,4 +170,18 @@ public sealed class ScenarioStepCatalogTests
         descriptor.Category.ShouldBe("Custom");
         descriptor.NamePrefix.ShouldBe("step");
     }
+
+    private static readonly string[] EventStepFieldKeys =
+    [
+        ScenarioStepCatalog.EventTypeKey,
+        ScenarioStepCatalog.TopicStartsWithKey,
+        ScenarioStepCatalog.SubjectStartsWithKey,
+        ScenarioStepCatalog.StatusKey,
+        ScenarioStepCatalog.SourceKey,
+        ScenarioStepCatalog.PayloadContainsKey,
+        ScenarioStepCatalog.QosAttributeKey,
+        ScenarioStepCatalog.RetainAttributeKey,
+        ScenarioStepCatalog.SchemaIdAttributeKey,
+        ScenarioStepCatalog.TimeoutMsKey
+    ];
 }
