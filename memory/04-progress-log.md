@@ -1717,6 +1717,8 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Updated event expectation timeout wording after the runner-owned MQTT source refactor.
 - Timeout diagnostics now describe observed scenario/app events generically instead of assuming every observed event came from the app runtime.
 - `mqtt.message.published` timeout guidance now names both valid sources: a scenario `mqtt.publisher` event or a running app MQTT publisher node event.
+- Updated scenario step catalog descriptions so `expect.event` and `when.event` describe matching scenario or app events, not only app runtime events.
 - Verified:
   - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqExpectationMessagePipeline\ -m:1` passes with 17 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioCatalogTextUi\ -m:1` passes with 6 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqExpectationMessageFull\ -m:1` passes with 499 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

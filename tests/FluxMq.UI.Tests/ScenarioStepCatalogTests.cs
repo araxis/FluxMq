@@ -59,6 +59,7 @@ public sealed class ScenarioStepCatalogTests
         var when = catalog.Find(ScenarioStepTypes.WhenEvent).ShouldNotBeNull();
         when.DisplayName.ShouldBe("When event");
         when.Category.ShouldBe("Condition");
+        when.Description.ShouldBe("Continue only when a scenario or app event matches configured filters.");
         when.NamePrefix.ShouldBe("whenEvent");
         when.EditorKind.ShouldBe(ScenarioStepEditorKind.ExpectEvent);
         when.Fields.ShouldBeEmpty();
@@ -66,6 +67,7 @@ public sealed class ScenarioStepCatalogTests
         var expect = catalog.Find(ScenarioStepTypes.ExpectEvent).ShouldNotBeNull();
         expect.DisplayName.ShouldBe("Expect event");
         expect.Category.ShouldBe("Expectation");
+        expect.Description.ShouldBe("Wait for a scenario or app event that matches configured filters.");
         expect.NamePrefix.ShouldBe("expectEvent");
         expect.EditorKind.ShouldBe(ScenarioStepEditorKind.ExpectEvent);
         expect.Fields.ShouldBeEmpty();
