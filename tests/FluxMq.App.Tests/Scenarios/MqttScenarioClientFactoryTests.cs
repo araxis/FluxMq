@@ -17,7 +17,7 @@ namespace FluxMq.App.Tests.Scenarios;
 public sealed class MqttScenarioClientFactoryTests
 {
     [Fact]
-    public async Task ApplicationDefinitionFactory_CreatesIsolatedSessionFromSharedAppResource()
+    public async Task ApplicationDefinitionFactory_CreatesIsolatedClientFromSharedAppResource()
     {
         var capturedProfiles = new List<MqttConnectionProfile>();
         var definition = new ApplicationDefinition
@@ -44,7 +44,7 @@ public sealed class MqttScenarioClientFactoryTests
             profile =>
             {
                 capturedProfiles.Add(profile);
-                return new FakeFluxMqttClient(profile);
+                return new FakeMqttBrokerClient(profile);
             });
 
         await using var client = factory.CreateClient("shared-broker");
@@ -65,7 +65,7 @@ public sealed class MqttScenarioClientFactoryTests
     }
 
     [Fact]
-    public async Task RuntimeFactory_CreatesIsolatedSessionFromRunningAppResource()
+    public async Task RuntimeFactory_CreatesIsolatedClientFromRunningAppResource()
     {
         var appProfile = new MqttConnectionProfile
         {
@@ -76,7 +76,7 @@ public sealed class MqttScenarioClientFactoryTests
             CleanStart = false
         };
         var connection = new MqttConnectionComponent(
-            new FakeFluxMqttClient(appProfile),
+            new FakeMqttBrokerClient(appProfile),
             disposeClientOnDispose: false);
         var resource = RuntimeNode.Create(
             new NodeAddress(WellKnownScopes.Resources, new NodeName("runtime-broker")),
@@ -91,7 +91,7 @@ public sealed class MqttScenarioClientFactoryTests
             profile =>
             {
                 capturedProfiles.Add(profile);
-                return new FakeFluxMqttClient(profile);
+                return new FakeMqttBrokerClient(profile);
             });
 
         await using var client = factory.CreateClient("runtime-broker");
@@ -110,7 +110,7 @@ public sealed class MqttScenarioClientFactoryTests
     [Fact]
     public async Task MqttPublishStep_UsesNormalPublisherComponentAndAppendsScenarioEvents()
     {
-        var client = new FakeFluxMqttClient(new MqttConnectionProfile { Name = "shared-broker" });
+        var client = new FakeMqttBrokerClient(new MqttConnectionProfile { Name = "shared-broker" });
         var factory = new FakeScenarioClientFactory(client);
         var events = new BroadcastBlock<FluxMq.Pipeline.Components.FlowEvent>(static flowEvent => flowEvent);
         var scenario = new ScenarioDefinition
@@ -170,7 +170,7 @@ public sealed class MqttScenarioClientFactoryTests
     [Fact]
     public async Task MqttTriggerStep_UsesNormalTriggerComponentAndAppendsScenarioEvents()
     {
-        var client = new FakeFluxMqttClient(new MqttConnectionProfile { Name = "shared-broker" });
+        var client = new FakeMqttBrokerClient(new MqttConnectionProfile { Name = "shared-broker" });
         var factory = new FakeScenarioClientFactory(client);
         var appEvents = new BroadcastBlock<FluxMq.Pipeline.Components.FlowEvent>(static flowEvent => flowEvent);
         var scenario = new ScenarioDefinition
@@ -246,18 +246,18 @@ public sealed class MqttScenarioClientFactoryTests
             }
         };
 
-    private sealed class FakeScenarioClientFactory(FakeFluxMqttClient client) : IMqttScenarioClientFactory
+    private sealed class FakeScenarioClientFactory(FakeMqttBrokerClient client) : IMqttScenarioClientFactory
     {
         public List<string> ConnectionNames { get; } = [];
 
-        public IFluxMqttClient CreateClient(string connectionName)
+        public IMqttBrokerClient CreateClient(string connectionName)
         {
             ConnectionNames.Add(connectionName);
             return client;
         }
     }
 
-    private sealed class FakeFluxMqttClient(MqttConnectionProfile profile) : IFluxMqttClient
+    private sealed class FakeMqttBrokerClient(MqttConnectionProfile profile) : IMqttBrokerClient
     {
         private readonly Channel<MqttEnvelope> _messages = Channel.CreateUnbounded<MqttEnvelope>();
 

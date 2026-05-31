@@ -16,7 +16,7 @@ namespace FluxMq.Components.MessageSource;
 /// </summary>
 public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDisposable
 {
-    private readonly IFluxMqttClient _client;
+    private readonly IMqttBrokerClient _client;
     private readonly ISourceBlock<MqttEnvelope> _connectionStream;
     private readonly IReadOnlyList<MqttSubscription> _subscriptions;
     private readonly string[] _topicFilters;
@@ -28,7 +28,7 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
     private int _started;
 
     public MqttTriggerComponent(
-        IFluxMqttClient client,
+        IMqttBrokerClient client,
         ISourceBlock<MqttEnvelope> connectionStream,
         IEnumerable<MqttSubscription> subscriptions,
         FlowNodeId? id = null,

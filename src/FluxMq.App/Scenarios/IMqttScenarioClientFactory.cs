@@ -4,5 +4,5 @@ namespace FluxMq.App.Scenarios;
 
 public interface IMqttScenarioClientFactory
 {
-    IFluxMqttClient CreateClient(string connectionName);
+    IMqttBrokerClient CreateClient(string connectionName);
 }

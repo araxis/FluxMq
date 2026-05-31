@@ -11,7 +11,7 @@ public sealed class MqttConnectionComponentTests
     [Fact]
     public async Task StartAsync_ConnectsTheUnderlyingClient()
     {
-        var mqttClient = new TestFluxMqttClient();
+        var mqttClient = new TestMqttBrokerClient();
         var component = new MqttConnectionComponent(mqttClient);
 
         await component.StartAsync();
@@ -23,7 +23,7 @@ public sealed class MqttConnectionComponentTests
     public async Task StartAsync_WaitsForConnectionBeforeReturning()
     {
         var connectGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var mqttClient = new TestFluxMqttClient(connectDelay: connectGate.Task);
+        var mqttClient = new TestMqttBrokerClient(connectDelay: connectGate.Task);
         var component = new MqttConnectionComponent(mqttClient);
 
         var startTask = component.StartAsync();
@@ -41,7 +41,7 @@ public sealed class MqttConnectionComponentTests
     [Fact]
     public async Task StartAsync_IsIdempotent()
     {
-        var mqttClient = new TestFluxMqttClient();
+        var mqttClient = new TestMqttBrokerClient();
         var component = new MqttConnectionComponent(mqttClient);
 
         await component.StartAsync();
@@ -53,7 +53,7 @@ public sealed class MqttConnectionComponentTests
     [Fact]
     public void Client_ExposesUnderlyingClient()
     {
-        var mqttClient = new TestFluxMqttClient();
+        var mqttClient = new TestMqttBrokerClient();
         var component = new MqttConnectionComponent(mqttClient);
 
         component.Client.ShouldBeSameAs(mqttClient);
@@ -62,7 +62,7 @@ public sealed class MqttConnectionComponentTests
     [Fact]
     public async Task DisposeAsync_DisposesOwnedClient()
     {
-        var mqttClient = new TestFluxMqttClient();
+        var mqttClient = new TestMqttBrokerClient();
         var component = new MqttConnectionComponent(mqttClient, disposeClientOnDispose: true);
 
         await component.DisposeAsync();
@@ -73,7 +73,7 @@ public sealed class MqttConnectionComponentTests
     [Fact]
     public async Task DisposeAsync_LeavesClientAlone_WhenNotOwned()
     {
-        var mqttClient = new TestFluxMqttClient();
+        var mqttClient = new TestMqttBrokerClient();
         var component = new MqttConnectionComponent(mqttClient, disposeClientOnDispose: false);
 
         await component.DisposeAsync();
@@ -84,7 +84,7 @@ public sealed class MqttConnectionComponentTests
     [Fact]
     public async Task Fault_PublishesErrorAndFaultsCompletion()
     {
-        var component = new MqttConnectionComponent(new TestFluxMqttClient());
+        var component = new MqttConnectionComponent(new TestMqttBrokerClient());
         var errors = new List<FlowError>();
         var sink = new ActionBlock<FlowError>(errors.Add);
         component.Errors.LinkTo(sink, new DataflowLinkOptions { PropagateCompletion = true });

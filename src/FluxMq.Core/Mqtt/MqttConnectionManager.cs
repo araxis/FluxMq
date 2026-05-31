@@ -8,24 +8,24 @@ namespace FluxMq.Core.Mqtt;
 
 public sealed class MqttConnectionManager : IMqttConnectionManager
 {
-    private readonly Func<MqttConnectionProfile, IFluxMqttClient> _clientFactory;
+    private readonly Func<MqttConnectionProfile, IMqttBrokerClient> _clientFactory;
     private readonly ResiliencePipeline _reconnectPipeline;
-    private readonly ConcurrentDictionary<ConnectionProfileId, IFluxMqttClient> _clients = new();
+    private readonly ConcurrentDictionary<ConnectionProfileId, IMqttBrokerClient> _clients = new();
     private readonly ConcurrentDictionary<ConnectionProfileId, CancellationTokenSource> _reconnectCts = new();
 
-    public IReadOnlyDictionary<ConnectionProfileId, IFluxMqttClient> Clients => _clients;
+    public IReadOnlyDictionary<ConnectionProfileId, IMqttBrokerClient> Clients => _clients;
 
     public event EventHandler<MqttClientStateChangedEventArgs>? StateChanged;
 
     public MqttConnectionManager(
-        Func<MqttConnectionProfile, IFluxMqttClient>? clientFactory = null,
+        Func<MqttConnectionProfile, IMqttBrokerClient>? clientFactory = null,
         ResiliencePipeline? reconnectPipeline = null)
     {
-        _clientFactory = clientFactory ?? (profile => new FluxMqttClient(profile));
+        _clientFactory = clientFactory ?? (profile => new MqttBrokerClient(profile));
         _reconnectPipeline = reconnectPipeline ?? BuildDefaultReconnectPipeline();
     }
 
-    public async Task<IFluxMqttClient> ConnectAsync(MqttConnectionProfile profile, CancellationToken ct = default)
+    public async Task<IMqttBrokerClient> ConnectAsync(MqttConnectionProfile profile, CancellationToken ct = default)
     {
         var client = _clientFactory(profile);
 
@@ -78,7 +78,7 @@ public sealed class MqttConnectionManager : IMqttConnectionManager
 
     private void OnClientStateChanged(object? sender, MqttClientState state)
     {
-        if (sender is not IFluxMqttClient client)
+        if (sender is not IMqttBrokerClient client)
             return;
 
         StateChanged?.Invoke(this, new MqttClientStateChangedEventArgs(client.Profile.Id, client.Profile, state));
@@ -90,7 +90,7 @@ public sealed class MqttConnectionManager : IMqttConnectionManager
         }
     }
 
-    private void ScheduleReconnect(IFluxMqttClient client)
+    private void ScheduleReconnect(IMqttBrokerClient client)
     {
         var cts = new CancellationTokenSource();
         if (_reconnectCts.TryRemove(client.Profile.Id, out var old))

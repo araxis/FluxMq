@@ -17,11 +17,11 @@ public sealed class LiveMqttWorkspaceServiceTests
     public async Task EnsureConnectionsAsync_AddsConnectsAndSubscribesProjectBroker()
     {
         var createdProfiles = new List<MqttConnectionProfile>();
-        var createdClients = new List<FakeFluxMqttClient>();
+        var createdClients = new List<FakeMqttBrokerClient>();
         var service = CreateService(profile =>
         {
             createdProfiles.Add(profile);
-            var client = new FakeFluxMqttClient(profile);
+            var client = new FakeMqttBrokerClient(profile);
             createdClients.Add(client);
             return client;
         });
@@ -48,10 +48,10 @@ public sealed class LiveMqttWorkspaceServiceTests
     [Fact]
     public async Task AddConnection_UsesBrokerMonitorSubscriptionByDefault()
     {
-        var createdClients = new List<FakeFluxMqttClient>();
+        var createdClients = new List<FakeMqttBrokerClient>();
         var service = CreateService(profile =>
         {
-            var client = new FakeFluxMqttClient(profile);
+            var client = new FakeMqttBrokerClient(profile);
             createdClients.Add(client);
             return client;
         });
@@ -76,10 +76,10 @@ public sealed class LiveMqttWorkspaceServiceTests
     [Fact]
     public async Task EnsureConnectionsAsync_DoesNotReconnectAlreadyConnectedBroker()
     {
-        var createdClients = new List<FakeFluxMqttClient>();
+        var createdClients = new List<FakeMqttBrokerClient>();
         var service = CreateService(profile =>
         {
-            var client = new FakeFluxMqttClient(profile);
+            var client = new FakeMqttBrokerClient(profile);
             createdClients.Add(client);
             return client;
         });
@@ -103,10 +103,10 @@ public sealed class LiveMqttWorkspaceServiceTests
     [Fact]
     public async Task EnsureConnectionsAsync_TreatsDifferentResourceNamesAsDifferentBrokers()
     {
-        var createdClients = new List<FakeFluxMqttClient>();
+        var createdClients = new List<FakeMqttBrokerClient>();
         var service = CreateService(profile =>
         {
-            var client = new FakeFluxMqttClient(profile);
+            var client = new FakeMqttBrokerClient(profile);
             createdClients.Add(client);
             return client;
         });
@@ -136,7 +136,7 @@ public sealed class LiveMqttWorkspaceServiceTests
     [Fact]
     public async Task EnsureConnectionsAsync_ReturnsFalseWhenBrokerConnectionFails()
     {
-        var service = CreateService(profile => new FakeFluxMqttClient(profile, failConnect: true));
+        var service = CreateService(profile => new FakeMqttBrokerClient(profile, failConnect: true));
         var profile = new MqttConnectionProfile
         {
             Name = "local-broker",
@@ -156,7 +156,7 @@ public sealed class LiveMqttWorkspaceServiceTests
     [Fact]
     public async Task DisconnectAutoStartedConnectionsAsync_DisconnectsOnlyConnectionsStartedByEnsure()
     {
-        var service = CreateService(profile => new FakeFluxMqttClient(profile));
+        var service = CreateService(profile => new FakeMqttBrokerClient(profile));
         var profile = new MqttConnectionProfile
         {
             Name = "local-broker",
@@ -185,10 +185,10 @@ public sealed class LiveMqttWorkspaceServiceTests
     [Fact]
     public async Task PublishAsync_ReturnsTrueWhenMessageWasPublished()
     {
-        var createdClients = new List<FakeFluxMqttClient>();
+        var createdClients = new List<FakeMqttBrokerClient>();
         var service = CreateService(profile =>
         {
-            var client = new FakeFluxMqttClient(profile);
+            var client = new FakeMqttBrokerClient(profile);
             createdClients.Add(client);
             return client;
         });
@@ -224,7 +224,7 @@ public sealed class LiveMqttWorkspaceServiceTests
     [Fact]
     public async Task PublishAsync_ReturnsFalseWhenNoConnectedConnectionExists()
     {
-        var service = CreateService(profile => new FakeFluxMqttClient(profile));
+        var service = CreateService(profile => new FakeMqttBrokerClient(profile));
 
         var published = await service.PublishAsync("test", "{}");
 
@@ -236,7 +236,7 @@ public sealed class LiveMqttWorkspaceServiceTests
     [Fact]
     public async Task RemoveConnectionsAsync_RemovesMatchingWorkspaceConnections()
     {
-        var service = CreateService(profile => new FakeFluxMqttClient(profile));
+        var service = CreateService(profile => new FakeMqttBrokerClient(profile));
         var profile = new MqttConnectionProfile
         {
             Name = "local-broker",
@@ -257,7 +257,7 @@ public sealed class LiveMqttWorkspaceServiceTests
     [Fact]
     public async Task CloseProjectAsync_RemovesClosedAppConnectionsOnlyWhenUnreferenced()
     {
-        var live = CreateService(profile => new FakeFluxMqttClient(profile));
+        var live = CreateService(profile => new FakeMqttBrokerClient(profile));
         var manager = new ProjectManagerService(new FlowDefinitionComposer(), live: live);
         var app1 = manager.NewProject();
         app1.SetDefinitionJson(ProjectWithBroker("broker1", 1883));
@@ -273,7 +273,7 @@ public sealed class LiveMqttWorkspaceServiceTests
         await live.DisposeAsync();
     }
 
-    private static LiveMqttWorkspaceService CreateService(Func<MqttConnectionProfile, IFluxMqttClient> clientFactory)
+    private static LiveMqttWorkspaceService CreateService(Func<MqttConnectionProfile, IMqttBrokerClient> clientFactory)
         => new(
             new TopicIndex(),
             new FakeSessionRepository(),
@@ -303,7 +303,7 @@ public sealed class LiveMqttWorkspaceServiceTests
         }
         """;
 
-    private sealed class FakeFluxMqttClient(MqttConnectionProfile profile, bool failConnect = false) : IFluxMqttClient
+    private sealed class FakeMqttBrokerClient(MqttConnectionProfile profile, bool failConnect = false) : IMqttBrokerClient
     {
         private readonly Channel<MqttEnvelope> _messages = Channel.CreateUnbounded<MqttEnvelope>();
         private readonly bool _failConnect = failConnect;

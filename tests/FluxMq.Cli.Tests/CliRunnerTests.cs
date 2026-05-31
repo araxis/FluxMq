@@ -442,7 +442,7 @@ public sealed class CliRunnerTests
             }
             """);
 
-        var client = new FakeFluxMqttClient();
+        var client = new FakeMqttBrokerClient();
         var output = new TestOutput();
         var error = new TestOutput();
         var runner = new CliRunner(output, error, _ => new FakeScenarioClientFactory(client));
@@ -508,7 +508,7 @@ public sealed class CliRunnerTests
             }
             """);
 
-        var client = new FakeFluxMqttClient();
+        var client = new FakeMqttBrokerClient();
         var output = new TestOutput();
         var error = new TestOutput();
         var runner = new CliRunner(output, error, _ => new FakeScenarioClientFactory(client));
@@ -580,7 +580,7 @@ public sealed class CliRunnerTests
             }
             """);
 
-        var client = new FakeFluxMqttClient();
+        var client = new FakeMqttBrokerClient();
         var output = new TestOutput();
         var error = new TestOutput();
         var runner = new CliRunner(output, error, _ => new FakeScenarioClientFactory(client));
@@ -645,7 +645,7 @@ public sealed class CliRunnerTests
             }
             """);
 
-        var client = new FakeFluxMqttClient();
+        var client = new FakeMqttBrokerClient();
         var output = new TestOutput();
         var error = new TestOutput();
         var runner = new CliRunner(output, error, _ => new FakeScenarioClientFactory(client));
@@ -806,12 +806,12 @@ public sealed class CliRunnerTests
         }
     }
 
-    private sealed class FakeScenarioClientFactory(FakeFluxMqttClient client) : IMqttScenarioClientFactory
+    private sealed class FakeScenarioClientFactory(FakeMqttBrokerClient client) : IMqttScenarioClientFactory
     {
-        public IFluxMqttClient CreateClient(string connectionName) => client;
+        public IMqttBrokerClient CreateClient(string connectionName) => client;
     }
 
-    private sealed class FakeFluxMqttClient : IFluxMqttClient
+    private sealed class FakeMqttBrokerClient : IMqttBrokerClient
     {
         private readonly Channel<MqttEnvelope> _messages = Channel.CreateUnbounded<MqttEnvelope>();
 

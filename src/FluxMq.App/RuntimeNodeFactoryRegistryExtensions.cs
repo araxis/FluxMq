@@ -44,12 +44,12 @@ public static class RuntimeNodeFactoryRegistryExtensions
 
     public static RuntimeNodeFactoryRegistry RegisterPipelineComponentFactories(
         this RuntimeNodeFactoryRegistry registry,
-        Func<MqttConnectionProfile, IFluxMqttClient>? clientFactory = null,
+        Func<MqttConnectionProfile, IMqttBrokerClient>? clientFactory = null,
         IMessageRepository? messageRepository = null,
         IFlowExpressionEngine? expressionEngine = null)
     {
         ArgumentNullException.ThrowIfNull(registry);
-        clientFactory ??= static profile => new FluxMqttClient(profile);
+        clientFactory ??= static profile => new MqttBrokerClient(profile);
         expressionEngine ??= new DynamicExpressoFlowExpressionEngine();
 
         return registry
@@ -75,7 +75,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
     private static RuntimeNode CreateConnection(
         NodeAddress address,
         NodeDefinition definition,
-        Func<MqttConnectionProfile, IFluxMqttClient> clientFactory)
+        Func<MqttConnectionProfile, IMqttBrokerClient> clientFactory)
     {
         var profile = GetConnectionProfile(definition, PipelineFlowNodeTypes.Connection.Value);
         var component = new MqttConnectionComponent(clientFactory(profile), disposeClientOnDispose: true);

@@ -13,7 +13,7 @@ public sealed class MqttTriggerComponentTests
     [Fact]
     public async Task StartAsync_InstallsSubscriptionsAndForwardsMatchingMessages()
     {
-        var mqttClient = new TestFluxMqttClient();
+        var mqttClient = new TestMqttBrokerClient();
         var connection = new MqttConnectionComponent(mqttClient, disposeClientOnDispose: false);
         var trigger = new MqttTriggerComponent(connection,
         [
@@ -31,9 +31,9 @@ public sealed class MqttTriggerComponentTests
         await connection.StartAsync();
         await trigger.StartAsync();
 
-        await mqttClient.WriteAsync(TestFluxMqttClient.Message("sensors/temp"));
-        await mqttClient.WriteAsync(TestFluxMqttClient.Message("lights/kitchen"));    // filtered out
-        await mqttClient.WriteAsync(TestFluxMqttClient.Message("sensors/humidity"));
+        await mqttClient.WriteAsync(TestMqttBrokerClient.Message("sensors/temp"));
+        await mqttClient.WriteAsync(TestMqttBrokerClient.Message("lights/kitchen"));    // filtered out
+        await mqttClient.WriteAsync(TestMqttBrokerClient.Message("sensors/humidity"));
         mqttClient.CompleteMessages();
 
         await sink.Completion.WaitAsync(TimeSpan.FromSeconds(5));
@@ -49,7 +49,7 @@ public sealed class MqttTriggerComponentTests
     [Fact]
     public async Task StartAsync_EmitsReceiveEventsForForwardedMessages()
     {
-        var mqttClient = new TestFluxMqttClient();
+        var mqttClient = new TestMqttBrokerClient();
         var connection = new MqttConnectionComponent(mqttClient, disposeClientOnDispose: false);
         var trigger = new MqttTriggerComponent(connection,
         [
@@ -72,7 +72,7 @@ public sealed class MqttTriggerComponentTests
             QualityOfService = MqttQualityOfServiceLevel.AtLeastOnce,
             Retain = true
         });
-        await mqttClient.WriteAsync(TestFluxMqttClient.Message("lights/kitchen"));
+        await mqttClient.WriteAsync(TestMqttBrokerClient.Message("lights/kitchen"));
         mqttClient.CompleteMessages();
 
         await Task.WhenAll(eventSink.Completion, outputSink.Completion).WaitAsync(TimeSpan.FromSeconds(5));
@@ -91,7 +91,7 @@ public sealed class MqttTriggerComponentTests
     [Fact]
     public async Task TwoTriggersSharingAConnection_EachReceiveOnlyTheirTopics()
     {
-        var mqttClient = new TestFluxMqttClient();
+        var mqttClient = new TestMqttBrokerClient();
         var connection = new MqttConnectionComponent(mqttClient, disposeClientOnDispose: false);
         var sensorsTrigger = new MqttTriggerComponent(connection,
         [
@@ -113,9 +113,9 @@ public sealed class MqttTriggerComponentTests
         await sensorsTrigger.StartAsync();
         await sysTrigger.StartAsync();
 
-        await mqttClient.WriteAsync(TestFluxMqttClient.Message("sensors/temp"));
-        await mqttClient.WriteAsync(TestFluxMqttClient.Message("$SYS/broker/uptime"));
-        await mqttClient.WriteAsync(TestFluxMqttClient.Message("lights/kitchen"));
+        await mqttClient.WriteAsync(TestMqttBrokerClient.Message("sensors/temp"));
+        await mqttClient.WriteAsync(TestMqttBrokerClient.Message("$SYS/broker/uptime"));
+        await mqttClient.WriteAsync(TestMqttBrokerClient.Message("lights/kitchen"));
         mqttClient.CompleteMessages();
 
         await Task.WhenAll(sensorSink.Completion, sysSink.Completion).WaitAsync(TimeSpan.FromSeconds(5));
@@ -130,7 +130,7 @@ public sealed class MqttTriggerComponentTests
     [Fact]
     public void Constructor_RequiresAtLeastOneSubscription()
     {
-        var mqttClient = new TestFluxMqttClient();
+        var mqttClient = new TestMqttBrokerClient();
         var connection = new MqttConnectionComponent(mqttClient, disposeClientOnDispose: false);
         var act = () => new MqttTriggerComponent(connection, []);
         var ex = Should.Throw<ArgumentException>(act);
@@ -140,7 +140,7 @@ public sealed class MqttTriggerComponentTests
     [Fact]
     public async Task DisposeAsync_StopsTheTrigger()
     {
-        var mqttClient = new TestFluxMqttClient();
+        var mqttClient = new TestMqttBrokerClient();
         var connection = new MqttConnectionComponent(mqttClient, disposeClientOnDispose: false);
         var trigger = new MqttTriggerComponent(connection,
         [

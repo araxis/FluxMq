@@ -5,7 +5,7 @@ using System.Threading.Channels;
 
 namespace FluxMq.Core.Mqtt;
 
-public sealed class FluxMqttClient : IFluxMqttClient
+public sealed class MqttBrokerClient : IMqttBrokerClient
 {
     private readonly IMqttClient _client;
     private readonly Channel<MqttEnvelope> _channel;
@@ -17,7 +17,7 @@ public sealed class FluxMqttClient : IFluxMqttClient
 
     public event EventHandler<MqttClientState>? StateChanged;
 
-    public FluxMqttClient(MqttConnectionProfile profile)
+    public MqttBrokerClient(MqttConnectionProfile profile)
     {
         Profile = profile;
         _channel = Channel.CreateBounded<MqttEnvelope>(new BoundedChannelOptions(1000)

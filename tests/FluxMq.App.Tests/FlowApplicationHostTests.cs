@@ -289,7 +289,7 @@ public sealed class FlowApplicationHostTests
     [Fact]
     public async Task RunScenarioAsync_CanPublishMqttMessageThroughNamedConnection()
     {
-        var mqttClient = new FakeFluxMqttClient();
+        var mqttClient = new FakeMqttBrokerClient();
         await using var host = FlowApplicationHost.CreateDefault(
             BuildConfiguration(
                 """
@@ -353,7 +353,7 @@ public sealed class FlowApplicationHostTests
     [Fact]
     public async Task StartAsync_ReportsMissingScenarioMqttConnection()
     {
-        var mqttClient = new FakeFluxMqttClient();
+        var mqttClient = new FakeMqttBrokerClient();
         await using var host = FlowApplicationHost.CreateDefault(
             BuildConfiguration(
                 """
@@ -522,7 +522,7 @@ public sealed class FlowApplicationHostTests
         }
     }
 
-    private sealed class FakeFluxMqttClient : IFluxMqttClient
+    private sealed class FakeMqttBrokerClient : IMqttBrokerClient
     {
         private readonly Channel<MqttEnvelope> _messages = Channel.CreateUnbounded<MqttEnvelope>();
 

@@ -16,7 +16,7 @@ public sealed class MqttPublisherComponentTests
     [Fact]
     public async Task Input_PublishesMessagesToClient()
     {
-        var mqttClient = new FakeFluxMqttClient();
+        var mqttClient = new FakeMqttBrokerClient();
         var component = new MqttPublisherComponent(mqttClient);
 
         component.Input.Post(new MqttPublishRequest
@@ -40,7 +40,7 @@ public sealed class MqttPublisherComponentTests
     [Fact]
     public async Task Input_EmitsPublishLogEntry()
     {
-        var mqttClient = new FakeFluxMqttClient();
+        var mqttClient = new FakeMqttBrokerClient();
         var component = new MqttPublisherComponent(mqttClient);
         var entries = new BufferBlock<FlowLogEntry>();
 
@@ -66,7 +66,7 @@ public sealed class MqttPublisherComponentTests
     [Fact]
     public async Task Input_EmitsPublishEvent()
     {
-        var mqttClient = new FakeFluxMqttClient();
+        var mqttClient = new FakeMqttBrokerClient();
         var component = new MqttPublisherComponent(mqttClient);
         var events = new BufferBlock<FlowEvent>();
 
@@ -96,7 +96,7 @@ public sealed class MqttPublisherComponentTests
     [Fact]
     public async Task Input_EmitsPublishEventWithoutPreviewForBinaryPayload()
     {
-        var mqttClient = new FakeFluxMqttClient();
+        var mqttClient = new FakeMqttBrokerClient();
         var component = new MqttPublisherComponent(mqttClient);
         var events = new BufferBlock<FlowEvent>();
 
@@ -118,7 +118,7 @@ public sealed class MqttPublisherComponentTests
     [Fact]
     public async Task Input_PreservesPublishOrder()
     {
-        var mqttClient = new FakeFluxMqttClient();
+        var mqttClient = new FakeMqttBrokerClient();
         var component = new MqttPublisherComponent(mqttClient);
 
         component.Input.Post(new MqttPublishRequest { Topic = "factory/1", Payload = [] });
@@ -135,7 +135,7 @@ public sealed class MqttPublisherComponentTests
     [Fact]
     public async Task PublishFailure_PublishesErrorAndKeepsProcessing()
     {
-        var mqttClient = new FakeFluxMqttClient(topicToFail: "factory/fail");
+        var mqttClient = new FakeMqttBrokerClient(topicToFail: "factory/fail");
         var component = new MqttPublisherComponent(mqttClient);
         var errors = new List<FlowError>();
         var errorSink = new ActionBlock<FlowError>(errors.Add);
@@ -161,7 +161,7 @@ public sealed class MqttPublisherComponentTests
     [Fact]
     public async Task Fault_PublishesErrorAndFaultsCompletion()
     {
-        var component = new MqttPublisherComponent(new FakeFluxMqttClient(), FlowNodeId.New());
+        var component = new MqttPublisherComponent(new FakeMqttBrokerClient(), FlowNodeId.New());
         var errors = new List<FlowError>();
         var errorSink = new ActionBlock<FlowError>(errors.Add);
         var failure = new InvalidOperationException("publisher failed");
@@ -177,7 +177,7 @@ public sealed class MqttPublisherComponentTests
         errors.ShouldHaveSingleItem().Code.ShouldBe(FlowErrorCodes.NodeFaulted);
     }
 
-    private sealed class FakeFluxMqttClient(string? topicToFail = null) : IFluxMqttClient
+    private sealed class FakeMqttBrokerClient(string? topicToFail = null) : IMqttBrokerClient
     {
         public MqttConnectionProfile Profile { get; } = new() { Name = "test" };
         public MqttClientState State { get; private set; } = MqttClientState.Connected;

@@ -1736,9 +1736,18 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 ## 2026-05-31 - MQTT client naming cleanup in tests
 
 - Replaced remaining live MQTT fake-client variable names that used `session` in component, app-runtime, app-host, and UI workspace tests with `mqttClient`.
-- Renamed the component test helper file from `TestMqttSession.cs` to `TestMqttClient.cs`.
+- Renamed the component test helper file from `TestMqttSession.cs` to `TestMqttBrokerClient.cs`.
 - Left stored recording session language and `session.source` component ids unchanged because those refer to persisted message sessions, not live MQTT clients.
 - Verified:
   - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttConnectionComponentTests|FullyQualifiedName~MqttPublisherComponentTests|FullyQualifiedName~MqttTriggerComponentTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqMqttClientNamingComponents\ -m:1` passes with 19 tests.
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowApplicationHostTests|FullyQualifiedName~PipelineComponentFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqMqttClientNamingApp\ -m:1` passes with 35 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowWorkspaceServiceTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqMqttClientNamingUi\ -m:1` passes with 53 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - Core MQTT broker client naming
+
+- Renamed the shared live MQTT client contract from `IFluxMqttClient` to `IMqttBrokerClient`.
+- Renamed the concrete MQTTnet wrapper from `FluxMqttClient` to `MqttBrokerClient`, leaving MQTTnet's own `IMqttClient` name unshadowed.
+- Updated app/runtime/scenario/UI factories, components, and tests to use the new broker-client vocabulary.
+- Renamed live fake/test MQTT clients to match the same naming direction while leaving persisted stored-session types unchanged.
+- Verified:
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqMqttBrokerClientRenameFull\ -m:1` passes with 500 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

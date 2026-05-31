@@ -7,17 +7,17 @@ namespace FluxMq.App.Scenarios;
 public sealed class RuntimeMqttScenarioClientFactory : IMqttScenarioClientFactory
 {
     private readonly ApplicationRuntime _runtime;
-    private readonly Func<MqttConnectionProfile, IFluxMqttClient> _clientFactory;
+    private readonly Func<MqttConnectionProfile, IMqttBrokerClient> _clientFactory;
 
     public RuntimeMqttScenarioClientFactory(
         ApplicationRuntime runtime,
-        Func<MqttConnectionProfile, IFluxMqttClient>? clientFactory = null)
+        Func<MqttConnectionProfile, IMqttBrokerClient>? clientFactory = null)
     {
         _runtime = runtime ?? throw new ArgumentNullException(nameof(runtime));
-        _clientFactory = clientFactory ?? (static profile => new FluxMqttClient(profile));
+        _clientFactory = clientFactory ?? (static profile => new MqttBrokerClient(profile));
     }
 
-    public IFluxMqttClient CreateClient(string connectionName)
+    public IMqttBrokerClient CreateClient(string connectionName)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionName);
 

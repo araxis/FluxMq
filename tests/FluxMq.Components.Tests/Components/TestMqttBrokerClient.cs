@@ -5,14 +5,14 @@ using System.Threading.Channels;
 
 namespace FluxMq.Components.Tests.Components;
 
-internal sealed class TestFluxMqttClient : IFluxMqttClient
+internal sealed class TestMqttBrokerClient : IMqttBrokerClient
 {
     private readonly Channel<MqttEnvelope> _messages = Channel.CreateUnbounded<MqttEnvelope>();
     private readonly List<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService)> _subscriptions = [];
     private readonly List<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService, bool ReceiveRetainedMessages, bool RetainAsPublished)> _subscriptionOptions = [];
     private readonly Task? _connectDelay;
 
-    public TestFluxMqttClient(string profileName = "test", Task? connectDelay = null)
+    public TestMqttBrokerClient(string profileName = "test", Task? connectDelay = null)
     {
         Profile = new MqttConnectionProfile { Name = profileName };
         _connectDelay = connectDelay;

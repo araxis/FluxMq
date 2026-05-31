@@ -8,7 +8,7 @@ namespace FluxMq.Components.MqttPublisher;
 
 public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource
 {
-    private readonly IFluxMqttClient _client;
+    private readonly IMqttBrokerClient _client;
     private readonly ActionBlock<MqttPublishRequest> _block;
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly BroadcastBlock<FlowLogEntry> _entries;
@@ -17,7 +17,7 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource
     private string? _lastPublishedTopic;
 
     public MqttPublisherComponent(
-        IFluxMqttClient client,
+        IMqttBrokerClient client,
         FlowNodeId? id = null,
         int boundedCapacity = 1000,
         int maxDegreeOfParallelism = 1)

@@ -556,13 +556,13 @@ public sealed class PipelineComponentFactoryTests
     [Fact]
     public async Task ConnectionAndTriggerFactories_StartClientAndFeedWorkflowNodes()
     {
-        FakeFluxMqttClient? mqttClient = null;
+        FakeMqttBrokerClient? mqttClient = null;
         TestSinkNode<MqttMetricsSnapshot>? sink = null;
 
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories(_ =>
             {
-                mqttClient = new FakeFluxMqttClient();
+                mqttClient = new FakeMqttBrokerClient();
                 return mqttClient;
             })
             .Register(new NodeType("test.snapshot-sink"), (address, _) =>
@@ -634,12 +634,12 @@ public sealed class PipelineComponentFactoryTests
     [Fact]
     public async Task TriggerFactory_UsesExplicitSubscriberOptions()
     {
-        FakeFluxMqttClient? mqttClient = null;
+        FakeMqttBrokerClient? mqttClient = null;
 
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories(_ =>
             {
-                mqttClient = new FakeFluxMqttClient();
+                mqttClient = new FakeMqttBrokerClient();
                 return mqttClient;
             }));
 
@@ -694,7 +694,7 @@ public sealed class PipelineComponentFactoryTests
     public void ConnectionStateTriggerFactory_UsesConfiguredConnectionResource()
     {
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
-            .RegisterPipelineComponentFactories(_ => new FakeFluxMqttClient()));
+            .RegisterPipelineComponentFactories(_ => new FakeMqttBrokerClient()));
 
         var result = builder.Build(new ApplicationDefinition
         {
@@ -791,7 +791,7 @@ public sealed class PipelineComponentFactoryTests
     [Fact]
     public async Task DynamicFilterAndJsonataMapper_CanPublishMappedRequestsToConnection()
     {
-        FakeFluxMqttClient? mqttClient = null;
+        FakeMqttBrokerClient? mqttClient = null;
         var runtimeEvents = new List<FlowEvent>();
         const string mapperExpression = """
         {
@@ -805,7 +805,7 @@ public sealed class PipelineComponentFactoryTests
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories(_ =>
             {
-                mqttClient = new FakeFluxMqttClient();
+                mqttClient = new FakeMqttBrokerClient();
                 return mqttClient;
             }));
 
@@ -914,7 +914,7 @@ public sealed class PipelineComponentFactoryTests
     [Fact]
     public async Task LiveTriggerAndJsonataMapper_CanPublishMappedRequestsToConnection()
     {
-        FakeFluxMqttClient? mqttClient = null;
+        FakeMqttBrokerClient? mqttClient = null;
         var runtimeEvents = new List<FlowEvent>();
         const string mapperExpression = """
         {
@@ -928,7 +928,7 @@ public sealed class PipelineComponentFactoryTests
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories(profile =>
             {
-                mqttClient = new FakeFluxMqttClient();
+                mqttClient = new FakeMqttBrokerClient();
                 return mqttClient;
             }));
 
@@ -1473,7 +1473,7 @@ public sealed class PipelineComponentFactoryTests
         }
     }
 
-    private sealed class FakeFluxMqttClient : IFluxMqttClient
+    private sealed class FakeMqttBrokerClient : IMqttBrokerClient
     {
         private readonly Channel<MqttEnvelope> _messages = Channel.CreateUnbounded<MqttEnvelope>();
         private readonly List<(string TopicFilter, MqttQualityOfServiceLevel QualityOfService)> _subscriptions = [];
