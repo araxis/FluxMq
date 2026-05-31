@@ -117,6 +117,7 @@ public sealed class ScenarioRunReportFormatterTests
         ScenarioRunReportFormatter.ToText(result, scenario, generatedAt).ShouldBe(text);
         text.ShouldContain(
             $"Report {ScenarioRunReportFormatter.CurrentSchemaVersion} run roundtrip-20260526T100000000Z generated {generatedAt:O}.");
+        text.ShouldContain("config: Event type=mqtt.message.published; Topic prefix=fluxmq/sample/; Timeout ms=5000");
         text.ShouldContain(
             "matched: mqtt.message.published / fluxmq/sample/response / published (+200 ms scenario, +190 ms step)");
         text.ShouldContain("""event: source=mqtt.publisher; subject=no subject; payloadBytes=12; payload={"ok":true}""");
@@ -193,9 +194,9 @@ public sealed class ScenarioRunReportFormatterTests
         text.ShouldContain("#2 expectLater [expect.event] TimedOut: Timed out after 500 ms.");
         text.ShouldContain("Not run: 1.");
         text.ShouldContain("#3 publishCleanup [mqtt.publisher]");
-        text.ShouldContain("""config: payload={"cleanup":true}; topic=factory/cleanup""");
+        text.ShouldContain("""config: Topic=factory/cleanup; Payload={"cleanup":true}""");
         text.ShouldContain("- unknown [unknown.step] Failed: Scenario step type 'unknown.step' is not registered.");
-        text.ShouldContain("config: timeoutMs=250");
+        text.ShouldContain("config: timeout ms=250");
         text.ShouldContain("timing: #1, start +0 ms, finish +10 ms, duration 10 ms");
 
         var json = ScenarioRunReportFormatter.ToJson(result, scenario);

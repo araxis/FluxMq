@@ -66,13 +66,17 @@ public static class ScenarioRunReportFormatter
     public static string ToText(
         ScenarioRunResult result,
         TestScenarioSnapshot? scenario = null,
-        DateTimeOffset? generatedAt = null)
-        => ToText(Create(result, scenario, generatedAt));
+        DateTimeOffset? generatedAt = null,
+        ScenarioStepCatalog? catalog = null)
+        => ToText(Create(result, scenario, generatedAt), catalog);
 
-    public static string ToText(ScenarioRunReport report)
+    public static string ToText(
+        ScenarioRunReport report,
+        ScenarioStepCatalog? catalog = null)
     {
         ArgumentNullException.ThrowIfNull(report);
 
+        catalog ??= ScenarioStepCatalog.Shared;
         var builder = new StringBuilder();
         builder.AppendLine(
             $"Report {report.SchemaVersion} run {report.RunId} generated {report.GeneratedAt:O}.");
@@ -105,7 +109,7 @@ public static class ScenarioRunReportFormatter
                 builder.AppendLine($"- #{step.Sequence} {step.StepName} [{step.StepType}]");
                 if (step.Configuration.Count > 0)
                 {
-                    builder.AppendLine($"  config: {FormatConfiguration(step.Configuration)}");
+                    builder.AppendLine($"  config: {FormatStepConfiguration(step.StepType, step.Configuration, catalog)}");
                 }
             }
         }
@@ -117,7 +121,7 @@ public static class ScenarioRunReportFormatter
 
             if (step.Configuration.Count > 0)
             {
-                builder.AppendLine($"  config: {FormatConfiguration(step.Configuration)}");
+                builder.AppendLine($"  config: {FormatStepConfiguration(step.Type, step.Configuration, catalog)}");
             }
 
             builder.AppendLine(
@@ -190,6 +194,19 @@ public static class ScenarioRunReportFormatter
             configuration
                 .OrderBy(item => item.Key, StringComparer.Ordinal)
                 .Select(item => $"{item.Key}={item.Value}"));
+
+    private static string FormatStepConfiguration(
+        string stepType,
+        IReadOnlyDictionary<string, string> configuration,
+        ScenarioStepCatalog catalog)
+    {
+        var step = new ScenarioStepSnapshot("report", stepType, configuration);
+        return string.Join(
+            "; ",
+            ScenarioStepDisplay
+                .VisibleConfiguration(step, catalog)
+                .Select(item => $"{ScenarioStepDisplay.FormatConfigurationKey(step, item.Key, catalog)}={item.Value}"));
+    }
 
     private static string FormatOffset(double milliseconds)
         => milliseconds >= 0 ? $"+{milliseconds:0}" : $"{milliseconds:0}";

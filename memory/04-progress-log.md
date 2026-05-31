@@ -1930,3 +1930,11 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verified:
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepDisplayTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 11 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 207 tests.
+
+## 2026-05-31 - Scenario report text catalog labels
+
+- Readable scenario report text now formats step configuration through `ScenarioStepCatalog`, so Summary exports use the same labels and field order as test cards.
+- Report JSON remains machine-readable with saved configuration keys unchanged.
+- The report dialog passes the injected scenario catalog into text generation instead of relying only on raw report data.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunReportFormatterTests|FullyQualifiedName~ScenarioStepDisplayTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 14 tests.

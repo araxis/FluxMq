@@ -428,7 +428,7 @@
 
         var scenario = Scenario;
         var report = ScenarioRunReportFormatter.Create(result, scenario);
-        var textReport = ScenarioRunReportFormatter.ToText(report);
+        var textReport = ScenarioRunReportFormatter.ToText(report, ScenarioSteps);
         var jsonReport = ScenarioRunReportFormatter.ToJson(report);
         var dialog = await DialogService.ShowAsync<ScenarioRunReportDialog>(
             "Scenario report",
