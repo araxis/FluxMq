@@ -1,4 +1,3 @@
-using FluxMq.Pipeline.Definitions;
 using FluxMq.Pipeline.Scenarios;
 using Shouldly;
 

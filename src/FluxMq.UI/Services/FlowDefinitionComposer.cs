@@ -1,5 +1,5 @@
 using FluxMq.Core.Models;
-using FluxMq.Pipeline.Definitions;
+using FluxMq.App.Definitions;
 using FluxMq.Pipeline.Scenarios;
 using FluxMq.UI.Components.Workspace.Nodes.FlowAssertion;
 using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;

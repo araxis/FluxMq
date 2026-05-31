@@ -1,5 +1,6 @@
 using Shouldly;
 using FluxMq.Pipeline.Definitions;
+using FluxMq.Pipeline.Scenarios;
 using System.Text.Json;
 
 namespace FluxMq.Pipeline.Tests.Definitions;

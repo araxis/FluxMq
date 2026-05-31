@@ -1,6 +1,6 @@
 using Shouldly;
 using FluxMq.App;
-using FluxMq.Pipeline.Definitions;
+using FluxMq.App.Definitions;
 using Microsoft.Extensions.Configuration;
 using System.Text;
 
@@ -115,7 +115,7 @@ public sealed class FlowApplicationConfigurationLoaderTests
             """);
 
         var definition = new FlowApplicationConfigurationLoader().Load(configuration);
-        var result = new ApplicationDefinitionValidator().Validate(definition);
+        var result = new FluxMqApplicationDefinitionValidator().Validate(definition);
 
         definition.Dashboards["d1"].Widgets.ShouldBeEmpty();
         definition.Dashboards["d1"].Layout.Cells.ShouldBeEmpty();

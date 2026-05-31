@@ -9,7 +9,7 @@ namespace FluxMq.Components.MqttConditionRouter;
 public sealed class MqttConditionRouterComponent : IFlowNode
 {
     private readonly BroadcastBlock<FlowError> _errors;
-    private readonly BroadcastBlock<FlowLogEntry> _entries;
+    private readonly BufferBlock<FlowLogEntry> _entries;
     private readonly TransformManyBlock<MqttEnvelope, RoutedMqttMessage> _block;
     private readonly TransformBlock<RoutedMqttMessage, MqttEnvelope> _whenTrue;
     private readonly TransformBlock<RoutedMqttMessage, MqttEnvelope> _whenFalse;
@@ -23,7 +23,7 @@ public sealed class MqttConditionRouterComponent : IFlowNode
         Id = id ?? FlowNodeId.New();
         _condition = condition ?? throw new ArgumentNullException(nameof(condition));
         _errors = new BroadcastBlock<FlowError>(static error => error);
-        _entries = new BroadcastBlock<FlowLogEntry>(static entry => entry);
+        _entries = new BufferBlock<FlowLogEntry>();
         _block = new TransformManyBlock<MqttEnvelope, RoutedMqttMessage>(
             Route,
             new ExecutionDataflowBlockOptions

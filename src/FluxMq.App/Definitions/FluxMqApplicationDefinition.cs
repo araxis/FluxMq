@@ -1,3 +1,4 @@
+using FluxMq.Pipeline.Scenarios;
 using EngineApplicationDefinition = FluxFlow.Engine.Definitions.ApplicationDefinition;
 using EngineNodeDefinition = FluxFlow.Engine.Definitions.NodeDefinition;
 using EngineWorkflowDefinition = FluxFlow.Engine.Definitions.WorkflowDefinition;

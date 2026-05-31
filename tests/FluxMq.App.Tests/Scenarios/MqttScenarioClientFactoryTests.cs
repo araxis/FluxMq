@@ -1,10 +1,11 @@
 using FluxMq.App.Scenarios;
+using FluxMq.App.Definitions;
 using FluxMq.Components.MessageSource;
 using FluxMq.Core.Models;
 using FluxMq.Core.Mqtt;
-using FluxMq.Pipeline.Definitions;
 using FluxFlow.Engine.Components;
-using FluxMq.Pipeline.Runtime;
+using FluxFlow.Engine.Definitions;
+using FluxFlow.Engine.Runtime;
 using FluxMq.Pipeline.Scenarios;
 using MQTTnet.Protocol;
 using Shouldly;
@@ -20,7 +21,7 @@ public sealed class MqttScenarioClientFactoryTests
     public async Task ApplicationDefinitionFactory_CreatesIsolatedClientFromSharedAppResource()
     {
         var capturedProfiles = new List<MqttConnectionProfile>();
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Resources =
             {

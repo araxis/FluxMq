@@ -11,7 +11,7 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource
     private readonly IMqttBrokerClient _client;
     private readonly ActionBlock<MqttPublishRequest> _block;
     private readonly BroadcastBlock<FlowError> _errors;
-    private readonly BroadcastBlock<FlowLogEntry> _entries;
+    private readonly BufferBlock<FlowLogEntry> _entries;
     private readonly BufferBlock<FlowEvent> _events;
     private int _publishedCount;
     private string? _lastPublishedTopic;
@@ -30,7 +30,7 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource
         Id = id ?? FlowNodeId.New();
         _client = client ?? throw new ArgumentNullException(nameof(client));
         _errors = new BroadcastBlock<FlowError>(static error => error);
-        _entries = new BroadcastBlock<FlowLogEntry>(static entry => entry);
+        _entries = new BufferBlock<FlowLogEntry>();
         _events = new BufferBlock<FlowEvent>();
         _block = new ActionBlock<MqttPublishRequest>(
             PublishAsync,

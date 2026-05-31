@@ -1,13 +1,13 @@
 using FluxMq.Core.Models;
-using FluxMq.Pipeline.Definitions;
-using FluxMq.Pipeline.Runtime;
+using FluxFlow.Engine.Definitions;
+using FluxMq.App.Definitions;
 using System.Text.Json;
 
 namespace FluxMq.App.Scenarios;
 
 internal static class ApplicationDefinitionMqttConnectionProfileResolver
 {
-    public static MqttConnectionProfile Resolve(ApplicationDefinition definition, string connectionName)
+    public static MqttConnectionProfile Resolve(FluxMqApplicationDefinition definition, string connectionName)
     {
         ArgumentNullException.ThrowIfNull(definition);
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionName);

@@ -3,8 +3,9 @@ using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Mqtt;
 using FluxFlow.Engine.Components;
-using FluxMq.Pipeline.Definitions;
-using FluxMq.Pipeline.Runtime;
+using FluxFlow.Engine.Definitions;
+using FluxFlow.Engine.Runtime;
+using FluxMq.App.Definitions;
 using FluxMq.App;
 using Microsoft.Extensions.Configuration;
 using MQTTnet.Protocol;
@@ -401,8 +402,8 @@ public sealed class FlowApplicationHostTests
 
         var startResult = await host.StartAsync();
         startResult.IsSuccess.ShouldBeFalse();
-        var validationError = startResult.RuntimeBuild!.Validation.Errors.Single(
-            error => error.Code == ApplicationDefinitionValidationErrorCode.MissingScenarioStepResource);
+        var validationError = startResult.DefinitionValidation!.Errors.Single(
+            error => error.Code == FluxMqApplicationDefinitionValidationErrorCode.MissingScenarioStepResource);
         validationError.Message.ShouldContain("publishMessage");
         validationError.Message.ShouldContain("publish");
         validationError.Message.ShouldContain("missingBroker");

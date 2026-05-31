@@ -1,5 +1,3 @@
-using FluxMq.Pipeline.Definitions;
-
 namespace FluxMq.Pipeline.Scenarios;
 
 public static class ScenarioEventSourceRequirements

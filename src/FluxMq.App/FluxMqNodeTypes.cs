@@ -1,4 +1,4 @@
-using FluxMq.Pipeline.Definitions;
+using FluxFlow.Engine.Definitions;
 
 namespace FluxMq.App;
 

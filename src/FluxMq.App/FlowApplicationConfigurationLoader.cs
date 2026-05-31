@@ -1,4 +1,4 @@
-using FluxMq.Pipeline.Definitions;
+using FluxMq.App.Definitions;
 using Microsoft.Extensions.Configuration;
 using System.Globalization;
 using System.Text.Json;
@@ -10,7 +10,7 @@ public sealed class FlowApplicationConfigurationLoader
 {
     public const string DefaultSectionName = "FluxMq:FlowApplication";
 
-    public ApplicationDefinition Load(IConfiguration configuration, string sectionName = DefaultSectionName)
+    public FluxMqApplicationDefinition Load(IConfiguration configuration, string sectionName = DefaultSectionName)
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
@@ -28,7 +28,7 @@ public sealed class FlowApplicationConfigurationLoader
 
         try
         {
-            var definition = json.Deserialize<ApplicationDefinition>(ApplicationDefinitionJson.CreateSerializerOptions())
+            var definition = json.Deserialize<FluxMqApplicationDefinition>(FluxMqApplicationDefinitionJson.CreateSerializerOptions())
                 ?? throw new FlowApplicationConfigurationException($"Configuration section '{sectionName}' did not contain a flow application definition.");
             return definition with
             {

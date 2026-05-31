@@ -21,7 +21,7 @@ public sealed class FlowAssertionComponent<TInput> : IFlowNode, IFlowEventSource
     private readonly BufferBlock<FlowAssertionResult> _result;
     private readonly BufferBlock<TInput> _passed;
     private readonly BufferBlock<TInput> _failed;
-    private readonly BroadcastBlock<FlowLogEntry> _entries;
+    private readonly BufferBlock<FlowLogEntry> _entries;
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly BufferBlock<FlowEvent> _events;
     private readonly IFlowPredicate<TInput> _predicate;
@@ -46,7 +46,7 @@ public sealed class FlowAssertionComponent<TInput> : IFlowNode, IFlowEventSource
         _expression = expression.Trim();
         _failureMessage = string.IsNullOrWhiteSpace(failureMessage) ? DefaultFailureMessage : failureMessage.Trim();
         _errors = new BroadcastBlock<FlowError>(static error => error);
-        _entries = new BroadcastBlock<FlowLogEntry>(static entry => entry);
+        _entries = new BufferBlock<FlowLogEntry>();
         _events = new BufferBlock<FlowEvent>();
         _result = new BufferBlock<FlowAssertionResult>(new DataflowBlockOptions
         {

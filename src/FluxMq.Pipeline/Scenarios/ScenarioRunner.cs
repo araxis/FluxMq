@@ -1,5 +1,4 @@
 using FluxFlow.Engine.Components;
-using FluxMq.Pipeline.Definitions;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Pipeline.Scenarios;

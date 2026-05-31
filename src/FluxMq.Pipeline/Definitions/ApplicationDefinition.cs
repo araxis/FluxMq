@@ -1,3 +1,5 @@
+using FluxMq.Pipeline.Scenarios;
+
 namespace FluxMq.Pipeline.Definitions;
 
 public sealed record ApplicationDefinition

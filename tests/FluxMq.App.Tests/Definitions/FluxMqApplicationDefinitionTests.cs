@@ -1,4 +1,5 @@
 using FluxMq.App.Definitions;
+using FluxMq.Pipeline.Scenarios;
 using Shouldly;
 using System.Text.Json;
 using EngineApplicationDefinitionValidator = FluxFlow.Engine.Definitions.ApplicationDefinitionValidator;

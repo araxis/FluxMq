@@ -1,9 +1,10 @@
 using FluxMq.Core.Models;
 using FluxMq.Core.Mqtt;
+using FluxFlow.Engine.Definitions;
+using FluxFlow.Engine.Runtime;
 using FluxMq.App.Scenarios;
+using FluxMq.App.Definitions;
 using FluxMq.Components.Storage.Repositories;
-using FluxMq.Pipeline.Definitions;
-using FluxMq.Pipeline.Runtime;
 using FluxMq.Pipeline.Scenarios;
 using Microsoft.Extensions.Configuration;
 
@@ -16,7 +17,7 @@ public sealed class FlowApplicationHost(
     string sectionName = FlowApplicationConfigurationLoader.DefaultSectionName,
     ScenarioRunner? scenarioRunner = null,
     Func<MqttConnectionProfile, IMqttBrokerClient>? scenarioClientFactory = null,
-    ApplicationDefinition? applicationDefinition = null)
+    FluxMqApplicationDefinition? applicationDefinition = null)
     : IAsyncDisposable, IDisposable
 {
     private readonly IConfiguration? _configuration = configuration;
@@ -25,13 +26,13 @@ public sealed class FlowApplicationHost(
     private readonly ScenarioRunner _scenarioRunner = scenarioRunner ?? CreateDefaultScenarioRunner();
     private readonly Func<MqttConnectionProfile, IMqttBrokerClient> _scenarioClientFactory =
         scenarioClientFactory ?? (static profile => new MqttBrokerClient(profile));
-    private readonly ApplicationDefinition? _applicationDefinition = applicationDefinition;
-    private ApplicationDefinition? _definition;
+    private readonly FluxMqApplicationDefinition? _applicationDefinition = applicationDefinition;
+    private FluxMqApplicationDefinition? _definition;
     private ApplicationRuntime? _runtime;
     private bool _disposed;
 
     public FlowApplicationHostState State { get; private set; } = FlowApplicationHostState.Empty;
-    public ApplicationDefinition? Definition => _definition;
+    public FluxMqApplicationDefinition? Definition => _definition;
     public ApplicationRuntime? Runtime => _runtime;
     public FlowApplicationHostBuildResult? LastBuildResult { get; private set; }
     public Exception? LastException { get; private set; }
@@ -52,7 +53,7 @@ public sealed class FlowApplicationHost(
     }
 
     public static FlowApplicationHost CreateDefault(
-        ApplicationDefinition definition,
+        FluxMqApplicationDefinition definition,
         IMessageRepository? messageRepository = null,
         Func<MqttConnectionProfile, IMqttBrokerClient>? clientFactory = null)
     {
@@ -90,7 +91,15 @@ public sealed class FlowApplicationHost(
             LastException = null;
             var definition = _applicationDefinition ?? LoadDefinitionFromConfiguration();
             _definition = definition;
-            var runtimeBuild = _runtimeBuilder.Build(definition);
+            var definitionValidation = new FluxMqApplicationDefinitionValidator().Validate(definition);
+            if (!definitionValidation.IsValid)
+            {
+                State = FlowApplicationHostState.Empty;
+                LastBuildResult = FlowApplicationHostBuildResult.FromDefinitionValidation(definitionValidation);
+                return LastBuildResult;
+            }
+
+            var runtimeBuild = _runtimeBuilder.Build(definition.ToEngineDefinition());
 
             if (runtimeBuild.IsSuccess)
             {
@@ -102,7 +111,7 @@ public sealed class FlowApplicationHost(
                 State = FlowApplicationHostState.Empty;
             }
 
-            LastBuildResult = FlowApplicationHostBuildResult.FromRuntime(runtimeBuild);
+            LastBuildResult = FlowApplicationHostBuildResult.FromRuntime(definitionValidation, runtimeBuild);
             return LastBuildResult;
         }
         catch (FlowApplicationConfigurationException exception)
@@ -288,7 +297,7 @@ public sealed class FlowApplicationHost(
         }
     }
 
-    private ApplicationDefinition LoadDefinitionFromConfiguration()
+    private FluxMqApplicationDefinition LoadDefinitionFromConfiguration()
     {
         if (_configuration is null)
         {
