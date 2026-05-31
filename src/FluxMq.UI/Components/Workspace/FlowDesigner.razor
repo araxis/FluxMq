@@ -263,8 +263,9 @@
                             if (IsDefinitionProperty(port.Name))
                                 continue;
 
-                            foreach (var sourceReference in ReadSourceReferences(port.Value))
+                            foreach (var sourceLink in ReadSourceLinks(port.Value))
                             {
+                                var sourceReference = sourceLink.Reference;
                                 var sourceName = sourceReference.Split('.', 2)[0];
                                 if (nodes.TryGetValue(sourceName, out var sourceNode))
                                 {
@@ -273,8 +274,16 @@
                                     var targetPort = PortFor(targetNode, PortAlignment.Left, port.Name);
                                     if (sourcePort is null || targetPort is null) continue;
 
-                                    var linkColor = IsErrorLink(sourcePortName, port.Name) ? "#F87171" : "#2DD4BF";
-                                    _diagram.Links.Add(CreateStyledLink(sourcePort, targetPort, linkColor));
+                                    var linkColor = sourceLink.HasCondition
+                                        ? "#FBBF24"
+                                        : IsErrorLink(sourcePortName, port.Name) ? "#F87171" : "#2DD4BF";
+                                    var link = CreateStyledLink(sourcePort, targetPort, linkColor);
+                                    if (sourceLink.HasCondition)
+                                    {
+                                        link.Width = 3;
+                                    }
+
+                                    _diagram.Links.Add(link);
                                 }
                             }
                         }
@@ -704,24 +713,38 @@
             : false;
     }
 
-    private static IEnumerable<string> ReadSourceReferences(JsonElement element)
+    private static IEnumerable<SourceLinkReference> ReadSourceLinks(JsonElement element)
     {
         if (element.ValueKind == JsonValueKind.String && element.GetString() is { } reference)
         {
-            yield return reference;
+            yield return new SourceLinkReference(reference, null);
         }
         else if (element.ValueKind == JsonValueKind.Array)
         {
             foreach (var item in element.EnumerateArray())
-                foreach (var sourceReference in ReadSourceReferences(item))
+                foreach (var sourceReference in ReadSourceLinks(item))
                     yield return sourceReference;
         }
         else if (element.ValueKind == JsonValueKind.Object)
         {
+            var condition = ReadCondition(element);
             if (element.TryGetProperty("from", out var from) || element.TryGetProperty("From", out from))
-                foreach (var sourceReference in ReadSourceReferences(from))
-                    yield return sourceReference;
+                foreach (var sourceReference in ReadSourceLinks(from))
+                    yield return sourceReference.When is { Length: > 0 }
+                        ? sourceReference
+                        : sourceReference with { When = condition };
         }
+    }
+
+    private static string? ReadCondition(JsonElement element)
+    {
+        if ((element.TryGetProperty("when", out var when) || element.TryGetProperty("When", out when)) &&
+            when.ValueKind == JsonValueKind.String)
+        {
+            return when.GetString();
+        }
+
+        return null;
     }
 
     private static bool IsDefinitionProperty(string name)
@@ -743,6 +766,11 @@
     private static bool IsErrorLink(string? sourcePortName, string targetPortName)
         => string.Equals(sourcePortName, "Errors", StringComparison.OrdinalIgnoreCase) ||
            string.Equals(targetPortName, "FlowErrors", StringComparison.OrdinalIgnoreCase);
+
+    private readonly record struct SourceLinkReference(string Reference, string? When)
+    {
+        public bool HasCondition => !string.IsNullOrWhiteSpace(When);
+    }
 
     private void UpdatePulseTimer()
     {

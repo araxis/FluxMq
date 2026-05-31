@@ -637,4 +637,4 @@ Review the scenario event-step field catalog slice:
 2. Do: edit either step and change event type, topic prefix, status, payload contains, QoS, retain, schema id, and timeout. Expected: the same MudBlazor editor opens as before, values round-trip into the scenario JSON, and unsupported event-specific filter fields are cleared when the event type changes.
 3. Do: run the UI tests for this slice. Expected: focused scenario catalog/composer tests pass with 76 tests, and the UI test project passes with 199 tests.
 
-Next implementation slice: expose conditional links cleanly in the designer/workspace model where useful, then return to scenario/test composition around normal components plus narrow test-specific `expect.event`/`when.event` blocks. Prefer catalog/runner/shared-service changes over adding one-off logic inside Razor components.
+Next implementation slice: add a small designer affordance for editing conditional-link expressions, then return to scenario/test composition around normal components plus narrow test-specific `expect.event`/`when.event` blocks. Prefer catalog/runner/shared-service changes over adding one-off logic inside Razor components.
