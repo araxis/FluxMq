@@ -9,7 +9,7 @@ FluxMQ is also a dynamic ELT app. Sources extract message streams, mapper nodes 
 ## Current Capabilities
 
 - MQTT client model and connection manager.
-- TPL Dataflow-based message pipeline foundation.
+- Package-backed workflow runtime with typed ports, lifecycle, mapping, and conditional links.
 - Topic index and topic tree UI components.
 - LiteDB persistence for profiles, sessions, and messages.
 - Payload inspector for JSON, XML, Base64, text, binary, and empty payloads.
@@ -26,7 +26,7 @@ FluxMQ is also a dynamic ELT app. Sources extract message streams, mapper nodes 
   - replay source
 - Flow error ports with stable numeric error codes.
 - Metrics snapshots for flow observability.
-- Initial Fork Flow application definition model and validation.
+- FluxMQ application definition model with engine-owned resources/workflows plus app-owned dashboards/tests.
 - MAUI Blazor Hybrid desktop alpha surface in `FluxMq.UI`.
 - Desktop broker connection, publish, topic inspection, payload inspection, LiteDB-backed recording, definition file load/save, validation, run, and stop controls.
 
@@ -47,6 +47,6 @@ OpenTelemetry support is planned later for exporting selected runtime metrics, t
 
 ## Current Development Phase
 
-The project is still in foundation work. Core runtime pieces are being built before the full drag-and-drop Fork Flow editor. This keeps the runtime honest: the visual editor will represent real executable flow application definitions, not a separate UI-only model.
+The project is still in foundation work. Runtime behavior now lives behind the package engine before the full drag-and-drop Fork Flow editor is finished. This keeps the runtime honest: the visual editor will represent real executable flow application definitions, not a separate UI-only model.
 
-Fork Flow now has an initial application definition model with shared resources and named workflows. The first cold-start runtime builder can create registered nodes and link typed ports from that definition. The preferred alpha shape uses `mqtt.connection` plus `mqtt.trigger` for live traffic, and explicit sources such as `session.source`, `replay.source`, and `generated.source` for stored, replayed, or configured message traffic. Actor nodes consume explicit request models, so users add `flow.mapper` nodes when a source output must become a request such as `MqttPublishRequest` or `FileWriteRequest`. The first desktop alpha can edit, save, load, validate, and run this JSON through the same host boundary. Runtime reload and richer graph patching are still planned work.
+Fork Flow now has an application definition model with shared resources and named workflows, plus FluxMQ-owned dashboards and tests in the app document. The package runtime builder can create registered nodes, link typed ports, and evaluate per-link conditions from that definition. The preferred alpha shape uses `mqtt.connection` plus `mqtt.trigger` for live traffic, and explicit sources such as `session.source`, `replay.source`, and `generated.source` for stored, replayed, or configured message traffic. Actor nodes consume explicit request models, so users add `flow.mapper` nodes when a source output must become a request such as `MqttPublishRequest` or `FileWriteRequest`. The first desktop alpha can edit, save, load, validate, and run this JSON through the same host boundary. Runtime reload and richer graph patching are still planned work.

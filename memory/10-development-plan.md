@@ -620,7 +620,7 @@ Done when:
   - scenario tests cover the helper directly so CLI/UI callers share one rule
 
 The engine package migration has removed FluxMQ's local workflow runtime and definition copies. `FluxMq.App` now owns workspace validation and projects executable resources/workflows into `FluxFlow.Engine`; `FluxMq.Scenarios` owns the test/scenario runner primitives; normal runtime components stay in `FluxMq.Components`.
-FluxMQ is now on `FluxFlow.Engine` `0.4.0-alpha.1`, so production workflows can use package-owned conditional links through per-link `when` expressions.
+FluxMQ is now on `FluxFlow.Engine` `0.4.0-alpha.1`, so production workflows can use package-owned conditional links through per-link `when` expressions. README and durable docs describe the package-backed runtime boundary and the current active solution layout.
 
 ## Next Action
 

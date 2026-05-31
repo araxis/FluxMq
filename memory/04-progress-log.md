@@ -1873,3 +1873,9 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verified:
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~ApplicationRuntimeBuilder_RoutesConditionalLinks" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 1 test.
   - `dotnet test FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 479 tests.
+
+## 2026-05-31 - Package migration documentation cleanup
+
+- Removed stale local build-output folders for the retired pipeline/replay/storage test projects.
+- Updated README and docs to describe the current package-backed runtime boundary, FluxMQ-owned app document shape, scenario project, and active solution layout.
+- Replaced stale MQTT client and local pipeline references in documentation with the current `IMqttBrokerClient`, `FluxFlow.Engine`, and `FluxMq.Scenarios` names.

@@ -105,7 +105,7 @@ The stored-session mode requires the host to provide `IMessageRepository` when r
 ```mermaid
 flowchart LR
     Profile["Connection profile"] --> Connection["MqttConnectionComponent"]
-    Connection --> Client["IFluxMqttClient"]
+    Connection --> Client["IMqttBrokerClient"]
     Client --> Broadcast["Shared message broadcast"]
     Trigger["MqttTriggerComponent"] --> Subscribe["Subscribe topic filters"]
     Broadcast --> Trigger
@@ -456,7 +456,7 @@ Invalid payloads produce `JsonSchemaValidationResult` values with `IsValid = fal
 ```mermaid
 flowchart LR
     In["Input: MqttPublishRequest"] --> Publisher["MqttPublisherComponent"]
-    Publisher --> Client["IFluxMqttClient.PublishAsync"]
+    Publisher --> Client["IMqttBrokerClient.PublishAsync"]
     Publisher -->|publish failure| Errors["Errors: FlowError code 2000"]
 ```
 
@@ -483,7 +483,7 @@ The component preserves publish order by default. Higher parallelism is availabl
 
 `MqttRecorderComponent` stores incoming `MqttRecordingRequest` commands for a recording session.
 
-This component lives in `FluxMq.Components` because it bridges flow nodes with storage repositories. `FluxMq.Pipeline` stays independent from storage and concrete component dependencies.
+This component lives in `FluxMq.Components` because it bridges flow nodes with storage repositories. The package runtime stays independent from storage and concrete component dependencies.
 
 ### Behavior
 

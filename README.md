@@ -23,10 +23,10 @@ Current state:
 - Core project structure in place.
 - MQTTnet selected for MQTT integration.
 - LiteDB selected for local-first storage.
-- Test projects created for core, pipeline, replay, storage, app host, and CLI layers.
-- Fork Flow application definition and cold-start runtime builder in place.
+- `FluxFlow.Engine` package selected for workflow definitions, typed ports, runtime building, lifecycle, mapping, and conditional links.
+- FluxMQ application definitions keep app-owned resources, workflows, dashboards, and tests together while projecting executable resources/workflows into the engine runtime.
 - `FluxMq.App` host boundary can load `FluxMq:FlowApplication` through .NET configuration.
-- `FluxMq.Cli` can validate a flow application JSON file.
+- `FluxMq.Cli` can validate and run an application JSON file.
 - Project memory and planning files tracked in `memory/`.
 
 ## Architecture Direction
@@ -35,9 +35,9 @@ FluxMQ will be built around the message/session flow first:
 
 ```text
 MQTTnet Client
-  -> FluxMqttClient
+  -> MqttBrokerClient
   -> Channel<MqttEnvelope>
-  -> Flow Application Runtime
+  -> FluxFlow.Engine Application Runtime
   -> Storage / Metrics / Topic Index
   -> UI Projection / Host Integration
 ```
@@ -66,18 +66,17 @@ Observability and replay timeline:
 /src
   /FluxMq.App
   /FluxMq.Cli
+  /FluxMq.Components
   /FluxMq.Core
-  /FluxMq.Pipeline
-  /FluxMq.Replay
-  /FluxMq.Storage
+  /FluxMq.Scenarios
   /FluxMq.UI
 /tests
   /FluxMq.App.Tests
   /FluxMq.Cli.Tests
+  /FluxMq.Components.Tests
   /FluxMq.Core.Tests
-  /FluxMq.Pipeline.Tests
-  /FluxMq.Replay.Tests
-  /FluxMq.Storage.Tests
+  /FluxMq.Scenarios.Tests
+  /FluxMq.UI.Tests
 /docs
 /docs-site
 /eng
