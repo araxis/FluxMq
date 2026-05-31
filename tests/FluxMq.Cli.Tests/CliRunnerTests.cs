@@ -346,8 +346,48 @@ public sealed class CliRunnerTests
         exitCode.ShouldBe((int)CliExitCode.ValidationError);
         output.Lines.ShouldBeEmpty();
         error.Lines.ShouldContain(line =>
-            line.Contains("contains expect.event steps before any runner-owned event source", StringComparison.Ordinal) &&
-            line.Contains("Add a scenario mqtt.publisher or mqtt.trigger step", StringComparison.Ordinal));
+            line.Contains("contains event-observing steps before any runner-owned event source", StringComparison.Ordinal) &&
+            line.Contains("Add a scenario mqtt.publisher or mqtt.trigger step before expect.event or when.event", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task RunAsync_ReturnsValidationErrorWhenCliScenarioWhenEventRequiresRuntimeEvents()
+    {
+        using var temp = TemporaryJsonFile(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "tests": {
+                    "conditional": {
+                      "steps": {
+                        "when": {
+                          "type": "when.event",
+                          "configuration": {
+                            "eventType": "mqtt.message.published",
+                            "topicStartsWith": "test",
+                            "timeoutMs": 100
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """);
+
+        var output = new TestOutput();
+        var error = new TestOutput();
+        var runner = new CliRunner(output, error);
+
+        var exitCode = await runner.RunAsync(["scenario", "--config", temp.Path, "--name", "conditional"]);
+
+        exitCode.ShouldBe((int)CliExitCode.ValidationError);
+        output.Lines.ShouldBeEmpty();
+        error.Lines.ShouldContain(line =>
+            line.Contains("contains event-observing steps before any runner-owned event source", StringComparison.Ordinal) &&
+            line.Contains("Add a scenario mqtt.publisher or mqtt.trigger step before expect.event or when.event", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -412,6 +452,73 @@ public sealed class CliRunnerTests
         exitCode.ShouldBe((int)CliExitCode.Success);
         error.Lines.ShouldBeEmpty();
         output.Lines.ShouldContain(line => line.Contains("Scenario 'publishOnly' passed."));
+        client.PublishCalls.ShouldBe(1);
+        client.DisposeCalls.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task RunAsync_RunsScenarioWithRunnerOwnedMqttPublisherAndWhenEvent()
+    {
+        using var temp = TemporaryJsonFile(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "resources": {
+                    "local-broker": {
+                      "type": "mqtt.connection",
+                      "configuration": {
+                        "profile": {
+                          "name": "local-broker",
+                          "host": "localhost",
+                          "port": 1883
+                        }
+                      }
+                    }
+                  },
+                  "tests": {
+                    "conditionalPublish": {
+                      "steps": {
+                        "publish": {
+                          "type": "mqtt.publisher",
+                          "configuration": {
+                            "connection": "local-broker",
+                            "topic": "test",
+                            "payload": { "hello": "fluxmq" },
+                            "payloadEncoding": "json",
+                            "qos": 1,
+                            "retain": false
+                          }
+                        },
+                        "when": {
+                          "type": "when.event",
+                          "configuration": {
+                            "eventType": "mqtt.message.published",
+                            "topicStartsWith": "test",
+                            "status": "published",
+                            "payloadContains": "\"hello\":\"fluxmq\"",
+                            "timeoutMs": 1000
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """);
+
+        var client = new FakeFluxMqttClient();
+        var output = new TestOutput();
+        var error = new TestOutput();
+        var runner = new CliRunner(output, error, _ => new FakeScenarioClientFactory(client));
+
+        var exitCode = await runner.RunAsync(["scenario", "--config", temp.Path, "--name", "conditionalPublish"]);
+
+        exitCode.ShouldBe((int)CliExitCode.Success);
+        error.Lines.ShouldBeEmpty();
+        output.Lines.ShouldContain(line => line.Contains("Scenario 'conditionalPublish' passed."));
+        output.Lines.ShouldContain(line => line.Contains("- when [when.event] Passed"));
         client.PublishCalls.ShouldBe(1);
         client.DisposeCalls.ShouldBe(1);
     }

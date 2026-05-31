@@ -1694,3 +1694,19 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttScenarioClientFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqPublisherEventsApp\ -m:1` passes with 4 tests.
   - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore --filter "FullyQualifiedName~CliRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqPublisherEventsCli3\ -m:1` passes with 15 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqPublisherEventsFull\ -m:1` passes with 484 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+
+## 2026-05-31 - CLI event-observer scenario guard
+
+- Tightened the CLI scenario fast-fail guard so both `expect.event` and `when.event` require a prior runner-owned event source.
+- A CLI scenario that starts with `when.event` now fails validation with guidance to add a scenario `mqtt.publisher` or `mqtt.trigger`, instead of silently skipping because no event stream is attached.
+- Added positive CLI coverage showing `mqtt.publisher` followed by `when.event` passes when the guard matches the publisher event.
+- Moved the event-source requirement into a shared scenario helper and applied it to desktop test runs that are not attached to a running app runtime.
+- A desktop test run with a leading `when.event` now fails immediately with a `RunFailed` diagnostic instead of waiting for the step timeout.
+- Added positive desktop coverage showing an isolated `mqtt.publisher` step can still feed a following `when.event` through the scenario journal without starting the app runtime.
+- Scenario setup failures in the desktop test runner no longer mark the app runtime state as faulted; they stay scoped to scenario diagnostics/logs.
+- Added direct pipeline tests for the shared event-source requirement helper so the rule is owned by the scenario layer, not only by CLI/UI callers.
+- Verified:
+  - `dotnet test tests\FluxMq.Pipeline.Tests\FluxMq.Pipeline.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioEventSourceRequirementsTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioEventSourceRequirementsPipeline\ -m:1` passes with 9 tests.
+  - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore --filter "FullyQualifiedName~CliRunnerTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqSharedScenarioEventGuardCli\ -m:1` passes with 17 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowWorkspaceServiceTests" -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioDoesNotFaultRuntimeStateUi\ -m:1` passes with 52 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:BaseOutputPath=$env:TEMP\FluxMqScenarioDoesNotFaultRuntimeStateFull\ -m:1` passes with 497 tests. The pass still prints existing WinAppSDK PRI qualifier warnings.

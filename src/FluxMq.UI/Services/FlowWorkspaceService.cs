@@ -1311,6 +1311,13 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             }
 
             var isolatedEvents = CreateScenarioEventSource(out var shouldCompleteScenarioEvents);
+            if (shouldCompleteScenarioEvents is not null &&
+                ScenarioEventSourceRequirements.RequiresAttachedEventStream(scenario))
+            {
+                throw new InvalidOperationException(
+                    ScenarioEventSourceRequirements.DescribeMissingEventStream(scenarioName));
+            }
+
             var services = CreateScenarioStepServices(definition);
             ScenarioRunResult result;
             try
@@ -1347,7 +1354,6 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            State = RuntimeWorkspaceState.Faulted;
             Diagnostics =
             [
                 new WorkspaceDiagnostic("Error", "Scenario", "RunFailed", exception.Message)

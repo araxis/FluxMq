@@ -601,6 +601,116 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public async Task RunActiveTestScenarioAsync_AllowsWhenEventAfterRunnerOwnedPublisherWithoutStartingRuntime()
+    {
+        var session = new FakeRuntimeFluxMqttClient();
+        await using var service = new FlowWorkspaceService(new FlowDefinitionComposer(), runtimeClientFactory: _ => session);
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "resources": {
+                "local-broker": {
+                  "type": "mqtt.connection",
+                  "configuration": {
+                    "profile": {
+                      "name": "local-broker",
+                      "host": "localhost",
+                      "port": 1883,
+                      "clientId": "test-client"
+                    }
+                  }
+                }
+              },
+              "tests": {
+                "conditionalPublish": {
+                  "steps": {
+                    "publish": {
+                      "type": "mqtt.publisher",
+                      "configuration": {
+                        "connection": "local-broker",
+                        "topic": "test",
+                        "payload": { "hello": "fluxmq" },
+                        "payloadEncoding": "json",
+                        "qos": 1,
+                        "retain": false
+                      }
+                    },
+                    "when": {
+                      "type": "when.event",
+                      "configuration": {
+                        "eventType": "mqtt.message.published",
+                        "topicStartsWith": "test",
+                        "status": "published",
+                        "payloadContains": "\"hello\":\"fluxmq\"",
+                        "timeoutMs": 1000
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+        service.SetActiveTest("conditionalPublish");
+
+        var result = (await service.RunActiveTestScenarioAsync()).ShouldNotBeNull();
+
+        result.IsSuccess.ShouldBeTrue(CreateScenarioFailureDetails(result, service.Logs));
+        result.Steps.Count.ShouldBe(2);
+        result.Steps[1].Status.ShouldBe(ScenarioStepRunStatus.Passed);
+        result.Steps[1].MatchedEvent.ShouldNotBeNull().Topic.ShouldBe("test");
+        service.State.ShouldNotBe(RuntimeWorkspaceState.Running);
+        service.RuntimeEvents.ShouldBeEmpty();
+        session.Published.ShouldHaveSingleItem().Topic.ShouldBe("test");
+    }
+
+    [Fact]
+    public async Task RunActiveTestScenarioAsync_FailsFastWhenEventObserverHasNoEventSource()
+    {
+        await using var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "tests": {
+                "conditional": {
+                  "steps": {
+                    "when": {
+                      "type": "when.event",
+                      "configuration": {
+                        "eventType": "mqtt.message.published",
+                        "topicStartsWith": "test",
+                        "timeoutMs": 10000
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+        service.SetActiveTest("conditional");
+
+        var result = await service.RunActiveTestScenarioAsync().WaitAsync(TimeSpan.FromSeconds(1));
+
+        result.ShouldBeNull();
+        service.State.ShouldBe(RuntimeWorkspaceState.Idle);
+        service.LastScenarioRunResult.ShouldBeNull();
+        var diagnostic = service.Diagnostics.ShouldHaveSingleItem();
+        diagnostic.Code.ShouldBe("RunFailed");
+        diagnostic.Message.ShouldContain("contains event-observing steps before any runner-owned event source");
+        diagnostic.Message.ShouldContain("start the app runtime");
+        service.Logs.ShouldContain(log =>
+            log.Scope == WorkspaceLogScopes.TestRunner &&
+            log.ArtifactKind == WorkspaceLogArtifactKinds.Test &&
+            log.ArtifactName == "conditional" &&
+            log.Code == "RunFailed");
+    }
+
+    [Fact]
     public async Task RunActiveTestScenarioAsync_UsesRunningRuntimeConnectionProfileForScenarioClients()
     {
         var factoryProfiles = new List<MqttConnectionProfile>();
