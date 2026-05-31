@@ -1946,3 +1946,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Moved the field option normalization test to the scenario test project so the lower layer owns its own contract.
 - Verified:
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepCatalogTests|FullyQualifiedName~ScenarioStepDisplayTests|FullyQualifiedName~ScenarioRunReportFormatterTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 22 tests.
+
+## 2026-05-31 - Scenario definition catalog layer split
+
+- Moved scenario step definitions, field defaults, finite options, and attribute filter key helpers into `FluxMq.Scenarios`.
+- The UI scenario catalog now wraps the lower definition catalog and only adds UI metadata such as icons and editor kind.
+- Dashboard event filter attribute helpers now delegate to the shared scenario configuration key helpers, keeping attribute filter keys consistent across dashboards, reports, and tests.
+- Added scenario-layer coverage for known definitions, defaults, option values, fallback definitions, and attribute filter keys.
+- Verified:
+  - `dotnet test tests\FluxMq.Scenarios.Tests\FluxMq.Scenarios.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 35 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 206 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 494 tests.

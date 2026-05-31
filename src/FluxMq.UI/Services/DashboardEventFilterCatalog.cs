@@ -1,4 +1,5 @@
 using FluxFlow.Engine.Components;
+using FluxMq.Scenarios;
 using FluxMq.UI.Models;
 
 namespace FluxMq.UI.Services;
@@ -9,7 +10,7 @@ public sealed class DashboardEventFilterCatalog
     public const string TopicStartsWithKey = "topicStartsWith";
     public const string SubjectStartsWithKey = "subjectStartsWith";
     public const string StatusKey = "status";
-    public const string AttributeKeyPrefix = "attribute:";
+    public const string AttributeKeyPrefix = ScenarioStepConfigurationKeys.AttributeKeyPrefix;
 
     private const string AnyValue = "";
 
@@ -63,20 +64,10 @@ public sealed class DashboardEventFilterCatalog
            EventTypes[0];
 
     public static string AttributeFilterKey(string attributeName)
-        => $"{AttributeKeyPrefix}{attributeName}";
+        => ScenarioStepConfigurationKeys.AttributeFilterKey(attributeName);
 
     public static bool TryGetAttributeName(string key, out string attributeName)
-    {
-        if (key.StartsWith(AttributeKeyPrefix, StringComparison.Ordinal) &&
-            key.Length > AttributeKeyPrefix.Length)
-        {
-            attributeName = key[AttributeKeyPrefix.Length..];
-            return true;
-        }
-
-        attributeName = string.Empty;
-        return false;
-    }
+        => ScenarioStepConfigurationKeys.TryGetAttributeName(key, out attributeName);
 
     public IReadOnlyDictionary<string, string> CreateEmptyConfiguration()
     {
