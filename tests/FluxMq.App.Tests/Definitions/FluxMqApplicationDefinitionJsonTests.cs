@@ -1,11 +1,12 @@
 using Shouldly;
-using FluxMq.Pipeline.Definitions;
+using FluxFlow.Engine.Definitions;
+using FluxMq.App.Definitions;
 using FluxMq.Pipeline.Scenarios;
 using System.Text.Json;
 
-namespace FluxMq.Pipeline.Tests.Definitions;
+namespace FluxMq.App.Tests.Definitions;
 
-public sealed class FlowApplicationDefinitionJsonTests
+public sealed class FluxMqApplicationDefinitionJsonTests
 {
     [Fact]
     public void Deserialize_SupportsApplicationResourcesAndWorkflowNodeObjects()
@@ -31,9 +32,9 @@ public sealed class FlowApplicationDefinitionJsonTests
             }
             """;
 
-        var definition = JsonSerializer.Deserialize<ApplicationDefinition>(
+        var definition = JsonSerializer.Deserialize<FluxMqApplicationDefinition>(
             json,
-            ApplicationDefinitionJson.CreateSerializerOptions());
+            FluxMqApplicationDefinitionJson.CreateSerializerOptions());
 
         definition.ShouldNotBeNull();
         definition!.Resources.Keys.ShouldContain("broker");
@@ -69,7 +70,7 @@ public sealed class FlowApplicationDefinitionJsonTests
 
         var node = JsonSerializer.Deserialize<NodeDefinition>(
             json,
-            ApplicationDefinitionJson.CreateSerializerOptions());
+            FluxMqApplicationDefinitionJson.CreateSerializerOptions());
 
         var links = node!.GetPortLinks("Input", "myWorkflow");
 
@@ -143,9 +144,9 @@ public sealed class FlowApplicationDefinitionJsonTests
             }
             """;
 
-        var definition = JsonSerializer.Deserialize<ApplicationDefinition>(
+        var definition = JsonSerializer.Deserialize<FluxMqApplicationDefinition>(
             json,
-            ApplicationDefinitionJson.CreateSerializerOptions());
+            FluxMqApplicationDefinitionJson.CreateSerializerOptions());
 
         definition.ShouldNotBeNull();
         var dashboard = definition!.Dashboards["ops"];
@@ -200,9 +201,9 @@ public sealed class FlowApplicationDefinitionJsonTests
             }
             """;
 
-        var definition = JsonSerializer.Deserialize<ApplicationDefinition>(
+        var definition = JsonSerializer.Deserialize<FluxMqApplicationDefinition>(
             json,
-            ApplicationDefinitionJson.CreateSerializerOptions());
+            FluxMqApplicationDefinitionJson.CreateSerializerOptions());
 
         definition.ShouldNotBeNull();
         definition!.Workflows["observeTraffic"].Nodes["source"].Configuration.ShouldBeEmpty();
@@ -214,7 +215,7 @@ public sealed class FlowApplicationDefinitionJsonTests
     [Fact]
     public void Serialize_KeepsWorkflowsAndNodesAsObjectProperties()
     {
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Workflows =
             {
@@ -239,7 +240,7 @@ public sealed class FlowApplicationDefinitionJsonTests
             }
         };
 
-        var json = JsonSerializer.Serialize(definition, ApplicationDefinitionJson.CreateSerializerOptions());
+        var json = JsonSerializer.Serialize(definition, FluxMqApplicationDefinitionJson.CreateSerializerOptions());
 
         json.ShouldContain("\"observeTraffic\"");
         json.ShouldContain("\"source\"");
@@ -252,7 +253,7 @@ public sealed class FlowApplicationDefinitionJsonTests
     [Fact]
     public void Serialize_KeepsDashboardAndTestArtifactsAsNamedObjects()
     {
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Workflows =
             {
@@ -313,7 +314,7 @@ public sealed class FlowApplicationDefinitionJsonTests
             }
         };
 
-        var json = JsonSerializer.Serialize(definition, ApplicationDefinitionJson.CreateSerializerOptions());
+        var json = JsonSerializer.Serialize(definition, FluxMqApplicationDefinitionJson.CreateSerializerOptions());
 
         json.ShouldContain("\"dashboards\"");
         json.ShouldContain("\"ops\"");

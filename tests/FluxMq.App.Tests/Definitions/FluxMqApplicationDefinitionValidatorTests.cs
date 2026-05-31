@@ -1,18 +1,19 @@
 using Shouldly;
-using FluxMq.Pipeline.Definitions;
+using FluxFlow.Engine.Definitions;
+using FluxMq.App.Definitions;
 using FluxMq.Pipeline.Scenarios;
 using System.Text.Json;
 
-namespace FluxMq.Pipeline.Tests.Definitions;
+namespace FluxMq.App.Tests.Definitions;
 
-public sealed class FlowApplicationDefinitionValidatorTests
+public sealed class FluxMqApplicationDefinitionValidatorTests
 {
-    private readonly ApplicationDefinitionValidator _validator = new();
+    private readonly FluxMqApplicationDefinitionValidator _validator = new();
 
     [Fact]
     public void Validate_AcceptsApplicationWithSharedResourcesAndMultipleWorkflows()
     {
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Resources =
             {
@@ -49,16 +50,16 @@ public sealed class FlowApplicationDefinitionValidatorTests
     [Fact]
     public void Validate_ReportsDefinitionWithoutWorkflows()
     {
-        var result = _validator.Validate(new ApplicationDefinition());
+        var result = _validator.Validate(new FluxMqApplicationDefinition());
 
         result.IsValid.ShouldBeFalse();
-        result.Errors.ShouldHaveSingleItem().Code.ShouldBe(ApplicationDefinitionValidationErrorCode.EmptyDefinition);
+        result.Errors.ShouldHaveSingleItem().Code.ShouldBe(FluxMqApplicationDefinitionValidationErrorCode.EmptyDefinition);
     }
 
     [Fact]
     public void Validate_ReportsEmptyWorkflow()
     {
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Workflows =
             {
@@ -68,13 +69,13 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        result.Errors.ShouldContain(error => error.Code == ApplicationDefinitionValidationErrorCode.EmptyWorkflow);
+        result.Errors.ShouldContain(error => error.Code == FluxMqApplicationDefinitionValidationErrorCode.EmptyWorkflow);
     }
 
     [Fact]
     public void Validate_ReportsEmptyNodeType()
     {
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Workflows =
             {
@@ -93,7 +94,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        var error = result.Errors.Single(error => error.Code == ApplicationDefinitionValidationErrorCode.EmptyNodeType);
+        var error = result.Errors.Single(error => error.Code == FluxMqApplicationDefinitionValidationErrorCode.EmptyNodeType);
         error.WorkflowName.ShouldBe("flow");
         error.NodeName.ShouldBe("node");
     }
@@ -101,7 +102,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
     [Fact]
     public void Validate_ReportsMissingSourceNode()
     {
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Workflows =
             {
@@ -117,7 +118,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        var error = result.Errors.Single(error => error.Code == ApplicationDefinitionValidationErrorCode.MissingSourceNode);
+        var error = result.Errors.Single(error => error.Code == FluxMqApplicationDefinitionValidationErrorCode.MissingSourceNode);
         error.WorkflowName.ShouldBe("flow");
         error.NodeName.ShouldBe("metrics");
         error.PortName.ShouldBe("Input");
@@ -126,7 +127,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
     [Fact]
     public void Validate_AllowsLinksFromSharedResources()
     {
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Resources =
             {
@@ -152,7 +153,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
     [Fact]
     public void Validate_AcceptsDashboardsAndTestsAsSeparateAppArtifacts()
     {
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Workflows =
             {
@@ -218,7 +219,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
     [Fact]
     public void Validate_ReportsInvalidDashboardLayoutAndMissingWidget()
     {
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Workflows =
             {
@@ -259,15 +260,15 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        result.Errors.ShouldContain(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidDashboardLayout);
-        result.Errors.ShouldContain(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidDashboardCell);
-        result.Errors.ShouldContain(error => error.Code == ApplicationDefinitionValidationErrorCode.MissingDashboardWidget);
+        result.Errors.ShouldContain(error => error.Code == FluxMqApplicationDefinitionValidationErrorCode.InvalidDashboardLayout);
+        result.Errors.ShouldContain(error => error.Code == FluxMqApplicationDefinitionValidationErrorCode.InvalidDashboardCell);
+        result.Errors.ShouldContain(error => error.Code == FluxMqApplicationDefinitionValidationErrorCode.MissingDashboardWidget);
     }
 
     [Fact]
     public void Validate_ReportsDashboardCellOutsideDefinedTracks()
     {
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Workflows =
             {
@@ -311,14 +312,14 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        result.Errors.Count(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidDashboardCell)
+        result.Errors.Count(error => error.Code == FluxMqApplicationDefinitionValidationErrorCode.InvalidDashboardCell)
             .ShouldBe(2);
     }
 
     [Fact]
     public void Validate_ReportsEmptyScenarioStepType()
     {
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Workflows =
             {
@@ -344,13 +345,13 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        result.Errors.ShouldContain(error => error.Code == ApplicationDefinitionValidationErrorCode.EmptyScenarioStepType);
+        result.Errors.ShouldContain(error => error.Code == FluxMqApplicationDefinitionValidationErrorCode.EmptyScenarioStepType);
     }
 
     [Fact]
     public void Validate_ReportsUnknownScenarioStepType()
     {
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Workflows =
             {
@@ -376,7 +377,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        var error = result.Errors.Single(error => error.Code == ApplicationDefinitionValidationErrorCode.UnknownScenarioStepType);
+        var error = result.Errors.Single(error => error.Code == FluxMqApplicationDefinitionValidationErrorCode.UnknownScenarioStepType);
         error.Message.ShouldContain("Test scenario 'roundTrip' step 'custom'");
         error.Message.ShouldContain("custom.step");
     }
@@ -384,7 +385,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
     [Fact]
     public void Validate_AcceptsMqttPublisherScenarioStepWithAppConnection()
     {
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Resources =
             {
@@ -430,7 +431,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
     [Fact]
     public void Validate_AcceptsMqttTriggerScenarioStepWithAppConnection()
     {
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Resources =
             {
@@ -475,7 +476,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
     [Fact]
     public void Validate_ReportsMqttPublisherScenarioStepMissingConnectionResource()
     {
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Workflows =
             {
@@ -507,7 +508,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        var error = result.Errors.Single(error => error.Code == ApplicationDefinitionValidationErrorCode.MissingScenarioStepResource);
+        var error = result.Errors.Single(error => error.Code == FluxMqApplicationDefinitionValidationErrorCode.MissingScenarioStepResource);
         error.Message.ShouldContain("roundTrip");
         error.Message.ShouldContain("publish");
         error.Message.ShouldContain("missing-broker");
@@ -516,7 +517,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
     [Fact]
     public void Validate_ReportsInvalidMqttPublisherScenarioStepConfiguration()
     {
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Resources =
             {
@@ -557,7 +558,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
         var result = _validator.Validate(definition);
 
         var errors = result.Errors
-            .Where(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidScenarioStepConfiguration)
+            .Where(error => error.Code == FluxMqApplicationDefinitionValidationErrorCode.InvalidScenarioStepConfiguration)
             .Select(error => error.Message)
             .ToArray();
         errors.ShouldContain(message => message.Contains("payload", StringComparison.Ordinal));
@@ -568,7 +569,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
     [Fact]
     public void Validate_ReportsInvalidMqttTriggerScenarioStepConfiguration()
     {
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Resources =
             {
@@ -608,7 +609,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
         var result = _validator.Validate(definition);
 
         var errors = result.Errors
-            .Where(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidScenarioStepConfiguration)
+            .Where(error => error.Code == FluxMqApplicationDefinitionValidationErrorCode.InvalidScenarioStepConfiguration)
             .Select(error => error.Message)
             .ToArray();
         errors.ShouldContain(message => message.Contains("subscriptions", StringComparison.Ordinal));
@@ -620,7 +621,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
     [Fact]
     public void Validate_ReportsInvalidExpectEventScenarioStepConfiguration()
     {
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Workflows =
             {
@@ -653,7 +654,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
         var result = _validator.Validate(definition);
 
         var errors = result.Errors
-            .Where(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidScenarioStepConfiguration)
+            .Where(error => error.Code == FluxMqApplicationDefinitionValidationErrorCode.InvalidScenarioStepConfiguration)
             .Select(error => error.Message)
             .ToArray();
         errors.ShouldContain(message => message.Contains("timeoutMs", StringComparison.Ordinal));
@@ -663,7 +664,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
     [Fact]
     public void Validate_ReportsInvalidLinkShape()
     {
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Workflows =
             {
@@ -679,7 +680,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        var error = result.Errors.Single(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidLink);
+        var error = result.Errors.Single(error => error.Code == FluxMqApplicationDefinitionValidationErrorCode.InvalidLink);
         error.WorkflowName.ShouldBe("flow");
         error.NodeName.ShouldBe("metrics");
         error.PortName.ShouldBe("Input");
@@ -688,7 +689,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
     [Fact]
     public void Validate_ReportsEmptySourcePort()
     {
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Workflows =
             {
@@ -705,13 +706,13 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        result.Errors.ShouldContain(error => error.Code == ApplicationDefinitionValidationErrorCode.InvalidLink);
+        result.Errors.ShouldContain(error => error.Code == FluxMqApplicationDefinitionValidationErrorCode.InvalidLink);
     }
 
     [Fact]
     public void Validate_ReportsDuplicateLinks()
     {
-        var definition = new ApplicationDefinition
+        var definition = new FluxMqApplicationDefinition
         {
             Workflows =
             {
@@ -728,7 +729,7 @@ public sealed class FlowApplicationDefinitionValidatorTests
 
         var result = _validator.Validate(definition);
 
-        var error = result.Errors.Single(error => error.Code == ApplicationDefinitionValidationErrorCode.DuplicateLink);
+        var error = result.Errors.Single(error => error.Code == FluxMqApplicationDefinitionValidationErrorCode.DuplicateLink);
         error.WorkflowName.ShouldBe("flow");
         error.NodeName.ShouldBe("metrics");
         error.PortName.ShouldBe("Input");
