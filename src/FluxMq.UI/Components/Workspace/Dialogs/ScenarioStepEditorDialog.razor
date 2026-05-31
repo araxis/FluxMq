@@ -246,35 +246,6 @@
 
 @code {
     private const string AnyValue = "";
-    private static readonly IReadOnlyList<ScenarioStepFieldOption> DefaultPayloadEncodingOptions =
-    [
-        new("json", "JSON"),
-        new("text", "Text"),
-        new("base64", "Base64"),
-        new("bytes", "Bytes")
-    ];
-
-    private static readonly IReadOnlyList<ScenarioStepFieldOption> DefaultQosOptions =
-    [
-        new("0", "0"),
-        new("1", "1"),
-        new("2", "2")
-    ];
-
-    private static readonly IReadOnlyList<ScenarioStepFieldOption> ExpectQosOptions =
-    [
-        new(AnyValue, "Any"),
-        new("0", "0"),
-        new("1", "1"),
-        new("2", "2")
-    ];
-
-    private static readonly IReadOnlyList<ScenarioStepFieldOption> ExpectRetainOptions =
-    [
-        new(AnyValue, "Any"),
-        new("true", "Retain"),
-        new("false", "No retain")
-    ];
 
     private static readonly DialogOptions EditorDialogOptions = new()
     {
@@ -314,8 +285,8 @@
     private ScenarioStepFieldDescriptor _subscriptionsField = EmptyPublishField(ScenarioStepCatalog.SubscriptionsKey);
     private ScenarioStepFieldDescriptor _receiveRetainedField = EmptyPublishField(ScenarioStepCatalog.ReceiveRetainedKey);
     private ScenarioStepFieldDescriptor _retainAsPublishedField = EmptyPublishField(ScenarioStepCatalog.RetainAsPublishedKey);
-    private IReadOnlyList<ScenarioStepFieldOption> _payloadEncodingOptions = [];
-    private IReadOnlyList<ScenarioStepFieldOption> _qosOptions = [];
+    private ScenarioStepFieldDescriptor _expectQosField = EmptyPublishField(ScenarioStepCatalog.QosAttributeKey);
+    private ScenarioStepFieldDescriptor _expectRetainField = EmptyPublishField(ScenarioStepCatalog.RetainAttributeKey);
 
     private ScenarioStepDescriptor StepDescriptor => ScenarioSteps.Describe(Step.Type);
 
@@ -329,11 +300,13 @@
 
     private int PayloadLines => Math.Max(1, _payloadField.Lines);
 
-    private IReadOnlyList<ScenarioStepFieldOption> PayloadEncodingOptions
-        => OptionsOrDefault(_payloadEncodingOptions, DefaultPayloadEncodingOptions);
+    private IReadOnlyList<ScenarioStepFieldOption> PayloadEncodingOptions => _payloadEncodingField.Options;
 
-    private IReadOnlyList<ScenarioStepFieldOption> QosOptions
-        => OptionsOrDefault(_qosOptions, DefaultQosOptions);
+    private IReadOnlyList<ScenarioStepFieldOption> QosOptions => _qosField.Options;
+
+    private IReadOnlyList<ScenarioStepFieldOption> ExpectQosOptions => _expectQosField.Options;
+
+    private IReadOnlyList<ScenarioStepFieldOption> ExpectRetainOptions => _expectRetainField.Options;
 
     protected override void OnInitialized()
     {
@@ -528,8 +501,8 @@
         _subscriptionsField = StepField(ScenarioStepCatalog.SubscriptionsKey);
         _receiveRetainedField = StepField(ScenarioStepCatalog.ReceiveRetainedKey);
         _retainAsPublishedField = StepField(ScenarioStepCatalog.RetainAsPublishedKey);
-        _payloadEncodingOptions = _payloadEncodingField.Options;
-        _qosOptions = _qosField.Options;
+        _expectQosField = StepField(ScenarioStepCatalog.QosAttributeKey);
+        _expectRetainField = StepField(ScenarioStepCatalog.RetainAttributeKey);
     }
 
     private ScenarioStepFieldDescriptor StepField(string key)
@@ -549,11 +522,6 @@
         var value = Step.ReadString(ScenarioStepCatalog.TimeoutMsKey);
         return int.TryParse(value, out var timeout) && timeout > 0 ? timeout : 5000;
     }
-
-    private static IReadOnlyList<ScenarioStepFieldOption> OptionsOrDefault(
-        IReadOnlyList<ScenarioStepFieldOption> options,
-        IReadOnlyList<ScenarioStepFieldOption> fallback)
-        => options.Count > 0 ? options : fallback;
 
     private static string NormalizeSelect(string? value, IReadOnlyList<ScenarioStepFieldOption> options)
     {
