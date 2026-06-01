@@ -551,11 +551,68 @@ recorder.Errors.LinkTo(errorSink);
 
 If a message cannot be stored, the recorder publishes a `FlowError` with the topic in `Context` and continues recording later messages.
 
+## Flow Logger
+
+`FlowLoggerComponent` observes MQTT messages and component errors. Neutral log-entry creation is package-backed by `FluxFlow.Components.Observability`; FluxMQ keeps the existing `flow.logger` node shape, MQTT/error projections, recent-entry buffer, and workspace log contract.
+
+### Behavior
+
+```mermaid
+flowchart LR
+    In["Input: MqttEnvelope"] --> Logger["FlowLoggerComponent"]
+    FlowErrors["FlowErrors: FlowError"] --> Logger
+    Logger --> Package["Package flow.logger nodes"]
+    Logger --> Entries["Entries: FlowLogEntry"]
+    Logger -->|logging failure| Errors["Errors: FlowError"]
+```
+
+### Usage
+
+```csharp
+var logger = new FlowLoggerComponent(includePayloadPreview: true);
+
+source.Output.LinkTo(logger.Input, new DataflowLinkOptions
+{
+    PropagateCompletion = true
+});
+
+source.Errors.LinkTo(logger.FlowErrors, new DataflowLinkOptions
+{
+    PropagateCompletion = true
+});
+
+logger.Entries.LinkTo(logSink);
+```
+
+### Flow Definition
+
+Registered node type: `flow.logger`
+
+Ports:
+
+- `Input`: `MqttEnvelope`
+- `FlowErrors`: `FlowError`
+- `Entries`: `FlowLogEntry`
+- `Errors`: `FlowError`
+
+```json
+{
+  "logger": {
+    "type": "flow.logger",
+    "Input": "source.Output",
+    "FlowErrors": "source.Errors",
+    "configuration": {
+      "includePayloadPreview": true
+    }
+  }
+}
+```
+
 ## MQTT Metrics
 
 `MqttMetricsComponent` observes incoming MQTT messages and broadcasts immutable metric snapshots. It works only from its input stream; it does not care whether the data came from a live connection, replay, stored session, generated source, or imported source.
 
-These snapshots are local flow data. Planned OpenTelemetry support should export selected observability signals later without making this component depend on external collectors.
+These snapshots are local flow data. The current node intentionally remains MQTT-specific because it tracks topic counts, retained messages, rolling-window rates, and MQTT payload sizes beyond the neutral package metrics contract. Planned OpenTelemetry support should export selected observability signals later without making this component depend on external collectors.
 
 ### Behavior
 

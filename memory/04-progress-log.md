@@ -2072,3 +2072,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal --filter FileWriterComponentTests` passes with 3 tests.
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 81 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 488 tests.
+
+## 2026-06-01 - Observability component package migration
+
+- Added `FluxFlow.Components.Observability` `0.1.0-alpha.1` to `FluxMq.Components`.
+- Reworked `flow.logger` so package code owns neutral log-entry creation and selector handling.
+- Kept a small FluxMQ adapter for the existing MQTT message log shape, `FlowError` log shape, recent-entry buffer, and workspace-facing `FlowLogEntry` contract.
+- Left `mqtt.metrics` in FluxMQ for now because it still owns MQTT-specific topic counts, retained-message counts, payload-byte summaries, and rolling-window rate projections.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal --filter FlowLoggerComponentTests` passes with 4 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal --filter "FullyQualifiedName~FlowLogger"` passes with 1 test.
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 108 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 81 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 205 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 488 tests.
