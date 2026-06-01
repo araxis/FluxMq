@@ -9,6 +9,7 @@
     <PackageReference Include="FluxFlow.Components.FileSystem" Version="0.1.0-alpha.1" />
     <PackageReference Include="FluxFlow.Components.Mqtt" Version="0.2.1-alpha.1" />
     <PackageReference Include="FluxFlow.Components.Observability" Version="0.1.0-alpha.1" />
+    <PackageReference Include="FluxFlow.Components.State" Version="0.1.0-alpha.1" />
     <PackageReference Include="FluxFlow.Components.Validation" Version="0.1.0-alpha.1" />
     <PackageReference Include="FluxFlow.Engine" Version="0.5.0-alpha.1" />
     <PackageReference Include="LiteDB" Version="5.0.21" />

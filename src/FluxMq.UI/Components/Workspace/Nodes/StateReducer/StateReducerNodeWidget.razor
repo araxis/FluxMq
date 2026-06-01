@@ -1,0 +1,125 @@
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.Storage"
+                 CategoryColor="@Color.Info"
+                 EditDialogMaxWidth="MaxWidth.Medium"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
+    <Body>
+        <MudStack Spacing="1" Class="mt-1">
+            <div class="d-flex flex-wrap gap-1">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@Model.Engine</MudChip>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">@Model.MaxKeys keys</MudChip>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Model.ExpressionName))
+            {
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@Model.ExpressionName</MudText>
+            }
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="node-expr-preview">@Model.Reducer</MudText>
+        </MudStack>
+    </Body>
+    <Editor>
+        <MudStack Spacing="2">
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string"
+                               Label="Engine"
+                               @bind-Value="_engine"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true">
+                        @foreach (var engine in StateReducerNodeModel.Engines)
+                        {
+                            <MudSelectItem Value="@engine">@engine</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Expression name"
+                                  @bind-Value="_expressionName"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                </MudItem>
+            </MudGrid>
+            <MudTextField T="string"
+                          Label="Key expression"
+                          @bind-Value="_keyExpression"
+                          Variant="Variant.Outlined"
+                          Lines="2"
+                          Class="node-expr-field"
+                          Placeholder="topic" />
+            <MudTextField T="string"
+                          Label="Reducer"
+                          @bind-Value="_reducer"
+                          Variant="Variant.Outlined"
+                          Lines="5"
+                          Class="node-expr-field"
+                          Placeholder="input" />
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="6">
+                    <MudNumericField T="int"
+                                     Label="Input buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="64"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField T="int"
+                                     Label="Max keys"
+                                     @bind-Value="_maxKeys"
+                                     Min="0"
+                                     Max="1000000"
+                                     Step="128"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                </MudItem>
+            </MudGrid>
+        </MudStack>
+    </Editor>
+</NodeWidgetShell>
+
+@code {
+    [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
+
+    private StateReducerNodeModel Model => (StateReducerNodeModel)Node;
+
+    private string _engine = StateReducerNodeModel.DefaultEngine;
+    private string _keyExpression = string.Empty;
+    private string _reducer = StateReducerNodeModel.DefaultReducer;
+    private string _expressionName = string.Empty;
+    private int _boundedCapacity = StateReducerNodeModel.DefaultBoundedCapacity;
+    private int _maxKeys = StateReducerNodeModel.DefaultMaxKeys;
+
+    protected override void OnParametersSet() => LoadDraft();
+
+    private void LoadDraft()
+    {
+        _engine = StateReducerNodeModel.NormalizeEngine(Model.Engine);
+        _keyExpression = Model.KeyExpression;
+        _reducer = Model.Reducer;
+        _expressionName = Model.ExpressionName;
+        _boundedCapacity = StateReducerNodeModel.NormalizeBoundedCapacity(Model.BoundedCapacity);
+        _maxKeys = StateReducerNodeModel.NormalizeMaxKeys(Model.MaxKeys);
+    }
+
+    private Task SaveAsync()
+    {
+        Model.Engine = StateReducerNodeModel.NormalizeEngine(_engine);
+        Model.KeyExpression = _keyExpression.Trim();
+        Model.Reducer = string.IsNullOrWhiteSpace(_reducer)
+            ? StateReducerNodeModel.DefaultReducer
+            : _reducer.Trim();
+        Model.ExpressionName = _expressionName.Trim();
+        Model.BoundedCapacity = StateReducerNodeModel.NormalizeBoundedCapacity(_boundedCapacity);
+        Model.MaxKeys = StateReducerNodeModel.NormalizeMaxKeys(_maxKeys);
+
+        Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
+        return Task.CompletedTask;
+    }
+}

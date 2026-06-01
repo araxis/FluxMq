@@ -18,6 +18,9 @@ using FluxFlow.Components.Control.Contracts;
 using FluxFlow.Components.Control.Options;
 using FluxFlow.Components.Mapping;
 using FluxFlow.Components.Mapping.Options;
+using FluxFlow.Components.State;
+using FluxFlow.Components.State.Contracts;
+using FluxFlow.Components.State.Options;
 using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Definitions;
 using FluxFlow.Engine.Mapping;
@@ -71,6 +74,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .Register(FluxMqNodeTypes.FlowAssertion, context => CreateFlowAssertion(context.Address, context.Definition, expressionEngine))
             .Register(FluxMqNodeTypes.JsonSchemaValidator, context => CreateJsonSchemaValidator(context.Address, context.Definition))
             .RegisterMappingComponents(options => ConfigureMappingComponents(options, expressionEngine))
+            .RegisterStateComponents(options => ConfigureStateComponents(options, expressionEngine))
             .Register(FluxMqNodeTypes.MqttPublisher, context => CreatePublisher(context.Address, context.Definition, context))
             .Register(FluxMqNodeTypes.MqttRecorder, context => CreateRecorder(context.Address, context.Definition, messageRepository))
             .Register(FluxMqNodeTypes.FileWriter, CreateFileWriter);
@@ -90,6 +94,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .RegisterType<MqttPublishRequest>("MqttPublishRequest")
             .RegisterType<MqttRecordingRequest>("MqttRecordingRequest")
             .RegisterType<FileWriteRequest>("FileWriteRequest")
+            .RegisterType<StateReducerInput>("StateReducerInput")
             .UseContextFactory<MqttEnvelope>(new MqttEnvelopeFlowMapContextFactory());
 
         if (!string.Equals(expressionEngine.Name, "jsonata", StringComparison.OrdinalIgnoreCase))
@@ -97,6 +102,21 @@ public static class RuntimeNodeFactoryRegistryExtensions
             options.UseExpressionEngine(
                 new FluxMqRequestMappingExpressionEngine(new JsonataFlowExpressionEngine()),
                 useAsDefault: false);
+        }
+    }
+
+    private static void ConfigureStateComponents(
+        StateComponentOptions options,
+        IFlowExpressionEngine expressionEngine)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(expressionEngine);
+
+        options.UseExpressionEngine(expressionEngine);
+
+        if (!string.Equals(expressionEngine.Name, "jsonata", StringComparison.OrdinalIgnoreCase))
+        {
+            options.UseExpressionEngine(new JsonataFlowExpressionEngine(), useAsDefault: false);
         }
     }
 

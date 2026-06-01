@@ -107,6 +107,23 @@ public sealed class DynamicMapperNodeModel(string id, DiagramPoint position, str
               Envelope = envelope
             }
             """,
+            "StateReducerInput" when isJsonata => """
+            {
+              "key": topic,
+              "input": payloadText,
+              "variables": {
+                "topic": topic,
+                "qos": qos,
+                "retain": retain
+              }
+            }
+            """,
+            "StateReducerInput" => """
+            new StateReducerInput {
+              Key = topic,
+              Input = payloadText
+            }
+            """,
             _ when isJsonata => """
             {
               "topic": topic,

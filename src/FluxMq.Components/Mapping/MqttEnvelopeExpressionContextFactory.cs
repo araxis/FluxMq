@@ -3,6 +3,7 @@ using FluxMq.Core.Ids;
 using FluxMq.Components.FileWriter;
 using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
+using FluxFlow.Components.State.Contracts;
 using FluxFlow.Engine.Mapping;
 using MQTTnet.Protocol;
 using System.Text;
@@ -38,7 +39,9 @@ public static class MqttEnvelopeExpressionContextFactory
                 ["SessionId"] = typeof(SessionId),
                 ["Guid"] = typeof(Guid),
                 ["FileWriteRequest"] = typeof(FileWriteRequest),
-                ["FileWriteMode"] = typeof(FileWriteMode)
+                ["FileWriteMode"] = typeof(FileWriteMode),
+                ["StateReducerInput"] = typeof(StateReducerInput),
+                ["StateReducerOperation"] = typeof(StateReducerOperation)
             }
         };
     }

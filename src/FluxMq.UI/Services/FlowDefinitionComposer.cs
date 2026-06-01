@@ -6,6 +6,7 @@ using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
 using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
 using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
 using FluxMq.UI.Components.Workspace.Nodes.Sources;
+using FluxMq.UI.Components.Workspace.Nodes.StateReducer;
 using FluxMq.UI.Models;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -27,6 +28,7 @@ public sealed class FlowDefinitionComposer
     public const string RouterNodeName = "router";
     public const string AssertionNodeName = "assertion";
     public const string MapperNodeName = "mapper";
+    public const string StateReducerNodeName = "stateReducer";
     public const string LoggerNodeName = "logger";
     public const string RecorderNodeName = "recorder";
     public const string PublisherNodeName = "publisher";
@@ -1100,6 +1102,7 @@ public sealed class FlowDefinitionComposer
             "flow.assert" => AssertionNodeName,
             "json.schema-validator" => "jsonSchemaValidator",
             "flow.mapper" => MakeUniqueNodeName(workflow, MapperNodeName),
+            "state.reducer" => StateReducerNodeName,
             "flow.logger" => MakeUniqueNodeName(workflow, LoggerNodeName),
             "mqtt.recorder" => RecorderNodeName,
             "mqtt.publisher" => PublisherNodeName,
@@ -1132,6 +1135,10 @@ public sealed class FlowDefinitionComposer
         else if (componentType == "flow.assert")
         {
             node["configuration"] = CreateAssertionConfiguration();
+        }
+        else if (componentType == "state.reducer")
+        {
+            node["configuration"] = CreateStateReducerConfiguration();
         }
         else if (componentType == "mqtt.publisher")
         {
@@ -2721,6 +2728,13 @@ public sealed class FlowDefinitionComposer
                 : null;
         }
 
+        if (componentType == "state.reducer")
+        {
+            return FindPreferredMapperNode(workflow, "StateReducerInput") is { Length: > 0 } mapper
+                ? $"{mapper}.Output"
+                : null;
+        }
+
         return FindPreferredSourceNode(workflow) is { Length: > 0 } source
             ? $"{source}.Output"
             : null;
@@ -2750,17 +2764,34 @@ public sealed class FlowDefinitionComposer
     }
 
     private static string? FindPreferredMapperNode(JsonObject workflow)
+        => FindPreferredMapperNode(workflow, outputType: null);
+
+    private static string? FindPreferredMapperNode(JsonObject workflow, string? outputType)
     {
         foreach (var node in workflow)
         {
             if (node.Value is JsonObject nodeObject &&
-                nodeObject["type"]?.GetValue<string?>() is "flow.mapper")
+                nodeObject["type"]?.GetValue<string?>() is "flow.mapper" &&
+                (outputType is null || MapperOutputTypeMatches(nodeObject, outputType)))
             {
                 return node.Key;
             }
         }
 
         return null;
+    }
+
+    private static bool MapperOutputTypeMatches(JsonObject mapperNode, string outputType)
+    {
+        if (mapperNode["configuration"] is not JsonObject configuration)
+        {
+            return false;
+        }
+
+        return string.Equals(
+            configuration["outputType"]?.GetValue<string?>(),
+            outputType,
+            StringComparison.Ordinal);
     }
 
     private static JsonObject CreateDynamicMapperConfiguration(string outputType)
@@ -2799,6 +2830,15 @@ public sealed class FlowDefinitionComposer
             ["expression"] = FlowAssertionNodeModel.DefaultExpression,
             ["failureMessage"] = FlowAssertionNodeModel.DefaultFailureMessage,
             ["boundedCapacity"] = FlowAssertionNodeModel.DefaultBoundedCapacity
+        };
+
+    private static JsonObject CreateStateReducerConfiguration()
+        => new()
+        {
+            ["engine"] = StateReducerNodeModel.DefaultEngine,
+            ["reducer"] = StateReducerNodeModel.DefaultReducer,
+            ["boundedCapacity"] = StateReducerNodeModel.DefaultBoundedCapacity,
+            ["maxKeys"] = StateReducerNodeModel.DefaultMaxKeys
         };
 
     private static JsonObject CreateMqttPublisherConfiguration(string? connectionName = null)

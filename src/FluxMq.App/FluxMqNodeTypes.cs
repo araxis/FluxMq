@@ -1,3 +1,4 @@
+using FluxFlow.Components.State;
 using FluxFlow.Engine.Definitions;
 
 namespace FluxMq.App;
@@ -18,6 +19,7 @@ public static class FluxMqNodeTypes
     public static readonly NodeType FlowAssertion = new("flow.assert");
     public static readonly NodeType JsonSchemaValidator = new("json.schema-validator");
     public static readonly NodeType DynamicMapper = new("flow.mapper");
+    public static readonly NodeType StateReducer = StateComponentTypes.Reducer;
     public static readonly NodeType MqttPublisher = new("mqtt.publisher");
     public static readonly NodeType MqttRecorder = new("mqtt.recorder");
     public static readonly NodeType FileWriter = new("file.writer");
