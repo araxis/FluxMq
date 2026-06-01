@@ -13,6 +13,7 @@ using FluxMq.UI.Components.Workspace.Nodes.Payloads;
 using FluxMq.UI.Components.Workspace.Nodes.PayloadInspector;
 using FluxMq.UI.Components.Workspace.Nodes.SessionSource;
 using FluxMq.UI.Components.Workspace.Nodes.Sources;
+using FluxMq.UI.Components.Workspace.Nodes.StateReducer;
 using FluxMq.UI.Components.Workspace.Nodes.Timers;
 
 namespace FluxMq.UI.Services;
@@ -38,6 +39,7 @@ public sealed class NodeWidgetRegistry
         ["flow.assert"] = typeof(FlowAssertionNodeWidget),
         ["json.schema-validator"] = typeof(JsonSchemaValidatorNodeWidget),
         ["flow.mapper"] = typeof(DynamicMapperNodeWidget),
+        ["state.reducer"] = typeof(StateReducerNodeWidget),
         ["mqtt.publisher"] = typeof(MqttPublisherNodeWidget),
         ["mqtt.recorder"] = typeof(MqttRecorderNodeWidget),
         ["file.writer"] = typeof(FileWriterNodeWidget),

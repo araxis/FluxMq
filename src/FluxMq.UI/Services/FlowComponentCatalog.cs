@@ -177,6 +177,17 @@ public sealed class FlowComponentCatalog
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
+            "state.reducer",
+            "State Reducer",
+            "State",
+            "Keeps per-key state from reducer inputs and emits updated state snapshots.",
+            IsResource: false,
+            [
+                new("Input", "StateReducerInput", IsInput: true),
+                new("Output", "StateReducerResult", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
             "json.parse",
             "JSON Parse",
             "Transform",

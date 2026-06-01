@@ -13,6 +13,7 @@ using FluxMq.Components.Storage.Models;
 using FluxMq.Components.Storage.Repositories;
 using FluxFlow.Components.Http.Contracts;
 using FluxFlow.Components.Payloads.Contracts;
+using FluxFlow.Components.State.Contracts;
 using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Definitions;
 using FluxFlow.Engine.Runtime;
@@ -56,6 +57,7 @@ public sealed class PipelineComponentFactoryTests
             FluxMqNodeTypes.FlowAssertion,
             FluxMqNodeTypes.JsonSchemaValidator,
             FluxMqNodeTypes.DynamicMapper,
+            FluxMqNodeTypes.StateReducer,
             new NodeType("json.parse"),
             new NodeType("json.stringify"),
             new NodeType("text.encode"),
@@ -1613,6 +1615,94 @@ public sealed class PipelineComponentFactoryTests
     }
 
     [Fact]
+    public async Task StateReducerFactory_CanReduceMappedInputs()
+    {
+        TestSinkNode<StateReducerResult>? sink = null;
+        const string mapperExpression = """
+        {
+          "key": topic,
+          "input": payloadText,
+          "variables": {
+            "topic": topic
+          }
+        }
+        """;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.state-sink"), (address, _) =>
+            {
+                sink = new TestSinkNode<StateReducerResult>();
+                return SinkNode(address, sink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["traffic"] = new NodeDefinition
+                        {
+                            Type = FluxMqNodeTypes.GeneratedSource,
+                            Configuration =
+                            {
+                                ["messages"] = JsonDocument.Parse("""
+                                [
+                                  {"topic":"factory/a","payload":"first"},
+                                  {"topic":"factory/a","payload":"second"}
+                                ]
+                                """).RootElement.Clone()
+                            }
+                        },
+                        ["map"] = new NodeDefinition
+                        {
+                            Type = FluxMqNodeTypes.DynamicMapper,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"traffic.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["engine"] = JsonDocument.Parse("\"jsonata\"").RootElement.Clone(),
+                                ["inputType"] = JsonDocument.Parse("\"MqttEnvelope\"").RootElement.Clone(),
+                                ["outputType"] = JsonDocument.Parse("\"StateReducerInput\"").RootElement.Clone(),
+                                ["expression"] = JsonDocument.Parse(JsonSerializer.Serialize(mapperExpression)).RootElement.Clone()
+                            }
+                        },
+                        ["state"] = new NodeDefinition
+                        {
+                            Type = FluxMqNodeTypes.StateReducer,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"map.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["engine"] = JsonDocument.Parse("\"jsonata\"").RootElement.Clone(),
+                                ["reducer"] = JsonDocument.Parse("\"value\"").RootElement.Clone()
+                            }
+                        },
+                        ["sink"] = NodeWithPort("test.state-sink", "Input", "\"state.Output\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+        await using var runtime = result.Runtime!;
+
+        await runtime.StartAsync();
+        await runtime.Completion;
+
+        sink!.Values.Select(value => value.Key).ShouldBe(["factory/a", "factory/a"]);
+        sink.Values.Select(value => value.NewState).ShouldBe(["first", "second"]);
+        sink.Values.Select(value => value.Version).ShouldBe([1, 2]);
+    }
+
+    [Fact]
     public async Task StoredSessionSourceFactory_CreatesStoredSessionSource()
     {
         var sessionId = SessionId.New();
@@ -1879,6 +1969,7 @@ public sealed class PipelineComponentFactoryTests
     [InlineData("MqttPublishRequest")]
     [InlineData("MqttRecordingRequest")]
     [InlineData("FileWriteRequest")]
+    [InlineData("StateReducerInput")]
     public void DynamicMapperFactory_ReturnsBuildErrorWhenExpressionIsMissing(
         string outputType)
     {

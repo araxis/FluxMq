@@ -3,6 +3,7 @@ using FluxMq.UI.Components.Diagram;
 using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
 using FluxMq.UI.Components.Workspace.Nodes.FlowAssertion;
 using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
+using FluxMq.UI.Components.Workspace.Nodes.StateReducer;
 using FluxMq.UI.Models;
 using FluxMq.UI.Services;
 using Blazor.Diagrams.Core.Models;
@@ -248,6 +249,25 @@ public sealed class FlowDiagramNodeModelTests
     }
 
     [Fact]
+    public void FlowNodeModelFactory_CreatesStateReducerNodeModel()
+    {
+        var catalog = new FlowComponentCatalog();
+        var descriptor = catalog.Find("state.reducer").ShouldNotBeNull();
+
+        var model = FlowNodeModelFactory.Create(
+            "workflow1.stateReducer",
+            new DiagramPoint(10, 20),
+            "stateReducer",
+            "state.reducer",
+            descriptor,
+            isResource: false);
+
+        model.ShouldBeOfType<StateReducerNodeModel>();
+        model.NodeType.ShouldBe("state.reducer");
+        model.PortDescriptors.ShouldContain(port => port.Name == "Input" && port.ValueType == "StateReducerInput");
+    }
+
+    [Fact]
     public void FlowAssertionNodeModel_BuildsAssertionConfiguration()
     {
         var catalog = new FlowComponentCatalog();
@@ -277,6 +297,38 @@ public sealed class FlowDiagramNodeModelTests
         config["boundedCapacity"]!.GetValue<int>().ShouldBe(250);
         model.ResolvePortValueType(new ComponentPortDescriptor("Passed", "Configured input type", IsInput: false))
             .ShouldBe("MqttPublishRequest");
+    }
+
+    [Fact]
+    public void StateReducerNodeModel_BuildsReducerConfiguration()
+    {
+        var catalog = new FlowComponentCatalog();
+        var descriptor = catalog.Find("state.reducer").ShouldNotBeNull();
+        var model = new StateReducerNodeModel(
+            "workflow1.stateReducer",
+            new DiagramPoint(10, 20),
+            "stateReducer",
+            descriptor,
+            isResource: false);
+
+        model.LoadConfiguration(new JsonObject
+        {
+            ["engine"] = "dynamic-expresso",
+            ["keyExpression"] = "topic",
+            ["reducer"] = "state == null ? input : state",
+            ["expressionName"] = "latest",
+            ["boundedCapacity"] = 64,
+            ["maxKeys"] = 32
+        });
+
+        var config = model.BuildConfiguration();
+
+        config["engine"]!.GetValue<string>().ShouldBe("dynamic-expresso");
+        config["keyExpression"]!.GetValue<string>().ShouldBe("topic");
+        config["reducer"]!.GetValue<string>().ShouldBe("state == null ? input : state");
+        config["expressionName"]!.GetValue<string>().ShouldBe("latest");
+        config["boundedCapacity"]!.GetValue<int>().ShouldBe(64);
+        config["maxKeys"]!.GetValue<int>().ShouldBe(32);
     }
 
     [Fact]

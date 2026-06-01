@@ -23,6 +23,9 @@ using FluxFlow.Components.Mapping.Options;
 using FluxFlow.Components.Payloads;
 using FluxFlow.Components.Payloads.Contracts;
 using FluxFlow.Components.Serialization;
+using FluxFlow.Components.State;
+using FluxFlow.Components.State.Contracts;
+using FluxFlow.Components.State.Options;
 using FluxFlow.Components.Timers;
 using FluxFlow.Components.Timers.Contracts;
 using FluxFlow.Components.Timers.Options;
@@ -82,6 +85,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .RegisterHttpComponents()
             .RegisterTimerComponents(ConfigureTimerComponents)
             .RegisterMappingComponents(options => ConfigureMappingComponents(options, expressionEngine))
+            .RegisterStateComponents(options => ConfigureStateComponents(options, expressionEngine))
             .RegisterSerializationComponents()
             .Register(FluxMqNodeTypes.MqttPublisher, context => CreatePublisher(context.Address, context.Definition, context))
             .Register(FluxMqNodeTypes.MqttRecorder, context => CreateRecorder(context.Address, context.Definition, messageRepository))
@@ -117,6 +121,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .RegisterType<MqttPublishRequest>("MqttPublishRequest")
             .RegisterType<MqttRecordingRequest>("MqttRecordingRequest")
             .RegisterType<FileWriteRequest>("FileWriteRequest")
+            .RegisterType<StateReducerInput>("StateReducerInput")
             .RegisterType<PayloadInspectionRequest>("PayloadInspectionRequest")
             .RegisterType<PayloadInspectionResult>("PayloadInspectionResult")
             .RegisterType<HttpRequestInput>("HttpRequestInput")
@@ -137,6 +142,21 @@ public static class RuntimeNodeFactoryRegistryExtensions
             options.UseExpressionEngine(
                 new FluxMqRequestMappingExpressionEngine(new JsonataFlowExpressionEngine()),
                 useAsDefault: false);
+        }
+    }
+
+    private static void ConfigureStateComponents(
+        StateComponentOptions options,
+        IFlowExpressionEngine expressionEngine)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(expressionEngine);
+
+        options.UseExpressionEngine(expressionEngine);
+
+        if (!string.Equals(expressionEngine.Name, "jsonata", StringComparison.OrdinalIgnoreCase))
+        {
+            options.UseExpressionEngine(new JsonataFlowExpressionEngine(), useAsDefault: false);
         }
     }
 

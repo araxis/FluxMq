@@ -5,6 +5,7 @@ using FluxMq.Components.Replay;
 using FluxMq.Core.Models;
 using FluxFlow.Components.Http.Contracts;
 using FluxFlow.Components.Payloads.Contracts;
+using FluxFlow.Components.State.Contracts;
 using FluxFlow.Components.Timers.Contracts;
 using FluxFlow.Engine.Mapping;
 using MQTTnet.Protocol;
@@ -180,6 +181,12 @@ public static class DynamicMapperWorkbenchPreview
             [
                 new("sessionId", "Guid", true, "\"00000000-0000-0000-0000-000000000001\"")
             ],
+            "StateReducerInput" =>
+            [
+                new("key", "string", true, "topic"),
+                new("input", "any JSON", false, "payloadText"),
+                new("variables", "object", false, "{ \"topic\": topic }")
+            ],
             "PayloadInspectionRequest" =>
             [
                 new("text", "string", false, "payloadText"),
@@ -312,6 +319,7 @@ public static class DynamicMapperWorkbenchPreview
             {
                 "FileWriteRequest" => PreviewFileWriteRequest(expressionEngine, expression, context),
                 "MqttRecordingRequest" => PreviewRecordingRequest(expressionEngine, expression, context),
+                "StateReducerInput" => PreviewStateReducerInput(expressionEngine, expression, context),
                 "PayloadInspectionRequest" => PreviewPayloadInspectionRequest(expressionEngine, expression, context),
                 "HttpRequestInput" => PreviewHttpRequestInput(expressionEngine, expression, context),
                 _ => PreviewPublishRequest(expressionEngine, expression, context)
@@ -409,6 +417,32 @@ public static class DynamicMapperWorkbenchPreview
                         ? payloadJson
                         : Encoding.UTF8.GetString(request.Envelope.Payload)
                 }
+            }));
+    }
+
+    private static DynamicMapperPreviewResult PreviewStateReducerInput(
+        IFlowExpressionEngine engine,
+        string expression,
+        FlowMapContext context)
+    {
+        var mapper = new FluxMqRequestMappingExpressionEngine(engine);
+        var request = (StateReducerInput)mapper.Evaluate(expression, context, typeof(StateReducerInput))!;
+
+        return new DynamicMapperPreviewResult(
+            true,
+            "StateReducerInput",
+            [
+                new("Key", request.Key),
+                new("Input", Shorten(SerializeResult(request.Input))),
+                new("Variables", request.Variables.Count.ToString()),
+                new("Operation", request.Operation.ToString())
+            ],
+            Json: SerializeResult(new Dictionary<string, object?>
+            {
+                ["key"] = request.Key,
+                ["input"] = request.Input,
+                ["variables"] = request.Variables,
+                ["operation"] = request.Operation.ToString()
             }));
     }
 

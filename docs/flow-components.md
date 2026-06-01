@@ -490,6 +490,7 @@ The current FluxMQ mapper context supports `MqttEnvelope` input and these output
 - `MqttRecordingRequest`
 - `PayloadInspectionRequest`
 - `HttpRequestInput`
+- `StateReducerInput`
 
 The mapper editor also records an output contract:
 
@@ -541,6 +542,57 @@ flowchart LR
 ### Failure Behavior
 
 If mapping fails for one message, the mapper publishes a `FlowError` and continues processing later messages.
+
+## State Reducer
+
+`state.reducer` is the package-backed state aggregation node. It consumes `StateReducerInput` values, applies a configured reducer expression, and emits updated `StateReducerResult` snapshots.
+
+Use a `flow.mapper` upstream when starting from MQTT envelopes or timer ticks.
+
+### Behavior
+
+```mermaid
+flowchart LR
+    In["Input: StateReducerInput"] --> Reducer["Package state.reducer node"]
+    Reducer --> Out["Output: StateReducerResult"]
+    Reducer --> Errors["Errors: FlowError"]
+```
+
+### Flow Definition
+
+Registered node type: `state.reducer`
+
+Ports:
+
+- `Input`: `StateReducerInput`
+- `Output`: `StateReducerResult`
+- `Errors`: `FlowError`
+
+```json
+{
+  "mapState": {
+    "type": "flow.mapper",
+    "Input": "source.Output",
+    "configuration": {
+      "engine": "jsonata",
+      "inputType": "MqttEnvelope",
+      "outputType": "StateReducerInput",
+      "outputContract": "typed",
+      "expression": "{ \"key\": topic, \"input\": payloadText, \"variables\": { \"topic\": topic } }"
+    }
+  },
+  "state": {
+    "type": "state.reducer",
+    "Input": "mapState.Output",
+    "configuration": {
+      "engine": "jsonata",
+      "reducer": "input",
+      "boundedCapacity": 1000,
+      "maxKeys": 1000
+    }
+  }
+}
+```
 
 ## JSON Schema Validator
 

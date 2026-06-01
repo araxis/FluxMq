@@ -5,6 +5,7 @@ using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
 using FluxFlow.Components.Http.Contracts;
 using FluxFlow.Components.Payloads.Contracts;
+using FluxFlow.Components.State.Contracts;
 using FluxFlow.Engine.Mapping;
 using MQTTnet.Protocol;
 using System.Text;
@@ -47,7 +48,9 @@ public static class MqttEnvelopeExpressionContextFactory
                 ["HttpRequestInput"] = typeof(HttpRequestInput),
                 ["HttpResponseOutput"] = typeof(HttpResponseOutput),
                 ["HttpErrorOutput"] = typeof(HttpErrorOutput),
-                ["HttpErrorKind"] = typeof(HttpErrorKind)
+                ["HttpErrorKind"] = typeof(HttpErrorKind),
+                ["StateReducerInput"] = typeof(StateReducerInput),
+                ["StateReducerOperation"] = typeof(StateReducerOperation)
             }
         };
     }

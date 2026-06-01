@@ -2133,7 +2133,7 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 
 - Added `FluxFlow.Components.Timers` `0.4.1-alpha.1` to the runtime/component projects.
 - Registered package-backed `timer.interval`, `timer.schedule`, and `timer.delay` nodes.
-- Added designer catalog entries, typed timer node models, and a MudBlazor-native timer node editor for interval, schedule, and delay configuration.
+- Added designer catalog entries, typed timer node models, and a native timer node editor for interval, schedule, and delay configuration.
 - Added `TimerTick` and `ScheduleTick` mapper/assertion aliases plus timer-specific mapping contexts so timer ticks can drive `flow.mapper` and `mqtt.publisher` without an MQTT envelope input.
 - Updated `flow.mapper` defaults to preserve timer input types and generate timer-friendly publish/file expressions.
 - Verified:
@@ -2154,3 +2154,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~PipelineComponentFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 35 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~TimerNodeModelTests|FullyQualifiedName~FlowDiagramNodeModelTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 110 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 523 tests.
+
+## 2026-06-01 - State component package registration
+
+- Added `FluxFlow.Components.State` `0.1.0-alpha.1` to the runtime/component projects.
+- Registered package-backed `state.reducer` runtime nodes.
+- Added mapper aliases/coercion for `StateReducerInput` and editor defaults so MQTT envelopes can be mapped into reducer inputs explicitly.
+- Added designer catalog entries, typed state reducer node models, and a node editor for reducer options.
+- Verified:
+  - `dotnet build FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~PipelineComponentFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 37 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~TimerNodeModelTests|FullyQualifiedName~FlowDiagramNodeModelTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 115 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 531 tests.

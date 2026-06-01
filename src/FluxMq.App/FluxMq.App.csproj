@@ -11,6 +11,7 @@
     <PackageReference Include="FluxFlow.Components.Mapping" Version="0.1.0-alpha.1" />
     <PackageReference Include="FluxFlow.Components.Payloads" Version="0.1.0-alpha.1" />
     <PackageReference Include="FluxFlow.Components.Serialization" Version="0.1.0-alpha.1" />
+    <PackageReference Include="FluxFlow.Components.State" Version="0.1.0-alpha.1" />
     <PackageReference Include="FluxFlow.Components.Timers" Version="0.4.1-alpha.1" />
     <PackageReference Include="FluxFlow.Engine" Version="0.5.0-alpha.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.7" />

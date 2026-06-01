@@ -13,6 +13,7 @@ using FluxMq.UI.Components.Workspace.Nodes.Payloads;
 using FluxMq.UI.Components.Workspace.Nodes.PayloadInspector;
 using FluxMq.UI.Components.Workspace.Nodes.SessionSource;
 using FluxMq.UI.Components.Workspace.Nodes.Sources;
+using FluxMq.UI.Components.Workspace.Nodes.StateReducer;
 using FluxMq.UI.Components.Workspace.Nodes.Timers;
 using FluxMq.UI.Models;
 using DiagramPoint = Blazor.Diagrams.Core.Geometry.Point;
@@ -36,6 +37,7 @@ public static class FlowNodeModelFactory
         "flow.assert" => new FlowAssertionNodeModel(id, position, nodeName, descriptor, isResource),
         "json.schema-validator" => new JsonSchemaValidatorNodeModel(id, position, nodeName, descriptor, isResource),
         "flow.mapper" => new DynamicMapperNodeModel(id, position, nodeName, descriptor, isResource),
+        "state.reducer" => new StateReducerNodeModel(id, position, nodeName, descriptor, isResource),
         "generated.source" => new GeneratedSourceNodeModel(id, position, nodeName, descriptor, isResource),
         "replay.source" => new ReplaySourceNodeModel(id, position, nodeName, descriptor, isResource),
         "session.source" => new SessionSourceNodeModel(id, position, nodeName, descriptor, isResource),

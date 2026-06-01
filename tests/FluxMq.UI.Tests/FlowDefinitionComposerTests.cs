@@ -141,6 +141,20 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void ComponentCatalog_ExposesStateReducer()
+    {
+        var catalog = new FlowComponentCatalog();
+
+        var descriptor = catalog.Find("state.reducer").ShouldNotBeNull();
+
+        descriptor.DisplayName.ShouldBe("State Reducer");
+        descriptor.Category.ShouldBe("State");
+        descriptor.Ports.ShouldContain(port => port.Name == "Input" && port.ValueType == "StateReducerInput" && port.IsInput);
+        descriptor.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "StateReducerResult" && !port.IsInput);
+        descriptor.Ports.ShouldContain(port => port.Name == "Errors" && port.ValueType == "FlowError" && !port.IsInput);
+    }
+
+    [Fact]
     public void ComponentCatalog_ExposesTimerNodes()
     {
         var catalog = new FlowComponentCatalog();
@@ -612,6 +626,65 @@ public sealed class FlowDefinitionComposerTests
             .GetProperty(FlowDefinitionComposer.PublisherNodeName);
 
         publisher.TryGetProperty("Input", out _).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void AddComponent_DoesNotWireStateReducerDirectlyToEnvelopeSource()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var updated = composer.AddComponent(initial, "state.reducer");
+
+        using var document = JsonDocument.Parse(updated);
+        var reducer = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty(FlowDefinitionComposer.StateReducerNodeName);
+
+        reducer.TryGetProperty("Input", out _).ShouldBeFalse();
+        reducer.GetProperty("configuration").GetProperty("engine").GetString().ShouldBe("jsonata");
+        reducer.GetProperty("configuration").GetProperty("reducer").GetString().ShouldBe("input");
+    }
+
+    [Fact]
+    public void AddComponent_WiresStateReducerFromStateInputMapper()
+    {
+        var composer = new FlowDefinitionComposer();
+        const string initial = """
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "pipe": {
+                  "mapper": {
+                    "type": "flow.mapper",
+                    "configuration": {
+                      "outputType": "StateReducerInput"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """;
+
+        var updated = composer.AddComponent(initial, "state.reducer", "pipe");
+
+        using var document = JsonDocument.Parse(updated);
+        var reducer = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty("pipe")
+            .GetProperty(FlowDefinitionComposer.StateReducerNodeName);
+
+        reducer.GetProperty("Input").GetString().ShouldBe("mapper.Output");
     }
 
     [Fact]
