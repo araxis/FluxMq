@@ -21,6 +21,8 @@ public sealed class FlowDefinitionComposerTests
         catalog.Components.ShouldContain(component => component.Type == "flow.mapper");
         catalog.Components.ShouldContain(component => component.Type == "flow.logger");
         catalog.Components.ShouldContain(component => component.Type == "mqtt.trigger");
+        catalog.Components.ShouldContain(component => component.Type == "http.request");
+        catalog.Components.ShouldContain(component => component.Type == "payload.inspect");
         catalog.Components.ShouldNotContain(component => component.Type == "mqtt.publish-request");
         catalog.Components.ShouldNotContain(component => component.Type == "mqtt.recording-request");
         catalog.Components.ShouldNotContain(component => component.Type == "file.write-request");
@@ -49,6 +51,24 @@ public sealed class FlowDefinitionComposerTests
         catalogTypes
             .Where(type => !runtimeTypes.Contains(type))
             .ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ComponentCatalog_ExposesHttpAndPayloadComponents()
+    {
+        var catalog = new FlowComponentCatalog();
+
+        var http = catalog.Find("http.request").ShouldNotBeNull();
+        http.Category.ShouldBe("Actor");
+        http.Ports.ShouldContain(port => port.Name == "Input" && port.ValueType == "HttpRequestInput" && port.IsInput);
+        http.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "HttpResponseOutput" && !port.IsInput);
+        http.Ports.ShouldContain(port => port.Name == "Errors" && port.ValueType == "HttpErrorOutput" && !port.IsInput);
+
+        var payload = catalog.Find("payload.inspect").ShouldNotBeNull();
+        payload.Category.ShouldBe("Mapper");
+        payload.Ports.ShouldContain(port => port.Name == "Input" && port.ValueType == "PayloadInspectionRequest" && port.IsInput);
+        payload.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "PayloadInspectionResult" && !port.IsInput);
+        payload.Ports.ShouldContain(port => port.Name == "Errors" && port.ValueType == "FlowError" && !port.IsInput);
     }
 
     [Fact]
@@ -321,6 +341,58 @@ public sealed class FlowDefinitionComposerTests
 
         inspect.GetProperty("Input").GetString()
             .ShouldBe($"{FlowDefinitionComposer.TriggerNodeName}.Output");
+    }
+
+    [Fact]
+    public void AddComponent_AddsHttpRequestConfigurationAndUsesMapperInput()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var withMapper = composer.AddComponent(initial, "flow.mapper");
+        var updated = composer.AddComponent(withMapper, "http.request");
+
+        using var document = JsonDocument.Parse(updated);
+        var workflow = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName);
+
+        var http = workflow.GetProperty(FlowDefinitionComposer.HttpRequestNodeName);
+        http.GetProperty("type").GetString().ShouldBe("http.request");
+        http.GetProperty("Input").GetString().ShouldBe($"{FlowDefinitionComposer.MapperNodeName}.Output");
+        http.GetProperty("configuration").GetProperty("defaultTimeoutMilliseconds").GetInt32().ShouldBe(30000);
+        http.GetProperty("configuration").GetProperty("maxResponseBodyBytes").GetInt32().ShouldBe(1048576);
+        http.GetProperty("configuration").GetProperty("followRedirects").GetBoolean().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void AddComponent_AddsPayloadInspectConfigurationAndUsesMapperInput()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var withMapper = composer.AddComponent(initial, "flow.mapper");
+        var updated = composer.AddComponent(withMapper, "payload.inspect");
+
+        using var document = JsonDocument.Parse(updated);
+        var workflow = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName);
+
+        var payload = workflow.GetProperty(FlowDefinitionComposer.PayloadInspectNodeName);
+        payload.GetProperty("type").GetString().ShouldBe("payload.inspect");
+        payload.GetProperty("Input").GetString().ShouldBe($"{FlowDefinitionComposer.MapperNodeName}.Output");
+        payload.GetProperty("configuration").GetProperty("maxPreviewBytes").GetInt32().ShouldBe(1024);
+        payload.GetProperty("configuration").GetProperty("maxFormattedChars").GetInt32().ShouldBe(4096);
+        payload.GetProperty("configuration").GetProperty("detectBase64").GetBoolean().ShouldBeTrue();
     }
 
     [Fact]

@@ -4,10 +4,12 @@ using FluxMq.UI.Components.Workspace.Nodes.ConditionRouter;
 using FluxMq.UI.Components.Workspace.Nodes.ConnectionStateTrigger;
 using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
 using FluxMq.UI.Components.Workspace.Nodes.FlowAssertion;
+using FluxMq.UI.Components.Workspace.Nodes.Http;
 using FluxMq.UI.Components.Workspace.Nodes.JsonSchemaValidator;
 using FluxMq.UI.Components.Workspace.Nodes.MessageFilter;
 using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
 using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
+using FluxMq.UI.Components.Workspace.Nodes.Payloads;
 using FluxMq.UI.Components.Workspace.Nodes.PayloadInspector;
 using FluxMq.UI.Components.Workspace.Nodes.SessionSource;
 using FluxMq.UI.Components.Workspace.Nodes.Sources;
@@ -38,6 +40,8 @@ public sealed class NodeWidgetRegistry
         ["mqtt.publisher"] = typeof(MqttPublisherNodeWidget),
         ["mqtt.recorder"] = typeof(MqttRecorderNodeWidget),
         ["file.writer"] = typeof(FileWriterNodeWidget),
+        ["http.request"] = typeof(HttpRequestNodeWidget),
+        ["payload.inspect"] = typeof(PayloadInspectNodeWidget),
         ["mqtt.metrics"] = typeof(MqttMetricsNodeWidget)
     };
 

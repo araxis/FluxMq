@@ -1,0 +1,131 @@
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.Public"
+                 CategoryColor="@Color.Tertiary"
+                 EditDialogMaxWidth="MaxWidth.Medium"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
+    <Body>
+        <MudStack Spacing="1" Class="mt-1">
+            <Stat Icon="@Icons.Material.Filled.Input" Label="Input" Value="HttpRequestInput" />
+            <Stat Icon="@Icons.Material.Filled.Output" Label="Output" Value="HttpResponseOutput" />
+            <Stat Icon="@Icons.Material.Filled.Schedule" Label="Timeout" Value="@TimeoutCaption" />
+        </MudStack>
+        <div class="d-flex flex-wrap gap-1 mt-2">
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">method</MudChip>
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">url</MudChip>
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">headers</MudChip>
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">body</MudChip>
+        </div>
+    </Body>
+    <Editor>
+        <MudStack Spacing="2">
+            <MudTextField T="string"
+                          Label="Base URL"
+                          @bind-Value="_baseUrl"
+                          Placeholder="https://api.example.test/"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense" />
+
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="4">
+                    <MudNumericField T="int"
+                                     Label="Timeout ms"
+                                     @bind-Value="_defaultTimeoutMilliseconds"
+                                     Min="1"
+                                     Max="600000"
+                                     Step="1000"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudNumericField T="int"
+                                     Label="Max body bytes"
+                                     @bind-Value="_maxResponseBodyBytes"
+                                     Min="1"
+                                     Max="104857600"
+                                     Step="1024"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudNumericField T="int"
+                                     Label="Input buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="64"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                </MudItem>
+            </MudGrid>
+
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="6">
+                    <MudCheckBox T="bool"
+                                 Label="Follow redirects"
+                                 @bind-Value="_followRedirects"
+                                 Color="Color.Primary" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudCheckBox T="bool"
+                                 Label="Non-success status emits error"
+                                 @bind-Value="_treatNonSuccessStatusAsError"
+                                 Color="Color.Primary" />
+                </MudItem>
+            </MudGrid>
+
+            <MudTextField T="string"
+                          Label="Default headers"
+                          @bind-Value="_defaultHeadersText"
+                          Lines="5"
+                          Placeholder="Authorization: Bearer token"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense" />
+        </MudStack>
+    </Editor>
+</NodeWidgetShell>
+
+@code {
+    [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
+
+    private HttpRequestNodeModel Model => (HttpRequestNodeModel)Node;
+
+    private string _baseUrl = string.Empty;
+    private string _defaultHeadersText = string.Empty;
+    private int _defaultTimeoutMilliseconds = HttpRequestNodeModel.DefaultTimeoutMilliseconds;
+    private int _maxResponseBodyBytes = HttpRequestNodeModel.DefaultMaxResponseBodyBytes;
+    private bool _followRedirects = true;
+    private bool _treatNonSuccessStatusAsError;
+    private int _boundedCapacity = HttpRequestNodeModel.DefaultBoundedCapacity;
+
+    private string TimeoutCaption => $"{HttpRequestNodeModel.NormalizePositiveInt(_defaultTimeoutMilliseconds, HttpRequestNodeModel.DefaultTimeoutMilliseconds)} ms";
+
+    protected override void OnParametersSet() => LoadDraft();
+
+    private void LoadDraft()
+    {
+        _baseUrl = Model.BaseUrl;
+        _defaultHeadersText = Model.DefaultHeadersText;
+        _defaultTimeoutMilliseconds = HttpRequestNodeModel.NormalizePositiveInt(Model.DefaultTimeoutMillisecondsValue, HttpRequestNodeModel.DefaultTimeoutMilliseconds);
+        _maxResponseBodyBytes = HttpRequestNodeModel.NormalizePositiveInt(Model.MaxResponseBodyBytes, HttpRequestNodeModel.DefaultMaxResponseBodyBytes);
+        _followRedirects = Model.FollowRedirects;
+        _treatNonSuccessStatusAsError = Model.TreatNonSuccessStatusAsError;
+        _boundedCapacity = HttpRequestNodeModel.NormalizePositiveInt(Model.BoundedCapacity, HttpRequestNodeModel.DefaultBoundedCapacity);
+    }
+
+    private Task SaveAsync()
+    {
+        Model.BaseUrl = _baseUrl.Trim();
+        Model.DefaultHeadersText = _defaultHeadersText.Trim();
+        Model.DefaultTimeoutMillisecondsValue = HttpRequestNodeModel.NormalizePositiveInt(_defaultTimeoutMilliseconds, HttpRequestNodeModel.DefaultTimeoutMilliseconds);
+        Model.MaxResponseBodyBytes = HttpRequestNodeModel.NormalizePositiveInt(_maxResponseBodyBytes, HttpRequestNodeModel.DefaultMaxResponseBodyBytes);
+        Model.FollowRedirects = _followRedirects;
+        Model.TreatNonSuccessStatusAsError = _treatNonSuccessStatusAsError;
+        Model.BoundedCapacity = HttpRequestNodeModel.NormalizePositiveInt(_boundedCapacity, HttpRequestNodeModel.DefaultBoundedCapacity);
+        Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
+        return Task.CompletedTask;
+    }
+}

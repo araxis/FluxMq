@@ -2086,3 +2086,16 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 81 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 205 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 488 tests.
+
+## 2026-06-01 - HTTP and payload component package registration
+
+- Added `FluxFlow.Components.Http` `0.1.0-alpha.1` and `FluxFlow.Components.Payloads` `0.1.0-alpha.1`.
+- Registered package-backed `http.request` and `payload.inspect` runtime nodes.
+- Added mapper aliases/coercion for `HttpRequestInput`, `HttpResponseOutput`, `HttpErrorOutput`, `PayloadInspectionRequest`, and `PayloadInspectionResult`.
+- Added designer catalog entries, typed node models, and MudBlazor-native node editors for HTTP request options and payload inspection options.
+- Kept the existing MQTT-specific payload inspector as a separate MQTT envelope projection while adding the generic package-backed payload node.
+- Verified:
+  - `dotnet build .\FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal --filter "FullyQualifiedName~PipelineComponentFactoryTests"` passes with 31 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal --filter "FullyQualifiedName~FlowDefinitionComposerTests"` passes with 76 tests.
+  - `dotnet test .\FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 494 tests.

@@ -16,8 +16,12 @@ using FluxMq.Components.Replay;
 using FluxMq.Components.Storage.Repositories;
 using FluxFlow.Components.Control.Contracts;
 using FluxFlow.Components.Control.Options;
+using FluxFlow.Components.Http;
+using FluxFlow.Components.Http.Contracts;
 using FluxFlow.Components.Mapping;
 using FluxFlow.Components.Mapping.Options;
+using FluxFlow.Components.Payloads;
+using FluxFlow.Components.Payloads.Contracts;
 using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Definitions;
 using FluxFlow.Engine.Mapping;
@@ -70,6 +74,8 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .Register(FluxMqNodeTypes.ConditionRouter, context => CreateConditionRouter(context.Address, context.Definition, expressionEngine))
             .Register(FluxMqNodeTypes.FlowAssertion, context => CreateFlowAssertion(context.Address, context.Definition, expressionEngine))
             .Register(FluxMqNodeTypes.JsonSchemaValidator, context => CreateJsonSchemaValidator(context.Address, context.Definition))
+            .RegisterPayloadComponents()
+            .RegisterHttpComponents()
             .RegisterMappingComponents(options => ConfigureMappingComponents(options, expressionEngine))
             .Register(FluxMqNodeTypes.MqttPublisher, context => CreatePublisher(context.Address, context.Definition, context))
             .Register(FluxMqNodeTypes.MqttRecorder, context => CreateRecorder(context.Address, context.Definition, messageRepository))
@@ -90,7 +96,15 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .RegisterType<MqttPublishRequest>("MqttPublishRequest")
             .RegisterType<MqttRecordingRequest>("MqttRecordingRequest")
             .RegisterType<FileWriteRequest>("FileWriteRequest")
-            .UseContextFactory<MqttEnvelope>(new MqttEnvelopeFlowMapContextFactory());
+            .RegisterType<PayloadInspectionRequest>("PayloadInspectionRequest")
+            .RegisterType<PayloadInspectionResult>("PayloadInspectionResult")
+            .RegisterType<HttpRequestInput>("HttpRequestInput")
+            .RegisterType<HttpResponseOutput>("HttpResponseOutput")
+            .RegisterType<HttpErrorOutput>("HttpErrorOutput")
+            .UseContextFactory<MqttEnvelope>(new MqttEnvelopeFlowMapContextFactory())
+            .UseContextFactory<PayloadInspectionResult>(new PayloadInspectionResultFlowMapContextFactory())
+            .UseContextFactory<HttpResponseOutput>(new HttpResponseOutputFlowMapContextFactory())
+            .UseContextFactory<HttpErrorOutput>(new HttpErrorOutputFlowMapContextFactory());
 
         if (!string.Equals(expressionEngine.Name, "jsonata", StringComparison.OrdinalIgnoreCase))
         {
@@ -439,13 +453,18 @@ public static class RuntimeNodeFactoryRegistryExtensions
             "MqttPublishRequest" => CreateFlowAssertion<MqttPublishRequest>(address, definition, expressionEngine),
             "MqttRecordingRequest" => CreateFlowAssertion<MqttRecordingRequest>(address, definition, expressionEngine),
             "FileWriteRequest" => CreateFlowAssertion<FileWriteRequest>(address, definition, expressionEngine),
+            "PayloadInspectionRequest" => CreateFlowAssertion<PayloadInspectionRequest>(address, definition, expressionEngine),
+            "PayloadInspectionResult" => CreateFlowAssertion<PayloadInspectionResult>(address, definition, expressionEngine),
+            "HttpRequestInput" => CreateFlowAssertion<HttpRequestInput>(address, definition, expressionEngine),
+            "HttpResponseOutput" => CreateFlowAssertion<HttpResponseOutput>(address, definition, expressionEngine),
+            "HttpErrorOutput" => CreateFlowAssertion<HttpErrorOutput>(address, definition, expressionEngine),
             "JsonSchemaValidationResult" => CreateFlowAssertion<JsonSchemaValidationResult>(address, definition, expressionEngine),
             "InspectedMqttMessage" => CreateFlowAssertion<InspectedMqttMessage>(address, definition, expressionEngine),
             "MqttMetricsSnapshot" => CreateFlowAssertion<MqttMetricsSnapshot>(address, definition, expressionEngine),
             "FlowLogEntry" => CreateFlowAssertion<FlowLogEntry>(address, definition, expressionEngine),
             "FlowError" => CreateFlowAssertion<FlowError>(address, definition, expressionEngine),
             _ => throw new InvalidOperationException(
-                $"Flow assertion inputType '{inputType}' is not supported yet. Supported inputType values: MqttEnvelope, MqttPublishRequest, MqttRecordingRequest, FileWriteRequest, JsonSchemaValidationResult, InspectedMqttMessage, MqttMetricsSnapshot, FlowLogEntry, FlowError.")
+                $"Flow assertion inputType '{inputType}' is not supported yet. Supported inputType values: MqttEnvelope, MqttPublishRequest, MqttRecordingRequest, FileWriteRequest, PayloadInspectionRequest, PayloadInspectionResult, HttpRequestInput, HttpResponseOutput, HttpErrorOutput, JsonSchemaValidationResult, InspectedMqttMessage, MqttMetricsSnapshot, FlowLogEntry, FlowError.")
         };
     }
 
