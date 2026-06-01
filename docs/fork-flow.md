@@ -65,9 +65,9 @@ Routes `MqttEnvelope` messages to `WhenTrue` or `WhenFalse` output ports.
 
 Delegates payload classification to the payload package and maps `MqttEnvelope` into `InspectedMqttMessage`.
 
-### ReplaySourceComponent
+### Replay Source
 
-Replays ordered `MqttEnvelope` values with relative timing and speed control.
+Streams stored session records as `MqttEnvelope` values with relative timing and speed control.
 
 ### Dynamic Mapper
 

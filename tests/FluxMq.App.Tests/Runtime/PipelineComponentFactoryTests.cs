@@ -1304,7 +1304,7 @@ public sealed class PipelineComponentFactoryTests
 
         sink!.Values.ShouldNotBeEmpty();
         sink.Values[^1].MessageCount.ShouldBe(2);
-        repository.LoadedSessionIds.ShouldBe(new[] { sessionId });
+        repository.StreamedSessionIds.ShouldBe(new[] { sessionId });
     }
 
     [Fact]
