@@ -2064,7 +2064,7 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 
 ## 2026-06-01 - File system component package migration
 
-- Added `FluxFlow.Components.FileSystem` `0.1.0-alpha.1` to `FluxMq.Components`.
+- Added `FluxFlow.Components.FileSystem` `0.1.0-alpha.1` to `FluxMq.Components`; later updated it to `0.4.0-alpha.1`.
 - Reworked `file.writer` so package code owns file path validation, directory creation, write modes, byte writing, and package error codes.
 - Kept a small FluxMQ adapter for the existing `FileWriteRequest` mapper target, `file.writer` actor id, and `file.written` event projection.
 - Updated docs and memory notes to describe the package-backed file writer boundary.
@@ -2072,6 +2072,16 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal --filter FileWriterComponentTests` passes with 3 tests.
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 81 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 488 tests.
+
+## 2026-06-01 - Component package update pass
+
+- Checked prerelease updates from NuGet for the FluxFlow package references.
+- Updated `FluxFlow.Components.FileSystem` from `0.1.0-alpha.1` to `0.4.0-alpha.1`.
+- Confirmed the existing `file.writer` adapter remains compatible with the package-owned `file.write` API.
+- Verified:
+  - `dotnet build .\FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes.
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal --filter FileWriterComponentTests` passes with 3 tests.
+  - `dotnet test .\FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 488 tests.
 
 ## 2026-06-01 - Observability component package migration
 
