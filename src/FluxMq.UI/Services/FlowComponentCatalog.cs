@@ -47,6 +47,34 @@ public sealed class FlowComponentCatalog
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
+            "timer.interval",
+            "Timer Interval",
+            "Source",
+            "Emits timer ticks at a fixed interval.",
+            IsResource: false,
+            [
+                new("Output", "TimerTick", IsInput: false)
+            ]),
+        new(
+            "timer.schedule",
+            "Scheduled Timer",
+            "Source",
+            "Emits schedule ticks from a cron expression.",
+            IsResource: false,
+            [
+                new("Output", "ScheduleTick", IsInput: false)
+            ]),
+        new(
+            "timer.delay",
+            "Delay",
+            "Control",
+            "Delays inputs and emits them unchanged.",
+            IsResource: false,
+            [
+                new("Input", "Configured input type", IsInput: true),
+                new("Output", "Configured input type", IsInput: false)
+            ]),
+        new(
             "mqtt.payload-inspector",
             "Payload Inspector",
             "Mapper",

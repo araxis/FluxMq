@@ -2086,3 +2086,16 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 81 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 205 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 488 tests.
+
+## 2026-06-01 - Timer component package registration
+
+- Added `FluxFlow.Components.Timers` `0.2.0-alpha.1` to the runtime/component projects.
+- Registered package-backed `timer.interval`, `timer.schedule`, and `timer.delay` nodes.
+- Added designer catalog entries, typed timer node models, and a MudBlazor-native timer node editor for interval, schedule, and delay configuration.
+- Added `TimerTick` and `ScheduleTick` mapper/assertion aliases plus timer-specific mapping contexts so timer ticks can drive `flow.mapper` and `mqtt.publisher` without an MQTT envelope input.
+- Updated `flow.mapper` defaults to preserve timer input types and generate timer-friendly publish/file expressions.
+- Verified:
+  - `dotnet build .\FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal --filter "FullyQualifiedName~PipelineComponentFactoryTests"` passes with 31 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal --filter "FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~TimerNodeModelTests|FullyQualifiedName~FlowDiagramNodeModelTests"` passes with 99 tests.
+  - `dotnet test .\FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 503 tests.

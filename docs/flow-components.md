@@ -6,11 +6,11 @@ This page documents the current Dataflow-backed components and shows how each be
 
 ## Shared Shape
 
-Current flow nodes expose:
+Most local flow nodes expose:
 
 - typed node identity through `FlowNodeId`
 - Dataflow lifecycle through `Complete`, `Fault`, and `Completion`
-- an `Errors` output port for `FlowError`
+- an `Errors` output port for `FlowError` when the component publishes routeable errors
 - component-specific input and output ports
 
 ```mermaid
@@ -21,6 +21,78 @@ flowchart LR
 ```
 
 Not every component has an input port. Source and trigger components produce events.
+Package-backed timer nodes currently expose their typed data ports and publish runtime diagnostics/events through the runtime event stream.
+
+## Timer Components
+
+FluxMQ registers package-backed timer nodes for periodic and scheduled workflows.
+These nodes are neutral: they emit tick contracts that can feed mappers, delays,
+assertions, publishers, file writers, or other workflow nodes.
+
+### Flow Definition
+
+Registered workflow node types: `timer.interval`, `timer.schedule`, `timer.delay`
+
+Ports:
+
+- `timer.interval`
+  - `Output`: `TimerTick`
+- `timer.schedule`
+  - `Output`: `ScheduleTick`
+- `timer.delay`
+  - `Input`: configured input type
+  - `Output`: same configured input type
+
+Interval timer:
+
+```json
+{
+  "timer": {
+    "type": "timer.interval",
+    "configuration": {
+      "intervalMilliseconds": 1000,
+      "initialDelayMilliseconds": 0,
+      "emitImmediately": true,
+      "maxTicks": 10,
+      "boundedCapacity": 1000
+    }
+  }
+}
+```
+
+Scheduled timer:
+
+```json
+{
+  "schedule": {
+    "type": "timer.schedule",
+    "configuration": {
+      "cron": "* * * * *",
+      "timeZoneId": "UTC",
+      "boundedCapacity": 1000
+    }
+  }
+}
+```
+
+Typed delay:
+
+```json
+{
+  "delay": {
+    "type": "timer.delay",
+    "Input": "timer.Output",
+    "configuration": {
+      "inputType": "TimerTick",
+      "delayMilliseconds": 250,
+      "boundedCapacity": 1000
+    }
+  }
+}
+```
+
+Mapper input aliases include `TimerTick` and `ScheduleTick`, so a timer source can
+drive an MQTT publish request through `flow.mapper` and `mqtt.publisher`.
 
 ## Connection State Trigger
 

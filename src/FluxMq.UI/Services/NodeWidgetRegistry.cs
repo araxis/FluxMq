@@ -11,6 +11,7 @@ using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
 using FluxMq.UI.Components.Workspace.Nodes.PayloadInspector;
 using FluxMq.UI.Components.Workspace.Nodes.SessionSource;
 using FluxMq.UI.Components.Workspace.Nodes.Sources;
+using FluxMq.UI.Components.Workspace.Nodes.Timers;
 
 namespace FluxMq.UI.Services;
 
@@ -38,7 +39,10 @@ public sealed class NodeWidgetRegistry
         ["mqtt.publisher"] = typeof(MqttPublisherNodeWidget),
         ["mqtt.recorder"] = typeof(MqttRecorderNodeWidget),
         ["file.writer"] = typeof(FileWriterNodeWidget),
-        ["mqtt.metrics"] = typeof(MqttMetricsNodeWidget)
+        ["mqtt.metrics"] = typeof(MqttMetricsNodeWidget),
+        [TimerNodeTypes.Interval] = typeof(TimerNodeWidget),
+        [TimerNodeTypes.Schedule] = typeof(TimerNodeWidget),
+        [TimerNodeTypes.Delay] = typeof(TimerNodeWidget)
     };
 
     /// <summary>Returns the widget type for the given node type, or the fallback default widget.</summary>

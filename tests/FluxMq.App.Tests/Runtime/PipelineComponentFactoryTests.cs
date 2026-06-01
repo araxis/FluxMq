@@ -14,8 +14,10 @@ using FluxMq.Components.Storage.Repositories;
 using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Definitions;
 using FluxFlow.Engine.Runtime;
+using FluxFlow.Components.Timers.Contracts;
 using MQTTnet.Protocol;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
 using System.Threading.Tasks.Dataflow;
@@ -48,7 +50,10 @@ public sealed class PipelineComponentFactoryTests
             FluxMqNodeTypes.DynamicMapper,
             FluxMqNodeTypes.MqttPublisher,
             FluxMqNodeTypes.MqttRecorder,
-            FluxMqNodeTypes.FileWriter
+            FluxMqNodeTypes.FileWriter,
+            FluxMqNodeTypes.TimerInterval,
+            FluxMqNodeTypes.TimerSchedule,
+            FluxMqNodeTypes.TimerDelay
         }, ignoreOrder: true);
     }
 
@@ -847,6 +852,211 @@ public sealed class PipelineComponentFactoryTests
         sink!.Values.ShouldNotBeEmpty();
         sink.Values[^1].MessageCount.ShouldBe(2);
         sink.Values[^1].TotalPayloadBytes.ShouldBe(6);
+    }
+
+    [Fact]
+    public async Task TimerIntervalFactory_CreatesLinkableRuntimeNode()
+    {
+        TestSinkNode<TimerTick>? sink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.timer-sink"), (address, _) =>
+            {
+                sink = new TestSinkNode<TimerTick>();
+                return SinkNode(address, sink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["timer"] = new NodeDefinition
+                        {
+                            Type = FluxMqNodeTypes.TimerInterval,
+                            Configuration =
+                            {
+                                ["name"] = JsonDocument.Parse("\"poll\"").RootElement.Clone(),
+                                ["intervalMilliseconds"] = JsonDocument.Parse("1").RootElement.Clone(),
+                                ["emitImmediately"] = JsonDocument.Parse("true").RootElement.Clone(),
+                                ["maxTicks"] = JsonDocument.Parse("2").RootElement.Clone()
+                            }
+                        },
+                        ["sink"] = NodeWithPort("test.timer-sink", "Input", "\"timer.Output\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+        await using var runtime = result.Runtime!;
+
+        await runtime.StartAsync();
+        await runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+        sink!.Values.Select(tick => tick.Sequence).ShouldBe([1, 2]);
+        sink.Values.ShouldAllBe(tick => tick.Name == "poll");
+    }
+
+    [Fact]
+    public async Task TimerDelayFactory_DelaysConfiguredInputType()
+    {
+        TestSinkNode<MqttEnvelope>? sink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.envelope-sink"), (address, _) =>
+            {
+                sink = new TestSinkNode<MqttEnvelope>();
+                return SinkNode(address, sink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["generated"] = new NodeDefinition
+                        {
+                            Type = FluxMqNodeTypes.GeneratedSource,
+                            Configuration =
+                            {
+                                ["messages"] = JsonDocument.Parse("""[{"topic":"factory/one","payload":"one"}]""").RootElement.Clone()
+                            }
+                        },
+                        ["delay"] = new NodeDefinition
+                        {
+                            Type = FluxMqNodeTypes.TimerDelay,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"generated.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["inputType"] = JsonDocument.Parse("\"MqttEnvelope\"").RootElement.Clone(),
+                                ["delayMilliseconds"] = JsonDocument.Parse("0").RootElement.Clone()
+                            }
+                        },
+                        ["sink"] = NodeWithPort("test.envelope-sink", "Input", "\"delay.Output\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+        await using var runtime = result.Runtime!;
+
+        await runtime.StartAsync();
+        await runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+        sink!.Values.ShouldHaveSingleItem().Topic.ShouldBe("factory/one");
+    }
+
+    [Fact]
+    public async Task TimerTickMapper_CanPublishMappedRequestsToConnection()
+    {
+        FakeMqttBrokerClient? mqttClient = null;
+        const string mapperExpression = """
+        {
+          "topic": "timer/" & name,
+          "payload": {
+            "sequence": sequence
+          },
+          "qos": 0,
+          "retain": false
+        }
+        """;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories(_ =>
+            {
+                mqttClient = new FakeMqttBrokerClient();
+                return mqttClient;
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Resources =
+            {
+                ["broker"] = new NodeDefinition
+                {
+                    Type = FluxMqNodeTypes.Connection,
+                    Configuration =
+                    {
+                        ["profile"] = JsonDocument.Parse("""{"name":"factory-broker","host":"localhost","port":1883}""").RootElement.Clone()
+                    }
+                }
+            },
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["timer"] = new NodeDefinition
+                        {
+                            Type = FluxMqNodeTypes.TimerInterval,
+                            Configuration =
+                            {
+                                ["name"] = JsonDocument.Parse("\"heartbeat\"").RootElement.Clone(),
+                                ["intervalMilliseconds"] = JsonDocument.Parse("1").RootElement.Clone(),
+                                ["emitImmediately"] = JsonDocument.Parse("true").RootElement.Clone(),
+                                ["maxTicks"] = JsonDocument.Parse("1").RootElement.Clone()
+                            }
+                        },
+                        ["map"] = new NodeDefinition
+                        {
+                            Type = FluxMqNodeTypes.DynamicMapper,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"timer.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["engine"] = JsonDocument.Parse("\"jsonata\"").RootElement.Clone(),
+                                ["inputType"] = JsonDocument.Parse("\"TimerTick\"").RootElement.Clone(),
+                                ["outputType"] = JsonDocument.Parse("\"MqttPublishRequest\"").RootElement.Clone(),
+                                ["expression"] = JsonDocument.Parse(JsonSerializer.Serialize(mapperExpression)).RootElement.Clone()
+                            }
+                        },
+                        ["publisher"] = new NodeDefinition
+                        {
+                            Type = FluxMqNodeTypes.MqttPublisher,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"map.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["connection"] = JsonDocument.Parse("\"broker\"").RootElement.Clone()
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+        await using var runtime = result.Runtime!;
+
+        await runtime.StartAsync();
+        mqttClient.ShouldNotBeNull();
+        await WaitUntilAsync(() => mqttClient!.Published.Count == 1);
+        mqttClient!.CompleteMessages();
+        await runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+        var publish = mqttClient.Published.ShouldHaveSingleItem();
+        publish.Topic.ShouldBe("timer/heartbeat");
+        Encoding.UTF8.GetString(publish.Payload).ShouldContain("\"sequence\":1");
+        publish.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtMostOnce);
+        publish.Retain.ShouldBeFalse();
     }
 
     [Fact]

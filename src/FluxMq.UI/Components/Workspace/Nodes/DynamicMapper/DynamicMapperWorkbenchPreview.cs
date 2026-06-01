@@ -3,6 +3,7 @@ using FluxMq.Components.Mapping;
 using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
 using FluxMq.Core.Models;
+using FluxFlow.Components.Timers.Contracts;
 using FluxFlow.Engine.Mapping;
 using MQTTnet.Protocol;
 using System.Text;
@@ -72,6 +73,36 @@ public static class DynamicMapperWorkbenchPreview
             },
             JsonOptions);
     }
+
+    public static string InputJson(string inputType, MqttEnvelope envelope)
+        => DynamicMapperNodeModel.NormalizeInputType(inputType) switch
+        {
+            "TimerTick" => JsonSerializer.Serialize(
+                new Dictionary<string, object?>
+                {
+                    ["name"] = "poll",
+                    ["sequence"] = 1,
+                    ["timestamp"] = DateTimeOffset.Parse("2026-05-23T10:00:00Z"),
+                    ["dueAt"] = DateTimeOffset.Parse("2026-05-23T10:00:00Z"),
+                    ["elapsedMilliseconds"] = 0,
+                    ["intervalMilliseconds"] = 1000,
+                    ["driftMilliseconds"] = 0
+                },
+                JsonOptions),
+            "ScheduleTick" => JsonSerializer.Serialize(
+                new Dictionary<string, object?>
+                {
+                    ["name"] = "weekday-noon",
+                    ["sequence"] = 1,
+                    ["timestamp"] = DateTimeOffset.Parse("2026-05-23T12:00:00Z"),
+                    ["dueAt"] = DateTimeOffset.Parse("2026-05-23T12:00:00Z"),
+                    ["cron"] = "0 12 * * MON-FRI",
+                    ["timeZoneId"] = "UTC",
+                    ["driftMilliseconds"] = 0
+                },
+                JsonOptions),
+            _ => InputJson(envelope)
+        };
 
     public static DynamicMapperInputSampleResult ParseInputJson(string json)
     {
@@ -178,16 +209,50 @@ public static class DynamicMapperWorkbenchPreview
         return variables;
     }
 
+    public static IReadOnlyList<DynamicMapperVariable> Variables(string inputType, MqttEnvelope envelope)
+        => DynamicMapperNodeModel.NormalizeInputType(inputType) switch
+        {
+            "TimerTick" =>
+            [
+                new("name", "name", "name", "poll"),
+                new("sequence", "sequence", "sequence", "1"),
+                new("timestamp", "timestamp", "timestamp", "2026-05-23T10:00:00.0000000Z"),
+                new("dueAt", "dueAt", "dueAt", "2026-05-23T10:00:00.0000000Z"),
+                new("elapsedMilliseconds", "elapsedMilliseconds", "elapsedMilliseconds", "0"),
+                new("intervalMilliseconds", "intervalMilliseconds", "intervalMilliseconds", "1000"),
+                new("driftMilliseconds", "driftMilliseconds", "driftMilliseconds", "0")
+            ],
+            "ScheduleTick" =>
+            [
+                new("name", "name", "name", "weekday-noon"),
+                new("sequence", "sequence", "sequence", "1"),
+                new("timestamp", "timestamp", "timestamp", "2026-05-23T12:00:00.0000000Z"),
+                new("dueAt", "dueAt", "dueAt", "2026-05-23T12:00:00.0000000Z"),
+                new("cron", "cron", "cron", "0 12 * * MON-FRI"),
+                new("timeZoneId", "timeZoneId", "timeZoneId", "UTC"),
+                new("driftMilliseconds", "driftMilliseconds", "driftMilliseconds", "0")
+            ],
+            _ => Variables(envelope)
+        };
+
     public static DynamicMapperPreviewResult PreviewAny(
         string engine,
         string expression,
+        MqttEnvelope envelope,
+        string title = "Any JSON")
+        => PreviewAny(engine, expression, "MqttEnvelope", envelope, title);
+
+    public static DynamicMapperPreviewResult PreviewAny(
+        string engine,
+        string expression,
+        string inputType,
         MqttEnvelope envelope,
         string title = "Any JSON")
     {
         try
         {
             var expressionEngine = CreateEngine(engine);
-            var context = MqttEnvelopeExpressionContextFactory.Create(envelope);
+            var context = CreateContext(inputType, envelope);
             var value = expressionEngine.Evaluate(expression, context, typeof(object));
             var json = SerializeResult(value);
 
@@ -211,11 +276,19 @@ public static class DynamicMapperWorkbenchPreview
         string outputType,
         string expression,
         MqttEnvelope envelope)
+        => Preview(engine, outputType, expression, "MqttEnvelope", envelope);
+
+    public static DynamicMapperPreviewResult Preview(
+        string engine,
+        string outputType,
+        string expression,
+        string inputType,
+        MqttEnvelope envelope)
     {
         try
         {
             var expressionEngine = CreateEngine(engine);
-            var context = MqttEnvelopeExpressionContextFactory.Create(envelope);
+            var context = CreateContext(inputType, envelope);
 
             return outputType switch
             {
@@ -323,6 +396,46 @@ public static class DynamicMapperWorkbenchPreview
         => string.Equals(engine, "jsonata", StringComparison.OrdinalIgnoreCase)
             ? new JsonataFlowExpressionEngine()
             : new DynamicExpressoFlowExpressionEngine();
+
+    private static FlowMapContext CreateContext(string inputType, MqttEnvelope envelope)
+        => DynamicMapperNodeModel.NormalizeInputType(inputType) switch
+        {
+            "TimerTick" => TimerTickExpressionContextFactory.Create(FallbackTimerTick()),
+            "ScheduleTick" => ScheduleTickExpressionContextFactory.Create(FallbackScheduleTick()),
+            _ => MqttEnvelopeExpressionContextFactory.Create(envelope)
+        };
+
+    private static TimerTick FallbackTimerTick()
+    {
+        var timestamp = DateTimeOffset.Parse("2026-05-23T10:00:00Z");
+        return new TimerTick
+        {
+            Name = "poll",
+            Sequence = 1,
+            Timestamp = timestamp,
+            StartedAt = timestamp,
+            DueAt = timestamp,
+            Elapsed = TimeSpan.Zero,
+            Interval = TimeSpan.FromSeconds(1),
+            Drift = TimeSpan.Zero
+        };
+    }
+
+    private static ScheduleTick FallbackScheduleTick()
+    {
+        var timestamp = DateTimeOffset.Parse("2026-05-23T12:00:00Z");
+        return new ScheduleTick
+        {
+            Name = "weekday-noon",
+            Sequence = 1,
+            Timestamp = timestamp,
+            StartedAt = timestamp,
+            DueAt = timestamp,
+            Cron = "0 12 * * MON-FRI",
+            TimeZoneId = "UTC",
+            Drift = TimeSpan.Zero
+        };
+    }
 
     private static JsonElement? TryParseJson(string payloadText)
     {
