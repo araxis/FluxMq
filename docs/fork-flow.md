@@ -63,7 +63,7 @@ Routes `MqttEnvelope` messages to `WhenTrue` or `WhenFalse` output ports.
 
 ### PayloadInspectorMapperComponent
 
-Maps `MqttEnvelope` into `InspectedMqttMessage`.
+Delegates payload classification to the payload package and maps `MqttEnvelope` into `InspectedMqttMessage`.
 
 ### Replay Source
 

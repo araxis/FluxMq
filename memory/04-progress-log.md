@@ -2118,3 +2118,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --filter MqttMetricsComponentTests -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 6 tests.
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --filter "FullyQualifiedName~MqttMetrics" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 1 test.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 485 tests.
+
+## 2026-06-01 - Payload component package migration
+
+- Added `FluxFlow.Components.Payloads` `0.1.0-alpha.1` to `FluxMq.Components`.
+- Reworked `mqtt.payload-inspector` so package code owns neutral payload classification, JSON/XML formatting, base64 detection, text preview, and binary detection.
+- Kept a small FluxMQ adapter for the existing `MqttEnvelope` input, `InspectedMqttMessage` output, Core payload result projection, and hex dump display shape.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --filter PayloadInspectorMapperComponentTests -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 11 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --filter "FullyQualifiedName~PayloadInspectorFactory" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 2 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 493 tests.
