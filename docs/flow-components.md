@@ -261,6 +261,8 @@ If the predicate throws, the component publishes a `FlowError` and drops that me
 
 `PayloadInspectorMapperComponent` maps raw MQTT messages into inspected payload messages.
 
+Runtime classification is package-backed through `FluxFlow.Components.Payloads`. FluxMQ adapts each `MqttEnvelope` into a neutral payload inspection request, then projects the package inspection result back into the existing `InspectedMqttMessage` and Core payload model used by the UI.
+
 ### Behavior
 
 ```mermaid
