@@ -118,6 +118,72 @@ public sealed class FlowComponentCatalog
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
+            "json.parse",
+            "JSON Parse",
+            "Transform",
+            "Parses text or bytes into a JSON value.",
+            IsResource: false,
+            [
+                new("Input", "JsonParseRequest", IsInput: true),
+                new("Output", "JsonParseResult", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "json.stringify",
+            "JSON Stringify",
+            "Transform",
+            "Serializes a value into JSON text and bytes.",
+            IsResource: false,
+            [
+                new("Input", "JsonStringifyRequest", IsInput: true),
+                new("Output", "JsonStringifyResult", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "text.encode",
+            "Text Encode",
+            "Transform",
+            "Encodes text into bytes.",
+            IsResource: false,
+            [
+                new("Input", "TextEncodeRequest", IsInput: true),
+                new("Output", "TextEncodeResult", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "text.decode",
+            "Text Decode",
+            "Transform",
+            "Decodes bytes into text.",
+            IsResource: false,
+            [
+                new("Input", "TextDecodeRequest", IsInput: true),
+                new("Output", "TextDecodeResult", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "base64.encode",
+            "Base64 Encode",
+            "Transform",
+            "Encodes bytes or text into base64 text.",
+            IsResource: false,
+            [
+                new("Input", "Base64EncodeRequest", IsInput: true),
+                new("Output", "Base64EncodeResult", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "base64.decode",
+            "Base64 Decode",
+            "Transform",
+            "Decodes base64 text into bytes and optional text.",
+            IsResource: false,
+            [
+                new("Input", "Base64DecodeRequest", IsInput: true),
+                new("Output", "Base64DecodeResult", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
             "mqtt.metrics",
             "MQTT Metrics",
             "Observer",

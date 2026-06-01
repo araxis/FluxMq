@@ -18,6 +18,7 @@ using FluxFlow.Components.Control.Contracts;
 using FluxFlow.Components.Control.Options;
 using FluxFlow.Components.Mapping;
 using FluxFlow.Components.Mapping.Options;
+using FluxFlow.Components.Serialization;
 using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Definitions;
 using FluxFlow.Engine.Mapping;
@@ -71,6 +72,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .Register(FluxMqNodeTypes.FlowAssertion, context => CreateFlowAssertion(context.Address, context.Definition, expressionEngine))
             .Register(FluxMqNodeTypes.JsonSchemaValidator, context => CreateJsonSchemaValidator(context.Address, context.Definition))
             .RegisterMappingComponents(options => ConfigureMappingComponents(options, expressionEngine))
+            .RegisterSerializationComponents()
             .Register(FluxMqNodeTypes.MqttPublisher, context => CreatePublisher(context.Address, context.Definition, context))
             .Register(FluxMqNodeTypes.MqttRecorder, context => CreateRecorder(context.Address, context.Definition, messageRepository))
             .Register(FluxMqNodeTypes.FileWriter, CreateFileWriter);

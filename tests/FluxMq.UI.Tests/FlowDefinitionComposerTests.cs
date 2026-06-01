@@ -121,6 +121,25 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void ComponentCatalog_ExposesSerializationTransforms()
+    {
+        var catalog = new FlowComponentCatalog();
+
+        var jsonParse = catalog.Find("json.parse").ShouldNotBeNull();
+        jsonParse.DisplayName.ShouldBe("JSON Parse");
+        jsonParse.Category.ShouldBe("Transform");
+        jsonParse.Ports.ShouldContain(port => port.Name == "Input" && port.ValueType == "JsonParseRequest" && port.IsInput);
+        jsonParse.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "JsonParseResult" && !port.IsInput);
+        jsonParse.Ports.ShouldContain(port => port.Name == "Errors" && port.ValueType == "FlowError" && !port.IsInput);
+
+        catalog.Find("json.stringify").ShouldNotBeNull().Category.ShouldBe("Transform");
+        catalog.Find("text.encode").ShouldNotBeNull().Category.ShouldBe("Transform");
+        catalog.Find("text.decode").ShouldNotBeNull().Category.ShouldBe("Transform");
+        catalog.Find("base64.encode").ShouldNotBeNull().Category.ShouldBe("Transform");
+        catalog.Find("base64.decode").ShouldNotBeNull().Category.ShouldBe("Transform");
+    }
+
+    [Fact]
     public void CreateInspectPayloadsDefinition_CreatesHostBuildableDefinition()
     {
         var composer = new FlowDefinitionComposer();
@@ -377,6 +396,29 @@ public sealed class FlowDefinitionComposerTests
             .EnumerateArray()
             .Select(static item => item.GetString())
             .ShouldBe(["messages", "currentRate", "averageRate", "payloadBytes"]);
+    }
+
+    [Fact]
+    public void AddComponent_DoesNotAutoWireSerializationTransformToEnvelopeSource()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var updated = composer.AddComponent(initial, "json.parse");
+
+        using var document = JsonDocument.Parse(updated);
+        var parser = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty("jsonParser");
+
+        parser.GetProperty("type").GetString().ShouldBe("json.parse");
+        parser.TryGetProperty("Input", out _).ShouldBeFalse();
+        parser.GetProperty("configuration").GetProperty("boundedCapacity").GetInt32().ShouldBe(1000);
     }
 
     [Fact]
