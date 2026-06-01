@@ -1099,6 +1099,12 @@ public sealed class FlowDefinitionComposer
             "flow.when" => RouterNodeName,
             "flow.assert" => AssertionNodeName,
             "json.schema-validator" => "jsonSchemaValidator",
+            "json.parse" => "jsonParser",
+            "json.stringify" => "jsonStringifier",
+            "text.encode" => "textEncoder",
+            "text.decode" => "textDecoder",
+            "base64.encode" => "base64Encoder",
+            "base64.decode" => "base64Decoder",
             "flow.mapper" => MakeUniqueNodeName(workflow, MapperNodeName),
             "flow.logger" => MakeUniqueNodeName(workflow, LoggerNodeName),
             "mqtt.recorder" => RecorderNodeName,
@@ -1164,6 +1170,10 @@ public sealed class FlowDefinitionComposer
         else if (componentType is "mqtt.recorder" or "file.writer")
         {
             node["configuration"] = CreateActorCapacityConfiguration();
+        }
+        else if (IsSerializationTransform(componentType))
+        {
+            node["configuration"] = CreateTransformCapacityConfiguration();
         }
 
         if (FindDefaultInputLink(componentType, workflow) is { Length: > 0 } inputLink)
@@ -2704,8 +2714,12 @@ public sealed class FlowDefinitionComposer
     private static bool NeedsInputLink(string componentType) => componentType switch
     {
         "mqtt.trigger" or "session.source" or "replay.source" or "generated.source" or "mqtt.connection-state-trigger" => false,
+        "json.parse" or "json.stringify" or "text.encode" or "text.decode" or "base64.encode" or "base64.decode" => false,
         _ => true
     };
+
+    private static bool IsSerializationTransform(string componentType)
+        => componentType is "json.parse" or "json.stringify" or "text.encode" or "text.decode" or "base64.encode" or "base64.decode";
 
     private static string? FindDefaultInputLink(string componentType, JsonObject workflow)
     {
@@ -2883,6 +2897,12 @@ public sealed class FlowDefinitionComposer
         };
 
     private static JsonObject CreateActorCapacityConfiguration()
+        => new()
+        {
+            ["boundedCapacity"] = 1000
+        };
+
+    private static JsonObject CreateTransformCapacityConfiguration()
         => new()
         {
             ["boundedCapacity"] = 1000
