@@ -314,13 +314,13 @@ Ports:
 
 ## Replay Source
 
-`ReplaySourceComponent` emits recorded MQTT messages in timestamp order.
+`replay.source` streams recorded MQTT messages from the session store and preserves relative timing.
 
 ### Behavior
 
 ```mermaid
 flowchart LR
-    Messages["IEnumerable<MqttEnvelope>"] --> Replay["ReplaySourceComponent"]
+    Store["Session store"] --> Replay["replay.source"]
     Replay --> Out["Output: MqttEnvelope"]
     Replay --> Errors["Errors: FlowError"]
 ```
@@ -336,19 +336,6 @@ sequenceDiagram
     Replay->>Out: second message
     Note over Replay: wait scaled relative delay
     Replay->>Out: third message
-```
-
-### Usage
-
-```csharp
-var replay = new ReplaySourceComponent(messages, speed: 2);
-
-replay.Output.LinkTo(next.Input, new DataflowLinkOptions
-{
-    PropagateCompletion = true
-});
-
-await replay.StartAsync();
 ```
 
 ### Notes
@@ -670,32 +657,6 @@ Ports:
 - last received timestamp
 - average payload bytes
 
-## Recorded Session Replay Factory
-
-`RecordedSessionReplayFactory` creates replay sources from stored sessions.
-
-This is not a flow node. It is an orchestration service.
-
-### Behavior
-
-```mermaid
-flowchart LR
-    SessionId["SessionId"] --> Factory["RecordedSessionReplayFactory"]
-    Repository["IMessageRepository"] --> Factory
-    Factory --> Convert["StoredMessage.ToEnvelope"]
-    Convert --> Replay["ReplaySourceComponent"]
-```
-
-### Usage
-
-```csharp
-var factory = new RecordedSessionReplayFactory(messageRepository);
-var replay = factory.Create(sessionId, new RecordedSessionReplayOptions
-{
-    Speed = 2
-});
-```
-
 ## Sample Flow
 
 This flow reads traffic through a source, filters it, inspects payloads, and projects results to UI. The same downstream graph can run from live or stored traffic by choosing the appropriate source node.
@@ -761,7 +722,7 @@ This flow replays a recorded session back through an MQTT client.
 
 ```mermaid
 flowchart LR
-    Factory["RecordedSessionReplayFactory"] --> Replay["ReplaySourceComponent"]
+    Store["Session store"] --> Replay["replay.source"]
     Replay --> Filter["flow.filter"]
     Filter --> Mapper["flow.mapper: MqttEnvelope -> MqttPublishRequest"]
     Mapper --> Publisher["MqttPublisherComponent"]

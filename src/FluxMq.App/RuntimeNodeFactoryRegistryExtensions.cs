@@ -256,14 +256,12 @@ public static class RuntimeNodeFactoryRegistryExtensions
             throw new InvalidOperationException("Replay source requires a message repository.");
         }
 
-        var factory = new RecordedSessionReplayFactory(messageRepository);
-        var component = factory.Create(
+        var component = new StoredSessionSourceComponent(
+            messageRepository,
             sessionId.Value,
-            new RecordedSessionReplayOptions
-            {
-                Speed = GetDoubleOrDefault(definition, "speed", 1),
-                BoundedCapacity = GetBoundedCapacity(definition)
-            });
+            preserveTiming: true,
+            speed: GetDoubleOrDefault(definition, "speed", 1),
+            boundedCapacity: GetBoundedCapacity(definition));
 
         return SourceRuntimeNode(address, component, component.Output);
     }
