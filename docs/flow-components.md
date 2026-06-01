@@ -422,15 +422,18 @@ If mapping fails for one message, the mapper publishes a `FlowError` and continu
 
 ## JSON Schema Validator
 
-`json.schema-validator` validates MQTT payload JSON against an inline schema or a schema file. It is a standalone validator node, not hidden filter behavior and not owned by the mapper UI.
+`json.schema-validator` validates MQTT payload JSON against an inline schema or a schema file. It is a standalone validator node, not hidden filter behavior and not owned by the mapper UI. Runtime schema loading and evaluation are package-backed by `FluxFlow.Components.Validation`; FluxMQ keeps the MQTT payload selector, `JsonSchemaValidationResult` shape, and validation events.
 
 ### Behavior
 
 ```mermaid
 flowchart LR
     In["Input: MqttEnvelope"] --> Validator["JsonSchemaValidatorComponent"]
-    Validator --> Out["Output: JsonSchemaValidationResult"]
-    Validator -->|schema/runtime failure| Errors["Errors: FlowError code 2000"]
+    Validator --> Package["Package json.schema-validator node"]
+    Package --> Out["Result: JsonSchemaValidationResult"]
+    Package --> Valid["Valid: MqttEnvelope"]
+    Package --> Invalid["Invalid: MqttEnvelope"]
+    Package -->|schema/runtime failure| Errors["Errors: FlowError"]
 ```
 
 Invalid payloads produce `JsonSchemaValidationResult` values with `IsValid = false` and issue details. Processing failures publish `FlowError` and the component continues with later messages where possible.

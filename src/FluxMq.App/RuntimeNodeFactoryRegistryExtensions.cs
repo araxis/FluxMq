@@ -630,24 +630,41 @@ public static class RuntimeNodeFactoryRegistryExtensions
 
     private static JsonSchemaValidatorDefinition GetJsonSchemaValidatorDefinition(NodeDefinition definition)
     {
-        var schema = GetNullableString(definition, "schema");
+        var schema = GetOptionalJsonSchema(definition);
         var schemaPath = GetNullableString(definition, "schemaPath") ?? GetNullableString(definition, "schemaFile");
-        if (string.IsNullOrWhiteSpace(schema))
+        if (schema is null && string.IsNullOrWhiteSpace(schemaPath))
         {
-            if (string.IsNullOrWhiteSpace(schemaPath))
-            {
-                throw new InvalidOperationException(
-                    "JSON Schema validator requires configuration value 'schema' or 'schemaPath'.");
-            }
-
-            schema = File.ReadAllText(schemaPath);
+            throw new InvalidOperationException(
+                "JSON Schema validator requires configuration value 'schema' or 'schemaPath'.");
         }
 
         return new JsonSchemaValidatorDefinition
         {
             SchemaJson = schema,
+            SchemaPath = schemaPath,
             SchemaId = GetNullableString(definition, "schemaId") ?? schemaPath ?? "inline"
         };
+    }
+
+    private static string? GetOptionalJsonSchema(NodeDefinition definition)
+    {
+        if (!definition.Configuration.TryGetValue("schema", out var value))
+        {
+            return null;
+        }
+
+        if (value.ValueKind == JsonValueKind.Null)
+        {
+            return null;
+        }
+
+        if (value.ValueKind == JsonValueKind.String)
+        {
+            var schema = value.GetString();
+            return string.IsNullOrWhiteSpace(schema) ? null : schema;
+        }
+
+        return value.GetRawText();
     }
 
     private static string NormalizeMapperTypeName(string value)

@@ -2049,3 +2049,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Updated the local sample app file at `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` from `mqtt.condition-router` to `flow.when`.
 - Verified:
   - `dotnet test FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 488 tests.
+
+## 2026-06-01 - Validation component package migration
+
+- Added `FluxFlow.Components.Validation` `0.1.0-alpha.1` to `FluxMq.Components`.
+- Reworked `json.schema-validator` so package code owns schema loading, schema-path handling, value selection, and validation evaluation.
+- Kept a small FluxMQ adapter for MQTT payload text selection, `JsonSchemaValidationResult` projection, invalid-payload issue wording, and `json.schema.validated` events.
+- Removed FluxMQ's direct `JsonSchema.Net` dependency from the component project.
+- Updated docs and memory notes to describe the package-backed validation boundary.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore --filter "FullyQualifiedName~JsonSchemaValidatorComponentTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v normal` passes with 4 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~JsonSchemaValidatorFactory" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 2 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 488 tests.

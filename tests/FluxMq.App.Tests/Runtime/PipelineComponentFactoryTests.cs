@@ -523,10 +523,11 @@ public sealed class PipelineComponentFactoryTests
         });
 
         result.IsSuccess.ShouldBeTrue();
+        await result.Runtime!.StartAsync();
 
         source!.Post(new MqttEnvelope { Topic = "factory/one", Payload = """{"status":"ok"}"""u8.ToArray() });
         source.Post(new MqttEnvelope { Topic = "factory/two", Payload = """{"status":"fault"}"""u8.ToArray() });
-        result.Runtime!.Complete();
+        result.Runtime.Complete();
 
         await result.Runtime.Completion;
 
@@ -601,10 +602,11 @@ public sealed class PipelineComponentFactoryTests
         });
 
         result.IsSuccess.ShouldBeTrue();
+        await result.Runtime!.StartAsync();
 
         source!.Post(new MqttEnvelope { Topic = "factory/valid", Payload = """{"status":"ok"}"""u8.ToArray() });
         source.Post(new MqttEnvelope { Topic = "factory/invalid", Payload = """{"status":"fault"}"""u8.ToArray() });
-        result.Runtime!.Complete();
+        result.Runtime.Complete();
 
         await result.Runtime.Completion;
 
