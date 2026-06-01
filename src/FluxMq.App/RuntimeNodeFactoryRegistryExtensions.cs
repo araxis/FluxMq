@@ -490,27 +490,28 @@ public static class RuntimeNodeFactoryRegistryExtensions
         NodeDefinition definition,
         IFlowExpressionEngine expressionEngine)
     {
-        var inputType = NormalizeMapperTypeName(GetStringOrDefault(definition, "inputType", "MqttEnvelope"));
+        var inputType = FlowContractTypeNames.Normalize(GetStringOrDefault(definition, "inputType", FlowContractTypeNames.MqttEnvelope));
         return inputType switch
         {
-            "MqttEnvelope" => CreateFlowAssertion<MqttEnvelope>(address, definition, expressionEngine),
-            "MqttPublishRequest" => CreateFlowAssertion<MqttPublishRequest>(address, definition, expressionEngine),
-            "MqttRecordingRequest" => CreateFlowAssertion<MqttRecordingRequest>(address, definition, expressionEngine),
-            "FileWriteRequest" => CreateFlowAssertion<FileWriteRequest>(address, definition, expressionEngine),
-            "PayloadInspectionRequest" => CreateFlowAssertion<PayloadInspectionRequest>(address, definition, expressionEngine),
-            "PayloadInspectionResult" => CreateFlowAssertion<PayloadInspectionResult>(address, definition, expressionEngine),
-            "HttpRequestInput" => CreateFlowAssertion<HttpRequestInput>(address, definition, expressionEngine),
-            "HttpResponseOutput" => CreateFlowAssertion<HttpResponseOutput>(address, definition, expressionEngine),
-            "HttpErrorOutput" => CreateFlowAssertion<HttpErrorOutput>(address, definition, expressionEngine),
-            "JsonSchemaValidationResult" => CreateFlowAssertion<JsonSchemaValidationResult>(address, definition, expressionEngine),
-            "InspectedMqttMessage" => CreateFlowAssertion<InspectedMqttMessage>(address, definition, expressionEngine),
-            "MqttMetricsSnapshot" => CreateFlowAssertion<MqttMetricsSnapshot>(address, definition, expressionEngine),
-            "TimerTick" => CreateFlowAssertion<TimerTick>(address, definition, expressionEngine),
-            "ScheduleTick" => CreateFlowAssertion<ScheduleTick>(address, definition, expressionEngine),
-            "FlowLogEntry" => CreateFlowAssertion<FlowLogEntry>(address, definition, expressionEngine),
-            "FlowError" => CreateFlowAssertion<FlowError>(address, definition, expressionEngine),
+            FlowContractTypeNames.MqttEnvelope => CreateFlowAssertion<MqttEnvelope>(address, definition, expressionEngine),
+            FlowContractTypeNames.MqttPublishRequest => CreateFlowAssertion<MqttPublishRequest>(address, definition, expressionEngine),
+            FlowContractTypeNames.MqttRecordingRequest => CreateFlowAssertion<MqttRecordingRequest>(address, definition, expressionEngine),
+            FlowContractTypeNames.FileWriteRequest => CreateFlowAssertion<FileWriteRequest>(address, definition, expressionEngine),
+            FlowContractTypeNames.PayloadInspectionRequest => CreateFlowAssertion<PayloadInspectionRequest>(address, definition, expressionEngine),
+            FlowContractTypeNames.PayloadInspectionResult => CreateFlowAssertion<PayloadInspectionResult>(address, definition, expressionEngine),
+            FlowContractTypeNames.HttpRequestInput => CreateFlowAssertion<HttpRequestInput>(address, definition, expressionEngine),
+            FlowContractTypeNames.HttpResponseOutput => CreateFlowAssertion<HttpResponseOutput>(address, definition, expressionEngine),
+            FlowContractTypeNames.HttpErrorOutput => CreateFlowAssertion<HttpErrorOutput>(address, definition, expressionEngine),
+            FlowContractTypeNames.JsonSchemaValidationResult => CreateFlowAssertion<JsonSchemaValidationResult>(address, definition, expressionEngine),
+            FlowContractTypeNames.InspectedMqttMessage => CreateFlowAssertion<InspectedMqttMessage>(address, definition, expressionEngine),
+            FlowContractTypeNames.MqttMetricsSnapshot => CreateFlowAssertion<MqttMetricsSnapshot>(address, definition, expressionEngine),
+            FlowContractTypeNames.TimerTick => CreateFlowAssertion<TimerTick>(address, definition, expressionEngine),
+            FlowContractTypeNames.ScheduleTick => CreateFlowAssertion<ScheduleTick>(address, definition, expressionEngine),
+            FlowContractTypeNames.StateReducerResult => CreateFlowAssertion<StateReducerResult>(address, definition, expressionEngine),
+            FlowContractTypeNames.FlowLogEntry => CreateFlowAssertion<FlowLogEntry>(address, definition, expressionEngine),
+            FlowContractTypeNames.FlowError => CreateFlowAssertion<FlowError>(address, definition, expressionEngine),
             _ => throw new InvalidOperationException(
-                $"Flow assertion inputType '{inputType}' is not supported yet. Supported inputType values: MqttEnvelope, MqttPublishRequest, MqttRecordingRequest, FileWriteRequest, PayloadInspectionRequest, PayloadInspectionResult, HttpRequestInput, HttpResponseOutput, HttpErrorOutput, JsonSchemaValidationResult, InspectedMqttMessage, MqttMetricsSnapshot, TimerTick, ScheduleTick, FlowLogEntry, FlowError.")
+                $"Flow assertion inputType '{inputType}' is not supported yet. Supported inputType values: {FlowContractTypeNames.FormatAssertionInputTypes()}.")
         };
     }
 

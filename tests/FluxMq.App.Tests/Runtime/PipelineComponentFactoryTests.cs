@@ -704,6 +704,79 @@ public sealed class PipelineComponentFactoryTests
     }
 
     [Fact]
+    public async Task FlowAssertionFactory_SupportsStateReducerResults()
+    {
+        TestValueSourceNode<StateReducerResult>? source = null;
+        TestSinkNode<FlowAssertionResult>? resultSink = null;
+        TestSinkNode<StateReducerResult>? passedSink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.state-source"), (address, _) =>
+            {
+                source = new TestValueSourceNode<StateReducerResult>();
+                return SourceNode(address, source);
+            })
+            .Register(new NodeType("test.assertion-sink"), (address, _) =>
+            {
+                resultSink = new TestSinkNode<FlowAssertionResult>();
+                return SinkNode(address, resultSink);
+            })
+            .Register(new NodeType("test.state-sink"), (address, _) =>
+            {
+                passedSink = new TestSinkNode<StateReducerResult>();
+                return SinkNode(address, passedSink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("test.state-source"),
+                        ["assertion"] = new NodeDefinition
+                        {
+                            Type = FluxMqNodeTypes.FlowAssertion,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["assertionName"] = JsonDocument.Parse("\"State updated\"").RootElement.Clone(),
+                                ["inputType"] = JsonDocument.Parse("\"StateReducerResult\"").RootElement.Clone(),
+                                ["expression"] = JsonDocument.Parse("\"version >= 1 && key == \\\"temperature\\\"\"").RootElement.Clone(),
+                                ["failureMessage"] = JsonDocument.Parse("\"State reducer result was not updated.\"").RootElement.Clone()
+                            }
+                        },
+                        ["resultSink"] = NodeWithPort("test.assertion-sink", "Input", "\"assertion.Result\""),
+                        ["passedSink"] = NodeWithPort("test.state-sink", "Input", "\"assertion.Passed\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+
+        source!.Post(new StateReducerResult
+        {
+            Key = "temperature",
+            NewState = 21.7,
+            Version = 1,
+            UpdatedAt = DateTimeOffset.Parse("2026-06-01T10:00:00Z")
+        });
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+        resultSink!.Values.ShouldHaveSingleItem().Passed.ShouldBeTrue();
+        passedSink!.Values.ShouldHaveSingleItem().Key.ShouldBe("temperature");
+    }
+
+    [Fact]
     public async Task JsonSchemaValidatorFactory_CreatesLinkableRuntimeNode()
     {
         TestSourceNode? source = null;

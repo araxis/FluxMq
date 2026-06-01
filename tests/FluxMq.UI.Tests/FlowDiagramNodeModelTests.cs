@@ -328,6 +328,16 @@ public sealed class FlowDiagramNodeModelTests
     }
 
     [Fact]
+    public void FlowAssertionNodeModel_UsesSharedAssertionInputTypes()
+    {
+        FlowAssertionNodeModel.InputTypes.ShouldBe(FlowContractTypeNames.AssertionInputTypes);
+        FlowAssertionNodeModel.InputTypes.ShouldContain("StateReducerResult");
+
+        FlowAssertionNodeModel.NormalizeInputType("FluxFlow.Components.State.Contracts.StateReducerResult")
+            .ShouldBe("StateReducerResult");
+    }
+
+    [Fact]
     public void StateReducerNodeModel_BuildsReducerConfiguration()
     {
         var catalog = new FlowComponentCatalog();
