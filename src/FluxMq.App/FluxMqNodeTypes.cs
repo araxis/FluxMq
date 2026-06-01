@@ -11,7 +11,9 @@ public static class FluxMqNodeTypes
     public static readonly NodeType StoredSessionSource = new("session.source");
     public static readonly NodeType ReplaySource = new("replay.source");
     public static readonly NodeType GeneratedSource = new("generated.source");
+    public static readonly NodeType PayloadInspect = new("payload.inspect");
     public static readonly NodeType PayloadInspector = new("mqtt.payload-inspector");
+    public static readonly NodeType HttpRequest = new("http.request");
     public static readonly NodeType MqttMetrics = new("mqtt.metrics");
     public static readonly NodeType FlowLogger = new("flow.logger");
     public static readonly NodeType MessageFilter = new("flow.filter");

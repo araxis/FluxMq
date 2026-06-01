@@ -23,6 +23,7 @@ public sealed class FlowDefinitionComposer
     public const string TriggerNodeName = "trigger";
     public const string StoredSourceNodeName = "stored";
     public const string InspectorNodeName = "inspect";
+    public const string PayloadInspectNodeName = "payloadInspect";
     public const string MetricsNodeName = "metrics";
     public const string FilterNodeName = "filter";
     public const string RouterNodeName = "router";
@@ -31,6 +32,7 @@ public sealed class FlowDefinitionComposer
     public const string LoggerNodeName = "logger";
     public const string RecorderNodeName = "recorder";
     public const string PublisherNodeName = "publisher";
+    public const string HttpRequestNodeName = "http";
     public const string StateSourceNodeName = "state";
     public const string ReplayNodeName = "replay";
     public const string GeneratedNodeName = "generated";
@@ -1100,6 +1102,7 @@ public sealed class FlowDefinitionComposer
         var preferredNodeName = componentType switch
         {
             "mqtt.payload-inspector" => InspectorNodeName,
+            "payload.inspect" => PayloadInspectNodeName,
             "mqtt.metrics" => MetricsNodeName,
             "flow.filter" => FilterNodeName,
             "flow.when" => RouterNodeName,
@@ -1115,6 +1118,7 @@ public sealed class FlowDefinitionComposer
             "flow.logger" => MakeUniqueNodeName(workflow, LoggerNodeName),
             "mqtt.recorder" => RecorderNodeName,
             "mqtt.publisher" => PublisherNodeName,
+            "http.request" => HttpRequestNodeName,
             "file.writer" => "fileWriter",
             "mqtt.connection-state-trigger" => StateSourceNodeName,
             "replay.source" => ReplayNodeName,
@@ -1179,6 +1183,14 @@ public sealed class FlowDefinitionComposer
         else if (componentType == "mqtt.metrics")
         {
             node["configuration"] = CreateMetricsConfiguration();
+        }
+        else if (componentType == "http.request")
+        {
+            node["configuration"] = CreateHttpRequestConfiguration();
+        }
+        else if (componentType == "payload.inspect")
+        {
+            node["configuration"] = CreatePayloadInspectConfiguration();
         }
         else if (componentType is "mqtt.recorder" or "file.writer")
         {
@@ -2775,7 +2787,7 @@ public sealed class FlowDefinitionComposer
     }
 
     private static bool IsActor(string componentType)
-        => componentType is "mqtt.publisher" or "mqtt.recorder" or "file.writer";
+        => componentType is "mqtt.publisher" or "mqtt.recorder" or "file.writer" or "http.request" or "payload.inspect";
 
     private static string? FindPreferredSourceNode(JsonObject workflow)
     {
@@ -2987,6 +2999,27 @@ public sealed class FlowDefinitionComposer
             ["rateWindowSeconds"] = MqttMetricsNodeModel.DefaultRateWindowSeconds,
             ["metricCardColumns"] = MqttMetricsNodeModel.DefaultMetricCardColumns,
             ["displayMetrics"] = MqttMetricsNodeModel.BuildDisplayMetrics(MqttMetricsNodeModel.DefaultDisplayMetrics)
+        };
+
+    private static JsonObject CreateHttpRequestConfiguration()
+        => new()
+        {
+            ["defaultTimeoutMilliseconds"] = 30000,
+            ["maxResponseBodyBytes"] = 1048576,
+            ["followRedirects"] = true,
+            ["treatNonSuccessStatusAsError"] = false,
+            ["boundedCapacity"] = 128
+        };
+
+    private static JsonObject CreatePayloadInspectConfiguration()
+        => new()
+        {
+            ["maxPreviewBytes"] = 1024,
+            ["maxFormattedChars"] = 4096,
+            ["detectBase64"] = true,
+            ["formatJson"] = true,
+            ["formatXml"] = true,
+            ["boundedCapacity"] = 128
         };
 
     private static JsonObject CreateActorCapacityConfiguration()

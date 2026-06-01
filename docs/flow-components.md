@@ -21,7 +21,8 @@ flowchart LR
 ```
 
 Not every component has an input port. Source and trigger components produce events.
-Package-backed timer nodes currently expose their typed data ports and publish runtime diagnostics/events through the runtime event stream.
+Most FluxMQ-owned nodes use `FlowError` for `Errors`; package-backed integration nodes can expose a more specific error type, such as `HttpErrorOutput`.
+Package-backed timer nodes expose their typed data ports and publish runtime diagnostics/events through the runtime event stream.
 
 ## Timer Components
 
@@ -31,7 +32,7 @@ assertions, publishers, file writers, or other workflow nodes.
 
 ### Flow Definition
 
-Registered workflow node types: `timer.interval`, `timer.schedule`, `timer.delay`
+Registered workflow node types: `timer.interval`, `timer.schedule`, `timer.delay`, `timer.debounce`, `timer.throttle`
 
 Ports:
 
@@ -40,6 +41,12 @@ Ports:
 - `timer.schedule`
   - `Output`: `ScheduleTick`
 - `timer.delay`
+  - `Input`: configured input type
+  - `Output`: same configured input type
+- `timer.debounce`
+  - `Input`: configured input type
+  - `Output`: same configured input type
+- `timer.throttle`
   - `Input`: configured input type
   - `Output`: same configured input type
 
@@ -386,6 +393,58 @@ Ports:
 - original `MqttEnvelope`
 - payload inspection result
 
+## Payload Inspect
+
+`payload.inspect` is the package-backed generic payload classifier. It consumes `PayloadInspectionRequest` values and emits `PayloadInspectionResult` values.
+
+Use a `flow.mapper` upstream when starting from MQTT messages or HTTP responses.
+
+### Behavior
+
+```mermaid
+flowchart LR
+    In["Input: PayloadInspectionRequest"] --> Inspect["Package payload.inspect node"]
+    Inspect --> Out["Output: PayloadInspectionResult"]
+    Inspect --> Errors["Errors: FlowError"]
+```
+
+### Flow Definition
+
+Registered node type: `payload.inspect`
+
+Ports:
+
+- `Input`: `PayloadInspectionRequest`
+- `Output`: `PayloadInspectionResult`
+- `Errors`: `FlowError`
+
+```json
+{
+  "mapPayload": {
+    "type": "flow.mapper",
+    "Input": "source.Output",
+    "configuration": {
+      "engine": "jsonata",
+      "inputType": "MqttEnvelope",
+      "outputType": "PayloadInspectionRequest",
+      "outputContract": "typed",
+      "expression": "{ \"text\": payloadText, \"contentType\": \"application/json\", \"encodingHint\": \"utf-8\" }"
+    }
+  },
+  "inspect": {
+    "type": "payload.inspect",
+    "Input": "mapPayload.Output",
+    "configuration": {
+      "maxPreviewBytes": 1024,
+      "maxFormattedChars": 4096,
+      "detectBase64": true,
+      "formatJson": true,
+      "formatXml": true
+    }
+  }
+}
+```
+
 ## Replay Source
 
 `replay.source` streams recorded MQTT messages from the session store and preserves relative timing.
@@ -429,6 +488,8 @@ The current FluxMQ mapper context supports `MqttEnvelope` input and these output
 - `MqttPublishRequest`
 - `FileWriteRequest`
 - `MqttRecordingRequest`
+- `PayloadInspectionRequest`
+- `HttpRequestInput`
 
 The mapper editor also records an output contract:
 
@@ -509,6 +570,57 @@ Invalid payloads produce `JsonSchemaValidationResult` values with `IsValid = fal
     "configuration": {
       "schemaId": "status-schema",
       "schema": "{ \"type\": \"object\", \"required\": [\"status\"] }"
+    }
+  }
+}
+```
+
+## HTTP Request
+
+`http.request` is the package-backed HTTP integration node. It consumes `HttpRequestInput` values and emits `HttpResponseOutput` values. Request-shape failures, timeouts, network errors, and optionally non-success status responses are emitted as `HttpErrorOutput` values on `Errors`.
+
+Use a `flow.mapper` upstream when starting from MQTT envelopes.
+
+### Behavior
+
+```mermaid
+flowchart LR
+    In["Input: HttpRequestInput"] --> Request["Package http.request node"]
+    Request --> Out["Output: HttpResponseOutput"]
+    Request --> Errors["Errors: HttpErrorOutput"]
+```
+
+### Flow Definition
+
+Registered node type: `http.request`
+
+Ports:
+
+- `Input`: `HttpRequestInput`
+- `Output`: `HttpResponseOutput`
+- `Errors`: `HttpErrorOutput`
+
+```json
+{
+  "mapRequest": {
+    "type": "flow.mapper",
+    "Input": "source.Output",
+    "configuration": {
+      "engine": "jsonata",
+      "inputType": "MqttEnvelope",
+      "outputType": "HttpRequestInput",
+      "outputContract": "typed",
+      "expression": "{ \"method\": \"POST\", \"url\": \"https://example.test/messages\", \"body\": payloadText, \"contentType\": \"application/json\" }"
+    }
+  },
+  "http": {
+    "type": "http.request",
+    "Input": "mapRequest.Output",
+    "configuration": {
+      "defaultTimeoutMilliseconds": 30000,
+      "maxResponseBodyBytes": 1048576,
+      "followRedirects": true,
+      "treatNonSuccessStatusAsError": false
     }
   }
 }

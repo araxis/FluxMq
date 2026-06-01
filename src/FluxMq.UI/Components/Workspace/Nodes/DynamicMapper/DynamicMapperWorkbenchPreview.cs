@@ -3,6 +3,8 @@ using FluxMq.Components.Mapping;
 using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
 using FluxMq.Core.Models;
+using FluxFlow.Components.Http.Contracts;
+using FluxFlow.Components.Payloads.Contracts;
 using FluxFlow.Components.Timers.Contracts;
 using FluxFlow.Engine.Mapping;
 using MQTTnet.Protocol;
@@ -178,6 +180,22 @@ public static class DynamicMapperWorkbenchPreview
             [
                 new("sessionId", "Guid", true, "\"00000000-0000-0000-0000-000000000001\"")
             ],
+            "PayloadInspectionRequest" =>
+            [
+                new("text", "string", false, "payloadText"),
+                new("bytes", "byte[]", false, "payload"),
+                new("contentType", "string", false, "\"application/json\""),
+                new("encodingHint", "string", false, "\"utf-8\"")
+            ],
+            "HttpRequestInput" =>
+            [
+                new("method", "string", false, "\"POST\""),
+                new("url", "string", true, "\"https://example.test/messages\""),
+                new("headers", "object", false, "{ \"Content-Type\": \"application/json\" }"),
+                new("body", "string", false, "payloadText"),
+                new("contentType", "string", false, "\"application/json\""),
+                new("timeoutMilliseconds", "int", false, "30000")
+            ],
             _ =>
             [
                 new("topic", "string", true, topicPrefixExample),
@@ -294,6 +312,8 @@ public static class DynamicMapperWorkbenchPreview
             {
                 "FileWriteRequest" => PreviewFileWriteRequest(expressionEngine, expression, context),
                 "MqttRecordingRequest" => PreviewRecordingRequest(expressionEngine, expression, context),
+                "PayloadInspectionRequest" => PreviewPayloadInspectionRequest(expressionEngine, expression, context),
+                "HttpRequestInput" => PreviewHttpRequestInput(expressionEngine, expression, context),
                 _ => PreviewPublishRequest(expressionEngine, expression, context)
             };
         }
@@ -389,6 +409,61 @@ public static class DynamicMapperWorkbenchPreview
                         ? payloadJson
                         : Encoding.UTF8.GetString(request.Envelope.Payload)
                 }
+            }));
+    }
+
+    private static DynamicMapperPreviewResult PreviewPayloadInspectionRequest(
+        IFlowExpressionEngine engine,
+        string expression,
+        FlowMapContext context)
+    {
+        var mapper = new FluxMqRequestMappingExpressionEngine(engine);
+        var request = (PayloadInspectionRequest)mapper.Evaluate(expression, context, typeof(PayloadInspectionRequest))!;
+
+        return new DynamicMapperPreviewResult(
+            true,
+            "PayloadInspectionRequest",
+            [
+                new("Text", Shorten(request.Text ?? string.Empty)),
+                new("Bytes", request.Bytes?.Length.ToString() ?? "none"),
+                new("Content type", request.ContentType ?? "none"),
+                new("Encoding", request.EncodingHint ?? "none")
+            ],
+            Json: SerializeResult(new Dictionary<string, object?>
+            {
+                ["text"] = TryParseJson(request.Text ?? string.Empty) is { } textJson ? textJson : request.Text,
+                ["bytes"] = request.Bytes,
+                ["contentType"] = request.ContentType,
+                ["encodingHint"] = request.EncodingHint
+            }));
+    }
+
+    private static DynamicMapperPreviewResult PreviewHttpRequestInput(
+        IFlowExpressionEngine engine,
+        string expression,
+        FlowMapContext context)
+    {
+        var mapper = new FluxMqRequestMappingExpressionEngine(engine);
+        var request = (HttpRequestInput)mapper.Evaluate(expression, context, typeof(HttpRequestInput))!;
+
+        return new DynamicMapperPreviewResult(
+            true,
+            "HttpRequestInput",
+            [
+                new("Method", request.Method),
+                new("URL", request.Url ?? string.Empty),
+                new("Headers", request.Headers.Count.ToString()),
+                new("Body", Shorten(request.Body ?? string.Empty))
+            ],
+            Json: SerializeResult(new Dictionary<string, object?>
+            {
+                ["method"] = request.Method,
+                ["url"] = request.Url,
+                ["headers"] = request.Headers,
+                ["body"] = TryParseJson(request.Body ?? string.Empty) is { } bodyJson ? bodyJson : request.Body,
+                ["bytes"] = request.Bytes,
+                ["contentType"] = request.ContentType,
+                ["timeoutMilliseconds"] = request.TimeoutMilliseconds
             }));
     }
 

@@ -3,6 +3,8 @@ using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
+using FluxFlow.Components.Http.Contracts;
+using FluxFlow.Components.Payloads.Contracts;
 using FluxFlow.Engine.Mapping;
 using MQTTnet.Protocol;
 
@@ -41,6 +43,18 @@ public sealed class FluxMqRequestMappingExpressionEngine : IFlowExpressionEngine
         {
             var value = _inner.Evaluate(expression, context, typeof(object));
             return CoerceFileWriteRequest(value, TryGetEnvelope(context));
+        }
+
+        if (resultType == typeof(PayloadInspectionRequest))
+        {
+            var value = _inner.Evaluate(expression, context, typeof(object));
+            return CoercePayloadInspectionRequest(value, TryGetEnvelope(context));
+        }
+
+        if (resultType == typeof(HttpRequestInput))
+        {
+            var value = _inner.Evaluate(expression, context, typeof(object));
+            return CoerceHttpRequestInput(value, TryGetEnvelope(context));
         }
 
         return _inner.Evaluate(expression, context, resultType);
@@ -97,6 +111,41 @@ public sealed class FluxMqRequestMappingExpressionEngine : IFlowExpressionEngine
                 Content = ExpressionObjectReader.ReadBytesOrDefault(value, "content", input?.Payload ?? []),
                 Mode = ExpressionObjectReader.ReadEnumOrDefault(value, "mode", FileWriteMode.Overwrite),
                 CreateDirectory = ExpressionObjectReader.ReadBoolOrDefault(value, "createDirectory", true)
+            }
+        };
+
+    private static PayloadInspectionRequest CoercePayloadInspectionRequest(object? value, MqttEnvelope? input)
+        => value switch
+        {
+            PayloadInspectionRequest request => request,
+            null => throw new InvalidOperationException(
+                "Mapper expression returned null. Expected PayloadInspectionRequest object."),
+            _ => new PayloadInspectionRequest
+            {
+                Bytes = ExpressionObjectReader.ReadOptionalBytes(value, "bytes") ?? input?.Payload,
+                Text = ExpressionObjectReader.ReadOptionalString(value, "text"),
+                ContentType = ExpressionObjectReader.ReadOptionalString(value, "contentType"),
+                EncodingHint =
+                    ExpressionObjectReader.ReadOptionalString(value, "encodingHint") ??
+                    ExpressionObjectReader.ReadOptionalString(value, "encoding")
+            }
+        };
+
+    private static HttpRequestInput CoerceHttpRequestInput(object? value, MqttEnvelope? input)
+        => value switch
+        {
+            HttpRequestInput request => request,
+            null => throw new InvalidOperationException(
+                "Mapper expression returned null. Expected HttpRequestInput object."),
+            _ => new HttpRequestInput
+            {
+                Method = ExpressionObjectReader.ReadOptionalString(value, "method") ?? "GET",
+                Url = ExpressionObjectReader.ReadRequiredString(value, "url"),
+                Headers = ExpressionObjectReader.ReadStringDictionaryOrEmpty(value, "headers"),
+                Body = ExpressionObjectReader.ReadOptionalString(value, "body"),
+                Bytes = ExpressionObjectReader.ReadOptionalBytes(value, "bytes") ?? input?.Payload,
+                ContentType = ExpressionObjectReader.ReadOptionalString(value, "contentType"),
+                TimeoutMilliseconds = ExpressionObjectReader.ReadOptionalInt(value, "timeoutMilliseconds")
             }
         };
 }

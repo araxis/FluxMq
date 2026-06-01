@@ -128,6 +128,41 @@ public sealed class DynamicMapperNodeModel(string id, DiagramPoint position, str
               Envelope = envelope
             }
             """,
+            "PayloadInspectionRequest" when isJsonata => """
+            {
+              "text": payloadText,
+              "contentType": "application/json",
+              "encodingHint": "utf-8"
+            }
+            """,
+            "PayloadInspectionRequest" => """
+            new PayloadInspectionRequest {
+              Text = payloadText,
+              ContentType = "application/json",
+              EncodingHint = "utf-8"
+            }
+            """,
+            "HttpRequestInput" when isJsonata => """
+            {
+              "method": "POST",
+              "url": "https://example.test/messages",
+              "headers": {
+                "Content-Type": "application/json"
+              },
+              "body": payloadText,
+              "contentType": "application/json",
+              "timeoutMilliseconds": 30000
+            }
+            """,
+            "HttpRequestInput" => """
+            new HttpRequestInput {
+              Method = "POST",
+              Url = "https://example.test/messages",
+              Body = payloadText,
+              ContentType = "application/json",
+              TimeoutMilliseconds = 30000
+            }
+            """,
             _ when isJsonata => """
             {
               "topic": topic,

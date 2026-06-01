@@ -47,6 +47,17 @@ public sealed class FlowComponentCatalog
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
+            "payload.inspect",
+            "Payload Inspect",
+            "Mapper",
+            "Classifies byte or text payload requests and emits preview metadata.",
+            IsResource: false,
+            [
+                new("Input", "PayloadInspectionRequest", IsInput: true),
+                new("Output", "PayloadInspectionResult", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
             "timer.interval",
             "Timer Interval",
             "Source",
@@ -253,6 +264,17 @@ public sealed class FlowComponentCatalog
                 new("FlowErrors", "FlowError", IsInput: true),
                 new("Entries", "FlowLogEntry", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "http.request",
+            "HTTP Request",
+            "Actor",
+            "Sends typed HTTP requests and emits typed responses or request errors.",
+            IsResource: false,
+            [
+                new("Input", "HttpRequestInput", IsInput: true),
+                new("Output", "HttpResponseOutput", IsInput: false),
+                new("Errors", "HttpErrorOutput", IsInput: false)
             ]),
         new(
             "mqtt.publisher",

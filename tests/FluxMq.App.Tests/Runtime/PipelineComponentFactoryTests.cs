@@ -11,6 +11,8 @@ using FluxMq.Components.MqttMetrics;
 using FluxMq.Components.MqttPayloadInspector;
 using FluxMq.Components.Storage.Models;
 using FluxMq.Components.Storage.Repositories;
+using FluxFlow.Components.Http.Contracts;
+using FluxFlow.Components.Payloads.Contracts;
 using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Definitions;
 using FluxFlow.Engine.Runtime;
@@ -22,6 +24,9 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
 using System.Threading.Tasks.Dataflow;
+using FlowPayloadInspectionRequest = FluxFlow.Components.Payloads.Contracts.PayloadInspectionRequest;
+using FlowPayloadInspectionResult = FluxFlow.Components.Payloads.Contracts.PayloadInspectionResult;
+using FlowPayloadKind = FluxFlow.Components.Payloads.Contracts.PayloadKind;
 
 namespace FluxMq.App.Tests.Runtime;
 
@@ -41,7 +46,9 @@ public sealed class PipelineComponentFactoryTests
             FluxMqNodeTypes.StoredSessionSource,
             FluxMqNodeTypes.ReplaySource,
             FluxMqNodeTypes.GeneratedSource,
+            FluxMqNodeTypes.PayloadInspect,
             FluxMqNodeTypes.PayloadInspector,
+            FluxMqNodeTypes.HttpRequest,
             FluxMqNodeTypes.MqttMetrics,
             FluxMqNodeTypes.FlowLogger,
             FluxMqNodeTypes.MessageFilter,
@@ -64,6 +71,167 @@ public sealed class PipelineComponentFactoryTests
             FluxMqNodeTypes.TimerDebounce,
             FluxMqNodeTypes.TimerThrottle
         }, ignoreOrder: true);
+    }
+
+    [Fact]
+    public async Task PayloadInspectFactory_CreatesLinkableRuntimeNode()
+    {
+        TestValueSourceNode<FlowPayloadInspectionRequest>? source = null;
+        TestSinkNode<FlowPayloadInspectionResult>? sink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.payload-source"), (address, _) =>
+            {
+                source = new TestValueSourceNode<FlowPayloadInspectionRequest>();
+                return SourceNode(address, source);
+            })
+            .Register(new NodeType("test.payload-sink"), (address, _) =>
+            {
+                sink = new TestSinkNode<FlowPayloadInspectionResult>();
+                return SinkNode(address, sink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("test.payload-source"),
+                        ["inspect"] = NodeWithPort(FluxMqNodeTypes.PayloadInspect, "Input", "\"source.Output\""),
+                        ["sink"] = NodeWithPort("test.payload-sink", "Input", "\"inspect.Output\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+
+        source!.Post(new FlowPayloadInspectionRequest
+        {
+            Text = """{"value":1}""",
+            ContentType = "application/json"
+        });
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+        sink!.Values.ShouldHaveSingleItem();
+        sink.Values[0].Kind.ShouldBe(FlowPayloadKind.JsonObject);
+        sink.Values[0].TextPreview.ShouldBe("""{"value":1}""");
+    }
+
+    [Fact]
+    public async Task HttpRequestFactory_CreatesLinkableRuntimeNode()
+    {
+        TestValueSourceNode<HttpRequestInput>? source = null;
+        TestSinkNode<HttpErrorOutput>? errors = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.http-source"), (address, _) =>
+            {
+                source = new TestValueSourceNode<HttpRequestInput>();
+                return SourceNode(address, source);
+            })
+            .Register(new NodeType("test.http-errors"), (address, _) =>
+            {
+                errors = new TestSinkNode<HttpErrorOutput>();
+                return SinkNode(address, errors);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("test.http-source"),
+                        ["request"] = NodeWithPort(FluxMqNodeTypes.HttpRequest, "Input", "\"source.Output\""),
+                        ["errors"] = NodeWithPort("test.http-errors", "Input", "\"request.Errors\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+
+        source!.Post(new HttpRequestInput { Method = "GET", Url = "::not-a-url::" });
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+        errors!.Values.ShouldHaveSingleItem();
+        errors.Values[0].Kind.ShouldBe(HttpErrorKind.InvalidUrl);
+    }
+
+    [Fact]
+    public async Task DynamicMapperFactory_CanCreateHttpRequestInput()
+    {
+        TestSourceNode? source = null;
+        TestSinkNode<HttpRequestInput>? sink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.source"), (address, _) =>
+            {
+                source = new TestSourceNode();
+                return SourceNode(address, source);
+            })
+            .Register(new NodeType("test.http-input-sink"), (address, _) =>
+            {
+                sink = new TestSinkNode<HttpRequestInput>();
+                return SinkNode(address, sink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("test.source"),
+                        ["mapper"] = new NodeDefinition
+                        {
+                            Type = FluxMqNodeTypes.DynamicMapper,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["engine"] = JsonDocument.Parse("\"jsonata\"").RootElement.Clone(),
+                                ["inputType"] = JsonDocument.Parse("\"MqttEnvelope\"").RootElement.Clone(),
+                                ["outputType"] = JsonDocument.Parse("\"HttpRequestInput\"").RootElement.Clone(),
+                                ["expression"] = JsonDocument.Parse("""
+                                    "{ \"method\": \"POST\", \"url\": \"https://example.test/messages\", \"body\": payloadText, \"contentType\": \"application/json\" }"
+                                    """).RootElement.Clone()
+                            }
+                        },
+                        ["sink"] = NodeWithPort("test.http-input-sink", "Input", "\"mapper.Output\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+
+        source!.Post(new MqttEnvelope { Topic = "factory/json", Payload = """{"value":1}"""u8.ToArray() });
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+        sink!.Values.ShouldHaveSingleItem();
+        sink.Values[0].Method.ShouldBe("POST");
+        sink.Values[0].Url.ShouldBe("https://example.test/messages");
+        sink.Values[0].Body.ShouldBe("""{"value":1}""");
     }
 
     [Fact]
