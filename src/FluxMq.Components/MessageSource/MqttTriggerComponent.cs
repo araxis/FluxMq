@@ -56,7 +56,6 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
             .Select(subscription => CreateSubscriberNode(
                 _client,
                 _connectionStream,
-                _subscriptions,
                 subscription,
                 boundedCapacity))
             .ToArray();
@@ -150,7 +149,6 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
     private SubscriberRuntime CreateSubscriberNode(
         IMqttBrokerClient client,
         ISourceBlock<MqttEnvelope> connectionStream,
-        IReadOnlyList<MqttSubscription> subscriptions,
         MqttSubscription subscription,
         int boundedCapacity)
     {
@@ -161,6 +159,8 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
             {
                 ["topicFilter"] = JsonSerializer.SerializeToElement(subscription.TopicFilter),
                 ["qualityOfService"] = JsonSerializer.SerializeToElement(MqttClientAdapter.ToComponentQualityOfService(subscription.QualityOfService).ToString()),
+                ["receiveRetainedMessages"] = JsonSerializer.SerializeToElement(subscription.ReceiveRetainedMessages),
+                ["retainAsPublished"] = JsonSerializer.SerializeToElement(subscription.RetainAsPublished),
                 ["boundedCapacity"] = JsonSerializer.SerializeToElement(boundedCapacity)
             }
         };
@@ -172,7 +172,7 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
             new Dictionary<NodeName, RuntimeNode>());
         var runtimeNode = MqttSubscribeNode.Create(
             context,
-            new MqttClientAdapterFactory(() => new MqttClientAdapter(client, connectionStream, subscriptions)));
+            new MqttClientAdapterFactory(() => new MqttClientAdapter(client, connectionStream)));
         var outputSink = new ActionBlock<ComponentMqttReceivedMessage>(
             HandleReceivedMessageAsync,
             new ExecutionDataflowBlockOptions { BoundedCapacity = boundedCapacity });

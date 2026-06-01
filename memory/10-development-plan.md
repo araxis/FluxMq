@@ -151,7 +151,7 @@ Tasks:
 - Add runtime mapper/predicate/expression abstractions.
 - Add `flow.mapper` as the user-facing mapper component.
 - Add Dynamic Expresso and Jsonata mapper support.
-- Keep request-specific mapper classes internal to `flow.mapper`; do not expose saved-definition aliases.
+- Use the package-backed `flow.mapper` runtime and keep request-shape coercion in FluxMQ's expression adapter; do not expose request-specific mapper node aliases.
 - Update UI catalog/composer so actors are not auto-wired to envelope sources.
 
 Done when:
@@ -640,4 +640,4 @@ Review the conditional-link designer editor slice:
 
 Next implementation slice: continue scenario/test composition around normal components plus narrow test-specific `expect.event`/`when.event` blocks. Prefer catalog/runner/shared-service changes over adding one-off logic inside Razor components.
 
-Latest slice: MQTT publish/trigger components now delegate execution to the `FluxFlow.Components.Mqtt` `0.1.0-alpha.1` package. FluxMQ keeps the existing `mqtt.publisher`/`mqtt.trigger` design surface, app-level connection resources, `MqttEnvelope` output, and scenario/dashboard event shape, but the duplicated publish/subscribe node execution now lives behind the package-backed adapter.
+Latest slice: MQTT publish/trigger components now use `FluxFlow.Components.Mqtt` `0.2.1-alpha.1`, and runtime `flow.mapper` execution now uses `FluxFlow.Components.Mapping` `0.1.0-alpha.1`. FluxMQ keeps app-level connection resources, `mqtt.publisher`/`mqtt.trigger` surface names, `MqttEnvelope` context variables, and request-shape coercion through a small expression adapter, while duplicated request-specific mapper nodes have been removed from FluxMQ.

@@ -6,6 +6,7 @@ using FluxMq.Components.ConnectionStateTrigger;
 using FluxMq.Components.FileWriter;
 using FluxMq.Components.JsonSchema;
 using FluxMq.Components.Logging;
+using FluxMq.Components.Mapping;
 using FluxMq.Components.MessageFilter;
 using FluxMq.Components.MessageSource;
 using FluxMq.Components.MqttConditionRouter;
@@ -14,6 +15,8 @@ using FluxMq.Components.MqttPayloadInspector;
 using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
 using FluxMq.Components.Storage.Repositories;
+using FluxFlow.Components.Mapping;
+using FluxFlow.Components.Mapping.Options;
 using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Definitions;
 using FluxFlow.Engine.Mapping;
@@ -66,10 +69,34 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .Register(FluxMqNodeTypes.ConditionRouter, context => CreateConditionRouter(context.Address, context.Definition, expressionEngine))
             .Register(FluxMqNodeTypes.FlowAssertion, context => CreateFlowAssertion(context.Address, context.Definition, expressionEngine))
             .Register(FluxMqNodeTypes.JsonSchemaValidator, context => CreateJsonSchemaValidator(context.Address, context.Definition))
-            .Register(FluxMqNodeTypes.DynamicMapper, context => CreateDynamicMapper(context.Address, context.Definition, expressionEngine))
+            .RegisterMappingComponents(options => ConfigureMappingComponents(options, expressionEngine))
             .Register(FluxMqNodeTypes.MqttPublisher, context => CreatePublisher(context.Address, context.Definition, context))
             .Register(FluxMqNodeTypes.MqttRecorder, context => CreateRecorder(context.Address, context.Definition, messageRepository))
             .Register(FluxMqNodeTypes.FileWriter, CreateFileWriter);
+    }
+
+    private static void ConfigureMappingComponents(
+        MappingComponentOptions options,
+        IFlowExpressionEngine expressionEngine)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(expressionEngine);
+
+        options
+            .UseExpressionEngine(new FluxMqRequestMappingExpressionEngine(expressionEngine))
+            .RegisterType<object>("Any")
+            .RegisterType<MqttEnvelope>("MqttEnvelope")
+            .RegisterType<MqttPublishRequest>("MqttPublishRequest")
+            .RegisterType<MqttRecordingRequest>("MqttRecordingRequest")
+            .RegisterType<FileWriteRequest>("FileWriteRequest")
+            .UseContextFactory<MqttEnvelope>(new MqttEnvelopeFlowMapContextFactory());
+
+        if (!string.Equals(expressionEngine.Name, "jsonata", StringComparison.OrdinalIgnoreCase))
+        {
+            options.UseExpressionEngine(
+                new FluxMqRequestMappingExpressionEngine(new JsonataFlowExpressionEngine()),
+                useAsDefault: false);
+        }
     }
 
     private static RuntimeNode CreateConnection(
@@ -435,91 +462,6 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
-    private static RuntimeNode CreatePublishRequestMapper(
-        NodeAddress address,
-        NodeDefinition definition,
-        IFlowExpressionEngine expressionEngine)
-    {
-        var mapperEngine = GetMapperExpressionEngine(definition, expressionEngine);
-
-        var component = new MqttPublishRequestMapperComponent(
-            new MqttPublishRequestExpressionMapper(
-                mapperEngine,
-                GetPublishRequestMapDefinition(definition)),
-            boundedCapacity: GetBoundedCapacity(definition));
-
-        return RuntimeNode.Create(
-            address,
-            component,
-            inputs:
-            [
-                new InputPort<MqttEnvelope>(address.Port(InputPort), component.Input)
-            ],
-            outputs:
-            [
-                new OutputPort<MqttPublishRequest>(address.Port(OutputPort), component.Output),
-                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
-            ]);
-    }
-
-    private static RuntimeNode CreateDynamicMapper(
-        NodeAddress address,
-        NodeDefinition definition,
-        IFlowExpressionEngine expressionEngine)
-    {
-        var inputType = NormalizeMapperTypeName(GetStringOrDefault(definition, "inputType", "MqttEnvelope"));
-        if (inputType is not "MqttEnvelope")
-        {
-            throw new InvalidOperationException(
-                $"Dynamic mapper inputType '{inputType}' is not supported yet. Supported inputType: MqttEnvelope.");
-        }
-
-        var outputType = NormalizeMapperTypeName(
-            GetNullableString(definition, "outputType") ??
-            GetNullableString(definition, "targetType") ??
-            throw new InvalidOperationException("Dynamic mapper requires configuration value 'outputType'."));
-
-        return outputType switch
-        {
-            "MqttPublishRequest" => CreatePublishRequestMapper(address, definition, expressionEngine),
-            "MqttRecordingRequest" => CreateRecordingRequestMapper(address, definition, expressionEngine),
-            "FileWriteRequest" => CreateFileWriteRequestMapper(address, definition, expressionEngine),
-            _ => throw new InvalidOperationException(
-                $"Dynamic mapper outputType '{outputType}' is not supported yet. Supported outputType values: MqttPublishRequest, MqttRecordingRequest, FileWriteRequest.")
-        };
-    }
-
-    private static RuntimeNode CreateRecordingRequestMapper(
-        NodeAddress address,
-        NodeDefinition definition,
-        IFlowExpressionEngine expressionEngine)
-    {
-        var expression = GetNullableString(definition, "expression");
-        if (string.IsNullOrWhiteSpace(expression))
-        {
-            throw new InvalidOperationException("MQTT recording request mapper requires configuration value 'expression'.");
-        }
-
-        var component = new MqttRecordingRequestMapperComponent(
-            new MqttRecordingRequestExpressionMapper(
-                GetMapperExpressionEngine(definition, expressionEngine),
-                expression),
-            boundedCapacity: GetBoundedCapacity(definition));
-
-        return RuntimeNode.Create(
-            address,
-            component,
-            inputs:
-            [
-                new InputPort<MqttEnvelope>(address.Port(InputPort), component.Input)
-            ],
-            outputs:
-            [
-                new OutputPort<MqttRecordingRequest>(address.Port(OutputPort), component.Output),
-                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
-            ]);
-    }
-
     private static RuntimeNode CreatePublisher(
         NodeAddress address,
         NodeDefinition definition,
@@ -571,33 +513,6 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
-    private static RuntimeNode CreateFileWriteRequestMapper(
-        NodeAddress address,
-        NodeDefinition definition,
-        IFlowExpressionEngine expressionEngine)
-    {
-        var mapperEngine = GetMapperExpressionEngine(definition, expressionEngine);
-
-        var component = new FileWriteRequestMapperComponent(
-            new FileWriteRequestExpressionMapper(
-                mapperEngine,
-                GetFileWriteRequestMapDefinition(definition)),
-            boundedCapacity: GetBoundedCapacity(definition));
-
-        return RuntimeNode.Create(
-            address,
-            component,
-            inputs:
-            [
-                new InputPort<MqttEnvelope>(address.Port(InputPort), component.Input)
-            ],
-            outputs:
-            [
-                new OutputPort<FileWriteRequest>(address.Port(OutputPort), component.Output),
-                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
-            ]);
-    }
-
     private static RuntimeNode CreateFileWriter(NodeAddress address, NodeDefinition definition)
     {
         var component = new FileWriterComponent(boundedCapacity: GetBoundedCapacity(definition));
@@ -613,34 +528,6 @@ public static class RuntimeNodeFactoryRegistryExtensions
             [
                 new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
             ]);
-    }
-
-    private static MqttPublishRequestMapDefinition GetPublishRequestMapDefinition(NodeDefinition definition)
-    {
-        var expression = GetNullableString(definition, "expression");
-        if (string.IsNullOrWhiteSpace(expression))
-        {
-            throw new InvalidOperationException("MQTT publish request mapper requires configuration value 'expression'.");
-        }
-
-        return new MqttPublishRequestMapDefinition
-        {
-            Expression = expression
-        };
-    }
-
-    private static FileWriteRequestMapDefinition GetFileWriteRequestMapDefinition(NodeDefinition definition)
-    {
-        var expression = GetNullableString(definition, "expression");
-        if (string.IsNullOrWhiteSpace(expression))
-        {
-            throw new InvalidOperationException("File write request mapper requires configuration value 'expression'.");
-        }
-
-        return new FileWriteRequestMapDefinition
-        {
-            Expression = expression
-        };
     }
 
     private static JsonSchemaValidatorDefinition GetJsonSchemaValidatorDefinition(NodeDefinition definition)
@@ -673,30 +560,6 @@ public static class RuntimeNodeFactoryRegistryExtensions
             _ when trimmed.Contains('.') => trimmed[(trimmed.LastIndexOf('.') + 1)..],
             _ => trimmed
         };
-    }
-
-    private static IFlowExpressionEngine GetMapperExpressionEngine(
-        NodeDefinition definition,
-        IFlowExpressionEngine defaultExpressionEngine)
-    {
-        var requestedEngine = GetNullableString(definition, "engine");
-        if (requestedEngine is null)
-        {
-            return defaultExpressionEngine;
-        }
-
-        if (string.Equals(requestedEngine, defaultExpressionEngine.Name, StringComparison.OrdinalIgnoreCase))
-        {
-            return defaultExpressionEngine;
-        }
-
-        if (string.Equals(requestedEngine, "jsonata", StringComparison.OrdinalIgnoreCase))
-        {
-            return new JsonataFlowExpressionEngine();
-        }
-
-        throw new InvalidOperationException(
-            $"Mapper engine '{requestedEngine}' is not registered. Supported engines: {defaultExpressionEngine.Name}, jsonata.");
     }
 
     private static IReadOnlyList<string> GetFilterPatterns(NodeDefinition definition)

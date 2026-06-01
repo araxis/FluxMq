@@ -2013,3 +2013,28 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore` passes with 18 tests.
   - `dotnet test tests\FluxMq.Core.Tests\FluxMq.Core.Tests.csproj --no-restore` passes with 41 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 495 tests.
+
+## 2026-05-31 - MQTT component package 0.2 update
+
+- Updated `FluxFlow.Components.Mqtt` to `0.2.0-alpha.1`.
+- Switched the FluxMQ adapter to the package's factory context and explicit `MqttClientLease.Shared` ownership model.
+- Moved retained subscription options into the package `mqtt.subscribe` configuration instead of resolving them back from FluxMQ subscription records inside the adapter.
+- Used package publish-result payload previews, removing the temporary pending-request dictionary from the FluxMQ publisher wrapper.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore` passes with 115 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore` passes with 81 tests.
+  - `dotnet test tests\FluxMq.Scenarios.Tests\FluxMq.Scenarios.Tests.csproj --no-restore` passes with 35 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore` passes with 205 tests.
+  - `dotnet test tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj --no-restore` passes with 18 tests.
+  - `dotnet test tests\FluxMq.Core.Tests\FluxMq.Core.Tests.csproj --no-restore` passes with 41 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 495 tests.
+
+## 2026-05-31 - MQTT 0.2.1 and mapping package migration
+
+- Updated `FluxFlow.Components.Mqtt` to `0.2.1-alpha.1`.
+- Added `FluxFlow.Components.Mapping` `0.1.0-alpha.1` and registered the package-backed `flow.mapper` runtime node.
+- Added a FluxMQ request mapping expression adapter so JSONata and Dynamic Expresso mapper expressions still coerce to `MqttPublishRequest`, `MqttRecordingRequest`, and `FileWriteRequest` with FluxMQ-friendly fields such as `qos`.
+- Removed the old request-specific mapper Dataflow nodes, mapper definitions, and component tests from FluxMQ.
+- Updated the mapper workbench preview to use the same FluxMQ request mapping adapter as runtime execution.
+- Verified:
+  - `dotnet test FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo` passes with 494 tests.

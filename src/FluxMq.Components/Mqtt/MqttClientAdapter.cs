@@ -3,6 +3,7 @@ using FluxMq.Core.Mqtt;
 using FluxMq.Components.MessageSource;
 using FluxFlow.Components.Mqtt.Contracts;
 using FluxFlow.Components.Mqtt.Options;
+using FluxFlow.Engine.Components;
 using MQTTnet.Protocol;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
@@ -10,28 +11,23 @@ using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.Components.Mqtt;
 
-using ComponentConnectionProfile = FluxFlow.Components.Mqtt.Options.MqttConnectionProfile;
 using ComponentMqttQualityOfService = FluxFlow.Components.Mqtt.Contracts.MqttQualityOfService;
 
 internal sealed class MqttClientAdapterFactory(Func<MqttClientAdapter> adapterFactory) : IMqttClientFactory
 {
-    public ValueTask<IMqttClientAdapter> CreateAsync(
-        ComponentConnectionProfile connection,
+    public ValueTask<MqttClientLease> CreateAsync(
+        MqttClientFactoryContext context,
         CancellationToken cancellationToken = default)
-        => ValueTask.FromResult<IMqttClientAdapter>(adapterFactory());
+        => ValueTask.FromResult(MqttClientLease.Shared(adapterFactory()));
 }
 
 internal sealed class MqttClientAdapter(
     IMqttBrokerClient client,
-    ISourceBlock<MqttEnvelope>? messages = null,
-    IReadOnlyList<MqttSubscription>? subscriptions = null,
-    bool disposeClientOnDispose = false)
+    ISourceBlock<MqttEnvelope>? messages = null)
     : IMqttClientAdapter
 {
     private readonly IMqttBrokerClient _client = client ?? throw new ArgumentNullException(nameof(client));
     private readonly ISourceBlock<MqttEnvelope>? _messages = messages;
-    private readonly IReadOnlyList<MqttSubscription> _subscriptions = subscriptions ?? [];
-    private readonly bool _disposeClientOnDispose = disposeClientOnDispose;
 
     public async ValueTask PublishAsync(
         MqttPublishRequest request,
@@ -60,63 +56,39 @@ internal sealed class MqttClientAdapter(
         }
     }
 
-    public async IAsyncEnumerable<MqttReceivedMessage> SubscribeAsync(
+    public async ValueTask<IMqttSubscription> SubscribeAsync(
         MqttSubscriptionOptions options,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(options);
 
         var topicFilter = options.TopicFilter ?? string.Empty;
-        var subscription = FindSubscription(topicFilter);
         await ConnectIfNeededAsync(cancellationToken).ConfigureAwait(false);
         await _client.SubscribeAsync(
                 topicFilter,
-                subscription?.QualityOfService ?? ToBrokerQualityOfService(options.QualityOfService),
-                subscription?.ReceiveRetainedMessages ?? true,
-                subscription?.RetainAsPublished ?? true,
+                ToBrokerQualityOfService(options.QualityOfService),
+                options.ReceiveRetainedMessages,
+                options.RetainAsPublished,
                 cancellationToken)
             .ConfigureAwait(false);
 
         if (_messages is null)
         {
-            await foreach (var envelope in ReadFromChannelAsync(_client.Messages, topicFilter, cancellationToken)
-                .ConfigureAwait(false))
-            {
-                yield return ToReceivedMessage(envelope);
-            }
-
-            yield break;
+            return new ChannelMqttEnvelopeSubscription(_client.Messages, topicFilter);
         }
 
-        var buffer = new BufferBlock<MqttEnvelope>();
-        using var link = _messages.LinkTo(
+        var buffer = new BufferBlock<MqttEnvelope>(
+            new DataflowBlockOptions { BoundedCapacity = options.BoundedCapacity });
+        var link = _messages.LinkTo(
             buffer,
             new DataflowLinkOptions { PropagateCompletion = true },
             envelope => MqttTopicFilterMatcher.IsMatch(topicFilter, envelope.Topic));
 
-        try
-        {
-            while (await buffer.OutputAvailableAsync(cancellationToken).ConfigureAwait(false))
-            {
-                while (buffer.TryReceive(out var envelope))
-                {
-                    yield return ToReceivedMessage(envelope);
-                }
-            }
-        }
-        finally
-        {
-            buffer.Complete();
-        }
+        return new DataflowMqttEnvelopeSubscription(buffer, link);
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        if (_disposeClientOnDispose)
-        {
-            await _client.DisposeAsync().ConfigureAwait(false);
-        }
-    }
+    public ValueTask DisposeAsync()
+        => ValueTask.CompletedTask;
 
     internal static ComponentMqttQualityOfService ToComponentQualityOfService(MqttQualityOfServiceLevel qualityOfService)
         => qualityOfService switch
@@ -142,6 +114,7 @@ internal sealed class MqttClientAdapter(
             Timestamp = envelope.ReceivedAt,
             Topic = envelope.Topic,
             Payload = envelope.Payload,
+            PayloadPreview = FlowEventPayloadPreview.FromBytes(envelope.Payload),
             QualityOfService = ToComponentQualityOfService(envelope.QualityOfService),
             Retain = envelope.Retain
         };
@@ -164,20 +137,51 @@ internal sealed class MqttClientAdapter(
         }
     }
 
-    private MqttSubscription? FindSubscription(string topicFilter)
-        => _subscriptions.FirstOrDefault(subscription =>
-            string.Equals(subscription.TopicFilter, topicFilter, StringComparison.Ordinal));
-
-    private static async IAsyncEnumerable<MqttEnvelope> ReadFromChannelAsync(
+    private sealed class ChannelMqttEnvelopeSubscription(
         ChannelReader<MqttEnvelope> messages,
-        string topicFilter,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
+        string topicFilter)
+        : IMqttSubscription
     {
-        await foreach (var envelope in messages.ReadAllAsync(cancellationToken).ConfigureAwait(false))
+        public IAsyncEnumerable<MqttReceivedMessage> Messages => ReadMessagesAsync();
+
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+
+        private async IAsyncEnumerable<MqttReceivedMessage> ReadMessagesAsync(
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            if (MqttTopicFilterMatcher.IsMatch(topicFilter, envelope.Topic))
+            await foreach (var envelope in messages.ReadAllAsync(cancellationToken).ConfigureAwait(false))
             {
-                yield return envelope;
+                if (MqttTopicFilterMatcher.IsMatch(topicFilter, envelope.Topic))
+                {
+                    yield return ToReceivedMessage(envelope);
+                }
+            }
+        }
+    }
+
+    private sealed class DataflowMqttEnvelopeSubscription(
+        BufferBlock<MqttEnvelope> buffer,
+        IDisposable link)
+        : IMqttSubscription
+    {
+        public IAsyncEnumerable<MqttReceivedMessage> Messages => ReadMessagesAsync();
+
+        public ValueTask DisposeAsync()
+        {
+            link.Dispose();
+            buffer.Complete();
+            return ValueTask.CompletedTask;
+        }
+
+        private async IAsyncEnumerable<MqttReceivedMessage> ReadMessagesAsync(
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            while (await buffer.OutputAvailableAsync(cancellationToken).ConfigureAwait(false))
+            {
+                while (buffer.TryReceive(out var envelope))
+                {
+                    yield return ToReceivedMessage(envelope);
+                }
             }
         }
     }

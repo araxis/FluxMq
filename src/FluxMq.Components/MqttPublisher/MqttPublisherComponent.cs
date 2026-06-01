@@ -9,7 +9,6 @@ using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Definitions;
 using FluxFlow.Engine.Runtime;
 using MQTTnet.Protocol;
-using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Threading.Tasks.Dataflow;
 
@@ -28,7 +27,6 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource, IAsync
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly BufferBlock<FlowLogEntry> _entries;
     private readonly BufferBlock<FlowEvent> _events;
-    private readonly ConcurrentDictionary<string, MqttPublishRequest> _pending = new(StringComparer.Ordinal);
     private readonly SemaphoreSlim _startLock = new(1, 1);
     private readonly Task _completion;
     private readonly Task _errorPump;
@@ -54,7 +52,7 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource, IAsync
         _entries = new BufferBlock<FlowLogEntry>();
         _events = new BufferBlock<FlowEvent>();
         _resultSink = new ActionBlock<ComponentMqttPublishResult>(
-            result => PublishSuccess(result, TryTakePending(result.CorrelationId)),
+            PublishSuccess,
             new ExecutionDataflowBlockOptions { BoundedCapacity = boundedCapacity });
         _resultLink = LinkResultSink(_publisherRuntime, _resultSink);
         _input = new ActionBlock<MqttPublishRequest>(
@@ -169,7 +167,6 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource, IAsync
     private async Task PublishAsync(MqttPublishRequest request)
     {
         var correlationId = Guid.NewGuid().ToString("N");
-        _pending[correlationId] = request;
 
         try
         {
@@ -181,7 +178,6 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource, IAsync
 
             if (!accepted)
             {
-                _pending.TryRemove(correlationId, out _);
                 PublishError(
                     FlowErrorCodes.ProcessingFailed,
                     "MQTT publish failed.",
@@ -191,7 +187,6 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource, IAsync
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _pending.TryRemove(correlationId, out _);
             PublishError(FlowErrorCodes.ProcessingFailed, "MQTT publish failed.", exception, request.Topic);
         }
     }
@@ -237,31 +232,13 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource, IAsync
         {
             Topic = request.Topic,
             Payload = request.Payload,
+            PayloadPreview = FlowEventPayloadPreview.FromBytes(request.Payload),
             QualityOfService = MqttClientAdapter.ToComponentQualityOfService(request.QualityOfService),
             Retain = request.Retain,
             CorrelationId = correlationId
         };
 
-    private MqttPublishRequest? TryTakePending(string? correlationId)
-        => correlationId is null
-            ? null
-            : _pending.TryRemove(correlationId, out var request)
-                ? request
-                : null;
-
-    private MqttPublishRequest? TryTakePending(MqttClientAdapterException exception)
-    {
-        if (exception.CorrelationId is not null && _pending.TryRemove(exception.CorrelationId, out var request))
-        {
-            return request;
-        }
-
-        var match = _pending.FirstOrDefault(pair =>
-            string.Equals(pair.Value.Topic, exception.Topic, StringComparison.Ordinal));
-        return match.Key is null ? null : _pending.TryRemove(match.Key, out request) ? request : null;
-    }
-
-    private void PublishSuccess(ComponentMqttPublishResult result, MqttPublishRequest? request)
+    private void PublishSuccess(ComponentMqttPublishResult result)
     {
         Interlocked.Increment(ref _publishedCount);
         _lastPublishedTopic = result.Topic;
@@ -286,7 +263,7 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource, IAsync
             Status = "published",
             Channel = result.Topic,
             PayloadBytes = result.PayloadBytes,
-            PayloadPreview = request is null ? null : FlowEventPayloadPreview.FromBytes(request.Payload),
+            PayloadPreview = result.PayloadPreview,
             Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["qos"] = ((int)ToBrokerQualityOfService(result.QualityOfService)).ToString(System.Globalization.CultureInfo.InvariantCulture),
@@ -297,11 +274,7 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource, IAsync
 
     private void PublishMappedError(FlowError error)
     {
-        var request = error.Exception is MqttClientAdapterException adapterException
-            ? TryTakePending(adapterException)
-            : null;
-        var context = request?.Topic ??
-            (error.Exception as MqttClientAdapterException)?.Topic ??
+        var context = (error.Exception as MqttClientAdapterException)?.Topic ??
             error.Context;
 
         PublishError(
