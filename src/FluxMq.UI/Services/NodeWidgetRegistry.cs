@@ -42,7 +42,9 @@ public sealed class NodeWidgetRegistry
         ["mqtt.metrics"] = typeof(MqttMetricsNodeWidget),
         [TimerNodeTypes.Interval] = typeof(TimerNodeWidget),
         [TimerNodeTypes.Schedule] = typeof(TimerNodeWidget),
-        [TimerNodeTypes.Delay] = typeof(TimerNodeWidget)
+        [TimerNodeTypes.Delay] = typeof(TimerNodeWidget),
+        [TimerNodeTypes.Debounce] = typeof(TimerNodeWidget),
+        [TimerNodeTypes.Throttle] = typeof(TimerNodeWidget)
     };
 
     /// <summary>Returns the widget type for the given node type, or the fallback default widget.</summary>

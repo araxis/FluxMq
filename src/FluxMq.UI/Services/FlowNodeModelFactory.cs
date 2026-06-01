@@ -45,6 +45,8 @@ public static class FlowNodeModelFactory
         TimerNodeTypes.Interval => new TimerIntervalNodeModel(id, position, nodeName, descriptor, isResource),
         TimerNodeTypes.Schedule => new TimerScheduleNodeModel(id, position, nodeName, descriptor, isResource),
         TimerNodeTypes.Delay => new TimerDelayNodeModel(id, position, nodeName, descriptor, isResource),
+        TimerNodeTypes.Debounce => new TimerDebounceNodeModel(id, position, nodeName, descriptor, isResource),
+        TimerNodeTypes.Throttle => new TimerThrottleNodeModel(id, position, nodeName, descriptor, isResource),
         _ => new FlowDiagramNodeModel(id, position, nodeName, nodeType, descriptor, isResource)
     };
 }

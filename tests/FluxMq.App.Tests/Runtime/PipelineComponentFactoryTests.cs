@@ -14,6 +14,7 @@ using FluxMq.Components.Storage.Repositories;
 using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Definitions;
 using FluxFlow.Engine.Runtime;
+using FluxFlow.Components.Serialization.Contracts;
 using FluxFlow.Components.Timers.Contracts;
 using MQTTnet.Protocol;
 using System.Runtime.CompilerServices;
@@ -48,13 +49,74 @@ public sealed class PipelineComponentFactoryTests
             FluxMqNodeTypes.FlowAssertion,
             FluxMqNodeTypes.JsonSchemaValidator,
             FluxMqNodeTypes.DynamicMapper,
+            new NodeType("json.parse"),
+            new NodeType("json.stringify"),
+            new NodeType("text.encode"),
+            new NodeType("text.decode"),
+            new NodeType("base64.encode"),
+            new NodeType("base64.decode"),
             FluxMqNodeTypes.MqttPublisher,
             FluxMqNodeTypes.MqttRecorder,
             FluxMqNodeTypes.FileWriter,
             FluxMqNodeTypes.TimerInterval,
             FluxMqNodeTypes.TimerSchedule,
-            FluxMqNodeTypes.TimerDelay
+            FluxMqNodeTypes.TimerDelay,
+            FluxMqNodeTypes.TimerDebounce,
+            FluxMqNodeTypes.TimerThrottle
         }, ignoreOrder: true);
+    }
+
+    [Fact]
+    public async Task SerializationFactory_CreatesLinkableRuntimeNode()
+    {
+        TestValueSourceNode<JsonStringifyRequest>? source = null;
+        TestSinkNode<JsonStringifyResult>? sink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.stringify-source"), (address, _) =>
+            {
+                source = new TestValueSourceNode<JsonStringifyRequest>();
+                return SourceNode(address, source);
+            })
+            .Register(new NodeType("test.stringify-sink"), (address, _) =>
+            {
+                sink = new TestSinkNode<JsonStringifyResult>();
+                return SinkNode(address, sink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("test.stringify-source"),
+                        ["stringify"] = NodeWithPort("json.stringify", "Input", "\"source.Output\""),
+                        ["sink"] = NodeWithPort("test.stringify-sink", "Input", "\"stringify.Output\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+
+        source!.Post(new JsonStringifyRequest
+        {
+            Value = new Dictionary<string, object?>
+            {
+                ["value"] = 12
+            }
+        });
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+        var output = sink!.Values.ShouldHaveSingleItem();
+        output.Text.ShouldBe("""{"value":12}""");
+        output.ByteCount.ShouldBe(12);
     }
 
     [Fact]
@@ -1514,7 +1576,7 @@ public sealed class PipelineComponentFactoryTests
 
         sink!.Values.ShouldNotBeEmpty();
         sink.Values[^1].MessageCount.ShouldBe(2);
-        repository.LoadedSessionIds.ShouldBe(new[] { sessionId });
+        repository.StreamedSessionIds.ShouldBe(new[] { sessionId });
     }
 
     [Fact]
@@ -1694,6 +1756,15 @@ public sealed class PipelineComponentFactoryTests
                 new OutputPort<MqttEnvelope>(address.Port(new PortName("Output")), node.Output)
             ]);
 
+    private static RuntimeNode SourceNode<T>(NodeAddress address, TestValueSourceNode<T> node)
+        => RuntimeNode.Create(
+            address,
+            node,
+            outputs:
+            [
+                new OutputPort<T>(address.Port(new PortName("Output")), node.Output)
+            ]);
+
     private static RuntimeNode SinkNode<T>(NodeAddress address, TestSinkNode<T> node)
         => RuntimeNode.Create(
             address,
@@ -1740,6 +1811,31 @@ public sealed class PipelineComponentFactoryTests
         public Task Completion => _output.Completion;
 
         public void Post(MqttEnvelope value) => _output.Post(value);
+
+        public void Complete()
+        {
+            _output.Complete();
+            _errors.Complete();
+        }
+
+        public void Fault(Exception exception)
+        {
+            ((IDataflowBlock)_output).Fault(exception);
+            _errors.Complete();
+        }
+    }
+
+    private sealed class TestValueSourceNode<T> : IFlowNode
+    {
+        private readonly BufferBlock<T> _output = new();
+        private readonly BufferBlock<FlowError> _errors = new();
+
+        public FlowNodeId Id { get; } = FlowNodeId.New();
+        public ISourceBlock<T> Output => _output;
+        public ISourceBlock<FlowError> Errors => _errors;
+        public Task Completion => _output.Completion;
+
+        public void Post(T value) => _output.Post(value);
 
         public void Complete()
         {

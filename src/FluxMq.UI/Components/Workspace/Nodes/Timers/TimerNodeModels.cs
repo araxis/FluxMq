@@ -154,11 +154,98 @@ public sealed class TimerDelayNodeModel(
     }
 }
 
+public sealed class TimerDebounceNodeModel(
+    string id,
+    DiagramPoint position,
+    string nodeName,
+    FlowComponentDescriptor? descriptor,
+    bool isResource)
+    : FlowDiagramNodeModel(id, position, nodeName, TimerNodeTypes.Debounce, descriptor, isResource)
+{
+    public const int DefaultQuietPeriodMilliseconds = 250;
+    public const int DefaultBoundedCapacity = 128;
+
+    public string InputType { get; set; } = TimerDelayNodeModel.DefaultInputType;
+    public int QuietPeriodMilliseconds { get; set; } = DefaultQuietPeriodMilliseconds;
+    public int BoundedCapacity { get; set; } = DefaultBoundedCapacity;
+
+    protected override void OnConfigurationLoaded(JsonObject? config)
+    {
+        InputType = TimerDelayNodeModel.NormalizeInputType(
+            TimerNodeConfiguration.ReadString(config, "inputType", TimerDelayNodeModel.DefaultInputType));
+        QuietPeriodMilliseconds = TimerNodeConfiguration.ReadPositiveInt(
+            config,
+            "quietPeriodMilliseconds",
+            DefaultQuietPeriodMilliseconds);
+        BoundedCapacity = TimerNodeConfiguration.ReadPositiveInt(config, "boundedCapacity", DefaultBoundedCapacity);
+    }
+
+    public override JsonObject BuildConfiguration() => new()
+    {
+        ["inputType"] = TimerDelayNodeModel.NormalizeInputType(InputType),
+        ["quietPeriodMilliseconds"] = TimerNodeConfiguration.NormalizePositiveInt(
+            QuietPeriodMilliseconds,
+            DefaultQuietPeriodMilliseconds),
+        ["boundedCapacity"] = TimerNodeConfiguration.NormalizePositiveInt(BoundedCapacity, DefaultBoundedCapacity)
+    };
+
+    public override string ResolvePortValueType(ComponentPortDescriptor descriptor)
+        => descriptor.Name is "Input" or "Output"
+            ? TimerDelayNodeModel.NormalizeInputType(InputType)
+            : base.ResolvePortValueType(descriptor);
+}
+
+public sealed class TimerThrottleNodeModel(
+    string id,
+    DiagramPoint position,
+    string nodeName,
+    FlowComponentDescriptor? descriptor,
+    bool isResource)
+    : FlowDiagramNodeModel(id, position, nodeName, TimerNodeTypes.Throttle, descriptor, isResource)
+{
+    public const int DefaultIntervalMilliseconds = 250;
+    public const int DefaultBoundedCapacity = 128;
+
+    public string InputType { get; set; } = TimerDelayNodeModel.DefaultInputType;
+    public int IntervalMilliseconds { get; set; } = DefaultIntervalMilliseconds;
+    public bool EmitFirstImmediately { get; set; } = true;
+    public int BoundedCapacity { get; set; } = DefaultBoundedCapacity;
+
+    protected override void OnConfigurationLoaded(JsonObject? config)
+    {
+        InputType = TimerDelayNodeModel.NormalizeInputType(
+            TimerNodeConfiguration.ReadString(config, "inputType", TimerDelayNodeModel.DefaultInputType));
+        IntervalMilliseconds = TimerNodeConfiguration.ReadPositiveInt(
+            config,
+            "intervalMilliseconds",
+            DefaultIntervalMilliseconds);
+        EmitFirstImmediately = TimerNodeConfiguration.ReadBool(config, "emitFirstImmediately", true);
+        BoundedCapacity = TimerNodeConfiguration.ReadPositiveInt(config, "boundedCapacity", DefaultBoundedCapacity);
+    }
+
+    public override JsonObject BuildConfiguration() => new()
+    {
+        ["inputType"] = TimerDelayNodeModel.NormalizeInputType(InputType),
+        ["intervalMilliseconds"] = TimerNodeConfiguration.NormalizePositiveInt(
+            IntervalMilliseconds,
+            DefaultIntervalMilliseconds),
+        ["emitFirstImmediately"] = EmitFirstImmediately,
+        ["boundedCapacity"] = TimerNodeConfiguration.NormalizePositiveInt(BoundedCapacity, DefaultBoundedCapacity)
+    };
+
+    public override string ResolvePortValueType(ComponentPortDescriptor descriptor)
+        => descriptor.Name is "Input" or "Output"
+            ? TimerDelayNodeModel.NormalizeInputType(InputType)
+            : base.ResolvePortValueType(descriptor);
+}
+
 public static class TimerNodeTypes
 {
     public const string Interval = "timer.interval";
     public const string Schedule = "timer.schedule";
     public const string Delay = "timer.delay";
+    public const string Debounce = "timer.debounce";
+    public const string Throttle = "timer.throttle";
 }
 
 internal static class TimerNodeConfiguration

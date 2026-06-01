@@ -15,6 +15,8 @@ public sealed class TimerNodeModelTests
     [InlineData("timer.interval", typeof(TimerIntervalNodeModel))]
     [InlineData("timer.schedule", typeof(TimerScheduleNodeModel))]
     [InlineData("timer.delay", typeof(TimerDelayNodeModel))]
+    [InlineData("timer.debounce", typeof(TimerDebounceNodeModel))]
+    [InlineData("timer.throttle", typeof(TimerThrottleNodeModel))]
     public void FlowNodeModelFactory_CreatesTypedTimerModels(string nodeType, Type expectedType)
     {
         var catalog = new FlowComponentCatalog();
@@ -105,6 +107,60 @@ public sealed class TimerNodeModelTests
             .ShouldBe("TimerTick");
         model.ResolvePortValueType(new ComponentPortDescriptor("Output", "Configured input type", IsInput: false))
             .ShouldBe("TimerTick");
+    }
+
+    [Fact]
+    public void TimerDebounceNodeModel_UsesConfiguredInputTypeForPorts()
+    {
+        var model = new TimerDebounceNodeModel(
+            "workflow1.debounce",
+            new DiagramPoint(10, 20),
+            "debounce",
+            descriptor: null,
+            isResource: false)
+        {
+            InputType = "TimerTick",
+            QuietPeriodMilliseconds = 800,
+            BoundedCapacity = 64
+        };
+
+        var config = model.BuildConfiguration();
+
+        config["inputType"]!.GetValue<string>().ShouldBe("TimerTick");
+        config["quietPeriodMilliseconds"]!.GetValue<int>().ShouldBe(800);
+        config["boundedCapacity"]!.GetValue<int>().ShouldBe(64);
+        model.ResolvePortValueType(new ComponentPortDescriptor("Input", "Configured input type", IsInput: true))
+            .ShouldBe("TimerTick");
+        model.ResolvePortValueType(new ComponentPortDescriptor("Output", "Configured input type", IsInput: false))
+            .ShouldBe("TimerTick");
+    }
+
+    [Fact]
+    public void TimerThrottleNodeModel_UsesConfiguredInputTypeForPorts()
+    {
+        var model = new TimerThrottleNodeModel(
+            "workflow1.throttle",
+            new DiagramPoint(10, 20),
+            "throttle",
+            descriptor: null,
+            isResource: false)
+        {
+            InputType = "ScheduleTick",
+            IntervalMilliseconds = 900,
+            EmitFirstImmediately = false,
+            BoundedCapacity = 32
+        };
+
+        var config = model.BuildConfiguration();
+
+        config["inputType"]!.GetValue<string>().ShouldBe("ScheduleTick");
+        config["intervalMilliseconds"]!.GetValue<int>().ShouldBe(900);
+        config["emitFirstImmediately"]!.GetValue<bool>().ShouldBeFalse();
+        config["boundedCapacity"]!.GetValue<int>().ShouldBe(32);
+        model.ResolvePortValueType(new ComponentPortDescriptor("Input", "Configured input type", IsInput: true))
+            .ShouldBe("ScheduleTick");
+        model.ResolvePortValueType(new ComponentPortDescriptor("Output", "Configured input type", IsInput: false))
+            .ShouldBe("ScheduleTick");
     }
 
     [Fact]

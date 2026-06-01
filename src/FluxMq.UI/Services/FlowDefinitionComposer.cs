@@ -37,6 +37,8 @@ public sealed class FlowDefinitionComposer
     public const string TimerIntervalNodeName = "timer";
     public const string TimerScheduleNodeName = "schedule";
     public const string TimerDelayNodeName = "delay";
+    public const string TimerDebounceNodeName = "debounce";
+    public const string TimerThrottleNodeName = "throttle";
     public const string DefaultWorkflowName = "inspectPayloads";
 
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
@@ -1103,6 +1105,12 @@ public sealed class FlowDefinitionComposer
             "flow.when" => RouterNodeName,
             "flow.assert" => AssertionNodeName,
             "json.schema-validator" => "jsonSchemaValidator",
+            "json.parse" => "jsonParser",
+            "json.stringify" => "jsonStringifier",
+            "text.encode" => "textEncoder",
+            "text.decode" => "textDecoder",
+            "base64.encode" => "base64Encoder",
+            "base64.decode" => "base64Decoder",
             "flow.mapper" => MakeUniqueNodeName(workflow, MapperNodeName),
             "flow.logger" => MakeUniqueNodeName(workflow, LoggerNodeName),
             "mqtt.recorder" => RecorderNodeName,
@@ -1115,6 +1123,8 @@ public sealed class FlowDefinitionComposer
             TimerNodeTypes.Interval => TimerIntervalNodeName,
             TimerNodeTypes.Schedule => TimerScheduleNodeName,
             TimerNodeTypes.Delay => TimerDelayNodeName,
+            TimerNodeTypes.Debounce => TimerDebounceNodeName,
+            TimerNodeTypes.Throttle => TimerThrottleNodeName,
             _ => MakeNodeName(componentType)
         };
         var nodeName = MakeUniqueNodeName(workflow, preferredNodeName);
@@ -1185,6 +1195,18 @@ public sealed class FlowDefinitionComposer
         else if (componentType == TimerNodeTypes.Delay)
         {
             node["configuration"] = CreateTimerDelayConfiguration(FindDefaultMapperInputType(workflow));
+        }
+        else if (componentType == TimerNodeTypes.Debounce)
+        {
+            node["configuration"] = CreateTimerDebounceConfiguration(FindDefaultMapperInputType(workflow));
+        }
+        else if (componentType == TimerNodeTypes.Throttle)
+        {
+            node["configuration"] = CreateTimerThrottleConfiguration(FindDefaultMapperInputType(workflow));
+        }
+        else if (IsSerializationTransform(componentType))
+        {
+            node["configuration"] = CreateTransformCapacityConfiguration();
         }
 
         if (FindDefaultInputLink(componentType, workflow) is { Length: > 0 } inputLink)
@@ -2726,8 +2748,12 @@ public sealed class FlowDefinitionComposer
     {
         "mqtt.trigger" or "session.source" or "replay.source" or "generated.source" or "mqtt.connection-state-trigger"
             or TimerNodeTypes.Interval or TimerNodeTypes.Schedule => false,
+        "json.parse" or "json.stringify" or "text.encode" or "text.decode" or "base64.encode" or "base64.decode" => false,
         _ => true
     };
+
+    private static bool IsSerializationTransform(string componentType)
+        => componentType is "json.parse" or "json.stringify" or "text.encode" or "text.decode" or "base64.encode" or "base64.decode";
 
     private static string? FindDefaultInputLink(string componentType, JsonObject workflow)
     {
@@ -2928,6 +2954,23 @@ public sealed class FlowDefinitionComposer
             ["boundedCapacity"] = TimerDelayNodeModel.DefaultBoundedCapacity
         };
 
+    private static JsonObject CreateTimerDebounceConfiguration(string inputType = TimerDelayNodeModel.DefaultInputType)
+        => new()
+        {
+            ["inputType"] = TimerDelayNodeModel.NormalizeInputType(inputType),
+            ["quietPeriodMilliseconds"] = TimerDebounceNodeModel.DefaultQuietPeriodMilliseconds,
+            ["boundedCapacity"] = TimerDebounceNodeModel.DefaultBoundedCapacity
+        };
+
+    private static JsonObject CreateTimerThrottleConfiguration(string inputType = TimerDelayNodeModel.DefaultInputType)
+        => new()
+        {
+            ["inputType"] = TimerDelayNodeModel.NormalizeInputType(inputType),
+            ["intervalMilliseconds"] = TimerThrottleNodeModel.DefaultIntervalMilliseconds,
+            ["emitFirstImmediately"] = true,
+            ["boundedCapacity"] = TimerThrottleNodeModel.DefaultBoundedCapacity
+        };
+
     private static JsonObject CreateLoggerConfiguration()
         => new()
         {
@@ -2947,6 +2990,12 @@ public sealed class FlowDefinitionComposer
         };
 
     private static JsonObject CreateActorCapacityConfiguration()
+        => new()
+        {
+            ["boundedCapacity"] = 1000
+        };
+
+    private static JsonObject CreateTransformCapacityConfiguration()
         => new()
         {
             ["boundedCapacity"] = 1000

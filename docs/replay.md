@@ -4,14 +4,14 @@ Replay is the foundation for time-travel debugging in FluxMQ.
 
 ## Current Runtime Component
 
-`ReplaySourceComponent` is a concrete Dataflow-backed source.
+`replay.source` uses the same session-store-backed runtime path as `session.source`, with timing preservation enabled.
 
-It accepts ordered or unordered `MqttEnvelope` values and emits them in `ReceivedAt` order.
+It reads stored session records, converts them to `MqttEnvelope` values, and emits them in stored sequence order.
 
 ## Behavior
 
-- sorts messages by `ReceivedAt`
-- preserves relative timing
+- streams messages from the session store
+- preserves relative timing when replaying
 - supports speed multiplier
 - exposes Dataflow lifecycle behavior
 - publishes failures through `Errors`
@@ -19,8 +19,8 @@ It accepts ordered or unordered `MqttEnvelope` values and emits them in `Receive
 
 ```mermaid
 flowchart LR
-    Stored["Stored messages"] --> Convert["ToEnvelope"]
-    Convert --> Replay["ReplaySourceComponent"]
+    Store["Session store"] --> Convert["SessionRecord to MqttEnvelope"]
+    Convert --> Replay["replay.source"]
     Replay --> Output["Output: MqttEnvelope"]
     Replay --> Errors["Errors: FlowError"]
 ```
@@ -68,27 +68,21 @@ sequenceDiagram
 
 ## Storage Integration
 
-The replay source works with `MqttEnvelope`.
-
-Storage integration stays outside the replay source component:
+FluxMQ adapts the shared session contracts to the local message repository:
 
 ```text
-IMessageRepository.ReadEnvelopesBySessionAsync(sessionId)
-  -> StoredMessage.ToEnvelope()
-  -> ReplaySourceComponent
+FluxMqSessionStore.ReadMessagesAsync(sessionId)
+  -> SessionRecord
+  -> MqttEnvelope
+  -> replay.source Output
 ```
-
-This keeps the package runtime independent from concrete storage dependencies.
-
-`FluxMq.Components` owns this orchestration through `RecordedSessionReplayFactory`.
 
 For source-agnostic workflow execution, stored sessions can also enter the graph directly through `session.source`. Downstream nodes link to that source node's `Output` port.
 
 ```mermaid
 flowchart LR
-    Repository["IMessageRepository"] --> Factory["RecordedSessionReplayFactory"]
-    Factory --> Convert["StoredMessage.ToEnvelope"]
-    Convert --> Source["ReplaySourceComponent"]
+    Repository["IMessageRepository"] --> Store["FluxMqSessionStore"]
+    Store --> Source["session.source or replay.source"]
 ```
 
 ## Replay To MQTT
@@ -97,8 +91,8 @@ Recorded sessions can be replayed back through an MQTT client by mapping each re
 
 ```mermaid
 flowchart LR
-    Repository["IMessageRepository"] --> Factory["RecordedSessionReplayFactory"]
-    Factory --> Replay["ReplaySourceComponent"]
+    Repository["IMessageRepository"] --> Store["FluxMqSessionStore"]
+    Store --> Replay["replay.source"]
     Replay --> Mapper["flow.mapper: MqttPublishRequest"]
     Mapper --> Publish["MqttPublisherComponent"]
     Publish --> Broker["MQTT broker"]

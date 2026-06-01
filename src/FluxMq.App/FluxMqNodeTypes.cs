@@ -25,4 +25,6 @@ public static class FluxMqNodeTypes
     public static readonly NodeType TimerInterval = TimerComponentTypes.Interval;
     public static readonly NodeType TimerSchedule = TimerComponentTypes.Schedule;
     public static readonly NodeType TimerDelay = TimerComponentTypes.Delay;
+    public static readonly NodeType TimerDebounce = TimerComponentTypes.Debounce;
+    public static readonly NodeType TimerThrottle = TimerComponentTypes.Throttle;
 }

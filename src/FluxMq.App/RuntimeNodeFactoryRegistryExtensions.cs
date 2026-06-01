@@ -18,6 +18,7 @@ using FluxFlow.Components.Control.Contracts;
 using FluxFlow.Components.Control.Options;
 using FluxFlow.Components.Mapping;
 using FluxFlow.Components.Mapping.Options;
+using FluxFlow.Components.Serialization;
 using FluxFlow.Components.Timers;
 using FluxFlow.Components.Timers.Contracts;
 using FluxFlow.Components.Timers.Options;
@@ -75,6 +76,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .Register(FluxMqNodeTypes.JsonSchemaValidator, context => CreateJsonSchemaValidator(context.Address, context.Definition))
             .RegisterTimerComponents(ConfigureTimerComponents)
             .RegisterMappingComponents(options => ConfigureMappingComponents(options, expressionEngine))
+            .RegisterSerializationComponents()
             .Register(FluxMqNodeTypes.MqttPublisher, context => CreatePublisher(context.Address, context.Definition, context))
             .Register(FluxMqNodeTypes.MqttRecorder, context => CreateRecorder(context.Address, context.Definition, messageRepository))
             .Register(FluxMqNodeTypes.FileWriter, CreateFileWriter);
@@ -280,14 +282,12 @@ public static class RuntimeNodeFactoryRegistryExtensions
             throw new InvalidOperationException("Replay source requires a message repository.");
         }
 
-        var factory = new RecordedSessionReplayFactory(messageRepository);
-        var component = factory.Create(
+        var component = new StoredSessionSourceComponent(
+            messageRepository,
             sessionId.Value,
-            new RecordedSessionReplayOptions
-            {
-                Speed = GetDoubleOrDefault(definition, "speed", 1),
-                BoundedCapacity = GetBoundedCapacity(definition)
-            });
+            preserveTiming: true,
+            speed: GetDoubleOrDefault(definition, "speed", 1),
+            boundedCapacity: GetBoundedCapacity(definition));
 
         return SourceRuntimeNode(address, component, component.Output);
     }

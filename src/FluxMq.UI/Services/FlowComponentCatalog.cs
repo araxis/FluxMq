@@ -75,6 +75,26 @@ public sealed class FlowComponentCatalog
                 new("Output", "Configured input type", IsInput: false)
             ]),
         new(
+            "timer.debounce",
+            "Debounce",
+            "Control",
+            "Emits the latest input after a quiet period.",
+            IsResource: false,
+            [
+                new("Input", "Configured input type", IsInput: true),
+                new("Output", "Configured input type", IsInput: false)
+            ]),
+        new(
+            "timer.throttle",
+            "Throttle",
+            "Control",
+            "Limits input emissions to a fixed interval.",
+            IsResource: false,
+            [
+                new("Input", "Configured input type", IsInput: true),
+                new("Output", "Configured input type", IsInput: false)
+            ]),
+        new(
             "mqtt.payload-inspector",
             "Payload Inspector",
             "Mapper",
@@ -143,6 +163,72 @@ public sealed class FlowComponentCatalog
             [
                 new("Input", "MqttEnvelope", IsInput: true),
                 new("Output", "Configured output type", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "json.parse",
+            "JSON Parse",
+            "Transform",
+            "Parses text or bytes into a JSON value.",
+            IsResource: false,
+            [
+                new("Input", "JsonParseRequest", IsInput: true),
+                new("Output", "JsonParseResult", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "json.stringify",
+            "JSON Stringify",
+            "Transform",
+            "Serializes a value into JSON text and bytes.",
+            IsResource: false,
+            [
+                new("Input", "JsonStringifyRequest", IsInput: true),
+                new("Output", "JsonStringifyResult", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "text.encode",
+            "Text Encode",
+            "Transform",
+            "Encodes text into bytes.",
+            IsResource: false,
+            [
+                new("Input", "TextEncodeRequest", IsInput: true),
+                new("Output", "TextEncodeResult", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "text.decode",
+            "Text Decode",
+            "Transform",
+            "Decodes bytes into text.",
+            IsResource: false,
+            [
+                new("Input", "TextDecodeRequest", IsInput: true),
+                new("Output", "TextDecodeResult", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "base64.encode",
+            "Base64 Encode",
+            "Transform",
+            "Encodes bytes or text into base64 text.",
+            IsResource: false,
+            [
+                new("Input", "Base64EncodeRequest", IsInput: true),
+                new("Output", "Base64EncodeResult", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "base64.decode",
+            "Base64 Decode",
+            "Transform",
+            "Decodes base64 text into bytes and optional text.",
+            IsResource: false,
+            [
+                new("Input", "Base64DecodeRequest", IsInput: true),
+                new("Output", "Base64DecodeResult", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
