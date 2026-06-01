@@ -4,6 +4,7 @@ using FluxMq.Components.Replay;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxFlow.Engine.Mapping;
+using MQTTnet.Protocol;
 
 namespace FluxMq.Components.Mapping;
 
@@ -27,36 +28,33 @@ public sealed class FluxMqRequestMappingExpressionEngine : IFlowExpressionEngine
         if (resultType == typeof(MqttPublishRequest))
         {
             var value = _inner.Evaluate(expression, context, typeof(object));
-            return CoercePublishRequest(value, GetEnvelope(context));
+            return CoercePublishRequest(value, TryGetEnvelope(context));
         }
 
         if (resultType == typeof(MqttRecordingRequest))
         {
             var value = _inner.Evaluate(expression, context, typeof(object));
-            return CoerceRecordingRequest(value, GetEnvelope(context));
+            return CoerceRecordingRequest(value, GetRequiredEnvelope(context));
         }
 
         if (resultType == typeof(FileWriteRequest))
         {
             var value = _inner.Evaluate(expression, context, typeof(object));
-            return CoerceFileWriteRequest(value, GetEnvelope(context));
+            return CoerceFileWriteRequest(value, TryGetEnvelope(context));
         }
 
         return _inner.Evaluate(expression, context, resultType);
     }
 
-    private static MqttEnvelope GetEnvelope(FlowMapContext context)
-    {
-        if (context.Variables.TryGetValue("envelope", out var value) &&
-            value is MqttEnvelope envelope)
-        {
-            return envelope;
-        }
+    private static MqttEnvelope GetRequiredEnvelope(FlowMapContext context)
+        => TryGetEnvelope(context) ?? throw new InvalidOperationException("FluxMQ request mapping requires an MqttEnvelope input context.");
 
-        throw new InvalidOperationException("FluxMQ request mapping requires an MqttEnvelope input context.");
-    }
+    private static MqttEnvelope? TryGetEnvelope(FlowMapContext context)
+        => context.Variables.TryGetValue("envelope", out var value) && value is MqttEnvelope envelope
+            ? envelope
+            : null;
 
-    private static MqttPublishRequest CoercePublishRequest(object? value, MqttEnvelope input)
+    private static MqttPublishRequest CoercePublishRequest(object? value, MqttEnvelope? input)
         => value switch
         {
             MqttPublishRequest request => request,
@@ -65,12 +63,12 @@ public sealed class FluxMqRequestMappingExpressionEngine : IFlowExpressionEngine
             _ => new MqttPublishRequest
             {
                 Topic = ExpressionObjectReader.ReadRequiredString(value, "topic"),
-                Payload = ExpressionObjectReader.ReadBytesOrDefault(value, "payload", input.Payload),
+                Payload = ExpressionObjectReader.ReadBytesOrDefault(value, "payload", input?.Payload ?? []),
                 QualityOfService =
                     ExpressionObjectReader.TryRead(value, "qos", out _)
-                        ? ExpressionObjectReader.ReadEnumOrDefault(value, "qos", input.QualityOfService)
-                        : ExpressionObjectReader.ReadEnumOrDefault(value, "qualityOfService", input.QualityOfService),
-                Retain = ExpressionObjectReader.ReadBoolOrDefault(value, "retain", input.Retain)
+                        ? ExpressionObjectReader.ReadEnumOrDefault(value, "qos", input?.QualityOfService ?? MqttQualityOfServiceLevel.AtMostOnce)
+                        : ExpressionObjectReader.ReadEnumOrDefault(value, "qualityOfService", input?.QualityOfService ?? MqttQualityOfServiceLevel.AtMostOnce),
+                Retain = ExpressionObjectReader.ReadBoolOrDefault(value, "retain", input?.Retain ?? false)
             }
         };
 
@@ -87,7 +85,7 @@ public sealed class FluxMqRequestMappingExpressionEngine : IFlowExpressionEngine
             }
         };
 
-    private static FileWriteRequest CoerceFileWriteRequest(object? value, MqttEnvelope input)
+    private static FileWriteRequest CoerceFileWriteRequest(object? value, MqttEnvelope? input)
         => value switch
         {
             FileWriteRequest request => request,
@@ -96,7 +94,7 @@ public sealed class FluxMqRequestMappingExpressionEngine : IFlowExpressionEngine
             _ => new FileWriteRequest
             {
                 Path = ExpressionObjectReader.ReadRequiredString(value, "path"),
-                Content = ExpressionObjectReader.ReadBytesOrDefault(value, "content", input.Payload),
+                Content = ExpressionObjectReader.ReadBytesOrDefault(value, "content", input?.Payload ?? []),
                 Mode = ExpressionObjectReader.ReadEnumOrDefault(value, "mode", FileWriteMode.Overwrite),
                 CreateDirectory = ExpressionObjectReader.ReadBoolOrDefault(value, "createDirectory", true)
             }

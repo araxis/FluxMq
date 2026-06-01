@@ -11,6 +11,7 @@ using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
 using FluxMq.UI.Components.Workspace.Nodes.PayloadInspector;
 using FluxMq.UI.Components.Workspace.Nodes.SessionSource;
 using FluxMq.UI.Components.Workspace.Nodes.Sources;
+using FluxMq.UI.Components.Workspace.Nodes.Timers;
 using FluxMq.UI.Models;
 using DiagramPoint = Blazor.Diagrams.Core.Geometry.Point;
 
@@ -41,6 +42,11 @@ public static class FlowNodeModelFactory
         "file.writer" => new FileWriterNodeModel(id, position, nodeName, descriptor, isResource),
         "mqtt.payload-inspector" => new PayloadInspectorNodeModel(id, position, nodeName, descriptor, isResource),
         "mqtt.metrics" => new MqttMetricsNodeModel(id, position, nodeName, descriptor, isResource),
+        TimerNodeTypes.Interval => new TimerIntervalNodeModel(id, position, nodeName, descriptor, isResource),
+        TimerNodeTypes.Schedule => new TimerScheduleNodeModel(id, position, nodeName, descriptor, isResource),
+        TimerNodeTypes.Delay => new TimerDelayNodeModel(id, position, nodeName, descriptor, isResource),
+        TimerNodeTypes.Debounce => new TimerDebounceNodeModel(id, position, nodeName, descriptor, isResource),
+        TimerNodeTypes.Throttle => new TimerThrottleNodeModel(id, position, nodeName, descriptor, isResource),
         _ => new FlowDiagramNodeModel(id, position, nodeName, nodeType, descriptor, isResource)
     };
 }

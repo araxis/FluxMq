@@ -25,7 +25,20 @@
     <Editor>
         <MudStack Spacing="2">
             <MudGrid Spacing="2">
-                <MudItem xs="12" md="4">
+                <MudItem xs="12" md="3">
+                    <MudSelect T="string"
+                               Label="Input schema"
+                               Value="@_inputType"
+                               ValueChanged="@SetInputType"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        @foreach (var inputType in DynamicMapperNodeModel.InputTypes)
+                        {
+                            <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="3">
                     <MudSelect T="string"
                                Label="Engine"
                                Value="@_engine"
@@ -36,7 +49,7 @@
                         <MudSelectItem Value="@("dynamic-expresso")">Dynamic Expresso</MudSelectItem>
                     </MudSelect>
                 </MudItem>
-                <MudItem xs="12" md="4">
+                <MudItem xs="12" md="3">
                     <MudSelect T="string"
                                Label="Result contract"
                                Value="@_outputContract"
@@ -48,7 +61,7 @@
                         <MudSelectItem Value="@DynamicMapperNodeModel.OutputContractJsonSchemaFile">JSON Schema file</MudSelectItem>
                     </MudSelect>
                 </MudItem>
-                <MudItem @key="SchemaControlKey" xs="12" md="4">
+                <MudItem @key="SchemaControlKey" xs="12" md="3">
                     @if (IsTypedOutputContract)
                     {
                         <MudSelect T="string"
@@ -384,6 +397,7 @@
     private string OutputContractCaption => IsTypedOutputContract
         ? _outputType
         : IsJsonSchemaFileContract ? "JSON Schema" : "Any JSON";
+    private bool IsMqttInput => string.Equals(_inputType, "MqttEnvelope", StringComparison.Ordinal);
 
     protected override void OnInitialized()
     {
@@ -432,13 +446,13 @@
         }
 
         _engine = string.IsNullOrWhiteSpace(Model.Engine) ? "jsonata" : Model.Engine;
-        _inputType = "MqttEnvelope";
+        _inputType = DynamicMapperNodeModel.NormalizeInputType(Model.InputType);
         _outputType = string.IsNullOrWhiteSpace(Model.OutputType) ? "MqttPublishRequest" : Model.OutputType;
         _outputContract = DynamicMapperNodeModel.NormalizeOutputContract(Model.OutputContract);
         _outputSchemaPath = Model.OutputSchemaPath;
         _schemaControlVersion++;
         _expression = string.IsNullOrWhiteSpace(Model.Expression)
-            ? DynamicMapperNodeModel.DefaultExpression(_outputType, _engine)
+            ? DynamicMapperNodeModel.DefaultExpression(_outputType, _engine, _inputType)
             : Model.Expression;
         _editorVersion++;
         _inputEditorVersion++;
@@ -464,11 +478,20 @@
     {
         if (!_sampleEdited)
         {
-            var (envelope, source) = ResolveSampleEnvelope();
-            LoadSampleEnvelope(envelope, source, updateInputJson: true);
+            if (IsMqttInput)
+            {
+                var (envelope, source) = ResolveSampleEnvelope();
+                LoadSampleEnvelope(envelope, source, updateInputJson: true);
+            }
+            else
+            {
+                _sampleSource = _inputType;
+                _inputJsonError = null;
+                _inputJsonText = DynamicMapperWorkbenchPreview.InputJson(_inputType, _sampleEnvelope);
+            }
         }
 
-        _variables = DynamicMapperWorkbenchPreview.Variables(_sampleEnvelope);
+        _variables = DynamicMapperWorkbenchPreview.Variables(_inputType, _sampleEnvelope);
         _outputFields = DynamicMapperWorkbenchPreview.OutputFields(OutputFieldsKey, _engine);
         RefreshPreview();
     }
@@ -493,8 +516,8 @@
 
     private DynamicMapperPreviewResult PreviewExpression()
         => IsTypedOutputContract
-            ? DynamicMapperWorkbenchPreview.Preview(_engine, _outputType, _expression, _sampleEnvelope)
-            : DynamicMapperWorkbenchPreview.PreviewAny(_engine, _expression, _sampleEnvelope, OutputShapeLabel);
+            ? DynamicMapperWorkbenchPreview.Preview(_engine, _outputType, _expression, _inputType, _sampleEnvelope)
+            : DynamicMapperWorkbenchPreview.PreviewAny(_engine, _expression, _inputType, _sampleEnvelope, OutputShapeLabel);
 
     private (MqttEnvelope Envelope, string Source) ResolveSampleEnvelope()
     {
@@ -546,7 +569,7 @@
         {
             LoadSampleEnvelope(result.Envelope, "edited", updateInputJson: false);
             _sampleEdited = true;
-            _variables = DynamicMapperWorkbenchPreview.Variables(_sampleEnvelope);
+            _variables = DynamicMapperWorkbenchPreview.Variables(_inputType, _sampleEnvelope);
             _outputFields = DynamicMapperWorkbenchPreview.OutputFields(OutputFieldsKey, _engine);
             return;
         }
@@ -567,17 +590,41 @@
 
         var wasDefault = string.Equals(
             NormalizeExpression(_expression),
-            NormalizeExpression(DynamicMapperNodeModel.DefaultExpression(_outputType, _engine)),
+            NormalizeExpression(DynamicMapperNodeModel.DefaultExpression(_outputType, _engine, _inputType)),
             StringComparison.Ordinal);
         _engine = value;
         if (wasDefault)
         {
-            _expression = DynamicMapperNodeModel.DefaultExpression(_outputType, _engine);
+            _expression = DynamicMapperNodeModel.DefaultExpression(_outputType, _engine, _inputType);
         }
 
         _editorVersion++;
         RefreshWorkbench();
         return RefreshEditorsAndRenderAsync(syncInput: false);
+    }
+
+    private Task SetInputType(string value)
+    {
+        var normalized = DynamicMapperNodeModel.NormalizeInputType(value);
+        if (string.Equals(_inputType, normalized, StringComparison.Ordinal))
+        {
+            return Task.CompletedTask;
+        }
+
+        var wasDefault = string.Equals(
+            NormalizeExpression(_expression),
+            NormalizeExpression(DynamicMapperNodeModel.DefaultExpression(_outputType, _engine, _inputType)),
+            StringComparison.Ordinal);
+        _inputType = normalized;
+        _sampleEdited = false;
+        if (wasDefault)
+        {
+            _expression = DynamicMapperNodeModel.DefaultExpression(_outputType, _engine, _inputType);
+            _editorVersion++;
+        }
+
+        RefreshWorkbench();
+        return RefreshEditorsAndRenderAsync();
     }
 
     private async Task SetOutputContract(string value)
@@ -602,7 +649,7 @@
         }
 
         _outputType = value;
-        _expression = DynamicMapperNodeModel.DefaultExpression(_outputType, _engine);
+        _expression = DynamicMapperNodeModel.DefaultExpression(_outputType, _engine, _inputType);
         _editorVersion++;
         RefreshWorkbench();
         return RefreshEditorsAndRenderAsync(syncInput: false);
@@ -655,6 +702,7 @@
             AutomaticLayout = true,
             Language = "json",
             Theme = ThemeService.IsDarkMode ? "fluxmq-dark" : "fluxmq-light",
+            ReadOnly = !IsMqttInput,
             Value = _inputJsonText
         };
 
@@ -682,6 +730,11 @@
 
     private async Task OnInputEditorContentChanged()
     {
+        if (!IsMqttInput)
+        {
+            return;
+        }
+
         if (_syncingInputEditor)
         {
             return;
@@ -759,12 +812,12 @@
     private Task SaveAsync()
     {
         Model.Engine = string.IsNullOrWhiteSpace(_engine) ? "jsonata" : _engine.Trim();
-        Model.InputType = "MqttEnvelope";
+        Model.InputType = DynamicMapperNodeModel.NormalizeInputType(_inputType);
         Model.OutputType = string.IsNullOrWhiteSpace(_outputType) ? "MqttPublishRequest" : _outputType.Trim();
         Model.OutputContract = DynamicMapperNodeModel.NormalizeOutputContract(_outputContract);
         Model.OutputSchemaPath = _outputSchemaPath.Trim();
         Model.Expression = string.IsNullOrWhiteSpace(_expression)
-            ? DynamicMapperNodeModel.DefaultExpression(Model.OutputType, Model.Engine)
+            ? DynamicMapperNodeModel.DefaultExpression(Model.OutputType, Model.Engine, Model.InputType)
             : _expression.Trim();
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
         return Task.CompletedTask;

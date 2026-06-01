@@ -1,4 +1,5 @@
 using FluxFlow.Engine.Definitions;
+using FluxFlow.Components.Timers;
 
 namespace FluxMq.App;
 
@@ -21,4 +22,9 @@ public static class FluxMqNodeTypes
     public static readonly NodeType MqttPublisher = new("mqtt.publisher");
     public static readonly NodeType MqttRecorder = new("mqtt.recorder");
     public static readonly NodeType FileWriter = new("file.writer");
+    public static readonly NodeType TimerInterval = TimerComponentTypes.Interval;
+    public static readonly NodeType TimerSchedule = TimerComponentTypes.Schedule;
+    public static readonly NodeType TimerDelay = TimerComponentTypes.Delay;
+    public static readonly NodeType TimerDebounce = TimerComponentTypes.Debounce;
+    public static readonly NodeType TimerThrottle = TimerComponentTypes.Throttle;
 }

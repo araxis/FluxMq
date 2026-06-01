@@ -7,6 +7,7 @@ using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
+using FluxFlow.Components.Timers.Contracts;
 using FluxFlow.Engine.Mapping;
 using MQTTnet.Protocol;
 using System.Text;
@@ -30,7 +31,9 @@ public static class FluxMqControlExpressionContextFactory
             ["MqttPublishRequest"] = typeof(MqttPublishRequest),
             ["MqttRecordingRequest"] = typeof(MqttRecordingRequest),
             ["FileWriteRequest"] = typeof(FileWriteRequest),
-            ["FileWriteMode"] = typeof(FileWriteMode)
+            ["FileWriteMode"] = typeof(FileWriteMode),
+            ["TimerTick"] = typeof(TimerTick),
+            ["ScheduleTick"] = typeof(ScheduleTick)
         };
 
         AddTypeSpecificVariables(variables, input);
@@ -83,6 +86,12 @@ public static class FluxMqControlExpressionContextFactory
                 Merge(variables, MqttEnvelopeExpressionContextFactory.Create(inspected.Envelope));
                 variables["input"] = inspected;
                 variables["value"] = inspected;
+                break;
+            case TimerTick tick:
+                Merge(variables, TimerTickExpressionContextFactory.Create(tick));
+                break;
+            case ScheduleTick tick:
+                Merge(variables, ScheduleTickExpressionContextFactory.Create(tick));
                 break;
         }
     }
