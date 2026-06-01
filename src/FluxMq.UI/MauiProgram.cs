@@ -4,6 +4,12 @@ using FluxMq.Components.Storage;
 using FluxMq.Components.Storage.Repositories;
 using FluxMq.UI.Services;
 using Microsoft.Extensions.Logging;
+#if WINDOWS
+using Microsoft.Maui.LifecycleEvents;
+using Microsoft.UI;
+using Microsoft.UI.Windowing;
+using WinRT.Interop;
+#endif
 using MudBlazor.Services;
 
 namespace FluxMq.UI;
@@ -15,6 +21,27 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>();
+
+#if WINDOWS
+        builder.ConfigureLifecycleEvents(events =>
+        {
+            events.AddWindows(windows =>
+            {
+                windows.OnWindowCreated(window =>
+                {
+                    var iconPath = Path.Combine(AppContext.BaseDirectory, "appicon.ico");
+                    if (!File.Exists(iconPath))
+                    {
+                        return;
+                    }
+
+                    var handle = WindowNative.GetWindowHandle(window);
+                    var windowId = Win32Interop.GetWindowIdFromWindow(handle);
+                    AppWindow.GetFromWindowId(windowId).SetIcon(iconPath);
+                });
+            });
+        });
+#endif
 
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddMudServices();

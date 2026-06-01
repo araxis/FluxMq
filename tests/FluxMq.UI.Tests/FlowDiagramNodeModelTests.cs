@@ -230,6 +230,34 @@ public sealed class FlowDiagramNodeModelTests
     }
 
     [Fact]
+    public void FlowLinkVisuals_BuildsCompactConditionLabel()
+    {
+        var label = FlowLinkVisuals.ConditionLabel(
+            " input.Topic.StartsWith(\"factory/\") \r\n && input.Payload.Length > 0 ");
+
+        label.ShouldBe("when: input.Topic.StartsWith(\"factory/\") && input.Payload.Length > 0");
+    }
+
+    [Fact]
+    public void FlowLinkVisuals_TruncatesLongConditionLabel()
+    {
+        var label = FlowLinkVisuals.ConditionLabel(new string('x', 100)).ShouldNotBeNull();
+
+        label.ShouldStartWith("when: ");
+        label.ShouldEndWith("...");
+        label.Length.ShouldBe(78);
+    }
+
+    [Fact]
+    public void FlowLinkVisuals_PrefersConditionStyleOverErrorStyle()
+    {
+        FlowLinkVisuals.ColorFor(hasCondition: true, isError: true)
+            .ShouldBe(FlowLinkVisuals.ConditionalColor);
+        FlowLinkVisuals.WidthFor(hasCondition: true)
+            .ShouldBe(FlowLinkVisuals.ConditionalWidth);
+    }
+
+    [Fact]
     public void FlowNodeModelFactory_CreatesMetricsNodeModel()
     {
         var catalog = new FlowComponentCatalog();
