@@ -1,5 +1,5 @@
 @using FluxMq.UI.Components.Diagram
-@using FluxMq.Components.MessageFilter
+@using FluxMq.Components.Control
 @using FluxMq.Components.MqttPublisher
 @using FluxMq.UI.Models
 @using Blazor.Diagrams.Core.Models.Base
@@ -893,7 +893,7 @@
 
         foreach (var runtimeNode in runtime.Nodes)
         {
-            if (runtimeNode.Node is not MessageFilterComponent filter) continue;
+            if (runtimeNode.Node is not FlowFilterComponent<MqttEnvelope> filter) continue;
 
             var nodeName = runtimeNode.Address.Node.Value;
             var currentCount = filter.PassedCount;

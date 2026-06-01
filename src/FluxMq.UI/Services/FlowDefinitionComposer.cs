@@ -1095,9 +1095,9 @@ public sealed class FlowDefinitionComposer
         {
             "mqtt.payload-inspector" => InspectorNodeName,
             "mqtt.metrics" => MetricsNodeName,
-            "mqtt.message-filter" => FilterNodeName,
-            "mqtt.condition-router" => RouterNodeName,
-            "flow.assertion" => AssertionNodeName,
+            "flow.filter" => FilterNodeName,
+            "flow.when" => RouterNodeName,
+            "flow.assert" => AssertionNodeName,
             "json.schema-validator" => "jsonSchemaValidator",
             "flow.mapper" => MakeUniqueNodeName(workflow, MapperNodeName),
             "flow.logger" => MakeUniqueNodeName(workflow, LoggerNodeName),
@@ -1125,11 +1125,11 @@ public sealed class FlowDefinitionComposer
         {
             node["configuration"] = CreateJsonSchemaValidatorConfiguration();
         }
-        else if (componentType == "mqtt.condition-router")
+        else if (componentType == "flow.when")
         {
             node["configuration"] = CreateConditionRouterConfiguration();
         }
-        else if (componentType == "flow.assertion")
+        else if (componentType == "flow.assert")
         {
             node["configuration"] = CreateAssertionConfiguration();
         }

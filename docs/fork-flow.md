@@ -53,11 +53,11 @@ Owns the MQTT client lifecycle as a shared resource.
 
 References a shared MQTT connection, delegates subscription execution to the package MQTT subscribe node, and broadcasts matching `MqttEnvelope` values.
 
-### TopicFilterComponent
+### FlowFilterComponent
 
-Filters `MqttEnvelope` messages using a predicate.
+Delegates `flow.filter` expression evaluation to the control package and forwards matching `MqttEnvelope` messages.
 
-### MqttConditionRouterComponent
+### FlowWhenComponent
 
 Routes `MqttEnvelope` messages to `WhenTrue` or `WhenFalse` output ports.
 
@@ -219,7 +219,7 @@ Default condition for all links on a component:
 
 ```json
 {
-  "type": "mqtt.message-filter",
+  "type": "flow.filter",
   "When": "payload.size > 0",
   "Input": [
     "source.Output",

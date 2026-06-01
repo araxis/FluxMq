@@ -120,7 +120,7 @@ Priority:
 
 **Acceptance:**
 
-- `mqtt.message-filter` supports expressions such as `qos >= 1`.
+- `flow.filter` supports expressions such as `qos >= 1`.
 - Predicate failures publish `FlowError` and do not stop later messages.
 - Router/filter ports remain type-safe.
 

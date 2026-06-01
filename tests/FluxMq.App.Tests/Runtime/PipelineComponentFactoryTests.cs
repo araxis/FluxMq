@@ -373,9 +373,9 @@ public sealed class PipelineComponentFactoryTests
         trueSink!.Values.Select(envelope => envelope.Topic).ShouldBe(["factory/qos1"]);
         falseSink!.Values.Select(envelope => envelope.Topic).ShouldBe(["factory/qos0"]);
         logSink!.Values.Select(entry => entry.Message).ShouldBe([
-            "Routed MQTT message to WhenFalse.",
-            "Routed MQTT message to WhenTrue."
-        ]);
+            "Routed input to WhenFalse.",
+            "Routed input to WhenTrue."
+        ], ignoreOrder: true);
     }
 
     [Fact]

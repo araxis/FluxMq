@@ -6,7 +6,7 @@ using DiagramPoint = Blazor.Diagrams.Core.Geometry.Point;
 namespace FluxMq.UI.Components.Workspace.Nodes.MessageFilter;
 
 public sealed class MessageFilterNodeModel(string id, DiagramPoint position, string nodeName, FlowComponentDescriptor? descriptor, bool isResource)
-    : FlowDiagramNodeModel(id, position, nodeName, "mqtt.message-filter", descriptor, isResource)
+    : FlowDiagramNodeModel(id, position, nodeName, "flow.filter", descriptor, isResource)
 {
     public string[] Patterns { get; set; } = ["#"];
     public string Expression { get; set; } = string.Empty;

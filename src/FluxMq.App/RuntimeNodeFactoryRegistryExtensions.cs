@@ -3,18 +3,19 @@ using FluxMq.Core.Models;
 using FluxMq.Core.Mqtt;
 using FluxMq.Components.Assertions;
 using FluxMq.Components.ConnectionStateTrigger;
+using FluxMq.Components.Control;
 using FluxMq.Components.FileWriter;
 using FluxMq.Components.JsonSchema;
 using FluxMq.Components.Logging;
 using FluxMq.Components.Mapping;
-using FluxMq.Components.MessageFilter;
 using FluxMq.Components.MessageSource;
-using FluxMq.Components.MqttConditionRouter;
 using FluxMq.Components.MqttMetrics;
 using FluxMq.Components.MqttPayloadInspector;
 using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
 using FluxMq.Components.Storage.Repositories;
+using FluxFlow.Components.Control.Contracts;
+using FluxFlow.Components.Control.Options;
 using FluxFlow.Components.Mapping;
 using FluxFlow.Components.Mapping.Options;
 using FluxFlow.Engine.Components;
@@ -98,6 +99,103 @@ public static class RuntimeNodeFactoryRegistryExtensions
                 useAsDefault: false);
         }
     }
+
+    private static ControlExpressionOptions GetFilterControlOptions(NodeDefinition definition)
+    {
+        var patterns = GetFilterPatterns(definition);
+        var expression = GetNullableString(definition, "expression");
+        var effectiveExpression = patterns.Count switch
+        {
+            > 0 when string.IsNullOrWhiteSpace(expression) => "topicMatches",
+            > 0 => $"topicMatches && ({expression})",
+            _ => string.IsNullOrWhiteSpace(expression) ? "true" : expression!
+        };
+
+        return CreateControlOptions(
+            definition,
+            FluxMqNodeTypes.MessageFilter.Value,
+            "MqttEnvelope",
+            effectiveExpression);
+    }
+
+    private static ControlExpressionOptions GetControlOptions(
+        NodeDefinition definition,
+        string nodeType,
+        string defaultInputType = "MqttEnvelope",
+        string? fallbackExpression = null)
+    {
+        var expression = GetNullableString(definition, "expression") ?? fallbackExpression;
+        if (string.IsNullOrWhiteSpace(expression))
+        {
+            throw new InvalidOperationException($"{nodeType} requires configuration value 'expression'.");
+        }
+
+        return CreateControlOptions(
+            definition,
+            nodeType,
+            NormalizeMapperTypeName(GetStringOrDefault(definition, "inputType", defaultInputType)),
+            expression);
+    }
+
+    private static ControlExpressionOptions CreateControlOptions(
+        NodeDefinition definition,
+        string nodeType,
+        string inputType,
+        string expression)
+    {
+        if (string.IsNullOrWhiteSpace(inputType))
+        {
+            throw new InvalidOperationException($"{nodeType} option 'inputType' cannot be empty.");
+        }
+
+        var boundedCapacity = GetBoundedCapacity(definition);
+        if (boundedCapacity <= 0)
+        {
+            throw new InvalidOperationException($"{nodeType} option 'boundedCapacity' must be greater than zero.");
+        }
+
+        return new ControlExpressionOptions
+        {
+            Engine = GetNullableString(definition, "engine"),
+            Expression = expression.Trim(),
+            ExpressionId = GetNullableString(definition, "expressionId"),
+            ExpressionName = GetNullableString(definition, "expressionName"),
+            InputType = inputType,
+            BoundedCapacity = boundedCapacity,
+            Name = GetNullableString(definition, "name") ?? GetNullableString(definition, "assertionName"),
+            FailureMessage = GetNullableString(definition, "failureMessage")
+        };
+    }
+
+    private static IFlowExpressionEngine GetControlExpressionEngine(
+        ControlExpressionOptions options,
+        IFlowExpressionEngine defaultExpressionEngine)
+    {
+        var requestedEngine = options.Engine;
+        if (string.IsNullOrWhiteSpace(requestedEngine) ||
+            string.Equals(requestedEngine, defaultExpressionEngine.Name, StringComparison.OrdinalIgnoreCase))
+        {
+            return defaultExpressionEngine;
+        }
+
+        if (string.Equals(requestedEngine, "jsonata", StringComparison.OrdinalIgnoreCase))
+        {
+            return new JsonataFlowExpressionEngine();
+        }
+
+        throw new InvalidOperationException(
+            $"Control expression engine '{requestedEngine}' is not registered. Supported engines: {defaultExpressionEngine.Name}, jsonata.");
+    }
+
+    private static ControlNodeContext CreateControlNodeContext<TInput>(
+        NodeAddress address,
+        ControlExpressionOptions options)
+        => new()
+        {
+            Address = address,
+            Options = options,
+            InputType = typeof(TInput)
+        };
 
     private static RuntimeNode CreateConnection(
         NodeAddress address,
@@ -262,17 +360,12 @@ public static class RuntimeNodeFactoryRegistryExtensions
         NodeDefinition definition,
         IFlowExpressionEngine expressionEngine)
     {
-        var patterns = GetFilterPatterns(definition);
-        var expression = GetNullableString(definition, "expression");
-        IFlowPredicate<MqttEnvelope> expressionPredicate = string.IsNullOrWhiteSpace(expression)
-            ? new DelegateFlowPredicate<MqttEnvelope>(_ => true)
-            : new MqttEnvelopeExpressionPredicate(expressionEngine, expression);
-
-        Func<MqttEnvelope, bool> predicate = patterns.Count > 0
-            ? envelope => MqttTopicFilterMatcher.MatchesAny(patterns, envelope.Topic) && expressionPredicate.IsMatch(envelope)
-            : expressionPredicate.IsMatch;
-
-        var component = new MessageFilterComponent(predicate, boundedCapacity: GetBoundedCapacity(definition));
+        var options = GetFilterControlOptions(definition);
+        var component = new FlowFilterComponent<MqttEnvelope>(
+            options,
+            GetControlExpressionEngine(options, expressionEngine),
+            new TopicFilterControlContextFactory(GetFilterPatterns(definition)),
+            CreateControlNodeContext<MqttEnvelope>(address, options));
 
         return RuntimeNode.Create(
             address,
@@ -311,10 +404,12 @@ public static class RuntimeNodeFactoryRegistryExtensions
         NodeDefinition definition,
         IFlowExpressionEngine expressionEngine)
     {
-        var predicate = new MqttEnvelopeExpressionPredicate(
-            expressionEngine,
-            GetRequiredString(definition, "expression"));
-        var component = new MqttConditionRouterComponent(predicate.IsMatch, boundedCapacity: GetBoundedCapacity(definition));
+        var options = GetControlOptions(definition, FluxMqNodeTypes.ConditionRouter.Value);
+        var component = new FlowWhenComponent<MqttEnvelope>(
+            options,
+            GetControlExpressionEngine(options, expressionEngine),
+            new FluxMqControlContextFactory(),
+            CreateControlNodeContext<MqttEnvelope>(address, options));
 
         return RuntimeNode.Create(
             address,
@@ -360,13 +455,16 @@ public static class RuntimeNodeFactoryRegistryExtensions
         IFlowExpressionEngine expressionEngine)
     {
         var expression = GetRequiredString(definition, "expression");
-        var predicate = new FlowAssertionExpressionPredicate<TInput>(expressionEngine, expression);
+        var options = GetControlOptions(
+            definition,
+            FluxMqNodeTypes.FlowAssertion.Value,
+            typeof(TInput).Name,
+            expression);
         var component = new FlowAssertionComponent<TInput>(
-            predicate,
-            GetStringOrDefault(definition, "assertionName", "Message assertion"),
-            expression,
-            GetNullableString(definition, "failureMessage"),
-            boundedCapacity: GetBoundedCapacity(definition));
+            options,
+            GetControlExpressionEngine(options, expressionEngine),
+            new FluxMqControlContextFactory(),
+            CreateControlNodeContext<TInput>(address, options));
 
         return RuntimeNode.Create(
             address,
@@ -1000,5 +1098,23 @@ public static class RuntimeNodeFactoryRegistryExtensions
         }
 
         return value;
+    }
+
+    private sealed class TopicFilterControlContextFactory(IReadOnlyList<string> patterns) : IControlContextFactory
+    {
+        private readonly FluxMqControlContextFactory _inner = new();
+
+        public FlowMapContext Create(object? input, ControlNodeContext context)
+        {
+            var baseContext = _inner.Create(input, context);
+            var variables = new Dictionary<string, object?>(baseContext.Variables, StringComparer.Ordinal)
+            {
+                ["topicMatches"] = input is MqttEnvelope envelope &&
+                                   patterns.Count > 0 &&
+                                   MqttTopicFilterMatcher.MatchesAny(patterns, envelope.Topic)
+            };
+
+            return baseContext with { Variables = variables };
+        }
     }
 }

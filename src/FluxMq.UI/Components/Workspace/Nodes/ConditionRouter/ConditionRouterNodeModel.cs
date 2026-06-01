@@ -6,7 +6,7 @@ using DiagramPoint = Blazor.Diagrams.Core.Geometry.Point;
 namespace FluxMq.UI.Components.Workspace.Nodes.ConditionRouter;
 
 public sealed class ConditionRouterNodeModel(string id, DiagramPoint position, string nodeName, FlowComponentDescriptor? descriptor, bool isResource)
-    : FlowDiagramNodeModel(id, position, nodeName, "mqtt.condition-router", descriptor, isResource)
+    : FlowDiagramNodeModel(id, position, nodeName, "flow.when", descriptor, isResource)
 {
     public string Expression { get; set; } = string.Empty;
 

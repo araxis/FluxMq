@@ -58,10 +58,10 @@ public sealed class FlowComponentCatalog
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
-            "mqtt.message-filter",
-            "Message Filter",
-            "Mapper",
-            "Lets matching MQTT envelopes continue downstream and drops the rest.",
+            "flow.filter",
+            "Flow Filter",
+            "Control",
+            "Lets matching inputs continue downstream and drops the rest.",
             IsResource: false,
             [
                 new("Input", "MqttEnvelope", IsInput: true),
@@ -69,20 +69,19 @@ public sealed class FlowComponentCatalog
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
-            "mqtt.condition-router",
-            "Condition Router",
-            "Mapper",
-            "Splits MQTT envelopes into true and false branches.",
+            "flow.when",
+            "When",
+            "Control",
+            "Splits inputs into true and false branches.",
             IsResource: false,
             [
                 new("Input", "MqttEnvelope", IsInput: true),
                 new("WhenTrue", "MqttEnvelope", IsInput: false),
                 new("WhenFalse", "MqttEnvelope", IsInput: false),
-                new("Entries", "FlowLogEntry", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
-            "flow.assertion",
+            "flow.assert",
             "Flow Assertion",
             "Assertion",
             "Checks a configured input stream against an expected condition and emits pass/fail result streams.",
@@ -92,7 +91,6 @@ public sealed class FlowComponentCatalog
                 new("Result", "FlowAssertionResult", IsInput: false),
                 new("Passed", "Configured input type", IsInput: false),
                 new("Failed", "Configured input type", IsInput: false),
-                new("Entries", "FlowLogEntry", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(

@@ -6,7 +6,7 @@ using DiagramPoint = Blazor.Diagrams.Core.Geometry.Point;
 namespace FluxMq.UI.Components.Workspace.Nodes.FlowAssertion;
 
 public sealed class FlowAssertionNodeModel(string id, DiagramPoint position, string nodeName, FlowComponentDescriptor? descriptor, bool isResource)
-    : FlowDiagramNodeModel(id, position, nodeName, "flow.assertion", descriptor, isResource)
+    : FlowDiagramNodeModel(id, position, nodeName, "flow.assert", descriptor, isResource)
 {
     public const string DefaultAssertionName = "QoS at least once";
     public const string DefaultInputType = "MqttEnvelope";

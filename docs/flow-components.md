@@ -189,23 +189,23 @@ The connection binding is configuration, not a dataflow link. This keeps the con
 
 If the session reader fails, the connection publishes a `FlowError` and completes its broadcast. If subscription startup fails, the trigger publishes a `FlowError`; the application host turns startup failures into structured host errors instead of letting them escape the process boundary.
 
-## Message Filter
+## Flow Filter
 
-`MessageFilterComponent` forwards only matching MQTT messages.
+`flow.filter` forwards only matching input values. Runtime evaluation is package-backed by `FluxFlow.Components.Control`; FluxMQ adds only app-specific expression variables and node activity projection.
 
 ### Behavior
 
 ```mermaid
 flowchart LR
-    In["Input: MqttEnvelope"] --> Filter["MessageFilterComponent"]
+    In["Input: MqttEnvelope"] --> Filter["flow.filter"]
     Filter -->|match| Out["Output: MqttEnvelope"]
-    Filter -->|predicate failure| Errors["Errors: FlowError code 2000"]
+    Filter -->|predicate failure| Errors["Errors: FlowError code 4000"]
 ```
 
 ### Usage
 
 ```csharp
-var filter = MessageFilterComponent.Prefix("factory/");
+Configure `expression` to control which values pass.
 
 source.LinkTo(filter.Input, new DataflowLinkOptions
 {
@@ -222,9 +222,9 @@ filter.Output.LinkTo(next.Input, new DataflowLinkOptions
 
 If the predicate throws, the component publishes a `FlowError` and drops that message. Later messages continue processing.
 
-## MQTT Condition Router
+## When Router
 
-`MqttConditionRouterComponent` routes each MQTT message to one of two output ports.
+`flow.when` routes each input value to one of two output ports. Runtime evaluation is package-backed by `FluxFlow.Components.Control`; FluxMQ preserves route log entries for workspace observability.
 
 Use it when non-matching messages should continue through a separate branch instead of being dropped.
 
@@ -232,16 +232,16 @@ Use it when non-matching messages should continue through a separate branch inst
 
 ```mermaid
 flowchart LR
-    In["Input: MqttEnvelope"] --> Router["MqttConditionRouterComponent"]
+    In["Input: MqttEnvelope"] --> Router["flow.when"]
     Router -->|condition true| True["WhenTrue: MqttEnvelope"]
     Router -->|condition false| False["WhenFalse: MqttEnvelope"]
-    Router -->|predicate failure| Errors["Errors: FlowError code 2000"]
+    Router -->|predicate failure| Errors["Errors: FlowError code 4100"]
 ```
 
 ### Usage
 
 ```csharp
-var router = MqttConditionRouterComponent.TopicPrefix("factory/");
+Configure `expression` to decide the branch.
 
 source.Output.LinkTo(router.Input, new DataflowLinkOptions
 {
@@ -609,7 +609,7 @@ This flow reads traffic through a source, filters it, inspects payloads, and pro
 
 ```mermaid
 flowchart LR
-    Source["mqtt.trigger"] --> Filter["TopicFilterComponent"]
+    Source["mqtt.trigger"] --> Filter["flow.filter"]
     Filter --> Mapper["PayloadInspectorMapperComponent"]
     Mapper --> Ui["Payload UI"]
     Source --> ErrorLog["Error Log"]
@@ -617,35 +617,30 @@ flowchart LR
     Mapper --> ErrorLog
 ```
 
-Equivalent code shape:
+Equivalent workflow shape:
 
-```csharp
-var connection = new MqttConnectionComponent(client, disposeClientOnDispose: false);
-var source = new MqttTriggerComponent(connection,
-[
-    new MqttSubscription("factory/#", MqttQualityOfServiceLevel.AtMostOnce)
-]);
-var filter = TopicFilterComponent.Prefix("factory/");
-var mapper = new PayloadInspectorMapperComponent();
-
-source.Output.LinkTo(filter.Input, new DataflowLinkOptions { PropagateCompletion = true });
-filter.Output.LinkTo(mapper.Input, new DataflowLinkOptions { PropagateCompletion = true });
-mapper.Output.LinkTo(payloadUiSink, new DataflowLinkOptions { PropagateCompletion = true });
-
-connection.Errors.LinkTo(errorSink);
-source.Errors.LinkTo(errorSink);
-filter.Errors.LinkTo(errorSink);
-mapper.Errors.LinkTo(errorSink);
-
-await connection.StartAsync();
-await source.StartAsync();
+```json
+{
+  "trigger": { "type": "mqtt.trigger" },
+  "filter": {
+    "type": "flow.filter",
+    "Input": "trigger.Output",
+    "configuration": {
+      "expression": "topic.StartsWith(\"factory/\")"
+    }
+  },
+  "inspect": {
+    "type": "mqtt.payload-inspector",
+    "Input": "filter.Output"
+  }
+}
 ```
 
 This flow branches live traffic into two paths.
 
 ```mermaid
 flowchart LR
-    Source["mqtt.trigger"] --> Router["MqttConditionRouterComponent"]
+    Source["mqtt.trigger"] --> Router["flow.when"]
     Router -->|factory topics| Inspector["PayloadInspectorMapperComponent"]
     Router -->|other topics| Metrics["MqttMetricsComponent"]
     Inspector --> Ui["Payload UI"]
@@ -660,7 +655,7 @@ This flow records selected live traffic.
 
 ```mermaid
 flowchart LR
-    Source["mqtt.trigger"] --> Filter["TopicFilterComponent"]
+    Source["mqtt.trigger"] --> Filter["flow.filter"]
     Filter --> Mapper["flow.mapper: MqttEnvelope -> MqttRecordingRequest"]
     Mapper --> Recorder["MqttRecorderComponent"]
     Source --> ErrorLog["Error Log"]
@@ -674,7 +669,7 @@ This flow replays a recorded session back through an MQTT client.
 ```mermaid
 flowchart LR
     Factory["RecordedSessionReplayFactory"] --> Replay["ReplaySourceComponent"]
-    Replay --> Filter["TopicFilterComponent"]
+    Replay --> Filter["flow.filter"]
     Filter --> Mapper["flow.mapper: MqttEnvelope -> MqttPublishRequest"]
     Mapper --> Publisher["MqttPublisherComponent"]
     Replay --> ErrorLog["Error Log"]
@@ -689,7 +684,7 @@ Equivalent definition shape:
 {
   "replay": { "type": "replay.source" },
   "filter": {
-    "type": "mqtt.message-filter",
+    "type": "flow.filter",
     "Input": "replay.Output"
   },
   "mapper": {

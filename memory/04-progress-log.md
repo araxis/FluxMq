@@ -2038,3 +2038,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Updated the mapper workbench preview to use the same FluxMQ request mapping adapter as runtime execution.
 - Verified:
   - `dotnet test FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo` passes with 494 tests.
+
+## 2026-06-01 - Control component package migration
+
+- Added `FluxFlow.Components.Control` `0.1.0-alpha.1` to the app/runtime component projects.
+- Shifted the pre-release control node vocabulary to package ids: `flow.filter`, `flow.when`, and `flow.assert`.
+- Reworked FluxMQ control wrappers so package nodes own expression evaluation while FluxMQ keeps product-specific pass-count activity, route log entries, assertion log entries, and assertion events.
+- Removed the old local predicate, filter, router, and assertion expression implementations from FluxMQ.
+- Updated docs, current memory, designer catalogs, node models, and tests to the new control ids.
+- Updated the local sample app file at `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` from `mqtt.condition-router` to `flow.when`.
+- Verified:
+  - `dotnet test FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 488 tests.

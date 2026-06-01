@@ -251,7 +251,7 @@ public sealed class FlowDiagramNodeModelTests
     public void FlowAssertionNodeModel_BuildsAssertionConfiguration()
     {
         var catalog = new FlowComponentCatalog();
-        var descriptor = catalog.Find("flow.assertion").ShouldNotBeNull();
+        var descriptor = catalog.Find("flow.assert").ShouldNotBeNull();
         var model = new FlowAssertionNodeModel(
             "workflow1.assertion",
             new DiagramPoint(10, 20),

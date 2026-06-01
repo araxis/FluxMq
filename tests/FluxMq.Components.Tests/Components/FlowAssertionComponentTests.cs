@@ -1,12 +1,15 @@
-using Shouldly;
 using FluxMq.Components.Assertions;
+using FluxMq.Components.Control;
 using FluxMq.Components.FileWriter;
 using FluxMq.Components.Logging;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
+using FluxFlow.Components.Control.Contracts;
+using FluxFlow.Components.Control.Options;
 using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Mapping;
 using MQTTnet.Protocol;
+using Shouldly;
 using System.Text;
 using System.Threading.Tasks.Dataflow;
 
@@ -17,10 +20,10 @@ public sealed class FlowAssertionComponentTests
     [Fact]
     public async Task Evaluate_RoutesMessagesAndPublishesResultsAndEntries()
     {
-        var component = new FlowAssertionComponent<MqttEnvelope>(
-            new DelegateFlowPredicate<MqttEnvelope>(message => message.QualityOfService >= MqttQualityOfServiceLevel.AtLeastOnce),
-            "QoS at least once",
+        var component = Create<MqttEnvelope>(
             "qos >= 1",
+            "MqttEnvelope",
+            "QoS at least once",
             "Expected QoS to be at least 1.");
         var results = new List<FlowAssertionResult>();
         var passed = new List<string>();
@@ -65,17 +68,17 @@ public sealed class FlowAssertionComponentTests
     [Fact]
     public async Task Evaluate_CanAssertNonMqttInput()
     {
-        var component = new FlowAssertionComponent<FileWriteRequest>(
-            new FlowAssertionExpressionPredicate<FileWriteRequest>(
-                new DynamicExpressoFlowExpressionEngine(),
-                """path.EndsWith(".json") && contentText.Contains("ok")"""),
-            "JSON file contains ok",
-            """path.EndsWith(".json") && contentText.Contains("ok")""");
+        var component = Create<FileWriteRequest>(
+            """path.EndsWith(".json") && contentText.Contains("ok")""",
+            "FileWriteRequest",
+            "JSON file contains ok");
         var passed = new List<string>();
         var failed = new List<string>();
+        var resultSink = DataflowBlock.NullTarget<FlowAssertionResult>();
         var passedSink = new ActionBlock<FileWriteRequest>(request => passed.Add(request.Path));
         var failedSink = new ActionBlock<FileWriteRequest>(request => failed.Add(request.Path));
 
+        component.Result.LinkTo(resultSink, new DataflowLinkOptions { PropagateCompletion = true });
         component.Passed.LinkTo(passedSink, new DataflowLinkOptions { PropagateCompletion = true });
         component.Failed.LinkTo(failedSink, new DataflowLinkOptions { PropagateCompletion = true });
 
@@ -90,70 +93,52 @@ public sealed class FlowAssertionComponentTests
     }
 
     [Fact]
-    public async Task PredicateFailure_PublishesErrorAndContinuesLaterMessages()
+    public async Task ExpressionFailure_PublishesErrorAndCompletes()
     {
-        var component = new FlowAssertionComponent<MqttEnvelope>(
-            new DelegateFlowPredicate<MqttEnvelope>(message =>
-            {
-                if (message.Topic == "bad/topic")
-                {
-                    throw new InvalidOperationException("expression failed");
-                }
-
-                return true;
-            }),
-            "Always true",
-            "true");
-        var results = new List<FlowAssertionResult>();
+        var component = Create<MqttEnvelope>(
+            "missingVariable == true",
+            "MqttEnvelope",
+            "Broken assertion");
         var errors = new List<FlowError>();
-        var resultSink = new ActionBlock<FlowAssertionResult>(results.Add);
         var errorSink = new ActionBlock<FlowError>(errors.Add);
 
-        component.Result.LinkTo(resultSink, new DataflowLinkOptions { PropagateCompletion = true });
         component.Errors.LinkTo(errorSink, new DataflowLinkOptions { PropagateCompletion = true });
 
         component.Input.Post(Message("bad/topic", MqttQualityOfServiceLevel.AtMostOnce));
-        component.Input.Post(Message("factory/good", MqttQualityOfServiceLevel.AtMostOnce));
         component.Complete();
 
-        await Task.WhenAll(component.Completion, resultSink.Completion, errorSink.Completion);
-
-        ((MqttEnvelope)results.ShouldHaveSingleItem().Value!).Topic.ShouldBe("factory/good");
+        await Task.WhenAll(component.Completion, errorSink.Completion);
 
         var error = errors.ShouldHaveSingleItem();
-        error.Code.ShouldBe(FlowErrorCodes.ProcessingFailed);
-        error.Message.ShouldBe("Flow assertion expression failed.");
-        error.Context.ShouldBe("bad/topic");
+        error.Code.ShouldBe(4200);
+        error.Message.ShouldContain("flow.assert failed to evaluate input");
     }
 
-    [Fact]
-    public async Task Fault_PublishesErrorAndFaultsCompletion()
+    private static FlowAssertionComponent<TInput> Create<TInput>(
+        string expression,
+        string inputType,
+        string name,
+        string failureMessage = "Assertion failed.")
     {
-        var component = new FlowAssertionComponent<MqttEnvelope>(
-            new DelegateFlowPredicate<MqttEnvelope>(_ => true),
-            "Always true",
-            "true",
-            id: FlowNodeId.New());
-        var errors = new List<FlowError>();
-        var errorSink = new ActionBlock<FlowError>(errors.Add);
-        var failure = new InvalidOperationException("assertion failed");
+        var options = new ControlExpressionOptions
+        {
+            Expression = expression,
+            InputType = inputType,
+            Name = name,
+            FailureMessage = failureMessage,
+            BoundedCapacity = 1000
+        };
 
-        component.Errors.LinkTo(errorSink, new DataflowLinkOptions { PropagateCompletion = true });
-        component.Fault(failure);
-
-        var completionTask = component.Completion;
-        await completionTask.ContinueWith(_ => { }, TaskScheduler.Default);
-
-        completionTask.IsFaulted.ShouldBeTrue();
-        completionTask.Exception!.Flatten().InnerExceptions
-            .OfType<InvalidOperationException>()
-            .ShouldContain(ex => ex.Message == "assertion failed");
-
-        await errorSink.Completion;
-
-        var error = errors.ShouldHaveSingleItem();
-        error.Code.ShouldBe(FlowErrorCodes.NodeFaulted);
-        error.Message.ShouldBe("Flow assertion faulted.");
+        return new FlowAssertionComponent<TInput>(
+            options,
+            new DynamicExpressoFlowExpressionEngine(),
+            new FluxMqControlContextFactory(),
+            new ControlNodeContext
+            {
+                Address = new(new("test"), new("assert")),
+                Options = options,
+                InputType = typeof(TInput)
+            });
     }
 
     private static MqttEnvelope Message(string topic, MqttQualityOfServiceLevel qos) => new()

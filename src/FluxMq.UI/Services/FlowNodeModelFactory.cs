@@ -28,9 +28,9 @@ public static class FlowNodeModelFactory
     {
         "mqtt.trigger" => new MqttTriggerNodeModel(id, position, nodeName, descriptor, isResource),
         "mqtt.connection-state-trigger" => new ConnectionStateTriggerNodeModel(id, position, nodeName, descriptor, isResource),
-        "mqtt.message-filter" => new MessageFilterNodeModel(id, position, nodeName, descriptor, isResource),
-        "mqtt.condition-router" => new ConditionRouterNodeModel(id, position, nodeName, descriptor, isResource),
-        "flow.assertion" => new FlowAssertionNodeModel(id, position, nodeName, descriptor, isResource),
+        "flow.filter" => new MessageFilterNodeModel(id, position, nodeName, descriptor, isResource),
+        "flow.when" => new ConditionRouterNodeModel(id, position, nodeName, descriptor, isResource),
+        "flow.assert" => new FlowAssertionNodeModel(id, position, nodeName, descriptor, isResource),
         "json.schema-validator" => new JsonSchemaValidatorNodeModel(id, position, nodeName, descriptor, isResource),
         "flow.mapper" => new DynamicMapperNodeModel(id, position, nodeName, descriptor, isResource),
         "generated.source" => new GeneratedSourceNodeModel(id, position, nodeName, descriptor, isResource),
