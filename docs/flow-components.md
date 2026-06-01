@@ -261,6 +261,8 @@ If the predicate throws, the component publishes a `FlowError` and drops that me
 
 `PayloadInspectorMapperComponent` maps raw MQTT messages into inspected payload messages.
 
+Runtime classification is package-backed through `FluxFlow.Components.Payloads`. FluxMQ adapts each `MqttEnvelope` into a neutral payload inspection request, then projects the package inspection result back into the existing `InspectedMqttMessage` and Core payload model used by the UI.
+
 ### Behavior
 
 ```mermaid
@@ -314,13 +316,13 @@ Ports:
 
 ## Replay Source
 
-`ReplaySourceComponent` emits recorded MQTT messages in timestamp order.
+`replay.source` streams recorded MQTT messages from the session store and preserves relative timing.
 
 ### Behavior
 
 ```mermaid
 flowchart LR
-    Messages["IEnumerable<MqttEnvelope>"] --> Replay["ReplaySourceComponent"]
+    Store["Session store"] --> Replay["replay.source"]
     Replay --> Out["Output: MqttEnvelope"]
     Replay --> Errors["Errors: FlowError"]
 ```
@@ -336,19 +338,6 @@ sequenceDiagram
     Replay->>Out: second message
     Note over Replay: wait scaled relative delay
     Replay->>Out: third message
-```
-
-### Usage
-
-```csharp
-var replay = new ReplaySourceComponent(messages, speed: 2);
-
-replay.Output.LinkTo(next.Input, new DataflowLinkOptions
-{
-    PropagateCompletion = true
-});
-
-await replay.StartAsync();
 ```
 
 ### Notes
@@ -612,7 +601,7 @@ Ports:
 
 `MqttMetricsComponent` observes incoming MQTT messages and broadcasts immutable metric snapshots. It works only from its input stream; it does not care whether the data came from a live connection, replay, stored session, generated source, or imported source.
 
-These snapshots are local flow data. The current node intentionally remains MQTT-specific because it tracks topic counts, retained messages, rolling-window rates, and MQTT payload sizes beyond the neutral package metrics contract. Planned OpenTelemetry support should export selected observability signals later without making this component depend on external collectors.
+Runtime aggregation is package-backed through `FluxFlow.Components.Metrics`. FluxMQ adapts each `MqttEnvelope` into a neutral metric sample, then projects the package snapshot back into `MqttMetricsSnapshot`. The wrapper keeps MQTT-specific retained-message counts and idle rolling-rate refresh behavior for the desktop dashboard.
 
 ### Behavior
 
@@ -669,32 +658,6 @@ Ports:
 - last topic
 - last received timestamp
 - average payload bytes
-
-## Recorded Session Replay Factory
-
-`RecordedSessionReplayFactory` creates replay sources from stored sessions.
-
-This is not a flow node. It is an orchestration service.
-
-### Behavior
-
-```mermaid
-flowchart LR
-    SessionId["SessionId"] --> Factory["RecordedSessionReplayFactory"]
-    Repository["IMessageRepository"] --> Factory
-    Factory --> Convert["StoredMessage.ToEnvelope"]
-    Convert --> Replay["ReplaySourceComponent"]
-```
-
-### Usage
-
-```csharp
-var factory = new RecordedSessionReplayFactory(messageRepository);
-var replay = factory.Create(sessionId, new RecordedSessionReplayOptions
-{
-    Speed = 2
-});
-```
 
 ## Sample Flow
 
@@ -761,7 +724,7 @@ This flow replays a recorded session back through an MQTT client.
 
 ```mermaid
 flowchart LR
-    Factory["RecordedSessionReplayFactory"] --> Replay["ReplaySourceComponent"]
+    Store["Session store"] --> Replay["replay.source"]
     Replay --> Filter["flow.filter"]
     Filter --> Mapper["flow.mapper: MqttEnvelope -> MqttPublishRequest"]
     Mapper --> Publisher["MqttPublisherComponent"]

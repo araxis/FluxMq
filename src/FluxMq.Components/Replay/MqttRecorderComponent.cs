@@ -1,5 +1,7 @@
 using FluxMq.Core.Ids;
+using FluxMq.Components.Storage;
 using FluxMq.Components.Storage.Repositories;
+using FluxFlow.Components.Sessions.Contracts;
 using FluxFlow.Engine.Components;
 using System.Threading.Tasks.Dataflow;
 
@@ -7,13 +9,22 @@ namespace FluxMq.Components.Replay;
 
 public sealed class MqttRecorderComponent : IFlowNode, IFlowEventSource
 {
-    private readonly IMessageRepository _messages;
+    private readonly ISessionStore _sessions;
     private readonly ActionBlock<MqttRecordingRequest> _block;
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly BufferBlock<FlowEvent> _events;
 
     public MqttRecorderComponent(
         IMessageRepository messages,
+        FlowNodeId? id = null,
+        int boundedCapacity = 1000,
+        int maxDegreeOfParallelism = 1)
+        : this(new FluxMqSessionStore(messages), id, boundedCapacity, maxDegreeOfParallelism)
+    {
+    }
+
+    public MqttRecorderComponent(
+        ISessionStore sessions,
         FlowNodeId? id = null,
         int boundedCapacity = 1000,
         int maxDegreeOfParallelism = 1)
@@ -24,11 +35,11 @@ public sealed class MqttRecorderComponent : IFlowNode, IFlowEventSource
         }
 
         Id = id ?? FlowNodeId.New();
-        _messages = messages ?? throw new ArgumentNullException(nameof(messages));
+        _sessions = sessions ?? throw new ArgumentNullException(nameof(sessions));
         _errors = new BroadcastBlock<FlowError>(static error => error);
         _events = new BufferBlock<FlowEvent>();
         _block = new ActionBlock<MqttRecordingRequest>(
-            Record,
+            RecordAsync,
             new ExecutionDataflowBlockOptions
             {
                 BoundedCapacity = boundedCapacity,
@@ -61,11 +72,23 @@ public sealed class MqttRecorderComponent : IFlowNode, IFlowEventSource
         ((IDataflowBlock)_block).Fault(exception);
     }
 
-    private void Record(MqttRecordingRequest request)
+    private async Task RecordAsync(MqttRecordingRequest request)
     {
         try
         {
-            _messages.Add(request.SessionId, request.Envelope);
+            var record = await _sessions.AppendMessageAsync(
+                new SessionAppendRequest
+                {
+                    Session = new SessionMetadata
+                    {
+                        SessionId = request.SessionId.ToString(),
+                        StartedAt = request.Envelope.ReceivedAt
+                    },
+                    Input = FluxMqSessionStore.ToRecordInput(request.Envelope),
+                    Sequence = 0,
+                    Timestamp = request.Envelope.ReceivedAt
+                }).ConfigureAwait(false);
+
             _events.Post(new FlowEvent
             {
                 Timestamp = DateTimeOffset.UtcNow,
@@ -79,7 +102,7 @@ public sealed class MqttRecorderComponent : IFlowNode, IFlowEventSource
                 PayloadPreview = FlowEventPayloadPreview.FromBytes(request.Envelope.Payload),
                 Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
                 {
-                    ["sessionId"] = request.SessionId.ToString(),
+                    ["sessionId"] = record.SessionId,
                     ["qos"] = ((int)request.Envelope.QualityOfService).ToString(System.Globalization.CultureInfo.InvariantCulture),
                     ["retain"] = request.Envelope.Retain.ToString()
                 }
