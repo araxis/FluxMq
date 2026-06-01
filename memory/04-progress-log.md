@@ -2075,7 +2075,7 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 
 ## 2026-06-01 - Component package update pass
 
-- Checked prerelease updates from NuGet for the FluxFlow package references.
+- Checked prerelease updates from the package feed for the FluxFlow package references.
 - Updated `FluxFlow.Components.FileSystem` from `0.1.0-alpha.1` to `0.4.0-alpha.1`.
 - Confirmed the existing `file.writer` adapter remains compatible with the package-owned `file.write` API.
 - Verified:
