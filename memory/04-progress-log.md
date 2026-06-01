@@ -2190,3 +2190,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~PipelineComponentFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 38 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDiagramNodeModelTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 20 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 536 tests.
+
+## 2026-06-01 - Shared component version properties
+
+- Added repo-level FluxFlow package version properties in `Directory.Build.props`.
+- Updated runtime, component, and scenario project references to use those shared properties for FluxFlow packages.
+- This keeps future component update slices to a single version edit before any required code changes.
+- Verified:
+  - `dotnet restore FluxMq.sln --nologo` passes.
+  - `dotnet build FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with existing UI project resource qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 536 tests.

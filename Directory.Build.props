@@ -1,0 +1,18 @@
+<Project>
+  <PropertyGroup>
+    <FluxFlowEngineVersion>0.5.0-alpha.1</FluxFlowEngineVersion>
+    <FluxFlowComponentsControlVersion>0.1.0-alpha.1</FluxFlowComponentsControlVersion>
+    <FluxFlowComponentsFileSystemVersion>0.4.0-alpha.1</FluxFlowComponentsFileSystemVersion>
+    <FluxFlowComponentsHttpVersion>0.1.0-alpha.1</FluxFlowComponentsHttpVersion>
+    <FluxFlowComponentsMappingVersion>0.1.0-alpha.1</FluxFlowComponentsMappingVersion>
+    <FluxFlowComponentsMetricsVersion>0.1.0-alpha.1</FluxFlowComponentsMetricsVersion>
+    <FluxFlowComponentsMqttVersion>0.2.1-alpha.1</FluxFlowComponentsMqttVersion>
+    <FluxFlowComponentsObservabilityVersion>0.1.0-alpha.1</FluxFlowComponentsObservabilityVersion>
+    <FluxFlowComponentsPayloadsVersion>0.1.0-alpha.1</FluxFlowComponentsPayloadsVersion>
+    <FluxFlowComponentsSerializationVersion>0.1.0-alpha.1</FluxFlowComponentsSerializationVersion>
+    <FluxFlowComponentsSessionsVersion>0.1.0-alpha.1</FluxFlowComponentsSessionsVersion>
+    <FluxFlowComponentsStateVersion>0.1.0-alpha.1</FluxFlowComponentsStateVersion>
+    <FluxFlowComponentsTimersVersion>0.4.1-alpha.1</FluxFlowComponentsTimersVersion>
+    <FluxFlowComponentsValidationVersion>0.1.0-alpha.1</FluxFlowComponentsValidationVersion>
+  </PropertyGroup>
+</Project>
