@@ -34,6 +34,35 @@ public sealed class MqttSourceComponentTests
     }
 
     [Fact]
+    public async Task StoredSessionSource_ScalesRelativeDelaysWhenPreservingTiming()
+    {
+        var sessionId = SessionId.New();
+        var startedAt = DateTimeOffset.Parse("2026-05-15T10:00:00Z");
+        var delays = new List<TimeSpan>();
+        var source = new StoredSessionSourceComponent(
+            new FakeMessageRepository(
+                Stored(sessionId, "factory/one", startedAt, 1),
+                Stored(sessionId, "factory/two", startedAt.AddSeconds(2), 2),
+                Stored(sessionId, "factory/three", startedAt.AddSeconds(3), 3)),
+            sessionId,
+            preserveTiming: true,
+            speed: 2,
+            delayAsync: (delay, _) =>
+            {
+                delays.Add(delay);
+                return ValueTask.CompletedTask;
+            });
+        var sink = new ActionBlock<MqttEnvelope>(_ => { });
+
+        source.Output.LinkTo(sink, new DataflowLinkOptions { PropagateCompletion = true });
+
+        await source.StartAsync();
+        await sink.Completion;
+
+        delays.ShouldBe([TimeSpan.FromSeconds(1), TimeSpan.FromMilliseconds(500)]);
+    }
+
+    [Fact]
     public async Task StoredSessionSource_PublishesErrorsAndCompletesWhenRepositoryFails()
     {
         var source = new StoredSessionSourceComponent(new FailingMessageRepository(), SessionId.New());
