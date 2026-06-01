@@ -599,7 +599,7 @@ Ports:
 
 `MqttMetricsComponent` observes incoming MQTT messages and broadcasts immutable metric snapshots. It works only from its input stream; it does not care whether the data came from a live connection, replay, stored session, generated source, or imported source.
 
-These snapshots are local flow data. The current node intentionally remains MQTT-specific because it tracks topic counts, retained messages, rolling-window rates, and MQTT payload sizes beyond the neutral package metrics contract. Planned OpenTelemetry support should export selected observability signals later without making this component depend on external collectors.
+Runtime aggregation is package-backed through `FluxFlow.Components.Metrics`. FluxMQ adapts each `MqttEnvelope` into a neutral metric sample, then projects the package snapshot back into `MqttMetricsSnapshot`. The wrapper keeps MQTT-specific retained-message counts and idle rolling-rate refresh behavior for the desktop dashboard.
 
 ### Behavior
 
