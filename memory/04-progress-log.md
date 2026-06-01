@@ -2061,3 +2061,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore --filter "FullyQualifiedName~JsonSchemaValidatorComponentTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v normal` passes with 4 tests.
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~JsonSchemaValidatorFactory" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 2 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 488 tests.
+
+## 2026-06-01 - File system component package migration
+
+- Added `FluxFlow.Components.FileSystem` `0.1.0-alpha.1` to `FluxMq.Components`.
+- Reworked `file.writer` so package code owns file path validation, directory creation, write modes, byte writing, and package error codes.
+- Kept a small FluxMQ adapter for the existing `FileWriteRequest` mapper target, `file.writer` actor id, and `file.written` event projection.
+- Updated docs and memory notes to describe the package-backed file writer boundary.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal --filter FileWriterComponentTests` passes with 3 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 81 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 488 tests.

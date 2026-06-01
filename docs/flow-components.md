@@ -486,6 +486,39 @@ If publishing fails for one request, the publisher publishes a `FlowError` with 
 
 The component preserves publish order by default. Higher parallelism is available through the constructor, but ordered single-message publishing should remain the default for replay and deterministic flow behavior.
 
+## File Writer
+
+`FileWriterComponent` consumes `FileWriteRequest` commands and delegates disk writes to the package file write node. FluxMQ keeps the user-facing `file.writer` actor, `FileWriteRequest` mapper target, and `file.written` event projection.
+
+### Behavior
+
+```mermaid
+flowchart LR
+    In["Input: FileWriteRequest"] --> Writer["FileWriterComponent"]
+    Writer --> Package["Package file.write node"]
+    Package --> Disk["File system write"]
+    Writer --> Events["Events: file.written"]
+    Writer -->|write failure| Errors["Errors: FlowError"]
+```
+
+### Usage
+
+```csharp
+var writer = new FileWriterComponent();
+
+mapper.Output.LinkTo(writer.Input, new DataflowLinkOptions
+{
+    PropagateCompletion = true
+});
+
+writer.Errors.LinkTo(errorSink);
+writer.Events.LinkTo(eventSink);
+```
+
+### Failure Behavior
+
+If a file write fails for one request, the package node publishes a structured `FlowError`, FluxMQ re-emits it from the `file.writer` node, and later requests continue processing.
+
 ## MQTT Recorder
 
 `MqttRecorderComponent` stores incoming `MqttRecordingRequest` commands for a recording session.

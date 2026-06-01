@@ -1,4 +1,5 @@
 using FluxMq.Components.FileWriter;
+using FluxFlow.Components.FileSystem;
 using FluxFlow.Engine.Components;
 using Shouldly;
 using System.Text;
@@ -52,9 +53,10 @@ public sealed class FileWriterComponentTests
         flowEvent.SourceNodeId.ShouldBe(component.Id);
         flowEvent.Subject.ShouldBe(path);
         flowEvent.PayloadBytes.ShouldBe(5);
-        flowEvent.PayloadPreview.ShouldBe("hello");
+        flowEvent.PayloadPreview.ShouldBeNull();
         flowEvent.GetAttribute("path").ShouldBe(path);
         flowEvent.GetAttribute("mode").ShouldBe(FileWriteMode.Overwrite.ToString());
+        flowEvent.GetAttribute("bytesWritten").ShouldBe("5");
 
         Directory.Delete(directory, recursive: true);
     }
@@ -90,7 +92,7 @@ public sealed class FileWriterComponentTests
 
         File.ReadAllText(existing).ShouldBe("first");
         File.ReadAllText(next).ShouldBe("next");
-        errors.ShouldHaveSingleItem().Code.ShouldBe(FlowErrorCodes.ProcessingFailed);
+        errors.ShouldHaveSingleItem().Code.ShouldBe(FileSystemErrorCodes.FileWriteIoFailed);
         Directory.Delete(directory, recursive: true);
     }
 }

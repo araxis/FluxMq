@@ -22,7 +22,7 @@ FluxMQ is also a dynamic ELT app. Sources extract message streams, mapper nodes 
   - dynamic mapper
   - payload inspector mapper
   - MQTT publisher actor
-  - file writer actor
+  - package-backed file writer actor
   - replay source
 - Flow error ports with stable numeric error codes.
 - Metrics snapshots for flow observability.

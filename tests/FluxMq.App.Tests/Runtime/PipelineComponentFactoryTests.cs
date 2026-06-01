@@ -1161,7 +1161,7 @@ public sealed class PipelineComponentFactoryTests
             }
         });
 
-        result.IsSuccess.ShouldBeTrue();
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
         await using var runtime = result.Runtime!;
 
         await runtime.StartAsync();

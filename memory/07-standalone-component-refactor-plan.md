@@ -83,7 +83,7 @@ Avoid user-facing "sink" naming where an actor name is clearer. Internal code ma
 - Added `flow.mapper` as the user-facing dynamic mapper node; request-specific mapper classes are internal typed implementations, not catalog/runtime node aliases.
 - Added `mqtt.publisher` as the MQTT publish actor node type.
 - Renamed the metrics observer to `MqttMetricsComponent` / `mqtt.metrics`.
-- Added `FileWriteRequest` and `file.writer` as the first non-MQTT proof of the mapper-to-actor pattern.
+- Added `FileWriteRequest` and package-backed `file.writer` as the first non-MQTT proof of the mapper-to-actor pattern.
 - Added `json.schema-validator` as a standalone validator backed by `FluxFlow.Components.Validation`.
 - Registered runtime node types and user-facing catalog entries:
   - `flow.mapper`

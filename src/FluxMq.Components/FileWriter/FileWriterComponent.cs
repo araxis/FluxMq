@@ -1,126 +1,241 @@
-using FluxMq.Core.Ids;
+using FluxFlow.Components.FileSystem;
 using FluxFlow.Engine.Components;
+using FluxFlow.Engine.Definitions;
+using FluxFlow.Engine.Runtime;
+using System.Globalization;
+using System.Text.Json;
 using System.Threading.Tasks.Dataflow;
+using PackageFileWriteMode = FluxFlow.Components.FileSystem.Contracts.FileWriteMode;
+using PackageFileWriteRequest = FluxFlow.Components.FileSystem.Contracts.FileWriteRequest;
+using PackageFileWriteResult = FluxFlow.Components.FileSystem.Contracts.FileWriteResult;
 
 namespace FluxMq.Components.FileWriter;
 
-public sealed class FileWriterComponent : IFlowNode, IFlowEventSource
+public sealed class FileWriterComponent : EventFlowNodeBase
 {
-    private readonly ActionBlock<FileWriteRequest> _block;
-    private readonly BroadcastBlock<FlowError> _errors;
-    private readonly BufferBlock<FlowEvent> _events;
+    private static readonly PortName InputPort = new("Input");
+
+    private readonly RuntimeNode _innerNode;
+    private readonly TransformBlock<FileWriteRequest, PackageFileWriteRequest> _input;
+    private readonly ActionBlock<PackageFileWriteResult> _result;
+    private readonly ActionBlock<FlowError> _errors;
+    private readonly List<IDisposable> _links = [];
+    private int _started;
 
     public FileWriterComponent(
         FlowNodeId? id = null,
-        int boundedCapacity = 1000,
-        int maxDegreeOfParallelism = 1)
+        int boundedCapacity = 1000)
+        : base(id ?? FlowNodeId.New())
     {
-        if (maxDegreeOfParallelism <= 0)
+        if (boundedCapacity <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(maxDegreeOfParallelism), maxDegreeOfParallelism, "Degree of parallelism must be positive.");
+            throw new ArgumentOutOfRangeException(
+                nameof(boundedCapacity),
+                "File writer bounded capacity must be greater than zero.");
         }
 
-        Id = id ?? FlowNodeId.New();
-        _errors = new BroadcastBlock<FlowError>(static error => error);
-        _events = new BufferBlock<FlowEvent>();
-        _block = new ActionBlock<FileWriteRequest>(
-            WriteAsync,
+        _innerNode = CreateInnerNode(boundedCapacity);
+        _input = new TransformBlock<FileWriteRequest, PackageFileWriteRequest>(
+            MapRequest,
             new ExecutionDataflowBlockOptions
             {
                 BoundedCapacity = boundedCapacity,
-                EnsureOrdered = true,
-                MaxDegreeOfParallelism = maxDegreeOfParallelism
+                EnsureOrdered = true
+            });
+        _result = new ActionBlock<PackageFileWriteResult>(
+            PublishFileWritten,
+            new ExecutionDataflowBlockOptions
+            {
+                BoundedCapacity = boundedCapacity,
+                EnsureOrdered = true
+            });
+        _errors = new ActionBlock<FlowError>(
+            error => TryReportError(error.Code, error.Message, error.Exception, error.Context),
+            new ExecutionDataflowBlockOptions
+            {
+                BoundedCapacity = boundedCapacity,
+                EnsureOrdered = true
             });
 
-        _block.Completion.ContinueWith(
-            _ =>
-            {
-                _errors.Complete();
-                _events.Complete();
-            },
-            CancellationToken.None,
-            TaskContinuationOptions.ExecuteSynchronously,
-            TaskScheduler.Default);
+        _links.Add(_input.LinkTo(
+            GetInput<PackageFileWriteRequest>(_innerNode, FileSystemComponentPorts.Input),
+            new DataflowLinkOptions { PropagateCompletion = true }));
+        _links.Add(LinkOutput(_innerNode, FileSystemComponentPorts.Result, _result));
+        _links.Add(_innerNode.Node.Errors.LinkTo(
+            _errors,
+            new DataflowLinkOptions { PropagateCompletion = true }));
+
+        CompleteWhen(Task.WhenAll(
+            _innerNode.Node.Completion,
+            _result.Completion,
+            _errors.Completion));
     }
 
-    public FlowNodeId Id { get; }
-    public ISourceBlock<FlowError> Errors => _errors;
-    public ISourceBlock<FlowEvent> Events => _events;
-    public Task Completion => _block.Completion;
-    public ITargetBlock<FileWriteRequest> Input => _block;
+    public ITargetBlock<FileWriteRequest> Input => _input;
 
-    public void Complete() => _block.Complete();
+    public override Task StartAsync(CancellationToken cancellationToken = default)
+        => Interlocked.Exchange(ref _started, 1) == 0
+            ? _innerNode.Node.StartAsync(cancellationToken)
+            : Task.CompletedTask;
 
-    public void Fault(Exception exception)
+    public override void Complete()
+        => _input.Complete();
+
+    public override void Fault(Exception exception)
     {
-        PublishError(FlowErrorCodes.NodeFaulted, "File writer faulted.", exception);
-        ((IDataflowBlock)_block).Fault(exception);
-    }
+        ArgumentNullException.ThrowIfNull(exception);
 
-    private async Task WriteAsync(FileWriteRequest request)
-    {
         try
         {
-            if (request.CreateDirectory && Path.GetDirectoryName(request.Path) is { Length: > 0 } directory)
-            {
-                Directory.CreateDirectory(directory);
-            }
-
-            switch (request.Mode)
-            {
-                case FileWriteMode.Overwrite:
-                    await File.WriteAllBytesAsync(request.Path, request.Content).ConfigureAwait(false);
-                    break;
-                case FileWriteMode.Append:
-                    await using (var stream = new FileStream(request.Path, FileMode.Append, FileAccess.Write, FileShare.Read))
-                    {
-                        await stream.WriteAsync(request.Content).ConfigureAwait(false);
-                    }
-                    break;
-                case FileWriteMode.CreateNew:
-                    await using (var stream = new FileStream(request.Path, FileMode.CreateNew, FileAccess.Write, FileShare.Read))
-                    {
-                        await stream.WriteAsync(request.Content).ConfigureAwait(false);
-                    }
-                    break;
-                default:
-                    throw new InvalidOperationException($"Unsupported file write mode '{request.Mode}'.");
-            }
-
-            _events.Post(new FlowEvent
-            {
-                Timestamp = DateTimeOffset.UtcNow,
-                Type = FluxMqEventTypes.FileWritten,
-                Source = "FileWriter",
-                SourceNodeId = Id,
-                Subject = request.Path,
-                Status = "written",
-                PayloadBytes = request.Content.Length,
-                PayloadPreview = FlowEventPayloadPreview.FromBytes(request.Content),
-                Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
-                {
-                    ["path"] = request.Path,
-                    ["mode"] = request.Mode.ToString(),
-                    ["createDirectory"] = request.CreateDirectory.ToString()
-                }
-            });
+            ((IDataflowBlock)_input).Fault(exception);
+            _innerNode.Node.Fault(exception);
+            ((IDataflowBlock)_result).Fault(exception);
+            ((IDataflowBlock)_errors).Fault(exception);
         }
-        catch (Exception exception)
+        finally
         {
-            PublishError(FlowErrorCodes.ProcessingFailed, "File write failed.", exception, request.Path);
+            FaultNode(exception);
         }
     }
 
-    private void PublishError(int code, string message, Exception exception, string? context = null)
+    protected override void OnNodeCompleted()
     {
-        _errors.Post(new FlowError
-        {
-            NodeId = Id,
-            Code = code,
-            Message = message,
-            Exception = exception,
-            Context = context
-        });
+        DisposeLinks();
+        base.OnNodeCompleted();
     }
 
+    protected override void OnNodeFaulted(Exception exception)
+    {
+        DisposeLinks();
+        base.OnNodeFaulted(exception);
+    }
+
+    private static RuntimeNode CreateInnerNode(int boundedCapacity)
+    {
+        var registry = new RuntimeNodeFactoryRegistry()
+            .RegisterFileSystemComponents();
+
+        if (!registry.TryGetFactory(FileSystemComponentTypes.FileWrite, out var factory))
+        {
+            throw new InvalidOperationException("File write package factory was not registered.");
+        }
+
+        return factory(new RuntimeNodeFactoryContext(
+            new NodeName("fileWrite"),
+            CreateInnerDefinition(boundedCapacity),
+            "fileWrite",
+            new Dictionary<NodeName, RuntimeNode>()));
+    }
+
+    private static NodeDefinition CreateInnerDefinition(int boundedCapacity)
+    {
+        var definition = new NodeDefinition
+        {
+            Type = FileSystemComponentTypes.FileWrite
+        };
+
+        definition.Configuration["boundedCapacity"] =
+            JsonSerializer.SerializeToElement(boundedCapacity);
+        definition.Configuration["allowAbsolutePaths"] =
+            JsonSerializer.SerializeToElement(true);
+
+        return definition;
+    }
+
+    private static ITargetBlock<T> GetInput<T>(RuntimeNode node, string portName)
+    {
+        var input = node.FindInput(new PortName(portName))
+            ?? throw new InvalidOperationException($"Inner file writer input '{portName}' was not found.");
+
+        return input is InputPort<T> typedInput
+            ? typedInput.Target
+            : throw new InvalidOperationException(
+                $"Inner file writer input '{portName}' has unsupported type '{input.ValueType.Name}'.");
+    }
+
+    private static IDisposable LinkOutput<T>(
+        RuntimeNode node,
+        string portName,
+        ITargetBlock<T> target)
+    {
+        var output = node.FindOutput(new PortName(portName))
+            ?? throw new InvalidOperationException($"Inner file writer output '{portName}' was not found.");
+
+        var link = output.TryLinkTo(
+            new InputPort<T>(
+                new PortAddress(
+                    "fileWrite",
+                    new NodeName(portName),
+                    InputPort),
+                target),
+            propagateCompletion: true,
+            out var error);
+
+        if (error is not null || link is null)
+        {
+            throw new InvalidOperationException(
+                error?.Message ?? $"Could not link inner file writer output '{portName}'.");
+        }
+
+        return link;
+    }
+
+    private static PackageFileWriteRequest MapRequest(FileWriteRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        return new PackageFileWriteRequest
+        {
+            Path = request.Path,
+            Bytes = request.Content,
+            Mode = MapMode(request.Mode),
+            CreateDirectories = request.CreateDirectory
+        };
+    }
+
+    private static PackageFileWriteMode MapMode(FileWriteMode mode)
+        => mode switch
+        {
+            FileWriteMode.Overwrite => PackageFileWriteMode.Overwrite,
+            FileWriteMode.Append => PackageFileWriteMode.Append,
+            FileWriteMode.CreateNew => PackageFileWriteMode.CreateNew,
+            _ => throw new InvalidOperationException($"Unsupported file write mode '{mode}'.")
+        };
+
+    private static FileWriteMode MapMode(PackageFileWriteMode mode)
+        => mode switch
+        {
+            PackageFileWriteMode.Overwrite => FileWriteMode.Overwrite,
+            PackageFileWriteMode.Append => FileWriteMode.Append,
+            PackageFileWriteMode.CreateNew => FileWriteMode.CreateNew,
+            _ => throw new InvalidOperationException($"Unsupported file write mode '{mode}'.")
+        };
+
+    private void PublishFileWritten(PackageFileWriteResult result)
+        => EmitEvent(new FlowEvent
+        {
+            Timestamp = result.WrittenAt,
+            Type = FluxMqEventTypes.FileWritten,
+            Source = "FileWriter",
+            SourceNodeId = Id,
+            Subject = result.Path,
+            Status = "written",
+            PayloadBytes = result.BytesWritten > int.MaxValue ? int.MaxValue : (int)result.BytesWritten,
+            Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["path"] = result.Path,
+                ["mode"] = MapMode(result.Mode).ToString(),
+                ["bytesWritten"] = result.BytesWritten.ToString(CultureInfo.InvariantCulture)
+            }
+        });
+
+    private void DisposeLinks()
+    {
+        foreach (var link in _links)
+        {
+            link.Dispose();
+        }
+
+        _links.Clear();
+    }
 }
