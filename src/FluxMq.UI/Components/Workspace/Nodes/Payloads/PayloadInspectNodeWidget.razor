@@ -1,0 +1,90 @@
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.Plagiarism"
+                 CategoryColor="@Color.Secondary"
+                 EditDialogMaxWidth="MaxWidth.Small"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
+    <Body>
+        <MudStack Spacing="1" Class="mt-1">
+            <Stat Icon="@Icons.Material.Filled.Input" Label="Input" Value="PayloadInspectionRequest" />
+            <Stat Icon="@Icons.Material.Filled.Output" Label="Output" Value="PayloadInspectionResult" />
+        </MudStack>
+        <div class="d-flex flex-wrap gap-1 mt-2">
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">JSON</MudChip>
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">XML</MudChip>
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">Base64</MudChip>
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">Binary</MudChip>
+        </div>
+    </Body>
+    <Editor>
+        <MudStack Spacing="2">
+            <MudNumericField T="int"
+                             Label="Preview bytes"
+                             @bind-Value="_maxPreviewBytes"
+                             Min="1"
+                             Max="1048576"
+                             Step="128"
+                             Variant="Variant.Outlined"
+                             Margin="Margin.Dense" />
+            <MudNumericField T="int"
+                             Label="Formatted chars"
+                             @bind-Value="_maxFormattedChars"
+                             Min="1"
+                             Max="1048576"
+                             Step="512"
+                             Variant="Variant.Outlined"
+                             Margin="Margin.Dense" />
+            <MudNumericField T="int"
+                             Label="Input buffer"
+                             @bind-Value="_boundedCapacity"
+                             Min="1"
+                             Max="100000"
+                             Step="64"
+                             Variant="Variant.Outlined"
+                             Margin="Margin.Dense" />
+            <MudCheckBox T="bool" Label="Detect Base64" @bind-Value="_detectBase64" Color="Color.Primary" />
+            <MudCheckBox T="bool" Label="Format JSON" @bind-Value="_formatJson" Color="Color.Primary" />
+            <MudCheckBox T="bool" Label="Format XML" @bind-Value="_formatXml" Color="Color.Primary" />
+        </MudStack>
+    </Editor>
+</NodeWidgetShell>
+
+@code {
+    [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
+
+    private PayloadInspectNodeModel Model => (PayloadInspectNodeModel)Node;
+
+    private int _maxPreviewBytes = PayloadInspectNodeModel.DefaultMaxPreviewBytes;
+    private int _maxFormattedChars = PayloadInspectNodeModel.DefaultMaxFormattedChars;
+    private bool _detectBase64 = true;
+    private bool _formatJson = true;
+    private bool _formatXml = true;
+    private int _boundedCapacity = PayloadInspectNodeModel.DefaultBoundedCapacity;
+
+    protected override void OnParametersSet() => LoadDraft();
+
+    private void LoadDraft()
+    {
+        _maxPreviewBytes = PayloadInspectNodeModel.NormalizePositiveInt(Model.MaxPreviewBytes, PayloadInspectNodeModel.DefaultMaxPreviewBytes);
+        _maxFormattedChars = PayloadInspectNodeModel.NormalizePositiveInt(Model.MaxFormattedChars, PayloadInspectNodeModel.DefaultMaxFormattedChars);
+        _detectBase64 = Model.DetectBase64;
+        _formatJson = Model.FormatJson;
+        _formatXml = Model.FormatXml;
+        _boundedCapacity = PayloadInspectNodeModel.NormalizePositiveInt(Model.BoundedCapacity, PayloadInspectNodeModel.DefaultBoundedCapacity);
+    }
+
+    private Task SaveAsync()
+    {
+        Model.MaxPreviewBytes = PayloadInspectNodeModel.NormalizePositiveInt(_maxPreviewBytes, PayloadInspectNodeModel.DefaultMaxPreviewBytes);
+        Model.MaxFormattedChars = PayloadInspectNodeModel.NormalizePositiveInt(_maxFormattedChars, PayloadInspectNodeModel.DefaultMaxFormattedChars);
+        Model.DetectBase64 = _detectBase64;
+        Model.FormatJson = _formatJson;
+        Model.FormatXml = _formatXml;
+        Model.BoundedCapacity = PayloadInspectNodeModel.NormalizePositiveInt(_boundedCapacity, PayloadInspectNodeModel.DefaultBoundedCapacity);
+        Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
+        return Task.CompletedTask;
+    }
+}

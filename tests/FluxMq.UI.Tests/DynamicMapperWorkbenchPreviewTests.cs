@@ -156,6 +156,32 @@ public sealed class DynamicMapperWorkbenchPreviewTests
     }
 
     [Fact]
+    public void Preview_JsonataStateReducerInput_UsesRuntimeEngine()
+    {
+        var envelope = CreateEnvelope("factory/line-a/status", """{"status":"ok"}""");
+        const string expression = """
+        {
+          "key": topic,
+          "input": payloadJson.status,
+          "variables": {
+            "topic": topic
+          }
+        }
+        """;
+
+        var preview = DynamicMapperWorkbenchPreview.Preview("jsonata", "StateReducerInput", expression, envelope);
+
+        preview.Success.ShouldBeTrue(preview.Error);
+        preview.Properties.Single(property => property.Name == "Key").Value
+            .ShouldBe("factory/line-a/status");
+        preview.Properties.Single(property => property.Name == "Input").Value
+            .ShouldBe("\"ok\"");
+        preview.Properties.Single(property => property.Name == "Variables").Value.ShouldBe("1");
+        preview.Json.ShouldContain("\"key\": \"factory/line-a/status\"");
+        preview.Json.ShouldContain("\"input\": \"ok\"");
+    }
+
+    [Fact]
     public void Preview_DynamicExpressoFileWriteRequest_UsesRuntimeEngine()
     {
         var envelope = CreateEnvelope("factory/line-a/status", """{"status":"ok"}""");

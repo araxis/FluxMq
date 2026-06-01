@@ -21,6 +21,8 @@ public sealed class FlowDefinitionComposerTests
         catalog.Components.ShouldContain(component => component.Type == "flow.mapper");
         catalog.Components.ShouldContain(component => component.Type == "flow.logger");
         catalog.Components.ShouldContain(component => component.Type == "mqtt.trigger");
+        catalog.Components.ShouldContain(component => component.Type == "http.request");
+        catalog.Components.ShouldContain(component => component.Type == "payload.inspect");
         catalog.Components.ShouldNotContain(component => component.Type == "mqtt.publish-request");
         catalog.Components.ShouldNotContain(component => component.Type == "mqtt.recording-request");
         catalog.Components.ShouldNotContain(component => component.Type == "file.write-request");
@@ -49,6 +51,24 @@ public sealed class FlowDefinitionComposerTests
         catalogTypes
             .Where(type => !runtimeTypes.Contains(type))
             .ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ComponentCatalog_ExposesHttpAndPayloadComponents()
+    {
+        var catalog = new FlowComponentCatalog();
+
+        var http = catalog.Find("http.request").ShouldNotBeNull();
+        http.Category.ShouldBe("Actor");
+        http.Ports.ShouldContain(port => port.Name == "Input" && port.ValueType == "HttpRequestInput" && port.IsInput);
+        http.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "HttpResponseOutput" && !port.IsInput);
+        http.Ports.ShouldContain(port => port.Name == "Errors" && port.ValueType == "HttpErrorOutput" && !port.IsInput);
+
+        var payload = catalog.Find("payload.inspect").ShouldNotBeNull();
+        payload.Category.ShouldBe("Mapper");
+        payload.Ports.ShouldContain(port => port.Name == "Input" && port.ValueType == "PayloadInspectionRequest" && port.IsInput);
+        payload.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "PayloadInspectionResult" && !port.IsInput);
+        payload.Ports.ShouldContain(port => port.Name == "Errors" && port.ValueType == "FlowError" && !port.IsInput);
     }
 
     [Fact]
@@ -118,6 +138,68 @@ public sealed class FlowDefinitionComposerTests
         descriptor.Ports.ShouldContain(port => port.Name == "Input" && port.IsInput);
         descriptor.Ports.ShouldContain(port => port.Name == "Snapshots" && !port.IsInput);
         descriptor.Ports.ShouldContain(port => port.Name == "Errors" && !port.IsInput);
+    }
+
+    [Fact]
+    public void ComponentCatalog_ExposesStateReducer()
+    {
+        var catalog = new FlowComponentCatalog();
+
+        var descriptor = catalog.Find("state.reducer").ShouldNotBeNull();
+
+        descriptor.DisplayName.ShouldBe("State Reducer");
+        descriptor.Category.ShouldBe("State");
+        descriptor.Ports.ShouldContain(port => port.Name == "Input" && port.ValueType == "StateReducerInput" && port.IsInput);
+        descriptor.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "StateReducerResult" && !port.IsInput);
+        descriptor.Ports.ShouldContain(port => port.Name == "Errors" && port.ValueType == "FlowError" && !port.IsInput);
+    }
+
+    [Fact]
+    public void ComponentCatalog_ExposesTimerNodes()
+    {
+        var catalog = new FlowComponentCatalog();
+
+        var interval = catalog.Find("timer.interval").ShouldNotBeNull();
+        interval.Category.ShouldBe("Source");
+        interval.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "TimerTick" && !port.IsInput);
+
+        var schedule = catalog.Find("timer.schedule").ShouldNotBeNull();
+        schedule.Category.ShouldBe("Source");
+        schedule.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "ScheduleTick" && !port.IsInput);
+
+        var delay = catalog.Find("timer.delay").ShouldNotBeNull();
+        delay.Category.ShouldBe("Control");
+        delay.Ports.ShouldContain(port => port.Name == "Input" && port.ValueType == "Configured input type" && port.IsInput);
+        delay.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "Configured input type" && !port.IsInput);
+
+        var debounce = catalog.Find("timer.debounce").ShouldNotBeNull();
+        debounce.Category.ShouldBe("Control");
+        debounce.Ports.ShouldContain(port => port.Name == "Input" && port.ValueType == "Configured input type" && port.IsInput);
+        debounce.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "Configured input type" && !port.IsInput);
+
+        var throttle = catalog.Find("timer.throttle").ShouldNotBeNull();
+        throttle.Category.ShouldBe("Control");
+        throttle.Ports.ShouldContain(port => port.Name == "Input" && port.ValueType == "Configured input type" && port.IsInput);
+        throttle.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "Configured input type" && !port.IsInput);
+    }
+
+    [Fact]
+    public void ComponentCatalog_ExposesSerializationTransforms()
+    {
+        var catalog = new FlowComponentCatalog();
+
+        var jsonParse = catalog.Find("json.parse").ShouldNotBeNull();
+        jsonParse.DisplayName.ShouldBe("JSON Parse");
+        jsonParse.Category.ShouldBe("Transform");
+        jsonParse.Ports.ShouldContain(port => port.Name == "Input" && port.ValueType == "JsonParseRequest" && port.IsInput);
+        jsonParse.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "JsonParseResult" && !port.IsInput);
+        jsonParse.Ports.ShouldContain(port => port.Name == "Errors" && port.ValueType == "FlowError" && !port.IsInput);
+
+        catalog.Find("json.stringify").ShouldNotBeNull().Category.ShouldBe("Transform");
+        catalog.Find("text.encode").ShouldNotBeNull().Category.ShouldBe("Transform");
+        catalog.Find("text.decode").ShouldNotBeNull().Category.ShouldBe("Transform");
+        catalog.Find("base64.encode").ShouldNotBeNull().Category.ShouldBe("Transform");
+        catalog.Find("base64.decode").ShouldNotBeNull().Category.ShouldBe("Transform");
     }
 
     [Fact]
@@ -324,6 +406,58 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void AddComponent_AddsHttpRequestConfigurationAndUsesMapperInput()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var withMapper = composer.AddComponent(initial, "flow.mapper");
+        var updated = composer.AddComponent(withMapper, "http.request");
+
+        using var document = JsonDocument.Parse(updated);
+        var workflow = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName);
+
+        var http = workflow.GetProperty(FlowDefinitionComposer.HttpRequestNodeName);
+        http.GetProperty("type").GetString().ShouldBe("http.request");
+        http.GetProperty("Input").GetString().ShouldBe($"{FlowDefinitionComposer.MapperNodeName}.Output");
+        http.GetProperty("configuration").GetProperty("defaultTimeoutMilliseconds").GetInt32().ShouldBe(30000);
+        http.GetProperty("configuration").GetProperty("maxResponseBodyBytes").GetInt32().ShouldBe(1048576);
+        http.GetProperty("configuration").GetProperty("followRedirects").GetBoolean().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void AddComponent_AddsPayloadInspectConfigurationAndUsesMapperInput()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var withMapper = composer.AddComponent(initial, "flow.mapper");
+        var updated = composer.AddComponent(withMapper, "payload.inspect");
+
+        using var document = JsonDocument.Parse(updated);
+        var workflow = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName);
+
+        var payload = workflow.GetProperty(FlowDefinitionComposer.PayloadInspectNodeName);
+        payload.GetProperty("type").GetString().ShouldBe("payload.inspect");
+        payload.GetProperty("Input").GetString().ShouldBe($"{FlowDefinitionComposer.MapperNodeName}.Output");
+        payload.GetProperty("configuration").GetProperty("maxPreviewBytes").GetInt32().ShouldBe(1024);
+        payload.GetProperty("configuration").GetProperty("maxFormattedChars").GetInt32().ShouldBe(4096);
+        payload.GetProperty("configuration").GetProperty("detectBase64").GetBoolean().ShouldBeTrue();
+    }
+
+    [Fact]
     public void AddComponent_AddsExplicitDynamicMapperBetweenSourceAndActor()
     {
         var composer = new FlowDefinitionComposer();
@@ -355,6 +489,77 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void AddComponent_ConfiguresMapperFromTimerSource()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.AddWorkflow(composer.CreateEmptyDefinition(), FlowDefinitionComposer.DefaultWorkflowName);
+        var withTimer = composer.AddComponent(initial, "timer.interval");
+
+        var updated = composer.AddComponent(withTimer, "flow.mapper");
+
+        using var document = JsonDocument.Parse(updated);
+        var workflow = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName);
+
+        var mapper = workflow.GetProperty(FlowDefinitionComposer.MapperNodeName);
+        mapper.GetProperty("Input").GetString().ShouldBe($"{FlowDefinitionComposer.TimerIntervalNodeName}.Output");
+        mapper.GetProperty("configuration").GetProperty("inputType").GetString().ShouldBe("TimerTick");
+        mapper.GetProperty("configuration").GetProperty("expression").GetString().ShouldNotBeNull().ShouldContain("timer/");
+    }
+
+    [Fact]
+    public void AddComponent_ConfiguresDelayFromTimerSource()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.AddWorkflow(composer.CreateEmptyDefinition(), FlowDefinitionComposer.DefaultWorkflowName);
+        var withTimer = composer.AddComponent(initial, "timer.interval");
+
+        var updated = composer.AddComponent(withTimer, "timer.delay");
+
+        using var document = JsonDocument.Parse(updated);
+        var delay = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty(FlowDefinitionComposer.TimerDelayNodeName);
+
+        delay.GetProperty("Input").GetString().ShouldBe($"{FlowDefinitionComposer.TimerIntervalNodeName}.Output");
+        delay.GetProperty("configuration").GetProperty("inputType").GetString().ShouldBe("TimerTick");
+        delay.GetProperty("configuration").GetProperty("delayMilliseconds").GetInt32().ShouldBe(250);
+    }
+
+    [Theory]
+    [InlineData("timer.debounce", FlowDefinitionComposer.TimerDebounceNodeName, "quietPeriodMilliseconds")]
+    [InlineData("timer.throttle", FlowDefinitionComposer.TimerThrottleNodeName, "intervalMilliseconds")]
+    public void AddComponent_ConfiguresTimerInputGateFromTimerSource(
+        string componentType,
+        string nodeName,
+        string durationProperty)
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.AddWorkflow(composer.CreateEmptyDefinition(), FlowDefinitionComposer.DefaultWorkflowName);
+        var withTimer = composer.AddComponent(initial, "timer.interval");
+
+        var updated = composer.AddComponent(withTimer, componentType);
+
+        using var document = JsonDocument.Parse(updated);
+        var gate = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty(nodeName);
+
+        gate.GetProperty("Input").GetString().ShouldBe($"{FlowDefinitionComposer.TimerIntervalNodeName}.Output");
+        gate.GetProperty("configuration").GetProperty("inputType").GetString().ShouldBe("TimerTick");
+        gate.GetProperty("configuration").GetProperty(durationProperty).GetInt32().ShouldBe(250);
+    }
+
+    [Fact]
     public void AddComponent_AddsMetricsRateConfiguration()
     {
         var composer = new FlowDefinitionComposer();
@@ -380,6 +585,29 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void AddComponent_DoesNotAutoWireSerializationTransformToEnvelopeSource()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var updated = composer.AddComponent(initial, "json.parse");
+
+        using var document = JsonDocument.Parse(updated);
+        var parser = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty("jsonParser");
+
+        parser.GetProperty("type").GetString().ShouldBe("json.parse");
+        parser.TryGetProperty("Input", out _).ShouldBeFalse();
+        parser.GetProperty("configuration").GetProperty("boundedCapacity").GetInt32().ShouldBe(1000);
+    }
+
+    [Fact]
     public void AddComponent_DoesNotWireActorDirectlyToEnvelopeSource()
     {
         var composer = new FlowDefinitionComposer();
@@ -398,6 +626,65 @@ public sealed class FlowDefinitionComposerTests
             .GetProperty(FlowDefinitionComposer.PublisherNodeName);
 
         publisher.TryGetProperty("Input", out _).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void AddComponent_DoesNotWireStateReducerDirectlyToEnvelopeSource()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var updated = composer.AddComponent(initial, "state.reducer");
+
+        using var document = JsonDocument.Parse(updated);
+        var reducer = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty(FlowDefinitionComposer.StateReducerNodeName);
+
+        reducer.TryGetProperty("Input", out _).ShouldBeFalse();
+        reducer.GetProperty("configuration").GetProperty("engine").GetString().ShouldBe("jsonata");
+        reducer.GetProperty("configuration").GetProperty("reducer").GetString().ShouldBe("input");
+    }
+
+    [Fact]
+    public void AddComponent_WiresStateReducerFromStateInputMapper()
+    {
+        var composer = new FlowDefinitionComposer();
+        const string initial = """
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "pipe": {
+                  "mapper": {
+                    "type": "flow.mapper",
+                    "configuration": {
+                      "outputType": "StateReducerInput"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """;
+
+        var updated = composer.AddComponent(initial, "state.reducer", "pipe");
+
+        using var document = JsonDocument.Parse(updated);
+        var reducer = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty("pipe")
+            .GetProperty(FlowDefinitionComposer.StateReducerNodeName);
+
+        reducer.GetProperty("Input").GetString().ShouldBe("mapper.Output");
     }
 
     [Fact]
@@ -678,6 +965,8 @@ public sealed class FlowDefinitionComposerTests
     [InlineData("generated.source", FlowDefinitionComposer.GeneratedNodeName, "messages")]
     [InlineData("session.source", FlowDefinitionComposer.StoredSourceNodeName, "sessionId")]
     [InlineData("replay.source", FlowDefinitionComposer.ReplayNodeName, "speed")]
+    [InlineData("timer.interval", FlowDefinitionComposer.TimerIntervalNodeName, "intervalMilliseconds")]
+    [InlineData("timer.schedule", FlowDefinitionComposer.TimerScheduleNodeName, "cron")]
     public void AddComponent_AddsSourceConfiguration(string componentType, string nodeName, string expectedProperty)
     {
         var composer = new FlowDefinitionComposer();
