@@ -1,0 +1,327 @@
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.Timer"
+                 CategoryColor="@Color.Warning"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
+    <Body>
+        @if (Node is TimerIntervalNodeModel interval)
+        {
+            <MudStack Spacing="1" Class="mt-1">
+                <Stat Icon="@Icons.Material.Filled.AvTimer" Label="Interval" Value="@($"{interval.IntervalMilliseconds} ms")" />
+                <Stat Icon="@Icons.Material.Filled.Schedule" Label="Initial delay" Value="@($"{interval.InitialDelayMilliseconds} ms")" />
+                <Stat Icon="@Icons.Material.Filled.Repeat" Label="Max ticks" Value="@MaxTicksText(interval.MaxTicks)" />
+            </MudStack>
+        }
+        else if (Node is TimerScheduleNodeModel schedule)
+        {
+            <MudStack Spacing="1" Class="mt-1">
+                <Stat Icon="@Icons.Material.Filled.CalendarMonth" Label="Cron" Value="@schedule.Cron" />
+                <Stat Icon="@Icons.Material.Filled.Public" Label="Time zone" Value="@schedule.TimeZoneId" />
+                <Stat Icon="@Icons.Material.Filled.Repeat" Label="Max ticks" Value="@MaxTicksText(schedule.MaxTicks)" />
+            </MudStack>
+        }
+        else if (Node is TimerDelayNodeModel delay)
+        {
+            <MudStack Spacing="1" Class="mt-1">
+                <Stat Icon="@Icons.Material.Filled.Input" Label="Input" Value="@delay.InputType" />
+                <Stat Icon="@Icons.Material.Filled.HourglassBottom" Label="Delay" Value="@($"{delay.DelayMilliseconds} ms")" />
+                <Stat Icon="@Icons.Material.Filled.Memory" Label="Buffer" Value="@delay.BoundedCapacity.ToString()" />
+            </MudStack>
+        }
+        else if (Node is TimerDebounceNodeModel debounce)
+        {
+            <MudStack Spacing="1" Class="mt-1">
+                <Stat Icon="@Icons.Material.Filled.Input" Label="Input" Value="@debounce.InputType" />
+                <Stat Icon="@Icons.Material.Filled.HourglassEmpty" Label="Quiet" Value="@($"{debounce.QuietPeriodMilliseconds} ms")" />
+                <Stat Icon="@Icons.Material.Filled.Memory" Label="Buffer" Value="@debounce.BoundedCapacity.ToString()" />
+            </MudStack>
+        }
+        else if (Node is TimerThrottleNodeModel throttle)
+        {
+            <MudStack Spacing="1" Class="mt-1">
+                <Stat Icon="@Icons.Material.Filled.Input" Label="Input" Value="@throttle.InputType" />
+                <Stat Icon="@Icons.Material.Filled.Speed" Label="Interval" Value="@($"{throttle.IntervalMilliseconds} ms")" />
+                <Stat Icon="@Icons.Material.Filled.PlayArrow" Label="First" Value="@(throttle.EmitFirstImmediately ? "immediate" : "delayed")" />
+            </MudStack>
+        }
+    </Body>
+    <Editor>
+        <MudStack Spacing="2">
+            @if (Node is TimerIntervalNodeModel)
+            {
+                <MudNumericField T="int"
+                                 Label="Interval ms"
+                                 @bind-Value="_intervalMilliseconds"
+                                 Min="1"
+                                 Max="86400000"
+                                 Step="100"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense" />
+                <MudNumericField T="int"
+                                 Label="Initial delay ms"
+                                 @bind-Value="_initialDelayMilliseconds"
+                                 Min="0"
+                                 Max="86400000"
+                                 Step="100"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense" />
+                <MudCheckBox T="bool" @bind-Value="_emitImmediately" Label="Emit immediately" Dense="true" />
+                <MudNumericField T="int"
+                                 Label="Max ticks"
+                                 @bind-Value="_maxTicks"
+                                 Min="0"
+                                 Max="1000000"
+                                 Step="1"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 HelperText="0 = unlimited" />
+                <MudNumericField T="int"
+                                 Label="Output buffer"
+                                 @bind-Value="_boundedCapacity"
+                                 Min="1"
+                                 Max="100000"
+                                 Step="100"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense" />
+            }
+            else if (Node is TimerScheduleNodeModel)
+            {
+                <MudTextField T="string"
+                              Label="Cron"
+                              @bind-Value="_cron"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense" />
+                <MudTextField T="string"
+                              Label="Time zone"
+                              @bind-Value="_timeZoneId"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense" />
+                <MudNumericField T="int"
+                                 Label="Max ticks"
+                                 @bind-Value="_maxTicks"
+                                 Min="0"
+                                 Max="1000000"
+                                 Step="1"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 HelperText="0 = unlimited" />
+                <MudNumericField T="int"
+                                 Label="Output buffer"
+                                 @bind-Value="_boundedCapacity"
+                                 Min="1"
+                                 Max="100000"
+                                 Step="100"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense" />
+            }
+            else if (Node is TimerDelayNodeModel)
+            {
+                <MudSelect T="string"
+                           Label="Input type"
+                           @bind-Value="_inputType"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense">
+                    @foreach (var inputType in TimerDelayNodeModel.InputTypes)
+                    {
+                        <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudNumericField T="int"
+                                 Label="Delay ms"
+                                 @bind-Value="_delayMilliseconds"
+                                 Min="0"
+                                 Max="86400000"
+                                 Step="100"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense" />
+                <MudNumericField T="int"
+                                 Label="Buffer"
+                                 @bind-Value="_boundedCapacity"
+                                 Min="1"
+                                 Max="100000"
+                                 Step="100"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense" />
+            }
+            else if (Node is TimerDebounceNodeModel)
+            {
+                <MudSelect T="string"
+                           Label="Input type"
+                           @bind-Value="_inputType"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense">
+                    @foreach (var inputType in TimerDelayNodeModel.InputTypes)
+                    {
+                        <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudNumericField T="int"
+                                 Label="Quiet period ms"
+                                 @bind-Value="_quietPeriodMilliseconds"
+                                 Min="1"
+                                 Max="86400000"
+                                 Step="100"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense" />
+                <MudNumericField T="int"
+                                 Label="Buffer"
+                                 @bind-Value="_boundedCapacity"
+                                 Min="1"
+                                 Max="100000"
+                                 Step="100"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense" />
+            }
+            else if (Node is TimerThrottleNodeModel)
+            {
+                <MudSelect T="string"
+                           Label="Input type"
+                           @bind-Value="_inputType"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense">
+                    @foreach (var inputType in TimerDelayNodeModel.InputTypes)
+                    {
+                        <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudNumericField T="int"
+                                 Label="Interval ms"
+                                 @bind-Value="_throttleIntervalMilliseconds"
+                                 Min="1"
+                                 Max="86400000"
+                                 Step="100"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense" />
+                <MudCheckBox T="bool" @bind-Value="_emitFirstImmediately" Label="Emit first immediately" Dense="true" />
+                <MudNumericField T="int"
+                                 Label="Buffer"
+                                 @bind-Value="_boundedCapacity"
+                                 Min="1"
+                                 Max="100000"
+                                 Step="100"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense" />
+            }
+        </MudStack>
+    </Editor>
+</NodeWidgetShell>
+
+@code {
+    [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
+
+    private int _intervalMilliseconds = TimerIntervalNodeModel.DefaultIntervalMilliseconds;
+    private int _initialDelayMilliseconds = TimerIntervalNodeModel.DefaultInitialDelayMilliseconds;
+    private bool _emitImmediately;
+    private string _cron = TimerScheduleNodeModel.DefaultCron;
+    private string _timeZoneId = TimerScheduleNodeModel.DefaultTimeZoneId;
+    private string _inputType = TimerDelayNodeModel.DefaultInputType;
+    private int _delayMilliseconds = TimerDelayNodeModel.DefaultDelayMilliseconds;
+    private int _quietPeriodMilliseconds = TimerDebounceNodeModel.DefaultQuietPeriodMilliseconds;
+    private int _throttleIntervalMilliseconds = TimerThrottleNodeModel.DefaultIntervalMilliseconds;
+    private bool _emitFirstImmediately = true;
+    private int _maxTicks;
+    private int _boundedCapacity = TimerIntervalNodeModel.DefaultBoundedCapacity;
+
+    protected override void OnParametersSet() => LoadDraft();
+
+    private void LoadDraft()
+    {
+        switch (Node)
+        {
+            case TimerIntervalNodeModel interval:
+                _intervalMilliseconds = interval.IntervalMilliseconds;
+                _initialDelayMilliseconds = interval.InitialDelayMilliseconds;
+                _emitImmediately = interval.EmitImmediately;
+                _maxTicks = interval.MaxTicks;
+                _boundedCapacity = interval.BoundedCapacity;
+                break;
+            case TimerScheduleNodeModel schedule:
+                _cron = schedule.Cron;
+                _timeZoneId = schedule.TimeZoneId;
+                _maxTicks = schedule.MaxTicks;
+                _boundedCapacity = schedule.BoundedCapacity;
+                break;
+            case TimerDelayNodeModel delay:
+                _inputType = delay.InputType;
+                _delayMilliseconds = delay.DelayMilliseconds;
+                _boundedCapacity = delay.BoundedCapacity;
+                break;
+            case TimerDebounceNodeModel debounce:
+                _inputType = debounce.InputType;
+                _quietPeriodMilliseconds = debounce.QuietPeriodMilliseconds;
+                _boundedCapacity = debounce.BoundedCapacity;
+                break;
+            case TimerThrottleNodeModel throttle:
+                _inputType = throttle.InputType;
+                _throttleIntervalMilliseconds = throttle.IntervalMilliseconds;
+                _emitFirstImmediately = throttle.EmitFirstImmediately;
+                _boundedCapacity = throttle.BoundedCapacity;
+                break;
+        }
+    }
+
+    private Task SaveAsync()
+    {
+        switch (Node)
+        {
+            case TimerIntervalNodeModel interval:
+                interval.IntervalMilliseconds = TimerNodeConfiguration.NormalizePositiveInt(
+                    _intervalMilliseconds,
+                    TimerIntervalNodeModel.DefaultIntervalMilliseconds);
+                interval.InitialDelayMilliseconds = TimerNodeConfiguration.NormalizeNonNegativeInt(
+                    _initialDelayMilliseconds,
+                    TimerIntervalNodeModel.DefaultInitialDelayMilliseconds);
+                interval.EmitImmediately = _emitImmediately;
+                interval.MaxTicks = TimerNodeConfiguration.NormalizeNonNegativeInt(_maxTicks, 0);
+                interval.BoundedCapacity = TimerNodeConfiguration.NormalizePositiveInt(
+                    _boundedCapacity,
+                    TimerIntervalNodeModel.DefaultBoundedCapacity);
+                break;
+            case TimerScheduleNodeModel schedule:
+                schedule.Cron = string.IsNullOrWhiteSpace(_cron) ? TimerScheduleNodeModel.DefaultCron : _cron.Trim();
+                schedule.TimeZoneId = string.IsNullOrWhiteSpace(_timeZoneId) ? TimerScheduleNodeModel.DefaultTimeZoneId : _timeZoneId.Trim();
+                schedule.MaxTicks = TimerNodeConfiguration.NormalizeNonNegativeInt(_maxTicks, 0);
+                schedule.BoundedCapacity = TimerNodeConfiguration.NormalizePositiveInt(
+                    _boundedCapacity,
+                    TimerScheduleNodeModel.DefaultBoundedCapacity);
+                break;
+            case TimerDelayNodeModel delay:
+                delay.InputType = TimerDelayNodeModel.NormalizeInputType(_inputType);
+                delay.DelayMilliseconds = TimerNodeConfiguration.NormalizeNonNegativeInt(
+                    _delayMilliseconds,
+                    TimerDelayNodeModel.DefaultDelayMilliseconds);
+                delay.BoundedCapacity = TimerNodeConfiguration.NormalizePositiveInt(
+                    _boundedCapacity,
+                    TimerDelayNodeModel.DefaultBoundedCapacity);
+                break;
+            case TimerDebounceNodeModel debounce:
+                debounce.InputType = TimerDelayNodeModel.NormalizeInputType(_inputType);
+                debounce.QuietPeriodMilliseconds = TimerNodeConfiguration.NormalizePositiveInt(
+                    _quietPeriodMilliseconds,
+                    TimerDebounceNodeModel.DefaultQuietPeriodMilliseconds);
+                debounce.BoundedCapacity = TimerNodeConfiguration.NormalizePositiveInt(
+                    _boundedCapacity,
+                    TimerDebounceNodeModel.DefaultBoundedCapacity);
+                break;
+            case TimerThrottleNodeModel throttle:
+                throttle.InputType = TimerDelayNodeModel.NormalizeInputType(_inputType);
+                throttle.IntervalMilliseconds = TimerNodeConfiguration.NormalizePositiveInt(
+                    _throttleIntervalMilliseconds,
+                    TimerThrottleNodeModel.DefaultIntervalMilliseconds);
+                throttle.EmitFirstImmediately = _emitFirstImmediately;
+                throttle.BoundedCapacity = TimerNodeConfiguration.NormalizePositiveInt(
+                    _boundedCapacity,
+                    TimerThrottleNodeModel.DefaultBoundedCapacity);
+                break;
+        }
+
+        Flow.UpdateNodeConfiguration(Node.NodeName, Node.BuildConfiguration());
+        return Task.CompletedTask;
+    }
+
+    private static string MaxTicksText(int maxTicks)
+        => maxTicks > 0 ? maxTicks.ToString() : "unlimited";
+}

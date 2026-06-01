@@ -62,6 +62,74 @@ internal static class ExpressionObjectReader
         };
     }
 
+    public static byte[]? ReadOptionalBytes(object source, string propertyName)
+    {
+        if (!TryRead(source, propertyName, out var value) || value is null)
+        {
+            return null;
+        }
+
+        return value switch
+        {
+            byte[] bytes => bytes,
+            string text => Encoding.UTF8.GetBytes(text),
+            JsonElement element => ReadBytes(element, propertyName),
+            _ => throw new InvalidOperationException(
+                $"Mapped object property '{propertyName}' must be a string, byte array, JSON object, or JSON array.")
+        };
+    }
+
+    public static int? ReadOptionalInt(object source, string propertyName)
+    {
+        if (!TryRead(source, propertyName, out var value) || value is null)
+        {
+            return null;
+        }
+
+        return value switch
+        {
+            int number => number,
+            long number => checked((int)number),
+            string text when int.TryParse(text, out var number) => number,
+            JsonElement element when element.ValueKind == JsonValueKind.Number && element.TryGetInt32(out var number) => number,
+            JsonElement element when element.ValueKind == JsonValueKind.String && int.TryParse(element.GetString(), out var number) => number,
+            _ => throw new InvalidOperationException($"Mapped object property '{propertyName}' must be an integer.")
+        };
+    }
+
+    public static Dictionary<string, string> ReadStringDictionaryOrEmpty(object source, string propertyName)
+    {
+        if (!TryRead(source, propertyName, out var value) || value is null)
+        {
+            return [];
+        }
+
+        if (value is Dictionary<string, string> dictionary)
+        {
+            return new Dictionary<string, string>(dictionary, StringComparer.OrdinalIgnoreCase);
+        }
+
+        if (value is IReadOnlyDictionary<string, string> readOnlyDictionary)
+        {
+            return new Dictionary<string, string>(readOnlyDictionary, StringComparer.OrdinalIgnoreCase);
+        }
+
+        if (value is JsonElement { ValueKind: JsonValueKind.Object } element)
+        {
+            var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var property in element.EnumerateObject())
+            {
+                result[property.Name] = property.Value.ValueKind == JsonValueKind.String
+                    ? property.Value.GetString() ?? string.Empty
+                    : property.Value.GetRawText();
+            }
+
+            return result;
+        }
+
+        throw new InvalidOperationException($"Mapped object property '{propertyName}' must be an object with string values.");
+    }
+
     public static TEnum ReadEnumOrDefault<TEnum>(object source, string propertyName, TEnum fallback)
         where TEnum : struct, Enum
     {

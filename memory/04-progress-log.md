@@ -276,7 +276,7 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Startup ordering is entirely a runtime concern; components do not declare their own phase.
 - Removed `IFlowStartable`:
   - `StartAsync(CancellationToken = default) => Task.CompletedTask` moved to `IFlowNode` as a default interface method.
-  - `MqttConnectionComponent`, `MqttTriggerComponent`, and `ReplaySourceComponent` dropped `IFlowStartable` from their declarations.
+  - `MqttConnectionComponent`, `MqttTriggerComponent`, and the replay source dropped `IFlowStartable` from their declarations.
 - Deleted `IPreExecutionProcessor` and `IPostExecutionProcessor` — marker-interface-on-component approach was tried and rejected in favour of config-driven phase ordering.
 - Committed as `850bc8b` on branch `feature/pipeline-runtime-model`.
 
@@ -2064,7 +2064,7 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 
 ## 2026-06-01 - File system component package migration
 
-- Added `FluxFlow.Components.FileSystem` `0.1.0-alpha.1` to `FluxMq.Components`.
+- Added `FluxFlow.Components.FileSystem` `0.1.0-alpha.1` to `FluxMq.Components`; later updated it to `0.4.0-alpha.1`.
 - Reworked `file.writer` so package code owns file path validation, directory creation, write modes, byte writing, and package error codes.
 - Kept a small FluxMQ adapter for the existing `FileWriteRequest` mapper target, `file.writer` actor id, and `file.written` event projection.
 - Updated docs and memory notes to describe the package-backed file writer boundary.
@@ -2072,6 +2072,16 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal --filter FileWriterComponentTests` passes with 3 tests.
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 81 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 488 tests.
+
+## 2026-06-01 - Component package update pass
+
+- Checked prerelease updates from the package feed for the FluxFlow package references.
+- Updated `FluxFlow.Components.FileSystem` from `0.1.0-alpha.1` to `0.4.0-alpha.1`.
+- Confirmed the existing `file.writer` adapter remains compatible with the package-owned `file.write` API.
+- Verified:
+  - `dotnet build .\FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes.
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal --filter FileWriterComponentTests` passes with 3 tests.
+  - `dotnet test .\FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 488 tests.
 
 ## 2026-06-01 - Observability component package migration
 
@@ -2086,3 +2096,73 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 81 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 205 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 488 tests.
+
+## 2026-06-01 - Sessions component package migration
+
+- Added `FluxFlow.Components.Sessions` `0.1.0-alpha.1` to `FluxMq.Components`.
+- Added `FluxMqSessionStore` as the adapter between local stored MQTT messages and the shared session contracts.
+- Reworked `MqttRecorderComponent` and `StoredSessionSourceComponent` to depend on `ISessionStore`; the existing `IMessageRepository` constructor path now wraps the repository in `FluxMqSessionStore`.
+- Collapsed `replay.source` onto the stored-session source path with timing preservation enabled, then removed the old local replay source class, replay factory, replay options, and their duplicate tests.
+- Updated replay docs and active dashboard memory so future dashboard/source work follows the shared session-store path.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --filter "FluxMqSessionStoreTests|MqttRecorderComponentTests|MqttSourceComponentTests" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 12 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --filter "StoredSessionSourceFactory|ReplaySourceFactory|StoredSourceFactories" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 6 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 485 tests.
+
+## 2026-06-01 - Metrics component package migration
+
+- Added `FluxFlow.Components.Metrics` `0.1.0-alpha.1` to `FluxMq.Components`.
+- Reworked `mqtt.metrics` so the FluxMQ component adapts `MqttEnvelope` values into package metric samples and projects package snapshots back into `MqttMetricsSnapshot`.
+- Kept MQTT-specific retained-message counting and idle rolling-rate refresh in the wrapper because the package aggregate is transport-neutral and emits snapshots on metric sample changes.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --filter MqttMetricsComponentTests -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 6 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --filter "FullyQualifiedName~MqttMetrics" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 1 test.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 485 tests.
+
+## 2026-06-01 - Payload component package migration
+
+- Added `FluxFlow.Components.Payloads` `0.1.0-alpha.1` to `FluxMq.Components`.
+- Reworked `mqtt.payload-inspector` so package code owns neutral payload classification, JSON/XML formatting, base64 detection, text preview, and binary detection.
+- Kept a small FluxMQ adapter for the existing `MqttEnvelope` input, `InspectedMqttMessage` output, Core payload result projection, and hex dump display shape.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --filter PayloadInspectorMapperComponentTests -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 11 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --filter "FullyQualifiedName~PayloadInspectorFactory" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 2 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 493 tests.
+
+## 2026-06-01 - Timer component package registration
+
+- Added `FluxFlow.Components.Timers` `0.4.1-alpha.1` to the runtime/component projects.
+- Registered package-backed `timer.interval`, `timer.schedule`, and `timer.delay` nodes.
+- Added designer catalog entries, typed timer node models, and a native timer node editor for interval, schedule, and delay configuration.
+- Added `TimerTick` and `ScheduleTick` mapper/assertion aliases plus timer-specific mapping contexts so timer ticks can drive `flow.mapper` and `mqtt.publisher` without an MQTT envelope input.
+- Updated `flow.mapper` defaults to preserve timer input types and generate timer-friendly publish/file expressions.
+- Verified:
+  - `dotnet build .\FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal --filter "FullyQualifiedName~PipelineComponentFactoryTests"` passes with 32 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal --filter "FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~TimerNodeModelTests|FullyQualifiedName~FlowDiagramNodeModelTests"` passes with 107 tests.
+  - `dotnet test .\FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 517 tests.
+
+## 2026-06-01 - HTTP and payload component package registration
+
+- Added `FluxFlow.Components.Http` `0.1.0-alpha.1` and `FluxFlow.Components.Payloads` `0.1.0-alpha.1`.
+- Registered package-backed `http.request` and `payload.inspect` runtime nodes.
+- Added mapper aliases/coercion for `HttpRequestInput`, `HttpResponseOutput`, `HttpErrorOutput`, `PayloadInspectionRequest`, and `PayloadInspectionResult`.
+- Added designer catalog entries, typed node models, and node editors for HTTP request options and payload inspection options.
+- Kept the existing MQTT-specific payload inspector as a separate MQTT envelope projection while adding the generic package-backed payload node.
+- Verified:
+  - `dotnet build .\FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~PipelineComponentFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 35 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~TimerNodeModelTests|FullyQualifiedName~FlowDiagramNodeModelTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 110 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 523 tests.
+
+## 2026-06-01 - State component package registration
+
+- Added `FluxFlow.Components.State` `0.1.0-alpha.1` to the runtime/component projects.
+- Registered package-backed `state.reducer` runtime nodes.
+- Added mapper aliases/coercion for `StateReducerInput` and editor defaults so MQTT envelopes can be mapped into reducer inputs explicitly.
+- Added designer catalog entries, typed state reducer node models, and a node editor for reducer options.
+- Verified:
+  - `dotnet build FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~PipelineComponentFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 37 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~TimerNodeModelTests|FullyQualifiedName~FlowDiagramNodeModelTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 115 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 531 tests.

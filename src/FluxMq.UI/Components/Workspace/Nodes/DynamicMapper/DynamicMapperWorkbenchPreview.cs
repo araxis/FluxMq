@@ -3,7 +3,10 @@ using FluxMq.Components.Mapping;
 using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
 using FluxMq.Core.Models;
+using FluxFlow.Components.Http.Contracts;
+using FluxFlow.Components.Payloads.Contracts;
 using FluxFlow.Components.State.Contracts;
+using FluxFlow.Components.Timers.Contracts;
 using FluxFlow.Engine.Mapping;
 using MQTTnet.Protocol;
 using System.Text;
@@ -73,6 +76,36 @@ public static class DynamicMapperWorkbenchPreview
             },
             JsonOptions);
     }
+
+    public static string InputJson(string inputType, MqttEnvelope envelope)
+        => DynamicMapperNodeModel.NormalizeInputType(inputType) switch
+        {
+            "TimerTick" => JsonSerializer.Serialize(
+                new Dictionary<string, object?>
+                {
+                    ["name"] = "poll",
+                    ["sequence"] = 1,
+                    ["timestamp"] = DateTimeOffset.Parse("2026-05-23T10:00:00Z"),
+                    ["dueAt"] = DateTimeOffset.Parse("2026-05-23T10:00:00Z"),
+                    ["elapsedMilliseconds"] = 0,
+                    ["intervalMilliseconds"] = 1000,
+                    ["driftMilliseconds"] = 0
+                },
+                JsonOptions),
+            "ScheduleTick" => JsonSerializer.Serialize(
+                new Dictionary<string, object?>
+                {
+                    ["name"] = "weekday-noon",
+                    ["sequence"] = 1,
+                    ["timestamp"] = DateTimeOffset.Parse("2026-05-23T12:00:00Z"),
+                    ["dueAt"] = DateTimeOffset.Parse("2026-05-23T12:00:00Z"),
+                    ["cron"] = "0 12 * * MON-FRI",
+                    ["timeZoneId"] = "UTC",
+                    ["driftMilliseconds"] = 0
+                },
+                JsonOptions),
+            _ => InputJson(envelope)
+        };
 
     public static DynamicMapperInputSampleResult ParseInputJson(string json)
     {
@@ -154,6 +187,22 @@ public static class DynamicMapperWorkbenchPreview
                 new("input", "any JSON", false, "payloadText"),
                 new("variables", "object", false, "{ \"topic\": topic }")
             ],
+            "PayloadInspectionRequest" =>
+            [
+                new("text", "string", false, "payloadText"),
+                new("bytes", "byte[]", false, "payload"),
+                new("contentType", "string", false, "\"application/json\""),
+                new("encodingHint", "string", false, "\"utf-8\"")
+            ],
+            "HttpRequestInput" =>
+            [
+                new("method", "string", false, "\"POST\""),
+                new("url", "string", true, "\"https://example.test/messages\""),
+                new("headers", "object", false, "{ \"Content-Type\": \"application/json\" }"),
+                new("body", "string", false, "payloadText"),
+                new("contentType", "string", false, "\"application/json\""),
+                new("timeoutMilliseconds", "int", false, "30000")
+            ],
             _ =>
             [
                 new("topic", "string", true, topicPrefixExample),
@@ -185,16 +234,50 @@ public static class DynamicMapperWorkbenchPreview
         return variables;
     }
 
+    public static IReadOnlyList<DynamicMapperVariable> Variables(string inputType, MqttEnvelope envelope)
+        => DynamicMapperNodeModel.NormalizeInputType(inputType) switch
+        {
+            "TimerTick" =>
+            [
+                new("name", "name", "name", "poll"),
+                new("sequence", "sequence", "sequence", "1"),
+                new("timestamp", "timestamp", "timestamp", "2026-05-23T10:00:00.0000000Z"),
+                new("dueAt", "dueAt", "dueAt", "2026-05-23T10:00:00.0000000Z"),
+                new("elapsedMilliseconds", "elapsedMilliseconds", "elapsedMilliseconds", "0"),
+                new("intervalMilliseconds", "intervalMilliseconds", "intervalMilliseconds", "1000"),
+                new("driftMilliseconds", "driftMilliseconds", "driftMilliseconds", "0")
+            ],
+            "ScheduleTick" =>
+            [
+                new("name", "name", "name", "weekday-noon"),
+                new("sequence", "sequence", "sequence", "1"),
+                new("timestamp", "timestamp", "timestamp", "2026-05-23T12:00:00.0000000Z"),
+                new("dueAt", "dueAt", "dueAt", "2026-05-23T12:00:00.0000000Z"),
+                new("cron", "cron", "cron", "0 12 * * MON-FRI"),
+                new("timeZoneId", "timeZoneId", "timeZoneId", "UTC"),
+                new("driftMilliseconds", "driftMilliseconds", "driftMilliseconds", "0")
+            ],
+            _ => Variables(envelope)
+        };
+
     public static DynamicMapperPreviewResult PreviewAny(
         string engine,
         string expression,
+        MqttEnvelope envelope,
+        string title = "Any JSON")
+        => PreviewAny(engine, expression, "MqttEnvelope", envelope, title);
+
+    public static DynamicMapperPreviewResult PreviewAny(
+        string engine,
+        string expression,
+        string inputType,
         MqttEnvelope envelope,
         string title = "Any JSON")
     {
         try
         {
             var expressionEngine = CreateEngine(engine);
-            var context = MqttEnvelopeExpressionContextFactory.Create(envelope);
+            var context = CreateContext(inputType, envelope);
             var value = expressionEngine.Evaluate(expression, context, typeof(object));
             var json = SerializeResult(value);
 
@@ -218,17 +301,27 @@ public static class DynamicMapperWorkbenchPreview
         string outputType,
         string expression,
         MqttEnvelope envelope)
+        => Preview(engine, outputType, expression, "MqttEnvelope", envelope);
+
+    public static DynamicMapperPreviewResult Preview(
+        string engine,
+        string outputType,
+        string expression,
+        string inputType,
+        MqttEnvelope envelope)
     {
         try
         {
             var expressionEngine = CreateEngine(engine);
-            var context = MqttEnvelopeExpressionContextFactory.Create(envelope);
+            var context = CreateContext(inputType, envelope);
 
             return outputType switch
             {
                 "FileWriteRequest" => PreviewFileWriteRequest(expressionEngine, expression, context),
                 "MqttRecordingRequest" => PreviewRecordingRequest(expressionEngine, expression, context),
                 "StateReducerInput" => PreviewStateReducerInput(expressionEngine, expression, context),
+                "PayloadInspectionRequest" => PreviewPayloadInspectionRequest(expressionEngine, expression, context),
+                "HttpRequestInput" => PreviewHttpRequestInput(expressionEngine, expression, context),
                 _ => PreviewPublishRequest(expressionEngine, expression, context)
             };
         }
@@ -353,10 +446,105 @@ public static class DynamicMapperWorkbenchPreview
             }));
     }
 
+    private static DynamicMapperPreviewResult PreviewPayloadInspectionRequest(
+        IFlowExpressionEngine engine,
+        string expression,
+        FlowMapContext context)
+    {
+        var mapper = new FluxMqRequestMappingExpressionEngine(engine);
+        var request = (PayloadInspectionRequest)mapper.Evaluate(expression, context, typeof(PayloadInspectionRequest))!;
+
+        return new DynamicMapperPreviewResult(
+            true,
+            "PayloadInspectionRequest",
+            [
+                new("Text", Shorten(request.Text ?? string.Empty)),
+                new("Bytes", request.Bytes?.Length.ToString() ?? "none"),
+                new("Content type", request.ContentType ?? "none"),
+                new("Encoding", request.EncodingHint ?? "none")
+            ],
+            Json: SerializeResult(new Dictionary<string, object?>
+            {
+                ["text"] = TryParseJson(request.Text ?? string.Empty) is { } textJson ? textJson : request.Text,
+                ["bytes"] = request.Bytes,
+                ["contentType"] = request.ContentType,
+                ["encodingHint"] = request.EncodingHint
+            }));
+    }
+
+    private static DynamicMapperPreviewResult PreviewHttpRequestInput(
+        IFlowExpressionEngine engine,
+        string expression,
+        FlowMapContext context)
+    {
+        var mapper = new FluxMqRequestMappingExpressionEngine(engine);
+        var request = (HttpRequestInput)mapper.Evaluate(expression, context, typeof(HttpRequestInput))!;
+
+        return new DynamicMapperPreviewResult(
+            true,
+            "HttpRequestInput",
+            [
+                new("Method", request.Method),
+                new("URL", request.Url ?? string.Empty),
+                new("Headers", request.Headers.Count.ToString()),
+                new("Body", Shorten(request.Body ?? string.Empty))
+            ],
+            Json: SerializeResult(new Dictionary<string, object?>
+            {
+                ["method"] = request.Method,
+                ["url"] = request.Url,
+                ["headers"] = request.Headers,
+                ["body"] = TryParseJson(request.Body ?? string.Empty) is { } bodyJson ? bodyJson : request.Body,
+                ["bytes"] = request.Bytes,
+                ["contentType"] = request.ContentType,
+                ["timeoutMilliseconds"] = request.TimeoutMilliseconds
+            }));
+    }
+
     private static IFlowExpressionEngine CreateEngine(string engine)
         => string.Equals(engine, "jsonata", StringComparison.OrdinalIgnoreCase)
             ? new JsonataFlowExpressionEngine()
             : new DynamicExpressoFlowExpressionEngine();
+
+    private static FlowMapContext CreateContext(string inputType, MqttEnvelope envelope)
+        => DynamicMapperNodeModel.NormalizeInputType(inputType) switch
+        {
+            "TimerTick" => TimerTickExpressionContextFactory.Create(FallbackTimerTick()),
+            "ScheduleTick" => ScheduleTickExpressionContextFactory.Create(FallbackScheduleTick()),
+            _ => MqttEnvelopeExpressionContextFactory.Create(envelope)
+        };
+
+    private static TimerTick FallbackTimerTick()
+    {
+        var timestamp = DateTimeOffset.Parse("2026-05-23T10:00:00Z");
+        return new TimerTick
+        {
+            Name = "poll",
+            Sequence = 1,
+            Timestamp = timestamp,
+            StartedAt = timestamp,
+            DueAt = timestamp,
+            Elapsed = TimeSpan.Zero,
+            Interval = TimeSpan.FromSeconds(1),
+            Drift = TimeSpan.Zero
+        };
+    }
+
+    private static ScheduleTick FallbackScheduleTick()
+    {
+        var timestamp = DateTimeOffset.Parse("2026-05-23T12:00:00Z");
+        return new ScheduleTick
+        {
+            Name = "weekday-noon",
+            Sequence = 1,
+            Timestamp = timestamp,
+            StartedAt = timestamp,
+            DueAt = timestamp,
+            Cron = "0 12 * * MON-FRI",
+            TimeZoneId = "UTC",
+            Drift = TimeSpan.Zero
+        };
+    }
 
     private static JsonElement? TryParseJson(string payloadText)
     {

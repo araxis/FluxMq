@@ -3,6 +3,8 @@ using FluxMq.Core.Ids;
 using FluxMq.Components.FileWriter;
 using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
+using FluxFlow.Components.Http.Contracts;
+using FluxFlow.Components.Payloads.Contracts;
 using FluxFlow.Components.State.Contracts;
 using FluxFlow.Engine.Mapping;
 using MQTTnet.Protocol;
@@ -40,6 +42,13 @@ public static class MqttEnvelopeExpressionContextFactory
                 ["Guid"] = typeof(Guid),
                 ["FileWriteRequest"] = typeof(FileWriteRequest),
                 ["FileWriteMode"] = typeof(FileWriteMode),
+                ["PayloadInspectionRequest"] = typeof(PayloadInspectionRequest),
+                ["PayloadInspectionResult"] = typeof(PayloadInspectionResult),
+                ["PayloadKind"] = typeof(PayloadKind),
+                ["HttpRequestInput"] = typeof(HttpRequestInput),
+                ["HttpResponseOutput"] = typeof(HttpResponseOutput),
+                ["HttpErrorOutput"] = typeof(HttpErrorOutput),
+                ["HttpErrorKind"] = typeof(HttpErrorKind),
                 ["StateReducerInput"] = typeof(StateReducerInput),
                 ["StateReducerOperation"] = typeof(StateReducerOperation)
             }

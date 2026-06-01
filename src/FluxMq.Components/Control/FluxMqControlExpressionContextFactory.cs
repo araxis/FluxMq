@@ -7,6 +7,9 @@ using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
+using FluxFlow.Components.Http.Contracts;
+using FluxFlow.Components.Payloads.Contracts;
+using FluxFlow.Components.Timers.Contracts;
 using FluxFlow.Engine.Mapping;
 using MQTTnet.Protocol;
 using System.Text;
@@ -30,7 +33,16 @@ public static class FluxMqControlExpressionContextFactory
             ["MqttPublishRequest"] = typeof(MqttPublishRequest),
             ["MqttRecordingRequest"] = typeof(MqttRecordingRequest),
             ["FileWriteRequest"] = typeof(FileWriteRequest),
-            ["FileWriteMode"] = typeof(FileWriteMode)
+            ["FileWriteMode"] = typeof(FileWriteMode),
+            ["PayloadInspectionRequest"] = typeof(PayloadInspectionRequest),
+            ["PayloadInspectionResult"] = typeof(PayloadInspectionResult),
+            ["PayloadKind"] = typeof(PayloadKind),
+            ["HttpRequestInput"] = typeof(HttpRequestInput),
+            ["HttpResponseOutput"] = typeof(HttpResponseOutput),
+            ["HttpErrorOutput"] = typeof(HttpErrorOutput),
+            ["HttpErrorKind"] = typeof(HttpErrorKind),
+            ["TimerTick"] = typeof(TimerTick),
+            ["ScheduleTick"] = typeof(ScheduleTick)
         };
 
         AddTypeSpecificVariables(variables, input);
@@ -84,6 +96,31 @@ public static class FluxMqControlExpressionContextFactory
                 variables["input"] = inspected;
                 variables["value"] = inspected;
                 break;
+            case PayloadInspectionRequest request:
+                variables["inspectionRequest"] = request;
+                variables["bytes"] = request.Bytes;
+                variables["text"] = request.Text;
+                variables["contentType"] = request.ContentType;
+                variables["encodingHint"] = request.EncodingHint;
+                break;
+            case PayloadInspectionResult result:
+                Merge(variables, HttpPayloadExpressionContextFactory.Create(result));
+                break;
+            case HttpRequestInput request:
+                AddHttpRequest(variables, request);
+                break;
+            case HttpResponseOutput response:
+                Merge(variables, HttpPayloadExpressionContextFactory.Create(response));
+                break;
+            case HttpErrorOutput error:
+                Merge(variables, HttpPayloadExpressionContextFactory.Create(error));
+                break;
+            case TimerTick tick:
+                Merge(variables, TimerTickExpressionContextFactory.Create(tick));
+                break;
+            case ScheduleTick tick:
+                Merge(variables, ScheduleTickExpressionContextFactory.Create(tick));
+                break;
         }
     }
 
@@ -96,6 +133,18 @@ public static class FluxMqControlExpressionContextFactory
         variables["qos"] = (int)request.QualityOfService;
         variables["qualityOfService"] = request.QualityOfService;
         variables["retain"] = request.Retain;
+    }
+
+    private static void AddHttpRequest(Dictionary<string, object?> variables, HttpRequestInput request)
+    {
+        variables["request"] = request;
+        variables["method"] = request.Method;
+        variables["url"] = request.Url;
+        variables["headers"] = request.Headers;
+        variables["body"] = request.Body;
+        variables["bytes"] = request.Bytes;
+        variables["contentType"] = request.ContentType;
+        variables["timeoutMilliseconds"] = request.TimeoutMilliseconds;
     }
 
     private static void Merge(Dictionary<string, object?> variables, FlowMapContext context)

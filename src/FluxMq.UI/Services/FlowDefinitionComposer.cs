@@ -7,6 +7,7 @@ using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
 using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
 using FluxMq.UI.Components.Workspace.Nodes.Sources;
 using FluxMq.UI.Components.Workspace.Nodes.StateReducer;
+using FluxMq.UI.Components.Workspace.Nodes.Timers;
 using FluxMq.UI.Models;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -23,6 +24,7 @@ public sealed class FlowDefinitionComposer
     public const string TriggerNodeName = "trigger";
     public const string StoredSourceNodeName = "stored";
     public const string InspectorNodeName = "inspect";
+    public const string PayloadInspectNodeName = "payloadInspect";
     public const string MetricsNodeName = "metrics";
     public const string FilterNodeName = "filter";
     public const string RouterNodeName = "router";
@@ -32,9 +34,15 @@ public sealed class FlowDefinitionComposer
     public const string LoggerNodeName = "logger";
     public const string RecorderNodeName = "recorder";
     public const string PublisherNodeName = "publisher";
+    public const string HttpRequestNodeName = "http";
     public const string StateSourceNodeName = "state";
     public const string ReplayNodeName = "replay";
     public const string GeneratedNodeName = "generated";
+    public const string TimerIntervalNodeName = "timer";
+    public const string TimerScheduleNodeName = "schedule";
+    public const string TimerDelayNodeName = "delay";
+    public const string TimerDebounceNodeName = "debounce";
+    public const string TimerThrottleNodeName = "throttle";
     public const string DefaultWorkflowName = "inspectPayloads";
 
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
@@ -1096,21 +1104,34 @@ public sealed class FlowDefinitionComposer
         var preferredNodeName = componentType switch
         {
             "mqtt.payload-inspector" => InspectorNodeName,
+            "payload.inspect" => PayloadInspectNodeName,
             "mqtt.metrics" => MetricsNodeName,
             "flow.filter" => FilterNodeName,
             "flow.when" => RouterNodeName,
             "flow.assert" => AssertionNodeName,
             "json.schema-validator" => "jsonSchemaValidator",
+            "json.parse" => "jsonParser",
+            "json.stringify" => "jsonStringifier",
+            "text.encode" => "textEncoder",
+            "text.decode" => "textDecoder",
+            "base64.encode" => "base64Encoder",
+            "base64.decode" => "base64Decoder",
             "flow.mapper" => MakeUniqueNodeName(workflow, MapperNodeName),
             "state.reducer" => StateReducerNodeName,
             "flow.logger" => MakeUniqueNodeName(workflow, LoggerNodeName),
             "mqtt.recorder" => RecorderNodeName,
             "mqtt.publisher" => PublisherNodeName,
+            "http.request" => HttpRequestNodeName,
             "file.writer" => "fileWriter",
             "mqtt.connection-state-trigger" => StateSourceNodeName,
             "replay.source" => ReplayNodeName,
             "generated.source" => GeneratedNodeName,
             "session.source" => StoredSourceNodeName,
+            TimerNodeTypes.Interval => TimerIntervalNodeName,
+            TimerNodeTypes.Schedule => TimerScheduleNodeName,
+            TimerNodeTypes.Delay => TimerDelayNodeName,
+            TimerNodeTypes.Debounce => TimerDebounceNodeName,
+            TimerNodeTypes.Throttle => TimerThrottleNodeName,
             _ => MakeNodeName(componentType)
         };
         var nodeName = MakeUniqueNodeName(workflow, preferredNodeName);
@@ -1122,7 +1143,9 @@ public sealed class FlowDefinitionComposer
 
         if (componentType == "flow.mapper")
         {
-            node["configuration"] = CreateDynamicMapperConfiguration("MqttPublishRequest");
+            node["configuration"] = CreateDynamicMapperConfiguration(
+                "MqttPublishRequest",
+                FindDefaultMapperInputType(workflow));
         }
         else if (componentType == "json.schema-validator")
         {
@@ -1168,9 +1191,41 @@ public sealed class FlowDefinitionComposer
         {
             node["configuration"] = CreateMetricsConfiguration();
         }
+        else if (componentType == "http.request")
+        {
+            node["configuration"] = CreateHttpRequestConfiguration();
+        }
+        else if (componentType == "payload.inspect")
+        {
+            node["configuration"] = CreatePayloadInspectConfiguration();
+        }
         else if (componentType is "mqtt.recorder" or "file.writer")
         {
             node["configuration"] = CreateActorCapacityConfiguration();
+        }
+        else if (componentType == TimerNodeTypes.Interval)
+        {
+            node["configuration"] = CreateTimerIntervalConfiguration();
+        }
+        else if (componentType == TimerNodeTypes.Schedule)
+        {
+            node["configuration"] = CreateTimerScheduleConfiguration();
+        }
+        else if (componentType == TimerNodeTypes.Delay)
+        {
+            node["configuration"] = CreateTimerDelayConfiguration(FindDefaultMapperInputType(workflow));
+        }
+        else if (componentType == TimerNodeTypes.Debounce)
+        {
+            node["configuration"] = CreateTimerDebounceConfiguration(FindDefaultMapperInputType(workflow));
+        }
+        else if (componentType == TimerNodeTypes.Throttle)
+        {
+            node["configuration"] = CreateTimerThrottleConfiguration(FindDefaultMapperInputType(workflow));
+        }
+        else if (IsSerializationTransform(componentType))
+        {
+            node["configuration"] = CreateTransformCapacityConfiguration();
         }
 
         if (FindDefaultInputLink(componentType, workflow) is { Length: > 0 } inputLink)
@@ -2710,9 +2765,14 @@ public sealed class FlowDefinitionComposer
 
     private static bool NeedsInputLink(string componentType) => componentType switch
     {
-        "mqtt.trigger" or "session.source" or "replay.source" or "generated.source" or "mqtt.connection-state-trigger" => false,
+        "mqtt.trigger" or "session.source" or "replay.source" or "generated.source" or "mqtt.connection-state-trigger"
+            or TimerNodeTypes.Interval or TimerNodeTypes.Schedule => false,
+        "json.parse" or "json.stringify" or "text.encode" or "text.decode" or "base64.encode" or "base64.decode" => false,
         _ => true
     };
+
+    private static bool IsSerializationTransform(string componentType)
+        => componentType is "json.parse" or "json.stringify" or "text.encode" or "text.decode" or "base64.encode" or "base64.decode";
 
     private static string? FindDefaultInputLink(string componentType, JsonObject workflow)
     {
@@ -2741,11 +2801,11 @@ public sealed class FlowDefinitionComposer
     }
 
     private static bool IsActor(string componentType)
-        => componentType is "mqtt.publisher" or "mqtt.recorder" or "file.writer";
+        => componentType is "mqtt.publisher" or "mqtt.recorder" or "file.writer" or "http.request" or "payload.inspect";
 
     private static string? FindPreferredSourceNode(JsonObject workflow)
     {
-        foreach (var preferredName in new[] { TriggerNodeName, StoredSourceNodeName, ReplayNodeName, GeneratedNodeName })
+        foreach (var preferredName in new[] { TriggerNodeName, StoredSourceNodeName, ReplayNodeName, GeneratedNodeName, TimerIntervalNodeName, TimerScheduleNodeName })
         {
             if (workflow.ContainsKey(preferredName)) return preferredName;
         }
@@ -2794,14 +2854,31 @@ public sealed class FlowDefinitionComposer
             StringComparison.Ordinal);
     }
 
-    private static JsonObject CreateDynamicMapperConfiguration(string outputType)
+    private static string FindDefaultMapperInputType(JsonObject workflow)
+    {
+        if (FindPreferredSourceNode(workflow) is not { Length: > 0 } source ||
+            workflow[source] is not JsonObject sourceNode ||
+            sourceNode["type"]?.GetValue<string?>() is not { } sourceType)
+        {
+            return "MqttEnvelope";
+        }
+
+        return sourceType switch
+        {
+            TimerNodeTypes.Interval => "TimerTick",
+            TimerNodeTypes.Schedule => "ScheduleTick",
+            _ => "MqttEnvelope"
+        };
+    }
+
+    private static JsonObject CreateDynamicMapperConfiguration(string outputType, string inputType = "MqttEnvelope")
         => new()
         {
             ["engine"] = "jsonata",
-            ["inputType"] = "MqttEnvelope",
+            ["inputType"] = inputType,
             ["outputType"] = outputType,
             ["outputContract"] = "typed",
-            ["expression"] = DynamicMapperNodeModel.DefaultExpression(outputType, "jsonata")
+            ["expression"] = DynamicMapperNodeModel.DefaultExpression(outputType, "jsonata", inputType)
         };
 
     private static JsonObject CreateJsonSchemaValidatorConfiguration()
@@ -2904,6 +2981,48 @@ public sealed class FlowDefinitionComposer
             ["boundedCapacity"] = 1000
         };
 
+    private static JsonObject CreateTimerIntervalConfiguration()
+        => new()
+        {
+            ["intervalMilliseconds"] = TimerIntervalNodeModel.DefaultIntervalMilliseconds,
+            ["initialDelayMilliseconds"] = TimerIntervalNodeModel.DefaultInitialDelayMilliseconds,
+            ["emitImmediately"] = true,
+            ["boundedCapacity"] = TimerIntervalNodeModel.DefaultBoundedCapacity
+        };
+
+    private static JsonObject CreateTimerScheduleConfiguration()
+        => new()
+        {
+            ["cron"] = TimerScheduleNodeModel.DefaultCron,
+            ["timeZoneId"] = TimerScheduleNodeModel.DefaultTimeZoneId,
+            ["boundedCapacity"] = TimerScheduleNodeModel.DefaultBoundedCapacity
+        };
+
+    private static JsonObject CreateTimerDelayConfiguration(string inputType = TimerDelayNodeModel.DefaultInputType)
+        => new()
+        {
+            ["inputType"] = TimerDelayNodeModel.NormalizeInputType(inputType),
+            ["delayMilliseconds"] = TimerDelayNodeModel.DefaultDelayMilliseconds,
+            ["boundedCapacity"] = TimerDelayNodeModel.DefaultBoundedCapacity
+        };
+
+    private static JsonObject CreateTimerDebounceConfiguration(string inputType = TimerDelayNodeModel.DefaultInputType)
+        => new()
+        {
+            ["inputType"] = TimerDelayNodeModel.NormalizeInputType(inputType),
+            ["quietPeriodMilliseconds"] = TimerDebounceNodeModel.DefaultQuietPeriodMilliseconds,
+            ["boundedCapacity"] = TimerDebounceNodeModel.DefaultBoundedCapacity
+        };
+
+    private static JsonObject CreateTimerThrottleConfiguration(string inputType = TimerDelayNodeModel.DefaultInputType)
+        => new()
+        {
+            ["inputType"] = TimerDelayNodeModel.NormalizeInputType(inputType),
+            ["intervalMilliseconds"] = TimerThrottleNodeModel.DefaultIntervalMilliseconds,
+            ["emitFirstImmediately"] = true,
+            ["boundedCapacity"] = TimerThrottleNodeModel.DefaultBoundedCapacity
+        };
+
     private static JsonObject CreateLoggerConfiguration()
         => new()
         {
@@ -2922,7 +3041,34 @@ public sealed class FlowDefinitionComposer
             ["displayMetrics"] = MqttMetricsNodeModel.BuildDisplayMetrics(MqttMetricsNodeModel.DefaultDisplayMetrics)
         };
 
+    private static JsonObject CreateHttpRequestConfiguration()
+        => new()
+        {
+            ["defaultTimeoutMilliseconds"] = 30000,
+            ["maxResponseBodyBytes"] = 1048576,
+            ["followRedirects"] = true,
+            ["treatNonSuccessStatusAsError"] = false,
+            ["boundedCapacity"] = 128
+        };
+
+    private static JsonObject CreatePayloadInspectConfiguration()
+        => new()
+        {
+            ["maxPreviewBytes"] = 1024,
+            ["maxFormattedChars"] = 4096,
+            ["detectBase64"] = true,
+            ["formatJson"] = true,
+            ["formatXml"] = true,
+            ["boundedCapacity"] = 128
+        };
+
     private static JsonObject CreateActorCapacityConfiguration()
+        => new()
+        {
+            ["boundedCapacity"] = 1000
+        };
+
+    private static JsonObject CreateTransformCapacityConfiguration()
         => new()
         {
             ["boundedCapacity"] = 1000

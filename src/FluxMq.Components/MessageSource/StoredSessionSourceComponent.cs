@@ -1,6 +1,8 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
+using FluxMq.Components.Storage;
 using FluxMq.Components.Storage.Repositories;
+using FluxFlow.Components.Sessions.Contracts;
 using FluxFlow.Engine.Components;
 using System.Threading.Tasks.Dataflow;
 
@@ -8,7 +10,7 @@ namespace FluxMq.Components.MessageSource;
 
 public sealed class StoredSessionSourceComponent : IFlowNode, IAsyncDisposable
 {
-    private readonly IMessageRepository _messages;
+    private readonly ISessionStore _sessions;
     private readonly BufferBlock<MqttEnvelope> _output;
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly Func<TimeSpan, CancellationToken, ValueTask> _delayAsync;
@@ -18,6 +20,25 @@ public sealed class StoredSessionSourceComponent : IFlowNode, IAsyncDisposable
 
     public StoredSessionSourceComponent(
         IMessageRepository messages,
+        SessionId sessionId,
+        FlowNodeId? id = null,
+        bool preserveTiming = false,
+        double speed = 1,
+        int boundedCapacity = 1000,
+        Func<TimeSpan, CancellationToken, ValueTask>? delayAsync = null)
+        : this(
+            new FluxMqSessionStore(messages),
+            sessionId,
+            id,
+            preserveTiming,
+            speed,
+            boundedCapacity,
+            delayAsync)
+    {
+    }
+
+    public StoredSessionSourceComponent(
+        ISessionStore sessions,
         SessionId sessionId,
         FlowNodeId? id = null,
         bool preserveTiming = false,
@@ -34,7 +55,7 @@ public sealed class StoredSessionSourceComponent : IFlowNode, IAsyncDisposable
         SessionId = sessionId;
         PreserveTiming = preserveTiming;
         Speed = speed;
-        _messages = messages ?? throw new ArgumentNullException(nameof(messages));
+        _sessions = sessions ?? throw new ArgumentNullException(nameof(sessions));
         _delayAsync = delayAsync ?? DefaultDelayAsync;
         _errors = new BroadcastBlock<FlowError>(static error => error);
         _output = new BufferBlock<MqttEnvelope>(new DataflowBlockOptions
@@ -109,9 +130,12 @@ public sealed class StoredSessionSourceComponent : IFlowNode, IAsyncDisposable
         {
             DateTimeOffset? previousReceivedAt = null;
 
-            await foreach (var message in _messages.ReadEnvelopesBySessionAsync(SessionId, ct).ConfigureAwait(false))
+            await foreach (var record in _sessions.ReadMessagesAsync(
+                               new SessionReadRequest { SessionId = SessionId.ToString() },
+                               ct).ConfigureAwait(false))
             {
                 ct.ThrowIfCancellationRequested();
+                var message = FluxMqSessionStore.ToEnvelope(record);
 
                 if (PreserveTiming && previousReceivedAt is not null)
                 {

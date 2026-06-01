@@ -47,6 +47,65 @@ public sealed class FlowComponentCatalog
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
+            "payload.inspect",
+            "Payload Inspect",
+            "Mapper",
+            "Classifies byte or text payload requests and emits preview metadata.",
+            IsResource: false,
+            [
+                new("Input", "PayloadInspectionRequest", IsInput: true),
+                new("Output", "PayloadInspectionResult", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "timer.interval",
+            "Timer Interval",
+            "Source",
+            "Emits timer ticks at a fixed interval.",
+            IsResource: false,
+            [
+                new("Output", "TimerTick", IsInput: false)
+            ]),
+        new(
+            "timer.schedule",
+            "Scheduled Timer",
+            "Source",
+            "Emits schedule ticks from a cron expression.",
+            IsResource: false,
+            [
+                new("Output", "ScheduleTick", IsInput: false)
+            ]),
+        new(
+            "timer.delay",
+            "Delay",
+            "Control",
+            "Delays inputs and emits them unchanged.",
+            IsResource: false,
+            [
+                new("Input", "Configured input type", IsInput: true),
+                new("Output", "Configured input type", IsInput: false)
+            ]),
+        new(
+            "timer.debounce",
+            "Debounce",
+            "Control",
+            "Emits the latest input after a quiet period.",
+            IsResource: false,
+            [
+                new("Input", "Configured input type", IsInput: true),
+                new("Output", "Configured input type", IsInput: false)
+            ]),
+        new(
+            "timer.throttle",
+            "Throttle",
+            "Control",
+            "Limits input emissions to a fixed interval.",
+            IsResource: false,
+            [
+                new("Input", "Configured input type", IsInput: true),
+                new("Output", "Configured input type", IsInput: false)
+            ]),
+        new(
             "mqtt.payload-inspector",
             "Payload Inspector",
             "Mapper",
@@ -129,6 +188,72 @@ public sealed class FlowComponentCatalog
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
+            "json.parse",
+            "JSON Parse",
+            "Transform",
+            "Parses text or bytes into a JSON value.",
+            IsResource: false,
+            [
+                new("Input", "JsonParseRequest", IsInput: true),
+                new("Output", "JsonParseResult", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "json.stringify",
+            "JSON Stringify",
+            "Transform",
+            "Serializes a value into JSON text and bytes.",
+            IsResource: false,
+            [
+                new("Input", "JsonStringifyRequest", IsInput: true),
+                new("Output", "JsonStringifyResult", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "text.encode",
+            "Text Encode",
+            "Transform",
+            "Encodes text into bytes.",
+            IsResource: false,
+            [
+                new("Input", "TextEncodeRequest", IsInput: true),
+                new("Output", "TextEncodeResult", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "text.decode",
+            "Text Decode",
+            "Transform",
+            "Decodes bytes into text.",
+            IsResource: false,
+            [
+                new("Input", "TextDecodeRequest", IsInput: true),
+                new("Output", "TextDecodeResult", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "base64.encode",
+            "Base64 Encode",
+            "Transform",
+            "Encodes bytes or text into base64 text.",
+            IsResource: false,
+            [
+                new("Input", "Base64EncodeRequest", IsInput: true),
+                new("Output", "Base64EncodeResult", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "base64.decode",
+            "Base64 Decode",
+            "Transform",
+            "Decodes base64 text into bytes and optional text.",
+            IsResource: false,
+            [
+                new("Input", "Base64DecodeRequest", IsInput: true),
+                new("Output", "Base64DecodeResult", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
             "mqtt.metrics",
             "MQTT Metrics",
             "Observer",
@@ -150,6 +275,17 @@ public sealed class FlowComponentCatalog
                 new("FlowErrors", "FlowError", IsInput: true),
                 new("Entries", "FlowLogEntry", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "http.request",
+            "HTTP Request",
+            "Actor",
+            "Sends typed HTTP requests and emits typed responses or request errors.",
+            IsResource: false,
+            [
+                new("Input", "HttpRequestInput", IsInput: true),
+                new("Output", "HttpResponseOutput", IsInput: false),
+                new("Errors", "HttpErrorOutput", IsInput: false)
             ]),
         new(
             "mqtt.publisher",
