@@ -120,7 +120,7 @@ Priority:
 
 **Acceptance:**
 
-- `mqtt.message-filter` supports expressions such as `qos >= 1`.
+- `flow.filter` supports expressions such as `qos >= 1`.
 - Predicate failures publish `FlowError` and do not stop later messages.
 - Router/filter ports remain type-safe.
 
@@ -176,7 +176,7 @@ Initial output targets:
 
 **Data/Logic:** Add a validator component with typed output such as `JsonSchemaValidationResult`, plus error output for processing failures.
 
-Initial implementation uses JsonSchema.Net and supports inline schema JSON or a schema file path. The component validates `MqttEnvelope.Payload` as JSON and emits `JsonSchemaValidationResult` with the original envelope and issue list.
+Current implementation delegates schema loading and evaluation to `FluxFlow.Components.Validation` and supports inline schema JSON or a schema file path. The FluxMQ adapter validates `MqttEnvelope.Payload` as JSON and emits `JsonSchemaValidationResult` with the original envelope and issue list.
 
 **Acceptance:**
 

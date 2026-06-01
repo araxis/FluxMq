@@ -1,6 +1,7 @@
 using FluxMq.Core.Models;
 using FluxMq.Core.Payloads;
 using FluxMq.Core.Mqtt;
+using FluxFlow.Components.Control;
 using FluxFlow.Engine.Components;
 using FluxMq.Scenarios;
 using FluxMq.UI.Models;
@@ -1015,7 +1016,7 @@ public sealed class FlowWorkspaceServiceTests
                     }
                   },
                   "router": {
-                    "type": "mqtt.condition-router",
+                    "type": "flow.when",
                     "Input": "trigger.Output",
                     "configuration": {
                       "expression": "topic.StartsWith(\"flux\")"
@@ -1570,7 +1571,7 @@ public sealed class FlowWorkspaceServiceTests
                     }
                   },
                   "filter": {
-                    "type": "mqtt.message-filter",
+                    "type": "flow.filter",
                     "Input": "generated.Output",
                     "configuration": {
                       "expression": "missing.Value > 0"
@@ -1588,12 +1589,12 @@ public sealed class FlowWorkspaceServiceTests
             log.Source == "FlowError" &&
             log.NodeName == "filter" &&
             log.PortName == "Errors" &&
-            log.Code == FlowErrorCodes.ProcessingFailed.ToString()));
+            log.Code == ControlErrorCodes.FilterExpressionFailed.ToString()));
 
         service.Logs.Any(log =>
             log.Source == "FlowError" &&
             log.Context is not null &&
-            log.Context.Contains("factory/error", StringComparison.Ordinal)).ShouldBeTrue();
+            log.Context.Contains("inputType=MqttEnvelope", StringComparison.Ordinal)).ShouldBeTrue();
     }
 
     [Fact]
@@ -1696,7 +1697,7 @@ public sealed class FlowWorkspaceServiceTests
                     }
                   },
                   "filter": {
-                    "type": "mqtt.message-filter",
+                    "type": "flow.filter",
                     "Input": "generated.Output",
                     "configuration": {
                       "expression": "qos >= 1"
@@ -1742,7 +1743,7 @@ public sealed class FlowWorkspaceServiceTests
                     }
                   },
                   "filter": {
-                    "type": "mqtt.message-filter",
+                    "type": "flow.filter",
                     "Input": "generated.Output",
                     "configuration": {
                       "expression": "qos >= 1"
@@ -2133,10 +2134,10 @@ public sealed class FlowWorkspaceServiceTests
             "FlowApplication": {
               "workflows": {
                 "pip1": {
-                  "filter": { "type": "mqtt.message-filter" }
+                  "filter": { "type": "flow.filter" }
                 },
                 "pip2": {
-                  "filter": { "type": "mqtt.message-filter" },
+                  "filter": { "type": "flow.filter" },
                   "inspect": {
                     "type": "mqtt.payload-inspector",
                     "Input": "filter.Output"

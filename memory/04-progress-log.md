@@ -2038,3 +2038,51 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Updated the mapper workbench preview to use the same FluxMQ request mapping adapter as runtime execution.
 - Verified:
   - `dotnet test FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo` passes with 494 tests.
+
+## 2026-06-01 - Control component package migration
+
+- Added `FluxFlow.Components.Control` `0.1.0-alpha.1` to the app/runtime component projects.
+- Shifted the pre-release control node vocabulary to package ids: `flow.filter`, `flow.when`, and `flow.assert`.
+- Reworked FluxMQ control wrappers so package nodes own expression evaluation while FluxMQ keeps product-specific pass-count activity, route log entries, assertion log entries, and assertion events.
+- Removed the old local predicate, filter, router, and assertion expression implementations from FluxMQ.
+- Updated docs, current memory, designer catalogs, node models, and tests to the new control ids.
+- Updated the local sample app file at `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` from `mqtt.condition-router` to `flow.when`.
+- Verified:
+  - `dotnet test FluxMq.sln -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 488 tests.
+
+## 2026-06-01 - Validation component package migration
+
+- Added `FluxFlow.Components.Validation` `0.1.0-alpha.1` to `FluxMq.Components`.
+- Reworked `json.schema-validator` so package code owns schema loading, schema-path handling, value selection, and validation evaluation.
+- Kept a small FluxMQ adapter for MQTT payload text selection, `JsonSchemaValidationResult` projection, invalid-payload issue wording, and `json.schema.validated` events.
+- Removed FluxMQ's direct `JsonSchema.Net` dependency from the component project.
+- Updated docs and memory notes to describe the package-backed validation boundary.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore --filter "FullyQualifiedName~JsonSchemaValidatorComponentTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v normal` passes with 4 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~JsonSchemaValidatorFactory" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 -v minimal` passes with 2 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 488 tests.
+
+## 2026-06-01 - File system component package migration
+
+- Added `FluxFlow.Components.FileSystem` `0.1.0-alpha.1` to `FluxMq.Components`.
+- Reworked `file.writer` so package code owns file path validation, directory creation, write modes, byte writing, and package error codes.
+- Kept a small FluxMQ adapter for the existing `FileWriteRequest` mapper target, `file.writer` actor id, and `file.written` event projection.
+- Updated docs and memory notes to describe the package-backed file writer boundary.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal --filter FileWriterComponentTests` passes with 3 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 81 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 488 tests.
+
+## 2026-06-01 - Observability component package migration
+
+- Added `FluxFlow.Components.Observability` `0.1.0-alpha.1` to `FluxMq.Components`.
+- Reworked `flow.logger` so package code owns neutral log-entry creation and selector handling.
+- Kept a small FluxMQ adapter for the existing MQTT message log shape, `FlowError` log shape, recent-entry buffer, and workspace-facing `FlowLogEntry` contract.
+- Left `mqtt.metrics` in FluxMQ for now because it still owns MQTT-specific topic counts, retained-message counts, payload-byte summaries, and rolling-window rate projections.
+- Verified:
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal --filter FlowLoggerComponentTests` passes with 4 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal --filter "FullyQualifiedName~FlowLogger"` passes with 1 test.
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 108 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 81 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 205 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 488 tests.

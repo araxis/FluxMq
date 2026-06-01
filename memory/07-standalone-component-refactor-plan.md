@@ -83,20 +83,21 @@ Avoid user-facing "sink" naming where an actor name is clearer. Internal code ma
 - Added `flow.mapper` as the user-facing dynamic mapper node; request-specific mapper classes are internal typed implementations, not catalog/runtime node aliases.
 - Added `mqtt.publisher` as the MQTT publish actor node type.
 - Renamed the metrics observer to `MqttMetricsComponent` / `mqtt.metrics`.
-- Added `FileWriteRequest` and `file.writer` as the first non-MQTT proof of the mapper-to-actor pattern.
+- Added `FileWriteRequest` and package-backed `file.writer` as the first non-MQTT proof of the mapper-to-actor pattern.
+- Added `json.schema-validator` as a standalone validator backed by `FluxFlow.Components.Validation`.
 - Registered runtime node types and user-facing catalog entries:
   - `flow.mapper`
   - `mqtt.publisher`
   - `mqtt.recorder`
   - `mqtt.metrics`
   - `file.writer`
+  - `json.schema-validator`
 
 ## Next Refactoring Steps
 
 1. Generalize dynamic mapper targets beyond the current request adapters so the same node can produce `HttpRequest`, `EmailSendRequest`, and future command types.
 2. Add richer File Writer configuration and UI editing for path/content/mode expressions.
 3. Harden Jsonata mapping around binary payloads, JSON payload objects, and schema-aware helper variables.
-4. Add JSON Schema validator component with a typed validation-result output.
-5. Add assertion and metric components for the ops/QA era.
-6. Rework node editor fields so each mapper's expressions and required actor input are obvious.
-7. Move dashboard/metric blocks to consume projection/runtime outputs only, never separate live/replay paths.
+4. Add assertion and metric components for the ops/QA era.
+5. Rework node editor fields so each mapper's expressions and required actor input are obvious.
+6. Move dashboard/metric blocks to consume projection/runtime outputs only, never separate live/replay paths.

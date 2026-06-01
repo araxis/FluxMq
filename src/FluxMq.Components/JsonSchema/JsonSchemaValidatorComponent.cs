@@ -1,225 +1,284 @@
-using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
+using FluxFlow.Components.Validation;
 using FluxFlow.Engine.Components;
-using Json.Schema;
+using FluxFlow.Engine.Definitions;
+using FluxFlow.Engine.Runtime;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks.Dataflow;
-using SchemaDocument = Json.Schema.JsonSchema;
+using PackageValidationIssue = FluxFlow.Components.Validation.Contracts.JsonSchemaValidationIssue;
+using PackageValidationResult = FluxFlow.Components.Validation.Contracts.JsonSchemaValidationResult<FluxMq.Core.Models.MqttEnvelope>;
 
 namespace FluxMq.Components.JsonSchema;
 
-public sealed class JsonSchemaValidatorComponent : IFlowNode, IFlowEventSource
+public sealed class JsonSchemaValidatorComponent : EventFlowNodeBase
 {
-    private readonly ActionBlock<MqttEnvelope> _block;
-    private readonly BufferBlock<JsonSchemaValidationResult> _result;
+    private const string InputTypeName = "MqttEnvelope";
+    private const string PayloadTextSelector = "payloadText";
+
+    private static readonly PortName InputPort = new("Input");
+
+    private readonly RuntimeNode _innerNode;
+    private readonly TransformBlock<PackageValidationResult, JsonSchemaValidationResult> _result;
     private readonly BufferBlock<MqttEnvelope> _valid;
     private readonly BufferBlock<MqttEnvelope> _invalid;
-    private readonly BroadcastBlock<FlowError> _errors;
-    private readonly BufferBlock<FlowEvent> _events;
-    private readonly SchemaDocument _schema;
-    private readonly string _schemaId;
+    private readonly ActionBlock<FlowError> _errors;
+    private readonly List<IDisposable> _links = [];
+    private int _started;
 
     public JsonSchemaValidatorComponent(
         JsonSchemaValidatorDefinition definition,
         FlowNodeId? id = null,
         int boundedCapacity = 1000)
+        : base(id ?? FlowNodeId.New())
     {
         ArgumentNullException.ThrowIfNull(definition);
-        ArgumentException.ThrowIfNullOrWhiteSpace(definition.SchemaJson);
+        if (boundedCapacity <= 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(boundedCapacity),
+                "JSON Schema validator bounded capacity must be greater than zero.");
+        }
 
-        Id = id ?? FlowNodeId.New();
-        _schema = SchemaDocument.FromText(definition.SchemaJson);
-        _schemaId = string.IsNullOrWhiteSpace(definition.SchemaId) ? "inline" : definition.SchemaId.Trim();
-        _errors = new BroadcastBlock<FlowError>(static error => error);
-        _events = new BufferBlock<FlowEvent>();
-        _result = new BufferBlock<JsonSchemaValidationResult>(new DataflowBlockOptions
+        var blockOptions = new DataflowBlockOptions { BoundedCapacity = boundedCapacity };
+        var executionOptions = new ExecutionDataflowBlockOptions
         {
-            BoundedCapacity = boundedCapacity
-        });
-        _valid = new BufferBlock<MqttEnvelope>(new DataflowBlockOptions
-        {
-            BoundedCapacity = boundedCapacity
-        });
-        _invalid = new BufferBlock<MqttEnvelope>(new DataflowBlockOptions
-        {
-            BoundedCapacity = boundedCapacity
-        });
-        _block = new ActionBlock<MqttEnvelope>(
-            ValidateAndRouteAsync,
-            new ExecutionDataflowBlockOptions
-            {
-                BoundedCapacity = boundedCapacity,
-                EnsureOrdered = true
-            });
+            BoundedCapacity = boundedCapacity,
+            EnsureOrdered = true
+        };
 
-        _block.Completion.ContinueWith(
-            CompleteOutputs,
-            CancellationToken.None,
-            TaskContinuationOptions.ExecuteSynchronously,
-            TaskScheduler.Default);
+        _innerNode = CreateInnerNode(definition, boundedCapacity);
+        Input = GetInput<MqttEnvelope>(_innerNode, ValidationComponentPorts.Input);
+        _result = new TransformBlock<PackageValidationResult, JsonSchemaValidationResult>(
+            MapResult,
+            executionOptions);
+        _valid = new BufferBlock<MqttEnvelope>(blockOptions);
+        _invalid = new BufferBlock<MqttEnvelope>(blockOptions);
+        _errors = new ActionBlock<FlowError>(
+            error => TryReportError(error.Code, error.Message, error.Exception, error.Context),
+            executionOptions);
+
+        _links.Add(LinkOutput(_innerNode, ValidationComponentPorts.Result, _result));
+        _links.Add(LinkOutput(_innerNode, ValidationComponentPorts.Valid, _valid));
+        _links.Add(LinkOutput(_innerNode, ValidationComponentPorts.Invalid, _invalid));
+        _links.Add(_innerNode.Node.Errors.LinkTo(
+            _errors,
+            new DataflowLinkOptions { PropagateCompletion = true }));
+
+        CompleteWhen(Task.WhenAll(
+            _innerNode.Node.Completion,
+            _result.Completion,
+            _errors.Completion));
     }
 
-    public FlowNodeId Id { get; }
-    public ISourceBlock<FlowError> Errors => _errors;
-    public ISourceBlock<FlowEvent> Events => _events;
-    public Task Completion => _block.Completion;
-    public ITargetBlock<MqttEnvelope> Input => _block;
+    public ITargetBlock<MqttEnvelope> Input { get; }
     public ISourceBlock<JsonSchemaValidationResult> Result => _result;
     public ISourceBlock<MqttEnvelope> Valid => _valid;
     public ISourceBlock<MqttEnvelope> Invalid => _invalid;
 
-    public void Complete() => _block.Complete();
+    public override Task StartAsync(CancellationToken cancellationToken = default)
+        => Interlocked.Exchange(ref _started, 1) == 0
+            ? _innerNode.Node.StartAsync(cancellationToken)
+            : Task.CompletedTask;
 
-    public void Fault(Exception exception)
+    public override void Complete()
+        => _innerNode.Node.Complete();
+
+    public override void Fault(Exception exception)
     {
-        PublishError(FlowErrorCodes.NodeFaulted, "JSON Schema validator faulted.", exception);
-        ((IDataflowBlock)_block).Fault(exception);
-    }
-
-    private async Task ValidateAndRouteAsync(MqttEnvelope envelope)
-    {
-        var result = Validate(envelope);
-        await _result.SendAsync(result).ConfigureAwait(false);
-        PublishEvent(result);
-
-        var branch = result.IsValid ? _valid : _invalid;
-        await branch.SendAsync(result.Envelope).ConfigureAwait(false);
-    }
-
-    private JsonSchemaValidationResult Validate(MqttEnvelope envelope)
-    {
-        JsonElement payload;
-        try
-        {
-            using var document = JsonDocument.Parse(Encoding.UTF8.GetString(envelope.Payload));
-            payload = document.RootElement.Clone();
-        }
-        catch (JsonException exception)
-        {
-            return new JsonSchemaValidationResult
-            {
-                SchemaId = _schemaId,
-                IsValid = false,
-                Envelope = envelope,
-                Issues =
-                [
-                    new JsonSchemaValidationIssue("$", $"Payload is not valid JSON: {exception.Message}")
-                ]
-            };
-        }
+        ArgumentNullException.ThrowIfNull(exception);
 
         try
         {
-            var results = _schema.Evaluate(payload, new EvaluationOptions
-            {
-                OutputFormat = OutputFormat.List
-            });
-
-            return new JsonSchemaValidationResult
-            {
-                SchemaId = _schemaId,
-                IsValid = results.IsValid,
-                Envelope = envelope,
-                Issues = results.IsValid ? [] : CollectIssues(results)
-            };
-        }
-        catch (Exception exception)
-        {
-            PublishError(FlowErrorCodes.ProcessingFailed, "JSON Schema validation failed.", exception, envelope.Topic);
-            return new JsonSchemaValidationResult
-            {
-                SchemaId = _schemaId,
-                IsValid = false,
-                Envelope = envelope,
-                Issues =
-                [
-                    new JsonSchemaValidationIssue("$", "JSON Schema validation failed.")
-                ]
-            };
-        }
-    }
-
-    private void CompleteOutputs(Task completion)
-    {
-        if (completion.IsFaulted && completion.Exception is { } exception)
-        {
+            _innerNode.Node.Fault(exception);
             ((IDataflowBlock)_result).Fault(exception);
             ((IDataflowBlock)_valid).Fault(exception);
             ((IDataflowBlock)_invalid).Fault(exception);
-            _errors.Complete();
-            _events.Complete();
-            return;
+            ((IDataflowBlock)_errors).Fault(exception);
         }
-
-        _result.Complete();
-        _valid.Complete();
-        _invalid.Complete();
-        _errors.Complete();
-        _events.Complete();
+        finally
+        {
+            FaultNode(exception);
+        }
     }
 
-    private static IReadOnlyList<JsonSchemaValidationIssue> CollectIssues(EvaluationResults results)
+    protected override void OnNodeCompleted()
     {
-        var issues = new List<JsonSchemaValidationIssue>();
-        foreach (var result in Flatten(results))
-        {
-            if (result.IsValid)
-            {
-                continue;
-            }
+        DisposeLinks();
+        base.OnNodeCompleted();
+    }
 
-            if (result.Errors is { Count: > 0 } errors)
-            {
-                foreach (var error in errors)
-                {
-                    issues.Add(new JsonSchemaValidationIssue(FormatPath(result), error.Value));
-                }
-            }
-            else if (result.Details is null || result.Details.Count == 0)
-            {
-                issues.Add(new JsonSchemaValidationIssue(FormatPath(result), "JSON value does not match schema."));
-            }
+    protected override void OnNodeFaulted(Exception exception)
+    {
+        DisposeLinks();
+        base.OnNodeFaulted(exception);
+    }
+
+    private static RuntimeNode CreateInnerNode(
+        JsonSchemaValidatorDefinition definition,
+        int boundedCapacity)
+    {
+        var registry = new RuntimeNodeFactoryRegistry()
+            .RegisterValidationComponents(options => options
+                .RegisterType<MqttEnvelope>(InputTypeName)
+                .UseValueSelector<MqttEnvelope>(
+                    PayloadTextSelector,
+                    static (envelope, _) => Encoding.UTF8.GetString(envelope.Payload)));
+
+        if (!registry.TryGetFactory(ValidationComponentTypes.JsonSchemaValidator, out var factory))
+        {
+            throw new InvalidOperationException("JSON Schema validator package factory was not registered.");
         }
 
-        return issues.Count > 0
+        return factory(new RuntimeNodeFactoryContext(
+            new NodeName("jsonSchemaValidator"),
+            CreateInnerDefinition(definition, boundedCapacity),
+            "jsonSchemaValidator",
+            new Dictionary<NodeName, RuntimeNode>()));
+    }
+
+    private static NodeDefinition CreateInnerDefinition(
+        JsonSchemaValidatorDefinition definition,
+        int boundedCapacity)
+    {
+        var innerDefinition = new NodeDefinition
+        {
+            Type = ValidationComponentTypes.JsonSchemaValidator
+        };
+
+        if (!string.IsNullOrWhiteSpace(definition.SchemaJson))
+        {
+            innerDefinition.Configuration["schema"] = ToJsonString(definition.SchemaJson);
+        }
+
+        if (!string.IsNullOrWhiteSpace(definition.SchemaPath))
+        {
+            innerDefinition.Configuration["schemaPath"] = ToJsonString(definition.SchemaPath);
+        }
+
+        innerDefinition.Configuration["schemaId"] = ToJsonString(definition.SchemaId);
+        innerDefinition.Configuration["inputType"] = ToJsonString(InputTypeName);
+        innerDefinition.Configuration["valueSelector"] = ToJsonString(PayloadTextSelector);
+        innerDefinition.Configuration["boundedCapacity"] =
+            JsonSerializer.SerializeToElement(boundedCapacity);
+
+        return innerDefinition;
+    }
+
+    private static JsonElement ToJsonString(string value)
+        => JsonSerializer.SerializeToElement(value);
+
+    private static ITargetBlock<T> GetInput<T>(RuntimeNode node, string portName)
+    {
+        var input = node.FindInput(new PortName(portName))
+            ?? throw new InvalidOperationException($"Inner validator input '{portName}' was not found.");
+
+        return input is InputPort<T> typedInput
+            ? typedInput.Target
+            : throw new InvalidOperationException(
+                $"Inner validator input '{portName}' has unsupported type '{input.ValueType.Name}'.");
+    }
+
+    private static IDisposable LinkOutput<T>(
+        RuntimeNode node,
+        string portName,
+        ITargetBlock<T> target)
+    {
+        var output = node.FindOutput(new PortName(portName))
+            ?? throw new InvalidOperationException($"Inner validator output '{portName}' was not found.");
+
+        var link = output.TryLinkTo(
+            new InputPort<T>(
+                new PortAddress(
+                    "jsonSchemaValidator",
+                    new NodeName(portName),
+                    InputPort),
+                target),
+            propagateCompletion: true,
+            out var error);
+
+        if (error is not null || link is null)
+        {
+            throw new InvalidOperationException(
+                error?.Message ?? $"Could not link inner validator output '{portName}'.");
+        }
+
+        return link;
+    }
+
+    private JsonSchemaValidationResult MapResult(PackageValidationResult result)
+    {
+        var mapped = new JsonSchemaValidationResult
+        {
+            SchemaId = string.IsNullOrWhiteSpace(result.SchemaId) ? "inline" : result.SchemaId,
+            IsValid = result.IsValid,
+            Envelope = result.Input,
+            Issues = CreateIssues(result)
+        };
+
+        PublishEvent(mapped);
+        return mapped;
+    }
+
+    private static IReadOnlyList<JsonSchemaValidationIssue> CreateIssues(PackageValidationResult result)
+    {
+        if (result.IsValid)
+        {
+            return [];
+        }
+
+        if (!IsPayloadValidJson(result.Input))
+        {
+            return [new JsonSchemaValidationIssue("$", "Payload is not valid JSON.")];
+        }
+
+        var issues = result.Issues
+            .Select(MapIssue)
+            .Where(issue => !string.IsNullOrWhiteSpace(issue.Message))
+            .ToArray();
+
+        return issues.Length > 0
             ? issues
-            :
-            [
-                new JsonSchemaValidationIssue("$", "JSON value does not match schema.")
-            ];
+            : [new JsonSchemaValidationIssue("$", "JSON value does not match schema.")];
     }
 
-    private static IEnumerable<EvaluationResults> Flatten(EvaluationResults results)
+    private static JsonSchemaValidationIssue MapIssue(PackageValidationIssue issue)
+        => new(
+            Path: FirstNonEmpty(
+                issue.InstanceLocation,
+                issue.EvaluationPath,
+                issue.SchemaLocation) ?? "$",
+            Message: issue.Message ?? "JSON value does not match schema.");
+
+    private static string? FirstNonEmpty(params string?[] values)
     {
-        yield return results;
-        foreach (var detail in results.Details ?? [])
+        foreach (var value in values)
         {
-            foreach (var result in Flatten(detail))
+            if (!string.IsNullOrWhiteSpace(value))
             {
-                yield return result;
+                return value;
             }
         }
+
+        return null;
     }
 
-    private static string FormatPath(EvaluationResults result)
-        => result.InstanceLocation.ToString();
-
-    private void PublishError(int code, string message, Exception exception, string? context = null)
+    private static bool IsPayloadValidJson(MqttEnvelope envelope)
     {
-        _errors.Post(new FlowError
+        try
         {
-            NodeId = Id,
-            Code = code,
-            Message = message,
-            Exception = exception,
-            Context = context
-        });
+            using var _ = JsonDocument.Parse(envelope.Payload);
+            return true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 
     private void PublishEvent(JsonSchemaValidationResult result)
     {
-        _events.Post(new FlowEvent
+        EmitEvent(new FlowEvent
         {
             Timestamp = DateTimeOffset.UtcNow,
             Type = FluxMqEventTypes.JsonSchemaValidated,
@@ -236,5 +295,15 @@ public sealed class JsonSchemaValidatorComponent : IFlowNode, IFlowEventSource
                 ["issueCount"] = result.Issues.Count.ToString(System.Globalization.CultureInfo.InvariantCulture)
             }
         });
+    }
+
+    private void DisposeLinks()
+    {
+        foreach (var link in _links)
+        {
+            link.Dispose();
+        }
+
+        _links.Clear();
     }
 }

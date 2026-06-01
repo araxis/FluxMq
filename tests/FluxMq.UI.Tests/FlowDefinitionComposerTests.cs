@@ -86,10 +86,10 @@ public sealed class FlowDefinitionComposerTests
     {
         var catalog = new FlowComponentCatalog();
 
-        var router = catalog.Find("mqtt.condition-router").ShouldNotBeNull();
+        var router = catalog.Find("flow.when").ShouldNotBeNull();
         router.Ports.ShouldContain(port => port.Name == "WhenTrue" && port.ValueType == "MqttEnvelope" && !port.IsInput);
         router.Ports.ShouldContain(port => port.Name == "WhenFalse" && port.ValueType == "MqttEnvelope" && !port.IsInput);
-        router.Ports.ShouldContain(port => port.Name == "Entries" && port.ValueType == "FlowLogEntry" && !port.IsInput);
+        router.Ports.ShouldNotContain(port => port.Name == "Entries");
 
         var validator = catalog.Find("json.schema-validator").ShouldNotBeNull();
         validator.Ports.ShouldContain(port => port.Name == "Result" && port.ValueType == "JsonSchemaValidationResult" && !port.IsInput);
@@ -97,13 +97,13 @@ public sealed class FlowDefinitionComposerTests
         validator.Ports.ShouldContain(port => port.Name == "Invalid" && port.ValueType == "MqttEnvelope" && !port.IsInput);
         validator.Ports.Last().Name.ShouldBe("Errors");
 
-        var assertion = catalog.Find("flow.assertion").ShouldNotBeNull();
+        var assertion = catalog.Find("flow.assert").ShouldNotBeNull();
         assertion.Category.ShouldBe("Assertion");
         assertion.Ports.ShouldContain(port => port.Name == "Input" && port.ValueType == "Configured input type" && port.IsInput);
         assertion.Ports.ShouldContain(port => port.Name == "Result" && port.ValueType == "FlowAssertionResult" && !port.IsInput);
         assertion.Ports.ShouldContain(port => port.Name == "Passed" && port.ValueType == "Configured input type" && !port.IsInput);
         assertion.Ports.ShouldContain(port => port.Name == "Failed" && port.ValueType == "Configured input type" && !port.IsInput);
-        assertion.Ports.ShouldContain(port => port.Name == "Entries" && port.ValueType == "FlowLogEntry" && !port.IsInput);
+        assertion.Ports.ShouldNotContain(port => port.Name == "Entries");
         assertion.Ports.Last().Name.ShouldBe("Errors");
     }
 
@@ -539,7 +539,7 @@ public sealed class FlowDefinitionComposerTests
             new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
             "#");
 
-        var updated = composer.AddComponent(initial, "mqtt.condition-router");
+        var updated = composer.AddComponent(initial, "flow.when");
 
         using var document = JsonDocument.Parse(updated);
         var router = document.RootElement
@@ -602,7 +602,7 @@ public sealed class FlowDefinitionComposerTests
             new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
             "#");
 
-        var updated = composer.AddComponent(initial, "flow.assertion");
+        var updated = composer.AddComponent(initial, "flow.assert");
 
         using var document = JsonDocument.Parse(updated);
         var assertion = document.RootElement
@@ -1497,7 +1497,7 @@ public sealed class FlowDefinitionComposerTests
               "workflows": {
                 "pipe": {
                   "trigger": { "type": "mqtt.trigger" },
-                  "filter": { "type": "mqtt.message-filter", "Input": "trigger.Output" },
+                  "filter": { "type": "flow.filter", "Input": "trigger.Output" },
                   "inspect": { "type": "mqtt.payload-inspector", "Input": "trigger.Output" }
                 }
               }
@@ -1606,7 +1606,7 @@ public sealed class FlowDefinitionComposerTests
               "workflows": {
                 "pipe": {
                   "trigger": { "type": "mqtt.trigger" },
-                  "filter": { "type": "mqtt.message-filter" },
+                  "filter": { "type": "flow.filter" },
                   "logger": {
                     "type": "flow.logger",
                     "Input": [ "trigger.Output", "filter.Output" ]
@@ -1805,7 +1805,7 @@ public sealed class FlowDefinitionComposerTests
                 "pipe": {
                   "trigger": { "type": "mqtt.trigger" },
                   "filter": {
-                    "type": "mqtt.message-filter",
+                    "type": "flow.filter",
                     "Input": "trigger.Output"
                   },
                   "inspect": {
@@ -1859,10 +1859,10 @@ public sealed class FlowDefinitionComposerTests
             "FlowApplication": {
               "workflows": {
                 "pip1": {
-                  "filter": { "type": "mqtt.message-filter" }
+                  "filter": { "type": "flow.filter" }
                 },
                 "pip2": {
-                  "filter": { "type": "mqtt.message-filter" }
+                  "filter": { "type": "flow.filter" }
                 }
               }
             }

@@ -373,9 +373,9 @@ public sealed class PipelineComponentFactoryTests
         trueSink!.Values.Select(envelope => envelope.Topic).ShouldBe(["factory/qos1"]);
         falseSink!.Values.Select(envelope => envelope.Topic).ShouldBe(["factory/qos0"]);
         logSink!.Values.Select(entry => entry.Message).ShouldBe([
-            "Routed MQTT message to WhenFalse.",
-            "Routed MQTT message to WhenTrue."
-        ]);
+            "Routed input to WhenFalse.",
+            "Routed input to WhenTrue."
+        ], ignoreOrder: true);
     }
 
     [Fact]
@@ -523,10 +523,11 @@ public sealed class PipelineComponentFactoryTests
         });
 
         result.IsSuccess.ShouldBeTrue();
+        await result.Runtime!.StartAsync();
 
         source!.Post(new MqttEnvelope { Topic = "factory/one", Payload = """{"status":"ok"}"""u8.ToArray() });
         source.Post(new MqttEnvelope { Topic = "factory/two", Payload = """{"status":"fault"}"""u8.ToArray() });
-        result.Runtime!.Complete();
+        result.Runtime.Complete();
 
         await result.Runtime.Completion;
 
@@ -601,10 +602,11 @@ public sealed class PipelineComponentFactoryTests
         });
 
         result.IsSuccess.ShouldBeTrue();
+        await result.Runtime!.StartAsync();
 
         source!.Post(new MqttEnvelope { Topic = "factory/valid", Payload = """{"status":"ok"}"""u8.ToArray() });
         source.Post(new MqttEnvelope { Topic = "factory/invalid", Payload = """{"status":"fault"}"""u8.ToArray() });
-        result.Runtime!.Complete();
+        result.Runtime.Complete();
 
         await result.Runtime.Completion;
 
@@ -1159,7 +1161,7 @@ public sealed class PipelineComponentFactoryTests
             }
         });
 
-        result.IsSuccess.ShouldBeTrue();
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
         await using var runtime = result.Runtime!;
 
         await runtime.StartAsync();

@@ -1,5 +1,6 @@
 using FluxMq.Components.FileWriter;
 using FluxMq.Components.JsonSchema;
+using FluxMq.Components.Logging;
 using FluxMq.Components.Mapping;
 using FluxMq.Components.MqttPayloadInspector;
 using FluxMq.Components.MqttPublisher;
@@ -10,9 +11,9 @@ using FluxFlow.Engine.Mapping;
 using MQTTnet.Protocol;
 using System.Text;
 
-namespace FluxMq.Components.Assertions;
+namespace FluxMq.Components.Control;
 
-public static class FlowAssertionContextFactory
+public static class FluxMqControlExpressionContextFactory
 {
     public static FlowMapContext Create<TInput>(TInput input)
     {
