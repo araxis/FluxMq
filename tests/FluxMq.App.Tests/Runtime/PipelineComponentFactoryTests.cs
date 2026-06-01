@@ -16,8 +16,11 @@ using FluxFlow.Components.Payloads.Contracts;
 using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Definitions;
 using FluxFlow.Engine.Runtime;
+using FluxFlow.Components.Serialization.Contracts;
+using FluxFlow.Components.Timers.Contracts;
 using MQTTnet.Protocol;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
 using System.Threading.Tasks.Dataflow;
@@ -53,23 +56,34 @@ public sealed class PipelineComponentFactoryTests
             FluxMqNodeTypes.FlowAssertion,
             FluxMqNodeTypes.JsonSchemaValidator,
             FluxMqNodeTypes.DynamicMapper,
+            new NodeType("json.parse"),
+            new NodeType("json.stringify"),
+            new NodeType("text.encode"),
+            new NodeType("text.decode"),
+            new NodeType("base64.encode"),
+            new NodeType("base64.decode"),
             FluxMqNodeTypes.MqttPublisher,
             FluxMqNodeTypes.MqttRecorder,
-            FluxMqNodeTypes.FileWriter
+            FluxMqNodeTypes.FileWriter,
+            FluxMqNodeTypes.TimerInterval,
+            FluxMqNodeTypes.TimerSchedule,
+            FluxMqNodeTypes.TimerDelay,
+            FluxMqNodeTypes.TimerDebounce,
+            FluxMqNodeTypes.TimerThrottle
         }, ignoreOrder: true);
     }
 
     [Fact]
     public async Task PayloadInspectFactory_CreatesLinkableRuntimeNode()
     {
-        TypedTestSourceNode<FlowPayloadInspectionRequest>? source = null;
+        TestValueSourceNode<FlowPayloadInspectionRequest>? source = null;
         TestSinkNode<FlowPayloadInspectionResult>? sink = null;
 
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories()
             .Register(new NodeType("test.payload-source"), (address, _) =>
             {
-                source = new TypedTestSourceNode<FlowPayloadInspectionRequest>();
+                source = new TestValueSourceNode<FlowPayloadInspectionRequest>();
                 return SourceNode(address, source);
             })
             .Register(new NodeType("test.payload-sink"), (address, _) =>
@@ -113,14 +127,14 @@ public sealed class PipelineComponentFactoryTests
     [Fact]
     public async Task HttpRequestFactory_CreatesLinkableRuntimeNode()
     {
-        TypedTestSourceNode<HttpRequestInput>? source = null;
+        TestValueSourceNode<HttpRequestInput>? source = null;
         TestSinkNode<HttpErrorOutput>? errors = null;
 
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories()
             .Register(new NodeType("test.http-source"), (address, _) =>
             {
-                source = new TypedTestSourceNode<HttpRequestInput>();
+                source = new TestValueSourceNode<HttpRequestInput>();
                 return SourceNode(address, source);
             })
             .Register(new NodeType("test.http-errors"), (address, _) =>
@@ -218,6 +232,59 @@ public sealed class PipelineComponentFactoryTests
         sink.Values[0].Method.ShouldBe("POST");
         sink.Values[0].Url.ShouldBe("https://example.test/messages");
         sink.Values[0].Body.ShouldBe("""{"value":1}""");
+    }
+
+    [Fact]
+    public async Task SerializationFactory_CreatesLinkableRuntimeNode()
+    {
+        TestValueSourceNode<JsonStringifyRequest>? source = null;
+        TestSinkNode<JsonStringifyResult>? sink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.stringify-source"), (address, _) =>
+            {
+                source = new TestValueSourceNode<JsonStringifyRequest>();
+                return SourceNode(address, source);
+            })
+            .Register(new NodeType("test.stringify-sink"), (address, _) =>
+            {
+                sink = new TestSinkNode<JsonStringifyResult>();
+                return SinkNode(address, sink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("test.stringify-source"),
+                        ["stringify"] = NodeWithPort("json.stringify", "Input", "\"source.Output\""),
+                        ["sink"] = NodeWithPort("test.stringify-sink", "Input", "\"stringify.Output\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+
+        source!.Post(new JsonStringifyRequest
+        {
+            Value = new Dictionary<string, object?>
+            {
+                ["value"] = 12
+            }
+        });
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+        var output = sink!.Values.ShouldHaveSingleItem();
+        output.Text.ShouldBe("""{"value":12}""");
+        output.ByteCount.ShouldBe(12);
     }
 
     [Fact]
@@ -1018,6 +1085,211 @@ public sealed class PipelineComponentFactoryTests
     }
 
     [Fact]
+    public async Task TimerIntervalFactory_CreatesLinkableRuntimeNode()
+    {
+        TestSinkNode<TimerTick>? sink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.timer-sink"), (address, _) =>
+            {
+                sink = new TestSinkNode<TimerTick>();
+                return SinkNode(address, sink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["timer"] = new NodeDefinition
+                        {
+                            Type = FluxMqNodeTypes.TimerInterval,
+                            Configuration =
+                            {
+                                ["name"] = JsonDocument.Parse("\"poll\"").RootElement.Clone(),
+                                ["intervalMilliseconds"] = JsonDocument.Parse("1").RootElement.Clone(),
+                                ["emitImmediately"] = JsonDocument.Parse("true").RootElement.Clone(),
+                                ["maxTicks"] = JsonDocument.Parse("2").RootElement.Clone()
+                            }
+                        },
+                        ["sink"] = NodeWithPort("test.timer-sink", "Input", "\"timer.Output\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+        await using var runtime = result.Runtime!;
+
+        await runtime.StartAsync();
+        await runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+        sink!.Values.Select(tick => tick.Sequence).ShouldBe([1, 2]);
+        sink.Values.ShouldAllBe(tick => tick.Name == "poll");
+    }
+
+    [Fact]
+    public async Task TimerDelayFactory_DelaysConfiguredInputType()
+    {
+        TestSinkNode<MqttEnvelope>? sink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.envelope-sink"), (address, _) =>
+            {
+                sink = new TestSinkNode<MqttEnvelope>();
+                return SinkNode(address, sink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["generated"] = new NodeDefinition
+                        {
+                            Type = FluxMqNodeTypes.GeneratedSource,
+                            Configuration =
+                            {
+                                ["messages"] = JsonDocument.Parse("""[{"topic":"factory/one","payload":"one"}]""").RootElement.Clone()
+                            }
+                        },
+                        ["delay"] = new NodeDefinition
+                        {
+                            Type = FluxMqNodeTypes.TimerDelay,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"generated.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["inputType"] = JsonDocument.Parse("\"MqttEnvelope\"").RootElement.Clone(),
+                                ["delayMilliseconds"] = JsonDocument.Parse("0").RootElement.Clone()
+                            }
+                        },
+                        ["sink"] = NodeWithPort("test.envelope-sink", "Input", "\"delay.Output\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+        await using var runtime = result.Runtime!;
+
+        await runtime.StartAsync();
+        await runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+        sink!.Values.ShouldHaveSingleItem().Topic.ShouldBe("factory/one");
+    }
+
+    [Fact]
+    public async Task TimerTickMapper_CanPublishMappedRequestsToConnection()
+    {
+        FakeMqttBrokerClient? mqttClient = null;
+        const string mapperExpression = """
+        {
+          "topic": "timer/" & name,
+          "payload": {
+            "sequence": sequence
+          },
+          "qos": 0,
+          "retain": false
+        }
+        """;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories(_ =>
+            {
+                mqttClient = new FakeMqttBrokerClient();
+                return mqttClient;
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Resources =
+            {
+                ["broker"] = new NodeDefinition
+                {
+                    Type = FluxMqNodeTypes.Connection,
+                    Configuration =
+                    {
+                        ["profile"] = JsonDocument.Parse("""{"name":"factory-broker","host":"localhost","port":1883}""").RootElement.Clone()
+                    }
+                }
+            },
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["timer"] = new NodeDefinition
+                        {
+                            Type = FluxMqNodeTypes.TimerInterval,
+                            Configuration =
+                            {
+                                ["name"] = JsonDocument.Parse("\"heartbeat\"").RootElement.Clone(),
+                                ["intervalMilliseconds"] = JsonDocument.Parse("1").RootElement.Clone(),
+                                ["emitImmediately"] = JsonDocument.Parse("true").RootElement.Clone(),
+                                ["maxTicks"] = JsonDocument.Parse("1").RootElement.Clone()
+                            }
+                        },
+                        ["map"] = new NodeDefinition
+                        {
+                            Type = FluxMqNodeTypes.DynamicMapper,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"timer.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["engine"] = JsonDocument.Parse("\"jsonata\"").RootElement.Clone(),
+                                ["inputType"] = JsonDocument.Parse("\"TimerTick\"").RootElement.Clone(),
+                                ["outputType"] = JsonDocument.Parse("\"MqttPublishRequest\"").RootElement.Clone(),
+                                ["expression"] = JsonDocument.Parse(JsonSerializer.Serialize(mapperExpression)).RootElement.Clone()
+                            }
+                        },
+                        ["publisher"] = new NodeDefinition
+                        {
+                            Type = FluxMqNodeTypes.MqttPublisher,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"map.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["connection"] = JsonDocument.Parse("\"broker\"").RootElement.Clone()
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+        await using var runtime = result.Runtime!;
+
+        await runtime.StartAsync();
+        mqttClient.ShouldNotBeNull();
+        await WaitUntilAsync(() => mqttClient!.Published.Count == 1);
+        mqttClient!.CompleteMessages();
+        await runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+        var publish = mqttClient.Published.ShouldHaveSingleItem();
+        publish.Topic.ShouldBe("timer/heartbeat");
+        Encoding.UTF8.GetString(publish.Payload).ShouldContain("\"sequence\":1");
+        publish.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtMostOnce);
+        publish.Retain.ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task DynamicFilterAndJsonataMapper_CanPublishMappedRequestsToConnection()
     {
         FakeMqttBrokerClient? mqttClient = null;
@@ -1472,7 +1744,7 @@ public sealed class PipelineComponentFactoryTests
 
         sink!.Values.ShouldNotBeEmpty();
         sink.Values[^1].MessageCount.ShouldBe(2);
-        repository.LoadedSessionIds.ShouldBe(new[] { sessionId });
+        repository.StreamedSessionIds.ShouldBe(new[] { sessionId });
     }
 
     [Fact]
@@ -1652,7 +1924,7 @@ public sealed class PipelineComponentFactoryTests
                 new OutputPort<MqttEnvelope>(address.Port(new PortName("Output")), node.Output)
             ]);
 
-    private static RuntimeNode SourceNode<T>(NodeAddress address, TypedTestSourceNode<T> node)
+    private static RuntimeNode SourceNode<T>(NodeAddress address, TestValueSourceNode<T> node)
         => RuntimeNode.Create(
             address,
             node,
@@ -1721,7 +1993,7 @@ public sealed class PipelineComponentFactoryTests
         }
     }
 
-    private sealed class TypedTestSourceNode<T> : IFlowNode
+    private sealed class TestValueSourceNode<T> : IFlowNode
     {
         private readonly BufferBlock<T> _output = new();
         private readonly BufferBlock<FlowError> _errors = new();

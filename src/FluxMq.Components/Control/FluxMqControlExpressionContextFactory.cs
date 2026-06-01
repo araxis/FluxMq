@@ -9,6 +9,7 @@ using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxFlow.Components.Http.Contracts;
 using FluxFlow.Components.Payloads.Contracts;
+using FluxFlow.Components.Timers.Contracts;
 using FluxFlow.Engine.Mapping;
 using MQTTnet.Protocol;
 using System.Text;
@@ -39,7 +40,9 @@ public static class FluxMqControlExpressionContextFactory
             ["HttpRequestInput"] = typeof(HttpRequestInput),
             ["HttpResponseOutput"] = typeof(HttpResponseOutput),
             ["HttpErrorOutput"] = typeof(HttpErrorOutput),
-            ["HttpErrorKind"] = typeof(HttpErrorKind)
+            ["HttpErrorKind"] = typeof(HttpErrorKind),
+            ["TimerTick"] = typeof(TimerTick),
+            ["ScheduleTick"] = typeof(ScheduleTick)
         };
 
         AddTypeSpecificVariables(variables, input);
@@ -111,6 +114,12 @@ public static class FluxMqControlExpressionContextFactory
                 break;
             case HttpErrorOutput error:
                 Merge(variables, HttpPayloadExpressionContextFactory.Create(error));
+                break;
+            case TimerTick tick:
+                Merge(variables, TimerTickExpressionContextFactory.Create(tick));
+                break;
+            case ScheduleTick tick:
+                Merge(variables, ScheduleTickExpressionContextFactory.Create(tick));
                 break;
         }
     }

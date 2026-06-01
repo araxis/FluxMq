@@ -6,11 +6,11 @@ This page documents the current Dataflow-backed components and shows how each be
 
 ## Shared Shape
 
-Current flow nodes expose:
+Most local flow nodes expose:
 
 - typed node identity through `FlowNodeId`
 - Dataflow lifecycle through `Complete`, `Fault`, and `Completion`
-- an `Errors` output port for component-specific errors
+- an `Errors` output port for `FlowError` when the component publishes routeable errors
 - component-specific input and output ports
 
 ```mermaid
@@ -22,6 +22,84 @@ flowchart LR
 
 Not every component has an input port. Source and trigger components produce events.
 Most FluxMQ-owned nodes use `FlowError` for `Errors`; package-backed integration nodes can expose a more specific error type, such as `HttpErrorOutput`.
+Package-backed timer nodes expose their typed data ports and publish runtime diagnostics/events through the runtime event stream.
+
+## Timer Components
+
+FluxMQ registers package-backed timer nodes for periodic and scheduled workflows.
+These nodes are neutral: they emit tick contracts that can feed mappers, delays,
+assertions, publishers, file writers, or other workflow nodes.
+
+### Flow Definition
+
+Registered workflow node types: `timer.interval`, `timer.schedule`, `timer.delay`, `timer.debounce`, `timer.throttle`
+
+Ports:
+
+- `timer.interval`
+  - `Output`: `TimerTick`
+- `timer.schedule`
+  - `Output`: `ScheduleTick`
+- `timer.delay`
+  - `Input`: configured input type
+  - `Output`: same configured input type
+- `timer.debounce`
+  - `Input`: configured input type
+  - `Output`: same configured input type
+- `timer.throttle`
+  - `Input`: configured input type
+  - `Output`: same configured input type
+
+Interval timer:
+
+```json
+{
+  "timer": {
+    "type": "timer.interval",
+    "configuration": {
+      "intervalMilliseconds": 1000,
+      "initialDelayMilliseconds": 0,
+      "emitImmediately": true,
+      "maxTicks": 10,
+      "boundedCapacity": 1000
+    }
+  }
+}
+```
+
+Scheduled timer:
+
+```json
+{
+  "schedule": {
+    "type": "timer.schedule",
+    "configuration": {
+      "cron": "* * * * *",
+      "timeZoneId": "UTC",
+      "boundedCapacity": 1000
+    }
+  }
+}
+```
+
+Typed delay:
+
+```json
+{
+  "delay": {
+    "type": "timer.delay",
+    "Input": "timer.Output",
+    "configuration": {
+      "inputType": "TimerTick",
+      "delayMilliseconds": 250,
+      "boundedCapacity": 1000
+    }
+  }
+}
+```
+
+Mapper input aliases include `TimerTick` and `ScheduleTick`, so a timer source can
+drive an MQTT publish request through `flow.mapper` and `mqtt.publisher`.
 
 ## Connection State Trigger
 
@@ -262,6 +340,8 @@ If the predicate throws, the component publishes a `FlowError` and drops that me
 
 `PayloadInspectorMapperComponent` maps raw MQTT messages into inspected payload messages.
 
+Runtime classification is package-backed through `FluxFlow.Components.Payloads`. FluxMQ adapts each `MqttEnvelope` into a neutral payload inspection request, then projects the package inspection result back into the existing `InspectedMqttMessage` and Core payload model used by the UI.
+
 ### Behavior
 
 ```mermaid
@@ -367,13 +447,13 @@ Ports:
 
 ## Replay Source
 
-`ReplaySourceComponent` emits recorded MQTT messages in timestamp order.
+`replay.source` streams recorded MQTT messages from the session store and preserves relative timing.
 
 ### Behavior
 
 ```mermaid
 flowchart LR
-    Messages["IEnumerable<MqttEnvelope>"] --> Replay["ReplaySourceComponent"]
+    Store["Session store"] --> Replay["replay.source"]
     Replay --> Out["Output: MqttEnvelope"]
     Replay --> Errors["Errors: FlowError"]
 ```
@@ -389,19 +469,6 @@ sequenceDiagram
     Replay->>Out: second message
     Note over Replay: wait scaled relative delay
     Replay->>Out: third message
-```
-
-### Usage
-
-```csharp
-var replay = new ReplaySourceComponent(messages, speed: 2);
-
-replay.Output.LinkTo(next.Input, new DataflowLinkOptions
-{
-    PropagateCompletion = true
-});
-
-await replay.StartAsync();
 ```
 
 ### Notes
@@ -718,7 +785,7 @@ Ports:
 
 `MqttMetricsComponent` observes incoming MQTT messages and broadcasts immutable metric snapshots. It works only from its input stream; it does not care whether the data came from a live connection, replay, stored session, generated source, or imported source.
 
-These snapshots are local flow data. The current node intentionally remains MQTT-specific because it tracks topic counts, retained messages, rolling-window rates, and MQTT payload sizes beyond the neutral package metrics contract. Planned OpenTelemetry support should export selected observability signals later without making this component depend on external collectors.
+Runtime aggregation is package-backed through `FluxFlow.Components.Metrics`. FluxMQ adapts each `MqttEnvelope` into a neutral metric sample, then projects the package snapshot back into `MqttMetricsSnapshot`. The wrapper keeps MQTT-specific retained-message counts and idle rolling-rate refresh behavior for the desktop dashboard.
 
 ### Behavior
 
@@ -775,32 +842,6 @@ Ports:
 - last topic
 - last received timestamp
 - average payload bytes
-
-## Recorded Session Replay Factory
-
-`RecordedSessionReplayFactory` creates replay sources from stored sessions.
-
-This is not a flow node. It is an orchestration service.
-
-### Behavior
-
-```mermaid
-flowchart LR
-    SessionId["SessionId"] --> Factory["RecordedSessionReplayFactory"]
-    Repository["IMessageRepository"] --> Factory
-    Factory --> Convert["StoredMessage.ToEnvelope"]
-    Convert --> Replay["ReplaySourceComponent"]
-```
-
-### Usage
-
-```csharp
-var factory = new RecordedSessionReplayFactory(messageRepository);
-var replay = factory.Create(sessionId, new RecordedSessionReplayOptions
-{
-    Speed = 2
-});
-```
 
 ## Sample Flow
 
@@ -867,7 +908,7 @@ This flow replays a recorded session back through an MQTT client.
 
 ```mermaid
 flowchart LR
-    Factory["RecordedSessionReplayFactory"] --> Replay["ReplaySourceComponent"]
+    Store["Session store"] --> Replay["replay.source"]
     Replay --> Filter["flow.filter"]
     Filter --> Mapper["flow.mapper: MqttEnvelope -> MqttPublishRequest"]
     Mapper --> Publisher["MqttPublisherComponent"]

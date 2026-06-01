@@ -28,6 +28,8 @@ public sealed class FlowAssertionNodeModel(string id, DiagramPoint position, str
         "JsonSchemaValidationResult",
         "InspectedMqttMessage",
         "MqttMetricsSnapshot",
+        "TimerTick",
+        "ScheduleTick",
         "FlowLogEntry",
         "FlowError"
     ];

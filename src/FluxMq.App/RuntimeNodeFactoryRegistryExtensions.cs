@@ -22,6 +22,10 @@ using FluxFlow.Components.Mapping;
 using FluxFlow.Components.Mapping.Options;
 using FluxFlow.Components.Payloads;
 using FluxFlow.Components.Payloads.Contracts;
+using FluxFlow.Components.Serialization;
+using FluxFlow.Components.Timers;
+using FluxFlow.Components.Timers.Contracts;
+using FluxFlow.Components.Timers.Options;
 using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Definitions;
 using FluxFlow.Engine.Mapping;
@@ -76,10 +80,27 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .Register(FluxMqNodeTypes.JsonSchemaValidator, context => CreateJsonSchemaValidator(context.Address, context.Definition))
             .RegisterPayloadComponents()
             .RegisterHttpComponents()
+            .RegisterTimerComponents(ConfigureTimerComponents)
             .RegisterMappingComponents(options => ConfigureMappingComponents(options, expressionEngine))
+            .RegisterSerializationComponents()
             .Register(FluxMqNodeTypes.MqttPublisher, context => CreatePublisher(context.Address, context.Definition, context))
             .Register(FluxMqNodeTypes.MqttRecorder, context => CreateRecorder(context.Address, context.Definition, messageRepository))
             .Register(FluxMqNodeTypes.FileWriter, CreateFileWriter);
+    }
+
+    private static void ConfigureTimerComponents(TimerComponentOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+
+        options
+            .RegisterType<MqttEnvelope>("MqttEnvelope")
+            .RegisterType<MqttPublishRequest>("MqttPublishRequest")
+            .RegisterType<MqttRecordingRequest>("MqttRecordingRequest")
+            .RegisterType<FileWriteRequest>("FileWriteRequest")
+            .RegisterType<TimerTick>("TimerTick")
+            .RegisterType<ScheduleTick>("ScheduleTick")
+            .RegisterType<FlowLogEntry>("FlowLogEntry")
+            .RegisterType<FlowError>("FlowError");
     }
 
     private static void ConfigureMappingComponents(
@@ -101,10 +122,15 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .RegisterType<HttpRequestInput>("HttpRequestInput")
             .RegisterType<HttpResponseOutput>("HttpResponseOutput")
             .RegisterType<HttpErrorOutput>("HttpErrorOutput")
+            .RegisterType<TimerTick>("TimerTick")
+            .RegisterType<ScheduleTick>("ScheduleTick")
             .UseContextFactory<MqttEnvelope>(new MqttEnvelopeFlowMapContextFactory())
             .UseContextFactory<PayloadInspectionResult>(new PayloadInspectionResultFlowMapContextFactory())
             .UseContextFactory<HttpResponseOutput>(new HttpResponseOutputFlowMapContextFactory())
             .UseContextFactory<HttpErrorOutput>(new HttpErrorOutputFlowMapContextFactory());
+        options
+            .UseContextFactory<TimerTick>(new TimerTickFlowMapContextFactory())
+            .UseContextFactory<ScheduleTick>(new ScheduleTickFlowMapContextFactory());
 
         if (!string.Equals(expressionEngine.Name, "jsonata", StringComparison.OrdinalIgnoreCase))
         {
@@ -270,14 +296,12 @@ public static class RuntimeNodeFactoryRegistryExtensions
             throw new InvalidOperationException("Replay source requires a message repository.");
         }
 
-        var factory = new RecordedSessionReplayFactory(messageRepository);
-        var component = factory.Create(
+        var component = new StoredSessionSourceComponent(
+            messageRepository,
             sessionId.Value,
-            new RecordedSessionReplayOptions
-            {
-                Speed = GetDoubleOrDefault(definition, "speed", 1),
-                BoundedCapacity = GetBoundedCapacity(definition)
-            });
+            preserveTiming: true,
+            speed: GetDoubleOrDefault(definition, "speed", 1),
+            boundedCapacity: GetBoundedCapacity(definition));
 
         return SourceRuntimeNode(address, component, component.Output);
     }
@@ -461,10 +485,12 @@ public static class RuntimeNodeFactoryRegistryExtensions
             "JsonSchemaValidationResult" => CreateFlowAssertion<JsonSchemaValidationResult>(address, definition, expressionEngine),
             "InspectedMqttMessage" => CreateFlowAssertion<InspectedMqttMessage>(address, definition, expressionEngine),
             "MqttMetricsSnapshot" => CreateFlowAssertion<MqttMetricsSnapshot>(address, definition, expressionEngine),
+            "TimerTick" => CreateFlowAssertion<TimerTick>(address, definition, expressionEngine),
+            "ScheduleTick" => CreateFlowAssertion<ScheduleTick>(address, definition, expressionEngine),
             "FlowLogEntry" => CreateFlowAssertion<FlowLogEntry>(address, definition, expressionEngine),
             "FlowError" => CreateFlowAssertion<FlowError>(address, definition, expressionEngine),
             _ => throw new InvalidOperationException(
-                $"Flow assertion inputType '{inputType}' is not supported yet. Supported inputType values: MqttEnvelope, MqttPublishRequest, MqttRecordingRequest, FileWriteRequest, PayloadInspectionRequest, PayloadInspectionResult, HttpRequestInput, HttpResponseOutput, HttpErrorOutput, JsonSchemaValidationResult, InspectedMqttMessage, MqttMetricsSnapshot, FlowLogEntry, FlowError.")
+                $"Flow assertion inputType '{inputType}' is not supported yet. Supported inputType values: MqttEnvelope, MqttPublishRequest, MqttRecordingRequest, FileWriteRequest, PayloadInspectionRequest, PayloadInspectionResult, HttpRequestInput, HttpResponseOutput, HttpErrorOutput, JsonSchemaValidationResult, InspectedMqttMessage, MqttMetricsSnapshot, TimerTick, ScheduleTick, FlowLogEntry, FlowError.")
         };
     }
 

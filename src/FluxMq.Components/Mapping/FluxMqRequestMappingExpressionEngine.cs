@@ -36,7 +36,7 @@ public sealed class FluxMqRequestMappingExpressionEngine : IFlowExpressionEngine
         if (resultType == typeof(MqttRecordingRequest))
         {
             var value = _inner.Evaluate(expression, context, typeof(object));
-            return CoerceRecordingRequest(value, GetEnvelope(context));
+            return CoerceRecordingRequest(value, GetRequiredEnvelope(context));
         }
 
         if (resultType == typeof(FileWriteRequest))
@@ -60,13 +60,11 @@ public sealed class FluxMqRequestMappingExpressionEngine : IFlowExpressionEngine
         return _inner.Evaluate(expression, context, resultType);
     }
 
-    private static MqttEnvelope GetEnvelope(FlowMapContext context)
-        => TryGetEnvelope(context) ??
-           throw new InvalidOperationException("FluxMQ recording request mapping requires an MqttEnvelope input context.");
+    private static MqttEnvelope GetRequiredEnvelope(FlowMapContext context)
+        => TryGetEnvelope(context) ?? throw new InvalidOperationException("FluxMQ request mapping requires an MqttEnvelope input context.");
 
     private static MqttEnvelope? TryGetEnvelope(FlowMapContext context)
-        => context.Variables.TryGetValue("envelope", out var value) &&
-           value is MqttEnvelope envelope
+        => context.Variables.TryGetValue("envelope", out var value) && value is MqttEnvelope envelope
             ? envelope
             : null;
 

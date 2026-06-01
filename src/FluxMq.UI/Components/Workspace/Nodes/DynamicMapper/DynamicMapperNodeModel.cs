@@ -8,6 +8,13 @@ namespace FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
 public sealed class DynamicMapperNodeModel(string id, DiagramPoint position, string nodeName, FlowComponentDescriptor? descriptor, bool isResource)
     : FlowDiagramNodeModel(id, position, nodeName, "flow.mapper", descriptor, isResource)
 {
+    public static readonly IReadOnlyList<string> InputTypes =
+    [
+        "MqttEnvelope",
+        "TimerTick",
+        "ScheduleTick"
+    ];
+
     public const string OutputContractAny = "any";
     public const string OutputContractTyped = "typed";
     public const string OutputContractJsonSchemaFile = "json-schema-file";
@@ -30,7 +37,7 @@ public sealed class DynamicMapperNodeModel(string id, DiagramPoint position, str
 
         if (string.IsNullOrWhiteSpace(Expression))
         {
-            Expression = DefaultExpression(OutputType, Engine);
+            Expression = DefaultExpression(OutputType, Engine, InputType);
         }
     }
 
@@ -43,7 +50,7 @@ public sealed class DynamicMapperNodeModel(string id, DiagramPoint position, str
             ["outputContract"] = NormalizeOutputContract(OutputContract),
             ["outputSchemaPath"] = OutputSchemaPath,
             ["expression"] = string.IsNullOrWhiteSpace(Expression)
-                ? DefaultExpression(OutputType, Engine)
+                ? DefaultExpression(OutputType, Engine, InputType)
                 : Expression.Trim()
         };
 
@@ -74,9 +81,23 @@ public sealed class DynamicMapperNodeModel(string id, DiagramPoint position, str
             _ => OutputContractTyped
         };
 
-    public static string DefaultExpression(string outputType, string engine = "jsonata")
+    public static string NormalizeInputType(string? value)
+    {
+        var trimmed = value?.Trim();
+        return InputTypes.Contains(trimmed, StringComparer.Ordinal)
+            ? trimmed!
+            : "MqttEnvelope";
+    }
+
+    public static string DefaultExpression(string outputType, string engine = "jsonata", string inputType = "MqttEnvelope")
     {
         var isJsonata = string.Equals(engine, "jsonata", StringComparison.OrdinalIgnoreCase);
+        var normalizedInputType = NormalizeInputType(inputType);
+
+        if (normalizedInputType is "TimerTick" or "ScheduleTick")
+        {
+            return DefaultTimerExpression(outputType, isJsonata, normalizedInputType);
+        }
 
         return outputType switch
         {
@@ -156,6 +177,55 @@ public sealed class DynamicMapperNodeModel(string id, DiagramPoint position, str
               Payload = payload,
               QualityOfService = qualityOfService,
               Retain = retain
+            }
+            """
+        };
+    }
+
+    private static string DefaultTimerExpression(string outputType, bool isJsonata, string inputType)
+    {
+        var topicPrefix = inputType == "ScheduleTick" ? "schedule/" : "timer/";
+
+        return outputType switch
+        {
+            "FileWriteRequest" when isJsonata => $$"""
+            {
+              "path": "{{topicPrefix}}" & name & ".json",
+              "content": {
+                "name": name,
+                "sequence": sequence,
+                "timestamp": timestamp
+              },
+              "mode": "Append",
+              "createDirectory": true
+            }
+            """,
+            "FileWriteRequest" => $$"""
+            new FileWriteRequest {
+              Path = "{{topicPrefix}}" + name + ".json",
+              Content = Encoding.UTF8.GetBytes("{\"name\":\"" + name + "\",\"sequence\":" + sequence + "}"),
+              Mode = FileWriteMode.Append,
+              CreateDirectory = true
+            }
+            """,
+            _ when isJsonata => $$"""
+            {
+              "topic": "{{topicPrefix}}" & name,
+              "payload": {
+                "name": name,
+                "sequence": sequence,
+                "timestamp": timestamp
+              },
+              "qos": 0,
+              "retain": false
+            }
+            """,
+            _ => $$"""
+            new MqttPublishRequest {
+              Topic = "{{topicPrefix}}" + name,
+              Payload = Encoding.UTF8.GetBytes("{\"name\":\"" + name + "\",\"sequence\":" + sequence + "}"),
+              QualityOfService = MqttQualityOfServiceLevel.AtMostOnce,
+              Retain = false
             }
             """
         };
