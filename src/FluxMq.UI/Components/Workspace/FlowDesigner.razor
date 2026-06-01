@@ -96,6 +96,7 @@
     private readonly Dictionary<string, DiagramNodeState> _nodeStates = new(StringComparer.Ordinal);
     private readonly Dictionary<string, long> _filterPassCounts = new(StringComparer.Ordinal);
     private static readonly LinkMarker FlowTargetMarker = new("M 0 -4 6 0 0 4 z", 13d);
+    private static readonly Blazor.Diagrams.Core.Geometry.Point ConditionLabelOffset = new(0, -18);
     private const double DroppedNodeCenterOffsetX = 130d;
     private const double DroppedNodeCenterOffsetY = 45d;
     private const int ZoomToFitMargin = 80;
@@ -303,13 +304,14 @@
                                     var targetPort = PortFor(targetNode, PortAlignment.Left, port.Name);
                                     if (sourcePort is null || targetPort is null) continue;
 
-                                    var linkColor = sourceLink.HasCondition
-                                        ? "#FBBF24"
-                                        : IsErrorLink(sourcePortName, port.Name) ? "#F87171" : "#2DD4BF";
+                                    var linkColor = FlowLinkVisuals.ColorFor(
+                                        sourceLink.HasCondition,
+                                        IsErrorLink(sourcePortName, port.Name));
                                     var link = CreateStyledLink(sourcePort, targetPort, linkColor);
-                                    if (sourceLink.HasCondition)
+                                    link.Width = FlowLinkVisuals.WidthFor(sourceLink.HasCondition);
+                                    if (FlowLinkVisuals.ConditionLabel(sourceLink.When) is { } label)
                                     {
-                                        link.Width = 3;
+                                        link.AddLabel(label, 0.5, ConditionLabelOffset);
                                     }
 
                                     _diagram.Links.Add(link);
@@ -328,7 +330,7 @@
                             var targetPort = PortFor(targetNode, PortAlignment.Left, "Connection");
                             if (sourcePort is not null && targetPort is not null)
                             {
-                                _diagram.Links.Add(CreateStyledLink(sourcePort, targetPort, "#FBBF24"));
+                                _diagram.Links.Add(CreateStyledLink(sourcePort, targetPort, FlowLinkVisuals.ConditionalColor));
                             }
                         }
                     }
@@ -418,16 +420,17 @@
         return node.Ports.FirstOrDefault(p => p.Alignment == alignment);
     }
 
-    private static LinkModel CreateStyledLink(PortModel sourcePort, PortModel targetPort, string color = "#2DD4BF")
+    private static LinkModel CreateStyledLink(PortModel sourcePort, PortModel targetPort, string color = FlowLinkVisuals.DefaultColor)
         => StyleLink(new LinkModel(sourcePort, targetPort), color);
 
-    private static LinkModel CreateStyledLink(Blazor.Diagrams.Core.Anchors.Anchor sourceAnchor, Blazor.Diagrams.Core.Anchors.Anchor targetAnchor, string color = "#2DD4BF")
+    private static LinkModel CreateStyledLink(Blazor.Diagrams.Core.Anchors.Anchor sourceAnchor, Blazor.Diagrams.Core.Anchors.Anchor targetAnchor, string color = FlowLinkVisuals.DefaultColor)
         => StyleLink(new LinkModel(sourceAnchor, targetAnchor), color);
 
     private static LinkModel StyleLink(LinkModel link, string color)
     {
         link.Color = color;
-        link.Width = 2;
+        link.SelectedColor = FlowLinkVisuals.SelectedColor;
+        link.Width = FlowLinkVisuals.DefaultWidth;
         link.TargetMarker = FlowTargetMarker;
         return link;
     }

@@ -228,9 +228,35 @@
 .flow-designer-root ::deep .diagram-link.selected path,
 .flow-designer-root ::deep .diagram-link.selected polyline,
 .flow-designer-root ::deep .diagram-link.selected line {
-    stroke: #FBBF24;
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--flux-accent) 52%, transparent));
+    stroke: #E8ECF2 !important;
+    stroke-width: 4px !important;
 }
 
+.flow-designer-root ::deep .diagram-link div.default-link-label {
+    background: color-mix(in srgb, var(--flux-surface) 88%, #FBBF24);
+    border: 1px solid color-mix(in srgb, #FBBF24 68%, transparent);
+    border-radius: 5px;
+    color: #FBBF24;
+    display: inline-block;
+    font-family: monospace;
+    font-size: 10px;
+    font-weight: 650;
+    line-height: 1.2;
+    max-width: 260px;
+    overflow: hidden;
+    padding: 3px 7px;
+    text-overflow: ellipsis;
+    transform: translate(-50%, -50%);
+    user-select: none;
+    white-space: nowrap;
+}
+
+.flow-designer-root ::deep .diagram-link.selected div.default-link-label {
+    border-color: #E8ECF2;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--flux-accent) 22%, transparent);
+    color: #E8ECF2;
+}
 
 .flow-designer-root ::deep .flow-node-port-list {
     border-top: 1px solid var(--flux-border);
