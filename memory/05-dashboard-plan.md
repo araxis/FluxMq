@@ -2,7 +2,7 @@
 
 ## Context
 
-The user wants a Dashboard concept layered on top of the existing pipeline runtime. Pipelines can already record sessions (`MqttRecorderComponent`, `ISessionRepository`, `IMessageRepository`) and replay them (`ReplaySourceComponent`, `RecordedSessionReplayFactory`). The dashboard adds two things:
+The user wants a Dashboard concept layered on top of the existing pipeline runtime. Pipelines can already record sessions (`MqttRecorderComponent`, `IMessageRepository`) and replay them through the package-backed session store adapter used by `session.source` and `replay.source`. The dashboard adds two things:
 
 1. **Metric calculator nodes** — new `IFlowNode` pipeline nodes users add to workflows in the diagram designer to compute per-topic payload sizes, message rates, error counts, etc.
 2. **Dashboard** — a UI that binds "dashboard blocks" (display widgets) to metric node outputs. Data can come from either a live running pipeline or a stored/replayed session — even with no broker connected.
@@ -124,8 +124,8 @@ Replay and offline mode work with no broker because the workflow source is bound
 | File | Action |
 |------|--------|
 | `src/FluxMq.Components/MqttMetrics/MqttMetricsComponent.cs` | Reference pattern for new components |
-| `src/FluxMq.Components/Replay/ReplaySourceComponent.cs` | Source implementation for timed stored-session replay |
-| `src/FluxMq.Components/Replay/RecordedSessionReplayFactory.cs` | Creates replay source from SessionId |
+| `src/FluxMq.Components/MessageSource/StoredSessionSourceComponent.cs` | Source implementation for stored-session and timed replay streams |
+| `src/FluxMq.Components/Storage/FluxMqSessionStore.cs` | Adapts local stored MQTT messages to shared session contracts |
 | `src/FluxMq.Pipeline/Definitions/ApplicationDefinition.cs` | Extend with Dashboards dict |
 | `src/FluxMq.Pipeline/Runtime/` | Add DashboardRuntime.cs |
 | `src/FluxMq.UI/Services/FlowComponentCatalog.cs` | Register new metric node types |
