@@ -632,12 +632,14 @@ Working rule:
 - Wait for confirmation before commit, push, PR, or merge steps.
 - For every review or verification step, write both what we are going to do and the expected result.
 
-Review the conditional-link designer editor slice:
+Review the conditional-link designer visual slice:
 
 1. Do: select a workflow link in the pipeline designer. Expected: a compact `When` field appears next to the canvas toolbar.
-2. Do: enter a condition such as `input.Topic.StartsWith("factory/")` and apply it. Expected: the link turns into a conditional link, is highlighted, and the JSON stores the condition on that link only.
-3. Do: select the link again and clear the condition. Expected: the link returns to a normal unconditional link without changing unrelated links.
-4. Do: run the UI tests for this slice. Expected: focused composer tests pass with 73 tests, and the UI test project passes with 204 tests.
+2. Do: enter a condition such as `input.Topic.StartsWith("factory/")` and apply it. Expected: the link turns into a conditional link, gets a `when: ...` label, and the JSON stores the condition on that link only.
+3. Do: select a normal link and then a conditional link. Expected: both selected links are visibly highlighted, even when the conditional link is already using its condition color.
+4. Do: select the link again and clear the condition. Expected: the label disappears and the link returns to a normal unconditional link without changing unrelated links.
+5. Do: restart the Windows app. Expected: the native window/taskbar/Alt-Tab icon uses the FluxMQ app icon instead of the generic host icon.
+6. Do: run the UI tests for this slice. Expected: focused diagram tests pass with 17 tests, and the UI test project passes with 208 tests.
 
 Next implementation slice: continue scenario/test composition around normal components plus narrow test-specific `expect.event`/`when.event` blocks. Prefer catalog/runner/shared-service changes over adding one-off logic inside Razor components.
 

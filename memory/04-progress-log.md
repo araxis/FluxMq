@@ -2086,3 +2086,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 81 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 205 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 488 tests.
+
+## 2026-06-01 - Conditional link designer visuals
+
+- Added a small `FlowLinkVisuals` helper for workflow link colors, selected color, conditional width, and compact condition labels.
+- Pipeline designer links with per-link `when` expressions now render a compact `when: ...` label directly on the link.
+- Selected links now use an explicit selected color plus stronger SVG styling so selected state is visible even when the link already has a condition color.
+- Wired the generated Windows `appicon.ico` into the MAUI Windows lifecycle so the native window uses the FluxMQ app icon instead of the generic host icon.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter FlowDiagramNodeModelTests -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 17 tests.
+  - `dotnet build FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 208 tests.
+  - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes.
