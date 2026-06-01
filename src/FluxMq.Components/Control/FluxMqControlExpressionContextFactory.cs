@@ -9,6 +9,7 @@ using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxFlow.Components.Http.Contracts;
 using FluxFlow.Components.Payloads.Contracts;
+using FluxFlow.Components.State.Contracts;
 using FluxFlow.Components.Timers.Contracts;
 using FluxFlow.Engine.Mapping;
 using MQTTnet.Protocol;
@@ -41,6 +42,9 @@ public static class FluxMqControlExpressionContextFactory
             ["HttpResponseOutput"] = typeof(HttpResponseOutput),
             ["HttpErrorOutput"] = typeof(HttpErrorOutput),
             ["HttpErrorKind"] = typeof(HttpErrorKind),
+            ["StateReducerInput"] = typeof(StateReducerInput),
+            ["StateReducerResult"] = typeof(StateReducerResult),
+            ["StateReducerOperation"] = typeof(StateReducerOperation),
             ["TimerTick"] = typeof(TimerTick),
             ["ScheduleTick"] = typeof(ScheduleTick)
         };
@@ -114,6 +118,15 @@ public static class FluxMqControlExpressionContextFactory
                 break;
             case HttpErrorOutput error:
                 Merge(variables, HttpPayloadExpressionContextFactory.Create(error));
+                break;
+            case StateReducerResult result:
+                variables["stateResult"] = result;
+                variables["key"] = result.Key;
+                variables["previousState"] = result.PreviousState;
+                variables["stateInput"] = result.Input;
+                variables["newState"] = result.NewState;
+                variables["version"] = result.Version;
+                variables["updatedAt"] = result.UpdatedAt;
                 break;
             case TimerTick tick:
                 Merge(variables, TimerTickExpressionContextFactory.Create(tick));

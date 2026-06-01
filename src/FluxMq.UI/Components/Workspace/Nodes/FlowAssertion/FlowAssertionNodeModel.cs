@@ -9,30 +9,12 @@ public sealed class FlowAssertionNodeModel(string id, DiagramPoint position, str
     : FlowDiagramNodeModel(id, position, nodeName, "flow.assert", descriptor, isResource)
 {
     public const string DefaultAssertionName = "QoS at least once";
-    public const string DefaultInputType = "MqttEnvelope";
+    public const string DefaultInputType = FlowContractTypeNames.MqttEnvelope;
     public const string DefaultExpression = "qos >= 1";
     public const string DefaultFailureMessage = "Expected QoS to be at least 1.";
     public const int DefaultBoundedCapacity = 1000;
 
-    public static readonly IReadOnlyList<string> InputTypes =
-    [
-        "MqttEnvelope",
-        "MqttPublishRequest",
-        "MqttRecordingRequest",
-        "FileWriteRequest",
-        "PayloadInspectionRequest",
-        "PayloadInspectionResult",
-        "HttpRequestInput",
-        "HttpResponseOutput",
-        "HttpErrorOutput",
-        "JsonSchemaValidationResult",
-        "InspectedMqttMessage",
-        "MqttMetricsSnapshot",
-        "TimerTick",
-        "ScheduleTick",
-        "FlowLogEntry",
-        "FlowError"
-    ];
+    public static IReadOnlyList<string> InputTypes => FlowContractTypeNames.AssertionInputTypes;
 
     public string AssertionName { get; set; } = DefaultAssertionName;
     public string InputType { get; set; } = DefaultInputType;
@@ -74,9 +56,11 @@ public sealed class FlowAssertionNodeModel(string id, DiagramPoint position, str
 
     public static string NormalizeInputType(string? value)
     {
-        var trimmed = value?.Trim();
-        return InputTypes.Contains(trimmed, StringComparer.Ordinal)
-            ? trimmed!
+        var normalized = string.IsNullOrWhiteSpace(value)
+            ? string.Empty
+            : FlowContractTypeNames.Normalize(value);
+        return InputTypes.Contains(normalized, StringComparer.Ordinal)
+            ? normalized
             : DefaultInputType;
     }
 

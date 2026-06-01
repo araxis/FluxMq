@@ -2179,3 +2179,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~PipelineComponentFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 37 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~TimerNodeModelTests|FullyQualifiedName~FlowDiagramNodeModelTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 115 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 531 tests.
+
+## 2026-06-01 - Assertion component prep
+
+- Added shared assertion input type names so runtime factory support and the assertion node editor use the same source of truth.
+- Added `StateReducerResult` as a supported `flow.assert` input type so state reducer outputs can be checked without waiting for a separate assertion package migration.
+- Added state reducer result variables to the control expression context: `key`, `previousState`, `stateInput`, `newState`, `version`, and `updatedAt`.
+- Verified:
+  - `dotnet build FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~PipelineComponentFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 38 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDiagramNodeModelTests" -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 20 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 536 tests.
