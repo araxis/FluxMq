@@ -2323,3 +2323,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Pull requests and `main` now run release-shaped Windows restore/tests without building or uploading package artifacts.
 - Manual workflow dispatch still builds the portable zip and MSI when package artifacts are explicitly needed.
 - Updated release-readiness and development docs to use the serialized Release test command and describe manual package generation.
+
+## 2026-06-02 - Host-owned expression engine preparation
+
+- Moved expression engine implementations into FluxMQ-owned mapping adapters.
+- Passed the FluxMQ default expression engine to runtime build paths for link `when` conditions.
+- Kept the shared workflow engine package on the current component-compatible version because the currently published component adapter packages still target that API.
+- Verified `dotnet restore .\FluxMq.sln --nologo` passes.
+- Verified `dotnet build .\FluxMq.sln --no-restore --nologo` passes.
+- The newer shared workflow engine package migration remains blocked until consumed component adapter packages are published against the same node-id namespace.

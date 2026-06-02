@@ -7,6 +7,7 @@ using FluxMq.App;
 using FluxMq.Components.Assertions;
 using FluxMq.Components.JsonSchema;
 using FluxMq.Components.Logging;
+using FluxMq.Components.Mapping;
 using FluxMq.Components.MqttMetrics;
 using FluxMq.Components.MqttPayloadInspector;
 using FluxMq.Components.Storage.Models;
@@ -408,7 +409,8 @@ public sealed class PipelineComponentFactoryTests
             {
                 alertSink = new TestSinkNode<MqttEnvelope>();
                 return SinkNode(address, alertSink);
-            }));
+            }),
+            linkConditionExpressionEngine: FluxMqExpressionEngines.CreateDefault());
 
         var result = builder.Build(new ApplicationDefinition
         {

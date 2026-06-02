@@ -76,7 +76,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
     {
         ArgumentNullException.ThrowIfNull(registry);
         clientFactory ??= static profile => new MqttBrokerClient(profile);
-        expressionEngine ??= new DynamicExpressoFlowExpressionEngine();
+        expressionEngine ??= FluxMqExpressionEngines.CreateDefault();
 
         return registry
             .Register(FluxMqNodeTypes.Connection, context => CreateConnection(context.Address, context.Definition, clientFactory))
@@ -153,7 +153,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
         if (!string.Equals(expressionEngine.Name, "jsonata", StringComparison.OrdinalIgnoreCase))
         {
             options.UseExpressionEngine(
-                new FluxMqRequestMappingExpressionEngine(new JsonataFlowExpressionEngine()),
+                new FluxMqRequestMappingExpressionEngine(FluxMqExpressionEngines.CreateJsonata()),
                 useAsDefault: false);
         }
     }
@@ -169,7 +169,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
 
         if (!string.Equals(expressionEngine.Name, "jsonata", StringComparison.OrdinalIgnoreCase))
         {
-            options.UseExpressionEngine(new JsonataFlowExpressionEngine(), useAsDefault: false);
+            options.UseExpressionEngine(FluxMqExpressionEngines.CreateJsonata(), useAsDefault: false);
         }
     }
 
@@ -313,7 +313,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
 
         if (string.Equals(requestedEngine, "jsonata", StringComparison.OrdinalIgnoreCase))
         {
-            return new JsonataFlowExpressionEngine();
+            return FluxMqExpressionEngines.CreateJsonata();
         }
 
         throw new InvalidOperationException(
