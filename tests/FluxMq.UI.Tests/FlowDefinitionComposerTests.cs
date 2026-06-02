@@ -1887,6 +1887,56 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void RemoveDashboard_RemovesNamedDashboard()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.CreateEmptyDefinition();
+        json = composer.AddDashboard(json, "ops");
+        json = composer.AddDashboard(json, "debug");
+
+        json = composer.RemoveDashboard(json, "ops");
+
+        composer.GetDashboardNames(json).ShouldBe(["debug"]);
+    }
+
+    [Fact]
+    public void RemoveDashboard_IsNoOpForMissingName()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.CreateEmptyDefinition();
+        json = composer.AddDashboard(json, "ops");
+
+        json = composer.RemoveDashboard(json, "missing");
+
+        composer.GetDashboardNames(json).ShouldBe(["ops"]);
+    }
+
+    [Fact]
+    public void RemoveTest_RemovesNamedTest()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.CreateEmptyDefinition();
+        json = composer.AddTest(json, "roundTrip");
+        json = composer.AddTest(json, "timeout");
+
+        json = composer.RemoveTest(json, "roundTrip");
+
+        composer.GetTestNames(json).ShouldBe(["timeout"]);
+    }
+
+    [Fact]
+    public void RemoveTest_IsNoOpForMissingName()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.CreateEmptyDefinition();
+        json = composer.AddTest(json, "roundTrip");
+
+        json = composer.RemoveTest(json, "missing");
+
+        composer.GetTestNames(json).ShouldBe(["roundTrip"]);
+    }
+
+    [Fact]
     public void AddComponent_UsesTargetWorkflowNameWhenProvided()
     {
         var composer = new FlowDefinitionComposer();

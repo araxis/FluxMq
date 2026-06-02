@@ -1439,6 +1439,81 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public void RemoveWorkflow_ClearsStoredPositionsForDeletedWorkflow()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddWorkflow("alpha");
+        service.AddWorkflow("beta");
+        service.LastNodePositions["alpha.trigger"] = (100d, 120d, false);
+        service.LastNodePositions["beta.trigger"] = (240d, 120d, false);
+
+        service.RemoveWorkflow("alpha");
+
+        service.LastNodePositions.Keys.ShouldNotContain("alpha.trigger");
+        service.LastNodePositions.Keys.ShouldContain("beta.trigger");
+    }
+
+    [Fact]
+    public void RemoveDashboard_FallsBackToFirstRemainingDashboard()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddWorkflow("pipe");
+        service.AddDashboard("ops");
+        service.AddDashboard("debug");
+        service.SetActiveDashboard("ops");
+
+        service.RemoveDashboard("ops");
+
+        service.ActiveArtifactKind.ShouldBe(WorkspaceArtifactKind.Dashboard);
+        service.ActiveDashboardName.ShouldBe("debug");
+    }
+
+    [Fact]
+    public void RemoveDashboard_FallsBackToPipelineWhenLastDashboardIsRemoved()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddWorkflow("pipe");
+        service.AddDashboard("ops");
+        service.SetActiveDashboard("ops");
+
+        service.RemoveDashboard("ops");
+
+        service.ActiveArtifactKind.ShouldBe(WorkspaceArtifactKind.Pipeline);
+        service.ActiveWorkflowName.ShouldBe("pipe");
+        service.ActiveDashboardName.ShouldBeNull();
+    }
+
+    [Fact]
+    public void RemoveTest_FallsBackToFirstRemainingTest()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddWorkflow("pipe");
+        service.AddTest("roundTrip");
+        service.AddTest("timeout");
+        service.SetActiveTest("roundTrip");
+
+        service.RemoveTest("roundTrip");
+
+        service.ActiveArtifactKind.ShouldBe(WorkspaceArtifactKind.Test);
+        service.ActiveTestName.ShouldBe("timeout");
+    }
+
+    [Fact]
+    public void RemoveTest_FallsBackToPipelineWhenLastTestIsRemoved()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddWorkflow("pipe");
+        service.AddTest("roundTrip");
+        service.SetActiveTest("roundTrip");
+
+        service.RemoveTest("roundTrip");
+
+        service.ActiveArtifactKind.ShouldBe(WorkspaceArtifactKind.Pipeline);
+        service.ActiveWorkflowName.ShouldBe("pipe");
+        service.ActiveTestName.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task ValidateAsync_AcceptsWellFormedDefinition()
     {
         var composer = new FlowDefinitionComposer();

@@ -704,9 +704,11 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
     public void RemoveWorkflow(string name)
     {
+        if (string.IsNullOrWhiteSpace(name)) return;
         try
         {
             ReplaceDefinition(_definitionComposer.RemoveWorkflow(DefinitionJson, name));
+            RemoveStoredNodePositionsForWorkflow(name);
             if (string.Equals(_activeWorkflowName, name, StringComparison.Ordinal))
                 _activeWorkflowName = WorkflowNames.FirstOrDefault();
             State = RuntimeWorkspaceState.Idle;
@@ -716,6 +718,52 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         {
             State = RuntimeWorkspaceState.Faulted;
             Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "WorkflowRemoveFailed", exception.Message)];
+        }
+        NotifyChanged();
+    }
+
+    public void RemoveDashboard(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return;
+        try
+        {
+            ReplaceDefinition(_definitionComposer.RemoveDashboard(DefinitionJson, name));
+            if (string.Equals(_activeDashboardName, name, StringComparison.Ordinal))
+            {
+                _activeDashboardName = DashboardNames.FirstOrDefault();
+                ActiveDashboardCellName = null;
+            }
+
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "DashboardRemoveFailed", exception.Message)];
+        }
+        NotifyChanged();
+    }
+
+    public void RemoveTest(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return;
+        try
+        {
+            ReplaceDefinition(_definitionComposer.RemoveTest(DefinitionJson, name));
+            if (string.Equals(_activeTestName, name, StringComparison.Ordinal))
+            {
+                _activeTestName = TestNames.FirstOrDefault();
+                LastScenarioRunResult = LatestScenarioRunForTest(_activeTestName);
+            }
+
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "TestRemoveFailed", exception.Message)];
         }
         NotifyChanged();
     }
@@ -766,6 +814,25 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         }
 
         return positions;
+    }
+
+    private void RemoveStoredNodePositionsForWorkflow(string workflowName)
+    {
+        var prefix = workflowName + ".";
+        foreach (var key in LastNodePositions.Keys.Where(key => key.StartsWith(prefix, StringComparison.Ordinal)).ToList())
+        {
+            LastNodePositions.Remove(key);
+        }
+
+        if (StagedNodePositions is not { Count: > 0 })
+        {
+            return;
+        }
+
+        var positions = StagedNodePositions
+            .Where(position => !position.Key.StartsWith(prefix, StringComparison.Ordinal))
+            .ToDictionary(position => position.Key, position => position.Value, StringComparer.Ordinal);
+        StagedNodePositions = positions.Count == 0 ? null : positions;
     }
 
     public void SetDefinitionJson(string json)

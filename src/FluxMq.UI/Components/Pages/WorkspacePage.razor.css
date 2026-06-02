@@ -133,6 +133,42 @@
     text-overflow: ellipsis;
 }
 
+.project-tab-delete {
+    align-items: center;
+    appearance: none;
+    background: transparent;
+    border: 0;
+    border-radius: 4px;
+    color: var(--mud-palette-text-secondary);
+    cursor: pointer;
+    display: flex;
+    flex: 0 0 auto;
+    height: 18px;
+    justify-content: center;
+    opacity: 0.42;
+    padding: 0;
+    transition: opacity 0.12s ease, background 0.12s ease, color 0.12s ease;
+    width: 18px;
+    z-index: 1;
+}
+
+.project-tab:hover .project-tab-delete,
+.project-tab:focus-within .project-tab-delete,
+.project-tab-active .project-tab-delete {
+    opacity: 0.86;
+}
+
+.project-tab-delete:hover,
+.project-tab-delete:focus-visible {
+    background: color-mix(in srgb, var(--mud-palette-error) 14%, transparent);
+    color: var(--mud-palette-error);
+    outline: none;
+}
+
+.project-tab-delete ::deep .mud-icon-root {
+    font-size: 15px;
+}
+
 .project-tab-icon {
     color: var(--flux-accent);
     flex: 0 0 auto;

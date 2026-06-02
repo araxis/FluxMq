@@ -56,12 +56,34 @@ The portable app smoke check used:
 Use the packaged desktop build for these checks:
 
 - create or open an app definition
+- create and delete pipeline, dashboard, and test artifacts
 - validate, run, and stop a pipeline
 - inspect live MQTT traffic through a pipeline artifact
 - verify dashboard live mode uses the full width without the live side panel
 - verify dashboard counter, latest, and rate widgets update from app runtime events
 - run a test scenario that publishes and expects MQTT events
 - verify Logs filtering by scope, level, and search
+
+## Focused Candidate Workflow Recheck
+
+Last checked: 2026-06-02
+
+Automated and broker-backed checks:
+
+- `metrics-only.json` validates.
+- `generated-traffic-inspect.json` validates and runs for a bounded duration.
+- Local `app1.json` validates with two workflows and two MQTT resources.
+- Local Mosquitto was listening on `localhost:1883`.
+- Local `app1.json` runs for a bounded duration against the broker.
+- While `app1.json` was running, an external MQTT client published `{"value":12,"unit":"c","status":"ok"}` to `fluxmq/sample/request` and observed the mapped publish on topic `test`.
+
+Still visual/manual:
+
+- artifact delete confirmation and active-tab fallback in the packaged desktop app
+- dashboard edit/live layout checks
+- dashboard widget visual refresh in the packaged desktop app
+- test scenario execution from the desktop test artifact
+- Logs page filter interaction
 
 ## Repackage Rules
 
