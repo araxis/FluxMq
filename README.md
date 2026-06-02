@@ -124,7 +124,7 @@ Run the local sample verification script before release-readiness checks:
 
 ## Windows Packages
 
-The Windows desktop packaging workflow builds:
+The Windows validation workflow runs release-shaped Windows restore and tests on PRs and main. Manual workflow dispatch still builds:
 
 - `FluxMQ-<version>-portable-win-x64.zip`
 - `FluxMQ-<version>-win-x64.msi`

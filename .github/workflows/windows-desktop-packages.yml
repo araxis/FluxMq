@@ -1,4 +1,4 @@
-name: Windows Desktop Packages
+name: Windows Validation
 
 on:
   workflow_dispatch:
@@ -31,14 +31,14 @@ permissions:
   contents: read
 
 concurrency:
-  group: windows-desktop-packages-${{ github.ref }}
+  group: windows-validation-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  package:
-    name: Package Windows desktop app
+  validate:
+    name: Validate Windows desktop app
     runs-on: windows-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
 
     env:
       DOTNET_NOLOGO: true
@@ -63,7 +63,31 @@ jobs:
 
       - name: Test
         shell: pwsh
-        run: dotnet test FluxMq.sln --configuration Release --no-restore --verbosity minimal -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64
+        run: dotnet test FluxMq.sln --configuration Release --no-restore --verbosity minimal -m:1 -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 -p:UseSharedCompilation=false
+
+  package:
+    name: Package Windows desktop app
+    if: github.event_name == 'workflow_dispatch'
+    needs: validate
+    runs-on: windows-latest
+    timeout-minutes: 90
+
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Restore workloads
+        shell: pwsh
+        run: dotnet workload restore src\FluxMq.UI\FluxMq.UI.csproj
 
       - name: Install WiX
         shell: pwsh
