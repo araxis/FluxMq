@@ -65,6 +65,39 @@ public sealed class FlowApplicationHostTests
     }
 
     [Fact]
+    public void Build_AllowsConditionalLinksFromDefaultHost()
+    {
+        using var host = FlowApplicationHost.CreateDefault(BuildConfiguration(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "workflows": {
+                    "observe": {
+                      "messages": {
+                        "type": "generated.source"
+                      },
+                      "metrics": {
+                        "type": "mqtt.metrics",
+                        "Input": {
+                          "from": "messages.Output",
+                          "when": "input == null || input.Topic.StartsWith(\"factory/\")"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """));
+
+        var result = host.Build();
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.RuntimeBuild?.Errors.Select(error => error.Message) ?? []));
+        result.RuntimeBuild!.Errors.ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task StopAsync_CompletesBuiltRuntime()
     {
         await using var host = FlowApplicationHost.CreateDefault(BuildConfiguration(

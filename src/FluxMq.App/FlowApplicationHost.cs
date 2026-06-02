@@ -5,6 +5,7 @@ using FluxFlow.Engine.Runtime;
 using FluxMq.App.Scenarios;
 using FluxMq.App.Definitions;
 using FluxMq.Components.Storage.Repositories;
+using FluxMq.Components.Mapping;
 using FluxMq.Scenarios;
 using Microsoft.Extensions.Configuration;
 
@@ -43,12 +44,13 @@ public sealed class FlowApplicationHost(
         Func<MqttConnectionProfile, IMqttBrokerClient>? clientFactory = null)
     {
         clientFactory ??= static profile => new MqttBrokerClient(profile);
+        var expressionEngine = FluxMqExpressionEngines.CreateDefault();
         var factories = new RuntimeNodeFactoryRegistry()
-            .RegisterPipelineComponentFactories(clientFactory, messageRepository);
+            .RegisterPipelineComponentFactories(clientFactory, messageRepository, expressionEngine);
 
         return new FlowApplicationHost(
             configuration,
-            new ApplicationRuntimeBuilder(factories),
+            new ApplicationRuntimeBuilder(factories, linkConditionExpressionEngine: expressionEngine),
             scenarioClientFactory: clientFactory);
     }
 
@@ -60,12 +62,13 @@ public sealed class FlowApplicationHost(
         ArgumentNullException.ThrowIfNull(definition);
 
         clientFactory ??= static profile => new MqttBrokerClient(profile);
+        var expressionEngine = FluxMqExpressionEngines.CreateDefault();
         var factories = new RuntimeNodeFactoryRegistry()
-            .RegisterPipelineComponentFactories(clientFactory, messageRepository);
+            .RegisterPipelineComponentFactories(clientFactory, messageRepository, expressionEngine);
 
         return new FlowApplicationHost(
             null,
-            new ApplicationRuntimeBuilder(factories),
+            new ApplicationRuntimeBuilder(factories, linkConditionExpressionEngine: expressionEngine),
             scenarioClientFactory: clientFactory,
             applicationDefinition: definition);
     }
