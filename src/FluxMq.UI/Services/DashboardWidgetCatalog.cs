@@ -7,6 +7,7 @@ public sealed class DashboardWidgetCatalog
 {
     public const string EventCounterType = "event.counter";
     public const string LatestEventType = "event.latest";
+    public const string EventRateType = "event.rate";
 
     private readonly IReadOnlyList<DashboardWidgetDescriptor> _widgets =
     [
@@ -21,7 +22,13 @@ public sealed class DashboardWidgetCatalog
             "Latest Event",
             "Events",
             "Shows the latest runtime event that matches optional filters.",
-            Icons.Material.Filled.Bolt)
+            Icons.Material.Filled.Bolt),
+        new(
+            EventRateType,
+            "Event Rate",
+            "Events",
+            "Shows the current event rate for matching runtime events.",
+            Icons.Material.Filled.Speed)
     ];
 
     public IReadOnlyList<DashboardWidgetDescriptor> Widgets => _widgets;

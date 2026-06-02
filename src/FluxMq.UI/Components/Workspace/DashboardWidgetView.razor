@@ -13,6 +13,12 @@
         <div class="dashboard-widget-value">@snapshot.Count</div>
         <div class="dashboard-widget-meta">@CounterMeta(snapshot)</div>
     }
+    else if (IsEventRate)
+    {
+        var snapshot = Project.GetDashboardEventSnapshot(Widget);
+        <div class="dashboard-widget-value">@FormatRate(snapshot.EventsPerSecond)</div>
+        <div class="dashboard-widget-meta">@RateMeta(snapshot)</div>
+    }
     else if (IsLatestEvent)
     {
         var snapshot = Project.GetDashboardEventSnapshot(Widget);
@@ -47,11 +53,14 @@
 
     private bool IsLatestEvent => string.Equals(Widget.Type, DashboardWidgetCatalog.LatestEventType, StringComparison.Ordinal);
 
+    private bool IsEventRate => string.Equals(Widget.Type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal);
+
     private string WidgetTitle
         => Widget.ReadString("title") ?? Widget.Type switch
         {
             DashboardWidgetCatalog.EventCounterType => "Events",
             DashboardWidgetCatalog.LatestEventType => "Latest event",
+            DashboardWidgetCatalog.EventRateType => "Event rate",
             _ => Widget.Name
         };
 
@@ -60,6 +69,7 @@
         {
             DashboardWidgetCatalog.EventCounterType => Icons.Material.Filled.Numbers,
             DashboardWidgetCatalog.LatestEventType => Icons.Material.Filled.Bolt,
+            DashboardWidgetCatalog.EventRateType => Icons.Material.Filled.Speed,
             _ => Icons.Material.Filled.Widgets
         };
 
@@ -68,6 +78,7 @@
         {
             DashboardWidgetCatalog.EventCounterType => "event-counter",
             DashboardWidgetCatalog.LatestEventType => "latest-event",
+            DashboardWidgetCatalog.EventRateType => "event-rate",
             _ => "unknown"
         };
 
@@ -75,6 +86,11 @@
         => snapshot.LatestEvent is null
             ? "waiting"
             : $"latest {FormatEventTime(snapshot.LatestEvent)}";
+
+    private static string RateMeta(DashboardEventSnapshot snapshot)
+        => snapshot.RecentCount == 0
+            ? "waiting"
+            : $"{snapshot.RecentCount} in {FormatDuration(snapshot.RateWindow)}";
 
     private static string EventMeta(FlowEvent flowEvent)
     {
@@ -104,4 +120,17 @@
 
     private static string FormatEventTime(FlowEvent flowEvent)
         => flowEvent.Timestamp.ToLocalTime().ToString("HH:mm:ss", CultureInfo.InvariantCulture);
+
+    private static string FormatRate(double eventsPerSecond)
+        => eventsPerSecond.ToString(eventsPerSecond switch
+        {
+            >= 10 => "0/s",
+            >= 1 => "0.0/s",
+            _ => "0.00/s"
+        }, CultureInfo.InvariantCulture);
+
+    private static string FormatDuration(TimeSpan duration)
+        => duration.TotalMinutes >= 1
+            ? $"{duration.TotalMinutes.ToString("0", CultureInfo.InvariantCulture)} min"
+            : $"{duration.TotalSeconds.ToString("0", CultureInfo.InvariantCulture)} sec";
 }

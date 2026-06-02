@@ -1982,6 +1982,61 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public void RecordManualMqttPublish_UpdatesPublishedDashboardRate()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "dashboards": {
+                "ops": {
+                  "layout": {
+                    "columns": ["*"],
+                    "rows": ["*"],
+                    "cells": {
+                      "publishedRate": {
+                        "row": 0,
+                        "column": 0,
+                        "widget": "publishedRate"
+                      }
+                    }
+                  },
+                  "widgets": {
+                    "publishedRate": {
+                      "type": "event.rate",
+                      "configuration": {
+                        "eventType": "mqtt.message.published",
+                        "topicStartsWith": "test/",
+                        "status": "published"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+        service.SetActiveDashboard("ops");
+        var widget = service.GetActiveDashboardLayout()
+            .ShouldNotBeNull()
+            .Widgets["publishedRate"];
+
+        service.RecordManualMqttPublish("test/one", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+        service.RecordManualMqttPublish("other/skip", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+        service.RecordManualMqttPublish("test/two", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+
+        var snapshot = service.GetDashboardEventSnapshot(widget);
+        snapshot.Count.ShouldBe(2);
+        snapshot.RecentCount.ShouldBe(2);
+        snapshot.RateWindow.ShouldBe(TimeSpan.FromMinutes(1));
+        snapshot.EventsPerSecond.ShouldBe(2d / snapshot.RateWindow.TotalSeconds, 0.0001);
+        snapshot.LatestEvent.ShouldNotBeNull();
+        snapshot.LatestEvent.Channel.ShouldBe("test/two");
+    }
+
+    [Fact]
     public async Task RunAsync_CollectsRuntimeEventsForDashboardWidgets()
     {
         var mqttClient = new FakeRuntimeMqttBrokerClient();
