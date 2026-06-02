@@ -2345,3 +2345,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test .\FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 565 tests.
   - `dotnet restore .\FluxMq.sln -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 --nologo` passes.
   - `dotnet test .\FluxMq.sln --configuration Release --no-restore --verbosity minimal -m:1 -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 -p:UseSharedCompilation=false --nologo` passes with 565 tests.
+
+## 2026-06-02 - Faster pull request validation
+
+- Kept the existing Windows validation check name, but split the commands by event type.
+- Pull requests now run the faster Debug/no-RID/no-apphost restore and test path.
+- Pushes to `main`, tags, and manual workflow dispatch still run the release-shaped `win-x64` validation path.
+- Package-version property changes now trigger Windows validation.
+- Restore/test steps now have focused timeouts so a stuck PR run fails quickly.
+- Disabled NuGet XML documentation extraction in the workflow to trim package restore overhead.
