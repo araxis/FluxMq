@@ -14,6 +14,8 @@
     <FluxFlowComponentsSessionsVersion>0.1.0-alpha.1</FluxFlowComponentsSessionsVersion>
     <FluxFlowComponentsSourcesVersion>0.1.0-alpha.1</FluxFlowComponentsSourcesVersion>
     <FluxFlowComponentsStateVersion>0.1.0-alpha.1</FluxFlowComponentsStateVersion>
+    <FluxFlowComponentsStorageVersion>0.1.0-alpha.1</FluxFlowComponentsStorageVersion>
+    <FluxFlowComponentsStorageLocalVersion>0.1.0-alpha.1</FluxFlowComponentsStorageLocalVersion>
     <FluxFlowComponentsTimersVersion>0.4.1-alpha.1</FluxFlowComponentsTimersVersion>
     <FluxFlowComponentsValidationVersion>0.1.0-alpha.1</FluxFlowComponentsValidationVersion>
   </PropertyGroup>

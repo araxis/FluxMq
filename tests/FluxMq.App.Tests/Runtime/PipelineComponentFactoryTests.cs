@@ -18,6 +18,8 @@ using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Definitions;
 using FluxFlow.Engine.Runtime;
 using FluxFlow.Components.Serialization.Contracts;
+using FluxFlow.Components.Storage;
+using FluxFlow.Components.Storage.Contracts;
 using FluxFlow.Components.Timers.Contracts;
 using MQTTnet.Protocol;
 using System.Runtime.CompilerServices;
@@ -67,6 +69,9 @@ public sealed class PipelineComponentFactoryTests
             FluxMqNodeTypes.MqttPublisher,
             FluxMqNodeTypes.MqttRecorder,
             FluxMqNodeTypes.FileWriter,
+            StorageComponentTypes.Put,
+            StorageComponentTypes.Get,
+            StorageComponentTypes.Delete,
             FluxMqNodeTypes.TimerInterval,
             FluxMqNodeTypes.TimerSchedule,
             FluxMqNodeTypes.TimerDelay,
@@ -774,6 +779,130 @@ public sealed class PipelineComponentFactoryTests
 
         resultSink!.Values.ShouldHaveSingleItem().Passed.ShouldBeTrue();
         passedSink!.Values.ShouldHaveSingleItem().Key.ShouldBe("temperature");
+    }
+
+    [Fact]
+    public async Task StorageComponents_CanStoreAndReadLocalRecords()
+    {
+        var storageRoot = Path.Combine(Path.GetTempPath(), "fluxmq-storage-tests", Guid.NewGuid().ToString("N"));
+        TestValueSourceNode<StoragePutRequest>? source = null;
+        TestSinkNode<StorageResult>? putSink = null;
+        TestSinkNode<StorageResult>? foundSink = null;
+
+        try
+        {
+            var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+                .RegisterPipelineComponentFactories(localStorageRootDirectory: storageRoot)
+                .Register(new NodeType("test.storage-put-source"), (address, _) =>
+                {
+                    source = new TestValueSourceNode<StoragePutRequest>();
+                    return SourceNode(address, source);
+                })
+                .Register(new NodeType("test.storage-get-request"), (address, _) =>
+                {
+                    var mapper = new StorageGetRequestNode();
+                    return RuntimeNode.Create(
+                        address,
+                        mapper,
+                        inputs:
+                        [
+                            new InputPort<StorageResult>(address.Port(new("Input")), mapper.Input)
+                        ],
+                        outputs:
+                        [
+                            new OutputPort<StorageGetRequest>(address.Port(new("Output")), mapper.Output)
+                        ]);
+                })
+                .Register(new NodeType("test.storage-result-sink"), (address, _) =>
+                {
+                    var sink = new TestSinkNode<StorageResult>();
+                    if (address.Node.Value == "putSink")
+                    {
+                        putSink = sink;
+                    }
+                    else
+                    {
+                        foundSink = sink;
+                    }
+
+                    return SinkNode(address, sink);
+                }));
+
+            var result = builder.Build(new ApplicationDefinition
+            {
+                Workflows =
+                {
+                    ["flow"] = new WorkflowDefinition
+                    {
+                        Nodes =
+                        {
+                            ["source"] = Node("test.storage-put-source"),
+                            ["put"] = new NodeDefinition
+                            {
+                                Type = StorageComponentTypes.Put,
+                                Ports =
+                                {
+                                    ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
+                                },
+                                Configuration =
+                                {
+                                    ["store"] = JsonDocument.Parse("\"local\"").RootElement.Clone(),
+                                    ["collection"] = JsonDocument.Parse("\"samples\"").RootElement.Clone(),
+                                    ["emitStoredRecord"] = JsonSerializer.SerializeToElement(true)
+                                }
+                            },
+                            ["getRequest"] = NodeWithPort("test.storage-get-request", "Input", "\"put.Result\""),
+                            ["get"] = new NodeDefinition
+                            {
+                                Type = StorageComponentTypes.Get,
+                                Ports =
+                                {
+                                    ["Input"] = JsonDocument.Parse("\"getRequest.Output\"").RootElement.Clone()
+                                },
+                                Configuration =
+                                {
+                                    ["store"] = JsonDocument.Parse("\"local\"").RootElement.Clone(),
+                                    ["collection"] = JsonDocument.Parse("\"samples\"").RootElement.Clone()
+                                }
+                            },
+                            ["putSink"] = NodeWithPort("test.storage-result-sink", "Input", "\"put.Result\""),
+                            ["foundSink"] = NodeWithPort("test.storage-result-sink", "Input", "\"get.Found\"")
+                        }
+                    }
+                }
+            });
+
+            result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+            await result.Runtime!.StartAsync();
+
+            source!.Post(new StoragePutRequest
+            {
+                Collection = "samples",
+                Key = "message-1",
+                Value = new Dictionary<string, object?>
+                {
+                    ["topic"] = "factory/one",
+                    ["value"] = 12
+                },
+                ContentType = "application/json"
+            });
+            result.Runtime.Complete();
+
+            await result.Runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+            putSink!.Values.ShouldHaveSingleItem().Succeeded.ShouldBeTrue();
+            var found = foundSink!.Values.ShouldHaveSingleItem();
+            found.Found.ShouldBeTrue();
+            found.Record.ShouldNotBeNull();
+            found.Record!.Key.ShouldBe("message-1");
+        }
+        finally
+        {
+            if (Directory.Exists(storageRoot))
+            {
+                Directory.Delete(storageRoot, recursive: true);
+            }
+        }
     }
 
     [Fact]
@@ -2233,6 +2362,43 @@ public sealed class PipelineComponentFactoryTests
         public void Fault(Exception exception)
         {
             ((IDataflowBlock)_output).Fault(exception);
+            _errors.Complete();
+        }
+    }
+
+    private sealed class StorageGetRequestNode : IFlowNode
+    {
+        private readonly TransformBlock<StorageResult, StorageGetRequest> _input;
+        private readonly BufferBlock<FlowError> _errors = new();
+
+        public StorageGetRequestNode()
+        {
+            _input = new TransformBlock<StorageResult, StorageGetRequest>(
+                result => new StorageGetRequest
+                {
+                    Collection = result.Collection,
+                    Key = result.Key,
+                    CorrelationId = result.CorrelationId
+                });
+            _input.Completion.ContinueWith(
+                _ => _errors.Complete(),
+                CancellationToken.None,
+                TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
+        }
+
+        public FlowNodeId Id { get; } = FlowNodeId.New();
+        public ITargetBlock<StorageResult> Input => _input;
+        public ISourceBlock<StorageGetRequest> Output => _input;
+        public ISourceBlock<FlowError> Errors => _errors;
+        public Task Completion => _input.Completion;
+
+        public void Complete()
+            => _input.Complete();
+
+        public void Fault(Exception exception)
+        {
+            ((IDataflowBlock)_input).Fault(exception);
             _errors.Complete();
         }
     }
