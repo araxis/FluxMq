@@ -90,7 +90,7 @@ The alpha workspace assumes a local MQTT broker is available at `localhost:1883`
 
 ## Windows Packaging
 
-The `Windows Desktop Packages` workflow builds the MAUI desktop app on a Windows runner and uploads two artifacts:
+The `Windows Validation` workflow runs release-shaped Windows restore and tests on pull requests and `main`. Manual workflow dispatch also builds and uploads two artifacts:
 
 - a portable `win-x64` zip containing the published `FluxMq.UI.exe` folder
 - an MSI installer built from the same publish output with WiX

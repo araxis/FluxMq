@@ -30,7 +30,7 @@ flowchart LR
 - definition save and load from local files
 - validate, run, and stop controls through `FluxMq.App`
 - named sessions grouped by project
-- Windows package workflow producing portable zip and MSI artifacts
+- Windows validation workflow for PRs, with manual package generation for portable zip and MSI artifacts
 
 ## Broker Assumption
 

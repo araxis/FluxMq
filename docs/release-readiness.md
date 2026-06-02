@@ -21,7 +21,7 @@ Expected result:
 
 ```powershell
 dotnet restore .\FluxMq.sln -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 --nologo
-dotnet test .\FluxMq.sln --configuration Release --no-restore --verbosity minimal -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 --nologo
+dotnet test .\FluxMq.sln --configuration Release --no-restore --verbosity minimal -m:1 -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 -p:UseSharedCompilation=false --nologo
 dotnet tool install --global wix --version 6.0.2
 .\eng\package-windows.ps1 -Configuration Release -Version 0.1.0
 ```
@@ -31,6 +31,8 @@ Expected result:
 - release-shaped solution tests pass
 - portable Windows zip is created
 - MSI installer is created from the same publish output
+
+GitHub pull requests run the release-shaped restore/test portion only. Package artifact generation is manual while the project is still in active development.
 
 ## Manual UI Gate
 

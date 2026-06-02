@@ -2316,3 +2316,10 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Updated durable docs so app definitions own resources, workflows, dashboards, and tests before executable resources/workflows are projected into the package runtime.
 - Removed stale `FluxMq.Cli` planned-language from architecture docs.
 - Updated bounded CLI runtime examples to use `generated-traffic-inspect.json` instead of the no-source `metrics-only.json` sample.
+
+## 2026-06-02 - Faster Windows validation workflow
+
+- Split the Windows workflow into an automatic validation job and a manual package job.
+- Pull requests and `main` now run release-shaped Windows restore/tests without building or uploading package artifacts.
+- Manual workflow dispatch still builds the portable zip and MSI when package artifacts are explicitly needed.
+- Updated release-readiness and development docs to use the serialized Release test command and describe manual package generation.
