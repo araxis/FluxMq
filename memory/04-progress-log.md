@@ -2267,3 +2267,23 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet restore FluxMq.sln --nologo` passes.
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~PipelineComponentFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 46 tests.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 562 tests.
+
+## 2026-06-02 - Dashboard event-rate widget
+
+- Added `event.rate` to the dashboard widget catalog.
+- Reused the existing dashboard event filters so rate widgets can target the same runtime events as counter/latest widgets.
+- Extended dashboard event snapshots with recent event count, one-minute rate window, and events-per-second value.
+- Rendered the rate widget as a compact live dashboard card with the same settings dialog path as existing event widgets.
+- Verified:
+  - `dotnet test .\tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --nologo` passes with 259 tests.
+  - `dotnet test .\FluxMq.sln --nologo` passes with 564 tests.
+
+## 2026-06-02 - Reconnect cancellation robustness
+
+- Fixed a reconnect cancellation race in `MqttConnectionManager`.
+- Cancel paths no longer dispose reconnect cancellation sources while reconnect tasks may still be using them.
+- Reconnect tasks now remove only their own dictionary entry, so an older completed reconnect cannot remove a newer reconnect attempt for the same profile.
+- Verified:
+  - `dotnet test .\tests\FluxMq.Core.Tests\FluxMq.Core.Tests.csproj --configuration Release --no-restore -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 --nologo` passes with 41 tests.
+  - `dotnet restore .\FluxMq.sln -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 --nologo` passes.
+  - `dotnet test .\FluxMq.sln --configuration Release --no-restore --verbosity minimal -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 --nologo` passes with 564 tests.
