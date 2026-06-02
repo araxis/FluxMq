@@ -2304,3 +2304,9 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Cleaned the MQTT publisher docs snippet to use `mqttClient` instead of the confusing old `session` variable name.
 - Verified:
   - `.\eng\verify-samples.ps1` passes.
+
+## 2026-06-02 - Release readiness checklist
+
+- Added `docs/release-readiness.md` as the pre-V1 release gate.
+- The checklist covers local command validation, broker-free sample verification, release-shaped Windows package validation, manual desktop UI checks, and blocker rules.
+- Linked the checklist from the README and documentation index.
