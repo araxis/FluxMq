@@ -2287,3 +2287,11 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test .\tests\FluxMq.Core.Tests\FluxMq.Core.Tests.csproj --configuration Release --no-restore -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 --nologo` passes with 41 tests.
   - `dotnet restore .\FluxMq.sln -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 --nologo` passes.
   - `dotnet test .\FluxMq.sln --configuration Release --no-restore --verbosity minimal -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 --nologo` passes with 564 tests.
+
+## 2026-06-02 - Artifact-aware live side panel
+
+- Made the live MQTT inspector/publisher panel available only for active pipeline artifacts.
+- Hid the inspector toggle and right side panel for no-app, dashboard, test, and logs states so those surfaces use the full workspace width.
+- Verified:
+  - `dotnet test .\tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --nologo` passes with 259 tests.
+  - `dotnet test .\FluxMq.sln --nologo` passes with 564 tests.
