@@ -1,7 +1,8 @@
 <Project>
   <PropertyGroup>
     <FluxFlowEngineVersion>0.5.0-alpha.1</FluxFlowEngineVersion>
-    <FluxFlowComponentsControlVersion>0.1.0-alpha.1</FluxFlowComponentsControlVersion>
+    <FluxFlowComponentsAssertionsVersion>0.1.0-alpha.1</FluxFlowComponentsAssertionsVersion>
+    <FluxFlowComponentsControlVersion>0.2.0-alpha.1</FluxFlowComponentsControlVersion>
     <FluxFlowComponentsFileSystemVersion>0.4.0-alpha.1</FluxFlowComponentsFileSystemVersion>
     <FluxFlowComponentsHttpVersion>0.1.0-alpha.1</FluxFlowComponentsHttpVersion>
     <FluxFlowComponentsMappingVersion>0.1.0-alpha.1</FluxFlowComponentsMappingVersion>

@@ -6,6 +6,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluxFlow.Components.Assertions" Version="$(FluxFlowComponentsAssertionsVersion)" />
     <PackageReference Include="FluxFlow.Components.Control" Version="$(FluxFlowComponentsControlVersion)" />
     <PackageReference Include="FluxFlow.Components.Http" Version="$(FluxFlowComponentsHttpVersion)" />
     <PackageReference Include="FluxFlow.Components.Mapping" Version="$(FluxFlowComponentsMappingVersion)" />

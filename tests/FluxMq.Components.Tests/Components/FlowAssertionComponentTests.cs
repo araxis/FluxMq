@@ -4,14 +4,15 @@ using FluxMq.Components.FileWriter;
 using FluxMq.Components.Logging;
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
-using FluxFlow.Components.Control.Contracts;
-using FluxFlow.Components.Control.Options;
+using FluxFlow.Components.Assertions.Options;
 using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Mapping;
 using MQTTnet.Protocol;
 using Shouldly;
 using System.Text;
 using System.Threading.Tasks.Dataflow;
+using AssertionErrorCodes = FluxFlow.Components.Assertions.AssertionErrorCodes;
+using AssertionNodeContext = FluxFlow.Components.Assertions.Contracts.AssertionNodeContext;
 
 namespace FluxMq.Components.Tests.Components;
 
@@ -110,7 +111,7 @@ public sealed class FlowAssertionComponentTests
         await Task.WhenAll(component.Completion, errorSink.Completion);
 
         var error = errors.ShouldHaveSingleItem();
-        error.Code.ShouldBe(4200);
+        error.Code.ShouldBe(AssertionErrorCodes.ExpressionFailed);
         error.Message.ShouldContain("flow.assert failed to evaluate input");
     }
 
@@ -120,20 +121,22 @@ public sealed class FlowAssertionComponentTests
         string name,
         string failureMessage = "Assertion failed.")
     {
-        var options = new ControlExpressionOptions
+        var options = new AssertionOptions
         {
             Expression = expression,
             InputType = inputType,
-            Name = name,
+            Description = name,
             FailureMessage = failureMessage,
-            BoundedCapacity = 1000
+            BoundedCapacity = 1000,
+            EmitPassedInput = true,
+            EmitFailedInput = true
         };
 
         return new FlowAssertionComponent<TInput>(
             options,
             new DynamicExpressoFlowExpressionEngine(),
             new FluxMqControlContextFactory(),
-            new ControlNodeContext
+            new AssertionNodeContext
             {
                 Address = new(new("test"), new("assert")),
                 Options = options,

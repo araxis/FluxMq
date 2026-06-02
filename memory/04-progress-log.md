@@ -2214,3 +2214,19 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~GeneratedSourceFactory" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 2 tests.
   - `dotnet build FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with existing UI project resource qualifier warnings.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 536 tests.
+
+## 2026-06-02 - Assertions component package migration
+
+- Added `FluxFlow.Components.Assertions` `0.1.0-alpha.1`.
+- Updated `FluxFlow.Components.Control` to `0.2.0-alpha.1`.
+- Reworked FluxMQ `flow.assert` execution to use the package-backed assertion node while preserving FluxMQ assertion result, log entry, and runtime event surfaces.
+- Reused the existing FluxMQ expression context factory for assertion expressions so MQTT, file, HTTP, payload, timer, state, and error variables still resolve the same way.
+- Updated assertion expression-failure tests to assert the package-owned assertion error code.
+- Verified:
+  - `dotnet restore FluxMq.sln --nologo` passes.
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowAssertionComponentTests" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 3 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowAssertionFactory" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 2 tests.
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowFilterComponentTests|FullyQualifiedName~FlowWhenComponentTests" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 4 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~ConditionRouterFactory|FullyQualifiedName~MessageFilter" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 1 test.
+  - `dotnet build FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with existing UI project resource qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 536 tests.
