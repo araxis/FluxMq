@@ -469,6 +469,32 @@ public sealed class FlowDefinitionComposer
         return root.ToJsonString(Options);
     }
 
+    /// <summary>Removes a dashboard by name, leaving the definition unchanged if it doesn't exist.</summary>
+    public string RemoveDashboard(string json, string name)
+    {
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["dashboards"] is JsonObject dashboards)
+        {
+            dashboards.Remove(name);
+        }
+
+        return root.ToJsonString(Options);
+    }
+
+    /// <summary>Removes a test scenario by name, leaving the definition unchanged if it doesn't exist.</summary>
+    public string RemoveTest(string json, string name)
+    {
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["tests"] is JsonObject tests)
+        {
+            tests.Remove(name);
+        }
+
+        return root.ToJsonString(Options);
+    }
+
     public string AddScenarioStep(string json, string testName, string stepType)
     {
         if (string.IsNullOrWhiteSpace(testName))
@@ -1096,7 +1122,10 @@ public sealed class FlowDefinitionComposer
         var root = ParseOrCreate(json);
         var flowApplication = GetFlowApplication(root);
         if (flowApplication["workflows"] is JsonObject workflows)
+        {
             workflows.Remove(name);
+        }
+
         return root.ToJsonString(Options);
     }
 

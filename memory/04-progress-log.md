@@ -2389,3 +2389,23 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - The notes capture candidate status, validated command gates, expected local Windows artifacts, manual candidate focus, and rules for when to rerun the Windows package gate.
 - Linked the candidate notes from the docs index and release-readiness checklist.
 - Updated the living development plan so the next slice is focused candidate workflow testing and concrete blocker fixes.
+
+## 2026-06-02 - Focused candidate workflow recheck
+
+- Validated repo sample definitions through the CLI:
+  - `samples\flow-applications\metrics-only.json`
+  - `samples\flow-applications\generated-traffic-inspect.json`
+- Validated `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json`; it reports two workflows and two MQTT resources.
+- Confirmed a local Mosquitto broker was listening on `localhost:1883`.
+- Ran `app1.json` for a bounded duration through the CLI against the local broker.
+- Verified the app1 MQTT pipeline externally: publishing `{"value":12,"unit":"c","status":"ok"}` to `fluxmq/sample/request` produced a mapped MQTT publish on topic `test`.
+- No runtime or broker-backed candidate blocker was found. Remaining candidate checks are desktop-visual checks for dashboard layout/widget refresh, desktop test artifact execution, and Logs filtering.
+
+## 2026-06-02 - Artifact deletion workflow
+
+- Added workspace deletion operations for pipeline, dashboard, and test artifacts.
+- Top artifact tabs now expose compact delete actions with confirmation before removal.
+- The app structure menus now expose matching delete entries for pipelines, dashboards, and tests.
+- Deleting the active artifact falls back to the next available artifact, and deleting a pipeline clears stored diagram positions for that pipeline.
+- Verified:
+  - `dotnet test .\tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false --nologo -v minimal` passes with 268 tests.

@@ -36,6 +36,15 @@
                      @onclick="@(() => { active.SetActiveWorkflow(w); _jsonView = false; })">
                     <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" Class="project-tab-icon" />
                     <span class="project-tab-name">@w</span>
+                    <button type="button"
+                            class="project-tab-delete"
+                            title="Delete pipeline"
+                            aria-label="@($"Delete pipeline {w}")"
+                            @onclick:stopPropagation="true"
+                            @onmousedown:stopPropagation="true"
+                            @onclick="@(() => RemoveWorkflowAsync(w))">
+                        <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" />
+                    </button>
                 </div>
             }
             @foreach (var dashboard in active.DashboardNames)
@@ -48,6 +57,15 @@
                      @onclick="@(() => { active.SetActiveDashboard(d); _jsonView = false; })">
                     <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="project-tab-icon" />
                     <span class="project-tab-name">@d</span>
+                    <button type="button"
+                            class="project-tab-delete"
+                            title="Delete dashboard"
+                            aria-label="@($"Delete dashboard {d}")"
+                            @onclick:stopPropagation="true"
+                            @onmousedown:stopPropagation="true"
+                            @onclick="@(() => RemoveDashboardAsync(d))">
+                        <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" />
+                    </button>
                 </div>
             }
             @foreach (var test in active.TestNames)
@@ -60,6 +78,15 @@
                      @onclick="@(() => { active.SetActiveTest(t); _jsonView = false; })">
                     <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" Class="project-tab-icon" />
                     <span class="project-tab-name">@t</span>
+                    <button type="button"
+                            class="project-tab-delete"
+                            title="Delete test"
+                            aria-label="@($"Delete test {t}")"
+                            @onclick:stopPropagation="true"
+                            @onmousedown:stopPropagation="true"
+                            @onclick="@(() => RemoveTestAsync(t))">
+                        <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" />
+                    </button>
                 </div>
             }
             @{
@@ -329,6 +356,46 @@
             active.AddTest(name.Trim());
             _jsonView = false;
         }
+    }
+
+    private async Task RemoveWorkflowAsync(string name)
+    {
+        var active = Projects.ActiveProject;
+        if (active is null || !await ConfirmDeleteAsync("pipeline", name)) return;
+
+        active.RemoveWorkflow(name);
+        _jsonView = false;
+    }
+
+    private async Task RemoveDashboardAsync(string name)
+    {
+        var active = Projects.ActiveProject;
+        if (active is null || !await ConfirmDeleteAsync("dashboard", name)) return;
+
+        active.RemoveDashboard(name);
+        _jsonView = false;
+    }
+
+    private async Task RemoveTestAsync(string name)
+    {
+        var active = Projects.ActiveProject;
+        if (active is null || !await ConfirmDeleteAsync("test", name)) return;
+
+        active.RemoveTest(name);
+        _jsonView = false;
+    }
+
+    private async Task<bool> ConfirmDeleteAsync(string artifactKind, string name)
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            $"Delete {artifactKind}",
+            $"Delete {artifactKind} '{name}'? This cannot be undone.",
+            "Delete",
+            null,
+            "Cancel",
+            new DialogOptions { MaxWidth = MaxWidth.ExtraSmall });
+
+        return confirmed == true;
     }
 
     private void OnDashboardEditModeChanged(bool isEditMode)

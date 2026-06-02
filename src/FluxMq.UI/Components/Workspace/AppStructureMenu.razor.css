@@ -48,6 +48,10 @@
     white-space: nowrap;
 }
 
+.app-structure-menu ::deep .app-menu-danger {
+    color: var(--mud-palette-error);
+}
+
 .app-structure-meta {
     color: var(--mud-palette-text-secondary);
     font-size: 11.5px;
