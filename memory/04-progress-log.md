@@ -2244,3 +2244,26 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~RegisterPipelineComponentFactories_RegistersStableComponentTypes" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 1 test.
   - `dotnet build FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with existing UI project resource qualifier warnings.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 537 tests.
+
+## 2026-06-02 - Routing correlation and join designer support
+
+- Added designer and runtime coverage for package-backed `flow.correlation` and `flow.join`.
+- Added node models, catalog entries, composer defaults, and MudBlazor editor widgets for both routing nodes.
+- `flow.correlation` pairs request/response values by key and side expressions.
+- `flow.join` pairs left/right streams by key expression and intentionally does not auto-wire a default single input.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 257 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~PipelineComponentFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 46 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 562 tests.
+
+## 2026-06-02 - Storage file-system adapter package rename
+
+- Replaced the broad `FluxFlow.Components.Storage.Local` adapter package with explicit `FluxFlow.Components.Storage.FileSystem` `0.1.0-alpha.1`.
+- Updated the base storage package version to `FluxFlow.Components.Storage` `0.2.0-alpha.1`, which is required by the file-system adapter package.
+- Updated runtime storage registration to `UseFileSystemStorage(...)` with `FileSystemStorageStoreOptions`.
+- Renamed the app runtime root-directory parameter from local-storage wording to file-system-storage wording.
+- Updated runtime registry coverage for the new `storage.query` component type registered by the updated storage package.
+- Verified:
+  - `dotnet restore FluxMq.sln --nologo` passes.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~PipelineComponentFactoryTests" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 46 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 562 tests.

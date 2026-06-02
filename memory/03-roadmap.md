@@ -2,6 +2,10 @@
 
 This is the staged implementation plan.
 
+## Current V1 Critical Path
+
+The project is now past the basic runtime, component, scenario, and dashboard-layout foundations. The remaining V1 path is to finish package alignment, test/scenario component unification, dashboard runtime/widget binding, designer polish, release packaging, sample definitions, smoke documentation, and stale-code cleanup. Keep these as small vertical slices and merge each one independently.
+
 ## Stage 0 - Project Setup
 
 Goals:
