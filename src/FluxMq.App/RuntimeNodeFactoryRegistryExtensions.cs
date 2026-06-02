@@ -23,6 +23,8 @@ using FluxFlow.Components.Mapping.Options;
 using FluxFlow.Components.Payloads;
 using FluxFlow.Components.Payloads.Contracts;
 using FluxFlow.Components.Serialization;
+using FluxFlow.Components.Sources.Nodes;
+using FluxFlow.Components.Sources.Options;
 using FluxFlow.Components.State;
 using FluxFlow.Components.State.Contracts;
 using FluxFlow.Components.State.Options;
@@ -328,20 +330,41 @@ public static class RuntimeNodeFactoryRegistryExtensions
 
     private static RuntimeNode CreateEmptyMqttSource(NodeAddress address, NodeDefinition definition)
     {
-        var component = new GeneratedMqttSourceComponent(
-            [],
-            boundedCapacity: GetBoundedCapacity(definition));
+        var component = new GeneratedSourceNode<MqttEnvelope>(
+            GetGeneratedSourceOptions(definition),
+            []);
 
         return SourceRuntimeNode(address, component, component.Output);
     }
 
     private static RuntimeNode CreateGeneratedMqttSource(NodeAddress address, NodeDefinition definition)
     {
-        var component = new GeneratedMqttSourceComponent(
-            GetGeneratedMessages(definition),
-            boundedCapacity: GetBoundedCapacity(definition));
+        var component = new GeneratedSourceNode<MqttEnvelope>(
+            GetGeneratedSourceOptions(definition),
+            GetGeneratedMessages(definition));
 
         return SourceRuntimeNode(address, component, component.Output);
+    }
+
+    private static GeneratedSourceOptions GetGeneratedSourceOptions(NodeDefinition definition)
+    {
+        var loop = GetBoolOrDefault(definition, "loop", false);
+        var maxItems = GetOptionalInt(definition, "maxItems", minValue: 1);
+        if (loop && !maxItems.HasValue)
+        {
+            throw new InvalidOperationException("generated.source option 'maxItems' is required when 'loop' is true.");
+        }
+
+        return new GeneratedSourceOptions
+        {
+            Name = GetNullableString(definition, "name") ?? "generated",
+            OutputType = FlowContractTypeNames.MqttEnvelope,
+            Loop = loop,
+            MaxItems = maxItems,
+            InitialDelayMilliseconds = GetIntOrDefault(definition, "initialDelayMilliseconds", 0, minValue: 0),
+            IntervalMilliseconds = GetIntOrDefault(definition, "intervalMilliseconds", 0, minValue: 0),
+            BoundedCapacity = GetBoundedCapacity(definition)
+        };
     }
 
     private static RuntimeNode SourceRuntimeNode(
@@ -986,6 +1009,21 @@ public static class RuntimeNodeFactoryRegistryExtensions
         if (!definition.Configuration.TryGetValue(key, out var value))
         {
             return defaultValue;
+        }
+
+        if (value.ValueKind != JsonValueKind.Number || !value.TryGetInt32(out var result) || result < minValue)
+        {
+            throw new InvalidOperationException($"Configuration value '{key}' must be an integer greater than or equal to {minValue}.");
+        }
+
+        return result;
+    }
+
+    private static int? GetOptionalInt(NodeDefinition definition, string key, int minValue)
+    {
+        if (!definition.Configuration.TryGetValue(key, out var value) || value.ValueKind == JsonValueKind.Null)
+        {
+            return null;
         }
 
         if (value.ValueKind != JsonValueKind.Number || !value.TryGetInt32(out var result) || result < minValue)
