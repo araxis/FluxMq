@@ -14,6 +14,7 @@ using FluxMq.Components.MqttPayloadInspector;
 using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
 using FluxMq.Components.Storage.Repositories;
+using FluxFlow.Components.Assertions.Options;
 using FluxFlow.Components.Control.Contracts;
 using FluxFlow.Components.Control.Options;
 using FluxFlow.Components.Http;
@@ -37,6 +38,7 @@ using MQTTnet.Protocol;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks.Dataflow;
+using AssertionNodeContext = FluxFlow.Components.Assertions.Contracts.AssertionNodeContext;
 
 namespace FluxMq.App;
 
@@ -221,17 +223,24 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ExpressionId = GetNullableString(definition, "expressionId"),
             ExpressionName = GetNullableString(definition, "expressionName"),
             InputType = inputType,
-            BoundedCapacity = boundedCapacity,
-            Name = GetNullableString(definition, "name") ?? GetNullableString(definition, "assertionName"),
-            FailureMessage = GetNullableString(definition, "failureMessage")
+            BoundedCapacity = boundedCapacity
         };
     }
 
     private static IFlowExpressionEngine GetControlExpressionEngine(
         ControlExpressionOptions options,
         IFlowExpressionEngine defaultExpressionEngine)
+        => GetExpressionEngine(options.Engine, defaultExpressionEngine);
+
+    private static IFlowExpressionEngine GetAssertionExpressionEngine(
+        AssertionOptions options,
+        IFlowExpressionEngine defaultExpressionEngine)
+        => GetExpressionEngine(options.Engine, defaultExpressionEngine);
+
+    private static IFlowExpressionEngine GetExpressionEngine(
+        string? requestedEngine,
+        IFlowExpressionEngine defaultExpressionEngine)
     {
-        var requestedEngine = options.Engine;
         if (string.IsNullOrWhiteSpace(requestedEngine) ||
             string.Equals(requestedEngine, defaultExpressionEngine.Name, StringComparison.OrdinalIgnoreCase))
         {
@@ -526,11 +535,12 @@ public static class RuntimeNodeFactoryRegistryExtensions
             FluxMqNodeTypes.FlowAssertion.Value,
             typeof(TInput).Name,
             expression);
+        var assertionOptions = CreateAssertionOptions(definition, options);
         var component = new FlowAssertionComponent<TInput>(
-            options,
-            GetControlExpressionEngine(options, expressionEngine),
+            assertionOptions,
+            GetAssertionExpressionEngine(assertionOptions, expressionEngine),
             new FluxMqControlContextFactory(),
-            CreateControlNodeContext<TInput>(address, options));
+            CreateAssertionNodeContext<TInput>(address, assertionOptions));
 
         return RuntimeNode.Create(
             address,
@@ -548,6 +558,35 @@ public static class RuntimeNodeFactoryRegistryExtensions
                 new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
             ]);
     }
+
+    private static AssertionOptions CreateAssertionOptions(
+        NodeDefinition definition,
+        ControlExpressionOptions options)
+        => new()
+        {
+            Engine = options.Engine,
+            Expression = options.Expression,
+            ExpressionId = options.ExpressionId,
+            ExpressionName = options.ExpressionName,
+            InputType = options.InputType,
+            BoundedCapacity = options.BoundedCapacity,
+            Description = GetNullableString(definition, "name") ??
+                          GetNullableString(definition, "assertionName") ??
+                          "Flow assertion",
+            FailureMessage = GetNullableString(definition, "failureMessage"),
+            EmitPassedInput = true,
+            EmitFailedInput = true
+        };
+
+    private static AssertionNodeContext CreateAssertionNodeContext<TInput>(
+        NodeAddress address,
+        AssertionOptions options)
+        => new()
+        {
+            Address = address,
+            Options = options,
+            InputType = typeof(TInput)
+        };
 
     private static RuntimeNode CreateMqttMetrics(NodeAddress address, NodeDefinition definition)
     {
