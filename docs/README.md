@@ -13,6 +13,7 @@ This folder contains project documentation intended for contributors and future 
 - [Flow Errors](flow-errors.md)
 - [Replay](replay.md)
 - [Release Readiness](release-readiness.md)
+- [V1 Candidate Notes](v1-candidate-notes.md)
 - [Documentation Strategy](documentation-strategy.md)
 - [Wiki Index](wiki-index.md)
 

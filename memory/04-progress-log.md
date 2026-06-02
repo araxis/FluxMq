@@ -2382,3 +2382,10 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verified `dotnet test .\FluxMq.sln --no-restore --nologo -m:1 -p:UseSharedCompilation=false -p:UseAppHost=false --verbosity minimal` passes with 565 tests.
 - Verified `.\eng\verify-samples.ps1` passes, including CLI build, sample validation, and bounded generated-traffic execution.
 - No concrete candidate blocker was found in this recheck.
+
+## 2026-06-02 - V1 candidate notes
+
+- Added `docs/v1-candidate-notes.md` as the current candidate handoff.
+- The notes capture candidate status, validated command gates, expected local Windows artifacts, manual candidate focus, and rules for when to rerun the Windows package gate.
+- Linked the candidate notes from the docs index and release-readiness checklist.
+- Updated the living development plan so the next slice is focused candidate workflow testing and concrete blocker fixes.

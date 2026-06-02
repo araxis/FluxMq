@@ -2,6 +2,8 @@
 
 This checklist is the pre-V1 release gate. Run commands from the repository root.
 
+Use [V1 Candidate Notes](v1-candidate-notes.md) to record the latest validated command results, local artifacts, manual smoke status, and repackage rules for a specific candidate.
+
 ## Local Command Gate
 
 ```powershell
