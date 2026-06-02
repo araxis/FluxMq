@@ -2201,9 +2201,39 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet build FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with existing UI project resource qualifier warnings.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 536 tests.
 
+## 2026-06-02 - Sources component package migration
+
+- Added `FluxFlow.Components.Sources` `0.1.0-alpha.1` to the app runtime project.
+- Reworked FluxMQ `generated.source` runtime creation to use package-backed `GeneratedSourceNode<MqttEnvelope>`.
+- Preserved the existing FluxMQ node type, `messages` configuration, and `Output`/`Errors` ports while adding package timing and bounded-loop options.
+- Removed the old local generated MQTT source implementation.
+- Kept `session.source` and `replay.source` on the existing session-store path because the sources package intentionally does not own stored session replay.
+- Verified:
+  - `dotnet restore FluxMq.sln --nologo` passes.
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore --filter "FullyQualifiedName~StoredSessionSource" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 3 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~GeneratedSourceFactory" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 2 tests.
+  - `dotnet build FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with existing UI project resource qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 536 tests.
+
+## 2026-06-02 - Assertions component package migration
+
+- Added `FluxFlow.Components.Assertions` `0.1.0-alpha.1`.
+- Updated `FluxFlow.Components.Control` to `0.2.0-alpha.1`.
+- Reworked FluxMQ `flow.assert` execution to use the package-backed assertion node while preserving FluxMQ assertion result, log entry, and runtime event surfaces.
+- Reused the existing FluxMQ expression context factory for assertion expressions so MQTT, file, HTTP, payload, timer, state, and error variables still resolve the same way.
+- Updated assertion expression-failure tests to assert the package-owned assertion error code.
+- Verified:
+  - `dotnet restore FluxMq.sln --nologo` passes.
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowAssertionComponentTests" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 3 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowAssertionFactory" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 2 tests.
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowFilterComponentTests|FullyQualifiedName~FlowWhenComponentTests" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 4 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~ConditionRouterFactory|FullyQualifiedName~MessageFilter" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 1 test.
+  - `dotnet build FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with existing UI project resource qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 536 tests.
+
 ## 2026-06-02 - Storage component package registration
 
-- Added `FluxFlow.Components.Storage` and `FluxFlow.Components.Storage.Local` `0.1.0-alpha.1` from NuGet.
+- Added `FluxFlow.Components.Storage` and `FluxFlow.Components.Storage.Local` `0.1.0-alpha.1`.
 - Registered package-backed `storage.put`, `storage.get`, and `storage.delete` runtime nodes.
 - Wired storage nodes to local file-backed storage with a configurable root directory and a default per-user app data root.
 - Added runtime coverage that stores a record with `storage.put` and reads it back with `storage.get` through the package-backed local store.

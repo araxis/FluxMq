@@ -1289,6 +1289,61 @@ public sealed class PipelineComponentFactoryTests
     }
 
     [Fact]
+    public async Task GeneratedSourceFactory_RepeatsMessagesWhenLoopHasMaxItems()
+    {
+        TestSinkNode<MqttEnvelope>? sink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.envelope-sink"), (address, _) =>
+            {
+                sink = new TestSinkNode<MqttEnvelope>();
+                return SinkNode(address, sink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["generated"] = new NodeDefinition
+                        {
+                            Type = FluxMqNodeTypes.GeneratedSource,
+                            Configuration =
+                            {
+                                ["messages"] = JsonDocument.Parse("""
+                                [
+                                  {"topic":"factory/one","payload":"one"},
+                                  {"topic":"factory/two","payload":"two"}
+                                ]
+                                """).RootElement.Clone(),
+                                ["loop"] = JsonSerializer.SerializeToElement(true),
+                                ["maxItems"] = JsonSerializer.SerializeToElement(3)
+                            }
+                        },
+                        ["sink"] = NodeWithPort("test.envelope-sink", "Input", "\"generated.Output\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue();
+        await using var runtime = result.Runtime!;
+
+        await runtime.StartAsync();
+        await runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+        sink!.Values.Select(envelope => envelope.Topic).ShouldBe([
+            "factory/one",
+            "factory/two",
+            "factory/one"
+        ]);
+    }
+
+    [Fact]
     public async Task TimerIntervalFactory_CreatesLinkableRuntimeNode()
     {
         TestSinkNode<TimerTick>? sink = null;

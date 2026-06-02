@@ -1,33 +1,33 @@
 using FluxMq.Components.Control;
 using FluxMq.Components.Logging;
-using FluxFlow.Components.Control.Contracts;
-using FluxFlow.Components.Control.Nodes;
-using FluxFlow.Components.Control.Options;
+using FluxFlow.Components.Assertions.Contracts;
+using FluxFlow.Components.Assertions.Options;
 using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Mapping;
 using System.Threading.Tasks.Dataflow;
+using PackageAssertionResult = FluxFlow.Components.Assertions.Contracts.FlowAssertionResult;
 
 namespace FluxMq.Components.Assertions;
 
 public sealed class FlowAssertionComponent<TInput> : IFlowNode, IFlowEventSource
 {
-    private readonly AssertNode<TInput> _node;
-    private readonly TransformBlock<ControlAssertionResult, FlowAssertionResult> _result;
+    private readonly FluxFlow.Components.Assertions.Nodes.FlowAssertionComponent<TInput> _node;
+    private readonly TransformBlock<PackageAssertionResult, FlowAssertionResult> _result;
     private readonly BufferBlock<FlowLogEntry> _entries = new();
     private readonly BufferBlock<FlowEvent> _events = new();
 
     public FlowAssertionComponent(
-        ControlExpressionOptions options,
+        AssertionOptions options,
         IFlowExpressionEngine expressionEngine,
-        IControlContextFactory contextFactory,
-        ControlNodeContext nodeContext)
+        IAssertionContextFactory contextFactory,
+        AssertionNodeContext nodeContext)
     {
-        _node = new AssertNode<TInput>(
+        _node = new FluxFlow.Components.Assertions.Nodes.FlowAssertionComponent<TInput>(
             options,
             expressionEngine,
             contextFactory,
             nodeContext);
-        _result = new TransformBlock<ControlAssertionResult, FlowAssertionResult>(
+        _result = new TransformBlock<PackageAssertionResult, FlowAssertionResult>(
             PublishResult,
             new ExecutionDataflowBlockOptions
             {
@@ -59,11 +59,11 @@ public sealed class FlowAssertionComponent<TInput> : IFlowNode, IFlowEventSource
     public void Fault(Exception exception)
         => _node.Fault(exception);
 
-    private FlowAssertionResult PublishResult(ControlAssertionResult packageResult)
+    private FlowAssertionResult PublishResult(PackageAssertionResult packageResult)
     {
         var result = new FlowAssertionResult
         {
-            AssertionName = packageResult.Name,
+            AssertionName = packageResult.Description,
             Expression = packageResult.Expression,
             InputType = packageResult.InputType,
             Passed = packageResult.Passed,

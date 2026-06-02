@@ -81,25 +81,6 @@ public sealed class MqttSourceComponentTests
         errors.ShouldHaveSingleItem().Code.ShouldBe(FlowErrorCodes.ProcessingFailed);
     }
 
-    [Fact]
-    public async Task GeneratedSource_EmitsConfiguredMessages()
-    {
-        var source = new GeneratedMqttSourceComponent(
-        [
-            TestMqttBrokerClient.Message("factory/one"),
-            TestMqttBrokerClient.Message("factory/two")
-        ]);
-        var received = new List<string>();
-        var sink = new ActionBlock<MqttEnvelope>(message => received.Add(message.Topic));
-
-        source.Output.LinkTo(sink, new DataflowLinkOptions { PropagateCompletion = true });
-
-        await source.StartAsync();
-        await sink.Completion;
-
-        received.ShouldBe(["factory/one", "factory/two"]);
-    }
-
     private static StoredMessage Stored(SessionId sessionId, string topic, DateTimeOffset receivedAt, long sequence) => new()
     {
         SessionId = sessionId,

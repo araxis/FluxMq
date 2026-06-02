@@ -14,6 +14,7 @@ using FluxMq.Components.MqttPayloadInspector;
 using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
 using FluxMq.Components.Storage.Repositories;
+using FluxFlow.Components.Assertions.Options;
 using FluxFlow.Components.Control.Contracts;
 using FluxFlow.Components.Control.Options;
 using FluxFlow.Components.Http;
@@ -23,6 +24,8 @@ using FluxFlow.Components.Mapping.Options;
 using FluxFlow.Components.Payloads;
 using FluxFlow.Components.Payloads.Contracts;
 using FluxFlow.Components.Serialization;
+using FluxFlow.Components.Sources.Nodes;
+using FluxFlow.Components.Sources.Options;
 using FluxFlow.Components.State;
 using FluxFlow.Components.State.Contracts;
 using FluxFlow.Components.State.Options;
@@ -40,6 +43,7 @@ using MQTTnet.Protocol;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks.Dataflow;
+using AssertionNodeContext = FluxFlow.Components.Assertions.Contracts.AssertionNodeContext;
 
 namespace FluxMq.App;
 
@@ -248,17 +252,24 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ExpressionId = GetNullableString(definition, "expressionId"),
             ExpressionName = GetNullableString(definition, "expressionName"),
             InputType = inputType,
-            BoundedCapacity = boundedCapacity,
-            Name = GetNullableString(definition, "name") ?? GetNullableString(definition, "assertionName"),
-            FailureMessage = GetNullableString(definition, "failureMessage")
+            BoundedCapacity = boundedCapacity
         };
     }
 
     private static IFlowExpressionEngine GetControlExpressionEngine(
         ControlExpressionOptions options,
         IFlowExpressionEngine defaultExpressionEngine)
+        => GetExpressionEngine(options.Engine, defaultExpressionEngine);
+
+    private static IFlowExpressionEngine GetAssertionExpressionEngine(
+        AssertionOptions options,
+        IFlowExpressionEngine defaultExpressionEngine)
+        => GetExpressionEngine(options.Engine, defaultExpressionEngine);
+
+    private static IFlowExpressionEngine GetExpressionEngine(
+        string? requestedEngine,
+        IFlowExpressionEngine defaultExpressionEngine)
     {
-        var requestedEngine = options.Engine;
         if (string.IsNullOrWhiteSpace(requestedEngine) ||
             string.Equals(requestedEngine, defaultExpressionEngine.Name, StringComparison.OrdinalIgnoreCase))
         {
@@ -355,20 +366,41 @@ public static class RuntimeNodeFactoryRegistryExtensions
 
     private static RuntimeNode CreateEmptyMqttSource(NodeAddress address, NodeDefinition definition)
     {
-        var component = new GeneratedMqttSourceComponent(
-            [],
-            boundedCapacity: GetBoundedCapacity(definition));
+        var component = new GeneratedSourceNode<MqttEnvelope>(
+            GetGeneratedSourceOptions(definition),
+            []);
 
         return SourceRuntimeNode(address, component, component.Output);
     }
 
     private static RuntimeNode CreateGeneratedMqttSource(NodeAddress address, NodeDefinition definition)
     {
-        var component = new GeneratedMqttSourceComponent(
-            GetGeneratedMessages(definition),
-            boundedCapacity: GetBoundedCapacity(definition));
+        var component = new GeneratedSourceNode<MqttEnvelope>(
+            GetGeneratedSourceOptions(definition),
+            GetGeneratedMessages(definition));
 
         return SourceRuntimeNode(address, component, component.Output);
+    }
+
+    private static GeneratedSourceOptions GetGeneratedSourceOptions(NodeDefinition definition)
+    {
+        var loop = GetBoolOrDefault(definition, "loop", false);
+        var maxItems = GetOptionalInt(definition, "maxItems", minValue: 1);
+        if (loop && !maxItems.HasValue)
+        {
+            throw new InvalidOperationException("generated.source option 'maxItems' is required when 'loop' is true.");
+        }
+
+        return new GeneratedSourceOptions
+        {
+            Name = GetNullableString(definition, "name") ?? "generated",
+            OutputType = FlowContractTypeNames.MqttEnvelope,
+            Loop = loop,
+            MaxItems = maxItems,
+            InitialDelayMilliseconds = GetIntOrDefault(definition, "initialDelayMilliseconds", 0, minValue: 0),
+            IntervalMilliseconds = GetIntOrDefault(definition, "intervalMilliseconds", 0, minValue: 0),
+            BoundedCapacity = GetBoundedCapacity(definition)
+        };
     }
 
     private static RuntimeNode SourceRuntimeNode(
@@ -553,11 +585,12 @@ public static class RuntimeNodeFactoryRegistryExtensions
             FluxMqNodeTypes.FlowAssertion.Value,
             typeof(TInput).Name,
             expression);
+        var assertionOptions = CreateAssertionOptions(definition, options);
         var component = new FlowAssertionComponent<TInput>(
-            options,
-            GetControlExpressionEngine(options, expressionEngine),
+            assertionOptions,
+            GetAssertionExpressionEngine(assertionOptions, expressionEngine),
             new FluxMqControlContextFactory(),
-            CreateControlNodeContext<TInput>(address, options));
+            CreateAssertionNodeContext<TInput>(address, assertionOptions));
 
         return RuntimeNode.Create(
             address,
@@ -575,6 +608,35 @@ public static class RuntimeNodeFactoryRegistryExtensions
                 new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
             ]);
     }
+
+    private static AssertionOptions CreateAssertionOptions(
+        NodeDefinition definition,
+        ControlExpressionOptions options)
+        => new()
+        {
+            Engine = options.Engine,
+            Expression = options.Expression,
+            ExpressionId = options.ExpressionId,
+            ExpressionName = options.ExpressionName,
+            InputType = options.InputType,
+            BoundedCapacity = options.BoundedCapacity,
+            Description = GetNullableString(definition, "name") ??
+                          GetNullableString(definition, "assertionName") ??
+                          "Flow assertion",
+            FailureMessage = GetNullableString(definition, "failureMessage"),
+            EmitPassedInput = true,
+            EmitFailedInput = true
+        };
+
+    private static AssertionNodeContext CreateAssertionNodeContext<TInput>(
+        NodeAddress address,
+        AssertionOptions options)
+        => new()
+        {
+            Address = address,
+            Options = options,
+            InputType = typeof(TInput)
+        };
 
     private static RuntimeNode CreateMqttMetrics(NodeAddress address, NodeDefinition definition)
     {
@@ -1013,6 +1075,21 @@ public static class RuntimeNodeFactoryRegistryExtensions
         if (!definition.Configuration.TryGetValue(key, out var value))
         {
             return defaultValue;
+        }
+
+        if (value.ValueKind != JsonValueKind.Number || !value.TryGetInt32(out var result) || result < minValue)
+        {
+            throw new InvalidOperationException($"Configuration value '{key}' must be an integer greater than or equal to {minValue}.");
+        }
+
+        return result;
+    }
+
+    private static int? GetOptionalInt(NodeDefinition definition, string key, int minValue)
+    {
+        if (!definition.Configuration.TryGetValue(key, out var value) || value.ValueKind == JsonValueKind.Null)
+        {
+            return null;
         }
 
         if (value.ValueKind != JsonValueKind.Number || !value.TryGetInt32(out var result) || result < minValue)
