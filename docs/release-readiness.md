@@ -32,7 +32,7 @@ Expected result:
 - portable Windows zip is created
 - MSI installer is created from the same publish output
 
-GitHub pull requests run the release-shaped restore/test portion only. Package artifact generation is manual while the project is still in active development.
+Pull requests run a faster Debug/no-RID/no-apphost restore/test path for development feedback. Pushes to `main`, tags, and manual workflow dispatch run the release-shaped restore/test portion. Package artifact generation is manual while the project is still in active development.
 
 ## Manual UI Gate
 
