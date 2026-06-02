@@ -5,6 +5,7 @@ using FluxMq.UI.Components.Workspace.Nodes.FlowAssertion;
 using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
 using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
 using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
+using FluxMq.UI.Components.Workspace.Nodes.Routing;
 using FluxMq.UI.Components.Workspace.Nodes.Sources;
 using FluxMq.UI.Components.Workspace.Nodes.StateReducer;
 using FluxMq.UI.Components.Workspace.Nodes.Timers;
@@ -28,6 +29,9 @@ public sealed class FlowDefinitionComposer
     public const string MetricsNodeName = "metrics";
     public const string FilterNodeName = "filter";
     public const string RouterNodeName = "router";
+    public const string SwitchNodeName = "switch";
+    public const string ForkNodeName = "fork";
+    public const string MergeNodeName = "merge";
     public const string AssertionNodeName = "assertion";
     public const string MapperNodeName = "mapper";
     public const string StateReducerNodeName = "stateReducer";
@@ -1108,6 +1112,9 @@ public sealed class FlowDefinitionComposer
             "mqtt.metrics" => MetricsNodeName,
             "flow.filter" => FilterNodeName,
             "flow.when" => RouterNodeName,
+            RoutingNodeTypes.Switch => SwitchNodeName,
+            RoutingNodeTypes.Fork => ForkNodeName,
+            RoutingNodeTypes.Merge => MergeNodeName,
             "flow.assert" => AssertionNodeName,
             "json.schema-validator" => "jsonSchemaValidator",
             "json.parse" => "jsonParser",
@@ -1154,6 +1161,18 @@ public sealed class FlowDefinitionComposer
         else if (componentType == "flow.when")
         {
             node["configuration"] = CreateConditionRouterConfiguration();
+        }
+        else if (componentType == RoutingNodeTypes.Switch)
+        {
+            node["configuration"] = CreateRoutingSwitchConfiguration(FindDefaultMapperInputType(workflow));
+        }
+        else if (componentType == RoutingNodeTypes.Fork)
+        {
+            node["configuration"] = CreateRoutingForkConfiguration(FindDefaultMapperInputType(workflow));
+        }
+        else if (componentType == RoutingNodeTypes.Merge)
+        {
+            node["configuration"] = CreateRoutingMergeConfiguration();
         }
         else if (componentType == "flow.assert")
         {
@@ -2767,6 +2786,7 @@ public sealed class FlowDefinitionComposer
     {
         "mqtt.trigger" or "session.source" or "replay.source" or "generated.source" or "mqtt.connection-state-trigger"
             or TimerNodeTypes.Interval or TimerNodeTypes.Schedule => false,
+        RoutingNodeTypes.Merge => false,
         "json.parse" or "json.stringify" or "text.encode" or "text.decode" or "base64.encode" or "base64.decode" => false,
         _ => true
     };
@@ -2897,6 +2917,49 @@ public sealed class FlowDefinitionComposer
         {
             ["expression"] = "qos >= 1",
             ["boundedCapacity"] = 1000
+        };
+
+    private static JsonObject CreateRoutingSwitchConfiguration(string inputType = RoutingSwitchNodeModel.DefaultInputType)
+    {
+        var normalizedInputType = RoutingNodeConfiguration.NormalizeInputType(inputType);
+        return new()
+        {
+            ["inputType"] = normalizedInputType,
+            ["expression"] = DefaultRoutingSwitchExpression(normalizedInputType),
+            ["routes"] = new JsonArray("True", "False"),
+            ["routeOutputs"] = new JsonObject
+            {
+                ["True"] = "WhenTrue",
+                ["False"] = "WhenFalse"
+            },
+            ["emitRouteEnvelope"] = false,
+            ["boundedCapacity"] = RoutingSwitchNodeModel.DefaultBoundedCapacity
+        };
+    }
+
+    private static string DefaultRoutingSwitchExpression(string inputType)
+        => inputType is FlowContractTypeNames.MqttEnvelope
+            or FlowContractTypeNames.MqttPublishRequest
+            or FlowContractTypeNames.MqttRecordingRequest
+            or FlowContractTypeNames.InspectedMqttMessage
+            or FlowContractTypeNames.JsonSchemaValidationResult
+            ? RoutingSwitchNodeModel.DefaultExpression
+            : "input != null";
+
+    private static JsonObject CreateRoutingForkConfiguration(string inputType = RoutingForkNodeModel.DefaultInputType)
+        => new()
+        {
+            ["inputType"] = RoutingNodeConfiguration.NormalizeInputType(inputType),
+            ["outputs"] = new JsonArray("A", "B"),
+            ["boundedCapacity"] = RoutingForkNodeModel.DefaultBoundedCapacity
+        };
+
+    private static JsonObject CreateRoutingMergeConfiguration(string inputType = RoutingMergeNodeModel.DefaultInputType)
+        => new()
+        {
+            ["inputType"] = RoutingNodeConfiguration.NormalizeInputType(inputType),
+            ["inputs"] = new JsonArray("Left", "Right"),
+            ["boundedCapacity"] = RoutingMergeNodeModel.DefaultBoundedCapacity
         };
 
     private static JsonObject CreateAssertionConfiguration()

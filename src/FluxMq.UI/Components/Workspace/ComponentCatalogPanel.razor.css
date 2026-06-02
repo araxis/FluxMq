@@ -21,6 +21,18 @@
     color: var(--flux-accent);
 }
 
+.component-catalog ::deep .catalog-search {
+    margin: 0 0 8px;
+}
+
+.component-catalog ::deep .catalog-search .mud-input-control-input-container {
+    min-height: 34px;
+}
+
+.component-catalog ::deep .catalog-search .mud-input {
+    font-size: 12px;
+}
+
 .component-catalog.dashboard .catalog-title-icon {
     color: var(--mud-palette-info);
 }
@@ -109,6 +121,10 @@
 
 .catalog-icon-tile.mapper {
     color: var(--mud-palette-info);
+}
+
+.catalog-icon-tile.control {
+    color: var(--mud-palette-secondary);
 }
 
 .catalog-icon-tile.validator {

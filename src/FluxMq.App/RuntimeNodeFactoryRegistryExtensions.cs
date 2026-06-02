@@ -23,6 +23,9 @@ using FluxFlow.Components.Mapping;
 using FluxFlow.Components.Mapping.Options;
 using FluxFlow.Components.Payloads;
 using FluxFlow.Components.Payloads.Contracts;
+using FluxFlow.Components.Routing;
+using FluxFlow.Components.Routing.Contracts;
+using FluxFlow.Components.Routing.Options;
 using FluxFlow.Components.Serialization;
 using FluxFlow.Components.Sources.Nodes;
 using FluxFlow.Components.Sources.Options;
@@ -96,6 +99,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .RegisterStateComponents(options => ConfigureStateComponents(options, expressionEngine))
             .RegisterStorageComponents(options => ConfigureStorageComponents(options, localStorageRootDirectory))
             .RegisterSerializationComponents()
+            .RegisterRoutingComponents(options => ConfigureRoutingComponents(options, expressionEngine))
             .Register(FluxMqNodeTypes.MqttPublisher, context => CreatePublisher(context.Address, context.Definition, context))
             .Register(FluxMqNodeTypes.MqttRecorder, context => CreateRecorder(context.Address, context.Definition, messageRepository))
             .Register(FluxMqNodeTypes.FileWriter, CreateFileWriter);
@@ -183,6 +187,37 @@ public static class RuntimeNodeFactoryRegistryExtensions
             CreateDirectory = true,
             DefaultCollection = "default"
         });
+    }
+
+    private static void ConfigureRoutingComponents(
+        RoutingComponentOptions options,
+        IFlowExpressionEngine expressionEngine)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(expressionEngine);
+
+        options
+            .UseExpressionEngineResolver(engine => GetExpressionEngine(engine, expressionEngine))
+            .UseDefaultContextFactory(new FluxMqRoutingContextFactory())
+            .RegisterType<object>("Any")
+            .RegisterType<MqttEnvelope>(FlowContractTypeNames.MqttEnvelope)
+            .RegisterType<MqttPublishRequest>(FlowContractTypeNames.MqttPublishRequest)
+            .RegisterType<MqttRecordingRequest>(FlowContractTypeNames.MqttRecordingRequest)
+            .RegisterType<FileWriteRequest>(FlowContractTypeNames.FileWriteRequest)
+            .RegisterType<StateReducerInput>(nameof(StateReducerInput))
+            .RegisterType<StateReducerResult>(FlowContractTypeNames.StateReducerResult)
+            .RegisterType<PayloadInspectionRequest>(FlowContractTypeNames.PayloadInspectionRequest)
+            .RegisterType<PayloadInspectionResult>(FlowContractTypeNames.PayloadInspectionResult)
+            .RegisterType<HttpRequestInput>(FlowContractTypeNames.HttpRequestInput)
+            .RegisterType<HttpResponseOutput>(FlowContractTypeNames.HttpResponseOutput)
+            .RegisterType<HttpErrorOutput>(FlowContractTypeNames.HttpErrorOutput)
+            .RegisterType<JsonSchemaValidationResult>(FlowContractTypeNames.JsonSchemaValidationResult)
+            .RegisterType<InspectedMqttMessage>(FlowContractTypeNames.InspectedMqttMessage)
+            .RegisterType<MqttMetricsSnapshot>(FlowContractTypeNames.MqttMetricsSnapshot)
+            .RegisterType<TimerTick>(FlowContractTypeNames.TimerTick)
+            .RegisterType<ScheduleTick>(FlowContractTypeNames.ScheduleTick)
+            .RegisterType<FlowLogEntry>(FlowContractTypeNames.FlowLogEntry)
+            .RegisterType<FlowError>(FlowContractTypeNames.FlowError);
     }
 
     private static string GetDefaultLocalStorageRootDirectory()
@@ -1302,6 +1337,27 @@ public static class RuntimeNodeFactoryRegistryExtensions
             };
 
             return baseContext with { Variables = variables };
+        }
+    }
+
+    private sealed class FluxMqRoutingContextFactory : IRoutingContextFactory
+    {
+        public FlowMapContext Create(object? input, RoutingNodeContext context)
+        {
+            if (input is not null)
+            {
+                return FluxMqControlExpressionContextFactory.Create(input);
+            }
+
+            return new FlowMapContext
+            {
+                Variables = new Dictionary<string, object?>
+                {
+                    ["input"] = null,
+                    ["value"] = null,
+                    ["inputType"] = context.InputType.Name
+                }
+            };
         }
     }
 }

@@ -218,19 +218,21 @@
     background: var(--mud-palette-error);
 }
 
-.flow-designer-root ::deep .diagram-link path,
-.flow-designer-root ::deep .diagram-link polyline,
-.flow-designer-root ::deep .diagram-link line {
-    stroke: #2DD4BF;
-    stroke-width: 2px;
+.flow-designer-root ::deep .diagram-link .flow-link-path {
+    transition: filter 120ms ease, stroke 120ms ease, stroke-width 120ms ease;
 }
 
-.flow-designer-root ::deep .diagram-link.selected path,
-.flow-designer-root ::deep .diagram-link.selected polyline,
-.flow-designer-root ::deep .diagram-link.selected line {
-    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--flux-accent) 52%, transparent));
-    stroke: #E8ECF2 !important;
-    stroke-width: 4px !important;
+.flow-designer-root ::deep .diagram-link .flow-link-selected {
+    filter: drop-shadow(0 0 2px color-mix(in srgb, #A78BFA 30%, transparent));
+}
+
+.flow-designer-root ::deep .diagram-link .flow-link-selection-halo {
+    opacity: .16;
+    pointer-events: none;
+}
+
+.flow-designer-root ::deep .diagram-link .flow-link-hit-area {
+    pointer-events: stroke;
 }
 
 .flow-designer-root ::deep .diagram-link div.default-link-label {
@@ -252,10 +254,10 @@
     white-space: nowrap;
 }
 
-.flow-designer-root ::deep .diagram-link.selected div.default-link-label {
-    border-color: #E8ECF2;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--flux-accent) 22%, transparent);
-    color: #E8ECF2;
+.flow-designer-root ::deep .diagram-link:has(.flow-link-selected) div.default-link-label {
+    border-color: #A78BFA;
+    box-shadow: 0 0 0 1px color-mix(in srgb, #A78BFA 18%, transparent);
+    color: #DDD6FE;
 }
 
 .flow-designer-root ::deep .flow-node-port-list {

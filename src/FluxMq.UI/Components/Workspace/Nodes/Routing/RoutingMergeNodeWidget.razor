@@ -1,0 +1,87 @@
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.CallMerge"
+                 CategoryColor="@Color.Secondary"
+                 EditDialogMaxWidth="MaxWidth.Small"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
+    <Body>
+        <MudStack Spacing="1" Class="mt-1">
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@Model.InputType</MudChip>
+            <div class="d-flex flex-wrap gap-1">
+                @foreach (var input in Model.Inputs)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@input</MudChip>
+                }
+            </div>
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">FlowMergeItem</MudChip>
+        </MudStack>
+    </Body>
+    <Editor>
+        <MudStack Spacing="2">
+            <MudSelect T="string"
+                       Label="Input type"
+                       @bind-Value="_inputType"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       Dense="true">
+                @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                {
+                    <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextField T="string"
+                          Label="Inputs"
+                          @bind-Value="_inputsText"
+                          Variant="Variant.Outlined"
+                          Lines="4"
+                          HelperText="One input port per line." />
+            <MudNumericField T="int"
+                             Label="Input buffer"
+                             @bind-Value="_boundedCapacity"
+                             Min="1"
+                             Max="100000"
+                             Step="100"
+                             Variant="Variant.Outlined"
+                             Margin="Margin.Dense" />
+        </MudStack>
+    </Editor>
+</NodeWidgetShell>
+
+@code {
+    [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
+
+    private RoutingMergeNodeModel Model => (RoutingMergeNodeModel)Node;
+
+    private string _inputType = RoutingMergeNodeModel.DefaultInputType;
+    private string _inputsText = string.Empty;
+    private int _boundedCapacity = RoutingMergeNodeModel.DefaultBoundedCapacity;
+
+    protected override void OnParametersSet() => LoadDraft();
+
+    private void LoadDraft()
+    {
+        _inputType = RoutingNodeConfiguration.NormalizeInputType(Model.InputType);
+        _inputsText = Model.FormatInputs();
+        _boundedCapacity = RoutingNodeConfiguration.NormalizePositiveInt(
+            Model.BoundedCapacity,
+            RoutingMergeNodeModel.DefaultBoundedCapacity);
+    }
+
+    private Task SaveAsync()
+    {
+        Model.InputType = RoutingNodeConfiguration.NormalizeInputType(_inputType);
+        Model.Inputs = RoutingNodeConfiguration.NormalizePortList(
+            RoutingNodeConfiguration.SplitLines(_inputsText),
+            ["Output", "Errors"],
+            ["Left", "Right"]);
+        Model.BoundedCapacity = RoutingNodeConfiguration.NormalizePositiveInt(
+            _boundedCapacity,
+            RoutingMergeNodeModel.DefaultBoundedCapacity);
+
+        Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
+        return Task.CompletedTask;
+    }
+}

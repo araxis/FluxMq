@@ -3,6 +3,7 @@ using FluxMq.UI.Components.Diagram;
 using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
 using FluxMq.UI.Components.Workspace.Nodes.FlowAssertion;
 using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
+using FluxMq.UI.Components.Workspace.Nodes.Routing;
 using FluxMq.UI.Components.Workspace.Nodes.StateReducer;
 using FluxMq.UI.Models;
 using FluxMq.UI.Services;
@@ -258,6 +259,39 @@ public sealed class FlowDiagramNodeModelTests
     }
 
     [Fact]
+    public void FlowDiagramLinkModel_TogglesSelectionStyle()
+    {
+        var source = new FlowDiagramNodeModel(
+            "workflow1.source",
+            new DiagramPoint(10, 20),
+            "source",
+            "mqtt.trigger",
+            descriptor: null,
+            isResource: false);
+        var target = new FlowDiagramNodeModel(
+            "workflow1.target",
+            new DiagramPoint(220, 20),
+            "target",
+            "mqtt.publisher",
+            descriptor: null,
+            isResource: false);
+        var sourcePort = new FlowPortModel(source, PortAlignment.Right, "Output", representsInput: false);
+        var targetPort = new FlowPortModel(target, PortAlignment.Left, "Input", representsInput: true);
+        var link = new FlowDiagramLinkModel(sourcePort, targetPort);
+
+        link.SetNormalStyle(FlowLinkVisuals.ConditionalColor, FlowLinkVisuals.ConditionalWidth);
+        link.ApplySelectionStyle(selected: true);
+
+        link.Color.ShouldBe(FlowLinkVisuals.ConditionalColor);
+        link.Width.ShouldBe(FlowLinkVisuals.SelectedWidth);
+
+        link.ApplySelectionStyle(selected: false);
+
+        link.Color.ShouldBe(FlowLinkVisuals.ConditionalColor);
+        link.Width.ShouldBe(FlowLinkVisuals.ConditionalWidth);
+    }
+
+    [Fact]
     public void FlowNodeModelFactory_CreatesMetricsNodeModel()
     {
         var catalog = new FlowComponentCatalog();
@@ -293,6 +327,109 @@ public sealed class FlowDiagramNodeModelTests
         model.ShouldBeOfType<StateReducerNodeModel>();
         model.NodeType.ShouldBe("state.reducer");
         model.PortDescriptors.ShouldContain(port => port.Name == "Input" && port.ValueType == "StateReducerInput");
+    }
+
+    [Theory]
+    [InlineData("flow.switch", typeof(RoutingSwitchNodeModel))]
+    [InlineData("flow.fork", typeof(RoutingForkNodeModel))]
+    [InlineData("flow.merge", typeof(RoutingMergeNodeModel))]
+    public void FlowNodeModelFactory_CreatesRoutingNodeModels(string nodeType, Type expectedType)
+    {
+        var catalog = new FlowComponentCatalog();
+        var descriptor = catalog.Find(nodeType).ShouldNotBeNull();
+
+        var model = FlowNodeModelFactory.Create(
+            $"workflow1.{nodeType}",
+            new DiagramPoint(10, 20),
+            "routing",
+            nodeType,
+            descriptor,
+            isResource: false);
+
+        model.ShouldBeOfType(expectedType);
+    }
+
+    [Fact]
+    public void RoutingSwitchNodeModel_BuildsRoutesAndPorts()
+    {
+        var catalog = new FlowComponentCatalog();
+        var descriptor = catalog.Find(RoutingNodeTypes.Switch).ShouldNotBeNull();
+        var model = new RoutingSwitchNodeModel(
+            "workflow1.switch",
+            new DiagramPoint(10, 20),
+            "switch",
+            descriptor,
+            isResource: false);
+
+        model.LoadConfiguration(new JsonObject
+        {
+            ["inputType"] = "MqttPublishRequest",
+            ["expression"] = "retain == true",
+            ["routes"] = new JsonArray("True", "False"),
+            ["routeOutputs"] = new JsonObject
+            {
+                ["True"] = "Retained",
+                ["False"] = "Live"
+            },
+            ["emitRouteEnvelope"] = true,
+            ["boundedCapacity"] = 64
+        });
+
+        model.PortDescriptors.ShouldContain(port => port.Name == "Retained" && !port.IsInput);
+        model.PortDescriptors.ShouldContain(port => port.Name == "Live" && !port.IsInput);
+        model.PortDescriptors.ShouldContain(port => port.Name == "Routed" && !port.IsInput);
+        model.ResolvePortValueType(new ComponentPortDescriptor("Retained", "Configured input type", IsInput: false))
+            .ShouldBe("MqttPublishRequest");
+
+        var config = model.BuildConfiguration();
+        config["inputType"]!.GetValue<string>().ShouldBe("MqttPublishRequest");
+        config["expression"]!.GetValue<string>().ShouldBe("retain == true");
+        config["emitRouteEnvelope"]!.GetValue<bool>().ShouldBeTrue();
+        config["boundedCapacity"]!.GetValue<int>().ShouldBe(64);
+        config["routeOutputs"]!.AsObject()["True"]!.GetValue<string>().ShouldBe("Retained");
+    }
+
+    [Fact]
+    public void RoutingFanNodeModels_BuildConfiguredPorts()
+    {
+        var catalog = new FlowComponentCatalog();
+        var fork = new RoutingForkNodeModel(
+            "workflow1.fork",
+            new DiagramPoint(10, 20),
+            "fork",
+            catalog.Find(RoutingNodeTypes.Fork).ShouldNotBeNull(),
+            isResource: false);
+        var merge = new RoutingMergeNodeModel(
+            "workflow1.merge",
+            new DiagramPoint(10, 20),
+            "merge",
+            catalog.Find(RoutingNodeTypes.Merge).ShouldNotBeNull(),
+            isResource: false);
+
+        fork.LoadConfiguration(new JsonObject
+        {
+            ["inputType"] = "TimerTick",
+            ["outputs"] = new JsonArray("Audit", "Dashboard"),
+            ["boundedCapacity"] = 32
+        });
+        merge.LoadConfiguration(new JsonObject
+        {
+            ["inputType"] = "TimerTick",
+            ["inputs"] = new JsonArray("Primary", "Replay"),
+            ["boundedCapacity"] = 16
+        });
+
+        fork.PortDescriptors.ShouldContain(port => port.Name == "Audit" && !port.IsInput);
+        fork.ResolvePortValueType(new ComponentPortDescriptor("Audit", "Configured input type", IsInput: false))
+            .ShouldBe("TimerTick");
+        fork.BuildConfiguration()["outputs"]!.AsArray().Select(static node => node!.GetValue<string>())
+            .ShouldBe(["Audit", "Dashboard"]);
+
+        merge.PortDescriptors.ShouldContain(port => port.Name == "Primary" && port.IsInput);
+        merge.ResolvePortValueType(new ComponentPortDescriptor("Primary", "Configured input type", IsInput: true))
+            .ShouldBe("TimerTick");
+        merge.BuildConfiguration()["inputs"]!.AsArray().Select(static node => node!.GetValue<string>())
+            .ShouldBe(["Primary", "Replay"]);
     }
 
     [Fact]
