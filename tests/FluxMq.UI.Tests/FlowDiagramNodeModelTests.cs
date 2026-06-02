@@ -331,7 +331,9 @@ public sealed class FlowDiagramNodeModelTests
 
     [Theory]
     [InlineData("flow.switch", typeof(RoutingSwitchNodeModel))]
+    [InlineData("flow.correlation", typeof(RoutingCorrelationNodeModel))]
     [InlineData("flow.window", typeof(RoutingWindowNodeModel))]
+    [InlineData("flow.join", typeof(RoutingJoinNodeModel))]
     [InlineData("flow.fork", typeof(RoutingForkNodeModel))]
     [InlineData("flow.merge", typeof(RoutingMergeNodeModel))]
     public void FlowNodeModelFactory_CreatesRoutingNodeModels(string nodeType, Type expectedType)
@@ -466,6 +468,93 @@ public sealed class FlowDiagramNodeModelTests
         config["timeMilliseconds"]!.GetValue<int>().ShouldBe(0);
         config["emitPartialOnCompletion"]!.GetValue<bool>().ShouldBeFalse();
         config["boundedCapacity"]!.GetValue<int>().ShouldBe(64);
+    }
+
+    [Fact]
+    public void RoutingCorrelationNodeModel_BuildsConfigurationAndPorts()
+    {
+        var catalog = new FlowComponentCatalog();
+        var model = new RoutingCorrelationNodeModel(
+            "workflow1.correlation",
+            new DiagramPoint(10, 20),
+            "correlation",
+            catalog.Find(RoutingNodeTypes.Correlation).ShouldNotBeNull(),
+            isResource: false);
+
+        model.LoadConfiguration(new JsonObject
+        {
+            ["inputType"] = "MqttPublishRequest",
+            ["keyExpression"] = "topic",
+            ["sideExpression"] = "payloadText",
+            ["requestSide"] = "request",
+            ["responseSide"] = "response",
+            ["caseSensitive"] = false,
+            ["timeoutMilliseconds"] = 15000,
+            ["maxPending"] = 128,
+            ["boundedCapacity"] = 64
+        });
+
+        model.PortDescriptors.ShouldContain(port => port.Name == "Input" && port.ValueType == "MqttPublishRequest" && port.IsInput);
+        model.PortDescriptors.ShouldContain(port => port.Name == "Matched" && port.ValueType == "FlowCorrelationMatch" && !port.IsInput);
+        model.PortDescriptors.ShouldContain(port => port.Name == "Timeouts" && port.ValueType == "FlowCorrelationTimeout" && !port.IsInput);
+        model.ResolvePortValueType(new ComponentPortDescriptor("Input", "Configured input type", IsInput: true))
+            .ShouldBe("MqttPublishRequest");
+        model.ResolvePortValueType(new ComponentPortDescriptor("Matched", "FlowCorrelationMatch", IsInput: false))
+            .ShouldBe("FlowCorrelationMatch");
+
+        var config = model.BuildConfiguration();
+        config["inputType"]!.GetValue<string>().ShouldBe("MqttPublishRequest");
+        config["keyExpression"]!.GetValue<string>().ShouldBe("topic");
+        config["sideExpression"]!.GetValue<string>().ShouldBe("payloadText");
+        config["requestSide"]!.GetValue<string>().ShouldBe("request");
+        config["responseSide"]!.GetValue<string>().ShouldBe("response");
+        config["caseSensitive"]!.GetValue<bool>().ShouldBeFalse();
+        config["timeoutMilliseconds"]!.GetValue<int>().ShouldBe(15000);
+        config["maxPending"]!.GetValue<int>().ShouldBe(128);
+        config["boundedCapacity"]!.GetValue<int>().ShouldBe(64);
+    }
+
+    [Fact]
+    public void RoutingJoinNodeModel_BuildsConfigurationAndPorts()
+    {
+        var catalog = new FlowComponentCatalog();
+        var model = new RoutingJoinNodeModel(
+            "workflow1.join",
+            new DiagramPoint(10, 20),
+            "join",
+            catalog.Find(RoutingNodeTypes.Join).ShouldNotBeNull(),
+            isResource: false);
+
+        model.LoadConfiguration(new JsonObject
+        {
+            ["leftInputType"] = "TimerTick",
+            ["rightInputType"] = "MqttEnvelope",
+            ["leftKeyExpression"] = "topic",
+            ["rightKeyExpression"] = "topic",
+            ["caseSensitive"] = true,
+            ["timeoutMilliseconds"] = 12000,
+            ["maxPending"] = 64,
+            ["boundedCapacity"] = 32
+        });
+
+        model.PortDescriptors.ShouldContain(port => port.Name == "Left" && port.ValueType == "TimerTick" && port.IsInput);
+        model.PortDescriptors.ShouldContain(port => port.Name == "Right" && port.ValueType == "MqttEnvelope" && port.IsInput);
+        model.PortDescriptors.ShouldContain(port => port.Name == "Output" && port.ValueType == "FlowJoinResult" && !port.IsInput);
+        model.PortDescriptors.ShouldContain(port => port.Name == "Timeouts" && port.ValueType == "FlowJoinTimeout" && !port.IsInput);
+        model.ResolvePortValueType(new ComponentPortDescriptor("Left", "Configured left input type", IsInput: true))
+            .ShouldBe("TimerTick");
+        model.ResolvePortValueType(new ComponentPortDescriptor("Right", "Configured right input type", IsInput: true))
+            .ShouldBe("MqttEnvelope");
+
+        var config = model.BuildConfiguration();
+        config["leftInputType"]!.GetValue<string>().ShouldBe("TimerTick");
+        config["rightInputType"]!.GetValue<string>().ShouldBe("MqttEnvelope");
+        config["leftKeyExpression"]!.GetValue<string>().ShouldBe("topic");
+        config["rightKeyExpression"]!.GetValue<string>().ShouldBe("topic");
+        config["caseSensitive"]!.GetValue<bool>().ShouldBeTrue();
+        config["timeoutMilliseconds"]!.GetValue<int>().ShouldBe(12000);
+        config["maxPending"]!.GetValue<int>().ShouldBe(64);
+        config["boundedCapacity"]!.GetValue<int>().ShouldBe(32);
     }
 
     [Fact]

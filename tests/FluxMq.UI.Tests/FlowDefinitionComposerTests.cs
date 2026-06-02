@@ -139,10 +139,21 @@ public sealed class FlowDefinitionComposerTests
         switchNode.Ports.ShouldContain(port => port.Name == "WhenTrue" && !port.IsInput);
         switchNode.Ports.ShouldContain(port => port.Name == "WhenFalse" && !port.IsInput);
 
+        var correlation = catalog.Find(RoutingNodeTypes.Correlation).ShouldNotBeNull();
+        correlation.Ports.ShouldContain(port => port.Name == "Input" && port.IsInput);
+        correlation.Ports.ShouldContain(port => port.Name == "Matched" && port.ValueType == "FlowCorrelationMatch" && !port.IsInput);
+        correlation.Ports.ShouldContain(port => port.Name == "Timeouts" && port.ValueType == "FlowCorrelationTimeout" && !port.IsInput);
+
         var window = catalog.Find(RoutingNodeTypes.Window).ShouldNotBeNull();
         window.Ports.ShouldContain(port => port.Name == "Input" && port.IsInput);
         window.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "FlowWindow" && !port.IsInput);
         window.Ports.Last().Name.ShouldBe("Errors");
+
+        var join = catalog.Find(RoutingNodeTypes.Join).ShouldNotBeNull();
+        join.Ports.ShouldContain(port => port.Name == "Left" && port.IsInput);
+        join.Ports.ShouldContain(port => port.Name == "Right" && port.IsInput);
+        join.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "FlowJoinResult" && !port.IsInput);
+        join.Ports.ShouldContain(port => port.Name == "Timeouts" && port.ValueType == "FlowJoinTimeout" && !port.IsInput);
 
         var fork = catalog.Find(RoutingNodeTypes.Fork).ShouldNotBeNull();
         fork.Ports.ShouldContain(port => port.Name == "Input" && port.IsInput);
@@ -611,6 +622,69 @@ public sealed class FlowDefinitionComposerTests
         config.GetProperty("expression").GetString().ShouldBe("qos >= 1");
         config.GetProperty("routeOutputs").GetProperty("True").GetString().ShouldBe("WhenTrue");
         config.GetProperty("routeOutputs").GetProperty("False").GetString().ShouldBe("WhenFalse");
+    }
+
+    [Fact]
+    public void AddComponent_AddsRoutingCorrelationConfigurationAndInputLink()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var updated = composer.AddComponent(initial, RoutingNodeTypes.Correlation);
+
+        using var document = JsonDocument.Parse(updated);
+        var node = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty(FlowDefinitionComposer.CorrelationNodeName);
+
+        node.GetProperty("Input").GetString().ShouldBe($"{FlowDefinitionComposer.TriggerNodeName}.Output");
+        var config = node.GetProperty("configuration");
+        config.GetProperty("inputType").GetString().ShouldBe("MqttEnvelope");
+        config.GetProperty("keyExpression").GetString().ShouldBe("topic");
+        config.GetProperty("sideExpression").GetString().ShouldBe("payloadText");
+        config.GetProperty("requestSide").GetString().ShouldBe("request");
+        config.GetProperty("responseSide").GetString().ShouldBe("response");
+        config.GetProperty("caseSensitive").GetBoolean().ShouldBeTrue();
+        config.GetProperty("timeoutMilliseconds").GetInt32().ShouldBe(30000);
+        config.GetProperty("maxPending").GetInt32().ShouldBe(1024);
+        config.GetProperty("boundedCapacity").GetInt32().ShouldBe(1000);
+    }
+
+    [Fact]
+    public void AddComponent_AddsRoutingJoinConfigurationWithoutInputLinks()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var updated = composer.AddComponent(initial, RoutingNodeTypes.Join);
+
+        using var document = JsonDocument.Parse(updated);
+        var node = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty(FlowDefinitionComposer.JoinNodeName);
+
+        node.TryGetProperty("Input", out _).ShouldBeFalse();
+        node.TryGetProperty("Left", out _).ShouldBeFalse();
+        node.TryGetProperty("Right", out _).ShouldBeFalse();
+        var config = node.GetProperty("configuration");
+        config.GetProperty("leftInputType").GetString().ShouldBe("MqttEnvelope");
+        config.GetProperty("rightInputType").GetString().ShouldBe("MqttEnvelope");
+        config.GetProperty("leftKeyExpression").GetString().ShouldBe("topic");
+        config.GetProperty("rightKeyExpression").GetString().ShouldBe("topic");
+        config.GetProperty("caseSensitive").GetBoolean().ShouldBeTrue();
+        config.GetProperty("timeoutMilliseconds").GetInt32().ShouldBe(30000);
+        config.GetProperty("maxPending").GetInt32().ShouldBe(1024);
+        config.GetProperty("boundedCapacity").GetInt32().ShouldBe(1000);
     }
 
     [Theory]

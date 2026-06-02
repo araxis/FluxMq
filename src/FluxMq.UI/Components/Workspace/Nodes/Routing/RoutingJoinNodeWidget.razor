@@ -1,0 +1,171 @@
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.Hub"
+                 CategoryColor="@Color.Secondary"
+                 EditDialogMaxWidth="MaxWidth.Medium"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
+    <Body>
+        <MudStack Spacing="1" Class="mt-1">
+            <div class="d-flex flex-wrap gap-1">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">Left: @Model.LeftInputType</MudChip>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">Right: @Model.RightInputType</MudChip>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">Output</MudChip>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">Timeouts</MudChip>
+            </div>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@Model.LeftKeyExpression = @Model.RightKeyExpression</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@Model.TimeoutMilliseconds ms / @Model.MaxPending pending</MudText>
+        </MudStack>
+    </Body>
+    <Editor>
+        <MudStack Spacing="2">
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string"
+                               Label="Left input type"
+                               @bind-Value="_leftInputType"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true">
+                        @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                        {
+                            <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string"
+                               Label="Right input type"
+                               @bind-Value="_rightInputType"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true">
+                        @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                        {
+                            <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Left key expression"
+                                  @bind-Value="_leftKeyExpression"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Placeholder="topic" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Right key expression"
+                                  @bind-Value="_rightKeyExpression"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Placeholder="topic" />
+                </MudItem>
+            </MudGrid>
+            <MudCheckBox T="bool"
+                         Label="Case sensitive"
+                         @bind-Value="_caseSensitive" />
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="4">
+                    <MudNumericField T="int"
+                                     Label="Timeout ms"
+                                     @bind-Value="_timeoutMilliseconds"
+                                     Min="1"
+                                     Max="86400000"
+                                     Step="1000"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudNumericField T="int"
+                                     Label="Max pending"
+                                     @bind-Value="_maxPending"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudNumericField T="int"
+                                     Label="Input buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                </MudItem>
+            </MudGrid>
+        </MudStack>
+    </Editor>
+</NodeWidgetShell>
+
+@code {
+    [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
+
+    private RoutingJoinNodeModel Model => (RoutingJoinNodeModel)Node;
+
+    private string _leftInputType = RoutingJoinNodeModel.DefaultLeftInputType;
+    private string _rightInputType = RoutingJoinNodeModel.DefaultRightInputType;
+    private string _leftKeyExpression = RoutingJoinNodeModel.DefaultLeftKeyExpression;
+    private string _rightKeyExpression = RoutingJoinNodeModel.DefaultRightKeyExpression;
+    private bool _caseSensitive = RoutingJoinNodeModel.DefaultCaseSensitive;
+    private int _timeoutMilliseconds = RoutingJoinNodeModel.DefaultTimeoutMilliseconds;
+    private int _maxPending = RoutingJoinNodeModel.DefaultMaxPending;
+    private int _boundedCapacity = RoutingJoinNodeModel.DefaultBoundedCapacity;
+
+    protected override void OnParametersSet() => LoadDraft();
+
+    private void LoadDraft()
+    {
+        _leftInputType = RoutingNodeConfiguration.NormalizeInputType(Model.LeftInputType);
+        _rightInputType = RoutingNodeConfiguration.NormalizeInputType(Model.RightInputType);
+        _leftKeyExpression = RoutingNodeConfiguration.NormalizeText(
+            Model.LeftKeyExpression,
+            RoutingJoinNodeModel.DefaultLeftKeyExpression);
+        _rightKeyExpression = RoutingNodeConfiguration.NormalizeText(
+            Model.RightKeyExpression,
+            RoutingJoinNodeModel.DefaultRightKeyExpression);
+        _caseSensitive = Model.CaseSensitive;
+        _timeoutMilliseconds = RoutingNodeConfiguration.NormalizePositiveInt(
+            Model.TimeoutMilliseconds,
+            RoutingJoinNodeModel.DefaultTimeoutMilliseconds);
+        _maxPending = RoutingNodeConfiguration.NormalizePositiveInt(
+            Model.MaxPending,
+            RoutingJoinNodeModel.DefaultMaxPending);
+        _boundedCapacity = RoutingNodeConfiguration.NormalizePositiveInt(
+            Model.BoundedCapacity,
+            RoutingJoinNodeModel.DefaultBoundedCapacity);
+    }
+
+    private Task SaveAsync()
+    {
+        Model.LeftInputType = RoutingNodeConfiguration.NormalizeInputType(_leftInputType);
+        Model.RightInputType = RoutingNodeConfiguration.NormalizeInputType(_rightInputType);
+        Model.LeftKeyExpression = RoutingNodeConfiguration.NormalizeText(
+            _leftKeyExpression,
+            RoutingJoinNodeModel.DefaultLeftKeyExpression);
+        Model.RightKeyExpression = RoutingNodeConfiguration.NormalizeText(
+            _rightKeyExpression,
+            RoutingJoinNodeModel.DefaultRightKeyExpression);
+        Model.CaseSensitive = _caseSensitive;
+        Model.TimeoutMilliseconds = RoutingNodeConfiguration.NormalizePositiveInt(
+            _timeoutMilliseconds,
+            RoutingJoinNodeModel.DefaultTimeoutMilliseconds);
+        Model.MaxPending = RoutingNodeConfiguration.NormalizePositiveInt(
+            _maxPending,
+            RoutingJoinNodeModel.DefaultMaxPending);
+        Model.BoundedCapacity = RoutingNodeConfiguration.NormalizePositiveInt(
+            _boundedCapacity,
+            RoutingJoinNodeModel.DefaultBoundedCapacity);
+
+        Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
+        return Task.CompletedTask;
+    }
+}
