@@ -41,6 +41,10 @@
     line-height: 1;
 }
 
+.dashboard-widget.event-rate .dashboard-widget-value {
+    color: var(--mud-palette-info);
+}
+
 .dashboard-widget-meta {
     color: var(--mud-palette-text-secondary);
     font-size: 12px;

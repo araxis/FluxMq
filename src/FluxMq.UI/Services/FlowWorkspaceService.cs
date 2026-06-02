@@ -31,6 +31,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     private const double AddedNodeColumnSpacing = 300d;
     private const double AddedNodeRowSpacing = 170d;
     private const int AddedNodeRowsBeforeNewColumn = 4;
+    private static readonly TimeSpan DashboardRateWindow = TimeSpan.FromMinutes(1);
     private static readonly TimeSpan RuntimeStopTimeout = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan RuntimeProjectionNotificationInterval = TimeSpan.FromMilliseconds(250);
     private static readonly Encoding StrictUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
@@ -151,7 +152,15 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             var matching = _runtimeEvents
                 .Where(flowEvent => MatchesDashboardEventWidget(widget, flowEvent))
                 .ToArray();
-            return new DashboardEventSnapshot(matching.Length, matching.LastOrDefault());
+            var recentThreshold = DateTimeOffset.UtcNow.Subtract(DashboardRateWindow);
+            var recentCount = matching.Count(flowEvent => flowEvent.Timestamp >= recentThreshold);
+            var eventsPerSecond = recentCount / DashboardRateWindow.TotalSeconds;
+            return new DashboardEventSnapshot(
+                matching.Length,
+                matching.LastOrDefault(),
+                recentCount,
+                DashboardRateWindow,
+                eventsPerSecond);
         }
     }
 

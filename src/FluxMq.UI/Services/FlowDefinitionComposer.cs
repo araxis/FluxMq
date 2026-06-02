@@ -2324,6 +2324,7 @@ public sealed class FlowDefinitionComposer
         {
             DashboardWidgetCatalog.EventCounterType => "eventCounter",
             DashboardWidgetCatalog.LatestEventType => "latestEvent",
+            DashboardWidgetCatalog.EventRateType => "eventRate",
             _ => "widget"
         };
 
@@ -2343,6 +2344,7 @@ public sealed class FlowDefinitionComposer
         {
             DashboardWidgetCatalog.EventCounterType => "Events",
             DashboardWidgetCatalog.LatestEventType => "Latest event",
+            DashboardWidgetCatalog.EventRateType => "Event rate",
             _ => null
         };
         if (title is null)

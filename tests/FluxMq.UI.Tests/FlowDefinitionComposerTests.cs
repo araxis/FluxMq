@@ -1339,6 +1339,24 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void AddDashboardWidget_AddsEventRateDefaults()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+
+        var updated = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.EventRateType, "slot:0:0");
+
+        var layout = composer.GetDashboardLayout(updated, "ops").ShouldNotBeNull();
+        layout.Widgets.Keys.ShouldBe(["eventRate"]);
+        var widget = layout.Widgets["eventRate"];
+        widget.Type.ShouldBe(DashboardWidgetCatalog.EventRateType);
+        widget.Configuration["title"].ShouldBe("Event rate");
+        widget.Configuration["eventType"].ShouldBe(string.Empty);
+        widget.Configuration["status"].ShouldBe(string.Empty);
+        layout.Cells.ShouldContain(cell => cell.Widget == "eventRate");
+    }
+
+    [Fact]
     public void AddDashboardWidget_AppendsUniqueWidgetsWithoutReplacingCells()
     {
         var composer = new FlowDefinitionComposer();

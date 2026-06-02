@@ -4,4 +4,7 @@ namespace FluxMq.UI.Models;
 
 public sealed record DashboardEventSnapshot(
     int Count,
-    FlowEvent? LatestEvent);
+    FlowEvent? LatestEvent,
+    int RecentCount,
+    TimeSpan RateWindow,
+    double EventsPerSecond);
