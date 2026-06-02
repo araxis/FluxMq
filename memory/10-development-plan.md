@@ -24,10 +24,24 @@ This is the active implementation plan. Keep it updated after every meaningful d
 
 ## Current Target
 
-**Phase:** 6 - metrics, assertions, and scenarios
-**Active feature:** `F-031 - Assertions And Expectations`
+**Phase:** V1 critical path
+**Active feature:** Package alignment, scenario model completion, dashboard runtime binding, designer polish, and release readiness
 **Status:** In progress
-**Started:** 2026-05-24
+**Started:** 2026-06-02
+
+The current plan is to finish V1 by draining the remaining critical path as small mergeable slices:
+
+1. Keep FluxFlow package references and runtime registrations aligned with the latest explicit component packages.
+2. Keep project memory current after meaningful direction changes.
+3. Finish the test/scenario model around runner-owned normal components plus narrow test-only blocks.
+4. Finish dashboard runtime/widget binding so dashboard layout cells can show data, not only layout structure.
+5. Polish designer interactions and empty states that block everyday use.
+6. Add release readiness checks: packaging, sample app definition, smoke documentation, and repeatable validation commands.
+7. Remove stale internal code and stale project-visible wording before the first release.
+
+Current package alignment status: storage now uses the explicit `FluxFlow.Components.Storage.FileSystem` adapter package with the base storage package version required by that adapter. The old broad storage adapter package is no longer referenced by source or tests.
+
+The largest remaining V1 gaps are dashboard runtime/widget binding and test/scenario component unification. The dashboard designer can already edit layout; the next dashboard slice should bind widgets to runtime/projection data. The scenario plane already owns `mqtt.publisher`, `mqtt.trigger`, `when.event`, and `expect.event`; the next scenario slice should keep normal-component reuse explicit while reserving special behavior for expectation and control blocks.
 
 The mapper workbench now follows a JSONata Exerciser-like shape: Monaco JSON input on the left, Monaco mapper expression in the middle, and live JSON result on the right. MQTT envelope samples use `{ topic, qos, retain, receivedAt, payload }`; arbitrary JSON input is treated as payload for quick experimentation. Mapper output configuration now separates the runtime target type from the result contract: `typed`, `any`, or `json-schema-file`. `json.schema-validator` exists as a standalone runtime/UI component backed by `FluxFlow.Components.Validation`, so schema validation is a reusable runtime capability rather than mapper-only UI behavior.
 
