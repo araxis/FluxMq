@@ -57,7 +57,7 @@ public sealed class FlowFilterComponentTests
         var options = Options(expression);
         return new FlowFilterComponent<MqttEnvelope>(
             options,
-            new DynamicExpressoFlowExpressionEngine(),
+            new FluxMqDynamicExpressionEngine(),
             new FluxMqControlContextFactory(),
             Context<MqttEnvelope>(options));
     }

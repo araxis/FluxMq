@@ -2332,3 +2332,16 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verified `dotnet restore .\FluxMq.sln --nologo` passes.
 - Verified `dotnet build .\FluxMq.sln --no-restore --nologo` passes.
 - The newer shared workflow engine package migration remains blocked until consumed component adapter packages are published against the same node-id namespace.
+
+## 2026-06-02 - Stable workflow package boundary
+
+- Updated `FluxFlow.Engine` to `1.0.0`.
+- Updated every consumed `FluxFlow.Components.*` package to the compatibility rebuild version, including the currently used observability and sources packages.
+- Moved all remaining `FlowNodeId` aliases to `FluxFlow.Engine.Components.FlowNodeId`.
+- Replaced test and mapper-preview references to removed engine-owned concrete expression engines with FluxMQ-owned expression adapters.
+- Verified:
+  - `dotnet restore .\FluxMq.sln --no-cache --force-evaluate --nologo` passes.
+  - `dotnet build .\FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with the existing WinAppSDK PRI qualifier warnings.
+  - `dotnet test .\FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 565 tests.
+  - `dotnet restore .\FluxMq.sln -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 --nologo` passes.
+  - `dotnet test .\FluxMq.sln --configuration Release --no-restore --verbosity minimal -m:1 -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 -p:UseSharedCompilation=false --nologo` passes with 565 tests.

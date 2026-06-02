@@ -503,8 +503,8 @@ public static class DynamicMapperWorkbenchPreview
 
     private static IFlowExpressionEngine CreateEngine(string engine)
         => string.Equals(engine, "jsonata", StringComparison.OrdinalIgnoreCase)
-            ? new JsonataFlowExpressionEngine()
-            : new DynamicExpressoFlowExpressionEngine();
+            ? new FluxMqJsonataExpressionEngine()
+            : new FluxMqDynamicExpressionEngine();
 
     private static FlowMapContext CreateContext(string inputType, MqttEnvelope envelope)
         => DynamicMapperNodeModel.NormalizeInputType(inputType) switch

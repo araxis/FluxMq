@@ -20,7 +20,7 @@ public sealed class FluxMqRequestMappingExpressionEngineTests
             """{"hello":"fluxmq"}"""u8.ToArray(),
             MqttQualityOfServiceLevel.AtLeastOnce,
             retain: true);
-        var engine = new FluxMqRequestMappingExpressionEngine(new JsonataFlowExpressionEngine());
+        var engine = new FluxMqRequestMappingExpressionEngine(new FluxMqJsonataExpressionEngine());
 
         var request = (MqttPublishRequest)engine.Evaluate(
             """
@@ -44,7 +44,7 @@ public sealed class FluxMqRequestMappingExpressionEngineTests
     public void DynamicExpressoMapper_MapsTypedPublishRequest()
     {
         var envelope = Envelope("factory/line-1", "hello"u8.ToArray());
-        var engine = new FluxMqRequestMappingExpressionEngine(new DynamicExpressoFlowExpressionEngine());
+        var engine = new FluxMqRequestMappingExpressionEngine(new FluxMqDynamicExpressionEngine());
 
         var request = (MqttPublishRequest)engine.Evaluate(
             """
@@ -68,7 +68,7 @@ public sealed class FluxMqRequestMappingExpressionEngineTests
     public void JsonataMapper_MapsFileWriteRequest()
     {
         var envelope = Envelope("factory/line-1", "hello"u8.ToArray());
-        var engine = new FluxMqRequestMappingExpressionEngine(new JsonataFlowExpressionEngine());
+        var engine = new FluxMqRequestMappingExpressionEngine(new FluxMqJsonataExpressionEngine());
 
         var request = (FileWriteRequest)engine.Evaluate(
             """
@@ -93,7 +93,7 @@ public sealed class FluxMqRequestMappingExpressionEngineTests
     {
         var sessionId = SessionId.New();
         var envelope = Envelope("factory/line-1", "hello"u8.ToArray());
-        var engine = new FluxMqRequestMappingExpressionEngine(new JsonataFlowExpressionEngine());
+        var engine = new FluxMqRequestMappingExpressionEngine(new FluxMqJsonataExpressionEngine());
 
         var request = (MqttRecordingRequest)engine.Evaluate(
             $$"""

@@ -68,7 +68,7 @@ public sealed class FlowWhenComponentTests
         var options = Options(expression);
         return new FlowWhenComponent<MqttEnvelope>(
             options,
-            new DynamicExpressoFlowExpressionEngine(),
+            new FluxMqDynamicExpressionEngine(),
             new FluxMqControlContextFactory(),
             Context<MqttEnvelope>(options));
     }

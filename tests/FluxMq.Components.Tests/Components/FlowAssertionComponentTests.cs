@@ -134,7 +134,7 @@ public sealed class FlowAssertionComponentTests
 
         return new FlowAssertionComponent<TInput>(
             options,
-            new DynamicExpressoFlowExpressionEngine(),
+            new FluxMqDynamicExpressionEngine(),
             new FluxMqControlContextFactory(),
             new AssertionNodeContext
             {
