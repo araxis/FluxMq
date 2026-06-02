@@ -43,7 +43,7 @@ Current package alignment status: storage now uses the explicit `FluxFlow.Compon
 
 Dashboard runtime binding is now useful enough for first-release validation: dashboard cells can show filtered event totals, latest matching events, and rolling event rates over the same runtime event stream used by logs and scenarios. The scenario plane already owns `mqtt.publisher`, `mqtt.trigger`, `when.event`, and `expect.event`; continue keeping normal-component reuse explicit while reserving special behavior for expectation and control blocks.
 
-The largest remaining V1 gaps are designer interaction polish, release readiness, sample/smoke documentation, and stale wording/code cleanup. Dashboard work should now focus on missing practical widget types only when a real validation workflow needs them.
+The V1 readiness gate has local command, Windows package, docs cleanup, and packaged desktop smoke coverage. The largest remaining V1 gaps are candidate testing, focused designer/editor polish found during candidate testing, and any stale wording/code cleanup that appears in the final review. Dashboard work should now focus on missing practical widget types only when a real validation workflow needs them.
 
 The mapper workbench now follows a JSONata Exerciser-like shape: Monaco JSON input on the left, Monaco mapper expression in the middle, and live JSON result on the right. MQTT envelope samples use `{ topic, qos, retain, receivedAt, payload }`; arbitrary JSON input is treated as payload for quick experimentation. Mapper output configuration now separates the runtime target type from the result contract: `typed`, `any`, or `json-schema-file`. `json.schema-validator` exists as a standalone runtime/UI component backed by `FluxFlow.Components.Validation`, so schema validation is a reusable runtime capability rather than mapper-only UI behavior.
 
@@ -105,6 +105,7 @@ The current test-designer display slice keeps the scenario UI aligned with the r
 The current diagram cleanup slice removes the last explicit `NotImplementedException` from the UI flow designer. The diagram link factory still supports the same node/port source shapes from Z.Blazor.Diagrams 3.0.4.1, but unexpected source shapes now produce a clear invalid-operation diagnostic instead of looking like unfinished code.
 The current control package migration adds `FluxFlow.Components.Control` `0.1.0-alpha.1` and moves the designer/runtime vocabulary to `flow.filter`, `flow.when`, and `flow.assert`. FluxMQ keeps thin wrappers only where product behavior still matters: filter pass-count activity, route log entries, assertion log entries, and assertion events. The old internal predicate/filter/router/assertion evaluation classes are removed, and runtime definitions no longer carry pre-release compatibility aliases for the old control node ids.
 The current scenario event-field catalog slice makes `when.event` and `expect.event` catalog-described test steps. Event filter keys, attribute filter keys, and default values now live in `ScenarioStepCatalog`, and `FlowDefinitionComposer` uses the catalog for default configuration across all known scenario step types. The existing MudBlazor editor behavior stays the same, but future test-specific blocks have a cleaner path for field metadata.
+The current manual desktop gate launched the packaged portable desktop build and found no obvious release-blocking shell issue. Richer component configuration dialogs and edit views remain a known designer-polish track under `F-022`; treat that as focused polish unless candidate testing exposes a concrete blocker.
 
 ## Step-by-Step Plan
 
@@ -656,12 +657,14 @@ Working rule:
 - For visual/runtime changes, state the exact manual check and expected result.
 - Before staging, scan changed files for neutral naming and run the smallest useful tests plus the release-shaped validation command when packaging can be affected.
 
-Review the current docs cleanup slice:
+Latest readiness state:
 
-1. Do: scan durable docs for bounded runtime commands. Expected: no runtime smoke command uses the no-source metrics sample.
-2. Do: scan docs for old planned-CLI wording. Expected: CLI docs describe the current host.
-3. Do: scan overview/architecture app-definition wording. Expected: resources are described as app-owned before projection into the package runtime.
+1. Local command gate passed.
+2. Windows package gate passed and produced portable zip plus MSI artifacts.
+3. Durable docs cleanup passed for generated-traffic smoke commands, current CLI wording, and app-owned resources before package-runtime projection.
+4. Packaged portable desktop smoke gate was launched and manually checked with no obvious release-blocking shell issue.
+5. Candidate readiness recheck passed: `git diff --check`, full solution tests, and broker-free sample verification are green.
 
-Next implementation slice: run the manual desktop UI gate before calling the V1 path ready for candidate testing.
+Next implementation slice: checkpoint the candidate-readiness update in a small PR, then prepare the V1 candidate notes and only rerun packaging if package inputs or runtime code change. Keep richer component edit views on the designer-polish track unless a candidate scenario proves one is blocking normal use.
 
 Latest slice: MQTT publish/trigger components now use `FluxFlow.Components.Mqtt` `0.2.2-alpha.1`, runtime `flow.mapper` execution now uses `FluxFlow.Components.Mapping` `0.1.1-alpha.1`, `json.schema-validator` now delegates schema loading/evaluation to `FluxFlow.Components.Validation` `0.1.1-alpha.1`, `file.writer` now delegates disk writes to `FluxFlow.Components.FileSystem` `0.4.1-alpha.1`, `flow.logger` now delegates neutral log-entry creation to `FluxFlow.Components.Observability` `0.1.1-alpha.1`, recording/stored replay now use `FluxFlow.Components.Sessions` `0.1.1-alpha.1` through `FluxMqSessionStore`, `mqtt.metrics` now delegates neutral count/size/group aggregation to `FluxFlow.Components.Metrics` `0.1.1-alpha.1`, `mqtt.payload-inspector` now delegates neutral payload classification to `FluxFlow.Components.Payloads` `0.1.1-alpha.1`, serialization transforms now use `FluxFlow.Components.Serialization` `0.1.1-alpha.1`, timer nodes now use `FluxFlow.Components.Timers` `0.4.2-alpha.1`, `state.reducer` now uses `FluxFlow.Components.State` `0.1.1-alpha.1`, and FluxMQ now registers package-backed `http.request` plus generic `payload.inspect` nodes. FluxMQ keeps app-level connection resources, `mqtt.publisher`/`mqtt.trigger`/`file.writer`/`flow.logger`/`mqtt.metrics`/`mqtt.payload-inspector` surface names, `MqttEnvelope` context variables, timer tick context variables, request-shape coercion, validation result projection, workspace log projection, product events, retained-message counts, idle metric-rate refresh, session persistence, Core/UI payload projection, HTTP request configuration, state reducer defaults, and transform catalog defaults through small adapters, while duplicated request-specific mapper, schema validation, file write, generic log-entry, local replay-source, generic metric aggregation, and payload classification internals have been removed from FluxMQ component execution.

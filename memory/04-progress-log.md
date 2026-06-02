@@ -2366,3 +2366,19 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test .\FluxMq.sln --configuration Release --no-restore --verbosity minimal -m:1 -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 -p:UseSharedCompilation=false --nologo` passed with 565 tests and the existing WinAppSDK PRI qualifier warnings.
   - `.\eng\package-windows.ps1 -Configuration Release -Version 0.1.0` passed and produced the portable zip and MSI under `artifacts\windows\dist`.
 - Updated release-readiness and development docs to describe the current fast pull-request validation path.
+
+## 2026-06-02 - Manual packaged desktop smoke gate
+
+- Launched the packaged portable desktop build from `artifacts\windows\portable\FluxMQ\FluxMq.UI.exe`.
+- The app opened as `FluxMQ`; the manual shell check found no obvious release-blocking issue.
+- Recorded that richer component configuration/edit views remain planned designer polish under `F-022`, but they are not treated as a release-readiness blocker unless candidate testing exposes a concrete failed workflow.
+
+## 2026-06-02 - Candidate readiness recheck
+
+- Confirmed the release package artifacts still exist:
+  - `artifacts\windows\dist\FluxMQ-0.1.0-portable-win-x64.zip`
+  - `artifacts\windows\dist\FluxMQ-0.1.0-win-x64.msi`
+- Verified `git diff --check` has no whitespace errors.
+- Verified `dotnet test .\FluxMq.sln --no-restore --nologo -m:1 -p:UseSharedCompilation=false -p:UseAppHost=false --verbosity minimal` passes with 565 tests.
+- Verified `.\eng\verify-samples.ps1` passes, including CLI build, sample validation, and bounded generated-traffic execution.
+- No concrete candidate blocker was found in this recheck.
