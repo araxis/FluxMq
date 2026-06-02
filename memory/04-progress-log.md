@@ -2354,3 +2354,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Package-version property changes now trigger Windows validation.
 - Restore/test steps now have focused timeouts so a stuck PR run fails quickly.
 - Disabled NuGet XML documentation extraction in the workflow to trim package restore overhead.
+
+## 2026-06-02 - Release-readiness command gate
+
+- Ran the pre-V1 local command gate:
+  - `dotnet restore .\FluxMq.sln --nologo` passed.
+  - `dotnet test .\FluxMq.sln --no-restore --nologo -m:1 -p:UseSharedCompilation=false -p:UseAppHost=false --verbosity minimal` passed with 565 tests.
+  - `.\eng\verify-samples.ps1` passed, including CLI build, metrics sample validation, generated-traffic sample validation, and bounded generated-traffic run.
+- Ran the Windows package gate:
+  - `dotnet restore .\FluxMq.sln -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 --nologo` passed.
+  - `dotnet test .\FluxMq.sln --configuration Release --no-restore --verbosity minimal -m:1 -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 -p:UseSharedCompilation=false --nologo` passed with 565 tests and the existing WinAppSDK PRI qualifier warnings.
+  - `.\eng\package-windows.ps1 -Configuration Release -Version 0.1.0` passed and produced the portable zip and MSI under `artifacts\windows\dist`.
+- Updated release-readiness and development docs to describe the current fast pull-request validation path.
