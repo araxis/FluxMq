@@ -80,6 +80,7 @@ public sealed class PipelineComponentFactoryTests
             StorageComponentTypes.Put,
             StorageComponentTypes.Get,
             StorageComponentTypes.Delete,
+            StorageComponentTypes.Query,
             FluxMqNodeTypes.TimerInterval,
             FluxMqNodeTypes.TimerSchedule,
             FluxMqNodeTypes.TimerDelay,
@@ -1209,7 +1210,7 @@ public sealed class PipelineComponentFactoryTests
         try
         {
             var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
-                .RegisterPipelineComponentFactories(localStorageRootDirectory: storageRoot)
+                .RegisterPipelineComponentFactories(fileSystemStorageRootDirectory: storageRoot)
                 .Register(new NodeType("test.storage-put-source"), (address, _) =>
                 {
                     source = new TestValueSourceNode<StoragePutRequest>();
