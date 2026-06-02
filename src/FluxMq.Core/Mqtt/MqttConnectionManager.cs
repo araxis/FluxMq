@@ -95,8 +95,7 @@ public sealed class MqttConnectionManager : IMqttConnectionManager
         var cts = new CancellationTokenSource();
         if (_reconnectCts.TryRemove(client.Profile.Id, out var old))
         {
-            old.Cancel();
-            old.Dispose();
+            CancelReconnectSource(old);
         }
         _reconnectCts[client.Profile.Id] = cts;
 
@@ -115,7 +114,8 @@ public sealed class MqttConnectionManager : IMqttConnectionManager
             catch (OperationCanceledException) { }
             finally
             {
-                _reconnectCts.TryRemove(client.Profile.Id, out _);
+                ((ICollection<KeyValuePair<ConnectionProfileId, CancellationTokenSource>>)_reconnectCts)
+                    .Remove(new KeyValuePair<ConnectionProfileId, CancellationTokenSource>(client.Profile.Id, cts));
                 cts.Dispose();
             }
         });
@@ -125,8 +125,29 @@ public sealed class MqttConnectionManager : IMqttConnectionManager
     {
         if (_reconnectCts.TryRemove(profileId, out var cts))
         {
+            await CancelReconnectSourceAsync(cts);
+        }
+    }
+
+    private static void CancelReconnectSource(CancellationTokenSource cts)
+    {
+        try
+        {
+            cts.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+    }
+
+    private static async Task CancelReconnectSourceAsync(CancellationTokenSource cts)
+    {
+        try
+        {
             await cts.CancelAsync();
-            cts.Dispose();
+        }
+        catch (ObjectDisposedException)
+        {
         }
     }
 
