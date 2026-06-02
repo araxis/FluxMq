@@ -2295,3 +2295,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verified:
   - `dotnet test .\tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --nologo` passes with 259 tests.
   - `dotnet test .\FluxMq.sln --nologo` passes with 564 tests.
+
+## 2026-06-02 - Release sample verification script
+
+- Added `eng/verify-samples.ps1` for repeatable local sample checks.
+- The script builds the CLI once, validates `metrics-only.json`, validates `generated-traffic-inspect.json`, and runs `generated-traffic-inspect.json` for a bounded duration without requiring a broker.
+- Updated README and local development docs so the generated-traffic sample is the recommended runtime smoke path.
+- Cleaned the MQTT publisher docs snippet to use `mqttClient` instead of the confusing old `session` variable name.
+- Verified:
+  - `.\eng\verify-samples.ps1` passes.

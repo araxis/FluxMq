@@ -695,7 +695,7 @@ flowchart LR
 ### Usage
 
 ```csharp
-var publisher = new MqttPublisherComponent(session);
+var publisher = new MqttPublisherComponent(mqttClient);
 
 mapper.Output.LinkTo(publisher.Input, new DataflowLinkOptions
 {

@@ -60,6 +60,16 @@ dotnet test FluxMq.sln
 npm run build --prefix docs-site
 ```
 
+## Sample Verification
+
+Run the broker-free sample verification script before release-readiness checks:
+
+```powershell
+.\eng\verify-samples.ps1
+```
+
+The script builds the CLI once, validates the metrics-only sample, validates the generated-traffic sample, and runs the generated-traffic sample for a bounded duration.
+
 ## Desktop App
 
 `FluxMq.UI` is a Windows-first MAUI Blazor Hybrid app for the first alpha.

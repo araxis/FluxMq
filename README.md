@@ -110,10 +110,16 @@ Use JSON output when the command is consumed by scripts or CI:
 dotnet run --project src\FluxMq.Cli -- validate --config samples\flow-applications\metrics-only.json --output json
 ```
 
-Run the same flow application for a bounded smoke test:
+Run a broker-free generated traffic flow application for a bounded smoke test:
 
 ```powershell
-dotnet run --project src\FluxMq.Cli -- run --config samples\flow-applications\metrics-only.json --duration-ms 1000
+dotnet run --project src\FluxMq.Cli -- run --config samples\flow-applications\generated-traffic-inspect.json --duration-ms 1000
+```
+
+Run the local sample verification script before release-readiness checks:
+
+```powershell
+.\eng\verify-samples.ps1
 ```
 
 ## Windows Packages
