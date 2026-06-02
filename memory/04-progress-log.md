@@ -2310,3 +2310,9 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Added `docs/release-readiness.md` as the pre-V1 release gate.
 - The checklist covers local command validation, broker-free sample verification, release-shaped Windows package validation, manual desktop UI checks, and blocker rules.
 - Linked the checklist from the README and documentation index.
+
+## 2026-06-02 - Current docs cleanup
+
+- Updated durable docs so app definitions own resources, workflows, dashboards, and tests before executable resources/workflows are projected into the package runtime.
+- Removed stale `FluxMq.Cli` planned-language from architecture docs.
+- Updated bounded CLI runtime examples to use `generated-traffic-inspect.json` instead of the no-source `metrics-only.json` sample.

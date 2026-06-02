@@ -27,7 +27,7 @@ FluxMQ is also a dynamic ELT app. Sources extract message streams, mapper nodes 
   - replay source
 - Flow error ports with stable numeric error codes.
 - Metrics snapshots for flow observability.
-- FluxMQ application definition model with engine-owned resources/workflows plus app-owned dashboards/tests.
+- FluxMQ application definition model with app-owned resources, workflows, dashboards, and tests, projected into the package runtime for execution.
 - MAUI Blazor Hybrid desktop alpha surface in `FluxMq.UI`.
 - Desktop broker connection, publish, topic inspection, payload inspection, LiteDB-backed recording, definition file load/save, validation, run, and stop controls.
 

@@ -73,7 +73,7 @@ Host-independent workflow application boundary.
 Responsibilities:
 
 - load FluxMQ application definitions from .NET configuration
-- validate FluxMQ-owned dashboards/tests plus engine-owned resources/workflows
+- validate FluxMQ-owned resources, workflows, dashboards, and tests
 - project executable resources and workflows into `FluxFlow.Engine`
 - build runtimes through registered factories
 - expose start and stop lifecycle
@@ -198,9 +198,9 @@ Factory calls receive a `RuntimeNodeFactoryContext` with the node address, node 
 
 Definition sources should remain configuration providers. A JSON file is the first alpha path, but the same host can later accept environment values, command-line values, LiteDB-backed providers, or UI-produced configuration without changing the runtime model.
 
-`FluxMq.Cli` is planned as a lightweight host over the same `FluxMq.App` boundary. The first CLI slice should stay small, but it is an important future surface for running, validating, inspecting, and automating flow applications.
+`FluxMq.Cli` is a lightweight host over the same `FluxMq.App` boundary. It validates and runs file-backed application definitions without depending on the desktop UI.
 
-The initial CLI command is intentionally limited:
+The CLI validation command can validate a minimal metrics-only definition:
 
 ```powershell
 dotnet run --project src/FluxMq.Cli -- validate --config samples/flow-applications/metrics-only.json
@@ -208,10 +208,10 @@ dotnet run --project src/FluxMq.Cli -- validate --config samples/flow-applicatio
 
 It validates the configured flow application through `FluxMq.App` and reports host, definition, and runtime build errors. The default text output is meant for people. `--output json` is the first automation-friendly format for scripts, CI pipelines, and other tools.
 
-The CLI also has an initial `run` command for the same file-backed application definition:
+The CLI `run` command is the broker-free sample smoke path when used with the generated-traffic definition:
 
 ```powershell
-dotnet run --project src/FluxMq.Cli -- run --config samples/flow-applications/metrics-only.json --duration-ms 1000
+dotnet run --project src/FluxMq.Cli -- run --config samples/flow-applications/generated-traffic-inspect.json --duration-ms 1000
 ```
 
 The current `run` command is a host lifecycle path: load, build, start, wait for cancellation or a bounded duration, and stop cleanly. Message-producing and service-backed behavior should come from registered components and resources rather than special CLI code.

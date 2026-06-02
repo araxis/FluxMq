@@ -298,10 +298,10 @@ For automation, the same validation command can emit structured output:
 dotnet run --project src/FluxMq.Cli -- validate --config samples/flow-applications/metrics-only.json --output json
 ```
 
-The first `run` command exercises the same host lifecycle and stops after a bounded duration:
+The `run` command exercises the same host lifecycle and stops after a bounded duration. Use the generated-traffic sample for a broker-free runtime smoke path:
 
 ```powershell
-dotnet run --project src/FluxMq.Cli -- run --config samples/flow-applications/metrics-only.json --duration-ms 1000
+dotnet run --project src/FluxMq.Cli -- run --config samples/flow-applications/generated-traffic-inspect.json --duration-ms 1000
 ```
 
 The first runtime builder slice is intentionally small. `ApplicationRuntimeBuilder`:
