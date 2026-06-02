@@ -1,0 +1,180 @@
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.SyncAlt"
+                 CategoryColor="@Color.Secondary"
+                 EditDialogMaxWidth="MaxWidth.Medium"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
+    <Body>
+        <MudStack Spacing="1" Class="mt-1">
+            <div class="d-flex flex-wrap gap-1">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@Model.InputType</MudChip>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">Matched</MudChip>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">Timeouts</MudChip>
+            </div>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@Model.KeyExpression / @Model.SideExpression</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@Model.RequestSide -> @Model.ResponseSide / @Model.TimeoutMilliseconds ms</MudText>
+        </MudStack>
+    </Body>
+    <Editor>
+        <MudStack Spacing="2">
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string"
+                               Label="Input type"
+                               @bind-Value="_inputType"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true">
+                        @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                        {
+                            <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField T="int"
+                                     Label="Input buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                </MudItem>
+            </MudGrid>
+            <MudTextField T="string"
+                          Label="Key expression"
+                          @bind-Value="_keyExpression"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Placeholder="topic" />
+            <MudTextField T="string"
+                          Label="Side expression"
+                          @bind-Value="_sideExpression"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Placeholder="payloadText" />
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Request side"
+                                  @bind-Value="_requestSide"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Response side"
+                                  @bind-Value="_responseSide"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                </MudItem>
+            </MudGrid>
+            <MudCheckBox T="bool"
+                         Label="Case sensitive"
+                         @bind-Value="_caseSensitive" />
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="6">
+                    <MudNumericField T="int"
+                                     Label="Timeout ms"
+                                     @bind-Value="_timeoutMilliseconds"
+                                     Min="1"
+                                     Max="86400000"
+                                     Step="1000"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField T="int"
+                                     Label="Max pending"
+                                     @bind-Value="_maxPending"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                </MudItem>
+            </MudGrid>
+        </MudStack>
+    </Editor>
+</NodeWidgetShell>
+
+@code {
+    [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
+
+    private RoutingCorrelationNodeModel Model => (RoutingCorrelationNodeModel)Node;
+
+    private string _inputType = RoutingCorrelationNodeModel.DefaultInputType;
+    private string _keyExpression = RoutingCorrelationNodeModel.DefaultKeyExpression;
+    private string _sideExpression = RoutingCorrelationNodeModel.DefaultSideExpression;
+    private string _requestSide = RoutingCorrelationNodeModel.DefaultRequestSide;
+    private string _responseSide = RoutingCorrelationNodeModel.DefaultResponseSide;
+    private bool _caseSensitive = RoutingCorrelationNodeModel.DefaultCaseSensitive;
+    private int _timeoutMilliseconds = RoutingCorrelationNodeModel.DefaultTimeoutMilliseconds;
+    private int _maxPending = RoutingCorrelationNodeModel.DefaultMaxPending;
+    private int _boundedCapacity = RoutingCorrelationNodeModel.DefaultBoundedCapacity;
+
+    protected override void OnParametersSet() => LoadDraft();
+
+    private void LoadDraft()
+    {
+        _inputType = RoutingNodeConfiguration.NormalizeInputType(Model.InputType);
+        _keyExpression = RoutingNodeConfiguration.NormalizeText(
+            Model.KeyExpression,
+            RoutingCorrelationNodeModel.DefaultKeyExpression);
+        _sideExpression = RoutingNodeConfiguration.NormalizeText(
+            Model.SideExpression,
+            RoutingCorrelationNodeModel.DefaultSideExpression);
+        _caseSensitive = Model.CaseSensitive;
+        _requestSide = RoutingNodeConfiguration.NormalizeText(
+            Model.RequestSide,
+            RoutingCorrelationNodeModel.DefaultRequestSide);
+        _responseSide = RoutingCorrelationNodeModel.NormalizeResponseSide(
+            _requestSide,
+            RoutingNodeConfiguration.NormalizeText(Model.ResponseSide, RoutingCorrelationNodeModel.DefaultResponseSide),
+            _caseSensitive);
+        _timeoutMilliseconds = RoutingNodeConfiguration.NormalizePositiveInt(
+            Model.TimeoutMilliseconds,
+            RoutingCorrelationNodeModel.DefaultTimeoutMilliseconds);
+        _maxPending = RoutingNodeConfiguration.NormalizePositiveInt(
+            Model.MaxPending,
+            RoutingCorrelationNodeModel.DefaultMaxPending);
+        _boundedCapacity = RoutingNodeConfiguration.NormalizePositiveInt(
+            Model.BoundedCapacity,
+            RoutingCorrelationNodeModel.DefaultBoundedCapacity);
+    }
+
+    private Task SaveAsync()
+    {
+        Model.InputType = RoutingNodeConfiguration.NormalizeInputType(_inputType);
+        Model.KeyExpression = RoutingNodeConfiguration.NormalizeText(
+            _keyExpression,
+            RoutingCorrelationNodeModel.DefaultKeyExpression);
+        Model.SideExpression = RoutingNodeConfiguration.NormalizeText(
+            _sideExpression,
+            RoutingCorrelationNodeModel.DefaultSideExpression);
+        Model.CaseSensitive = _caseSensitive;
+        Model.RequestSide = RoutingNodeConfiguration.NormalizeText(
+            _requestSide,
+            RoutingCorrelationNodeModel.DefaultRequestSide);
+        Model.ResponseSide = RoutingCorrelationNodeModel.NormalizeResponseSide(
+            Model.RequestSide,
+            RoutingNodeConfiguration.NormalizeText(_responseSide, RoutingCorrelationNodeModel.DefaultResponseSide),
+            Model.CaseSensitive);
+        Model.TimeoutMilliseconds = RoutingNodeConfiguration.NormalizePositiveInt(
+            _timeoutMilliseconds,
+            RoutingCorrelationNodeModel.DefaultTimeoutMilliseconds);
+        Model.MaxPending = RoutingNodeConfiguration.NormalizePositiveInt(
+            _maxPending,
+            RoutingCorrelationNodeModel.DefaultMaxPending);
+        Model.BoundedCapacity = RoutingNodeConfiguration.NormalizePositiveInt(
+            _boundedCapacity,
+            RoutingCorrelationNodeModel.DefaultBoundedCapacity);
+
+        Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
+        return Task.CompletedTask;
+    }
+}

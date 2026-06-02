@@ -30,7 +30,9 @@ public sealed class FlowDefinitionComposer
     public const string FilterNodeName = "filter";
     public const string RouterNodeName = "router";
     public const string SwitchNodeName = "switch";
+    public const string CorrelationNodeName = "correlation";
     public const string WindowNodeName = "window";
+    public const string JoinNodeName = "join";
     public const string ForkNodeName = "fork";
     public const string MergeNodeName = "merge";
     public const string AssertionNodeName = "assertion";
@@ -1114,7 +1116,9 @@ public sealed class FlowDefinitionComposer
             "flow.filter" => FilterNodeName,
             "flow.when" => RouterNodeName,
             RoutingNodeTypes.Switch => SwitchNodeName,
+            RoutingNodeTypes.Correlation => CorrelationNodeName,
             RoutingNodeTypes.Window => WindowNodeName,
+            RoutingNodeTypes.Join => JoinNodeName,
             RoutingNodeTypes.Fork => ForkNodeName,
             RoutingNodeTypes.Merge => MergeNodeName,
             "flow.assert" => AssertionNodeName,
@@ -1168,9 +1172,17 @@ public sealed class FlowDefinitionComposer
         {
             node["configuration"] = CreateRoutingSwitchConfiguration(FindDefaultMapperInputType(workflow));
         }
+        else if (componentType == RoutingNodeTypes.Correlation)
+        {
+            node["configuration"] = CreateRoutingCorrelationConfiguration(FindDefaultMapperInputType(workflow));
+        }
         else if (componentType == RoutingNodeTypes.Window)
         {
             node["configuration"] = CreateRoutingWindowConfiguration(FindDefaultMapperInputType(workflow));
+        }
+        else if (componentType == RoutingNodeTypes.Join)
+        {
+            node["configuration"] = CreateRoutingJoinConfiguration();
         }
         else if (componentType == RoutingNodeTypes.Fork)
         {
@@ -2792,7 +2804,7 @@ public sealed class FlowDefinitionComposer
     {
         "mqtt.trigger" or "session.source" or "replay.source" or "generated.source" or "mqtt.connection-state-trigger"
             or TimerNodeTypes.Interval or TimerNodeTypes.Schedule => false,
-        RoutingNodeTypes.Merge => false,
+        RoutingNodeTypes.Join or RoutingNodeTypes.Merge => false,
         "json.parse" or "json.stringify" or "text.encode" or "text.decode" or "base64.encode" or "base64.decode" => false,
         _ => true
     };
@@ -2952,6 +2964,20 @@ public sealed class FlowDefinitionComposer
             ? RoutingSwitchNodeModel.DefaultExpression
             : "input != null";
 
+    private static JsonObject CreateRoutingCorrelationConfiguration(string inputType = RoutingCorrelationNodeModel.DefaultInputType)
+        => new()
+        {
+            ["inputType"] = RoutingNodeConfiguration.NormalizeInputType(inputType),
+            ["keyExpression"] = RoutingCorrelationNodeModel.DefaultKeyExpression,
+            ["sideExpression"] = RoutingCorrelationNodeModel.DefaultSideExpression,
+            ["requestSide"] = RoutingCorrelationNodeModel.DefaultRequestSide,
+            ["responseSide"] = RoutingCorrelationNodeModel.DefaultResponseSide,
+            ["caseSensitive"] = RoutingCorrelationNodeModel.DefaultCaseSensitive,
+            ["timeoutMilliseconds"] = RoutingCorrelationNodeModel.DefaultTimeoutMilliseconds,
+            ["maxPending"] = RoutingCorrelationNodeModel.DefaultMaxPending,
+            ["boundedCapacity"] = RoutingCorrelationNodeModel.DefaultBoundedCapacity
+        };
+
     private static JsonObject CreateRoutingForkConfiguration(string inputType = RoutingForkNodeModel.DefaultInputType)
         => new()
         {
@@ -2969,6 +2995,22 @@ public sealed class FlowDefinitionComposer
             ["emitPartialOnCompletion"] = RoutingWindowNodeModel.DefaultEmitPartialOnCompletion,
             ["boundedCapacity"] = RoutingWindowNodeModel.DefaultBoundedCapacity
         };
+
+    private static JsonObject CreateRoutingJoinConfiguration(string inputType = RoutingJoinNodeModel.DefaultLeftInputType)
+    {
+        var normalizedInputType = RoutingNodeConfiguration.NormalizeInputType(inputType);
+        return new()
+        {
+            ["leftInputType"] = normalizedInputType,
+            ["rightInputType"] = normalizedInputType,
+            ["leftKeyExpression"] = RoutingJoinNodeModel.DefaultLeftKeyExpression,
+            ["rightKeyExpression"] = RoutingJoinNodeModel.DefaultRightKeyExpression,
+            ["caseSensitive"] = RoutingJoinNodeModel.DefaultCaseSensitive,
+            ["timeoutMilliseconds"] = RoutingJoinNodeModel.DefaultTimeoutMilliseconds,
+            ["maxPending"] = RoutingJoinNodeModel.DefaultMaxPending,
+            ["boundedCapacity"] = RoutingJoinNodeModel.DefaultBoundedCapacity
+        };
+    }
 
     private static JsonObject CreateRoutingMergeConfiguration(string inputType = RoutingMergeNodeModel.DefaultInputType)
         => new()

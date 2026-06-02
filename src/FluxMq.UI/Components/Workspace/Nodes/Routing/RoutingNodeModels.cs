@@ -8,7 +8,9 @@ namespace FluxMq.UI.Components.Workspace.Nodes.Routing;
 public static class RoutingNodeTypes
 {
     public const string Switch = "flow.switch";
+    public const string Correlation = "flow.correlation";
     public const string Window = "flow.window";
+    public const string Join = "flow.join";
     public const string Fork = "flow.fork";
     public const string Merge = "flow.merge";
 }
@@ -225,6 +227,121 @@ public sealed class RoutingForkNodeModel(
     }
 }
 
+public sealed class RoutingCorrelationNodeModel(
+    string id,
+    DiagramPoint position,
+    string nodeName,
+    FlowComponentDescriptor? descriptor,
+    bool isResource)
+    : FlowDiagramNodeModel(id, position, nodeName, RoutingNodeTypes.Correlation, descriptor, isResource)
+{
+    public const string DefaultInputType = FlowContractTypeNames.MqttEnvelope;
+    public const string DefaultKeyExpression = "topic";
+    public const string DefaultSideExpression = "payloadText";
+    public const string DefaultRequestSide = "request";
+    public const string DefaultResponseSide = "response";
+    public const bool DefaultCaseSensitive = true;
+    public const int DefaultTimeoutMilliseconds = 30000;
+    public const int DefaultMaxPending = 1024;
+    public const int DefaultBoundedCapacity = 1000;
+
+    public string InputType { get; set; } = DefaultInputType;
+    public string KeyExpression { get; set; } = DefaultKeyExpression;
+    public string SideExpression { get; set; } = DefaultSideExpression;
+    public string RequestSide { get; set; } = DefaultRequestSide;
+    public string ResponseSide { get; set; } = DefaultResponseSide;
+    public bool CaseSensitive { get; set; } = DefaultCaseSensitive;
+    public int TimeoutMilliseconds { get; set; } = DefaultTimeoutMilliseconds;
+    public int MaxPending { get; set; } = DefaultMaxPending;
+    public int BoundedCapacity { get; set; } = DefaultBoundedCapacity;
+
+    protected override void OnConfigurationLoaded(JsonObject? config)
+    {
+        InputType = RoutingNodeConfiguration.NormalizeInputType(
+            RoutingNodeConfiguration.ReadString(config, "inputType", DefaultInputType));
+        KeyExpression = RoutingNodeConfiguration.NormalizeText(
+            RoutingNodeConfiguration.ReadString(config, "keyExpression", DefaultKeyExpression),
+            DefaultKeyExpression);
+        SideExpression = RoutingNodeConfiguration.NormalizeText(
+            RoutingNodeConfiguration.ReadString(config, "sideExpression", DefaultSideExpression),
+            DefaultSideExpression);
+        CaseSensitive = RoutingNodeConfiguration.ReadBool(config, "caseSensitive", DefaultCaseSensitive);
+        RequestSide = RoutingNodeConfiguration.NormalizeText(
+            RoutingNodeConfiguration.ReadString(config, "requestSide", DefaultRequestSide),
+            DefaultRequestSide);
+        ResponseSide = NormalizeResponseSide(
+            RequestSide,
+            RoutingNodeConfiguration.NormalizeText(
+                RoutingNodeConfiguration.ReadString(config, "responseSide", DefaultResponseSide),
+                DefaultResponseSide),
+            CaseSensitive);
+        TimeoutMilliseconds = RoutingNodeConfiguration.ReadPositiveInt(
+            config,
+            "timeoutMilliseconds",
+            DefaultTimeoutMilliseconds);
+        MaxPending = RoutingNodeConfiguration.ReadPositiveInt(config, "maxPending", DefaultMaxPending);
+        BoundedCapacity = RoutingNodeConfiguration.ReadPositiveInt(config, "boundedCapacity", DefaultBoundedCapacity);
+        SetPortDescriptors(BuildPorts());
+    }
+
+    public override JsonObject BuildConfiguration()
+    {
+        var requestSide = RoutingNodeConfiguration.NormalizeText(RequestSide, DefaultRequestSide);
+        var responseSide = NormalizeResponseSide(
+            requestSide,
+            RoutingNodeConfiguration.NormalizeText(ResponseSide, DefaultResponseSide),
+            CaseSensitive);
+
+        return new JsonObject
+        {
+            ["inputType"] = RoutingNodeConfiguration.NormalizeInputType(InputType),
+            ["keyExpression"] = RoutingNodeConfiguration.NormalizeText(KeyExpression, DefaultKeyExpression),
+            ["sideExpression"] = RoutingNodeConfiguration.NormalizeText(SideExpression, DefaultSideExpression),
+            ["requestSide"] = requestSide,
+            ["responseSide"] = responseSide,
+            ["caseSensitive"] = CaseSensitive,
+            ["timeoutMilliseconds"] = RoutingNodeConfiguration.NormalizePositiveInt(
+                TimeoutMilliseconds,
+                DefaultTimeoutMilliseconds),
+            ["maxPending"] = RoutingNodeConfiguration.NormalizePositiveInt(MaxPending, DefaultMaxPending),
+            ["boundedCapacity"] = RoutingNodeConfiguration.NormalizePositiveInt(
+                BoundedCapacity,
+                DefaultBoundedCapacity)
+        };
+    }
+
+    public override string ResolvePortValueType(ComponentPortDescriptor descriptor)
+        => descriptor.Name switch
+        {
+            "Input" => RoutingNodeConfiguration.NormalizeInputType(InputType),
+            "Matched" => "FlowCorrelationMatch",
+            "Timeouts" => "FlowCorrelationTimeout",
+            _ => base.ResolvePortValueType(descriptor)
+        };
+
+    public static string NormalizeResponseSide(string requestSide, string responseSide, bool caseSensitive)
+    {
+        var comparer = caseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+        if (!comparer.Equals(requestSide, responseSide))
+        {
+            return responseSide;
+        }
+
+        return comparer.Equals(requestSide, DefaultResponseSide)
+            ? DefaultRequestSide
+            : DefaultResponseSide;
+    }
+
+    private IReadOnlyList<ComponentPortDescriptor> BuildPorts()
+        =>
+        [
+            new("Input", InputType, IsInput: true),
+            new("Matched", "FlowCorrelationMatch", IsInput: false),
+            new("Timeouts", "FlowCorrelationTimeout", IsInput: false),
+            new("Errors", FlowContractTypeNames.FlowError, IsInput: false)
+        ];
+}
+
 public sealed class RoutingMergeNodeModel(
     string id,
     DiagramPoint position,
@@ -277,6 +394,96 @@ public sealed class RoutingMergeNodeModel(
         ports.Add(new("Errors", FlowContractTypeNames.FlowError, IsInput: false));
         return ports;
     }
+}
+
+public sealed class RoutingJoinNodeModel(
+    string id,
+    DiagramPoint position,
+    string nodeName,
+    FlowComponentDescriptor? descriptor,
+    bool isResource)
+    : FlowDiagramNodeModel(id, position, nodeName, RoutingNodeTypes.Join, descriptor, isResource)
+{
+    public const string DefaultLeftInputType = FlowContractTypeNames.MqttEnvelope;
+    public const string DefaultRightInputType = FlowContractTypeNames.MqttEnvelope;
+    public const string DefaultLeftKeyExpression = "topic";
+    public const string DefaultRightKeyExpression = "topic";
+    public const bool DefaultCaseSensitive = true;
+    public const int DefaultTimeoutMilliseconds = 30000;
+    public const int DefaultMaxPending = 1024;
+    public const int DefaultBoundedCapacity = 1000;
+
+    public string LeftInputType { get; set; } = DefaultLeftInputType;
+    public string RightInputType { get; set; } = DefaultRightInputType;
+    public string LeftKeyExpression { get; set; } = DefaultLeftKeyExpression;
+    public string RightKeyExpression { get; set; } = DefaultRightKeyExpression;
+    public bool CaseSensitive { get; set; } = DefaultCaseSensitive;
+    public int TimeoutMilliseconds { get; set; } = DefaultTimeoutMilliseconds;
+    public int MaxPending { get; set; } = DefaultMaxPending;
+    public int BoundedCapacity { get; set; } = DefaultBoundedCapacity;
+
+    protected override void OnConfigurationLoaded(JsonObject? config)
+    {
+        LeftInputType = RoutingNodeConfiguration.NormalizeInputType(
+            RoutingNodeConfiguration.ReadString(config, "leftInputType", DefaultLeftInputType));
+        RightInputType = RoutingNodeConfiguration.NormalizeInputType(
+            RoutingNodeConfiguration.ReadString(config, "rightInputType", DefaultRightInputType));
+        LeftKeyExpression = RoutingNodeConfiguration.NormalizeText(
+            RoutingNodeConfiguration.ReadString(config, "leftKeyExpression", DefaultLeftKeyExpression),
+            DefaultLeftKeyExpression);
+        RightKeyExpression = RoutingNodeConfiguration.NormalizeText(
+            RoutingNodeConfiguration.ReadString(config, "rightKeyExpression", DefaultRightKeyExpression),
+            DefaultRightKeyExpression);
+        CaseSensitive = RoutingNodeConfiguration.ReadBool(config, "caseSensitive", DefaultCaseSensitive);
+        TimeoutMilliseconds = RoutingNodeConfiguration.ReadPositiveInt(
+            config,
+            "timeoutMilliseconds",
+            DefaultTimeoutMilliseconds);
+        MaxPending = RoutingNodeConfiguration.ReadPositiveInt(config, "maxPending", DefaultMaxPending);
+        BoundedCapacity = RoutingNodeConfiguration.ReadPositiveInt(config, "boundedCapacity", DefaultBoundedCapacity);
+        SetPortDescriptors(BuildPorts());
+    }
+
+    public override JsonObject BuildConfiguration()
+        => new()
+        {
+            ["leftInputType"] = RoutingNodeConfiguration.NormalizeInputType(LeftInputType),
+            ["rightInputType"] = RoutingNodeConfiguration.NormalizeInputType(RightInputType),
+            ["leftKeyExpression"] = RoutingNodeConfiguration.NormalizeText(
+                LeftKeyExpression,
+                DefaultLeftKeyExpression),
+            ["rightKeyExpression"] = RoutingNodeConfiguration.NormalizeText(
+                RightKeyExpression,
+                DefaultRightKeyExpression),
+            ["caseSensitive"] = CaseSensitive,
+            ["timeoutMilliseconds"] = RoutingNodeConfiguration.NormalizePositiveInt(
+                TimeoutMilliseconds,
+                DefaultTimeoutMilliseconds),
+            ["maxPending"] = RoutingNodeConfiguration.NormalizePositiveInt(MaxPending, DefaultMaxPending),
+            ["boundedCapacity"] = RoutingNodeConfiguration.NormalizePositiveInt(
+                BoundedCapacity,
+                DefaultBoundedCapacity)
+        };
+
+    public override string ResolvePortValueType(ComponentPortDescriptor descriptor)
+        => descriptor.Name switch
+        {
+            "Left" => RoutingNodeConfiguration.NormalizeInputType(LeftInputType),
+            "Right" => RoutingNodeConfiguration.NormalizeInputType(RightInputType),
+            "Output" => "FlowJoinResult",
+            "Timeouts" => "FlowJoinTimeout",
+            _ => base.ResolvePortValueType(descriptor)
+        };
+
+    private IReadOnlyList<ComponentPortDescriptor> BuildPorts()
+        =>
+        [
+            new("Left", LeftInputType, IsInput: true),
+            new("Right", RightInputType, IsInput: true),
+            new("Output", "FlowJoinResult", IsInput: false),
+            new("Timeouts", "FlowJoinTimeout", IsInput: false),
+            new("Errors", FlowContractTypeNames.FlowError, IsInput: false)
+        ];
 }
 
 public sealed class RoutingWindowNodeModel(
@@ -406,6 +613,9 @@ internal static class RoutingNodeConfiguration
 
     public static string ReadString(JsonObject? config, string key, string fallback)
         => config?[key]?.GetValue<string?>() is { Length: > 0 } value ? value : fallback;
+
+    public static string NormalizeText(string? value, string fallback)
+        => string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
 
     public static bool ReadBool(JsonObject? config, string key, bool fallback)
         => config?[key] is JsonValue value && value.TryGetValue<bool>(out var result) ? result : fallback;

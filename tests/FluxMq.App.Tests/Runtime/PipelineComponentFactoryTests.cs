@@ -698,6 +698,148 @@ public sealed class PipelineComponentFactoryTests
     }
 
     [Fact]
+    public async Task RoutingCorrelationFactory_MatchesRequestAndResponse()
+    {
+        TestSourceNode? source = null;
+        TestSinkNode<FlowCorrelationMatch<MqttEnvelope>>? sink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.source"), (address, _) =>
+            {
+                source = new TestSourceNode();
+                return SourceNode(address, source);
+            })
+            .Register(new NodeType("test.correlation-sink"), (address, _) =>
+            {
+                sink = new TestSinkNode<FlowCorrelationMatch<MqttEnvelope>>();
+                return SinkNode(address, sink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("test.source"),
+                        ["correlation"] = new NodeDefinition
+                        {
+                            Type = RoutingComponentTypes.Correlation,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["inputType"] = JsonDocument.Parse("\"MqttEnvelope\"").RootElement.Clone(),
+                                ["keyExpression"] = JsonDocument.Parse("\"topic\"").RootElement.Clone(),
+                                ["sideExpression"] = JsonDocument.Parse("\"payloadText\"").RootElement.Clone(),
+                                ["requestSide"] = JsonDocument.Parse("\"request\"").RootElement.Clone(),
+                                ["responseSide"] = JsonDocument.Parse("\"response\"").RootElement.Clone(),
+                                ["timeoutMilliseconds"] = JsonDocument.Parse("30000").RootElement.Clone(),
+                                ["maxPending"] = JsonDocument.Parse("8").RootElement.Clone(),
+                                ["boundedCapacity"] = JsonDocument.Parse("64").RootElement.Clone()
+                            }
+                        },
+                        ["sink"] = NodeWithPort("test.correlation-sink", "Input", "\"correlation.Matched\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+
+        source!.Post(new MqttEnvelope { Topic = "factory/42", Payload = Encoding.UTF8.GetBytes("request") });
+        source.Post(new MqttEnvelope { Topic = "factory/42", Payload = Encoding.UTF8.GetBytes("response") });
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+        var match = sink!.Values.ShouldHaveSingleItem();
+        match.Key.ShouldBe("factory/42");
+        Encoding.UTF8.GetString(match.Request.Payload).ShouldBe("request");
+        Encoding.UTF8.GetString(match.Response.Payload).ShouldBe("response");
+    }
+
+    [Fact]
+    public async Task RoutingJoinFactory_JoinsLeftAndRightByKey()
+    {
+        TestSourceNode? leftSource = null;
+        TestSourceNode? rightSource = null;
+        TestSinkNode<FlowJoinResult<MqttEnvelope, MqttEnvelope>>? sink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.source"), (address, _) =>
+            {
+                if (address.Node.Value == "leftSource")
+                {
+                    leftSource = new TestSourceNode();
+                    return SourceNode(address, leftSource);
+                }
+
+                rightSource = new TestSourceNode();
+                return SourceNode(address, rightSource);
+            })
+            .Register(new NodeType("test.join-sink"), (address, _) =>
+            {
+                sink = new TestSinkNode<FlowJoinResult<MqttEnvelope, MqttEnvelope>>();
+                return SinkNode(address, sink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["leftSource"] = Node("test.source"),
+                        ["rightSource"] = Node("test.source"),
+                        ["join"] = new NodeDefinition
+                        {
+                            Type = RoutingComponentTypes.Join,
+                            Ports =
+                            {
+                                ["Left"] = JsonDocument.Parse("\"leftSource.Output\"").RootElement.Clone(),
+                                ["Right"] = JsonDocument.Parse("\"rightSource.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["leftInputType"] = JsonDocument.Parse("\"MqttEnvelope\"").RootElement.Clone(),
+                                ["rightInputType"] = JsonDocument.Parse("\"MqttEnvelope\"").RootElement.Clone(),
+                                ["leftKeyExpression"] = JsonDocument.Parse("\"topic\"").RootElement.Clone(),
+                                ["rightKeyExpression"] = JsonDocument.Parse("\"topic\"").RootElement.Clone(),
+                                ["timeoutMilliseconds"] = JsonDocument.Parse("30000").RootElement.Clone(),
+                                ["maxPending"] = JsonDocument.Parse("8").RootElement.Clone(),
+                                ["boundedCapacity"] = JsonDocument.Parse("64").RootElement.Clone()
+                            }
+                        },
+                        ["sink"] = NodeWithPort("test.join-sink", "Input", "\"join.Output\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+
+        leftSource!.Post(new MqttEnvelope { Topic = "factory/42", Payload = Encoding.UTF8.GetBytes("left") });
+        rightSource!.Post(new MqttEnvelope { Topic = "factory/42", Payload = Encoding.UTF8.GetBytes("right") });
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+        var joined = sink!.Values.ShouldHaveSingleItem();
+        joined.Key.ShouldBe("factory/42");
+        Encoding.UTF8.GetString(joined.Left.Payload).ShouldBe("left");
+        Encoding.UTF8.GetString(joined.Right.Payload).ShouldBe("right");
+    }
+
+    [Fact]
     public async Task RoutingWindowFactory_EmitsCountWindows()
     {
         TestSourceNode? source = null;

@@ -155,6 +155,18 @@ public sealed class FlowComponentCatalog
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
+            "flow.correlation",
+            "Correlation",
+            "Control",
+            "Pairs request and response values by key and side expressions.",
+            IsResource: false,
+            [
+                new("Input", "Configured input type", IsInput: true),
+                new("Matched", "FlowCorrelationMatch", IsInput: false),
+                new("Timeouts", "FlowCorrelationTimeout", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
             "flow.window",
             "Window",
             "Control",
@@ -163,6 +175,19 @@ public sealed class FlowComponentCatalog
             [
                 new("Input", "Configured input type", IsInput: true),
                 new("Output", "FlowWindow", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "flow.join",
+            "Join",
+            "Control",
+            "Pairs left and right streams by matching key expressions.",
+            IsResource: false,
+            [
+                new("Left", "Configured left input type", IsInput: true),
+                new("Right", "Configured right input type", IsInput: true),
+                new("Output", "FlowJoinResult", IsInput: false),
+                new("Timeouts", "FlowJoinTimeout", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
