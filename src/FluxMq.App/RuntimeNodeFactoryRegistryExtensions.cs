@@ -33,7 +33,7 @@ using FluxFlow.Components.State;
 using FluxFlow.Components.State.Contracts;
 using FluxFlow.Components.State.Options;
 using FluxFlow.Components.Storage;
-using FluxFlow.Components.Storage.Local;
+using FluxFlow.Components.Storage.FileSystem;
 using FluxFlow.Components.Storage.Options;
 using FluxFlow.Components.Timers;
 using FluxFlow.Components.Timers.Contracts;
@@ -72,7 +72,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
         Func<MqttConnectionProfile, IMqttBrokerClient>? clientFactory = null,
         IMessageRepository? messageRepository = null,
         IFlowExpressionEngine? expressionEngine = null,
-        string? localStorageRootDirectory = null)
+        string? fileSystemStorageRootDirectory = null)
     {
         ArgumentNullException.ThrowIfNull(registry);
         clientFactory ??= static profile => new MqttBrokerClient(profile);
@@ -97,7 +97,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .RegisterTimerComponents(ConfigureTimerComponents)
             .RegisterMappingComponents(options => ConfigureMappingComponents(options, expressionEngine))
             .RegisterStateComponents(options => ConfigureStateComponents(options, expressionEngine))
-            .RegisterStorageComponents(options => ConfigureStorageComponents(options, localStorageRootDirectory))
+            .RegisterStorageComponents(options => ConfigureStorageComponents(options, fileSystemStorageRootDirectory))
             .RegisterSerializationComponents()
             .RegisterRoutingComponents(options => ConfigureRoutingComponents(options, expressionEngine))
             .Register(FluxMqNodeTypes.MqttPublisher, context => CreatePublisher(context.Address, context.Definition, context))
@@ -175,15 +175,15 @@ public static class RuntimeNodeFactoryRegistryExtensions
 
     private static void ConfigureStorageComponents(
         StorageComponentOptions options,
-        string? localStorageRootDirectory)
+        string? fileSystemStorageRootDirectory)
     {
         ArgumentNullException.ThrowIfNull(options);
 
-        options.UseLocalStorage(new LocalStorageStoreOptions
+        options.UseFileSystemStorage(new FileSystemStorageStoreOptions
         {
-            RootDirectory = string.IsNullOrWhiteSpace(localStorageRootDirectory)
-                ? GetDefaultLocalStorageRootDirectory()
-                : localStorageRootDirectory,
+            RootDirectory = string.IsNullOrWhiteSpace(fileSystemStorageRootDirectory)
+                ? GetDefaultFileSystemStorageRootDirectory()
+                : fileSystemStorageRootDirectory,
             CreateDirectory = true,
             DefaultCollection = "default"
         });
@@ -220,7 +220,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .RegisterType<FlowError>(FlowContractTypeNames.FlowError);
     }
 
-    private static string GetDefaultLocalStorageRootDirectory()
+    private static string GetDefaultFileSystemStorageRootDirectory()
         => Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "FluxMq",
