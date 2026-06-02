@@ -2200,3 +2200,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet restore FluxMq.sln --nologo` passes.
   - `dotnet build FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with existing UI project resource qualifier warnings.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 536 tests.
+
+## 2026-06-02 - Sources component package migration
+
+- Added `FluxFlow.Components.Sources` `0.1.0-alpha.1` to the app runtime project.
+- Reworked FluxMQ `generated.source` runtime creation to use package-backed `GeneratedSourceNode<MqttEnvelope>`.
+- Preserved the existing FluxMQ node type, `messages` configuration, and `Output`/`Errors` ports while adding package timing and bounded-loop options.
+- Removed the old local generated MQTT source implementation.
+- Kept `session.source` and `replay.source` on the existing session-store path because the sources package intentionally does not own stored session replay.
+- Verified:
+  - `dotnet restore FluxMq.sln --nologo` passes.
+  - `dotnet test tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj --no-restore --filter "FullyQualifiedName~StoredSessionSource" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 3 tests.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~GeneratedSourceFactory" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 2 tests.
+  - `dotnet build FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with existing UI project resource qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 536 tests.
