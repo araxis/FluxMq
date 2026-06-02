@@ -139,6 +139,11 @@ public sealed class FlowDefinitionComposerTests
         switchNode.Ports.ShouldContain(port => port.Name == "WhenTrue" && !port.IsInput);
         switchNode.Ports.ShouldContain(port => port.Name == "WhenFalse" && !port.IsInput);
 
+        var window = catalog.Find(RoutingNodeTypes.Window).ShouldNotBeNull();
+        window.Ports.ShouldContain(port => port.Name == "Input" && port.IsInput);
+        window.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "FlowWindow" && !port.IsInput);
+        window.Ports.Last().Name.ShouldBe("Errors");
+
         var fork = catalog.Find(RoutingNodeTypes.Fork).ShouldNotBeNull();
         fork.Ports.ShouldContain(port => port.Name == "Input" && port.IsInput);
         fork.Ports.ShouldContain(port => port.Name == "A" && !port.IsInput);
@@ -609,9 +614,10 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Theory]
+    [InlineData("flow.window", FlowDefinitionComposer.WindowNodeName, "maxItems")]
     [InlineData("flow.fork", FlowDefinitionComposer.ForkNodeName, "outputs")]
     [InlineData("flow.merge", FlowDefinitionComposer.MergeNodeName, "inputs")]
-    public void AddComponent_AddsFanRoutingConfiguration(string componentType, string nodeName, string listProperty)
+    public void AddComponent_AddsRoutingConfiguration(string componentType, string nodeName, string requiredProperty)
     {
         var composer = new FlowDefinitionComposer();
         var initial = composer.CreateInspectPayloadsDefinition(
@@ -630,11 +636,22 @@ public sealed class FlowDefinitionComposerTests
 
         var config = node.GetProperty("configuration");
         config.GetProperty("inputType").GetString().ShouldBe("MqttEnvelope");
-        config.GetProperty(listProperty).EnumerateArray().Select(static item => item.GetString())
-            .ShouldBe(componentType == RoutingNodeTypes.Fork ? ["A", "B"] : ["Left", "Right"]);
         config.GetProperty("boundedCapacity").GetInt32().ShouldBe(1000);
 
-        if (componentType == RoutingNodeTypes.Fork)
+        if (componentType == RoutingNodeTypes.Window)
+        {
+            config.GetProperty(requiredProperty).GetInt32().ShouldBe(100);
+            config.GetProperty("timeMilliseconds").GetInt32().ShouldBe(5000);
+            config.GetProperty("emitPartialOnCompletion").GetBoolean().ShouldBeTrue();
+            node.GetProperty("Input").GetString().ShouldBe($"{FlowDefinitionComposer.TriggerNodeName}.Output");
+        }
+        else
+        {
+            config.GetProperty(requiredProperty).EnumerateArray().Select(static item => item.GetString())
+                .ShouldBe(componentType == RoutingNodeTypes.Fork ? ["A", "B"] : ["Left", "Right"]);
+        }
+
+        if (componentType is RoutingNodeTypes.Fork or RoutingNodeTypes.Window)
         {
             node.GetProperty("Input").GetString().ShouldBe($"{FlowDefinitionComposer.TriggerNodeName}.Output");
         }

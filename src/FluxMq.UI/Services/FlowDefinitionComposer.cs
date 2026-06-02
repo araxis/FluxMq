@@ -30,6 +30,7 @@ public sealed class FlowDefinitionComposer
     public const string FilterNodeName = "filter";
     public const string RouterNodeName = "router";
     public const string SwitchNodeName = "switch";
+    public const string WindowNodeName = "window";
     public const string ForkNodeName = "fork";
     public const string MergeNodeName = "merge";
     public const string AssertionNodeName = "assertion";
@@ -1113,6 +1114,7 @@ public sealed class FlowDefinitionComposer
             "flow.filter" => FilterNodeName,
             "flow.when" => RouterNodeName,
             RoutingNodeTypes.Switch => SwitchNodeName,
+            RoutingNodeTypes.Window => WindowNodeName,
             RoutingNodeTypes.Fork => ForkNodeName,
             RoutingNodeTypes.Merge => MergeNodeName,
             "flow.assert" => AssertionNodeName,
@@ -1165,6 +1167,10 @@ public sealed class FlowDefinitionComposer
         else if (componentType == RoutingNodeTypes.Switch)
         {
             node["configuration"] = CreateRoutingSwitchConfiguration(FindDefaultMapperInputType(workflow));
+        }
+        else if (componentType == RoutingNodeTypes.Window)
+        {
+            node["configuration"] = CreateRoutingWindowConfiguration(FindDefaultMapperInputType(workflow));
         }
         else if (componentType == RoutingNodeTypes.Fork)
         {
@@ -2952,6 +2958,16 @@ public sealed class FlowDefinitionComposer
             ["inputType"] = RoutingNodeConfiguration.NormalizeInputType(inputType),
             ["outputs"] = new JsonArray("A", "B"),
             ["boundedCapacity"] = RoutingForkNodeModel.DefaultBoundedCapacity
+        };
+
+    private static JsonObject CreateRoutingWindowConfiguration(string inputType = RoutingWindowNodeModel.DefaultInputType)
+        => new()
+        {
+            ["inputType"] = RoutingNodeConfiguration.NormalizeInputType(inputType),
+            ["maxItems"] = RoutingWindowNodeModel.DefaultMaxItems,
+            ["timeMilliseconds"] = RoutingWindowNodeModel.DefaultTimeMilliseconds,
+            ["emitPartialOnCompletion"] = RoutingWindowNodeModel.DefaultEmitPartialOnCompletion,
+            ["boundedCapacity"] = RoutingWindowNodeModel.DefaultBoundedCapacity
         };
 
     private static JsonObject CreateRoutingMergeConfiguration(string inputType = RoutingMergeNodeModel.DefaultInputType)

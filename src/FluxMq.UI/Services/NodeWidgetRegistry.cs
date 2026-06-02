@@ -38,6 +38,7 @@ public sealed class NodeWidgetRegistry
         ["mqtt.payload-inspector"] = typeof(PayloadInspectorNodeWidget),
         ["flow.when"] = typeof(ConditionRouterNodeWidget),
         [RoutingNodeTypes.Switch] = typeof(RoutingSwitchNodeWidget),
+        [RoutingNodeTypes.Window] = typeof(RoutingWindowNodeWidget),
         [RoutingNodeTypes.Fork] = typeof(RoutingForkNodeWidget),
         [RoutingNodeTypes.Merge] = typeof(RoutingMergeNodeWidget),
         ["flow.assert"] = typeof(FlowAssertionNodeWidget),

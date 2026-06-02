@@ -8,6 +8,7 @@ namespace FluxMq.UI.Components.Workspace.Nodes.Routing;
 public static class RoutingNodeTypes
 {
     public const string Switch = "flow.switch";
+    public const string Window = "flow.window";
     public const string Fork = "flow.fork";
     public const string Merge = "flow.merge";
 }
@@ -278,6 +279,92 @@ public sealed class RoutingMergeNodeModel(
     }
 }
 
+public sealed class RoutingWindowNodeModel(
+    string id,
+    DiagramPoint position,
+    string nodeName,
+    FlowComponentDescriptor? descriptor,
+    bool isResource)
+    : FlowDiagramNodeModel(id, position, nodeName, RoutingNodeTypes.Window, descriptor, isResource)
+{
+    public const string DefaultInputType = FlowContractTypeNames.MqttEnvelope;
+    public const int DefaultMaxItems = 100;
+    public const int DefaultTimeMilliseconds = 5000;
+    public const bool DefaultEmitPartialOnCompletion = true;
+    public const int DefaultBoundedCapacity = 1000;
+
+    public string InputType { get; set; } = DefaultInputType;
+    public int MaxItems { get; set; } = DefaultMaxItems;
+    public int TimeMilliseconds { get; set; } = DefaultTimeMilliseconds;
+    public bool EmitPartialOnCompletion { get; set; } = DefaultEmitPartialOnCompletion;
+    public int BoundedCapacity { get; set; } = DefaultBoundedCapacity;
+
+    protected override void OnConfigurationLoaded(JsonObject? config)
+    {
+        InputType = RoutingNodeConfiguration.NormalizeInputType(
+            RoutingNodeConfiguration.ReadString(config, "inputType", DefaultInputType));
+        MaxItems = RoutingNodeConfiguration.ReadNonNegativeInt(config, "maxItems", DefaultMaxItems);
+        TimeMilliseconds = RoutingNodeConfiguration.ReadNonNegativeInt(
+            config,
+            "timeMilliseconds",
+            DefaultTimeMilliseconds);
+        EnsureBoundary();
+        EmitPartialOnCompletion = RoutingNodeConfiguration.ReadBool(
+            config,
+            "emitPartialOnCompletion",
+            DefaultEmitPartialOnCompletion);
+        BoundedCapacity = RoutingNodeConfiguration.ReadPositiveInt(config, "boundedCapacity", DefaultBoundedCapacity);
+        SetPortDescriptors(BuildPorts());
+    }
+
+    public override JsonObject BuildConfiguration()
+    {
+        var maxItems = RoutingNodeConfiguration.NormalizeNonNegativeInt(MaxItems, DefaultMaxItems);
+        var timeMilliseconds = RoutingNodeConfiguration.NormalizeNonNegativeInt(
+            TimeMilliseconds,
+            DefaultTimeMilliseconds);
+        if (maxItems == 0 && timeMilliseconds == 0)
+        {
+            maxItems = DefaultMaxItems;
+        }
+
+        return new JsonObject
+        {
+            ["inputType"] = RoutingNodeConfiguration.NormalizeInputType(InputType),
+            ["maxItems"] = maxItems,
+            ["timeMilliseconds"] = timeMilliseconds,
+            ["emitPartialOnCompletion"] = EmitPartialOnCompletion,
+            ["boundedCapacity"] = RoutingNodeConfiguration.NormalizePositiveInt(
+                BoundedCapacity,
+                DefaultBoundedCapacity)
+        };
+    }
+
+    public override string ResolvePortValueType(ComponentPortDescriptor descriptor)
+        => descriptor.Name switch
+        {
+            "Input" => RoutingNodeConfiguration.NormalizeInputType(InputType),
+            "Output" => "FlowWindow",
+            _ => base.ResolvePortValueType(descriptor)
+        };
+
+    private void EnsureBoundary()
+    {
+        if (MaxItems == 0 && TimeMilliseconds == 0)
+        {
+            MaxItems = DefaultMaxItems;
+        }
+    }
+
+    private IReadOnlyList<ComponentPortDescriptor> BuildPorts()
+        =>
+        [
+            new("Input", InputType, IsInput: true),
+            new("Output", "FlowWindow", IsInput: false),
+            new("Errors", FlowContractTypeNames.FlowError, IsInput: false)
+        ];
+}
+
 public sealed record RoutingSwitchRoute(string Key, string OutputPort);
 
 internal static class RoutingNodeConfiguration
@@ -328,6 +415,12 @@ internal static class RoutingNodeConfiguration
 
     public static int NormalizePositiveInt(int value, int fallback)
         => value > 0 ? value : fallback;
+
+    public static int ReadNonNegativeInt(JsonObject? config, string key, int fallback)
+        => NormalizeNonNegativeInt(ReadInt(config, key, fallback), fallback);
+
+    public static int NormalizeNonNegativeInt(int value, int fallback)
+        => value >= 0 ? value : fallback;
 
     public static IReadOnlyList<string> ReadStringArray(JsonObject? config, string key, IReadOnlyList<string>? fallback = null)
     {

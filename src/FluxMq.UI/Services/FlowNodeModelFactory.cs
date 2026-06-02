@@ -36,6 +36,7 @@ public static class FlowNodeModelFactory
         "flow.filter" => new MessageFilterNodeModel(id, position, nodeName, descriptor, isResource),
         "flow.when" => new ConditionRouterNodeModel(id, position, nodeName, descriptor, isResource),
         RoutingNodeTypes.Switch => new RoutingSwitchNodeModel(id, position, nodeName, descriptor, isResource),
+        RoutingNodeTypes.Window => new RoutingWindowNodeModel(id, position, nodeName, descriptor, isResource),
         RoutingNodeTypes.Fork => new RoutingForkNodeModel(id, position, nodeName, descriptor, isResource),
         RoutingNodeTypes.Merge => new RoutingMergeNodeModel(id, position, nodeName, descriptor, isResource),
         "flow.assert" => new FlowAssertionNodeModel(id, position, nodeName, descriptor, isResource),

@@ -698,6 +698,70 @@ public sealed class PipelineComponentFactoryTests
     }
 
     [Fact]
+    public async Task RoutingWindowFactory_EmitsCountWindows()
+    {
+        TestSourceNode? source = null;
+        TestSinkNode<FlowWindow<MqttEnvelope>>? sink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.source"), (address, _) =>
+            {
+                source = new TestSourceNode();
+                return SourceNode(address, source);
+            })
+            .Register(new NodeType("test.window-sink"), (address, _) =>
+            {
+                sink = new TestSinkNode<FlowWindow<MqttEnvelope>>();
+                return SinkNode(address, sink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("test.source"),
+                        ["window"] = new NodeDefinition
+                        {
+                            Type = RoutingComponentTypes.Window,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["inputType"] = JsonDocument.Parse("\"MqttEnvelope\"").RootElement.Clone(),
+                                ["maxItems"] = JsonDocument.Parse("2").RootElement.Clone(),
+                                ["timeMilliseconds"] = JsonDocument.Parse("0").RootElement.Clone(),
+                                ["emitPartialOnCompletion"] = JsonDocument.Parse("false").RootElement.Clone()
+                            }
+                        },
+                        ["sink"] = NodeWithPort("test.window-sink", "Input", "\"window.Output\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+
+        source!.Post(new MqttEnvelope { Topic = "factory/one", Payload = [] });
+        source.Post(new MqttEnvelope { Topic = "factory/two", Payload = [] });
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+        var window = sink!.Values.ShouldHaveSingleItem();
+        window.Sequence.ShouldBe(1);
+        window.Count.ShouldBe(2);
+        window.Reason.ShouldBe(FlowWindowEmitReason.Count);
+        window.Items.Select(envelope => envelope.Topic).ShouldBe(["factory/one", "factory/two"]);
+    }
+
+    [Fact]
     public async Task RoutingForkFactory_CopiesInputsToConfiguredOutputs()
     {
         TestSourceNode? source = null;

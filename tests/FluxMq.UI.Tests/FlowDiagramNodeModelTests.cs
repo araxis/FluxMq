@@ -331,6 +331,7 @@ public sealed class FlowDiagramNodeModelTests
 
     [Theory]
     [InlineData("flow.switch", typeof(RoutingSwitchNodeModel))]
+    [InlineData("flow.window", typeof(RoutingWindowNodeModel))]
     [InlineData("flow.fork", typeof(RoutingForkNodeModel))]
     [InlineData("flow.merge", typeof(RoutingMergeNodeModel))]
     public void FlowNodeModelFactory_CreatesRoutingNodeModels(string nodeType, Type expectedType)
@@ -430,6 +431,41 @@ public sealed class FlowDiagramNodeModelTests
             .ShouldBe("TimerTick");
         merge.BuildConfiguration()["inputs"]!.AsArray().Select(static node => node!.GetValue<string>())
             .ShouldBe(["Primary", "Replay"]);
+    }
+
+    [Fact]
+    public void RoutingWindowNodeModel_BuildsConfigurationAndPorts()
+    {
+        var catalog = new FlowComponentCatalog();
+        var model = new RoutingWindowNodeModel(
+            "workflow1.window",
+            new DiagramPoint(10, 20),
+            "window",
+            catalog.Find(RoutingNodeTypes.Window).ShouldNotBeNull(),
+            isResource: false);
+
+        model.LoadConfiguration(new JsonObject
+        {
+            ["inputType"] = "TimerTick",
+            ["maxItems"] = 25,
+            ["timeMilliseconds"] = 0,
+            ["emitPartialOnCompletion"] = false,
+            ["boundedCapacity"] = 64
+        });
+
+        model.PortDescriptors.ShouldContain(port => port.Name == "Input" && port.ValueType == "TimerTick" && port.IsInput);
+        model.PortDescriptors.ShouldContain(port => port.Name == "Output" && port.ValueType == "FlowWindow" && !port.IsInput);
+        model.ResolvePortValueType(new ComponentPortDescriptor("Input", "Configured input type", IsInput: true))
+            .ShouldBe("TimerTick");
+        model.ResolvePortValueType(new ComponentPortDescriptor("Output", "FlowWindow", IsInput: false))
+            .ShouldBe("FlowWindow");
+
+        var config = model.BuildConfiguration();
+        config["inputType"]!.GetValue<string>().ShouldBe("TimerTick");
+        config["maxItems"]!.GetValue<int>().ShouldBe(25);
+        config["timeMilliseconds"]!.GetValue<int>().ShouldBe(0);
+        config["emitPartialOnCompletion"]!.GetValue<bool>().ShouldBeFalse();
+        config["boundedCapacity"]!.GetValue<int>().ShouldBe(64);
     }
 
     [Fact]

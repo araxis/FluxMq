@@ -155,6 +155,17 @@ public sealed class FlowComponentCatalog
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
+            "flow.window",
+            "Window",
+            "Control",
+            "Groups input values into count or time based windows.",
+            IsResource: false,
+            [
+                new("Input", "Configured input type", IsInput: true),
+                new("Output", "FlowWindow", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
             "flow.fork",
             "Fork",
             "Control",
