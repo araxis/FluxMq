@@ -2,6 +2,7 @@ using FluxMq.App;
 using FluxMq.Core.Models;
 using FluxFlow.Engine.Runtime;
 using FluxMq.Scenarios;
+using FluxMq.UI.Components.Workspace.Nodes.Routing;
 using FluxMq.UI.Models;
 using FluxMq.UI.Services;
 using Shouldly;
@@ -125,6 +126,33 @@ public sealed class FlowDefinitionComposerTests
         assertion.Ports.ShouldContain(port => port.Name == "Failed" && port.ValueType == "Configured input type" && !port.IsInput);
         assertion.Ports.ShouldNotContain(port => port.Name == "Entries");
         assertion.Ports.Last().Name.ShouldBe("Errors");
+    }
+
+    [Fact]
+    public void ComponentCatalog_ExposesRoutingComponents()
+    {
+        var catalog = new FlowComponentCatalog();
+
+        var switchNode = catalog.Find(RoutingNodeTypes.Switch).ShouldNotBeNull();
+        switchNode.Category.ShouldBe("Control");
+        switchNode.Ports.ShouldContain(port => port.Name == "Input" && port.IsInput);
+        switchNode.Ports.ShouldContain(port => port.Name == "WhenTrue" && !port.IsInput);
+        switchNode.Ports.ShouldContain(port => port.Name == "WhenFalse" && !port.IsInput);
+
+        var window = catalog.Find(RoutingNodeTypes.Window).ShouldNotBeNull();
+        window.Ports.ShouldContain(port => port.Name == "Input" && port.IsInput);
+        window.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "FlowWindow" && !port.IsInput);
+        window.Ports.Last().Name.ShouldBe("Errors");
+
+        var fork = catalog.Find(RoutingNodeTypes.Fork).ShouldNotBeNull();
+        fork.Ports.ShouldContain(port => port.Name == "Input" && port.IsInput);
+        fork.Ports.ShouldContain(port => port.Name == "A" && !port.IsInput);
+        fork.Ports.ShouldContain(port => port.Name == "B" && !port.IsInput);
+
+        var merge = catalog.Find(RoutingNodeTypes.Merge).ShouldNotBeNull();
+        merge.Ports.ShouldContain(port => port.Name == "Left" && port.IsInput);
+        merge.Ports.ShouldContain(port => port.Name == "Right" && port.IsInput);
+        merge.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "FlowMergeItem" && !port.IsInput);
     }
 
     [Fact]
@@ -557,6 +585,80 @@ public sealed class FlowDefinitionComposerTests
         gate.GetProperty("Input").GetString().ShouldBe($"{FlowDefinitionComposer.TimerIntervalNodeName}.Output");
         gate.GetProperty("configuration").GetProperty("inputType").GetString().ShouldBe("TimerTick");
         gate.GetProperty("configuration").GetProperty(durationProperty).GetInt32().ShouldBe(250);
+    }
+
+    [Fact]
+    public void AddComponent_AddsRoutingSwitchConfigurationAndInputLink()
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var updated = composer.AddComponent(initial, RoutingNodeTypes.Switch);
+
+        using var document = JsonDocument.Parse(updated);
+        var switchNode = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty(FlowDefinitionComposer.SwitchNodeName);
+
+        switchNode.GetProperty("Input").GetString().ShouldBe($"{FlowDefinitionComposer.TriggerNodeName}.Output");
+        var config = switchNode.GetProperty("configuration");
+        config.GetProperty("inputType").GetString().ShouldBe("MqttEnvelope");
+        config.GetProperty("expression").GetString().ShouldBe("qos >= 1");
+        config.GetProperty("routeOutputs").GetProperty("True").GetString().ShouldBe("WhenTrue");
+        config.GetProperty("routeOutputs").GetProperty("False").GetString().ShouldBe("WhenFalse");
+    }
+
+    [Theory]
+    [InlineData("flow.window", FlowDefinitionComposer.WindowNodeName, "maxItems")]
+    [InlineData("flow.fork", FlowDefinitionComposer.ForkNodeName, "outputs")]
+    [InlineData("flow.merge", FlowDefinitionComposer.MergeNodeName, "inputs")]
+    public void AddComponent_AddsRoutingConfiguration(string componentType, string nodeName, string requiredProperty)
+    {
+        var composer = new FlowDefinitionComposer();
+        var initial = composer.CreateInspectPayloadsDefinition(
+            new MqttConnectionProfile { Name = "broker", Host = "localhost", Port = 1883, ClientId = "client" },
+            "#");
+
+        var updated = composer.AddComponent(initial, componentType);
+
+        using var document = JsonDocument.Parse(updated);
+        var node = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty(FlowDefinitionComposer.DefaultWorkflowName)
+            .GetProperty(nodeName);
+
+        var config = node.GetProperty("configuration");
+        config.GetProperty("inputType").GetString().ShouldBe("MqttEnvelope");
+        config.GetProperty("boundedCapacity").GetInt32().ShouldBe(1000);
+
+        if (componentType == RoutingNodeTypes.Window)
+        {
+            config.GetProperty(requiredProperty).GetInt32().ShouldBe(100);
+            config.GetProperty("timeMilliseconds").GetInt32().ShouldBe(5000);
+            config.GetProperty("emitPartialOnCompletion").GetBoolean().ShouldBeTrue();
+            node.GetProperty("Input").GetString().ShouldBe($"{FlowDefinitionComposer.TriggerNodeName}.Output");
+        }
+        else
+        {
+            config.GetProperty(requiredProperty).EnumerateArray().Select(static item => item.GetString())
+                .ShouldBe(componentType == RoutingNodeTypes.Fork ? ["A", "B"] : ["Left", "Right"]);
+        }
+
+        if (componentType is RoutingNodeTypes.Fork or RoutingNodeTypes.Window)
+        {
+            node.GetProperty("Input").GetString().ShouldBe($"{FlowDefinitionComposer.TriggerNodeName}.Output");
+        }
+        else
+        {
+            node.TryGetProperty("Input", out _).ShouldBeFalse();
+        }
     }
 
     [Fact]

@@ -1,0 +1,139 @@
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.ViewColumn"
+                 CategoryColor="@Color.Secondary"
+                 EditDialogMaxWidth="MaxWidth.Small"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
+    <Body>
+        <MudStack Spacing="1" Class="mt-1">
+            <div class="d-flex flex-wrap gap-1">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@Model.InputType</MudChip>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">FlowWindow</MudChip>
+            </div>
+            <div class="d-flex flex-wrap gap-1">
+                @if (Model.MaxItems > 0)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">max @Model.MaxItems</MudChip>
+                }
+                @if (Model.TimeMilliseconds > 0)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">@Model.TimeMilliseconds ms</MudChip>
+                }
+                @if (Model.EmitPartialOnCompletion)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">partial</MudChip>
+                }
+            </div>
+        </MudStack>
+    </Body>
+    <Editor>
+        <MudStack Spacing="2">
+            <MudSelect T="string"
+                       Label="Input type"
+                       @bind-Value="_inputType"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       Dense="true">
+                @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                {
+                    <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                }
+            </MudSelect>
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="6">
+                    <MudNumericField T="int"
+                                     Label="Max items"
+                                     @bind-Value="_maxItems"
+                                     Min="0"
+                                     Max="100000"
+                                     Step="10"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     HelperText="0 disables count." />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField T="int"
+                                     Label="Time window ms"
+                                     @bind-Value="_timeMilliseconds"
+                                     Min="0"
+                                     Max="86400000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     HelperText="0 disables time." />
+                </MudItem>
+            </MudGrid>
+            <MudCheckBox T="bool"
+                         Label="Emit partial on completion"
+                         @bind-Value="_emitPartialOnCompletion" />
+            <MudNumericField T="int"
+                             Label="Input buffer"
+                             @bind-Value="_boundedCapacity"
+                             Min="1"
+                             Max="100000"
+                             Step="100"
+                             Variant="Variant.Outlined"
+                             Margin="Margin.Dense" />
+        </MudStack>
+    </Editor>
+</NodeWidgetShell>
+
+@code {
+    [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
+
+    private RoutingWindowNodeModel Model => (RoutingWindowNodeModel)Node;
+
+    private string _inputType = RoutingWindowNodeModel.DefaultInputType;
+    private int _maxItems = RoutingWindowNodeModel.DefaultMaxItems;
+    private int _timeMilliseconds = RoutingWindowNodeModel.DefaultTimeMilliseconds;
+    private bool _emitPartialOnCompletion = RoutingWindowNodeModel.DefaultEmitPartialOnCompletion;
+    private int _boundedCapacity = RoutingWindowNodeModel.DefaultBoundedCapacity;
+
+    protected override void OnParametersSet() => LoadDraft();
+
+    private void LoadDraft()
+    {
+        _inputType = RoutingNodeConfiguration.NormalizeInputType(Model.InputType);
+        _maxItems = RoutingNodeConfiguration.NormalizeNonNegativeInt(
+            Model.MaxItems,
+            RoutingWindowNodeModel.DefaultMaxItems);
+        _timeMilliseconds = RoutingNodeConfiguration.NormalizeNonNegativeInt(
+            Model.TimeMilliseconds,
+            RoutingWindowNodeModel.DefaultTimeMilliseconds);
+        if (_maxItems == 0 && _timeMilliseconds == 0)
+        {
+            _maxItems = RoutingWindowNodeModel.DefaultMaxItems;
+        }
+
+        _emitPartialOnCompletion = Model.EmitPartialOnCompletion;
+        _boundedCapacity = RoutingNodeConfiguration.NormalizePositiveInt(
+            Model.BoundedCapacity,
+            RoutingWindowNodeModel.DefaultBoundedCapacity);
+    }
+
+    private Task SaveAsync()
+    {
+        Model.InputType = RoutingNodeConfiguration.NormalizeInputType(_inputType);
+        Model.MaxItems = RoutingNodeConfiguration.NormalizeNonNegativeInt(
+            _maxItems,
+            RoutingWindowNodeModel.DefaultMaxItems);
+        Model.TimeMilliseconds = RoutingNodeConfiguration.NormalizeNonNegativeInt(
+            _timeMilliseconds,
+            RoutingWindowNodeModel.DefaultTimeMilliseconds);
+        if (Model.MaxItems == 0 && Model.TimeMilliseconds == 0)
+        {
+            Model.MaxItems = RoutingWindowNodeModel.DefaultMaxItems;
+        }
+
+        Model.EmitPartialOnCompletion = _emitPartialOnCompletion;
+        Model.BoundedCapacity = RoutingNodeConfiguration.NormalizePositiveInt(
+            _boundedCapacity,
+            RoutingWindowNodeModel.DefaultBoundedCapacity);
+
+        Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
+        return Task.CompletedTask;
+    }
+}

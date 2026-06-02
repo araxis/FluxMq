@@ -114,6 +114,7 @@
     protected override void OnInitialized()
     {
         _diagram.RegisterComponent<FlowDiagramNodeModel, FlowDiagramNodeWidget>();
+        _diagram.RegisterComponent<FlowDiagramLinkModel, FlowDiagramLinkWidget>();
         _diagram.RegisterComponent<FlowPortModel, FluxPortWidget>();
         Flow.GetDiagramState = () =>
         {
@@ -307,8 +308,11 @@
                                     var linkColor = FlowLinkVisuals.ColorFor(
                                         sourceLink.HasCondition,
                                         IsErrorLink(sourcePortName, port.Name));
-                                    var link = CreateStyledLink(sourcePort, targetPort, linkColor);
-                                    link.Width = FlowLinkVisuals.WidthFor(sourceLink.HasCondition);
+                                    var link = CreateStyledLink(
+                                        sourcePort,
+                                        targetPort,
+                                        linkColor,
+                                        FlowLinkVisuals.WidthFor(sourceLink.HasCondition));
                                     if (FlowLinkVisuals.ConditionLabel(sourceLink.When) is { } label)
                                     {
                                         link.AddLabel(label, 0.5, ConditionLabelOffset);
@@ -330,7 +334,11 @@
                             var targetPort = PortFor(targetNode, PortAlignment.Left, "Connection");
                             if (sourcePort is not null && targetPort is not null)
                             {
-                                _diagram.Links.Add(CreateStyledLink(sourcePort, targetPort, FlowLinkVisuals.ConditionalColor));
+                                _diagram.Links.Add(CreateStyledLink(
+                                    sourcePort,
+                                    targetPort,
+                                    FlowLinkVisuals.ConditionalColor,
+                                    FlowLinkVisuals.ConditionalWidth));
                             }
                         }
                     }
@@ -420,17 +428,23 @@
         return node.Ports.FirstOrDefault(p => p.Alignment == alignment);
     }
 
-    private static LinkModel CreateStyledLink(PortModel sourcePort, PortModel targetPort, string color = FlowLinkVisuals.DefaultColor)
-        => StyleLink(new LinkModel(sourcePort, targetPort), color);
+    private static FlowDiagramLinkModel CreateStyledLink(
+        PortModel sourcePort,
+        PortModel targetPort,
+        string color = FlowLinkVisuals.DefaultColor,
+        double width = FlowLinkVisuals.DefaultWidth)
+        => StyleLink(new FlowDiagramLinkModel(sourcePort, targetPort), color, width);
 
-    private static LinkModel CreateStyledLink(Blazor.Diagrams.Core.Anchors.Anchor sourceAnchor, Blazor.Diagrams.Core.Anchors.Anchor targetAnchor, string color = FlowLinkVisuals.DefaultColor)
-        => StyleLink(new LinkModel(sourceAnchor, targetAnchor), color);
+    private static FlowDiagramLinkModel CreateStyledLink(
+        Blazor.Diagrams.Core.Anchors.Anchor sourceAnchor,
+        Blazor.Diagrams.Core.Anchors.Anchor targetAnchor,
+        string color = FlowLinkVisuals.DefaultColor,
+        double width = FlowLinkVisuals.DefaultWidth)
+        => StyleLink(new FlowDiagramLinkModel(sourceAnchor, targetAnchor), color, width);
 
-    private static LinkModel StyleLink(LinkModel link, string color)
+    private static FlowDiagramLinkModel StyleLink(FlowDiagramLinkModel link, string color, double width)
     {
-        link.Color = color;
-        link.SelectedColor = FlowLinkVisuals.SelectedColor;
-        link.Width = FlowLinkVisuals.DefaultWidth;
+        link.SetNormalStyle(color, width);
         link.TargetMarker = FlowTargetMarker;
         return link;
     }
@@ -506,6 +520,8 @@
 
     private void RefreshSelectedWorkflowLink()
     {
+        UpdateLinkSelectionVisuals();
+
         var selectedLink = _diagram.GetSelectedModels()
             .OfType<BaseLinkModel>()
             .FirstOrDefault(link => TryResolveWorkflowLink(link, out _, out _));
@@ -529,6 +545,14 @@
             sourcePort.PortName,
             targetNode.NodeName,
             targetPort.PortName) ?? string.Empty;
+    }
+
+    private void UpdateLinkSelectionVisuals()
+    {
+        foreach (var link in _diagram.Links.OfType<FlowDiagramLinkModel>())
+        {
+            link.ApplySelectionStyle(link.Selected);
+        }
     }
 
     private void OnSelectedLinkConditionChanged(string? value)

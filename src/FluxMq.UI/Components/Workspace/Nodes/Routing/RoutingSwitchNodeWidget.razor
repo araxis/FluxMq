@@ -1,0 +1,113 @@
+@using FluxMq.UI.Components.Diagram
+@inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.AccountTree"
+                 CategoryColor="@Color.Secondary"
+                 EditDialogMaxWidth="MaxWidth.Medium"
+                 OnSave="@SaveAsync"
+                 OnCancel="@LoadDraft">
+    <Body>
+        <MudStack Spacing="1" Class="mt-1">
+            <div class="d-flex flex-wrap gap-1">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@Model.InputType</MudChip>
+                @foreach (var route in Model.Routes)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">@route.OutputPort</MudChip>
+                }
+                @if (Model.EmitRouteEnvelope)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">Routed</MudChip>
+                }
+            </div>
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="node-expr-preview">@Model.Expression</MudText>
+        </MudStack>
+    </Body>
+    <Editor>
+        <MudStack Spacing="2">
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string"
+                               Label="Input type"
+                               @bind-Value="_inputType"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true">
+                        @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                        {
+                            <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField T="int"
+                                     Label="Input buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                </MudItem>
+            </MudGrid>
+            <MudTextField T="string"
+                          Label="Expression"
+                          @bind-Value="_expression"
+                          Variant="Variant.Outlined"
+                          Lines="4"
+                          Class="node-expr-field"
+                          Placeholder='qos >= 1'
+                          HelperText="The result is matched against the route keys below." />
+            <MudTextField T="string"
+                          Label="Routes"
+                          @bind-Value="_routesText"
+                          Variant="Variant.Outlined"
+                          Lines="4"
+                          HelperText="One route per line as RouteKey=OutputPort." />
+            <MudCheckBox T="bool"
+                         Label="Emit route envelope"
+                         @bind-Value="_emitRouteEnvelope" />
+        </MudStack>
+    </Editor>
+</NodeWidgetShell>
+
+@code {
+    [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
+
+    private RoutingSwitchNodeModel Model => (RoutingSwitchNodeModel)Node;
+
+    private string _inputType = RoutingSwitchNodeModel.DefaultInputType;
+    private string _expression = RoutingSwitchNodeModel.DefaultExpression;
+    private string _routesText = string.Empty;
+    private bool _emitRouteEnvelope;
+    private int _boundedCapacity = RoutingSwitchNodeModel.DefaultBoundedCapacity;
+
+    protected override void OnParametersSet() => LoadDraft();
+
+    private void LoadDraft()
+    {
+        _inputType = RoutingNodeConfiguration.NormalizeInputType(Model.InputType);
+        _expression = Model.Expression;
+        _routesText = Model.FormatRoutes();
+        _emitRouteEnvelope = Model.EmitRouteEnvelope;
+        _boundedCapacity = RoutingNodeConfiguration.NormalizePositiveInt(
+            Model.BoundedCapacity,
+            RoutingSwitchNodeModel.DefaultBoundedCapacity);
+    }
+
+    private Task SaveAsync()
+    {
+        Model.InputType = RoutingNodeConfiguration.NormalizeInputType(_inputType);
+        Model.Expression = string.IsNullOrWhiteSpace(_expression)
+            ? RoutingSwitchNodeModel.DefaultExpression
+            : _expression.Trim();
+        Model.Routes = RoutingSwitchNodeModel.ParseRoutes(_routesText);
+        Model.EmitRouteEnvelope = _emitRouteEnvelope;
+        Model.BoundedCapacity = RoutingNodeConfiguration.NormalizePositiveInt(
+            _boundedCapacity,
+            RoutingSwitchNodeModel.DefaultBoundedCapacity);
+
+        Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
+        return Task.CompletedTask;
+    }
+}

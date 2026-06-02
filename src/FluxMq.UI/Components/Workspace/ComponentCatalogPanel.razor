@@ -9,6 +9,18 @@
         <MudIcon Icon="@CatalogIcon" Size="Size.Small" Class="catalog-title-icon" />
         <span>@CatalogTitle</span>
     </div>
+    <MudTextField T="string"
+                  Value="@_searchText"
+                  ValueChanged="@OnSearchTextChanged"
+                  Placeholder="@SearchPlaceholder"
+                  Variant="Variant.Outlined"
+                  Margin="Margin.Dense"
+                  Immediate="true"
+                  Clearable="true"
+                  Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.Search"
+                  AdornmentColor="Color.Secondary"
+                  Class="catalog-search" />
     @if (VisibleItems.Count == 0)
     {
         <div class="catalog-empty">@EmptyLabel</div>
@@ -34,6 +46,8 @@
     [Parameter]
     public WorkspaceArtifactKind ArtifactKind { get; set; } = WorkspaceArtifactKind.Pipeline;
 
+    private string _searchText = string.Empty;
+
     private RenderFragment<CatalogEntry> RenderCatalogItem => item =>
         @<div class="catalog-item @(!CanUseItem ? "disabled" : null)"
               role="button"
@@ -52,7 +66,11 @@
             </span>
         </div>;
 
-    private IReadOnlyList<CatalogEntry> VisibleItems => ArtifactKind switch
+    private IReadOnlyList<CatalogEntry> VisibleItems => AllItems
+        .Where(MatchesSearch)
+        .ToArray();
+
+    private IReadOnlyList<CatalogEntry> AllItems => ArtifactKind switch
     {
         WorkspaceArtifactKind.Pipeline => Catalog.Components
             .Where(component => !string.Equals(component.Category, "Assertion", StringComparison.Ordinal))
@@ -82,11 +100,20 @@
         _ => "Pipeline components"
     };
 
-    private string EmptyLabel => ArtifactKind switch
+    private string EmptyLabel => HasSearch
+        ? $"No matches for \"{_searchText.Trim()}\""
+        : ArtifactKind switch
     {
         WorkspaceArtifactKind.Dashboard => "No widgets",
         WorkspaceArtifactKind.Test => "No steps",
         _ => "No components"
+    };
+
+    private string SearchPlaceholder => ArtifactKind switch
+    {
+        WorkspaceArtifactKind.Dashboard => "Search widgets",
+        WorkspaceArtifactKind.Test => "Search steps",
+        _ => "Search components"
     };
 
     private string CatalogClass => ArtifactKind switch
@@ -110,6 +137,28 @@
         WorkspaceArtifactKind.Test when CanUseItem => "Add test step",
         _ => "Unavailable in this tab"
     };
+
+    private bool HasSearch => !string.IsNullOrWhiteSpace(_searchText);
+
+    private void OnSearchTextChanged(string? value)
+        => _searchText = value ?? string.Empty;
+
+    private bool MatchesSearch(CatalogEntry item)
+    {
+        var text = _searchText.Trim();
+        if (text.Length == 0)
+        {
+            return true;
+        }
+
+        return ContainsSearch(item.DisplayName, text) ||
+               ContainsSearch(item.Type, text) ||
+               ContainsSearch(item.Category, text) ||
+               ContainsSearch(item.Description, text);
+    }
+
+    private static bool ContainsSearch(string value, string search)
+        => value.Contains(search, StringComparison.OrdinalIgnoreCase);
 
     private void BeginItemDrag(PointerEventArgs args, CatalogEntry item)
     {
@@ -175,6 +224,7 @@
         "Source" => Icons.Material.Filled.Sensors,
         "Mapper" => Icons.Material.Filled.Transform,
         "Transform" => Icons.Material.Filled.Transform,
+        "Control" => Icons.Material.Filled.AccountTree,
         "Validator" => Icons.Material.Filled.FactCheck,
         "Assertion" => Icons.Material.Filled.FactCheck,
         "Observer" => Icons.Material.Filled.QueryStats,
@@ -188,6 +238,7 @@
         "Source" => "catalog-icon-tile source",
         "Mapper" => "catalog-icon-tile mapper",
         "Transform" => "catalog-icon-tile mapper",
+        "Control" => "catalog-icon-tile control",
         "Validator" => "catalog-icon-tile validator",
         "Assertion" => "catalog-icon-tile assertion",
         "Observer" => "catalog-icon-tile observer",

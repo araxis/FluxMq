@@ -140,6 +140,56 @@ public sealed class FlowComponentCatalog
                 new("Errors", "FlowError", IsInput: false)
             ]),
         new(
+            "flow.switch",
+            "Switch",
+            "Control",
+            "Routes input values by expression result into named branches.",
+            IsResource: false,
+            [
+                new("Input", "Configured input type", IsInput: true),
+                new("Result", "FlowSwitchResult", IsInput: false),
+                new("Matched", "Configured input type", IsInput: false),
+                new("WhenTrue", "Configured input type", IsInput: false),
+                new("WhenFalse", "Configured input type", IsInput: false),
+                new("Default", "Configured input type", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "flow.window",
+            "Window",
+            "Control",
+            "Groups input values into count or time based windows.",
+            IsResource: false,
+            [
+                new("Input", "Configured input type", IsInput: true),
+                new("Output", "FlowWindow", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "flow.fork",
+            "Fork",
+            "Control",
+            "Copies every input value to each configured output branch.",
+            IsResource: false,
+            [
+                new("Input", "Configured input type", IsInput: true),
+                new("A", "Configured input type", IsInput: false),
+                new("B", "Configured input type", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
+            "flow.merge",
+            "Merge",
+            "Control",
+            "Combines same-type input branches into a source-tagged output stream.",
+            IsResource: false,
+            [
+                new("Left", "Configured input type", IsInput: true),
+                new("Right", "Configured input type", IsInput: true),
+                new("Output", "FlowMergeItem", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ]),
+        new(
             "flow.assert",
             "Flow Assertion",
             "Assertion",

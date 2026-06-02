@@ -11,6 +11,7 @@ using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
 using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
 using FluxMq.UI.Components.Workspace.Nodes.Payloads;
 using FluxMq.UI.Components.Workspace.Nodes.PayloadInspector;
+using FluxMq.UI.Components.Workspace.Nodes.Routing;
 using FluxMq.UI.Components.Workspace.Nodes.SessionSource;
 using FluxMq.UI.Components.Workspace.Nodes.Sources;
 using FluxMq.UI.Components.Workspace.Nodes.StateReducer;
@@ -36,6 +37,10 @@ public sealed class NodeWidgetRegistry
         ["replay.source"] = typeof(ReplaySourceNodeWidget),
         ["mqtt.payload-inspector"] = typeof(PayloadInspectorNodeWidget),
         ["flow.when"] = typeof(ConditionRouterNodeWidget),
+        [RoutingNodeTypes.Switch] = typeof(RoutingSwitchNodeWidget),
+        [RoutingNodeTypes.Window] = typeof(RoutingWindowNodeWidget),
+        [RoutingNodeTypes.Fork] = typeof(RoutingForkNodeWidget),
+        [RoutingNodeTypes.Merge] = typeof(RoutingMergeNodeWidget),
         ["flow.assert"] = typeof(FlowAssertionNodeWidget),
         ["json.schema-validator"] = typeof(JsonSchemaValidatorNodeWidget),
         ["flow.mapper"] = typeof(DynamicMapperNodeWidget),

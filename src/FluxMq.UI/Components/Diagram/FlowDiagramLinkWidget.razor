@@ -1,0 +1,79 @@
+@using System.Globalization
+@using Blazor.Diagrams
+@using Blazor.Diagrams.Components.Renderers
+@using Blazor.Diagrams.Core
+@using Blazor.Diagrams.Core.Geometry
+@using Microsoft.AspNetCore.Components
+
+@if (PathResult is not null)
+{
+    var path = PathResult.FullPath.ToString();
+    var strokeColor = Link.NormalColor;
+    var strokeWidth = Link.Selected ? FlowLinkVisuals.SelectedWidth : Link.NormalWidth;
+    var pathClass = Link.Selected ? "flow-link-path flow-link-selected" : "flow-link-path";
+
+    if (Link.Selected)
+    {
+        <path class="flow-link-selection-halo"
+              d="@path"
+              fill="none"
+              stroke="@FlowLinkVisuals.SelectedColor"
+              stroke-linecap="round"
+              stroke-width="@FormatWidth(strokeWidth + 4d)" />
+    }
+
+    <path class="@pathClass"
+          d="@path"
+          fill="none"
+          stroke="@strokeColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="@FormatWidth(strokeWidth)" />
+
+    <path class="flow-link-hit-area"
+          d="@path"
+          fill="none"
+          stroke="transparent"
+          stroke-width="@FormatWidth(Math.Max(strokeWidth + 12d, 16d))" />
+
+    if (Link.SourceMarker is not null &&
+        PathResult.SourceMarkerAngle.HasValue &&
+        PathResult.SourceMarkerPosition is not null)
+    {
+        <g transform="@MarkerTransform(PathResult.SourceMarkerPosition, PathResult.SourceMarkerAngle.Value)">
+            <path d="@Link.SourceMarker.Path" fill="@strokeColor" />
+        </g>
+    }
+
+    if (Link.TargetMarker is not null &&
+        PathResult.TargetMarkerAngle.HasValue &&
+        PathResult.TargetMarkerPosition is not null)
+    {
+        <g transform="@MarkerTransform(PathResult.TargetMarkerPosition, PathResult.TargetMarkerAngle.Value)">
+            <path d="@Link.TargetMarker.Path" fill="@strokeColor" />
+        </g>
+    }
+
+    foreach (var label in Link.Labels)
+    {
+        <LinkLabelRenderer Label="@label"
+                           Path="@PathResult.FullPath"
+                           @key="@label.Id" />
+    }
+}
+
+@code {
+    [CascadingParameter]
+    public BlazorDiagram BlazorDiagram { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public FlowDiagramLinkModel Link { get; set; } = null!;
+
+    private PathGeneratorResult? PathResult => Link.PathGeneratorResult;
+
+    private static string FormatWidth(double value)
+        => value.ToString(CultureInfo.InvariantCulture);
+
+    private static string MarkerTransform(Point position, double angle)
+        => FormattableString.Invariant($"translate({position.X}, {position.Y}) rotate({angle})");
+}

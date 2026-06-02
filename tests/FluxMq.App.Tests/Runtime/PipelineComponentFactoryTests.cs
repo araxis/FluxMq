@@ -13,6 +13,8 @@ using FluxMq.Components.Storage.Models;
 using FluxMq.Components.Storage.Repositories;
 using FluxFlow.Components.Http.Contracts;
 using FluxFlow.Components.Payloads.Contracts;
+using FluxFlow.Components.Routing;
+using FluxFlow.Components.Routing.Contracts;
 using FluxFlow.Components.State.Contracts;
 using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Definitions;
@@ -60,6 +62,12 @@ public sealed class PipelineComponentFactoryTests
             FluxMqNodeTypes.JsonSchemaValidator,
             FluxMqNodeTypes.DynamicMapper,
             FluxMqNodeTypes.StateReducer,
+            RoutingComponentTypes.Switch,
+            RoutingComponentTypes.Correlation,
+            RoutingComponentTypes.Window,
+            RoutingComponentTypes.Join,
+            RoutingComponentTypes.Fork,
+            RoutingComponentTypes.Merge,
             new NodeType("json.parse"),
             new NodeType("json.stringify"),
             new NodeType("text.encode"),
@@ -618,6 +626,273 @@ public sealed class PipelineComponentFactoryTests
             "Routed input to WhenFalse.",
             "Routed input to WhenTrue."
         ], ignoreOrder: true);
+    }
+
+    [Fact]
+    public async Task RoutingSwitchFactory_RoutesWithFluxMqExpressionContext()
+    {
+        TestSourceNode? source = null;
+        TestSinkNode<MqttEnvelope>? trueSink = null;
+        TestSinkNode<MqttEnvelope>? falseSink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.source"), (address, _) =>
+            {
+                source = new TestSourceNode();
+                return SourceNode(address, source);
+            })
+            .Register(new NodeType("test.envelope-sink"), (address, _) =>
+            {
+                if (address.Node.Value == "trueSink")
+                {
+                    trueSink = new TestSinkNode<MqttEnvelope>();
+                    return SinkNode(address, trueSink);
+                }
+
+                falseSink = new TestSinkNode<MqttEnvelope>();
+                return SinkNode(address, falseSink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("test.source"),
+                        ["router"] = new NodeDefinition
+                        {
+                            Type = RoutingComponentTypes.Switch,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["inputType"] = JsonDocument.Parse("\"MqttEnvelope\"").RootElement.Clone(),
+                                ["expression"] = JsonDocument.Parse("\"qos >= 1\"").RootElement.Clone(),
+                                ["routes"] = JsonDocument.Parse("""["True","False"]""").RootElement.Clone(),
+                                ["routeOutputs"] = JsonDocument.Parse("""{"True":"WhenTrue","False":"WhenFalse"}""").RootElement.Clone()
+                            }
+                        },
+                        ["trueSink"] = NodeWithPort("test.envelope-sink", "Input", "\"router.WhenTrue\""),
+                        ["falseSink"] = NodeWithPort("test.envelope-sink", "Input", "\"router.WhenFalse\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+
+        source!.Post(new MqttEnvelope { Topic = "factory/qos0", Payload = [], QualityOfService = MqttQualityOfServiceLevel.AtMostOnce });
+        source.Post(new MqttEnvelope { Topic = "factory/qos1", Payload = [], QualityOfService = MqttQualityOfServiceLevel.AtLeastOnce });
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion;
+
+        trueSink!.Values.Select(envelope => envelope.Topic).ShouldBe(["factory/qos1"]);
+        falseSink!.Values.Select(envelope => envelope.Topic).ShouldBe(["factory/qos0"]);
+    }
+
+    [Fact]
+    public async Task RoutingWindowFactory_EmitsCountWindows()
+    {
+        TestSourceNode? source = null;
+        TestSinkNode<FlowWindow<MqttEnvelope>>? sink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.source"), (address, _) =>
+            {
+                source = new TestSourceNode();
+                return SourceNode(address, source);
+            })
+            .Register(new NodeType("test.window-sink"), (address, _) =>
+            {
+                sink = new TestSinkNode<FlowWindow<MqttEnvelope>>();
+                return SinkNode(address, sink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("test.source"),
+                        ["window"] = new NodeDefinition
+                        {
+                            Type = RoutingComponentTypes.Window,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["inputType"] = JsonDocument.Parse("\"MqttEnvelope\"").RootElement.Clone(),
+                                ["maxItems"] = JsonDocument.Parse("2").RootElement.Clone(),
+                                ["timeMilliseconds"] = JsonDocument.Parse("0").RootElement.Clone(),
+                                ["emitPartialOnCompletion"] = JsonDocument.Parse("false").RootElement.Clone()
+                            }
+                        },
+                        ["sink"] = NodeWithPort("test.window-sink", "Input", "\"window.Output\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+
+        source!.Post(new MqttEnvelope { Topic = "factory/one", Payload = [] });
+        source.Post(new MqttEnvelope { Topic = "factory/two", Payload = [] });
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+
+        var window = sink!.Values.ShouldHaveSingleItem();
+        window.Sequence.ShouldBe(1);
+        window.Count.ShouldBe(2);
+        window.Reason.ShouldBe(FlowWindowEmitReason.Count);
+        window.Items.Select(envelope => envelope.Topic).ShouldBe(["factory/one", "factory/two"]);
+    }
+
+    [Fact]
+    public async Task RoutingForkFactory_CopiesInputsToConfiguredOutputs()
+    {
+        TestSourceNode? source = null;
+        TestSinkNode<MqttEnvelope>? auditSink = null;
+        TestSinkNode<MqttEnvelope>? dashboardSink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.source"), (address, _) =>
+            {
+                source = new TestSourceNode();
+                return SourceNode(address, source);
+            })
+            .Register(new NodeType("test.envelope-sink"), (address, _) =>
+            {
+                if (address.Node.Value == "auditSink")
+                {
+                    auditSink = new TestSinkNode<MqttEnvelope>();
+                    return SinkNode(address, auditSink);
+                }
+
+                dashboardSink = new TestSinkNode<MqttEnvelope>();
+                return SinkNode(address, dashboardSink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node("test.source"),
+                        ["fork"] = new NodeDefinition
+                        {
+                            Type = RoutingComponentTypes.Fork,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["inputType"] = JsonDocument.Parse("\"MqttEnvelope\"").RootElement.Clone(),
+                                ["outputs"] = JsonDocument.Parse("""["Audit","Dashboard"]""").RootElement.Clone()
+                            }
+                        },
+                        ["auditSink"] = NodeWithPort("test.envelope-sink", "Input", "\"fork.Audit\""),
+                        ["dashboardSink"] = NodeWithPort("test.envelope-sink", "Input", "\"fork.Dashboard\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+
+        source!.Post(new MqttEnvelope { Topic = "factory/one", Payload = [] });
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion;
+
+        auditSink!.Values.Select(envelope => envelope.Topic).ShouldBe(["factory/one"]);
+        dashboardSink!.Values.Select(envelope => envelope.Topic).ShouldBe(["factory/one"]);
+    }
+
+    [Fact]
+    public async Task RoutingMergeFactory_CombinesConfiguredInputsWithSourcePort()
+    {
+        TestSourceNode? leftSource = null;
+        TestSourceNode? rightSource = null;
+        TestSinkNode<FlowMergeItem<MqttEnvelope>>? sink = null;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories()
+            .Register(new NodeType("test.source"), (address, _) =>
+            {
+                if (address.Node.Value == "leftSource")
+                {
+                    leftSource = new TestSourceNode();
+                    return SourceNode(address, leftSource);
+                }
+
+                rightSource = new TestSourceNode();
+                return SourceNode(address, rightSource);
+            })
+            .Register(new NodeType("test.merge-sink"), (address, _) =>
+            {
+                sink = new TestSinkNode<FlowMergeItem<MqttEnvelope>>();
+                return SinkNode(address, sink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["leftSource"] = Node("test.source"),
+                        ["rightSource"] = Node("test.source"),
+                        ["merge"] = new NodeDefinition
+                        {
+                            Type = RoutingComponentTypes.Merge,
+                            Ports =
+                            {
+                                ["Left"] = JsonDocument.Parse("\"leftSource.Output\"").RootElement.Clone(),
+                                ["Right"] = JsonDocument.Parse("\"rightSource.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["inputType"] = JsonDocument.Parse("\"MqttEnvelope\"").RootElement.Clone(),
+                                ["inputs"] = JsonDocument.Parse("""["Left","Right"]""").RootElement.Clone()
+                            }
+                        },
+                        ["sink"] = NodeWithPort("test.merge-sink", "Input", "\"merge.Output\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+
+        leftSource!.Post(new MqttEnvelope { Topic = "factory/left", Payload = [] });
+        rightSource!.Post(new MqttEnvelope { Topic = "factory/right", Payload = [] });
+        result.Runtime!.Complete();
+
+        await result.Runtime.Completion;
+
+        sink!.Values.Select(item => (item.Source, item.Value.Topic))
+            .ShouldBe([("Left", "factory/left"), ("Right", "factory/right")], ignoreOrder: true);
     }
 
     [Fact]

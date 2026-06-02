@@ -11,6 +11,7 @@
     <PackageReference Include="FluxFlow.Components.Http" Version="$(FluxFlowComponentsHttpVersion)" />
     <PackageReference Include="FluxFlow.Components.Mapping" Version="$(FluxFlowComponentsMappingVersion)" />
     <PackageReference Include="FluxFlow.Components.Payloads" Version="$(FluxFlowComponentsPayloadsVersion)" />
+    <PackageReference Include="FluxFlow.Components.Routing" Version="$(FluxFlowComponentsRoutingVersion)" />
     <PackageReference Include="FluxFlow.Components.Serialization" Version="$(FluxFlowComponentsSerializationVersion)" />
     <PackageReference Include="FluxFlow.Components.Sources" Version="$(FluxFlowComponentsSourcesVersion)" />
     <PackageReference Include="FluxFlow.Components.State" Version="$(FluxFlowComponentsStateVersion)" />

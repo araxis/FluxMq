@@ -8,9 +8,6 @@ namespace FluxMq.UI.Components.Diagram;
 
 public class FlowDiagramNodeModel : NodeModel
 {
-    private readonly DiagramSize _collapsedSize;
-    private readonly DiagramSize _expandedSize;
-
     // port section height: border(1) + padding(10) + margin-top(8) - negative-margin-bottom(10) = 9px overhead
     private static int PortSectionHeight(int portCount)
         => portCount > 0 ? 9 + portCount * 26 : 0;
@@ -37,11 +34,9 @@ public class FlowDiagramNodeModel : NodeModel
         Summary = descriptor?.Summary ?? "Configuration-defined flow node.";
         IsResource = isResource;
         PortDescriptors = descriptor?.Ports ?? [];
-        _collapsedSize = ComputeCollapsedSize(PortDescriptors.Count);
-        _expandedSize = ComputeExpandedSize(PortDescriptors.Count);
         ControlledSize = true;
         IsCollapsed = true;
-        Size = _collapsedSize;
+        RefreshControlledSize();
     }
 
     public string NodeName { get; }
@@ -50,7 +45,7 @@ public class FlowDiagramNodeModel : NodeModel
     public string Category { get; }
     public string Summary { get; }
     public bool IsResource { get; }
-    public IReadOnlyList<ComponentPortDescriptor> PortDescriptors { get; }
+    public IReadOnlyList<ComponentPortDescriptor> PortDescriptors { get; private set; }
     public bool IsCollapsed { get; private set; }
     public string? ActivityText { get; private set; }
     public IReadOnlyList<WorkspaceDiagnostic> Diagnostics { get; private set; } = [];
@@ -72,6 +67,12 @@ public class FlowDiagramNodeModel : NodeModel
     public virtual string ResolvePortValueType(ComponentPortDescriptor descriptor)
         => descriptor.ValueType;
 
+    protected void SetPortDescriptors(IReadOnlyList<ComponentPortDescriptor> descriptors)
+    {
+        PortDescriptors = descriptors;
+        RefreshControlledSize();
+    }
+
     public void Toggle()
     {
         SetCollapsed(!IsCollapsed);
@@ -85,9 +86,14 @@ public class FlowDiagramNodeModel : NodeModel
         }
 
         IsCollapsed = isCollapsed;
-        Size = IsCollapsed ? _collapsedSize : _expandedSize;
+        RefreshControlledSize();
         RefreshAll();
     }
+
+    private void RefreshControlledSize()
+        => Size = IsCollapsed
+            ? ComputeCollapsedSize(PortDescriptors.Count)
+            : ComputeExpandedSize(PortDescriptors.Count);
 
     public void SetActivity(string? activityText)
     {

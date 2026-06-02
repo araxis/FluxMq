@@ -10,6 +10,7 @@
     <FluxFlowComponentsMqttVersion>0.2.1-alpha.1</FluxFlowComponentsMqttVersion>
     <FluxFlowComponentsObservabilityVersion>0.1.0-alpha.1</FluxFlowComponentsObservabilityVersion>
     <FluxFlowComponentsPayloadsVersion>0.1.0-alpha.1</FluxFlowComponentsPayloadsVersion>
+    <FluxFlowComponentsRoutingVersion>0.6.0-alpha.1</FluxFlowComponentsRoutingVersion>
     <FluxFlowComponentsSerializationVersion>0.1.0-alpha.1</FluxFlowComponentsSerializationVersion>
     <FluxFlowComponentsSessionsVersion>0.1.0-alpha.1</FluxFlowComponentsSessionsVersion>
     <FluxFlowComponentsSourcesVersion>0.1.0-alpha.1</FluxFlowComponentsSourcesVersion>

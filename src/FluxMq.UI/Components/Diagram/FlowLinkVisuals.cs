@@ -7,9 +7,10 @@ public static class FlowLinkVisuals
     public const string DefaultColor = "#2DD4BF";
     public const string ErrorColor = "#F87171";
     public const string ConditionalColor = "#FBBF24";
-    public const string SelectedColor = "#E8ECF2";
+    public const string SelectedColor = "#A78BFA";
     public const double DefaultWidth = 2d;
     public const double ConditionalWidth = 3d;
+    public const double SelectedWidth = 4d;
 
     private const int MaxConditionLabelLength = 72;
 
