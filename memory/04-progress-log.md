@@ -2200,3 +2200,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet restore FluxMq.sln --nologo` passes.
   - `dotnet build FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with existing UI project resource qualifier warnings.
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 536 tests.
+
+## 2026-06-02 - Storage component package registration
+
+- Added `FluxFlow.Components.Storage` and `FluxFlow.Components.Storage.Local` `0.1.0-alpha.1` from NuGet.
+- Registered package-backed `storage.put`, `storage.get`, and `storage.delete` runtime nodes.
+- Wired storage nodes to local file-backed storage with a configurable root directory and a default per-user app data root.
+- Added runtime coverage that stores a record with `storage.put` and reads it back with `storage.get` through the package-backed local store.
+- Kept designer/catalog work out of this slice; storage is now executable from definitions, and UI surfacing can be layered separately.
+- Verified:
+  - `dotnet restore FluxMq.sln --nologo` passes.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~StorageComponents" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 1 test.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~RegisterPipelineComponentFactories_RegistersStableComponentTypes" -p:UseSharedCompilation=false -p:UseAppHost=false --nologo -v minimal` passes with 1 test.
+  - `dotnet build FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with existing UI project resource qualifier warnings.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -m:1 --nologo -v minimal` passes with 537 tests.
