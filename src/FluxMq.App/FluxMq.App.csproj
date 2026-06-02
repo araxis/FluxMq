@@ -12,6 +12,7 @@
     <PackageReference Include="FluxFlow.Components.Mapping" Version="$(FluxFlowComponentsMappingVersion)" />
     <PackageReference Include="FluxFlow.Components.Payloads" Version="$(FluxFlowComponentsPayloadsVersion)" />
     <PackageReference Include="FluxFlow.Components.Serialization" Version="$(FluxFlowComponentsSerializationVersion)" />
+    <PackageReference Include="FluxFlow.Components.Sources" Version="$(FluxFlowComponentsSourcesVersion)" />
     <PackageReference Include="FluxFlow.Components.State" Version="$(FluxFlowComponentsStateVersion)" />
     <PackageReference Include="FluxFlow.Components.Timers" Version="$(FluxFlowComponentsTimersVersion)" />
     <PackageReference Include="FluxFlow.Engine" Version="$(FluxFlowEngineVersion)" />
