@@ -13,6 +13,7 @@ Chronological progress record.
 - Added a tested catalog search helper and compact result count in the component/widget/test-step panel so large component lists are easier to scan during authoring.
 - Reworked the New Connection dialog into a wider two-section MudBlazor form with broker and security fields arranged for faster scanning and basic disabled-state validation.
 - Aligned the New App dialog with the wider responsive connection form so initial app and broker setup is less cramped.
+- Reworked the dashboard widget settings dialog into a wider responsive form and changed MQTT QoS/retain filters to finite toggle controls.
 
 ## 2026-05-06
 
