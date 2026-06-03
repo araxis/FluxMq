@@ -12,6 +12,7 @@
     <FluxFlowComponentsPayloadsVersion>0.1.1-alpha.1</FluxFlowComponentsPayloadsVersion>
     <FluxFlowComponentsRoutingVersion>0.10.0-alpha.1</FluxFlowComponentsRoutingVersion>
     <FluxFlowComponentsSerializationVersion>0.1.1-alpha.1</FluxFlowComponentsSerializationVersion>
+    <FluxFlowComponentsSecretsVersion>0.2.0-alpha.1</FluxFlowComponentsSecretsVersion>
     <FluxFlowComponentsSessionsVersion>0.3.0-alpha.1</FluxFlowComponentsSessionsVersion>
     <FluxFlowComponentsSourcesVersion>0.2.0-alpha.1</FluxFlowComponentsSourcesVersion>
     <FluxFlowComponentsStateVersion>0.3.0-alpha.1</FluxFlowComponentsStateVersion>

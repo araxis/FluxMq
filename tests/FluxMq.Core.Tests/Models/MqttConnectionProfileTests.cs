@@ -1,5 +1,6 @@
 using Shouldly;
 using FluxMq.Core.Models;
+using FluxFlow.Components.Secrets.Contracts;
 
 namespace FluxMq.Core.Tests.Models;
 
@@ -17,6 +18,7 @@ public class MqttConnectionProfileTests
         profile.KeepAlive.ShouldBe(TimeSpan.FromSeconds(60));
         profile.Username.ShouldBeNull();
         profile.Password.ShouldBeNull();
+        profile.PasswordSecret.ShouldBeNull();
     }
 
     [Fact]
@@ -40,6 +42,11 @@ public class MqttConnectionProfileTests
             UseTls = true,
             Username = "user",
             Password = "pass",
+            PasswordSecret = new SecretReference
+            {
+                Name = new SecretName("broker-password"),
+                Kind = "mqtt-password"
+            },
             CleanStart = false
         };
 
@@ -49,6 +56,8 @@ public class MqttConnectionProfileTests
         profile.UseTls.ShouldBeTrue();
         profile.Username.ShouldBe("user");
         profile.Password.ShouldBe("pass");
+        profile.PasswordSecret!.Name.Value.ShouldBe("broker-password");
+        profile.PasswordSecret.Kind.ShouldBe("mqtt-password");
         profile.CleanStart.ShouldBeFalse();
     }
 

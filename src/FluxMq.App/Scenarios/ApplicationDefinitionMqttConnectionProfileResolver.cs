@@ -1,4 +1,5 @@
 using FluxMq.Core.Models;
+using FluxMq.Core.Secrets;
 using FluxFlow.Engine.Definitions;
 using FluxMq.App.Definitions;
 using System.Text.Json;
@@ -47,6 +48,7 @@ internal static class ApplicationDefinitionMqttConnectionProfileResolver
             UseTls = ReadBoolOrDefault(profileElement, "useTls", defaults.UseTls),
             Username = ReadNullableString(profileElement, "username"),
             Password = ReadNullableString(profileElement, "password"),
+            PasswordSecret = SecretReferenceJson.ReadOptional(profileElement, "passwordSecret"),
             KeepAlive = TimeSpan.FromSeconds(ReadIntOrDefault(profileElement, "keepAliveSeconds", (int)defaults.KeepAlive.TotalSeconds, minValue: 1)),
             CleanStart = ReadBoolOrDefault(profileElement, "cleanStart", defaults.CleanStart)
         };

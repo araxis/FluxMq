@@ -3,6 +3,7 @@ using FluxMq.App.Definitions;
 using FluxMq.Components.MessageSource;
 using FluxMq.Core.Models;
 using FluxMq.Core.Mqtt;
+using FluxFlow.Components.Secrets.Contracts;
 using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Definitions;
 using FluxFlow.Engine.Runtime;
@@ -63,6 +64,47 @@ public sealed class MqttScenarioClientFactoryTests
         scenarioProfile.ClientId.ShouldStartWith("fluxmq-test-");
         scenarioProfile.ClientId.Length.ShouldBe(44);
         scenarioProfile.ClientId.ShouldNotBe("app-client");
+    }
+
+    [Fact]
+    public async Task ApplicationDefinitionFactory_PreservesPasswordSecretReference()
+    {
+        var capturedProfiles = new List<MqttConnectionProfile>();
+        var definition = new FluxMqApplicationDefinition
+        {
+            Resources =
+            {
+                ["shared-broker"] = MqttConnectionResource("""
+                    {
+                      "name": "shared-broker",
+                      "host": "broker.local",
+                      "username": "tester",
+                      "passwordSecret": {
+                        "name": "broker-password",
+                        "version": "v1",
+                        "kind": "mqtt-password"
+                      }
+                    }
+                    """)
+            }
+        };
+        var factory = new ApplicationDefinitionMqttScenarioClientFactory(
+            definition,
+            profile =>
+            {
+                capturedProfiles.Add(profile);
+                return new FakeMqttBrokerClient(profile);
+            });
+
+        await using var client = factory.CreateClient("shared-broker");
+
+        var scenarioProfile = capturedProfiles.ShouldHaveSingleItem();
+        scenarioProfile.Password.ShouldBeNull();
+        scenarioProfile.PasswordSecret.ShouldNotBeNull();
+        scenarioProfile.PasswordSecret.Name.Value.ShouldBe("broker-password");
+        scenarioProfile.PasswordSecret.Version.ShouldBe("v1");
+        scenarioProfile.PasswordSecret.Kind.ShouldBe("mqtt-password");
+        scenarioProfile.Username.ShouldBe("tester");
     }
 
     [Fact]

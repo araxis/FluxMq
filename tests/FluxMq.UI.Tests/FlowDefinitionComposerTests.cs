@@ -1,5 +1,6 @@
 using FluxMq.App;
 using FluxMq.Core.Models;
+using FluxFlow.Components.Secrets.Contracts;
 using FluxFlow.Engine.Runtime;
 using FluxMq.Scenarios;
 using FluxMq.UI.Components.Workspace.Nodes.Routing;
@@ -375,6 +376,54 @@ public sealed class FlowDefinitionComposerTests
 
         connection.Name.ShouldBe("broker1");
         connection.Subscription.ShouldBe(LiveMqttWorkspaceService.DefaultBrokerMonitorSubscription);
+    }
+
+    [Fact]
+    public void ConnectionResourceComposer_PreservesPasswordSecretReference()
+    {
+        var composer = new FlowDefinitionComposer();
+        var profile = new MqttConnectionProfile
+        {
+            Name = "broker1",
+            Host = "localhost",
+            Port = 1883,
+            Username = "tester",
+            Password = "plain-password",
+            PasswordSecret = new SecretReference
+            {
+                Name = new SecretName("broker-password"),
+                Version = "v1",
+                Kind = "mqtt-password"
+            }
+        };
+
+        var json = composer.UpsertConnectionResource(
+            composer.CreateEmptyDefinition(),
+            "broker1",
+            profile);
+
+        using var doc = JsonDocument.Parse(json);
+        var profileJson = doc.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("resources")
+            .GetProperty("broker1")
+            .GetProperty("configuration")
+            .GetProperty("profile");
+
+        profileJson.GetProperty("username").GetString().ShouldBe("tester");
+        profileJson.TryGetProperty("password", out _).ShouldBeFalse();
+        var passwordSecret = profileJson.GetProperty("passwordSecret");
+        passwordSecret.GetProperty("name").GetString().ShouldBe("broker-password");
+        passwordSecret.GetProperty("version").GetString().ShouldBe("v1");
+        passwordSecret.GetProperty("kind").GetString().ShouldBe("mqtt-password");
+
+        var connection = composer.ReadConnectionResourcesFromDefinition(json).ShouldHaveSingleItem();
+        connection.Profile.Password.ShouldBeNull();
+        connection.Profile.PasswordSecret.ShouldNotBeNull();
+        connection.Profile.PasswordSecret.Name.Value.ShouldBe("broker-password");
+        connection.Profile.PasswordSecret.Version.ShouldBe("v1");
+        connection.Profile.PasswordSecret.Kind.ShouldBe("mqtt-password");
     }
 
     [Theory]

@@ -13,6 +13,7 @@
     <PackageReference Include="FluxFlow.Components.Payloads" Version="$(FluxFlowComponentsPayloadsVersion)" />
     <PackageReference Include="FluxFlow.Components.Routing" Version="$(FluxFlowComponentsRoutingVersion)" />
     <PackageReference Include="FluxFlow.Components.Serialization" Version="$(FluxFlowComponentsSerializationVersion)" />
+    <PackageReference Include="FluxFlow.Components.Secrets" Version="$(FluxFlowComponentsSecretsVersion)" />
     <PackageReference Include="FluxFlow.Components.Sources" Version="$(FluxFlowComponentsSourcesVersion)" />
     <PackageReference Include="FluxFlow.Components.State" Version="$(FluxFlowComponentsStateVersion)" />
     <PackageReference Include="FluxFlow.Components.Storage" Version="$(FluxFlowComponentsStorageVersion)" />

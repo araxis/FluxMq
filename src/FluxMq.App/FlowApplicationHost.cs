@@ -7,6 +7,7 @@ using FluxMq.App.Definitions;
 using FluxMq.Components.Storage.Repositories;
 using FluxMq.Components.Mapping;
 using FluxMq.Scenarios;
+using FluxFlow.Components.Secrets;
 using Microsoft.Extensions.Configuration;
 
 namespace FluxMq.App;
@@ -18,6 +19,7 @@ public sealed class FlowApplicationHost(
     string sectionName = FlowApplicationConfigurationLoader.DefaultSectionName,
     ScenarioRunner? scenarioRunner = null,
     Func<MqttConnectionProfile, IMqttBrokerClient>? scenarioClientFactory = null,
+    ISecretResolver? secretResolver = null,
     FluxMqApplicationDefinition? applicationDefinition = null)
     : IAsyncDisposable, IDisposable
 {
@@ -26,7 +28,7 @@ public sealed class FlowApplicationHost(
     private readonly FlowApplicationConfigurationLoader _configurationLoader = configurationLoader ?? new FlowApplicationConfigurationLoader();
     private readonly ScenarioRunner _scenarioRunner = scenarioRunner ?? CreateDefaultScenarioRunner();
     private readonly Func<MqttConnectionProfile, IMqttBrokerClient> _scenarioClientFactory =
-        scenarioClientFactory ?? (static profile => new MqttBrokerClient(profile));
+        scenarioClientFactory ?? (profile => new MqttBrokerClient(profile, secretResolver));
     private readonly FluxMqApplicationDefinition? _applicationDefinition = applicationDefinition;
     private FluxMqApplicationDefinition? _definition;
     private ApplicationRuntime? _runtime;
@@ -41,35 +43,39 @@ public sealed class FlowApplicationHost(
     public static FlowApplicationHost CreateDefault(
         IConfiguration configuration,
         IMessageRepository? messageRepository = null,
-        Func<MqttConnectionProfile, IMqttBrokerClient>? clientFactory = null)
+        Func<MqttConnectionProfile, IMqttBrokerClient>? clientFactory = null,
+        ISecretResolver? secretResolver = null)
     {
-        clientFactory ??= static profile => new MqttBrokerClient(profile);
+        clientFactory ??= profile => new MqttBrokerClient(profile, secretResolver);
         var expressionEngine = FluxMqExpressionEngines.CreateDefault();
         var factories = new RuntimeNodeFactoryRegistry()
-            .RegisterPipelineComponentFactories(clientFactory, messageRepository, expressionEngine);
+            .RegisterPipelineComponentFactories(clientFactory, messageRepository, expressionEngine, secretResolver: secretResolver);
 
         return new FlowApplicationHost(
             configuration,
             new ApplicationRuntimeBuilder(factories, linkConditionExpressionEngine: expressionEngine),
-            scenarioClientFactory: clientFactory);
+            scenarioClientFactory: clientFactory,
+            secretResolver: secretResolver);
     }
 
     public static FlowApplicationHost CreateDefault(
         FluxMqApplicationDefinition definition,
         IMessageRepository? messageRepository = null,
-        Func<MqttConnectionProfile, IMqttBrokerClient>? clientFactory = null)
+        Func<MqttConnectionProfile, IMqttBrokerClient>? clientFactory = null,
+        ISecretResolver? secretResolver = null)
     {
         ArgumentNullException.ThrowIfNull(definition);
 
-        clientFactory ??= static profile => new MqttBrokerClient(profile);
+        clientFactory ??= profile => new MqttBrokerClient(profile, secretResolver);
         var expressionEngine = FluxMqExpressionEngines.CreateDefault();
         var factories = new RuntimeNodeFactoryRegistry()
-            .RegisterPipelineComponentFactories(clientFactory, messageRepository, expressionEngine);
+            .RegisterPipelineComponentFactories(clientFactory, messageRepository, expressionEngine, secretResolver: secretResolver);
 
         return new FlowApplicationHost(
             null,
             new ApplicationRuntimeBuilder(factories, linkConditionExpressionEngine: expressionEngine),
             scenarioClientFactory: clientFactory,
+            secretResolver: secretResolver,
             applicationDefinition: definition);
     }
 
