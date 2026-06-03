@@ -8,6 +8,7 @@
     <div class="catalog-title">
         <MudIcon Icon="@CatalogIcon" Size="Size.Small" Class="catalog-title-icon" />
         <span>@CatalogTitle</span>
+        <span class="catalog-count" title="@CatalogCountTitle">@CatalogCountLabel</span>
     </div>
     <MudTextField T="string"
                   Value="@_searchText"
@@ -21,13 +22,13 @@
                   AdornmentIcon="@Icons.Material.Filled.Search"
                   AdornmentColor="Color.Secondary"
                   Class="catalog-search" />
-    @if (VisibleItems.Count == 0)
+    @if (SearchResult.VisibleCount == 0)
     {
         <div class="catalog-empty">@EmptyLabel</div>
     }
     else
     {
-        @foreach (var group in VisibleItems.GroupBy(c => c.Category))
+        @foreach (var group in SearchResult.Items.GroupBy(c => c.Category))
         {
             <div class="catalog-group">
                 @group.Key
@@ -66,9 +67,8 @@
             </span>
         </div>;
 
-    private IReadOnlyList<CatalogEntry> VisibleItems => AllItems
-        .Where(MatchesSearch)
-        .ToArray();
+    private CatalogSearchResult<CatalogEntry> SearchResult
+        => CatalogSearch.Filter(AllItems, _searchText, static item => item.SearchFields);
 
     private IReadOnlyList<CatalogEntry> AllItems => ArtifactKind switch
     {
@@ -130,6 +130,14 @@
         _ => Icons.Material.Filled.Extension
     };
 
+    private string CatalogCountLabel => SearchResult.HasSearch
+        ? $"{SearchResult.VisibleCount} of {SearchResult.TotalCount}"
+        : SearchResult.TotalCount.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+    private string CatalogCountTitle => SearchResult.HasSearch
+        ? $"{SearchResult.VisibleCount} matching items out of {SearchResult.TotalCount}"
+        : $"{SearchResult.TotalCount} available items";
+
     private string CatalogItemTitle => ArtifactKind switch
     {
         WorkspaceArtifactKind.Pipeline when CanUseItem => "Drag to add component",
@@ -142,23 +150,6 @@
 
     private void OnSearchTextChanged(string? value)
         => _searchText = value ?? string.Empty;
-
-    private bool MatchesSearch(CatalogEntry item)
-    {
-        var text = _searchText.Trim();
-        if (text.Length == 0)
-        {
-            return true;
-        }
-
-        return ContainsSearch(item.DisplayName, text) ||
-               ContainsSearch(item.Type, text) ||
-               ContainsSearch(item.Category, text) ||
-               ContainsSearch(item.Description, text);
-    }
-
-    private static bool ContainsSearch(string value, string search)
-        => value.Contains(search, StringComparison.OrdinalIgnoreCase);
 
     private void BeginItemDrag(PointerEventArgs args, CatalogEntry item)
     {
@@ -257,6 +248,8 @@
         string Description,
         string Icon)
     {
+        public CatalogSearchFields SearchFields => new(Type, DisplayName, Category, Description);
+
         public static CatalogEntry FromComponent(FlowComponentDescriptor descriptor)
             => new(
                 descriptor.Type,

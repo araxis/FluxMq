@@ -10,6 +10,7 @@ Chronological progress record.
 - Tightened the live tools shell policy so the right inspector/publisher panel is available only on pipeline and dashboard surfaces, keeping test, logs, and topic explorer pages focused on their own workspace content.
 - Improved Logs page filtering interaction with clearable search and a reset-filters action for scope, level, and search filters.
 - Wired the dashboard designer to the active workspace change signal so live dashboard widgets repaint from runtime event snapshots instead of waiting for definition edits.
+- Added a tested catalog search helper and compact result count in the component/widget/test-step panel so large component lists are easier to scan during authoring.
 
 ## 2026-05-06
 
