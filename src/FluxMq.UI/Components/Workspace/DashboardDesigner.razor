@@ -264,6 +264,7 @@
     private string? _hoveredDropCellName;
     private bool? _lastNotifiedEditMode;
     private long _definitionRevision = -1;
+    private FlowWorkspaceService? _subscribedProject;
     private bool _isDisposed;
 
     protected override void OnInitialized()
@@ -274,6 +275,8 @@
 
     protected override void OnParametersSet()
     {
+        SyncProjectSubscription();
+
         if (_definitionRevision != Project.DefinitionRevision ||
             !string.Equals(_dashboardName, Project.ActiveDashboardName, StringComparison.Ordinal))
         {
@@ -545,6 +548,41 @@
         InvokeAsync(StateHasChanged);
     }
 
+    private void OnProjectChanged(object? sender, EventArgs e)
+    {
+        _ = InvokeAsync(() =>
+        {
+            if (_isDisposed)
+            {
+                return;
+            }
+
+            if (_definitionRevision != Project.DefinitionRevision ||
+                !string.Equals(_dashboardName, Project.ActiveDashboardName, StringComparison.Ordinal))
+            {
+                LoadLayout();
+            }
+
+            StateHasChanged();
+        });
+    }
+
+    private void SyncProjectSubscription()
+    {
+        if (ReferenceEquals(_subscribedProject, Project))
+        {
+            return;
+        }
+
+        if (_subscribedProject is not null)
+        {
+            _subscribedProject.Changed -= OnProjectChanged;
+        }
+
+        _subscribedProject = Project;
+        _subscribedProject.Changed += OnProjectChanged;
+    }
+
     private void ToggleGridPicker()
     {
         if (!_isGridPickerOpen && _layout is not null)
@@ -811,5 +849,10 @@
         _isDisposed = true;
         DragState.Changed -= OnDragStateChanged;
         DragState.ComponentDropRequested -= OnComponentDropRequested;
+        if (_subscribedProject is not null)
+        {
+            _subscribedProject.Changed -= OnProjectChanged;
+            _subscribedProject = null;
+        }
     }
 }
