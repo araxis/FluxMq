@@ -1,13 +1,13 @@
 # Fork Flow
 
-Fork Flow is the planned user-configurable pipeline system in FluxMQ.
+Fork Flow is the user-configurable pipeline system in FluxMQ.
 
-Flows are built from sources, triggers, filters, mappers, routers, and sinks.
+Pipelines are built from sources, triggers, filters, mappers, routers, observers, and actors.
 
 ```text
 source or trigger
-  -> filter, router, or mapper
-  -> sink or projection
+  -> filter, router, mapper, validator, or assertion
+  -> observer or actor
 ```
 
 ## Examples
@@ -15,61 +15,59 @@ source or trigger
 Record and inspect messages:
 
 ```text
-Traffic source
-  -> Topic filter
-  -> Payload inspector
-  -> UI projection
+mqtt.trigger
+  -> flow.filter
+  -> mqtt.payload-inspector
 ```
 
 Record selected messages:
 
 ```text
-Traffic source
-  -> Topic filter
-  -> Recording sink
+mqtt.trigger
+  -> flow.filter
+  -> mqtt.recorder
 ```
 
 Replay selected traffic:
 
 ```text
-Replay source
-  -> Topic filter
-  -> MQTT publish sink
+replay.source
+  -> flow.filter
+  -> mqtt.publisher
 ```
 
 React to connection state:
 
 ```text
-Connection state trigger
-  -> State router
-  -> Notification sink
+mqtt.connection-state-trigger
+  -> flow.when
+  -> flow.logger
 ```
 
 Branch live traffic:
 
 ```text
-Traffic source
-  -> Condition router
-  -> Matching branch / non-matching branch
+mqtt.trigger
+  -> flow.when
+  -> matching branch / non-matching branch
 ```
 
 Observe traffic:
 
 ```text
-Traffic source
-  -> Metrics sink
-  -> UI projection
+mqtt.trigger
+  -> mqtt.metrics
 ```
 
 ## Design Goal
 
-The same flow application definition should be editable through configuration and through the drag-and-drop interface.
+The same app definition should be editable through configuration and through the drag-and-drop interface.
 
-FluxMQ now uses the .NET configuration system as the first loading path for flow application definitions. A JSON file can provide `FluxMq:FlowApplication`, and future hosts can layer command-line values, environment values, saved settings, or UI-produced definitions through the same configuration model.
+FluxMQ app files keep resources, workflows, dashboards, and tests together. The runtime builds executable resources and workflows from that file; dashboards and tests stay app-owned.
 
 ## Application Definition Shape
 
-A Fork Flow application definition describes shared resources, workflows, nodes, and links. It is the configuration package the future runtime will load regardless of whether FluxMQ is hosted by the desktop app, a console runner, or another tool process.
+A FluxMQ app definition describes shared resources, workflows, dashboards, tests, nodes, and links.
 
 ```text
 Flow application definition
@@ -77,6 +75,8 @@ Flow application definition
   -> workflows
      -> nodes
         -> receiving port links
+  -> dashboards
+  -> tests
 ```
 
 Each workflow is an object. Each node is a property inside that workflow object.
@@ -86,14 +86,9 @@ Each workflow is an object. Each node is a property inside that workflow object.
   "workflows": {
     "observeTraffic": {
       "traffic": {
-        "type": "traffic.source",
+        "type": "mqtt.trigger",
         "configuration": {
-          "kind": "live",
-          "profile": {
-            "name": "local-broker",
-            "host": "localhost",
-            "port": 1883
-          },
+          "connection": "local-broker",
           "subscriptions": [
             "factory/#",
             { "topicFilter": "telemetry/#", "qos": 1 }
@@ -101,7 +96,7 @@ Each workflow is an object. Each node is a property inside that workflow object.
         }
       },
       "metrics": {
-        "type": "mqtt.metrics-sink",
+        "type": "mqtt.metrics",
         "Input": "traffic.Output"
       }
     }
@@ -123,38 +118,25 @@ Links are declared on receiving ports. A port can accept one link, many links, o
 }
 ```
 
-A component-level `When` can provide the default condition for links that do not specify one.
+Links can also carry `when` conditions. Link conditions are evaluated by the FluxMQ host expression engine.
 
 Validation catches broken node references, malformed links, empty ports, and duplicate links before the flow runs.
 
-The first runtime builder can create registered node types and link compatible typed ports from the definition. If a node type or port is missing, or two ports carry incompatible value types, the build returns errors instead of starting a partial flow.
+The runtime builder creates registered node types and links compatible typed ports from the definition. If a node type or port is missing, or two ports carry incompatible value types, the build returns errors instead of starting a partial flow.
 
-The first registered runtime component types are:
+Common runtime component ids include:
 
-- `mqtt.connection`: shared resource that owns an MQTT session and publishes `FlowError` on `Errors`.
+- `mqtt.connection`: shared resource that owns an MQTT broker client and publishes `FlowError` on `Errors`.
 - `mqtt.trigger`: workflow node that references a connection resource, subscribes to topic filters, emits `MqttEnvelope` on `Output`, and publishes `FlowError` on `Errors`.
-- `traffic.source`: workflow node that binds to live, stored-session, or generated MQTT traffic and emits `MqttEnvelope` on `Output`.
+- `generated.source`: emits configured MQTT envelope samples.
+- `replay.source`: emits messages from a stored session.
 - `mqtt.payload-inspector`: `Input` receives `MqttEnvelope`, `Output` publishes `InspectedMqttMessage`, and `Errors` publishes `FlowError`.
-- `mqtt.metrics-sink`: `Input` receives `MqttEnvelope`, `Snapshots` publishes `MqttMetricsSnapshot`, and `Errors` publishes `FlowError`.
+- `mqtt.metrics`: `Input` receives `MqttEnvelope`, `Snapshots` publishes metric snapshots, and `Errors` publishes `FlowError`.
+- `flow.filter`, `flow.when`, `flow.mapper`, and `flow.assert`: control, mapping, routing, and assertion components.
+- `json.schema-validator`, `json.parse`, and `json.stringify`: JSON and validation components.
+- `mqtt.publisher`, `mqtt.recorder`, `file.writer`, `http.request`, and `flow.logger`: actors and observers.
 
-Traffic source live configuration supports:
-
-- `profile` object (`name` required; host/port/clientId/useTls/username/password/keepAliveSeconds/cleanStart optional)
-- `subscriptions` as string, array of strings, or array of objects
-- `qos` per subscription as `0|1|2` or `AtMostOnce|AtLeastOnce|ExactlyOnce`
-- optional `boundedCapacity`
-
-Stored-session configuration supports:
-
-- `sessionId`
-- `preserveTiming`
-- `speed`
-
-The runtime package owns the definition model, graph builder, typed ports, lifecycle state, and error contracts. Concrete MQTT, replay, storage, and metrics components live in the component package and are registered by the application host.
-
-The mapper and metrics nodes were chosen first because they have stable constructors and do not need external services or expression configuration.
-
-The first host boundary can build and control a configured flow application from this section:
+The host boundary can build and control a configured app from this section:
 
 ```json
 {
@@ -162,9 +144,9 @@ The first host boundary can build and control a configured flow application from
     "FlowApplication": {
       "workflows": {
         "observe": {
-          "metrics": {
-            "type": "mqtt.metrics-sink"
-          }
+            "metrics": {
+              "type": "mqtt.metrics"
+            }
         }
       }
     }
@@ -188,19 +170,17 @@ dotnet run --project src/FluxMq.Cli -- run --config samples/flow-applications/me
 
 Runtime factories can tell whether they are building a shared resource or a workflow node. Startup order is controlled with `phase` on each node definition; lower phases start first across both resources and workflow nodes. Workflow nodes are stopped and disposed before shared resources.
 
-Reloading will be owned by the runtime layer. The UI can edit and save definitions, but the runtime is responsible for validating the next definition, keeping unaffected resources alive, patching workflow graphs, and reporting reload failures.
-
-The first desktop alpha includes a Blazor.Diagrams canvas that projects the current definition into nodes and links, a JSON editor for the same definition, local file save/load, and run controls that call the same host boundary as the command-line host.
+The desktop app includes a diagram canvas that projects the current workflow into nodes and links, a JSON view for the same app file, local file save/load, and run controls that call the same host boundary as the command-line host.
 
 ## Current Building Blocks
 
 - MQTT connection: owns the shared broker session.
 - MQTT trigger: subscribes through a connection and emits matching live messages.
-- Traffic source: binds a workflow to live, stored-session, or generated traffic.
+- Generated source: emits configured MQTT messages without a broker.
 - Replay source: emits messages from a stored recording.
-- Topic filter: forwards only matching messages.
-- Condition router: sends each message to a true or false branch.
+- Flow filter: forwards only matching messages.
+- Flow when: sends each message to a true or false branch.
 - Payload inspector: converts raw payloads into readable inspection results.
-- MQTT publish sink: publishes messages through an active session.
-- Recording sink: stores messages for a recording session.
-- Metrics sink: tracks counters and broadcasts metric snapshots.
+- MQTT publisher: publishes messages through an app-level connection.
+- MQTT recorder: stores messages for a recording session.
+- MQTT metrics: tracks counters and broadcasts metric snapshots.

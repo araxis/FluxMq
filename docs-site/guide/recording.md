@@ -1,6 +1,6 @@
 # Recording
 
-Recording captures MQTT messages into local storage so a session can be inspected or replayed later.
+Recording captures MQTT messages into local storage so a session can be inspected, loaded into the topic view, or replayed later.
 
 ## What A Recording Captures
 
@@ -14,10 +14,11 @@ Recording captures MQTT messages into local storage so a session can be inspecte
 ## Typical Use
 
 1. Connect to a broker.
-2. Select the topics to observe.
-3. Start a recording session.
-4. Reproduce the system behavior you want to analyze.
-5. Stop recording and name the session.
+2. Add a pipeline with `mqtt.trigger`.
+3. Link the trigger to `mqtt.recorder`, optionally through `flow.filter` or `flow.when`.
+4. Start the app.
+5. Reproduce the system behavior you want to analyze.
+6. Stop the app and load the stored session when needed.
 
 ## Notes
 
@@ -26,9 +27,9 @@ Recordings are local-first. This keeps debugging data available without requirin
 ## Flow Shape
 
 ```text
-Traffic source
-  -> Optional topic filter
-  -> Recording sink
+mqtt.trigger
+  -> optional flow.filter
+  -> mqtt.recorder
 ```
 
-The recording sink stores each incoming message for the selected recording session. If storing one message fails, the failure is reported as a flow error and later messages can continue recording.
+The recorder stores each incoming message for the selected recording session. If storing one message fails, the failure is reported as a flow error and later messages can continue recording.

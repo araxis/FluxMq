@@ -18,6 +18,9 @@ export default {
           { text: 'Getting Started', link: '/guide/getting-started' },
           { text: 'Desktop Workspace', link: '/guide/desktop-workspace' },
           { text: 'Connections', link: '/guide/connections' },
+          { text: 'Dashboards', link: '/guide/dashboards' },
+          { text: 'Tests', link: '/guide/tests' },
+          { text: 'Logs And Topics', link: '/guide/logs-and-topics' },
           { text: 'Recording', link: '/guide/recording' },
           { text: 'Replay', link: '/guide/replay' },
           { text: 'Fork Flow', link: '/guide/fork-flow' }

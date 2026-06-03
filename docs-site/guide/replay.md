@@ -1,6 +1,6 @@
 # Replay
 
-Replay sends recorded MQTT messages back through a controlled flow.
+Replay sends recorded MQTT messages through a controlled workflow.
 
 ## Timing
 
@@ -8,15 +8,15 @@ Replay preserves relative message timing by default. Speed controls can make a s
 
 ## Replay To MQTT
 
-A recorded session can be replayed back to a broker by linking the replay source to an MQTT publish sink.
+A recorded session can be replayed back to a broker by linking `replay.source` to `mqtt.publisher`.
 
-For analysis flows, a stored session can also be selected as a `traffic.source` mode so payload inspection, topic views, metrics, and future dashboards use the same path as live traffic.
+For analysis, a stored session can also be selected in the desktop workspace so the topic tree, message table, and payload inspector show stored traffic instead of live traffic.
 
 ```text
 Recorded session
   -> Replay source
   -> Optional filters
-  -> MQTT publish sink
+  -> MQTT publisher
   -> Broker
 ```
 

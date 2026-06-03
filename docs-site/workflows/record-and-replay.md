@@ -5,20 +5,20 @@ This workflow captures live MQTT traffic and replays it later.
 ## Steps
 
 1. Connect to the broker.
-2. Subscribe to the target topics.
-3. Start recording.
-4. Exercise the system under test.
-5. Stop recording.
-6. Create a replay flow.
-7. Replay the session into a selected broker or analysis view.
+2. Add `mqtt.trigger` for the target topics.
+3. Link it to `mqtt.recorder`.
+4. Run the app and exercise the system under test.
+5. Stop the app.
+6. Load the stored session into the Topics page for analysis, or create a replay pipeline.
+7. Replay the session into a selected broker.
 
 ## Replay Flow Shape
 
 ```text
 Recorded session
-  -> Traffic source or replay source
-  -> Topic filter
-  -> MQTT publish sink
+  -> replay.source
+  -> flow.filter
+  -> mqtt.publisher
 ```
 
 Use a topic filter when the recording contains traffic that should not be replayed.
@@ -26,9 +26,9 @@ Use a topic filter when the recording contains traffic that should not be replay
 ## Recording Flow Shape
 
 ```text
-Traffic source
-  -> Topic filter
-  -> Recording sink
+mqtt.trigger
+  -> flow.filter
+  -> mqtt.recorder
 ```
 
-The recording sink writes MQTT messages into local storage for the active recording session.
+The recorder writes MQTT messages into local storage for the active recording session.

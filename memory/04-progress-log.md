@@ -14,6 +14,7 @@ Chronological progress record.
 - Reworked the New Connection dialog into a wider two-section MudBlazor form with broker and security fields arranged for faster scanning and basic disabled-state validation.
 - Aligned the New App dialog with the wider responsive connection form so initial app and broker setup is less cramped.
 - Reworked the dashboard widget settings dialog into a wider responsive form and changed MQTT QoS/retain filters to finite toggle controls.
+- Resynced the public documentation site with the current app model, including app-owned resources, pipelines, dashboards, tests, logs, topics, live tools, and current workflow component ids.
 
 ## 2026-05-06
 
