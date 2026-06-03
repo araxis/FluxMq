@@ -13,6 +13,7 @@ public sealed class ScenarioStepDefinitionCatalog
     public const string RetainAsPublishedKey = ScenarioStepConfigurationKeys.RetainAsPublished;
     public const string EventTypeKey = ScenarioStepConfigurationKeys.EventType;
     public const string TopicStartsWithKey = ScenarioStepConfigurationKeys.TopicStartsWith;
+    public const string TopicNotStartsWithKey = ScenarioStepConfigurationKeys.TopicNotStartsWith;
     public const string SubjectStartsWithKey = ScenarioStepConfigurationKeys.SubjectStartsWith;
     public const string StatusKey = ScenarioStepConfigurationKeys.Status;
     public const string SourceKey = ScenarioStepConfigurationKeys.Source;
@@ -81,6 +82,7 @@ public sealed class ScenarioStepDefinitionCatalog
     [
         new(EventTypeKey, "Event type", ScenarioStepFieldKind.Select, FlowEventTypes.MqttMessagePublished, EventTypeOptions),
         new(TopicStartsWithKey, "Topic prefix", ScenarioStepFieldKind.Text, string.Empty, []),
+        new(TopicNotStartsWithKey, "Exclude topic prefix", ScenarioStepFieldKind.Text, string.Empty, []),
         new(SubjectStartsWithKey, "Subject prefix", ScenarioStepFieldKind.Text, string.Empty, []),
         new(StatusKey, "Status", ScenarioStepFieldKind.Select, "published", EventStatusOptions),
         new(SourceKey, "Source", ScenarioStepFieldKind.Text, string.Empty, []),

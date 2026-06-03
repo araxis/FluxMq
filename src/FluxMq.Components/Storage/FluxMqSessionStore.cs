@@ -18,6 +18,8 @@ public sealed class FluxMqSessionStore(IMessageRepository messages) : ISessionSt
     public const string RetainAttribute = "retain";
 
     private readonly IMessageRepository _messages = messages ?? throw new ArgumentNullException(nameof(messages));
+    private readonly object _sessionSync = new();
+    private readonly Dictionary<string, SessionMetadata> _sessions = new(StringComparer.Ordinal);
 
     public Task<SessionMetadata?> GetSessionAsync(
         string sessionId,
@@ -25,6 +27,18 @@ public sealed class FluxMqSessionStore(IMessageRepository messages) : ISessionSt
     {
         var id = ParseSessionId(sessionId);
         cancellationToken.ThrowIfCancellationRequested();
+
+        lock (_sessionSync)
+        {
+            if (_sessions.TryGetValue(id.ToString(), out var session))
+            {
+                return Task.FromResult<SessionMetadata?>(CopyMetadata(session with
+                {
+                    MessageCount = _messages.CountBySession(id)
+                }));
+            }
+        }
+
         return Task.FromResult<SessionMetadata?>(CreateMetadata(id, _messages.CountBySession(id)));
     }
 
@@ -39,7 +53,7 @@ public sealed class FluxMqSessionStore(IMessageRepository messages) : ISessionSt
             ? SessionId.New()
             : ParseSessionId(request.SessionId);
 
-        return Task.FromResult(new SessionMetadata
+        var session = new SessionMetadata
         {
             SessionId = id.ToString(),
             Name = request.Name,
@@ -47,7 +61,10 @@ public sealed class FluxMqSessionStore(IMessageRepository messages) : ISessionSt
             Notes = request.Notes,
             Tags = CopyDictionary(request.Tags),
             MessageCount = _messages.CountBySession(id)
-        });
+        };
+
+        StoreMetadata(session);
+        return Task.FromResult(CopyMetadata(session));
     }
 
     public Task<SessionRecord> AppendMessageAsync(
@@ -61,7 +78,9 @@ public sealed class FluxMqSessionStore(IMessageRepository messages) : ISessionSt
         var envelope = ToEnvelope(request.Input, request.Timestamp);
 
         _messages.Add(id, envelope);
-        return Task.FromResult(ToRecord(id, envelope, _messages.CountBySession(id)));
+        var count = _messages.CountBySession(id);
+        StoreMetadata(request.Session with { MessageCount = count });
+        return Task.FromResult(ToRecord(id, envelope, count));
     }
 
     public Task<SessionMetadata> CompleteSessionAsync(
@@ -71,11 +90,44 @@ public sealed class FluxMqSessionStore(IMessageRepository messages) : ISessionSt
         ArgumentNullException.ThrowIfNull(request);
 
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(request.Session with
+        var session = request.Session with
         {
             EndedAt = request.EndedAt,
             MessageCount = request.MessageCount
-        });
+        };
+
+        StoreMetadata(session);
+        return Task.FromResult(CopyMetadata(session));
+    }
+
+    public Task<IReadOnlyList<SessionMetadata>> QuerySessionsAsync(
+        SessionQueryRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        cancellationToken.ThrowIfCancellationRequested();
+        IReadOnlyList<SessionMetadata> sessions;
+        lock (_sessionSync)
+        {
+            sessions = _sessions.Values.Select(CopyMetadata).ToArray();
+        }
+
+        IEnumerable<SessionMetadata> query = sessions
+            .Where(session => MatchesName(session, request))
+            .Where(session => MatchesTags(session, request.Tags))
+            .Where(session => MatchesRange(session.StartedAt, request.StartedFrom, request.StartedTo))
+            .Where(session => MatchesEndedRange(session, request.EndedFrom, request.EndedTo))
+            .Where(session => MatchesCompletionState(session, request))
+            .OrderByDescending(session => session.StartedAt)
+            .ThenBy(session => session.SessionId, StringComparer.Ordinal);
+
+        if (request.Limit is > 0)
+        {
+            query = query.Take(request.Limit.Value);
+        }
+
+        return Task.FromResult<IReadOnlyList<SessionMetadata>>(query.ToArray());
     }
 
     public async IAsyncEnumerable<SessionRecord> ReadMessagesAsync(
@@ -201,6 +253,62 @@ public sealed class FluxMqSessionStore(IMessageRepository messages) : ISessionSt
             MessageCount = messageCount
         };
 
+    private void StoreMetadata(SessionMetadata session)
+    {
+        lock (_sessionSync)
+        {
+            _sessions[session.SessionId] = CopyMetadata(session);
+        }
+    }
+
+    private static bool MatchesName(SessionMetadata session, SessionQueryRequest request)
+    {
+        if (!string.IsNullOrWhiteSpace(request.Name) &&
+            !string.Equals(session.Name, request.Name, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return string.IsNullOrWhiteSpace(request.NamePrefix) ||
+               (!string.IsNullOrWhiteSpace(session.Name) &&
+                session.Name.StartsWith(request.NamePrefix, StringComparison.Ordinal));
+    }
+
+    private static bool MatchesTags(SessionMetadata session, IReadOnlyDictionary<string, string>? expectedTags)
+    {
+        if (expectedTags is null || expectedTags.Count == 0)
+        {
+            return true;
+        }
+
+        foreach (var (key, value) in expectedTags)
+        {
+            if (!session.Tags.TryGetValue(key, out var actual) ||
+                !string.Equals(actual, value, StringComparison.Ordinal))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool MatchesRange(DateTimeOffset value, DateTimeOffset? from, DateTimeOffset? to)
+        => (!from.HasValue || value >= from.Value) &&
+           (!to.HasValue || value <= to.Value);
+
+    private static bool MatchesEndedRange(SessionMetadata session, DateTimeOffset? from, DateTimeOffset? to)
+        => (!from.HasValue || session.EndedAt >= from.Value) &&
+           (!to.HasValue || session.EndedAt <= to.Value);
+
+    private static bool MatchesCompletionState(SessionMetadata session, SessionQueryRequest request)
+    {
+        var isCompleted = session.EndedAt.HasValue;
+        return isCompleted
+            ? request.IncludeCompleted is not false
+            : request.IncludeActive is not false;
+    }
+
     private static SessionId ParseSessionId(string sessionId)
         => Guid.TryParse(sessionId, out var guid) && guid != Guid.Empty
             ? new SessionId(guid)
@@ -261,4 +369,7 @@ public sealed class FluxMqSessionStore(IMessageRepository messages) : ISessionSt
         => source is null
             ? []
             : new Dictionary<string, string>(source, StringComparer.Ordinal);
+
+    private static SessionMetadata CopyMetadata(SessionMetadata source)
+        => source with { Tags = CopyDictionary(source.Tags) };
 }

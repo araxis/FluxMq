@@ -17,6 +17,7 @@ public sealed class ScenarioStepCatalog
     public const string RetainAsPublishedKey = ScenarioStepDefinitionCatalog.RetainAsPublishedKey;
     public const string EventTypeKey = ScenarioStepDefinitionCatalog.EventTypeKey;
     public const string TopicStartsWithKey = ScenarioStepDefinitionCatalog.TopicStartsWithKey;
+    public const string TopicNotStartsWithKey = ScenarioStepDefinitionCatalog.TopicNotStartsWithKey;
     public const string SubjectStartsWithKey = ScenarioStepDefinitionCatalog.SubjectStartsWithKey;
     public const string StatusKey = ScenarioStepDefinitionCatalog.StatusKey;
     public const string SourceKey = ScenarioStepDefinitionCatalog.SourceKey;

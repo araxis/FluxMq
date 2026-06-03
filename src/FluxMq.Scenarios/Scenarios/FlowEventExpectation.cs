@@ -7,6 +7,7 @@ public sealed record FlowEventExpectation
 {
     public string? EventType { get; init; }
     public string? TopicStartsWith { get; init; }
+    public string? TopicNotStartsWith { get; init; }
     public string? SubjectStartsWith { get; init; }
     public string? Status { get; init; }
     public string? Source { get; init; }
@@ -21,6 +22,7 @@ public sealed record FlowEventExpectation
         {
             EventType = ScenarioStepConfigurationReader.ReadString(configuration, ScenarioStepConfigurationKeys.EventType),
             TopicStartsWith = ScenarioStepConfigurationReader.ReadString(configuration, ScenarioStepConfigurationKeys.TopicStartsWith),
+            TopicNotStartsWith = ScenarioStepConfigurationReader.ReadString(configuration, ScenarioStepConfigurationKeys.TopicNotStartsWith),
             SubjectStartsWith = ScenarioStepConfigurationReader.ReadString(configuration, ScenarioStepConfigurationKeys.SubjectStartsWith),
             Status = ScenarioStepConfigurationReader.ReadString(configuration, ScenarioStepConfigurationKeys.Status),
             Source = ScenarioStepConfigurationReader.ReadString(configuration, ScenarioStepConfigurationKeys.Source),
@@ -39,6 +41,7 @@ public sealed record FlowEventExpectation
 
         return MatchesExact(flowEvent.Type, EventType) &&
                MatchesPrefix(flowEvent.Channel, TopicStartsWith) &&
+               DoesNotMatchPrefix(flowEvent.Channel, TopicNotStartsWith) &&
                MatchesPrefix(flowEvent.Subject, SubjectStartsWith) &&
                MatchesExact(flowEvent.Status, Status) &&
                MatchesExact(flowEvent.Source, Source) &&
@@ -54,6 +57,11 @@ public sealed record FlowEventExpectation
         => string.IsNullOrWhiteSpace(expectedPrefix) ||
            (!string.IsNullOrWhiteSpace(actual) &&
             actual.StartsWith(expectedPrefix, StringComparison.Ordinal));
+
+    private static bool DoesNotMatchPrefix(string? actual, string? rejectedPrefix)
+        => string.IsNullOrWhiteSpace(rejectedPrefix) ||
+           string.IsNullOrWhiteSpace(actual) ||
+           !actual.StartsWith(rejectedPrefix, StringComparison.Ordinal);
 
     private static bool MatchesContains(string? actual, string? expectedValue)
         => string.IsNullOrWhiteSpace(expectedValue) ||

@@ -120,9 +120,9 @@
                                Class="flux-icon-button"
                                OnClick="@CycleTheme" />
             </MudTooltip>
-            @if (CanShowLivePanel)
+            @if (HasActiveProject)
             {
-                <MudTooltip Text="@(_rightOpen ? "Hide inspector" : "Show inspector")">
+                <MudTooltip Text="@(_rightOpen ? "Hide live tools" : "Show live tools")">
                     <MudIconButton Icon="@(_rightOpen ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ChevronLeft)"
                                    Size="Size.Small"
                                    Class="flux-icon-button"
@@ -276,10 +276,7 @@
 
     private bool HasActiveProject => Projects.ActiveProject is not null;
 
-    private bool CanShowLivePanel =>
-        Projects.ActiveProject is { ActiveArtifactKind: WorkspaceArtifactKind.Pipeline, ActiveWorkflowName: { Length: > 0 } };
-
-    private bool IsRightPanelVisible => CanShowLivePanel && _rightOpen;
+    private bool IsRightPanelVisible => HasActiveProject && _rightOpen;
 
     private string ShellClass =>
         $"flux-shell {(ThemeService.IsDarkMode ? "flux-theme-dark" : "flux-theme-light")}{(!_leftOpen ? " left-collapsed" : "")}{(!IsRightPanelVisible ? " right-collapsed" : "")}{(DragState.ActiveComponentDrag?.DidDrag == true ? " flux-component-drag-active" : "")}";

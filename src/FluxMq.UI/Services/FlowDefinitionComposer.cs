@@ -2183,6 +2183,7 @@ public sealed class FlowDefinitionComposer
 
         AddString(result, configuration, ScenarioStepCatalog.EventTypeKey);
         AddString(result, configuration, ScenarioStepCatalog.TopicStartsWithKey);
+        AddString(result, configuration, ScenarioStepCatalog.TopicNotStartsWithKey);
         AddString(result, configuration, ScenarioStepCatalog.SubjectStartsWithKey);
         AddString(result, configuration, ScenarioStepCatalog.StatusKey);
         AddString(result, configuration, ScenarioStepCatalog.SourceKey);

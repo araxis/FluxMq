@@ -83,6 +83,50 @@ public sealed class FluxMqSessionStoreTests
     }
 
     [Fact]
+    public async Task QuerySessionsAsync_ReturnsFilteredSessionMetadata()
+    {
+        var repository = new FakeMessageRepository();
+        var store = new FluxMqSessionStore(repository);
+
+        var first = await store.StartSessionAsync(new SessionStartRequest
+        {
+            SessionId = SessionId.New().ToString(),
+            Name = "factory-a",
+            StartedAt = DateTimeOffset.Parse("2026-06-01T10:00:00Z"),
+            Tags = new Dictionary<string, string> { ["project"] = "app1" }
+        });
+        await store.StartSessionAsync(new SessionStartRequest
+        {
+            SessionId = SessionId.New().ToString(),
+            Name = "debug",
+            StartedAt = DateTimeOffset.Parse("2026-06-01T11:00:00Z"),
+            Tags = new Dictionary<string, string> { ["project"] = "app2" }
+        });
+        await store.CompleteSessionAsync(new SessionCompleteRequest
+        {
+            Session = first,
+            EndedAt = DateTimeOffset.Parse("2026-06-01T10:05:00Z"),
+            MessageCount = 3
+        });
+
+        var result = await store.QuerySessionsAsync(new SessionQueryRequest
+        {
+            NamePrefix = "factory",
+            Tags = new Dictionary<string, string> { ["project"] = "app1" },
+            IncludeActive = false,
+            IncludeCompleted = true,
+            Limit = 10
+        });
+
+        var session = result.ShouldHaveSingleItem();
+        session.SessionId.ShouldBe(first.SessionId);
+        session.Name.ShouldBe("factory-a");
+        session.EndedAt.ShouldBe(DateTimeOffset.Parse("2026-06-01T10:05:00Z"));
+        session.MessageCount.ShouldBe(3);
+        session.Tags["project"].ShouldBe("app1");
+    }
+
+    [Fact]
     public void ToEnvelope_ReadsMqttAttributes()
     {
         var record = new SessionRecord

@@ -14,6 +14,7 @@ public static class ScenarioStepConfigurationKeys
 
     public const string EventType = "eventType";
     public const string TopicStartsWith = "topicStartsWith";
+    public const string TopicNotStartsWith = "topicNotStartsWith";
     public const string SubjectStartsWith = "subjectStartsWith";
     public const string Status = "status";
     public const string Source = "source";
