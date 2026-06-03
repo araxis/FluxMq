@@ -1,4 +1,6 @@
 using FluxMq.Core.Models;
+using FluxFlow.Components.Secrets;
+using FluxFlow.Components.Secrets.Contracts;
 using MQTTnet;
 using MQTTnet.Protocol;
 using System.Threading.Channels;
@@ -9,6 +11,7 @@ public sealed class MqttBrokerClient : IMqttBrokerClient
 {
     private readonly IMqttClient _client;
     private readonly Channel<MqttEnvelope> _channel;
+    private readonly ISecretResolver? _secretResolver;
     private volatile MqttClientState _state = MqttClientState.Disconnected;
 
     public MqttConnectionProfile Profile { get; }
@@ -17,9 +20,10 @@ public sealed class MqttBrokerClient : IMqttBrokerClient
 
     public event EventHandler<MqttClientState>? StateChanged;
 
-    public MqttBrokerClient(MqttConnectionProfile profile)
+    public MqttBrokerClient(MqttConnectionProfile profile, ISecretResolver? secretResolver = null)
     {
         Profile = profile;
+        _secretResolver = secretResolver;
         _channel = Channel.CreateBounded<MqttEnvelope>(new BoundedChannelOptions(1000)
         {
             FullMode = BoundedChannelFullMode.DropOldest,
@@ -41,8 +45,9 @@ public sealed class MqttBrokerClient : IMqttBrokerClient
                 .WithKeepAlivePeriod(Profile.KeepAlive)
                 .WithCleanStart(Profile.CleanStart);
 
+            var password = await ResolvePasswordAsync(ct).ConfigureAwait(false);
             if (Profile.Username is not null)
-                builder = builder.WithCredentials(Profile.Username, Profile.Password);
+                builder = builder.WithCredentials(Profile.Username, password);
 
             if (Profile.UseTls)
                 builder = builder.WithTlsOptions(o => o.UseTls());
@@ -105,6 +110,36 @@ public sealed class MqttBrokerClient : IMqttBrokerClient
             .Build();
         await _client.PublishAsync(message, ct);
     }
+
+    private async ValueTask<string?> ResolvePasswordAsync(CancellationToken cancellationToken)
+    {
+        if (Profile.PasswordSecret is null)
+        {
+            return Profile.Password;
+        }
+
+        if (_secretResolver is null)
+        {
+            throw new InvalidOperationException(
+                $"MQTT profile '{Profile.Name}' references 'passwordSecret' but no secret resolver is configured.");
+        }
+
+        var result = await SecretOptionResolver
+            .ResolveRequiredAsync(_secretResolver, Profile.PasswordSecret, "profile.passwordSecret", cancellationToken)
+            .ConfigureAwait(false);
+
+        if (result.Resolved)
+        {
+            return result.Value.Reveal();
+        }
+
+        throw new InvalidOperationException(BuildSecretResolutionMessage(result));
+    }
+
+    private string BuildSecretResolutionMessage(SecretOptionResolution resolution)
+        => resolution.Diagnostic is { } diagnostic
+            ? $"MQTT profile '{Profile.Name}' password secret could not be resolved: {diagnostic.Message}"
+            : $"MQTT profile '{Profile.Name}' password secret could not be resolved.";
 
     // Fired by MQTTnet on any disconnect — intentional or unexpected.
     // Reconnect policy (Polly) will hook here in a future step.

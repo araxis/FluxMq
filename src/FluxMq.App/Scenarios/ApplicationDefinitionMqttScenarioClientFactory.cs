@@ -1,6 +1,7 @@
 using FluxMq.Core.Models;
 using FluxMq.Core.Mqtt;
 using FluxMq.App.Definitions;
+using FluxFlow.Components.Secrets;
 
 namespace FluxMq.App.Scenarios;
 
@@ -11,10 +12,11 @@ public sealed class ApplicationDefinitionMqttScenarioClientFactory : IMqttScenar
 
     public ApplicationDefinitionMqttScenarioClientFactory(
         FluxMqApplicationDefinition definition,
-        Func<MqttConnectionProfile, IMqttBrokerClient>? clientFactory = null)
+        Func<MqttConnectionProfile, IMqttBrokerClient>? clientFactory = null,
+        ISecretResolver? secretResolver = null)
     {
         _definition = definition ?? throw new ArgumentNullException(nameof(definition));
-        _clientFactory = clientFactory ?? (static profile => new MqttBrokerClient(profile));
+        _clientFactory = clientFactory ?? (profile => new MqttBrokerClient(profile, secretResolver));
     }
 
     public IMqttBrokerClient CreateClient(string connectionName)

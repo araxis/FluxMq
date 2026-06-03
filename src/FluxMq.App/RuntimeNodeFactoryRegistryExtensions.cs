@@ -1,6 +1,7 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Mqtt;
+using FluxMq.Core.Secrets;
 using FluxMq.Components.Assertions;
 using FluxMq.Components.ConnectionStateTrigger;
 using FluxMq.Components.Control;
@@ -27,6 +28,7 @@ using FluxFlow.Components.Routing;
 using FluxFlow.Components.Routing.Contracts;
 using FluxFlow.Components.Routing.Options;
 using FluxFlow.Components.Serialization;
+using FluxFlow.Components.Secrets;
 using FluxFlow.Components.Sources.Nodes;
 using FluxFlow.Components.Sources.Options;
 using FluxFlow.Components.State;
@@ -72,10 +74,11 @@ public static class RuntimeNodeFactoryRegistryExtensions
         Func<MqttConnectionProfile, IMqttBrokerClient>? clientFactory = null,
         IMessageRepository? messageRepository = null,
         IFlowExpressionEngine? expressionEngine = null,
-        string? fileSystemStorageRootDirectory = null)
+        string? fileSystemStorageRootDirectory = null,
+        ISecretResolver? secretResolver = null)
     {
         ArgumentNullException.ThrowIfNull(registry);
-        clientFactory ??= static profile => new MqttBrokerClient(profile);
+        clientFactory ??= profile => new MqttBrokerClient(profile, secretResolver);
         expressionEngine ??= FluxMqExpressionEngines.CreateDefault();
 
         return registry
@@ -977,6 +980,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             UseTls = ReadBoolOrDefault(profileElement, "useTls", defaults.UseTls),
             Username = ReadNullableString(profileElement, "username"),
             Password = ReadNullableString(profileElement, "password"),
+            PasswordSecret = SecretReferenceJson.ReadOptional(profileElement, "passwordSecret"),
             KeepAlive = TimeSpan.FromSeconds(ReadIntOrDefault(profileElement, "keepAliveSeconds", (int)defaults.KeepAlive.TotalSeconds, minValue: 1)),
             CleanStart = ReadBoolOrDefault(profileElement, "cleanStart", defaults.CleanStart)
         };

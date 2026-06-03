@@ -1,5 +1,6 @@
 using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
+using FluxFlow.Components.Secrets;
 using Polly;
 using Polly.Retry;
 using System.Collections.Concurrent;
@@ -19,9 +20,10 @@ public sealed class MqttConnectionManager : IMqttConnectionManager
 
     public MqttConnectionManager(
         Func<MqttConnectionProfile, IMqttBrokerClient>? clientFactory = null,
-        ResiliencePipeline? reconnectPipeline = null)
+        ResiliencePipeline? reconnectPipeline = null,
+        ISecretResolver? secretResolver = null)
     {
-        _clientFactory = clientFactory ?? (profile => new MqttBrokerClient(profile));
+        _clientFactory = clientFactory ?? (profile => new MqttBrokerClient(profile, secretResolver));
         _reconnectPipeline = reconnectPipeline ?? BuildDefaultReconnectPipeline();
     }
 

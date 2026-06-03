@@ -1,4 +1,5 @@
 using FluxMq.Core.Models;
+using FluxMq.Core.Secrets;
 using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -144,28 +145,49 @@ public sealed partial class FlowDefinitionComposer
         Port = profileEl.TryGetProperty("port", out var p) ? p.GetInt32() : 1883,
         ClientId = profileEl.TryGetProperty("clientId", out var c) ? c.GetString() ?? "" : "",
         UseTls = profileEl.TryGetProperty("useTls", out var tls) && tls.GetBoolean(),
+        Username = profileEl.TryGetProperty("username", out var user) && user.ValueKind == JsonValueKind.String ? user.GetString() : null,
+        Password = profileEl.TryGetProperty("password", out var password) && password.ValueKind == JsonValueKind.String ? password.GetString() : null,
+        PasswordSecret = SecretReferenceJson.ReadOptional(profileEl, "passwordSecret"),
         KeepAlive = TimeSpan.FromSeconds(profileEl.TryGetProperty("keepAliveSeconds", out var ka) ? ka.GetInt32() : 60),
         CleanStart = !profileEl.TryGetProperty("cleanStart", out var cs) || cs.GetBoolean()
     };
 
     private static JsonObject CreateConnection(MqttConnectionProfile profile)
-        => new()
+    {
+        var profileJson = new JsonObject
+        {
+            ["name"] = string.IsNullOrWhiteSpace(profile.Name) ? "local-broker" : profile.Name,
+            ["host"] = profile.Host,
+            ["port"] = profile.Port,
+            ["clientId"] = profile.ClientId,
+            ["useTls"] = profile.UseTls,
+            ["keepAliveSeconds"] = (int)Math.Max(1, profile.KeepAlive.TotalSeconds),
+            ["cleanStart"] = profile.CleanStart
+        };
+
+        if (!string.IsNullOrWhiteSpace(profile.Username))
+        {
+            profileJson["username"] = profile.Username;
+        }
+
+        if (profile.PasswordSecret is not null)
+        {
+            profileJson["passwordSecret"] = SecretReferenceJson.Write(profile.PasswordSecret);
+        }
+        else if (!string.IsNullOrEmpty(profile.Password))
+        {
+            profileJson["password"] = profile.Password;
+        }
+
+        return new JsonObject
         {
             ["type"] = "mqtt.connection",
             ["configuration"] = new JsonObject
             {
-                ["profile"] = new JsonObject
-                {
-                    ["name"] = string.IsNullOrWhiteSpace(profile.Name) ? "local-broker" : profile.Name,
-                    ["host"] = profile.Host,
-                    ["port"] = profile.Port,
-                    ["clientId"] = profile.ClientId,
-                    ["useTls"] = profile.UseTls,
-                    ["keepAliveSeconds"] = (int)Math.Max(1, profile.KeepAlive.TotalSeconds),
-                    ["cleanStart"] = profile.CleanStart
-                }
+                ["profile"] = profileJson
             }
         };
+    }
 
     private static JsonObject CreateTrigger(string connectionRef, string subscription)
         => new()

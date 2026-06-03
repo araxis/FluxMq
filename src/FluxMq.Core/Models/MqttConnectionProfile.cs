@@ -1,4 +1,5 @@
 using FluxMq.Core.Ids;
+using FluxFlow.Components.Secrets.Contracts;
 
 namespace FluxMq.Core.Models;
 
@@ -12,6 +13,7 @@ public sealed record MqttConnectionProfile
     public bool UseTls { get; init; }
     public string? Username { get; init; }
     public string? Password { get; init; }
+    public SecretReference? PasswordSecret { get; init; }
     public TimeSpan KeepAlive { get; init; } = TimeSpan.FromSeconds(60);
     public bool CleanStart { get; init; } = true;
 }
