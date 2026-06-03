@@ -1,13 +1,8 @@
 using FluxMq.Core.Models;
 using FluxMq.App.Definitions;
 using FluxMq.Scenarios;
-using FluxMq.UI.Components.Workspace.Nodes.FlowAssertion;
-using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
-using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
 using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
 using FluxMq.UI.Components.Workspace.Nodes.Routing;
-using FluxMq.UI.Components.Workspace.Nodes.Sources;
-using FluxMq.UI.Components.Workspace.Nodes.StateReducer;
 using FluxMq.UI.Components.Workspace.Nodes.Timers;
 using FluxMq.UI.Models;
 using System.Text.Json;
@@ -82,7 +77,7 @@ public sealed class FlowDefinitionComposer
                 {
                     ["type"] = "mqtt.metrics",
                     ["Input"] = $"{TriggerNodeName}.Output",
-                    ["configuration"] = CreateMetricsConfiguration()
+                    ["configuration"] = CreateDefaultComponentConfiguration("mqtt.metrics")
                 }
             }
         };
@@ -463,7 +458,7 @@ public sealed class FlowDefinitionComposer
         var dashboards = GetOrCreateObject(flowApplication, "dashboards");
         if (!dashboards.ContainsKey(name))
         {
-            dashboards[name] = CreateDashboard();
+            dashboards[name] = FlowDashboardDefinitionFactory.CreateDashboard();
         }
 
         return root.ToJsonString(Options);
@@ -527,8 +522,8 @@ public sealed class FlowDefinitionComposer
         var tests = GetOrCreateObject(flowApplication, "tests");
         var scenario = GetOrCreateObject(tests, testName);
         var steps = GetOrCreateObject(scenario, "steps");
-        var stepName = MakeUniqueScenarioStepName(steps, ScenarioStepNamePrefix(normalizedType));
-        steps[stepName] = CreateScenarioStepObject(flowApplication, normalizedType);
+        var stepName = MakeUniqueScenarioStepName(steps, FlowScenarioStepDefinitionFactory.NamePrefix(normalizedType));
+        steps[stepName] = FlowScenarioStepDefinitionFactory.CreateStep(flowApplication, normalizedType);
 
         return root.ToJsonString(Options);
     }
@@ -564,7 +559,7 @@ public sealed class FlowDefinitionComposer
             ? ReadString(step, "type") ?? ScenarioStepTypes.ExpectEvent
             : stepType.Trim();
         step["type"] = normalizedType;
-        step["configuration"] = CreateScenarioStepConfiguration(normalizedType, configuration);
+        step["configuration"] = FlowScenarioStepDefinitionFactory.CreateConfiguration(normalizedType, configuration);
         return root.ToJsonString(Options);
     }
 
@@ -702,8 +697,8 @@ public sealed class FlowDefinitionComposer
         var cells = GetOrCreateObject(layout, "cells");
         var widgets = GetOrCreateObject(dashboard, "widgets");
 
-        var widgetName = MakeUniqueDashboardWidgetName(widgets, WidgetNamePrefix(normalizedType));
-        widgets[widgetName] = CreateDashboardWidgetObject(normalizedType);
+        var widgetName = MakeUniqueDashboardWidgetName(widgets, FlowDashboardDefinitionFactory.WidgetNamePrefix(normalizedType));
+        widgets[widgetName] = FlowDashboardDefinitionFactory.CreateWidget(normalizedType);
         AssignWidgetToDashboardCell(layout, cells, widgetName, cellName);
 
         return root.ToJsonString(Options);
@@ -731,7 +726,7 @@ public sealed class FlowDefinitionComposer
             return json;
         }
 
-        widget["configuration"] = CreateConfigurationObject(configuration);
+        widget["configuration"] = FlowDashboardDefinitionFactory.CreateConfiguration(configuration);
         return root.ToJsonString(Options);
     }
 
@@ -1098,13 +1093,13 @@ public sealed class FlowDefinitionComposer
         var nextCells = new JsonObject();
         foreach (var cell in existingCells)
         {
-            nextCells[cell.Name] = CreateDashboardCellObject(cell);
+            nextCells[cell.Name] = FlowDashboardDefinitionFactory.CreateCell(cell);
         }
 
         foreach (var child in CreateSubdivisionCells(selectedCell, rowParts, columnParts))
         {
             var name = MakeUniqueDashboardCellName(nextCells, "cell");
-            nextCells[name] = CreateDashboardCellObject(child with { Name = name, IsExplicit = true });
+            nextCells[name] = FlowDashboardDefinitionFactory.CreateCell(child with { Name = name, IsExplicit = true });
         }
 
         layout["cells"] = nextCells;
@@ -1154,45 +1149,12 @@ public sealed class FlowDefinitionComposer
         var workflows = GetOrCreateObject(flowApplication, "workflows");
         var workflow = GetOrCreateObject(workflows, targetWorkflowName ?? DefaultWorkflowName);
 
-        var preferredNodeName = componentType switch
-        {
-            "mqtt.payload-inspector" => InspectorNodeName,
-            "payload.inspect" => PayloadInspectNodeName,
-            "mqtt.metrics" => MetricsNodeName,
-            "flow.filter" => FilterNodeName,
-            "flow.when" => RouterNodeName,
-            RoutingNodeTypes.Switch => SwitchNodeName,
-            RoutingNodeTypes.Correlation => CorrelationNodeName,
-            RoutingNodeTypes.Window => WindowNodeName,
-            RoutingNodeTypes.Join => JoinNodeName,
-            RoutingNodeTypes.Fork => ForkNodeName,
-            RoutingNodeTypes.Merge => MergeNodeName,
-            "flow.assert" => AssertionNodeName,
-            "json.schema-validator" => "jsonSchemaValidator",
-            "json.parse" => "jsonParser",
-            "json.stringify" => "jsonStringifier",
-            "text.encode" => "textEncoder",
-            "text.decode" => "textDecoder",
-            "base64.encode" => "base64Encoder",
-            "base64.decode" => "base64Decoder",
-            "flow.mapper" => MakeUniqueNodeName(workflow, MapperNodeName),
-            "state.reducer" => StateReducerNodeName,
-            "flow.logger" => MakeUniqueNodeName(workflow, LoggerNodeName),
-            "mqtt.recorder" => RecorderNodeName,
-            "mqtt.publisher" => PublisherNodeName,
-            "http.request" => HttpRequestNodeName,
-            "file.writer" => "fileWriter",
-            "mqtt.connection-state-trigger" => StateSourceNodeName,
-            "replay.source" => ReplayNodeName,
-            "generated.source" => GeneratedNodeName,
-            "session.source" => StoredSourceNodeName,
-            TimerNodeTypes.Interval => TimerIntervalNodeName,
-            TimerNodeTypes.Schedule => TimerScheduleNodeName,
-            TimerNodeTypes.Delay => TimerDelayNodeName,
-            TimerNodeTypes.Debounce => TimerDebounceNodeName,
-            TimerNodeTypes.Throttle => TimerThrottleNodeName,
-            _ => MakeNodeName(componentType)
-        };
+        var componentMetadata = FlowComponentMetadataRegistry.Find(componentType);
+        var preferredNodeName = componentMetadata is { } metadata
+            ? metadata.MakePreferredNodeNameUnique
+                ? MakeUniqueNodeName(workflow, metadata.PreferredNodeName)
+                : metadata.PreferredNodeName
+            : MakeNodeName(componentType);
         var nodeName = MakeUniqueNodeName(workflow, preferredNodeName);
 
         var node = new JsonObject
@@ -1200,115 +1162,12 @@ public sealed class FlowDefinitionComposer
             ["type"] = componentType
         };
 
-        if (componentType == "flow.mapper")
+        var configurationContext = new FlowComponentDefaultConfigurationContext(
+            FindDefaultMapperInputType(workflow),
+            FindFirstConnectionResourceName(flowApplication));
+        if (FlowComponentMetadataRegistry.CreateDefaultConfiguration(componentType, configurationContext) is { } configuration)
         {
-            node["configuration"] = CreateDynamicMapperConfiguration(
-                "MqttPublishRequest",
-                FindDefaultMapperInputType(workflow));
-        }
-        else if (componentType == "json.schema-validator")
-        {
-            node["configuration"] = CreateJsonSchemaValidatorConfiguration();
-        }
-        else if (componentType == "flow.when")
-        {
-            node["configuration"] = CreateConditionRouterConfiguration();
-        }
-        else if (componentType == RoutingNodeTypes.Switch)
-        {
-            node["configuration"] = CreateRoutingSwitchConfiguration(FindDefaultMapperInputType(workflow));
-        }
-        else if (componentType == RoutingNodeTypes.Correlation)
-        {
-            node["configuration"] = CreateRoutingCorrelationConfiguration(FindDefaultMapperInputType(workflow));
-        }
-        else if (componentType == RoutingNodeTypes.Window)
-        {
-            node["configuration"] = CreateRoutingWindowConfiguration(FindDefaultMapperInputType(workflow));
-        }
-        else if (componentType == RoutingNodeTypes.Join)
-        {
-            node["configuration"] = CreateRoutingJoinConfiguration();
-        }
-        else if (componentType == RoutingNodeTypes.Fork)
-        {
-            node["configuration"] = CreateRoutingForkConfiguration(FindDefaultMapperInputType(workflow));
-        }
-        else if (componentType == RoutingNodeTypes.Merge)
-        {
-            node["configuration"] = CreateRoutingMergeConfiguration();
-        }
-        else if (componentType == "flow.assert")
-        {
-            node["configuration"] = CreateAssertionConfiguration();
-        }
-        else if (componentType == "state.reducer")
-        {
-            node["configuration"] = CreateStateReducerConfiguration();
-        }
-        else if (componentType == "mqtt.publisher")
-        {
-            node["configuration"] = CreateMqttPublisherConfiguration(FindFirstConnectionResourceName(flowApplication));
-        }
-        else if (componentType == "mqtt.connection-state-trigger")
-        {
-            node["configuration"] = CreateConnectionReferenceConfiguration(FindFirstConnectionResourceName(flowApplication));
-        }
-        else if (componentType == "generated.source")
-        {
-            node["configuration"] = CreateGeneratedSourceConfiguration();
-        }
-        else if (componentType == "session.source")
-        {
-            node["configuration"] = CreateStoredSessionSourceConfiguration();
-        }
-        else if (componentType == "replay.source")
-        {
-            node["configuration"] = CreateReplaySourceConfiguration();
-        }
-        else if (componentType == "flow.logger")
-        {
-            node["configuration"] = CreateLoggerConfiguration();
-        }
-        else if (componentType == "mqtt.metrics")
-        {
-            node["configuration"] = CreateMetricsConfiguration();
-        }
-        else if (componentType == "http.request")
-        {
-            node["configuration"] = CreateHttpRequestConfiguration();
-        }
-        else if (componentType == "payload.inspect")
-        {
-            node["configuration"] = CreatePayloadInspectConfiguration();
-        }
-        else if (componentType is "mqtt.recorder" or "file.writer")
-        {
-            node["configuration"] = CreateActorCapacityConfiguration();
-        }
-        else if (componentType == TimerNodeTypes.Interval)
-        {
-            node["configuration"] = CreateTimerIntervalConfiguration();
-        }
-        else if (componentType == TimerNodeTypes.Schedule)
-        {
-            node["configuration"] = CreateTimerScheduleConfiguration();
-        }
-        else if (componentType == TimerNodeTypes.Delay)
-        {
-            node["configuration"] = CreateTimerDelayConfiguration(FindDefaultMapperInputType(workflow));
-        }
-        else if (componentType == TimerNodeTypes.Debounce)
-        {
-            node["configuration"] = CreateTimerDebounceConfiguration(FindDefaultMapperInputType(workflow));
-        }
-        else if (componentType == TimerNodeTypes.Throttle)
-        {
-            node["configuration"] = CreateTimerThrottleConfiguration(FindDefaultMapperInputType(workflow));
-        }
-        else if (IsSerializationTransform(componentType))
-        {
-            node["configuration"] = CreateTransformCapacityConfiguration();
+            node["configuration"] = configuration;
         }
 
         if (FindDefaultInputLink(componentType, workflow) is { Length: > 0 } inputLink)
@@ -1836,7 +1695,7 @@ public sealed class FlowDefinitionComposer
                 }
 
                 var cellName = MakeUniqueDashboardCellName(cells, "cell");
-                cells[cellName] = CreateDashboardCellObject(new DashboardCellSnapshot(
+                cells[cellName] = FlowDashboardDefinitionFactory.CreateCell(new DashboardCellSnapshot(
                     cellName,
                     requestedRow,
                     requestedColumn,
@@ -1866,7 +1725,7 @@ public sealed class FlowDefinitionComposer
         }
 
         var name = MakeUniqueDashboardCellName(cells, "cell");
-        cells[name] = CreateDashboardCellObject(new DashboardCellSnapshot(
+        cells[name] = FlowDashboardDefinitionFactory.CreateCell(new DashboardCellSnapshot(
             name,
             openPosition.Value.Row,
             openPosition.Value.Column,
@@ -2102,24 +1961,6 @@ public sealed class FlowDefinitionComposer
         }
     }
 
-    private static JsonObject CreateDashboardCellObject(DashboardCellSnapshot cell)
-    {
-        var result = new JsonObject
-        {
-            ["row"] = cell.Row,
-            ["column"] = cell.Column,
-            ["rowSpan"] = cell.RowSpan,
-            ["columnSpan"] = cell.ColumnSpan
-        };
-
-        if (!string.IsNullOrWhiteSpace(cell.Widget))
-        {
-            result["widget"] = cell.Widget;
-        }
-
-        return result;
-    }
-
     private static JsonArray CreateTrackArray(IEnumerable<string> tracks)
     {
         var array = new JsonArray();
@@ -2142,169 +1983,6 @@ public sealed class FlowDefinitionComposer
         return array;
     }
 
-    private static JsonObject CreateConfigurationObject(IReadOnlyDictionary<string, string> configuration)
-    {
-        var result = new JsonObject();
-        foreach (var (key, value) in configuration.OrderBy(static pair => pair.Key, StringComparer.Ordinal))
-        {
-            if (!string.IsNullOrWhiteSpace(key))
-            {
-                result[key] = value ?? string.Empty;
-            }
-        }
-
-        return result;
-    }
-
-    private static JsonObject CreateScenarioStepObject(JsonObject flowApplication, string stepType)
-        => new()
-        {
-            ["type"] = stepType,
-            ["configuration"] = CreateScenarioStepConfiguration(
-                stepType,
-                CreateDefaultScenarioStepConfiguration(flowApplication, stepType))
-        };
-
-    private static IReadOnlyDictionary<string, string> CreateDefaultScenarioStepConfiguration(
-        JsonObject flowApplication,
-        string stepType)
-        => ScenarioStepCatalog.Shared.CreateDefaultConfiguration(
-            stepType,
-            ReadFirstConnectionResourceName(flowApplication));
-
-    private static JsonObject CreateScenarioStepConfiguration(
-        string stepType,
-        IReadOnlyDictionary<string, string> configuration)
-    {
-        var result = new JsonObject();
-        if (IsMqttPublishScenarioStep(stepType))
-        {
-            AddString(result, configuration, ScenarioStepCatalog.ConnectionKey);
-            AddString(result, configuration, ScenarioStepCatalog.TopicKey);
-            AddPayload(result, configuration);
-            AddString(result, configuration, ScenarioStepCatalog.PayloadEncodingKey);
-            AddInt(result, configuration, ScenarioStepCatalog.QosKey, 0);
-            AddBool(result, configuration, ScenarioStepCatalog.RetainKey, false);
-            return result;
-        }
-
-        if (IsMqttTriggerScenarioStep(stepType))
-        {
-            AddString(result, configuration, ScenarioStepCatalog.ConnectionKey);
-            AddString(result, configuration, ScenarioStepCatalog.SubscriptionsKey);
-            AddInt(result, configuration, ScenarioStepCatalog.QosKey, 1);
-            AddBool(result, configuration, ScenarioStepCatalog.ReceiveRetainedKey, false);
-            AddBool(result, configuration, ScenarioStepCatalog.RetainAsPublishedKey, true);
-            return result;
-        }
-
-        AddString(result, configuration, ScenarioStepCatalog.EventTypeKey);
-        AddString(result, configuration, ScenarioStepCatalog.TopicStartsWithKey);
-        AddString(result, configuration, ScenarioStepCatalog.TopicNotStartsWithKey);
-        AddString(result, configuration, ScenarioStepCatalog.SubjectStartsWithKey);
-        AddString(result, configuration, ScenarioStepCatalog.StatusKey);
-        AddString(result, configuration, ScenarioStepCatalog.SourceKey);
-        AddString(result, configuration, ScenarioStepCatalog.PayloadContainsKey);
-        AddInt(result, configuration, ScenarioStepCatalog.TimeoutMsKey, 5000);
-        AddAttributes(result, configuration);
-        return result;
-    }
-
-    private static bool IsMqttPublishScenarioStep(string stepType)
-        => ScenarioStepCatalog.Shared.Find(stepType)?.EditorKind == ScenarioStepEditorKind.MqttPublish;
-
-    private static bool IsMqttTriggerScenarioStep(string stepType)
-        => ScenarioStepCatalog.Shared.Find(stepType)?.EditorKind == ScenarioStepEditorKind.MqttTrigger;
-
-    private static void AddString(JsonObject target, IReadOnlyDictionary<string, string> configuration, string key)
-        => target[key] = configuration.TryGetValue(key, out var value) ? value ?? string.Empty : string.Empty;
-
-    private static void AddInt(
-        JsonObject target,
-        IReadOnlyDictionary<string, string> configuration,
-        string key,
-        int fallback)
-    {
-        target[key] = configuration.TryGetValue(key, out var value) &&
-                      int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var parsed)
-            ? parsed
-            : fallback;
-    }
-
-    private static void AddBool(
-        JsonObject target,
-        IReadOnlyDictionary<string, string> configuration,
-        string key,
-        bool fallback)
-    {
-        target[key] = configuration.TryGetValue(key, out var value) &&
-                      bool.TryParse(value, out var parsed)
-            ? parsed
-            : fallback;
-    }
-
-    private static void AddAttributes(JsonObject target, IReadOnlyDictionary<string, string> configuration)
-    {
-        var attributes = new JsonObject();
-        foreach (var (key, value) in configuration.OrderBy(static pair => pair.Key, StringComparer.Ordinal))
-        {
-            if (DashboardEventFilterCatalog.TryGetAttributeName(key, out var attributeName) &&
-                !string.IsNullOrWhiteSpace(value))
-            {
-                attributes[attributeName] = value.Trim();
-            }
-        }
-
-        if (attributes.Count > 0)
-        {
-            target["attributes"] = attributes;
-        }
-    }
-
-    private static void AddPayload(JsonObject target, IReadOnlyDictionary<string, string> configuration)
-    {
-        var payload = configuration.TryGetValue(ScenarioStepCatalog.PayloadKey, out var value)
-            ? value ?? string.Empty
-            : string.Empty;
-        var encoding = configuration.TryGetValue(ScenarioStepCatalog.PayloadEncodingKey, out var configuredEncoding)
-            ? configuredEncoding
-            : string.Empty;
-        if (string.Equals(encoding, "json", StringComparison.OrdinalIgnoreCase) &&
-            !string.IsNullOrWhiteSpace(payload))
-        {
-            try
-            {
-                target[ScenarioStepCatalog.PayloadKey] = JsonNode.Parse(payload);
-                return;
-            }
-            catch (JsonException)
-            {
-                // Store the raw value so the user can fix it without losing their input.
-            }
-        }
-
-        target[ScenarioStepCatalog.PayloadKey] = payload;
-    }
-
-    private static string ReadFirstConnectionResourceName(JsonObject flowApplication)
-    {
-        if (flowApplication["resources"] is not JsonObject resources)
-        {
-            return string.Empty;
-        }
-
-        foreach (var resource in resources)
-        {
-            if (resource.Value is JsonObject resourceObject &&
-                string.Equals(ReadString(resourceObject, "type"), "mqtt.connection", StringComparison.Ordinal))
-            {
-                return resource.Key;
-            }
-        }
-
-        return string.Empty;
-    }
-
     private static JsonObject GetOrCreateDashboardObject(JsonObject flowApplication, string dashboardName)
     {
         var dashboards = GetOrCreateObject(flowApplication, "dashboards");
@@ -2313,7 +1991,7 @@ public sealed class FlowDefinitionComposer
             return dashboard;
         }
 
-        dashboard = CreateDashboard();
+        dashboard = FlowDashboardDefinitionFactory.CreateDashboard();
         dashboards[dashboardName] = dashboard;
         return dashboard;
     }
@@ -2364,44 +2042,6 @@ public sealed class FlowDefinitionComposer
         }
 
         return $"{preferred}{index}";
-    }
-
-    private static string WidgetNamePrefix(string widgetType)
-        => widgetType switch
-        {
-            DashboardWidgetCatalog.EventCounterType => "eventCounter",
-            DashboardWidgetCatalog.LatestEventType => "latestEvent",
-            DashboardWidgetCatalog.EventRateType => "eventRate",
-            _ => "widget"
-        };
-
-    private static string ScenarioStepNamePrefix(string stepType)
-        => ScenarioStepCatalog.Shared.Find(stepType)?.NamePrefix ?? "step";
-
-    private static JsonObject CreateDashboardWidgetObject(string widgetType)
-        => new()
-        {
-            ["type"] = widgetType,
-            ["configuration"] = CreateDashboardWidgetConfiguration(widgetType)
-        };
-
-    private static JsonObject CreateDashboardWidgetConfiguration(string widgetType)
-    {
-        var title = widgetType switch
-        {
-            DashboardWidgetCatalog.EventCounterType => "Events",
-            DashboardWidgetCatalog.LatestEventType => "Latest event",
-            DashboardWidgetCatalog.EventRateType => "Event rate",
-            _ => null
-        };
-        if (title is null)
-        {
-            return new JsonObject();
-        }
-
-        var configuration = CreateConfigurationObject(DashboardEventFilterCatalog.Shared.CreateEmptyConfiguration());
-        configuration["title"] = title;
-        return configuration;
     }
 
     private static JsonObject CreateConnection(MqttConnectionProfile profile)
@@ -2918,46 +2558,31 @@ public sealed class FlowDefinitionComposer
             : newSourceNodeName.Trim();
     }
 
-    private static bool NeedsInputLink(string componentType) => componentType switch
-    {
-        "mqtt.trigger" or "session.source" or "replay.source" or "generated.source" or "mqtt.connection-state-trigger"
-            or TimerNodeTypes.Interval or TimerNodeTypes.Schedule => false,
-        RoutingNodeTypes.Join or RoutingNodeTypes.Merge => false,
-        "json.parse" or "json.stringify" or "text.encode" or "text.decode" or "base64.encode" or "base64.decode" => false,
-        _ => true
-    };
-
-    private static bool IsSerializationTransform(string componentType)
-        => componentType is "json.parse" or "json.stringify" or "text.encode" or "text.decode" or "base64.encode" or "base64.decode";
+    private static bool NeedsInputLink(string componentType)
+        => GetDefaultInputLink(componentType) != FlowComponentDefaultInputLink.None;
 
     private static string? FindDefaultInputLink(string componentType, JsonObject workflow)
     {
-        if (!NeedsInputLink(componentType))
+        return GetDefaultInputLink(componentType) switch
         {
-            return null;
-        }
-
-        if (IsActor(componentType))
-        {
-            return FindPreferredMapperNode(workflow) is { Length: > 0 } mapper
+            FlowComponentDefaultInputLink.None => null,
+            FlowComponentDefaultInputLink.PreferredMapper =>
+                FindPreferredMapperNode(workflow) is { Length: > 0 } mapper
                 ? $"{mapper}.Output"
-                : null;
-        }
-
-        if (componentType == "state.reducer")
-        {
-            return FindPreferredMapperNode(workflow, "StateReducerInput") is { Length: > 0 } mapper
+                : null,
+            FlowComponentDefaultInputLink.StateReducerMapper =>
+                FindPreferredMapperNode(workflow, "StateReducerInput") is { Length: > 0 } mapper
                 ? $"{mapper}.Output"
-                : null;
-        }
-
-        return FindPreferredSourceNode(workflow) is { Length: > 0 } source
-            ? $"{source}.Output"
-            : null;
+                : null,
+            _ => FindPreferredSourceNode(workflow) is { Length: > 0 } source
+                ? $"{source}.Output"
+                : null
+        };
     }
 
-    private static bool IsActor(string componentType)
-        => componentType is "mqtt.publisher" or "mqtt.recorder" or "file.writer" or "http.request" or "payload.inspect";
+    private static FlowComponentDefaultInputLink GetDefaultInputLink(string componentType)
+        => FlowComponentMetadataRegistry.Find(componentType)?.DefaultInputLink
+           ?? FlowComponentDefaultInputLink.PreferredSource;
 
     private static string? FindPreferredSourceNode(JsonObject workflow)
     {
@@ -3027,149 +2652,6 @@ public sealed class FlowDefinitionComposer
         };
     }
 
-    private static JsonObject CreateDynamicMapperConfiguration(string outputType, string inputType = "MqttEnvelope")
-        => new()
-        {
-            ["engine"] = "jsonata",
-            ["inputType"] = inputType,
-            ["outputType"] = outputType,
-            ["outputContract"] = "typed",
-            ["expression"] = DynamicMapperNodeModel.DefaultExpression(outputType, "jsonata", inputType)
-        };
-
-    private static JsonObject CreateJsonSchemaValidatorConfiguration()
-        => new()
-        {
-            ["schemaId"] = "payload-object",
-            ["schema"] = """
-            {
-              "type": "object"
-            }
-            """
-        };
-
-    private static JsonObject CreateConditionRouterConfiguration()
-        => new()
-        {
-            ["expression"] = "qos >= 1",
-            ["boundedCapacity"] = 1000
-        };
-
-    private static JsonObject CreateRoutingSwitchConfiguration(string inputType = RoutingSwitchNodeModel.DefaultInputType)
-    {
-        var normalizedInputType = RoutingNodeConfiguration.NormalizeInputType(inputType);
-        return new()
-        {
-            ["inputType"] = normalizedInputType,
-            ["expression"] = DefaultRoutingSwitchExpression(normalizedInputType),
-            ["routes"] = new JsonArray("True", "False"),
-            ["routeOutputs"] = new JsonObject
-            {
-                ["True"] = "WhenTrue",
-                ["False"] = "WhenFalse"
-            },
-            ["emitRouteEnvelope"] = false,
-            ["boundedCapacity"] = RoutingSwitchNodeModel.DefaultBoundedCapacity
-        };
-    }
-
-    private static string DefaultRoutingSwitchExpression(string inputType)
-        => inputType is FlowContractTypeNames.MqttEnvelope
-            or FlowContractTypeNames.MqttPublishRequest
-            or FlowContractTypeNames.MqttRecordingRequest
-            or FlowContractTypeNames.InspectedMqttMessage
-            or FlowContractTypeNames.JsonSchemaValidationResult
-            ? RoutingSwitchNodeModel.DefaultExpression
-            : "input != null";
-
-    private static JsonObject CreateRoutingCorrelationConfiguration(string inputType = RoutingCorrelationNodeModel.DefaultInputType)
-        => new()
-        {
-            ["inputType"] = RoutingNodeConfiguration.NormalizeInputType(inputType),
-            ["keyExpression"] = RoutingCorrelationNodeModel.DefaultKeyExpression,
-            ["sideExpression"] = RoutingCorrelationNodeModel.DefaultSideExpression,
-            ["requestSide"] = RoutingCorrelationNodeModel.DefaultRequestSide,
-            ["responseSide"] = RoutingCorrelationNodeModel.DefaultResponseSide,
-            ["caseSensitive"] = RoutingCorrelationNodeModel.DefaultCaseSensitive,
-            ["timeoutMilliseconds"] = RoutingCorrelationNodeModel.DefaultTimeoutMilliseconds,
-            ["maxPending"] = RoutingCorrelationNodeModel.DefaultMaxPending,
-            ["boundedCapacity"] = RoutingCorrelationNodeModel.DefaultBoundedCapacity
-        };
-
-    private static JsonObject CreateRoutingForkConfiguration(string inputType = RoutingForkNodeModel.DefaultInputType)
-        => new()
-        {
-            ["inputType"] = RoutingNodeConfiguration.NormalizeInputType(inputType),
-            ["outputs"] = new JsonArray("A", "B"),
-            ["boundedCapacity"] = RoutingForkNodeModel.DefaultBoundedCapacity
-        };
-
-    private static JsonObject CreateRoutingWindowConfiguration(string inputType = RoutingWindowNodeModel.DefaultInputType)
-        => new()
-        {
-            ["inputType"] = RoutingNodeConfiguration.NormalizeInputType(inputType),
-            ["maxItems"] = RoutingWindowNodeModel.DefaultMaxItems,
-            ["timeMilliseconds"] = RoutingWindowNodeModel.DefaultTimeMilliseconds,
-            ["emitPartialOnCompletion"] = RoutingWindowNodeModel.DefaultEmitPartialOnCompletion,
-            ["boundedCapacity"] = RoutingWindowNodeModel.DefaultBoundedCapacity
-        };
-
-    private static JsonObject CreateRoutingJoinConfiguration(string inputType = RoutingJoinNodeModel.DefaultLeftInputType)
-    {
-        var normalizedInputType = RoutingNodeConfiguration.NormalizeInputType(inputType);
-        return new()
-        {
-            ["leftInputType"] = normalizedInputType,
-            ["rightInputType"] = normalizedInputType,
-            ["leftKeyExpression"] = RoutingJoinNodeModel.DefaultLeftKeyExpression,
-            ["rightKeyExpression"] = RoutingJoinNodeModel.DefaultRightKeyExpression,
-            ["caseSensitive"] = RoutingJoinNodeModel.DefaultCaseSensitive,
-            ["timeoutMilliseconds"] = RoutingJoinNodeModel.DefaultTimeoutMilliseconds,
-            ["maxPending"] = RoutingJoinNodeModel.DefaultMaxPending,
-            ["boundedCapacity"] = RoutingJoinNodeModel.DefaultBoundedCapacity
-        };
-    }
-
-    private static JsonObject CreateRoutingMergeConfiguration(string inputType = RoutingMergeNodeModel.DefaultInputType)
-        => new()
-        {
-            ["inputType"] = RoutingNodeConfiguration.NormalizeInputType(inputType),
-            ["inputs"] = new JsonArray("Left", "Right"),
-            ["boundedCapacity"] = RoutingMergeNodeModel.DefaultBoundedCapacity
-        };
-
-    private static JsonObject CreateAssertionConfiguration()
-        => new()
-        {
-            ["assertionName"] = FlowAssertionNodeModel.DefaultAssertionName,
-            ["inputType"] = FlowAssertionNodeModel.DefaultInputType,
-            ["expression"] = FlowAssertionNodeModel.DefaultExpression,
-            ["failureMessage"] = FlowAssertionNodeModel.DefaultFailureMessage,
-            ["boundedCapacity"] = FlowAssertionNodeModel.DefaultBoundedCapacity
-        };
-
-    private static JsonObject CreateStateReducerConfiguration()
-        => new()
-        {
-            ["engine"] = StateReducerNodeModel.DefaultEngine,
-            ["reducer"] = StateReducerNodeModel.DefaultReducer,
-            ["boundedCapacity"] = StateReducerNodeModel.DefaultBoundedCapacity,
-            ["maxKeys"] = StateReducerNodeModel.DefaultMaxKeys
-        };
-
-    private static JsonObject CreateMqttPublisherConfiguration(string? connectionName = null)
-        => new()
-        {
-            ["connection"] = string.IsNullOrWhiteSpace(connectionName) ? BrokerResourceName : connectionName,
-            ["boundedCapacity"] = 1000
-        };
-
-    private static JsonObject CreateConnectionReferenceConfiguration(string? connectionName = null)
-        => new()
-        {
-            ["connection"] = string.IsNullOrWhiteSpace(connectionName) ? BrokerResourceName : connectionName
-        };
-
     private static string? FindFirstConnectionResourceName(JsonObject flowApplication)
     {
         if (flowApplication["resources"] is not JsonObject resources)
@@ -3189,143 +2671,9 @@ public sealed class FlowDefinitionComposer
         return null;
     }
 
-    private static JsonObject CreateGeneratedSourceConfiguration()
-        => new()
-        {
-            ["messages"] = SourceNodeConfiguration.BuildGeneratedMessages(
-            [
-                new GeneratedMessageDraft
-                {
-                    Topic = "factory/sample",
-                    Payload = """{"value":21.7,"unit":"c","status":"ok"}"""
-                }
-            ]),
-            ["boundedCapacity"] = 1000
-        };
-
-    private static JsonObject CreateReplaySourceConfiguration()
-        => new()
-        {
-            ["sessionId"] = string.Empty,
-            ["speed"] = 1,
-            ["boundedCapacity"] = 1000
-        };
-
-    private static JsonObject CreateStoredSessionSourceConfiguration()
-        => new()
-        {
-            ["sessionId"] = string.Empty,
-            ["preserveTiming"] = false,
-            ["speed"] = 1,
-            ["boundedCapacity"] = 1000
-        };
-
-    private static JsonObject CreateTimerIntervalConfiguration()
-        => new()
-        {
-            ["intervalMilliseconds"] = TimerIntervalNodeModel.DefaultIntervalMilliseconds,
-            ["initialDelayMilliseconds"] = TimerIntervalNodeModel.DefaultInitialDelayMilliseconds,
-            ["emitImmediately"] = true,
-            ["boundedCapacity"] = TimerIntervalNodeModel.DefaultBoundedCapacity
-        };
-
-    private static JsonObject CreateTimerScheduleConfiguration()
-        => new()
-        {
-            ["cron"] = TimerScheduleNodeModel.DefaultCron,
-            ["timeZoneId"] = TimerScheduleNodeModel.DefaultTimeZoneId,
-            ["boundedCapacity"] = TimerScheduleNodeModel.DefaultBoundedCapacity
-        };
-
-    private static JsonObject CreateTimerDelayConfiguration(string inputType = TimerDelayNodeModel.DefaultInputType)
-        => new()
-        {
-            ["inputType"] = TimerDelayNodeModel.NormalizeInputType(inputType),
-            ["delayMilliseconds"] = TimerDelayNodeModel.DefaultDelayMilliseconds,
-            ["boundedCapacity"] = TimerDelayNodeModel.DefaultBoundedCapacity
-        };
-
-    private static JsonObject CreateTimerDebounceConfiguration(string inputType = TimerDelayNodeModel.DefaultInputType)
-        => new()
-        {
-            ["inputType"] = TimerDelayNodeModel.NormalizeInputType(inputType),
-            ["quietPeriodMilliseconds"] = TimerDebounceNodeModel.DefaultQuietPeriodMilliseconds,
-            ["boundedCapacity"] = TimerDebounceNodeModel.DefaultBoundedCapacity
-        };
-
-    private static JsonObject CreateTimerThrottleConfiguration(string inputType = TimerDelayNodeModel.DefaultInputType)
-        => new()
-        {
-            ["inputType"] = TimerDelayNodeModel.NormalizeInputType(inputType),
-            ["intervalMilliseconds"] = TimerThrottleNodeModel.DefaultIntervalMilliseconds,
-            ["emitFirstImmediately"] = true,
-            ["boundedCapacity"] = TimerThrottleNodeModel.DefaultBoundedCapacity
-        };
-
-    private static JsonObject CreateLoggerConfiguration()
-        => new()
-        {
-            ["boundedCapacity"] = 1000,
-            ["maxEntries"] = 500,
-            ["includePayloadPreview"] = true,
-            ["maxPayloadPreviewChars"] = 512
-        };
-
-    private static JsonObject CreateMetricsConfiguration()
-        => new()
-        {
-            ["boundedCapacity"] = MqttMetricsNodeModel.DefaultBoundedCapacity,
-            ["rateWindowSeconds"] = MqttMetricsNodeModel.DefaultRateWindowSeconds,
-            ["metricCardColumns"] = MqttMetricsNodeModel.DefaultMetricCardColumns,
-            ["displayMetrics"] = MqttMetricsNodeModel.BuildDisplayMetrics(MqttMetricsNodeModel.DefaultDisplayMetrics)
-        };
-
-    private static JsonObject CreateHttpRequestConfiguration()
-        => new()
-        {
-            ["defaultTimeoutMilliseconds"] = 30000,
-            ["maxResponseBodyBytes"] = 1048576,
-            ["followRedirects"] = true,
-            ["treatNonSuccessStatusAsError"] = false,
-            ["boundedCapacity"] = 128
-        };
-
-    private static JsonObject CreatePayloadInspectConfiguration()
-        => new()
-        {
-            ["maxPreviewBytes"] = 1024,
-            ["maxFormattedChars"] = 4096,
-            ["detectBase64"] = true,
-            ["formatJson"] = true,
-            ["formatXml"] = true,
-            ["boundedCapacity"] = 128
-        };
-
-    private static JsonObject CreateActorCapacityConfiguration()
-        => new()
-        {
-            ["boundedCapacity"] = 1000
-        };
-
-    private static JsonObject CreateTransformCapacityConfiguration()
-        => new()
-        {
-            ["boundedCapacity"] = 1000
-        };
-
-    private static JsonObject CreateDashboard()
-        => new()
-        {
-            ["layout"] = new JsonObject
-            {
-                ["columns"] = new JsonArray("320", "*"),
-                ["rows"] = new JsonArray("180", "*"),
-                ["columnPadding"] = new JsonArray(0, 0),
-                ["rowPadding"] = new JsonArray(0, 0),
-                ["cells"] = new JsonObject()
-            },
-            ["widgets"] = new JsonObject()
-        };
+    private static JsonObject CreateDefaultComponentConfiguration(string componentType)
+        => FlowComponentMetadataRegistry.CreateDefaultConfiguration(componentType, FlowComponentDefaultConfigurationContext.Empty)
+           ?? new JsonObject();
 
     private static JsonObject CreateRoot()
         => new()

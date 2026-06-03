@@ -4,6 +4,18 @@ This file records project decisions so they do not get lost across sessions.
 
 ## Accepted Decisions
 
+### 2026-06-03 - Topic tree is a first-class ops visualization
+
+Decision: The topic tree should be treated as a first-class visual surface in the workspace, not only as a narrow secondary panel. Before the next major desktop layout/design pass, choose an explicit topic-tree treatment: a larger dockable panel, a dedicated topic explorer view, or an ops-focused dashboard/monitoring surface where the topic tree has enough space and importance.
+
+Reasoning:
+- Feedback from an operations-team review was that FluxMQ is compelling, but MQTT topic hierarchy is one of the first mental models ops users expect to see.
+- The current UI makes the topic tree feel under-weighted relative to the diagram and side panels.
+- Topic hierarchy is not just navigation; it is an operational visualization for broker activity, topic health, recent payloads, and where traffic is flowing.
+- The decision must be made deliberately instead of letting the current cramped layout become the default by inertia.
+
+Status: Accepted direction; exact layout treatment pending.
+
 ### 2026-05-31 - Test when steps are successful guards
 
 Decision: Model `when.event` as a conditional guard over the scenario event stream. A matching event passes and lets the flat scenario continue; a timeout marks the guard step `Skipped`, stops remaining flat scenario steps, and keeps the scenario run successful.
