@@ -458,7 +458,7 @@ public sealed class FlowDefinitionComposer
         var dashboards = GetOrCreateObject(flowApplication, "dashboards");
         if (!dashboards.ContainsKey(name))
         {
-            dashboards[name] = CreateDashboard();
+            dashboards[name] = FlowDashboardDefinitionFactory.CreateDashboard();
         }
 
         return root.ToJsonString(Options);
@@ -522,8 +522,8 @@ public sealed class FlowDefinitionComposer
         var tests = GetOrCreateObject(flowApplication, "tests");
         var scenario = GetOrCreateObject(tests, testName);
         var steps = GetOrCreateObject(scenario, "steps");
-        var stepName = MakeUniqueScenarioStepName(steps, ScenarioStepNamePrefix(normalizedType));
-        steps[stepName] = CreateScenarioStepObject(flowApplication, normalizedType);
+        var stepName = MakeUniqueScenarioStepName(steps, FlowScenarioStepDefinitionFactory.NamePrefix(normalizedType));
+        steps[stepName] = FlowScenarioStepDefinitionFactory.CreateStep(flowApplication, normalizedType);
 
         return root.ToJsonString(Options);
     }
@@ -559,7 +559,7 @@ public sealed class FlowDefinitionComposer
             ? ReadString(step, "type") ?? ScenarioStepTypes.ExpectEvent
             : stepType.Trim();
         step["type"] = normalizedType;
-        step["configuration"] = CreateScenarioStepConfiguration(normalizedType, configuration);
+        step["configuration"] = FlowScenarioStepDefinitionFactory.CreateConfiguration(normalizedType, configuration);
         return root.ToJsonString(Options);
     }
 
@@ -697,8 +697,8 @@ public sealed class FlowDefinitionComposer
         var cells = GetOrCreateObject(layout, "cells");
         var widgets = GetOrCreateObject(dashboard, "widgets");
 
-        var widgetName = MakeUniqueDashboardWidgetName(widgets, WidgetNamePrefix(normalizedType));
-        widgets[widgetName] = CreateDashboardWidgetObject(normalizedType);
+        var widgetName = MakeUniqueDashboardWidgetName(widgets, FlowDashboardDefinitionFactory.WidgetNamePrefix(normalizedType));
+        widgets[widgetName] = FlowDashboardDefinitionFactory.CreateWidget(normalizedType);
         AssignWidgetToDashboardCell(layout, cells, widgetName, cellName);
 
         return root.ToJsonString(Options);
@@ -726,7 +726,7 @@ public sealed class FlowDefinitionComposer
             return json;
         }
 
-        widget["configuration"] = CreateConfigurationObject(configuration);
+        widget["configuration"] = FlowDashboardDefinitionFactory.CreateConfiguration(configuration);
         return root.ToJsonString(Options);
     }
 
@@ -1093,13 +1093,13 @@ public sealed class FlowDefinitionComposer
         var nextCells = new JsonObject();
         foreach (var cell in existingCells)
         {
-            nextCells[cell.Name] = CreateDashboardCellObject(cell);
+            nextCells[cell.Name] = FlowDashboardDefinitionFactory.CreateCell(cell);
         }
 
         foreach (var child in CreateSubdivisionCells(selectedCell, rowParts, columnParts))
         {
             var name = MakeUniqueDashboardCellName(nextCells, "cell");
-            nextCells[name] = CreateDashboardCellObject(child with { Name = name, IsExplicit = true });
+            nextCells[name] = FlowDashboardDefinitionFactory.CreateCell(child with { Name = name, IsExplicit = true });
         }
 
         layout["cells"] = nextCells;
@@ -1695,7 +1695,7 @@ public sealed class FlowDefinitionComposer
                 }
 
                 var cellName = MakeUniqueDashboardCellName(cells, "cell");
-                cells[cellName] = CreateDashboardCellObject(new DashboardCellSnapshot(
+                cells[cellName] = FlowDashboardDefinitionFactory.CreateCell(new DashboardCellSnapshot(
                     cellName,
                     requestedRow,
                     requestedColumn,
@@ -1725,7 +1725,7 @@ public sealed class FlowDefinitionComposer
         }
 
         var name = MakeUniqueDashboardCellName(cells, "cell");
-        cells[name] = CreateDashboardCellObject(new DashboardCellSnapshot(
+        cells[name] = FlowDashboardDefinitionFactory.CreateCell(new DashboardCellSnapshot(
             name,
             openPosition.Value.Row,
             openPosition.Value.Column,
@@ -1961,24 +1961,6 @@ public sealed class FlowDefinitionComposer
         }
     }
 
-    private static JsonObject CreateDashboardCellObject(DashboardCellSnapshot cell)
-    {
-        var result = new JsonObject
-        {
-            ["row"] = cell.Row,
-            ["column"] = cell.Column,
-            ["rowSpan"] = cell.RowSpan,
-            ["columnSpan"] = cell.ColumnSpan
-        };
-
-        if (!string.IsNullOrWhiteSpace(cell.Widget))
-        {
-            result["widget"] = cell.Widget;
-        }
-
-        return result;
-    }
-
     private static JsonArray CreateTrackArray(IEnumerable<string> tracks)
     {
         var array = new JsonArray();
@@ -2001,169 +1983,6 @@ public sealed class FlowDefinitionComposer
         return array;
     }
 
-    private static JsonObject CreateConfigurationObject(IReadOnlyDictionary<string, string> configuration)
-    {
-        var result = new JsonObject();
-        foreach (var (key, value) in configuration.OrderBy(static pair => pair.Key, StringComparer.Ordinal))
-        {
-            if (!string.IsNullOrWhiteSpace(key))
-            {
-                result[key] = value ?? string.Empty;
-            }
-        }
-
-        return result;
-    }
-
-    private static JsonObject CreateScenarioStepObject(JsonObject flowApplication, string stepType)
-        => new()
-        {
-            ["type"] = stepType,
-            ["configuration"] = CreateScenarioStepConfiguration(
-                stepType,
-                CreateDefaultScenarioStepConfiguration(flowApplication, stepType))
-        };
-
-    private static IReadOnlyDictionary<string, string> CreateDefaultScenarioStepConfiguration(
-        JsonObject flowApplication,
-        string stepType)
-        => ScenarioStepCatalog.Shared.CreateDefaultConfiguration(
-            stepType,
-            ReadFirstConnectionResourceName(flowApplication));
-
-    private static JsonObject CreateScenarioStepConfiguration(
-        string stepType,
-        IReadOnlyDictionary<string, string> configuration)
-    {
-        var result = new JsonObject();
-        if (IsMqttPublishScenarioStep(stepType))
-        {
-            AddString(result, configuration, ScenarioStepCatalog.ConnectionKey);
-            AddString(result, configuration, ScenarioStepCatalog.TopicKey);
-            AddPayload(result, configuration);
-            AddString(result, configuration, ScenarioStepCatalog.PayloadEncodingKey);
-            AddInt(result, configuration, ScenarioStepCatalog.QosKey, 0);
-            AddBool(result, configuration, ScenarioStepCatalog.RetainKey, false);
-            return result;
-        }
-
-        if (IsMqttTriggerScenarioStep(stepType))
-        {
-            AddString(result, configuration, ScenarioStepCatalog.ConnectionKey);
-            AddString(result, configuration, ScenarioStepCatalog.SubscriptionsKey);
-            AddInt(result, configuration, ScenarioStepCatalog.QosKey, 1);
-            AddBool(result, configuration, ScenarioStepCatalog.ReceiveRetainedKey, false);
-            AddBool(result, configuration, ScenarioStepCatalog.RetainAsPublishedKey, true);
-            return result;
-        }
-
-        AddString(result, configuration, ScenarioStepCatalog.EventTypeKey);
-        AddString(result, configuration, ScenarioStepCatalog.TopicStartsWithKey);
-        AddString(result, configuration, ScenarioStepCatalog.TopicNotStartsWithKey);
-        AddString(result, configuration, ScenarioStepCatalog.SubjectStartsWithKey);
-        AddString(result, configuration, ScenarioStepCatalog.StatusKey);
-        AddString(result, configuration, ScenarioStepCatalog.SourceKey);
-        AddString(result, configuration, ScenarioStepCatalog.PayloadContainsKey);
-        AddInt(result, configuration, ScenarioStepCatalog.TimeoutMsKey, 5000);
-        AddAttributes(result, configuration);
-        return result;
-    }
-
-    private static bool IsMqttPublishScenarioStep(string stepType)
-        => ScenarioStepCatalog.Shared.Find(stepType)?.EditorKind == ScenarioStepEditorKind.MqttPublish;
-
-    private static bool IsMqttTriggerScenarioStep(string stepType)
-        => ScenarioStepCatalog.Shared.Find(stepType)?.EditorKind == ScenarioStepEditorKind.MqttTrigger;
-
-    private static void AddString(JsonObject target, IReadOnlyDictionary<string, string> configuration, string key)
-        => target[key] = configuration.TryGetValue(key, out var value) ? value ?? string.Empty : string.Empty;
-
-    private static void AddInt(
-        JsonObject target,
-        IReadOnlyDictionary<string, string> configuration,
-        string key,
-        int fallback)
-    {
-        target[key] = configuration.TryGetValue(key, out var value) &&
-                      int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var parsed)
-            ? parsed
-            : fallback;
-    }
-
-    private static void AddBool(
-        JsonObject target,
-        IReadOnlyDictionary<string, string> configuration,
-        string key,
-        bool fallback)
-    {
-        target[key] = configuration.TryGetValue(key, out var value) &&
-                      bool.TryParse(value, out var parsed)
-            ? parsed
-            : fallback;
-    }
-
-    private static void AddAttributes(JsonObject target, IReadOnlyDictionary<string, string> configuration)
-    {
-        var attributes = new JsonObject();
-        foreach (var (key, value) in configuration.OrderBy(static pair => pair.Key, StringComparer.Ordinal))
-        {
-            if (DashboardEventFilterCatalog.TryGetAttributeName(key, out var attributeName) &&
-                !string.IsNullOrWhiteSpace(value))
-            {
-                attributes[attributeName] = value.Trim();
-            }
-        }
-
-        if (attributes.Count > 0)
-        {
-            target["attributes"] = attributes;
-        }
-    }
-
-    private static void AddPayload(JsonObject target, IReadOnlyDictionary<string, string> configuration)
-    {
-        var payload = configuration.TryGetValue(ScenarioStepCatalog.PayloadKey, out var value)
-            ? value ?? string.Empty
-            : string.Empty;
-        var encoding = configuration.TryGetValue(ScenarioStepCatalog.PayloadEncodingKey, out var configuredEncoding)
-            ? configuredEncoding
-            : string.Empty;
-        if (string.Equals(encoding, "json", StringComparison.OrdinalIgnoreCase) &&
-            !string.IsNullOrWhiteSpace(payload))
-        {
-            try
-            {
-                target[ScenarioStepCatalog.PayloadKey] = JsonNode.Parse(payload);
-                return;
-            }
-            catch (JsonException)
-            {
-                // Store the raw value so the user can fix it without losing their input.
-            }
-        }
-
-        target[ScenarioStepCatalog.PayloadKey] = payload;
-    }
-
-    private static string ReadFirstConnectionResourceName(JsonObject flowApplication)
-    {
-        if (flowApplication["resources"] is not JsonObject resources)
-        {
-            return string.Empty;
-        }
-
-        foreach (var resource in resources)
-        {
-            if (resource.Value is JsonObject resourceObject &&
-                string.Equals(ReadString(resourceObject, "type"), "mqtt.connection", StringComparison.Ordinal))
-            {
-                return resource.Key;
-            }
-        }
-
-        return string.Empty;
-    }
-
     private static JsonObject GetOrCreateDashboardObject(JsonObject flowApplication, string dashboardName)
     {
         var dashboards = GetOrCreateObject(flowApplication, "dashboards");
@@ -2172,7 +1991,7 @@ public sealed class FlowDefinitionComposer
             return dashboard;
         }
 
-        dashboard = CreateDashboard();
+        dashboard = FlowDashboardDefinitionFactory.CreateDashboard();
         dashboards[dashboardName] = dashboard;
         return dashboard;
     }
@@ -2223,44 +2042,6 @@ public sealed class FlowDefinitionComposer
         }
 
         return $"{preferred}{index}";
-    }
-
-    private static string WidgetNamePrefix(string widgetType)
-        => widgetType switch
-        {
-            DashboardWidgetCatalog.EventCounterType => "eventCounter",
-            DashboardWidgetCatalog.LatestEventType => "latestEvent",
-            DashboardWidgetCatalog.EventRateType => "eventRate",
-            _ => "widget"
-        };
-
-    private static string ScenarioStepNamePrefix(string stepType)
-        => ScenarioStepCatalog.Shared.Find(stepType)?.NamePrefix ?? "step";
-
-    private static JsonObject CreateDashboardWidgetObject(string widgetType)
-        => new()
-        {
-            ["type"] = widgetType,
-            ["configuration"] = CreateDashboardWidgetConfiguration(widgetType)
-        };
-
-    private static JsonObject CreateDashboardWidgetConfiguration(string widgetType)
-    {
-        var title = widgetType switch
-        {
-            DashboardWidgetCatalog.EventCounterType => "Events",
-            DashboardWidgetCatalog.LatestEventType => "Latest event",
-            DashboardWidgetCatalog.EventRateType => "Event rate",
-            _ => null
-        };
-        if (title is null)
-        {
-            return new JsonObject();
-        }
-
-        var configuration = CreateConfigurationObject(DashboardEventFilterCatalog.Shared.CreateEmptyConfiguration());
-        configuration["title"] = title;
-        return configuration;
     }
 
     private static JsonObject CreateConnection(MqttConnectionProfile profile)
@@ -2893,20 +2674,6 @@ public sealed class FlowDefinitionComposer
     private static JsonObject CreateDefaultComponentConfiguration(string componentType)
         => FlowComponentMetadataRegistry.CreateDefaultConfiguration(componentType, FlowComponentDefaultConfigurationContext.Empty)
            ?? new JsonObject();
-
-    private static JsonObject CreateDashboard()
-        => new()
-        {
-            ["layout"] = new JsonObject
-            {
-                ["columns"] = new JsonArray("320", "*"),
-                ["rows"] = new JsonArray("180", "*"),
-                ["columnPadding"] = new JsonArray(0, 0),
-                ["rowPadding"] = new JsonArray(0, 0),
-                ["cells"] = new JsonObject()
-            },
-            ["widgets"] = new JsonObject()
-        };
 
     private static JsonObject CreateRoot()
         => new()
