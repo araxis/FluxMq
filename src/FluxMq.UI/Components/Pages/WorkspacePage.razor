@@ -90,6 +90,15 @@
                 </div>
             }
             @{
+                var topicsActive = active.ActiveArtifactKind == WorkspaceArtifactKind.Topics && !_jsonView;
+            }
+            <div class="project-tab project-tab-topics @(topicsActive ? "project-tab-active" : "")"
+                 @onclick="@(() => { active.SetActiveTopics(); _jsonView = false; })">
+                <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" Class="project-tab-icon" />
+                <span class="project-tab-name">Topics</span>
+                <span class="project-tab-count">@Live.RecentMessages.Select(m => m.Topic).Distinct(StringComparer.Ordinal).Count()</span>
+            </div>
+            @{
                 var logsActive = active.ActiveArtifactKind == WorkspaceArtifactKind.Logs && !_jsonView;
             }
             <div class="project-tab @(logsActive ? "project-tab-active" : "")"
@@ -134,6 +143,12 @@
                                    OnClear="@active.ClearLogs"
                                    Title="Logs"
                                    MaxEntries="1000" />
+            </div>
+        }
+        else if (active.ActiveArtifactKind == WorkspaceArtifactKind.Topics)
+        {
+            <div class="workspace-tab-content">
+                <TopicExplorerPanel />
             </div>
         }
         else if (active.ActiveArtifactName is null &&

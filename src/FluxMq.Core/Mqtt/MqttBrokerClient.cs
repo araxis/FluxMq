@@ -128,9 +128,9 @@ public sealed class MqttBrokerClient : IMqttBrokerClient
             .ResolveRequiredAsync(_secretResolver, Profile.PasswordSecret, "profile.passwordSecret", cancellationToken)
             .ConfigureAwait(false);
 
-        if (result.Resolved)
+        if (result is { Resolved: true, Value: { } value })
         {
-            return result.Value.Reveal();
+            return value.Reveal();
         }
 
         throw new InvalidOperationException(BuildSecretResolutionMessage(result));

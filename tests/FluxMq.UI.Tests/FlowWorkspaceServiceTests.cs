@@ -368,6 +368,20 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public void SetActiveTopics_SwitchesActiveArtifactToTopicsPage()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddWorkflow("alpha");
+        service.SetActiveDashboardLive(true);
+
+        service.SetActiveTopics();
+
+        service.ActiveArtifactKind.ShouldBe(WorkspaceArtifactKind.Topics);
+        service.ActiveArtifactName.ShouldBe("Topics");
+        service.IsActiveDashboardLive.ShouldBeFalse();
+    }
+
+    [Fact]
     public void SetDefinitionJson_TracksWorkspaceArtifactNames()
     {
         var service = new FlowWorkspaceService(new FlowDefinitionComposer());

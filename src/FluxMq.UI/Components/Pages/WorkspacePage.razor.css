@@ -182,6 +182,23 @@
     color: var(--mud-palette-warning);
 }
 
+.project-tab-topics .project-tab-icon {
+    color: var(--flux-accent);
+}
+
+.project-tab-count {
+    background: var(--flux-surface-2);
+    border: 1px solid var(--flux-border);
+    border-radius: 4px;
+    color: var(--mud-palette-text-secondary);
+    flex: 0 0 auto;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1;
+    padding: 2px 5px;
+}
+
 .project-tab-menu {
     align-items: stretch;
     border-right: 1px solid var(--flux-border-soft);

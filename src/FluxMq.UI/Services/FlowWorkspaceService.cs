@@ -112,6 +112,7 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
         WorkspaceArtifactKind.Pipeline => _activeWorkflowName,
         WorkspaceArtifactKind.Dashboard => _activeDashboardName,
         WorkspaceArtifactKind.Test => _activeTestName,
+        WorkspaceArtifactKind.Topics => "Topics",
         WorkspaceArtifactKind.Logs => "Logs",
         _ => null
     };
@@ -293,6 +294,19 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
         ActiveDashboardCellName = null;
         IsActiveDashboardLive = false;
         _activeArtifactKind = WorkspaceArtifactKind.Logs;
+        NotifyChanged();
+    }
+
+    public void SetActiveTopics()
+    {
+        if (_activeArtifactKind == WorkspaceArtifactKind.Topics)
+        {
+            return;
+        }
+
+        ActiveDashboardCellName = null;
+        IsActiveDashboardLive = false;
+        _activeArtifactKind = WorkspaceArtifactKind.Topics;
         NotifyChanged();
     }
 
@@ -2126,7 +2140,7 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
             _activeTestName = tests.FirstOrDefault();
         }
 
-        if (_activeArtifactKind == WorkspaceArtifactKind.Logs)
+        if (_activeArtifactKind is WorkspaceArtifactKind.Logs or WorkspaceArtifactKind.Topics)
         {
             ActiveDashboardCellName = null;
             IsActiveDashboardLive = false;

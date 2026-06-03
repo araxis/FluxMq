@@ -1,0 +1,174 @@
+@inject LiveMqttWorkspaceService Live
+
+<div class="topic-explorer">
+    <section class="topic-explorer-tree">
+        <div class="topic-explorer-header">
+            <div>
+                <div class="topic-explorer-kicker">Topics</div>
+                <h2>Topic tree</h2>
+            </div>
+            <div class="topic-explorer-stats">
+                <span>@TopicCount topics</span>
+                <span>@MessageSource.Count messages</span>
+            </div>
+        </div>
+
+        @if (Live.SelectedStoredSession is not null)
+        {
+            <div class="topic-session-note">
+                <MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Small" />
+                <span>@Live.SelectedStoredSession.Name</span>
+                <button type="button" @onclick="@Live.ClearStoredSessionSelection">Switch to live</button>
+            </div>
+        }
+
+        <div class="topic-explorer-toolbar">
+            <MudTextField T="string"
+                          Value="@_filter"
+                          ValueChanged="@OnFilterChanged"
+                          Placeholder="Search topics"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Immediate="true"
+                          Clearable="true"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          AdornmentColor="Color.Secondary"
+                          Class="topic-search" />
+            <MudTooltip Text="Clear topic selection">
+                <MudIconButton Icon="@Icons.Material.Filled.Backspace"
+                               Size="Size.Small"
+                               Class="topic-clear-button"
+                               Disabled="@string.IsNullOrWhiteSpace(_selectedTopic)"
+                               OnClick="@ClearTopicSelection" />
+            </MudTooltip>
+        </div>
+
+        <div class="topic-tree-frame">
+            <TopicTreeView Messages="@MessageSource"
+                           SelectedTopic="@_selectedTopic"
+                           TopicSelected="@OnTopicSelected"
+                           Filter="@_filter"
+                           EmptyMessage="No topics yet" />
+        </div>
+    </section>
+
+    <section class="topic-explorer-detail">
+        <div class="topic-detail-strip">
+            <div>
+                <div class="topic-explorer-kicker">Selection</div>
+                <h3>@SelectedTopicLabel</h3>
+            </div>
+            <div class="topic-explorer-stats">
+                <span>@FilteredMessages.Count messages</span>
+                <span>@SelectedPayloadLabel</span>
+            </div>
+        </div>
+
+        <div class="topic-message-table">
+            <MudTable T="MqttEnvelope"
+                      Items="@FilteredMessages"
+                      Dense="true"
+                      Hover="true"
+                      Elevation="0"
+                      RowsPerPage="12"
+                      SelectOnRowClick="true"
+                      SelectedItem="@SelectedMessage"
+                      SelectedItemChanged="@OnMessageSelected">
+                <HeaderContent>
+                    <MudTh>Time</MudTh>
+                    <MudTh>Topic</MudTh>
+                    <MudTh>QoS</MudTh>
+                    <MudTh>Bytes</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Time">@context.ReceivedAt.ToLocalTime().ToString("HH:mm:ss")</MudTd>
+                    <MudTd DataLabel="Topic">
+                        <MudText Typo="Typo.caption" Class="topic-cell">
+                            @context.Topic
+                        </MudText>
+                    </MudTd>
+                    <MudTd DataLabel="QoS">@((int)context.QualityOfService)</MudTd>
+                    <MudTd DataLabel="Bytes">@context.Payload.Length</MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <EmptyView Message="No messages" />
+                </NoRecordsContent>
+                <PagerContent>
+                    <MudTablePager HideRowsPerPage="true" />
+                </PagerContent>
+            </MudTable>
+        </div>
+
+        <div class="topic-payload-frame">
+            <PayloadInspectorPanel Title="Payload"
+                                   Topic="@SelectedMessage?.Topic"
+                                   ReceivedAt="@SelectedMessage?.ReceivedAt"
+                                   Payload="@SelectedMessage?.Payload" />
+        </div>
+    </section>
+</div>
+
+@code {
+    private string? _selectedTopic;
+    private string _filter = string.Empty;
+
+    private IReadOnlyList<MqttEnvelope> MessageSource => Live.SelectedStoredSession is null
+        ? Live.RecentMessages
+        : Live.SelectedSessionMessages;
+
+    private IReadOnlyList<MqttEnvelope> FilteredMessages => string.IsNullOrWhiteSpace(_selectedTopic)
+        ? MessageSource
+        : MessageSource.Where(message => IsInSelectedTopic(message.Topic)).ToArray();
+
+    private MqttEnvelope? SelectedMessage => Live.SelectedMessage is { } selected &&
+                                            FilteredMessages.Contains(selected)
+        ? selected
+        : FilteredMessages.OrderByDescending(message => message.ReceivedAt).FirstOrDefault();
+
+    private int TopicCount => MessageSource
+        .Select(message => message.Topic)
+        .Distinct(StringComparer.Ordinal)
+        .Count();
+
+    private string SelectedTopicLabel => string.IsNullOrWhiteSpace(_selectedTopic)
+        ? "All topics"
+        : _selectedTopic;
+
+    private string SelectedPayloadLabel => SelectedMessage is { } message
+        ? $"{message.Payload.Length} B"
+        : "No payload";
+
+    private void OnFilterChanged(string value)
+    {
+        _filter = value;
+    }
+
+    private void OnTopicSelected(string? topic)
+    {
+        _selectedTopic = string.IsNullOrWhiteSpace(topic) ? null : topic;
+        var latest = FilteredMessages.OrderByDescending(message => message.ReceivedAt).FirstOrDefault();
+        if (latest is not null)
+        {
+            Live.SelectMessage(latest);
+        }
+    }
+
+    private void ClearTopicSelection()
+    {
+        _selectedTopic = null;
+    }
+
+    private void OnMessageSelected(MqttEnvelope? message)
+    {
+        if (message is not null)
+        {
+            Live.SelectMessage(message);
+        }
+    }
+
+    private bool IsInSelectedTopic(string topic) =>
+        string.IsNullOrWhiteSpace(_selectedTopic) ||
+        string.Equals(topic, _selectedTopic, StringComparison.Ordinal) ||
+        topic.StartsWith($"{_selectedTopic}/", StringComparison.Ordinal);
+}
