@@ -120,7 +120,7 @@
                                Class="flux-icon-button"
                                OnClick="@CycleTheme" />
             </MudTooltip>
-            @if (HasActiveProject)
+            @if (CanUseLiveTools)
             {
                 <MudTooltip Text="@(_rightOpen ? "Hide live tools" : "Show live tools")">
                     <MudIconButton Icon="@(_rightOpen ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ChevronLeft)"
@@ -274,9 +274,9 @@
         SyncProjectSubscriptions();
     }
 
-    private bool HasActiveProject => Projects.ActiveProject is not null;
+    private bool CanUseLiveTools => WorkspaceLiveToolsPolicy.CanUseLiveTools(Projects.ActiveProject);
 
-    private bool IsRightPanelVisible => HasActiveProject && _rightOpen;
+    private bool IsRightPanelVisible => CanUseLiveTools && _rightOpen;
 
     private string ShellClass =>
         $"flux-shell {(ThemeService.IsDarkMode ? "flux-theme-dark" : "flux-theme-light")}{(!_leftOpen ? " left-collapsed" : "")}{(!IsRightPanelVisible ? " right-collapsed" : "")}{(DragState.ActiveComponentDrag?.DidDrag == true ? " flux-component-drag-active" : "")}";
