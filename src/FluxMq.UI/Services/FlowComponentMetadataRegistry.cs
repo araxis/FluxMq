@@ -20,10 +20,19 @@ public sealed record FlowComponentDefaultConfigurationContext(
         new("MqttEnvelope", null);
 }
 
+public enum FlowComponentDefaultInputLink
+{
+    PreferredSource,
+    None,
+    PreferredMapper,
+    StateReducerMapper
+}
+
 public sealed record FlowComponentMetadata(
     FlowComponentDescriptor Descriptor,
     string PreferredNodeName,
     bool MakePreferredNodeNameUnique,
+    FlowComponentDefaultInputLink DefaultInputLink,
     Func<FlowComponentDefaultConfigurationContext, JsonObject?>? CreateDefaultConfiguration);
 
 public static class FlowComponentMetadataRegistry
@@ -39,7 +48,8 @@ public static class FlowComponentMetadataRegistry
             [
                 new("Output", "MqttEnvelope", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
-            ]),
+            ],
+            defaultInputLink: FlowComponentDefaultInputLink.None),
         Component(
             "session.source",
             "Stored Session Source",
@@ -50,6 +60,7 @@ public static class FlowComponentMetadataRegistry
                 new("Output", "MqttEnvelope", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ],
+            defaultInputLink: FlowComponentDefaultInputLink.None,
             createDefaultConfiguration: _ => CreateStoredSessionSourceConfiguration()),
         Component(
             "replay.source",
@@ -61,6 +72,7 @@ public static class FlowComponentMetadataRegistry
                 new("Output", "MqttEnvelope", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ],
+            defaultInputLink: FlowComponentDefaultInputLink.None,
             createDefaultConfiguration: _ => CreateReplaySourceConfiguration()),
         Component(
             "generated.source",
@@ -72,6 +84,7 @@ public static class FlowComponentMetadataRegistry
                 new("Output", "MqttEnvelope", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ],
+            defaultInputLink: FlowComponentDefaultInputLink.None,
             createDefaultConfiguration: _ => CreateGeneratedSourceConfiguration()),
         Component(
             "payload.inspect",
@@ -84,6 +97,7 @@ public static class FlowComponentMetadataRegistry
                 new("Output", "PayloadInspectionResult", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ],
+            defaultInputLink: FlowComponentDefaultInputLink.PreferredMapper,
             createDefaultConfiguration: _ => CreatePayloadInspectConfiguration()),
         Component(
             TimerNodeTypes.Interval,
@@ -94,6 +108,7 @@ public static class FlowComponentMetadataRegistry
             [
                 new("Output", "TimerTick", IsInput: false)
             ],
+            defaultInputLink: FlowComponentDefaultInputLink.None,
             createDefaultConfiguration: _ => CreateTimerIntervalConfiguration()),
         Component(
             TimerNodeTypes.Schedule,
@@ -104,6 +119,7 @@ public static class FlowComponentMetadataRegistry
             [
                 new("Output", "ScheduleTick", IsInput: false)
             ],
+            defaultInputLink: FlowComponentDefaultInputLink.None,
             createDefaultConfiguration: _ => CreateTimerScheduleConfiguration()),
         Component(
             TimerNodeTypes.Delay,
@@ -227,6 +243,7 @@ public static class FlowComponentMetadataRegistry
                 new("Timeouts", "FlowJoinTimeout", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ],
+            defaultInputLink: FlowComponentDefaultInputLink.None,
             createDefaultConfiguration: _ => CreateRoutingJoinConfiguration()),
         Component(
             RoutingNodeTypes.Fork,
@@ -253,6 +270,7 @@ public static class FlowComponentMetadataRegistry
                 new("Output", "FlowMergeItem", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ],
+            defaultInputLink: FlowComponentDefaultInputLink.None,
             createDefaultConfiguration: _ => CreateRoutingMergeConfiguration()),
         Component(
             "flow.assert",
@@ -306,6 +324,7 @@ public static class FlowComponentMetadataRegistry
                 new("Output", "StateReducerResult", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ],
+            defaultInputLink: FlowComponentDefaultInputLink.StateReducerMapper,
             createDefaultConfiguration: _ => CreateStateReducerConfiguration()),
         Component(
             "json.parse",
@@ -318,6 +337,7 @@ public static class FlowComponentMetadataRegistry
                 new("Output", "JsonParseResult", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ],
+            defaultInputLink: FlowComponentDefaultInputLink.None,
             createDefaultConfiguration: _ => CreateTransformCapacityConfiguration()),
         Component(
             "json.stringify",
@@ -330,6 +350,7 @@ public static class FlowComponentMetadataRegistry
                 new("Output", "JsonStringifyResult", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ],
+            defaultInputLink: FlowComponentDefaultInputLink.None,
             createDefaultConfiguration: _ => CreateTransformCapacityConfiguration()),
         Component(
             "text.encode",
@@ -342,6 +363,7 @@ public static class FlowComponentMetadataRegistry
                 new("Output", "TextEncodeResult", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ],
+            defaultInputLink: FlowComponentDefaultInputLink.None,
             createDefaultConfiguration: _ => CreateTransformCapacityConfiguration()),
         Component(
             "text.decode",
@@ -354,6 +376,7 @@ public static class FlowComponentMetadataRegistry
                 new("Output", "TextDecodeResult", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ],
+            defaultInputLink: FlowComponentDefaultInputLink.None,
             createDefaultConfiguration: _ => CreateTransformCapacityConfiguration()),
         Component(
             "base64.encode",
@@ -366,6 +389,7 @@ public static class FlowComponentMetadataRegistry
                 new("Output", "Base64EncodeResult", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ],
+            defaultInputLink: FlowComponentDefaultInputLink.None,
             createDefaultConfiguration: _ => CreateTransformCapacityConfiguration()),
         Component(
             "base64.decode",
@@ -378,6 +402,7 @@ public static class FlowComponentMetadataRegistry
                 new("Output", "Base64DecodeResult", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ],
+            defaultInputLink: FlowComponentDefaultInputLink.None,
             createDefaultConfiguration: _ => CreateTransformCapacityConfiguration()),
         Component(
             "mqtt.metrics",
@@ -416,6 +441,7 @@ public static class FlowComponentMetadataRegistry
                 new("Output", "HttpResponseOutput", IsInput: false),
                 new("Errors", "HttpErrorOutput", IsInput: false)
             ],
+            defaultInputLink: FlowComponentDefaultInputLink.PreferredMapper,
             createDefaultConfiguration: _ => CreateHttpRequestConfiguration()),
         Component(
             "mqtt.publisher",
@@ -428,6 +454,7 @@ public static class FlowComponentMetadataRegistry
                 new("Entries", "FlowLogEntry", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ],
+            defaultInputLink: FlowComponentDefaultInputLink.PreferredMapper,
             createDefaultConfiguration: context => CreateMqttPublisherConfiguration(context.ConnectionName)),
         Component(
             "mqtt.recorder",
@@ -439,6 +466,7 @@ public static class FlowComponentMetadataRegistry
                 new("Input", "MqttRecordingRequest", IsInput: true),
                 new("Errors", "FlowError", IsInput: false)
             ],
+            defaultInputLink: FlowComponentDefaultInputLink.PreferredMapper,
             createDefaultConfiguration: _ => CreateActorCapacityConfiguration()),
         Component(
             "file.writer",
@@ -450,6 +478,7 @@ public static class FlowComponentMetadataRegistry
                 new("Input", "FileWriteRequest", IsInput: true),
                 new("Errors", "FlowError", IsInput: false)
             ],
+            defaultInputLink: FlowComponentDefaultInputLink.PreferredMapper,
             createDefaultConfiguration: _ => CreateActorCapacityConfiguration()),
         Component(
             "mqtt.connection-state-trigger",
@@ -461,6 +490,7 @@ public static class FlowComponentMetadataRegistry
                 new("Output", "MqttClientStateChanged", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ],
+            defaultInputLink: FlowComponentDefaultInputLink.None,
             createDefaultConfiguration: context => CreateConnectionReferenceConfiguration(context.ConnectionName))
     ];
 
@@ -487,11 +517,13 @@ public static class FlowComponentMetadataRegistry
         string preferredNodeName,
         IReadOnlyList<ComponentPortDescriptor> ports,
         bool makePreferredNodeNameUnique = false,
+        FlowComponentDefaultInputLink defaultInputLink = FlowComponentDefaultInputLink.PreferredSource,
         Func<FlowComponentDefaultConfigurationContext, JsonObject?>? createDefaultConfiguration = null)
         => new(
             new FlowComponentDescriptor(type, displayName, category, summary, IsResource: false, ports),
             preferredNodeName,
             makePreferredNodeNameUnique,
+            defaultInputLink,
             createDefaultConfiguration);
 
     private static JsonObject CreateDynamicMapperConfiguration(string outputType, string inputType = "MqttEnvelope")

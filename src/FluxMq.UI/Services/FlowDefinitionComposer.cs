@@ -2777,43 +2777,31 @@ public sealed class FlowDefinitionComposer
             : newSourceNodeName.Trim();
     }
 
-    private static bool NeedsInputLink(string componentType) => componentType switch
-    {
-        "mqtt.trigger" or "session.source" or "replay.source" or "generated.source" or "mqtt.connection-state-trigger"
-            or TimerNodeTypes.Interval or TimerNodeTypes.Schedule => false,
-        RoutingNodeTypes.Join or RoutingNodeTypes.Merge => false,
-        "json.parse" or "json.stringify" or "text.encode" or "text.decode" or "base64.encode" or "base64.decode" => false,
-        _ => true
-    };
+    private static bool NeedsInputLink(string componentType)
+        => GetDefaultInputLink(componentType) != FlowComponentDefaultInputLink.None;
 
     private static string? FindDefaultInputLink(string componentType, JsonObject workflow)
     {
-        if (!NeedsInputLink(componentType))
+        return GetDefaultInputLink(componentType) switch
         {
-            return null;
-        }
-
-        if (IsActor(componentType))
-        {
-            return FindPreferredMapperNode(workflow) is { Length: > 0 } mapper
+            FlowComponentDefaultInputLink.None => null,
+            FlowComponentDefaultInputLink.PreferredMapper =>
+                FindPreferredMapperNode(workflow) is { Length: > 0 } mapper
                 ? $"{mapper}.Output"
-                : null;
-        }
-
-        if (componentType == "state.reducer")
-        {
-            return FindPreferredMapperNode(workflow, "StateReducerInput") is { Length: > 0 } mapper
+                : null,
+            FlowComponentDefaultInputLink.StateReducerMapper =>
+                FindPreferredMapperNode(workflow, "StateReducerInput") is { Length: > 0 } mapper
                 ? $"{mapper}.Output"
-                : null;
-        }
-
-        return FindPreferredSourceNode(workflow) is { Length: > 0 } source
-            ? $"{source}.Output"
-            : null;
+                : null,
+            _ => FindPreferredSourceNode(workflow) is { Length: > 0 } source
+                ? $"{source}.Output"
+                : null
+        };
     }
 
-    private static bool IsActor(string componentType)
-        => componentType is "mqtt.publisher" or "mqtt.recorder" or "file.writer" or "http.request" or "payload.inspect";
+    private static FlowComponentDefaultInputLink GetDefaultInputLink(string componentType)
+        => FlowComponentMetadataRegistry.Find(componentType)?.DefaultInputLink
+           ?? FlowComponentDefaultInputLink.PreferredSource;
 
     private static string? FindPreferredSourceNode(JsonObject workflow)
     {
