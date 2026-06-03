@@ -2,6 +2,11 @@
 
 Chronological progress record.
 
+## 2026-06-03
+
+- Recorded operations-team product feedback: the MQTT topic tree is a critical visual object for ops users and currently does not have enough space or importance in the desktop UI.
+- Added an accepted direction to treat the topic tree as a first-class workspace visualization and to make an explicit layout decision before the next major desktop layout/design pass.
+
 ## 2026-05-06
 
 - Read the initial FluxMQ proposal.

@@ -213,7 +213,7 @@ Expected mapper editor layout:
 
 **Goal:** Provide a real operational desktop workspace, not a landing page.
 
-**UI/UX:** Use MudBlazor for dense, work-focused panels: app tree, component catalog, diagram, JSON editor, live inspector, session panel, payload inspector.
+**UI/UX:** Use MudBlazor for dense, work-focused panels: app tree, component catalog, diagram, JSON editor, live inspector, session panel, payload inspector. The MQTT topic tree is a first-class ops visualization, not a cramped secondary widget; the desktop layout needs an explicit decision for giving it enough space and importance, such as a larger dockable panel, dedicated topic explorer view, or ops monitoring surface.
 
 **Data/Logic:** Workspace state, selected app, selected artifact, selected workflow, selected node, recent messages, stored sessions, validation/run state. Apps are containers for multiple artifact kinds: pipelines for app design/run, dashboards for monitoring, and later tests/scenarios for field verification.
 
