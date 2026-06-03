@@ -5,20 +5,82 @@
         <MudText Typo="Typo.h6">New Connection</MudText>
     </TitleContent>
     <DialogContent>
-        <MudStack Spacing="2">
-            <MudTextField T="string" Label="Name" @bind-Value="_name" Variant="Variant.Outlined" Margin="Margin.Dense" />
-            <MudTextField T="string" Label="Host" @bind-Value="_host" Variant="Variant.Outlined" Margin="Margin.Dense" />
-            <MudNumericField T="int" Label="Port" @bind-Value="_port" Min="1" Variant="Variant.Outlined" Margin="Margin.Dense" />
-            <MudTextField T="string" Label="Client ID" @bind-Value="_clientId" Variant="Variant.Outlined" Margin="Margin.Dense" />
-            <MudCheckBox T="bool" @bind-Value="_useTls" Label="TLS" Dense="true" />
-            <MudTextField T="string" Label="Username" @bind-Value="_username" Variant="Variant.Outlined" Margin="Margin.Dense" />
-            <MudTextField T="string" Label="Password" @bind-Value="_password"
-                          InputType="InputType.Password" Variant="Variant.Outlined" Margin="Margin.Dense" />
+        <MudStack Spacing="3">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Broker</MudText>
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Name"
+                                      @bind-Value="_name"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Immediate="true"
+                                      OnKeyDown="@OnKeyDown" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Client ID"
+                                      @bind-Value="_clientId"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Immediate="true"
+                                      OnKeyDown="@OnKeyDown" />
+                    </MudItem>
+                    <MudItem xs="12" md="8">
+                        <MudTextField T="string"
+                                      Label="Host"
+                                      @bind-Value="_host"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Required="true"
+                                      Immediate="true"
+                                      OnKeyDown="@OnKeyDown" />
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudNumericField T="int"
+                                         Label="Port"
+                                         @bind-Value="_port"
+                                         Min="1"
+                                         Max="65535"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense" />
+                    </MudItem>
+                </MudGrid>
+            </MudStack>
+
+            <MudDivider />
+
+            <MudStack Spacing="2">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Security</MudText>
+                    <MudCheckBox T="bool" @bind-Value="_useTls" Label="TLS" Dense="true" />
+                </MudStack>
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Username"
+                                      @bind-Value="_username"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      OnKeyDown="@OnKeyDown" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Password"
+                                      @bind-Value="_password"
+                                      InputType="InputType.Password"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      OnKeyDown="@OnKeyDown" />
+                    </MudItem>
+                </MudGrid>
+            </MudStack>
         </MudStack>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@Submit">Add</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@(!IsValid)" OnClick="@Submit">Add</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -33,10 +95,19 @@
     private string? _username;
     private string? _password;
 
+    private bool IsValid =>
+        !string.IsNullOrWhiteSpace(_host) &&
+        _port is >= 1 and <= 65535;
+
     private void Cancel() => MudDialog.Cancel();
 
     private void Submit()
     {
+        if (!IsValid)
+        {
+            return;
+        }
+
         var profile = new MqttConnectionProfile
         {
             Name = string.IsNullOrWhiteSpace(_name) ? "local-broker" : _name.Trim(),
@@ -51,6 +122,14 @@
         MudDialog.Close(DialogResult.Ok(new AddConnectionResult(
             profile,
             LiveMqttWorkspaceService.DefaultBrokerMonitorSubscription)));
+    }
+
+    private void OnKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            Submit();
+        }
     }
 
     public record AddConnectionResult(MqttConnectionProfile Profile, string Subscription);

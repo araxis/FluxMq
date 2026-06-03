@@ -11,6 +11,7 @@ Chronological progress record.
 - Improved Logs page filtering interaction with clearable search and a reset-filters action for scope, level, and search filters.
 - Wired the dashboard designer to the active workspace change signal so live dashboard widgets repaint from runtime event snapshots instead of waiting for definition edits.
 - Added a tested catalog search helper and compact result count in the component/widget/test-step panel so large component lists are easier to scan during authoring.
+- Reworked the New Connection dialog into a wider two-section MudBlazor form with broker and security fields arranged for faster scanning and basic disabled-state validation.
 
 ## 2026-05-06
 
