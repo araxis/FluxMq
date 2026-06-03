@@ -12,6 +12,7 @@ Chronological progress record.
 - Wired the dashboard designer to the active workspace change signal so live dashboard widgets repaint from runtime event snapshots instead of waiting for definition edits.
 - Added a tested catalog search helper and compact result count in the component/widget/test-step panel so large component lists are easier to scan during authoring.
 - Reworked the New Connection dialog into a wider two-section MudBlazor form with broker and security fields arranged for faster scanning and basic disabled-state validation.
+- Aligned the New App dialog with the wider responsive connection form so initial app and broker setup is less cramped.
 
 ## 2026-05-06
 

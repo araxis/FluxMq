@@ -1,90 +1,106 @@
-<MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
+<MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true })">
     <TitleContent>
         <MudText Typo="Typo.h6">New App</MudText>
     </TitleContent>
     <DialogContent>
         <MudStack Spacing="3">
 
-            <MudStack Spacing="2">
-                <MudTextField T="string"
-                              Label="App name"
-                              @bind-Value="_appName"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              Immediate="true"
-                              HelperText="Used as the suggested filename when saving"
-                              OnKeyDown="@OnKeyDown" />
-                <MudTextField T="string"
-                              Label="First pipeline name"
-                              @bind-Value="_pipelineName"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              Immediate="true"
-                              OnKeyDown="@OnKeyDown" />
-            </MudStack>
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="App name"
+                                  @bind-Value="_appName"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  HelperText="Used as the suggested filename when saving"
+                                  OnKeyDown="@OnKeyDown" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="First pipeline name"
+                                  @bind-Value="_pipelineName"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  OnKeyDown="@OnKeyDown" />
+                </MudItem>
+            </MudGrid>
 
             <MudDivider />
 
             <MudText Typo="Typo.subtitle2" Color="Color.Secondary">MQTT Connection</MudText>
 
-            <MudStack Spacing="2">
-                <MudStack Row="true" Spacing="2">
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="6">
                     <MudTextField T="string"
                                   Label="Name"
                                   @bind-Value="_connName"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
-                                  Class="flex-grow-1" />
-                </MudStack>
-                <MudStack Row="true" Spacing="2">
+                                  Immediate="true"
+                                  OnKeyDown="@OnKeyDown" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Client ID"
+                                  @bind-Value="_clientId"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  OnKeyDown="@OnKeyDown" />
+                </MudItem>
+                <MudItem xs="12" md="8">
                     <MudTextField T="string"
                                   Label="Host"
                                   @bind-Value="_host"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
                                   Immediate="true"
-                                  Class="flex-grow-1"
                                   OnKeyDown="@OnKeyDown" />
+                </MudItem>
+                <MudItem xs="12" md="4">
                     <MudNumericField T="int"
                                      Label="Port"
                                      @bind-Value="_port"
-                                     Min="1" Max="65535"
+                                     Min="1"
+                                     Max="65535"
                                      Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Style="width:90px;" />
-                </MudStack>
-                <MudTextField T="string"
-                              Label="Initial trigger topic(s)"
-                              @bind-Value="_subscription"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              HelperText="Creates the first MQTT Trigger subscriber. Add QoS/retained options in the trigger editor."
-                              OnKeyDown="@OnKeyDown" />
-                <MudStack Row="true" Spacing="2">
+                                     Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12">
                     <MudTextField T="string"
-                                  Label="Client ID"
-                                  @bind-Value="_clientId"
+                                  Label="Initial trigger topic(s)"
+                                  @bind-Value="_subscription"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
-                                  Class="flex-grow-1" />
-                    <MudCheckBox T="bool" @bind-Value="_useTls" Label="TLS" Dense="true" Class="align-self-center" />
-                </MudStack>
-                <MudStack Row="true" Spacing="2">
+                                  HelperText="Creates the first MQTT Trigger subscriber. Add QoS/retained options in the trigger editor."
+                                  OnKeyDown="@OnKeyDown" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Security</MudText>
+                        <MudCheckBox T="bool" @bind-Value="_useTls" Label="TLS" Dense="true" />
+                    </MudStack>
+                </MudItem>
+                <MudItem xs="12" md="6">
                     <MudTextField T="string"
                                   Label="Username"
                                   @bind-Value="_username"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
-                                  Class="flex-grow-1" />
+                                  OnKeyDown="@OnKeyDown" />
+                </MudItem>
+                <MudItem xs="12" md="6">
                     <MudTextField T="string"
                                   Label="Password"
                                   @bind-Value="_password"
                                   InputType="InputType.Password"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
-                                  Class="flex-grow-1" />
-                </MudStack>
-            </MudStack>
+                                  OnKeyDown="@OnKeyDown" />
+                </MudItem>
+            </MudGrid>
 
         </MudStack>
     </DialogContent>
