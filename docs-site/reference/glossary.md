@@ -10,23 +10,23 @@ Saved broker connection settings.
 
 ## Condition Router
 
-A flow component that sends each incoming message to one of two branches.
+A workflow component that sends each incoming value to one of two branches.
 
 ## Fork Flow
 
-A configurable FluxMQ pipeline made from sources, triggers, filters, mappers, routers, and sinks.
+A configurable FluxMQ pipeline made from sources, triggers, filters, mappers, routers, observers, and actors.
 
 ## Flow Application Definition
 
-A configuration model that describes one runnable FluxMQ application: shared resources, named workflows, node properties, and receiving-port links before runtime graphs are built.
+A configuration model that describes one runnable FluxMQ application: resources, workflows, dashboards, tests, node properties, and receiving-port links before runtime graphs are built.
 
 ## Flow Application Runtime
 
-The future host-independent runtime layer that loads a flow application definition, owns shared resources, starts workflows, coordinates reloads, and supervises lifecycle and errors.
+The host-independent runtime layer that loads executable resources and workflows, owns shared resources, starts workflows, and supervises lifecycle and errors.
 
 ## Flow Components
 
-The concrete MQTT, replay, storage, filtering, mapping, routing, publishing, recording, and metrics nodes registered into the runtime by a host.
+The concrete MQTT, replay, storage, filtering, mapping, routing, publishing, recording, metrics, HTTP, file, state, and validation nodes registered into the runtime by a host.
 
 ## Runtime Builder
 
@@ -38,32 +38,28 @@ A registered constructor that turns a node definition into a runtime node with t
 
 ## MQTT Envelope
 
-The FluxMQ runtime shape for an MQTT message and its metadata.
+The runtime shape for an MQTT message and its metadata.
 
-## Traffic Source
+## MQTT Trigger
 
-A logical flow source that can bind to live MQTT traffic, a stored recording session, or generated messages while exposing the same `MqttEnvelope` output.
+A workflow node that subscribes to topics through an app-level broker connection and emits `MqttEnvelope` values.
 
-## Metrics Sink
+## MQTT Metrics
 
-A flow component that tracks counters from MQTT messages and publishes metric snapshots.
-
-## OpenTelemetry
-
-A planned optional integration for exporting selected FluxMQ metrics, traces, and diagnostic events to external observability tools.
+A workflow component that tracks counters from MQTT messages and publishes metric snapshots.
 
 ## Recording Session
 
 A stored sequence of MQTT messages captured during a debugging session.
 
-## Recording Sink
+## MQTT Recorder
 
-A flow component that stores incoming MQTT messages for a recording session.
+A workflow component that stores incoming MQTT messages for a recording session.
 
 ## Replay Source
 
 A flow component that emits recorded MQTT messages in timestamp order.
 
-## Sink
+## Actor
 
-A flow endpoint that writes, publishes, stores, or projects incoming data.
+A workflow endpoint that writes, publishes, stores, or calls an external system from incoming data.

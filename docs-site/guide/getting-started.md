@@ -1,6 +1,6 @@
 # Getting Started
 
-FluxMQ is in early alpha work. The current repository includes the core MQTT, storage, flow component, workflow runtime, command-line host, and desktop workspace.
+FluxMQ is still pre-release, but the desktop app is now the main product surface. A FluxMQ app file contains app-level resources, pipelines, dashboards, and tests.
 
 ## What FluxMQ Helps With
 
@@ -9,6 +9,8 @@ FluxMQ is in early alpha work. The current repository includes the core MQTT, st
 - Decode and compare payloads.
 - Record message sessions for later analysis.
 - Replay recorded traffic through controlled flows.
+- Build live dashboards from runtime events.
+- Run integration-style test scenarios against the app.
 
 ## Current Product Direction
 
@@ -18,7 +20,7 @@ FluxMQ is designed as a focused desktop workspace, closer to an IDE than a dashb
 
 ### Desktop Workspace
 
-The first desktop workspace is `FluxMq.UI`, a MAUI Blazor Hybrid app.
+The desktop workspace is `FluxMq.UI`.
 
 Run it on Windows with:
 
@@ -26,20 +28,11 @@ Run it on Windows with:
 dotnet run --project src/FluxMq.UI/FluxMq.UI.csproj -f net10.0-windows10.0.19041.0
 ```
 
-The default broker profile points to `localhost:1883`.
-
-### Windows Packages
-
-The repository workflow builds early Windows desktop packages:
-
-- portable `win-x64` zip
-- MSI installer
-
-Both artifacts are produced from the same desktop app publish output.
+The default broker profile points to `localhost:1883`. Broker resources belong to the app, not to one pipeline, dashboard, or test.
 
 ### Command Line
 
-The first command-line surface validates a flow application definition through the same host boundary planned for future app surfaces:
+The command-line surface can validate and run app definitions:
 
 ```sh
 dotnet run --project src/FluxMq.Cli -- validate --config samples/flow-applications/metrics-only.json
@@ -52,6 +45,21 @@ To exercise the same definition through the runtime host lifecycle:
 ```sh
 dotnet run --project src/FluxMq.Cli -- run --config samples/flow-applications/metrics-only.json --duration-ms 1000
 ```
+
+For a broker-free smoke check, use the generated-traffic sample:
+
+```sh
+dotnet run --project src/FluxMq.Cli -- run --config samples/flow-applications/generated-traffic-inspect.json --duration-ms 1000
+```
+
+## Current Workspace Shape
+
+- Connections: app-owned MQTT broker resources.
+- Pipelines: runnable workflow graphs.
+- Dashboards: visual runtime-event projections.
+- Tests: scenario steps and expectations.
+- Logs: scoped app, runtime, and test-runner entries.
+- Topics: first-class topic tree and message inspection view.
 
 ## Documentation Scope
 

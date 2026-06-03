@@ -5,10 +5,9 @@ Payload inspection helps make raw MQTT messages understandable.
 ## Typical Flow
 
 ```text
-Traffic source
-  -> Topic filter or condition router
-  -> Payload inspector
-  -> UI projection
+mqtt.trigger
+  -> flow.filter or flow.when
+  -> mqtt.payload-inspector
 ```
 
 ## Inspection Goals
@@ -22,6 +21,6 @@ Traffic source
 
 Payload inspection should not mutate the original MQTT message. Transformations belong in explicit mapper components.
 
-The traffic source is responsible for binding the workflow to live or stored messages. Filtering, inspection, and projection stay in separate components so each step remains visible in the flow.
+The trigger is responsible for subscribing to live broker topics. Filtering, routing, inspection, and output handling stay in separate components so each step remains visible in the flow.
 
-Use a topic filter when non-matching messages should be dropped. Use a condition router when non-matching messages should continue through another branch.
+Use `flow.filter` when non-matching messages should be dropped. Use `flow.when` when non-matching messages should continue through another branch.
