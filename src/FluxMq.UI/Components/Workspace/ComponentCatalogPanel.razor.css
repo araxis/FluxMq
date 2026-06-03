@@ -17,6 +17,22 @@
     padding: 2px 2px 7px;
 }
 
+.catalog-count {
+    align-items: center;
+    background: var(--flux-surface-2);
+    border: 1px solid var(--flux-border);
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    display: inline-flex;
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1;
+    margin-left: auto;
+    min-height: 20px;
+    padding: 0 6px;
+    white-space: nowrap;
+}
+
 .catalog-title-icon {
     color: var(--flux-accent);
 }
