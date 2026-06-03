@@ -346,7 +346,7 @@
         Projects.SetActive(app);
         var dialog = await DialogService.ShowAsync<AddConnectionDialog>(
             "New Connection",
-            new DialogOptions { MaxWidth = MaxWidth.Medium });
+            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
         var result = await dialog.Result;
         if (result is { Canceled: false, Data: AddConnectionDialog.AddConnectionResult r })
         {

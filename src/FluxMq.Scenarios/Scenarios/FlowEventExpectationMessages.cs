@@ -29,6 +29,7 @@ internal static class FlowEventExpectationMessages
         var parts = new List<string>();
         Add(parts, "type", expectation.EventType);
         Add(parts, "topic", expectation.TopicStartsWith);
+        Add(parts, "topic not", expectation.TopicNotStartsWith);
         Add(parts, "subject", expectation.SubjectStartsWith);
         Add(parts, "status", expectation.Status);
         Add(parts, "source", expectation.Source);

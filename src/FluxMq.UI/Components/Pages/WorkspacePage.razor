@@ -239,7 +239,7 @@
         if (artifactChanged)
         {
             _jsonView = false;
-            _dashboardEditMode = true;
+            _dashboardEditMode = active is not { ActiveArtifactKind: WorkspaceArtifactKind.Dashboard, IsActiveDashboardLive: true };
         }
 
         _lastActiveProject = active;
@@ -400,12 +400,15 @@
 
     private void OnDashboardEditModeChanged(bool isEditMode)
     {
-        if (_dashboardEditMode == isEditMode)
+        if (_dashboardEditMode != isEditMode)
         {
-            return;
+            _dashboardEditMode = isEditMode;
         }
 
-        _dashboardEditMode = isEditMode;
+        if (Projects.ActiveProject is { ActiveArtifactKind: WorkspaceArtifactKind.Dashboard } active)
+        {
+            active.SetActiveDashboardLive(!isEditMode);
+        }
     }
 
     public void Dispose()

@@ -8,6 +8,7 @@ public sealed class DashboardEventFilterCatalog
 {
     public const string EventTypeKey = "eventType";
     public const string TopicStartsWithKey = "topicStartsWith";
+    public const string TopicNotStartsWithKey = ScenarioStepConfigurationKeys.TopicNotStartsWith;
     public const string SubjectStartsWithKey = "subjectStartsWith";
     public const string StatusKey = "status";
     public const string AttributeKeyPrefix = ScenarioStepConfigurationKeys.AttributeKeyPrefix;
@@ -98,8 +99,23 @@ public sealed class DashboardEventFilterCatalog
         foreach (var field in descriptor.Fields)
         {
             var expectedPrefix = widget.ReadString(field.Key);
-            if (!string.IsNullOrWhiteSpace(expectedPrefix) &&
-                !StartsWith(field.ReadValue(flowEvent), expectedPrefix))
+            if (string.IsNullOrWhiteSpace(expectedPrefix))
+            {
+                continue;
+            }
+
+            var actual = field.ReadValue(flowEvent);
+            if (string.Equals(field.Key, TopicNotStartsWithKey, StringComparison.Ordinal))
+            {
+                if (StartsWith(actual, expectedPrefix))
+                {
+                    return false;
+                }
+
+                continue;
+            }
+
+            if (!StartsWith(actual, expectedPrefix))
             {
                 return false;
             }
@@ -129,12 +145,16 @@ public sealed class DashboardEventFilterCatalog
         =>
         [
             TopicField("Topic prefix", "factory/line-a/", $"Filters by {eventVerb} message topic."),
+            TopicExcludeField("Exclude topic prefix", "$SYS/", $"Excludes {eventVerb} messages whose topic starts with this prefix."),
             AttributeField("qos", "QoS", "1", "Filters by MQTT QoS."),
             AttributeField("retain", "Retain", "false", "Filters by MQTT retain flag.")
         ];
 
     private static DashboardEventFilterFieldDescriptor SubjectField(string label, string? placeholder, string helperText)
         => new(SubjectStartsWithKey, label, placeholder, helperText, static flowEvent => flowEvent.Subject);
+
+    private static DashboardEventFilterFieldDescriptor TopicExcludeField(string label, string? placeholder, string helperText)
+        => new(TopicNotStartsWithKey, label, placeholder, helperText, static flowEvent => flowEvent.Channel);
 
     private static DashboardEventFilterFieldDescriptor AttributeField(
         string attributeName,

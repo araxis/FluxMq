@@ -426,6 +426,64 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public void SetActiveDashboardLive_OnlyEnablesLiveModeForActiveDashboard()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddWorkflow("pipe");
+        service.AddDashboard("ops");
+
+        service.SetActiveWorkflow("pipe");
+        service.SetActiveDashboardLive(true);
+
+        service.IsActiveDashboardLive.ShouldBeFalse();
+
+        service.SetActiveDashboard("ops");
+        service.SetActiveDashboardLive(true);
+
+        service.IsActiveDashboardLive.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ActiveDashboardLiveMode_ClearsWhenLeavingDashboard()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddWorkflow("pipe");
+        service.AddDashboard("ops");
+        service.AddTest("roundTrip");
+
+        service.SetActiveDashboard("ops");
+        service.SetActiveDashboardLive(true);
+
+        service.SetActiveTest("roundTrip");
+
+        service.IsActiveDashboardLive.ShouldBeFalse();
+
+        service.SetActiveDashboard("ops");
+        service.SetActiveDashboardLive(true);
+
+        service.SetActiveWorkflow("pipe");
+
+        service.IsActiveDashboardLive.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void SetActiveDashboard_ChangingDashboardClearsLiveMode()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddWorkflow("pipe");
+        service.AddDashboard("ops");
+        service.AddDashboard("debug");
+
+        service.SetActiveDashboard("ops");
+        service.SetActiveDashboardLive(true);
+
+        service.SetActiveDashboard("debug");
+
+        service.IsActiveDashboardLive.ShouldBeFalse();
+        service.ActiveDashboardName.ShouldBe("debug");
+    }
+
+    [Fact]
     public void GetActiveTestScenario_ReflectsLoadedSteps()
     {
         var service = new FlowWorkspaceService(new FlowDefinitionComposer());

@@ -558,6 +558,7 @@ internal static class FluxMqScenarioStepDefinitionValidator
     {
         ValidateOptionalString(scenarioName, stepName, configuration, ScenarioStepConfigurationKeys.EventType, errors);
         ValidateOptionalString(scenarioName, stepName, configuration, ScenarioStepConfigurationKeys.TopicStartsWith, errors);
+        ValidateOptionalString(scenarioName, stepName, configuration, ScenarioStepConfigurationKeys.TopicNotStartsWith, errors);
         ValidateOptionalString(scenarioName, stepName, configuration, ScenarioStepConfigurationKeys.SubjectStartsWith, errors);
         ValidateOptionalString(scenarioName, stepName, configuration, ScenarioStepConfigurationKeys.Status, errors);
         ValidateOptionalString(scenarioName, stepName, configuration, ScenarioStepConfigurationKeys.Source, errors);

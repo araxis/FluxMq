@@ -1,23 +1,23 @@
 <Project>
   <PropertyGroup>
     <FluxFlowEngineVersion>1.0.0</FluxFlowEngineVersion>
-    <FluxFlowComponentsAssertionsVersion>0.1.1-alpha.1</FluxFlowComponentsAssertionsVersion>
-    <FluxFlowComponentsControlVersion>0.2.1-alpha.1</FluxFlowComponentsControlVersion>
-    <FluxFlowComponentsFileSystemVersion>0.4.1-alpha.1</FluxFlowComponentsFileSystemVersion>
-    <FluxFlowComponentsHttpVersion>0.1.1-alpha.1</FluxFlowComponentsHttpVersion>
-    <FluxFlowComponentsMappingVersion>0.1.1-alpha.1</FluxFlowComponentsMappingVersion>
-    <FluxFlowComponentsMetricsVersion>0.1.1-alpha.1</FluxFlowComponentsMetricsVersion>
-    <FluxFlowComponentsMqttVersion>0.2.2-alpha.1</FluxFlowComponentsMqttVersion>
-    <FluxFlowComponentsObservabilityVersion>0.1.1-alpha.1</FluxFlowComponentsObservabilityVersion>
+    <FluxFlowComponentsAssertionsVersion>0.2.0-alpha.1</FluxFlowComponentsAssertionsVersion>
+    <FluxFlowComponentsControlVersion>0.3.0-alpha.1</FluxFlowComponentsControlVersion>
+    <FluxFlowComponentsFileSystemVersion>0.5.0-alpha.1</FluxFlowComponentsFileSystemVersion>
+    <FluxFlowComponentsHttpVersion>0.2.0-alpha.1</FluxFlowComponentsHttpVersion>
+    <FluxFlowComponentsMappingVersion>0.2.0-alpha.1</FluxFlowComponentsMappingVersion>
+    <FluxFlowComponentsMetricsVersion>0.2.0-alpha.1</FluxFlowComponentsMetricsVersion>
+    <FluxFlowComponentsMqttVersion>0.5.0-alpha.1</FluxFlowComponentsMqttVersion>
+    <FluxFlowComponentsObservabilityVersion>0.3.0-alpha.1</FluxFlowComponentsObservabilityVersion>
     <FluxFlowComponentsPayloadsVersion>0.1.1-alpha.1</FluxFlowComponentsPayloadsVersion>
-    <FluxFlowComponentsRoutingVersion>0.6.1-alpha.1</FluxFlowComponentsRoutingVersion>
+    <FluxFlowComponentsRoutingVersion>0.10.0-alpha.1</FluxFlowComponentsRoutingVersion>
     <FluxFlowComponentsSerializationVersion>0.1.1-alpha.1</FluxFlowComponentsSerializationVersion>
-    <FluxFlowComponentsSessionsVersion>0.1.1-alpha.1</FluxFlowComponentsSessionsVersion>
-    <FluxFlowComponentsSourcesVersion>0.1.1-alpha.1</FluxFlowComponentsSourcesVersion>
-    <FluxFlowComponentsStateVersion>0.1.1-alpha.1</FluxFlowComponentsStateVersion>
-    <FluxFlowComponentsStorageVersion>0.2.1-alpha.1</FluxFlowComponentsStorageVersion>
-    <FluxFlowComponentsStorageFileSystemVersion>0.1.1-alpha.1</FluxFlowComponentsStorageFileSystemVersion>
-    <FluxFlowComponentsTimersVersion>0.4.2-alpha.1</FluxFlowComponentsTimersVersion>
-    <FluxFlowComponentsValidationVersion>0.1.1-alpha.1</FluxFlowComponentsValidationVersion>
+    <FluxFlowComponentsSessionsVersion>0.3.0-alpha.1</FluxFlowComponentsSessionsVersion>
+    <FluxFlowComponentsSourcesVersion>0.2.0-alpha.1</FluxFlowComponentsSourcesVersion>
+    <FluxFlowComponentsStateVersion>0.3.0-alpha.1</FluxFlowComponentsStateVersion>
+    <FluxFlowComponentsStorageVersion>0.3.0-alpha.1</FluxFlowComponentsStorageVersion>
+    <FluxFlowComponentsStorageFileSystemVersion>0.2.0-alpha.1</FluxFlowComponentsStorageFileSystemVersion>
+    <FluxFlowComponentsTimersVersion>0.5.0-alpha.1</FluxFlowComponentsTimersVersion>
+    <FluxFlowComponentsValidationVersion>0.2.0-alpha.1</FluxFlowComponentsValidationVersion>
   </PropertyGroup>
 </Project>

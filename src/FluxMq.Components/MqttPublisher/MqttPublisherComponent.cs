@@ -5,6 +5,7 @@ using FluxMq.Components.Mqtt;
 using FluxFlow.Components.Mqtt;
 using FluxFlow.Components.Mqtt.Contracts;
 using FluxFlow.Components.Mqtt.Nodes;
+using FluxFlow.Components.Mqtt.Timing;
 using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Definitions;
 using FluxFlow.Engine.Runtime;
@@ -125,7 +126,8 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource, IAsync
             new Dictionary<NodeName, RuntimeNode>());
         return MqttPublishNode.Create(
             context,
-            new MqttClientAdapterFactory(() => new MqttClientAdapter(client)));
+            new MqttClientAdapterFactory(() => new MqttClientAdapter(client)),
+            SystemMqttClock.Instance);
     }
 
     private static IDisposable LinkResultSink(

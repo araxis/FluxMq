@@ -104,6 +104,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
     public string? ActiveWorkflowName => _activeWorkflowName;
     public string? ActiveDashboardName => _activeDashboardName;
     public string? ActiveDashboardCellName { get; private set; }
+    public bool IsActiveDashboardLive { get; private set; }
     public string? ActiveTestName => _activeTestName;
     public WorkspaceArtifactKind ActiveArtifactKind => _activeArtifactKind;
     public string? ActiveArtifactName => _activeArtifactKind switch
@@ -246,6 +247,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
         _activeWorkflowName = name;
         ActiveDashboardCellName = null;
+        IsActiveDashboardLive = false;
         _activeArtifactKind = WorkspaceArtifactKind.Pipeline;
         NotifyChanged();
     }
@@ -260,6 +262,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
         _activeDashboardName = name;
         ActiveDashboardCellName = null;
+        IsActiveDashboardLive = false;
         _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
         NotifyChanged();
     }
@@ -274,6 +277,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
 
         _activeTestName = name;
         ActiveDashboardCellName = null;
+        IsActiveDashboardLive = false;
         _activeArtifactKind = WorkspaceArtifactKind.Test;
         LastScenarioRunResult = LatestScenarioRunForTest(name);
         NotifyChanged();
@@ -287,7 +291,22 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         }
 
         ActiveDashboardCellName = null;
+        IsActiveDashboardLive = false;
         _activeArtifactKind = WorkspaceArtifactKind.Logs;
+        NotifyChanged();
+    }
+
+    public void SetActiveDashboardLive(bool isLive)
+    {
+        var next = isLive &&
+            _activeArtifactKind == WorkspaceArtifactKind.Dashboard &&
+            !string.IsNullOrWhiteSpace(_activeDashboardName);
+        if (IsActiveDashboardLive == next)
+        {
+            return;
+        }
+
+        IsActiveDashboardLive = next;
         NotifyChanged();
     }
 
@@ -298,6 +317,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         {
             ReplaceDefinition(_definitionComposer.AddWorkflow(DefinitionJson, name));
             _activeWorkflowName ??= name;
+            IsActiveDashboardLive = false;
             _activeArtifactKind = WorkspaceArtifactKind.Pipeline;
             State = RuntimeWorkspaceState.Idle;
             Diagnostics = [];
@@ -318,6 +338,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             ReplaceDefinition(_definitionComposer.AddDashboard(DefinitionJson, name));
             _activeDashboardName = name;
             ActiveDashboardCellName = null;
+            IsActiveDashboardLive = false;
             _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
             State = RuntimeWorkspaceState.Idle;
             Diagnostics = [];
@@ -338,6 +359,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         {
             ReplaceDefinition(_definitionComposer.AddTest(DefinitionJson, name));
             _activeTestName = name;
+            IsActiveDashboardLive = false;
             _activeArtifactKind = WorkspaceArtifactKind.Test;
             State = RuntimeWorkspaceState.Idle;
             Diagnostics = [];
@@ -732,6 +754,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
             {
                 _activeDashboardName = DashboardNames.FirstOrDefault();
                 ActiveDashboardCellName = null;
+                IsActiveDashboardLive = false;
             }
 
             State = RuntimeWorkspaceState.Idle;
@@ -2335,6 +2358,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         if (_activeArtifactKind == WorkspaceArtifactKind.Logs)
         {
             ActiveDashboardCellName = null;
+            IsActiveDashboardLive = false;
             return;
         }
 
@@ -2356,6 +2380,7 @@ public sealed class FlowWorkspaceService : IAsyncDisposable
         if (_activeArtifactKind != WorkspaceArtifactKind.Dashboard)
         {
             ActiveDashboardCellName = null;
+            IsActiveDashboardLive = false;
         }
     }
 

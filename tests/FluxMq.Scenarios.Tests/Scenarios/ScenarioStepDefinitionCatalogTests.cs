@@ -112,6 +112,7 @@ public sealed class ScenarioStepDefinitionCatalogTests
 
         defaults[ScenarioStepDefinitionCatalog.EventTypeKey].ShouldBe(FlowEventTypes.MqttMessagePublished);
         defaults[ScenarioStepDefinitionCatalog.TopicStartsWithKey].ShouldBeEmpty();
+        defaults[ScenarioStepDefinitionCatalog.TopicNotStartsWithKey].ShouldBeEmpty();
         defaults[ScenarioStepDefinitionCatalog.SubjectStartsWithKey].ShouldBeEmpty();
         defaults[ScenarioStepDefinitionCatalog.StatusKey].ShouldBe("published");
         defaults[ScenarioStepDefinitionCatalog.SourceKey].ShouldBeEmpty();
@@ -152,6 +153,7 @@ public sealed class ScenarioStepDefinitionCatalogTests
     [
         ScenarioStepDefinitionCatalog.EventTypeKey,
         ScenarioStepDefinitionCatalog.TopicStartsWithKey,
+        ScenarioStepDefinitionCatalog.TopicNotStartsWithKey,
         ScenarioStepDefinitionCatalog.SubjectStartsWithKey,
         ScenarioStepDefinitionCatalog.StatusKey,
         ScenarioStepDefinitionCatalog.SourceKey,

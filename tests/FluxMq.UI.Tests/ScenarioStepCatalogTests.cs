@@ -145,6 +145,7 @@ public sealed class ScenarioStepCatalogTests
     [
         ScenarioStepCatalog.EventTypeKey,
         ScenarioStepCatalog.TopicStartsWithKey,
+        ScenarioStepCatalog.TopicNotStartsWithKey,
         ScenarioStepCatalog.SubjectStartsWithKey,
         ScenarioStepCatalog.StatusKey,
         ScenarioStepCatalog.SourceKey,

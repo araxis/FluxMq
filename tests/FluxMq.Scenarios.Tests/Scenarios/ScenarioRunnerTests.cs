@@ -90,6 +90,39 @@ public sealed class ScenarioRunnerTests
     }
 
     [Fact]
+    public async Task RunAsync_IgnoresExcludedTopicPrefixesUntilMatchArrives()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        var scenario = new ScenarioDefinition
+        {
+            Steps =
+            {
+                ["expectMessage"] = ExpectEvent(
+                    ("eventType", FlowEventTypes.MqttMessageReceived),
+                    ("topicNotStartsWith", "$SYS/"),
+                    ("status", "received"),
+                    ("timeoutMs", 1000))
+            }
+        };
+
+        var runTask = CreateRunner().RunAsync("excludeSystemTopics", scenario, events);
+
+        events.Post(Event(
+            FlowEventTypes.MqttMessageReceived,
+            topic: "$SYS/broker/bytes/sent",
+            status: "received"));
+        events.Post(Event(
+            FlowEventTypes.MqttMessageReceived,
+            topic: "test",
+            status: "received"));
+
+        var result = await runTask.WaitAsync(TimeSpan.FromSeconds(2));
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Steps[0].MatchedEvent!.Channel.ShouldBe("test");
+    }
+
+    [Fact]
     public async Task RunAsync_MatchesMqttQosAndRetainAttributes()
     {
         var events = new BufferBlock<FlowEvent>();

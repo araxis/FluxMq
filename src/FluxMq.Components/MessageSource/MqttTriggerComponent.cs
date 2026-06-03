@@ -5,6 +5,7 @@ using FluxMq.Components.Mqtt;
 using FluxFlow.Components.Mqtt;
 using FluxFlow.Components.Mqtt.Contracts;
 using FluxFlow.Components.Mqtt.Nodes;
+using FluxFlow.Components.Mqtt.Timing;
 using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Definitions;
 using FluxFlow.Engine.Runtime;
@@ -172,7 +173,8 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
             new Dictionary<NodeName, RuntimeNode>());
         var runtimeNode = MqttSubscribeNode.Create(
             context,
-            new MqttClientAdapterFactory(() => new MqttClientAdapter(client, connectionStream)));
+            new MqttClientAdapterFactory(() => new MqttClientAdapter(client, connectionStream)),
+            SystemMqttClock.Instance);
         var outputSink = new ActionBlock<ComponentMqttReceivedMessage>(
             HandleReceivedMessageAsync,
             new ExecutionDataflowBlockOptions { BoundedCapacity = boundedCapacity });

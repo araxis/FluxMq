@@ -22,6 +22,7 @@ public sealed class DashboardEventFilterCatalogTests
         var mqttReceived = catalog.Find(FluxMqEventTypes.MqttMessageReceived);
         mqttReceived.Fields.Select(static field => field.Key).ShouldBe([
             DashboardEventFilterCatalog.TopicStartsWithKey,
+            DashboardEventFilterCatalog.TopicNotStartsWithKey,
             DashboardEventFilterCatalog.AttributeFilterKey("qos"),
             DashboardEventFilterCatalog.AttributeFilterKey("retain")
         ]);
@@ -132,6 +133,35 @@ public sealed class DashboardEventFilterCatalogTests
                     ["qos"] = "1",
                     ["retain"] = "True"
                 })).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Matches_ExcludesMqttTopicPrefix()
+    {
+        var catalog = new DashboardEventFilterCatalog();
+        var widget = new DashboardWidgetSnapshot(
+            "received",
+            DashboardWidgetCatalog.EventCounterType,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [DashboardEventFilterCatalog.EventTypeKey] = FluxMqEventTypes.MqttMessageReceived,
+                [DashboardEventFilterCatalog.TopicStartsWithKey] = string.Empty,
+                [DashboardEventFilterCatalog.TopicNotStartsWithKey] = "$SYS/",
+                [DashboardEventFilterCatalog.StatusKey] = "received"
+            });
+
+        catalog.Matches(
+            widget,
+            Event(
+                FluxMqEventTypes.MqttMessageReceived,
+                topic: "test",
+                status: "received")).ShouldBeTrue();
+        catalog.Matches(
+            widget,
+            Event(
+                FluxMqEventTypes.MqttMessageReceived,
+                topic: "$SYS/broker/bytes/sent",
+                status: "received")).ShouldBeFalse();
     }
 
     private static FlowEvent Event(
