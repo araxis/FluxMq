@@ -79,13 +79,15 @@ jobs:
         if: github.event_name == 'pull_request'
         shell: pwsh
         timeout-minutes: 12
-        run: dotnet test FluxMq.sln --no-restore --verbosity minimal -m:1 -p:UseSharedCompilation=false -p:UseAppHost=false
+        run: |
+          dotnet build FluxMq.sln --no-restore --disable-build-servers --verbosity minimal -m:1 -p:UseSharedCompilation=false -p:UseAppHost=false
+          dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --no-build --disable-build-servers --verbosity minimal
 
       - name: Test release validation
         if: github.event_name != 'pull_request'
         shell: pwsh
         timeout-minutes: 30
-        run: dotnet test FluxMq.sln --configuration Release --no-restore --verbosity minimal -m:1 -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 -p:UseSharedCompilation=false
+        run: dotnet test FluxMq.sln --configuration Release --no-restore --disable-build-servers --verbosity minimal -m:1 -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 -p:UseSharedCompilation=false
 
   package:
     name: Package Windows desktop app

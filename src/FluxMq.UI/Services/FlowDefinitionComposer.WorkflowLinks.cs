@@ -4,6 +4,251 @@ namespace FluxMq.UI.Services;
 
 public sealed partial class FlowDefinitionComposer
 {
+    /// <summary>
+    /// Renames a workflow node and rewrites all intra-workflow references that point to it.
+    /// No-ops when old and new names are equal, the node cannot be found, or the new name already exists.
+    /// </summary>
+    public string RenameWorkflowNode(string json, string? workflowName, string oldName, string newName)
+    {
+        var normalizedOldName = oldName.Trim();
+        var normalizedNewName = newName.Trim();
+        if (string.IsNullOrWhiteSpace(workflowName) ||
+            string.IsNullOrWhiteSpace(normalizedOldName) ||
+            string.IsNullOrWhiteSpace(normalizedNewName) ||
+            string.Equals(normalizedOldName, normalizedNewName, StringComparison.Ordinal))
+        {
+            return json;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+
+        if (flowApplication["workflows"] is not JsonObject workflows ||
+            workflows[workflowName] is not JsonObject workflow)
+        {
+            return json;
+        }
+
+        var nodeDef = workflow[normalizedOldName];
+        if (nodeDef is null || workflow.ContainsKey(normalizedNewName))
+        {
+            return json;
+        }
+
+        workflow.Remove(normalizedOldName);
+        workflow[normalizedNewName] = nodeDef;
+
+        foreach (var (_, node) in workflow.AsEnumerable().ToList())
+        {
+            if (node is not JsonObject nodeObject)
+            {
+                continue;
+            }
+
+            foreach (var (portName, portValue) in nodeObject.AsEnumerable().ToList())
+            {
+                if (IsDefinitionProperty(portName) || portValue is null)
+                {
+                    continue;
+                }
+
+                var updated = RenameReferencesFromSourceNode(portValue, normalizedOldName, normalizedNewName, out var renamed);
+                if (renamed)
+                {
+                    nodeObject[portName] = updated;
+                }
+            }
+        }
+
+        return root.ToJsonString(Options);
+    }
+
+    public string ConnectWorkflowPorts(
+        string json,
+        string? workflowName,
+        string sourceNodeName,
+        string sourcePortName,
+        string targetNodeName,
+        string targetPortName,
+        bool replaceTargetPortLinks = true)
+    {
+        if (string.IsNullOrWhiteSpace(workflowName) ||
+            string.IsNullOrWhiteSpace(sourceNodeName) ||
+            string.IsNullOrWhiteSpace(targetNodeName) ||
+            string.IsNullOrWhiteSpace(targetPortName) ||
+            string.Equals(sourceNodeName, targetNodeName, StringComparison.Ordinal))
+        {
+            return json;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["workflows"] is not JsonObject workflows ||
+            workflows[workflowName] is not JsonObject workflow ||
+            workflow[sourceNodeName] is not JsonObject ||
+            workflow[targetNodeName] is not JsonObject targetNode)
+        {
+            return json;
+        }
+
+        var reference = BuildPortReference(sourceNodeName, sourcePortName);
+        if (replaceTargetPortLinks)
+        {
+            targetNode[targetPortName] = reference;
+        }
+        else
+        {
+            AppendLinkReference(targetNode, targetPortName, reference);
+        }
+
+        return root.ToJsonString(Options);
+    }
+
+    public string RemoveWorkflowPortLink(
+        string json,
+        string? workflowName,
+        string sourceNodeName,
+        string sourcePortName,
+        string targetNodeName,
+        string targetPortName)
+    {
+        if (string.IsNullOrWhiteSpace(workflowName) ||
+            string.IsNullOrWhiteSpace(sourceNodeName) ||
+            string.IsNullOrWhiteSpace(targetNodeName) ||
+            string.IsNullOrWhiteSpace(targetPortName))
+        {
+            return json;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["workflows"] is not JsonObject workflows ||
+            workflows[workflowName] is not JsonObject workflow ||
+            workflow[targetNodeName] is not JsonObject targetNode ||
+            !RemoveLinkReference(targetNode, targetPortName, sourceNodeName, sourcePortName))
+        {
+            return json;
+        }
+
+        return root.ToJsonString(Options);
+    }
+
+    public string UpdateWorkflowPortLinkCondition(
+        string json,
+        string? workflowName,
+        string sourceNodeName,
+        string sourcePortName,
+        string targetNodeName,
+        string targetPortName,
+        string? condition)
+    {
+        if (string.IsNullOrWhiteSpace(workflowName) ||
+            string.IsNullOrWhiteSpace(sourceNodeName) ||
+            string.IsNullOrWhiteSpace(targetNodeName) ||
+            string.IsNullOrWhiteSpace(targetPortName))
+        {
+            return json;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["workflows"] is not JsonObject workflows ||
+            workflows[workflowName] is not JsonObject workflow ||
+            workflow[targetNodeName] is not JsonObject targetNode ||
+            !UpdateLinkCondition(targetNode, targetPortName, sourceNodeName, sourcePortName, condition))
+        {
+            return json;
+        }
+
+        return root.ToJsonString(Options);
+    }
+
+    public string? GetWorkflowPortLinkCondition(
+        string json,
+        string? workflowName,
+        string sourceNodeName,
+        string sourcePortName,
+        string targetNodeName,
+        string targetPortName)
+    {
+        if (string.IsNullOrWhiteSpace(workflowName) ||
+            string.IsNullOrWhiteSpace(sourceNodeName) ||
+            string.IsNullOrWhiteSpace(targetNodeName) ||
+            string.IsNullOrWhiteSpace(targetPortName))
+        {
+            return null;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["workflows"] is not JsonObject workflows ||
+            workflows[workflowName] is not JsonObject workflow ||
+            workflow[targetNodeName] is not JsonObject targetNode ||
+            targetNode[targetPortName] is not { } link)
+        {
+            return null;
+        }
+
+        return TryGetLinkCondition(link, sourceNodeName, sourcePortName, out var condition)
+            ? condition
+            : null;
+    }
+
+    public string RemoveWorkflowNode(string json, string? workflowName, string nodeName)
+    {
+        if (string.IsNullOrWhiteSpace(workflowName) || string.IsNullOrWhiteSpace(nodeName))
+        {
+            return json;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["workflows"] is not JsonObject workflows ||
+            workflows[workflowName] is not JsonObject workflow ||
+            !workflow.Remove(nodeName))
+        {
+            return json;
+        }
+
+        foreach (var (_, node) in workflow.AsEnumerable().ToList())
+        {
+            if (node is not JsonObject nodeObject)
+            {
+                continue;
+            }
+
+            foreach (var (portName, portValue) in nodeObject.AsEnumerable().ToList())
+            {
+                if (IsDefinitionProperty(portName))
+                {
+                    continue;
+                }
+
+                if (portValue is null)
+                {
+                    continue;
+                }
+
+                var updated = RemoveReferencesFromSourceNode(portValue, nodeName, out var removed);
+                if (!removed)
+                {
+                    continue;
+                }
+
+                if (updated is null)
+                {
+                    nodeObject.Remove(portName);
+                }
+                else
+                {
+                    nodeObject[portName] = updated;
+                }
+            }
+        }
+
+        return root.ToJsonString(Options);
+    }
+
     private static string BuildPortReference(string sourceNodeName, string sourcePortName)
     {
         var sourcePort = string.IsNullOrWhiteSpace(sourcePortName) ? "Output" : sourcePortName.Trim();
