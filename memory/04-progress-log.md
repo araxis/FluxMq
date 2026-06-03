@@ -8,6 +8,7 @@ Chronological progress record.
 - Added an accepted direction to treat the topic tree as a first-class workspace visualization and to make an explicit layout decision before the next major desktop layout/design pass.
 - Added a first-class `Topics` workspace page backed by the existing live/stored message projection, with a full-height topic tree, message table, and payload inspector so topic structure is no longer confined to the right inspector.
 - Tightened the live tools shell policy so the right inspector/publisher panel is available only on pipeline and dashboard surfaces, keeping test, logs, and topic explorer pages focused on their own workspace content.
+- Improved Logs page filtering interaction with clearable search and a reset-filters action for scope, level, and search filters.
 
 ## 2026-05-06
 

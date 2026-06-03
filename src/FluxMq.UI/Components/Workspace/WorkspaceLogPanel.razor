@@ -6,13 +6,22 @@
             <MudText Typo="@TitleTypo">@Title</MudText>
             <MudText Typo="Typo.caption" Color="Color.Secondary">@FilteredLogs.Count of @Logs.Count entries</MudText>
         </MudStack>
-        <MudTooltip Text="Clear logs">
-            <MudIconButton Icon="@Icons.Material.Filled.DeleteSweep"
-                           Size="Size.Small"
-                           Color="Color.Secondary"
-                           Disabled="@(Logs.Count == 0)"
-                           OnClick="ClearAsync" />
-        </MudTooltip>
+        <MudStack Row="true" Spacing="1">
+            <MudTooltip Text="Reset filters">
+                <MudIconButton Icon="@Icons.Material.Filled.FilterAltOff"
+                               Size="Size.Small"
+                               Color="Color.Secondary"
+                               Disabled="@(!HasActiveFilters)"
+                               OnClick="ResetFilters" />
+            </MudTooltip>
+            <MudTooltip Text="Clear logs">
+                <MudIconButton Icon="@Icons.Material.Filled.DeleteSweep"
+                               Size="Size.Small"
+                               Color="Color.Secondary"
+                               Disabled="@(Logs.Count == 0)"
+                               OnClick="ClearAsync" />
+            </MudTooltip>
+        </MudStack>
     </MudStack>
 
     <div style="@ToolbarStyle">
@@ -50,6 +59,7 @@
                       Variant="Variant.Outlined"
                       Margin="Margin.Dense"
                       Immediate="true"
+                      Clearable="true"
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       @bind-Value="_search"
@@ -153,6 +163,11 @@
         : "display:grid;grid-template-columns:180px 160px minmax(240px,360px);gap:12px;align-items:start;flex:0 0 auto;max-width:760px;";
     private string EffectiveScope => string.IsNullOrWhiteSpace(ForcedScope) ? _scope : ForcedScope;
     private string EmptyMessage => Logs.Count == 0 ? "No logs" : "No matching logs";
+    private bool HasActiveFilters =>
+        (string.IsNullOrWhiteSpace(ForcedScope) &&
+         !string.Equals(_scope, WorkspaceLogFilter.All, StringComparison.Ordinal)) ||
+        !string.Equals(_severity, WorkspaceLogFilter.All, StringComparison.Ordinal) ||
+        !string.IsNullOrWhiteSpace(_search);
 
     private IReadOnlyList<WorkspaceLogEntry> FilteredLogs =>
         WorkspaceLogFilter.Apply(Logs, new WorkspaceLogQuery(EffectiveScope, _severity, _search), MaxEntries);
@@ -190,6 +205,17 @@
         {
             await OnClear.InvokeAsync();
         }
+    }
+
+    private void ResetFilters()
+    {
+        if (string.IsNullOrWhiteSpace(ForcedScope))
+        {
+            _scope = WorkspaceLogFilter.All;
+        }
+
+        _severity = WorkspaceLogFilter.All;
+        _search = null;
     }
 
     private static string FormatLogTime(WorkspaceLogEntry entry)
