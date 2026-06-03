@@ -5,5 +5,6 @@ public enum WorkspaceArtifactKind
     Pipeline,
     Dashboard,
     Test,
+    Topics,
     Logs
 }
