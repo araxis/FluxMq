@@ -2383,6 +2383,92 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void RenameWorkflowNode_DoesNotOverwriteExistingNode()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = """
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "pipe": {
+                  "filter": { "type": "flow.filter" },
+                  "inspect": { "type": "mqtt.payload-inspector" }
+                }
+              }
+            }
+          }
+        }
+        """;
+
+        var updated = composer.RenameWorkflowNode(json, "pipe", "filter", "inspect");
+
+        updated.ShouldBe(json);
+    }
+
+    [Fact]
+    public void RenameWorkflowNode_TrimsNamesAndUpdatesReferences()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = """
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "pipe": {
+                  "filter": { "type": "flow.filter" },
+                  "inspect": {
+                    "type": "mqtt.payload-inspector",
+                    "Input": "filter.Output"
+                  },
+                  "logger": {
+                    "type": "flow.logger",
+                    "Input": [ "filter.Output", "inspect.Output" ],
+                    "FlowErrors": {
+                      "from": "filter.Errors",
+                      "when": "severity == \"Error\""
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """;
+
+        var updated = composer.RenameWorkflowNode(json, "pipe", " filter ", " clean ");
+
+        using var document = JsonDocument.Parse(updated);
+        var workflow = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("workflows")
+            .GetProperty("pipe");
+
+        workflow.TryGetProperty("filter", out _).ShouldBeFalse();
+        workflow.TryGetProperty("clean", out _).ShouldBeTrue();
+        workflow.GetProperty("inspect")
+            .GetProperty("Input")
+            .GetString()
+            .ShouldBe("clean.Output");
+        workflow.GetProperty("logger")
+            .GetProperty("Input")
+            .EnumerateArray()
+            .Select(item => item.GetString())
+            .ShouldBe(["clean.Output", "inspect.Output"]);
+        workflow.GetProperty("logger")
+            .GetProperty("FlowErrors")
+            .GetProperty("from")
+            .GetString()
+            .ShouldBe("clean.Errors");
+        workflow.GetProperty("logger")
+            .GetProperty("FlowErrors")
+            .GetProperty("when")
+            .GetString()
+            .ShouldBe("severity == \"Error\"");
+    }
+
+    [Fact]
     public void RemoveWorkflowNode_UsesWorkflowScopeWhenNodeNamesRepeat()
     {
         var composer = new FlowDefinitionComposer();

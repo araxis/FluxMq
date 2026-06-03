@@ -157,41 +157,58 @@ public sealed class FlowDefinitionComposer
 
     /// <summary>
     /// Renames a workflow node and rewrites all intra-workflow references that point to it.
-    /// No-ops when old and new names are equal or the node cannot be found.
+    /// No-ops when old and new names are equal, the node cannot be found, or the new name already exists.
     /// </summary>
     public string RenameWorkflowNode(string json, string? workflowName, string oldName, string newName)
     {
+        var normalizedOldName = oldName.Trim();
+        var normalizedNewName = newName.Trim();
         if (string.IsNullOrWhiteSpace(workflowName) ||
-            string.IsNullOrWhiteSpace(oldName) ||
-            string.IsNullOrWhiteSpace(newName) ||
-            string.Equals(oldName, newName, StringComparison.Ordinal))
+            string.IsNullOrWhiteSpace(normalizedOldName) ||
+            string.IsNullOrWhiteSpace(normalizedNewName) ||
+            string.Equals(normalizedOldName, normalizedNewName, StringComparison.Ordinal))
+        {
             return json;
+        }
 
         var root = ParseOrCreate(json);
         var flowApplication = GetFlowApplication(root);
 
         if (flowApplication["workflows"] is not JsonObject workflows ||
             workflows[workflowName] is not JsonObject workflow)
+        {
             return json;
+        }
 
-        var nodeDef = workflow[oldName];
-        if (nodeDef is null) return json;
+        var nodeDef = workflow[normalizedOldName];
+        if (nodeDef is null || workflow.ContainsKey(normalizedNewName))
+        {
+            return json;
+        }
 
-        workflow.Remove(oldName);
-        workflow[newName] = nodeDef;
+        workflow.Remove(normalizedOldName);
+        workflow[normalizedNewName] = nodeDef;
 
-        var prefix = oldName + ".";
         foreach (var (_, node) in workflow.AsEnumerable().ToList())
         {
-            if (node is not JsonObject nodeObj) continue;
-            var updates = nodeObj
-                .Where(p => p.Value is JsonValue jv &&
-                             jv.TryGetValue<string>(out var s) &&
-                             s.StartsWith(prefix, StringComparison.Ordinal))
-                .Select(p => (p.Key, newName + p.Value!.GetValue<string>()[oldName.Length..]))
-                .ToList();
-            foreach (var (key, val) in updates)
-                nodeObj[key] = val;
+            if (node is not JsonObject nodeObject)
+            {
+                continue;
+            }
+
+            foreach (var (portName, portValue) in nodeObject.AsEnumerable().ToList())
+            {
+                if (IsDefinitionProperty(portName) || portValue is null)
+                {
+                    continue;
+                }
+
+                var updated = RenameReferencesFromSourceNode(portValue, normalizedOldName, normalizedNewName, out var renamed);
+                if (renamed)
+                {
+                    nodeObject[portName] = updated;
+                }
+            }
         }
 
         return root.ToJsonString(Options);
@@ -2778,6 +2795,61 @@ public sealed class FlowDefinitionComposer
         return node.DeepClone();
     }
 
+    private static JsonNode RenameReferencesFromSourceNode(
+        JsonNode node,
+        string sourceNodeName,
+        string newSourceNodeName,
+        out bool renamed)
+    {
+        renamed = false;
+
+        if (node is JsonValue value &&
+            value.TryGetValue<string>(out var reference) &&
+            ReferenceNodeMatches(reference, sourceNodeName))
+        {
+            renamed = true;
+            return JsonValue.Create(RenameReferenceNode(reference, sourceNodeName, newSourceNodeName))!;
+        }
+
+        if (node is JsonArray array)
+        {
+            var updatedArray = new JsonArray();
+            foreach (var item in array)
+            {
+                if (item is null)
+                {
+                    updatedArray.Add(null);
+                    continue;
+                }
+
+                var updatedItem = RenameReferencesFromSourceNode(item, sourceNodeName, newSourceNodeName, out var itemRenamed);
+                renamed |= itemRenamed;
+                updatedArray.Add(updatedItem);
+            }
+
+            return renamed ? updatedArray : node.DeepClone();
+        }
+
+        if (node is JsonObject obj &&
+            (obj.TryGetPropertyValue("from", out var fromNode) ||
+             obj.TryGetPropertyValue("From", out fromNode)) &&
+            fromNode is not null)
+        {
+            var updatedFrom = RenameReferencesFromSourceNode(fromNode, sourceNodeName, newSourceNodeName, out renamed);
+            if (!renamed)
+            {
+                return node.DeepClone();
+            }
+
+            var updatedObject = (JsonObject)node.DeepClone();
+            updatedObject["from"] = updatedFrom;
+            updatedObject.Remove("From");
+            return updatedObject;
+        }
+
+        return node.DeepClone();
+    }
+
     private static bool ContainsLinkReference(JsonNode node, string reference)
     {
         if (node is JsonValue value &&
@@ -2830,6 +2902,20 @@ public sealed class FlowDefinitionComposer
 
         var referenceNode = reference.Trim().Split('.', 2, StringSplitOptions.TrimEntries)[0];
         return string.Equals(referenceNode, sourceNodeName.Trim(), StringComparison.Ordinal);
+    }
+
+    private static string RenameReferenceNode(string reference, string sourceNodeName, string newSourceNodeName)
+    {
+        var parts = reference.Trim().Split('.', 2, StringSplitOptions.TrimEntries);
+        if (parts.Length == 0 ||
+            !string.Equals(parts[0], sourceNodeName.Trim(), StringComparison.Ordinal))
+        {
+            return reference;
+        }
+
+        return parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1])
+            ? $"{newSourceNodeName.Trim()}.{parts[1]}"
+            : newSourceNodeName.Trim();
     }
 
     private static bool NeedsInputLink(string componentType) => componentType switch
