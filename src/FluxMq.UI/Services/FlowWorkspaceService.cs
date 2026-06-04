@@ -158,13 +158,18 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
             var recentThreshold = DateTimeOffset.UtcNow.Subtract(DashboardRateWindow);
             var recentCount = matching.Count(flowEvent => flowEvent.Timestamp >= recentThreshold);
             var eventsPerSecond = recentCount / DashboardRateWindow.TotalSeconds;
+            var topicCounts = BuildDashboardTopicMetrics(matching);
             return new DashboardEventSnapshot(
                 matching.Length,
                 matching.LastOrDefault(),
                 recentCount,
                 DashboardRateWindow,
                 eventsPerSecond,
-                BuildDashboardEventBuckets(matching, recentThreshold));
+                BuildDashboardEventBuckets(matching, recentThreshold),
+                topicCounts,
+                matching.Sum(static flowEvent => (long)(flowEvent.PayloadBytes ?? 0)),
+                topicCounts.Count,
+                matching.Count(static flowEvent => IsRetained(flowEvent)));
         }
     }
 
@@ -2237,6 +2242,18 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
 
         return buckets;
     }
+
+    private static IReadOnlyList<DashboardTopicMetric> BuildDashboardTopicMetrics(IReadOnlyList<FlowEvent> events)
+        => events
+            .Where(static flowEvent => !string.IsNullOrWhiteSpace(flowEvent.Channel))
+            .GroupBy(static flowEvent => flowEvent.Channel!, StringComparer.Ordinal)
+            .Select(static group => new DashboardTopicMetric(group.Key, group.Count()))
+            .OrderByDescending(static topic => topic.Count)
+            .ThenBy(static topic => topic.Topic, StringComparer.Ordinal)
+            .ToArray();
+
+    private static bool IsRetained(FlowEvent flowEvent)
+        => bool.TryParse(flowEvent.GetAttribute(ScenarioStepConfigurationKeys.Retain), out var retain) && retain;
 
     private sealed class WorkspaceScenarioEventObserver(Action<FlowEvent> observe) : IScenarioEventObserver
     {

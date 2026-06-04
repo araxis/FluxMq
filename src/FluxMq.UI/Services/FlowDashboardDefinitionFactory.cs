@@ -74,6 +74,25 @@ public static class FlowDashboardDefinitionFactory
             ? CreateConfiguration(DashboardEventFilterCatalog.Shared.CreateEmptyConfiguration())
             : new JsonObject();
         configuration["title"] = title;
+        if (DashboardWidgetCatalog.IsVisualEventWidget(widgetType))
+        {
+            configuration[DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricRecent;
+            configuration[DashboardWidgetCatalog.DisplayMetricsKey] =
+                DashboardWidgetCatalog.BuildDisplayMetrics(null);
+            configuration[DashboardWidgetCatalog.MetricCardColumnsKey] =
+                DashboardWidgetCatalog.DefaultMetricCardColumns.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        if (string.Equals(widgetType, DashboardWidgetCatalog.EventGaugeType, StringComparison.Ordinal))
+        {
+            configuration[DashboardWidgetCatalog.GaugeStyleKey] = DashboardWidgetCatalog.GaugeStyleRing;
+        }
+        else if (string.Equals(widgetType, DashboardWidgetCatalog.EventChartType, StringComparison.Ordinal))
+        {
+            configuration[DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricMessages;
+            configuration[DashboardWidgetCatalog.ChartTypeKey] = DashboardWidgetCatalog.ChartTypeBars;
+        }
+
         return configuration;
     }
 

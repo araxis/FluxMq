@@ -40,15 +40,10 @@
         {
             <div class="dashboard-widget-metric">
                 <div>
-                    <div class="dashboard-widget-value">@snapshot.Count</div>
+                    <div class="dashboard-widget-value">@FormatNumber(snapshot.Count)</div>
                     <div class="dashboard-widget-meta">@CounterMeta(snapshot)</div>
                 </div>
-                <div class="dashboard-widget-sparkline">
-                    @foreach (var bucket in ChartBuckets(snapshot))
-                    {
-                        <span style="@bucket.Style" title="@bucket.Label"></span>
-                    }
-                </div>
+                @RenderBucketBars(snapshot, compact: true)
             </div>
         }
         else if (IsEventRate)
@@ -65,29 +60,88 @@
         }
         else if (IsEventGauge)
         {
-            <div class="dashboard-widget-gauge-shell">
-                <div class="dashboard-widget-gauge" style="@GaugeStyle(snapshot)">
-                    <div>
-                        <strong>@snapshot.RecentCount</strong>
-                        <span>@FormatDuration(snapshot.RateWindow)</span>
+            var primary = PrimaryMetricCard(snapshot);
+            <div class="dashboard-observability-layout">
+                <div class="dashboard-observability-grid" style="@MetricGridStyle">
+                    @foreach (var card in MetricCards(snapshot))
+                    {
+                        @RenderMetricCard(card)
+                    }
+                </div>
+
+                @if (SelectedGaugeStyle == DashboardWidgetCatalog.GaugeStyleTiles)
+                {
+                    @RenderTopicBars(snapshot, limit: 4)
+                }
+                else if (SelectedGaugeStyle == DashboardWidgetCatalog.GaugeStyleMeter)
+                {
+                    <div class="dashboard-gauge-meter-panel">
+                        <div class="dashboard-gauge-meter-header">
+                            <span>@primary.Label</span>
+                            <strong>@primary.Value</strong>
+                        </div>
+                        <div class="dashboard-gauge-meter" style="@GaugeProgressStyle(snapshot)" aria-hidden="true">
+                            <span></span>
+                        </div>
+                        <div class="dashboard-gauge-meter-footer">
+                            <span>@FormatDuration(snapshot.RateWindow)</span>
+                            <span>@FormatNumber(snapshot.Count) total</span>
+                        </div>
                     </div>
-                </div>
-                <div class="dashboard-widget-gauge-meta">
-                    <strong>@snapshot.Count total</strong>
-                    <span>@FormatRate(snapshot.EventsPerSecond)</span>
-                </div>
+                }
+                else
+                {
+                    <div class="dashboard-widget-gauge-shell">
+                        <div class="dashboard-widget-gauge" style="@GaugeProgressStyle(snapshot)">
+                            <div>
+                                <strong>@primary.Value</strong>
+                                <span>@primary.Label</span>
+                            </div>
+                        </div>
+                        <div class="dashboard-widget-gauge-meta">
+                            <strong>@FormatNumber(snapshot.Count) total</strong>
+                            <span>@FormatRate(snapshot.EventsPerSecond)</span>
+                            <span>@FormatBytes(snapshot.TotalPayloadBytes) payload</span>
+                        </div>
+                    </div>
+                }
             </div>
         }
         else if (IsEventChart)
         {
-            <div class="dashboard-widget-chart">
-                <div class="dashboard-widget-chart-bars">
-                    @foreach (var bucket in ChartBuckets(snapshot))
+            <div class="dashboard-observability-layout">
+                <div class="dashboard-observability-grid compact" style="@MetricGridStyle">
+                    @foreach (var card in MetricCards(snapshot))
                     {
-                        <span style="@bucket.Style" title="@bucket.Label"></span>
+                        @RenderMetricCard(card)
                     }
                 </div>
-                <div class="dashboard-widget-meta">@RateMeta(snapshot)</div>
+
+                <div class="dashboard-widget-chart">
+                    @if (SelectedChartType == DashboardWidgetCatalog.ChartTypeTopics)
+                    {
+                        @RenderTopicBars(snapshot, limit: 6)
+                    }
+                    else if (SelectedChartType == DashboardWidgetCatalog.ChartTypeLine ||
+                             SelectedChartType == DashboardWidgetCatalog.ChartTypeArea)
+                    {
+                        <svg class="dashboard-widget-chart-line @SelectedChartType"
+                             viewBox="0 0 100 44"
+                             preserveAspectRatio="none"
+                             aria-hidden="true">
+                            @if (SelectedChartType == DashboardWidgetCatalog.ChartTypeArea)
+                            {
+                                <polygon points="@ChartAreaPoints(snapshot)" />
+                            }
+                            <polyline points="@ChartLinePoints(snapshot)" />
+                        </svg>
+                    }
+                    else
+                    {
+                        @RenderBucketBars(snapshot, compact: false)
+                    }
+                    <div class="dashboard-widget-meta">@RateMeta(snapshot)</div>
+                </div>
             </div>
         }
         else if (IsLatestEvent)
@@ -131,6 +185,15 @@
     private bool IsEventChart => string.Equals(Widget.Type, DashboardWidgetCatalog.EventChartType, StringComparison.Ordinal);
 
     private bool IsTopicTree => string.Equals(Widget.Type, DashboardWidgetCatalog.TopicTreeType, StringComparison.Ordinal);
+
+    private string SelectedGaugeStyle
+        => DashboardWidgetCatalog.NormalizeGaugeStyle(Widget.ReadString(DashboardWidgetCatalog.GaugeStyleKey));
+
+    private string SelectedChartType
+        => DashboardWidgetCatalog.NormalizeChartType(Widget.ReadString(DashboardWidgetCatalog.ChartTypeKey));
+
+    private string MetricGridStyle
+        => $"--metric-columns:{DashboardWidgetCatalog.NormalizeMetricCardColumns(Widget.ReadString(DashboardWidgetCatalog.MetricCardColumnsKey))};";
 
     private IReadOnlyList<MqttEnvelope> TopicMessages
     {
@@ -182,7 +245,7 @@
             DashboardWidgetCatalog.LatestEventType => Icons.Material.Filled.Bolt,
             DashboardWidgetCatalog.EventRateType => Icons.Material.Filled.Speed,
             DashboardWidgetCatalog.EventGaugeType => Icons.Material.Filled.DonutLarge,
-            DashboardWidgetCatalog.EventChartType => Icons.Material.Filled.BarChart,
+            DashboardWidgetCatalog.EventChartType => Icons.Material.Filled.StackedLineChart,
             DashboardWidgetCatalog.TopicTreeType => Icons.Material.Filled.AccountTree,
             _ => Icons.Material.Filled.Widgets
         };
@@ -212,6 +275,92 @@
         }
     }
 
+    private RenderFragment RenderMetricCard(MetricDisplayCard card) => @<div class="dashboard-metric-tile @card.CssClass">
+        <MudIcon Icon="@card.Icon" Size="Size.Small" />
+        <span class="dashboard-metric-value">@card.Value</span>
+        <span class="dashboard-metric-label">@card.Label</span>
+    </div>;
+
+    private RenderFragment RenderBucketBars(DashboardEventSnapshot snapshot, bool compact) => @<div class="@(compact ? "dashboard-widget-sparkline" : "dashboard-widget-chart-bars")">
+        @foreach (var bucket in ChartBuckets(snapshot))
+        {
+            <span style="@bucket.Style" title="@bucket.Label"></span>
+        }
+    </div>;
+
+    private RenderFragment RenderTopicBars(DashboardEventSnapshot snapshot, int limit) => @<div class="dashboard-top-topic-panel">
+        @if (snapshot.TopicCounts.Count == 0)
+        {
+            <div class="dashboard-topic-empty">
+                <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" />
+                <span>No topic traffic yet</span>
+            </div>
+        }
+        else
+        {
+            @foreach (var topic in TopicBars(snapshot, limit))
+            {
+                <div class="dashboard-topic-row">
+                    <span class="dashboard-topic-name" title="@topic.Topic">@TrimTopic(topic.Topic)</span>
+                    <div class="dashboard-topic-bar">
+                        <div class="dashboard-topic-bar-fill" style="@topic.Style"></div>
+                    </div>
+                    <span class="dashboard-topic-count">@FormatNumber(topic.Count)</span>
+                </div>
+            }
+        }
+    </div>;
+
+    private IReadOnlyList<MetricDisplayCard> MetricCards(DashboardEventSnapshot snapshot)
+        => DashboardWidgetCatalog.NormalizeDisplayMetrics(Widget.ReadString(DashboardWidgetCatalog.DisplayMetricsKey))
+            .Select(metric => ToMetricDisplayCard(metric, snapshot))
+            .ToArray();
+
+    private MetricDisplayCard PrimaryMetricCard(DashboardEventSnapshot snapshot)
+        => ToMetricDisplayCard(
+            DashboardWidgetCatalog.NormalizePrimaryMetric(Widget.ReadString(DashboardWidgetCatalog.PrimaryMetricKey)),
+            snapshot);
+
+    private static MetricDisplayCard ToMetricDisplayCard(string metric, DashboardEventSnapshot snapshot)
+        => metric switch
+        {
+            DashboardWidgetCatalog.MetricCurrentRate => new(
+                Icons.Material.Filled.Speed,
+                FormatRate(snapshot.EventsPerSecond),
+                "now / sec",
+                "metric-rate"),
+            DashboardWidgetCatalog.MetricRecent => new(
+                Icons.Material.Filled.Update,
+                FormatNumber(snapshot.RecentCount),
+                "recent",
+                "metric-recent"),
+            DashboardWidgetCatalog.MetricPayloadBytes => new(
+                Icons.Material.Filled.DataUsage,
+                FormatBytes(snapshot.TotalPayloadBytes),
+                "payload",
+                "metric-payload"),
+            DashboardWidgetCatalog.MetricTopics => new(
+                Icons.Material.Filled.Topic,
+                FormatNumber(snapshot.UniqueTopicCount),
+                "topics",
+                "metric-topics"),
+            DashboardWidgetCatalog.MetricRetained => new(
+                Icons.Material.Filled.PushPin,
+                FormatNumber(snapshot.RetainedCount),
+                "retained",
+                "metric-retained"),
+            DashboardWidgetCatalog.MetricAveragePayload => new(
+                Icons.Material.Filled.DataUsage,
+                FormatBytes(snapshot.AveragePayloadBytes),
+                "avg payload",
+                "metric-payload"),
+            _ => new(
+                Icons.Material.Filled.MailOutline,
+                FormatNumber(snapshot.Count),
+                "messages",
+                "metric-messages")
+        };
+
     private static int TopicCount(IReadOnlyList<MqttEnvelope> messages)
         => messages.Select(static message => message.Topic).Distinct(StringComparer.Ordinal).Count();
 
@@ -223,7 +372,7 @@
     private static string RateMeta(DashboardEventSnapshot snapshot)
         => snapshot.RecentCount == 0
             ? "waiting for traffic"
-            : $"{snapshot.RecentCount} in {FormatDuration(snapshot.RateWindow)}";
+            : $"{FormatNumber(snapshot.RecentCount)} in {FormatDuration(snapshot.RateWindow)}";
 
     private static string EventMeta(FlowEvent flowEvent)
     {
@@ -260,17 +409,50 @@
                 var height = count == 0 ? 8 : Math.Clamp((count / (double)max) * 100, 14, 100);
                 return new ChartBucket(
                     $"height:{height.ToString("0.###", CultureInfo.InvariantCulture)}%;",
-                    $"{count} events");
+                    $"{FormatNumber(count)} events");
             })
             .ToArray();
     }
 
-    private static string GaugeStyle(DashboardEventSnapshot snapshot)
+    private static IReadOnlyList<TopicBar> TopicBars(DashboardEventSnapshot snapshot, int limit)
+    {
+        var max = Math.Max(1, snapshot.TopicCounts.DefaultIfEmpty(new DashboardTopicMetric(string.Empty, 0)).Max(static topic => topic.Count));
+        return snapshot.TopicCounts
+            .Take(limit)
+            .Select(topic =>
+            {
+                var width = topic.Count == 0 ? 0 : Math.Clamp(topic.Count / (double)max * 100, 10, 100);
+                return new TopicBar(
+                    topic.Topic,
+                    topic.Count,
+                    $"width:{width.ToString("0.###", CultureInfo.InvariantCulture)}%;");
+            })
+            .ToArray();
+    }
+
+    private static string ChartLinePoints(DashboardEventSnapshot snapshot)
+    {
+        var buckets = snapshot.BucketCounts.Count == 0 ? [0] : snapshot.BucketCounts;
+        var max = Math.Max(1, buckets.Max());
+        var lastIndex = Math.Max(1, buckets.Count - 1);
+        return string.Join(" ", buckets.Select((count, index) =>
+        {
+            var x = index * 100d / lastIndex;
+            var y = count == 0 ? 41d : 42d - Math.Clamp(count / (double)max * 36d, 8d, 36d);
+            return $"{x.ToString("0.###", CultureInfo.InvariantCulture)},{y.ToString("0.###", CultureInfo.InvariantCulture)}";
+        }));
+    }
+
+    private static string ChartAreaPoints(DashboardEventSnapshot snapshot)
+        => $"0,44 {ChartLinePoints(snapshot)} 100,44";
+
+    private static string GaugeProgressStyle(DashboardEventSnapshot snapshot)
     {
         var maxBucket = Math.Max(1, snapshot.BucketCounts.DefaultIfEmpty(0).Max());
+        var capacity = Math.Max(1, maxBucket * Math.Max(1, snapshot.BucketCounts.Count));
         var percent = snapshot.RecentCount == 0
             ? 0
-            : Math.Clamp((snapshot.RecentCount / (double)(maxBucket * snapshot.BucketCounts.Count)) * 100, 12, 100);
+            : Math.Clamp(snapshot.RecentCount / (double)capacity * 100, 12, 100);
         return $"--gauge-progress:{percent.ToString("0.###", CultureInfo.InvariantCulture)}%;";
     }
 
@@ -285,6 +467,24 @@
     private static string FormatEventTime(FlowEvent flowEvent)
         => flowEvent.Timestamp.ToLocalTime().ToString("HH:mm:ss", CultureInfo.InvariantCulture);
 
+    private static string FormatNumber(long value) => value switch
+    {
+        < 1_000 => value.ToString(CultureInfo.InvariantCulture),
+        < 1_000_000 => $"{value / 1_000.0:0.#}k",
+        < 1_000_000_000 => $"{value / 1_000_000.0:0.#}M",
+        _ => $"{value / 1_000_000_000.0:0.#}B"
+    };
+
+    private static string FormatBytes(long bytes) => FormatBytes((double)bytes);
+
+    private static string FormatBytes(double bytes) => bytes switch
+    {
+        < 1_024 => $"{bytes.ToString("0.#", CultureInfo.InvariantCulture)} B",
+        < 1_048_576 => $"{bytes / 1_024.0:0.#} KB",
+        < 1_073_741_824 => $"{bytes / 1_048_576.0:0.#} MB",
+        _ => $"{bytes / 1_073_741_824.0:0.#} GB"
+    };
+
     private static string FormatRate(double eventsPerSecond)
         => eventsPerSecond.ToString(eventsPerSecond switch
         {
@@ -297,6 +497,9 @@
         => duration.TotalMinutes >= 1
             ? $"{duration.TotalMinutes.ToString("0", CultureInfo.InvariantCulture)} min"
             : $"{duration.TotalSeconds.ToString("0", CultureInfo.InvariantCulture)} sec";
+
+    private static string TrimTopic(string topic)
+        => topic.Length <= 28 ? topic : "..." + topic[^25..];
 
     private static void AddPart(List<string> parts, string? value, string prefix = "")
     {
@@ -312,4 +515,6 @@
     }
 
     private readonly record struct ChartBucket(string Style, string Label);
+    private readonly record struct TopicBar(string Topic, int Count, string Style);
+    private sealed record MetricDisplayCard(string Icon, string Value, string Label, string CssClass);
 }

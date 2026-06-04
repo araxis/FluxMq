@@ -1,0 +1,40 @@
+.dashboard-widget-editor-tabs {
+    min-width: 0;
+}
+
+.dashboard-widget-editor-tab {
+    min-width: 0;
+    padding: 18px 2px 2px;
+}
+
+.dashboard-widget-editor-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.dashboard-widget-editor-metric-options {
+    display: grid;
+    gap: 2px 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 0;
+}
+
+.dashboard-widget-editor-empty {
+    align-items: center;
+    border: 1px dashed color-mix(in srgb, var(--mud-palette-text-primary) 18%, transparent);
+    border-radius: 7px;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    font-size: 12px;
+    font-weight: 650;
+    justify-content: center;
+    min-height: 92px;
+}
+
+@media (max-width: 700px) {
+    .dashboard-widget-editor-metric-options {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
