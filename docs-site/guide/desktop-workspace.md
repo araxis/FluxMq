@@ -2,6 +2,8 @@
 
 The desktop workspace is the fastest path for local MQTT debugging and workflow validation.
 
+![FluxMQ desktop workspace with a sample operations monitor app](/screenshots/sample-workspace.png)
+
 ## Run
 
 ```sh
@@ -43,6 +45,12 @@ Use the Connections menu to add or edit broker resources. The live tools panel c
 The left session panel and right live tools panel can be opened or closed from the shell controls. The live tools panel is available on pipeline and dashboard surfaces; tests, logs, topics, and no-app states keep the full workspace width.
 
 Runtime and traffic updates refresh diagram node activity without rebuilding the diagram, so node positions and collapsed state remain stable while messages arrive.
+
+## Workflow Canvas
+
+The sample app uses saved node positions so the pipeline opens as readable lanes: source, inspection and validation, routing, publishing, metrics, and logging.
+
+![Readable workflow canvas](/screenshots/sample-flow-canvas.png)
 
 ## Sessions And Projects
 

@@ -2,6 +2,8 @@
 
 Tests are scenario artifacts inside the app file. They are separate from production pipelines, but they can reuse normal components where the behavior is the same.
 
+The operations monitor sample includes `priority-order-roundtrip`, which publishes a priority order and waits for the app runtime to emit matching receive and publish events.
+
 ## Current Steps
 
 - `mqtt.publisher`: publishes an MQTT message through an app-level broker resource.

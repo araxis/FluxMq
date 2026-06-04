@@ -2,6 +2,8 @@
 
 Dashboards show runtime events from the running app. They are separate app artifacts, not pipeline nodes.
 
+The operations monitor sample includes an `ops-overview` dashboard that counts received orders, published alerts, latest payloads, and event rate.
+
 ## Modes
 
 - Edit: change rows, columns, cells, and widgets.

@@ -226,6 +226,7 @@
         Projects.Changed += OnProjectsChanged;
         SyncSubscriptions();
         SyncActiveArtifactState();
+        _ = OpenStartupFileAsync();
     }
 
     private void OnProjectsChanged(object? sender, EventArgs e)
@@ -310,6 +311,65 @@
             foreach (var (name, profile, sub) in project.GetConnectionResources())
                 Live.AddConnectionIfAbsent(profile, sub, name);
         }
+    }
+
+    private async Task OpenStartupFileAsync()
+    {
+        var path = ResolveStartupFilePath();
+        if (path is null || Projects.ActiveProject is not null)
+        {
+            return;
+        }
+
+        try
+        {
+            var project = await Projects.OpenAsync(path);
+            foreach (var (name, profile, sub) in project.GetConnectionResources())
+                Live.AddConnectionIfAbsent(profile, sub, name);
+        }
+        catch (Exception exception)
+        {
+            Console.Error.WriteLine($"Startup project open failed: {exception.Message}");
+        }
+    }
+
+    private static string? ResolveStartupFilePath()
+    {
+        var args = Environment.GetCommandLineArgs().Skip(1).ToArray();
+        for (var i = 0; i < args.Length; i++)
+        {
+            var arg = args[i];
+            if (string.Equals(arg, "--open", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(arg, "--project", StringComparison.OrdinalIgnoreCase))
+            {
+                if (i + 1 < args.Length && ExistingJsonFile(args[i + 1]) is { } explicitPath)
+                {
+                    return explicitPath;
+                }
+
+                continue;
+            }
+
+            if (ExistingJsonFile(arg) is { } path)
+            {
+                return path;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? ExistingJsonFile(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var path = value.Trim().Trim('"');
+        return path.EndsWith(".json", StringComparison.OrdinalIgnoreCase) && File.Exists(path)
+            ? Path.GetFullPath(path)
+            : null;
     }
 
     private async Task CloseActiveAsync()
