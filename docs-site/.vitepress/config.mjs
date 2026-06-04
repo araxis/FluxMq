@@ -16,6 +16,7 @@ export default {
         text: 'Guide',
         items: [
           { text: 'Getting Started', link: '/guide/getting-started' },
+          { text: 'Sample App', link: '/guide/sample-app' },
           { text: 'Desktop Workspace', link: '/guide/desktop-workspace' },
           { text: 'Connections', link: '/guide/connections' },
           { text: 'Dashboards', link: '/guide/dashboards' },

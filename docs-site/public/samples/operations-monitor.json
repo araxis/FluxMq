@@ -1,0 +1,440 @@
+{
+  "FluxMq": {
+    "FlowApplication": {
+      "resources": {
+        "local-broker": {
+          "type": "mqtt.connection",
+          "configuration": {
+            "profile": {
+              "name": "local-broker",
+              "host": "localhost",
+              "port": 1883,
+              "clientId": "fluxmq-docs-operations",
+              "useTls": false,
+              "keepAliveSeconds": 60,
+              "cleanStart": true
+            }
+          }
+        },
+        "edge-broker": {
+          "type": "mqtt.connection",
+          "configuration": {
+            "profile": {
+              "name": "edge-broker",
+              "host": "localhost",
+              "port": 1884,
+              "clientId": "fluxmq-docs-edge",
+              "useTls": false,
+              "keepAliveSeconds": 60,
+              "cleanStart": true
+            }
+          }
+        }
+      },
+      "workflows": {
+        "order-intake": {
+          "liveOrders": {
+            "type": "mqtt.trigger",
+            "configuration": {
+              "connection": "local-broker",
+              "subscriptions": [
+                {
+                  "topicFilter": "factory/orders/#",
+                  "qos": 1,
+                  "receiveRetained": true,
+                  "retainAsPublished": true
+                }
+              ],
+              "boundedCapacity": 1000
+            }
+          },
+          "inspectPayload": {
+            "type": "mqtt.payload-inspector",
+            "Input": "liveOrders.Output"
+          },
+          "validateOrder": {
+            "type": "json.schema-validator",
+            "Input": "liveOrders.Output",
+            "configuration": {
+              "schemaId": "order-message",
+              "schema": "{\n  \"type\": \"object\",\n  \"required\": [\"orderId\", \"priority\", \"status\"],\n  \"properties\": {\n    \"orderId\": { \"type\": \"string\" },\n    \"priority\": { \"type\": \"string\" },\n    \"status\": { \"type\": \"string\" },\n    \"line\": { \"type\": \"string\" }\n  }\n}",
+              "boundedCapacity": 1000
+            }
+          },
+          "priorityRouter": {
+            "type": "flow.when",
+            "Input": "validateOrder.Valid",
+            "configuration": {
+              "expression": "payload.Contains(\"\\\"priority\\\":\\\"high\\\"\") || topic.Contains(\"/priority/\")",
+              "boundedCapacity": 1000
+            }
+          },
+          "alertMapper": {
+            "type": "flow.mapper",
+            "Input": "priorityRouter.WhenTrue",
+            "configuration": {
+              "engine": "jsonata",
+              "inputType": "MqttEnvelope",
+              "outputType": "MqttPublishRequest",
+              "outputContract": "typed",
+              "outputSchemaPath": "",
+              "expression": "{\n  \"topic\": \"ops/alerts/\" & topic,\n  \"payload\": payloadText,\n  \"qos\": 1,\n  \"retain\": false\n}"
+            }
+          },
+          "publishAlert": {
+            "type": "mqtt.publisher",
+            "Input": "alertMapper.Output",
+            "configuration": {
+              "connection": "local-broker",
+              "boundedCapacity": 1000
+            }
+          },
+          "orderMetrics": {
+            "type": "mqtt.metrics",
+            "Input": [
+              "liveOrders.Output",
+              "priorityRouter.WhenFalse"
+            ],
+            "configuration": {
+              "boundedCapacity": 1000,
+              "rateWindowSeconds": 60,
+              "metricCardColumns": 4,
+              "displayMetrics": [
+                "MessageCount",
+                "NowRate",
+                "AverageRate",
+                "PayloadBytes"
+              ]
+            }
+          },
+          "orderLogger": {
+            "type": "flow.logger",
+            "Input": "liveOrders.Output",
+            "FlowErrors": [
+              "validateOrder.Errors",
+              "priorityRouter.Errors",
+              "publishAlert.Errors"
+            ],
+            "configuration": {
+              "boundedCapacity": 1000,
+              "maxEntries": 500,
+              "includePayloadPreview": true,
+              "maxPayloadPreviewChars": 512
+            }
+          }
+        },
+        "edge-replay": {
+          "sampleTraffic": {
+            "type": "generated.source",
+            "configuration": {
+              "messages": [
+                {
+                  "topic": "factory/orders/line-a",
+                  "payload": "orderId=A-1024 priority=normal status=accepted line=line-a",
+                  "payloadEncoding": "utf8",
+                  "qos": 1,
+                  "retain": false
+                },
+                {
+                  "topic": "factory/orders/line-a/priority",
+                  "payload": "orderId=A-1025 priority=high status=blocked line=line-a",
+                  "payloadEncoding": "utf8",
+                  "qos": 1,
+                  "retain": false
+                },
+                {
+                  "topic": "$SYS/broker/bytes/sent",
+                  "payload": "sys-bytes=1048576",
+                  "payloadEncoding": "utf8",
+                  "qos": 0,
+                  "retain": false
+                }
+              ],
+              "boundedCapacity": 1000
+            }
+          },
+          "businessOnly": {
+            "type": "flow.filter",
+            "Input": "sampleTraffic.Output",
+            "configuration": {
+              "expression": "topic.StartsWith(\"factory/orders/\") && qos >= 1",
+              "boundedCapacity": 1000
+            }
+          },
+          "replayMapper": {
+            "type": "flow.mapper",
+            "Input": "businessOnly.Output",
+            "configuration": {
+              "engine": "jsonata",
+              "inputType": "MqttEnvelope",
+              "outputType": "MqttPublishRequest",
+              "outputContract": "typed",
+              "outputSchemaPath": "",
+              "expression": "{\n  \"topic\": \"lab/replay/\" & topic,\n  \"payload\": payloadText,\n  \"qos\": qos,\n  \"retain\": false\n}"
+            }
+          },
+          "replayPublisher": {
+            "type": "mqtt.publisher",
+            "Input": "replayMapper.Output",
+            "configuration": {
+              "connection": "edge-broker",
+              "boundedCapacity": 1000
+            }
+          },
+          "replayMetrics": {
+            "type": "mqtt.metrics",
+            "Input": "businessOnly.Output",
+            "configuration": {
+              "boundedCapacity": 1000,
+              "rateWindowSeconds": 60,
+              "metricCardColumns": 4,
+              "displayMetrics": [
+                "MessageCount",
+                "NowRate",
+                "AverageRate",
+                "PayloadBytes"
+              ]
+            }
+          }
+        }
+      },
+      "dashboards": {
+        "ops-overview": {
+          "layout": {
+            "columns": [
+              "300",
+              "*",
+              "320"
+            ],
+            "rows": [
+              "180",
+              "260",
+              "*"
+            ],
+            "columnPadding": [
+              0,
+              12,
+              12
+            ],
+            "rowPadding": [
+              0,
+              12,
+              12
+            ],
+            "cells": {
+              "receivedCounter": {
+                "row": 0,
+                "column": 0,
+                "widget": "ordersReceived"
+              },
+              "alertCounter": {
+                "row": 1,
+                "column": 0,
+                "widget": "alertsPublished"
+              },
+              "latestOrder": {
+                "row": 0,
+                "column": 1,
+                "rowSpan": 2,
+                "widget": "latestOrder"
+              },
+              "eventRate": {
+                "row": 0,
+                "column": 2,
+                "widget": "eventRate"
+              },
+              "latestAlert": {
+                "row": 1,
+                "column": 2,
+                "widget": "latestAlert"
+              }
+            }
+          },
+          "widgets": {
+            "ordersReceived": {
+              "type": "event.counter",
+              "configuration": {
+                "title": "Orders received",
+                "eventType": "mqtt.message.received",
+                "topicStartsWith": "factory/orders/",
+                "topicNotStartsWith": "$SYS/",
+                "status": "received",
+                "attribute:qos": "1",
+                "attribute:retain": ""
+              }
+            },
+            "alertsPublished": {
+              "type": "event.counter",
+              "configuration": {
+                "title": "Alerts published",
+                "eventType": "mqtt.message.published",
+                "topicStartsWith": "ops/alerts/",
+                "topicNotStartsWith": "$SYS/",
+                "status": "published",
+                "attribute:qos": "1",
+                "attribute:retain": "false"
+              }
+            },
+            "latestOrder": {
+              "type": "event.latest",
+              "configuration": {
+                "title": "Latest order payload",
+                "eventType": "mqtt.message.received",
+                "topicStartsWith": "factory/orders/",
+                "topicNotStartsWith": "$SYS/",
+                "status": "received",
+                "attribute:qos": "",
+                "attribute:retain": ""
+              }
+            },
+            "eventRate": {
+              "type": "event.rate",
+              "configuration": {
+                "title": "Order event rate",
+                "eventType": "mqtt.message.received",
+                "topicStartsWith": "factory/orders/",
+                "topicNotStartsWith": "$SYS/",
+                "status": "received",
+                "attribute:qos": "",
+                "attribute:retain": ""
+              }
+            },
+            "latestAlert": {
+              "type": "event.latest",
+              "configuration": {
+                "title": "Latest alert publish",
+                "eventType": "mqtt.message.published",
+                "topicStartsWith": "ops/alerts/",
+                "topicNotStartsWith": "$SYS/",
+                "status": "published",
+                "attribute:qos": "",
+                "attribute:retain": ""
+              }
+            }
+          }
+        }
+      },
+      "tests": {
+        "priority-order-roundtrip": {
+          "steps": {
+            "publishPriorityOrder": {
+              "type": "mqtt.publisher",
+              "configuration": {
+                "connection": "local-broker",
+                "topic": "factory/orders/line-a/priority",
+                "payload": {
+                  "orderId": "A-2048",
+                  "priority": "high",
+                  "status": "blocked",
+                  "line": "line-a"
+                },
+                "payloadEncoding": "json",
+                "qos": 1,
+                "retain": false
+              }
+            },
+            "expectOrderReceived": {
+              "type": "expect.event",
+              "configuration": {
+                "eventType": "mqtt.message.received",
+                "topicStartsWith": "factory/orders/",
+                "topicNotStartsWith": "$SYS/",
+                "status": "received",
+                "payloadContains": "\"priority\":\"high\"",
+                "attributes": {
+                  "qos": "1",
+                  "retain": "false"
+                },
+                "timeoutMs": 10000
+              }
+            },
+            "expectAlertPublished": {
+              "type": "expect.event",
+              "configuration": {
+                "eventType": "mqtt.message.published",
+                "topicStartsWith": "ops/alerts/",
+                "topicNotStartsWith": "$SYS/",
+                "status": "published",
+                "payloadContains": "\"orderId\":\"A-2048\"",
+                "attributes": {
+                  "qos": "1",
+                  "retain": "false"
+                },
+                "timeoutMs": 10000
+              }
+            }
+          }
+        }
+      }
+    },
+    "Designer": {
+      "nodes": {
+        "liveOrders": {
+          "x": 80,
+          "y": 260,
+          "collapsed": false
+        },
+        "inspectPayload": {
+          "x": 560,
+          "y": 40,
+          "collapsed": false
+        },
+        "validateOrder": {
+          "x": 560,
+          "y": 380,
+          "collapsed": false
+        },
+        "priorityRouter": {
+          "x": 1040,
+          "y": 380,
+          "collapsed": false
+        },
+        "alertMapper": {
+          "x": 1520,
+          "y": 300,
+          "collapsed": false
+        },
+        "publishAlert": {
+          "x": 2000,
+          "y": 300,
+          "collapsed": false
+        },
+        "orderMetrics": {
+          "x": 1040,
+          "y": 40,
+          "collapsed": false
+        },
+        "orderLogger": {
+          "x": 1520,
+          "y": 660,
+          "collapsed": false
+        },
+        "sampleTraffic": {
+          "x": 80,
+          "y": 160,
+          "collapsed": false
+        },
+        "businessOnly": {
+          "x": 560,
+          "y": 160,
+          "collapsed": false
+        },
+        "replayMapper": {
+          "x": 1040,
+          "y": 160,
+          "collapsed": false
+        },
+        "replayPublisher": {
+          "x": 1520,
+          "y": 160,
+          "collapsed": false
+        },
+        "replayMetrics": {
+          "x": 1040,
+          "y": 480,
+          "collapsed": false
+        }
+      }
+    }
+  }
+}

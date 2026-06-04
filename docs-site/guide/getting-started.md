@@ -2,6 +2,17 @@
 
 FluxMQ is still pre-release, but the desktop app is now the main product surface. A FluxMQ app file contains app-level resources, pipelines, dashboards, and tests.
 
+## Start With The Sample App
+
+The fastest way to understand the current workspace is to open the operations monitor sample:
+
+- [Download operations-monitor.json](/samples/operations-monitor.json)
+- [Read the sample app walkthrough](sample-app.md)
+
+The sample contains broker resources, two pipelines, one dashboard, one test scenario, and saved designer positions.
+
+![Operations monitor workspace](/screenshots/sample-workspace.png)
+
 ## What FluxMQ Helps With
 
 - Connect to MQTT brokers.
@@ -27,6 +38,8 @@ Run it on Windows with:
 ```sh
 dotnet run --project src/FluxMq.UI/FluxMq.UI.csproj -f net10.0-windows10.0.19041.0
 ```
+
+Use the Open file action to load `docs-site/public/samples/operations-monitor.json`.
 
 The default broker profile points to `localhost:1883`. Broker resources belong to the app, not to one pipeline, dashboard, or test.
 

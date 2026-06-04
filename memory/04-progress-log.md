@@ -2,6 +2,14 @@
 
 Chronological progress record.
 
+## 2026-06-04
+
+- Added a repo-contained `operations-monitor` sample app for documentation and manual UI checks instead of using a personal workspace file.
+- The sample covers app-owned broker resources, two pipelines, a dashboard, and a test scenario with saved designer positions.
+- Added current desktop screenshots from the sample workspace and removed stale captures from the documentation site.
+- Added startup file-open support to the desktop workspace so a sample can be opened with `--open <path>` through the normal project loader.
+- Validated the sample through the CLI.
+
 ## 2026-06-03
 
 - Recorded operations-team product feedback: the MQTT topic tree is a critical visual object for ops users and currently does not have enough space or importance in the desktop UI.
