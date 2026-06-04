@@ -447,7 +447,7 @@
             {
                 [nameof(DashboardWidgetEditorDialog.Widget)] = widget
             },
-            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+            new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true });
         var result = await dialog.Result;
         if (result is { Canceled: false, Data: DashboardWidgetEditorDialog.DashboardWidgetUpdate update })
         {

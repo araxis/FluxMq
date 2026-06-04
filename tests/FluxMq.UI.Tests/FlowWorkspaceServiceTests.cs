@@ -2120,6 +2120,10 @@ public sealed class FlowWorkspaceServiceTests
         snapshot.LatestEvent.Channel.ShouldBe("test");
         snapshot.LatestEvent.GetAttribute("qos").ShouldBe("0");
         snapshot.LatestEvent.GetAttribute("retain").ShouldBe("False");
+        snapshot.TopicCounts.ShouldBe([new DashboardTopicMetric("test", 1)]);
+        snapshot.UniqueTopicCount.ShouldBe(1);
+        snapshot.TotalPayloadBytes.ShouldBe(Encoding.UTF8.GetByteCount("""{"hello":"fluxmq"}"""));
+        snapshot.RetainedCount.ShouldBe(0);
         service.Logs.ShouldContain(log =>
             log.Source == "LivePublisher" &&
             log.Code == FluxMqEventTypes.MqttMessagePublished &&
@@ -2181,6 +2185,12 @@ public sealed class FlowWorkspaceServiceTests
         snapshot.EventsPerSecond.ShouldBe(2d / snapshot.RateWindow.TotalSeconds, 0.0001);
         snapshot.LatestEvent.ShouldNotBeNull();
         snapshot.LatestEvent.Channel.ShouldBe("test/two");
+        snapshot.TopicCounts.ShouldBe([
+            new DashboardTopicMetric("test/one", 1),
+            new DashboardTopicMetric("test/two", 1)
+        ]);
+        snapshot.UniqueTopicCount.ShouldBe(2);
+        snapshot.TotalPayloadBytes.ShouldBe(Encoding.UTF8.GetByteCount("""{"hello":"fluxmq"}""") * 2);
     }
 
     [Fact]
@@ -2261,6 +2271,9 @@ public sealed class FlowWorkspaceServiceTests
         snapshot.Count.ShouldBe(1);
         snapshot.LatestEvent.ShouldNotBeNull();
         snapshot.LatestEvent.Channel.ShouldBe("factory/one");
+        snapshot.TopicCounts.ShouldBe([new DashboardTopicMetric("factory/one", 1)]);
+        snapshot.UniqueTopicCount.ShouldBe(1);
+        snapshot.TotalPayloadBytes.ShouldBe(3);
     }
 
     [Fact]

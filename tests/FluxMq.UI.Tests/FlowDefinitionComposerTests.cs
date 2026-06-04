@@ -1417,7 +1417,15 @@ public sealed class FlowDefinitionComposerTests
 
         var layout = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull();
         layout.Widgets["eventGauge"].Configuration["title"].ShouldBe("Event gauge");
+        layout.Widgets["eventGauge"].Configuration[DashboardWidgetCatalog.PrimaryMetricKey].ShouldBe(DashboardWidgetCatalog.MetricRecent);
+        layout.Widgets["eventGauge"].Configuration[DashboardWidgetCatalog.GaugeStyleKey].ShouldBe(DashboardWidgetCatalog.GaugeStyleRing);
+        layout.Widgets["eventGauge"].Configuration[DashboardWidgetCatalog.DisplayMetricsKey].ShouldBe("messages,recent,currentRate,payloadBytes");
+        layout.Widgets["eventGauge"].Configuration[DashboardWidgetCatalog.MetricCardColumnsKey].ShouldBe("4");
         layout.Widgets["eventChart"].Configuration["title"].ShouldBe("Event chart");
+        layout.Widgets["eventChart"].Configuration[DashboardWidgetCatalog.PrimaryMetricKey].ShouldBe(DashboardWidgetCatalog.MetricMessages);
+        layout.Widgets["eventChart"].Configuration[DashboardWidgetCatalog.ChartTypeKey].ShouldBe(DashboardWidgetCatalog.ChartTypeBars);
+        layout.Widgets["eventChart"].Configuration[DashboardWidgetCatalog.DisplayMetricsKey].ShouldBe("messages,recent,currentRate,payloadBytes");
+        layout.Widgets["eventChart"].Configuration[DashboardWidgetCatalog.MetricCardColumnsKey].ShouldBe("4");
         layout.Widgets["topicTree"].Configuration["title"].ShouldBe("Topic tree");
         layout.Widgets["topicTree"].Configuration[DashboardWidgetCatalog.ExcludeSystemTopicsKey].ShouldBe("true");
     }
