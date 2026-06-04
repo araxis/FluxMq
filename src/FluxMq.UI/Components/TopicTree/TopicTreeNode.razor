@@ -1,8 +1,9 @@
 @* Recursive component — renders one TopicNode and its children when expanded. *@
 
-<div class="topic-node" style="padding-left: @(Node.Depth * 12)px">
+<div class="topic-node @(Compact ? "compact" : null)" style="@($"--topic-depth:{Node.Depth};")">
 
     <div class="topic-node-row @(Node.FullPath == SelectedTopic ? "topic-node-selected" : null)" @onclick="Select">
+        <span class="topic-node-branch"></span>
 
         <span class="topic-node-chevron" @onclick="Toggle" @onclick:stopPropagation>
             @if (Node.HasChildren)
@@ -12,7 +13,7 @@
             }
             else
             {
-                <span style="width:1.25rem; display:inline-block;"></span>
+                <span class="topic-node-chevron-placeholder"></span>
             }
         </span>
 
@@ -22,7 +23,7 @@
             @Node.MessageCount
         </MudChip>
 
-        @if (Node.LastActivity != default)
+        @if (!Compact && Node.LastActivity != default)
         {
             <MudText Typo="Typo.caption" Color="Color.Secondary" Class="ml-2 topic-node-time">
                 @Node.LastActivity.ToLocalTime().ToString("HH:mm:ss.fff")
@@ -37,7 +38,8 @@
         {
             <TopicTreeNode Node="child"
                            SelectedTopic="@SelectedTopic"
-                           TopicSelected="@TopicSelected" />
+                           TopicSelected="@TopicSelected"
+                           Compact="@Compact" />
         }
     }
 
@@ -47,6 +49,7 @@
     [Parameter, EditorRequired] public TopicNode Node { get; set; } = null!;
     [Parameter] public string? SelectedTopic { get; set; }
     [Parameter] public EventCallback<string?> TopicSelected { get; set; }
+    [Parameter] public bool Compact { get; set; }
 
     private bool _expanded;
     private bool _initialized;

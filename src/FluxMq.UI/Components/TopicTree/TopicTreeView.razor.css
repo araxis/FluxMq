@@ -1,4 +1,9 @@
 .topic-tree-view {
+    background:
+        linear-gradient(color-mix(in srgb, var(--mud-palette-info) 10%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, var(--mud-palette-info) 8%, transparent) 1px, transparent 1px);
+    background-size: 30px 30px;
+    border-radius: 8px;
     height: 100%;
     min-width: 0;
 }
@@ -7,29 +12,62 @@
     height: 100%;
     min-height: 0;
     overflow: auto;
+    padding: 4px;
 }
 
 .topic-node-flat {
     align-items: center;
-    border-radius: 5px;
+    background: color-mix(in srgb, var(--flux-surface-2) 58%, transparent);
+    border: 1px solid transparent;
+    border-radius: 7px;
     cursor: pointer;
     display: flex;
-    min-height: 30px;
-    padding: 3px 6px;
+    gap: 5px;
+    margin: 3px 0;
+    min-height: 34px;
+    padding: 4px 8px;
+    transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
 }
 
 .topic-node-flat:hover {
-    background: var(--flux-surface-2);
+    background: color-mix(in srgb, var(--mud-palette-info) 9%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--mud-palette-info) 32%, transparent);
+    transform: translateX(1px);
 }
 
 .topic-node-selected {
-    background: var(--flux-accent-soft);
+    background: color-mix(in srgb, var(--flux-accent) 16%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--flux-accent) 62%, transparent);
+    box-shadow: inset 3px 0 0 var(--flux-accent), 0 8px 20px rgba(0, 0, 0, 0.18);
+}
+
+.topic-node-flat-icon {
+    align-items: center;
+    color: var(--mud-palette-info);
+    display: inline-flex;
+    flex: 0 0 auto;
 }
 
 .topic-path {
+    color: var(--mud-palette-text-primary);
     flex: 1;
+    font-weight: 700;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.topic-tree-view.compact .topic-tree-nodes {
+    padding: 1px;
+}
+
+.topic-tree-view.compact .topic-node-flat {
+    min-height: 28px;
+    padding-bottom: 2px;
+    padding-top: 2px;
+}
+
+.topic-tree-view.compact .topic-path {
+    font-size: 12px;
 }

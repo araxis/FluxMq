@@ -170,6 +170,10 @@
                                  @onpointerenter="@((PointerEventArgs args) => TrackDropCell(currentCell, args))"
                                  @onpointermove="@((PointerEventArgs args) => TrackDropCell(currentCell, args))"
                                  @onpointerleave="@((PointerEventArgs args) => ClearDropCell(currentCell, args))"
+                                 @ondragenter="@(() => TrackWidgetMoveCell(currentCell))"
+                                 @ondragover:preventDefault="true"
+                                 @ondrop="@(() => DropWidgetOnCell(currentCell))"
+                                 @ondragleave="@(() => ClearWidgetMoveCell(currentCell))"
                                  @onclick="@((MouseEventArgs args) => SelectCell(currentCell, args))"
                                  @key="currentCell.Name">
                             <div class="dashboard-cell-content">
@@ -180,7 +184,15 @@
                                 }
                                 @if (!string.IsNullOrWhiteSpace(currentCell.Widget))
                                 {
-                                    <div class="dashboard-cell-widget">
+                                    <div class="dashboard-cell-widget"
+                                         draggable="true"
+                                         title="Drag to move widget"
+                                         @ondragstart="@(() => BeginWidgetMove(currentCell.Widget, currentCell.Name))"
+                                         @ondragend="@EndWidgetMove"
+                                         @onclick:stopPropagation="true">
+                                        <span class="dashboard-cell-widget-grip">
+                                            <MudIcon Icon="@Icons.Material.Filled.DragIndicator" Size="Size.Small" />
+                                        </span>
                                         <span class="dashboard-cell-widget-label">@WidgetLabel(currentCell.Widget)</span>
                                         <button type="button"
                                                 class="dashboard-cell-widget-action"
@@ -262,6 +274,9 @@
     private int _previewSplitColumns = 2;
     private string _dashboardMode = DashboardModeEdit;
     private string? _hoveredDropCellName;
+    private string? _movingWidgetName;
+    private string? _movingWidgetSourceCellName;
+    private string? _hoveredWidgetMoveCellName;
     private bool? _lastNotifiedEditMode;
     private long _definitionRevision = -1;
     private FlowWorkspaceService? _subscribedProject;
@@ -331,6 +346,7 @@
             _isSplitPickerOpen = false;
             _selectedCellIds.Clear();
             _hoveredDropCellName = null;
+            ClearWidgetMove();
         }
     }
 
@@ -480,7 +496,7 @@
 
     private void HandleDesignerPointerEnter(PointerEventArgs args)
     {
-        if (IsDashboardWidgetDrag)
+        if (IsDashboardComponentDrag)
         {
             DragState.SetComponentDragOverDesigner(args.PointerId, true);
         }
@@ -488,7 +504,7 @@
 
     private void HandleDesignerPointerMove(PointerEventArgs args)
     {
-        if (IsDashboardWidgetDrag)
+        if (IsDashboardComponentDrag)
         {
             DragState.SetComponentDragOverDesigner(args.PointerId, true);
         }
@@ -496,7 +512,7 @@
 
     private void HandleDesignerPointerLeave(PointerEventArgs args)
     {
-        if (IsDashboardWidgetDrag)
+        if (IsDashboardComponentDrag)
         {
             _hoveredDropCellName = null;
             DragState.SetComponentDragOverDesigner(args.PointerId, false);
@@ -505,7 +521,7 @@
 
     private void TrackDropCell(DashboardCellSnapshot cell, PointerEventArgs args)
     {
-        if (!IsDashboardWidgetDrag)
+        if (!IsDashboardComponentDrag)
         {
             return;
         }
@@ -516,10 +532,67 @@
 
     private void ClearDropCell(DashboardCellSnapshot cell, PointerEventArgs args)
     {
-        if (IsDashboardWidgetDrag && string.Equals(_hoveredDropCellName, cell.Name, StringComparison.Ordinal))
+        if (IsDashboardComponentDrag && string.Equals(_hoveredDropCellName, cell.Name, StringComparison.Ordinal))
         {
             _hoveredDropCellName = null;
         }
+    }
+
+    private void BeginWidgetMove(string? widgetName, string sourceCellName)
+    {
+        if (string.IsNullOrWhiteSpace(widgetName))
+        {
+            return;
+        }
+
+        _movingWidgetName = widgetName;
+        _movingWidgetSourceCellName = sourceCellName;
+        _hoveredWidgetMoveCellName = sourceCellName;
+    }
+
+    private void TrackWidgetMoveCell(DashboardCellSnapshot cell)
+    {
+        if (!IsDashboardMoveDrag)
+        {
+            return;
+        }
+
+        _hoveredWidgetMoveCellName = cell.Name;
+    }
+
+    private void ClearWidgetMoveCell(DashboardCellSnapshot cell)
+    {
+        if (IsDashboardMoveDrag && string.Equals(_hoveredWidgetMoveCellName, cell.Name, StringComparison.Ordinal))
+        {
+            _hoveredWidgetMoveCellName = null;
+        }
+    }
+
+    private void DropWidgetOnCell(DashboardCellSnapshot cell)
+    {
+        if (string.IsNullOrWhiteSpace(_movingWidgetName) ||
+            string.Equals(_movingWidgetSourceCellName, cell.Name, StringComparison.Ordinal))
+        {
+            ClearWidgetMove();
+            return;
+        }
+
+        Project.MoveDashboardWidget(_movingWidgetName, cell.Name);
+        ClearWidgetMove();
+        CaptureDashboardError();
+        RefreshLayoutAfterCommand();
+    }
+
+    private void EndWidgetMove()
+    {
+        ClearWidgetMove();
+    }
+
+    private void ClearWidgetMove()
+    {
+        _movingWidgetName = null;
+        _movingWidgetSourceCellName = null;
+        _hoveredWidgetMoveCellName = null;
     }
 
     private void OnComponentDropRequested(object? sender, ComponentDropRequestedEventArgs args)
@@ -709,11 +782,14 @@
     private string SplitPickerCellClass(int rows, int columns)
         => $"dashboard-grid-picker-cell {(rows <= _previewSplitRows && columns <= _previewSplitColumns ? "active" : null)} {(rows == 1 && columns == 1 || !CanSubdivide(rows, columns) ? "disabled" : null)}";
 
-    private bool IsDashboardWidgetDrag
+    private bool IsDashboardComponentDrag
         => DragState.ActiveComponentDrag is { TargetKind: WorkspaceArtifactKind.Dashboard };
 
+    private bool IsDashboardMoveDrag
+        => !string.IsNullOrWhiteSpace(_movingWidgetName);
+
     private string CellClass(DashboardCellSnapshot cell)
-        => $"dashboard-cell {(cell.IsExplicit ? "explicit" : "virtual")} {(cell.IsMerged ? "merged" : null)} {(_selectedCellIds.Contains(cell.Name) ? "selected" : null)} {(IsDashboardWidgetDrag && string.Equals(_hoveredDropCellName, cell.Name, StringComparison.Ordinal) ? "dropping" : null)}";
+        => $"dashboard-cell {(cell.IsExplicit ? "explicit" : "virtual")} {(cell.IsMerged ? "merged" : null)} {(_selectedCellIds.Contains(cell.Name) ? "selected" : null)} {(IsDashboardComponentDrag && string.Equals(_hoveredDropCellName, cell.Name, StringComparison.Ordinal) ? "dropping" : null)} {(IsDashboardMoveDrag && string.Equals(_hoveredWidgetMoveCellName, cell.Name, StringComparison.Ordinal) ? "dropping" : null)} {(IsDashboardMoveDrag && string.Equals(_movingWidgetSourceCellName, cell.Name, StringComparison.Ordinal) ? "moving-source" : null)}";
 
     private static string LiveCellClass(DashboardCellSnapshot cell)
         => $"dashboard-live-cell {(cell.IsMerged ? "merged" : null)} {(!string.IsNullOrWhiteSpace(cell.Widget) ? "has-widget" : "empty")}";

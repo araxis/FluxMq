@@ -4,38 +4,82 @@
 
 .topic-node-row {
     align-items: center;
-    border-radius: 5px;
+    background: color-mix(in srgb, var(--flux-surface-2) 54%, transparent);
+    border: 1px solid transparent;
+    border-radius: 7px;
     cursor: pointer;
     display: flex;
-    min-height: 30px;
-    padding: 3px 6px;
+    gap: 4px;
+    margin: 3px 0;
+    min-height: 34px;
+    padding: 4px 8px 4px calc(8px + (var(--topic-depth) * 15px));
+    position: relative;
+    transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
 }
 
 .topic-node-row:hover {
-    background: var(--flux-surface-2);
+    background: color-mix(in srgb, var(--mud-palette-info) 9%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--mud-palette-info) 32%, transparent);
+    transform: translateX(1px);
 }
 
 .topic-node-selected {
-    background: var(--flux-accent-soft);
+    background: color-mix(in srgb, var(--flux-accent) 16%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--flux-accent) 62%, transparent);
+    box-shadow: inset 3px 0 0 var(--flux-accent), 0 8px 20px rgba(0, 0, 0, 0.18);
+}
+
+.topic-node-branch {
+    background: color-mix(in srgb, var(--mud-palette-info) 44%, transparent);
+    border-radius: 999px;
+    bottom: 7px;
+    left: calc(8px + (var(--topic-depth) * 15px));
+    opacity: 0.55;
+    position: absolute;
+    top: 7px;
+    width: 2px;
 }
 
 .topic-node-chevron {
     align-items: center;
+    color: color-mix(in srgb, var(--mud-palette-info) 72%, var(--mud-palette-text-secondary));
     display: inline-flex;
-    flex: 0 0 20px;
+    flex: 0 0 22px;
     justify-content: center;
-    color: var(--flux-text-muted);
+}
+
+.topic-node-chevron-placeholder {
+    display: inline-block;
+    width: 1.25rem;
 }
 
 .topic-node-name {
+    color: var(--mud-palette-text-primary);
     flex: 1;
+    font-weight: 700;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.topic-node-count,
+.topic-node-count {
+    background: color-mix(in srgb, var(--flux-accent) 13%, var(--flux-surface)) !important;
+    border: 1px solid color-mix(in srgb, var(--flux-accent) 34%, transparent);
+    color: var(--mud-palette-text-primary) !important;
+    flex: 0 0 auto;
+}
+
 .topic-node-time {
     flex: 0 0 auto;
+}
+
+.topic-node.compact .topic-node-row {
+    min-height: 28px;
+    padding-bottom: 2px;
+    padding-top: 2px;
+}
+
+.topic-node.compact .topic-node-name {
+    font-size: 12px;
 }

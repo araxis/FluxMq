@@ -1,44 +1,115 @@
 @using FluxFlow.Engine.Components
 @using System.Globalization
+@implements IDisposable
+@inject LiveMqttWorkspaceService Live
 
 <div class="dashboard-widget @WidgetClass">
     <div class="dashboard-widget-header">
-        <MudIcon Icon="@WidgetIcon" Size="Size.Small" />
-        <span>@WidgetTitle</span>
+        <div class="dashboard-widget-icon">
+            <MudIcon Icon="@WidgetIcon" Size="Size.Small" />
+        </div>
+        <div class="dashboard-widget-title-block">
+            <span class="dashboard-widget-title">@WidgetTitle</span>
+            <span class="dashboard-widget-subtitle">@WidgetSubtitle</span>
+        </div>
     </div>
 
-    @if (IsEventCounter)
+    @if (IsTopicTree)
     {
-        var snapshot = Project.GetDashboardEventSnapshot(Widget);
-        <div class="dashboard-widget-value">@snapshot.Count</div>
-        <div class="dashboard-widget-meta">@CounterMeta(snapshot)</div>
+        var messages = TopicMessages;
+        <div class="dashboard-topic-summary">
+            <div>
+                <strong>@TopicCount(messages)</strong>
+                <span>topics</span>
+            </div>
+            <div>
+                <strong>@messages.Count</strong>
+                <span>messages</span>
+            </div>
+        </div>
+        <div class="dashboard-topic-tree">
+            <TopicTreeView Messages="@messages"
+                           Compact="true"
+                           EmptyMessage="No topic traffic yet" />
+        </div>
     }
-    else if (IsEventRate)
+    else
     {
         var snapshot = Project.GetDashboardEventSnapshot(Widget);
-        <div class="dashboard-widget-value">@FormatRate(snapshot.EventsPerSecond)</div>
-        <div class="dashboard-widget-meta">@RateMeta(snapshot)</div>
-    }
-    else if (IsLatestEvent)
-    {
-        var snapshot = Project.GetDashboardEventSnapshot(Widget);
-        if (snapshot.LatestEvent is { } latest)
+        if (IsEventCounter)
         {
-            <div class="dashboard-widget-event-type">@latest.Type</div>
-            <div class="dashboard-widget-meta">@EventMeta(latest)</div>
-            @if (!string.IsNullOrWhiteSpace(latest.PayloadPreview))
+            <div class="dashboard-widget-metric">
+                <div>
+                    <div class="dashboard-widget-value">@snapshot.Count</div>
+                    <div class="dashboard-widget-meta">@CounterMeta(snapshot)</div>
+                </div>
+                <div class="dashboard-widget-sparkline">
+                    @foreach (var bucket in ChartBuckets(snapshot))
+                    {
+                        <span style="@bucket.Style" title="@bucket.Label"></span>
+                    }
+                </div>
+            </div>
+        }
+        else if (IsEventRate)
+        {
+            <div class="dashboard-rate-layout">
+                <div>
+                    <div class="dashboard-widget-value">@FormatRate(snapshot.EventsPerSecond)</div>
+                    <div class="dashboard-widget-meta">@RateMeta(snapshot)</div>
+                </div>
+                <div class="dashboard-rate-track" aria-hidden="true">
+                    <span style="@RateTrackStyle(snapshot)"></span>
+                </div>
+            </div>
+        }
+        else if (IsEventGauge)
+        {
+            <div class="dashboard-widget-gauge-shell">
+                <div class="dashboard-widget-gauge" style="@GaugeStyle(snapshot)">
+                    <div>
+                        <strong>@snapshot.RecentCount</strong>
+                        <span>@FormatDuration(snapshot.RateWindow)</span>
+                    </div>
+                </div>
+                <div class="dashboard-widget-gauge-meta">
+                    <strong>@snapshot.Count total</strong>
+                    <span>@FormatRate(snapshot.EventsPerSecond)</span>
+                </div>
+            </div>
+        }
+        else if (IsEventChart)
+        {
+            <div class="dashboard-widget-chart">
+                <div class="dashboard-widget-chart-bars">
+                    @foreach (var bucket in ChartBuckets(snapshot))
+                    {
+                        <span style="@bucket.Style" title="@bucket.Label"></span>
+                    }
+                </div>
+                <div class="dashboard-widget-meta">@RateMeta(snapshot)</div>
+            </div>
+        }
+        else if (IsLatestEvent)
+        {
+            if (snapshot.LatestEvent is { } latest)
             {
-                <pre class="dashboard-widget-payload">@latest.PayloadPreview</pre>
+                <div class="dashboard-widget-event-type">@latest.Type</div>
+                <div class="dashboard-widget-meta">@EventMeta(latest)</div>
+                @if (!string.IsNullOrWhiteSpace(latest.PayloadPreview))
+                {
+                    <pre class="dashboard-widget-payload">@latest.PayloadPreview</pre>
+                }
+            }
+            else
+            {
+                <div class="dashboard-widget-empty">No events yet</div>
             }
         }
         else
         {
-            <div class="dashboard-widget-empty">No events yet</div>
+            <div class="dashboard-widget-empty">@Widget.Type</div>
         }
-    }
-    else
-    {
-        <div class="dashboard-widget-empty">@Widget.Type</div>
     }
 </div>
 
@@ -55,14 +126,54 @@
 
     private bool IsEventRate => string.Equals(Widget.Type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal);
 
+    private bool IsEventGauge => string.Equals(Widget.Type, DashboardWidgetCatalog.EventGaugeType, StringComparison.Ordinal);
+
+    private bool IsEventChart => string.Equals(Widget.Type, DashboardWidgetCatalog.EventChartType, StringComparison.Ordinal);
+
+    private bool IsTopicTree => string.Equals(Widget.Type, DashboardWidgetCatalog.TopicTreeType, StringComparison.Ordinal);
+
+    private IReadOnlyList<MqttEnvelope> TopicMessages
+    {
+        get
+        {
+            var messages = Live.RecentMessages;
+            return ExcludeSystemTopics
+                ? messages.Where(static message => !message.Topic.StartsWith("$SYS/", StringComparison.Ordinal)).ToArray()
+                : messages;
+        }
+    }
+
+    private bool ExcludeSystemTopics
+        => !string.Equals(Widget.ReadString(DashboardWidgetCatalog.ExcludeSystemTopicsKey), "false", StringComparison.OrdinalIgnoreCase);
+
     private string WidgetTitle
         => Widget.ReadString("title") ?? Widget.Type switch
         {
             DashboardWidgetCatalog.EventCounterType => "Events",
             DashboardWidgetCatalog.LatestEventType => "Latest event",
             DashboardWidgetCatalog.EventRateType => "Event rate",
+            DashboardWidgetCatalog.EventGaugeType => "Event gauge",
+            DashboardWidgetCatalog.EventChartType => "Event chart",
+            DashboardWidgetCatalog.TopicTreeType => "Topic tree",
             _ => Widget.Name
         };
+
+    private string WidgetSubtitle => IsTopicTree
+        ? "Live topic map"
+        : EventFilterSummary;
+
+    private string EventFilterSummary
+    {
+        get
+        {
+            var parts = new List<string>();
+            AddPart(parts, Widget.ReadString(DashboardEventFilterCatalog.EventTypeKey));
+            AddPart(parts, Widget.ReadString(DashboardEventFilterCatalog.TopicStartsWithKey), "topic ");
+            AddPart(parts, Widget.ReadString(DashboardEventFilterCatalog.TopicNotStartsWithKey), "exclude ");
+            AddPart(parts, Widget.ReadString(DashboardEventFilterCatalog.StatusKey), "status ");
+            return parts.Count == 0 ? "All runtime events" : string.Join(" / ", parts);
+        }
+    }
 
     private string WidgetIcon
         => Widget.Type switch
@@ -70,6 +181,9 @@
             DashboardWidgetCatalog.EventCounterType => Icons.Material.Filled.Numbers,
             DashboardWidgetCatalog.LatestEventType => Icons.Material.Filled.Bolt,
             DashboardWidgetCatalog.EventRateType => Icons.Material.Filled.Speed,
+            DashboardWidgetCatalog.EventGaugeType => Icons.Material.Filled.DonutLarge,
+            DashboardWidgetCatalog.EventChartType => Icons.Material.Filled.BarChart,
+            DashboardWidgetCatalog.TopicTreeType => Icons.Material.Filled.AccountTree,
             _ => Icons.Material.Filled.Widgets
         };
 
@@ -79,8 +193,27 @@
             DashboardWidgetCatalog.EventCounterType => "event-counter",
             DashboardWidgetCatalog.LatestEventType => "latest-event",
             DashboardWidgetCatalog.EventRateType => "event-rate",
+            DashboardWidgetCatalog.EventGaugeType => "event-gauge",
+            DashboardWidgetCatalog.EventChartType => "event-chart",
+            DashboardWidgetCatalog.TopicTreeType => "topic-tree-widget",
             _ => "unknown"
         };
+
+    protected override void OnInitialized()
+    {
+        Live.Changed += OnLiveChanged;
+    }
+
+    private void OnLiveChanged(object? sender, EventArgs e)
+    {
+        if (IsTopicTree)
+        {
+            _ = InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private static int TopicCount(IReadOnlyList<MqttEnvelope> messages)
+        => messages.Select(static message => message.Topic).Distinct(StringComparer.Ordinal).Count();
 
     private static string CounterMeta(DashboardEventSnapshot snapshot)
         => snapshot.LatestEvent is null
@@ -89,7 +222,7 @@
 
     private static string RateMeta(DashboardEventSnapshot snapshot)
         => snapshot.RecentCount == 0
-            ? "waiting"
+            ? "waiting for traffic"
             : $"{snapshot.RecentCount} in {FormatDuration(snapshot.RateWindow)}";
 
     private static string EventMeta(FlowEvent flowEvent)
@@ -118,6 +251,37 @@
         return string.Join(" / ", parts);
     }
 
+    private static IReadOnlyList<ChartBucket> ChartBuckets(DashboardEventSnapshot snapshot)
+    {
+        var max = Math.Max(1, snapshot.BucketCounts.DefaultIfEmpty(0).Max());
+        return snapshot.BucketCounts
+            .Select(count =>
+            {
+                var height = count == 0 ? 8 : Math.Clamp((count / (double)max) * 100, 14, 100);
+                return new ChartBucket(
+                    $"height:{height.ToString("0.###", CultureInfo.InvariantCulture)}%;",
+                    $"{count} events");
+            })
+            .ToArray();
+    }
+
+    private static string GaugeStyle(DashboardEventSnapshot snapshot)
+    {
+        var maxBucket = Math.Max(1, snapshot.BucketCounts.DefaultIfEmpty(0).Max());
+        var percent = snapshot.RecentCount == 0
+            ? 0
+            : Math.Clamp((snapshot.RecentCount / (double)(maxBucket * snapshot.BucketCounts.Count)) * 100, 12, 100);
+        return $"--gauge-progress:{percent.ToString("0.###", CultureInfo.InvariantCulture)}%;";
+    }
+
+    private static string RateTrackStyle(DashboardEventSnapshot snapshot)
+    {
+        var percent = snapshot.RecentCount == 0
+            ? 0
+            : Math.Clamp(snapshot.EventsPerSecond * 320, 8, 100);
+        return $"width:{percent.ToString("0.###", CultureInfo.InvariantCulture)}%;";
+    }
+
     private static string FormatEventTime(FlowEvent flowEvent)
         => flowEvent.Timestamp.ToLocalTime().ToString("HH:mm:ss", CultureInfo.InvariantCulture);
 
@@ -133,4 +297,19 @@
         => duration.TotalMinutes >= 1
             ? $"{duration.TotalMinutes.ToString("0", CultureInfo.InvariantCulture)} min"
             : $"{duration.TotalSeconds.ToString("0", CultureInfo.InvariantCulture)} sec";
+
+    private static void AddPart(List<string> parts, string? value, string prefix = "")
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            parts.Add($"{prefix}{value}");
+        }
+    }
+
+    public void Dispose()
+    {
+        Live.Changed -= OnLiveChanged;
+    }
+
+    private readonly record struct ChartBucket(string Style, string Label);
 }

@@ -51,6 +51,9 @@ public static class FlowDashboardDefinitionFactory
             DashboardWidgetCatalog.EventCounterType => "Events",
             DashboardWidgetCatalog.LatestEventType => "Latest event",
             DashboardWidgetCatalog.EventRateType => "Event rate",
+            DashboardWidgetCatalog.EventGaugeType => "Event gauge",
+            DashboardWidgetCatalog.EventChartType => "Event chart",
+            DashboardWidgetCatalog.TopicTreeType => "Topic tree",
             _ => null
         };
         if (title is null)
@@ -58,7 +61,18 @@ public static class FlowDashboardDefinitionFactory
             return new JsonObject();
         }
 
-        var configuration = CreateConfiguration(DashboardEventFilterCatalog.Shared.CreateEmptyConfiguration());
+        if (DashboardWidgetCatalog.IsTopicTreeWidget(widgetType))
+        {
+            return new JsonObject
+            {
+                ["title"] = title,
+                [DashboardWidgetCatalog.ExcludeSystemTopicsKey] = "true"
+            };
+        }
+
+        var configuration = DashboardWidgetCatalog.IsEventWidget(widgetType)
+            ? CreateConfiguration(DashboardEventFilterCatalog.Shared.CreateEmptyConfiguration())
+            : new JsonObject();
         configuration["title"] = title;
         return configuration;
     }
@@ -83,6 +97,9 @@ public static class FlowDashboardDefinitionFactory
             DashboardWidgetCatalog.EventCounterType => "eventCounter",
             DashboardWidgetCatalog.LatestEventType => "latestEvent",
             DashboardWidgetCatalog.EventRateType => "eventRate",
+            DashboardWidgetCatalog.EventGaugeType => "eventGauge",
+            DashboardWidgetCatalog.EventChartType => "eventChart",
+            DashboardWidgetCatalog.TopicTreeType => "topicTree",
             _ => "widget"
         };
 }

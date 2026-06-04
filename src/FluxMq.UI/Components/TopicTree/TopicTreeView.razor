@@ -1,7 +1,7 @@
 @implements IDisposable
 @inject ITopicIndex TopicIndex
 
-<div class="topic-tree-view">
+<div class="topic-tree-view @(Compact ? "compact" : null)">
 
     <div class="topic-tree-nodes">
         @if (string.IsNullOrWhiteSpace(Filter))
@@ -17,7 +17,8 @@
                 {
                     <TopicTreeNode Node="root"
                                    SelectedTopic="@SelectedTopic"
-                                   TopicSelected="@TopicSelected" />
+                                   TopicSelected="@TopicSelected"
+                                   Compact="@Compact" />
                 }
             }
         }
@@ -34,9 +35,12 @@
                 {
                     <div class="topic-node-flat @(node.FullPath == SelectedTopic ? "topic-node-selected" : null)"
                          @onclick="@(() => TopicSelected.InvokeAsync(node.FullPath))">
+                        <span class="topic-node-flat-icon">
+                            <MudIcon Icon="@Icons.Material.Filled.Topic" Size="Size.Small" />
+                        </span>
                         <MudText Typo="Typo.body2" Class="topic-path">@node.FullPath</MudText>
                         <MudChip T="string" Size="Size.Small" Color="Color.Default" Class="ml-2">@node.MessageCount</MudChip>
-                        @if (node.LastActivity != default)
+                        @if (!Compact && node.LastActivity != default)
                         {
                             <MudText Typo="Typo.caption" Color="Color.Secondary" Class="ml-2">
                                 @node.LastActivity.ToLocalTime().ToString("HH:mm:ss.fff")
@@ -57,6 +61,7 @@
     [Parameter] public string? EmptyMessage { get; set; }
     [Parameter] public RenderFragment? EmptyContent { get; set; }
     [Parameter] public string Filter { get; set; } = string.Empty;
+    [Parameter] public bool Compact { get; set; }
 
     private volatile bool _pendingUpdate;
     private Timer? _refreshTimer;

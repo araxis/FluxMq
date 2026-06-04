@@ -7,4 +7,5 @@ public sealed record DashboardEventSnapshot(
     FlowEvent? LatestEvent,
     int RecentCount,
     TimeSpan RateWindow,
-    double EventsPerSecond);
+    double EventsPerSecond,
+    IReadOnlyList<int> BucketCounts);

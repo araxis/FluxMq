@@ -1406,6 +1406,23 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void AddDashboardWidget_AddsVisualDashboardWidgetDefaults()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+
+        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.EventGaugeType, "slot:0:0");
+        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.EventChartType, "slot:0:1");
+        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.TopicTreeType, "slot:1:0");
+
+        var layout = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull();
+        layout.Widgets["eventGauge"].Configuration["title"].ShouldBe("Event gauge");
+        layout.Widgets["eventChart"].Configuration["title"].ShouldBe("Event chart");
+        layout.Widgets["topicTree"].Configuration["title"].ShouldBe("Topic tree");
+        layout.Widgets["topicTree"].Configuration[DashboardWidgetCatalog.ExcludeSystemTopicsKey].ShouldBe("true");
+    }
+
+    [Fact]
     public void AddDashboardWidget_AppendsUniqueWidgetsWithoutReplacingCells()
     {
         var composer = new FlowDefinitionComposer();
@@ -1485,6 +1502,37 @@ public sealed class FlowDefinitionComposerTests
         var layout = composer.GetDashboardLayout(updated, "ops").ShouldNotBeNull();
         layout.Widgets.ContainsKey("eventCounter").ShouldBeFalse();
         layout.Cells.ShouldContain(cell => cell.Row == 0 && cell.Column == 0 && string.IsNullOrWhiteSpace(cell.Widget));
+    }
+
+    [Fact]
+    public void MoveDashboardWidget_MovesWidgetToOpenSlot()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.CreateEmptyDefinition();
+        json = composer.AddDashboard(json, "ops");
+        json = composer.AddDashboardWidget(json, "ops", "event.counter", "slot:0:0");
+
+        var updated = composer.MoveDashboardWidget(json, "ops", "eventCounter", "slot:0:1");
+
+        var layout = composer.GetDashboardLayout(updated, "ops").ShouldNotBeNull();
+        layout.Cells.ShouldContain(cell => cell.Row == 0 && cell.Column == 0 && string.IsNullOrWhiteSpace(cell.Widget));
+        layout.Cells.ShouldContain(cell => cell.Row == 0 && cell.Column == 1 && cell.Widget == "eventCounter");
+    }
+
+    [Fact]
+    public void MoveDashboardWidget_SwapsWidgetsWhenTargetCellIsOccupied()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.CreateEmptyDefinition();
+        json = composer.AddDashboard(json, "ops");
+        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.EventCounterType, "slot:0:0");
+        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.EventRateType, "slot:0:1");
+
+        var updated = composer.MoveDashboardWidget(json, "ops", "eventCounter", "cell2");
+
+        var layout = composer.GetDashboardLayout(updated, "ops").ShouldNotBeNull();
+        layout.Cells.ShouldContain(cell => cell.Row == 0 && cell.Column == 0 && cell.Widget == "eventRate");
+        layout.Cells.ShouldContain(cell => cell.Row == 0 && cell.Column == 1 && cell.Widget == "eventCounter");
     }
 
     [Fact]
