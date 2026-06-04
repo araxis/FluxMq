@@ -3,8 +3,8 @@
 <section class="home-hero">
   <div>
     <p class="home-kicker">MQTT workspace for operators and builders</p>
-    <h1>Design, run, inspect, and test broker traffic in one desktop workspace.</h1>
-    <p>FluxMQ brings app-level broker resources, pipeline design, live dashboards, topic trees, scoped logs, and integration checks into a single app file.</p>
+    <h1>MQTT workspace.</h1>
+    <p>Design pipelines, inspect broker traffic, watch dashboards, browse topic trees, and run integration checks from one app file.</p>
     <div class="home-actions">
       <a class="home-action primary" href="guide/getting-started">Get started</a>
       <a class="home-action" href="guide/sample-app">Open the sample app</a>
