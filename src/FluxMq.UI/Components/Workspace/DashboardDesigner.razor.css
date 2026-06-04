@@ -293,6 +293,10 @@
     z-index: 4;
 }
 
+.dashboard-cell.moving-source {
+    opacity: 0.68;
+}
+
 .dashboard-cell.merged {
     background: color-mix(in srgb, var(--flux-accent) 13%, var(--flux-surface-2));
 }
@@ -338,6 +342,22 @@
     max-width: 100%;
     min-width: 0;
     padding: 5px 6px 5px 8px;
+}
+
+.dashboard-cell-widget[draggable="true"] {
+    cursor: grab;
+}
+
+.dashboard-cell-widget[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+.dashboard-cell-widget-grip {
+    align-items: center;
+    color: color-mix(in srgb, var(--flux-accent) 82%, var(--mud-palette-text-secondary));
+    display: inline-flex;
+    flex: 0 0 auto;
+    margin-left: -2px;
 }
 
 .dashboard-cell-widget-label {

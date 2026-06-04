@@ -152,6 +152,63 @@ public sealed partial class FlowDefinitionComposer
         return changed ? root.ToJsonString(Options) : json;
     }
 
+    public string MoveDashboardWidget(string json, string dashboardName, string widgetName, string targetCellName)
+    {
+        if (string.IsNullOrWhiteSpace(dashboardName) ||
+            string.IsNullOrWhiteSpace(widgetName) ||
+            string.IsNullOrWhiteSpace(targetCellName))
+        {
+            return json;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["dashboards"] is not JsonObject dashboards ||
+            dashboards[dashboardName] is not JsonObject dashboard ||
+            dashboard["widgets"] is not JsonObject widgets ||
+            !widgets.ContainsKey(widgetName))
+        {
+            return json;
+        }
+
+        var layout = GetOrCreateObject(dashboard, "layout");
+        var cells = GetOrCreateObject(layout, "cells");
+        if (!TryFindOrCreateDashboardCell(layout, cells, targetCellName, out var targetName, out var targetCell))
+        {
+            return json;
+        }
+
+        var sourceCells = ReadDashboardCells(cells)
+            .Where(cell => string.Equals(cell.Widget, widgetName, StringComparison.Ordinal))
+            .ToArray();
+        if (sourceCells.Any(cell => string.Equals(cell.Name, targetName, StringComparison.Ordinal)))
+        {
+            return json;
+        }
+
+        var replacedWidget = ReadString(targetCell, "widget");
+        targetCell["widget"] = widgetName;
+
+        var firstSourceCell = sourceCells.FirstOrDefault();
+        foreach (var sourceCell in sourceCells)
+        {
+            if (cells[sourceCell.Name] is JsonObject sourceCellObject)
+            {
+                sourceCellObject.Remove("widget");
+            }
+        }
+
+        if (firstSourceCell is not null &&
+            !string.IsNullOrWhiteSpace(replacedWidget) &&
+            !string.Equals(replacedWidget, widgetName, StringComparison.Ordinal) &&
+            cells[firstSourceCell.Name] is JsonObject firstSourceCellObject)
+        {
+            firstSourceCellObject["widget"] = replacedWidget;
+        }
+
+        return root.ToJsonString(Options);
+    }
+
     public string UpdateDashboardTrack(
         string json,
         string dashboardName,
@@ -866,6 +923,59 @@ public sealed partial class FlowDefinitionComposer
             1,
             1,
             widgetName));
+    }
+
+    private static bool TryFindOrCreateDashboardCell(
+        JsonObject layout,
+        JsonObject cells,
+        string requestedCellName,
+        out string cellName,
+        out JsonObject cellObject)
+    {
+        if (cells[requestedCellName] is JsonObject existingCell)
+        {
+            cellName = requestedCellName;
+            cellObject = existingCell;
+            return true;
+        }
+
+        if (!TryParseSlotCellName(requestedCellName, out var requestedRow, out var requestedColumn))
+        {
+            cellName = string.Empty;
+            cellObject = new JsonObject();
+            return false;
+        }
+
+        var columns = ReadTrackStrings(layout, "columns", ["*"]).ToList();
+        var rows = ReadTrackStrings(layout, "rows", ["*"]).ToList();
+        if (requestedRow < 0 ||
+            requestedColumn < 0 ||
+            requestedRow >= rows.Count ||
+            requestedColumn >= columns.Count)
+        {
+            cellName = string.Empty;
+            cellObject = new JsonObject();
+            return false;
+        }
+
+        var coveringCell = ReadDashboardCells(cells)
+            .FirstOrDefault(cell => CoversDashboardSlot(cell, requestedRow, requestedColumn));
+        if (coveringCell is not null && cells[coveringCell.Name] is JsonObject coveringCellObject)
+        {
+            cellName = coveringCell.Name;
+            cellObject = coveringCellObject;
+            return true;
+        }
+
+        cellName = MakeUniqueDashboardCellName(cells, "cell");
+        cellObject = FlowDashboardDefinitionFactory.CreateCell(new DashboardCellSnapshot(
+            cellName,
+            requestedRow,
+            requestedColumn,
+            1,
+            1));
+        cells[cellName] = cellObject;
+        return true;
     }
 
     private static bool TryParseSlotCellName(string name, out int row, out int column)

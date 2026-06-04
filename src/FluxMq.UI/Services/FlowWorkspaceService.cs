@@ -26,6 +26,7 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
     private const int MaxRuntimeEvents = 1000;
     private const int MaxScenarioRunHistory = 20;
     private const int MaxFlowEventPayloadPreviewChars = 512;
+    private const int DashboardEventBucketCount = 12;
     private const double DefaultAddedNodeX = 420d;
     private const double DefaultAddedNodeY = 120d;
     private const double AddedNodeColumnSpacing = 300d;
@@ -162,7 +163,8 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
                 matching.LastOrDefault(),
                 recentCount,
                 DashboardRateWindow,
-                eventsPerSecond);
+                eventsPerSecond,
+                BuildDashboardEventBuckets(matching, recentThreshold));
         }
     }
 
@@ -478,6 +480,31 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
         {
             State = RuntimeWorkspaceState.Faulted;
             Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "DashboardWidgetRemoveFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
+    public void MoveDashboardWidget(string widgetName, string cellName)
+    {
+        if (string.IsNullOrWhiteSpace(_activeDashboardName) ||
+            string.IsNullOrWhiteSpace(widgetName) ||
+            string.IsNullOrWhiteSpace(cellName))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.MoveDashboardWidget(DefinitionJson, _activeDashboardName, widgetName, cellName));
+            _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "DashboardWidgetMoveFailed", exception.Message)];
         }
 
         NotifyChanged();
@@ -2191,6 +2218,25 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
 
     private bool MatchesDashboardEventWidget(DashboardWidgetSnapshot widget, FlowEvent flowEvent)
         => _dashboardEventFilters.Matches(widget, flowEvent);
+
+    private static IReadOnlyList<int> BuildDashboardEventBuckets(IReadOnlyList<FlowEvent> events, DateTimeOffset start)
+    {
+        var buckets = new int[DashboardEventBucketCount];
+        var bucketDuration = DashboardRateWindow.TotalMilliseconds / DashboardEventBucketCount;
+        foreach (var flowEvent in events)
+        {
+            if (flowEvent.Timestamp < start)
+            {
+                continue;
+            }
+
+            var index = (int)Math.Floor((flowEvent.Timestamp - start).TotalMilliseconds / bucketDuration);
+            index = Math.Clamp(index, 0, buckets.Length - 1);
+            buckets[index]++;
+        }
+
+        return buckets;
+    }
 
     private sealed class WorkspaceScenarioEventObserver(Action<FlowEvent> observe) : IScenarioEventObserver
     {
