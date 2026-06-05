@@ -104,12 +104,16 @@ public sealed class JsonSchemaValidatorComponent : EventFlowNodeBase
 
     protected override void OnNodeCompleted()
     {
+        _valid.Complete();
+        _invalid.Complete();
         DisposeLinks();
         base.OnNodeCompleted();
     }
 
     protected override void OnNodeFaulted(Exception exception)
     {
+        ((IDataflowBlock)_valid).Fault(exception);
+        ((IDataflowBlock)_invalid).Fault(exception);
         DisposeLinks();
         base.OnNodeFaulted(exception);
     }

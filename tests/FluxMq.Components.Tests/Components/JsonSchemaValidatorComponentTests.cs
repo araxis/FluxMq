@@ -96,7 +96,8 @@ public sealed class JsonSchemaValidatorComponentTests
         component.Input.Post(CreateEnvelope("""{"status":"fault"}""", "factory/invalid"));
         component.Complete();
 
-        await Task.WhenAll(component.Completion, validSink.Completion, invalidSink.Completion);
+        await Task.WhenAll(component.Completion, validSink.Completion, invalidSink.Completion)
+            .WaitAsync(TimeSpan.FromSeconds(10));
 
         validTopics.ShouldBe(["factory/valid"]);
         invalidTopics.ShouldBe(["factory/invalid"]);
