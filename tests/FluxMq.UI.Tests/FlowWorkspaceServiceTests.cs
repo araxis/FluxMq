@@ -2279,6 +2279,84 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public async Task RunAsync_ProjectsGeneratedSourceMessagesToDashboardEvents()
+    {
+        await using var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "flow": {
+                  "generated": {
+                    "type": "generated.source",
+                    "configuration": {
+                      "messages": [
+                        { "topic": "factory/line-a/temperature", "payload": "{\"value\":21}", "qos": 0, "retain": false },
+                        { "topic": "other/skip", "payload": "skip", "qos": 0, "retain": false },
+                        { "topic": "factory/line-b/temperature", "payload": "{\"value\":28}", "qos": 1, "retain": true }
+                      ]
+                    }
+                  }
+                }
+              },
+              "dashboards": {
+                "ops": {
+                  "layout": {
+                    "columns": ["*"],
+                    "rows": ["*"],
+                    "cells": {
+                      "events": {
+                        "row": 0,
+                        "column": 0,
+                        "widget": "received"
+                      }
+                    }
+                  },
+                  "widgets": {
+                    "received": {
+                      "type": "event.counter",
+                      "configuration": {
+                        "eventType": "mqtt.message.received",
+                        "topicStartsWith": "factory/",
+                        "status": "received"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+        service.SetActiveDashboard("ops");
+
+        await service.RunAsync();
+
+        var widget = service.GetActiveDashboardLayout()
+            .ShouldNotBeNull()
+            .Widgets["received"];
+        await WaitUntilAsync(() => service.GetDashboardEventSnapshot(widget).Count == 2);
+
+        var snapshot = service.GetDashboardEventSnapshot(widget);
+        snapshot.Count.ShouldBe(2);
+        snapshot.LatestEvent.ShouldNotBeNull();
+        snapshot.LatestEvent.Source.ShouldBe("RuntimeSource");
+        snapshot.LatestEvent.Channel.ShouldBe("factory/line-b/temperature");
+        snapshot.TopicCounts.ShouldBe([
+            new DashboardTopicMetric("factory/line-a/temperature", 1),
+            new DashboardTopicMetric("factory/line-b/temperature", 1)
+        ]);
+        snapshot.TotalPayloadBytes.ShouldBe(24);
+        snapshot.RetainedCount.ShouldBe(1);
+        service.Logs.ShouldContain(log =>
+            log.Source == "RuntimeSource" &&
+            log.WorkflowName == "flow" &&
+            log.NodeName == "generated" &&
+            log.Code == FluxMqEventTypes.MqttMessageReceived);
+    }
+
+    [Fact]
     public void UpdateNodeConfiguration_UpdatesActiveWorkflowWhenNodeNamesRepeat()
     {
         var service = new FlowWorkspaceService(new FlowDefinitionComposer());

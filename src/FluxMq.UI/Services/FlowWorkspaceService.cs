@@ -1752,6 +1752,7 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
             AttachRuntimeLogOutputs(node);
             AttachRuntimeMetricsOutputs(node);
             AttachRuntimePayloadInspectionOutputs(node);
+            AttachRuntimeSourceEnvelopeOutputs(node);
             AttachRuntimeTriggerActivityOutputs(node);
         }
     }
@@ -1841,6 +1842,55 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
         var address = node.Address;
         var target = new ActionBlock<MqttEnvelope>(
             envelope => StoreRuntimeTriggerActivity(address, envelope),
+            new ExecutionDataflowBlockOptions
+            {
+                EnsureOrdered = true,
+                MaxDegreeOfParallelism = 1
+            });
+
+        _runtimeProjectionTargets.Add(target);
+        _runtimeProjectionLinks.Add(LinkRuntimeOutput(envelopes, target));
+    }
+
+    private void AttachRuntimeSourceEnvelopeOutputs(RuntimeNode node)
+    {
+        if (!ShouldProjectSourceEnvelopes(node))
+        {
+            return;
+        }
+
+        foreach (var output in node.Outputs.OfType<OutputPort<MqttEnvelope>>())
+        {
+            if (string.Equals(output.Address.Port.Value, "Output", StringComparison.OrdinalIgnoreCase))
+            {
+                AttachRuntimeSourceEnvelopeEvents(node, output);
+            }
+        }
+    }
+
+    private static bool ShouldProjectSourceEnvelopes(RuntimeNode node)
+    {
+        if (node.Node is IFlowEventSource)
+        {
+            return false;
+        }
+
+        if (node.Type != FluxMqNodeTypes.GeneratedSource &&
+            node.Type != FluxMqNodeTypes.StoredSessionSource &&
+            node.Type != FluxMqNodeTypes.ReplaySource)
+        {
+            return false;
+        }
+
+        return !node.Inputs.OfType<InputPort<MqttEnvelope>>().Any();
+    }
+
+    private void AttachRuntimeSourceEnvelopeEvents(RuntimeNode node, OutputPort<MqttEnvelope> envelopes)
+    {
+        var address = node.Address;
+        var nodeId = node.Node.Id;
+        var target = new ActionBlock<MqttEnvelope>(
+            envelope => StoreRuntimeSourceEnvelopeEvent(address, nodeId, envelope),
             new ExecutionDataflowBlockOptions
             {
                 EnsureOrdered = true,
@@ -1980,6 +2030,29 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
         }
 
         NotifyRuntimeProjectionChanged();
+    }
+
+    private void StoreRuntimeSourceEnvelopeEvent(NodeAddress address, FlowNodeId nodeId, MqttEnvelope envelope)
+    {
+        var flowEvent = new FlowEvent
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Type = FluxMqEventTypes.MqttMessageReceived,
+            Source = "RuntimeSource",
+            SourceNodeId = nodeId,
+            Subject = envelope.Topic,
+            Status = "received",
+            Channel = envelope.Topic,
+            PayloadBytes = envelope.Payload.Length,
+            PayloadPreview = CreatePayloadPreview(envelope.Payload),
+            Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["qos"] = ((int)envelope.QualityOfService).ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ["retain"] = envelope.Retain.ToString()
+            }
+        };
+
+        StoreWorkspaceEvent(flowEvent, address);
     }
 
     private void StoreRuntimeTriggerActivity(NodeAddress address, MqttEnvelope envelope)
