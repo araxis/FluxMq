@@ -2,6 +2,22 @@
 
 Chronological progress record.
 
+## 2026-06-05 - Dashboard/test studio stabilization slice
+
+- Hardened dashboard Design/Live surfaces around the existing V2 schema without adding widget types or changing saved JSON shape.
+- Tightened responsive containment for dashboard widget cards, event tables, gauges, topic panels, payload distribution, QoS/retain breakdown, grid handles, and dense toolbars.
+- Kept Scenario Designer as the authoring surface and added Runner Console report/history actions so execution review supports preview, copy, save, and selected historical runs.
+- Improved scenario step editor title/context and narrow-window editor wrapping for the existing step pack.
+- Added focused component catalog coverage proving package-provider fallback still exposes serialization transforms and FluxMQ aliases.
+- Verified:
+  - `npm run build` in `docs-site`
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore`
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj -p:UseFluxFlowSourceReferences=false -p:FluxFlowSourceRoot=D:\NoFluxFlow\`
+  - `dotnet restore FluxMq.sln` after the package-fallback restore, then `dotnet test FluxMq.sln --no-restore`
+  - `dotnet run --project src\FluxMq.Cli\FluxMq.Cli.csproj -- validate --config samples\flow-applications\operations-dashboard-test-studio.json --output json`
+  - `git diff --check`
+  - Desktop smoke: launched `samples\flow-applications\operations-dashboard-test-studio.json` in the app and confirmed the main window opened.
+
 ## 2026-06-05 - Component boundary refactor slice
 
 - Added FluxMQ catalog adapter interfaces/classes so the UI catalog can be

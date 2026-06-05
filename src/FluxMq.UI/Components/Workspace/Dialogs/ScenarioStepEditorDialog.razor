@@ -4,10 +4,16 @@
 
 <MudDialog Options="@EditorDialogOptions">
     <TitleContent>
-        <MudText Typo="Typo.h6">@DialogTitle</MudText>
+        <div class="scenario-step-editor-title">
+            <MudIcon Icon="@StepDescriptor.Icon" Size="Size.Small" />
+            <div>
+                <MudText Typo="Typo.h6">@DialogTitle</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@Step.Type</MudText>
+            </div>
+        </div>
     </TitleContent>
     <DialogContent>
-        <MudStack Spacing="2">
+        <MudStack Spacing="2" Class="scenario-step-editor">
             @if (IsMqttPublish)
             {
                 @if (ConnectionNames.Count > 0)
@@ -131,7 +137,7 @@
                         }
                     </MudToggleGroup>
                 </MudStack>
-                <MudStack Row="true" Spacing="2">
+                <MudStack Row="true" Spacing="2" Class="scenario-step-editor-checks">
                     <MudCheckBox T="bool"
                                  Label="@_receiveRetainedField.Label"
                                  @bind-Value="_receiveRetained"

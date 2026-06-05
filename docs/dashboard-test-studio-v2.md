@@ -33,3 +33,13 @@ The first step pack includes MQTT publisher, MQTT trigger/listener, wait for eve
 ## Sample
 
 Use `samples/flow-applications/operations-dashboard-test-studio.json` as the repo-contained V2 reference sample.
+
+## Stabilization Notes
+
+The dashboard studio keeps the structured grid as the source of truth. Design mode owns cell, track, split, merge, and widget settings edits; Live mode renders the current widget snapshots and runtime event projections without writing design metadata.
+
+The stabilization pass tightened dashboard widget containment across desktop, tablet, and narrow windows so KPI values, event tables, gauge panels, topic activity, payload distribution, and QoS/retain breakdowns shrink without overlapping neighboring cells.
+
+The test studio keeps authoring and execution separate. Scenario Designer remains the phase-lane authoring surface, while Runner Console now carries run preflight, active timeline, event/log streams, diagnosis, run-history selection, and report preview/copy/save actions.
+
+Component catalog fallback is covered so package-backed serialization transforms and FluxMQ aliases remain visible when source references are unavailable.

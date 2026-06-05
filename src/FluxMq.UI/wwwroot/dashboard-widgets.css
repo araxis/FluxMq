@@ -106,6 +106,10 @@
     font-weight: 850;
     letter-spacing: 0;
     line-height: 0.95;
+    min-width: 0;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    text-overflow: ellipsis;
 }
 
 .dashboard-widget-meta {
@@ -743,5 +747,85 @@
 
     .dashboard-breakdown-grid {
         grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 700px) {
+    .dashboard-widget {
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .dashboard-widget::before {
+        left: 10px;
+        right: 10px;
+    }
+
+    .dashboard-widget-icon {
+        height: 28px;
+        width: 28px;
+    }
+
+    .dashboard-widget-value {
+        font-size: 34px;
+    }
+
+    .dashboard-observability-grid,
+    .dashboard-status-strip-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard-topic-summary,
+    .dashboard-breakdown-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .dashboard-event-table-head,
+    .dashboard-event-table-row {
+        grid-template-columns: 54px minmax(0, 1fr);
+    }
+
+    .dashboard-event-table-head span:nth-child(3),
+    .dashboard-event-table-head span:nth-child(4),
+    .dashboard-event-table-row span:nth-child(3),
+    .dashboard-event-table-row span:nth-child(4) {
+        display: none;
+    }
+
+    .dashboard-distribution-row,
+    .dashboard-series-row {
+        grid-template-columns: minmax(64px, 0.75fr) minmax(72px, 1fr) minmax(32px, auto);
+    }
+
+    .dashboard-topic-activity {
+        grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+    }
+}
+
+@media (max-width: 420px) {
+    .dashboard-widget {
+        padding: 10px;
+    }
+
+    .dashboard-widget-header {
+        gap: 8px;
+    }
+
+    .dashboard-widget-value {
+        font-size: 28px;
+    }
+
+    .dashboard-observability-grid,
+    .dashboard-status-strip-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .dashboard-widget-chart {
+        padding: 8px;
+    }
+
+    .dashboard-widget-chart-bars,
+    .dashboard-widget-chart-line {
+        min-height: 68px;
     }
 }
