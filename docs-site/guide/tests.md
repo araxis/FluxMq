@@ -4,7 +4,7 @@ Tests are scenario artifacts inside the app file. They are separate from product
 
 The V2 test framework separates authoring from execution. Scenario Designer is for arranging phases and editing steps. Runner Console is for preflight, execution, live events, logs, matched details, failure diagnosis, and report/export actions.
 
-The operations dashboard sample includes `operationsRegression`, a phase-based scenario with setup, stimulus, observe, assert, and cleanup lanes.
+The operations dashboard sample includes `operationsSmoke`, a phase-based scenario with setup, stimulus, observe, assert, and cleanup lanes.
 
 ## Scenario Phases
 

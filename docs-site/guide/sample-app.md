@@ -12,7 +12,7 @@ The sample app is a complete FluxMQ workspace for the dashboard and test-studio 
 
 - Pipeline `operationsMonitor`: generated MQTT-style traffic, payload inspection, and metrics.
 - Dashboard `operations`: V2 layout, reusable metrics, widget bindings, and MQTT operations widgets.
-- Test `operationsRegression`: phase-based scenario lanes for setup, stimulus, observe, assert, and cleanup.
+- Test `operationsSmoke`: phase-based scenario lanes for setup, stimulus, observe, assert, and cleanup.
 - Runner metadata: local run profile, run-history references, and report snapshot placeholders.
 
 ## Open It
@@ -35,7 +35,7 @@ FluxMq.UI.exe --open docs-site/public/samples/operations-dashboard-test-studio.j
 2. Run the app.
 3. Open the `operations` dashboard in Design mode and inspect the grid, metrics, bindings, and widget settings.
 4. Switch the dashboard to Live mode and watch the generated traffic drive KPI, status, trend, topic, payload-size, and QoS/retain widgets.
-5. Open the test studio and run `operationsRegression` from the Runner Console.
+5. Open the test studio and run `operationsSmoke` from the Runner Console.
 
 ![Operations monitor flow canvas](/screenshots/sample-flow-canvas.png)
 

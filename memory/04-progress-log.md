@@ -2,6 +2,35 @@
 
 Chronological progress record.
 
+## 2026-06-05 - V1 candidate QA blocker slice
+
+- Started from `main` on `work/v1-candidate-qa` and kept FluxFlow read-only.
+- Re-ran the V1 candidate command gates, release-shaped tests, operations sample validation, docs-site build, and Windows package build.
+- Fixed generated-source dashboard projection so generated/runtime source envelopes emit dashboard-visible `mqtt.message.received` events without duplicating trigger-owned flow events.
+- Added focused UI test coverage proving generated source messages drive dashboard event snapshots, topic counts, payload totals, retain counts, and workspace logs.
+- Fixed packaged Dashboard Live layout blockers:
+  - compacted payload distribution and QoS/retain rows so small cards do not clip horizontally
+  - rendered medium/narrow Live dashboards as a scrollable feed while preserving the saved grid as the source of truth
+  - hid auxiliary side panels on narrow shells so the active workspace stays usable
+- Fixed Test Studio artifact layout so Runner Console uses the full workspace region instead of the empty tool-column width.
+- Corrected docs-site sample wording from the old test name to `operationsSmoke`.
+- Packaged desktop QA verified:
+  - delete confirmations for pipeline, dashboard, and test artifacts
+  - generated traffic driving Dashboard Live widgets
+  - Dashboard Live at 1366x900, 900x900, and 480x900 without widget horizontal overflow
+  - Scenario Designer and Runner Console for `operationsSmoke`
+  - Runner Console preflight, timeline, live events, diagnosis, logs, report/history actions, and passed run state
+  - Logs scope/level/search controls and runner logs not incrementing dashboard metrics
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --nologo -p:UseSharedCompilation=false -p:UseAppHost=false --verbosity minimal` passed with 303 tests
+  - `dotnet test FluxMq.sln --no-restore --nologo -m:1 -p:UseSharedCompilation=false -p:UseAppHost=false --verbosity minimal` passed with 615 tests
+  - `.\eng\verify-samples.ps1` passed
+  - `dotnet restore .\FluxMq.sln -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 --nologo` passed
+  - `dotnet test .\FluxMq.sln --configuration Release --no-restore --verbosity minimal -m:1 -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 -p:UseSharedCompilation=false --nologo` passed with 615 tests
+  - `.\eng\package-windows.ps1 -Configuration Release -Version 0.1.0` produced the portable zip and MSI
+  - `dotnet run --project src\FluxMq.Cli\FluxMq.Cli.csproj -- validate --config samples\flow-applications\operations-dashboard-test-studio.json --output json` returned `isValid: true`
+  - `npm run build` in `docs-site` passed
+
 ## 2026-06-05 - Dashboard/test studio stabilization slice
 
 - Hardened dashboard Design/Live surfaces around the existing V2 schema without adding widget types or changing saved JSON shape.

@@ -358,3 +358,49 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+@media (max-width: 760px) {
+    .flux-shell,
+    .flux-shell.left-collapsed,
+    .flux-shell.right-collapsed,
+    .flux-shell.left-collapsed.right-collapsed {
+        grid-template-areas:
+            "top top"
+            "rail main"
+            "status status";
+        grid-template-columns: var(--flux-rail-width) minmax(0, 1fr);
+    }
+
+    .flux-side-panel {
+        display: none;
+    }
+
+    .flux-topbar {
+        gap: 8px;
+        padding: 0 8px;
+    }
+
+    .flux-toolbar {
+        gap: 3px;
+        overflow-x: auto;
+        scrollbar-width: thin;
+    }
+
+    .flux-toolbar-divider,
+    .flux-brand-name,
+    .flux-runstate {
+        display: none;
+    }
+
+    .flux-command-button {
+        padding: 0 6px;
+    }
+
+    .flux-statusbar {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .flux-status-path {
+        display: none;
+    }
+}

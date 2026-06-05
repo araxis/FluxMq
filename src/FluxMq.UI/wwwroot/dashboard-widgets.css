@@ -676,8 +676,8 @@
 .dashboard-series-row {
     align-items: center;
     display: grid;
-    gap: 10px;
-    grid-template-columns: minmax(76px, 0.62fr) minmax(92px, 1fr) minmax(38px, auto);
+    gap: 6px;
+    grid-template-columns: minmax(0, 0.85fr) minmax(24px, 1fr) max-content;
     min-width: 0;
 }
 
@@ -697,7 +697,10 @@
     color: var(--mud-palette-text-primary);
     font-size: 12px;
     font-weight: 850;
+    min-width: 0;
+    overflow: hidden;
     text-align: right;
+    text-overflow: ellipsis;
 }
 
 .dashboard-distribution-track,
@@ -705,6 +708,7 @@
     background: color-mix(in srgb, var(--mud-palette-text-primary) 8%, transparent);
     border-radius: 999px;
     height: 8px;
+    min-width: 0;
     overflow: hidden;
 }
 
@@ -719,8 +723,8 @@
 .dashboard-breakdown-grid {
     display: grid;
     flex: 1 1 auto;
-    gap: 14px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr);
     min-height: 0;
 }
 
@@ -794,7 +798,7 @@
 
     .dashboard-distribution-row,
     .dashboard-series-row {
-        grid-template-columns: minmax(64px, 0.75fr) minmax(72px, 1fr) minmax(32px, auto);
+        grid-template-columns: minmax(0, 0.85fr) minmax(24px, 1fr) max-content;
     }
 
     .dashboard-topic-activity {
