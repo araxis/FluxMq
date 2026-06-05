@@ -81,7 +81,28 @@ public static class RuntimeNodeFactoryRegistryExtensions
         clientFactory ??= profile => new MqttBrokerClient(profile, secretResolver);
         expressionEngine ??= FluxMqExpressionEngines.CreateDefault();
 
-        return registry
+        registry
+            .RegisterPayloadComponents()
+            .RegisterHttpComponents()
+            .RegisterTimerComponents(ConfigureTimerComponents)
+            .RegisterMappingComponents(options => ConfigureMappingComponents(options, expressionEngine))
+            .RegisterStateComponents(options => ConfigureStateComponents(options, expressionEngine))
+            .RegisterStorageComponents(options => ConfigureStorageComponents(options, fileSystemStorageRootDirectory))
+            .RegisterSerializationComponents()
+            .RegisterRoutingComponents(options => ConfigureRoutingComponents(options, expressionEngine));
+
+        return registry.RegisterFluxMqRuntimeAdapters(
+            clientFactory,
+            messageRepository,
+            expressionEngine);
+    }
+
+    private static RuntimeNodeFactoryRegistry RegisterFluxMqRuntimeAdapters(
+        this RuntimeNodeFactoryRegistry registry,
+        Func<MqttConnectionProfile, IMqttBrokerClient> clientFactory,
+        IMessageRepository? messageRepository,
+        IFlowExpressionEngine expressionEngine)
+        => registry
             .Register(FluxMqNodeTypes.Connection, context => CreateConnection(context.Address, context.Definition, clientFactory))
             .Register(FluxMqNodeTypes.Trigger, context => CreateTrigger(context.Address, context.Definition, context))
             .Register(FluxMqNodeTypes.ConnectionStateTrigger, context => CreateConnectionStateTrigger(context.Address, context.Definition, context))
@@ -95,18 +116,9 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .Register(FluxMqNodeTypes.ConditionRouter, context => CreateConditionRouter(context.Address, context.Definition, expressionEngine))
             .Register(FluxMqNodeTypes.FlowAssertion, context => CreateFlowAssertion(context.Address, context.Definition, expressionEngine))
             .Register(FluxMqNodeTypes.JsonSchemaValidator, context => CreateJsonSchemaValidator(context.Address, context.Definition))
-            .RegisterPayloadComponents()
-            .RegisterHttpComponents()
-            .RegisterTimerComponents(ConfigureTimerComponents)
-            .RegisterMappingComponents(options => ConfigureMappingComponents(options, expressionEngine))
-            .RegisterStateComponents(options => ConfigureStateComponents(options, expressionEngine))
-            .RegisterStorageComponents(options => ConfigureStorageComponents(options, fileSystemStorageRootDirectory))
-            .RegisterSerializationComponents()
-            .RegisterRoutingComponents(options => ConfigureRoutingComponents(options, expressionEngine))
             .Register(FluxMqNodeTypes.MqttPublisher, context => CreatePublisher(context.Address, context.Definition, context))
             .Register(FluxMqNodeTypes.MqttRecorder, context => CreateRecorder(context.Address, context.Definition, messageRepository))
             .Register(FluxMqNodeTypes.FileWriter, CreateFileWriter);
-    }
 
     private static void ConfigureTimerComponents(TimerComponentOptions options)
     {
