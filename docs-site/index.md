@@ -18,10 +18,10 @@
 
 ## Start With A Real App
 
-The documentation includes a complete operations monitor sample app. It contains two broker resources, a live order intake pipeline, replay traffic, an event dashboard, and an integration-style scenario.
+The documentation includes a complete operations dashboard and test-studio sample app. It contains generated traffic, a V2 dashboard with reusable metrics and dedicated MQTT operations widgets, and a phase-based scenario that can be opened in the runner console.
 
 <div class="sample-actions">
-  <a class="sample-action primary" href="samples/operations-monitor.json">Download operations-monitor.json</a>
+  <a class="sample-action primary" href="samples/operations-dashboard-test-studio.json">Download operations-dashboard-test-studio.json</a>
   <a class="sample-action" href="guide/sample-app">Read the walkthrough</a>
 </div>
 
@@ -34,11 +34,11 @@ The documentation includes a complete operations monitor sample app. It contains
   </div>
   <div class="feature-tile">
     <h3>Watch live traffic</h3>
-    <p>Use dashboards, logs, topic trees, and the live publish panel while the app is running.</p>
+    <p>Use dashboard Design and Live modes, logs, topic trees, and payload detail while the app is running.</p>
   </div>
   <div class="feature-tile">
     <h3>Check behavior</h3>
-    <p>Run scenario steps that publish traffic and wait for matching runtime events.</p>
+    <p>Author phase-based scenarios and run them from a separate console with timeline, events, logs, and report output.</p>
   </div>
 </div>
 

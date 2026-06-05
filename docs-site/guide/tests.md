@@ -2,14 +2,34 @@
 
 Tests are scenario artifacts inside the app file. They are separate from production pipelines, but they can reuse normal components where the behavior is the same.
 
-The operations monitor sample includes `priority-order-roundtrip`, which publishes a priority order and waits for the app runtime to emit matching receive and publish events.
+The V2 test framework separates authoring from execution. Scenario Designer is for arranging phases and editing steps. Runner Console is for preflight, execution, live events, logs, matched details, failure diagnosis, and report/export actions.
 
-## Current Steps
+The operations dashboard sample includes `operationsRegression`, a phase-based scenario with setup, stimulus, observe, assert, and cleanup lanes.
+
+## Scenario Phases
+
+Default scenarios use these phases:
+
+- Setup
+- Stimulus
+- Observe
+- Assert
+- Cleanup
+
+Older flat scenarios are migrated into an imported phase so their execution order is preserved.
+
+## Step Pack
 
 - `mqtt.publisher`: publishes an MQTT message through an app-level broker resource.
 - `mqtt.trigger`: creates a runner-owned MQTT trigger using an app-level broker resource.
+- `wait.event`: waits for a matching event.
 - `when.event`: gates later steps based on observed runtime events.
 - `expect.event`: waits for a matching runtime event.
+- `assert.payload`: checks payload content.
+- `assert.json-schema`: validates payload JSON against a schema.
+- `assert.metric-threshold`: checks a named metric threshold.
+- `wait.delay`: waits for a duration.
+- `cleanup.action`: performs cleanup work.
 
 ## Runner Boundary
 
@@ -19,4 +39,4 @@ Use app-level connections as shared resources. Do not define broker settings ins
 
 ## Reports
 
-Scenario results keep recent run history in the desktop session. Reports can be previewed, copied, or saved as structured JSON or readable text.
+Scenario results persist local run history with run metadata, step results, matched events, log excerpts, and report snapshots. Reports can be previewed, copied, or saved as structured JSON or readable text.
