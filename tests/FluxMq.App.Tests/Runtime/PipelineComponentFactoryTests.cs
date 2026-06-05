@@ -1293,7 +1293,9 @@ public sealed class PipelineComponentFactoryTests
             });
 
             result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
-            await result.Runtime!.StartAsync();
+            await using var runtime = result.Runtime!;
+
+            await runtime.StartAsync();
 
             source!.Post(new StoragePutRequest
             {
@@ -1306,9 +1308,9 @@ public sealed class PipelineComponentFactoryTests
                 },
                 ContentType = "application/json"
             });
-            result.Runtime.Complete();
+            runtime.Complete();
 
-            await result.Runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+            await runtime.Completion.WaitAsync(TimeSpan.FromSeconds(2));
 
             putSink!.Values.ShouldHaveSingleItem().Succeeded.ShouldBeTrue();
             var found = foundSink!.Values.ShouldHaveSingleItem();
