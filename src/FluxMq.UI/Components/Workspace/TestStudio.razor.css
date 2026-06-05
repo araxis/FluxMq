@@ -14,8 +14,10 @@
     border-bottom: 1px solid var(--flux-border);
     display: flex;
     flex: 0 0 auto;
+    flex-wrap: wrap;
     gap: 12px;
     min-height: 48px;
+    min-width: 0;
     padding: 7px 14px;
 }
 
@@ -50,7 +52,7 @@
 
 .test-studio-tools {
     border-right: 1px solid var(--flux-border);
-    flex: 0 0 300px;
+    flex: 0 0 288px;
     min-height: 0;
     min-width: 0;
 }
@@ -75,5 +77,20 @@
         border-bottom: 1px solid var(--flux-border);
         border-right: 0;
         flex-basis: 220px;
+    }
+}
+
+@media (max-width: 560px) {
+    .test-studio-toolbar {
+        align-items: flex-start;
+        padding: 8px 10px;
+    }
+
+    .test-studio-toolbar .mud-toggle-group {
+        margin-left: 0;
+    }
+
+    .test-studio-tools {
+        flex-basis: 200px;
     }
 }

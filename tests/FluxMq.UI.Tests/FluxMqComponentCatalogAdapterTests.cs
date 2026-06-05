@@ -111,4 +111,55 @@ public sealed class FluxMqComponentCatalogAdapterTests
         configuration.ShouldNotBeNull();
         configuration["boundedCapacity"]!.GetValue<int>().ShouldBe(1000);
     }
+
+    [Fact]
+    public void Adapter_without_package_providers_keeps_transform_fallbacks_and_fluxmq_aliases()
+    {
+        var adapter = new FluxMqComponentCatalogAdapter(
+            new FluxMqComponentAliasRegistry(),
+            []);
+
+        foreach (var componentType in new[]
+                 {
+                     "json.parse",
+                     "json.stringify",
+                     "text.encode",
+                     "text.decode",
+                     "base64.encode",
+                     "base64.decode"
+                 })
+        {
+            adapter.Find(componentType).ShouldNotBeNull(componentType);
+        }
+
+        var transform = adapter.Find("json.parse")!;
+        transform.Category.ShouldBe("Serialization");
+        transform.Ports.Select(port => port.Name).ShouldBe(["Input", "Output", "Errors"]);
+
+        adapter.DesignMetadata.TryGet(new NodeType("json.parse"), out var transformMetadata).ShouldBeTrue();
+        transformMetadata.Attributes["fluxmq.packageFallback"].ShouldBe("true");
+        transformMetadata.Ports.Select(port => port.ValueType).ShouldBe(["JsonParseRequest", "JsonParseResult", "FlowError"]);
+
+        var transformCompatibility = adapter.FindMetadata("json.parse");
+        transformCompatibility.ShouldNotBeNull();
+        transformCompatibility.PreferredNodeName.ShouldBe("jsonParser");
+        transformCompatibility.DefaultInputLink.ShouldBe(FlowComponentDefaultInputLink.None);
+
+        var transformDefaults = adapter.CreateDefaultConfiguration(
+            "json.parse",
+            FlowComponentDefaultConfigurationContext.Empty);
+        transformDefaults.ShouldNotBeNull();
+        transformDefaults["boundedCapacity"]!.GetValue<int>().ShouldBe(1000);
+
+        var trigger = adapter.Find("mqtt.trigger");
+        trigger.ShouldNotBeNull();
+        trigger.DisplayName.ShouldBe("Live MQTT Trigger");
+        trigger.Ports.Select(port => port.Name).ShouldBe(["Output", "Errors"]);
+
+        var publisherDefaults = adapter.CreateDefaultConfiguration(
+            "mqtt.publisher",
+            new FlowComponentDefaultConfigurationContext("MqttEnvelope", "local-broker"));
+        publisherDefaults.ShouldNotBeNull();
+        publisherDefaults["connection"]!.GetValue<string>().ShouldBe("local-broker");
+    }
 }

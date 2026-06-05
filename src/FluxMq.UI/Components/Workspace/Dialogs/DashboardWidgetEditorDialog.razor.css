@@ -30,6 +30,10 @@
     min-width: 0;
 }
 
+.dashboard-widget-editor-section ::deep(.mud-toggle-group) {
+    flex-wrap: wrap;
+}
+
 .dashboard-widget-editor-metric-options {
     display: grid;
     gap: 2px 16px;
@@ -50,6 +54,14 @@
 }
 
 @media (max-width: 700px) {
+    .dashboard-widget-editor-title {
+        align-items: flex-start;
+    }
+
+    .dashboard-widget-editor-tab {
+        padding-top: 12px;
+    }
+
     .dashboard-widget-editor-metric-options {
         grid-template-columns: minmax(0, 1fr);
     }

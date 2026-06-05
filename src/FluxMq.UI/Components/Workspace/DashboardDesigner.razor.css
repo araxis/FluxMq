@@ -36,6 +36,10 @@
     font-size: 13px;
     font-weight: 750;
     line-height: 1.25;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .dashboard-meta {
@@ -43,12 +47,17 @@
     font-size: 10.5px;
     line-height: 1.25;
     margin-top: 2px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .dashboard-command-strip {
     align-items: center;
     display: flex;
     flex: 0 1 auto;
+    flex-wrap: wrap;
     gap: 4px;
     min-width: 0;
 }
@@ -496,5 +505,102 @@
 
     .dashboard-command-strip {
         flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 700px) {
+    .dashboard-toolbar {
+        padding: 8px 10px;
+    }
+
+    .dashboard-heading {
+        min-width: 0;
+    }
+
+    .dashboard-mode-toggle {
+        align-self: flex-start;
+    }
+
+    .dashboard-selection-summary {
+        margin-left: 0;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .dashboard-grid-frame {
+        border-radius: 0;
+        border-left: 0;
+        border-right: 0;
+        padding: 10px;
+    }
+
+    .dashboard-grid-stage {
+        grid-template-columns: 58px minmax(0, 1fr);
+        grid-template-rows: 52px minmax(0, 1fr);
+    }
+
+    .dashboard-column-handles {
+        padding: 0 6px;
+    }
+
+    .dashboard-row-handles {
+        padding: 6px 0;
+    }
+
+    .dashboard-track-handle {
+        min-height: 28px;
+        min-width: 42px;
+        padding: 3px 7px;
+    }
+
+    .dashboard-track-padding {
+        display: none;
+    }
+
+    .dashboard-grid {
+        gap: 6px;
+        padding: 6px;
+    }
+
+    .dashboard-cell-content {
+        padding: 10px 8px;
+    }
+
+    .dashboard-cell-widget {
+        gap: 4px;
+        padding-left: 6px;
+    }
+
+    .dashboard-cell-widget-action {
+        height: 22px;
+        width: 22px;
+    }
+
+    .dashboard-live-frame {
+        padding: 8px;
+    }
+
+    .dashboard-live-grid {
+        gap: 6px;
+    }
+}
+
+@media (max-width: 420px) {
+    .dashboard-grid-frame {
+        padding: 8px;
+    }
+
+    .dashboard-grid-stage {
+        grid-template-columns: 48px minmax(0, 1fr);
+        grid-template-rows: 46px minmax(0, 1fr);
+    }
+
+    .dashboard-track-handle small {
+        display: none;
+    }
+
+    .dashboard-cell-name {
+        font-size: 12px;
     }
 }

@@ -1,0 +1,36 @@
+.scenario-step-editor-title {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    min-width: 0;
+}
+
+.scenario-step-editor-title > .mud-icon-root {
+    color: var(--mud-palette-warning);
+    flex: 0 0 auto;
+}
+
+.scenario-step-editor-title > div,
+.scenario-step-editor {
+    min-width: 0;
+}
+
+.scenario-step-editor ::deep(.mud-toggle-group),
+.scenario-step-editor-checks {
+    flex-wrap: wrap;
+}
+
+.scenario-step-editor ::deep(.mud-input-control) {
+    min-width: 0;
+}
+
+@media (max-width: 560px) {
+    .scenario-step-editor-title {
+        align-items: flex-start;
+    }
+
+    .scenario-step-editor-checks {
+        flex-direction: column;
+        gap: 0;
+    }
+}

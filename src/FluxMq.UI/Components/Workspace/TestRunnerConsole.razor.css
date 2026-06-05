@@ -14,7 +14,9 @@
     background: color-mix(in srgb, var(--flux-surface) 88%, transparent);
     border-bottom: 1px solid var(--flux-border);
     display: flex;
+    gap: 12px;
     min-height: 54px;
+    min-width: 0;
     padding: 8px 18px;
 }
 
@@ -28,18 +30,27 @@
 }
 
 .test-runner-title-block {
+    flex: 1 1 auto;
     gap: 10px;
     min-width: 0;
 }
 
 .test-runner-actions {
+    flex: 0 1 auto;
+    flex-wrap: wrap;
     gap: 10px;
     margin-left: auto;
+    min-width: 0;
+    justify-content: flex-end;
 }
 
 .test-runner-title {
     font-size: 15px;
     font-weight: 800;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .test-runner-meta {
@@ -52,7 +63,7 @@
     display: grid;
     flex: 1 1 auto;
     gap: 12px;
-    grid-template-columns: minmax(260px, 0.85fr) minmax(420px, 1.35fr) minmax(320px, 1fr);
+    grid-template-columns: minmax(250px, 0.85fr) minmax(360px, 1.35fr) minmax(280px, 1fr);
     grid-template-rows: minmax(160px, auto) minmax(0, 1fr);
     min-height: 0;
     overflow: auto;
@@ -171,6 +182,13 @@
     padding: 7px 9px;
 }
 
+.test-runner-timeline-step span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .test-runner-timeline-step strong {
     color: var(--mud-palette-text-secondary);
     font-size: 11px;
@@ -231,6 +249,7 @@
 .test-runner-diagnosis-card span {
     color: var(--mud-palette-text-primary);
     font-size: 12px;
+    overflow-wrap: anywhere;
 }
 
 .test-runner-diagnosis-card small {
@@ -256,13 +275,54 @@
     opacity: 0.55;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1320px) {
     .test-runner-grid {
-        grid-template-columns: minmax(280px, 1fr);
-        grid-template-rows: none;
+        grid-template-columns: minmax(260px, 0.8fr) minmax(360px, 1.2fr);
     }
 
     .test-runner-panel.timeline {
         grid-row: auto;
+    }
+}
+
+@media (max-width: 920px) {
+    .test-runner-header {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 8px 12px;
+    }
+
+    .test-runner-actions {
+        justify-content: flex-start;
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .test-runner-grid {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: none;
+        padding: 10px;
+    }
+}
+
+@media (max-width: 560px) {
+    .test-runner-stream-row {
+        gap: 6px;
+        grid-template-columns: 52px minmax(0, 1fr);
+    }
+
+    .test-runner-stream-row em {
+        grid-column: 1 / -1;
+        white-space: normal;
+    }
+
+    .test-runner-timeline-step {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .test-runner-timeline-step strong {
+        margin-left: 0;
     }
 }
