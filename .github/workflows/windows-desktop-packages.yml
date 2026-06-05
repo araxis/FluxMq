@@ -87,7 +87,20 @@ jobs:
         if: github.event_name != 'pull_request'
         shell: pwsh
         timeout-minutes: 30
-        run: dotnet test FluxMq.sln --configuration Release --no-restore --disable-build-servers --verbosity minimal -m:1 -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 -p:UseSharedCompilation=false
+        run: |
+          $testProjects = @(
+            "tests\FluxMq.Core.Tests\FluxMq.Core.Tests.csproj",
+            "tests\FluxMq.Components.Tests\FluxMq.Components.Tests.csproj",
+            "tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj",
+            "tests\FluxMq.Cli.Tests\FluxMq.Cli.Tests.csproj",
+            "tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj",
+            "tests\FluxMq.Scenarios.Tests\FluxMq.Scenarios.Tests.csproj"
+          )
+
+          foreach ($project in $testProjects) {
+            dotnet test $project --configuration Release --no-restore --disable-build-servers --verbosity minimal -p:RuntimeIdentifierOverride=win-x64 -p:RuntimeIdentifier=win-x64 -p:UseSharedCompilation=false --blame-hang --blame-hang-timeout 120s
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
 
   package:
     name: Package Windows desktop app
