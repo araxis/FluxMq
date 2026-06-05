@@ -1,0 +1,8 @@
+@namespace FluxMq.UI.Components.Workspace
+
+<div class="dashboard-widget-empty">@Type</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Type { get; set; } = string.Empty;
+}

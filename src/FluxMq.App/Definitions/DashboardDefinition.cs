@@ -5,7 +5,13 @@ namespace FluxMq.App.Definitions;
 public sealed record DashboardDefinition
 {
     private DashboardLayoutDefinition? _layout = new();
+    private Dictionary<string, DashboardMetricDefinition>? _metrics = [];
     private Dictionary<string, DashboardWidgetDefinition>? _widgets = [];
+    private Dictionary<string, DashboardWidgetBindingDefinition>? _bindings = [];
+    private DashboardResponsiveDefinition? _responsive = new();
+    private DashboardViewDefinition? _view = new();
+
+    public int Version { get; init; } = 2;
 
     public DashboardLayoutDefinition Layout
     {
@@ -13,10 +19,34 @@ public sealed record DashboardDefinition
         init => _layout = value ?? new DashboardLayoutDefinition();
     }
 
+    public Dictionary<string, DashboardMetricDefinition> Metrics
+    {
+        get => _metrics ??= [];
+        init => _metrics = value ?? [];
+    }
+
     public Dictionary<string, DashboardWidgetDefinition> Widgets
     {
         get => _widgets ??= [];
         init => _widgets = value ?? [];
+    }
+
+    public Dictionary<string, DashboardWidgetBindingDefinition> Bindings
+    {
+        get => _bindings ??= [];
+        init => _bindings = value ?? [];
+    }
+
+    public DashboardResponsiveDefinition Responsive
+    {
+        get => _responsive ??= new();
+        init => _responsive = value ?? new DashboardResponsiveDefinition();
+    }
+
+    public DashboardViewDefinition View
+    {
+        get => _view ??= new();
+        init => _view = value ?? new DashboardViewDefinition();
     }
 }
 
@@ -166,4 +196,72 @@ public sealed record DashboardWidgetDefinition
         get => _configuration ??= [];
         init => _configuration = value ?? [];
     }
+}
+
+public sealed record DashboardMetricDefinition
+{
+    private Dictionary<string, JsonElement>? _filters = [];
+    private Dictionary<string, JsonElement>? _format = [];
+
+    public string Source { get; init; } = "runtimeEvents";
+    public string Aggregation { get; init; } = "count";
+    public string Window { get; init; } = "60s";
+    public string? GroupBy { get; init; }
+
+    public Dictionary<string, JsonElement> Filters
+    {
+        get => _filters ??= [];
+        init => _filters = value ?? [];
+    }
+
+    public Dictionary<string, JsonElement> Format
+    {
+        get => _format ??= [];
+        init => _format = value ?? [];
+    }
+}
+
+public sealed record DashboardWidgetBindingDefinition
+{
+    private List<string>? _metrics = [];
+    private Dictionary<string, JsonElement>? _options = [];
+
+    public string? PrimaryMetric { get; init; }
+
+    public List<string> Metrics
+    {
+        get => _metrics ??= [];
+        init => _metrics = value ?? [];
+    }
+
+    public Dictionary<string, JsonElement> Options
+    {
+        get => _options ??= [];
+        init => _options = value ?? [];
+    }
+}
+
+public sealed record DashboardResponsiveDefinition
+{
+    private Dictionary<string, DashboardBreakpointDefinition>? _breakpoints = [];
+
+    public string DefaultBreakpoint { get; init; } = "desktop";
+
+    public Dictionary<string, DashboardBreakpointDefinition> Breakpoints
+    {
+        get => _breakpoints ??= [];
+        init => _breakpoints = value ?? [];
+    }
+}
+
+public sealed record DashboardBreakpointDefinition
+{
+    public int Columns { get; init; } = 12;
+    public int MinWidth { get; init; }
+}
+
+public sealed record DashboardViewDefinition
+{
+    public string Mode { get; init; } = "design";
+    public string Breakpoint { get; init; } = "desktop";
 }

@@ -72,6 +72,34 @@ public sealed class ScenarioEventJournal : IDisposable
         }
     }
 
+    public IReadOnlyList<FlowEvent> SnapshotMatchingFrom(
+        int startIndex,
+        Predicate<FlowEvent> predicate,
+        IReadOnlySet<int>? excludedIndexes = null)
+    {
+        ArgumentNullException.ThrowIfNull(predicate);
+
+        lock (_gate)
+        {
+            var cursor = Math.Max(0, startIndex);
+            var events = new List<FlowEvent>();
+            for (var index = cursor; index < _events.Count; index++)
+            {
+                if (excludedIndexes?.Contains(index) == true)
+                {
+                    continue;
+                }
+
+                if (predicate(_events[index]))
+                {
+                    events.Add(_events[index]);
+                }
+            }
+
+            return events.ToArray();
+        }
+    }
+
     public void Append(FlowEvent flowEvent)
     {
         if (AppendCore(flowEvent))

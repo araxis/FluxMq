@@ -16,6 +16,7 @@ This folder is the working memory for FluxMQ. It should hold the project decisio
 - [09-feature-list.md](09-feature-list.md) - followable product and implementation feature backlog.
 - [10-development-plan.md](10-development-plan.md) - living step-by-step implementation plan and progress tracker.
 - [11-opc-router-ui-inspiration.md](11-opc-router-ui-inspiration.md) - industrial ETL UI inspiration for mapper/workflow authoring.
+- [12-component-boundary-refactor.md](12-component-boundary-refactor.md) - FluxMQ/FluxFlow component metadata and adapter boundary refactor.
 
 ## Working Rule
 

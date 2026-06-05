@@ -1,0 +1,14 @@
+@namespace FluxMq.UI.Components.Workspace
+
+<div class="dashboard-widget-metric">
+    <div>
+        <div class="dashboard-widget-value">@DashboardWidgetFormatting.FormatNumber(Snapshot.Count)</div>
+        <div class="dashboard-widget-meta">@DashboardWidgetFormatting.CounterMeta(Snapshot)</div>
+    </div>
+    <DashboardBucketBars Snapshot="@Snapshot" Compact="true" />
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardEventSnapshot Snapshot { get; set; } = null!;
+}

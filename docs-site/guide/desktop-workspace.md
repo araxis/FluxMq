@@ -36,8 +36,8 @@ Use the Connections menu to add or edit broker resources. The live tools panel c
 - Top bar: open/save, validate, run, stop, app runtime state, broker connection state, and panel toggles.
 - Connections menu: create, edit, connect, disconnect, and delete app-level broker resources.
 - Pipelines: component catalog, search, diagram canvas, link editing, JSON view, and node activity.
-- Dashboards: grid designer, widget catalog, live mode, event counters, latest-event cards, and event-rate widgets.
-- Tests: scenario step catalog, runner actions, result history, and report export.
+- Dashboards: Design and Live modes, grid studio, widget registry, reusable metrics, and live MQTT operations widgets.
+- Tests: Scenario Designer, phase lanes, Runner Console, persisted run history, and report export.
 - Logs: scoped entries with search and level filters.
 - Topics: topic tree, message table, and payload inspector.
 - Live tools: inspect, publish, and live topic activity for pipeline and dashboard checks.

@@ -120,7 +120,7 @@ public sealed partial class FlowDefinitionComposer
         var workflows = GetOrCreateObject(flowApplication, "workflows");
         var workflow = GetOrCreateObject(workflows, targetWorkflowName ?? DefaultWorkflowName);
 
-        var componentMetadata = FlowComponentMetadataRegistry.Find(componentType);
+        var componentMetadata = FluxMqComponentCatalogAdapter.Shared.FindMetadata(componentType);
         var preferredNodeName = componentMetadata is { } metadata
             ? metadata.MakePreferredNodeNameUnique
                 ? MakeUniqueNodeName(workflow, metadata.PreferredNodeName)
@@ -136,7 +136,7 @@ public sealed partial class FlowDefinitionComposer
         var configurationContext = new FlowComponentDefaultConfigurationContext(
             FindDefaultMapperInputType(workflow),
             FindFirstConnectionResourceName(flowApplication));
-        if (FlowComponentMetadataRegistry.CreateDefaultConfiguration(componentType, configurationContext) is { } configuration)
+        if (FluxMqComponentCatalogAdapter.Shared.CreateDefaultConfiguration(componentType, configurationContext) is { } configuration)
         {
             node["configuration"] = configuration;
         }
@@ -205,7 +205,7 @@ public sealed partial class FlowDefinitionComposer
     }
 
     private static FlowComponentDefaultInputLink GetDefaultInputLink(string componentType)
-        => FlowComponentMetadataRegistry.Find(componentType)?.DefaultInputLink
+        => FluxMqComponentCatalogAdapter.Shared.FindMetadata(componentType)?.DefaultInputLink
            ?? FlowComponentDefaultInputLink.PreferredSource;
 
     private static string? FindPreferredSourceNode(JsonObject workflow)
@@ -277,7 +277,7 @@ public sealed partial class FlowDefinitionComposer
     }
 
     private static JsonObject CreateDefaultComponentConfiguration(string componentType)
-        => FlowComponentMetadataRegistry.CreateDefaultConfiguration(componentType, FlowComponentDefaultConfigurationContext.Empty)
+        => FluxMqComponentCatalogAdapter.Shared.CreateDefaultConfiguration(componentType, FlowComponentDefaultConfigurationContext.Empty)
            ?? new JsonObject();
 
     private static string MakeNodeName(string componentType)

@@ -6,4 +6,5 @@ public sealed record ScenarioStepDefinitionDescriptor(
     string Category,
     string Description,
     string NamePrefix,
-    IReadOnlyList<ScenarioStepFieldDescriptor> Fields);
+    IReadOnlyList<ScenarioStepFieldDescriptor> Fields,
+    string DefaultPhase = ScenarioPhaseKinds.Stimulus);

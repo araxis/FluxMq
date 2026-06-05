@@ -8,6 +8,8 @@ This folder contains project documentation intended for contributors and future 
 - [Local Development](development.md)
 - [Architecture](architecture.md)
 - [Desktop App](desktop-app.md)
+- [Dashboard And Test Studio V2](dashboard-test-studio-v2.md)
+- [Component Boundary Refactor](component-boundary-refactor.md)
 - [Fork Flow](fork-flow.md)
 - [Flow Components](flow-components.md)
 - [Flow Errors](flow-errors.md)

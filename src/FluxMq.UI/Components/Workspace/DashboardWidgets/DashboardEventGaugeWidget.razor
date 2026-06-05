@@ -1,0 +1,60 @@
+@namespace FluxMq.UI.Components.Workspace
+
+@{
+    var primary = DashboardWidgetFormatting.PrimaryMetricCard(Widget, Snapshot);
+    var gaugeStyle = DashboardWidgetCatalog.NormalizeGaugeStyle(Widget.ReadString(DashboardWidgetCatalog.GaugeStyleKey));
+}
+
+<div class="dashboard-observability-layout">
+    <div class="dashboard-observability-grid" style="@DashboardWidgetFormatting.MetricGridStyle(Widget)">
+        @foreach (var card in DashboardWidgetFormatting.MetricCards(Widget, Snapshot))
+        {
+            <DashboardMetricTile Card="@card" />
+        }
+    </div>
+
+    @if (gaugeStyle == DashboardWidgetCatalog.GaugeStyleTiles)
+    {
+        <DashboardTopicBars Snapshot="@Snapshot" Limit="4" />
+    }
+    else if (gaugeStyle == DashboardWidgetCatalog.GaugeStyleMeter)
+    {
+        <div class="dashboard-gauge-meter-panel">
+            <div class="dashboard-gauge-meter-header">
+                <span>@primary.Label</span>
+                <strong>@primary.Value</strong>
+            </div>
+            <div class="dashboard-gauge-meter" style="@DashboardWidgetFormatting.GaugeProgressStyle(Snapshot)" aria-hidden="true">
+                <span></span>
+            </div>
+            <div class="dashboard-gauge-meter-footer">
+                <span>@DashboardWidgetFormatting.FormatDuration(Snapshot.RateWindow)</span>
+                <span>@DashboardWidgetFormatting.FormatNumber(Snapshot.Count) total</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="dashboard-widget-gauge-shell">
+            <div class="dashboard-widget-gauge" style="@DashboardWidgetFormatting.GaugeProgressStyle(Snapshot)">
+                <div>
+                    <strong>@primary.Value</strong>
+                    <span>@primary.Label</span>
+                </div>
+            </div>
+            <div class="dashboard-widget-gauge-meta">
+                <strong>@DashboardWidgetFormatting.FormatNumber(Snapshot.Count) total</strong>
+                <span>@DashboardWidgetFormatting.FormatRate(Snapshot.EventsPerSecond)</span>
+                <span>@DashboardWidgetFormatting.FormatBytes(Snapshot.TotalPayloadBytes) payload</span>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardWidgetSnapshot Widget { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public DashboardEventSnapshot Snapshot { get; set; } = null!;
+}

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using FluxMq.App.Definitions;
 
 namespace FluxMq.UI.Services;
 
@@ -68,11 +69,11 @@ public sealed partial class FlowDefinitionComposer
     {
         if (string.IsNullOrWhiteSpace(json))
         {
-            return CreateRoot();
+            return FluxMqApplicationDefinitionMigrator.MigrateRoot(CreateRoot());
         }
 
         var node = JsonNode.Parse(json);
-        return node as JsonObject ?? CreateRoot();
+        return FluxMqApplicationDefinitionMigrator.MigrateRoot(node as JsonObject ?? CreateRoot());
     }
 
     private static JsonObject GetFlowApplication(JsonObject root)

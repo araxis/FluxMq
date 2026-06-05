@@ -23,6 +23,9 @@ public sealed class FluxDbContext : IDisposable
     public ILiteCollection<StoredMessage> Messages
         => _db.GetCollection<StoredMessage>("messages");
 
+    public ILiteCollection<StoredScenarioRun> ScenarioRuns
+        => _db.GetCollection<StoredScenarioRun>("scenario_runs");
+
     /// <summary>Production constructor — opens or creates a LiteDB file.</summary>
     public FluxDbContext(string path = "flux.db")
         : this(new LiteDatabase(path)) { }
@@ -66,6 +69,9 @@ public sealed class FluxDbContext : IDisposable
         Messages.EnsureIndex(m => m.Sequence);
         Messages.EnsureIndex(m => m.ReceivedAt);
         Messages.EnsureIndex(m => m.Topic);
+        ScenarioRuns.EnsureIndex(nameof(StoredScenarioRun.ProjectName));
+        ScenarioRuns.EnsureIndex(nameof(StoredScenarioRun.ScenarioName));
+        ScenarioRuns.EnsureIndex(nameof(StoredScenarioRun.FinishedAt));
         Sessions.EnsureIndex(nameof(StoredSession.ProfileId));
         Sessions.EnsureIndex(nameof(StoredSession.ProjectName));
     }

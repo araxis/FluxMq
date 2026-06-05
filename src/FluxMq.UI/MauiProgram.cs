@@ -56,8 +56,18 @@ public static class MauiProgram
         });
         builder.Services.AddSingleton<IMessageRepository, LiteDbMessageRepository>();
         builder.Services.AddSingleton<ISessionRepository, LiteDbSessionRepository>();
+        builder.Services.AddSingleton<IScenarioRunHistoryRepository, LiteDbScenarioRunHistoryRepository>();
+        builder.Services.AddSingleton<FluxMqComponentAliasRegistry>();
+        builder.Services.AddSingleton(_ => FluxMqComponentPackageDesignMetadataProviders.CreateDefault());
+        builder.Services.AddSingleton<IFluxMqComponentCatalog>(services =>
+            new FluxMqComponentCatalogAdapter(
+                services.GetRequiredService<FluxMqComponentAliasRegistry>(),
+                services.GetRequiredService<IReadOnlyList<FluxFlow.Components.Designer.IComponentDesignMetadataProvider>>()));
         builder.Services.AddSingleton<FlowComponentCatalog>();
         builder.Services.AddSingleton<DashboardWidgetCatalog>();
+        builder.Services.AddSingleton<DashboardWidgetRegistry>();
+        builder.Services.AddSingleton<DashboardMetricRegistry>();
+        builder.Services.AddSingleton<IFluxChartAdapter, FluxChartAdapter>();
         builder.Services.AddSingleton(ScenarioStepCatalog.Shared);
         builder.Services.AddSingleton(DashboardEventFilterCatalog.Shared);
         builder.Services.AddSingleton<NodeWidgetRegistry>();

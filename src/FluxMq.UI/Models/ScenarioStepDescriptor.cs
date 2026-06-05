@@ -6,7 +6,10 @@ public enum ScenarioStepEditorKind
 {
     ExpectEvent,
     MqttPublish,
-    MqttTrigger
+    MqttTrigger,
+    Delay,
+    MetricThreshold,
+    Cleanup
 }
 
 public sealed record ScenarioStepDescriptor(
@@ -17,4 +20,5 @@ public sealed record ScenarioStepDescriptor(
     string Icon,
     string NamePrefix,
     ScenarioStepEditorKind EditorKind,
-    IReadOnlyList<ScenarioStepFieldDescriptor> Fields);
+    IReadOnlyList<ScenarioStepFieldDescriptor> Fields,
+    string DefaultPhase);

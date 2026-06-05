@@ -255,7 +255,7 @@ public sealed class FluxMqApplicationDefinitionValidator
                 "Test scenario name cannot be empty."));
         }
 
-        foreach (var step in scenario.Steps)
+        foreach (var step in scenario.EnumerateSteps())
         {
             if (string.IsNullOrWhiteSpace(step.Key))
             {
@@ -312,7 +312,18 @@ internal static class FluxMqScenarioStepDefinitionValidator
                 break;
             case ScenarioStepTypes.WhenEvent:
             case ScenarioStepTypes.ExpectEvent:
+            case ScenarioStepTypes.WaitForEvent:
+            case ScenarioStepTypes.ConditionalEvent:
+            case ScenarioStepTypes.PayloadAssertion:
+            case ScenarioStepTypes.JsonSchemaAssertion:
                 ValidateExpectEventStep(scenarioName, stepName, step.Configuration, errors);
+                break;
+            case ScenarioStepTypes.MetricThresholdAssertion:
+                ValidateMetricThresholdStep(scenarioName, stepName, step.Configuration, stepDefinition, errors);
+                break;
+            case ScenarioStepTypes.Delay:
+            case ScenarioStepTypes.CleanupAction:
+                ValidateDelayStep(scenarioName, stepName, step.Configuration, errors);
                 break;
         }
     }
@@ -567,6 +578,42 @@ internal static class FluxMqScenarioStepDefinitionValidator
         ValidateAttributes(scenarioName, stepName, configuration, errors);
     }
 
+    private static void ValidateMetricThresholdStep(
+        string scenarioName,
+        string stepName,
+        IReadOnlyDictionary<string, JsonElement> configuration,
+        ScenarioStepDefinitionDescriptor stepDefinition,
+        List<FluxMqApplicationDefinitionValidationError> errors)
+    {
+        ValidateOptionalString(scenarioName, stepName, configuration, ScenarioStepConfigurationKeys.Metric, errors);
+        ValidateOptionalStringOption(
+            scenarioName,
+            stepName,
+            configuration,
+            ScenarioStepConfigurationKeys.Aggregation,
+            stepDefinition,
+            errors);
+        ValidateOptionalStringOption(
+            scenarioName,
+            stepName,
+            configuration,
+            ScenarioStepConfigurationKeys.Operator,
+            stepDefinition,
+            errors);
+        ValidateOptionalThreshold(scenarioName, stepName, configuration, errors);
+        ValidateOptionalInt(scenarioName, stepName, configuration, ScenarioStepConfigurationKeys.WindowMs, 1, int.MaxValue, errors);
+        ValidateOptionalString(scenarioName, stepName, configuration, ScenarioStepConfigurationKeys.EventType, errors);
+        ValidateOptionalString(scenarioName, stepName, configuration, ScenarioStepConfigurationKeys.TopicStartsWith, errors);
+        ValidateOptionalString(scenarioName, stepName, configuration, ScenarioStepConfigurationKeys.Status, errors);
+    }
+
+    private static void ValidateDelayStep(
+        string scenarioName,
+        string stepName,
+        IReadOnlyDictionary<string, JsonElement> configuration,
+        List<FluxMqApplicationDefinitionValidationError> errors)
+        => ValidateOptionalInt(scenarioName, stepName, configuration, ScenarioStepConfigurationKeys.DelayMs, 0, int.MaxValue, errors);
+
     private static string? ReadRequiredString(
         string scenarioName,
         string stepName,
@@ -591,6 +638,64 @@ internal static class FluxMqScenarioStepDefinitionValidator
         string key,
         List<FluxMqApplicationDefinitionValidationError> errors)
         => TryReadOptionalString(scenarioName, stepName, configuration, key, errors, out _);
+
+    private static void ValidateOptionalStringOption(
+        string scenarioName,
+        string stepName,
+        IReadOnlyDictionary<string, JsonElement> configuration,
+        string key,
+        ScenarioStepDefinitionDescriptor stepDefinition,
+        List<FluxMqApplicationDefinitionValidationError> errors)
+    {
+        if (!TryReadOptionalString(scenarioName, stepName, configuration, key, errors, out var value) ||
+            string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        var options = FieldOptionValues(stepDefinition, key);
+        if (!options.Contains(value, StringComparer.Ordinal))
+        {
+            errors.Add(InvalidScenarioConfiguration(
+                scenarioName,
+                stepName,
+                key,
+                $"must be one of: {string.Join(", ", options)}."));
+        }
+    }
+
+    private static void ValidateOptionalThreshold(
+        string scenarioName,
+        string stepName,
+        IReadOnlyDictionary<string, JsonElement> configuration,
+        List<FluxMqApplicationDefinitionValidationError> errors)
+    {
+        if (!configuration.TryGetValue(ScenarioStepConfigurationKeys.Threshold, out var element))
+        {
+            return;
+        }
+
+        if (element.ValueKind == JsonValueKind.Number && element.TryGetDouble(out _))
+        {
+            return;
+        }
+
+        if (element.ValueKind == JsonValueKind.String &&
+            double.TryParse(
+                element.GetString(),
+                System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out _))
+        {
+            return;
+        }
+
+        errors.Add(InvalidScenarioConfiguration(
+            scenarioName,
+            stepName,
+            ScenarioStepConfigurationKeys.Threshold,
+            "must be a number."));
+    }
 
     private static bool TryReadOptionalString(
         string scenarioName,

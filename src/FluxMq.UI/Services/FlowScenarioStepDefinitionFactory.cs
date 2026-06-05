@@ -43,6 +43,25 @@ public static class FlowScenarioStepDefinitionFactory
             return result;
         }
 
+        if (IsDelayStep(stepType) || IsCleanupStep(stepType))
+        {
+            AddInt(result, configuration, ScenarioStepCatalog.DelayMsKey, IsCleanupStep(stepType) ? 0 : 1000);
+            return result;
+        }
+
+        if (IsMetricThresholdStep(stepType))
+        {
+            AddString(result, configuration, ScenarioStepCatalog.MetricKey);
+            AddString(result, configuration, ScenarioStepCatalog.AggregationKey);
+            AddString(result, configuration, ScenarioStepCatalog.OperatorKey);
+            AddString(result, configuration, ScenarioStepCatalog.ThresholdKey);
+            AddInt(result, configuration, ScenarioStepCatalog.WindowMsKey, 5000);
+            AddString(result, configuration, ScenarioStepCatalog.EventTypeKey);
+            AddString(result, configuration, ScenarioStepCatalog.TopicStartsWithKey);
+            AddString(result, configuration, ScenarioStepCatalog.StatusKey);
+            return result;
+        }
+
         AddString(result, configuration, ScenarioStepCatalog.EventTypeKey);
         AddString(result, configuration, ScenarioStepCatalog.TopicStartsWithKey);
         AddString(result, configuration, ScenarioStepCatalog.TopicNotStartsWithKey);
@@ -70,6 +89,15 @@ public static class FlowScenarioStepDefinitionFactory
 
     private static bool IsMqttTriggerStep(string stepType)
         => ScenarioStepCatalog.Shared.Find(stepType)?.EditorKind == ScenarioStepEditorKind.MqttTrigger;
+
+    private static bool IsDelayStep(string stepType)
+        => ScenarioStepCatalog.Shared.Find(stepType)?.EditorKind == ScenarioStepEditorKind.Delay;
+
+    private static bool IsCleanupStep(string stepType)
+        => ScenarioStepCatalog.Shared.Find(stepType)?.EditorKind == ScenarioStepEditorKind.Cleanup;
+
+    private static bool IsMetricThresholdStep(string stepType)
+        => ScenarioStepCatalog.Shared.Find(stepType)?.EditorKind == ScenarioStepEditorKind.MetricThreshold;
 
     private static void AddString(JsonObject target, IReadOnlyDictionary<string, string> configuration, string key)
         => target[key] = configuration.TryGetValue(key, out var value) ? value ?? string.Empty : string.Empty;

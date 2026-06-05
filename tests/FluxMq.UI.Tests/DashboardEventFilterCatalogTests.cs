@@ -1,4 +1,5 @@
 using FluxFlow.Engine.Components;
+using FluxMq.UI.Components.Workspace;
 using FluxMq.UI.Models;
 using FluxMq.UI.Services;
 using Shouldly;
@@ -7,6 +8,116 @@ namespace FluxMq.UI.Tests;
 
 public sealed class DashboardEventFilterCatalogTests
 {
+    [Fact]
+    public void DashboardWidgetFormatting_UsesDedicatedWidgetChromeMetadata()
+    {
+        var eventWidget = new DashboardWidgetSnapshot(
+            "published",
+            DashboardWidgetCatalog.EventGaugeType,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["title"] = "Published traffic",
+                [DashboardEventFilterCatalog.EventTypeKey] = FluxMqEventTypes.MqttMessagePublished,
+                [DashboardEventFilterCatalog.TopicStartsWithKey] = "factory/",
+                [DashboardEventFilterCatalog.TopicNotStartsWithKey] = "$SYS/",
+                [DashboardEventFilterCatalog.StatusKey] = "published"
+            });
+        var topicWidget = new DashboardWidgetSnapshot(
+            "topics",
+            DashboardWidgetCatalog.TopicTreeType,
+            new Dictionary<string, string>(StringComparer.Ordinal));
+        var topicActivity = new DashboardWidgetSnapshot(
+            "topicActivity",
+            DashboardWidgetCatalog.TopicActivityType,
+            new Dictionary<string, string>(StringComparer.Ordinal));
+
+        DashboardWidgetFormatting.WidgetTitle(eventWidget).ShouldBe("Published traffic");
+        DashboardWidgetFormatting.WidgetClass(eventWidget).ShouldBe("event-gauge");
+        DashboardWidgetFormatting.WidgetSubtitle(eventWidget)
+            .ShouldBe("mqtt.message.published / topic factory/ / exclude $SYS/ / status published");
+        DashboardWidgetFormatting.WidgetTitle(topicActivity).ShouldBe("Topic activity");
+        DashboardWidgetFormatting.WidgetClass(topicActivity).ShouldBe("topic-activity");
+        DashboardWidgetFormatting.WidgetSubtitle(topicWidget).ShouldBe("Live topic map");
+    }
+
+    [Fact]
+    public void DashboardWidgetSettingsProfiles_ExposeDedicatedSettingsShape()
+    {
+        var gauge = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.EventGaugeType);
+        var table = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.EventTableType);
+        var tree = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.TopicTreeType);
+
+        gauge.IsEventWidget.ShouldBeTrue();
+        gauge.UsesVisualMetrics.ShouldBeTrue();
+        gauge.UsesGaugeStyle.ShouldBeTrue();
+        gauge.UsesChartType.ShouldBeFalse();
+        table.IsEventWidget.ShouldBeTrue();
+        table.UsesVisualMetrics.ShouldBeFalse();
+        tree.IsEventWidget.ShouldBeFalse();
+        tree.IsTopicTreeWidget.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void DashboardWidgetSettingsDraft_BuildsEventConfigurationForActiveFieldsOnly()
+    {
+        var catalog = new DashboardEventFilterCatalog();
+        var widget = new DashboardWidgetSnapshot(
+            "gauge",
+            DashboardWidgetCatalog.EventGaugeType,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["title"] = "  ",
+                [DashboardEventFilterCatalog.EventTypeKey] = FluxMqEventTypes.MqttMessageReceived,
+                [DashboardEventFilterCatalog.TopicStartsWithKey] = "old/",
+                [DashboardEventFilterCatalog.SubjectStartsWithKey] = "stale/",
+                [DashboardEventFilterCatalog.StatusKey] = "received",
+                [DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricCurrentRate,
+                [DashboardWidgetCatalog.DisplayMetricsKey] = "messages,currentRate",
+                [DashboardWidgetCatalog.MetricCardColumnsKey] = "3",
+                [DashboardWidgetCatalog.GaugeStyleKey] = DashboardWidgetCatalog.GaugeStyleMeter
+            });
+
+        var draft = DashboardWidgetSettingsDraft.Create(widget, catalog);
+        draft.SetFilterValue(DashboardEventFilterCatalog.TopicStartsWithKey, "factory/");
+        draft.SetFilterValue(DashboardEventFilterCatalog.AttributeFilterKey("qos"), "1");
+        draft.SetFilterValue(DashboardEventFilterCatalog.AttributeFilterKey("retain"), "false");
+
+        var configuration = draft.BuildConfiguration();
+
+        configuration["title"].ShouldBe("Event gauge");
+        configuration[DashboardEventFilterCatalog.EventTypeKey].ShouldBe(FluxMqEventTypes.MqttMessageReceived);
+        configuration[DashboardEventFilterCatalog.TopicStartsWithKey].ShouldBe("factory/");
+        configuration[DashboardEventFilterCatalog.SubjectStartsWithKey].ShouldBe(string.Empty);
+        configuration[DashboardEventFilterCatalog.AttributeFilterKey("qos")].ShouldBe("1");
+        configuration[DashboardEventFilterCatalog.AttributeFilterKey("retain")].ShouldBe("false");
+        configuration[DashboardWidgetCatalog.PrimaryMetricKey].ShouldBe(DashboardWidgetCatalog.MetricCurrentRate);
+        configuration[DashboardWidgetCatalog.GaugeStyleKey].ShouldBe(DashboardWidgetCatalog.GaugeStyleMeter);
+    }
+
+    [Fact]
+    public void DashboardWidgetSettingsDraft_BuildsTopicTreeConfiguration()
+    {
+        var draft = DashboardWidgetSettingsDraft.Create(
+            new DashboardWidgetSnapshot(
+                "topics",
+                DashboardWidgetCatalog.TopicTreeType,
+                new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["title"] = "Topics",
+                    [DashboardWidgetCatalog.ExcludeSystemTopicsKey] = "false"
+                }),
+            new DashboardEventFilterCatalog());
+
+        draft.Title = "Broker topics";
+        draft.ExcludeSystemTopics = true;
+
+        var configuration = draft.BuildConfiguration();
+
+        configuration.Keys.ShouldBe(["title", DashboardWidgetCatalog.ExcludeSystemTopicsKey], ignoreOrder: true);
+        configuration["title"].ShouldBe("Broker topics");
+        configuration[DashboardWidgetCatalog.ExcludeSystemTopicsKey].ShouldBe("true");
+    }
+
     [Fact]
     public void Find_ReturnsEventSpecificFieldDescriptors()
     {

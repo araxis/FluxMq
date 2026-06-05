@@ -8,6 +8,7 @@ public sealed record DashboardEventSnapshot(
     int RecentCount,
     TimeSpan RateWindow,
     double EventsPerSecond,
+    IReadOnlyList<FlowEvent> Events,
     IReadOnlyList<int> BucketCounts,
     IReadOnlyList<DashboardTopicMetric> TopicCounts,
     long TotalPayloadBytes,

@@ -1,60 +1,50 @@
 # Sample App
 
-The sample app is a complete FluxMQ workspace for an operations monitor. It shows the current app shape without relying on a personal project file.
+The sample app is a complete FluxMQ workspace for the dashboard and test-studio V2 foundation. It shows the current app shape without relying on a personal project file.
 
 <div class="sample-actions">
-  <a class="sample-action primary" href="../samples/operations-monitor.json">Download operations-monitor.json</a>
+  <a class="sample-action primary" href="../samples/operations-dashboard-test-studio.json">Download operations-dashboard-test-studio.json</a>
 </div>
 
 ![Operations monitor workspace](/screenshots/sample-workspace.png)
 
 ## What It Contains
 
-- App resources: `local-broker` on `localhost:1883` and `edge-broker` on `localhost:1884`.
-- Pipeline `order-intake`: live MQTT trigger, payload inspector, schema validator, conditional router, mapper, publisher, metrics, and logger.
-- Pipeline `edge-replay`: generated source traffic, filter, mapper, publisher, and metrics.
-- Dashboard `ops-overview`: event counters, latest payload views, and event-rate widgets.
-- Test `priority-order-roundtrip`: publish a priority order and expect receive/publish runtime events.
+- Pipeline `operationsMonitor`: generated MQTT-style traffic, payload inspection, and metrics.
+- Dashboard `operations`: V2 layout, reusable metrics, widget bindings, and MQTT operations widgets.
+- Test `operationsRegression`: phase-based scenario lanes for setup, stimulus, observe, assert, and cleanup.
+- Runner metadata: local run profile, run-history references, and report snapshot placeholders.
 
 ## Open It
 
 Use the desktop app's Open file action and select:
 
 ```text
-docs-site/public/samples/operations-monitor.json
+docs-site/public/samples/operations-dashboard-test-studio.json
 ```
 
 When launching from a built desktop executable, the same file can be opened directly:
 
 ```sh
-FluxMq.UI.exe --open docs-site/public/samples/operations-monitor.json
+FluxMq.UI.exe --open docs-site/public/samples/operations-dashboard-test-studio.json
 ```
 
 ## Try The Main Flow
 
 1. Open the sample app.
-2. Connect `local-broker`.
-3. Run the app.
-4. Publish this payload to `factory/orders/line-a/priority` with QoS `1`:
-
-```json
-{
-  "orderId": "A-2048",
-  "priority": "high",
-  "status": "blocked",
-  "line": "line-a"
-}
-```
-
-The `order-intake` pipeline receives the message, validates the payload, routes the high-priority order, maps it into an alert publish request, and publishes to `ops/alerts/factory/orders/line-a/priority`.
+2. Run the app.
+3. Open the `operations` dashboard in Design mode and inspect the grid, metrics, bindings, and widget settings.
+4. Switch the dashboard to Live mode and watch the generated traffic drive KPI, status, trend, topic, payload-size, and QoS/retain widgets.
+5. Open the test studio and run `operationsRegression` from the Runner Console.
 
 ![Operations monitor flow canvas](/screenshots/sample-flow-canvas.png)
 
 ## What To Look At
 
-- The pipeline canvas shows message activity on source, mapper, publisher, metrics, and logger nodes.
-- The dashboard counts only matching business topics and excludes `$SYS`.
-- The Logs page keeps scoped runtime entries separate from the live publish tools.
+- The pipeline canvas shows generated source, payload inspection, and metrics activity.
+- The dashboard keeps structured grid layout as the source of truth.
+- Metric definitions can be reused across multiple widgets.
+- The runner console keeps execution timeline, live events, logs, payload detail, and report output separate from authoring.
 - The Topics page gives the topic tree room for inspection instead of hiding it in a narrow side panel.
 
 ## Component Search

@@ -3,10 +3,16 @@
 
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true })">
     <TitleContent>
-        <MudText Typo="Typo.h6">Widget settings</MudText>
+        <div class="dashboard-widget-editor-title">
+            <MudIcon Icon="@Profile.Icon" Size="Size.Small" />
+            <div>
+                <MudText Typo="Typo.h6">@Profile.Title settings</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@Widget.Type</MudText>
+            </div>
+        </div>
     </TitleContent>
     <DialogContent>
-        @if (IsEventWidget)
+        @if (Profile.ShowsEventTabs)
         {
             <MudTabs Elevation="0"
                      Rounded="true"
@@ -16,12 +22,12 @@
                     <MudStack Spacing="3" Class="dashboard-widget-editor-tab">
                         @TitleField
 
-                        @if (IsEventGauge)
+                        @if (Profile.UsesGaugeStyle)
                         {
                             <div class="dashboard-widget-editor-section">
                                 <MudText Typo="Typo.caption" Color="Color.Secondary">Gauge style</MudText>
                                 <MudToggleGroup T="string"
-                                                @bind-Value="_gaugeStyle"
+                                                @bind-Value="_draft.GaugeStyle"
                                                 SelectionMode="SelectionMode.SingleSelection"
                                                 Size="Size.Small"
                                                 Color="Color.Primary"
@@ -34,12 +40,12 @@
                             </div>
                         }
 
-                        @if (IsEventChart)
+                        @if (Profile.UsesChartType)
                         {
                             <div class="dashboard-widget-editor-section">
                                 <MudText Typo="Typo.caption" Color="Color.Secondary">Chart type</MudText>
                                 <MudToggleGroup T="string"
-                                                @bind-Value="_chartType"
+                                                @bind-Value="_draft.ChartType"
                                                 SelectionMode="SelectionMode.SingleSelection"
                                                 Size="Size.Small"
                                                 Color="Color.Primary"
@@ -53,13 +59,13 @@
                             </div>
                         }
 
-                        @if (IsVisualEventWidget)
+                        @if (Profile.UsesVisualMetrics)
                         {
                             <MudGrid Spacing="2">
                                 <MudItem xs="12" md="6">
                                     <MudSelect T="string"
                                                Label="Primary metric"
-                                               @bind-Value="_primaryMetric"
+                                               @bind-Value="_draft.PrimaryMetric"
                                                Variant="Variant.Outlined"
                                                Margin="Margin.Dense"
                                                Dense="true">
@@ -72,7 +78,7 @@
                                 <MudItem xs="12" md="6">
                                     <MudNumericField T="int"
                                                      Label="Card columns"
-                                                     @bind-Value="_metricCardColumns"
+                                                     @bind-Value="_draft.MetricCardColumns"
                                                      Min="@DashboardWidgetCatalog.MinMetricCardColumns"
                                                      Max="@DashboardWidgetCatalog.MaxMetricCardColumns"
                                                      Step="1"
@@ -87,12 +93,12 @@
                                 <div class="dashboard-widget-editor-metric-options">
                                     @foreach (var option in DashboardWidgetCatalog.MetricOptions)
                                     {
-                                        var selected = IsDisplayMetricSelected(option.Id);
-                                        var disabled = selected && _displayMetrics.Count == 1;
+                                        var selected = _draft.IsDisplayMetricSelected(option.Id);
+                                        var disabled = selected && _draft.DisplayMetrics.Count == 1;
 
                                         <MudCheckBox T="bool"
                                                      Value="@selected"
-                                                     ValueChanged="@((bool value) => ToggleDisplayMetric(option.Id, value))"
+                                                     ValueChanged="@((bool value) => _draft.ToggleDisplayMetric(option.Id, value))"
                                                      Disabled="@disabled"
                                                      Dense="true"
                                                      Label="@option.Label" />
@@ -108,7 +114,7 @@
                         <MudItem xs="12" md="6">
                             <MudSelect T="string"
                                        Label="Event type"
-                                       Value="@_eventType"
+                                       Value="@_draft.EventType"
                                        ValueChanged="@SetEventType"
                                        Variant="Variant.Outlined"
                                        Margin="Margin.Dense"
@@ -122,11 +128,11 @@
                         <MudItem xs="12" md="6">
                             <MudSelect T="string"
                                        Label="Status"
-                                       @bind-Value="_status"
+                                       @bind-Value="_draft.Status"
                                        Variant="Variant.Outlined"
                                        Margin="Margin.Dense"
                                        Dense="true">
-                                @foreach (var option in CurrentEventType.StatusOptions)
+                                @foreach (var option in _draft.CurrentEventType.StatusOptions)
                                 {
                                     <MudSelectItem T="string" Value="@option.Value">@option.Label</MudSelectItem>
                                 }
@@ -137,7 +143,7 @@
 
                 <MudTabPanel Text="Filters" Icon="@Icons.Material.Filled.FilterAlt">
                     <MudGrid Spacing="2" Class="dashboard-widget-editor-tab">
-                        @if (CurrentEventType.Fields.Count == 0)
+                        @if (_draft.CurrentEventType.Fields.Count == 0)
                         {
                             <MudItem xs="12">
                                 <div class="dashboard-widget-editor-empty">No filters</div>
@@ -145,7 +151,7 @@
                         }
                         else
                         {
-                            @foreach (var field in CurrentEventType.Fields)
+                            @foreach (var field in _draft.CurrentEventType.Fields)
                             {
                                 var currentField = field;
                                 <MudItem xs="12" md="@FilterFieldColumns(currentField)">
@@ -157,12 +163,12 @@
                 </MudTabPanel>
             </MudTabs>
         }
-        else if (IsTopicTreeWidget)
+        else if (Profile.IsTopicTreeWidget)
         {
             <MudStack Spacing="3" Class="dashboard-widget-editor-tab">
                 @TitleField
                 <MudSwitch T="bool"
-                           @bind-Value="_excludeSystemTopics"
+                           @bind-Value="_draft.ExcludeSystemTopics"
                            Color="Color.Primary"
                            Label="Hide system topics" />
             </MudStack>
@@ -202,114 +208,31 @@
     [Parameter, EditorRequired]
     public DashboardWidgetSnapshot Widget { get; set; } = null!;
 
-    private readonly Dictionary<string, string> _filterValues = new(StringComparer.Ordinal);
-    private string _title = string.Empty;
-    private string _eventType = AnyValue;
-    private string _status = AnyValue;
-    private bool _excludeSystemTopics = true;
-    private string _primaryMetric = DashboardWidgetCatalog.MetricRecent;
-    private string _gaugeStyle = DashboardWidgetCatalog.GaugeStyleRing;
-    private string _chartType = DashboardWidgetCatalog.ChartTypeBars;
-    private int _metricCardColumns = DashboardWidgetCatalog.DefaultMetricCardColumns;
-    private List<string> _displayMetrics = [.. DashboardWidgetCatalog.NormalizeDisplayMetrics((string?)null)];
+    private DashboardWidgetSettingsDraft _draft = null!;
+
+    private DashboardWidgetSettingsProfile Profile => _draft.Profile;
 
     private RenderFragment TitleField => @<MudTextField T="string"
                                                         Label="Title"
-                                                        @bind-Value="_title"
+                                                        @bind-Value="_draft.Title"
                                                         Variant="Variant.Outlined"
                                                         Margin="Margin.Dense" />;
 
     protected override void OnInitialized()
     {
-        _title = Widget.ReadString("title") ?? DefaultTitle(Widget.Type);
-        _excludeSystemTopics = !string.Equals(
-            Widget.ReadString(DashboardWidgetCatalog.ExcludeSystemTopicsKey),
-            "false",
-            StringComparison.OrdinalIgnoreCase);
-        _eventType = Widget.ReadString(DashboardEventFilterCatalog.EventTypeKey) ?? AnyValue;
-        _primaryMetric = DashboardWidgetCatalog.NormalizePrimaryMetric(Widget.ReadString(DashboardWidgetCatalog.PrimaryMetricKey));
-        _gaugeStyle = DashboardWidgetCatalog.NormalizeGaugeStyle(Widget.ReadString(DashboardWidgetCatalog.GaugeStyleKey));
-        _chartType = DashboardWidgetCatalog.NormalizeChartType(Widget.ReadString(DashboardWidgetCatalog.ChartTypeKey));
-        _metricCardColumns = DashboardWidgetCatalog.NormalizeMetricCardColumns(Widget.ReadString(DashboardWidgetCatalog.MetricCardColumnsKey));
-        _displayMetrics = [.. DashboardWidgetCatalog.NormalizeDisplayMetrics(Widget.ReadString(DashboardWidgetCatalog.DisplayMetricsKey))];
-        foreach (var key in EventFilters.FilterKeys)
-        {
-            _filterValues[key] = Widget.ReadString(key) ?? string.Empty;
-        }
-
-        _status = Widget.ReadString(DashboardEventFilterCatalog.StatusKey) ?? AnyValue;
-        TrimFiltersToEventType();
-        ResetStatusWhenUnsupported();
+        _draft = DashboardWidgetSettingsDraft.Create(Widget, EventFilters);
     }
-
-    private DashboardEventTypeDescriptor CurrentEventType => EventFilters.Find(_eventType);
-
-    private bool IsEventWidget => DashboardWidgetCatalog.IsEventWidget(Widget.Type);
-
-    private bool IsVisualEventWidget => DashboardWidgetCatalog.IsVisualEventWidget(Widget.Type);
-
-    private bool IsEventGauge => string.Equals(Widget.Type, DashboardWidgetCatalog.EventGaugeType, StringComparison.Ordinal);
-
-    private bool IsEventChart => string.Equals(Widget.Type, DashboardWidgetCatalog.EventChartType, StringComparison.Ordinal);
-
-    private bool IsTopicTreeWidget => DashboardWidgetCatalog.IsTopicTreeWidget(Widget.Type);
 
     private void SetEventType(string? value)
     {
-        _eventType = Normalize(value);
-        TrimFiltersToEventType();
-        ResetStatusWhenUnsupported();
+        _draft.SetEventType(value);
     }
 
     private void Cancel() => MudDialog.Cancel();
 
     private void Submit()
     {
-        var title = string.IsNullOrWhiteSpace(_title)
-            ? DefaultTitle(Widget.Type)
-            : _title.Trim();
-        if (IsTopicTreeWidget)
-        {
-            MudDialog.Close(DialogResult.Ok(new DashboardWidgetUpdate(
-                new Dictionary<string, string>(StringComparer.Ordinal)
-                {
-                    ["title"] = title,
-                    [DashboardWidgetCatalog.ExcludeSystemTopicsKey] = _excludeSystemTopics ? "true" : "false"
-                })));
-            return;
-        }
-
-        if (!IsEventWidget)
-        {
-            MudDialog.Close(DialogResult.Ok(new DashboardWidgetUpdate(
-                new Dictionary<string, string>(StringComparer.Ordinal)
-                {
-                    ["title"] = title
-                })));
-            return;
-        }
-
-        var eventType = CurrentEventType;
-        var status = eventType.StatusOptions.Any(option => string.Equals(option.Value, _status, StringComparison.Ordinal))
-            ? Normalize(_status)
-            : string.Empty;
-        var configuration = new Dictionary<string, string>(StringComparer.Ordinal)
-        {
-            ["title"] = title,
-            [DashboardEventFilterCatalog.EventTypeKey] = Normalize(_eventType),
-            [DashboardEventFilterCatalog.StatusKey] = status
-        };
-
-        var activeFieldKeys = eventType.Fields.Select(static field => field.Key).ToHashSet(StringComparer.Ordinal);
-        foreach (var key in EventFilters.FilterKeys)
-        {
-            configuration[key] = activeFieldKeys.Contains(key)
-                ? Normalize(GetFilterValue(key))
-                : string.Empty;
-        }
-
-        ApplyVisualConfiguration(configuration);
-        MudDialog.Close(DialogResult.Ok(new DashboardWidgetUpdate(configuration)));
+        MudDialog.Close(DialogResult.Ok(new DashboardWidgetUpdate(_draft.BuildConfiguration())));
     }
 
     private RenderFragment RenderFilterField(DashboardEventFilterFieldDescriptor field)
@@ -319,8 +242,8 @@
             return @<MudStack Spacing="1">
                 <MudText Typo="Typo.caption" Color="Color.Secondary">@field.Label</MudText>
                 <MudToggleGroup T="string"
-                                Value="@GetFilterValue(field.Key)"
-                                ValueChanged="@((string value) => SetFilterValue(field.Key, value))"
+                                Value="@_draft.GetFilterValue(field.Key)"
+                                ValueChanged="@((string value) => _draft.SetFilterValue(field.Key, value))"
                                 SelectionMode="SelectionMode.SingleSelection"
                                 Size="Size.Small"
                                 Color="Color.Primary"
@@ -342,8 +265,8 @@
             return @<MudStack Spacing="1">
                 <MudText Typo="Typo.caption" Color="Color.Secondary">@field.Label</MudText>
                 <MudToggleGroup T="string"
-                                Value="@GetFilterValue(field.Key)"
-                                ValueChanged="@((string value) => SetFilterValue(field.Key, value))"
+                                Value="@_draft.GetFilterValue(field.Key)"
+                                ValueChanged="@((string value) => _draft.SetFilterValue(field.Key, value))"
                                 SelectionMode="SelectionMode.SingleSelection"
                                 Size="Size.Small"
                                 Color="Color.Primary"
@@ -362,67 +285,13 @@
 
         return @<MudTextField T="string"
                               Label="@field.Label"
-                              Value="@GetFilterValue(field.Key)"
-                              ValueChanged="@((string? value) => SetFilterValue(field.Key, value))"
+                              Value="@_draft.GetFilterValue(field.Key)"
+                              ValueChanged="@((string? value) => _draft.SetFilterValue(field.Key, value))"
                               Placeholder="@field.Placeholder"
                               HelperText="@field.HelperText"
                               Variant="Variant.Outlined"
                               Margin="Margin.Dense" />;
     }
-
-    private void ApplyVisualConfiguration(Dictionary<string, string> configuration)
-    {
-        if (!IsVisualEventWidget)
-        {
-            return;
-        }
-
-        configuration[DashboardWidgetCatalog.PrimaryMetricKey] =
-            DashboardWidgetCatalog.NormalizePrimaryMetric(_primaryMetric);
-        configuration[DashboardWidgetCatalog.DisplayMetricsKey] =
-            DashboardWidgetCatalog.BuildDisplayMetrics(_displayMetrics);
-        configuration[DashboardWidgetCatalog.MetricCardColumnsKey] =
-            DashboardWidgetCatalog.NormalizeMetricCardColumns(_metricCardColumns).ToString(System.Globalization.CultureInfo.InvariantCulture);
-
-        if (IsEventGauge)
-        {
-            configuration[DashboardWidgetCatalog.GaugeStyleKey] =
-                DashboardWidgetCatalog.NormalizeGaugeStyle(_gaugeStyle);
-        }
-
-        if (IsEventChart)
-        {
-            configuration[DashboardWidgetCatalog.ChartTypeKey] =
-                DashboardWidgetCatalog.NormalizeChartType(_chartType);
-        }
-    }
-
-    private bool IsDisplayMetricSelected(string id)
-        => _displayMetrics.Contains(id, StringComparer.Ordinal);
-
-    private void ToggleDisplayMetric(string id, bool selected)
-    {
-        if (selected)
-        {
-            if (!IsDisplayMetricSelected(id))
-            {
-                _displayMetrics.Add(id);
-            }
-
-            return;
-        }
-
-        if (_displayMetrics.Count > 1)
-        {
-            _displayMetrics.RemoveAll(metric => string.Equals(metric, id, StringComparison.Ordinal));
-        }
-    }
-
-    private string GetFilterValue(string key)
-        => _filterValues.TryGetValue(key, out var value) ? value : string.Empty;
-
-    private void SetFilterValue(string key, string? value)
-        => _filterValues[key] = Normalize(value);
 
     private static int FilterFieldColumns(DashboardEventFilterFieldDescriptor field)
         => IsQosFilter(field) || IsRetainFilter(field) ? 6 : 12;
@@ -432,38 +301,6 @@
 
     private static bool IsRetainFilter(DashboardEventFilterFieldDescriptor field)
         => string.Equals(field.Key, ScenarioStepCatalog.RetainAttributeKey, StringComparison.Ordinal);
-
-    private void TrimFiltersToEventType()
-    {
-        var activeFieldKeys = CurrentEventType.Fields.Select(static field => field.Key).ToHashSet(StringComparer.Ordinal);
-        foreach (var key in EventFilters.FilterKeys.Where(key => !activeFieldKeys.Contains(key)))
-        {
-            _filterValues[key] = string.Empty;
-        }
-    }
-
-    private void ResetStatusWhenUnsupported()
-    {
-        if (!CurrentEventType.StatusOptions.Any(option => string.Equals(option.Value, _status, StringComparison.Ordinal)))
-        {
-            _status = AnyValue;
-        }
-    }
-
-    private static string Normalize(string? value)
-        => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
-
-    private static string DefaultTitle(string type)
-        => type switch
-        {
-            DashboardWidgetCatalog.EventCounterType => "Events",
-            DashboardWidgetCatalog.LatestEventType => "Latest event",
-            DashboardWidgetCatalog.EventRateType => "Event rate",
-            DashboardWidgetCatalog.EventGaugeType => "Event gauge",
-            DashboardWidgetCatalog.EventChartType => "Event chart",
-            DashboardWidgetCatalog.TopicTreeType => "Topic tree",
-            _ => "Widget"
-        };
 
     public sealed record DashboardWidgetUpdate(IReadOnlyDictionary<string, string> Configuration);
 

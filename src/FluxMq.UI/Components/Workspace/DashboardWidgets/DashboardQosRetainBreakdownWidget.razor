@@ -1,0 +1,23 @@
+@namespace FluxMq.UI.Components.Workspace
+@inject IFluxChartAdapter Charts
+
+@{
+    var qos = Charts.CreateQosSeries(Snapshot);
+    var retain = Charts.CreateRetainSeries(Snapshot);
+}
+
+<div class="dashboard-breakdown-grid">
+    <section>
+        <div class="dashboard-breakdown-title">QoS</div>
+        <DashboardSeriesBars Series="@qos" />
+    </section>
+    <section>
+        <div class="dashboard-breakdown-title">Retain</div>
+        <DashboardSeriesBars Series="@retain" />
+    </section>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardEventSnapshot Snapshot { get; set; } = null!;
+}

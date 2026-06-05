@@ -1,0 +1,253 @@
+@using FluxMq.Scenarios
+@using FluxMq.UI.Models
+@using FluxMq.UI.Services
+@using System.Globalization
+@implements IDisposable
+
+<div class="test-runner-console">
+    @if (Scenario is null)
+    {
+        <div class="test-runner-empty">
+            <MudIcon Icon="@Icons.Material.Filled.PlayCircle" Class="test-runner-empty-icon" />
+            <span>No test selected</span>
+        </div>
+    }
+    else
+    {
+        <div class="test-runner-header">
+            <div class="test-runner-title-block">
+                <MudIcon Icon="@Icons.Material.Filled.PlayCircle" Size="Size.Small" />
+                <div>
+                    <div class="test-runner-title">@Scenario.Name</div>
+                    <div class="test-runner-meta">@Scenario.StepCount steps / @Scenario.Phases.Count phases</div>
+                </div>
+            </div>
+            <div class="test-runner-actions">
+                @if (Project.LastScenarioRunResult is { } result)
+                {
+                    <MudChip T="string"
+                             Text="@result.Status.ToString()"
+                             Icon="@RunStatusIcon(result.Status)"
+                             Color="@RunStatusColor(result.Status)"
+                             Variant="Variant.Outlined"
+                             Size="Size.Small" />
+                }
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.PlayArrow"
+                           Disabled="@Project.IsScenarioRunning"
+                           OnClick="@RunScenarioAsync">
+                    @RunButtonText
+                </MudButton>
+            </div>
+        </div>
+
+        <div class="test-runner-grid">
+            <section class="test-runner-panel preflight">
+                <div class="test-runner-panel-title">
+                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
+                    <span>Preflight</span>
+                </div>
+                <div class="test-runner-checks">
+                    <div class="@CheckClass(Scenario.StepCount > 0)">
+                        <MudIcon Icon="@CheckIcon(Scenario.StepCount > 0)" Size="Size.Small" />
+                        <span>@(Scenario.StepCount > 0 ? "Scenario has executable steps" : "Scenario has no steps")</span>
+                    </div>
+                    <div class="@CheckClass(Project.State == RuntimeWorkspaceState.Running)">
+                        <MudIcon Icon="@CheckIcon(Project.State == RuntimeWorkspaceState.Running)" Size="Size.Small" />
+                        <span>@(Project.State == RuntimeWorkspaceState.Running ? "Runtime event stream attached" : "Will run with isolated scenario events")</span>
+                    </div>
+                    <div class="@CheckClass(!Project.IsScenarioRunning)">
+                        <MudIcon Icon="@CheckIcon(!Project.IsScenarioRunning)" Size="Size.Small" />
+                        <span>@(Project.IsScenarioRunning ? "Run in progress" : "Runner is idle")</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="test-runner-panel timeline">
+                <div class="test-runner-panel-title">
+                    <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" />
+                    <span>Timeline</span>
+                </div>
+                <div class="test-runner-timeline">
+                    @foreach (var phase in Scenario.Phases)
+                    {
+                        <div class="test-runner-phase" @key="phase.Name">
+                            <div class="test-runner-phase-title">
+                                <MudIcon Icon="@PhaseIcon(phase.Kind)" Size="Size.Small" />
+                                <span>@phase.Title</span>
+                            </div>
+                            <div class="test-runner-phase-steps">
+                                @if (phase.Steps.Count == 0)
+                                {
+                                    <span class="test-runner-muted">No steps</span>
+                                }
+                                else
+                                {
+                                    @foreach (var step in phase.Steps)
+                                    {
+                                        var stepResult = FindStepResult(step);
+                                        <div class="@TimelineStepClass(stepResult)" @key="step.Name">
+                                            <span>@step.Name</span>
+                                            <strong>@(stepResult?.Status.ToString() ?? "Ready")</strong>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <section class="test-runner-panel events">
+                <div class="test-runner-panel-title">
+                    <MudIcon Icon="@Icons.Material.Filled.Bolt" Size="Size.Small" />
+                    <span>Live Events</span>
+                </div>
+                <div class="test-runner-stream">
+                    @foreach (var flowEvent in Project.RuntimeEvents.Reverse().Take(12))
+                    {
+                        <div class="test-runner-stream-row">
+                            <span>@flowEvent.Timestamp.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture)</span>
+                            <strong>@Shorten(flowEvent.Type)</strong>
+                            <em>@EventTarget(flowEvent)</em>
+                        </div>
+                    }
+                    @if (Project.RuntimeEvents.Count == 0)
+                    {
+                        <div class="test-runner-muted centered">No live events</div>
+                    }
+                </div>
+            </section>
+
+            <section class="test-runner-panel diagnosis">
+                <div class="test-runner-panel-title">
+                    <MudIcon Icon="@Icons.Material.Filled.Troubleshoot" Size="Size.Small" />
+                    <span>Diagnosis</span>
+                </div>
+                @if (Project.LastScenarioRunResult is { } latest)
+                {
+                    <div class="test-runner-diagnosis-card">
+                        <strong>@latest.Status</strong>
+                        <span>@FirstIssueText(latest)</span>
+                        <small>@FormatDuration(latest.FinishedAt - latest.StartedAt)</small>
+                    </div>
+                }
+                else
+                {
+                    <div class="test-runner-muted centered">No run selected</div>
+                }
+            </section>
+
+            <section class="test-runner-panel logs">
+                <div class="test-runner-panel-title">
+                    <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Small" />
+                    <span>Logs</span>
+                </div>
+                <div class="test-runner-stream">
+                    @foreach (var log in Project.Logs.Where(IsRunnerLog).Reverse().Take(10))
+                    {
+                        <div class="test-runner-stream-row">
+                            <span>@log.Timestamp.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture)</span>
+                            <strong>@log.Code</strong>
+                            <em>@log.Message</em>
+                        </div>
+                    }
+                    @if (!Project.Logs.Any(IsRunnerLog))
+                    {
+                        <div class="test-runner-muted centered">No runner logs</div>
+                    }
+                </div>
+            </section>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public FlowWorkspaceService Project { get; set; } = null!;
+
+    private TestScenarioSnapshot? Scenario => Project.GetActiveTestScenario();
+
+    private string RunButtonText => Project.IsScenarioRunning ? "Running" : "Run scenario";
+
+    protected override void OnInitialized()
+        => Project.Changed += OnProjectChanged;
+
+    public void Dispose()
+        => Project.Changed -= OnProjectChanged;
+
+    private void OnProjectChanged(object? sender, EventArgs args)
+        => _ = InvokeAsync(StateHasChanged);
+
+    private async Task RunScenarioAsync()
+        => await Project.RunActiveTestScenarioAsync();
+
+    private ScenarioStepResult? FindStepResult(ScenarioStepSnapshot step)
+        => Project.LastScenarioRunResult?.Steps.FirstOrDefault(result =>
+            string.Equals(result.Name, step.Name, StringComparison.Ordinal));
+
+    private static string TimelineStepClass(ScenarioStepResult? result)
+        => result is null
+            ? "test-runner-timeline-step"
+            : $"test-runner-timeline-step {result.Status.ToString().ToLowerInvariant()}";
+
+    private static string CheckClass(bool passed)
+        => passed ? "test-runner-check passed" : "test-runner-check warning";
+
+    private static string CheckIcon(bool passed)
+        => passed ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Info;
+
+    private static string PhaseIcon(string kind)
+        => kind switch
+        {
+            ScenarioPhaseKinds.Setup => Icons.Material.Filled.BuildCircle,
+            ScenarioPhaseKinds.Stimulus => Icons.Material.Filled.PlayCircle,
+            ScenarioPhaseKinds.Observe => Icons.Material.Filled.Visibility,
+            ScenarioPhaseKinds.Assert => Icons.Material.Filled.Rule,
+            ScenarioPhaseKinds.Cleanup => Icons.Material.Filled.CleaningServices,
+            _ => Icons.Material.Filled.ViewTimeline
+        };
+
+    private static string RunStatusIcon(ScenarioRunStatus status)
+        => status switch
+        {
+            ScenarioRunStatus.Passed => Icons.Material.Filled.CheckCircle,
+            ScenarioRunStatus.Failed => Icons.Material.Filled.Error,
+            ScenarioRunStatus.Canceled => Icons.Material.Filled.Cancel,
+            _ => Icons.Material.Filled.History
+        };
+
+    private static Color RunStatusColor(ScenarioRunStatus status)
+        => status switch
+        {
+            ScenarioRunStatus.Passed => Color.Success,
+            ScenarioRunStatus.Failed => Color.Error,
+            ScenarioRunStatus.Canceled => Color.Warning,
+            _ => Color.Default
+        };
+
+    private static bool IsRunnerLog(WorkspaceLogEntry log)
+        => string.Equals(log.Scope, WorkspaceLogScopes.TestRunner, StringComparison.Ordinal);
+
+    private static string EventTarget(FluxFlow.Engine.Components.FlowEvent flowEvent)
+        => !string.IsNullOrWhiteSpace(flowEvent.Channel)
+            ? flowEvent.Channel
+            : !string.IsNullOrWhiteSpace(flowEvent.Subject)
+                ? flowEvent.Subject
+                : flowEvent.Status ?? string.Empty;
+
+    private static string FirstIssueText(ScenarioRunResult result)
+        => result.Steps.FirstOrDefault(step => !step.IsSuccess) is { } issue
+            ? $"{issue.Name}: {issue.Message ?? issue.Status.ToString()}"
+            : "No issues found.";
+
+    private static string FormatDuration(TimeSpan duration)
+        => duration.TotalSeconds < 1
+            ? $"{duration.TotalMilliseconds:0} ms"
+            : $"{duration.TotalSeconds:0.##} s";
+
+    private static string Shorten(string value)
+        => value.Length <= 28 ? value : value[..25] + "...";
+}

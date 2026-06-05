@@ -1,6 +1,7 @@
 <Project>
   <PropertyGroup>
     <FluxFlowEngineVersion>1.0.0</FluxFlowEngineVersion>
+    <FluxFlowComponentsDesignerVersion>1.0.0</FluxFlowComponentsDesignerVersion>
     <FluxFlowComponentsAssertionsVersion>0.2.0-alpha.1</FluxFlowComponentsAssertionsVersion>
     <FluxFlowComponentsControlVersion>0.3.0-alpha.1</FluxFlowComponentsControlVersion>
     <FluxFlowComponentsFileSystemVersion>0.5.0-alpha.1</FluxFlowComponentsFileSystemVersion>
@@ -20,5 +21,8 @@
     <FluxFlowComponentsStorageFileSystemVersion>0.2.0-alpha.1</FluxFlowComponentsStorageFileSystemVersion>
     <FluxFlowComponentsTimersVersion>0.5.0-alpha.1</FluxFlowComponentsTimersVersion>
     <FluxFlowComponentsValidationVersion>0.2.0-alpha.1</FluxFlowComponentsValidationVersion>
+    <FluxFlowSourceRoot Condition="'$(FluxFlowSourceRoot)' == ''">$(MSBuildThisFileDirectory)..\FluxFlow\</FluxFlowSourceRoot>
+    <UseFluxFlowSourceReferences Condition="'$(UseFluxFlowSourceReferences)' == '' and Exists('$(FluxFlowSourceRoot)src\FluxFlow.Components.Designer\FluxFlow.Components.Designer.csproj')">true</UseFluxFlowSourceReferences>
+    <UseFluxFlowSourceReferences Condition="'$(UseFluxFlowSourceReferences)' == ''">false</UseFluxFlowSourceReferences>
   </PropertyGroup>
 </Project>

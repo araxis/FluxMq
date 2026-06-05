@@ -327,84 +327,6 @@ public static class FlowComponentMetadataRegistry
             defaultInputLink: FlowComponentDefaultInputLink.StateReducerMapper,
             createDefaultConfiguration: _ => CreateStateReducerConfiguration()),
         Component(
-            "json.parse",
-            "JSON Parse",
-            "Transform",
-            "Parses text or bytes into a JSON value.",
-            "jsonParser",
-            [
-                new("Input", "JsonParseRequest", IsInput: true),
-                new("Output", "JsonParseResult", IsInput: false),
-                new("Errors", "FlowError", IsInput: false)
-            ],
-            defaultInputLink: FlowComponentDefaultInputLink.None,
-            createDefaultConfiguration: _ => CreateTransformCapacityConfiguration()),
-        Component(
-            "json.stringify",
-            "JSON Stringify",
-            "Transform",
-            "Serializes a value into JSON text and bytes.",
-            "jsonStringifier",
-            [
-                new("Input", "JsonStringifyRequest", IsInput: true),
-                new("Output", "JsonStringifyResult", IsInput: false),
-                new("Errors", "FlowError", IsInput: false)
-            ],
-            defaultInputLink: FlowComponentDefaultInputLink.None,
-            createDefaultConfiguration: _ => CreateTransformCapacityConfiguration()),
-        Component(
-            "text.encode",
-            "Text Encode",
-            "Transform",
-            "Encodes text into bytes.",
-            "textEncoder",
-            [
-                new("Input", "TextEncodeRequest", IsInput: true),
-                new("Output", "TextEncodeResult", IsInput: false),
-                new("Errors", "FlowError", IsInput: false)
-            ],
-            defaultInputLink: FlowComponentDefaultInputLink.None,
-            createDefaultConfiguration: _ => CreateTransformCapacityConfiguration()),
-        Component(
-            "text.decode",
-            "Text Decode",
-            "Transform",
-            "Decodes bytes into text.",
-            "textDecoder",
-            [
-                new("Input", "TextDecodeRequest", IsInput: true),
-                new("Output", "TextDecodeResult", IsInput: false),
-                new("Errors", "FlowError", IsInput: false)
-            ],
-            defaultInputLink: FlowComponentDefaultInputLink.None,
-            createDefaultConfiguration: _ => CreateTransformCapacityConfiguration()),
-        Component(
-            "base64.encode",
-            "Base64 Encode",
-            "Transform",
-            "Encodes bytes or text into base64 text.",
-            "base64Encoder",
-            [
-                new("Input", "Base64EncodeRequest", IsInput: true),
-                new("Output", "Base64EncodeResult", IsInput: false),
-                new("Errors", "FlowError", IsInput: false)
-            ],
-            defaultInputLink: FlowComponentDefaultInputLink.None,
-            createDefaultConfiguration: _ => CreateTransformCapacityConfiguration()),
-        Component(
-            "base64.decode",
-            "Base64 Decode",
-            "Transform",
-            "Decodes base64 text into bytes and optional text.",
-            "base64Decoder",
-            [
-                new("Input", "Base64DecodeRequest", IsInput: true),
-                new("Output", "Base64DecodeResult", IsInput: false),
-                new("Errors", "FlowError", IsInput: false)
-            ],
-            defaultInputLink: FlowComponentDefaultInputLink.None,
-            createDefaultConfiguration: _ => CreateTransformCapacityConfiguration()),
-        Component(
             "mqtt.metrics",
             "MQTT Metrics",
             "Observer",
@@ -501,6 +423,17 @@ public static class FlowComponentMetadataRegistry
 
     public static IReadOnlyList<FlowComponentDescriptor> Descriptors => ComponentDescriptors;
 
+    public static IReadOnlyDictionary<string, FlowComponentBehavior> PackageComponentBehaviors { get; } =
+        new Dictionary<string, FlowComponentBehavior>(StringComparer.Ordinal)
+        {
+            ["json.parse"] = TransformBehavior("jsonParser"),
+            ["json.stringify"] = TransformBehavior("jsonStringifier"),
+            ["text.encode"] = TransformBehavior("textEncoder"),
+            ["text.decode"] = TransformBehavior("textDecoder"),
+            ["base64.encode"] = TransformBehavior("base64Encoder"),
+            ["base64.decode"] = TransformBehavior("base64Decoder")
+        };
+
     public static FlowComponentMetadata? Find(string componentType)
         => Metadata.FirstOrDefault(component => string.Equals(component.Descriptor.Type, componentType, StringComparison.Ordinal));
 
@@ -525,6 +458,12 @@ public static class FlowComponentMetadataRegistry
             makePreferredNodeNameUnique,
             defaultInputLink,
             createDefaultConfiguration);
+
+    private static FlowComponentBehavior TransformBehavior(string preferredNodeName)
+        => new(
+            preferredNodeName,
+            DefaultInputLink: FlowComponentDefaultInputLink.None,
+            CreateDefaultConfiguration: _ => CreateTransformCapacityConfiguration());
 
     private static JsonObject CreateDynamicMapperConfiguration(string outputType, string inputType = "MqttEnvelope")
         => new()

@@ -2,6 +2,42 @@
 
 Chronological progress record.
 
+## 2026-06-05 - Component boundary refactor slice
+
+- Added FluxMQ catalog adapter interfaces/classes so the UI catalog can be
+  backed by FluxFlow component design metadata contracts.
+- Changed `FlowComponentCatalog` and `FlowDefinitionComposer` to read component
+  descriptors/defaults through the adapter.
+- Split runtime registration into package component registration first and
+  FluxMQ runtime adapter/compatibility registration second.
+- Added component catalog adapter tests covering design metadata, descriptor
+  mapping, and default configuration compatibility.
+- Added docs and memory for the new component boundary.
+- Verified:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore`
+  - `dotnet test FluxMq.sln --no-restore`
+
+## 2026-06-05 - Dashboard and test studio V2 slice
+
+- Added V2 dashboard artifact support with `version`, responsive metadata, reusable metrics, widget bindings, and view metadata.
+- Added V2 test artifact support with ordered phases, run profile, run-history references, and report-snapshot metadata.
+- Added automatic JSON migration on designer load/parse. V1 flat tests are preserved in an imported phase, and a flat `steps` mirror remains for compatibility.
+- Added dashboard widget and metric registries plus a neutral FluxMQ chart adapter boundary.
+- Expanded the dashboard widget pack with KPI tile, status strip, rate tile, dedicated chart aliases, payload distribution, and QoS/retain breakdown widgets.
+- Expanded the scenario step registry and runner bindings with wait/conditional event steps, payload/schema assertions, metric threshold assertions, delay, and cleanup action.
+- Reworked the test UI into phase lanes and added a separate Runner Console for preflight, controls, timeline, live events, diagnosis, and runner logs.
+- Added LiteDB-backed scenario run history storage with report JSON/text snapshots and log excerpts.
+- Added `samples/flow-applications/operations-dashboard-test-studio.json` as the repo-contained V2 operations dashboard/test sample.
+- Added `docs/dashboard-test-studio-v2.md`.
+- Verified:
+  - `dotnet build FluxMq.sln --no-restore`
+  - `dotnet test tests/FluxMq.UI.Tests/FluxMq.UI.Tests.csproj`
+  - `dotnet test tests/FluxMq.App.Tests/FluxMq.App.Tests.csproj`
+  - `dotnet test tests/FluxMq.Components.Tests/FluxMq.Components.Tests.csproj`
+  - `dotnet test tests/FluxMq.Scenarios.Tests/FluxMq.Scenarios.Tests.csproj`
+  - `dotnet run --project src/FluxMq.Cli -- validate --config samples/flow-applications/operations-dashboard-test-studio.json`
+  - `dotnet test FluxMq.sln --no-restore`
+
 ## 2026-06-04
 
 - Added a repo-contained `operations-monitor` sample app for documentation and manual UI checks instead of using a personal workspace file.

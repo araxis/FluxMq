@@ -230,16 +230,16 @@ public sealed class FlowDefinitionComposerTests
 
         var jsonParse = catalog.Find("json.parse").ShouldNotBeNull();
         jsonParse.DisplayName.ShouldBe("JSON Parse");
-        jsonParse.Category.ShouldBe("Transform");
+        jsonParse.Category.ShouldBe("Serialization");
         jsonParse.Ports.ShouldContain(port => port.Name == "Input" && port.ValueType == "JsonParseRequest" && port.IsInput);
         jsonParse.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "JsonParseResult" && !port.IsInput);
         jsonParse.Ports.ShouldContain(port => port.Name == "Errors" && port.ValueType == "FlowError" && !port.IsInput);
 
-        catalog.Find("json.stringify").ShouldNotBeNull().Category.ShouldBe("Transform");
-        catalog.Find("text.encode").ShouldNotBeNull().Category.ShouldBe("Transform");
-        catalog.Find("text.decode").ShouldNotBeNull().Category.ShouldBe("Transform");
-        catalog.Find("base64.encode").ShouldNotBeNull().Category.ShouldBe("Transform");
-        catalog.Find("base64.decode").ShouldNotBeNull().Category.ShouldBe("Transform");
+        catalog.Find("json.stringify").ShouldNotBeNull().Category.ShouldBe("Serialization");
+        catalog.Find("text.encode").ShouldNotBeNull().Category.ShouldBe("Serialization");
+        catalog.Find("text.decode").ShouldNotBeNull().Category.ShouldBe("Serialization");
+        catalog.Find("base64.encode").ShouldNotBeNull().Category.ShouldBe("Serialization");
+        catalog.Find("base64.decode").ShouldNotBeNull().Category.ShouldBe("Serialization");
     }
 
     [Fact]
@@ -1413,7 +1413,9 @@ public sealed class FlowDefinitionComposerTests
 
         json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.EventGaugeType, "slot:0:0");
         json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.EventChartType, "slot:0:1");
-        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.TopicTreeType, "slot:1:0");
+        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.EventTableType, "slot:1:0");
+        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.TopicActivityType, "slot:1:1");
+        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.TopicTreeType, "slot:2:0");
 
         var layout = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull();
         layout.Widgets["eventGauge"].Configuration["title"].ShouldBe("Event gauge");
@@ -1426,6 +1428,12 @@ public sealed class FlowDefinitionComposerTests
         layout.Widgets["eventChart"].Configuration[DashboardWidgetCatalog.ChartTypeKey].ShouldBe(DashboardWidgetCatalog.ChartTypeBars);
         layout.Widgets["eventChart"].Configuration[DashboardWidgetCatalog.DisplayMetricsKey].ShouldBe("messages,recent,currentRate,payloadBytes");
         layout.Widgets["eventChart"].Configuration[DashboardWidgetCatalog.MetricCardColumnsKey].ShouldBe("4");
+        layout.Widgets["eventTable"].Configuration["title"].ShouldBe("Event table");
+        layout.Widgets["eventTable"].Configuration["eventType"].ShouldBe(string.Empty);
+        layout.Widgets["eventTable"].Configuration["status"].ShouldBe(string.Empty);
+        layout.Widgets["topicActivity"].Configuration["title"].ShouldBe("Topic activity");
+        layout.Widgets["topicActivity"].Configuration["eventType"].ShouldBe(string.Empty);
+        layout.Widgets["topicActivity"].Configuration["topicStartsWith"].ShouldBe(string.Empty);
         layout.Widgets["topicTree"].Configuration["title"].ShouldBe("Topic tree");
         layout.Widgets["topicTree"].Configuration[DashboardWidgetCatalog.ExcludeSystemTopicsKey].ShouldBe("true");
     }

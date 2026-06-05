@@ -1,0 +1,28 @@
+@namespace FluxMq.UI.Components.Workspace
+@inject IFluxChartAdapter Charts
+
+@{
+    var series = Charts.CreatePayloadDistributionSeries(Snapshot);
+    var max = Math.Max(1, series.Values.DefaultIfEmpty(0).Max());
+}
+
+<div class="dashboard-payload-distribution">
+    @for (var index = 0; index < series.Values.Count; index++)
+    {
+        var value = series.Values[index];
+        var label = series.Labels[index];
+        var width = value <= 0 ? 0 : Math.Clamp(value / max * 100, 8, 100);
+        <div class="dashboard-distribution-row">
+            <span>@label</span>
+            <div class="dashboard-distribution-track">
+                <div class="dashboard-distribution-fill" style="width:@width.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)%"></div>
+            </div>
+            <strong>@DashboardWidgetFormatting.FormatNumber((long)value)</strong>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardEventSnapshot Snapshot { get; set; } = null!;
+}

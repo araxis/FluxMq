@@ -1,0 +1,44 @@
+@namespace FluxMq.UI.Components.Workspace
+
+@if (Snapshot.Events.Count == 0)
+{
+    <div class="dashboard-widget-empty">No events yet</div>
+}
+else
+{
+    <div class="dashboard-event-table">
+        <div class="dashboard-event-table-head">
+            <span>Time</span>
+            <span>Event</span>
+            <span>Status</span>
+            <span>Payload</span>
+        </div>
+        <div class="dashboard-event-table-body">
+            @foreach (var flowEvent in Snapshot.Events)
+            {
+                <div class="dashboard-event-table-row">
+                    <span>@DashboardWidgetFormatting.FormatEventTime(flowEvent)</span>
+                    <span title="@flowEvent.Type">@flowEvent.Type</span>
+                    <span>@(flowEvent.Status ?? "-")</span>
+                    <span title="@flowEvent.PayloadPreview">@PayloadPreview(flowEvent.PayloadPreview)</span>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardEventSnapshot Snapshot { get; set; } = null!;
+
+    private static string PayloadPreview(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "-";
+        }
+
+        var trimmed = value.Trim();
+        return trimmed.Length <= 42 ? trimmed : trimmed[..39] + "...";
+    }
+}

@@ -1,0 +1,349 @@
+{
+  "FluxMq": {
+    "FlowApplication": {
+      "workflows": {
+        "operationsMonitor": {
+          "generated": {
+            "type": "generated.source",
+            "configuration": {
+              "messages": [
+                {
+                  "topic": "factory/line-a/temperature",
+                  "payload": "{\"line\":\"a\",\"value\":21,\"status\":\"ok\"}",
+                  "receivedAt": "2026-06-05T08:00:00Z"
+                },
+                {
+                  "topic": "factory/line-a/pressure",
+                  "payload": "{\"line\":\"a\",\"value\":6.2,\"status\":\"ok\"}",
+                  "receivedAt": "2026-06-05T08:00:01Z"
+                },
+                {
+                  "topic": "factory/line-b/temperature",
+                  "payload": "{\"line\":\"b\",\"value\":28,\"status\":\"warning\"}",
+                  "receivedAt": "2026-06-05T08:00:02Z"
+                }
+              ]
+            }
+          },
+          "inspectPayload": {
+            "type": "mqtt.payload-inspector",
+            "Input": "generated.Output"
+          },
+          "metrics": {
+            "type": "mqtt.metrics",
+            "Input": "generated.Output"
+          }
+        }
+      },
+      "dashboards": {
+        "operations": {
+          "version": 2,
+          "layout": {
+            "columns": ["320", "*", "*", "*"],
+            "rows": ["150", "260", "*"],
+            "columnPadding": [0, 8, 8, 0],
+            "rowPadding": [0, 8, 0],
+            "cells": {
+              "kpi": {
+                "row": 0,
+                "column": 0,
+                "rowSpan": 1,
+                "columnSpan": 1,
+                "widget": "messageKpi"
+              },
+              "status": {
+                "row": 0,
+                "column": 1,
+                "rowSpan": 1,
+                "columnSpan": 3,
+                "widget": "statusStrip"
+              },
+              "trend": {
+                "row": 1,
+                "column": 0,
+                "rowSpan": 1,
+                "columnSpan": 2,
+                "widget": "messageTrend"
+              },
+              "topics": {
+                "row": 1,
+                "column": 2,
+                "rowSpan": 2,
+                "columnSpan": 1,
+                "widget": "topicHeatmap"
+              },
+              "payloads": {
+                "row": 1,
+                "column": 3,
+                "rowSpan": 1,
+                "columnSpan": 1,
+                "widget": "payloadSizes"
+              },
+              "events": {
+                "row": 2,
+                "column": 0,
+                "rowSpan": 1,
+                "columnSpan": 2,
+                "widget": "recentEvents"
+              },
+              "breakdown": {
+                "row": 2,
+                "column": 3,
+                "rowSpan": 1,
+                "columnSpan": 1,
+                "widget": "qosRetain"
+              }
+            }
+          },
+          "responsive": {
+            "defaultBreakpoint": "desktop",
+            "breakpoints": {
+              "desktop": {
+                "columns": 4,
+                "minWidth": 1024
+              },
+              "tablet": {
+                "columns": 2,
+                "minWidth": 720
+              },
+              "mobile": {
+                "columns": 1,
+                "minWidth": 0
+              }
+            }
+          },
+          "metrics": {
+            "messageVolume": {
+              "source": "runtimeEvents",
+              "aggregation": "count",
+              "window": "60s",
+              "filters": {
+                "topicStartsWith": "factory/"
+              },
+              "format": {
+                "unit": "events"
+              }
+            },
+            "messageRate": {
+              "source": "runtimeEvents",
+              "aggregation": "rate",
+              "window": "60s",
+              "filters": {
+                "topicStartsWith": "factory/"
+              },
+              "format": {
+                "unit": "/s"
+              }
+            },
+            "topicVolume": {
+              "source": "topicProjection",
+              "aggregation": "count",
+              "window": "60s",
+              "groupBy": "topic",
+              "filters": {
+                "topicStartsWith": "factory/"
+              },
+              "format": {
+                "unit": "events"
+              }
+            }
+          },
+          "widgets": {
+            "messageKpi": {
+              "type": "kpi.tile",
+              "configuration": {
+                "title": "Messages",
+                "metric": "messageVolume",
+                "primaryMetric": "messages",
+                "displayMetrics": "messages,currentRate,payloadBytes,topics",
+                "metricCardColumns": "2",
+                "topicStartsWith": "factory/"
+              }
+            },
+            "statusStrip": {
+              "type": "status.strip",
+              "configuration": {
+                "title": "Status",
+                "metric": "messageVolume",
+                "displayMetrics": "messages,recent,currentRate,payloadBytes",
+                "metricCardColumns": "4",
+                "topicStartsWith": "factory/"
+              }
+            },
+            "messageTrend": {
+              "type": "chart.line",
+              "configuration": {
+                "title": "Message Trend",
+                "metric": "messageRate",
+                "chartType": "line",
+                "displayMetrics": "messages,currentRate,payloadBytes,topics",
+                "metricCardColumns": "4",
+                "topicStartsWith": "factory/"
+              }
+            },
+            "topicHeatmap": {
+              "type": "topic.activity",
+              "configuration": {
+                "title": "Top Topics",
+                "metric": "topicVolume",
+                "chartType": "topics",
+                "topicStartsWith": "factory/"
+              }
+            },
+            "payloadSizes": {
+              "type": "payload.size.distribution",
+              "configuration": {
+                "title": "Payload Sizes",
+                "metric": "messageVolume",
+                "topicStartsWith": "factory/"
+              }
+            },
+            "recentEvents": {
+              "type": "event.table",
+              "configuration": {
+                "title": "Recent Events",
+                "metric": "messageVolume",
+                "topicStartsWith": "factory/"
+              }
+            },
+            "qosRetain": {
+              "type": "qos.retain.breakdown",
+              "configuration": {
+                "title": "QoS / Retain",
+                "metric": "messageVolume",
+                "topicStartsWith": "factory/"
+              }
+            }
+          },
+          "bindings": {
+            "messageKpi": {
+              "primaryMetric": "messageVolume",
+              "metrics": ["messageVolume", "messageRate"]
+            },
+            "statusStrip": {
+              "primaryMetric": "messageVolume",
+              "metrics": ["messageVolume", "messageRate"]
+            },
+            "messageTrend": {
+              "primaryMetric": "messageRate",
+              "metrics": ["messageRate"]
+            },
+            "topicHeatmap": {
+              "primaryMetric": "topicVolume",
+              "metrics": ["topicVolume"]
+            },
+            "payloadSizes": {
+              "primaryMetric": "messageVolume",
+              "metrics": ["messageVolume"]
+            },
+            "recentEvents": {
+              "primaryMetric": "messageVolume",
+              "metrics": ["messageVolume"]
+            },
+            "qosRetain": {
+              "primaryMetric": "messageVolume",
+              "metrics": ["messageVolume"]
+            }
+          },
+          "view": {
+            "mode": "design",
+            "breakpoint": "desktop"
+          }
+        }
+      },
+      "tests": {
+        "operationsSmoke": {
+          "version": 2,
+          "phases": {
+            "setup": {
+              "title": "Setup",
+              "kind": "setup",
+              "order": 0,
+              "steps": {
+                "settle": {
+                  "type": "delay.wait",
+                  "configuration": {
+                    "delayMs": 10
+                  }
+                }
+              }
+            },
+            "stimulus": {
+              "title": "Stimulus",
+              "kind": "stimulus",
+              "order": 1,
+              "steps": {}
+            },
+            "observe": {
+              "title": "Observe",
+              "kind": "observe",
+              "order": 2,
+              "steps": {}
+            },
+            "assert": {
+              "title": "Assert",
+              "kind": "assert",
+              "order": 3,
+              "steps": {
+                "runtimeVolume": {
+                  "type": "assert.metric.threshold",
+                  "configuration": {
+                    "metric": "runtimeEvents",
+                    "aggregation": "count",
+                    "operator": ">=",
+                    "threshold": "0",
+                    "windowMs": 10,
+                    "topicStartsWith": "factory/"
+                  }
+                }
+              }
+            },
+            "cleanup": {
+              "title": "Cleanup",
+              "kind": "cleanup",
+              "order": 4,
+              "steps": {
+                "cleanup": {
+                  "type": "cleanup.action",
+                  "configuration": {
+                    "delayMs": 0
+                  }
+                }
+              }
+            }
+          },
+          "runProfile": {
+            "mode": "local",
+            "timeoutMs": 30000,
+            "stopOnFailure": true
+          },
+          "steps": {
+            "settle": {
+              "type": "delay.wait",
+              "configuration": {
+                "delayMs": 10
+              }
+            },
+            "runtimeVolume": {
+              "type": "assert.metric.threshold",
+              "configuration": {
+                "metric": "runtimeEvents",
+                "aggregation": "count",
+                "operator": ">=",
+                "threshold": "0",
+                "windowMs": 10,
+                "topicStartsWith": "factory/"
+              }
+            },
+            "cleanup": {
+              "type": "cleanup.action",
+              "configuration": {
+                "delayMs": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
