@@ -49,6 +49,11 @@ public sealed class FluxMqComponentAliasRegistry
             metadataByType[packageMetadata.Type] = packageMetadata;
         }
 
+        foreach (var fallbackMetadata in CreatePackageFallbackDesignMetadata())
+        {
+            metadataByType.TryAdd(fallbackMetadata.Type, fallbackMetadata);
+        }
+
         foreach (var aliasMetadata in CreateAliasDesignMetadata())
         {
             metadataByType[aliasMetadata.Type] = aliasMetadata;
@@ -100,6 +105,73 @@ public sealed class FluxMqComponentAliasRegistry
 
     private static string IconKeyFor(FlowComponentDescriptor descriptor)
         => descriptor.Category.ToLowerInvariant().Replace(" ", "-", StringComparison.Ordinal);
+
+    private static IReadOnlyList<ComponentDesignMetadata> CreatePackageFallbackDesignMetadata() =>
+    [
+        Transform("json.parse", "JSON Parse", "jsonParser", "Parses text or bytes into a JSON value.", "JsonParseRequest", "JsonParseResult"),
+        Transform("json.stringify", "JSON Stringify", "jsonStringifier", "Serializes a value into JSON text and bytes.", "JsonStringifyRequest", "JsonStringifyResult"),
+        Transform("text.encode", "Text Encode", "textEncoder", "Encodes text into bytes.", "TextEncodeRequest", "TextEncodeResult"),
+        Transform("text.decode", "Text Decode", "textDecoder", "Decodes bytes into text.", "TextDecodeRequest", "TextDecodeResult"),
+        Transform("base64.encode", "Base64 Encode", "base64Encoder", "Encodes bytes into Base64 text.", "Base64EncodeRequest", "Base64EncodeResult"),
+        Transform("base64.decode", "Base64 Decode", "base64Decoder", "Decodes Base64 text into bytes.", "Base64DecodeRequest", "Base64DecodeResult")
+    ];
+
+    private static ComponentDesignMetadata Transform(
+        string type,
+        string displayName,
+        string preferredNodeName,
+        string summary,
+        string inputType,
+        string outputType)
+        => new()
+        {
+            Type = new NodeType(type),
+            DisplayName = displayName,
+            Category = "Serialization",
+            Summary = summary,
+            PreferredNodeName = preferredNodeName,
+            IconKey = "serialization",
+            Options =
+            [
+                new()
+                {
+                    Name = "boundedCapacity",
+                    Kind = OptionValueKind.Number,
+                    DisplayName = "Capacity",
+                    DefaultValue = 128,
+                    Min = 1
+                }
+            ],
+            Ports =
+            [
+                new()
+                {
+                    Name = new PortName("Input"),
+                    Direction = PortDirection.Input,
+                    ValueType = inputType,
+                    IsPrimary = true
+                },
+                new()
+                {
+                    Name = new PortName("Output"),
+                    Direction = PortDirection.Output,
+                    ValueType = outputType,
+                    IsPrimary = true,
+                    Order = 1
+                },
+                new()
+                {
+                    Name = new PortName("Errors"),
+                    Direction = PortDirection.Output,
+                    ValueType = "FlowError",
+                    Order = 2
+                }
+            ],
+            Attributes = new Dictionary<string, string>
+            {
+                ["fluxmq.packageFallback"] = "true"
+            }
+        };
 }
 
 public sealed record FlowComponentBehavior(

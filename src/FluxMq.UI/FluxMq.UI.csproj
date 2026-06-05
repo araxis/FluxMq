@@ -50,15 +50,30 @@
 		<ProjectReference Include="..\FluxMq.Components\FluxMq.Components.csproj" />
 		<ProjectReference Include="..\FluxMq.Core\FluxMq.Core.csproj" />
 		<ProjectReference Include="..\FluxMq.Scenarios\FluxMq.Scenarios.csproj" />
-		<ProjectReference Include="..\..\..\FluxFlow\src\FluxFlow.Components.Designer\FluxFlow.Components.Designer.csproj" />
-		<ProjectReference Include="..\..\..\FluxFlow\src\FluxFlow.Components.Http\FluxFlow.Components.Http.csproj" />
-		<ProjectReference Include="..\..\..\FluxFlow\src\FluxFlow.Components.Mapping\FluxFlow.Components.Mapping.csproj" />
-		<ProjectReference Include="..\..\..\FluxFlow\src\FluxFlow.Components.Payloads\FluxFlow.Components.Payloads.csproj" />
-		<ProjectReference Include="..\..\..\FluxFlow\src\FluxFlow.Components.Routing\FluxFlow.Components.Routing.csproj" />
-		<ProjectReference Include="..\..\..\FluxFlow\src\FluxFlow.Components.Serialization\FluxFlow.Components.Serialization.csproj" />
-		<ProjectReference Include="..\..\..\FluxFlow\src\FluxFlow.Components.State\FluxFlow.Components.State.csproj" />
-		<ProjectReference Include="..\..\..\FluxFlow\src\FluxFlow.Components.Storage\FluxFlow.Components.Storage.csproj" />
-		<ProjectReference Include="..\..\..\FluxFlow\src\FluxFlow.Components.Timers\FluxFlow.Components.Timers.csproj" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(UseFluxFlowSourceReferences)' == 'true'">
+		<ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.Designer\FluxFlow.Components.Designer.csproj" />
+		<ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.Http\FluxFlow.Components.Http.csproj" />
+		<ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.Mapping\FluxFlow.Components.Mapping.csproj" />
+		<ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.Payloads\FluxFlow.Components.Payloads.csproj" />
+		<ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.Routing\FluxFlow.Components.Routing.csproj" />
+		<ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.Serialization\FluxFlow.Components.Serialization.csproj" />
+		<ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.State\FluxFlow.Components.State.csproj" />
+		<ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.Storage\FluxFlow.Components.Storage.csproj" />
+		<ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.Timers\FluxFlow.Components.Timers.csproj" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(UseFluxFlowSourceReferences)' != 'true'">
+		<PackageReference Include="FluxFlow.Components.Designer" Version="$(FluxFlowComponentsDesignerVersion)" />
+		<PackageReference Include="FluxFlow.Components.Http" Version="$(FluxFlowComponentsHttpVersion)" />
+		<PackageReference Include="FluxFlow.Components.Mapping" Version="$(FluxFlowComponentsMappingVersion)" />
+		<PackageReference Include="FluxFlow.Components.Payloads" Version="$(FluxFlowComponentsPayloadsVersion)" />
+		<PackageReference Include="FluxFlow.Components.Routing" Version="$(FluxFlowComponentsRoutingVersion)" />
+		<PackageReference Include="FluxFlow.Components.Serialization" Version="$(FluxFlowComponentsSerializationVersion)" />
+		<PackageReference Include="FluxFlow.Components.State" Version="$(FluxFlowComponentsStateVersion)" />
+		<PackageReference Include="FluxFlow.Components.Storage" Version="$(FluxFlowComponentsStorageVersion)" />
+		<PackageReference Include="FluxFlow.Components.Timers" Version="$(FluxFlowComponentsTimersVersion)" />
 	</ItemGroup>
 
 </Project>
