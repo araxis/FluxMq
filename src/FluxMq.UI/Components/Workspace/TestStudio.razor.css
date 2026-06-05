@@ -1,0 +1,79 @@
+.test-studio {
+    background: var(--flux-canvas);
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.test-studio-toolbar {
+    align-items: center;
+    background: color-mix(in srgb, var(--flux-surface) 92%, transparent);
+    border-bottom: 1px solid var(--flux-border);
+    display: flex;
+    flex: 0 0 auto;
+    gap: 12px;
+    min-height: 48px;
+    padding: 7px 14px;
+}
+
+.test-studio-heading {
+    align-items: center;
+    color: var(--mud-palette-text-primary);
+    display: flex;
+    font-size: 13px;
+    font-weight: 850;
+    gap: 8px;
+    min-width: 0;
+}
+
+.test-studio-heading span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.test-studio-toolbar .mud-toggle-group {
+    margin-left: auto;
+}
+
+.test-studio-body {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.test-studio-tools {
+    border-right: 1px solid var(--flux-border);
+    flex: 0 0 300px;
+    min-height: 0;
+    min-width: 0;
+}
+
+.test-studio-region {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+}
+
+.test-studio-body.runner {
+    flex-direction: column;
+}
+
+@media (max-width: 900px) {
+    .test-studio-body.designer {
+        flex-direction: column;
+    }
+
+    .test-studio-tools {
+        border-bottom: 1px solid var(--flux-border);
+        border-right: 0;
+        flex-basis: 220px;
+    }
+}

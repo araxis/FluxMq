@@ -1,0 +1,20 @@
+@namespace FluxMq.UI.Components.Workspace
+
+@if (Snapshot.LatestEvent is { } latest)
+{
+    <div class="dashboard-widget-event-type">@latest.Type</div>
+    <div class="dashboard-widget-meta">@DashboardWidgetFormatting.EventMeta(latest)</div>
+    @if (!string.IsNullOrWhiteSpace(latest.PayloadPreview))
+    {
+        <pre class="dashboard-widget-payload">@latest.PayloadPreview</pre>
+    }
+}
+else
+{
+    <div class="dashboard-widget-empty">No events yet</div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardEventSnapshot Snapshot { get; set; } = null!;
+}

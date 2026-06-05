@@ -48,11 +48,22 @@ public static class FlowDashboardDefinitionFactory
     {
         var title = widgetType switch
         {
+            DashboardWidgetCatalog.KpiTileType => "KPI tile",
+            DashboardWidgetCatalog.StatusStripType => "Status strip",
+            DashboardWidgetCatalog.RateTileType => "Rate tile",
             DashboardWidgetCatalog.EventCounterType => "Events",
             DashboardWidgetCatalog.LatestEventType => "Latest event",
             DashboardWidgetCatalog.EventRateType => "Event rate",
             DashboardWidgetCatalog.EventGaugeType => "Event gauge",
             DashboardWidgetCatalog.EventChartType => "Event chart",
+            DashboardWidgetCatalog.LineChartType => "Line chart",
+            DashboardWidgetCatalog.AreaChartType => "Area chart",
+            DashboardWidgetCatalog.BarChartType => "Bar chart",
+            DashboardWidgetCatalog.DonutChartType => "Donut chart",
+            DashboardWidgetCatalog.EventTableType => "Event table",
+            DashboardWidgetCatalog.TopicActivityType => "Topic activity",
+            DashboardWidgetCatalog.PayloadDistributionType => "Payload sizes",
+            DashboardWidgetCatalog.QosRetainBreakdownType => "QoS / retain",
             DashboardWidgetCatalog.TopicTreeType => "Topic tree",
             _ => null
         };
@@ -87,10 +98,24 @@ public static class FlowDashboardDefinitionFactory
         {
             configuration[DashboardWidgetCatalog.GaugeStyleKey] = DashboardWidgetCatalog.GaugeStyleRing;
         }
-        else if (string.Equals(widgetType, DashboardWidgetCatalog.EventChartType, StringComparison.Ordinal))
+        else if (DashboardWidgetCatalog.IsChartWidget(widgetType))
         {
             configuration[DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricMessages;
-            configuration[DashboardWidgetCatalog.ChartTypeKey] = DashboardWidgetCatalog.ChartTypeBars;
+            configuration[DashboardWidgetCatalog.ChartTypeKey] = widgetType switch
+            {
+                DashboardWidgetCatalog.LineChartType => DashboardWidgetCatalog.ChartTypeLine,
+                DashboardWidgetCatalog.AreaChartType => DashboardWidgetCatalog.ChartTypeArea,
+                DashboardWidgetCatalog.TopicActivityType => DashboardWidgetCatalog.ChartTypeTopics,
+                _ => DashboardWidgetCatalog.ChartTypeBars
+            };
+        }
+        else if (DashboardWidgetCatalog.IsBreakdownWidget(widgetType))
+        {
+            configuration[DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricMessages;
+            configuration[DashboardWidgetCatalog.DisplayMetricsKey] =
+                DashboardWidgetCatalog.BuildDisplayMetrics(null);
+            configuration[DashboardWidgetCatalog.MetricCardColumnsKey] =
+                DashboardWidgetCatalog.DefaultMetricCardColumns.ToString(System.Globalization.CultureInfo.InvariantCulture);
         }
 
         return configuration;
@@ -113,11 +138,22 @@ public static class FlowDashboardDefinitionFactory
     public static string WidgetNamePrefix(string widgetType)
         => widgetType switch
         {
+            DashboardWidgetCatalog.KpiTileType => "kpiTile",
+            DashboardWidgetCatalog.StatusStripType => "statusStrip",
+            DashboardWidgetCatalog.RateTileType => "rateTile",
             DashboardWidgetCatalog.EventCounterType => "eventCounter",
             DashboardWidgetCatalog.LatestEventType => "latestEvent",
             DashboardWidgetCatalog.EventRateType => "eventRate",
             DashboardWidgetCatalog.EventGaugeType => "eventGauge",
             DashboardWidgetCatalog.EventChartType => "eventChart",
+            DashboardWidgetCatalog.LineChartType => "lineChart",
+            DashboardWidgetCatalog.AreaChartType => "areaChart",
+            DashboardWidgetCatalog.BarChartType => "barChart",
+            DashboardWidgetCatalog.DonutChartType => "donutChart",
+            DashboardWidgetCatalog.EventTableType => "eventTable",
+            DashboardWidgetCatalog.TopicActivityType => "topicActivity",
+            DashboardWidgetCatalog.PayloadDistributionType => "payloadDistribution",
+            DashboardWidgetCatalog.QosRetainBreakdownType => "qosRetainBreakdown",
             DashboardWidgetCatalog.TopicTreeType => "topicTree",
             _ => "widget"
         };

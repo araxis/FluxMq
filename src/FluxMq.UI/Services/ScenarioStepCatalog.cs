@@ -23,6 +23,12 @@ public sealed class ScenarioStepCatalog
     public const string SourceKey = ScenarioStepDefinitionCatalog.SourceKey;
     public const string PayloadContainsKey = ScenarioStepDefinitionCatalog.PayloadContainsKey;
     public const string TimeoutMsKey = ScenarioStepDefinitionCatalog.TimeoutMsKey;
+    public const string DelayMsKey = ScenarioStepDefinitionCatalog.DelayMsKey;
+    public const string MetricKey = ScenarioStepDefinitionCatalog.MetricKey;
+    public const string AggregationKey = ScenarioStepDefinitionCatalog.AggregationKey;
+    public const string OperatorKey = ScenarioStepDefinitionCatalog.OperatorKey;
+    public const string ThresholdKey = ScenarioStepDefinitionCatalog.ThresholdKey;
+    public const string WindowMsKey = ScenarioStepDefinitionCatalog.WindowMsKey;
 
     public static readonly string QosAttributeKey = ScenarioStepDefinitionCatalog.QosAttributeKey;
     public static readonly string RetainAttributeKey = ScenarioStepDefinitionCatalog.RetainAttributeKey;
@@ -70,7 +76,8 @@ public sealed class ScenarioStepCatalog
             metadata.Icon,
             definition.NamePrefix,
             metadata.EditorKind,
-            definition.Fields);
+            definition.Fields,
+            definition.DefaultPhase);
     }
 
     private static ScenarioStepUiMetadata UiMetadataFor(string type)
@@ -80,6 +87,13 @@ public sealed class ScenarioStepCatalog
             ScenarioStepTypes.MqttTrigger => new(Icons.Material.Filled.Sensors, ScenarioStepEditorKind.MqttTrigger),
             ScenarioStepTypes.WhenEvent => new(Icons.Material.Filled.AltRoute, ScenarioStepEditorKind.ExpectEvent),
             ScenarioStepTypes.ExpectEvent => new(Icons.Material.Filled.Rule, ScenarioStepEditorKind.ExpectEvent),
+            ScenarioStepTypes.WaitForEvent => new(Icons.Material.Filled.HourglassTop, ScenarioStepEditorKind.ExpectEvent),
+            ScenarioStepTypes.ConditionalEvent => new(Icons.Material.Filled.AccountTree, ScenarioStepEditorKind.ExpectEvent),
+            ScenarioStepTypes.PayloadAssertion => new(Icons.Material.Filled.DataObject, ScenarioStepEditorKind.ExpectEvent),
+            ScenarioStepTypes.JsonSchemaAssertion => new(Icons.Material.Filled.Schema, ScenarioStepEditorKind.ExpectEvent),
+            ScenarioStepTypes.MetricThresholdAssertion => new(Icons.Material.Filled.QueryStats, ScenarioStepEditorKind.MetricThreshold),
+            ScenarioStepTypes.Delay => new(Icons.Material.Filled.Timer, ScenarioStepEditorKind.Delay),
+            ScenarioStepTypes.CleanupAction => new(Icons.Material.Filled.CleaningServices, ScenarioStepEditorKind.Cleanup),
             _ => new(Icons.Material.Filled.Extension, ScenarioStepEditorKind.ExpectEvent)
         };
 

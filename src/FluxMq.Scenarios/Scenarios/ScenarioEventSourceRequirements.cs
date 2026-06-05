@@ -7,7 +7,7 @@ public static class ScenarioEventSourceRequirements
         ArgumentNullException.ThrowIfNull(scenario);
 
         var hasScenarioEventSource = false;
-        foreach (var step in scenario.Steps.Values)
+        foreach (var step in scenario.EnumerateSteps().Select(static item => item.Value))
         {
             if (IsScenarioEventSourceStep(step.Type))
             {
@@ -33,5 +33,10 @@ public static class ScenarioEventSourceRequirements
 
     private static bool IsEventObservingStep(string type)
         => string.Equals(type, ScenarioStepTypes.ExpectEvent, StringComparison.Ordinal) ||
-           string.Equals(type, ScenarioStepTypes.WhenEvent, StringComparison.Ordinal);
+           string.Equals(type, ScenarioStepTypes.WhenEvent, StringComparison.Ordinal) ||
+           string.Equals(type, ScenarioStepTypes.WaitForEvent, StringComparison.Ordinal) ||
+           string.Equals(type, ScenarioStepTypes.ConditionalEvent, StringComparison.Ordinal) ||
+           string.Equals(type, ScenarioStepTypes.PayloadAssertion, StringComparison.Ordinal) ||
+           string.Equals(type, ScenarioStepTypes.JsonSchemaAssertion, StringComparison.Ordinal) ||
+           string.Equals(type, ScenarioStepTypes.MetricThresholdAssertion, StringComparison.Ordinal);
 }

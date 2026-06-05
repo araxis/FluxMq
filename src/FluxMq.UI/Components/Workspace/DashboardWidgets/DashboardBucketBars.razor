@@ -1,0 +1,16 @@
+@namespace FluxMq.UI.Components.Workspace
+
+<div class="@(Compact ? "dashboard-widget-sparkline" : "dashboard-widget-chart-bars")">
+    @foreach (var bucket in DashboardWidgetFormatting.ChartBuckets(Snapshot))
+    {
+        <span style="@bucket.Style" title="@bucket.Label"></span>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardEventSnapshot Snapshot { get; set; } = null!;
+
+    [Parameter]
+    public bool Compact { get; set; }
+}

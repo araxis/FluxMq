@@ -9,7 +9,26 @@ public sealed class ScenarioStepRunnerRegistry
     public static ScenarioStepRunnerRegistry CreateEventExpectationOnly()
         => new ScenarioStepRunnerRegistry()
             .Register(new WhenEventScenarioStepRunner())
-            .Register(new ExpectEventScenarioStepRunner());
+            .Register(new ExpectEventScenarioStepRunner())
+            .Register(new EventExpectationScenarioStepRunner(
+                ScenarioStepTypes.WaitForEvent,
+                skipOnTimeout: false,
+                "Expected event observed."))
+            .Register(new EventExpectationScenarioStepRunner(
+                ScenarioStepTypes.ConditionalEvent,
+                skipOnTimeout: true,
+                "Conditional event matched; continuing scenario."))
+            .Register(new EventExpectationScenarioStepRunner(
+                ScenarioStepTypes.PayloadAssertion,
+                skipOnTimeout: false,
+                "Payload assertion matched."))
+            .Register(new EventExpectationScenarioStepRunner(
+                ScenarioStepTypes.JsonSchemaAssertion,
+                skipOnTimeout: false,
+                "JSON schema assertion matched."))
+            .Register(new MetricThresholdScenarioStepRunner())
+            .Register(new DelayScenarioStepRunner())
+            .Register(new CleanupActionScenarioStepRunner());
 
     public ScenarioStepRunnerRegistry Register(IScenarioStepRunner runner)
     {

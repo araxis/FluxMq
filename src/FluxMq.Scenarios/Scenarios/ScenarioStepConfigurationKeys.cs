@@ -21,6 +21,12 @@ public static class ScenarioStepConfigurationKeys
     public const string PayloadContains = "payloadContains";
     public const string Attributes = "attributes";
     public const string TimeoutMs = "timeoutMs";
+    public const string DelayMs = "delayMs";
+    public const string Metric = "metric";
+    public const string Aggregation = "aggregation";
+    public const string Operator = "operator";
+    public const string Threshold = "threshold";
+    public const string WindowMs = "windowMs";
 
     public const string AttributeKeyPrefix = "attribute:";
 

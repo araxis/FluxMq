@@ -84,6 +84,7 @@ public sealed partial class FlowDefinitionComposer
         widgets[widgetName] = FlowDashboardDefinitionFactory.CreateWidget(normalizedType);
         AssignWidgetToDashboardCell(layout, cells, widgetName, cellName);
 
+        FluxMqApplicationDefinitionMigrator.MigrateRoot(root);
         return root.ToJsonString(Options);
     }
 

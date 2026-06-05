@@ -39,7 +39,7 @@ public sealed class ScenarioRunner(ScenarioStepRunnerRegistry registry)
         var lifetime = new ScenarioRunLifetime();
         using var journal = new ScenarioEventJournal(events, startedAt, eventObserver);
 
-        foreach (var step in scenario.Steps)
+        foreach (var step in scenario.EnumerateSteps())
         {
             var result = await RunStepAsync(
                 name,

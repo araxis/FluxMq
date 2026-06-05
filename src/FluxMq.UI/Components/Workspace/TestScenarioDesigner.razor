@@ -126,83 +126,100 @@
         }
         else
         {
-            <div class="test-step-list">
-                @for (var index = 0; index < Scenario.Steps.Count; index++)
+            <div class="test-phase-lanes">
+                @foreach (var phase in Scenario.Phases)
                 {
-                    var step = Scenario.Steps[index];
-                    var stepResult = FindStepResult(step);
-                    var visibleConfiguration = VisibleConfiguration(step).ToArray();
-                    <section class="@StepCardClass(stepResult)" @key="step.Name">
-                        <div class="test-step-index">@(index + 1)</div>
-                        <div class="test-step-body">
-                            <div class="test-step-topline">
-                                <span class="test-step-name">@step.Name</span>
-                                <span class="@StepTypeClass(step)">@StepTypeLabel(step)</span>
-                                @if (stepResult is not null)
-                                {
-                                    <span class="@StepStatusClass(stepResult.Status)">@stepResult.Status</span>
-                                }
-                                <span class="test-step-actions">
-                                    <button type="button"
-                                            class="test-step-action"
-                                            title="Move earlier"
-                                            disabled="@(index == 0)"
-                                            @onclick="@(() => MoveStep(step.Name, -1))">
-                                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowLeft" Size="Size.Small" />
-                                    </button>
-                                    <button type="button"
-                                            class="test-step-action"
-                                            title="Move later"
-                                            disabled="@(index >= Scenario.Steps.Count - 1)"
-                                            @onclick="@(() => MoveStep(step.Name, 1))">
-                                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowRight" Size="Size.Small" />
-                                    </button>
-                                    <button type="button"
-                                            class="test-step-action"
-                                            title="Edit step"
-                                            @onclick="@(() => OpenStepEditorAsync(step))">
-                                        <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
-                                    </button>
-                                    <button type="button"
-                                            class="test-step-action danger"
-                                            title="Delete step"
-                                            @onclick="@(() => RemoveStep(step.Name))">
-                                        <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" />
-                                    </button>
-                                </span>
+                    <section class="test-phase-lane" @key="phase.Name">
+                        <div class="test-phase-header">
+                            <div>
+                                <span>@phase.Title</span>
+                                <strong>@PhaseStepCountText(phase)</strong>
                             </div>
-                            <div class="test-step-summary">@BuildStepSummary(step)</div>
-                            @if (!string.IsNullOrWhiteSpace(stepResult?.Message))
-                            {
-                                <div class="test-step-result-message">@stepResult.Message</div>
-                            }
-                            @if (stepResult?.MatchedEvent is { } matched)
-                            {
-                                <div class="test-step-event">
-                                    <MudIcon Icon="@Icons.Material.Filled.Bolt" Size="Size.Small" />
-                                    <span>@BuildEventSummary(matched)</span>
-                                </div>
-                            }
-                            @if (visibleConfiguration.Length > 0)
-                            {
-                                <dl class="test-step-config">
-                                    @foreach (var item in visibleConfiguration)
-                                    {
-                                        <div class="test-step-config-row">
-                                            <dt>@FormatConfigurationKey(step, item.Key)</dt>
-                                            <dd title="@item.Value">@item.Value</dd>
+                            <MudIcon Icon="@PhaseIcon(phase.Kind)" Size="Size.Small" />
+                        </div>
+
+                        @if (phase.Steps.Count == 0)
+                        {
+                            <div class="test-phase-empty">No steps</div>
+                        }
+                        else
+                        {
+                            <div class="test-phase-step-stack">
+                                @for (var index = 0; index < phase.Steps.Count; index++)
+                                {
+                                    var step = phase.Steps[index];
+                                    var stepNumber = StepNumber(step);
+                                    var stepResult = FindStepResult(step);
+                                    var visibleConfiguration = VisibleConfiguration(step).ToArray();
+                                    <section class="@StepCardClass(stepResult)" @key="step.Name">
+                                        <div class="test-step-index">@stepNumber</div>
+                                        <div class="test-step-body">
+                                            <div class="test-step-topline">
+                                                <span class="test-step-name">@step.Name</span>
+                                                <span class="@StepTypeClass(step)">@StepTypeLabel(step)</span>
+                                                @if (stepResult is not null)
+                                                {
+                                                    <span class="@StepStatusClass(stepResult.Status)">@stepResult.Status</span>
+                                                }
+                                                <span class="test-step-actions">
+                                                    <button type="button"
+                                                            class="test-step-action"
+                                                            title="Move earlier"
+                                                            disabled="@(index == 0)"
+                                                            @onclick="@(() => MoveStep(step.Name, -1))">
+                                                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" />
+                                                    </button>
+                                                    <button type="button"
+                                                            class="test-step-action"
+                                                            title="Move later"
+                                                            disabled="@(index >= phase.Steps.Count - 1)"
+                                                            @onclick="@(() => MoveStep(step.Name, 1))">
+                                                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" />
+                                                    </button>
+                                                    <button type="button"
+                                                            class="test-step-action"
+                                                            title="Edit step"
+                                                            @onclick="@(() => OpenStepEditorAsync(step))">
+                                                        <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
+                                                    </button>
+                                                    <button type="button"
+                                                            class="test-step-action danger"
+                                                            title="Delete step"
+                                                            @onclick="@(() => RemoveStep(step.Name))">
+                                                        <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" />
+                                                    </button>
+                                                </span>
+                                            </div>
+                                            <div class="test-step-summary">@BuildStepSummary(step)</div>
+                                            @if (!string.IsNullOrWhiteSpace(stepResult?.Message))
+                                            {
+                                                <div class="test-step-result-message">@stepResult.Message</div>
+                                            }
+                                            @if (stepResult?.MatchedEvent is { } matched)
+                                            {
+                                                <div class="test-step-event">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Bolt" Size="Size.Small" />
+                                                    <span>@BuildEventSummary(matched)</span>
+                                                </div>
+                                            }
+                                            @if (visibleConfiguration.Length > 0)
+                                            {
+                                                <dl class="test-step-config">
+                                                    @foreach (var item in visibleConfiguration)
+                                                    {
+                                                        <div class="test-step-config-row">
+                                                            <dt>@FormatConfigurationKey(step, item.Key)</dt>
+                                                            <dd title="@item.Value">@item.Value</dd>
+                                                        </div>
+                                                    }
+                                                </dl>
+                                            }
                                         </div>
-                                    }
-                                </dl>
-                            }
-                        </div>
+                                    </section>
+                                }
+                            </div>
+                        }
                     </section>
-                    @if (index < Scenario.Steps.Count - 1)
-                    {
-                        <div class="test-step-link" aria-hidden="true">
-                            <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
-                        </div>
-                    }
                 }
             </div>
         }
@@ -276,6 +293,42 @@
             > 1 => $"{Scenario.StepCount} steps",
             _ => "no steps"
         };
+
+    private static string PhaseStepCountText(ScenarioPhaseSnapshot phase)
+        => phase.Steps.Count switch
+        {
+            1 => "1 step",
+            _ => $"{phase.Steps.Count} steps"
+        };
+
+    private static string PhaseIcon(string kind)
+        => kind switch
+        {
+            ScenarioPhaseKinds.Setup => Icons.Material.Filled.BuildCircle,
+            ScenarioPhaseKinds.Stimulus => Icons.Material.Filled.PlayCircle,
+            ScenarioPhaseKinds.Observe => Icons.Material.Filled.Visibility,
+            ScenarioPhaseKinds.Assert => Icons.Material.Filled.Rule,
+            ScenarioPhaseKinds.Cleanup => Icons.Material.Filled.CleaningServices,
+            _ => Icons.Material.Filled.ViewTimeline
+        };
+
+    private int StepNumber(ScenarioStepSnapshot step)
+    {
+        if (Scenario is null)
+        {
+            return 1;
+        }
+
+        for (var index = 0; index < Scenario.Steps.Count; index++)
+        {
+            if (string.Equals(Scenario.Steps[index].Name, step.Name, StringComparison.Ordinal))
+            {
+                return index + 1;
+            }
+        }
+
+        return 1;
+    }
 
     private ScenarioStepDescriptor StepDescriptor(ScenarioStepSnapshot step)
         => ScenarioSteps.Describe(step.Type);

@@ -1,0 +1,16 @@
+@namespace FluxMq.UI.Components.Workspace
+
+<div class="dashboard-status-strip-grid" style="@DashboardWidgetFormatting.MetricGridStyle(Widget)">
+    @foreach (var card in DashboardWidgetFormatting.MetricCards(Widget, Snapshot))
+    {
+        <DashboardMetricTile Card="@card" />
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardWidgetSnapshot Widget { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public DashboardEventSnapshot Snapshot { get; set; } = null!;
+}

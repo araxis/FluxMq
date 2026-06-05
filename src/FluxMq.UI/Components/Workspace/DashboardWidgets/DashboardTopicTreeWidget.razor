@@ -1,0 +1,58 @@
+@namespace FluxMq.UI.Components.Workspace
+@using FluxFlow.Engine.Components
+@implements IDisposable
+@inject LiveMqttWorkspaceService Live
+
+@{
+    var messages = TopicMessages;
+}
+
+<div class="dashboard-topic-summary">
+    <div>
+        <strong>@DashboardWidgetFormatting.TopicCount(messages)</strong>
+        <span>topics</span>
+    </div>
+    <div>
+        <strong>@messages.Count</strong>
+        <span>messages</span>
+    </div>
+</div>
+<div class="dashboard-topic-tree">
+    <TopicTreeView Messages="@messages"
+                   Compact="true"
+                   EmptyMessage="No topic traffic yet" />
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardWidgetSnapshot Widget { get; set; } = null!;
+
+    private IReadOnlyList<MqttEnvelope> TopicMessages
+    {
+        get
+        {
+            var messages = Live.RecentMessages;
+            return ExcludeSystemTopics
+                ? messages.Where(static message => !message.Topic.StartsWith("$SYS/", StringComparison.Ordinal)).ToArray()
+                : messages;
+        }
+    }
+
+    private bool ExcludeSystemTopics
+        => !string.Equals(Widget.ReadString(DashboardWidgetCatalog.ExcludeSystemTopicsKey), "false", StringComparison.OrdinalIgnoreCase);
+
+    protected override void OnInitialized()
+    {
+        Live.Changed += OnLiveChanged;
+    }
+
+    private void OnLiveChanged(object? sender, EventArgs e)
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Live.Changed -= OnLiveChanged;
+    }
+}

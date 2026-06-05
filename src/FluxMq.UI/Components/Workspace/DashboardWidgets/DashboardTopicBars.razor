@@ -1,0 +1,32 @@
+@namespace FluxMq.UI.Components.Workspace
+
+<div class="dashboard-top-topic-panel">
+    @if (Snapshot.TopicCounts.Count == 0)
+    {
+        <div class="dashboard-topic-empty">
+            <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" />
+            <span>No topic traffic yet</span>
+        </div>
+    }
+    else
+    {
+        @foreach (var topic in DashboardWidgetFormatting.TopicBars(Snapshot, Limit))
+        {
+            <div class="dashboard-topic-row">
+                <span class="dashboard-topic-name" title="@topic.Topic">@DashboardWidgetFormatting.TrimTopic(topic.Topic)</span>
+                <div class="dashboard-topic-bar">
+                    <div class="dashboard-topic-bar-fill" style="@topic.Style"></div>
+                </div>
+                <span class="dashboard-topic-count">@DashboardWidgetFormatting.FormatNumber(topic.Count)</span>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardEventSnapshot Snapshot { get; set; } = null!;
+
+    [Parameter]
+    public int Limit { get; set; } = 6;
+}

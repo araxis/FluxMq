@@ -1,168 +1,64 @@
-@using FluxFlow.Engine.Components
-@using System.Globalization
-@implements IDisposable
-@inject LiveMqttWorkspaceService Live
+@namespace FluxMq.UI.Components.Workspace
 
-<div class="dashboard-widget @WidgetClass">
+<div class="dashboard-widget @DashboardWidgetFormatting.WidgetClass(Widget)">
     <div class="dashboard-widget-header">
         <div class="dashboard-widget-icon">
-            <MudIcon Icon="@WidgetIcon" Size="Size.Small" />
+            <MudIcon Icon="@DashboardWidgetFormatting.WidgetIcon(Widget)" Size="Size.Small" />
         </div>
         <div class="dashboard-widget-title-block">
-            <span class="dashboard-widget-title">@WidgetTitle</span>
-            <span class="dashboard-widget-subtitle">@WidgetSubtitle</span>
+            <span class="dashboard-widget-title">@DashboardWidgetFormatting.WidgetTitle(Widget)</span>
+            <span class="dashboard-widget-subtitle">@DashboardWidgetFormatting.WidgetSubtitle(Widget)</span>
         </div>
     </div>
 
-    @if (IsTopicTree)
+    @if (DashboardWidgetCatalog.IsTopicTreeWidget(Widget.Type))
     {
-        var messages = TopicMessages;
-        <div class="dashboard-topic-summary">
-            <div>
-                <strong>@TopicCount(messages)</strong>
-                <span>topics</span>
-            </div>
-            <div>
-                <strong>@messages.Count</strong>
-                <span>messages</span>
-            </div>
-        </div>
-        <div class="dashboard-topic-tree">
-            <TopicTreeView Messages="@messages"
-                           Compact="true"
-                           EmptyMessage="No topic traffic yet" />
-        </div>
+        <DashboardTopicTreeWidget Widget="@Widget" />
     }
     else
     {
         var snapshot = Project.GetDashboardEventSnapshot(Widget);
-        if (IsEventCounter)
+        @switch (Widget.Type)
         {
-            <div class="dashboard-widget-metric">
-                <div>
-                    <div class="dashboard-widget-value">@FormatNumber(snapshot.Count)</div>
-                    <div class="dashboard-widget-meta">@CounterMeta(snapshot)</div>
-                </div>
-                @RenderBucketBars(snapshot, compact: true)
-            </div>
-        }
-        else if (IsEventRate)
-        {
-            <div class="dashboard-rate-layout">
-                <div>
-                    <div class="dashboard-widget-value">@FormatRate(snapshot.EventsPerSecond)</div>
-                    <div class="dashboard-widget-meta">@RateMeta(snapshot)</div>
-                </div>
-                <div class="dashboard-rate-track" aria-hidden="true">
-                    <span style="@RateTrackStyle(snapshot)"></span>
-                </div>
-            </div>
-        }
-        else if (IsEventGauge)
-        {
-            var primary = PrimaryMetricCard(snapshot);
-            <div class="dashboard-observability-layout">
-                <div class="dashboard-observability-grid" style="@MetricGridStyle">
-                    @foreach (var card in MetricCards(snapshot))
-                    {
-                        @RenderMetricCard(card)
-                    }
-                </div>
-
-                @if (SelectedGaugeStyle == DashboardWidgetCatalog.GaugeStyleTiles)
-                {
-                    @RenderTopicBars(snapshot, limit: 4)
-                }
-                else if (SelectedGaugeStyle == DashboardWidgetCatalog.GaugeStyleMeter)
-                {
-                    <div class="dashboard-gauge-meter-panel">
-                        <div class="dashboard-gauge-meter-header">
-                            <span>@primary.Label</span>
-                            <strong>@primary.Value</strong>
-                        </div>
-                        <div class="dashboard-gauge-meter" style="@GaugeProgressStyle(snapshot)" aria-hidden="true">
-                            <span></span>
-                        </div>
-                        <div class="dashboard-gauge-meter-footer">
-                            <span>@FormatDuration(snapshot.RateWindow)</span>
-                            <span>@FormatNumber(snapshot.Count) total</span>
-                        </div>
-                    </div>
-                }
-                else
-                {
-                    <div class="dashboard-widget-gauge-shell">
-                        <div class="dashboard-widget-gauge" style="@GaugeProgressStyle(snapshot)">
-                            <div>
-                                <strong>@primary.Value</strong>
-                                <span>@primary.Label</span>
-                            </div>
-                        </div>
-                        <div class="dashboard-widget-gauge-meta">
-                            <strong>@FormatNumber(snapshot.Count) total</strong>
-                            <span>@FormatRate(snapshot.EventsPerSecond)</span>
-                            <span>@FormatBytes(snapshot.TotalPayloadBytes) payload</span>
-                        </div>
-                    </div>
-                }
-            </div>
-        }
-        else if (IsEventChart)
-        {
-            <div class="dashboard-observability-layout">
-                <div class="dashboard-observability-grid compact" style="@MetricGridStyle">
-                    @foreach (var card in MetricCards(snapshot))
-                    {
-                        @RenderMetricCard(card)
-                    }
-                </div>
-
-                <div class="dashboard-widget-chart">
-                    @if (SelectedChartType == DashboardWidgetCatalog.ChartTypeTopics)
-                    {
-                        @RenderTopicBars(snapshot, limit: 6)
-                    }
-                    else if (SelectedChartType == DashboardWidgetCatalog.ChartTypeLine ||
-                             SelectedChartType == DashboardWidgetCatalog.ChartTypeArea)
-                    {
-                        <svg class="dashboard-widget-chart-line @SelectedChartType"
-                             viewBox="0 0 100 44"
-                             preserveAspectRatio="none"
-                             aria-hidden="true">
-                            @if (SelectedChartType == DashboardWidgetCatalog.ChartTypeArea)
-                            {
-                                <polygon points="@ChartAreaPoints(snapshot)" />
-                            }
-                            <polyline points="@ChartLinePoints(snapshot)" />
-                        </svg>
-                    }
-                    else
-                    {
-                        @RenderBucketBars(snapshot, compact: false)
-                    }
-                    <div class="dashboard-widget-meta">@RateMeta(snapshot)</div>
-                </div>
-            </div>
-        }
-        else if (IsLatestEvent)
-        {
-            if (snapshot.LatestEvent is { } latest)
-            {
-                <div class="dashboard-widget-event-type">@latest.Type</div>
-                <div class="dashboard-widget-meta">@EventMeta(latest)</div>
-                @if (!string.IsNullOrWhiteSpace(latest.PayloadPreview))
-                {
-                    <pre class="dashboard-widget-payload">@latest.PayloadPreview</pre>
-                }
-            }
-            else
-            {
-                <div class="dashboard-widget-empty">No events yet</div>
-            }
-        }
-        else
-        {
-            <div class="dashboard-widget-empty">@Widget.Type</div>
+            case DashboardWidgetCatalog.KpiTileType:
+            case DashboardWidgetCatalog.EventCounterType:
+                <DashboardEventCounterWidget Snapshot="@snapshot" />
+                break;
+            case DashboardWidgetCatalog.RateTileType:
+            case DashboardWidgetCatalog.EventRateType:
+                <DashboardEventRateWidget Snapshot="@snapshot" />
+                break;
+            case DashboardWidgetCatalog.EventGaugeType:
+                <DashboardEventGaugeWidget Widget="@Widget" Snapshot="@snapshot" />
+                break;
+            case DashboardWidgetCatalog.LineChartType:
+            case DashboardWidgetCatalog.AreaChartType:
+            case DashboardWidgetCatalog.BarChartType:
+            case DashboardWidgetCatalog.EventChartType:
+                <DashboardEventChartWidget Widget="@Widget" Snapshot="@snapshot" />
+                break;
+            case DashboardWidgetCatalog.StatusStripType:
+                <DashboardStatusStripWidget Widget="@Widget" Snapshot="@snapshot" />
+                break;
+            case DashboardWidgetCatalog.DonutChartType:
+            case DashboardWidgetCatalog.QosRetainBreakdownType:
+                <DashboardQosRetainBreakdownWidget Snapshot="@snapshot" />
+                break;
+            case DashboardWidgetCatalog.PayloadDistributionType:
+                <DashboardPayloadDistributionWidget Snapshot="@snapshot" />
+                break;
+            case DashboardWidgetCatalog.EventTableType:
+                <DashboardEventTableWidget Snapshot="@snapshot" />
+                break;
+            case DashboardWidgetCatalog.TopicActivityType:
+                <DashboardTopicActivityWidget Snapshot="@snapshot" />
+                break;
+            case DashboardWidgetCatalog.LatestEventType:
+                <DashboardLatestEventWidget Snapshot="@snapshot" />
+                break;
+            default:
+                <DashboardUnknownWidget Type="@Widget.Type" />
+                break;
         }
     }
 </div>
@@ -173,348 +69,4 @@
 
     [Parameter, EditorRequired]
     public DashboardWidgetSnapshot Widget { get; set; } = null!;
-
-    private bool IsEventCounter => string.Equals(Widget.Type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal);
-
-    private bool IsLatestEvent => string.Equals(Widget.Type, DashboardWidgetCatalog.LatestEventType, StringComparison.Ordinal);
-
-    private bool IsEventRate => string.Equals(Widget.Type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal);
-
-    private bool IsEventGauge => string.Equals(Widget.Type, DashboardWidgetCatalog.EventGaugeType, StringComparison.Ordinal);
-
-    private bool IsEventChart => string.Equals(Widget.Type, DashboardWidgetCatalog.EventChartType, StringComparison.Ordinal);
-
-    private bool IsTopicTree => string.Equals(Widget.Type, DashboardWidgetCatalog.TopicTreeType, StringComparison.Ordinal);
-
-    private string SelectedGaugeStyle
-        => DashboardWidgetCatalog.NormalizeGaugeStyle(Widget.ReadString(DashboardWidgetCatalog.GaugeStyleKey));
-
-    private string SelectedChartType
-        => DashboardWidgetCatalog.NormalizeChartType(Widget.ReadString(DashboardWidgetCatalog.ChartTypeKey));
-
-    private string MetricGridStyle
-        => $"--metric-columns:{DashboardWidgetCatalog.NormalizeMetricCardColumns(Widget.ReadString(DashboardWidgetCatalog.MetricCardColumnsKey))};";
-
-    private IReadOnlyList<MqttEnvelope> TopicMessages
-    {
-        get
-        {
-            var messages = Live.RecentMessages;
-            return ExcludeSystemTopics
-                ? messages.Where(static message => !message.Topic.StartsWith("$SYS/", StringComparison.Ordinal)).ToArray()
-                : messages;
-        }
-    }
-
-    private bool ExcludeSystemTopics
-        => !string.Equals(Widget.ReadString(DashboardWidgetCatalog.ExcludeSystemTopicsKey), "false", StringComparison.OrdinalIgnoreCase);
-
-    private string WidgetTitle
-        => Widget.ReadString("title") ?? Widget.Type switch
-        {
-            DashboardWidgetCatalog.EventCounterType => "Events",
-            DashboardWidgetCatalog.LatestEventType => "Latest event",
-            DashboardWidgetCatalog.EventRateType => "Event rate",
-            DashboardWidgetCatalog.EventGaugeType => "Event gauge",
-            DashboardWidgetCatalog.EventChartType => "Event chart",
-            DashboardWidgetCatalog.TopicTreeType => "Topic tree",
-            _ => Widget.Name
-        };
-
-    private string WidgetSubtitle => IsTopicTree
-        ? "Live topic map"
-        : EventFilterSummary;
-
-    private string EventFilterSummary
-    {
-        get
-        {
-            var parts = new List<string>();
-            AddPart(parts, Widget.ReadString(DashboardEventFilterCatalog.EventTypeKey));
-            AddPart(parts, Widget.ReadString(DashboardEventFilterCatalog.TopicStartsWithKey), "topic ");
-            AddPart(parts, Widget.ReadString(DashboardEventFilterCatalog.TopicNotStartsWithKey), "exclude ");
-            AddPart(parts, Widget.ReadString(DashboardEventFilterCatalog.StatusKey), "status ");
-            return parts.Count == 0 ? "All runtime events" : string.Join(" / ", parts);
-        }
-    }
-
-    private string WidgetIcon
-        => Widget.Type switch
-        {
-            DashboardWidgetCatalog.EventCounterType => Icons.Material.Filled.Numbers,
-            DashboardWidgetCatalog.LatestEventType => Icons.Material.Filled.Bolt,
-            DashboardWidgetCatalog.EventRateType => Icons.Material.Filled.Speed,
-            DashboardWidgetCatalog.EventGaugeType => Icons.Material.Filled.DonutLarge,
-            DashboardWidgetCatalog.EventChartType => Icons.Material.Filled.StackedLineChart,
-            DashboardWidgetCatalog.TopicTreeType => Icons.Material.Filled.AccountTree,
-            _ => Icons.Material.Filled.Widgets
-        };
-
-    private string WidgetClass
-        => Widget.Type switch
-        {
-            DashboardWidgetCatalog.EventCounterType => "event-counter",
-            DashboardWidgetCatalog.LatestEventType => "latest-event",
-            DashboardWidgetCatalog.EventRateType => "event-rate",
-            DashboardWidgetCatalog.EventGaugeType => "event-gauge",
-            DashboardWidgetCatalog.EventChartType => "event-chart",
-            DashboardWidgetCatalog.TopicTreeType => "topic-tree-widget",
-            _ => "unknown"
-        };
-
-    protected override void OnInitialized()
-    {
-        Live.Changed += OnLiveChanged;
-    }
-
-    private void OnLiveChanged(object? sender, EventArgs e)
-    {
-        if (IsTopicTree)
-        {
-            _ = InvokeAsync(StateHasChanged);
-        }
-    }
-
-    private RenderFragment RenderMetricCard(MetricDisplayCard card) => @<div class="dashboard-metric-tile @card.CssClass">
-        <MudIcon Icon="@card.Icon" Size="Size.Small" />
-        <span class="dashboard-metric-value">@card.Value</span>
-        <span class="dashboard-metric-label">@card.Label</span>
-    </div>;
-
-    private RenderFragment RenderBucketBars(DashboardEventSnapshot snapshot, bool compact) => @<div class="@(compact ? "dashboard-widget-sparkline" : "dashboard-widget-chart-bars")">
-        @foreach (var bucket in ChartBuckets(snapshot))
-        {
-            <span style="@bucket.Style" title="@bucket.Label"></span>
-        }
-    </div>;
-
-    private RenderFragment RenderTopicBars(DashboardEventSnapshot snapshot, int limit) => @<div class="dashboard-top-topic-panel">
-        @if (snapshot.TopicCounts.Count == 0)
-        {
-            <div class="dashboard-topic-empty">
-                <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" />
-                <span>No topic traffic yet</span>
-            </div>
-        }
-        else
-        {
-            @foreach (var topic in TopicBars(snapshot, limit))
-            {
-                <div class="dashboard-topic-row">
-                    <span class="dashboard-topic-name" title="@topic.Topic">@TrimTopic(topic.Topic)</span>
-                    <div class="dashboard-topic-bar">
-                        <div class="dashboard-topic-bar-fill" style="@topic.Style"></div>
-                    </div>
-                    <span class="dashboard-topic-count">@FormatNumber(topic.Count)</span>
-                </div>
-            }
-        }
-    </div>;
-
-    private IReadOnlyList<MetricDisplayCard> MetricCards(DashboardEventSnapshot snapshot)
-        => DashboardWidgetCatalog.NormalizeDisplayMetrics(Widget.ReadString(DashboardWidgetCatalog.DisplayMetricsKey))
-            .Select(metric => ToMetricDisplayCard(metric, snapshot))
-            .ToArray();
-
-    private MetricDisplayCard PrimaryMetricCard(DashboardEventSnapshot snapshot)
-        => ToMetricDisplayCard(
-            DashboardWidgetCatalog.NormalizePrimaryMetric(Widget.ReadString(DashboardWidgetCatalog.PrimaryMetricKey)),
-            snapshot);
-
-    private static MetricDisplayCard ToMetricDisplayCard(string metric, DashboardEventSnapshot snapshot)
-        => metric switch
-        {
-            DashboardWidgetCatalog.MetricCurrentRate => new(
-                Icons.Material.Filled.Speed,
-                FormatRate(snapshot.EventsPerSecond),
-                "now / sec",
-                "metric-rate"),
-            DashboardWidgetCatalog.MetricRecent => new(
-                Icons.Material.Filled.Update,
-                FormatNumber(snapshot.RecentCount),
-                "recent",
-                "metric-recent"),
-            DashboardWidgetCatalog.MetricPayloadBytes => new(
-                Icons.Material.Filled.DataUsage,
-                FormatBytes(snapshot.TotalPayloadBytes),
-                "payload",
-                "metric-payload"),
-            DashboardWidgetCatalog.MetricTopics => new(
-                Icons.Material.Filled.Topic,
-                FormatNumber(snapshot.UniqueTopicCount),
-                "topics",
-                "metric-topics"),
-            DashboardWidgetCatalog.MetricRetained => new(
-                Icons.Material.Filled.PushPin,
-                FormatNumber(snapshot.RetainedCount),
-                "retained",
-                "metric-retained"),
-            DashboardWidgetCatalog.MetricAveragePayload => new(
-                Icons.Material.Filled.DataUsage,
-                FormatBytes(snapshot.AveragePayloadBytes),
-                "avg payload",
-                "metric-payload"),
-            _ => new(
-                Icons.Material.Filled.MailOutline,
-                FormatNumber(snapshot.Count),
-                "messages",
-                "metric-messages")
-        };
-
-    private static int TopicCount(IReadOnlyList<MqttEnvelope> messages)
-        => messages.Select(static message => message.Topic).Distinct(StringComparer.Ordinal).Count();
-
-    private static string CounterMeta(DashboardEventSnapshot snapshot)
-        => snapshot.LatestEvent is null
-            ? "waiting"
-            : $"latest {FormatEventTime(snapshot.LatestEvent)}";
-
-    private static string RateMeta(DashboardEventSnapshot snapshot)
-        => snapshot.RecentCount == 0
-            ? "waiting for traffic"
-            : $"{FormatNumber(snapshot.RecentCount)} in {FormatDuration(snapshot.RateWindow)}";
-
-    private static string EventMeta(FlowEvent flowEvent)
-    {
-        var parts = new List<string>();
-        if (!string.IsNullOrWhiteSpace(flowEvent.Channel))
-        {
-            parts.Add(flowEvent.Channel);
-        }
-        else if (!string.IsNullOrWhiteSpace(flowEvent.Subject))
-        {
-            parts.Add(flowEvent.Subject);
-        }
-
-        if (!string.IsNullOrWhiteSpace(flowEvent.Status))
-        {
-            parts.Add(flowEvent.Status);
-        }
-
-        if (flowEvent.PayloadBytes is { } bytes)
-        {
-            parts.Add($"{bytes} B");
-        }
-
-        parts.Add(FormatEventTime(flowEvent));
-        return string.Join(" / ", parts);
-    }
-
-    private static IReadOnlyList<ChartBucket> ChartBuckets(DashboardEventSnapshot snapshot)
-    {
-        var max = Math.Max(1, snapshot.BucketCounts.DefaultIfEmpty(0).Max());
-        return snapshot.BucketCounts
-            .Select(count =>
-            {
-                var height = count == 0 ? 8 : Math.Clamp((count / (double)max) * 100, 14, 100);
-                return new ChartBucket(
-                    $"height:{height.ToString("0.###", CultureInfo.InvariantCulture)}%;",
-                    $"{FormatNumber(count)} events");
-            })
-            .ToArray();
-    }
-
-    private static IReadOnlyList<TopicBar> TopicBars(DashboardEventSnapshot snapshot, int limit)
-    {
-        var max = Math.Max(1, snapshot.TopicCounts.DefaultIfEmpty(new DashboardTopicMetric(string.Empty, 0)).Max(static topic => topic.Count));
-        return snapshot.TopicCounts
-            .Take(limit)
-            .Select(topic =>
-            {
-                var width = topic.Count == 0 ? 0 : Math.Clamp(topic.Count / (double)max * 100, 10, 100);
-                return new TopicBar(
-                    topic.Topic,
-                    topic.Count,
-                    $"width:{width.ToString("0.###", CultureInfo.InvariantCulture)}%;");
-            })
-            .ToArray();
-    }
-
-    private static string ChartLinePoints(DashboardEventSnapshot snapshot)
-    {
-        var buckets = snapshot.BucketCounts.Count == 0 ? [0] : snapshot.BucketCounts;
-        var max = Math.Max(1, buckets.Max());
-        var lastIndex = Math.Max(1, buckets.Count - 1);
-        return string.Join(" ", buckets.Select((count, index) =>
-        {
-            var x = index * 100d / lastIndex;
-            var y = count == 0 ? 41d : 42d - Math.Clamp(count / (double)max * 36d, 8d, 36d);
-            return $"{x.ToString("0.###", CultureInfo.InvariantCulture)},{y.ToString("0.###", CultureInfo.InvariantCulture)}";
-        }));
-    }
-
-    private static string ChartAreaPoints(DashboardEventSnapshot snapshot)
-        => $"0,44 {ChartLinePoints(snapshot)} 100,44";
-
-    private static string GaugeProgressStyle(DashboardEventSnapshot snapshot)
-    {
-        var maxBucket = Math.Max(1, snapshot.BucketCounts.DefaultIfEmpty(0).Max());
-        var capacity = Math.Max(1, maxBucket * Math.Max(1, snapshot.BucketCounts.Count));
-        var percent = snapshot.RecentCount == 0
-            ? 0
-            : Math.Clamp(snapshot.RecentCount / (double)capacity * 100, 12, 100);
-        return $"--gauge-progress:{percent.ToString("0.###", CultureInfo.InvariantCulture)}%;";
-    }
-
-    private static string RateTrackStyle(DashboardEventSnapshot snapshot)
-    {
-        var percent = snapshot.RecentCount == 0
-            ? 0
-            : Math.Clamp(snapshot.EventsPerSecond * 320, 8, 100);
-        return $"width:{percent.ToString("0.###", CultureInfo.InvariantCulture)}%;";
-    }
-
-    private static string FormatEventTime(FlowEvent flowEvent)
-        => flowEvent.Timestamp.ToLocalTime().ToString("HH:mm:ss", CultureInfo.InvariantCulture);
-
-    private static string FormatNumber(long value) => value switch
-    {
-        < 1_000 => value.ToString(CultureInfo.InvariantCulture),
-        < 1_000_000 => $"{value / 1_000.0:0.#}k",
-        < 1_000_000_000 => $"{value / 1_000_000.0:0.#}M",
-        _ => $"{value / 1_000_000_000.0:0.#}B"
-    };
-
-    private static string FormatBytes(long bytes) => FormatBytes((double)bytes);
-
-    private static string FormatBytes(double bytes) => bytes switch
-    {
-        < 1_024 => $"{bytes.ToString("0.#", CultureInfo.InvariantCulture)} B",
-        < 1_048_576 => $"{bytes / 1_024.0:0.#} KB",
-        < 1_073_741_824 => $"{bytes / 1_048_576.0:0.#} MB",
-        _ => $"{bytes / 1_073_741_824.0:0.#} GB"
-    };
-
-    private static string FormatRate(double eventsPerSecond)
-        => eventsPerSecond.ToString(eventsPerSecond switch
-        {
-            >= 10 => "0/s",
-            >= 1 => "0.0/s",
-            _ => "0.00/s"
-        }, CultureInfo.InvariantCulture);
-
-    private static string FormatDuration(TimeSpan duration)
-        => duration.TotalMinutes >= 1
-            ? $"{duration.TotalMinutes.ToString("0", CultureInfo.InvariantCulture)} min"
-            : $"{duration.TotalSeconds.ToString("0", CultureInfo.InvariantCulture)} sec";
-
-    private static string TrimTopic(string topic)
-        => topic.Length <= 28 ? topic : "..." + topic[^25..];
-
-    private static void AddPart(List<string> parts, string? value, string prefix = "")
-    {
-        if (!string.IsNullOrWhiteSpace(value))
-        {
-            parts.Add($"{prefix}{value}");
-        }
-    }
-
-    public void Dispose()
-    {
-        Live.Changed -= OnLiveChanged;
-    }
-
-    private readonly record struct ChartBucket(string Style, string Label);
-    private readonly record struct TopicBar(string Topic, int Count, string Style);
-    private sealed record MetricDisplayCard(string Icon, string Value, string Label, string CssClass);
 }

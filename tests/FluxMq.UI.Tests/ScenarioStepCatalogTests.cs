@@ -17,7 +17,14 @@ public sealed class ScenarioStepCatalogTests
                 ScenarioStepTypes.MqttPublisher,
                 ScenarioStepTypes.MqttTrigger,
                 ScenarioStepTypes.WhenEvent,
-                ScenarioStepTypes.ExpectEvent
+                ScenarioStepTypes.ExpectEvent,
+                ScenarioStepTypes.WaitForEvent,
+                ScenarioStepTypes.ConditionalEvent,
+                ScenarioStepTypes.PayloadAssertion,
+                ScenarioStepTypes.JsonSchemaAssertion,
+                ScenarioStepTypes.MetricThresholdAssertion,
+                ScenarioStepTypes.Delay,
+                ScenarioStepTypes.CleanupAction
             ]);
 
         var publish = catalog.Find(ScenarioStepTypes.MqttPublisher).ShouldNotBeNull();

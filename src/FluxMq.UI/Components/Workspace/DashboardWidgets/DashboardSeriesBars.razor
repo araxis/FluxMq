@@ -1,0 +1,26 @@
+@namespace FluxMq.UI.Components.Workspace
+
+@{
+    var max = Math.Max(1, Series.Values.DefaultIfEmpty(0).Max());
+}
+
+<div class="dashboard-series-bars">
+    @for (var index = 0; index < Series.Values.Count; index++)
+    {
+        var value = Series.Values[index];
+        var label = Series.Labels[index];
+        var width = value <= 0 ? 0 : Math.Clamp(value / max * 100, 8, 100);
+        <div class="dashboard-series-row">
+            <span>@label</span>
+            <div class="dashboard-series-track">
+                <div class="dashboard-series-fill" style="width:@width.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)%"></div>
+            </div>
+            <strong>@DashboardWidgetFormatting.FormatNumber((long)value)</strong>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public FluxChartSeries Series { get; set; } = null!;
+}

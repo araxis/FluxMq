@@ -1,0 +1,16 @@
+@namespace FluxMq.UI.Components.Workspace
+
+<div class="dashboard-rate-layout">
+    <div>
+        <div class="dashboard-widget-value">@DashboardWidgetFormatting.FormatRate(Snapshot.EventsPerSecond)</div>
+        <div class="dashboard-widget-meta">@DashboardWidgetFormatting.RateMeta(Snapshot)</div>
+    </div>
+    <div class="dashboard-rate-track" aria-hidden="true">
+        <span style="@DashboardWidgetFormatting.RateTrackStyle(Snapshot)"></span>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardEventSnapshot Snapshot { get; set; } = null!;
+}

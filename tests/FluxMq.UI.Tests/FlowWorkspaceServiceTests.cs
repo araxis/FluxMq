@@ -2118,6 +2118,7 @@ public sealed class FlowWorkspaceServiceTests
         snapshot.LatestEvent.ShouldNotBeNull();
         snapshot.LatestEvent.Source.ShouldBe("LivePublisher");
         snapshot.LatestEvent.Channel.ShouldBe("test");
+        snapshot.Events.ShouldHaveSingleItem().Channel.ShouldBe("test");
         snapshot.LatestEvent.GetAttribute("qos").ShouldBe("0");
         snapshot.LatestEvent.GetAttribute("retain").ShouldBe("False");
         snapshot.TopicCounts.ShouldBe([new DashboardTopicMetric("test", 1)]);
@@ -2185,6 +2186,7 @@ public sealed class FlowWorkspaceServiceTests
         snapshot.EventsPerSecond.ShouldBe(2d / snapshot.RateWindow.TotalSeconds, 0.0001);
         snapshot.LatestEvent.ShouldNotBeNull();
         snapshot.LatestEvent.Channel.ShouldBe("test/two");
+        snapshot.Events.Select(static flowEvent => flowEvent.Channel).ShouldBe(["test/two", "test/one"]);
         snapshot.TopicCounts.ShouldBe([
             new DashboardTopicMetric("test/one", 1),
             new DashboardTopicMetric("test/two", 1)

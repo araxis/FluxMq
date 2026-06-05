@@ -7,6 +7,7 @@ using FluxMq.Components.MessageSource;
 using FluxMq.Core.Models;
 using FluxMq.Core.Mqtt;
 using FluxMq.Components.Logging;
+using FluxMq.Components.Storage.Models;
 using FluxMq.Components.Storage.Repositories;
 using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Definitions;
@@ -38,6 +39,7 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
     private static readonly Encoding StrictUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
     private readonly FlowDefinitionComposer _definitionComposer;
     private readonly IMessageRepository? _messageRepository;
+    private readonly IScenarioRunHistoryRepository? _scenarioRunHistoryRepository;
     private readonly Func<MqttConnectionProfile, IMqttBrokerClient>? _runtimeClientFactory;
     private readonly DashboardEventFilterCatalog _dashboardEventFilters;
     private readonly SemaphoreSlim _gate = new(1, 1);
@@ -61,11 +63,13 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
     public FlowWorkspaceService(
         FlowDefinitionComposer definitionComposer,
         IMessageRepository? messageRepository = null,
+        IScenarioRunHistoryRepository? scenarioRunHistory = null,
         Func<MqttConnectionProfile, IMqttBrokerClient>? runtimeClientFactory = null,
         DashboardEventFilterCatalog? dashboardEventFilters = null)
     {
         _definitionComposer = definitionComposer;
         _messageRepository = messageRepository;
+        _scenarioRunHistoryRepository = scenarioRunHistory;
         _runtimeClientFactory = runtimeClientFactory;
         _dashboardEventFilters = dashboardEventFilters ?? DashboardEventFilterCatalog.Shared;
         DefinitionJson = _definitionComposer.CreateEmptyDefinition();
@@ -165,6 +169,7 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
                 recentCount,
                 DashboardRateWindow,
                 eventsPerSecond,
+                matching.Reverse().Take(12).ToArray(),
                 BuildDashboardEventBuckets(matching, recentThreshold),
                 topicCounts,
                 matching.Sum(static flowEvent => (long)(flowEvent.PayloadBytes ?? 0)),
@@ -1532,6 +1537,7 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
 
             LastScenarioRunResult = result;
             AddScenarioRunHistory(result);
+            StoreScenarioRunHistory(result);
             Diagnostics =
             [
                 new WorkspaceDiagnostic(
@@ -2124,6 +2130,55 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
             }
 
             ScenarioRunHistory = _scenarioRunHistory.ToArray();
+        }
+    }
+
+    private void StoreScenarioRunHistory(ScenarioRunResult result)
+    {
+        if (_scenarioRunHistoryRepository is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var scenario = GetActiveTestScenario();
+            var report = ScenarioRunReportFormatter.Create(result, scenario);
+            _scenarioRunHistoryRepository.Add(new StoredScenarioRun
+            {
+                ProjectName = Name,
+                ScenarioName = result.Name,
+                RunId = report.RunId,
+                Status = result.Status.ToString(),
+                StartedAt = result.StartedAt,
+                FinishedAt = result.FinishedAt,
+                DurationMilliseconds = (result.FinishedAt - result.StartedAt).TotalMilliseconds,
+                StepCount = result.Steps.Count,
+                FailedStepCount = result.Steps.Count(static step => !step.IsSuccess),
+                ReportJson = ScenarioRunReportFormatter.ToJson(report),
+                ReportText = ScenarioRunReportFormatter.ToText(report, ScenarioStepCatalog.Shared),
+                LogExcerpt = CreateScenarioLogExcerpt(result.Name)
+            });
+        }
+        catch
+        {
+            // Run persistence should never turn a completed scenario into a failed run.
+        }
+    }
+
+    private string CreateScenarioLogExcerpt(string scenarioName)
+    {
+        lock (_logSync)
+        {
+            return string.Join(
+                Environment.NewLine,
+                _logs
+                    .Where(log =>
+                        string.Equals(log.Scope, WorkspaceLogScopes.TestRunner, StringComparison.Ordinal) &&
+                        (string.IsNullOrWhiteSpace(log.ArtifactName) ||
+                         string.Equals(log.ArtifactName, scenarioName, StringComparison.Ordinal)))
+                    .TakeLast(20)
+                    .Select(static log => $"{log.Timestamp:O} [{log.Severity}] {log.Code}: {log.Message}"));
         }
     }
 

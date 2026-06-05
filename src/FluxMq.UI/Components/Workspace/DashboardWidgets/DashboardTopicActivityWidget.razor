@@ -1,0 +1,33 @@
+@namespace FluxMq.UI.Components.Workspace
+
+@if (Snapshot.TopicCounts.Count == 0)
+{
+    <div class="dashboard-widget-empty">No topic activity yet</div>
+}
+else
+{
+    <div class="dashboard-topic-activity">
+        @foreach (var topic in DashboardWidgetFormatting.TopicBars(Snapshot, 16))
+        {
+            <div class="dashboard-topic-activity-cell"
+                 style="@HeatStyle(topic)"
+                 title="@($"{topic.Topic} / {topic.Count} events")">
+                <span>@DashboardWidgetFormatting.TrimTopic(topic.Topic)</span>
+                <strong>@DashboardWidgetFormatting.FormatNumber(topic.Count)</strong>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardEventSnapshot Snapshot { get; set; } = null!;
+
+    private static string HeatStyle(DashboardTopicBar topic)
+    {
+        var width = topic.Style.StartsWith("width:", StringComparison.Ordinal)
+            ? topic.Style["width:".Length..].TrimEnd(';')
+            : "10%";
+        return $"--topic-heat:{width};";
+    }
+}
