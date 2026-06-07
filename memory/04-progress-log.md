@@ -2784,3 +2784,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 723 tests.
     - `git diff --check` passed.
 - Next step: commit the metric binding state cleanup, then inspect whether `OnParametersSet` can be safely reduced without obscuring UI state.
+- Dashboard inspector draft-loading cleanup:
+  - Reduced `OnParametersSet` to lifecycle coordination: selected-cell draft load, empty-widget cleanup, and selected-widget draft load.
+  - Split widget metric name resolution, metric draft setup, dashboard metric snapshot resolution, and legacy query-builder snapshot creation into focused local helpers.
+  - Kept behavior unchanged and avoided new public abstractions in this slice.
+  - Added source-boundary coverage for the draft-loading lifecycle shape.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardInspector"` passed with 16 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 399 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 724 tests.
+    - `git diff --check` passed.
+- Next step: commit the draft-loading cleanup, then review remaining dashboard inspector command handlers to decide if this cleanup phase is complete.

@@ -123,48 +123,59 @@
 
     protected override void OnParametersSet()
     {
-        var selectedCell = SelectedCells.Count == 1 ? SelectedCells[0] : null;
-        var selectedCellName = selectedCell?.Name;
-        if (!string.Equals(_draftCellName, selectedCellName, StringComparison.Ordinal))
-        {
-            _draftCellName = selectedCellName;
-            _cellStyleDraft = selectedCell is null
-                ? null
-                : DashboardCellStyleDraft.Create(selectedCell.Style);
-        }
+        LoadSelectedCellDraft();
 
         if (Widget is null)
         {
-            _widgetDraft = null;
-            _metricDraft = null;
-            _draftWidgetName = null;
-            _draftMetricName = null;
-            _metricToAdd = null;
-            _displayMetricToAdd = null;
-            _bindingMetrics = [];
-            _bindingOptions = [];
-            _primaryBindingMetric = null;
+            ClearWidgetDraftState();
             return;
         }
 
-        var binding = Layout?.Bindings.TryGetValue(Widget.Name, out var foundBinding) == true
-            ? foundBinding
-            : null;
-        var metricName = binding?.PrimaryMetric ??
-            Widget.ReadString("metric") ??
-            binding?.Metrics.FirstOrDefault() ??
-            (IsKpiWidget(Widget) ? Project.MetricNames.FirstOrDefault() : null) ??
-            $"{Widget.Name}Metric";
+        LoadWidgetDraftState(Widget);
+    }
 
-        if (string.Equals(_draftWidgetName, Widget.Name, StringComparison.Ordinal) &&
+    private void LoadSelectedCellDraft()
+    {
+        var selectedCell = SelectedCells.Count == 1 ? SelectedCells[0] : null;
+        var selectedCellName = selectedCell?.Name;
+        if (string.Equals(_draftCellName, selectedCellName, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _draftCellName = selectedCellName;
+        _cellStyleDraft = selectedCell is null
+            ? null
+            : DashboardCellStyleDraft.Create(selectedCell.Style);
+    }
+
+    private void ClearWidgetDraftState()
+    {
+        _widgetDraft = null;
+        _metricDraft = null;
+        _draftWidgetName = null;
+        _draftMetricName = null;
+        _metricToAdd = null;
+        _displayMetricToAdd = null;
+        _bindingMetrics = [];
+        _bindingOptions = [];
+        _primaryBindingMetric = null;
+    }
+
+    private void LoadWidgetDraftState(DashboardWidgetSnapshot widget)
+    {
+        var binding = FindWidgetBinding(widget.Name);
+        var metricName = ResolveWidgetMetricName(widget, binding);
+
+        if (string.Equals(_draftWidgetName, widget.Name, StringComparison.Ordinal) &&
             string.Equals(_draftMetricName, metricName, StringComparison.Ordinal))
         {
             return;
         }
 
-        _draftWidgetName = Widget.Name;
+        _draftWidgetName = widget.Name;
         _draftMetricName = metricName;
-        _widgetDraft = DashboardWidgetSettingsDraft.Create(Widget, EventFilters);
+        _widgetDraft = DashboardWidgetSettingsDraft.Create(widget, EventFilters);
         _metricToAdd = null;
         _displayMetricToAdd = null;
         _bindingOptions = binding?.Options is null
@@ -173,10 +184,42 @@
 
         if (!_widgetDraft.Profile.UsesMetricQuery)
         {
-            _metricDraft = null;
-            _bindingMetrics = [];
-            _bindingOptions = [];
-            _primaryBindingMetric = null;
+            ClearMetricDraftState();
+            return;
+        }
+
+        LoadMetricDraftState(widget, binding, metricName);
+    }
+
+    private DashboardWidgetBindingSnapshot? FindWidgetBinding(string widgetName)
+        => Layout?.Bindings.TryGetValue(widgetName, out var foundBinding) == true
+            ? foundBinding
+            : null;
+
+    private string ResolveWidgetMetricName(
+        DashboardWidgetSnapshot widget,
+        DashboardWidgetBindingSnapshot? binding)
+        => binding?.PrimaryMetric ??
+            widget.ReadString("metric") ??
+            binding?.Metrics.FirstOrDefault() ??
+            (IsKpiWidget(widget) ? Project.MetricNames.FirstOrDefault() : null) ??
+            $"{widget.Name}Metric";
+
+    private void ClearMetricDraftState()
+    {
+        _metricDraft = null;
+        _bindingMetrics = [];
+        _bindingOptions = [];
+        _primaryBindingMetric = null;
+    }
+
+    private void LoadMetricDraftState(
+        DashboardWidgetSnapshot widget,
+        DashboardWidgetBindingSnapshot? binding,
+        string metricName)
+    {
+        if (_widgetDraft is null)
+        {
             return;
         }
 
@@ -187,29 +230,44 @@
             metricName,
             _widgetDraft.Profile.SupportsMetricSlots);
 
-        var metric = DashboardMetricReferenceResolver.ResolveAppMetricSnapshot(Project, metricName, _bindingOptions) ??
-            (Layout?.Metrics.TryGetValue(metricName, out var foundMetric) == true
-            ? foundMetric
-            : null);
-        if (metric is null && _widgetDraft.UsesMetricQueryBuilder)
-        {
-            var legacyDefinition = FluxMetricQueryDraft
-                .Create(
-                    metric: null,
-                    Widget.Configuration,
-                    metricName)
-                .BuildDefinition(metricName);
-            metric = DashboardMetricQueryMapper.ToDashboardMetricSnapshot(
-                metricName,
-                DashboardMetricQueryMapper.ToDashboardQuery(legacyDefinition));
-        }
-
         _metricDraft = DashboardMetricEditorDraft.Create(
             metricName,
-            metric,
+            ResolveMetricSnapshot(widget, metricName),
             EventFilters,
             MetricRegistry,
-            Widget.Type);
+            widget.Type);
+    }
+
+    private DashboardMetricSnapshot? ResolveMetricSnapshot(
+        DashboardWidgetSnapshot widget,
+        string metricName)
+        => DashboardMetricReferenceResolver.ResolveAppMetricSnapshot(Project, metricName, _bindingOptions) ??
+           ResolveDashboardMetricSnapshot(metricName) ??
+           CreateLegacyMetricSnapshot(widget, metricName);
+
+    private DashboardMetricSnapshot? ResolveDashboardMetricSnapshot(string metricName)
+        => Layout?.Metrics.TryGetValue(metricName, out var foundMetric) == true
+            ? foundMetric
+            : null;
+
+    private DashboardMetricSnapshot? CreateLegacyMetricSnapshot(
+        DashboardWidgetSnapshot widget,
+        string metricName)
+    {
+        if (_widgetDraft?.UsesMetricQueryBuilder != true)
+        {
+            return null;
+        }
+
+        var legacyDefinition = FluxMetricQueryDraft
+            .Create(
+                metric: null,
+                widget.Configuration,
+                metricName)
+            .BuildDefinition(metricName);
+        return DashboardMetricQueryMapper.ToDashboardMetricSnapshot(
+            metricName,
+            DashboardMetricQueryMapper.ToDashboardQuery(legacyDefinition));
     }
 
     private IReadOnlyList<PropertyGridGroup> PropertyGroups => BuildPropertyGroups();

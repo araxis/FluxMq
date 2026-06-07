@@ -2166,6 +2166,27 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardInspector_SplitsDraftLoadingLifecycle()
+    {
+        var root = FindRepositoryRoot();
+        var inspector = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspector.razor"));
+
+        inspector.ShouldContain("LoadSelectedCellDraft();");
+        inspector.ShouldContain("ClearWidgetDraftState();");
+        inspector.ShouldContain("LoadWidgetDraftState(Widget);");
+        inspector.ShouldContain("private void LoadMetricDraftState");
+        inspector.ShouldContain("private DashboardMetricSnapshot? ResolveMetricSnapshot");
+        inspector.ShouldContain("private DashboardMetricSnapshot? CreateLegacyMetricSnapshot");
+        inspector.ShouldNotContain("protected override void OnParametersSet()\r\n    {\r\n        var selectedCell");
+    }
+
+    [Fact]
     public void DashboardDesigner_EmptyCellLabelsStayBoundedWhenGridShrinks()
     {
         var root = FindRepositoryRoot();
