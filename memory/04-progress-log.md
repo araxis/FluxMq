@@ -2631,4 +2631,11 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Kept Digital visual padding owned by `metric.digital.padding`.
   - Fixed property-grid color swatches to render alpha-safe `rgba(...)` colors over a checker background so selected colors are visible in the compact rows.
   - Separate-output UI build and focused UI tests passed after the change.
-- Next step: visually review cell padding versus Value/Digital visual padding together; if approved, continue with unit placement/case or the next Value visual layout polish.
+- Responsive dashboard grid slice:
+  - Added runtime responsive cell variables for column span, row span, tablet/mobile span, track padding, and responsive minimum height without changing dashboard V2 JSON.
+  - Updated edit and live dashboard grids to use container-query reflow: desktop keeps the designed grid, tablet derives two columns, and mobile derives one column.
+  - Added safe track minimums so fixed/star/percent tracks stop crushing widgets and scroll the dashboard frame when the available area is too small.
+  - Made Value and Digital metric visuals use container-aware sizing so titles, values, units, and digital readouts adapt to narrow or short cells in edit and live views.
+  - Normal UI build was blocked by the already-running desktop app locking output DLLs; separate-output UI build passed with no warnings or errors.
+  - Focused dashboard UI tests passed after the change.
+- Next step: visually review wide, medium, and narrow dashboard sizes with Value and Digital visuals; if approved, continue with KPI unit placement/case or the next Value visual layout polish.

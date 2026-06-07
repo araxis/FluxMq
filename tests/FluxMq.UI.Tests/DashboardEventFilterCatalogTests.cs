@@ -1675,6 +1675,69 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardDesigner_EmitsResponsiveCellVariables()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor"));
+
+        markup.ShouldContain("CellResponsiveVariables");
+        markup.ShouldContain("--dashboard-cell-column-span");
+        markup.ShouldContain("--dashboard-cell-row-span");
+        markup.ShouldContain("--dashboard-cell-tablet-span");
+        markup.ShouldContain("--dashboard-cell-mobile-span");
+        markup.ShouldContain("--dashboard-cell-responsive-min-height");
+        markup.ShouldContain("CssTemplate(_layout.Columns, ColumnAxis)");
+        markup.ShouldContain("CssTemplate(_layout.Rows, RowAxis)");
+    }
+
+    [Fact]
+    public void DashboardDesigner_UsesContainerResponsiveGridForEditAndLive()
+    {
+        var root = FindRepositoryRoot();
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor.css"));
+
+        css.ShouldContain("container-name: dashboard-layout;");
+        css.ShouldContain("@container dashboard-layout (max-width: 980px)");
+        css.ShouldContain("@container dashboard-layout (max-width: 620px)");
+        css.ShouldContain("grid-template-columns: repeat(2, minmax(var(--dashboard-grid-column-min, 156px), 1fr)) !important;");
+        css.ShouldContain("grid-column: span var(--dashboard-cell-tablet-span, 1) !important;");
+        css.ShouldContain("grid-column: span var(--dashboard-cell-mobile-span, 1) !important;");
+        css.ShouldContain(".dashboard-live-grid");
+        css.ShouldContain("grid-auto-rows: minmax(var(--dashboard-grid-row-min, 136px), 1fr);");
+    }
+
+    [Fact]
+    public void DashboardWidgets_UseContainerResponsiveValueAndDigitalSizing()
+    {
+        var root = FindRepositoryRoot();
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "wwwroot",
+            "dashboard-widgets.css"));
+
+        css.ShouldContain("font-size: clamp(28px, 8cqw, 46px);");
+        css.ShouldContain("font-size: clamp(30px, 10cqw, 52px);");
+        css.ShouldContain("height: clamp(34px, 42cqh, 74px);");
+        css.ShouldContain("@container (max-width: 240px)");
+        css.ShouldContain("@container (max-height: 150px)");
+        css.ShouldContain(".dashboard-digital-readout-display");
+    }
+
+    [Fact]
     public void DashboardInspector_RendersCellWidgetAlignmentPad()
     {
         var root = FindRepositoryRoot();

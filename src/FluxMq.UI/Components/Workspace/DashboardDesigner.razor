@@ -402,15 +402,15 @@
 
     private string GridStyle => _layout is null
         ? string.Empty
-        : $"grid-template-columns:{CssTemplate(_layout.Columns)};grid-template-rows:{CssTemplate(_layout.Rows)};";
+        : $"grid-template-columns:{CssTemplate(_layout.Columns, ColumnAxis)};grid-template-rows:{CssTemplate(_layout.Rows, RowAxis)};";
 
     private string ColumnHandleStyle => _layout is null
         ? string.Empty
-        : $"grid-template-columns:{CssTemplate(_layout.Columns)};";
+        : $"grid-template-columns:{CssTemplate(_layout.Columns, ColumnAxis)};";
 
     private string RowHandleStyle => _layout is null
         ? string.Empty
-        : $"grid-template-rows:{CssTemplate(_layout.Rows)};";
+        : $"grid-template-rows:{CssTemplate(_layout.Rows, RowAxis)};";
 
     private void LoadLayout()
     {
@@ -846,7 +846,7 @@
     {
         var rowPadding = GetCellRowPadding(cell);
         var columnPadding = GetCellColumnPadding(cell);
-        return $"grid-row:{cell.Row + 1} / span {cell.RowSpan};grid-column:{cell.Column + 1} / span {cell.ColumnSpan};margin:{FormatNumber(rowPadding)}px {FormatNumber(columnPadding)}px;{DashboardCellStyleDraft.CssVariables(cell.Style)}";
+        return $"grid-row:{cell.Row + 1} / span {cell.RowSpan};grid-column:{cell.Column + 1} / span {cell.ColumnSpan};margin:{FormatNumber(rowPadding)}px {FormatNumber(columnPadding)}px;{CellResponsiveVariables(cell, rowPadding, columnPadding)}{DashboardCellStyleDraft.CssVariables(cell.Style)}";
     }
 
     private double GetCellRowPadding(DashboardCellSnapshot cell)
@@ -939,8 +939,8 @@
                widget.Name;
     }
 
-    private static string CssTemplate(IReadOnlyList<string> sizes)
-        => string.Join(" ", sizes.Select(ToCssTrack));
+    private static string CssTemplate(IReadOnlyList<string> sizes, string axis)
+        => string.Join(" ", sizes.Select(size => ToCssTrack(size, axis)));
 
     private static IReadOnlyList<DashboardCellSnapshot> BuildVisibleCells(DashboardLayoutSnapshot layout)
     {
@@ -991,17 +991,35 @@
         return unique.Count == (maxRow - minRow + 1) * (maxColumn - minColumn + 1);
     }
 
-    private static string ToCssTrack(string size)
+    private static string CellResponsiveVariables(DashboardCellSnapshot cell, double rowPadding, double columnPadding)
+    {
+        var tabletSpan = Math.Clamp(cell.ColumnSpan, 1, 2);
+        var mobileSpan = 1;
+        var minHeight = Math.Clamp(136 * Math.Max(1, cell.RowSpan), 136, 420);
+        return
+            $"--dashboard-cell-column-span:{Math.Max(1, cell.ColumnSpan)};" +
+            $"--dashboard-cell-row-span:{Math.Max(1, cell.RowSpan)};" +
+            $"--dashboard-cell-tablet-span:{tabletSpan};" +
+            $"--dashboard-cell-mobile-span:{mobileSpan};" +
+            $"--dashboard-cell-row-padding:{FormatNumber(rowPadding)}px;" +
+            $"--dashboard-cell-column-padding:{FormatNumber(columnPadding)}px;" +
+            $"--dashboard-cell-responsive-min-height:{FormatNumber(minHeight)}px;";
+    }
+
+    private static string ToCssTrack(string size, string axis)
     {
         try
         {
             var track = DashboardGridTrackDefinition.Parse(size);
             var value = FormatNumber(track.Value);
+            var minVariable = string.Equals(axis, RowAxis, StringComparison.Ordinal)
+                ? "var(--dashboard-grid-row-min, 136px)"
+                : "var(--dashboard-grid-column-min, 156px)";
             return track.Unit switch
             {
-                DashboardGridTrackUnit.Fixed => $"minmax(0,{value}px)",
-                DashboardGridTrackUnit.Percent => $"minmax(0,{value}%)",
-                DashboardGridTrackUnit.Star => $"minmax(0,{value}fr)",
+                DashboardGridTrackUnit.Fixed => $"minmax({minVariable},{value}px)",
+                DashboardGridTrackUnit.Percent => $"minmax({minVariable},{value}%)",
+                DashboardGridTrackUnit.Star => $"minmax({minVariable},{value}fr)",
                 _ => "minmax(0,1fr)"
             };
         }
