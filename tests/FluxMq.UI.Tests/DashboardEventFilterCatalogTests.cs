@@ -568,6 +568,40 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardInspectorMetricBindingState_InitializesSingleMetricWithoutSlots()
+    {
+        var metrics = DashboardInspectorMetricBindingState.Initialize(
+            ["secondary", "primary"],
+            "primary",
+            supportsSlots: false);
+
+        metrics.ShouldBe(["primary"]);
+    }
+
+    [Fact]
+    public void DashboardInspectorMetricBindingState_KeepsPrimaryFirstWithSlots()
+    {
+        var metrics = DashboardInspectorMetricBindingState.Initialize(
+            ["secondary", "secondary", "third"],
+            "primary",
+            supportsSlots: true);
+
+        metrics.ShouldBe(["primary", "secondary", "third"]);
+    }
+
+    [Fact]
+    public void DashboardInspectorMetricBindingState_CurrentUsesFallbackWhenEmpty()
+    {
+        var metrics = DashboardInspectorMetricBindingState.Current(
+            supportsSlots: true,
+            metrics: [],
+            primaryMetric: null,
+            fallbackMetric: "fallback");
+
+        metrics.ShouldBe(["fallback"]);
+    }
+
+    [Fact]
     public void DashboardWidgetSettingsDraft_ResetToDefaultConfiguration_RestoresKpiDefaults()
     {
         var draft = DashboardWidgetSettingsDraft.Create(
@@ -1965,8 +1999,11 @@ public sealed class DashboardEventFilterCatalogTests
         inspector.ShouldContain("DashboardInspectorAppMetricRows");
         inspector.ShouldContain("DashboardInspectorMetricBindingRows");
         inspector.ShouldContain("DashboardInspectorMetricQueryRows");
+        inspector.ShouldContain("DashboardInspectorMetricBindingState.Initialize");
+        inspector.ShouldContain("DashboardInspectorMetricBindingState.Current");
         inspector.ShouldNotContain("<PropertyGridRow Name=\"Metric query\">");
         inspector.ShouldNotContain("private RenderFragment RenderMetricParameterField");
+        inspector.ShouldNotContain("CurrentBindingMetrics(");
         appRows.ShouldContain("Open metric");
         appRows.ShouldContain("ParameterChanged");
         bindingRows.ShouldContain("PrimaryMetricChanged");

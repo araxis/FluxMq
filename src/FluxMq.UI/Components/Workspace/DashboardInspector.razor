@@ -182,17 +182,10 @@
 
         _widgetDraft.MetricName = metricName;
         _primaryBindingMetric = metricName;
-        _bindingMetrics = binding?.Metrics.Count > 0
-            ? [.. binding.Metrics]
-            : [metricName];
-        if (!_widgetDraft.Profile.SupportsMetricSlots)
-        {
-            _bindingMetrics = [metricName];
-        }
-        else if (!_bindingMetrics.Contains(metricName, StringComparer.Ordinal))
-        {
-            _bindingMetrics.Insert(0, metricName);
-        }
+        _bindingMetrics = DashboardInspectorMetricBindingState.Initialize(
+            binding?.Metrics,
+            metricName,
+            _widgetDraft.Profile.SupportsMetricSlots);
 
         var metric = DashboardMetricReferenceResolver.ResolveAppMetricSnapshot(Project, metricName, _bindingOptions) ??
             (Layout?.Metrics.TryGetValue(metricName, out var foundMetric) == true
@@ -1183,11 +1176,15 @@
         if (_widgetDraft.Profile.UsesMetricQuery)
         {
             var primaryMetric = _primaryBindingMetric ?? _draftMetricName;
-            Project.UpdateDashboardWidgetBinding(
-                Widget.Name,
+        Project.UpdateDashboardWidgetBinding(
+            Widget.Name,
+            primaryMetric,
+            DashboardInspectorMetricBindingState.Current(
+                SupportsMetricSlots,
+                _bindingMetrics,
                 primaryMetric,
-                CurrentBindingMetrics(primaryMetric),
-                IsAppMetricConsumerWidget ? _bindingOptions : null);
+                _draftMetricName),
+            IsAppMetricConsumerWidget ? _bindingOptions : null);
         }
 
         await Changed.InvokeAsync();
@@ -1213,36 +1210,6 @@
 
         Project.RemoveDashboardWidget(Widget.Name);
         await Changed.InvokeAsync();
-    }
-
-    private IReadOnlyList<string> CurrentBindingMetrics(string? primaryMetric)
-    {
-        if (!SupportsMetricSlots)
-        {
-            var metric = string.IsNullOrWhiteSpace(primaryMetric)
-                ? _draftMetricName
-                : primaryMetric;
-            return string.IsNullOrWhiteSpace(metric)
-                ? []
-                : [metric];
-        }
-
-        var metrics = _bindingMetrics
-            .Where(static metric => !string.IsNullOrWhiteSpace(metric))
-            .Distinct(StringComparer.Ordinal)
-            .ToList();
-        if (!string.IsNullOrWhiteSpace(primaryMetric) &&
-            !metrics.Contains(primaryMetric, StringComparer.Ordinal))
-        {
-            metrics.Insert(0, primaryMetric);
-        }
-
-        if (metrics.Count == 0 && !string.IsNullOrWhiteSpace(_draftMetricName))
-        {
-            metrics.Add(_draftMetricName);
-        }
-
-        return metrics;
     }
 
     private void LoadMetricDraft(string metricName)

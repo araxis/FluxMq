@@ -2772,3 +2772,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 720 tests.
     - `git diff --check` passed.
 - Next step: commit the metric reference resolver cleanup, then continue with a small dashboard inspector draft-loading extraction.
+- Dashboard inspector metric binding state cleanup:
+  - Added `DashboardInspectorMetricBindingState` to own metric binding list initialization and save-time normalization.
+  - Removed inline initial binding list normalization and final binding list construction from `DashboardInspector`.
+  - Kept add, remove, move, and primary metric commands in the inspector for now.
+  - Added unit coverage for slot/non-slot binding normalization plus source-boundary coverage for inspector delegation.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardInspectorMetricBindingState|FullyQualifiedName~DashboardInspector"` passed with 15 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 398 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 723 tests.
+    - `git diff --check` passed.
+- Next step: commit the metric binding state cleanup, then inspect whether `OnParametersSet` can be safely reduced without obscuring UI state.
