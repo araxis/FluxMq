@@ -128,7 +128,9 @@ public sealed class DashboardEventFilterCatalogTests
             "borderColor",
             "borderWidth",
             "radius",
-            "padding"
+            "padding",
+            "widgetFit",
+            "widgetAlignment"
         ]);
         fields.ShouldNotContain("surface");
         fields.ShouldNotContain("mainText");
@@ -239,6 +241,26 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain("--dashboard-widget-border-width:0px;");
         css.ShouldContain("--dashboard-widget-radius:14px;");
+    }
+
+    [Fact]
+    public void DashboardCellStyleDraft_WritesContentFitAlignmentVariables()
+    {
+        var cellStyle = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["widgetFit"] = DashboardCellStyleDraft.WidgetFitContent,
+            ["widgetAlignment"] = DashboardCellStyleDraft.WidgetAlignmentBottomRight
+        };
+
+        var css = DashboardCellStyleDraft.CssVariables(cellStyle);
+
+        css.ShouldContain("--dashboard-cell-widget-flex:0 1 auto;");
+        css.ShouldContain("--dashboard-cell-widget-width:auto;");
+        css.ShouldContain("--dashboard-cell-widget-height:auto;");
+        css.ShouldContain("--dashboard-cell-widget-max-width:100%;");
+        css.ShouldContain("--dashboard-cell-widget-max-height:100%;");
+        css.ShouldContain("--dashboard-cell-widget-justify:flex-end;");
+        css.ShouldContain("--dashboard-cell-widget-align:flex-end;");
     }
 
     [Fact]
@@ -1614,6 +1636,44 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".dashboard-cell-widget-preview ::deep .dashboard-metric-value-layout");
         css.ShouldContain("justify-content: var(--dashboard-kpi-value-placement, flex-start);");
         css.ShouldNotContain("justify-content: space-between;");
+    }
+
+    [Fact]
+    public void DashboardDesigner_AppliesCellWidgetAlignmentToEditAndLiveViews()
+    {
+        var root = FindRepositoryRoot();
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor.css"));
+
+        css.ShouldContain(".dashboard-cell-widget-preview");
+        css.ShouldContain("align-items: var(--dashboard-cell-widget-align, stretch);");
+        css.ShouldContain("justify-content: var(--dashboard-cell-widget-justify, flex-start);");
+        css.ShouldContain("flex: var(--dashboard-cell-widget-flex, 1 1 auto);");
+        css.ShouldContain("width: var(--dashboard-cell-widget-width, 100%);");
+        css.ShouldContain(".dashboard-live-cell");
+        css.ShouldContain(".dashboard-live-cell ::deep .dashboard-widget");
+    }
+
+    [Fact]
+    public void DashboardInspector_RendersCellWidgetAlignmentPad()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspector.razor"));
+
+        markup.ShouldContain("<PropertyGridAlignmentPad");
+        markup.ShouldContain("SetCellWidgetAlignmentAsync");
+        markup.ShouldContain("DashboardCellStyleDraft.WidgetFitContent");
     }
 
     [Fact]

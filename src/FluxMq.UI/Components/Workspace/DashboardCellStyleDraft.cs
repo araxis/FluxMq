@@ -5,6 +5,20 @@ namespace FluxMq.UI.Components.Workspace;
 
 public sealed class DashboardCellStyleDraft
 {
+    public const string WidgetFitKey = "widgetFit";
+    public const string WidgetAlignmentKey = "widgetAlignment";
+    public const string WidgetFitFill = "fill";
+    public const string WidgetFitContent = "content";
+    public const string WidgetAlignmentTopLeft = "top-left";
+    public const string WidgetAlignmentTopCenter = "top-center";
+    public const string WidgetAlignmentTopRight = "top-right";
+    public const string WidgetAlignmentMiddleLeft = "middle-left";
+    public const string WidgetAlignmentMiddleCenter = "middle-center";
+    public const string WidgetAlignmentMiddleRight = "middle-right";
+    public const string WidgetAlignmentBottomLeft = "bottom-left";
+    public const string WidgetAlignmentBottomCenter = "bottom-center";
+    public const string WidgetAlignmentBottomRight = "bottom-right";
+
     private readonly Dictionary<string, string> _values = new(StringComparer.Ordinal);
 
     public static IReadOnlyList<DashboardStyleField> Fields { get; } =
@@ -18,7 +32,12 @@ public sealed class DashboardCellStyleDraft
         new("borderColor", "Border color", "#223042", Editor: DashboardWidgetPropertyEditorKind.Color),
         new("borderWidth", "Border width", "1", "px", DashboardWidgetPropertyEditorKind.Number),
         new("radius", "Radius", "8", "px", DashboardWidgetPropertyEditorKind.Number),
-        new("padding", "Padding", "16", "px", DashboardWidgetPropertyEditorKind.Number)
+        new("padding", "Padding", "16", "px", DashboardWidgetPropertyEditorKind.Number),
+        new(WidgetFitKey, "Widget fit", WidgetFitFill, Editor: DashboardWidgetPropertyEditorKind.Select, Options: [
+            new(WidgetFitFill, "Fill"),
+            new(WidgetFitContent, "Content")
+        ]),
+        new(WidgetAlignmentKey, "Widget align", WidgetAlignmentMiddleCenter, Editor: DashboardWidgetPropertyEditorKind.Segmented)
     ];
 
     private DashboardCellStyleDraft(IReadOnlyDictionary<string, string> style)
@@ -75,6 +94,18 @@ public sealed class DashboardCellStyleDraft
         AddCssVariable(parts, "--dashboard-widget-border-width", BorderWidthValue(style), static value => value.EndsWith("px", StringComparison.Ordinal));
         AddCssVariable(parts, "--dashboard-widget-radius", PixelValue(ReadStyleValue(style, "radius")), static value => value.EndsWith("px", StringComparison.Ordinal));
         AddCssVariable(parts, "--dashboard-widget-padding", PixelValue(ReadStyleValue(style, "padding")), static value => value.EndsWith("px", StringComparison.Ordinal));
+        if (string.Equals(NormalizeWidgetFit(ReadStyleValue(style, WidgetFitKey)), WidgetFitContent, StringComparison.Ordinal))
+        {
+            var alignment = NormalizeWidgetAlignment(ReadStyleValue(style, WidgetAlignmentKey));
+            AddCssVariable(parts, "--dashboard-cell-widget-flex", "0 1 auto", static _ => true);
+            AddCssVariable(parts, "--dashboard-cell-widget-width", "auto", static _ => true);
+            AddCssVariable(parts, "--dashboard-cell-widget-height", "auto", static _ => true);
+            AddCssVariable(parts, "--dashboard-cell-widget-max-width", "100%", static _ => true);
+            AddCssVariable(parts, "--dashboard-cell-widget-max-height", "100%", static _ => true);
+            AddCssVariable(parts, "--dashboard-cell-widget-justify", HorizontalAlignmentCss(alignment), static _ => true);
+            AddCssVariable(parts, "--dashboard-cell-widget-align", VerticalAlignmentCss(alignment), static _ => true);
+        }
+
         return string.Join(string.Empty, parts);
     }
 
@@ -102,6 +133,43 @@ public sealed class DashboardCellStyleDraft
 
         return PixelValue(ReadStyleValue(style, "borderWidth"));
     }
+
+    private static string NormalizeWidgetFit(string? value)
+        => string.Equals(value, WidgetFitContent, StringComparison.OrdinalIgnoreCase)
+            ? WidgetFitContent
+            : WidgetFitFill;
+
+    private static string NormalizeWidgetAlignment(string? value)
+    {
+        var normalized = Normalize(value).ToLowerInvariant();
+        return normalized switch
+        {
+            WidgetAlignmentTopLeft or
+            WidgetAlignmentTopCenter or
+            WidgetAlignmentTopRight or
+            WidgetAlignmentMiddleLeft or
+            WidgetAlignmentMiddleCenter or
+            WidgetAlignmentMiddleRight or
+            WidgetAlignmentBottomLeft or
+            WidgetAlignmentBottomCenter or
+            WidgetAlignmentBottomRight => normalized,
+            _ => WidgetAlignmentMiddleCenter
+        };
+    }
+
+    private static string HorizontalAlignmentCss(string alignment)
+        => alignment.EndsWith("-right", StringComparison.Ordinal)
+            ? "flex-end"
+            : alignment.EndsWith("-center", StringComparison.Ordinal)
+                ? "center"
+                : "flex-start";
+
+    private static string VerticalAlignmentCss(string alignment)
+        => alignment.StartsWith("bottom-", StringComparison.Ordinal)
+            ? "flex-end"
+            : alignment.StartsWith("middle-", StringComparison.Ordinal)
+                ? "center"
+                : "flex-start";
 
     private static void AddCssVariable(List<string> parts, string name, string? value, Func<string, bool> isValid)
     {

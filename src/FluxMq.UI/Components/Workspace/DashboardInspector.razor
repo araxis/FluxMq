@@ -592,6 +592,13 @@
                                             AriaLabel="@currentField.Label"
                                             ValueChanged="@((string? value) => SetStyleValueAsync(currentField.Key, value))" />
                     }
+                    else if (currentField.Editor == DashboardWidgetPropertyEditorKind.Segmented &&
+                        string.Equals(currentField.Key, DashboardCellStyleDraft.WidgetAlignmentKey, StringComparison.Ordinal))
+                    {
+                        <PropertyGridAlignmentPad Value="@draft.GetValue(currentField.Key)"
+                                                  AriaLabel="@currentField.Label"
+                                                  ValueChanged="@SetCellWidgetAlignmentAsync" />
+                    }
                     else
                     {
                         <input class="property-grid-input"
@@ -992,6 +999,23 @@
         }
 
         _cellStyleDraft.SetValue(key, value);
+        Project.UpdateDashboardCellStyle(cell.Name, _cellStyleDraft.BuildStyle());
+        await Changed.InvokeAsync();
+    }
+
+    private async Task SetCellWidgetAlignmentAsync(string? value)
+    {
+        if (_cellStyleDraft is null || PrimarySelectedCell is not { } cell)
+        {
+            return;
+        }
+
+        _cellStyleDraft.SetValue(DashboardCellStyleDraft.WidgetAlignmentKey, value);
+        if (string.Equals(_cellStyleDraft.GetValue(DashboardCellStyleDraft.WidgetFitKey), DashboardCellStyleDraft.WidgetFitFill, StringComparison.Ordinal))
+        {
+            _cellStyleDraft.SetValue(DashboardCellStyleDraft.WidgetFitKey, DashboardCellStyleDraft.WidgetFitContent);
+        }
+
         Project.UpdateDashboardCellStyle(cell.Name, _cellStyleDraft.BuildStyle());
         await Changed.InvokeAsync();
     }

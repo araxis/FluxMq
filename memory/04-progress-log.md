@@ -2620,4 +2620,9 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Added a bounded empty-cell placeholder wrapper in the dashboard editor grid.
   - Anchored empty-cell labels to the cell interior so merged/large cells do not place labels on visual seams when the grid is narrow.
   - Separate-output UI build and focused UI test passed.
-- Next step: visually review the empty-cell labels at narrow widths, then decide whether unit placement/case should also become Value visual settings.
+- Cell widget alignment:
+  - Added shared cell-level `Widget fit` and `Widget align` settings so the whole widget frame can be placed inside a dashboard cell.
+  - Kept the default as stretch/fill; selecting an alignment dot switches the cell to content fit so the placement is visible immediately.
+  - Added a compact 3x3 property-grid alignment pad and applied the same CSS variables to edit-cell previews and live dashboard cells.
+  - Separate-output UI build and focused UI tests passed after the change.
+- Next step: visually review `Widget fit = Content` with Value and Digital KPI visuals, then continue with unit placement/case if the cell alignment behavior is approved.

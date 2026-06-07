@@ -374,9 +374,11 @@
 }
 
 .dashboard-cell-widget-preview {
+    align-items: var(--dashboard-cell-widget-align, stretch);
     container-type: size;
     display: flex;
     flex: 1 1 auto;
+    justify-content: var(--dashboard-cell-widget-justify, flex-start);
     min-height: 0;
     min-width: 0;
     overflow: hidden;
@@ -392,13 +394,15 @@
 
 .dashboard-cell-widget-preview ::deep .dashboard-widget {
     box-shadow: none;
-    flex: 1 1 auto;
+    flex: var(--dashboard-cell-widget-flex, 1 1 auto);
     gap: 8px;
-    height: 100%;
+    height: var(--dashboard-cell-widget-height, 100%);
+    max-height: var(--dashboard-cell-widget-max-height, none);
+    max-width: var(--dashboard-cell-widget-max-width, none);
     min-height: 0;
     min-width: 0;
     padding: var(--dashboard-widget-padding, 10px 12px 11px);
-    width: 100%;
+    width: var(--dashboard-cell-widget-width, 100%);
 }
 
 .dashboard-cell-widget-preview ::deep .dashboard-widget-header {
@@ -456,7 +460,13 @@
 }
 
 .dashboard-live-cell ::deep .dashboard-widget {
+    flex: var(--dashboard-cell-widget-flex, 1 1 auto);
+    height: var(--dashboard-cell-widget-height, 100%);
+    max-height: var(--dashboard-cell-widget-max-height, none);
+    max-width: var(--dashboard-cell-widget-max-width, none);
     min-height: 0;
+    min-width: 0;
+    width: var(--dashboard-cell-widget-width, 100%);
 }
 
 .dashboard-cell-widget-preview ::deep .dashboard-observability-layout {
@@ -728,10 +738,12 @@
 }
 
 .dashboard-live-cell {
+    align-items: var(--dashboard-cell-widget-align, stretch);
     background: transparent;
     border: 1px solid transparent;
     border-radius: 6px;
     display: flex;
+    justify-content: var(--dashboard-cell-widget-justify, flex-start);
     min-height: 0;
     min-width: 0;
     overflow: hidden;
