@@ -53,21 +53,6 @@
 </aside>
 
 @code {
-    private static readonly IReadOnlyList<DashboardFilterChoice> QosFilterOptions =
-    [
-        new("", "Any"),
-        new("0", "0"),
-        new("1", "1"),
-        new("2", "2")
-    ];
-
-    private static readonly IReadOnlyList<DashboardFilterChoice> RetainFilterOptions =
-    [
-        new("", "Any"),
-        new("true", "True"),
-        new("false", "False")
-    ];
-
     private static readonly IReadOnlyList<DashboardFilterChoice> WindowOptions =
     [
         new("30s", "30s"),
@@ -361,30 +346,13 @@
         }
     </text>;
 
-    private RenderFragment RenderFilterProperties() => @<text>
-        @if (_widgetDraft is not null && _metricDraft is not null)
-        {
-            <PropertyGridRow Name="@InspectorLabels.EventRow">
-                <PropertyGridSelect Value="@_widgetDraft.EventType"
-                                    Options="@EventTypeSelectOptions"
-                                    AriaLabel="@InspectorLabels.EventRow"
-                                    ValueChanged="@SetEventTypeAsync" />
-            </PropertyGridRow>
-            <PropertyGridRow Name="@InspectorLabels.StatusRow">
-                <PropertyGridSelect Value="@_widgetDraft.Status"
-                                    Options="@StatusSelectOptions"
-                                    AriaLabel="@InspectorLabels.StatusRow"
-                                    ValueChanged="@SetStatusAsync" />
-            </PropertyGridRow>
-            @foreach (var field in _widgetDraft.CurrentEventType.Fields)
-            {
-                var currentField = field;
-                <PropertyGridRow Name="@currentField.Label" HelpText="@currentField.HelperText">
-                    @RenderFilterField(currentField)
-                </PropertyGridRow>
-            }
-        }
-    </text>;
+    private RenderFragment RenderFilterProperties() => @<DashboardInspectorEventFilterRows Draft="@_widgetDraft"
+                                                                                           Labels="@InspectorLabels"
+                                                                                           EventOptions="@EventTypeSelectOptions"
+                                                                                           StatusOptions="@StatusSelectOptions"
+                                                                                           EventChanged="@SetEventTypeAsync"
+                                                                                           StatusChanged="@SetStatusAsync"
+                                                                                           FilterChanged="@SetFilterValueAsync" />;
 
     private RenderFragment RenderDisplayProperties() => @<text>
         @if (_widgetDraft is { } draft)
@@ -580,41 +548,6 @@
                        type="@(property.Editor == DashboardWidgetPropertyEditorKind.Number ? "number" : "text")"
                        value="@value"
                        @oninput="@((ChangeEventArgs args) => SetMetricVisualizationValueAsync(property.Key, args.Value?.ToString()))" />;
-    }
-
-    private RenderFragment RenderFilterField(DashboardEventFilterFieldDescriptor field)
-    {
-        if (IsQosFilter(field))
-        {
-            return @<div class="property-grid-button-group">
-                    @foreach (var option in QosFilterOptions)
-                    {
-                        var currentOption = option;
-                        <button type="button"
-                                class="@ChoiceClass(_widgetDraft!.GetFilterValue(field.Key), currentOption.Value)"
-                                @onclick="@(() => SetFilterValueAsync(field.Key, currentOption.Value))">@currentOption.Label</button>
-                    }
-            </div>;
-        }
-
-        if (IsRetainFilter(field))
-        {
-            return @<div class="property-grid-button-group">
-                    @foreach (var option in RetainFilterOptions)
-                    {
-                        var currentOption = option;
-                        <button type="button"
-                                class="@ChoiceClass(_widgetDraft!.GetFilterValue(field.Key), currentOption.Value)"
-                                @onclick="@(() => SetFilterValueAsync(field.Key, currentOption.Value))">@currentOption.Label</button>
-                    }
-            </div>;
-        }
-
-        return @<input class="property-grid-input"
-                       value="@_widgetDraft!.GetFilterValue(field.Key)"
-                       placeholder="@field.Placeholder"
-                       title="@field.HelperText"
-                       @oninput="@((ChangeEventArgs args) => SetFilterValueAsync(field.Key, args.Value?.ToString()))" />;
     }
 
     private RenderFragment RenderCellSummary() => @<div class="dashboard-inspector-cell-summary">
@@ -1225,6 +1158,9 @@
         await AutoApplyAsync();
     }
 
+    private Task SetFilterValueAsync(DashboardInspectorPropertyValueChange change)
+        => SetFilterValueAsync(change.Key, change.Value);
+
     private async Task SetFilterValueAsync(string key, string? value)
     {
         _widgetDraft?.SetFilterValue(key, value);
@@ -1594,12 +1530,6 @@
         => DashboardWidgetCatalog.MetricOptions
             .FirstOrDefault(metric => string.Equals(metric.Id, metricId, StringComparison.Ordinal))
             ?.Label ?? metricId;
-
-    private static bool IsQosFilter(DashboardEventFilterFieldDescriptor field)
-        => string.Equals(field.Key, DashboardEventFilterCatalog.AttributeFilterKey("qos"), StringComparison.Ordinal);
-
-    private static bool IsRetainFilter(DashboardEventFilterFieldDescriptor field)
-        => string.Equals(field.Key, DashboardEventFilterCatalog.AttributeFilterKey("retain"), StringComparison.Ordinal);
 
     private static IReadOnlyList<PropertyGridSelectOption> ToSelectOptions(IEnumerable<DashboardFilterChoice> options)
         => [.. options.Select(static option => new PropertyGridSelectOption(option.Value, option.Label))];

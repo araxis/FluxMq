@@ -1,0 +1,114 @@
+@using FluxMq.UI.Models
+@using FluxMq.UI.Services
+
+@if (Draft is not null)
+{
+    <PropertyGridRow Name="@Labels.EventRow">
+        <PropertyGridSelect Value="@Draft.EventType"
+                            Options="@EventOptions"
+                            AriaLabel="@Labels.EventRow"
+                            ValueChanged="@EventChanged" />
+    </PropertyGridRow>
+    <PropertyGridRow Name="@Labels.StatusRow">
+        <PropertyGridSelect Value="@Draft.Status"
+                            Options="@StatusOptions"
+                            AriaLabel="@Labels.StatusRow"
+                            ValueChanged="@StatusChanged" />
+    </PropertyGridRow>
+    @foreach (var field in Draft.CurrentEventType.Fields)
+    {
+        var currentField = field;
+        <PropertyGridRow Name="@currentField.Label" HelpText="@currentField.HelperText">
+            @RenderFilterField(currentField)
+        </PropertyGridRow>
+    }
+}
+
+@code {
+    private static readonly IReadOnlyList<FilterChoice> QosFilterOptions =
+    [
+        new("", "Any"),
+        new("0", "0"),
+        new("1", "1"),
+        new("2", "2")
+    ];
+
+    private static readonly IReadOnlyList<FilterChoice> RetainFilterOptions =
+    [
+        new("", "Any"),
+        new("true", "True"),
+        new("false", "False")
+    ];
+
+    [Parameter]
+    public DashboardWidgetSettingsDraft? Draft { get; set; }
+
+    [Parameter]
+    public DashboardWidgetInspectorLabels Labels { get; set; } = DashboardWidgetInspectorLabels.Default;
+
+    [Parameter]
+    public IReadOnlyList<PropertyGridSelectOption> EventOptions { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<PropertyGridSelectOption> StatusOptions { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<string?> EventChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> StatusChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<DashboardInspectorPropertyValueChange> FilterChanged { get; set; }
+
+    private RenderFragment RenderFilterField(DashboardEventFilterFieldDescriptor field)
+    {
+        if (IsQosFilter(field))
+        {
+            return @<div class="property-grid-button-group">
+                    @foreach (var option in QosFilterOptions)
+                    {
+                        var currentOption = option;
+                        <button type="button"
+                                class="@ChoiceClass(Draft!.GetFilterValue(field.Key), currentOption.Value)"
+                                @onclick="@(() => SetFilterValueAsync(field.Key, currentOption.Value))">@currentOption.Label</button>
+                    }
+            </div>;
+        }
+
+        if (IsRetainFilter(field))
+        {
+            return @<div class="property-grid-button-group">
+                    @foreach (var option in RetainFilterOptions)
+                    {
+                        var currentOption = option;
+                        <button type="button"
+                                class="@ChoiceClass(Draft!.GetFilterValue(field.Key), currentOption.Value)"
+                                @onclick="@(() => SetFilterValueAsync(field.Key, currentOption.Value))">@currentOption.Label</button>
+                    }
+            </div>;
+        }
+
+        return @<input class="property-grid-input"
+                       value="@Draft!.GetFilterValue(field.Key)"
+                       placeholder="@field.Placeholder"
+                       title="@field.HelperText"
+                       @oninput="@((ChangeEventArgs args) => SetFilterValueAsync(field.Key, args.Value?.ToString()))" />;
+    }
+
+    private Task SetFilterValueAsync(string key, string? value)
+        => FilterChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
+
+    private static string ChoiceClass(string? currentValue, string value)
+        => string.Equals(currentValue ?? string.Empty, value, StringComparison.Ordinal)
+            ? "property-grid-choice selected"
+            : "property-grid-choice";
+
+    private static bool IsQosFilter(DashboardEventFilterFieldDescriptor field)
+        => string.Equals(field.Key, DashboardEventFilterCatalog.AttributeFilterKey("qos"), StringComparison.Ordinal);
+
+    private static bool IsRetainFilter(DashboardEventFilterFieldDescriptor field)
+        => string.Equals(field.Key, DashboardEventFilterCatalog.AttributeFilterKey("retain"), StringComparison.Ordinal);
+
+    private sealed record FilterChoice(string Value, string Label);
+}

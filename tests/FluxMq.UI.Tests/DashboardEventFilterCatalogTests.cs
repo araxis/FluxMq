@@ -1859,6 +1859,38 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardInspector_UsesFocusedEventFilterRowComponent()
+    {
+        var root = FindRepositoryRoot();
+        var inspector = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspector.razor"));
+        var filterRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorEventFilterRows.razor"));
+
+        inspector.ShouldContain("DashboardInspectorEventFilterRows");
+        inspector.ShouldNotContain("private RenderFragment RenderFilterField");
+        inspector.ShouldNotContain("QosFilterOptions");
+        inspector.ShouldNotContain("RetainFilterOptions");
+        filterRows.ShouldContain("PropertyGridSelect Value=\"@Draft.EventType\"");
+        filterRows.ShouldContain("PropertyGridSelect Value=\"@Draft.Status\"");
+        filterRows.ShouldContain("FilterChanged");
+        filterRows.ShouldContain("QosFilterOptions");
+        filterRows.ShouldContain("RetainFilterOptions");
+        filterRows.ShouldContain("DashboardEventFilterCatalog.AttributeFilterKey(\"qos\")");
+        filterRows.ShouldContain("DashboardEventFilterCatalog.AttributeFilterKey(\"retain\")");
+    }
+
+    [Fact]
     public void DashboardDesigner_EmptyCellLabelsStayBoundedWhenGridShrinks()
     {
         var root = FindRepositoryRoot();

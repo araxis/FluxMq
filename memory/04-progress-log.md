@@ -2705,4 +2705,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardInspector"` passed with 6 tests.
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 387 tests.
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 712 tests.
-- Next step: run diff check, then commit the focused metric-row split.
+- Dashboard inspector event filter row split:
+  - Extracted event/status/filter field rows into `DashboardInspectorEventFilterRows`.
+  - Kept `DashboardInspector` responsible for draft mutation and metric-query synchronization while the focused component owns filter row markup.
+  - Moved QoS/retain segmented filter rendering out of the parent inspector.
+  - Added a source-boundary test so the inspector keeps delegating filter rows to the focused component.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardInspector"` passed with 7 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 388 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 713 tests.
+- Next step: run diff check, then commit the focused event-filter split.
