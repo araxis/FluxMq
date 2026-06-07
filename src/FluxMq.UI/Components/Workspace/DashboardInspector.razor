@@ -61,29 +61,12 @@
         new("900s", "15m")
     ];
 
-    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> HorizontalAlignmentOptions =
-    [
-        new(DashboardWidgetCatalog.KpiAlignLeft, Icons.Material.Filled.FormatAlignLeft, "Left"),
-        new(DashboardWidgetCatalog.KpiAlignCenter, Icons.Material.Filled.FormatAlignCenter, "Center"),
-        new(DashboardWidgetCatalog.KpiAlignRight, Icons.Material.Filled.FormatAlignRight, "Right")
-    ];
-
-    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> ValuePlacementOptions =
-    [
-        new(DashboardWidgetCatalog.KpiValuePlacementTop, Icons.Material.Filled.VerticalAlignTop, "Top"),
-        new(DashboardWidgetCatalog.KpiValuePlacementMiddle, Icons.Material.Filled.VerticalAlignCenter, "Middle"),
-        new(DashboardWidgetCatalog.KpiValuePlacementBottom, Icons.Material.Filled.VerticalAlignBottom, "Bottom")
-    ];
-
     private const string DataGroupId = "data";
     private const string MetricQueryGroupId = "metric-query";
     private const string FilterGroupId = "filters";
     private const string DisplayGroupId = "display";
     private const string StyleGroupId = "style";
     private const string LayoutGroupId = "layout";
-    private const string TrueValue = "true";
-    private const string FalseValue = "false";
-
     [Parameter, EditorRequired]
     public FlowWorkspaceService Project { get; set; } = null!;
 
@@ -376,14 +359,11 @@
 
         @if (draft.Profile.UsesMetricVisualization)
         {
-            <PropertyGridRow Name="Visualization">
-                <PropertyGridSelect Value="@draft.MetricVisualizationId"
-                                    Options="@MetricVisualizationOptions"
-                                    AriaLabel="Visualization"
-                                    ValueChanged="@SetMetricVisualizationAsync" />
-            </PropertyGridRow>
-
-            @RenderMetricVisualizationProperties(draft)
+            <DashboardInspectorMetricVisualizationRows Draft="@draft"
+                                                       VisualizationOptions="@MetricVisualizationOptions"
+                                                       Properties="@CurrentMetricVisualizationProperties"
+                                                       VisualizationChanged="@SetMetricVisualizationAsync"
+                                                       PropertyChanged="@SetMetricVisualizationValueAsync" />
         }
 
         @if (draft.Profile.UsesVisualMetrics)
@@ -492,63 +472,6 @@
                                                                                          ValueChanged="@SetStyleValueAsync"
                                                                                          WidgetAlignmentChanged="@SetCellWidgetAlignmentAsync"
                                                                                          Reset="@ResetCellStyleAsync" />;
-
-    private RenderFragment RenderMetricVisualizationProperties(DashboardWidgetSettingsDraft draft) => @<text>
-        @foreach (var property in CurrentMetricVisualizationProperties)
-        {
-            var currentProperty = property;
-            <PropertyGridRow Name="@currentProperty.Label" Unit="@currentProperty.Unit" HelpText="@currentProperty.HelpText">
-                @RenderMetricVisualizationProperty(draft, currentProperty)
-            </PropertyGridRow>
-        }
-    </text>;
-
-    private RenderFragment RenderMetricVisualizationProperty(
-        DashboardWidgetSettingsDraft draft,
-        DashboardWidgetPropertyDefinition property)
-    {
-        var value = MetricVisualizationPropertyValue(draft, property);
-        if (property.Editor == DashboardWidgetPropertyEditorKind.Color)
-        {
-            return @<PropertyGridColorPicker Value="@value"
-                                             DefaultValue="@property.DefaultValue"
-                                             AriaLabel="@property.Label"
-                                             ValueChanged="@((string? next) => SetMetricVisualizationValueAsync(property.Key, next))" />;
-        }
-
-        if (property.Editor == DashboardWidgetPropertyEditorKind.Select)
-        {
-            return @<PropertyGridSelect Value="@value"
-                                        Options="@ToSelectOptions(property.Options)"
-                                        AriaLabel="@property.Label"
-                                        ValueChanged="@((string? next) => SetMetricVisualizationValueAsync(property.Key, next))" />;
-        }
-
-        if (property.Editor == DashboardWidgetPropertyEditorKind.Toggle)
-        {
-            return @<div class="property-grid-button-group">
-                <button type="button"
-                        class="@ChoiceClass(value, TrueValue)"
-                        @onclick="@(() => SetMetricVisualizationValueAsync(property.Key, TrueValue))">On</button>
-                <button type="button"
-                        class="@ChoiceClass(value, FalseValue)"
-                        @onclick="@(() => SetMetricVisualizationValueAsync(property.Key, FalseValue))">Off</button>
-            </div>;
-        }
-
-        if (property.Editor == DashboardWidgetPropertyEditorKind.Segmented)
-        {
-            return @<PropertyGridIconSegment Value="@value"
-                                             Options="@MetricVisualizationSegmentOptions(property.Key)"
-                                             AriaLabel="@property.Label"
-                                             ValueChanged="@((string? next) => SetMetricVisualizationValueAsync(property.Key, next))" />;
-        }
-
-        return @<input class="property-grid-input"
-                       type="@(property.Editor == DashboardWidgetPropertyEditorKind.Number ? "number" : "text")"
-                       value="@value"
-                       @oninput="@((ChangeEventArgs args) => SetMetricVisualizationValueAsync(property.Key, args.Value?.ToString()))" />;
-    }
 
     private RenderFragment RenderCellSummary() => @<div class="dashboard-inspector-cell-summary">
         @if (SelectedCells.Count == 0)
@@ -836,6 +759,9 @@
         _widgetDraft.MetricVisualization.SetVisualization(value, applyDefaults: true);
         await AutoApplyAsync();
     }
+
+    private Task SetMetricVisualizationValueAsync(DashboardInspectorPropertyValueChange change)
+        => SetMetricVisualizationValueAsync(change.Key, change.Value);
 
     private async Task SetMetricVisualizationValueAsync(string key, string? value)
     {
@@ -1503,38 +1429,12 @@
             ? "property-grid-choice selected"
             : "property-grid-choice";
 
-    private static string MetricVisualizationPropertyValue(
-        DashboardWidgetSettingsDraft draft,
-        DashboardWidgetPropertyDefinition property)
-        => draft.MetricVisualization.BuildConfiguration().TryGetValue(property.Key, out var value)
-            ? value
-            : property.DefaultValue ?? string.Empty;
-
-    private static IReadOnlyList<PropertyGridIconSegmentOption> MetricVisualizationSegmentOptions(string key)
-    {
-        if (string.Equals(key, DashboardWidgetCatalog.MetricValueTitleAlignKey, StringComparison.Ordinal) ||
-            string.Equals(key, DashboardWidgetCatalog.MetricValueValueAlignKey, StringComparison.Ordinal))
-        {
-            return HorizontalAlignmentOptions;
-        }
-
-        if (string.Equals(key, DashboardWidgetCatalog.MetricValueValuePlacementKey, StringComparison.Ordinal))
-        {
-            return ValuePlacementOptions;
-        }
-
-        return [];
-    }
-
     private static string VisualMetricLabel(string metricId)
         => DashboardWidgetCatalog.MetricOptions
             .FirstOrDefault(metric => string.Equals(metric.Id, metricId, StringComparison.Ordinal))
             ?.Label ?? metricId;
 
     private static IReadOnlyList<PropertyGridSelectOption> ToSelectOptions(IEnumerable<DashboardFilterChoice> options)
-        => [.. options.Select(static option => new PropertyGridSelectOption(option.Value, option.Label))];
-
-    private static IReadOnlyList<PropertyGridSelectOption> ToSelectOptions(IEnumerable<DashboardWidgetPropertyOption> options)
         => [.. options.Select(static option => new PropertyGridSelectOption(option.Value, option.Label))];
 
     private sealed record DashboardFilterChoice(string Value, string Label);

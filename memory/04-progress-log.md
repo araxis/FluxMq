@@ -2715,4 +2715,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardInspector"` passed with 7 tests.
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 388 tests.
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 713 tests.
-- Next step: run diff check, then commit the focused event-filter split.
+- Dashboard inspector metric visualization row split:
+  - Extracted visualization selection and dynamic value/digital visualization property rows into `DashboardInspectorMetricVisualizationRows`.
+  - Moved visualization property editor rendering, color picker/select/toggle/segmented handling, and alignment option lookup out of the parent inspector.
+  - Kept `DashboardInspector` responsible for applying visualization config changes and composing property groups.
+  - Added source-boundary tests so the inspector delegates visualization rows to the focused component.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardInspector"` passed with 8 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 389 tests.
+    - First full solution run hit a transient `JsonSchemaValidatorComponentTests.Input_RoutesValidAndInvalidEnvelopesToBranchOutputs` miss; the focused rerun passed.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed on rerun with 714 tests.
+- Next step: run diff check, then commit the focused visualization-row split.

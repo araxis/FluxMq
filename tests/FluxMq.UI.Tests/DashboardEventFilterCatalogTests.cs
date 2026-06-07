@@ -1393,32 +1393,40 @@ public sealed class DashboardEventFilterCatalogTests
     [Fact]
     public void DashboardInspector_ExposesKpiVisualizationFromCatalog()
     {
-        var path = Path.Combine(
-            FindRepositoryRoot(),
+        var root = FindRepositoryRoot();
+        var inspector = File.ReadAllText(Path.Combine(
+            root,
             "src",
             "FluxMq.UI",
             "Components",
             "Workspace",
-            "DashboardInspector.razor");
-        var markup = File.ReadAllText(path);
+            "DashboardInspector.razor"));
+        var visualRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorMetricVisualizationRows.razor"));
 
-        markup.ShouldContain("draft.Profile.UsesMetricVisualization");
-        markup.ShouldContain("PropertyGridRow Name=\"Visualization\"");
-        markup.ShouldContain("MetricVisualizationOptions");
-        markup.ShouldContain("DashboardMetricVisualizationCatalog.CreateModules()");
-        markup.ShouldContain("SetMetricVisualizationAsync");
-        markup.ShouldContain("MetricVisualization.SetVisualization(value, applyDefaults: true)");
-        markup.ShouldContain("RenderMetricVisualizationProperties(draft)");
-        markup.ShouldContain("CurrentMetricVisualizationModule");
-        markup.ShouldContain("MetricVisualizationPropertyCount");
-        markup.ShouldContain("SetMetricVisualizationValueAsync");
-        markup.ShouldContain("PropertyGridColorPicker");
-        markup.ShouldContain("PropertyGridIconSegment");
-        markup.ShouldNotContain("PropertyGridRow Name=\"Visual settings\"");
-        markup.ShouldNotContain("OpenMetricVisualizationEditorAsync");
-        markup.ShouldNotContain("DashboardMetricVisualizationEditorDialog");
-        markup.ShouldNotContain("SetMetricDigitalStyleAsync");
-        markup.ShouldNotContain("SetKpiTitleColorAsync");
+        inspector.ShouldContain("draft.Profile.UsesMetricVisualization");
+        inspector.ShouldContain("DashboardInspectorMetricVisualizationRows");
+        inspector.ShouldContain("MetricVisualizationOptions");
+        inspector.ShouldContain("DashboardMetricVisualizationCatalog.CreateModules()");
+        inspector.ShouldContain("SetMetricVisualizationAsync");
+        inspector.ShouldContain("MetricVisualization.SetVisualization(value, applyDefaults: true)");
+        inspector.ShouldContain("CurrentMetricVisualizationModule");
+        inspector.ShouldContain("MetricVisualizationPropertyCount");
+        inspector.ShouldContain("SetMetricVisualizationValueAsync");
+        visualRows.ShouldContain("PropertyGridRow Name=\"Visualization\"");
+        visualRows.ShouldContain("PropertyGridColorPicker");
+        visualRows.ShouldContain("PropertyGridIconSegment");
+        visualRows.ShouldContain("PropertyChanged");
+        inspector.ShouldNotContain("PropertyGridRow Name=\"Visual settings\"");
+        inspector.ShouldNotContain("OpenMetricVisualizationEditorAsync");
+        inspector.ShouldNotContain("DashboardMetricVisualizationEditorDialog");
+        inspector.ShouldNotContain("SetMetricDigitalStyleAsync");
+        inspector.ShouldNotContain("SetKpiTitleColorAsync");
     }
 
     [Fact]
@@ -1888,6 +1896,36 @@ public sealed class DashboardEventFilterCatalogTests
         filterRows.ShouldContain("RetainFilterOptions");
         filterRows.ShouldContain("DashboardEventFilterCatalog.AttributeFilterKey(\"qos\")");
         filterRows.ShouldContain("DashboardEventFilterCatalog.AttributeFilterKey(\"retain\")");
+    }
+
+    [Fact]
+    public void DashboardInspector_UsesFocusedMetricVisualizationRowComponent()
+    {
+        var root = FindRepositoryRoot();
+        var inspector = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspector.razor"));
+        var visualRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorMetricVisualizationRows.razor"));
+
+        inspector.ShouldContain("DashboardInspectorMetricVisualizationRows");
+        inspector.ShouldNotContain("private RenderFragment RenderMetricVisualizationProperty");
+        inspector.ShouldNotContain("HorizontalAlignmentOptions");
+        inspector.ShouldNotContain("MetricVisualizationSegmentOptions");
+        visualRows.ShouldContain("<PropertyGridColorPicker");
+        visualRows.ShouldContain("<PropertyGridIconSegment");
+        visualRows.ShouldContain("HorizontalAlignmentOptions");
+        visualRows.ShouldContain("ValuePlacementOptions");
+        visualRows.ShouldContain("PropertyChanged");
     }
 
     [Fact]

@@ -1,0 +1,130 @@
+@using FluxMq.UI.Models
+
+@if (Draft is not null)
+{
+    <PropertyGridRow Name="Visualization">
+        <PropertyGridSelect Value="@Draft.MetricVisualizationId"
+                            Options="@VisualizationOptions"
+                            AriaLabel="Visualization"
+                            ValueChanged="@VisualizationChanged" />
+    </PropertyGridRow>
+
+    @foreach (var property in Properties)
+    {
+        var currentProperty = property;
+        <PropertyGridRow Name="@currentProperty.Label" Unit="@currentProperty.Unit" HelpText="@currentProperty.HelpText">
+            @RenderProperty(currentProperty)
+        </PropertyGridRow>
+    }
+}
+
+@code {
+    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> HorizontalAlignmentOptions =
+    [
+        new(DashboardWidgetCatalog.KpiAlignLeft, Icons.Material.Filled.FormatAlignLeft, "Left"),
+        new(DashboardWidgetCatalog.KpiAlignCenter, Icons.Material.Filled.FormatAlignCenter, "Center"),
+        new(DashboardWidgetCatalog.KpiAlignRight, Icons.Material.Filled.FormatAlignRight, "Right")
+    ];
+
+    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> ValuePlacementOptions =
+    [
+        new(DashboardWidgetCatalog.KpiValuePlacementTop, Icons.Material.Filled.VerticalAlignTop, "Top"),
+        new(DashboardWidgetCatalog.KpiValuePlacementMiddle, Icons.Material.Filled.VerticalAlignCenter, "Middle"),
+        new(DashboardWidgetCatalog.KpiValuePlacementBottom, Icons.Material.Filled.VerticalAlignBottom, "Bottom")
+    ];
+
+    private const string TrueValue = "true";
+    private const string FalseValue = "false";
+
+    [Parameter]
+    public DashboardWidgetSettingsDraft? Draft { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<PropertyGridSelectOption> VisualizationOptions { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<DashboardWidgetPropertyDefinition> Properties { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<string?> VisualizationChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<DashboardInspectorPropertyValueChange> PropertyChanged { get; set; }
+
+    private RenderFragment RenderProperty(DashboardWidgetPropertyDefinition property)
+    {
+        var value = PropertyValue(property);
+        if (property.Editor == DashboardWidgetPropertyEditorKind.Color)
+        {
+            return @<PropertyGridColorPicker Value="@value"
+                                             DefaultValue="@property.DefaultValue"
+                                             AriaLabel="@property.Label"
+                                             ValueChanged="@((string? next) => SetPropertyAsync(property.Key, next))" />;
+        }
+
+        if (property.Editor == DashboardWidgetPropertyEditorKind.Select)
+        {
+            return @<PropertyGridSelect Value="@value"
+                                        Options="@ToSelectOptions(property.Options)"
+                                        AriaLabel="@property.Label"
+                                        ValueChanged="@((string? next) => SetPropertyAsync(property.Key, next))" />;
+        }
+
+        if (property.Editor == DashboardWidgetPropertyEditorKind.Toggle)
+        {
+            return @<div class="property-grid-button-group">
+                <button type="button"
+                        class="@ChoiceClass(value, TrueValue)"
+                        @onclick="@(() => SetPropertyAsync(property.Key, TrueValue))">On</button>
+                <button type="button"
+                        class="@ChoiceClass(value, FalseValue)"
+                        @onclick="@(() => SetPropertyAsync(property.Key, FalseValue))">Off</button>
+            </div>;
+        }
+
+        if (property.Editor == DashboardWidgetPropertyEditorKind.Segmented)
+        {
+            return @<PropertyGridIconSegment Value="@value"
+                                             Options="@SegmentOptions(property.Key)"
+                                             AriaLabel="@property.Label"
+                                             ValueChanged="@((string? next) => SetPropertyAsync(property.Key, next))" />;
+        }
+
+        return @<input class="property-grid-input"
+                       type="@(property.Editor == DashboardWidgetPropertyEditorKind.Number ? "number" : "text")"
+                       value="@value"
+                       @oninput="@((ChangeEventArgs args) => SetPropertyAsync(property.Key, args.Value?.ToString()))" />;
+    }
+
+    private string PropertyValue(DashboardWidgetPropertyDefinition property)
+        => Draft?.MetricVisualization.BuildConfiguration().TryGetValue(property.Key, out var value) == true
+            ? value
+            : property.DefaultValue ?? string.Empty;
+
+    private Task SetPropertyAsync(string key, string? value)
+        => PropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
+
+    private static IReadOnlyList<PropertyGridIconSegmentOption> SegmentOptions(string key)
+    {
+        if (string.Equals(key, DashboardWidgetCatalog.MetricValueTitleAlignKey, StringComparison.Ordinal) ||
+            string.Equals(key, DashboardWidgetCatalog.MetricValueValueAlignKey, StringComparison.Ordinal))
+        {
+            return HorizontalAlignmentOptions;
+        }
+
+        if (string.Equals(key, DashboardWidgetCatalog.MetricValueValuePlacementKey, StringComparison.Ordinal))
+        {
+            return ValuePlacementOptions;
+        }
+
+        return [];
+    }
+
+    private static string ChoiceClass(string? currentValue, string value)
+        => string.Equals(currentValue ?? string.Empty, value, StringComparison.Ordinal)
+            ? "property-grid-choice selected"
+            : "property-grid-choice";
+
+    private static IReadOnlyList<PropertyGridSelectOption> ToSelectOptions(IEnumerable<DashboardWidgetPropertyOption> options)
+        => [.. options.Select(static option => new PropertyGridSelectOption(option.Value, option.Label))];
+}
