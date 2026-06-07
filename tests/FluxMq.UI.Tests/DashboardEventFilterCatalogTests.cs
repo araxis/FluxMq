@@ -414,9 +414,55 @@ public sealed class DashboardEventFilterCatalogTests
         configuration[DashboardWidgetCatalog.KpiTitleAlignKey].ShouldBe(DashboardWidgetCatalog.KpiAlignCenter);
         configuration[DashboardWidgetCatalog.KpiValueAlignKey].ShouldBe(DashboardWidgetCatalog.KpiAlignRight);
         configuration[DashboardWidgetCatalog.KpiValuePlacementKey].ShouldBe(DashboardWidgetCatalog.KpiValuePlacementMiddle);
+        configuration.ContainsKey(DashboardWidgetCatalog.MetricDigitalStyleKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardWidgetCatalog.MetricDigitalGlowKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardWidgetCatalog.DisplayMetricsKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardWidgetCatalog.MetricCardColumnsKey).ShouldBeFalse();
         configuration.Keys.ShouldNotContain("style.titleColor");
+    }
+
+    [Fact]
+    public void DashboardWidgetSettingsDraft_WritesDigitalVisualizationSettingsOnlyWhenSelected()
+    {
+        var draft = DashboardWidgetSettingsDraft.Create(
+            new DashboardWidgetSnapshot(
+                "kpi",
+                DashboardWidgetCatalog.KpiTileType,
+                new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    [DashboardWidgetCatalog.MetricVisualizationKey] = DashboardMetricVisualizationIds.Digital,
+                    [DashboardWidgetCatalog.MetricDigitalStyleKey] = DashboardWidgetCatalog.MetricDigitalStyleTerminal,
+                    [DashboardWidgetCatalog.MetricDigitalGlowKey] = DashboardWidgetCatalog.MetricDigitalGlowStrong,
+                    [DashboardWidgetCatalog.MetricDigitalBackgroundColorKey] = "#010203",
+                    [DashboardWidgetCatalog.MetricDigitalSegmentColorKey] = "#aabbcc",
+                    [DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey] = "#112233",
+                    [DashboardWidgetCatalog.MetricDigitalLabelColorKey] = "#ddeeff",
+                    [DashboardWidgetCatalog.MetricDigitalDigitsKey] = "6"
+                }),
+            new DashboardEventFilterCatalog());
+
+        draft.MetricVisualizationId.ShouldBe(DashboardMetricVisualizationIds.Digital);
+        draft.DigitalStyle.ShouldBe(DashboardWidgetCatalog.MetricDigitalStyleTerminal);
+        draft.DigitalGlow.ShouldBe(DashboardWidgetCatalog.MetricDigitalGlowStrong);
+        draft.DigitalBackgroundColor.ShouldBe("#010203");
+        draft.DigitalSegmentColor.ShouldBe("#aabbcc");
+        draft.DigitalInactiveSegmentColor.ShouldBe("#112233");
+        draft.DigitalLabelColor.ShouldBe("#ddeeff");
+        draft.DigitalDigits.ShouldBe(6);
+
+        var configuration = draft.BuildConfiguration();
+
+        configuration[DashboardWidgetCatalog.MetricVisualizationKey]
+            .ShouldBe(DashboardMetricVisualizationIds.Digital);
+        configuration[DashboardWidgetCatalog.MetricDigitalStyleKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalStyleTerminal);
+        configuration[DashboardWidgetCatalog.MetricDigitalGlowKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalGlowStrong);
+        configuration[DashboardWidgetCatalog.MetricDigitalBackgroundColorKey].ShouldBe("#010203");
+        configuration[DashboardWidgetCatalog.MetricDigitalSegmentColorKey].ShouldBe("#aabbcc");
+        configuration[DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey].ShouldBe("#112233");
+        configuration[DashboardWidgetCatalog.MetricDigitalLabelColorKey].ShouldBe("#ddeeff");
+        configuration[DashboardWidgetCatalog.MetricDigitalDigitsKey].ShouldBe("6");
     }
 
     [Fact]
@@ -1278,6 +1324,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("RenderMetricVisualizationProperties(draft)");
         markup.ShouldContain("CurrentMetricVisualizationModule.PropertyGroups");
         markup.ShouldContain("MetricVisualizationPropertyCount");
+        markup.ShouldContain("MetricDigitalStyleKey");
+        markup.ShouldContain("MetricDigitalGlowKey");
     }
 
     [Fact]
@@ -1334,6 +1382,7 @@ public sealed class DashboardEventFilterCatalogTests
     {
         var modules = DashboardMetricVisualizationCatalog.CreateModules();
         var value = modules.Single(static module => module.Id == DashboardMetricVisualizationIds.Value);
+        var digital = modules.Single(static module => module.Id == DashboardMetricVisualizationIds.Digital);
 
         value.DisplayName.ShouldBe("Value");
         value.EditCellComponent.ShouldBe(typeof(DashboardMetricValueVisualizationView));
@@ -1358,6 +1407,70 @@ public sealed class DashboardEventFilterCatalogTests
                 DashboardWidgetCatalog.KpiValueAlignKey,
                 DashboardWidgetCatalog.KpiValuePlacementKey
             ]);
+
+        digital.DisplayName.ShouldBe("Digital");
+        digital.EditCellComponent.ShouldBe(typeof(DashboardMetricDigitalVisualizationView));
+        digital.LiveComponent.ShouldBe(typeof(DashboardMetricDigitalVisualizationView));
+        digital.DefaultConfiguration[DashboardWidgetCatalog.MetricVisualizationKey]
+            .ShouldBe(DashboardMetricVisualizationIds.Digital);
+        digital.DefaultConfiguration[DashboardWidgetCatalog.MetricDigitalStyleKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalStylePanel);
+        digital.DefaultConfiguration[DashboardWidgetCatalog.MetricDigitalGlowKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalGlowSoft);
+        digital.DefaultConfiguration[DashboardWidgetCatalog.MetricDigitalBackgroundColorKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalDefaultBackgroundColor);
+        digital.DefaultConfiguration[DashboardWidgetCatalog.MetricDigitalSegmentColorKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalDefaultSegmentColor);
+        digital.DefaultConfiguration[DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalDefaultInactiveSegmentColor);
+        digital.DefaultConfiguration[DashboardWidgetCatalog.MetricDigitalLabelColorKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalDefaultLabelColor);
+        digital.DefaultConfiguration[DashboardWidgetCatalog.MetricDigitalDigitsKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalDefaultDigits.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        digital.SupportedValueKinds.ShouldContain(DashboardMetricValueKinds.Number);
+        digital.SupportedValueKinds.ShouldContain(DashboardMetricValueKinds.Rate);
+        var digitalPropertyKeys = digital.PropertyGroups
+            .SelectMany(static group => group.Properties)
+            .Select(static property => property.Key)
+            .ToArray();
+        digitalPropertyKeys.ShouldContain(DashboardWidgetCatalog.MetricDigitalStyleKey);
+        digitalPropertyKeys.ShouldContain(DashboardWidgetCatalog.MetricDigitalGlowKey);
+        digitalPropertyKeys.ShouldContain(DashboardWidgetCatalog.MetricDigitalBackgroundColorKey);
+        digitalPropertyKeys.ShouldContain(DashboardWidgetCatalog.MetricDigitalSegmentColorKey);
+        digitalPropertyKeys.ShouldContain(DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey);
+        digitalPropertyKeys.ShouldContain(DashboardWidgetCatalog.MetricDigitalLabelColorKey);
+        digitalPropertyKeys.ShouldContain(DashboardWidgetCatalog.MetricDigitalDigitsKey);
+        digitalPropertyKeys.ShouldNotContain(DashboardWidgetCatalog.KpiValueColorKey);
+    }
+
+    [Fact]
+    public void DashboardMetricDigitalVisualization_UsesReusableReadoutComponent()
+    {
+        var root = FindRepositoryRoot();
+        var widgetsPath = Path.Combine(root, "src", "FluxMq.UI", "Components", "Workspace", "DashboardWidgets");
+        var digitalView = File.ReadAllText(Path.Combine(widgetsPath, "DashboardMetricDigitalVisualizationView.razor"));
+        var readout = File.ReadAllText(Path.Combine(widgetsPath, "DashboardDigitalReadout.razor"));
+
+        digitalView.ShouldContain("<DashboardDigitalReadout");
+        digitalView.ShouldContain("Value=\"@DigitalValue(metric.Value)\"");
+        digitalView.ShouldContain("Label=\"@label\"");
+        digitalView.ShouldContain("AccentColor=");
+        digitalView.ShouldContain("BackgroundColor=");
+        digitalView.ShouldContain("InactiveSegmentColor=");
+        digitalView.ShouldContain("LabelColor=");
+        digitalView.ShouldContain("MinimumDigits=");
+        digitalView.ShouldNotContain("<svg");
+
+        readout.ShouldContain("[Parameter]");
+        readout.ShouldContain("public string? Value");
+        readout.ShouldContain("public string? Label");
+        readout.ShouldContain("public string? AccentColor");
+        readout.ShouldContain("public string? BackgroundColor");
+        readout.ShouldContain("public string? InactiveSegmentColor");
+        readout.ShouldContain("public string? LabelColor");
+        readout.ShouldContain("public int MinimumDigits");
+        readout.ShouldContain("viewBox=");
+        readout.ShouldContain("SegmentPath");
     }
 
     [Fact]
@@ -1370,7 +1483,7 @@ public sealed class DashboardEventFilterCatalogTests
         var eventRate = File.ReadAllText(Path.Combine(widgetsPath, "DashboardEventRateModuleView.razor"));
         var rateTile = File.ReadAllText(Path.Combine(widgetsPath, "DashboardRateTileModuleView.razor"));
 
-        kpi.ShouldContain("DashboardMetricValueVisualizationView");
+        kpi.ShouldContain("DashboardMetricVisualizationHost");
         counter.ShouldContain("DashboardMetricValueVisualizationView");
         eventRate.ShouldContain("DashboardMetricValueVisualizationView");
         rateTile.ShouldContain("DashboardMetricValueVisualizationView");

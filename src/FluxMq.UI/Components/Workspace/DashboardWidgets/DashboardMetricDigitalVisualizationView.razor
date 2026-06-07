@@ -1,0 +1,44 @@
+@namespace FluxMq.UI.Components.Workspace
+@using FluxMq.UI.Services
+
+@{
+    var metric = Context.MetricValue;
+    var label = !string.IsNullOrWhiteSpace(metric.Unit) &&
+        !string.Equals(metric.Unit, "bytes", StringComparison.Ordinal)
+            ? metric.Unit
+            : DashboardWidgetFormatting.WidgetTitle(Context.Widget);
+}
+
+<div class="@RootClass">
+    <DashboardDigitalReadout Value="@DigitalValue(metric.Value)"
+                             Label="@label"
+                             AccentColor="@Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalSegmentColorKey)"
+                             BackgroundColor="@Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalBackgroundColorKey)"
+                             InactiveSegmentColor="@Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey)"
+                             LabelColor="@Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalLabelColorKey)"
+                             StyleKind="@DigitalStyle"
+                             Glow="@DigitalGlow"
+                             MinimumDigits="@MinimumDigits" />
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardWidgetRenderContext Context { get; set; } = null!;
+
+    private string RootClass =>
+        "dashboard-metric-digital-layout";
+
+    private string DigitalStyle => DashboardWidgetCatalog.NormalizeMetricDigitalStyle(
+        Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalStyleKey));
+
+    private string DigitalGlow => DashboardWidgetCatalog.NormalizeMetricDigitalGlow(
+        Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalGlowKey));
+
+    private int MinimumDigits => DashboardWidgetCatalog.NormalizeMetricDigitalDigits(
+        Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalDigitsKey));
+
+    private static string DigitalValue(double value)
+        => Math.Abs(value % 1) < 0.001
+            ? value.ToString("0", System.Globalization.CultureInfo.InvariantCulture)
+            : value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+}

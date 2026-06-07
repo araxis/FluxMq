@@ -2543,3 +2543,32 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-mode UI tests passed with 372 tests.
   - Default/package-mode app build passed for `src\fluxmq.ui` with no `InitializeComponent` error.
 - Next step: visually review KPI `Visualization` editing first; if accepted, reuse the pattern for the next focused metric widget before adding a new visualization module.
+
+## 2026-06-07 - KPI digital visualization slice
+
+- Merged PR #167 and synced `main`; post-merge Windows validation passed and FluxFlow stayed clean.
+- Started `work/dashboard-metric-digital-visualization` for the next focused dashboard slice.
+- Added `metric.digital` as the first second visualization module for KPI:
+  - KPI now routes through a visualization host instead of directly rendering `metric.value`.
+  - `metric.digital` has its own renderer, defaults, supported metric kinds, and property rows.
+  - Digital-specific settings are `Digit style` and `Glow`; they are saved only when the digital visualization is selected.
+- Refined `metric.digital` into a reusable Blazor component:
+  - Added `DashboardDigitalReadout` with simple parameters for value, label, accent color, style, glow, and minimum digits.
+  - The visualization view now passes metric values into the component instead of owning the SVG drawing.
+  - The readout uses SVG seven-segment paths so the digital visual can move toward a real meter/readout look without leaking implementation details into KPI.
+- Expanded the digital visual controls:
+  - Added readout-specific background, segment, inactive segment, label color, and digit count settings.
+  - Hid the generic `Value color` row for `metric.digital`; `Segment color` is the digital value color.
+  - These settings remain visualization-owned and are saved only when `metric.digital` is selected.
+- Kept the separation intact:
+  - Metric query still chooses the number.
+  - Visualization chooses the presentation.
+  - Cell style still owns container background, border, radius, padding, and shared colors.
+- Verification:
+  - Source-mode restore completed after the package update.
+  - Source-mode UI tests passed with 373 tests.
+  - Package-mode restore completed.
+  - Package-mode UI tests passed with 373 tests.
+  - After the reusable readout refinement, UI build passed and package-mode UI tests passed with 374 tests.
+  - After the digital-control expansion, UI build passed and package-mode UI tests passed with 374 tests.
+- Next step: visually review KPI `Value` versus `Digital`; if accepted, add the next visualization or reuse the pattern on the next metric widget one slice at a time.

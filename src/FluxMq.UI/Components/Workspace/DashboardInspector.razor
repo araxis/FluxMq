@@ -467,6 +467,50 @@
                                          AriaLabel="@property.Label"
                                          ValueChanged="@SetKpiValuePlacementAsync" />
                 break;
+            case DashboardWidgetCatalog.MetricDigitalStyleKey:
+                <PropertyGridSelect Value="@draft.DigitalStyle"
+                                    Options="@ToSelectOptions(property.Options)"
+                                    AriaLabel="@property.Label"
+                                    ValueChanged="@SetMetricDigitalStyleAsync" />
+                break;
+            case DashboardWidgetCatalog.MetricDigitalGlowKey:
+                <PropertyGridSelect Value="@draft.DigitalGlow"
+                                    Options="@ToSelectOptions(property.Options)"
+                                    AriaLabel="@property.Label"
+                                    ValueChanged="@SetMetricDigitalGlowAsync" />
+                break;
+            case DashboardWidgetCatalog.MetricDigitalSegmentColorKey:
+                <PropertyGridColorPicker Value="@draft.DigitalSegmentColor"
+                                         DefaultValue="@(property.DefaultValue ?? DashboardWidgetCatalog.MetricDigitalDefaultSegmentColor)"
+                                         AriaLabel="@property.Label"
+                                         ValueChanged="@SetMetricDigitalSegmentColorAsync" />
+                break;
+            case DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey:
+                <PropertyGridColorPicker Value="@draft.DigitalInactiveSegmentColor"
+                                         DefaultValue="@(property.DefaultValue ?? DashboardWidgetCatalog.MetricDigitalDefaultInactiveSegmentColor)"
+                                         AriaLabel="@property.Label"
+                                         ValueChanged="@SetMetricDigitalInactiveSegmentColorAsync" />
+                break;
+            case DashboardWidgetCatalog.MetricDigitalBackgroundColorKey:
+                <PropertyGridColorPicker Value="@draft.DigitalBackgroundColor"
+                                         DefaultValue="@(property.DefaultValue ?? DashboardWidgetCatalog.MetricDigitalDefaultBackgroundColor)"
+                                         AriaLabel="@property.Label"
+                                         ValueChanged="@SetMetricDigitalBackgroundColorAsync" />
+                break;
+            case DashboardWidgetCatalog.MetricDigitalLabelColorKey:
+                <PropertyGridColorPicker Value="@draft.DigitalLabelColor"
+                                         DefaultValue="@(property.DefaultValue ?? DashboardWidgetCatalog.MetricDigitalDefaultLabelColor)"
+                                         AriaLabel="@property.Label"
+                                         ValueChanged="@SetMetricDigitalLabelColorAsync" />
+                break;
+            case DashboardWidgetCatalog.MetricDigitalDigitsKey:
+                <input class="property-grid-input"
+                       type="number"
+                       min="@DashboardWidgetCatalog.MetricDigitalMinDigits"
+                       max="@DashboardWidgetCatalog.MetricDigitalMaxDigits"
+                       value="@draft.DigitalDigits"
+                       @oninput="@((ChangeEventArgs args) => SetMetricDigitalDigitsAsync(args.Value?.ToString()))" />
+                break;
             default:
                 <span class="property-grid-cell-text">Unsupported visual property</span>
                 break;
@@ -1027,6 +1071,83 @@
         await AutoApplyAsync();
     }
 
+    private async Task SetMetricDigitalStyleAsync(string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.DigitalStyle = DashboardWidgetCatalog.NormalizeMetricDigitalStyle(value);
+        await AutoApplyAsync();
+    }
+
+    private async Task SetMetricDigitalGlowAsync(string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.DigitalGlow = DashboardWidgetCatalog.NormalizeMetricDigitalGlow(value);
+        await AutoApplyAsync();
+    }
+
+    private async Task SetMetricDigitalSegmentColorAsync(string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.DigitalSegmentColor = value ?? string.Empty;
+        await AutoApplyAsync();
+    }
+
+    private async Task SetMetricDigitalInactiveSegmentColorAsync(string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.DigitalInactiveSegmentColor = value ?? string.Empty;
+        await AutoApplyAsync();
+    }
+
+    private async Task SetMetricDigitalBackgroundColorAsync(string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.DigitalBackgroundColor = value ?? string.Empty;
+        await AutoApplyAsync();
+    }
+
+    private async Task SetMetricDigitalLabelColorAsync(string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.DigitalLabelColor = value ?? string.Empty;
+        await AutoApplyAsync();
+    }
+
+    private async Task SetMetricDigitalDigitsAsync(string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.DigitalDigits = DashboardWidgetCatalog.NormalizeMetricDigitalDigits(value);
+        await AutoApplyAsync();
+    }
+
     private async Task SetGaugeStyleAsync(string? value)
     {
         if (_widgetDraft is null)
@@ -1578,6 +1699,9 @@
         => string.Equals(field.Key, DashboardEventFilterCatalog.AttributeFilterKey("retain"), StringComparison.Ordinal);
 
     private static IReadOnlyList<PropertyGridSelectOption> ToSelectOptions(IEnumerable<DashboardFilterChoice> options)
+        => [.. options.Select(static option => new PropertyGridSelectOption(option.Value, option.Label))];
+
+    private static IReadOnlyList<PropertyGridSelectOption> ToSelectOptions(IEnumerable<DashboardWidgetPropertyOption> options)
         => [.. options.Select(static option => new PropertyGridSelectOption(option.Value, option.Label))];
 
     private sealed record DashboardFilterChoice(string Value, string Label);

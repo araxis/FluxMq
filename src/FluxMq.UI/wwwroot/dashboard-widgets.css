@@ -209,6 +209,113 @@
     text-align: var(--dashboard-kpi-value-align, left);
 }
 
+.dashboard-metric-digital-layout {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    justify-content: var(--dashboard-kpi-value-placement, center);
+    min-height: 0;
+    overflow: hidden;
+}
+
+.dashboard-digital-readout {
+    --dashboard-digital-accent: var(--dashboard-widget-value, #db8b98);
+    --dashboard-digital-background: #040609;
+    --dashboard-digital-inactive: #351820;
+    --dashboard-digital-label: #7f928b;
+    align-items: var(--dashboard-kpi-value-items, center);
+    display: flex;
+    justify-content: var(--dashboard-kpi-value-items, center);
+    min-width: 0;
+    text-align: var(--dashboard-kpi-value-align, center);
+    width: 100%;
+}
+
+.dashboard-digital-readout-face {
+    align-items: center;
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--dashboard-digital-accent) 9%, transparent), transparent),
+        var(--dashboard-digital-background);
+    border: 1px solid color-mix(in srgb, var(--dashboard-digital-accent) 24%, #111820);
+    border-radius: 7px;
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.025),
+        inset 0 0 18px rgba(0, 0, 0, 0.68);
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 100%;
+    overflow: hidden;
+    padding: 10px 13px 8px;
+}
+
+.dashboard-digital-readout-display {
+    display: block;
+    height: clamp(38px, 42%, 74px);
+    max-width: 100%;
+    min-width: 0;
+    width: min(100%, 148px);
+}
+
+.dashboard-digital-readout .segment {
+    transition: fill 0.12s ease, opacity 0.12s ease;
+}
+
+.dashboard-digital-readout .segment.on {
+    fill: var(--dashboard-digital-accent);
+    filter: drop-shadow(0 0 3px color-mix(in srgb, var(--dashboard-digital-accent) 52%, transparent));
+}
+
+.dashboard-digital-readout .segment.off {
+    fill: var(--dashboard-digital-inactive);
+    opacity: 0.32;
+}
+
+.dashboard-digital-readout-label {
+    color: var(--dashboard-digital-label);
+    font-size: 8.5px;
+    font-weight: 850;
+    letter-spacing: 1.4px;
+    line-height: 1.1;
+    margin-top: 4px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.dashboard-digital-readout.style-segment .dashboard-digital-readout-face {
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--dashboard-digital-accent) 12%, transparent), transparent),
+        var(--dashboard-digital-background);
+}
+
+.dashboard-digital-readout.style-terminal .dashboard-digital-readout-face {
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--dashboard-digital-accent) 8%, transparent), transparent),
+        var(--dashboard-digital-background);
+    border-style: dashed;
+}
+
+.dashboard-digital-readout.glow-off .segment.on {
+    filter: none;
+}
+
+.dashboard-digital-readout.glow-soft .dashboard-digital-readout-face {
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.025),
+        inset 0 0 18px rgba(0, 0, 0, 0.68),
+        0 0 14px color-mix(in srgb, var(--dashboard-digital-accent) 10%, transparent);
+}
+
+.dashboard-digital-readout.glow-strong .dashboard-digital-readout-face {
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.025),
+        inset 0 0 22px rgba(0, 0, 0, 0.72),
+        0 0 24px color-mix(in srgb, var(--dashboard-digital-accent) 22%, transparent);
+}
+
 .dashboard-observability-layout {
     justify-content: stretch;
 }
@@ -846,6 +953,11 @@
         font-size: 34px;
     }
 
+    .dashboard-digital-readout-display {
+        height: clamp(34px, 40%, 62px);
+        width: min(100%, 128px);
+    }
+
     .dashboard-observability-grid,
     .dashboard-status-strip-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -889,6 +1001,15 @@
 
     .dashboard-widget-value {
         font-size: 28px;
+    }
+
+    .dashboard-digital-readout-face {
+        padding: 8px 10px 7px;
+    }
+
+    .dashboard-digital-readout-display {
+        height: clamp(30px, 38%, 54px);
+        width: min(100%, 112px);
     }
 
     .dashboard-observability-grid,

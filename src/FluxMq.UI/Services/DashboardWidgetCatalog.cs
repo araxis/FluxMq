@@ -38,6 +38,13 @@ public sealed class DashboardWidgetCatalog
     public const string KpiTitleAlignKey = "kpi.titleAlign";
     public const string KpiValueAlignKey = "kpi.valueAlign";
     public const string KpiValuePlacementKey = "kpi.valuePlacement";
+    public const string MetricDigitalStyleKey = "metric.digital.style";
+    public const string MetricDigitalGlowKey = "metric.digital.glow";
+    public const string MetricDigitalBackgroundColorKey = "metric.digital.backgroundColor";
+    public const string MetricDigitalSegmentColorKey = "metric.digital.segmentColor";
+    public const string MetricDigitalInactiveSegmentColorKey = "metric.digital.inactiveSegmentColor";
+    public const string MetricDigitalLabelColorKey = "metric.digital.labelColor";
+    public const string MetricDigitalDigitsKey = "metric.digital.digits";
     public const string MetricMessages = "messages";
     public const string MetricRecent = "recent";
     public const string MetricCurrentRate = "currentRate";
@@ -61,6 +68,19 @@ public sealed class DashboardWidgetCatalog
     public const string KpiDefaultTitleColor = "#f3f7fb";
     public const string KpiDefaultSubtitleColor = "#9fb0c5";
     public const string KpiDefaultValueColor = "#f3f7fb";
+    public const string MetricDigitalDefaultBackgroundColor = "#040609";
+    public const string MetricDigitalDefaultSegmentColor = "#db8b98";
+    public const string MetricDigitalDefaultInactiveSegmentColor = "#351820";
+    public const string MetricDigitalDefaultLabelColor = "#7f928b";
+    public const int MetricDigitalDefaultDigits = 4;
+    public const int MetricDigitalMinDigits = 1;
+    public const int MetricDigitalMaxDigits = 8;
+    public const string MetricDigitalStylePanel = "panel";
+    public const string MetricDigitalStyleSegment = "segment";
+    public const string MetricDigitalStyleTerminal = "terminal";
+    public const string MetricDigitalGlowOff = "off";
+    public const string MetricDigitalGlowSoft = "soft";
+    public const string MetricDigitalGlowStrong = "strong";
 
     public const int DefaultMetricCardColumns = 4;
     public const int MinMetricCardColumns = 1;
@@ -463,6 +483,30 @@ public sealed class DashboardWidgetCatalog
         return DashboardMetricVisualizationCatalog.Find(normalized)?.Id ??
             DashboardMetricVisualizationIds.Value;
     }
+
+    public static string NormalizeMetricDigitalStyle(string? value)
+        => value switch
+        {
+            MetricDigitalStyleSegment => MetricDigitalStyleSegment,
+            MetricDigitalStyleTerminal => MetricDigitalStyleTerminal,
+            _ => MetricDigitalStylePanel
+        };
+
+    public static string NormalizeMetricDigitalGlow(string? value)
+        => value switch
+        {
+            MetricDigitalGlowOff => MetricDigitalGlowOff,
+            MetricDigitalGlowStrong => MetricDigitalGlowStrong,
+            _ => MetricDigitalGlowSoft
+        };
+
+    public static int NormalizeMetricDigitalDigits(string? value)
+        => int.TryParse(value, out var digits)
+            ? NormalizeMetricDigitalDigits(digits)
+            : MetricDigitalDefaultDigits;
+
+    public static int NormalizeMetricDigitalDigits(int value)
+        => Math.Clamp(value, MetricDigitalMinDigits, MetricDigitalMaxDigits);
 
     private static string NormalizeMetric(string? value)
         => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
