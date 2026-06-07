@@ -178,11 +178,19 @@ public enum DashboardGridTrackUnit
 
 public sealed record DashboardCellDefinition
 {
+    private Dictionary<string, JsonElement>? _style = [];
+
     public int Row { get; init; }
     public int Column { get; init; }
     public int RowSpan { get; init; } = 1;
     public int ColumnSpan { get; init; } = 1;
     public string? Widget { get; init; }
+
+    public Dictionary<string, JsonElement> Style
+    {
+        get => _style ??= [];
+        init => _style = value ?? [];
+    }
 }
 
 public sealed record DashboardWidgetDefinition

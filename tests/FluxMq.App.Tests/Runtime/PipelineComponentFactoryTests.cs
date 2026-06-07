@@ -1126,6 +1126,9 @@ public sealed class PipelineComponentFactoryTests
             "Assertion failed: QoS at least once.",
             "Assertion passed: QoS at least once."
         ]);
+        logSink.Values.Select(entry => entry.Topic).ShouldBe([null, null]);
+        logSink.Values.Select(entry => entry.PayloadBytes).ShouldBe([null, null]);
+        logSink.Values.Select(entry => entry.Context).ShouldBe([null, null]);
     }
 
     [Fact]

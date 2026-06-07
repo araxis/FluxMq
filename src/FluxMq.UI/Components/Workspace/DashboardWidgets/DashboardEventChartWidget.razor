@@ -4,39 +4,26 @@
     var chartType = DashboardWidgetCatalog.NormalizeChartType(Widget.ReadString(DashboardWidgetCatalog.ChartTypeKey));
 }
 
-<div class="dashboard-observability-layout">
-    <div class="dashboard-observability-grid compact" style="@DashboardWidgetFormatting.MetricGridStyle(Widget)">
-        @foreach (var card in DashboardWidgetFormatting.MetricCards(Widget, Snapshot))
-        {
-            <DashboardMetricTile Card="@card" />
-        }
-    </div>
-
-    <div class="dashboard-widget-chart">
-        @if (chartType == DashboardWidgetCatalog.ChartTypeTopics)
-        {
-            <DashboardTopicBars Snapshot="@Snapshot" Limit="6" />
-        }
-        else if (chartType == DashboardWidgetCatalog.ChartTypeLine ||
-                 chartType == DashboardWidgetCatalog.ChartTypeArea)
-        {
-            <svg class="dashboard-widget-chart-line @chartType"
-                 viewBox="0 0 100 44"
-                 preserveAspectRatio="none"
-                 aria-hidden="true">
-                @if (chartType == DashboardWidgetCatalog.ChartTypeArea)
-                {
-                    <polygon points="@DashboardWidgetFormatting.ChartAreaPoints(Snapshot)" />
-                }
-                <polyline points="@DashboardWidgetFormatting.ChartLinePoints(Snapshot)" />
-            </svg>
-        }
-        else
-        {
-            <DashboardBucketBars Snapshot="@Snapshot" />
-        }
-        <div class="dashboard-widget-meta">@DashboardWidgetFormatting.RateMeta(Snapshot)</div>
-    </div>
+<div class="dashboard-widget-chart">
+    @if (chartType == DashboardWidgetCatalog.ChartTypeLine ||
+         chartType == DashboardWidgetCatalog.ChartTypeArea)
+    {
+        <svg class="dashboard-widget-chart-line @chartType"
+             viewBox="0 0 100 44"
+             preserveAspectRatio="none"
+             aria-hidden="true">
+            @if (chartType == DashboardWidgetCatalog.ChartTypeArea)
+            {
+                <polygon points="@DashboardWidgetFormatting.ChartAreaPoints(Snapshot)" />
+            }
+            <polyline points="@DashboardWidgetFormatting.ChartLinePoints(Snapshot)" />
+        </svg>
+    }
+    else
+    {
+        <DashboardBucketBars Snapshot="@Snapshot" />
+    }
+    <div class="dashboard-widget-meta">@DashboardWidgetFormatting.RateMeta(Snapshot)</div>
 </div>
 
 @code {

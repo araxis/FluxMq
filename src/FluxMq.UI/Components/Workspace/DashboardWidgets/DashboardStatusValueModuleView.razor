@@ -1,0 +1,14 @@
+@namespace FluxMq.UI.Components.Workspace
+
+@{
+    var card = DashboardWidgetFormatting.PrimaryMetricCard(Context.Widget, Context.Snapshot);
+}
+
+<div class="dashboard-status-value">
+    <DashboardMetricTile Card="@card" />
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardWidgetRenderContext Context { get; set; } = null!;
+}

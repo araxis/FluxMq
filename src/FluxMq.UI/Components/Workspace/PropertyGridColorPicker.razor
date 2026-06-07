@@ -1,0 +1,158 @@
+@namespace FluxMq.UI.Components.Workspace
+
+<div class="property-grid-color-picker">
+    <label class="property-grid-color-button"
+           style="@SwatchStyle"
+           title="@PickerTitle">
+        <input class="property-grid-color-native"
+               type="color"
+               value="@CurrentColor"
+               aria-label="@PickerTitle"
+               @oninput="@SetValueFromEventAsync"
+               @onchange="@SetValueFromEventAsync" />
+        <span class="property-grid-color-swatch" aria-hidden="true"></span>
+    </label>
+    <input class="property-grid-color-text"
+           type="text"
+           value="@TextValue"
+           spellcheck="false"
+           aria-label="@TextTitle"
+           @oninput="@SetTextFromEventAsync"
+           @onchange="@CommitTextAsync"
+           @onblur="@ResetInvalidText" />
+</div>
+
+@code {
+    private const string FallbackColor = "#2ed3c6";
+    private string? _textValue;
+    private string? _lastCommittedColor;
+
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter]
+    public string? DefaultValue { get; set; }
+
+    [Parameter]
+    public string? AriaLabel { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> ValueChanged { get; set; }
+
+    private string CurrentColor => NormalizeColor(Value, DefaultValue);
+
+    private string TextValue => _textValue ?? CurrentColor;
+
+    private string PickerTitle => string.IsNullOrWhiteSpace(AriaLabel)
+        ? "Pick color"
+        : AriaLabel;
+
+    private string TextTitle => string.IsNullOrWhiteSpace(AriaLabel)
+        ? "Edit color value"
+        : $"{AriaLabel} value";
+
+    private string SwatchStyle => $"--property-grid-color-value: {CurrentColor};";
+
+    protected override void OnParametersSet()
+    {
+        var current = CurrentColor;
+        if (!string.Equals(_lastCommittedColor, current, StringComparison.OrdinalIgnoreCase) || _textValue is null)
+        {
+            _textValue = current;
+            _lastCommittedColor = current;
+        }
+    }
+
+    private async Task SetValueFromEventAsync(ChangeEventArgs args)
+    {
+        var next = NormalizeColor(args.Value?.ToString(), DefaultValue);
+        await SetColorAsync(next);
+    }
+
+    private async Task SetTextFromEventAsync(ChangeEventArgs args)
+    {
+        _textValue = args.Value?.ToString() ?? string.Empty;
+        if (TryNormalizeColor(_textValue, out var next))
+        {
+            await SetColorAsync(next);
+        }
+    }
+
+    private async Task CommitTextAsync()
+    {
+        if (TryNormalizeColor(_textValue, out var next))
+        {
+            _textValue = next;
+            await SetColorAsync(next);
+            return;
+        }
+
+        ResetInvalidText();
+    }
+
+    private void ResetInvalidText()
+    {
+        if (!TryNormalizeColor(_textValue, out _))
+        {
+            _textValue = CurrentColor;
+        }
+    }
+
+    private async Task SetColorAsync(string next)
+    {
+        _textValue = next;
+        if (!string.Equals(next, CurrentColor, StringComparison.OrdinalIgnoreCase))
+        {
+            _lastCommittedColor = next;
+            await ValueChanged.InvokeAsync(next);
+        }
+    }
+
+    private static string NormalizeColor(string? value, string? defaultValue)
+    {
+        if (TryNormalizeColor(value, out var color))
+        {
+            return color;
+        }
+
+        if (TryNormalizeColor(defaultValue, out color))
+        {
+            return color;
+        }
+
+        return FallbackColor;
+    }
+
+    private static bool TryNormalizeColor(string? value, out string color)
+    {
+        color = string.Empty;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var candidate = value.Trim();
+        if (candidate.Length == 4 &&
+            candidate[0] == '#' &&
+            IsHex(candidate[1]) &&
+            IsHex(candidate[2]) &&
+            IsHex(candidate[3]))
+        {
+            color = $"#{candidate[1]}{candidate[1]}{candidate[2]}{candidate[2]}{candidate[3]}{candidate[3]}".ToLowerInvariant();
+            return true;
+        }
+
+        if (candidate.Length == 7 &&
+            candidate[0] == '#' &&
+            candidate.Skip(1).All(IsHex))
+        {
+            color = candidate.ToLowerInvariant();
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsHex(char value)
+        => value is >= '0' and <= '9' or >= 'a' and <= 'f' or >= 'A' and <= 'F';
+}

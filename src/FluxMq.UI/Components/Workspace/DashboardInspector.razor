@@ -1,0 +1,1584 @@
+@using FluxMq.UI.Models
+@using FluxMq.App.Metrics
+@using FluxMq.UI.Services
+@inject DashboardEventFilterCatalog EventFilters
+@inject DashboardMetricRegistry MetricRegistry
+@inject DashboardWidgetRegistry WidgetRegistry
+@inject IDialogService DialogService
+
+<aside class="dashboard-inspector">
+    <header class="dashboard-inspector-header">
+        <div class="dashboard-inspector-icon">
+            <MudIcon Icon="@InspectorIcon" Size="Size.Small" />
+        </div>
+        <div class="dashboard-inspector-heading">
+            <span class="dashboard-inspector-title">@InspectorTitle</span>
+            <span class="dashboard-inspector-subtitle">@InspectorSubtitle</span>
+        </div>
+        @if (Widget is not null)
+        {
+            <button type="button"
+                    class="dashboard-inspector-command"
+                    title="Reset widget properties"
+                    aria-label="Reset widget properties"
+                    @onclick="@ResetWidgetPropertiesAsync">
+                <MudIcon Icon="@Icons.Material.Filled.RestartAlt" Size="Size.Small" />
+            </button>
+        }
+    </header>
+
+    @if (PropertyGroups.Count > 0)
+    {
+        <PropertyGrid Groups="@PropertyGroups"
+                      CollapsedGroupIds="@CollapsedPropertyGroups"
+                      CollapsedGroupIdsChanged="@CollapsedPropertyGroupsChanged" />
+    }
+    else
+    {
+        <div class="dashboard-inspector-empty">
+            @if (SelectedCells.Count == 0)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.GridView" />
+                <span>Select a cell or widget</span>
+                <small>Use the grid to place widgets, merge cells, split cells, and inspect layout.</small>
+            }
+            else
+            {
+                @RenderCellSummary()
+                <MudDivider />
+                <small>Drop a widget here or choose one from the catalog.</small>
+            }
+        </div>
+    }
+</aside>
+
+@code {
+    private static readonly IReadOnlyList<DashboardFilterChoice> QosFilterOptions =
+    [
+        new("", "Any"),
+        new("0", "0"),
+        new("1", "1"),
+        new("2", "2")
+    ];
+
+    private static readonly IReadOnlyList<DashboardFilterChoice> RetainFilterOptions =
+    [
+        new("", "Any"),
+        new("true", "True"),
+        new("false", "False")
+    ];
+
+    private static readonly IReadOnlyList<DashboardFilterChoice> WindowOptions =
+    [
+        new("30s", "30s"),
+        new("60s", "1m"),
+        new("300s", "5m"),
+        new("900s", "15m")
+    ];
+
+    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> HorizontalAlignmentOptions =
+    [
+        new(DashboardWidgetCatalog.KpiAlignLeft, Icons.Material.Filled.FormatAlignLeft, "Left"),
+        new(DashboardWidgetCatalog.KpiAlignCenter, Icons.Material.Filled.FormatAlignCenter, "Center"),
+        new(DashboardWidgetCatalog.KpiAlignRight, Icons.Material.Filled.FormatAlignRight, "Right")
+    ];
+
+    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> ValuePlacementOptions =
+    [
+        new(DashboardWidgetCatalog.KpiValuePlacementTop, Icons.Material.Filled.VerticalAlignTop, "Top"),
+        new(DashboardWidgetCatalog.KpiValuePlacementMiddle, Icons.Material.Filled.VerticalAlignCenter, "Middle"),
+        new(DashboardWidgetCatalog.KpiValuePlacementBottom, Icons.Material.Filled.VerticalAlignBottom, "Bottom")
+    ];
+
+    private const string DataGroupId = "data";
+    private const string MetricQueryGroupId = "metric-query";
+    private const string FilterGroupId = "filters";
+    private const string DisplayGroupId = "display";
+    private const string StyleGroupId = "style";
+    private const string LayoutGroupId = "layout";
+
+    [Parameter, EditorRequired]
+    public FlowWorkspaceService Project { get; set; } = null!;
+
+    [Parameter]
+    public DashboardLayoutSnapshot? Layout { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<DashboardCellSnapshot> SelectedCells { get; set; } = [];
+
+    [Parameter]
+    public DashboardWidgetSnapshot? Widget { get; set; }
+
+    [Parameter]
+    public EventCallback Changed { get; set; }
+
+    [Parameter]
+    public IReadOnlySet<string>? CollapsedPropertyGroups { get; set; }
+
+    [Parameter]
+    public EventCallback<IReadOnlySet<string>> CollapsedPropertyGroupsChanged { get; set; }
+
+    private DashboardWidgetSettingsDraft? _widgetDraft;
+    private DashboardCellStyleDraft? _cellStyleDraft;
+    private DashboardMetricEditorDraft? _metricDraft;
+    private string? _draftWidgetName;
+    private string? _draftCellName;
+    private string? _draftMetricName;
+    private string? _metricToAdd;
+    private string? _displayMetricToAdd;
+    private List<string> _bindingMetrics = [];
+    private string? _primaryBindingMetric;
+
+    private string InspectorIcon => Widget is null
+        ? Icons.Material.Filled.GridView
+        : DashboardWidgetFormatting.WidgetIcon(Widget);
+
+    private string InspectorTitle => Widget is null
+        ? SelectedCells.Count switch
+        {
+            0 => "Dashboard inspector",
+            1 => $"Cell {SelectedCells[0].Label}",
+            _ => $"{SelectedCells.Count} cells"
+        }
+        : DashboardWidgetFormatting.WidgetTitle(PreviewWidget);
+
+    private string InspectorSubtitle => Widget is null
+        ? Layout is null ? "No dashboard loaded" : $"{Layout.Columns.Count} columns / {Layout.Rows.Count} rows"
+        : Widget.Type;
+
+    private DashboardWidgetSnapshot PreviewWidget => Widget is null || _widgetDraft is null
+        ? Widget ?? new DashboardWidgetSnapshot("preview", DashboardWidgetCatalog.EventCounterType, new Dictionary<string, string>())
+        : Widget with { Configuration = _widgetDraft.BuildConfiguration() };
+
+    protected override void OnParametersSet()
+    {
+        var selectedCell = SelectedCells.Count == 1 ? SelectedCells[0] : null;
+        var selectedCellName = selectedCell?.Name;
+        if (!string.Equals(_draftCellName, selectedCellName, StringComparison.Ordinal))
+        {
+            _draftCellName = selectedCellName;
+            _cellStyleDraft = selectedCell is null
+                ? null
+                : DashboardCellStyleDraft.Create(selectedCell.Style);
+        }
+
+        if (Widget is null)
+        {
+            _widgetDraft = null;
+            _metricDraft = null;
+            _draftWidgetName = null;
+            _draftMetricName = null;
+            _metricToAdd = null;
+            _displayMetricToAdd = null;
+            _bindingMetrics = [];
+            _primaryBindingMetric = null;
+            return;
+        }
+
+        var binding = Layout?.Bindings.TryGetValue(Widget.Name, out var foundBinding) == true
+            ? foundBinding
+            : null;
+        var metricName = binding?.PrimaryMetric ??
+            Widget.ReadString("metric") ??
+            binding?.Metrics.FirstOrDefault() ??
+            $"{Widget.Name}Metric";
+
+        if (string.Equals(_draftWidgetName, Widget.Name, StringComparison.Ordinal) &&
+            string.Equals(_draftMetricName, metricName, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _draftWidgetName = Widget.Name;
+        _draftMetricName = metricName;
+        _widgetDraft = DashboardWidgetSettingsDraft.Create(Widget, EventFilters);
+        _metricToAdd = null;
+        _displayMetricToAdd = null;
+
+        if (!_widgetDraft.Profile.UsesMetricQuery)
+        {
+            _metricDraft = null;
+            _bindingMetrics = [];
+            _primaryBindingMetric = null;
+            return;
+        }
+
+        _widgetDraft.MetricName = metricName;
+        _primaryBindingMetric = metricName;
+        _bindingMetrics = binding?.Metrics.Count > 0
+            ? [.. binding.Metrics]
+            : [metricName];
+        if (!_widgetDraft.Profile.SupportsMetricSlots)
+        {
+            _bindingMetrics = [metricName];
+        }
+        else if (!_bindingMetrics.Contains(metricName, StringComparer.Ordinal))
+        {
+            _bindingMetrics.Insert(0, metricName);
+        }
+
+        var metric = Layout?.Metrics.TryGetValue(metricName, out var foundMetric) == true
+            ? foundMetric
+            : null;
+        if (metric is null && _widgetDraft.UsesMetricQueryBuilder)
+        {
+            var legacyDefinition = FluxMetricQueryDraft
+                .Create(
+                    metric: null,
+                    Widget.Configuration,
+                    metricName)
+                .BuildDefinition(metricName);
+            metric = ToMetricSnapshot(
+                metricName,
+                DashboardMetricQueryMapper.ToDashboardQuery(legacyDefinition));
+        }
+
+        _metricDraft = DashboardMetricEditorDraft.Create(
+            metricName,
+            metric,
+            EventFilters,
+            MetricRegistry,
+            Widget.Type);
+    }
+
+    private IReadOnlyList<PropertyGridGroup> PropertyGroups => BuildPropertyGroups();
+
+    private IReadOnlyList<PropertyGridGroup> BuildPropertyGroups()
+    {
+        if (Widget is null || _widgetDraft is null)
+        {
+            var cellGroups = new List<PropertyGridGroup>();
+            if (_cellStyleDraft is not null)
+            {
+                cellGroups.Add(new(StyleGroupId, "Cell style", StylePropertyCount, RenderStyleProperties(), StartCollapsed: true));
+                cellGroups.Add(new(LayoutGroupId, "Layout", LayoutPropertyCount, RenderLayoutProperties()));
+            }
+
+            return cellGroups;
+        }
+
+        var groups = new List<PropertyGridGroup>();
+        if (ShowsDataProperties)
+        {
+            groups.Add(new(
+                DataGroupId,
+                SupportsMetricSlots ? InspectorLabels.SeriesGroup : InspectorLabels.DataGroup,
+                DataPropertyCount,
+                RenderDataProperties()));
+        }
+
+        if (ShowsMetricQueryProperties)
+        {
+            groups.Add(new(
+                MetricQueryGroupId,
+                InspectorLabels.TimeWindowGroup,
+                MetricQueryPropertyCount,
+                RenderMetricQueryProperties()));
+        }
+
+        if (ShowsFilterProperties)
+        {
+            groups.Add(new(FilterGroupId, InspectorLabels.FilterGroup, FilterPropertyCount, RenderFilterProperties()));
+        }
+
+        groups.Add(new(DisplayGroupId, InspectorLabels.DisplayGroup, DisplayPropertyCount, RenderDisplayProperties()));
+        if (_cellStyleDraft is not null)
+        {
+            groups.Add(new(StyleGroupId, "Cell style", StylePropertyCount, RenderStyleProperties(), StartCollapsed: true));
+        }
+
+        groups.Add(new(LayoutGroupId, "Layout", LayoutPropertyCount, RenderLayoutProperties()));
+        return groups;
+    }
+
+    private RenderFragment RenderDataProperties() => @<text>
+        @if (IsMetricQueryBuilderWidget)
+        {
+        <PropertyGridRow Name="Metric query">
+            <div class="dashboard-inspector-query-row">
+                <div class="dashboard-inspector-query-preview">
+                    <span>@MetricQueryPreviewValue</span>
+                    <small title="@MetricQuerySummary">@MetricQuerySummary</small>
+                </div>
+                <button type="button"
+                        class="dashboard-inspector-query-edit"
+                        title="@MetricQueryEditTitle"
+                        aria-label="@MetricQueryEditTitle"
+                        @onclick="@OpenMetricBuilderAsync">
+                    <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
+                </button>
+            </div>
+        </PropertyGridRow>
+        }
+        else if (!SupportsMetricSlots)
+        {
+        <PropertyGridRow Name="@InspectorLabels.MetricRow">
+            <PropertyGridSelect Value="@(_primaryBindingMetric ?? string.Empty)"
+                                Options="@MetricNameOptions"
+                                AriaLabel="@InspectorLabels.MetricRow"
+                                ValueChanged="@SetPrimaryBindingMetricAsync" />
+        </PropertyGridRow>
+        }
+        else
+        {
+        <PropertyGridRow Name="@InspectorLabels.PrimarySeriesRow">
+            <PropertyGridSelect Value="@(_primaryBindingMetric ?? string.Empty)"
+                                Options="@MetricNameOptions"
+                                AriaLabel="@InspectorLabels.PrimarySeriesRow"
+                                ValueChanged="@SetPrimaryBindingMetricAsync" />
+        </PropertyGridRow>
+
+        @foreach (var item in _bindingMetrics.Select((metric, index) => new { Metric = metric, Index = index }))
+        {
+            var currentMetric = item.Metric;
+            <PropertyGridRow Name="@($"{InspectorLabels.SeriesRowPrefix} {item.Index + 1}")">
+                <div class="property-grid-inline">
+                    <span class="property-grid-cell-text" title="@currentMetric">@DashboardWidgetFormatting.MetricDisplayName(currentMetric)</span>
+                    <button type="button"
+                            class="property-grid-small-button"
+                            title="Move up"
+                            disabled="@(item.Index == 0)"
+                            @onclick="@(() => MoveBindingMetricAsync(currentMetric, -1))">^</button>
+                    <button type="button"
+                            class="property-grid-small-button"
+                            title="Move down"
+                            disabled="@(item.Index == _bindingMetrics.Count - 1)"
+                            @onclick="@(() => MoveBindingMetricAsync(currentMetric, 1))">v</button>
+                    <button type="button"
+                            class="property-grid-small-button"
+                            title="Remove"
+                            disabled="@(_bindingMetrics.Count == 1)"
+                            @onclick="@(() => RemoveBindingMetricAsync(currentMetric))">x</button>
+                </div>
+            </PropertyGridRow>
+        }
+
+        <PropertyGridRow Name="@InspectorLabels.AddSeriesRow">
+            <div class="property-grid-inline">
+                <PropertyGridSelect Value="@(_metricToAdd ?? string.Empty)"
+                                    Options="@AddMetricOptions"
+                                    AriaLabel="@InspectorLabels.AddSeriesRow"
+                                    ValueChanged="@SetMetricToAddAsync" />
+                <button type="button"
+                        class="property-grid-small-button"
+                        disabled="@string.IsNullOrWhiteSpace(_metricToAdd)"
+                        @onclick="@AddBindingMetricAsync">+</button>
+            </div>
+        </PropertyGridRow>
+        }
+    </text>;
+
+    private RenderFragment RenderMetricQueryProperties() => @<text>
+        @if (_metricDraft is not null)
+        {
+            @if (_widgetDraft?.Profile.UsesMetricAggregation == true)
+            {
+                <PropertyGridRow Name="Aggregate">
+                    <PropertyGridSelect Value="@_metricDraft.Aggregation"
+                                        Options="@AggregationSelectOptions"
+                                        AriaLabel="Aggregate"
+                                        ValueChanged="@SetMetricAggregationAsync" />
+                </PropertyGridRow>
+            }
+            @if (_widgetDraft?.Profile.UsesMetricWindow == true)
+            {
+            <PropertyGridRow Name="@InspectorLabels.WindowRow">
+                <PropertyGridSelect Value="@_metricDraft.Window"
+                                    Options="@WindowSelectOptions"
+                                    AriaLabel="@InspectorLabels.WindowRow"
+                                    ValueChanged="@SetMetricWindowAsync" />
+            </PropertyGridRow>
+            }
+        }
+    </text>;
+
+    private RenderFragment RenderFilterProperties() => @<text>
+        @if (_widgetDraft is not null && _metricDraft is not null)
+        {
+            <PropertyGridRow Name="@InspectorLabels.EventRow">
+                <PropertyGridSelect Value="@_widgetDraft.EventType"
+                                    Options="@EventTypeSelectOptions"
+                                    AriaLabel="@InspectorLabels.EventRow"
+                                    ValueChanged="@SetEventTypeAsync" />
+            </PropertyGridRow>
+            <PropertyGridRow Name="@InspectorLabels.StatusRow">
+                <PropertyGridSelect Value="@_widgetDraft.Status"
+                                    Options="@StatusSelectOptions"
+                                    AriaLabel="@InspectorLabels.StatusRow"
+                                    ValueChanged="@SetStatusAsync" />
+            </PropertyGridRow>
+            @foreach (var field in _widgetDraft.CurrentEventType.Fields)
+            {
+                var currentField = field;
+                <PropertyGridRow Name="@currentField.Label" HelpText="@currentField.HelperText">
+                    @RenderFilterField(currentField)
+                </PropertyGridRow>
+            }
+        }
+    </text>;
+
+    private RenderFragment RenderMetricVisualizationProperties(DashboardWidgetSettingsDraft draft) => @<text>
+        @foreach (var property in MetricVisualizationProperties)
+        {
+            <PropertyGridRow Name="@property.Label" HelpText="@property.HelpText">
+                @RenderMetricVisualizationEditor(property, draft)
+            </PropertyGridRow>
+        }
+    </text>;
+
+    private RenderFragment RenderMetricVisualizationEditor(
+        DashboardWidgetPropertyDefinition property,
+        DashboardWidgetSettingsDraft draft) => @<text>
+        @switch (property.Key)
+        {
+            case DashboardWidgetCatalog.KpiTitleColorKey:
+                <PropertyGridColorPicker Value="@draft.TitleColor"
+                                         DefaultValue="@(property.DefaultValue ?? DashboardWidgetCatalog.KpiDefaultTitleColor)"
+                                         AriaLabel="@property.Label"
+                                         ValueChanged="@SetKpiTitleColorAsync" />
+                break;
+            case DashboardWidgetCatalog.KpiSubtitleColorKey:
+                <PropertyGridColorPicker Value="@draft.SubtitleColor"
+                                         DefaultValue="@(property.DefaultValue ?? DashboardWidgetCatalog.KpiDefaultSubtitleColor)"
+                                         AriaLabel="@property.Label"
+                                         ValueChanged="@SetKpiSubtitleColorAsync" />
+                break;
+            case DashboardWidgetCatalog.KpiValueColorKey:
+                <PropertyGridColorPicker Value="@draft.ValueColor"
+                                         DefaultValue="@(property.DefaultValue ?? DashboardWidgetCatalog.KpiDefaultValueColor)"
+                                         AriaLabel="@property.Label"
+                                         ValueChanged="@SetKpiValueColorAsync" />
+                break;
+            case DashboardWidgetCatalog.KpiTitleAlignKey:
+                <PropertyGridIconSegment Value="@draft.TitleAlign"
+                                         Options="@HorizontalAlignmentOptions"
+                                         AriaLabel="@property.Label"
+                                         ValueChanged="@SetKpiTitleAlignAsync" />
+                break;
+            case DashboardWidgetCatalog.KpiValueAlignKey:
+                <PropertyGridIconSegment Value="@draft.ValueAlign"
+                                         Options="@HorizontalAlignmentOptions"
+                                         AriaLabel="@property.Label"
+                                         ValueChanged="@SetKpiValueAlignAsync" />
+                break;
+            case DashboardWidgetCatalog.KpiValuePlacementKey:
+                <PropertyGridIconSegment Value="@draft.ValuePlacement"
+                                         Options="@ValuePlacementOptions"
+                                         AriaLabel="@property.Label"
+                                         ValueChanged="@SetKpiValuePlacementAsync" />
+                break;
+            default:
+                <span class="property-grid-cell-text">Unsupported visual property</span>
+                break;
+        }
+    </text>;
+
+    private RenderFragment RenderDisplayProperties() => @<text>
+        @if (_widgetDraft is { } draft)
+        {
+        <PropertyGridRow Name="@InspectorLabels.TitleRow">
+            <input class="property-grid-input"
+                   value="@draft.Title"
+                   @oninput="@((ChangeEventArgs args) => SetTitleAsync(args.Value?.ToString()))" />
+        </PropertyGridRow>
+        @if (draft.Profile.UsesSubtitle)
+        {
+            <PropertyGridRow Name="Subtitle">
+                <input class="property-grid-input"
+                       value="@draft.Subtitle"
+                       @oninput="@((ChangeEventArgs args) => SetSubtitleAsync(args.Value?.ToString()))" />
+            </PropertyGridRow>
+        }
+
+        @if (draft.Profile.UsesMetricVisualization)
+        {
+            <PropertyGridRow Name="Visualization">
+                <PropertyGridSelect Value="@draft.MetricVisualizationId"
+                                    Options="@MetricVisualizationOptions"
+                                    AriaLabel="Visualization"
+                                    ValueChanged="@SetMetricVisualizationAsync" />
+            </PropertyGridRow>
+
+            @RenderMetricVisualizationProperties(draft)
+        }
+
+        @if (draft.Profile.UsesVisualMetrics)
+        {
+            <PropertyGridRow Name="@InspectorLabels.PrimaryCardRow">
+                <PropertyGridSelect Value="@draft.PrimaryMetric"
+                                    Options="@VisualMetricOptions"
+                                    AriaLabel="@InspectorLabels.PrimaryCardRow"
+                                    ValueChanged="@SetVisualPrimaryMetricAsync" />
+            </PropertyGridRow>
+
+            @if (draft.Profile.SupportsMetricSlots)
+            {
+                @foreach (var item in draft.DisplayMetrics.Select((metric, index) => new { Metric = metric, Index = index }))
+                {
+                    var currentMetric = item.Metric;
+                    <PropertyGridRow Name="@($"{InspectorLabels.CardRowPrefix} {item.Index + 1}")">
+                        <div class="property-grid-inline">
+                            <span class="property-grid-cell-text" title="@currentMetric">@VisualMetricLabel(currentMetric)</span>
+                            <button type="button"
+                                    class="property-grid-small-button"
+                                    title="Move up"
+                                    disabled="@(item.Index == 0)"
+                                    @onclick="@(() => MoveVisualMetricAsync(currentMetric, -1))">^</button>
+                            <button type="button"
+                                    class="property-grid-small-button"
+                                    title="Move down"
+                                    disabled="@(item.Index == draft.DisplayMetrics.Count - 1)"
+                                    @onclick="@(() => MoveVisualMetricAsync(currentMetric, 1))">v</button>
+                            <button type="button"
+                                    class="property-grid-small-button"
+                                    title="Remove"
+                                    disabled="@(!draft.CanRemoveDisplayMetric)"
+                                    @onclick="@(() => RemoveVisualMetricAsync(currentMetric))">x</button>
+                        </div>
+                    </PropertyGridRow>
+                }
+
+                <PropertyGridRow Name="@InspectorLabels.AddCardRow">
+                    <div class="property-grid-inline">
+                        <PropertyGridSelect Value="@(_displayMetricToAdd ?? string.Empty)"
+                                            Options="@AddVisualMetricOptions"
+                                            AriaLabel="@InspectorLabels.AddCardRow"
+                                            ValueChanged="@SetVisualMetricToAddAsync" />
+                        <button type="button"
+                                class="property-grid-small-button"
+                                disabled="@string.IsNullOrWhiteSpace(_displayMetricToAdd)"
+                                @onclick="@AddVisualMetricAsync">+</button>
+                    </div>
+                </PropertyGridRow>
+
+                <PropertyGridRow Name="@InspectorLabels.ColumnsRow" Unit="cols">
+                    <input class="property-grid-input"
+                           type="number"
+                           min="@DashboardWidgetCatalog.MinMetricCardColumns"
+                           max="@DashboardWidgetCatalog.MaxMetricCardColumns"
+                           step="1"
+                           value="@draft.MetricCardColumns"
+                           @oninput="@SetMetricCardColumnsFromEventAsync" />
+                </PropertyGridRow>
+            }
+        }
+
+        @if (draft.Profile.UsesGaugeStyle)
+        {
+            <PropertyGridRow Name="@InspectorLabels.GaugeRow">
+                <div class="property-grid-button-group">
+                    <button type="button" class="@ChoiceClass(draft.GaugeStyle, DashboardWidgetCatalog.GaugeStyleRing)" @onclick="@(() => SetGaugeStyleAsync(DashboardWidgetCatalog.GaugeStyleRing))">Ring</button>
+                    <button type="button" class="@ChoiceClass(draft.GaugeStyle, DashboardWidgetCatalog.GaugeStyleMeter)" @onclick="@(() => SetGaugeStyleAsync(DashboardWidgetCatalog.GaugeStyleMeter))">Meter</button>
+                    <button type="button" class="@ChoiceClass(draft.GaugeStyle, DashboardWidgetCatalog.GaugeStyleTiles)" @onclick="@(() => SetGaugeStyleAsync(DashboardWidgetCatalog.GaugeStyleTiles))">Tiles</button>
+                </div>
+            </PropertyGridRow>
+        }
+
+        @if (draft.Profile.UsesChartType)
+        {
+            <PropertyGridRow Name="@InspectorLabels.ChartRow">
+                <div class="property-grid-button-group">
+                    <button type="button" class="@ChoiceClass(draft.ChartType, DashboardWidgetCatalog.ChartTypeBars)" @onclick="@(() => SetChartTypeAsync(DashboardWidgetCatalog.ChartTypeBars))">Bars</button>
+                    <button type="button" class="@ChoiceClass(draft.ChartType, DashboardWidgetCatalog.ChartTypeLine)" @onclick="@(() => SetChartTypeAsync(DashboardWidgetCatalog.ChartTypeLine))">Line</button>
+                    <button type="button" class="@ChoiceClass(draft.ChartType, DashboardWidgetCatalog.ChartTypeArea)" @onclick="@(() => SetChartTypeAsync(DashboardWidgetCatalog.ChartTypeArea))">Area</button>
+                    <button type="button" class="@ChoiceClass(draft.ChartType, DashboardWidgetCatalog.ChartTypeTopics)" @onclick="@(() => SetChartTypeAsync(DashboardWidgetCatalog.ChartTypeTopics))">Topics</button>
+                </div>
+            </PropertyGridRow>
+        }
+
+        @if (draft.Profile.IsTopicTreeWidget)
+        {
+            <PropertyGridRow Name="@InspectorLabels.TopicSystemRow">
+                <div class="property-grid-button-group">
+                    <button type="button" class="@ChoiceClass(draft.ExcludeSystemTopics ? "false" : "true", "true")" @onclick="@(() => SetExcludeSystemTopicsAsync(false))">Show</button>
+                    <button type="button" class="@ChoiceClass(draft.ExcludeSystemTopics ? "true" : "false", "true")" @onclick="@(() => SetExcludeSystemTopicsAsync(true))">Hide</button>
+                </div>
+            </PropertyGridRow>
+        }
+
+        }
+    </text>;
+
+    private RenderFragment RenderLayoutProperties() => @<text>
+        <PropertyGridRow Name="@LayoutSelectionName">
+            <span class="property-grid-cell-text">@LayoutSelectionValue</span>
+        </PropertyGridRow>
+        <PropertyGridRow Name="Position">
+            <span class="property-grid-cell-text">@LayoutPositionValue</span>
+        </PropertyGridRow>
+        <PropertyGridRow Name="Span">
+            <span class="property-grid-cell-text">@LayoutSpanValue</span>
+        </PropertyGridRow>
+        <PropertyGridRow Name="Widget">
+            <span class="property-grid-cell-text">@LayoutWidgetValue</span>
+        </PropertyGridRow>
+        @if (Widget is not null)
+        {
+        <PropertyGridRow Name="Actions">
+            <div class="property-grid-button-group">
+                <button type="button" class="property-grid-action-button" @onclick="@DuplicateWidget">Duplicate</button>
+                <button type="button" class="property-grid-action-button danger" @onclick="@DeleteWidget">Delete</button>
+            </div>
+        </PropertyGridRow>
+        }
+    </text>;
+
+    private RenderFragment RenderStyleProperties() => @<text>
+        @if (_cellStyleDraft is { } draft)
+        {
+            @foreach (var field in DashboardCellStyleDraft.Fields)
+            {
+                var currentField = field;
+                <PropertyGridRow Name="@currentField.Label" Unit="@currentField.Unit">
+                    @if (currentField.Editor == DashboardWidgetPropertyEditorKind.Color)
+                    {
+                        <PropertyGridColorPicker Value="@draft.GetValue(currentField.Key)"
+                                                 DefaultValue="@currentField.DefaultValue"
+                                                 AriaLabel="@currentField.Label"
+                                                 ValueChanged="@((string? value) => SetStyleValueAsync(currentField.Key, value))" />
+                    }
+                    else if (currentField.Editor == DashboardWidgetPropertyEditorKind.Select)
+                    {
+                        <PropertyGridSelect Value="@draft.GetValue(currentField.Key)"
+                                            Options="@StyleSelectOptions(currentField)"
+                                            AriaLabel="@currentField.Label"
+                                            ValueChanged="@((string? value) => SetStyleValueAsync(currentField.Key, value))" />
+                    }
+                    else
+                    {
+                        <input class="property-grid-input"
+                               type="@StyleInputType(currentField)"
+                               value="@draft.GetValue(currentField.Key)"
+                               @oninput="@((ChangeEventArgs args) => SetStyleValueAsync(currentField.Key, args.Value?.ToString()))" />
+                    }
+                </PropertyGridRow>
+            }
+            <PropertyGridRow Name="Defaults">
+                <button type="button" class="property-grid-action-button" @onclick="@ResetCellStyleAsync">Reset cell style</button>
+            </PropertyGridRow>
+        }
+    </text>;
+
+    private RenderFragment RenderFilterField(DashboardEventFilterFieldDescriptor field)
+    {
+        if (IsQosFilter(field))
+        {
+            return @<div class="property-grid-button-group">
+                    @foreach (var option in QosFilterOptions)
+                    {
+                        var currentOption = option;
+                        <button type="button"
+                                class="@ChoiceClass(_widgetDraft!.GetFilterValue(field.Key), currentOption.Value)"
+                                @onclick="@(() => SetFilterValueAsync(field.Key, currentOption.Value))">@currentOption.Label</button>
+                    }
+            </div>;
+        }
+
+        if (IsRetainFilter(field))
+        {
+            return @<div class="property-grid-button-group">
+                    @foreach (var option in RetainFilterOptions)
+                    {
+                        var currentOption = option;
+                        <button type="button"
+                                class="@ChoiceClass(_widgetDraft!.GetFilterValue(field.Key), currentOption.Value)"
+                                @onclick="@(() => SetFilterValueAsync(field.Key, currentOption.Value))">@currentOption.Label</button>
+                    }
+            </div>;
+        }
+
+        return @<input class="property-grid-input"
+                       value="@_widgetDraft!.GetFilterValue(field.Key)"
+                       placeholder="@field.Placeholder"
+                       title="@field.HelperText"
+                       @oninput="@((ChangeEventArgs args) => SetFilterValueAsync(field.Key, args.Value?.ToString()))" />;
+    }
+
+    private RenderFragment RenderCellSummary() => @<div class="dashboard-inspector-cell-summary">
+        @if (SelectedCells.Count == 0)
+        {
+            <span>No cell selected</span>
+        }
+        else if (SelectedCells.Count == 1)
+        {
+            var cell = SelectedCells[0];
+            <span>@cell.Label</span>
+            <small>Row @(cell.Row + 1), column @(cell.Column + 1), span @cell.ColumnSpan x @cell.RowSpan</small>
+            @if (!string.IsNullOrWhiteSpace(cell.Widget))
+            {
+                <small>Widget: @cell.Widget</small>
+            }
+        }
+        else
+        {
+            <span>@SelectedCells.Count cells selected</span>
+            <small>Use the toolbar to merge this selection when it forms a rectangle.</small>
+        }
+    </div>;
+
+    private bool SupportsMetricSlots => _widgetDraft?.Profile.SupportsMetricSlots == true;
+
+    private DashboardWidgetInspectorLabels InspectorLabels =>
+        _widgetDraft?.Profile.InspectorLabels ?? DashboardWidgetInspectorLabels.Default;
+
+    private bool ShowsDataProperties => _widgetDraft?.Profile.UsesMetricQuery == true;
+
+    private bool IsEventCounterQueryBuilderWidget =>
+        string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal);
+
+    private bool IsEventRateQueryBuilderWidget =>
+        string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal);
+
+    private bool IsMetricQueryBuilderWidget => _widgetDraft?.UsesMetricQueryBuilder == true;
+
+    private bool ShowsMetricQueryProperties =>
+        _widgetDraft?.Profile.UsesMetricQuery == true &&
+        !IsMetricQueryBuilderWidget &&
+        (_widgetDraft.Profile.UsesMetricAggregation || _widgetDraft.Profile.UsesMetricWindow) &&
+        _metricDraft is not null;
+
+    private bool ShowsFilterProperties =>
+        _widgetDraft?.Profile.UsesEventFilters == true &&
+        !IsMetricQueryBuilderWidget &&
+        _metricDraft is not null;
+
+    private int DataPropertyCount => ShowsDataProperties
+        ? (IsMetricQueryBuilderWidget ? 1 : SupportsMetricSlots ? 2 + _bindingMetrics.Count : 1)
+        : 0;
+
+    private int MetricQueryPropertyCount => _widgetDraft is null || !ShowsMetricQueryProperties
+        ? 0
+        : (_widgetDraft.Profile.UsesMetricAggregation ? 1 : 0) +
+          (_widgetDraft.Profile.UsesMetricWindow ? 1 : 0);
+
+    private int FilterPropertyCount => _widgetDraft is null || !ShowsFilterProperties
+        ? 0
+        : 2 + _widgetDraft.CurrentEventType.Fields.Count;
+
+    private int DisplayPropertyCount => _widgetDraft is null
+        ? 0
+        : 1 +
+          (_widgetDraft.Profile.UsesSubtitle ? 1 : 0) +
+          (_widgetDraft.Profile.UsesGaugeStyle ? 1 : 0) +
+          (_widgetDraft.Profile.UsesChartType ? 1 : 0) +
+          (_widgetDraft.Profile.UsesMetricVisualization ? 1 + MetricVisualizationPropertyCount : 0) +
+          (_widgetDraft.Profile.IsTopicTreeWidget ? 1 : 0) +
+          (_widgetDraft.Profile.UsesVisualMetrics
+              ? 1 + (_widgetDraft.Profile.SupportsMetricSlots ? 2 + _widgetDraft.DisplayMetrics.Count : 0)
+              : 0);
+
+    private int MetricVisualizationPropertyCount => MetricVisualizationProperties.Count;
+
+    private DashboardMetricVisualizationModule? CurrentMetricVisualizationModule => _widgetDraft is null
+        ? null
+        : DashboardMetricVisualizationCatalog.Find(_widgetDraft.MetricVisualizationId);
+
+    private IReadOnlyList<DashboardWidgetPropertyDefinition> MetricVisualizationProperties => CurrentMetricVisualizationModule is null
+        ? []
+        : [.. CurrentMetricVisualizationModule.PropertyGroups.SelectMany(static group => group.Properties)];
+
+    private int StylePropertyCount => _cellStyleDraft is null
+        ? 0
+        : DashboardCellStyleDraft.Fields.Count + 1;
+
+    private int LayoutPropertyCount => Widget is null ? 4 : 5;
+
+    private DashboardCellSnapshot? PrimarySelectedCell => SelectedCells.Count == 1
+        ? SelectedCells[0]
+        : null;
+
+    private string LayoutSelectionName => SelectedCells.Count == 1
+        ? "Cell"
+        : "Selection";
+
+    private string LayoutSelectionValue => SelectedCells.Count switch
+    {
+        0 => "No cell selected",
+        1 => PrimarySelectedCell?.Label ?? "Cell",
+        _ => $"{SelectedCells.Count} cells"
+    };
+
+    private string LayoutPositionValue => PrimarySelectedCell is { } cell
+        ? $"Row {cell.Row + 1}, column {cell.Column + 1}"
+        : "-";
+
+    private string LayoutSpanValue => PrimarySelectedCell is { } cell
+        ? $"{cell.ColumnSpan} x {cell.RowSpan}"
+        : "-";
+
+    private string LayoutWidgetValue => Widget?.Name ??
+        PrimarySelectedCell?.Widget ??
+        "-";
+
+    private IEnumerable<string> AvailableMetricNames
+    {
+        get
+        {
+            var names = new HashSet<string>(StringComparer.Ordinal);
+            if (!string.IsNullOrWhiteSpace(_draftMetricName))
+            {
+                names.Add(_draftMetricName);
+            }
+
+            if (Layout is not null)
+            {
+                foreach (var name in Layout.Metrics.Keys)
+                {
+                    names.Add(name);
+                }
+            }
+
+            return names.OrderBy(DashboardWidgetFormatting.MetricDisplayName, StringComparer.Ordinal);
+        }
+    }
+
+    private IReadOnlyList<PropertyGridSelectOption> MetricNameOptions
+        => [.. AvailableMetricNames.Select(static metric => new PropertyGridSelectOption(
+            metric,
+            DashboardWidgetFormatting.MetricDisplayName(metric)))];
+
+    private IReadOnlyList<PropertyGridSelectOption> AddMetricOptions
+        => [
+            new("", "Select metric", true),
+            .. AvailableMetricNames
+                .Where(metric => !_bindingMetrics.Contains(metric, StringComparer.Ordinal))
+                .Select(static metric => new PropertyGridSelectOption(
+                    metric,
+                    DashboardWidgetFormatting.MetricDisplayName(metric)))
+        ];
+
+    private IReadOnlyList<PropertyGridSelectOption> VisualMetricOptions
+        => [.. DashboardWidgetCatalog.MetricOptions.Select(static metric => new PropertyGridSelectOption(metric.Id, metric.Label))];
+
+    private IReadOnlyList<PropertyGridSelectOption> MetricVisualizationOptions
+        => [.. DashboardMetricVisualizationCatalog.CreateModules().Select(static visual => new PropertyGridSelectOption(
+            visual.Id,
+            visual.DisplayName))];
+
+    private IReadOnlyList<PropertyGridSelectOption> AddVisualMetricOptions
+        => _widgetDraft is null
+            ? [new("", "Select card metric", true)]
+            : [
+                new("", "Select card metric", true),
+                .. _widgetDraft.AvailableDisplayMetrics
+                    .Select(static metric => new PropertyGridSelectOption(metric.Id, metric.Label))
+            ];
+
+    private IReadOnlyList<PropertyGridSelectOption> WindowSelectOptions
+        => ToSelectOptions(WindowOptions);
+
+    private IReadOnlyList<PropertyGridSelectOption> AggregationSelectOptions
+        => [.. MetricRegistry.Aggregations.Select(static aggregation => new PropertyGridSelectOption(
+            aggregation.Id,
+            aggregation.DisplayName))];
+
+    private IReadOnlyList<PropertyGridSelectOption> EventTypeSelectOptions
+        => [.. EventFilters.EventTypes.Select(static option => new PropertyGridSelectOption(option.Value, option.Label))];
+
+    private IReadOnlyList<PropertyGridSelectOption> StatusSelectOptions
+        => _widgetDraft is null
+            ? []
+            : [.. _widgetDraft.CurrentEventType.StatusOptions.Select(static option => new PropertyGridSelectOption(option.Value, option.Label))];
+
+    private string MetricQuerySummary => _metricDraft is null
+        ? "No metric query"
+        : DashboardMetricQuerySummary.DescribeSentence(_metricDraft.BuildQuery(), EventFilters, MetricRegistry);
+
+    private string MetricQueryPreviewValue
+    {
+        get
+        {
+            if (Widget is null || _metricDraft is null)
+            {
+                return "-";
+            }
+
+            var preview = DashboardMetricQueryPreviewFactory.Create(
+                _metricDraft.BuildQuery(),
+                Widget,
+                Project,
+                MetricRegistry,
+                EventFilters,
+                useSampleFallback: false);
+            return preview.Value.FormattedValue;
+        }
+    }
+
+    private string MetricQueryEditTitle => IsEventRateQueryBuilderWidget
+        ? "Edit event rate query"
+        : IsEventCounterQueryBuilderWidget
+            ? "Edit event counter query"
+            : "Edit metric query";
+
+    private string MetricQueryDialogTitle => IsEventRateQueryBuilderWidget
+        ? "Event rate query"
+        : IsEventCounterQueryBuilderWidget
+            ? "Event counter query"
+            : "KPI query";
+
+    private string MetricQueryApplyNote => IsEventRateQueryBuilderWidget
+        ? "Draft query. Apply updates this event rate metric only."
+        : IsEventCounterQueryBuilderWidget
+            ? "Draft query. Apply updates this event counter metric only."
+            : "Draft query. Apply updates this KPI metric only.";
+
+    private IReadOnlyList<string> MetricQueryAllowedMeasures => IsEventRateQueryBuilderWidget
+        ? [FluxMetricCatalog.MeasureRate]
+        : IsEventCounterQueryBuilderWidget
+            ? [FluxMetricCatalog.MeasureCount]
+            : [];
+
+    private async Task SetTitleAsync(string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.Title = value ?? string.Empty;
+        await AutoApplyAsync();
+    }
+
+    private async Task SetSubtitleAsync(string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.Subtitle = value ?? string.Empty;
+        await AutoApplyAsync();
+    }
+
+    private async Task SetMetricVisualizationAsync(string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.MetricVisualizationId = DashboardWidgetCatalog.NormalizeMetricVisualization(value);
+        await AutoApplyAsync();
+    }
+
+    private async Task SetKpiTitleColorAsync(string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.TitleColor = value ?? string.Empty;
+        await AutoApplyAsync();
+    }
+
+    private async Task SetKpiSubtitleColorAsync(string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.SubtitleColor = value ?? string.Empty;
+        await AutoApplyAsync();
+    }
+
+    private async Task SetKpiValueColorAsync(string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.ValueColor = value ?? string.Empty;
+        await AutoApplyAsync();
+    }
+
+    private async Task SetKpiTitleAlignAsync(string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.TitleAlign = DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(value);
+        await AutoApplyAsync();
+    }
+
+    private async Task SetKpiValueAlignAsync(string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.ValueAlign = DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(value);
+        await AutoApplyAsync();
+    }
+
+    private async Task SetKpiValuePlacementAsync(string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.ValuePlacement = DashboardWidgetCatalog.NormalizeKpiValuePlacement(value);
+        await AutoApplyAsync();
+    }
+
+    private async Task SetGaugeStyleAsync(string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.GaugeStyle = string.IsNullOrWhiteSpace(value)
+            ? DashboardWidgetCatalog.GaugeStyleRing
+            : value.Trim();
+        await AutoApplyAsync();
+    }
+
+    private async Task SetChartTypeAsync(string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.ChartType = string.IsNullOrWhiteSpace(value)
+            ? DashboardWidgetCatalog.ChartTypeBars
+            : value.Trim();
+        await AutoApplyAsync();
+    }
+
+    private async Task SetStyleValueAsync(string key, string? value)
+    {
+        if (_cellStyleDraft is null || PrimarySelectedCell is not { } cell)
+        {
+            return;
+        }
+
+        _cellStyleDraft.SetValue(key, value);
+        Project.UpdateDashboardCellStyle(cell.Name, _cellStyleDraft.BuildStyle());
+        await Changed.InvokeAsync();
+    }
+
+    private async Task ResetCellStyleAsync()
+    {
+        if (PrimarySelectedCell is not { } cell)
+        {
+            return;
+        }
+
+        _cellStyleDraft = DashboardCellStyleDraft.Create(null);
+        Project.UpdateDashboardCellStyle(cell.Name, _cellStyleDraft.BuildStyle());
+        await Changed.InvokeAsync();
+    }
+
+    private async Task ResetWidgetPropertiesAsync()
+    {
+        if (Widget is null || _widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.ResetToDefaultConfiguration(WidgetRegistry.CreateDefaultConfiguration(Widget.Type));
+        _metricToAdd = null;
+        _displayMetricToAdd = null;
+
+        if (!_widgetDraft.Profile.UsesMetricQuery)
+        {
+            _metricDraft = null;
+            _draftMetricName = null;
+            _primaryBindingMetric = null;
+            _bindingMetrics = [];
+            await AutoApplyAsync();
+            return;
+        }
+
+        var metricName = string.IsNullOrWhiteSpace(_draftMetricName)
+            ? Widget.ReadString("metric") ?? $"{Widget.Name}Metric"
+            : _draftMetricName;
+        _draftMetricName = metricName;
+        _widgetDraft.MetricName = metricName;
+        _primaryBindingMetric = metricName;
+        _bindingMetrics = [metricName];
+        _metricDraft = DashboardMetricEditorDraft.Create(
+            metricName,
+            null,
+            EventFilters,
+            MetricRegistry,
+            Widget.Type);
+
+        await AutoApplyAsync();
+    }
+
+    private async Task OpenMetricBuilderAsync()
+    {
+        if (Widget is null || _widgetDraft is null || !IsMetricQueryBuilderWidget)
+        {
+            return;
+        }
+
+        var metricName = string.IsNullOrWhiteSpace(_draftMetricName)
+            ? Widget.ReadString("metric") ?? $"{Widget.Name}Metric"
+            : _draftMetricName;
+        var metric = Layout?.Metrics.TryGetValue(metricName, out var foundMetric) == true
+            ? foundMetric
+            : null;
+        var dialog = await DialogService.ShowAsync<DashboardMetricQueryBuilderDialog>(
+            MetricQueryDialogTitle,
+            new DialogParameters
+            {
+                [nameof(DashboardMetricQueryBuilderDialog.Project)] = Project,
+                [nameof(DashboardMetricQueryBuilderDialog.Widget)] = Widget,
+                [nameof(DashboardMetricQueryBuilderDialog.Metric)] = metric,
+                [nameof(DashboardMetricQueryBuilderDialog.DialogTitle)] = MetricQueryDialogTitle,
+                [nameof(DashboardMetricQueryBuilderDialog.ApplyNote)] = MetricQueryApplyNote,
+                [nameof(DashboardMetricQueryBuilderDialog.AllowedMeasures)] = MetricQueryAllowedMeasures
+            },
+            new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: DashboardMetricQueryBuilderDialog.DashboardMetricQueryUpdate update })
+        {
+            await ApplyMetricQueryAsync(metricName, update.Query);
+        }
+    }
+
+    private async Task ApplyMetricQueryAsync(
+        string metricName,
+        DashboardMetricQueryDefinition query)
+    {
+        if (Widget is null || _widgetDraft is null)
+        {
+            return;
+        }
+
+        _draftMetricName = metricName;
+        _widgetDraft.MetricName = metricName;
+        _primaryBindingMetric = metricName;
+        _bindingMetrics = [metricName];
+        _metricDraft = DashboardMetricEditorDraft.Create(
+            metricName,
+            ToMetricSnapshot(metricName, query),
+            EventFilters,
+            MetricRegistry,
+            Widget.Type);
+
+        await AutoApplyAsync();
+    }
+
+    private async Task SetExcludeSystemTopicsAsync(bool value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.ExcludeSystemTopics = value;
+        await AutoApplyAsync();
+    }
+
+    private async Task SetMetricCardColumnsAsync(int value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.MetricCardColumns = value;
+        await AutoApplyAsync();
+    }
+
+    private async Task SetMetricCardColumnsFromEventAsync(ChangeEventArgs args)
+    {
+        if (int.TryParse(args.Value?.ToString(), out var value))
+        {
+            await SetMetricCardColumnsAsync(value);
+        }
+    }
+
+    private async Task SetVisualPrimaryMetricAsync(string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.SetPrimaryMetric(value);
+        await AutoApplyAsync();
+    }
+
+    private Task SetVisualMetricToAddAsync(string? value)
+    {
+        _displayMetricToAdd = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        return Task.CompletedTask;
+    }
+
+    private async Task AddVisualMetricAsync()
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.AddDisplayMetric(_displayMetricToAdd);
+        _displayMetricToAdd = null;
+        await AutoApplyAsync();
+    }
+
+    private async Task MoveVisualMetricAsync(string metricId, int offset)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.MoveDisplayMetric(metricId, offset);
+        await AutoApplyAsync();
+    }
+
+    private async Task RemoveVisualMetricAsync(string metricId)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.RemoveDisplayMetric(metricId);
+        await AutoApplyAsync();
+    }
+
+    private async Task SetMetricWindowAsync(string? value)
+    {
+        if (_metricDraft is null)
+        {
+            return;
+        }
+
+        _metricDraft.Window = NormalizeValue(value);
+        await AutoApplyAsync();
+    }
+
+    private async Task SetMetricAggregationAsync(string? value)
+    {
+        if (_metricDraft is null)
+        {
+            return;
+        }
+
+        var normalized = NormalizeValue(value);
+        _metricDraft.Aggregation = string.IsNullOrWhiteSpace(normalized)
+            ? "count"
+            : normalized;
+        await AutoApplyAsync();
+    }
+
+    private async Task SetEventTypeAsync(string? value)
+    {
+        _widgetDraft?.SetEventType(value);
+        _metricDraft?.SetEventType(value);
+        await AutoApplyAsync();
+    }
+
+    private async Task SetStatusAsync(string? value)
+    {
+        var normalized = string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
+        if (_widgetDraft is not null)
+        {
+            _widgetDraft.Status = normalized;
+        }
+
+        if (_metricDraft is not null)
+        {
+            _metricDraft.Status = normalized;
+        }
+
+        await AutoApplyAsync();
+    }
+
+    private async Task SetFilterValueAsync(string key, string? value)
+    {
+        _widgetDraft?.SetFilterValue(key, value);
+        if (_metricDraft is null)
+        {
+            await AutoApplyAsync();
+            return;
+        }
+
+        if (string.Equals(key, DashboardEventFilterCatalog.TopicStartsWithKey, StringComparison.Ordinal))
+        {
+            _metricDraft.TopicStartsWith = value ?? string.Empty;
+        }
+        else if (string.Equals(key, DashboardEventFilterCatalog.TopicNotStartsWithKey, StringComparison.Ordinal))
+        {
+            _metricDraft.TopicNotStartsWith = value ?? string.Empty;
+        }
+        else if (string.Equals(key, DashboardEventFilterCatalog.SubjectStartsWithKey, StringComparison.Ordinal))
+        {
+            _metricDraft.SubjectStartsWith = value ?? string.Empty;
+        }
+        else if (string.Equals(key, DashboardEventFilterCatalog.AttributeFilterKey("qos"), StringComparison.Ordinal))
+        {
+            _metricDraft.Qos = value ?? string.Empty;
+        }
+        else if (string.Equals(key, DashboardEventFilterCatalog.AttributeFilterKey("retain"), StringComparison.Ordinal))
+        {
+            _metricDraft.Retain = value ?? string.Empty;
+        }
+        else if (string.Equals(key, DashboardEventFilterCatalog.AttributeFilterKey("schemaId"), StringComparison.Ordinal))
+        {
+            _metricDraft.SchemaId = value ?? string.Empty;
+        }
+
+        await AutoApplyAsync();
+    }
+
+    private async Task SetPrimaryBindingMetricAsync(string? value)
+    {
+        _primaryBindingMetric = string.IsNullOrWhiteSpace(value) ? _draftMetricName : value.Trim();
+        if (!SupportsMetricSlots)
+        {
+            _bindingMetrics = string.IsNullOrWhiteSpace(_primaryBindingMetric)
+                ? []
+                : [_primaryBindingMetric];
+        }
+        else
+        {
+            if (!string.IsNullOrWhiteSpace(_primaryBindingMetric) &&
+                !_bindingMetrics.Contains(_primaryBindingMetric, StringComparer.Ordinal))
+            {
+                _bindingMetrics.Insert(0, _primaryBindingMetric);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(_primaryBindingMetric))
+        {
+            LoadMetricDraft(_primaryBindingMetric);
+        }
+
+        await AutoApplyAsync();
+    }
+
+    private Task SetMetricToAddAsync(string? value)
+    {
+        _metricToAdd = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        return Task.CompletedTask;
+    }
+
+    private async Task AddBindingMetricAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(_metricToAdd) &&
+            !_bindingMetrics.Contains(_metricToAdd, StringComparer.Ordinal))
+        {
+            _bindingMetrics.Add(_metricToAdd);
+            _metricToAdd = null;
+            await AutoApplyAsync();
+        }
+    }
+
+    private async Task RemoveBindingMetricAsync(string metricName)
+    {
+        if (_bindingMetrics.Count <= 1)
+        {
+            return;
+        }
+
+        _bindingMetrics.RemoveAll(metric => string.Equals(metric, metricName, StringComparison.Ordinal));
+        if (string.Equals(_primaryBindingMetric, metricName, StringComparison.Ordinal))
+        {
+            _primaryBindingMetric = _bindingMetrics[0];
+        }
+
+        await AutoApplyAsync();
+    }
+
+    private async Task MoveBindingMetricAsync(string metricName, int offset)
+    {
+        var index = _bindingMetrics.FindIndex(metric => string.Equals(metric, metricName, StringComparison.Ordinal));
+        if (index < 0)
+        {
+            return;
+        }
+
+        var next = Math.Clamp(index + offset, 0, _bindingMetrics.Count - 1);
+        if (next == index)
+        {
+            return;
+        }
+
+        _bindingMetrics.RemoveAt(index);
+        _bindingMetrics.Insert(next, metricName);
+        await AutoApplyAsync();
+    }
+
+    private async Task AutoApplyAsync()
+    {
+        if (Widget is null || _widgetDraft is null)
+        {
+            return;
+        }
+
+        if (_widgetDraft.Profile.UsesMetricQuery)
+        {
+            _widgetDraft.MetricName = _draftMetricName ?? _widgetDraft.MetricName;
+        }
+
+        Project.UpdateDashboardWidget(Widget.Name, _widgetDraft.BuildConfiguration());
+        if (_widgetDraft.Profile.UsesMetricQuery &&
+            _metricDraft is not null &&
+            !string.IsNullOrWhiteSpace(_draftMetricName))
+        {
+            Project.UpdateDashboardMetric(_draftMetricName, _metricDraft.BuildQuery());
+        }
+
+        if (_widgetDraft.Profile.UsesMetricQuery)
+        {
+            var primaryMetric = _primaryBindingMetric ?? _draftMetricName;
+            Project.UpdateDashboardWidgetBinding(
+                Widget.Name,
+                primaryMetric,
+                CurrentBindingMetrics(primaryMetric));
+        }
+
+        await Changed.InvokeAsync();
+    }
+
+    private async Task DuplicateWidget()
+    {
+        if (Widget is null)
+        {
+            return;
+        }
+
+        Project.DuplicateDashboardWidget(Widget.Name);
+        await Changed.InvokeAsync();
+    }
+
+    private async Task DeleteWidget()
+    {
+        if (Widget is null)
+        {
+            return;
+        }
+
+        Project.RemoveDashboardWidget(Widget.Name);
+        await Changed.InvokeAsync();
+    }
+
+    private IReadOnlyList<string> CurrentBindingMetrics(string? primaryMetric)
+    {
+        if (!SupportsMetricSlots)
+        {
+            var metric = string.IsNullOrWhiteSpace(primaryMetric)
+                ? _draftMetricName
+                : primaryMetric;
+            return string.IsNullOrWhiteSpace(metric)
+                ? []
+                : [metric];
+        }
+
+        var metrics = _bindingMetrics
+            .Where(static metric => !string.IsNullOrWhiteSpace(metric))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        if (!string.IsNullOrWhiteSpace(primaryMetric) &&
+            !metrics.Contains(primaryMetric, StringComparer.Ordinal))
+        {
+            metrics.Insert(0, primaryMetric);
+        }
+
+        if (metrics.Count == 0 && !string.IsNullOrWhiteSpace(_draftMetricName))
+        {
+            metrics.Add(_draftMetricName);
+        }
+
+        return metrics;
+    }
+
+    private void LoadMetricDraft(string metricName)
+    {
+        _draftMetricName = metricName;
+        if (_widgetDraft is not null)
+        {
+            _widgetDraft.MetricName = metricName;
+        }
+
+        var metric = Layout?.Metrics.TryGetValue(metricName, out var foundMetric) == true
+            ? foundMetric
+            : null;
+        _metricDraft = DashboardMetricEditorDraft.Create(
+            metricName,
+            metric,
+            EventFilters,
+            MetricRegistry,
+            Widget?.Type ?? DashboardWidgetCatalog.EventCounterType);
+    }
+
+    private static DashboardMetricSnapshot ToMetricSnapshot(
+        string metricName,
+        DashboardMetricQueryDefinition query)
+    {
+        var filters = new Dictionary<string, string>(StringComparer.Ordinal);
+        AddIfPresent(filters, DashboardEventFilterCatalog.EventTypeKey, query.EventType);
+        AddIfPresent(filters, DashboardEventFilterCatalog.TopicStartsWithKey, query.TopicStartsWith);
+        AddIfPresent(filters, DashboardEventFilterCatalog.TopicNotStartsWithKey, query.TopicNotStartsWith);
+        AddIfPresent(filters, DashboardEventFilterCatalog.StatusKey, query.Status);
+        foreach (var (key, value) in query.AdditionalFilters)
+        {
+            AddIfPresent(filters, key, value);
+        }
+
+        return new DashboardMetricSnapshot(
+            metricName,
+            query.Source,
+            query.Aggregation,
+            query.Window,
+            query.GroupBy,
+            filters,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["unit"] = query.Format
+            });
+    }
+
+    private static void AddIfPresent(Dictionary<string, string> target, string key, string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            target[key] = value.Trim();
+        }
+    }
+
+    private static string NormalizeValue(string? value)
+        => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
+
+    private static string ChoiceClass(string? currentValue, string value)
+        => string.Equals(currentValue ?? string.Empty, value, StringComparison.Ordinal)
+            ? "property-grid-choice selected"
+            : "property-grid-choice";
+
+    private static string StyleInputType(DashboardStyleField field)
+        => field.Editor == DashboardWidgetPropertyEditorKind.Number ? "number" : "text";
+
+    private static IReadOnlyList<PropertyGridSelectOption> StyleSelectOptions(DashboardStyleField field)
+        => [.. field.Options.Select(static option => new PropertyGridSelectOption(option.Value, option.Label))];
+
+    private static string VisualMetricLabel(string metricId)
+        => DashboardWidgetCatalog.MetricOptions
+            .FirstOrDefault(metric => string.Equals(metric.Id, metricId, StringComparison.Ordinal))
+            ?.Label ?? metricId;
+
+    private static bool IsQosFilter(DashboardEventFilterFieldDescriptor field)
+        => string.Equals(field.Key, DashboardEventFilterCatalog.AttributeFilterKey("qos"), StringComparison.Ordinal);
+
+    private static bool IsRetainFilter(DashboardEventFilterFieldDescriptor field)
+        => string.Equals(field.Key, DashboardEventFilterCatalog.AttributeFilterKey("retain"), StringComparison.Ordinal);
+
+    private static IReadOnlyList<PropertyGridSelectOption> ToSelectOptions(IEnumerable<DashboardFilterChoice> options)
+        => [.. options.Select(static option => new PropertyGridSelectOption(option.Value, option.Label))];
+
+    private sealed record DashboardFilterChoice(string Value, string Label);
+}

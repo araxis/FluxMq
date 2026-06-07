@@ -6,15 +6,16 @@
 @inject DragStateService DragState
 
 <MudThemeProvider Theme="@_theme" IsDarkMode="@ThemeService.IsDarkMode" />
-<MudPopoverProvider />
-<MudDialogProvider BackdropClick="false" />
-<MudSnackbarProvider />
+<div class="@ThemeScopeClass">
+    <MudPopoverProvider />
+    <MudDialogProvider BackdropClick="false" />
+    <MudSnackbarProvider />
 
-<div class="@ShellClass"
-     @onpointermove="HandleShellPointerMove"
-     @onpointerup="HandleShellPointerUp"
-     @onpointercancel="HandleShellPointerCancel">
-    <header class="flux-topbar">
+    <div class="@ShellClass"
+         @onpointermove="HandleShellPointerMove"
+         @onpointerup="HandleShellPointerUp"
+         @onpointercancel="HandleShellPointerCancel">
+        <header class="flux-topbar">
         <div class="flux-brand">
             <img class="flux-brand-mark" src="brand/fluxmq-mark.svg" alt="" aria-hidden="true" />
             <span class="flux-brand-name">FluxMQ</span>
@@ -197,15 +198,16 @@
             <span>@Live.RecentMessages.Count messages</span>
         </div>
     </footer>
-</div>
-
-@if (DragState.ActiveComponentDrag is { DidDrag: true } activeDrag)
-{
-    <div class="@DragPreviewClass" style="@DragPreviewStyle">
-        <MudIcon Icon="@Icons.Material.Filled.Extension" Size="Size.Small" />
-        <span>@activeDrag.DisplayName</span>
     </div>
-}
+
+    @if (DragState.ActiveComponentDrag is { DidDrag: true } activeDrag)
+    {
+        <div class="@DragPreviewClass" style="@DragPreviewStyle">
+            <MudIcon Icon="@Icons.Material.Filled.Extension" Size="Size.Small" />
+            <span>@activeDrag.DisplayName</span>
+        </div>
+    }
+</div>
 
 @code {
     private bool _leftOpen;
@@ -280,6 +282,9 @@
 
     private string ShellClass =>
         $"flux-shell {(ThemeService.IsDarkMode ? "flux-theme-dark" : "flux-theme-light")}{(!_leftOpen ? " left-collapsed" : "")}{(!IsRightPanelVisible ? " right-collapsed" : "")}{(DragState.ActiveComponentDrag?.DidDrag == true ? " flux-component-drag-active" : "")}";
+
+    private string ThemeScopeClass =>
+        $"flux-theme-scope {(ThemeService.IsDarkMode ? "flux-theme-dark" : "flux-theme-light")}";
 
     private string DragPreviewClass =>
         $"flux-drag-preview {(DragState.ActiveComponentDrag?.IsOverDesigner == true ? "over-designer" : null)}";

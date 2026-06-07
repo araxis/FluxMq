@@ -68,6 +68,49 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public void GetAssertionNames_ReturnsConfiguredWorkflowAssertions()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "workflows": {
+                "primary": {
+                  "assertQoS": {
+                    "type": "flow.assert",
+                    "configuration": {
+                      "assertionName": "QoS at least once"
+                    }
+                  },
+                  "assertPayload": {
+                    "type": "flow.assert",
+                    "configuration": {
+                      "assertionName": "Payload has id"
+                    }
+                  },
+                  "logger": {
+                    "type": "log.console"
+                  }
+                },
+                "secondary": {
+                  "duplicate": {
+                    "type": "flow.assert",
+                    "configuration": {
+                      "assertionName": "Payload has id"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+
+        service.GetAssertionNames().ShouldBe(["Payload has id", "QoS at least once"]);
+    }
+
+    [Fact]
     public void AddComponent_WithRequestedPosition_StagesNodeAtRequestedPosition()
     {
         var service = new FlowWorkspaceService(new FlowDefinitionComposer());
@@ -2193,6 +2236,153 @@ public sealed class FlowWorkspaceServiceTests
         ]);
         snapshot.UniqueTopicCount.ShouldBe(2);
         snapshot.TotalPayloadBytes.ShouldBe(Encoding.UTF8.GetByteCount("""{"hello":"fluxmq"}""") * 2);
+    }
+
+    [Fact]
+    public void GetDashboardEventSnapshot_UsesBoundMetricFiltersAndWindow()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "dashboards": {
+                "ops": {
+                  "layout": {
+                    "columns": ["*"],
+                    "rows": ["*"],
+                    "cells": {
+                      "publishedRate": {
+                        "row": 0,
+                        "column": 0,
+                        "widget": "publishedRate"
+                      }
+                    }
+                  },
+                  "metrics": {
+                    "publishedRateMetric": {
+                      "source": "runtimeEvents",
+                      "aggregation": "rate",
+                      "window": "300s",
+                      "filters": {
+                        "eventType": "mqtt.message.published",
+                        "topicStartsWith": "test/",
+                        "status": "published"
+                      }
+                    }
+                  },
+                  "bindings": {
+                    "publishedRate": {
+                      "primaryMetric": "publishedRateMetric",
+                      "metrics": ["publishedRateMetric"]
+                    }
+                  },
+                  "widgets": {
+                    "publishedRate": {
+                      "type": "event.rate",
+                      "configuration": {
+                        "eventType": "mqtt.message.published",
+                        "topicStartsWith": "other/",
+                        "status": "published"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+        service.SetActiveDashboard("ops");
+        var widget = service.GetActiveDashboardLayout()
+            .ShouldNotBeNull()
+            .Widgets["publishedRate"];
+
+        service.RecordManualMqttPublish("test/one", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+        service.RecordManualMqttPublish("other/skip", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+        service.RecordManualMqttPublish("test/two", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+
+        var snapshot = service.GetDashboardEventSnapshot(widget);
+
+        snapshot.Count.ShouldBe(2);
+        snapshot.RateWindow.ShouldBe(TimeSpan.FromMinutes(5));
+        snapshot.EventsPerSecond.ShouldBe(2d / snapshot.RateWindow.TotalSeconds, 0.0001);
+        snapshot.Events.Select(static flowEvent => flowEvent.Channel).ShouldBe(["test/two", "test/one"]);
+    }
+
+    [Fact]
+    public void GetDashboardMetricValue_UsesBoundMetricAggregationForKpi()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "dashboards": {
+                "ops": {
+                  "layout": {
+                    "columns": ["*"],
+                    "rows": ["*"],
+                    "cells": {
+                      "payload": {
+                        "row": 0,
+                        "column": 0,
+                        "widget": "payload"
+                      }
+                    }
+                  },
+                  "metrics": {
+                    "payloadMetric": {
+                      "source": "runtimeEvents",
+                      "aggregation": "payloadBytes",
+                      "window": "60s",
+                      "filters": {
+                        "eventType": "mqtt.message.published",
+                        "topicStartsWith": "test/",
+                        "status": "published"
+                      },
+                      "format": {
+                        "unit": "bytes"
+                      }
+                    }
+                  },
+                  "bindings": {
+                    "payload": {
+                      "primaryMetric": "payloadMetric",
+                      "metrics": ["payloadMetric"]
+                    }
+                  },
+                  "widgets": {
+                    "payload": {
+                      "type": "kpi.tile",
+                      "configuration": {
+                        "title": "Payload",
+                        "primaryMetric": "messages"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+        service.SetActiveDashboard("ops");
+        var widget = service.GetActiveDashboardLayout()
+            .ShouldNotBeNull()
+            .Widgets["payload"];
+
+        service.RecordManualMqttPublish("test/one", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+        service.RecordManualMqttPublish("other/skip", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+        service.RecordManualMqttPublish("test/two", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+
+        var value = service.GetDashboardMetricValue(widget);
+
+        var expectedBytes = Encoding.UTF8.GetByteCount("""{"hello":"fluxmq"}""") * 2;
+        value.Label.ShouldBe("Payload bytes");
+        value.Value.ShouldBe(expectedBytes);
+        value.Unit.ShouldBe("bytes");
+        value.FormattedValue.ShouldBe($"{expectedBytes} B");
     }
 
     [Fact]

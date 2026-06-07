@@ -1,4 +1,5 @@
 using FluxFlow.Engine.Components;
+using FluxMq.App.Metrics;
 using FluxMq.UI.Components.Workspace;
 using FluxMq.UI.Models;
 using FluxMq.UI.Services;
@@ -11,6 +12,14 @@ public sealed class DashboardEventFilterCatalogTests
     [Fact]
     public void DashboardWidgetFormatting_UsesDedicatedWidgetChromeMetadata()
     {
+        var kpiWidget = new DashboardWidgetSnapshot(
+            "received",
+            DashboardWidgetCatalog.KpiTileType,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["title"] = "KPI tile",
+                [DashboardEventFilterCatalog.EventTypeKey] = FluxMqEventTypes.MqttMessageReceived
+            });
         var eventWidget = new DashboardWidgetSnapshot(
             "published",
             DashboardWidgetCatalog.EventGaugeType,
@@ -29,8 +38,10 @@ public sealed class DashboardEventFilterCatalogTests
         var topicActivity = new DashboardWidgetSnapshot(
             "topicActivity",
             DashboardWidgetCatalog.TopicActivityType,
-            new Dictionary<string, string>(StringComparer.Ordinal));
+                new Dictionary<string, string>(StringComparer.Ordinal));
 
+        DashboardWidgetFormatting.WidgetTitle(kpiWidget).ShouldBe("Messages");
+        DashboardWidgetFormatting.WidgetSubtitle(kpiWidget).ShouldBe("Total matching events");
         DashboardWidgetFormatting.WidgetTitle(eventWidget).ShouldBe("Published traffic");
         DashboardWidgetFormatting.WidgetClass(eventWidget).ShouldBe("event-gauge");
         DashboardWidgetFormatting.WidgetSubtitle(eventWidget)
@@ -40,21 +51,247 @@ public sealed class DashboardEventFilterCatalogTests
         DashboardWidgetFormatting.WidgetSubtitle(topicWidget).ShouldBe("Live topic map");
     }
 
+    [Theory]
+    [InlineData("eventRateMetric", "Event Rate metric")]
+    [InlineData("latestEvent2Metric", "Latest Event metric #2")]
+    [InlineData("latestEventMetric2", "Latest Event metric #2")]
+    [InlineData("qosRetainBreakdownMetric", "QoS Retain Breakdown metric")]
+    public void DashboardWidgetFormatting_FormatsMetricIdsForEditorDisplay(
+        string metricName,
+        string expected)
+        => DashboardWidgetFormatting.MetricDisplayName(metricName).ShouldBe(expected);
+
+    [Fact]
+    public void DashboardMetricRegistry_EvaluatesKpiMetricAsWindowedScalarValue()
+    {
+        var registry = new DashboardMetricRegistry();
+        var snapshot = new DashboardEventSnapshot(
+            60,
+            LatestEvent: null,
+            RecentCount: 18,
+            RateWindow: TimeSpan.FromSeconds(60),
+            EventsPerSecond: 0.3,
+            Events: [],
+            BucketCounts: [1, 2, 3],
+            TopicCounts: [],
+            TotalPayloadBytes: 1024,
+            UniqueTopicCount: 0,
+            RetainedCount: 0);
+
+        var value = registry.Evaluate(new DashboardMetricQueryDefinition("runtimeEvents", "count", "60s"), snapshot);
+
+        value.Label.ShouldBe("Count");
+        value.Value.ShouldBe(18);
+        value.Unit.ShouldBe("events");
+        value.FormattedValue.ShouldBe("18");
+        value.FormattedValue.ShouldNotContain("events");
+    }
+
+    [Fact]
+    public void DashboardMetricRegistry_AutoFormatUsesNaturalMeasureUnit()
+    {
+        var registry = new DashboardMetricRegistry();
+        var snapshot = new DashboardEventSnapshot(
+            60,
+            LatestEvent: null,
+            RecentCount: 18,
+            RateWindow: TimeSpan.FromSeconds(60),
+            EventsPerSecond: 0.3,
+            Events: [],
+            BucketCounts: [1, 2, 3],
+            TopicCounts: [],
+            TotalPayloadBytes: 2048,
+            UniqueTopicCount: 4,
+            RetainedCount: 2);
+
+        var count = registry.Evaluate(
+            new DashboardMetricQueryDefinition("runtimeEvents", "count", "60s", Format: "auto"),
+            snapshot);
+        var payload = registry.Evaluate(
+            new DashboardMetricQueryDefinition("payloadInspection", "payloadBytes", "60s", Format: "auto"),
+            snapshot);
+
+        count.FormattedValue.ShouldBe("18");
+        payload.FormattedValue.ShouldBe("2 KB");
+    }
+
+    [Fact]
+    public void DashboardCellStyleDraft_ExposesOnlyCellContainerFields()
+    {
+        var fields = DashboardCellStyleDraft.Fields
+            .Select(static field => field.Key)
+            .ToArray();
+        fields.ShouldBe([
+            "background",
+            "accent",
+            "borderMode",
+            "borderColor",
+            "borderWidth",
+            "radius",
+            "padding"
+        ]);
+        fields.ShouldNotContain("surface");
+        fields.ShouldNotContain("mainText");
+        fields.ShouldNotContain("secondaryText");
+        fields.ShouldNotContain("text");
+        fields.ShouldNotContain("mutedText");
+
+        var css = DashboardCellStyleDraft.CssVariables(new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["background"] = "#161b24",
+            ["surface"] = "#222222",
+            ["accent"] = "#2ed3c6",
+            ["mainText"] = "#ffffff",
+            ["secondaryText"] = "#9fd0ff",
+            ["text"] = "#123456",
+            ["mutedText"] = "#abcdef"
+        });
+
+        css.ShouldContain("--dashboard-widget-bg:#161b24;");
+        css.ShouldContain("--dashboard-widget-accent:#2ed3c6;");
+        css.ShouldNotContain("--dashboard-widget-surface");
+        css.ShouldNotContain("--dashboard-widget-text");
+        css.ShouldNotContain("--dashboard-widget-muted");
+        css.ShouldNotContain("--dashboard-widget-title");
+        css.ShouldNotContain("--dashboard-widget-subtitle");
+        css.ShouldNotContain("--dashboard-widget-value");
+    }
+
+    [Fact]
+    public void DashboardWidgetFormatting_ReadsLegacyWidgetColorVariables()
+    {
+        var widget = new DashboardWidgetSnapshot(
+            "kpi",
+            DashboardWidgetCatalog.KpiTileType,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["style.titleColor"] = "#ffffff",
+                ["style.subtitleColor"] = "#9fd0ff",
+                ["style.valueColor"] = "#2ed3c6"
+            });
+
+        var style = DashboardWidgetFormatting.WidgetStyle(widget);
+
+        style.ShouldContain("--dashboard-widget-title:#ffffff;");
+        style.ShouldContain("--dashboard-widget-subtitle:#9fd0ff;");
+        style.ShouldContain("--dashboard-widget-value:#2ed3c6;");
+    }
+
+    [Fact]
+    public void DashboardWidgetFormatting_ReadsKpiSpecificColorAndLayoutVariables()
+    {
+        var widget = new DashboardWidgetSnapshot(
+            "kpi",
+            DashboardWidgetCatalog.KpiTileType,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [DashboardWidgetCatalog.KpiTitleColorKey] = "#112233",
+                [DashboardWidgetCatalog.KpiSubtitleColorKey] = "#445566",
+                [DashboardWidgetCatalog.KpiValueColorKey] = "#778899",
+                [DashboardWidgetCatalog.KpiTitleAlignKey] = DashboardWidgetCatalog.KpiAlignCenter,
+                [DashboardWidgetCatalog.KpiValueAlignKey] = DashboardWidgetCatalog.KpiAlignRight,
+                [DashboardWidgetCatalog.KpiValuePlacementKey] = DashboardWidgetCatalog.KpiValuePlacementBottom
+            });
+
+        var style = DashboardWidgetFormatting.WidgetStyle(widget);
+
+        style.ShouldContain("--dashboard-widget-title:#112233;");
+        style.ShouldContain("--dashboard-widget-subtitle:#445566;");
+        style.ShouldContain("--dashboard-widget-value:#778899;");
+        style.ShouldContain("--dashboard-kpi-title-align:center;");
+        style.ShouldContain("--dashboard-kpi-title-items:center;");
+        style.ShouldContain("--dashboard-kpi-value-align:right;");
+        style.ShouldContain("--dashboard-kpi-value-items:flex-end;");
+        style.ShouldContain("--dashboard-kpi-value-placement:flex-end;");
+    }
+
+    [Fact]
+    public void DashboardCellStyleDraft_WritesSharedContainerBorderSettings()
+    {
+        var draft = DashboardCellStyleDraft.Create(new Dictionary<string, string>(StringComparer.Ordinal));
+
+        draft.SetValue("borderMode", "none");
+        draft.SetValue("borderWidth", "3");
+        draft.SetValue("radius", "14");
+
+        var style = draft.BuildStyle();
+
+        style["borderMode"].ShouldBe("none");
+        style["borderWidth"].ShouldBe("3");
+        style["radius"].ShouldBe("14");
+        DashboardCellStyleDraft.Fields
+            .First(static field => field.Key == "borderMode")
+            .Editor
+            .ShouldBe(DashboardWidgetPropertyEditorKind.Select);
+    }
+
+    [Fact]
+    public void DashboardCellStyleDraft_UsesZeroBorderWidthWhenBorderless()
+    {
+        var cellStyle = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["borderMode"] = "none",
+            ["borderWidth"] = "3",
+            ["radius"] = "14"
+        };
+
+        var css = DashboardCellStyleDraft.CssVariables(cellStyle);
+
+        css.ShouldContain("--dashboard-widget-border-width:0px;");
+        css.ShouldContain("--dashboard-widget-radius:14px;");
+    }
+
     [Fact]
     public void DashboardWidgetSettingsProfiles_ExposeDedicatedSettingsShape()
     {
         var gauge = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.EventGaugeType);
+        var kpi = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.KpiTileType);
+        var rate = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.EventRateType);
+        var latest = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.LatestEventType);
+        var chart = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.LineChartType);
         var table = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.EventTableType);
         var tree = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.TopicTreeType);
 
+        kpi.UsesMetricQuery.ShouldBeTrue();
+        kpi.UsesMetricVisualization.ShouldBeTrue();
+        kpi.UsesVisualMetrics.ShouldBeFalse();
+        kpi.UsesMetricAggregation.ShouldBeTrue();
+        kpi.UsesMetricWindow.ShouldBeTrue();
+        kpi.UsesSubtitle.ShouldBeTrue();
         gauge.IsEventWidget.ShouldBeTrue();
+        gauge.UsesMetricQuery.ShouldBeTrue();
         gauge.UsesVisualMetrics.ShouldBeTrue();
         gauge.UsesGaugeStyle.ShouldBeTrue();
         gauge.UsesChartType.ShouldBeFalse();
+        gauge.SupportsMetricSlots.ShouldBeFalse();
+        gauge.UsesMetricWindow.ShouldBeTrue();
+        chart.SupportsMetricSlots.ShouldBeFalse();
+        chart.UsesMetricWindow.ShouldBeTrue();
         table.IsEventWidget.ShouldBeTrue();
         table.UsesVisualMetrics.ShouldBeFalse();
+        table.SupportsMetricSlots.ShouldBeFalse();
+        table.UsesMetricWindow.ShouldBeFalse();
         tree.IsEventWidget.ShouldBeFalse();
         tree.IsTopicTreeWidget.ShouldBeTrue();
+        tree.UsesMetricQuery.ShouldBeFalse();
+        tree.UsesEventFilters.ShouldBeFalse();
+        tree.UsesMetricWindow.ShouldBeFalse();
+
+        rate.InspectorLabels.DataGroup.ShouldBe("Rate source");
+        rate.UsesMetricVisualization.ShouldBeFalse();
+        kpi.InspectorLabels.DataGroup.ShouldBe("KPI source");
+        kpi.InspectorLabels.TimeWindowGroup.ShouldBe("Metric query");
+        rate.UsesMetricWindow.ShouldBeFalse();
+        rate.InspectorLabels.TimeWindowGroup.ShouldBe("Rate window");
+        rate.InspectorLabels.FilterGroup.ShouldBe("Traffic filter");
+        latest.InspectorLabels.DataGroup.ShouldBe("Event source");
+        latest.InspectorLabels.FilterGroup.ShouldBe("Match rules");
+        table.InspectorLabels.DataGroup.ShouldBe("Table source");
+        table.InspectorLabels.FilterGroup.ShouldBe("Row filter");
+        tree.InspectorLabels.DisplayGroup.ShouldBe("Topic tree");
+        tree.InspectorLabels.TopicSystemRow.ShouldBe("System topics");
+        chart.InspectorLabels.SeriesGroup.ShouldBe("Chart series");
+        chart.InspectorLabels.TimeWindowGroup.ShouldBe("Chart window");
     }
 
     [Fact]
@@ -119,6 +356,1077 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardWidgetSettingsDraft_WritesFocusedMetricValueWithoutSlots()
+    {
+        var draft = DashboardWidgetSettingsDraft.Create(
+            new DashboardWidgetSnapshot(
+                "status",
+                DashboardWidgetCatalog.StatusValueType,
+                new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    [DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricRecent,
+                    [DashboardWidgetCatalog.DisplayMetricsKey] = "messages,recent"
+                }),
+            new DashboardEventFilterCatalog());
+
+        draft.SetPrimaryMetric(DashboardWidgetCatalog.MetricPayloadBytes);
+        draft.PrimaryMetric.ShouldBe(DashboardWidgetCatalog.MetricPayloadBytes);
+
+        var configuration = draft.BuildConfiguration();
+        configuration.ContainsKey(DashboardWidgetCatalog.DisplayMetricsKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardWidgetCatalog.MetricCardColumnsKey).ShouldBeFalse();
+        configuration[DashboardWidgetCatalog.PrimaryMetricKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricPayloadBytes);
+    }
+
+    [Fact]
+    public void DashboardWidgetSettingsDraft_WritesKpiSpecificTextAndLayoutSettings()
+    {
+        var draft = DashboardWidgetSettingsDraft.Create(
+            new DashboardWidgetSnapshot(
+                "kpi",
+                DashboardWidgetCatalog.KpiTileType,
+                new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    [DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricMessages
+                }),
+            new DashboardEventFilterCatalog());
+
+        draft.Title = "Messages";
+        draft.Subtitle = "Total matching events";
+        draft.TitleColor = "#112233";
+        draft.SubtitleColor = "#445566";
+        draft.ValueColor = "#778899";
+        draft.MetricVisualizationId = DashboardMetricVisualizationIds.Value;
+        draft.TitleAlign = DashboardWidgetCatalog.KpiAlignCenter;
+        draft.ValueAlign = DashboardWidgetCatalog.KpiAlignRight;
+        draft.ValuePlacement = DashboardWidgetCatalog.KpiValuePlacementMiddle;
+
+        var configuration = draft.BuildConfiguration();
+
+        configuration["title"].ShouldBe("Messages");
+        configuration["subtitle"].ShouldBe("Total matching events");
+        configuration[DashboardWidgetCatalog.MetricVisualizationKey].ShouldBe(DashboardMetricVisualizationIds.Value);
+        configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
+        configuration[DashboardWidgetCatalog.KpiTitleColorKey].ShouldBe("#112233");
+        configuration[DashboardWidgetCatalog.KpiSubtitleColorKey].ShouldBe("#445566");
+        configuration[DashboardWidgetCatalog.KpiValueColorKey].ShouldBe("#778899");
+        configuration[DashboardWidgetCatalog.KpiTitleAlignKey].ShouldBe(DashboardWidgetCatalog.KpiAlignCenter);
+        configuration[DashboardWidgetCatalog.KpiValueAlignKey].ShouldBe(DashboardWidgetCatalog.KpiAlignRight);
+        configuration[DashboardWidgetCatalog.KpiValuePlacementKey].ShouldBe(DashboardWidgetCatalog.KpiValuePlacementMiddle);
+        configuration.ContainsKey(DashboardWidgetCatalog.DisplayMetricsKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardWidgetCatalog.MetricCardColumnsKey).ShouldBeFalse();
+        configuration.Keys.ShouldNotContain("style.titleColor");
+    }
+
+    [Fact]
+    public void DashboardWidgetSettingsDraft_WritesEventCounterAsMetricQueryConfiguration()
+    {
+        var draft = DashboardWidgetSettingsDraft.Create(
+            new DashboardWidgetSnapshot(
+                "counter",
+                DashboardWidgetCatalog.EventCounterType,
+                new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["title"] = "Factory events",
+                    ["metric"] = "factoryEventsMetric",
+                    [DashboardEventFilterCatalog.EventTypeKey] = FluxMqEventTypes.MqttMessagePublished,
+                    [DashboardEventFilterCatalog.TopicStartsWithKey] = "factory/",
+                    [DashboardEventFilterCatalog.StatusKey] = "published",
+                    [DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricPayloadBytes
+                }),
+            new DashboardEventFilterCatalog());
+
+        draft.UsesMetricQueryBuilder.ShouldBeTrue();
+        var configuration = draft.BuildConfiguration();
+
+        configuration["title"].ShouldBe("Factory events");
+        configuration["metric"].ShouldBe("factoryEventsMetric");
+        configuration.ContainsKey(DashboardEventFilterCatalog.EventTypeKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardEventFilterCatalog.TopicStartsWithKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardEventFilterCatalog.StatusKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DashboardWidgetSettingsDraft_WritesEventRateAsMetricQueryConfiguration()
+    {
+        var draft = DashboardWidgetSettingsDraft.Create(
+            new DashboardWidgetSnapshot(
+                "rate",
+                DashboardWidgetCatalog.EventRateType,
+                new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["title"] = "Factory rate",
+                    ["metric"] = "factoryRateMetric",
+                    [DashboardEventFilterCatalog.EventTypeKey] = FluxMqEventTypes.MqttMessagePublished,
+                    [DashboardEventFilterCatalog.TopicStartsWithKey] = "factory/",
+                    [DashboardEventFilterCatalog.StatusKey] = "published",
+                    [DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricCurrentRate
+                }),
+            new DashboardEventFilterCatalog());
+
+        draft.UsesMetricQueryBuilder.ShouldBeTrue();
+        var configuration = draft.BuildConfiguration();
+
+        configuration["title"].ShouldBe("Factory rate");
+        configuration["metric"].ShouldBe("factoryRateMetric");
+        configuration.ContainsKey(DashboardEventFilterCatalog.EventTypeKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardEventFilterCatalog.TopicStartsWithKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardEventFilterCatalog.StatusKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DashboardWidgetSettingsDraft_ResetToDefaultConfiguration_RestoresKpiDefaults()
+    {
+        var draft = DashboardWidgetSettingsDraft.Create(
+            new DashboardWidgetSnapshot(
+                "kpi",
+                DashboardWidgetCatalog.KpiTileType,
+                new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["title"] = "Custom title",
+                    ["subtitle"] = "Custom subtitle",
+                    ["metric"] = "receivedMetric",
+                    [DashboardEventFilterCatalog.EventTypeKey] = FluxMqEventTypes.MqttMessageReceived,
+                    [DashboardEventFilterCatalog.TopicStartsWithKey] = "factory/",
+                    [DashboardEventFilterCatalog.StatusKey] = "received",
+                    [DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricPayloadBytes,
+                    [DashboardWidgetCatalog.KpiTitleColorKey] = "#112233",
+                    [DashboardWidgetCatalog.KpiSubtitleColorKey] = "#445566",
+                    [DashboardWidgetCatalog.KpiValueColorKey] = "#778899",
+                    [DashboardWidgetCatalog.KpiTitleAlignKey] = DashboardWidgetCatalog.KpiAlignCenter,
+                    [DashboardWidgetCatalog.KpiValueAlignKey] = DashboardWidgetCatalog.KpiAlignRight,
+                    [DashboardWidgetCatalog.KpiValuePlacementKey] = DashboardWidgetCatalog.KpiValuePlacementBottom
+                }),
+            new DashboardEventFilterCatalog());
+
+        var defaults = DashboardWidgetModuleCatalog
+            .Find(DashboardWidgetCatalog.KpiTileType)!
+            .DefaultConfiguration;
+
+        draft.ResetToDefaultConfiguration(defaults);
+
+        var configuration = draft.BuildConfiguration();
+
+        configuration["title"].ShouldBe("Messages");
+        configuration["subtitle"].ShouldBe("Total matching events");
+        configuration["metric"].ShouldBe("receivedMetric");
+        configuration[DashboardWidgetCatalog.MetricVisualizationKey].ShouldBe(DashboardMetricVisualizationIds.Value);
+        configuration.ContainsKey(DashboardEventFilterCatalog.EventTypeKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardEventFilterCatalog.TopicStartsWithKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardEventFilterCatalog.StatusKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
+        configuration[DashboardWidgetCatalog.KpiTitleColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultTitleColor);
+        configuration[DashboardWidgetCatalog.KpiSubtitleColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultSubtitleColor);
+        configuration[DashboardWidgetCatalog.KpiValueColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultValueColor);
+        configuration[DashboardWidgetCatalog.KpiTitleAlignKey].ShouldBe(DashboardWidgetCatalog.KpiAlignLeft);
+        configuration[DashboardWidgetCatalog.KpiValueAlignKey].ShouldBe(DashboardWidgetCatalog.KpiAlignLeft);
+        configuration[DashboardWidgetCatalog.KpiValuePlacementKey].ShouldBe(DashboardWidgetCatalog.KpiValuePlacementTop);
+    }
+
+    [Fact]
+    public void FluxMetricQueryDraft_UsesMetricFiltersBeforeLegacyWidgetFilters()
+    {
+        var metric = new FluxMetricDefinition(
+            "publishedMetric",
+            FluxMetricCatalog.RuntimeEventsSource,
+            FluxMetricCatalog.MeasureRate,
+            "300s",
+            eventType: FluxMqEventTypes.MqttMessagePublished,
+            topicStartsWith: "metric/",
+            status: "published",
+            format: FluxMetricCatalog.FormatNumber);
+        var legacyFilters = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [FluxMetricCatalog.TopicStartsWithKey] = "legacy/",
+                [FluxMetricCatalog.AttributeFilterKey("qos")] = "1",
+                [FluxMetricCatalog.AttributeFilterKey("retain")] = "false"
+            };
+
+        var draft = FluxMetricQueryDraft.Create(
+            metric,
+            legacyFilters,
+            DashboardWidgetCatalog.KpiTileType);
+        var query = draft.BuildDefinition("publishedMetric");
+
+        query.Measure.ShouldBe(FluxMetricCatalog.MeasureRate);
+        query.Window.ShouldBe("300s");
+        query.EventType.ShouldBe(FluxMqEventTypes.MqttMessagePublished);
+        query.TopicStartsWith.ShouldBe("metric/");
+        query.Status.ShouldBeNull();
+        query.AdditionalFilters[FluxMetricCatalog.AttributeFilterKey("qos")].ShouldBe("1");
+        query.AdditionalFilters[FluxMetricCatalog.AttributeFilterKey("retain")].ShouldBe("false");
+    }
+
+    [Fact]
+    public void FluxMetricCatalog_ExposesMeasureMetadataForAllAggregations()
+    {
+        var registry = new DashboardMetricRegistry();
+        var catalog = FluxMetricCatalog.Shared;
+
+        foreach (var aggregation in registry.Aggregations)
+        {
+            var measure = catalog.FindMeasure(aggregation.Id);
+
+            measure.Id.ShouldBe(aggregation.Id);
+            measure.Label.ShouldNotBeNullOrWhiteSpace();
+            measure.Description.ShouldNotBeNullOrWhiteSpace();
+            measure.Explanation.ShouldNotBeNullOrWhiteSpace();
+            measure.Calculation.ShouldNotBeNullOrWhiteSpace();
+            measure.BestFor.ShouldNotBeNullOrWhiteSpace();
+            measure.CompatibleSources.ShouldNotBeEmpty();
+            measure.CompatibleSources.ShouldContain(measure.DefaultSource);
+            measure.DefaultFormat.ShouldNotBeNullOrWhiteSpace();
+        }
+    }
+
+    [Fact]
+    public void FluxMetricQueryDraft_AppliesMeasureDefaultsUntilCustomized()
+    {
+        var draft = CreateKpiQueryDraft();
+
+        draft.SetAggregation(FluxMetricCatalog.MeasurePayloadBytes);
+        draft.Source.ShouldBe(FluxMetricCatalog.PayloadInspectionSource);
+        draft.Format.ShouldBe(FluxMetricCatalog.FormatBytes);
+
+        draft.SetSource(FluxMetricCatalog.RuntimeEventsSource);
+        draft.SetFormat(FluxMetricCatalog.FormatNumber);
+        draft.SetAggregation(FluxMetricCatalog.MeasureTopics);
+
+        draft.Source.ShouldBe(FluxMetricCatalog.RuntimeEventsSource);
+        draft.Format.ShouldBe(FluxMetricCatalog.FormatNumber);
+    }
+
+    [Fact]
+    public void FluxMetricQueryDraft_DisallowsUnsupportedSourceSelection()
+    {
+        var draft = CreateKpiQueryDraft();
+
+        draft.SetSource(FluxMetricCatalog.PayloadInspectionSource);
+
+        draft.Source.ShouldBe(FluxMetricCatalog.RuntimeEventsSource);
+        FluxMetricCatalog.Shared
+            .IsSourceCompatible(draft.Aggregation, FluxMetricCatalog.PayloadInspectionSource)
+            .ShouldBeFalse();
+    }
+
+    [Fact]
+    public void FluxMetricQueryDraft_ClearsActiveFilterChipFields()
+    {
+        var draft = CreateKpiQueryDraft();
+        draft.SetEventType(FluxMqEventTypes.MqttMessagePublished);
+        draft.Status = "published";
+        draft.SetFilterValue(FluxMetricCatalog.TopicStartsWithKey, "factory/");
+        draft.SetFilterValue(FluxMetricCatalog.AttributeFilterKey("qos"), "1");
+        draft.SetFilterValue(FluxMetricCatalog.AttributeFilterKey("retain"), "false");
+
+        var chips = FluxMetricQuerySummary.ActiveFilterChips(draft.BuildDefinition());
+        chips.Select(static chip => chip.Key).ShouldContain(FluxMetricCatalog.TopicStartsWithKey);
+        chips.Select(static chip => chip.Key).ShouldContain(FluxMetricCatalog.AttributeFilterKey("qos"));
+        chips.Select(static chip => chip.Key).ShouldContain(FluxMetricCatalog.AttributeFilterKey("retain"));
+
+        draft.ClearFilter(FluxMetricCatalog.TopicStartsWithKey);
+        draft.ClearFilter(FluxMetricCatalog.AttributeFilterKey("qos"));
+        draft.ClearFilter(FluxMetricCatalog.AttributeFilterKey("retain"));
+        draft.ClearFilter(FluxMetricCatalog.StatusKey);
+
+        var query = draft.BuildDefinition();
+        query.TopicStartsWith.ShouldBeNull();
+        query.Status.ShouldBeNull();
+        query.AdditionalFilters.ContainsKey(FluxMetricCatalog.AttributeFilterKey("qos")).ShouldBeFalse();
+        query.AdditionalFilters.ContainsKey(FluxMetricCatalog.AttributeFilterKey("retain")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void FluxMetricQueryDraft_ClearsRedundantStatusForSingleStatusEvents()
+    {
+        var draft = CreateKpiQueryDraft();
+        draft.SetEventType(FluxMqEventTypes.MqttMessagePublished);
+        draft.Status = "published";
+
+        var query = draft.BuildDefinition();
+
+        query.Status.ShouldBeNull();
+    }
+
+    [Fact]
+    public void FluxMetricQueryDraft_KeepsMeaningfulStatusForMultiStatusEvents()
+    {
+        var draft = CreateKpiQueryDraft();
+        draft.SetEventType(FluxMqEventTypes.JsonSchemaValidated);
+        draft.Status = "invalid";
+
+        var query = draft.BuildDefinition();
+
+        query.Status.ShouldBe("invalid");
+    }
+
+    [Theory]
+    [InlineData("30s", true, "30s")]
+    [InlineData("1m", true, "1m")]
+    [InlineData("2h", true, "2h")]
+    [InlineData("0s", false, "")]
+    [InlineData("1d", false, "")]
+    [InlineData("90000s", false, "")]
+    public void FluxMetricQueryDraft_ValidatesCustomWindows(
+        string value,
+        bool expectedValid,
+        string expectedNormalized)
+    {
+        FluxMetricQueryDraft.TryNormalizeWindow(value, out var normalized).ShouldBe(expectedValid);
+        normalized.ShouldBe(expectedNormalized);
+    }
+
+    [Theory]
+    [InlineData("60s", "1m")]
+    [InlineData("300s", "5m")]
+    [InlineData("900s", "15m")]
+    [InlineData("2h", "2h")]
+    public void DashboardMetricQuerySummary_UsesHumanWindowLabels(
+        string value,
+        string expectedLabel)
+        => DashboardMetricQuerySummary.WindowLabel(value).ShouldBe(expectedLabel);
+
+    [Fact]
+    public void DashboardMetricQuerySummary_DescribesMeasureWindowAndFilters()
+    {
+        var query = new DashboardMetricQueryDefinition(
+            "runtimeEvents",
+            "count",
+            "60s",
+            EventType: FluxMqEventTypes.MqttMessagePublished,
+            TopicStartsWith: "factory/",
+            TopicNotStartsWith: "$SYS/",
+            Status: "published",
+            AdditionalFilters: new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [DashboardEventFilterCatalog.AttributeFilterKey("qos")] = "1"
+            });
+
+        var summary = DashboardMetricQuerySummary.Describe(
+            query,
+            new DashboardEventFilterCatalog(),
+            new DashboardMetricRegistry());
+        var sentence = DashboardMetricQuerySummary.DescribeSentence(
+            query,
+            new DashboardEventFilterCatalog(),
+            new DashboardMetricRegistry());
+
+        summary.ShouldContain("Count of MQTT published messages during last 1m");
+        sentence.ShouldBe("Show Count of MQTT published messages during last 1m where topic starts factory/, exclude $SYS/, QoS 1");
+        summary.ShouldContain("topic starts factory/");
+        summary.ShouldContain("exclude $SYS/");
+        summary.ShouldNotContain("status published");
+        summary.ShouldContain("QoS 1");
+    }
+
+    [Fact]
+    public void DashboardMetricQuerySummary_DescribesNoFiltersAsSentence()
+    {
+        var sentence = DashboardMetricQuerySummary.DescribeSentence(
+            new DashboardMetricQueryDefinition("runtimeEvents", "count", "60s"),
+            new DashboardEventFilterCatalog(),
+            new DashboardMetricRegistry());
+
+        sentence.ShouldBe("Show Count of all runtime events during last 1m where all events match");
+    }
+
+    [Fact]
+    public void DashboardMetricQuerySummary_IgnoresUnsupportedStatusForAllRuntimeEvents()
+    {
+        var sentence = DashboardMetricQuerySummary.DescribeSentence(
+            new DashboardMetricQueryDefinition(
+                "runtimeEvents",
+                "count",
+                "60s",
+                Status: "published"),
+            new DashboardEventFilterCatalog(),
+            new DashboardMetricRegistry());
+
+        sentence.ShouldBe("Show Count of all runtime events during last 1m where all events match");
+        DashboardMetricQuerySummary
+            .ActiveFilters(
+                new DashboardMetricQueryDefinition("runtimeEvents", "count", "60s", Status: "published"),
+                new DashboardEventFilterCatalog())
+            .ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void DashboardMetricQuerySummary_LabelsAssertionFilterAsAssertion()
+    {
+        var sentence = DashboardMetricQuerySummary.DescribeSentence(
+            new DashboardMetricQueryDefinition(
+                "runtimeEvents",
+                "count",
+                "60s",
+                EventType: FluxMqEventTypes.AssertionEvaluated,
+                Status: "passed",
+                AdditionalFilters: new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    [DashboardEventFilterCatalog.SubjectStartsWithKey] = "QoS at least once"
+                }),
+            new DashboardEventFilterCatalog(),
+            new DashboardMetricRegistry());
+
+        sentence.ShouldBe("Show Count of assertions during last 1m where status passed, assertion QoS at least once");
+    }
+
+    [Fact]
+    public void DashboardMetricQuerySummary_LabelsFileFilterAsFilePath()
+    {
+        var sentence = DashboardMetricQuerySummary.DescribeSentence(
+            new DashboardMetricQueryDefinition(
+                "runtimeEvents",
+                "count",
+                "60s",
+                EventType: FluxMqEventTypes.FileWritten,
+                AdditionalFilters: new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    [DashboardEventFilterCatalog.SubjectStartsWithKey] = "logs/"
+                }),
+            new DashboardEventFilterCatalog(),
+            new DashboardMetricRegistry());
+
+        sentence.ShouldBe("Show Count of file writes during last 1m where file path logs/");
+    }
+
+    [Fact]
+    public void DashboardMetricQueryMapper_RoundTripsDashboardMetricJsonShape()
+    {
+        var query = new DashboardMetricQueryDefinition(
+            "runtimeEvents",
+            "rate",
+            "300s",
+            GroupBy: "topic",
+            EventType: FluxMqEventTypes.MqttMessageReceived,
+            TopicStartsWith: "factory/",
+            TopicNotStartsWith: "$SYS/",
+            Status: "received",
+            AdditionalFilters: new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [DashboardEventFilterCatalog.AttributeFilterKey("qos")] = "1",
+                [DashboardEventFilterCatalog.AttributeFilterKey("retain")] = "false"
+            });
+
+        var metric = DashboardMetricQueryMapper.ToFluxMetricDefinition("receivedMetric", query);
+        var roundTrip = DashboardMetricQueryMapper.ToDashboardQuery(metric);
+
+        metric.Name.ShouldBe("receivedMetric");
+        metric.Mode.ShouldBe(MetricDefinitionMode.Builder);
+        metric.ExportPolicy.Enabled.ShouldBeFalse();
+        roundTrip.Source.ShouldBe(query.Source);
+        roundTrip.Aggregation.ShouldBe(query.Aggregation);
+        roundTrip.Window.ShouldBe(query.Window);
+        roundTrip.GroupBy.ShouldBe(query.GroupBy);
+        roundTrip.EventType.ShouldBe(query.EventType);
+        roundTrip.TopicStartsWith.ShouldBe(query.TopicStartsWith);
+        roundTrip.TopicNotStartsWith.ShouldBe(query.TopicNotStartsWith);
+        roundTrip.Status.ShouldBe(query.Status);
+        roundTrip.AdditionalFilters.ContainsKey(DashboardEventFilterCatalog.AttributeFilterKey("qos")).ShouldBeTrue();
+        roundTrip.AdditionalFilters.ContainsKey(DashboardEventFilterCatalog.AttributeFilterKey("retain")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void DashboardMetricQueryPreviewFactory_UsesSampleWhenNoLiveEventsMatch()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        var widget = new DashboardWidgetSnapshot(
+            "kpi",
+            DashboardWidgetCatalog.KpiTileType,
+            new Dictionary<string, string>(StringComparer.Ordinal));
+        var query = new DashboardMetricQueryDefinition(
+            "runtimeEvents",
+            "count",
+            "60s",
+            EventType: FluxMqEventTypes.MqttMessagePublished,
+            TopicStartsWith: "factory/",
+            Status: "published");
+
+        var preview = DashboardMetricQueryPreviewFactory.Create(
+            query,
+            widget,
+            service,
+            new DashboardMetricRegistry(),
+            new DashboardEventFilterCatalog());
+
+        preview.IsLive.ShouldBeFalse();
+        preview.SourceLabel.ShouldBe("Sample");
+        preview.WindowEventCount.ShouldBeGreaterThan(0);
+        preview.TotalMatchCount.ShouldBeGreaterThanOrEqualTo(preview.WindowEventCount);
+        preview.MatchingEventCount.ShouldBe(preview.WindowEventCount);
+        preview.EmptyReason.ShouldBe("No live events match this query in the selected window. Showing generated sample data.");
+    }
+
+    [Fact]
+    public void DashboardMetricQueryPreviewFactory_UsesLiveEventsWhenPresent()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.RecordManualMqttPublish("factory/one", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+        service.RecordManualMqttPublish("other/two", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+        var widget = new DashboardWidgetSnapshot(
+            "kpi",
+            DashboardWidgetCatalog.KpiTileType,
+            new Dictionary<string, string>(StringComparer.Ordinal));
+        var query = new DashboardMetricQueryDefinition(
+            "runtimeEvents",
+            "count",
+            "60s",
+            EventType: FluxMqEventTypes.MqttMessagePublished,
+            TopicStartsWith: "factory/",
+            Status: "published");
+
+        var preview = DashboardMetricQueryPreviewFactory.Create(
+            query,
+            widget,
+            service,
+            new DashboardMetricRegistry(),
+            new DashboardEventFilterCatalog());
+
+        preview.IsLive.ShouldBeTrue();
+        preview.SourceLabel.ShouldBe("Live");
+        preview.WindowEventCount.ShouldBe(1);
+        preview.TotalMatchCount.ShouldBe(1);
+        preview.MatchingEventCount.ShouldBe(preview.WindowEventCount);
+        preview.Value.Value.ShouldBe(1);
+        preview.EmptyReason.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void DashboardMetricQueryBuilder_UsesMudSelectControls()
+    {
+        var path = Path.Combine(
+            FindRepositoryRoot(),
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardMetricQueryBuilder.razor");
+        var markup = File.ReadAllText(path);
+
+        markup.ShouldNotContain("<select", Case.Insensitive);
+        markup.ShouldContain("Metric sentence");
+        markup.ShouldContain("<MudSwitch T=\"bool\"");
+        markup.ShouldContain("ShowHelpChanged");
+        markup.ShouldContain("SetShowHelpAsync");
+        markup.ShouldContain("dashboard-query-builder-sentence-line");
+        markup.ShouldContain("dashboard-query-builder-sentence-token");
+        markup.ShouldContain("FocusSentencePart");
+        markup.ShouldContain("dashboard-query-builder-section focused");
+        markup.ShouldContain("<MudToggleGroup T=\"string\"");
+        markup.ShouldContain("<MudToggleItem T=\"string\"");
+        markup.ShouldContain("dashboard-query-builder-measure-summary");
+        markup.ShouldContain("dashboard-query-builder-measure-copy");
+        markup.ShouldContain("dashboard-query-builder-measure-meta");
+        markup.ShouldContain("Selected");
+        markup.ShouldContain("@if (ShowHelp)");
+        markup.ShouldContain("Calculates");
+        markup.ShouldContain("Good for");
+        markup.ShouldContain("Source");
+        markup.ShouldContain("@CurrentMeasureDefaultSourceLabel");
+        markup.ShouldContain("Unit");
+        markup.ShouldNotContain("Default source");
+        markup.ShouldNotContain("dashboard-query-builder-measure-detail");
+        markup.ShouldNotContain("dashboard-query-builder-measure-title");
+        markup.ShouldNotContain("dashboard-query-builder-measure-facts");
+        markup.ShouldContain("Selected source");
+        markup.ShouldContain("Choose one compatible projection");
+        markup.ShouldContain("Available sources");
+        markup.ShouldContain("Recommended default for");
+        markup.ShouldContain("Compatible with");
+        markup.ShouldContain("MetricCatalog.IsSourceCompatible(Draft.Aggregation, source.Id)");
+        markup.ShouldContain("FluxMetricQueryDraft");
+        markup.ShouldContain("FluxMetricCatalog.Shared");
+        markup.ShouldContain("FluxMetricQuerySummary");
+        markup.ShouldNotContain("DashboardMetricQueryBuilderDraft");
+        markup.ShouldNotContain("DashboardMetricQueryBuilderCatalog");
+        markup.ShouldNotContain("Disabled=\"@option.Disabled\"");
+        markup.ShouldNotContain("does not use this source");
+        markup.ShouldContain("Preset window");
+        markup.ShouldContain("Custom duration");
+        markup.ShouldContain("CustomWindowInputValue");
+        markup.ShouldContain("CurrentWindowHasPreset");
+        markup.ShouldContain("No custom duration active.");
+        markup.ShouldContain("new(\"1m\", \"1m\")");
+        markup.ShouldContain("new(\"5m\", \"5m\")");
+        markup.ShouldNotContain("new(\"60s\", \"1m\")");
+        markup.ShouldContain("Current window");
+        markup.ShouldContain("Pick a preset or type a custom duration.");
+        markup.ShouldContain("Maximum 24h.");
+        markup.ShouldContain("dashboard-query-builder-format-toggle");
+        markup.ShouldContain("dashboard-query-builder-format-detail");
+        markup.ShouldContain("Selected format");
+        markup.ShouldContain("Auto will format this measure");
+        markup.ShouldContain("Number format");
+        markup.ShouldContain("Preview updates immediately with the current query.");
+        markup.ShouldContain("All runtime events");
+        markup.ShouldContain("EmptyFilterSentenceToken");
+        markup.ShouldContain("dashboard-query-builder-match-controls");
+        markup.ShouldContain("dashboard-query-builder-match-details");
+        markup.ShouldContain("dashboard-query-builder-match-chips");
+        markup.ShouldContain("Filters");
+        markup.ShouldContain("Event");
+        markup.ShouldContain("ShouldShowStatus");
+        markup.ShouldContain("Clear all");
+        markup.ShouldContain("ClearAllFiltersAsync");
+        markup.ShouldNotContain("dashboard-query-builder-match-summary");
+        markup.ShouldNotContain("Current match");
+        markup.ShouldNotContain("MatchSummary");
+        markup.ShouldNotContain("All runtime events are included.");
+        markup.ShouldNotContain("This is the broadest query mode");
+        markup.ShouldNotContain("EmptyFilterLabel");
+        markup.ShouldNotContain("dashboard-query-builder-active-filter-heading");
+        markup.ShouldNotContain("EventGateHelp");
+        markup.ShouldNotContain("CurrentEventDetailHelp");
+        markup.ShouldContain("dashboard-query-builder-detail-panels");
+        markup.ShouldContain("dashboard-query-builder-detail-panel");
+        markup.ShouldContain("RenderMqttDetailFilters");
+        markup.ShouldContain("Topic match");
+        markup.ShouldContain("MQTT delivery");
+        markup.ShouldContain("dashboard-query-builder-mqtt-details");
+        markup.ShouldContain("dashboard-query-builder-filter-toggle");
+        markup.ShouldContain("QosFilterOptions");
+        markup.ShouldContain("RetainFilterOptions");
+        markup.ShouldContain("RenderSchemaDetailFilters");
+        markup.ShouldContain("Message match");
+        markup.ShouldContain("Schema match");
+        markup.ShouldContain("dashboard-query-builder-schema-details");
+        markup.ShouldContain("IsSchemaIdFilter");
+        markup.ShouldContain("RenderFileDetailFilters");
+        markup.ShouldContain("File match");
+        markup.ShouldContain("dashboard-query-builder-file-details");
+        markup.ShouldContain("IsSubjectFilter");
+        markup.ShouldContain("RenderAssertionDetailFilters");
+        markup.ShouldContain("Assertion match");
+        markup.ShouldContain("Any assertion");
+        markup.ShouldContain("AssertionNameOptions");
+        markup.ShouldContain("dashboard-query-builder-assertion-details");
+        markup.ShouldNotContain("dashboard-query-builder-match-operator");
+        markup.ShouldNotContain("Rule logic");
+        markup.ShouldNotContain("Rule summary");
+        markup.ShouldNotContain("All rules");
+        markup.ShouldNotContain("Event gate");
+        markup.ShouldNotContain("Event details");
+        markup.ShouldNotContain("Advanced match");
+        markup.ShouldNotContain("AND/OR/NOT");
+        markup.ShouldNotContain("Active rules");
+        markup.ShouldNotContain("Every active rule is combined with AND.");
+        markup.ShouldContain("<MudSelect T=\"string\"");
+        markup.ShouldContain("<MudSelectItem T=\"string\"");
+        markup.ShouldContain("<MudTextField T=\"string\"");
+        markup.ShouldNotContain("OptionCardClass");
+        markup.ShouldNotContain("SetWindowFromEventAsync");
+        markup.ShouldNotContain("dashboard-query-builder-choice-row");
+        markup.ShouldNotContain("DashboardQueryBuilderSelect");
+    }
+
+    [Fact]
+    public void DashboardMetricQueryBuilder_KeepsSentenceStickyDuringScroll()
+    {
+        var path = Path.Combine(
+            FindRepositoryRoot(),
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardMetricQueryBuilder.razor.css");
+        var css = File.ReadAllText(path);
+
+        css.ShouldContain(".dashboard-query-builder-sentence");
+        css.ShouldContain("position: sticky;");
+        css.ShouldContain("top: -7px;");
+        css.ShouldContain("z-index: 4;");
+        css.ShouldNotContain("dashboard-query-builder-source-item.disabled");
+        css.ShouldNotContain("dashboard-query-builder-match-operator");
+        css.ShouldNotContain("dashboard-query-builder-advanced-match");
+        css.ShouldNotContain("dashboard-query-builder-match-mode");
+        css.ShouldNotContain("dashboard-query-builder-active-rule-heading");
+        css.ShouldNotContain("dashboard-query-builder-clear-rules");
+        css.ShouldNotContain("dashboard-query-builder-match-summary");
+        css.ShouldNotContain("dashboard-query-builder-filter-groups");
+        css.ShouldNotContain("dashboard-query-builder-filter-group-heading");
+        css.ShouldNotContain("dashboard-query-builder-active-filter-heading");
+        css.ShouldNotContain("dashboard-query-builder-match-overview");
+        css.ShouldNotContain("dashboard-query-builder-empty-chip");
+        css.ShouldContain(".dashboard-query-builder-measure-summary");
+        css.ShouldContain(".dashboard-query-builder-measure-copy");
+        css.ShouldContain(".dashboard-query-builder-measure-meta");
+        css.ShouldNotContain("dashboard-query-builder-measure-detail");
+        css.ShouldNotContain("dashboard-query-builder-measure-title");
+        css.ShouldNotContain("dashboard-query-builder-measure-facts");
+        css.ShouldContain(".dashboard-query-builder-result-note");
+        css.ShouldContain("var(--mud-palette-primary) 6%");
+        css.ShouldNotContain("var(--mud-palette-warning) 84%");
+    }
+
+    [Fact]
+    public void DashboardEditorPreferenceService_PersistsQueryBuilderHelpOutsideProjectJson()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "FluxMqEditorPreferenceTests", Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(directory, "editor-preferences.json");
+        try
+        {
+            var preferences = new DashboardEditorPreferenceService(path);
+            preferences.ShowQueryBuilderHelp.ShouldBeTrue();
+
+            preferences.SetShowQueryBuilderHelp(false);
+
+            var reloaded = new DashboardEditorPreferenceService(path);
+            reloaded.ShowQueryBuilderHelp.ShouldBeFalse();
+            File.ReadAllText(path).ShouldContain("showQueryBuilderHelp");
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void DashboardMetricQueryBuilderDialog_UsesCenteredMudDialogChrome()
+    {
+        var path = Path.Combine(
+            FindRepositoryRoot(),
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "DashboardMetricQueryBuilderDialog.razor");
+        var markup = File.ReadAllText(path);
+
+        markup.ShouldContain("<MudDialog");
+        markup.ShouldContain("Class=\"dashboard-query-dialog-modal\"");
+        markup.ShouldContain("<TitleContent>");
+        markup.ShouldContain("<DialogActions>");
+        markup.ShouldContain("@DialogTitle");
+        markup.ShouldContain("dashboard-query-dialog-titlebar");
+        markup.ShouldContain("dashboard-query-dialog-badge");
+        markup.ShouldContain("dashboard-query-dialog-close");
+        markup.ShouldContain("DashboardMetricQueryBuilder");
+        markup.ShouldContain("DashboardEditorPreferenceService");
+        markup.ShouldContain("DialogTitle { get; set; } = \"Metric query\"");
+        markup.ShouldContain("ApplyNote { get; set; } = \"Draft query. Apply updates this metric only.\"");
+        markup.ShouldContain("AllowedMeasures { get; set; } = []");
+        markup.ShouldContain("NormalizeAllowedMeasure");
+        markup.ShouldContain("ShowHelp=\"@EditorPreferences.ShowQueryBuilderHelp\"");
+        markup.ShouldContain("ShowHelpChanged=\"@SetShowHelpAsync\"");
+        markup.ShouldContain("MaxWidth = MaxWidth.Large");
+        markup.ShouldContain("FullWidth = true");
+        markup.ShouldNotContain("DashboardMovableDialogShell");
+        markup.ShouldNotContain("NoHeader = true");
+        markup.ShouldNotContain("Build KPI metric");
+    }
+
+    [Fact]
+    public void DashboardQueryDialog_UsesFluxThemeScopeAndBackdrop()
+    {
+        var root = FindRepositoryRoot();
+        var layoutMarkup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Layout",
+            "MainLayout.razor"));
+        var appCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "wwwroot",
+            "app.css"));
+
+        layoutMarkup.ShouldContain("ThemeScopeClass");
+        layoutMarkup.ShouldContain("flux-theme-scope");
+        layoutMarkup.ShouldContain("<MudDialogProvider BackdropClick=\"false\" />");
+        layoutMarkup.IndexOf("<MudDialogProvider BackdropClick=\"false\" />", StringComparison.Ordinal)
+            .ShouldBeLessThan(layoutMarkup.IndexOf("<div class=\"@ShellClass\"", StringComparison.Ordinal));
+
+        appCss.ShouldContain(".flux-theme-scope");
+        appCss.ShouldContain(".flux-theme-dark .mud-overlay");
+        appCss.ShouldContain(".flux-theme-light .mud-overlay");
+        appCss.ShouldContain(".mud-dialog.dashboard-query-dialog-modal");
+        appCss.ShouldContain("var(--flux-shadow-pop)");
+        appCss.ShouldContain("var(--flux-accent");
+    }
+
+    [Fact]
+    public void DashboardMetricQueryBuilder_UsesPreviewFrameWithRealWidgetView()
+    {
+        var path = Path.Combine(
+            FindRepositoryRoot(),
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardMetricQueryBuilder.razor");
+        var markup = File.ReadAllText(path);
+
+        markup.ShouldContain("DashboardQueryPreviewFrame");
+        markup.ShouldContain("ShowHelp=\"@ShowHelp\"");
+        markup.ShouldContain("AllowedMeasures");
+        markup.ShouldContain("MeasureOptions =>");
+        markup.ShouldContain("DashboardWidgetView");
+        markup.ShouldContain("MetricValueOverride=\"@Preview.Value\"");
+        markup.ShouldContain("RefreshSample=\"@RefreshSampleAsync\"");
+        markup.ShouldContain("dashboard-query-builder-result-main");
+        markup.ShouldContain("dashboard-query-builder-result-explain");
+        markup.ShouldContain("PreviewMatchLabel");
+        markup.ShouldContain("PreviewRetainedMatchLabel");
+        markup.ShouldContain("Preview.TotalMatchCount != Preview.WindowEventCount");
+        markup.ShouldContain("PreviewFilterEmptyLabel");
+        markup.ShouldContain("<span>Result</span>");
+        markup.ShouldContain("<span>Retained</span>");
+        markup.ShouldContain("<span>Query</span>");
+        markup.ShouldNotContain("dashboard-query-builder-result-row");
+        markup.ShouldNotContain("Query result");
+        markup.ShouldNotContain("Active filters");
+    }
+
+    [Fact]
+    public void DashboardEventCounterModuleView_UsesFocusedMetricValueRenderPath()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardWidgets",
+            "DashboardEventCounterModuleView.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "wwwroot",
+            "dashboard-widgets.css"));
+
+        markup.ShouldContain("DashboardMetricValueVisualizationView");
+        markup.ShouldNotContain("DashboardEventCounterWidget");
+        markup.ShouldNotContain("Context.Snapshot");
+        css.ShouldContain(".dashboard-metric-value-layout");
+        css.ShouldContain(".dashboard-metric-value-unit");
+    }
+
+    [Fact]
+    public void DashboardInspector_UsesCompactSingleLineMetricQueryRow()
+    {
+        var css = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot(),
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspector.razor.css"));
+
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 32px;");
+        css.ShouldContain(".dashboard-inspector-query-preview");
+        css.ShouldContain("height: 100%;");
+        css.ShouldContain("max-width: 34px;");
+        css.ShouldContain("width: 32px;");
+        css.ShouldContain("white-space: nowrap;");
+    }
+
+    [Fact]
+    public void DashboardInspector_UsesMetricBuilderForKpiCounterAndRateWidgets()
+    {
+        var path = Path.Combine(
+            FindRepositoryRoot(),
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspector.razor");
+        var markup = File.ReadAllText(path);
+
+        markup.ShouldContain("IsEventCounterQueryBuilderWidget");
+        markup.ShouldContain("IsEventRateQueryBuilderWidget");
+        markup.ShouldContain("IsMetricQueryBuilderWidget");
+        markup.ShouldContain("!IsMetricQueryBuilderWidget");
+        markup.ShouldContain("OpenMetricBuilderAsync");
+        markup.ShouldContain("Event counter query");
+        markup.ShouldContain("Event rate query");
+        markup.ShouldContain("FluxMetricCatalog.MeasureCount");
+        markup.ShouldContain("FluxMetricCatalog.MeasureRate");
+        markup.ShouldContain("[nameof(DashboardMetricQueryBuilderDialog.AllowedMeasures)] = MetricQueryAllowedMeasures");
+        markup.ShouldNotContain("OpenKpiMetricBuilderAsync");
+        markup.ShouldNotContain("ApplyKpiMetricQueryAsync");
+    }
+
+    [Fact]
+    public void DashboardInspector_ExposesKpiVisualizationFromCatalog()
+    {
+        var path = Path.Combine(
+            FindRepositoryRoot(),
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspector.razor");
+        var markup = File.ReadAllText(path);
+
+        markup.ShouldContain("draft.Profile.UsesMetricVisualization");
+        markup.ShouldContain("PropertyGridRow Name=\"Visualization\"");
+        markup.ShouldContain("MetricVisualizationOptions");
+        markup.ShouldContain("DashboardMetricVisualizationCatalog.CreateModules()");
+        markup.ShouldContain("SetMetricVisualizationAsync");
+        markup.ShouldContain("DashboardWidgetCatalog.NormalizeMetricVisualization(value)");
+        markup.ShouldContain("RenderMetricVisualizationProperties(draft)");
+        markup.ShouldContain("CurrentMetricVisualizationModule.PropertyGroups");
+        markup.ShouldContain("MetricVisualizationPropertyCount");
+    }
+
+    [Fact]
+    public void DashboardWidgetModuleCatalog_ProvidesFocusedPropertyDefinitionsForAllPaletteWidgets()
+    {
+        var modules = DashboardWidgetModuleCatalog.CreateModules();
+
+        modules.Select(static module => module.Type).ShouldContain(DashboardWidgetCatalog.QosBreakdownType);
+        modules.Select(static module => module.Type).ShouldContain(DashboardWidgetCatalog.RetainBreakdownType);
+        modules.Select(static module => module.Type).ShouldContain(DashboardWidgetCatalog.StatusValueType);
+        modules.Select(static module => module.Type).ShouldNotContain(DashboardWidgetCatalog.StatusStripType);
+        modules.Select(static module => module.Type).ShouldNotContain(DashboardWidgetCatalog.QosRetainBreakdownType);
+        modules.All(static module => module.PropertyGroups.Count > 0).ShouldBeTrue();
+        modules.All(static module => module.EditCellComponent is not null && module.LiveComponent is not null).ShouldBeTrue();
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.EventCounterType)
+            .DefaultConfiguration
+            .Keys
+            .ShouldBe(["title"]);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.EventRateType)
+            .DefaultConfiguration
+            .Keys
+            .ShouldBe(["title"]);
+        modules
+            .Where(static module =>
+                string.Equals(module.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal) ||
+                string.Equals(module.Type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal) ||
+                string.Equals(module.Type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal) ||
+                string.Equals(module.Type, DashboardWidgetCatalog.RateTileType, StringComparison.Ordinal))
+            .All(static module => string.Equals(module.MetricVisualizationId, DashboardMetricVisualizationIds.Value, StringComparison.Ordinal))
+            .ShouldBeTrue();
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.KpiTileType)
+            .DefaultConfiguration[DashboardWidgetCatalog.MetricVisualizationKey]
+            .ShouldBe(DashboardMetricVisualizationIds.Value);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.KpiTileType)
+            .PropertyGroups
+            .SelectMany(static group => group.Properties)
+            .Select(static property => property.Key)
+            .ShouldNotContain(DashboardWidgetCatalog.PrimaryMetricKey);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.KpiTileType)
+            .PropertyGroups
+            .SelectMany(static group => group.Properties)
+            .Single(static property => property.Key == DashboardWidgetCatalog.MetricVisualizationKey)
+            .DefaultValue
+            .ShouldBe(DashboardMetricVisualizationIds.Value);
+    }
+
+    [Fact]
+    public void DashboardMetricVisualizationCatalog_ProvidesMetricValueFoundation()
+    {
+        var modules = DashboardMetricVisualizationCatalog.CreateModules();
+        var value = modules.Single(static module => module.Id == DashboardMetricVisualizationIds.Value);
+
+        value.DisplayName.ShouldBe("Value");
+        value.EditCellComponent.ShouldBe(typeof(DashboardMetricValueVisualizationView));
+        value.LiveComponent.ShouldBe(typeof(DashboardMetricValueVisualizationView));
+        value.DefaultConfiguration["visualization"].ShouldBe(DashboardMetricVisualizationIds.Value);
+        value.DefaultConfiguration[DashboardWidgetCatalog.KpiTitleColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultTitleColor);
+        value.DefaultConfiguration[DashboardWidgetCatalog.KpiSubtitleColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultSubtitleColor);
+        value.DefaultConfiguration[DashboardWidgetCatalog.KpiValueColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultValueColor);
+        value.SupportedValueKinds.ShouldContain(DashboardMetricValueKinds.Number);
+        value.SupportedValueKinds.ShouldContain(DashboardMetricValueKinds.Rate);
+        value.SupportedValueKinds.ShouldContain(DashboardMetricValueKinds.Bytes);
+        value.SupportedValueKinds.ShouldContain(DashboardMetricValueKinds.Percent);
+        value.PropertyGroups.ShouldNotBeEmpty();
+        value.PropertyGroups
+            .SelectMany(static group => group.Properties)
+            .Select(static property => property.Key)
+            .ShouldBe([
+                DashboardWidgetCatalog.KpiTitleColorKey,
+                DashboardWidgetCatalog.KpiSubtitleColorKey,
+                DashboardWidgetCatalog.KpiValueColorKey,
+                DashboardWidgetCatalog.KpiTitleAlignKey,
+                DashboardWidgetCatalog.KpiValueAlignKey,
+                DashboardWidgetCatalog.KpiValuePlacementKey
+            ]);
+    }
+
+    [Fact]
+    public void DashboardMetricValueWidgets_UseSharedVisualizationView()
+    {
+        var root = FindRepositoryRoot();
+        var widgetsPath = Path.Combine(root, "src", "FluxMq.UI", "Components", "Workspace", "DashboardWidgets");
+        var kpi = File.ReadAllText(Path.Combine(widgetsPath, "DashboardKpiTileModuleView.razor"));
+        var counter = File.ReadAllText(Path.Combine(widgetsPath, "DashboardEventCounterModuleView.razor"));
+        var eventRate = File.ReadAllText(Path.Combine(widgetsPath, "DashboardEventRateModuleView.razor"));
+        var rateTile = File.ReadAllText(Path.Combine(widgetsPath, "DashboardRateTileModuleView.razor"));
+
+        kpi.ShouldContain("DashboardMetricValueVisualizationView");
+        counter.ShouldContain("DashboardMetricValueVisualizationView");
+        eventRate.ShouldContain("DashboardMetricValueVisualizationView");
+        rateTile.ShouldContain("DashboardMetricValueVisualizationView");
+        eventRate.ShouldNotContain("DashboardEventRateWidget");
+        eventRate.ShouldNotContain("Context.Snapshot");
+    }
+
+    [Fact]
+    public void DashboardPreviewSampleFactory_CreatesDesignOnlyTrafficFromWidgetFilters()
+    {
+        var widget = new DashboardWidgetSnapshot(
+            "published",
+            DashboardWidgetCatalog.LineChartType,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [DashboardEventFilterCatalog.EventTypeKey] = FluxMqEventTypes.MqttMessageReceived,
+                [DashboardEventFilterCatalog.TopicStartsWithKey] = "factory/line-b",
+                [DashboardEventFilterCatalog.StatusKey] = "received",
+                [DashboardEventFilterCatalog.AttributeFilterKey("qos")] = "2",
+                [DashboardEventFilterCatalog.AttributeFilterKey("retain")] = "true"
+            });
+
+        var sample = DashboardPreviewSampleFactory.Create(widget);
+
+        sample.Snapshot.Count.ShouldBeGreaterThan(0);
+        sample.Snapshot.BucketCounts.Count.ShouldBe(12);
+        sample.Snapshot.TopicCounts.ShouldNotBeEmpty();
+        foreach (var flowEvent in sample.Snapshot.Events)
+        {
+            flowEvent.Type.ShouldBe(FluxMqEventTypes.MqttMessageReceived);
+            flowEvent.Status.ShouldBe("received");
+            flowEvent.Channel.ShouldNotBeNull();
+            flowEvent.Channel.StartsWith("factory/line-b/", StringComparison.Ordinal).ShouldBeTrue();
+            flowEvent.GetAttribute("qos").ShouldBe("2");
+            string.Equals(flowEvent.GetAttribute("retain"), bool.TrueString, StringComparison.OrdinalIgnoreCase)
+                .ShouldBeTrue();
+        }
+
+        sample.TopicMessages.ShouldNotBeEmpty();
+    }
+
+    [Fact]
+    public void DashboardPreviewSampleFactory_UsesTopicTreeDefaults()
+    {
+        var widget = new DashboardWidgetSnapshot(
+            "topics",
+            DashboardWidgetCatalog.TopicTreeType,
+            new Dictionary<string, string>(StringComparer.Ordinal));
+
+        var sample = DashboardPreviewSampleFactory.Create(widget);
+
+        sample.TopicMessages.ShouldNotBeEmpty();
+        sample.Snapshot.UniqueTopicCount.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
     public void Find_ReturnsEventSpecificFieldDescriptors()
     {
         var catalog = new DashboardEventFilterCatalog();
@@ -129,6 +1437,9 @@ public sealed class DashboardEventFilterCatalogTests
         var assertion = catalog.Find(FluxMqEventTypes.AssertionEvaluated);
 
         any.Fields.ShouldBeEmpty();
+        any.Label.ShouldBe("All runtime events");
+        any.StatusOptions.Select(static option => option.Value).ShouldBe([""]);
+        DashboardEventFilterCatalog.ShouldExposeStatus(any).ShouldBeFalse();
 
         var mqttReceived = catalog.Find(FluxMqEventTypes.MqttMessageReceived);
         mqttReceived.Fields.Select(static field => field.Key).ShouldBe([
@@ -137,22 +1448,27 @@ public sealed class DashboardEventFilterCatalogTests
             DashboardEventFilterCatalog.AttributeFilterKey("qos"),
             DashboardEventFilterCatalog.AttributeFilterKey("retain")
         ]);
+        DashboardEventFilterCatalog.ShouldExposeStatus(mqttReceived).ShouldBeFalse();
 
         var fileField = fileWritten.Fields.ShouldHaveSingleItem();
         fileField.Key.ShouldBe(DashboardEventFilterCatalog.SubjectStartsWithKey);
-        fileField.Label.ShouldBe("Path prefix");
+        fileField.Label.ShouldBe("File path");
+        fileField.Placeholder.ShouldBe("logs/");
+        DashboardEventFilterCatalog.ShouldExposeStatus(fileWritten).ShouldBeFalse();
 
         schemaValidated.Fields.Select(static field => field.Key).ShouldBe([
             DashboardEventFilterCatalog.TopicStartsWithKey,
             DashboardEventFilterCatalog.AttributeFilterKey("schemaId")
         ]);
         schemaValidated.Fields[1].AttributeName.ShouldBe("schemaId");
+        DashboardEventFilterCatalog.ShouldExposeStatus(schemaValidated).ShouldBeTrue();
 
         assertion.Fields.Select(static field => field.Key).ShouldBe([
-            DashboardEventFilterCatalog.TopicStartsWithKey,
             DashboardEventFilterCatalog.SubjectStartsWithKey
         ]);
+        assertion.Fields[0].Label.ShouldBe("Assertion");
         assertion.StatusOptions.Select(static option => option.Value).ShouldBe(["", "passed", "failed"]);
+        DashboardEventFilterCatalog.ShouldExposeStatus(assertion).ShouldBeTrue();
     }
 
     [Fact]
@@ -275,6 +1591,36 @@ public sealed class DashboardEventFilterCatalogTests
                 status: "received")).ShouldBeFalse();
     }
 
+    [Fact]
+    public void Matches_UsesAssertionNameSubjectForAssertionEvents()
+    {
+        var catalog = new DashboardEventFilterCatalog();
+        var widget = new DashboardWidgetSnapshot(
+            "assertions",
+            DashboardWidgetCatalog.EventCounterType,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [DashboardEventFilterCatalog.EventTypeKey] = FluxMqEventTypes.AssertionEvaluated,
+                [DashboardEventFilterCatalog.SubjectStartsWithKey] = "QoS at least once",
+                [DashboardEventFilterCatalog.StatusKey] = "passed"
+            });
+
+        catalog.Matches(
+            widget,
+            Event(
+                FluxMqEventTypes.AssertionEvaluated,
+                topic: "factory/line-a",
+                subject: "QoS at least once",
+                status: "passed")).ShouldBeTrue();
+        catalog.Matches(
+            widget,
+            Event(
+                FluxMqEventTypes.AssertionEvaluated,
+                topic: "QoS at least once",
+                subject: "Payload has id",
+                status: "passed")).ShouldBeFalse();
+    }
+
     private static FlowEvent Event(
         string type,
         string? topic = null,
@@ -291,4 +1637,21 @@ public sealed class DashboardEventFilterCatalogTests
             Status = status,
             Attributes = attributes ?? new Dictionary<string, string>(StringComparer.Ordinal)
         };
+
+    private static FluxMetricQueryDraft CreateKpiQueryDraft()
+        => FluxMetricQueryDraft.Create(
+            metric: null,
+            metricName: DashboardWidgetCatalog.KpiTileType);
+
+    private static string FindRepositoryRoot()
+    {
+        var current = new DirectoryInfo(AppContext.BaseDirectory);
+        while (current is not null && !File.Exists(Path.Combine(current.FullName, "FluxMq.sln")))
+        {
+            current = current.Parent;
+        }
+
+        current.ShouldNotBeNull("Could not locate FluxMq.sln from the test output directory.");
+        return current.FullName;
+    }
 }

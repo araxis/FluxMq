@@ -1,0 +1,193 @@
+@using FluxMq.App.Metrics
+@using FluxMq.UI.Models
+@using FluxMq.UI.Services
+@inject DashboardEditorPreferenceService EditorPreferences
+
+<MudDialog Options="@DialogOptions" Class="dashboard-query-dialog-modal">
+    <TitleContent>
+        <div class="dashboard-query-dialog-titlebar">
+            <span class="dashboard-query-dialog-icon">
+                <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" />
+            </span>
+            <div class="dashboard-query-dialog-heading">
+                <div class="dashboard-query-dialog-heading-row">
+                    <MudText Typo="Typo.h6" Class="dashboard-query-dialog-title">@DialogTitle</MudText>
+                    @if (_preview is not null)
+                    {
+                        <span class="@PreviewBadgeClass">@PreviewBadge</span>
+                    }
+                </div>
+                <MudText Typo="Typo.caption" Class="dashboard-query-dialog-summary">
+                    @Summary
+                </MudText>
+            </div>
+            <MudIconButton Icon="@Icons.Material.Filled.Close"
+                           Size="Size.Small"
+                           Class="dashboard-query-dialog-close"
+                           OnClick="@Cancel" />
+        </div>
+    </TitleContent>
+    <DialogContent>
+        @if (_draft is not null && _preview is not null)
+        {
+            <DashboardMetricQueryBuilder Draft="@_draft"
+                                         Preview="@_preview"
+                                         Project="@Project"
+                                         Widget="@Widget"
+                                         AllowedMeasures="@AllowedMeasures"
+                                         ShowHelp="@EditorPreferences.ShowQueryBuilderHelp"
+                                         ShowHelpChanged="@SetShowHelpAsync"
+                                         Changed="@RefreshPreviewAsync"
+                                         RefreshSample="@RefreshSampleAsync" />
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mr-auto">@ApplyNote</MudText>
+        <MudButton OnClick="@Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   OnClick="@ResetQueryAsync">
+            Reset query
+        </MudButton>
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   Disabled="@(_draft is null || !_draft.HasValidWindow)"
+                   OnClick="@Submit">
+            Apply
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private static readonly DialogOptions DialogOptions = new()
+    {
+        BackdropClick = false,
+        CloseOnEscapeKey = true,
+        MaxWidth = MaxWidth.Large,
+        FullWidth = true
+    };
+
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public FlowWorkspaceService Project { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public DashboardWidgetSnapshot Widget { get; set; } = null!;
+
+    [Parameter]
+    public DashboardMetricSnapshot? Metric { get; set; }
+
+    [Parameter]
+    public string DialogTitle { get; set; } = "Metric query";
+
+    [Parameter]
+    public string ApplyNote { get; set; } = "Draft query. Apply updates this metric only.";
+
+    [Parameter]
+    public IReadOnlyList<string> AllowedMeasures { get; set; } = [];
+
+    private FluxMetricQueryDraft? _draft;
+    private DashboardMetricQueryPreview? _preview;
+
+    private string Summary => _draft is null
+        ? "Build a readable metric query"
+        : FluxMetricQuerySummary.DescribeSentence(_draft.BuildDefinition(Widget.Name));
+
+    private string PreviewBadge => _preview is null ? "Sample data" : $"{_preview.SourceLabel} data";
+
+    private string PreviewBadgeClass => _preview?.IsLive == true
+        ? "dashboard-query-dialog-badge live"
+        : "dashboard-query-dialog-badge sample";
+
+    protected override void OnInitialized()
+    {
+        _draft = FluxMetricQueryDraft.Create(
+            Metric is null ? null : DashboardMetricQueryMapper.ToFluxMetricDefinition(Metric),
+            Widget.Configuration,
+            Widget.Name);
+        NormalizeAllowedMeasure();
+        RefreshPreview();
+    }
+
+    private Task RefreshPreviewAsync()
+    {
+        RefreshPreview();
+        return Task.CompletedTask;
+    }
+
+    private Task RefreshSampleAsync()
+    {
+        RefreshPreview();
+        return Task.CompletedTask;
+    }
+
+    private Task SetShowHelpAsync(bool value)
+    {
+        EditorPreferences.SetShowQueryBuilderHelp(value);
+        return Task.CompletedTask;
+    }
+
+    private void RefreshPreview()
+    {
+        if (_draft is null)
+        {
+            return;
+        }
+
+        _preview = DashboardMetricQueryPreviewFactory.Create(
+            DashboardMetricQueryMapper.ToDashboardQuery(_draft.BuildDefinition(Widget.Name)),
+            Widget,
+            Project,
+            new DashboardMetricRegistry(),
+            DashboardEventFilterCatalog.Shared,
+            useSampleFallback: true);
+    }
+
+    private Task ResetQueryAsync()
+    {
+        if (_draft is not null)
+        {
+            _draft.Reset(Widget.Name);
+            NormalizeAllowedMeasure();
+            RefreshPreview();
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Submit()
+    {
+        if (_draft is null || !_draft.HasValidWindow)
+        {
+            return;
+        }
+
+        MudDialog.Close(DialogResult.Ok(new DashboardMetricQueryUpdate(
+            DashboardMetricQueryMapper.ToDashboardQuery(_draft.BuildDefinition(Widget.Name)))));
+    }
+
+    public sealed record DashboardMetricQueryUpdate(DashboardMetricQueryDefinition Query);
+
+    private void NormalizeAllowedMeasure()
+    {
+        if (_draft is null || AllowedMeasures.Count == 0)
+        {
+            return;
+        }
+
+        var allowed = AllowedMeasures
+            .Where(static measure => !string.IsNullOrWhiteSpace(measure))
+            .Select(static measure => measure.Trim())
+            .ToArray();
+        if (allowed.Length == 0 ||
+            allowed.Contains(_draft.Aggregation, StringComparer.Ordinal))
+        {
+            return;
+        }
+
+        _draft.SetAggregation(allowed[0]);
+    }
+}

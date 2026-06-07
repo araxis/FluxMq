@@ -4,16 +4,27 @@ using FluxMq.UI.Models;
 using FluxMq.UI.Services;
 using MudBlazor;
 using System.Globalization;
+using System.Text;
 
 namespace FluxMq.UI.Components.Workspace;
 
 public static class DashboardWidgetFormatting
 {
     public static string WidgetTitle(DashboardWidgetSnapshot widget)
-        => widget.ReadString("title") ?? widget.Type switch
+    {
+        var configuredTitle = widget.ReadString("title");
+        if (string.Equals(widget.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal) &&
+            (string.IsNullOrWhiteSpace(configuredTitle) ||
+             string.Equals(configuredTitle, "KPI tile", StringComparison.OrdinalIgnoreCase)))
+        {
+            return KpiDefaultTitle(widget);
+        }
+
+        return configuredTitle ?? widget.Type switch
         {
             DashboardWidgetCatalog.KpiTileType => "KPI tile",
             DashboardWidgetCatalog.StatusStripType => "Status strip",
+            DashboardWidgetCatalog.StatusValueType => "Status value",
             DashboardWidgetCatalog.RateTileType => "Rate tile",
             DashboardWidgetCatalog.EventCounterType => "Events",
             DashboardWidgetCatalog.LatestEventType => "Latest event",
@@ -28,12 +39,17 @@ public static class DashboardWidgetFormatting
             DashboardWidgetCatalog.TopicActivityType => "Topic activity",
             DashboardWidgetCatalog.PayloadDistributionType => "Payload sizes",
             DashboardWidgetCatalog.QosRetainBreakdownType => "QoS / retain",
+            DashboardWidgetCatalog.QosBreakdownType => "QoS breakdown",
+            DashboardWidgetCatalog.RetainBreakdownType => "Retain breakdown",
             DashboardWidgetCatalog.TopicTreeType => "Topic tree",
             _ => widget.Name
         };
+    }
 
     public static string WidgetSubtitle(DashboardWidgetSnapshot widget)
-        => DashboardWidgetCatalog.IsTopicTreeWidget(widget.Type)
+        => string.Equals(widget.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal)
+            ? KpiSubtitle(widget)
+            : DashboardWidgetCatalog.IsTopicTreeWidget(widget.Type)
             ? "Live topic map"
             : EventFilterSummary(widget);
 
@@ -47,11 +63,30 @@ public static class DashboardWidgetFormatting
         return parts.Count == 0 ? "All runtime events" : string.Join(" / ", parts);
     }
 
+    private static string KpiDefaultTitle(DashboardWidgetSnapshot widget)
+        => widget.ReadString(DashboardWidgetCatalog.PrimaryMetricKey) switch
+        {
+            DashboardWidgetCatalog.MetricCurrentRate => "Event rate",
+            DashboardWidgetCatalog.MetricRecent => "Recent messages",
+            DashboardWidgetCatalog.MetricPayloadBytes => "Payload size",
+            DashboardWidgetCatalog.MetricTopics => "Topic count",
+            DashboardWidgetCatalog.MetricRetained => "Retained messages",
+            DashboardWidgetCatalog.MetricAveragePayload => "Average payload",
+            _ => "Messages"
+        };
+
+    private static string KpiSubtitle(DashboardWidgetSnapshot widget)
+    {
+        var subtitle = widget.ReadString("subtitle");
+        return string.IsNullOrWhiteSpace(subtitle) ? "Total matching events" : subtitle;
+    }
+
     public static string WidgetIcon(DashboardWidgetSnapshot widget)
         => widget.Type switch
         {
             DashboardWidgetCatalog.KpiTileType => Icons.Material.Filled.Speed,
             DashboardWidgetCatalog.StatusStripType => Icons.Material.Filled.ViewWeek,
+            DashboardWidgetCatalog.StatusValueType => Icons.Material.Filled.Verified,
             DashboardWidgetCatalog.RateTileType => Icons.Material.Filled.QueryStats,
             DashboardWidgetCatalog.EventCounterType => Icons.Material.Filled.Numbers,
             DashboardWidgetCatalog.LatestEventType => Icons.Material.Filled.Bolt,
@@ -66,6 +101,8 @@ public static class DashboardWidgetFormatting
             DashboardWidgetCatalog.TopicActivityType => Icons.Material.Filled.GridOn,
             DashboardWidgetCatalog.PayloadDistributionType => Icons.Material.Filled.DataArray,
             DashboardWidgetCatalog.QosRetainBreakdownType => Icons.Material.Filled.PieChart,
+            DashboardWidgetCatalog.QosBreakdownType => Icons.Material.Filled.PieChart,
+            DashboardWidgetCatalog.RetainBreakdownType => Icons.Material.Filled.PushPin,
             DashboardWidgetCatalog.TopicTreeType => Icons.Material.Filled.AccountTree,
             _ => Icons.Material.Filled.Widgets
         };
@@ -75,6 +112,7 @@ public static class DashboardWidgetFormatting
         {
             DashboardWidgetCatalog.KpiTileType => "kpi-tile",
             DashboardWidgetCatalog.StatusStripType => "status-strip",
+            DashboardWidgetCatalog.StatusValueType => "status-value",
             DashboardWidgetCatalog.RateTileType => "rate-tile",
             DashboardWidgetCatalog.EventCounterType => "event-counter",
             DashboardWidgetCatalog.LatestEventType => "latest-event",
@@ -89,12 +127,62 @@ public static class DashboardWidgetFormatting
             DashboardWidgetCatalog.TopicActivityType => "topic-activity",
             DashboardWidgetCatalog.PayloadDistributionType => "payload-distribution",
             DashboardWidgetCatalog.QosRetainBreakdownType => "qos-retain-breakdown",
+            DashboardWidgetCatalog.QosBreakdownType => "qos-breakdown",
+            DashboardWidgetCatalog.RetainBreakdownType => "retain-breakdown",
             DashboardWidgetCatalog.TopicTreeType => "topic-tree-widget",
             _ => "unknown"
         };
 
+    public static string WidgetStyle(DashboardWidgetSnapshot widget)
+    {
+        var parts = new List<string>();
+        AddCssVariable(parts, "--dashboard-widget-bg", widget.ReadString("style.background"), IsSafeCssToken);
+        AddCssVariable(parts, "--dashboard-widget-surface", widget.ReadString("style.surface"), IsSafeCssToken);
+        AddCssVariable(parts, "--dashboard-widget-accent", widget.ReadString("style.accent"), IsSafeCssToken);
+        AddCssVariable(parts, "--dashboard-widget-text", BodyTextColor(widget), IsSafeCssToken);
+        AddCssVariable(parts, "--dashboard-widget-muted", SubtitleColor(widget), IsSafeCssToken);
+        AddCssVariable(parts, "--dashboard-widget-title", TitleColor(widget), IsSafeCssToken);
+        AddCssVariable(parts, "--dashboard-widget-subtitle", SubtitleColor(widget), IsSafeCssToken);
+        AddCssVariable(parts, "--dashboard-widget-value", ValueColor(widget), IsSafeCssToken);
+        AddCssVariable(parts, "--dashboard-widget-border", widget.ReadString("style.border"), IsSafeCssToken);
+        AddCssVariable(parts, "--dashboard-widget-border-width", BorderWidthValue(widget), static value => value.EndsWith("px", StringComparison.Ordinal));
+        AddCssVariable(parts, "--dashboard-widget-radius", PixelValue(widget.ReadString("style.radius")), static value => value.EndsWith("px", StringComparison.Ordinal));
+        AddCssVariable(parts, "--dashboard-widget-padding", PixelValue(widget.ReadString("style.padding")), static value => value.EndsWith("px", StringComparison.Ordinal));
+        AddKpiCssVariables(parts, widget);
+        return string.Join(string.Empty, parts);
+    }
+
     public static string MetricGridStyle(DashboardWidgetSnapshot widget)
         => $"--metric-columns:{DashboardWidgetCatalog.NormalizeMetricCardColumns(widget.ReadString(DashboardWidgetCatalog.MetricCardColumnsKey))};";
+
+    public static string MetricDisplayName(string metricName)
+    {
+        var raw = string.IsNullOrWhiteSpace(metricName)
+            ? "metric"
+            : metricName.Trim();
+        var ordinal = ExtractTrailingDigits(raw, out var stem);
+
+        if (stem.EndsWith("Metric", StringComparison.OrdinalIgnoreCase))
+        {
+            stem = stem[..^"Metric".Length];
+            if (string.IsNullOrWhiteSpace(ordinal))
+            {
+                ordinal = ExtractTrailingDigits(stem, out stem);
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(stem))
+        {
+            return string.IsNullOrWhiteSpace(ordinal)
+                ? "Metric"
+                : $"Metric #{ordinal}";
+        }
+
+        var label = ToReadableIdentifier(stem);
+        return string.IsNullOrWhiteSpace(ordinal)
+            ? $"{label} metric"
+            : $"{label} metric #{ordinal}";
+    }
 
     public static IReadOnlyList<DashboardMetricDisplayCard> MetricCards(
         DashboardWidgetSnapshot widget,
@@ -301,6 +389,175 @@ public static class DashboardWidgetFormatting
             parts.Add($"{prefix}{value}");
         }
     }
+
+    private static void AddCssVariable(List<string> parts, string name, string? value, Func<string, bool> isValid)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            var normalized = value.Trim();
+            if (isValid(normalized))
+            {
+                parts.Add($"{name}:{normalized};");
+            }
+        }
+    }
+
+    private static string? PixelValue(string? value)
+    {
+        if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var number))
+        {
+            return null;
+        }
+
+        return $"{Math.Clamp(number, 0, 64).ToString("0.###", CultureInfo.InvariantCulture)}px";
+    }
+
+    private static string? BorderWidthValue(DashboardWidgetSnapshot widget)
+    {
+        if (string.Equals(widget.ReadString("style.borderMode"), "none", StringComparison.OrdinalIgnoreCase))
+        {
+            return "0px";
+        }
+
+        return PixelValue(widget.ReadString("style.borderWidth"));
+    }
+
+    private static string? TitleColor(DashboardWidgetSnapshot widget)
+        => widget.ReadString(DashboardWidgetCatalog.KpiTitleColorKey) ??
+           widget.ReadString("style.titleColor") ??
+           widget.ReadString("style.text");
+
+    private static string? SubtitleColor(DashboardWidgetSnapshot widget)
+        => widget.ReadString(DashboardWidgetCatalog.KpiSubtitleColorKey) ??
+           widget.ReadString("style.subtitleColor") ??
+           widget.ReadString("style.mutedText");
+
+    private static string? ValueColor(DashboardWidgetSnapshot widget)
+        => widget.ReadString(DashboardWidgetCatalog.KpiValueColorKey) ??
+           widget.ReadString("style.valueColor") ??
+           widget.ReadString("style.text");
+
+    private static string? BodyTextColor(DashboardWidgetSnapshot widget)
+        => widget.ReadString(DashboardWidgetCatalog.KpiValueColorKey) ??
+           widget.ReadString(DashboardWidgetCatalog.KpiTitleColorKey) ??
+           widget.ReadString("style.valueColor") ??
+           widget.ReadString("style.titleColor") ??
+           widget.ReadString("style.text");
+
+    private static void AddKpiCssVariables(List<string> parts, DashboardWidgetSnapshot widget)
+    {
+        if (!string.Equals(widget.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        AddCssVariable(
+            parts,
+            "--dashboard-kpi-title-align",
+            DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(widget.ReadString(DashboardWidgetCatalog.KpiTitleAlignKey)),
+            IsKpiHorizontalAlignment);
+        AddCssVariable(
+            parts,
+            "--dashboard-kpi-title-items",
+            KpiHorizontalAlignmentCss(widget.ReadString(DashboardWidgetCatalog.KpiTitleAlignKey)),
+            IsKpiItemAlignment);
+        AddCssVariable(
+            parts,
+            "--dashboard-kpi-value-align",
+            DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(widget.ReadString(DashboardWidgetCatalog.KpiValueAlignKey)),
+            IsKpiHorizontalAlignment);
+        AddCssVariable(
+            parts,
+            "--dashboard-kpi-value-items",
+            KpiHorizontalAlignmentCss(widget.ReadString(DashboardWidgetCatalog.KpiValueAlignKey)),
+            IsKpiItemAlignment);
+        AddCssVariable(
+            parts,
+            "--dashboard-kpi-value-placement",
+            KpiValuePlacementCss(widget.ReadString(DashboardWidgetCatalog.KpiValuePlacementKey)),
+            IsKpiPlacement);
+    }
+
+    private static string KpiHorizontalAlignmentCss(string? value)
+        => DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(value) switch
+        {
+            DashboardWidgetCatalog.KpiAlignCenter => "center",
+            DashboardWidgetCatalog.KpiAlignRight => "flex-end",
+            _ => "flex-start"
+        };
+
+    private static string KpiValuePlacementCss(string? value)
+        => DashboardWidgetCatalog.NormalizeKpiValuePlacement(value) switch
+        {
+            DashboardWidgetCatalog.KpiValuePlacementMiddle => "center",
+            DashboardWidgetCatalog.KpiValuePlacementBottom => "flex-end",
+            _ => "flex-start"
+        };
+
+    private static bool IsKpiHorizontalAlignment(string value)
+        => value is DashboardWidgetCatalog.KpiAlignLeft or
+            DashboardWidgetCatalog.KpiAlignCenter or
+            DashboardWidgetCatalog.KpiAlignRight;
+
+    private static bool IsKpiItemAlignment(string value)
+        => value is "flex-start" or "center" or "flex-end";
+
+    private static bool IsKpiPlacement(string value)
+        => value is "flex-start" or "center" or "flex-end";
+
+    private static bool IsSafeCssToken(string value)
+        => value.Length <= 64 &&
+           !value.Contains(';', StringComparison.Ordinal) &&
+           !value.Contains("url", StringComparison.OrdinalIgnoreCase) &&
+           !value.Contains("expression", StringComparison.OrdinalIgnoreCase);
+
+    private static string ExtractTrailingDigits(string value, out string stem)
+    {
+        var index = value.Length;
+        while (index > 0 && char.IsDigit(value[index - 1]))
+        {
+            index--;
+        }
+
+        stem = value[..index];
+        return index == value.Length ? string.Empty : value[index..];
+    }
+
+    private static string ToReadableIdentifier(string value)
+    {
+        var builder = new StringBuilder(value.Length + 8);
+        for (var index = 0; index < value.Length; index++)
+        {
+            var character = value[index];
+            if (index > 0 &&
+                char.IsUpper(character) &&
+                (char.IsLower(value[index - 1]) ||
+                 char.IsDigit(value[index - 1]) ||
+                 (index + 1 < value.Length && char.IsLower(value[index + 1]))))
+            {
+                builder.Append(' ');
+            }
+
+            builder.Append(character);
+        }
+
+        var words = builder
+            .ToString()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(CapitalizeWord);
+        return string.Join(" ", words);
+    }
+
+    private static string CapitalizeWord(string word)
+        => word.ToLowerInvariant() switch
+        {
+            "mqtt" => "MQTT",
+            "qos" => "QoS",
+            "json" => "JSON",
+            _ => word.Length == 1
+                ? char.ToUpperInvariant(word[0]).ToString()
+                : char.ToUpperInvariant(word[0]) + word[1..]
+        };
 }
 
 public sealed record DashboardMetricDisplayCard(string Icon, string Value, string Label, string CssClass);

@@ -5,19 +5,8 @@
     var gaugeStyle = DashboardWidgetCatalog.NormalizeGaugeStyle(Widget.ReadString(DashboardWidgetCatalog.GaugeStyleKey));
 }
 
-<div class="dashboard-observability-layout">
-    <div class="dashboard-observability-grid" style="@DashboardWidgetFormatting.MetricGridStyle(Widget)">
-        @foreach (var card in DashboardWidgetFormatting.MetricCards(Widget, Snapshot))
-        {
-            <DashboardMetricTile Card="@card" />
-        }
-    </div>
-
-    @if (gaugeStyle == DashboardWidgetCatalog.GaugeStyleTiles)
-    {
-        <DashboardTopicBars Snapshot="@Snapshot" Limit="4" />
-    }
-    else if (gaugeStyle == DashboardWidgetCatalog.GaugeStyleMeter)
+<div class="dashboard-single-gauge-layout">
+    @if (gaugeStyle == DashboardWidgetCatalog.GaugeStyleMeter)
     {
         <div class="dashboard-gauge-meter-panel">
             <div class="dashboard-gauge-meter-header">
@@ -41,11 +30,6 @@
                     <strong>@primary.Value</strong>
                     <span>@primary.Label</span>
                 </div>
-            </div>
-            <div class="dashboard-widget-gauge-meta">
-                <strong>@DashboardWidgetFormatting.FormatNumber(Snapshot.Count) total</strong>
-                <span>@DashboardWidgetFormatting.FormatRate(Snapshot.EventsPerSecond)</span>
-                <span>@DashboardWidgetFormatting.FormatBytes(Snapshot.TotalPayloadBytes) payload</span>
             </div>
         </div>
     }

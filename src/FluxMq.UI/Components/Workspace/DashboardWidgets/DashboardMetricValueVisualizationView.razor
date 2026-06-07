@@ -1,0 +1,22 @@
+@namespace FluxMq.UI.Components.Workspace
+
+@{
+    var metric = Context.MetricValue;
+    var showUnit = !string.IsNullOrWhiteSpace(metric.Unit) &&
+        !string.Equals(metric.Unit, "bytes", StringComparison.Ordinal);
+}
+
+<div class="dashboard-metric-value-layout">
+    <div class="dashboard-metric-value-block">
+        <div class="dashboard-widget-value">@metric.FormattedValue</div>
+        @if (showUnit)
+        {
+            <div class="dashboard-metric-value-unit">@metric.Unit</div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardWidgetRenderContext Context { get; set; } = null!;
+}

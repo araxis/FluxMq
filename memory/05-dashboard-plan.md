@@ -78,6 +78,44 @@ This keeps everything in one application JSON file, consistent with the existing
 
 ---
 
+## Metric Builder Direction
+
+The visual metric builder is the standard-mode facade, not the final metric capability boundary. The dashboard metric model should be treated as a context-aware metric function contract: given the active app/runtime context, event projections, topic state, payload summaries, and saved resources, it produces a typed metric value or series for widgets.
+
+Design implications:
+
+- Keep the current sentence-style visual builder simple, readable, and safe for common users.
+- Keep persisted metric definitions neutral and structured so they can later be produced by either the visual builder or an advanced expression-backed editor.
+- Do not bake KPI-specific UI assumptions into the metric engine; KPI is only the first consumer.
+- Preserve an upgrade path for an advanced mode where experienced users can define metric logic with code-like expressions over an explicit app context.
+- Validate advanced metrics before execution, show preview output against sample/live context, and keep failures isolated to the metric result instead of breaking the dashboard.
+- Make the visual builder a generator/editor for structured metric definitions, not a separate metric system.
+
+This matters now because the query-builder UI should expose intent as `Measure + Source + Window + Match + Format`, while the underlying model stays capable of representing richer metric functions later.
+
+### 2026-06-07 - Event Counter Metric Builder Slice
+
+- Reused the approved metric query builder for `event.counter` as the second focused dashboard consumer after KPI.
+- Kept `event.counter` count-only by passing an allowed-measure list into the builder and normalizing old/non-count drafts back to `count`.
+- Moved event counter event/status/topic matching into the reusable metric definition path; new saves keep the widget config focused on display/style plus metric binding.
+- Updated dashboard inspector wording so KPI and event counter open widget-specific query dialogs while sharing the same metric framework.
+- Added focused tests for event counter default config, composer-created metric bindings, property-grid builder dispatch, and legacy widget-filter cleanup.
+- Follow-up: aligned the event counter editor-cell view with the popup preview by rendering from the metric value path, removed the old sparkline/counter delegate from the module, and compacted the metric-query inspector row into a single-line value/summary/action layout.
+- NuGet/source-reference follow-up: source-reference test mode now swaps FluxMQ Core, Scenarios, Components, App, and UI FluxFlow dependencies to project references consistently, preventing mixed package/source assembly conflicts after FluxFlow package upgrades while keeping package-only fallback intact.
+
+### 2026-06-07 - Metric Visualization Foundation Slice
+
+- Added a UI-only metric visualization foundation so dashboard metric definitions, metric visualizations, and cell styles remain separate concerns.
+- Introduced `metric.value` as the first visualization module; KPI, event counter, event rate, and rate tile use the shared value view instead of duplicating number rendering.
+- Converted `event.rate` into a rate-only metric-builder consumer; the widget config stays focused on display/style plus metric binding, and the metric query owns source/window/match/format.
+- Removed the old event-rate progress-track dependency from `event.rate` and `rate.tile`; linear meters remain a future focused visualization rather than hidden behavior inside rate widgets.
+- Updated KPI as the reference consumer for the visualization layer: KPI display settings now include a catalog-backed `Visualization` row and persist `visualization = metric.value` through defaults, reset, save, and reopen.
+- Next step after UI review: verify the KPI `Visualization` row feels right in the property grid, then reuse the same pattern for the next focused metric widget before adding `metric.digital` or `metric.arcMeter`.
+- Visualization-specific property rows must be driven by the selected `DashboardMetricVisualizationModule`, not hard-coded in the widget inspector. `metric.value` currently owns the value visual settings for title/subtitle/value colors and title/value alignment/placement.
+- Next approved implementation step after KPI visual QA: add one second visualization module, likely `metric.digital` or `metric.arcMeter`, and prove the property grid swaps to that module's property set without changing KPI metric-query or cell-style behavior.
+
+---
+
 ## Phase 3: Dashboard Runtime
 
 Location: `src/FluxMq.Pipeline/Runtime/DashboardRuntime.cs` or a projection-oriented runtime package after the source-agnostic refactor.

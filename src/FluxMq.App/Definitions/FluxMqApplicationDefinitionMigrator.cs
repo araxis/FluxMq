@@ -6,6 +6,21 @@ public static class FluxMqApplicationDefinitionMigrator
 {
     public const int CurrentDashboardVersion = 2;
     public const int CurrentTestVersion = 2;
+    private const string StatusStripType = "status.strip";
+    private const string StatusValueType = "status.value";
+    private const string EventGaugeType = "event.gauge";
+    private const string EventChartType = "event.chart";
+    private const string LineChartType = "chart.line";
+    private const string AreaChartType = "chart.area";
+    private const string BarChartType = "chart.bar";
+    private const string KpiTileType = "kpi.tile";
+    private const string QosRetainBreakdownType = "qos.retain.breakdown";
+    private const string QosBreakdownType = "qos.breakdown";
+    private const string RetainBreakdownType = "retain.breakdown";
+    private const string PrimaryMetricKey = "primaryMetric";
+    private const string DisplayMetricsKey = "displayMetrics";
+    private const string MetricCardColumnsKey = "metricCardColumns";
+    private const string ChartTypeKey = "chartType";
 
     private static readonly IReadOnlyList<(string Name, string Title, string Kind, int Order)> DefaultPhases =
     [
@@ -69,6 +84,7 @@ public static class FluxMqApplicationDefinitionMigrator
             var layout = GetOrCreateObject(dashboardObject, "layout");
             EnsureDashboardResponsiveDefinition(dashboardObject, layout);
             EnsureDashboardView(dashboardObject);
+            HardSplitDashboardWidgets(dashboardObject, layout);
 
             var metrics = GetOrCreateObject(dashboardObject, "metrics");
             var bindings = GetOrCreateObject(dashboardObject, "bindings");
@@ -136,6 +152,193 @@ public static class FluxMqApplicationDefinitionMigrator
         }
     }
 
+    private static void HardSplitDashboardWidgets(JsonObject dashboard, JsonObject layout)
+    {
+        if (dashboard["widgets"] is not JsonObject widgets)
+        {
+            return;
+        }
+
+        foreach (var item in widgets.ToArray())
+        {
+            if (item.Value is not JsonObject widget)
+            {
+                continue;
+            }
+
+            var type = ReadString(widget, "type") ?? string.Empty;
+            var configuration = GetOrCreateObject(widget, "configuration");
+            switch (type)
+            {
+                case StatusStripType:
+                    SplitMetricStrip(widgets, layout, item.Key, widget, configuration, StatusValueType, "Status value");
+                    break;
+                case EventGaugeType:
+                    SplitGaugeMetricCards(widgets, layout, item.Key, configuration);
+                    RemoveCompositeMetricKeys(configuration);
+                    break;
+                case EventChartType:
+                    widget["type"] = ChartTypeFromConfiguration(configuration);
+                    RemoveCompositeMetricKeys(configuration);
+                    break;
+                case QosRetainBreakdownType:
+                    widget["type"] = QosBreakdownType;
+                    configuration["title"] = "QoS breakdown";
+                    AddSplitWidget(widgets, layout, item.Key, RetainBreakdownType, "Retain breakdown", configuration);
+                    RemoveCompositeMetricKeys(configuration);
+                    break;
+            }
+        }
+    }
+
+    private static void SplitMetricStrip(
+        JsonObject widgets,
+        JsonObject layout,
+        string widgetName,
+        JsonObject widget,
+        JsonObject configuration,
+        string focusedType,
+        string focusedTitle)
+    {
+        var primaryMetric = ReadString(configuration, PrimaryMetricKey) ?? "recent";
+        var metrics = ReadCsv(configuration, DisplayMetricsKey);
+        widget["type"] = focusedType;
+        configuration["title"] = focusedTitle;
+        configuration[PrimaryMetricKey] = primaryMetric;
+        RemoveCompositeMetricKeys(configuration);
+
+        foreach (var metric in metrics.Where(metric => !string.Equals(metric, primaryMetric, StringComparison.Ordinal)))
+        {
+            AddSplitWidget(widgets, layout, widgetName, focusedType, MetricTitle(metric), configuration, metric);
+        }
+    }
+
+    private static void SplitGaugeMetricCards(
+        JsonObject widgets,
+        JsonObject layout,
+        string widgetName,
+        JsonObject configuration)
+    {
+        var primaryMetric = ReadString(configuration, PrimaryMetricKey) ?? "recent";
+        foreach (var metric in ReadCsv(configuration, DisplayMetricsKey)
+                     .Where(metric => !string.Equals(metric, primaryMetric, StringComparison.Ordinal)))
+        {
+            AddSplitWidget(widgets, layout, widgetName, KpiTileType, MetricTitle(metric), configuration, metric);
+        }
+    }
+
+    private static void AddSplitWidget(
+        JsonObject widgets,
+        JsonObject layout,
+        string sourceWidgetName,
+        string type,
+        string title,
+        JsonObject sourceConfiguration,
+        string? primaryMetric = null)
+    {
+        var widgetName = MakeUniqueName(widgets, NormalizeIdentifier(type));
+        var configuration = CloneObject(sourceConfiguration);
+        configuration["title"] = title;
+        if (!string.IsNullOrWhiteSpace(primaryMetric))
+        {
+            configuration[PrimaryMetricKey] = primaryMetric;
+        }
+
+        RemoveCompositeMetricKeys(configuration);
+        widgets[widgetName] = new JsonObject
+        {
+            ["type"] = type,
+            ["configuration"] = configuration
+        };
+
+        AppendWidgetCell(layout, sourceWidgetName, widgetName);
+    }
+
+    private static void AppendWidgetCell(JsonObject layout, string sourceWidgetName, string widgetName)
+    {
+        var rows = GetOrCreateArray(layout, "rows");
+        var columns = GetOrCreateArray(layout, "columns");
+        if (columns.Count == 0)
+        {
+            columns.Add("*");
+        }
+
+        var cells = GetOrCreateObject(layout, "cells");
+        var sourceCell = cells.FirstOrDefault(cell =>
+            cell.Value is JsonObject cellObject &&
+            string.Equals(ReadString(cellObject, "widget"), sourceWidgetName, StringComparison.Ordinal));
+        var row = sourceCell.Value is JsonObject sourceObject
+            ? ReadInt(sourceObject, "row", rows.Count)
+            : rows.Count;
+        var column = FindOpenColumn(cells, row, columns.Count);
+        if (column < 0)
+        {
+            row = rows.Count;
+            rows.Add("*");
+            column = 0;
+        }
+
+        var cellName = MakeUniqueName(cells, "cell");
+        cells[cellName] = new JsonObject
+        {
+            ["row"] = row,
+            ["column"] = column,
+            ["rowSpan"] = 1,
+            ["columnSpan"] = 1,
+            ["widget"] = widgetName
+        };
+    }
+
+    private static int FindOpenColumn(JsonObject cells, int row, int columnCount)
+    {
+        for (var column = 0; column < columnCount; column++)
+        {
+            var occupied = cells.Any(cell =>
+                cell.Value is JsonObject cellObject &&
+                ReadInt(cellObject, "row", -1) == row &&
+                ReadInt(cellObject, "column", -1) == column);
+            if (!occupied)
+            {
+                return column;
+            }
+        }
+
+        return -1;
+    }
+
+    private static string ChartTypeFromConfiguration(JsonObject configuration)
+        => ReadString(configuration, ChartTypeKey) switch
+        {
+            "line" => LineChartType,
+            "area" => AreaChartType,
+            _ => BarChartType
+        };
+
+    private static void RemoveCompositeMetricKeys(JsonObject configuration)
+    {
+        configuration.Remove(DisplayMetricsKey);
+        configuration.Remove(MetricCardColumnsKey);
+    }
+
+    private static IReadOnlyList<string> ReadCsv(JsonObject obj, string propertyName)
+        => (ReadString(obj, propertyName) ?? string.Empty)
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+    private static string MetricTitle(string metric)
+        => metric switch
+        {
+            "messages" => "Messages",
+            "recent" => "Recent events",
+            "currentRate" => "Event rate",
+            "topics" => "Topics",
+            "payloadBytes" => "Payload bytes",
+            "retained" => "Retained messages",
+            "averagePayload" => "Average payload",
+            _ => metric
+        };
+
     private static void EnsureDashboardWidgetBinding(
         string widgetName,
         JsonObject widget,
@@ -146,13 +349,25 @@ public static class FluxMqApplicationDefinitionMigrator
         var metricName = ReadString(configuration, "metric");
         if (string.IsNullOrWhiteSpace(metricName))
         {
-            metricName = MakeUniqueName(metrics, $"{NormalizeIdentifier(widgetName)}Metric");
+            metricName = MakeUniqueName(metrics, MetricNamePrefix(widgetName));
             configuration["metric"] = metricName;
         }
 
         if (!metrics.ContainsKey(metricName))
         {
             metrics[metricName] = CreateMetricFromWidget(widget, configuration);
+        }
+
+        if (string.Equals(ReadString(widget, "type"), KpiTileType, StringComparison.Ordinal))
+        {
+            var legacyMetric = ReadString(configuration, PrimaryMetricKey);
+            if (!string.IsNullOrWhiteSpace(legacyMetric) &&
+                string.Equals(ReadString(configuration, "title"), "KPI tile", StringComparison.OrdinalIgnoreCase))
+            {
+                configuration["title"] = MetricTitle(legacyMetric);
+            }
+
+            configuration.Remove(PrimaryMetricKey);
         }
 
         if (bindings[widgetName] is not JsonObject binding)
@@ -203,9 +418,7 @@ public static class FluxMqApplicationDefinitionMigrator
         }
 
         var type = ReadString(widget, "type") ?? string.Empty;
-        var aggregation = type.Contains("rate", StringComparison.OrdinalIgnoreCase)
-            ? "rate"
-            : "count";
+        var aggregation = MetricAggregationFromWidget(type, configuration);
         var groupBy = type.Contains("topic", StringComparison.OrdinalIgnoreCase)
             ? "topic"
             : null;
@@ -220,7 +433,7 @@ public static class FluxMqApplicationDefinitionMigrator
             ["filters"] = filters,
             ["format"] = new JsonObject
             {
-                ["unit"] = aggregation == "rate" ? "/s" : "events"
+                ["unit"] = MetricFormatFromAggregation(aggregation)
             }
         };
 
@@ -231,6 +444,31 @@ public static class FluxMqApplicationDefinitionMigrator
 
         return metric;
     }
+
+    private static string MetricAggregationFromWidget(string type, JsonObject configuration)
+    {
+        if (string.Equals(type, KpiTileType, StringComparison.Ordinal))
+        {
+            return ReadString(configuration, PrimaryMetricKey) switch
+            {
+                "currentRate" => "rate",
+                "topics" => "topics",
+                "payloadBytes" => "payloadBytes",
+                "averagePayload" => "averagePayload",
+                "retained" => "retained",
+                _ => "count"
+            };
+        }
+
+        return type.Contains("rate", StringComparison.OrdinalIgnoreCase)
+            ? "rate"
+            : "count";
+    }
+
+    private static string MetricFormatFromAggregation(string aggregation)
+        => aggregation is "payloadBytes" or "averagePayload"
+            ? "bytes"
+            : "number";
 
     private static void MigrateTests(JsonObject flowApplication)
     {
@@ -395,12 +633,30 @@ public static class FluxMqApplicationDefinitionMigrator
         return created;
     }
 
+    private static JsonArray GetOrCreateArray(JsonObject parent, string propertyName)
+    {
+        if (parent[propertyName] is JsonArray existing)
+        {
+            return existing;
+        }
+
+        var created = new JsonArray();
+        parent[propertyName] = created;
+        return created;
+    }
+
     private static string? ReadString(JsonObject obj, string propertyName)
         => obj[propertyName] is JsonValue value &&
            value.TryGetValue<string>(out var text) &&
            !string.IsNullOrWhiteSpace(text)
             ? text
             : null;
+
+    private static int ReadInt(JsonObject obj, string propertyName, int fallback)
+        => obj[propertyName] is JsonValue value &&
+           value.TryGetValue<int>(out var number)
+            ? number
+            : fallback;
 
     private static int ReadArrayCount(JsonObject obj, string propertyName, int fallback)
         => obj[propertyName] is JsonArray array && array.Count > 0
@@ -435,6 +691,23 @@ public static class FluxMqApplicationDefinitionMigrator
         }
 
         return char.ToLowerInvariant(result[0]) + result[1..];
+    }
+
+    private static string MetricNamePrefix(string widgetName)
+    {
+        var identifier = NormalizeIdentifier(widgetName);
+        var suffixStart = identifier.Length;
+        while (suffixStart > 0 && char.IsDigit(identifier[suffixStart - 1]))
+        {
+            suffixStart--;
+        }
+
+        if (suffixStart == identifier.Length)
+        {
+            return $"{identifier}Metric";
+        }
+
+        return $"{identifier[..suffixStart]}Metric{identifier[suffixStart..]}";
     }
 
     private static string ToTitle(string value)

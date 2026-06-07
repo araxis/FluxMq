@@ -1,0 +1,59 @@
+@namespace FluxMq.UI.Components.Workspace
+@using MudBlazor
+
+<div class="property-grid-icon-segment" role="group" aria-label="@ResolvedAriaLabel">
+    @foreach (var option in Options)
+    {
+        <button type="button"
+                class="@OptionClass(option)"
+                title="@option.Label"
+                aria-label="@option.Label"
+                aria-pressed="@IsSelected(option)"
+                disabled="@option.Disabled"
+                @onclick="@(() => SelectOptionAsync(option))">
+            <MudIcon Icon="@option.Icon" Size="Size.Small" />
+            <span class="property-grid-icon-segment-label">@option.Label</span>
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<PropertyGridIconSegmentOption> Options { get; set; } = [];
+
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> ValueChanged { get; set; }
+
+    [Parameter]
+    public string? AriaLabel { get; set; }
+
+    private string ResolvedAriaLabel => string.IsNullOrWhiteSpace(AriaLabel)
+        ? "Choose option"
+        : AriaLabel;
+
+    private async Task SelectOptionAsync(PropertyGridIconSegmentOption option)
+    {
+        if (option.Disabled)
+        {
+            return;
+        }
+
+        if (!string.Equals(Value ?? string.Empty, option.Value, StringComparison.Ordinal))
+        {
+            await ValueChanged.InvokeAsync(option.Value);
+        }
+    }
+
+    private bool IsSelected(PropertyGridIconSegmentOption option)
+        => string.Equals(Value ?? string.Empty, option.Value, StringComparison.Ordinal);
+
+    private string OptionClass(PropertyGridIconSegmentOption option)
+    {
+        var selected = IsSelected(option) ? " selected" : string.Empty;
+        var disabled = option.Disabled ? " disabled" : string.Empty;
+        return $"property-grid-icon-segment-button{selected}{disabled}";
+    }
+}

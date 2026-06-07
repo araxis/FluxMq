@@ -1,4 +1,3 @@
-using FluxMq.Components.Control;
 using FluxMq.Components.Logging;
 using FluxFlow.Components.Assertions.Contracts;
 using FluxFlow.Components.Assertions.Options;
@@ -79,10 +78,6 @@ public sealed class FlowAssertionComponent<TInput> : IFlowNode, IFlowEventSource
 
     private void PublishEntry(FlowAssertionResult result)
     {
-        var value = result.Value is TInput typed ? typed : default;
-        var (topic, payloadBytes) = value is null
-            ? (null, null)
-            : FlowControlLogShape.Shape(value);
         _entries.Post(new FlowLogEntry
         {
             Timestamp = result.EvaluatedAt,
@@ -91,19 +86,12 @@ public sealed class FlowAssertionComponent<TInput> : IFlowNode, IFlowEventSource
             Message = result.Passed
                 ? $"Assertion passed: {result.AssertionName}."
                 : $"Assertion failed: {result.AssertionName}.",
-            RelatedNodeId = Id,
-            Topic = topic,
-            PayloadBytes = payloadBytes,
-            Context = $"passed={result.Passed}; inputType={result.InputType}; expression={result.Expression}"
+            RelatedNodeId = Id
         });
     }
 
     private void PublishEvent(FlowAssertionResult result)
     {
-        var value = result.Value is TInput typed ? typed : default;
-        var (topic, payloadBytes) = value is null
-            ? (null, null)
-            : FlowControlLogShape.Shape(value);
         _events.Post(new FlowEvent
         {
             Timestamp = result.EvaluatedAt,
@@ -111,15 +99,7 @@ public sealed class FlowAssertionComponent<TInput> : IFlowNode, IFlowEventSource
             Source = "FlowAssertion",
             SourceNodeId = Id,
             Subject = result.AssertionName,
-            Status = result.Passed ? "passed" : "failed",
-            Channel = topic,
-            PayloadBytes = payloadBytes,
-            Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["assertionName"] = result.AssertionName,
-                ["inputType"] = result.InputType,
-                ["passed"] = result.Passed.ToString()
-            }
+            Status = result.Passed ? "passed" : "failed"
         });
     }
 

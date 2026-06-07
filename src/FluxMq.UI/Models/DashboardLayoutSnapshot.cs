@@ -6,9 +6,17 @@ public sealed record DashboardLayoutSnapshot(
     IReadOnlyList<double> ColumnPadding,
     IReadOnlyList<double> RowPadding,
     IReadOnlyList<DashboardCellSnapshot> Cells,
-    IReadOnlyDictionary<string, DashboardWidgetSnapshot> Widgets)
+    IReadOnlyDictionary<string, DashboardWidgetSnapshot> Widgets,
+    IReadOnlyDictionary<string, DashboardMetricSnapshot>? Metrics = null,
+    IReadOnlyDictionary<string, DashboardWidgetBindingSnapshot>? Bindings = null)
 {
     public int WidgetCount => Widgets.Count;
+
+    public IReadOnlyDictionary<string, DashboardMetricSnapshot> Metrics { get; init; } =
+        Metrics ?? new Dictionary<string, DashboardMetricSnapshot>(StringComparer.Ordinal);
+
+    public IReadOnlyDictionary<string, DashboardWidgetBindingSnapshot> Bindings { get; init; } =
+        Bindings ?? new Dictionary<string, DashboardWidgetBindingSnapshot>(StringComparer.Ordinal);
 }
 
 public sealed record DashboardWidgetSnapshot(
@@ -22,6 +30,38 @@ public sealed record DashboardWidgetSnapshot(
             : null;
 }
 
+public sealed record DashboardMetricSnapshot(
+    string Name,
+    string Source,
+    string Aggregation,
+    string Window,
+    string? GroupBy,
+    IReadOnlyDictionary<string, string> Filters,
+    IReadOnlyDictionary<string, string> Format)
+{
+    public string? ReadFilter(string key)
+        => Filters.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value)
+            ? value
+            : null;
+
+    public string? ReadFormat(string key)
+        => Format.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value)
+            ? value
+            : null;
+}
+
+public sealed record DashboardWidgetBindingSnapshot(
+    string WidgetName,
+    string? PrimaryMetric,
+    IReadOnlyList<string> Metrics,
+    IReadOnlyDictionary<string, string> Options)
+{
+    public bool UsesMetric(string metricName)
+        => !string.IsNullOrWhiteSpace(metricName) &&
+           (string.Equals(PrimaryMetric, metricName, StringComparison.Ordinal) ||
+            Metrics.Contains(metricName, StringComparer.Ordinal));
+}
+
 public sealed record DashboardCellSnapshot(
     string Name,
     int Row,
@@ -29,8 +69,12 @@ public sealed record DashboardCellSnapshot(
     int RowSpan,
     int ColumnSpan,
     string? Widget = null,
-    bool IsExplicit = true)
+    bool IsExplicit = true,
+    IReadOnlyDictionary<string, string>? Style = null)
 {
+    public IReadOnlyDictionary<string, string> Style { get; init; } =
+        Style ?? new Dictionary<string, string>(StringComparer.Ordinal);
+
     public bool IsMerged => RowSpan > 1 || ColumnSpan > 1;
 
     public string Label => IsMerged

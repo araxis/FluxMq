@@ -1,0 +1,8 @@
+@namespace FluxMq.UI.Components.Workspace
+
+<DashboardEventGaugeWidget Widget="@Context.Widget" Snapshot="@Context.Snapshot" />
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardWidgetRenderContext Context { get; set; } = null!;
+}

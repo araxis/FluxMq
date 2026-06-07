@@ -1,7 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(UseFluxFlowSourceReferences)' != 'true'">
     <PackageReference Include="FluxFlow.Engine" Version="$(FluxFlowEngineVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UseFluxFlowSourceReferences)' == 'true'">
+    <ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Engine\FluxFlow.Engine.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

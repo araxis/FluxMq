@@ -1,0 +1,130 @@
+.dashboard-query-preview-frame {
+    background: color-mix(in srgb, var(--flux-surface-2, #161b24) 78%, var(--flux-surface, #11151c));
+    border: 1px solid var(--flux-border-strong, #2a313d);
+    border-radius: 7px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    padding: 8px;
+}
+
+.dashboard-query-preview-frame-header {
+    align-items: center;
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border, #1d232e) 82%, transparent);
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    min-width: 0;
+    padding-bottom: 7px;
+}
+
+.dashboard-query-preview-frame-header > div:first-child {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.dashboard-query-preview-frame-header span:first-child {
+    color: var(--mud-palette-text-primary, #f3f7fb);
+    font-size: 12px;
+    font-weight: 850;
+    line-height: 1.15;
+}
+
+.dashboard-query-preview-frame-header small {
+    color: var(--mud-palette-text-secondary, #9fb0c5);
+    font-size: 10.5px;
+    line-height: 1.2;
+}
+
+.dashboard-query-preview-frame-actions {
+    align-items: center;
+    display: flex;
+    flex: 0 0 auto;
+    gap: 6px;
+}
+
+.dashboard-query-preview-frame-badge {
+    border-radius: 6px;
+    flex: 0 0 auto;
+    font-size: 10px;
+    font-weight: 850;
+    line-height: 1;
+    padding: 4px 8px;
+    text-transform: uppercase;
+}
+
+.dashboard-query-preview-frame-badge.live {
+    background: color-mix(in srgb, var(--mud-palette-success, #22c55e) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-success, #22c55e) 48%, var(--flux-border, #1d232e));
+    color: var(--mud-palette-success, #22c55e);
+}
+
+.dashboard-query-preview-frame-badge.sample {
+    background: color-mix(in srgb, var(--mud-palette-primary, #2dd4bf) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-primary, #2dd4bf) 52%, var(--flux-border, #1d232e));
+    color: var(--mud-palette-primary, #2dd4bf);
+}
+
+.dashboard-query-preview-frame-refresh {
+    align-items: center;
+    appearance: none;
+    background: color-mix(in srgb, var(--mud-palette-primary, #2dd4bf) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-primary, #2dd4bf) 46%, var(--flux-border, #1d232e));
+    border-radius: 5px;
+    color: var(--mud-palette-primary, #2dd4bf);
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    font-size: 10.5px;
+    font-weight: 820;
+    gap: 5px;
+    min-height: 26px;
+    padding: 0 8px;
+}
+
+.dashboard-query-preview-frame-refresh:hover {
+    background: color-mix(in srgb, var(--mud-palette-primary, #2dd4bf) 18%, transparent);
+}
+
+.dashboard-query-preview-frame-refresh ::deep .mud-icon-root {
+    font-size: 15px;
+}
+
+.dashboard-query-preview-frame-widget {
+    background:
+        linear-gradient(color-mix(in srgb, var(--flux-border-soft, #161b24) 62%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, var(--flux-border-soft, #161b24) 62%, transparent) 1px, transparent 1px),
+        color-mix(in srgb, var(--flux-canvas, #0c1016) 78%, var(--flux-surface, #11151c));
+    background-size: 28px 28px;
+    border: 1px dashed color-mix(in srgb, var(--mud-palette-primary, #2dd4bf) 36%, var(--flux-border-strong, #2a313d));
+    border-radius: 6px;
+    min-height: 206px;
+    min-width: 0;
+    padding: 9px;
+}
+
+.dashboard-query-preview-frame-widget ::deep .dashboard-widget {
+    min-height: 188px;
+}
+
+.dashboard-query-preview-frame-result {
+    background: color-mix(in srgb, var(--mud-palette-text-primary, #f3f7fb) 4%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border, #1d232e) 80%, transparent);
+    border-radius: 6px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+@media (max-width: 760px) {
+    .dashboard-query-preview-frame-header,
+    .dashboard-query-preview-frame-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .dashboard-query-preview-frame-actions {
+        align-items: flex-start;
+    }
+}

@@ -1,3 +1,4 @@
+using FluxMq.App.Metrics;
 using FluxMq.Core.Models;
 using FluxMq.Components.Storage.Repositories;
 
@@ -10,6 +11,7 @@ public sealed class ProjectManagerService : IAsyncDisposable
     private readonly IScenarioRunHistoryRepository? _scenarioRunHistory;
     private readonly LiveMqttWorkspaceService? _live;
     private readonly DashboardEventFilterCatalog _eventFilters;
+    private readonly DashboardRuntimeMetrics? _runtimeMetrics;
     private readonly List<FlowWorkspaceService> _projects = [];
 
     public ProjectManagerService(
@@ -17,13 +19,15 @@ public sealed class ProjectManagerService : IAsyncDisposable
         IMessageRepository? messageRepository = null,
         IScenarioRunHistoryRepository? scenarioRunHistory = null,
         LiveMqttWorkspaceService? live = null,
-        DashboardEventFilterCatalog? eventFilters = null)
+        DashboardEventFilterCatalog? eventFilters = null,
+        DashboardRuntimeMetrics? runtimeMetrics = null)
     {
         _composer = composer;
         _messageRepository = messageRepository;
         _scenarioRunHistory = scenarioRunHistory;
         _live = live;
         _eventFilters = eventFilters ?? DashboardEventFilterCatalog.Shared;
+        _runtimeMetrics = runtimeMetrics;
     }
 
     public IReadOnlyList<FlowWorkspaceService> Projects => _projects;
@@ -109,7 +113,12 @@ public sealed class ProjectManagerService : IAsyncDisposable
     }
 
     private FlowWorkspaceService CreateProject()
-        => new(_composer, _messageRepository, scenarioRunHistory: _scenarioRunHistory, dashboardEventFilters: _eventFilters);
+        => new(
+            _composer,
+            _messageRepository,
+            scenarioRunHistory: _scenarioRunHistory,
+            dashboardEventFilters: _eventFilters,
+            runtimeMetrics: _runtimeMetrics);
 
     private async Task RemoveClosedProjectConnectionsAsync(
         IReadOnlyList<(string ResourceName, MqttConnectionProfile Profile)> closedConnections)
