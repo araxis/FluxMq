@@ -25,43 +25,9 @@ public sealed class DashboardWidgetSettingsDraft
         EventType = widget.ReadString(DashboardEventFilterCatalog.EventTypeKey) ?? AnyValue;
         Status = widget.ReadString(DashboardEventFilterCatalog.StatusKey) ?? AnyValue;
         MetricName = widget.ReadString("metric") ?? string.Empty;
-        MetricVisualizationId = DashboardWidgetCatalog.NormalizeMetricVisualization(
-            widget.ReadString(DashboardWidgetCatalog.MetricVisualizationKey));
+        MetricVisualization = DashboardMetricVisualizationSettingsDraft.Create(widget);
         PrimaryMetric = DashboardWidgetCatalog.NormalizePrimaryMetric(
             widget.ReadString(DashboardWidgetCatalog.PrimaryMetricKey));
-        TitleColor = NormalizeColor(
-            widget.ReadString(DashboardWidgetCatalog.KpiTitleColorKey) ?? widget.ReadString("style.titleColor"),
-            DashboardWidgetCatalog.KpiDefaultTitleColor);
-        SubtitleColor = NormalizeColor(
-            widget.ReadString(DashboardWidgetCatalog.KpiSubtitleColorKey) ?? widget.ReadString("style.subtitleColor"),
-            DashboardWidgetCatalog.KpiDefaultSubtitleColor);
-        ValueColor = NormalizeColor(
-            widget.ReadString(DashboardWidgetCatalog.KpiValueColorKey) ?? widget.ReadString("style.valueColor"),
-            DashboardWidgetCatalog.KpiDefaultValueColor);
-        TitleAlign = DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(
-            widget.ReadString(DashboardWidgetCatalog.KpiTitleAlignKey));
-        ValueAlign = DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(
-            widget.ReadString(DashboardWidgetCatalog.KpiValueAlignKey));
-        ValuePlacement = DashboardWidgetCatalog.NormalizeKpiValuePlacement(
-            widget.ReadString(DashboardWidgetCatalog.KpiValuePlacementKey));
-        DigitalStyle = DashboardWidgetCatalog.NormalizeMetricDigitalStyle(
-            widget.ReadString(DashboardWidgetCatalog.MetricDigitalStyleKey));
-        DigitalGlow = DashboardWidgetCatalog.NormalizeMetricDigitalGlow(
-            widget.ReadString(DashboardWidgetCatalog.MetricDigitalGlowKey));
-        DigitalBackgroundColor = NormalizeColor(
-            widget.ReadString(DashboardWidgetCatalog.MetricDigitalBackgroundColorKey),
-            DashboardWidgetCatalog.MetricDigitalDefaultBackgroundColor);
-        DigitalSegmentColor = NormalizeColor(
-            widget.ReadString(DashboardWidgetCatalog.MetricDigitalSegmentColorKey),
-            DashboardWidgetCatalog.MetricDigitalDefaultSegmentColor);
-        DigitalInactiveSegmentColor = NormalizeColor(
-            widget.ReadString(DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey),
-            DashboardWidgetCatalog.MetricDigitalDefaultInactiveSegmentColor);
-        DigitalLabelColor = NormalizeColor(
-            widget.ReadString(DashboardWidgetCatalog.MetricDigitalLabelColorKey),
-            DashboardWidgetCatalog.MetricDigitalDefaultLabelColor);
-        DigitalDigits = DashboardWidgetCatalog.NormalizeMetricDigitalDigits(
-            widget.ReadString(DashboardWidgetCatalog.MetricDigitalDigitsKey));
         GaugeStyle = DashboardWidgetCatalog.NormalizeGaugeStyle(
             widget.ReadString(DashboardWidgetCatalog.GaugeStyleKey));
         ChartType = DashboardWidgetCatalog.NormalizeChartType(
@@ -92,37 +58,17 @@ public sealed class DashboardWidgetSettingsDraft
 
     public string MetricName { get; set; }
 
-    public string MetricVisualizationId { get; set; }
+    public DashboardMetricVisualizationSettingsDraft MetricVisualization { get; }
+
+    public string MetricVisualizationId
+    {
+        get => MetricVisualization.VisualizationId;
+        set => MetricVisualization.SetVisualization(value, applyDefaults: false);
+    }
 
     public bool ExcludeSystemTopics { get; set; }
 
     public string PrimaryMetric { get; set; }
-
-    public string TitleColor { get; set; }
-
-    public string SubtitleColor { get; set; }
-
-    public string ValueColor { get; set; }
-
-    public string TitleAlign { get; set; }
-
-    public string ValueAlign { get; set; }
-
-    public string ValuePlacement { get; set; }
-
-    public string DigitalStyle { get; set; }
-
-    public string DigitalGlow { get; set; }
-
-    public string DigitalBackgroundColor { get; set; }
-
-    public string DigitalSegmentColor { get; set; }
-
-    public string DigitalInactiveSegmentColor { get; set; }
-
-    public string DigitalLabelColor { get; set; }
-
-    public int DigitalDigits { get; set; }
 
     public string GaugeStyle { get; set; }
 
@@ -159,43 +105,9 @@ public sealed class DashboardWidgetSettingsDraft
         EventType = ReadString(configuration, DashboardEventFilterCatalog.EventTypeKey) ?? AnyValue;
         Status = ReadString(configuration, DashboardEventFilterCatalog.StatusKey) ?? AnyValue;
         MetricName = ReadString(configuration, "metric") ?? MetricName;
-        MetricVisualizationId = DashboardWidgetCatalog.NormalizeMetricVisualization(
-            ReadString(configuration, DashboardWidgetCatalog.MetricVisualizationKey));
+        MetricVisualization.ApplyConfiguration(configuration);
         PrimaryMetric = DashboardWidgetCatalog.NormalizePrimaryMetric(
             ReadString(configuration, DashboardWidgetCatalog.PrimaryMetricKey));
-        TitleColor = NormalizeColor(
-            ReadString(configuration, DashboardWidgetCatalog.KpiTitleColorKey),
-            DashboardWidgetCatalog.KpiDefaultTitleColor);
-        SubtitleColor = NormalizeColor(
-            ReadString(configuration, DashboardWidgetCatalog.KpiSubtitleColorKey),
-            DashboardWidgetCatalog.KpiDefaultSubtitleColor);
-        ValueColor = NormalizeColor(
-            ReadString(configuration, DashboardWidgetCatalog.KpiValueColorKey),
-            DashboardWidgetCatalog.KpiDefaultValueColor);
-        TitleAlign = DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(
-            ReadString(configuration, DashboardWidgetCatalog.KpiTitleAlignKey));
-        ValueAlign = DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(
-            ReadString(configuration, DashboardWidgetCatalog.KpiValueAlignKey));
-        ValuePlacement = DashboardWidgetCatalog.NormalizeKpiValuePlacement(
-            ReadString(configuration, DashboardWidgetCatalog.KpiValuePlacementKey));
-        DigitalStyle = DashboardWidgetCatalog.NormalizeMetricDigitalStyle(
-            ReadString(configuration, DashboardWidgetCatalog.MetricDigitalStyleKey));
-        DigitalGlow = DashboardWidgetCatalog.NormalizeMetricDigitalGlow(
-            ReadString(configuration, DashboardWidgetCatalog.MetricDigitalGlowKey));
-        DigitalBackgroundColor = NormalizeColor(
-            ReadString(configuration, DashboardWidgetCatalog.MetricDigitalBackgroundColorKey),
-            DashboardWidgetCatalog.MetricDigitalDefaultBackgroundColor);
-        DigitalSegmentColor = NormalizeColor(
-            ReadString(configuration, DashboardWidgetCatalog.MetricDigitalSegmentColorKey),
-            DashboardWidgetCatalog.MetricDigitalDefaultSegmentColor);
-        DigitalInactiveSegmentColor = NormalizeColor(
-            ReadString(configuration, DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey),
-            DashboardWidgetCatalog.MetricDigitalDefaultInactiveSegmentColor);
-        DigitalLabelColor = NormalizeColor(
-            ReadString(configuration, DashboardWidgetCatalog.MetricDigitalLabelColorKey),
-            DashboardWidgetCatalog.MetricDigitalDefaultLabelColor);
-        DigitalDigits = DashboardWidgetCatalog.NormalizeMetricDigitalDigits(
-            ReadString(configuration, DashboardWidgetCatalog.MetricDigitalDigitsKey));
         GaugeStyle = DashboardWidgetCatalog.NormalizeGaugeStyle(
             ReadString(configuration, DashboardWidgetCatalog.GaugeStyleKey));
         ChartType = DashboardWidgetCatalog.NormalizeChartType(
@@ -338,11 +250,13 @@ public sealed class DashboardWidgetSettingsDraft
 
         if (UsesMetricQueryBuilder)
         {
-            var metricQueryConfiguration = new Dictionary<string, string>(StringComparer.Ordinal)
+            var metricQueryConfiguration = new Dictionary<string, string>(StringComparer.Ordinal);
+            if (!IsKpiTile)
             {
-                ["title"] = title
-            };
-            if (Profile.UsesSubtitle)
+                metricQueryConfiguration["title"] = title;
+            }
+
+            if (!IsKpiTile && Profile.UsesSubtitle)
             {
                 metricQueryConfiguration["subtitle"] = subtitle;
             }
@@ -440,35 +354,9 @@ public sealed class DashboardWidgetSettingsDraft
             return;
         }
 
-        configuration[DashboardWidgetCatalog.KpiTitleColorKey] =
-            NormalizeColor(TitleColor, DashboardWidgetCatalog.KpiDefaultTitleColor);
-        configuration[DashboardWidgetCatalog.KpiSubtitleColorKey] =
-            NormalizeColor(SubtitleColor, DashboardWidgetCatalog.KpiDefaultSubtitleColor);
-        configuration[DashboardWidgetCatalog.KpiValueColorKey] =
-            NormalizeColor(ValueColor, DashboardWidgetCatalog.KpiDefaultValueColor);
-        configuration[DashboardWidgetCatalog.KpiTitleAlignKey] =
-            DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(TitleAlign);
-        configuration[DashboardWidgetCatalog.KpiValueAlignKey] =
-            DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(ValueAlign);
-        configuration[DashboardWidgetCatalog.KpiValuePlacementKey] =
-            DashboardWidgetCatalog.NormalizeKpiValuePlacement(ValuePlacement);
-        if (string.Equals(MetricVisualizationId, DashboardMetricVisualizationIds.Digital, StringComparison.Ordinal))
+        foreach (var (key, value) in MetricVisualization.BuildConfiguration())
         {
-            configuration[DashboardWidgetCatalog.MetricDigitalStyleKey] =
-                DashboardWidgetCatalog.NormalizeMetricDigitalStyle(DigitalStyle);
-            configuration[DashboardWidgetCatalog.MetricDigitalGlowKey] =
-                DashboardWidgetCatalog.NormalizeMetricDigitalGlow(DigitalGlow);
-            configuration[DashboardWidgetCatalog.MetricDigitalBackgroundColorKey] =
-                NormalizeColor(DigitalBackgroundColor, DashboardWidgetCatalog.MetricDigitalDefaultBackgroundColor);
-            configuration[DashboardWidgetCatalog.MetricDigitalSegmentColorKey] =
-                NormalizeColor(DigitalSegmentColor, DashboardWidgetCatalog.MetricDigitalDefaultSegmentColor);
-            configuration[DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey] =
-                NormalizeColor(DigitalInactiveSegmentColor, DashboardWidgetCatalog.MetricDigitalDefaultInactiveSegmentColor);
-            configuration[DashboardWidgetCatalog.MetricDigitalLabelColorKey] =
-                NormalizeColor(DigitalLabelColor, DashboardWidgetCatalog.MetricDigitalDefaultLabelColor);
-            configuration[DashboardWidgetCatalog.MetricDigitalDigitsKey] =
-                DashboardWidgetCatalog.NormalizeMetricDigitalDigits(DigitalDigits)
-                    .ToString(CultureInfo.InvariantCulture);
+            configuration[key] = value;
         }
     }
 
@@ -496,17 +384,6 @@ public sealed class DashboardWidgetSettingsDraft
         => configuration.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value)
             ? value
             : null;
-
-    private static string NormalizeColor(string? value, string fallback)
-    {
-        var normalized = Normalize(value);
-        return IsHexColor(normalized) ? normalized.ToLowerInvariant() : fallback;
-    }
-
-    private static bool IsHexColor(string value)
-        => value.Length is 7 or 9 &&
-           value[0] == '#' &&
-           value.Skip(1).All(static character => character is >= '0' and <= '9' or >= 'a' and <= 'f' or >= 'A' and <= 'F');
 
     private static string DefaultSubtitle(string type)
         => string.Equals(type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal)

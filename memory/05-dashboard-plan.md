@@ -9,6 +9,17 @@ The user wants a Dashboard concept layered on top of the existing pipeline runti
 
 The dashboard does not replace the pipeline. It is a view over runtime/projection outputs. Source mode is selected before the graph runs, so dashboard blocks should not have separate live and replay implementations.
 
+## 2026-06-07 Current Dashboard Editor Direction
+
+- Dashboard metric query, visualization, and cell style are separate concerns.
+- Metric query defines the number: source, measure, window, filters, format.
+- Metric visualization defines the inner presentation: label/title/subtitle, visibility, placement, alignment, inner background, inner border, colors, digits, glow, and fit behavior.
+- Cell style defines only the outer dashboard cell/container: background, border, radius, padding, and grid layout behavior.
+- KPI is the first widget using this ownership model. `metric.value` and `metric.digital` are separate visualization modules with their own defaults, property definitions, renderers, editor dialog, summary, and compatibility loading.
+- The KPI inspector should stay compact: one `Visualization` row plus one `Visual settings` row that opens the visualization editor. It should not expose flattened digital/value rows in the main property grid.
+- Existing dashboards remain loadable through compatibility fallbacks, but applying visualization settings writes visualization-owned keys such as `metric.value.*` and `metric.digital.*`, not old shared `kpi.*` display keys.
+- Next step after visual QA: review the KPI visualization editor flow manually, then reuse the approved pattern one widget at a time.
+
 ---
 
 ## Phase 1: New Metric Pipeline Components

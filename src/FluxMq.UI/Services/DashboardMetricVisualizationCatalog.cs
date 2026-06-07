@@ -25,14 +25,18 @@ public static class DashboardMetricVisualizationCatalog
                 new Dictionary<string, string>(StringComparer.Ordinal)
                 {
                     [DashboardWidgetCatalog.MetricVisualizationKey] = DashboardMetricVisualizationIds.Value,
-                    [DashboardWidgetCatalog.KpiTitleColorKey] = DashboardWidgetCatalog.KpiDefaultTitleColor,
-                    [DashboardWidgetCatalog.KpiSubtitleColorKey] = DashboardWidgetCatalog.KpiDefaultSubtitleColor,
-                    [DashboardWidgetCatalog.KpiValueColorKey] = DashboardWidgetCatalog.KpiDefaultValueColor,
-                    [DashboardWidgetCatalog.KpiTitleAlignKey] = DashboardWidgetCatalog.KpiAlignLeft,
-                    [DashboardWidgetCatalog.KpiValueAlignKey] = DashboardWidgetCatalog.KpiAlignLeft,
-                    [DashboardWidgetCatalog.KpiValuePlacementKey] = DashboardWidgetCatalog.KpiValuePlacementTop
+                    [DashboardWidgetCatalog.MetricValueTitleKey] = DashboardWidgetCatalog.MetricValueDefaultTitle,
+                    [DashboardWidgetCatalog.MetricValueSubtitleKey] = DashboardWidgetCatalog.MetricValueDefaultSubtitle,
+                    [DashboardWidgetCatalog.MetricValueShowTitleKey] = "true",
+                    [DashboardWidgetCatalog.MetricValueShowSubtitleKey] = "true",
+                    [DashboardWidgetCatalog.MetricValueTitleColorKey] = DashboardWidgetCatalog.KpiDefaultTitleColor,
+                    [DashboardWidgetCatalog.MetricValueSubtitleColorKey] = DashboardWidgetCatalog.KpiDefaultSubtitleColor,
+                    [DashboardWidgetCatalog.MetricValueValueColorKey] = DashboardWidgetCatalog.KpiDefaultValueColor,
+                    [DashboardWidgetCatalog.MetricValueTitleAlignKey] = DashboardWidgetCatalog.KpiAlignLeft,
+                    [DashboardWidgetCatalog.MetricValueValueAlignKey] = DashboardWidgetCatalog.KpiAlignLeft,
+                    [DashboardWidgetCatalog.MetricValueValuePlacementKey] = DashboardWidgetCatalog.KpiValuePlacementTop
                 },
-                [new("value-visual", "Value visual", CommonValueProperties())],
+                [new("value-visual", "Value visual", ValueProperties())],
                 typeof(DashboardMetricValueVisualizationView),
                 typeof(DashboardMetricValueVisualizationView),
                 "Shows one metric result as a title, value, and optional unit."),
@@ -50,64 +54,24 @@ public static class DashboardMetricVisualizationCatalog
                 new Dictionary<string, string>(StringComparer.Ordinal)
                 {
                     [DashboardWidgetCatalog.MetricVisualizationKey] = DashboardMetricVisualizationIds.Digital,
-                    [DashboardWidgetCatalog.KpiTitleColorKey] = DashboardWidgetCatalog.KpiDefaultTitleColor,
-                    [DashboardWidgetCatalog.KpiSubtitleColorKey] = DashboardWidgetCatalog.KpiDefaultSubtitleColor,
-                    [DashboardWidgetCatalog.KpiValueColorKey] = DashboardWidgetCatalog.KpiDefaultValueColor,
-                    [DashboardWidgetCatalog.KpiTitleAlignKey] = DashboardWidgetCatalog.KpiAlignLeft,
-                    [DashboardWidgetCatalog.KpiValueAlignKey] = DashboardWidgetCatalog.KpiAlignCenter,
-                    [DashboardWidgetCatalog.KpiValuePlacementKey] = DashboardWidgetCatalog.KpiValuePlacementMiddle,
+                    [DashboardWidgetCatalog.MetricDigitalLabelKey] = DashboardWidgetCatalog.MetricValueDefaultTitle,
+                    [DashboardWidgetCatalog.MetricDigitalShowLabelKey] = "true",
+                    [DashboardWidgetCatalog.MetricDigitalLabelPlacementKey] = DashboardWidgetCatalog.MetricDigitalLabelPlacementBottom,
                     [DashboardWidgetCatalog.MetricDigitalStyleKey] = DashboardWidgetCatalog.MetricDigitalStylePanel,
                     [DashboardWidgetCatalog.MetricDigitalGlowKey] = DashboardWidgetCatalog.MetricDigitalGlowSoft,
                     [DashboardWidgetCatalog.MetricDigitalBackgroundColorKey] = DashboardWidgetCatalog.MetricDigitalDefaultBackgroundColor,
                     [DashboardWidgetCatalog.MetricDigitalSegmentColorKey] = DashboardWidgetCatalog.MetricDigitalDefaultSegmentColor,
                     [DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey] = DashboardWidgetCatalog.MetricDigitalDefaultInactiveSegmentColor,
                     [DashboardWidgetCatalog.MetricDigitalLabelColorKey] = DashboardWidgetCatalog.MetricDigitalDefaultLabelColor,
-                    [DashboardWidgetCatalog.MetricDigitalDigitsKey] = DashboardWidgetCatalog.MetricDigitalDefaultDigits.ToString(CultureInfo.InvariantCulture)
+                    [DashboardWidgetCatalog.MetricDigitalDigitsKey] = DashboardWidgetCatalog.MetricDigitalDefaultDigits.ToString(CultureInfo.InvariantCulture),
+                    [DashboardWidgetCatalog.MetricDigitalBorderColorKey] = DashboardWidgetCatalog.MetricDigitalDefaultBorderColor,
+                    [DashboardWidgetCatalog.MetricDigitalBorderWidthKey] = DashboardWidgetCatalog.MetricDigitalDefaultBorderWidth.ToString(CultureInfo.InvariantCulture),
+                    [DashboardWidgetCatalog.MetricDigitalRadiusKey] = DashboardWidgetCatalog.MetricDigitalDefaultRadius.ToString(CultureInfo.InvariantCulture),
+                    [DashboardWidgetCatalog.MetricDigitalPaddingKey] = DashboardWidgetCatalog.MetricDigitalDefaultPadding.ToString(CultureInfo.InvariantCulture),
+                    [DashboardWidgetCatalog.MetricDigitalFitModeKey] = DashboardWidgetCatalog.MetricDigitalFitCompact
                 },
                 [
-                    new(
-                        "digital-visual",
-                        "Digital visual",
-                        [
-                            .. CommonValueProperties(includeValueColor: false),
-                            new(
-                                DashboardWidgetCatalog.MetricDigitalStyleKey,
-                                "Digit style",
-                                DashboardWidgetPropertyEditorKind.Select,
-                                DefaultValue: DashboardWidgetCatalog.MetricDigitalStylePanel,
-                                Options: DigitalStyleOptions()),
-                            new(
-                                DashboardWidgetCatalog.MetricDigitalGlowKey,
-                                "Glow",
-                                DashboardWidgetPropertyEditorKind.Select,
-                                DefaultValue: DashboardWidgetCatalog.MetricDigitalGlowSoft,
-                                Options: DigitalGlowOptions()),
-                            new(
-                                DashboardWidgetCatalog.MetricDigitalSegmentColorKey,
-                                "Segment color",
-                                DashboardWidgetPropertyEditorKind.Color,
-                                DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultSegmentColor),
-                            new(
-                                DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey,
-                                "Inactive color",
-                                DashboardWidgetPropertyEditorKind.Color,
-                                DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultInactiveSegmentColor),
-                            new(
-                                DashboardWidgetCatalog.MetricDigitalBackgroundColorKey,
-                                "Display bg",
-                                DashboardWidgetPropertyEditorKind.Color,
-                                DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultBackgroundColor),
-                            new(
-                                DashboardWidgetCatalog.MetricDigitalLabelColorKey,
-                                "Label color",
-                                DashboardWidgetPropertyEditorKind.Color,
-                                DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultLabelColor),
-                            new(
-                                DashboardWidgetCatalog.MetricDigitalDigitsKey,
-                                "Digits",
-                                DashboardWidgetPropertyEditorKind.Number,
-                                DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultDigits.ToString(CultureInfo.InvariantCulture))
-                        ])
+                    new("digital-visual", "Digital visual", DigitalProperties())
                 ],
                 typeof(DashboardMetricDigitalVisualizationView),
                 typeof(DashboardMetricDigitalVisualizationView),
@@ -126,49 +90,48 @@ public static class DashboardMetricVisualizationCatalog
             string.Equals(module.Id, normalized, StringComparison.Ordinal));
     }
 
-    private static IReadOnlyList<DashboardWidgetPropertyDefinition> CommonValueProperties(bool includeValueColor = true)
-    {
-        var properties = new List<DashboardWidgetPropertyDefinition>
-        {
-            new(
-                DashboardWidgetCatalog.KpiTitleColorKey,
-                "Title color",
-                DashboardWidgetPropertyEditorKind.Color,
-                DefaultValue: DashboardWidgetCatalog.KpiDefaultTitleColor),
-            new(
-                DashboardWidgetCatalog.KpiSubtitleColorKey,
-                "Subtitle color",
-                DashboardWidgetPropertyEditorKind.Color,
-                DefaultValue: DashboardWidgetCatalog.KpiDefaultSubtitleColor)
-        };
-        if (includeValueColor)
-        {
-            properties.Add(new DashboardWidgetPropertyDefinition(
-                DashboardWidgetCatalog.KpiValueColorKey,
-                "Value color",
-                DashboardWidgetPropertyEditorKind.Color,
-                DefaultValue: DashboardWidgetCatalog.KpiDefaultValueColor));
-        }
+    private static IReadOnlyList<DashboardWidgetPropertyDefinition> ValueProperties()
+        =>
+        [
+            new(DashboardWidgetCatalog.MetricValueTitleKey, "Title", DashboardWidgetPropertyEditorKind.Text, DefaultValue: DashboardWidgetCatalog.MetricValueDefaultTitle),
+            new(DashboardWidgetCatalog.MetricValueShowTitleKey, "Show title", DashboardWidgetPropertyEditorKind.Toggle, DefaultValue: "true"),
+            new(DashboardWidgetCatalog.MetricValueSubtitleKey, "Subtitle", DashboardWidgetPropertyEditorKind.Text, DefaultValue: DashboardWidgetCatalog.MetricValueDefaultSubtitle),
+            new(DashboardWidgetCatalog.MetricValueShowSubtitleKey, "Show subtitle", DashboardWidgetPropertyEditorKind.Toggle, DefaultValue: "true"),
+            new(DashboardWidgetCatalog.MetricValueTitleColorKey, "Title color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardWidgetCatalog.KpiDefaultTitleColor),
+            new(DashboardWidgetCatalog.MetricValueSubtitleColorKey, "Subtitle color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardWidgetCatalog.KpiDefaultSubtitleColor),
+            new(DashboardWidgetCatalog.MetricValueValueColorKey, "Value color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardWidgetCatalog.KpiDefaultValueColor),
+            new(DashboardWidgetCatalog.MetricValueTitleAlignKey, "Title align", DashboardWidgetPropertyEditorKind.Segmented, DefaultValue: DashboardWidgetCatalog.KpiAlignLeft),
+            new(DashboardWidgetCatalog.MetricValueValueAlignKey, "Value align", DashboardWidgetPropertyEditorKind.Segmented, DefaultValue: DashboardWidgetCatalog.KpiAlignLeft),
+            new(DashboardWidgetCatalog.MetricValueValuePlacementKey, "Value place", DashboardWidgetPropertyEditorKind.Segmented, DefaultValue: DashboardWidgetCatalog.KpiValuePlacementTop)
+        ];
 
-        properties.AddRange([
-            new DashboardWidgetPropertyDefinition(
-                DashboardWidgetCatalog.KpiTitleAlignKey,
-                "Title align",
-                DashboardWidgetPropertyEditorKind.Segmented,
-                DefaultValue: DashboardWidgetCatalog.KpiAlignLeft),
-            new DashboardWidgetPropertyDefinition(
-                DashboardWidgetCatalog.KpiValueAlignKey,
-                "Value align",
-                DashboardWidgetPropertyEditorKind.Segmented,
-                DefaultValue: DashboardWidgetCatalog.KpiAlignLeft),
-            new DashboardWidgetPropertyDefinition(
-                DashboardWidgetCatalog.KpiValuePlacementKey,
-                "Value place",
-                DashboardWidgetPropertyEditorKind.Segmented,
-                DefaultValue: DashboardWidgetCatalog.KpiValuePlacementTop)
-        ]);
-        return properties;
-    }
+    private static IReadOnlyList<DashboardWidgetPropertyDefinition> DigitalProperties()
+        =>
+        [
+            new(DashboardWidgetCatalog.MetricDigitalLabelKey, "Label", DashboardWidgetPropertyEditorKind.Text, DefaultValue: DashboardWidgetCatalog.MetricValueDefaultTitle),
+            new(DashboardWidgetCatalog.MetricDigitalShowLabelKey, "Show label", DashboardWidgetPropertyEditorKind.Toggle, DefaultValue: "true"),
+            new(DashboardWidgetCatalog.MetricDigitalLabelPlacementKey, "Label place", DashboardWidgetPropertyEditorKind.Select, DefaultValue: DashboardWidgetCatalog.MetricDigitalLabelPlacementBottom, Options: DigitalLabelPlacementOptions()),
+            new(DashboardWidgetCatalog.MetricDigitalStyleKey, "Digit style", DashboardWidgetPropertyEditorKind.Select, DefaultValue: DashboardWidgetCatalog.MetricDigitalStylePanel, Options: DigitalStyleOptions()),
+            new(DashboardWidgetCatalog.MetricDigitalGlowKey, "Glow", DashboardWidgetPropertyEditorKind.Select, DefaultValue: DashboardWidgetCatalog.MetricDigitalGlowSoft, Options: DigitalGlowOptions()),
+            new(DashboardWidgetCatalog.MetricDigitalSegmentColorKey, "Segment color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultSegmentColor),
+            new(DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey, "Inactive color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultInactiveSegmentColor),
+            new(DashboardWidgetCatalog.MetricDigitalBackgroundColorKey, "Display bg", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultBackgroundColor),
+            new(DashboardWidgetCatalog.MetricDigitalLabelColorKey, "Label color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultLabelColor),
+            new(DashboardWidgetCatalog.MetricDigitalBorderColorKey, "Border color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultBorderColor),
+            new(DashboardWidgetCatalog.MetricDigitalBorderWidthKey, "Border width", DashboardWidgetPropertyEditorKind.Number, Unit: "px", DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultBorderWidth.ToString(CultureInfo.InvariantCulture)),
+            new(DashboardWidgetCatalog.MetricDigitalRadiusKey, "Radius", DashboardWidgetPropertyEditorKind.Number, Unit: "px", DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultRadius.ToString(CultureInfo.InvariantCulture)),
+            new(DashboardWidgetCatalog.MetricDigitalPaddingKey, "Padding", DashboardWidgetPropertyEditorKind.Number, Unit: "px", DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultPadding.ToString(CultureInfo.InvariantCulture)),
+            new(DashboardWidgetCatalog.MetricDigitalDigitsKey, "Digits", DashboardWidgetPropertyEditorKind.Number, DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultDigits.ToString(CultureInfo.InvariantCulture)),
+            new(DashboardWidgetCatalog.MetricDigitalFitModeKey, "Fit", DashboardWidgetPropertyEditorKind.Select, DefaultValue: DashboardWidgetCatalog.MetricDigitalFitCompact, Options: DigitalFitModeOptions())
+        ];
+
+    private static IReadOnlyList<DashboardWidgetPropertyOption> DigitalLabelPlacementOptions()
+        =>
+        [
+            new(DashboardWidgetCatalog.MetricDigitalLabelPlacementTop, "Top"),
+            new(DashboardWidgetCatalog.MetricDigitalLabelPlacementBottom, "Bottom"),
+            new(DashboardWidgetCatalog.MetricDigitalLabelPlacementHidden, "Hidden")
+        ];
 
     private static IReadOnlyList<DashboardWidgetPropertyOption> DigitalStyleOptions()
         =>
@@ -184,5 +147,12 @@ public static class DashboardMetricVisualizationCatalog
             new(DashboardWidgetCatalog.MetricDigitalGlowOff, "Off"),
             new(DashboardWidgetCatalog.MetricDigitalGlowSoft, "Soft"),
             new(DashboardWidgetCatalog.MetricDigitalGlowStrong, "Strong")
+        ];
+
+    private static IReadOnlyList<DashboardWidgetPropertyOption> DigitalFitModeOptions()
+        =>
+        [
+            new(DashboardWidgetCatalog.MetricDigitalFitCompact, "Compact"),
+            new(DashboardWidgetCatalog.MetricDigitalFitFill, "Fill")
         ];
 }

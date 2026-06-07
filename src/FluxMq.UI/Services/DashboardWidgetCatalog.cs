@@ -38,6 +38,19 @@ public sealed class DashboardWidgetCatalog
     public const string KpiTitleAlignKey = "kpi.titleAlign";
     public const string KpiValueAlignKey = "kpi.valueAlign";
     public const string KpiValuePlacementKey = "kpi.valuePlacement";
+    public const string MetricValueTitleKey = "metric.value.title";
+    public const string MetricValueSubtitleKey = "metric.value.subtitle";
+    public const string MetricValueShowTitleKey = "metric.value.showTitle";
+    public const string MetricValueShowSubtitleKey = "metric.value.showSubtitle";
+    public const string MetricValueTitleColorKey = "metric.value.titleColor";
+    public const string MetricValueSubtitleColorKey = "metric.value.subtitleColor";
+    public const string MetricValueValueColorKey = "metric.value.valueColor";
+    public const string MetricValueTitleAlignKey = "metric.value.titleAlign";
+    public const string MetricValueValueAlignKey = "metric.value.valueAlign";
+    public const string MetricValueValuePlacementKey = "metric.value.valuePlacement";
+    public const string MetricDigitalLabelKey = "metric.digital.label";
+    public const string MetricDigitalShowLabelKey = "metric.digital.showLabel";
+    public const string MetricDigitalLabelPlacementKey = "metric.digital.labelPlacement";
     public const string MetricDigitalStyleKey = "metric.digital.style";
     public const string MetricDigitalGlowKey = "metric.digital.glow";
     public const string MetricDigitalBackgroundColorKey = "metric.digital.backgroundColor";
@@ -45,6 +58,11 @@ public sealed class DashboardWidgetCatalog
     public const string MetricDigitalInactiveSegmentColorKey = "metric.digital.inactiveSegmentColor";
     public const string MetricDigitalLabelColorKey = "metric.digital.labelColor";
     public const string MetricDigitalDigitsKey = "metric.digital.digits";
+    public const string MetricDigitalBorderColorKey = "metric.digital.borderColor";
+    public const string MetricDigitalBorderWidthKey = "metric.digital.borderWidth";
+    public const string MetricDigitalRadiusKey = "metric.digital.radius";
+    public const string MetricDigitalPaddingKey = "metric.digital.padding";
+    public const string MetricDigitalFitModeKey = "metric.digital.fitMode";
     public const string MetricMessages = "messages";
     public const string MetricRecent = "recent";
     public const string MetricCurrentRate = "currentRate";
@@ -68,19 +86,30 @@ public sealed class DashboardWidgetCatalog
     public const string KpiDefaultTitleColor = "#f3f7fb";
     public const string KpiDefaultSubtitleColor = "#9fb0c5";
     public const string KpiDefaultValueColor = "#f3f7fb";
+    public const string MetricValueDefaultTitle = "Messages";
+    public const string MetricValueDefaultSubtitle = "Total matching events";
     public const string MetricDigitalDefaultBackgroundColor = "#040609";
     public const string MetricDigitalDefaultSegmentColor = "#db8b98";
     public const string MetricDigitalDefaultInactiveSegmentColor = "#351820";
     public const string MetricDigitalDefaultLabelColor = "#7f928b";
+    public const string MetricDigitalDefaultBorderColor = "#1d4850";
+    public const int MetricDigitalDefaultBorderWidth = 1;
+    public const int MetricDigitalDefaultRadius = 7;
+    public const int MetricDigitalDefaultPadding = 10;
     public const int MetricDigitalDefaultDigits = 4;
     public const int MetricDigitalMinDigits = 1;
     public const int MetricDigitalMaxDigits = 8;
+    public const string MetricDigitalLabelPlacementTop = "top";
+    public const string MetricDigitalLabelPlacementBottom = "bottom";
+    public const string MetricDigitalLabelPlacementHidden = "hidden";
     public const string MetricDigitalStylePanel = "panel";
     public const string MetricDigitalStyleSegment = "segment";
     public const string MetricDigitalStyleTerminal = "terminal";
     public const string MetricDigitalGlowOff = "off";
     public const string MetricDigitalGlowSoft = "soft";
     public const string MetricDigitalGlowStrong = "strong";
+    public const string MetricDigitalFitCompact = "compact";
+    public const string MetricDigitalFitFill = "fill";
 
     public const int DefaultMetricCardColumns = 4;
     public const int MinMetricCardColumns = 1;
@@ -498,6 +527,21 @@ public sealed class DashboardWidgetCatalog
             MetricDigitalGlowOff => MetricDigitalGlowOff,
             MetricDigitalGlowStrong => MetricDigitalGlowStrong,
             _ => MetricDigitalGlowSoft
+        };
+
+    public static string NormalizeMetricDigitalLabelPlacement(string? value)
+        => value switch
+        {
+            MetricDigitalLabelPlacementTop => MetricDigitalLabelPlacementTop,
+            MetricDigitalLabelPlacementHidden => MetricDigitalLabelPlacementHidden,
+            _ => MetricDigitalLabelPlacementBottom
+        };
+
+    public static string NormalizeMetricDigitalFitMode(string? value)
+        => value switch
+        {
+            MetricDigitalFitFill => MetricDigitalFitFill,
+            _ => MetricDigitalFitCompact
         };
 
     public static int NormalizeMetricDigitalDigits(string? value)

@@ -76,20 +76,6 @@
         new("900s", "15m")
     ];
 
-    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> HorizontalAlignmentOptions =
-    [
-        new(DashboardWidgetCatalog.KpiAlignLeft, Icons.Material.Filled.FormatAlignLeft, "Left"),
-        new(DashboardWidgetCatalog.KpiAlignCenter, Icons.Material.Filled.FormatAlignCenter, "Center"),
-        new(DashboardWidgetCatalog.KpiAlignRight, Icons.Material.Filled.FormatAlignRight, "Right")
-    ];
-
-    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> ValuePlacementOptions =
-    [
-        new(DashboardWidgetCatalog.KpiValuePlacementTop, Icons.Material.Filled.VerticalAlignTop, "Top"),
-        new(DashboardWidgetCatalog.KpiValuePlacementMiddle, Icons.Material.Filled.VerticalAlignCenter, "Middle"),
-        new(DashboardWidgetCatalog.KpiValuePlacementBottom, Icons.Material.Filled.VerticalAlignBottom, "Bottom")
-    ];
-
     private const string DataGroupId = "data";
     private const string MetricQueryGroupId = "metric-query";
     private const string FilterGroupId = "filters";
@@ -417,121 +403,24 @@
         }
     </text>;
 
-    private RenderFragment RenderMetricVisualizationProperties(DashboardWidgetSettingsDraft draft) => @<text>
-        @foreach (var property in MetricVisualizationProperties)
-        {
-            <PropertyGridRow Name="@property.Label" HelpText="@property.HelpText">
-                @RenderMetricVisualizationEditor(property, draft)
-            </PropertyGridRow>
-        }
-    </text>;
-
-    private RenderFragment RenderMetricVisualizationEditor(
-        DashboardWidgetPropertyDefinition property,
-        DashboardWidgetSettingsDraft draft) => @<text>
-        @switch (property.Key)
-        {
-            case DashboardWidgetCatalog.KpiTitleColorKey:
-                <PropertyGridColorPicker Value="@draft.TitleColor"
-                                         DefaultValue="@(property.DefaultValue ?? DashboardWidgetCatalog.KpiDefaultTitleColor)"
-                                         AriaLabel="@property.Label"
-                                         ValueChanged="@SetKpiTitleColorAsync" />
-                break;
-            case DashboardWidgetCatalog.KpiSubtitleColorKey:
-                <PropertyGridColorPicker Value="@draft.SubtitleColor"
-                                         DefaultValue="@(property.DefaultValue ?? DashboardWidgetCatalog.KpiDefaultSubtitleColor)"
-                                         AriaLabel="@property.Label"
-                                         ValueChanged="@SetKpiSubtitleColorAsync" />
-                break;
-            case DashboardWidgetCatalog.KpiValueColorKey:
-                <PropertyGridColorPicker Value="@draft.ValueColor"
-                                         DefaultValue="@(property.DefaultValue ?? DashboardWidgetCatalog.KpiDefaultValueColor)"
-                                         AriaLabel="@property.Label"
-                                         ValueChanged="@SetKpiValueColorAsync" />
-                break;
-            case DashboardWidgetCatalog.KpiTitleAlignKey:
-                <PropertyGridIconSegment Value="@draft.TitleAlign"
-                                         Options="@HorizontalAlignmentOptions"
-                                         AriaLabel="@property.Label"
-                                         ValueChanged="@SetKpiTitleAlignAsync" />
-                break;
-            case DashboardWidgetCatalog.KpiValueAlignKey:
-                <PropertyGridIconSegment Value="@draft.ValueAlign"
-                                         Options="@HorizontalAlignmentOptions"
-                                         AriaLabel="@property.Label"
-                                         ValueChanged="@SetKpiValueAlignAsync" />
-                break;
-            case DashboardWidgetCatalog.KpiValuePlacementKey:
-                <PropertyGridIconSegment Value="@draft.ValuePlacement"
-                                         Options="@ValuePlacementOptions"
-                                         AriaLabel="@property.Label"
-                                         ValueChanged="@SetKpiValuePlacementAsync" />
-                break;
-            case DashboardWidgetCatalog.MetricDigitalStyleKey:
-                <PropertyGridSelect Value="@draft.DigitalStyle"
-                                    Options="@ToSelectOptions(property.Options)"
-                                    AriaLabel="@property.Label"
-                                    ValueChanged="@SetMetricDigitalStyleAsync" />
-                break;
-            case DashboardWidgetCatalog.MetricDigitalGlowKey:
-                <PropertyGridSelect Value="@draft.DigitalGlow"
-                                    Options="@ToSelectOptions(property.Options)"
-                                    AriaLabel="@property.Label"
-                                    ValueChanged="@SetMetricDigitalGlowAsync" />
-                break;
-            case DashboardWidgetCatalog.MetricDigitalSegmentColorKey:
-                <PropertyGridColorPicker Value="@draft.DigitalSegmentColor"
-                                         DefaultValue="@(property.DefaultValue ?? DashboardWidgetCatalog.MetricDigitalDefaultSegmentColor)"
-                                         AriaLabel="@property.Label"
-                                         ValueChanged="@SetMetricDigitalSegmentColorAsync" />
-                break;
-            case DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey:
-                <PropertyGridColorPicker Value="@draft.DigitalInactiveSegmentColor"
-                                         DefaultValue="@(property.DefaultValue ?? DashboardWidgetCatalog.MetricDigitalDefaultInactiveSegmentColor)"
-                                         AriaLabel="@property.Label"
-                                         ValueChanged="@SetMetricDigitalInactiveSegmentColorAsync" />
-                break;
-            case DashboardWidgetCatalog.MetricDigitalBackgroundColorKey:
-                <PropertyGridColorPicker Value="@draft.DigitalBackgroundColor"
-                                         DefaultValue="@(property.DefaultValue ?? DashboardWidgetCatalog.MetricDigitalDefaultBackgroundColor)"
-                                         AriaLabel="@property.Label"
-                                         ValueChanged="@SetMetricDigitalBackgroundColorAsync" />
-                break;
-            case DashboardWidgetCatalog.MetricDigitalLabelColorKey:
-                <PropertyGridColorPicker Value="@draft.DigitalLabelColor"
-                                         DefaultValue="@(property.DefaultValue ?? DashboardWidgetCatalog.MetricDigitalDefaultLabelColor)"
-                                         AriaLabel="@property.Label"
-                                         ValueChanged="@SetMetricDigitalLabelColorAsync" />
-                break;
-            case DashboardWidgetCatalog.MetricDigitalDigitsKey:
-                <input class="property-grid-input"
-                       type="number"
-                       min="@DashboardWidgetCatalog.MetricDigitalMinDigits"
-                       max="@DashboardWidgetCatalog.MetricDigitalMaxDigits"
-                       value="@draft.DigitalDigits"
-                       @oninput="@((ChangeEventArgs args) => SetMetricDigitalDigitsAsync(args.Value?.ToString()))" />
-                break;
-            default:
-                <span class="property-grid-cell-text">Unsupported visual property</span>
-                break;
-        }
-    </text>;
-
     private RenderFragment RenderDisplayProperties() => @<text>
         @if (_widgetDraft is { } draft)
         {
-        <PropertyGridRow Name="@InspectorLabels.TitleRow">
-            <input class="property-grid-input"
-                   value="@draft.Title"
-                   @oninput="@((ChangeEventArgs args) => SetTitleAsync(args.Value?.ToString()))" />
-        </PropertyGridRow>
-        @if (draft.Profile.UsesSubtitle)
+        @if (!draft.Profile.UsesMetricVisualization)
         {
-            <PropertyGridRow Name="Subtitle">
+            <PropertyGridRow Name="@InspectorLabels.TitleRow">
                 <input class="property-grid-input"
-                       value="@draft.Subtitle"
-                       @oninput="@((ChangeEventArgs args) => SetSubtitleAsync(args.Value?.ToString()))" />
+                       value="@draft.Title"
+                       @oninput="@((ChangeEventArgs args) => SetTitleAsync(args.Value?.ToString()))" />
             </PropertyGridRow>
+            @if (draft.Profile.UsesSubtitle)
+            {
+                <PropertyGridRow Name="Subtitle">
+                    <input class="property-grid-input"
+                           value="@draft.Subtitle"
+                           @oninput="@((ChangeEventArgs args) => SetSubtitleAsync(args.Value?.ToString()))" />
+                </PropertyGridRow>
+            }
         }
 
         @if (draft.Profile.UsesMetricVisualization)
@@ -543,7 +432,18 @@
                                     ValueChanged="@SetMetricVisualizationAsync" />
             </PropertyGridRow>
 
-            @RenderMetricVisualizationProperties(draft)
+            <PropertyGridRow Name="Visual settings">
+                <div class="dashboard-inspector-visual-row">
+                    <span title="@MetricVisualizationSummary">@MetricVisualizationSummary</span>
+                    <button type="button"
+                            class="dashboard-inspector-query-edit"
+                            title="Edit visual"
+                            aria-label="Edit visual"
+                            @onclick="@OpenMetricVisualizationEditorAsync">
+                        <MudIcon Icon="@Icons.Material.Filled.Edit" Size="Size.Small" />
+                    </button>
+                </div>
+            </PropertyGridRow>
         }
 
         @if (draft.Profile.UsesVisualMetrics)
@@ -801,25 +701,15 @@
 
     private int DisplayPropertyCount => _widgetDraft is null
         ? 0
-        : 1 +
-          (_widgetDraft.Profile.UsesSubtitle ? 1 : 0) +
+        : (_widgetDraft.Profile.UsesMetricVisualization ? 2 : 1 + (_widgetDraft.Profile.UsesSubtitle ? 1 : 0)) +
           (_widgetDraft.Profile.UsesGaugeStyle ? 1 : 0) +
           (_widgetDraft.Profile.UsesChartType ? 1 : 0) +
-          (_widgetDraft.Profile.UsesMetricVisualization ? 1 + MetricVisualizationPropertyCount : 0) +
           (_widgetDraft.Profile.IsTopicTreeWidget ? 1 : 0) +
           (_widgetDraft.Profile.UsesVisualMetrics
               ? 1 + (_widgetDraft.Profile.SupportsMetricSlots ? 2 + _widgetDraft.DisplayMetrics.Count : 0)
               : 0);
 
-    private int MetricVisualizationPropertyCount => MetricVisualizationProperties.Count;
-
-    private DashboardMetricVisualizationModule? CurrentMetricVisualizationModule => _widgetDraft is null
-        ? null
-        : DashboardMetricVisualizationCatalog.Find(_widgetDraft.MetricVisualizationId);
-
-    private IReadOnlyList<DashboardWidgetPropertyDefinition> MetricVisualizationProperties => CurrentMetricVisualizationModule is null
-        ? []
-        : [.. CurrentMetricVisualizationModule.PropertyGroups.SelectMany(static group => group.Properties)];
+    private string MetricVisualizationSummary => _widgetDraft?.MetricVisualization.Summary() ?? "Default visual";
 
     private int StylePropertyCount => _cellStyleDraft is null
         ? 0
@@ -1001,151 +891,33 @@
             return;
         }
 
-        _widgetDraft.MetricVisualizationId = DashboardWidgetCatalog.NormalizeMetricVisualization(value);
+        _widgetDraft.MetricVisualization.SetVisualization(value, applyDefaults: true);
         await AutoApplyAsync();
     }
 
-    private async Task SetKpiTitleColorAsync(string? value)
+    private async Task OpenMetricVisualizationEditorAsync()
     {
-        if (_widgetDraft is null)
+        if (Widget is null || _widgetDraft is null || !Widget.Type.Equals(DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal))
         {
             return;
         }
 
-        _widgetDraft.TitleColor = value ?? string.Empty;
-        await AutoApplyAsync();
-    }
-
-    private async Task SetKpiSubtitleColorAsync(string? value)
-    {
-        if (_widgetDraft is null)
+        var dialog = await DialogService.ShowAsync<DashboardMetricVisualizationEditorDialog>(
+            "Visual settings",
+            new DialogParameters
+            {
+                [nameof(DashboardMetricVisualizationEditorDialog.Project)] = Project,
+                [nameof(DashboardMetricVisualizationEditorDialog.Widget)] = PreviewWidget,
+                [nameof(DashboardMetricVisualizationEditorDialog.VisualizationId)] = _widgetDraft.MetricVisualizationId,
+                [nameof(DashboardMetricVisualizationEditorDialog.MetricValue)] = Project.GetDashboardMetricValue(PreviewWidget)
+            },
+            new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: DashboardMetricVisualizationEditorDialog.DashboardMetricVisualizationUpdate update })
         {
-            return;
+            _widgetDraft.MetricVisualization.ApplyConfiguration(update.Configuration);
+            await AutoApplyAsync();
         }
-
-        _widgetDraft.SubtitleColor = value ?? string.Empty;
-        await AutoApplyAsync();
-    }
-
-    private async Task SetKpiValueColorAsync(string? value)
-    {
-        if (_widgetDraft is null)
-        {
-            return;
-        }
-
-        _widgetDraft.ValueColor = value ?? string.Empty;
-        await AutoApplyAsync();
-    }
-
-    private async Task SetKpiTitleAlignAsync(string? value)
-    {
-        if (_widgetDraft is null)
-        {
-            return;
-        }
-
-        _widgetDraft.TitleAlign = DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(value);
-        await AutoApplyAsync();
-    }
-
-    private async Task SetKpiValueAlignAsync(string? value)
-    {
-        if (_widgetDraft is null)
-        {
-            return;
-        }
-
-        _widgetDraft.ValueAlign = DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(value);
-        await AutoApplyAsync();
-    }
-
-    private async Task SetKpiValuePlacementAsync(string? value)
-    {
-        if (_widgetDraft is null)
-        {
-            return;
-        }
-
-        _widgetDraft.ValuePlacement = DashboardWidgetCatalog.NormalizeKpiValuePlacement(value);
-        await AutoApplyAsync();
-    }
-
-    private async Task SetMetricDigitalStyleAsync(string? value)
-    {
-        if (_widgetDraft is null)
-        {
-            return;
-        }
-
-        _widgetDraft.DigitalStyle = DashboardWidgetCatalog.NormalizeMetricDigitalStyle(value);
-        await AutoApplyAsync();
-    }
-
-    private async Task SetMetricDigitalGlowAsync(string? value)
-    {
-        if (_widgetDraft is null)
-        {
-            return;
-        }
-
-        _widgetDraft.DigitalGlow = DashboardWidgetCatalog.NormalizeMetricDigitalGlow(value);
-        await AutoApplyAsync();
-    }
-
-    private async Task SetMetricDigitalSegmentColorAsync(string? value)
-    {
-        if (_widgetDraft is null)
-        {
-            return;
-        }
-
-        _widgetDraft.DigitalSegmentColor = value ?? string.Empty;
-        await AutoApplyAsync();
-    }
-
-    private async Task SetMetricDigitalInactiveSegmentColorAsync(string? value)
-    {
-        if (_widgetDraft is null)
-        {
-            return;
-        }
-
-        _widgetDraft.DigitalInactiveSegmentColor = value ?? string.Empty;
-        await AutoApplyAsync();
-    }
-
-    private async Task SetMetricDigitalBackgroundColorAsync(string? value)
-    {
-        if (_widgetDraft is null)
-        {
-            return;
-        }
-
-        _widgetDraft.DigitalBackgroundColor = value ?? string.Empty;
-        await AutoApplyAsync();
-    }
-
-    private async Task SetMetricDigitalLabelColorAsync(string? value)
-    {
-        if (_widgetDraft is null)
-        {
-            return;
-        }
-
-        _widgetDraft.DigitalLabelColor = value ?? string.Empty;
-        await AutoApplyAsync();
-    }
-
-    private async Task SetMetricDigitalDigitsAsync(string? value)
-    {
-        if (_widgetDraft is null)
-        {
-            return;
-        }
-
-        _widgetDraft.DigitalDigits = DashboardWidgetCatalog.NormalizeMetricDigitalDigits(value);
-        await AutoApplyAsync();
     }
 
     private async Task SetGaugeStyleAsync(string? value)

@@ -4,6 +4,10 @@
 
 <div class="@RootClass" style="@RootStyle" aria-label="@AriaLabel">
     <div class="dashboard-digital-readout-face">
+        @if (ShouldShowTopLabel)
+        {
+            <span class="dashboard-digital-readout-label">@Label</span>
+        }
         <svg class="dashboard-digital-readout-display"
              viewBox="@ViewBox"
              role="img"
@@ -16,7 +20,7 @@
                 </g>
             }
         </svg>
-        @if (!string.IsNullOrWhiteSpace(Label))
+        @if (ShouldShowBottomLabel)
         {
             <span class="dashboard-digital-readout-label">@Label</span>
         }
@@ -51,6 +55,12 @@
     public string? Label { get; set; }
 
     [Parameter]
+    public bool ShowLabel { get; set; } = true;
+
+    [Parameter]
+    public string LabelPlacement { get; set; } = DashboardWidgetCatalog.MetricDigitalLabelPlacementBottom;
+
+    [Parameter]
     public string? AccentColor { get; set; }
 
     [Parameter]
@@ -61,6 +71,21 @@
 
     [Parameter]
     public string? LabelColor { get; set; }
+
+    [Parameter]
+    public string? BorderColor { get; set; }
+
+    [Parameter]
+    public int BorderWidth { get; set; } = DashboardWidgetCatalog.MetricDigitalDefaultBorderWidth;
+
+    [Parameter]
+    public int Radius { get; set; } = DashboardWidgetCatalog.MetricDigitalDefaultRadius;
+
+    [Parameter]
+    public int Padding { get; set; } = DashboardWidgetCatalog.MetricDigitalDefaultPadding;
+
+    [Parameter]
+    public string FitMode { get; set; } = DashboardWidgetCatalog.MetricDigitalFitCompact;
 
     [Parameter]
     public string StyleKind { get; set; } = DashboardWidgetCatalog.MetricDigitalStylePanel;
@@ -93,13 +118,29 @@
     }
 
     private string RootClass =>
-        $"dashboard-digital-readout style-{DashboardWidgetCatalog.NormalizeMetricDigitalStyle(StyleKind)} glow-{DashboardWidgetCatalog.NormalizeMetricDigitalGlow(Glow)}";
+        $"dashboard-digital-readout style-{DashboardWidgetCatalog.NormalizeMetricDigitalStyle(StyleKind)} glow-{DashboardWidgetCatalog.NormalizeMetricDigitalGlow(Glow)} fit-{DashboardWidgetCatalog.NormalizeMetricDigitalFitMode(FitMode)}";
 
     private string? RootStyle => BuildRootStyle();
 
     private string AriaLabel => string.IsNullOrWhiteSpace(Label)
         ? NormalizedValue
         : $"{Label}: {NormalizedValue}";
+
+    private bool ShouldShowTopLabel =>
+        ShowLabel &&
+        !string.IsNullOrWhiteSpace(Label) &&
+        string.Equals(
+            DashboardWidgetCatalog.NormalizeMetricDigitalLabelPlacement(LabelPlacement),
+            DashboardWidgetCatalog.MetricDigitalLabelPlacementTop,
+            StringComparison.Ordinal);
+
+    private bool ShouldShowBottomLabel =>
+        ShowLabel &&
+        !string.IsNullOrWhiteSpace(Label) &&
+        string.Equals(
+            DashboardWidgetCatalog.NormalizeMetricDigitalLabelPlacement(LabelPlacement),
+            DashboardWidgetCatalog.MetricDigitalLabelPlacementBottom,
+            StringComparison.Ordinal);
 
     private string GlyphTransform(int index)
     {
@@ -166,6 +207,10 @@
         AddCssVariable(values, "--dashboard-digital-background", BackgroundColor);
         AddCssVariable(values, "--dashboard-digital-inactive", InactiveSegmentColor);
         AddCssVariable(values, "--dashboard-digital-label", LabelColor);
+        AddCssVariable(values, "--dashboard-digital-border", BorderColor);
+        values.Add($"--dashboard-digital-border-width:{Math.Clamp(BorderWidth, 0, 8).ToString(CultureInfo.InvariantCulture)}px;");
+        values.Add($"--dashboard-digital-radius:{Math.Clamp(Radius, 0, 32).ToString(CultureInfo.InvariantCulture)}px;");
+        values.Add($"--dashboard-digital-padding:{Math.Clamp(Padding, 0, 32).ToString(CultureInfo.InvariantCulture)}px;");
         return values.Count == 0 ? null : string.Join(string.Empty, values);
     }
 

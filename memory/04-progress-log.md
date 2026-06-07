@@ -2577,3 +2577,19 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Updated dashboard widget setting normalization so alpha hex values are preserved when saved.
   - Verification passed with UI build and 375 package-mode UI tests.
 - Next step: visually review KPI `Value` versus `Digital`; if accepted, add the next visualization or reuse the pattern on the next metric widget one slice at a time.
+
+## 2026-06-07 - KPI visualization ownership refactor
+
+- Refactored KPI visualization editing so the selected visual owns all inner display settings.
+- Added `DashboardMetricVisualizationSettingsDraft` as the compatibility/draft boundary for visual-owned config.
+- Replaced flattened KPI visual property rows in the inspector with:
+  - `Visualization` select
+  - `Visual settings` summary/edit action
+- Added `DashboardMetricVisualizationEditorDialog` with draft-only Value/Digital visual editing and real component preview.
+- Moved saved Value visual settings to `metric.value.*` keys and Digital visual settings to `metric.digital.*` keys.
+- Kept outer dashboard cell style focused on cell/container background, border, radius, padding, and layout only.
+- Kept compatibility for old KPI keys (`title`, `subtitle`, `kpi.*`) when loading existing dashboards; applying visual settings rewrites to visual-owned keys.
+- Verification so far:
+  - `dotnet build src\fluxmq.ui --no-restore --verbosity minimal` passed.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 375 tests.
+- Next step: run final diff checks and focused commit, then manually review KPI Value/Digital visual editor behavior before applying the pattern to the next widget.

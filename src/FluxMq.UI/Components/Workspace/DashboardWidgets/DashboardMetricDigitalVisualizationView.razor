@@ -3,19 +3,23 @@
 
 @{
     var metric = Context.MetricValue;
-    var label = !string.IsNullOrWhiteSpace(metric.Unit) &&
-        !string.Equals(metric.Unit, "bytes", StringComparison.Ordinal)
-            ? metric.Unit
-            : DashboardWidgetFormatting.WidgetTitle(Context.Widget);
+    var label = Label;
 }
 
 <div class="@RootClass">
     <DashboardDigitalReadout Value="@DigitalValue(metric.Value)"
                              Label="@label"
+                             ShowLabel="@ShowLabel"
+                             LabelPlacement="@LabelPlacement"
                              AccentColor="@Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalSegmentColorKey)"
                              BackgroundColor="@Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalBackgroundColorKey)"
                              InactiveSegmentColor="@Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey)"
                              LabelColor="@Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalLabelColorKey)"
+                             BorderColor="@Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalBorderColorKey)"
+                             BorderWidth="@ReadInt(DashboardWidgetCatalog.MetricDigitalBorderWidthKey, DashboardWidgetCatalog.MetricDigitalDefaultBorderWidth)"
+                             Radius="@ReadInt(DashboardWidgetCatalog.MetricDigitalRadiusKey, DashboardWidgetCatalog.MetricDigitalDefaultRadius)"
+                             Padding="@ReadInt(DashboardWidgetCatalog.MetricDigitalPaddingKey, DashboardWidgetCatalog.MetricDigitalDefaultPadding)"
+                             FitMode="@FitMode"
                              StyleKind="@DigitalStyle"
                              Glow="@DigitalGlow"
                              MinimumDigits="@MinimumDigits" />
@@ -28,6 +32,24 @@
     private string RootClass =>
         "dashboard-metric-digital-layout";
 
+    private string Label =>
+        Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalLabelKey) ??
+        Context.Widget.ReadString("title") ??
+        DashboardWidgetFormatting.WidgetTitle(Context.Widget);
+
+    private bool ShowLabel =>
+        !string.Equals(
+            LabelPlacement,
+            DashboardWidgetCatalog.MetricDigitalLabelPlacementHidden,
+            StringComparison.Ordinal) &&
+        !string.Equals(
+            Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalShowLabelKey),
+            "false",
+            StringComparison.OrdinalIgnoreCase);
+
+    private string LabelPlacement => DashboardWidgetCatalog.NormalizeMetricDigitalLabelPlacement(
+        Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalLabelPlacementKey));
+
     private string DigitalStyle => DashboardWidgetCatalog.NormalizeMetricDigitalStyle(
         Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalStyleKey));
 
@@ -36,6 +58,18 @@
 
     private int MinimumDigits => DashboardWidgetCatalog.NormalizeMetricDigitalDigits(
         Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalDigitsKey));
+
+    private string FitMode => DashboardWidgetCatalog.NormalizeMetricDigitalFitMode(
+        Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalFitModeKey));
+
+    private int ReadInt(string key, int fallback)
+        => int.TryParse(
+            Context.Widget.ReadString(key),
+            System.Globalization.NumberStyles.Integer,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out var value)
+                ? value
+                : fallback;
 
     private static string DigitalValue(double value)
         => Math.Abs(value % 1) < 0.001

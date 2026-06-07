@@ -1,0 +1,489 @@
+@using FluxMq.UI.Models
+@using FluxMq.UI.Services
+
+<MudDialog Options="@DialogOptions" Class="dashboard-visual-dialog-modal">
+    <TitleContent>
+        <div class="dashboard-visual-dialog-titlebar">
+            <span class="dashboard-visual-dialog-icon">
+                <MudIcon Icon="@ModuleIcon" Size="Size.Small" />
+            </span>
+            <div class="dashboard-visual-dialog-heading">
+                <MudText Typo="Typo.h6" Class="dashboard-visual-dialog-title">@DialogTitle</MudText>
+                <MudText Typo="Typo.caption" Class="dashboard-visual-dialog-summary">@_draft?.Summary()</MudText>
+            </div>
+            <MudIconButton Icon="@Icons.Material.Filled.Close"
+                           Size="Size.Small"
+                           Class="dashboard-visual-dialog-close"
+                           OnClick="@Cancel" />
+        </div>
+    </TitleContent>
+    <DialogContent>
+        @if (_draft is not null)
+        {
+            <div class="dashboard-visual-editor">
+                <section class="dashboard-visual-editor-form" aria-label="Visual settings">
+                    <PropertyGrid Groups="@EditorGroups" />
+                </section>
+                <section class="dashboard-visual-editor-preview" aria-label="Visual preview">
+                    <header>
+                        <div>
+                            <strong>Preview</strong>
+                            <small>Real visual component</small>
+                        </div>
+                        <span>@PreviewMetric.FormattedValue @PreviewMetric.Unit</span>
+                    </header>
+                    <div class="dashboard-visual-preview-frame">
+                        <DashboardMetricVisualizationHost Context="@PreviewContext" />
+                    </div>
+                </section>
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mr-auto">Draft visual. Apply updates this widget visual only.</MudText>
+        <MudButton OnClick="@Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   OnClick="@ResetVisualAsync">
+            Reset visual
+        </MudButton>
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   OnClick="@Submit">
+            Apply
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private static readonly DialogOptions DialogOptions = new()
+    {
+        BackdropClick = false,
+        CloseOnEscapeKey = true,
+        MaxWidth = MaxWidth.Large,
+        FullWidth = true
+    };
+
+    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> HorizontalAlignmentOptions =
+    [
+        new(DashboardWidgetCatalog.KpiAlignLeft, Icons.Material.Filled.FormatAlignLeft, "Left"),
+        new(DashboardWidgetCatalog.KpiAlignCenter, Icons.Material.Filled.FormatAlignCenter, "Center"),
+        new(DashboardWidgetCatalog.KpiAlignRight, Icons.Material.Filled.FormatAlignRight, "Right")
+    ];
+
+    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> ValuePlacementOptions =
+    [
+        new(DashboardWidgetCatalog.KpiValuePlacementTop, Icons.Material.Filled.VerticalAlignTop, "Top"),
+        new(DashboardWidgetCatalog.KpiValuePlacementMiddle, Icons.Material.Filled.VerticalAlignCenter, "Middle"),
+        new(DashboardWidgetCatalog.KpiValuePlacementBottom, Icons.Material.Filled.VerticalAlignBottom, "Bottom")
+    ];
+
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public FlowWorkspaceService Project { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public DashboardWidgetSnapshot Widget { get; set; } = null!;
+
+    [Parameter]
+    public string VisualizationId { get; set; } = DashboardMetricVisualizationIds.Value;
+
+    [Parameter]
+    public DashboardMetricValue? MetricValue { get; set; }
+
+    private DashboardMetricVisualizationSettingsDraft? _draft;
+
+    private string DialogTitle =>
+        string.Equals(_draft?.VisualizationId, DashboardMetricVisualizationIds.Digital, StringComparison.Ordinal)
+            ? "Digital visual"
+            : "Value visual";
+
+    private string ModuleIcon =>
+        DashboardMetricVisualizationCatalog.Find(_draft?.VisualizationId)?.Icon ?? Icons.Material.Filled.Pin;
+
+    private DashboardWidgetSnapshot PreviewWidget => _draft is null
+        ? Widget
+        : Widget with { Configuration = _draft.ApplyToConfiguration(Widget.Configuration) };
+
+    private DashboardMetricValue PreviewMetric
+    {
+        get
+        {
+            var current = MetricValue ?? Project.GetDashboardMetricValue(Widget);
+            if (Math.Abs(current.Value) > 0.001)
+            {
+                return current;
+            }
+
+            return new DashboardMetricValue("Sample", 8500, current.Unit, "8500");
+        }
+    }
+
+    private DashboardWidgetRenderContext PreviewContext =>
+        new(Project, PreviewWidget, DashboardWidgetRenderMode.EditCell, MetricValueOverride: PreviewMetric);
+
+    private IReadOnlyList<PropertyGridGroup> EditorGroups => _draft is null
+        ? []
+        : string.Equals(_draft.VisualizationId, DashboardMetricVisualizationIds.Digital, StringComparison.Ordinal)
+            ? DigitalGroups()
+            : ValueGroups();
+
+    protected override void OnInitialized()
+    {
+        _draft = DashboardMetricVisualizationSettingsDraft.Create(Widget);
+        _draft.SetVisualization(VisualizationId, applyDefaults: false);
+    }
+
+    private IReadOnlyList<PropertyGridGroup> ValueGroups()
+        =>
+        [
+            new("value-text", "Text", 7, RenderValueTextRows()),
+            new("value-layout", "Layout", 3, RenderValueLayoutRows())
+        ];
+
+    private IReadOnlyList<PropertyGridGroup> DigitalGroups()
+        =>
+        [
+            new("digital-label", "Label", 5, RenderDigitalLabelRows()),
+            new("digital-readout", "Readout", 10, RenderDigitalReadoutRows())
+        ];
+
+    private RenderFragment RenderValueTextRows() => @<text>
+        <PropertyGridRow Name="Title">
+            <input class="property-grid-input"
+                   value="@_draft!.ValueTitle"
+                   @oninput="@((ChangeEventArgs args) => SetValueTitle(args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Show title">
+            @RenderToggle(_draft!.ValueShowTitle, value => _draft!.ValueShowTitle = value)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Subtitle">
+            <input class="property-grid-input"
+                   value="@_draft!.ValueSubtitle"
+                   @oninput="@((ChangeEventArgs args) => SetValueSubtitle(args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Show subtitle">
+            @RenderToggle(_draft!.ValueShowSubtitle, value => _draft!.ValueShowSubtitle = value)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Title color">
+            <PropertyGridColorPicker Value="@_draft!.ValueTitleColor"
+                                     DefaultValue="@DashboardWidgetCatalog.KpiDefaultTitleColor"
+                                     AriaLabel="Title color"
+                                     ValueChanged="@SetValueTitleColorAsync" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Subtitle color">
+            <PropertyGridColorPicker Value="@_draft!.ValueSubtitleColor"
+                                     DefaultValue="@DashboardWidgetCatalog.KpiDefaultSubtitleColor"
+                                     AriaLabel="Subtitle color"
+                                     ValueChanged="@SetValueSubtitleColorAsync" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Value color">
+            <PropertyGridColorPicker Value="@_draft!.ValueValueColor"
+                                     DefaultValue="@DashboardWidgetCatalog.KpiDefaultValueColor"
+                                     AriaLabel="Value color"
+                                     ValueChanged="@SetValueValueColorAsync" />
+        </PropertyGridRow>
+    </text>;
+
+    private RenderFragment RenderValueLayoutRows() => @<text>
+        <PropertyGridRow Name="Title align">
+            <PropertyGridIconSegment Value="@_draft!.ValueTitleAlign"
+                                     Options="@HorizontalAlignmentOptions"
+                                     AriaLabel="Title align"
+                                     ValueChanged="@SetValueTitleAlignAsync" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Value align">
+            <PropertyGridIconSegment Value="@_draft!.ValueValueAlign"
+                                     Options="@HorizontalAlignmentOptions"
+                                     AriaLabel="Value align"
+                                     ValueChanged="@SetValueValueAlignAsync" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Value place">
+            <PropertyGridIconSegment Value="@_draft!.ValueValuePlacement"
+                                     Options="@ValuePlacementOptions"
+                                     AriaLabel="Value place"
+                                     ValueChanged="@SetValueValuePlacementAsync" />
+        </PropertyGridRow>
+    </text>;
+
+    private RenderFragment RenderDigitalLabelRows() => @<text>
+        <PropertyGridRow Name="Label">
+            <input class="property-grid-input"
+                   value="@_draft!.DigitalLabel"
+                   @oninput="@((ChangeEventArgs args) => SetDigitalLabel(args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Show label">
+            @RenderToggle(_draft!.DigitalShowLabel, value => _draft!.DigitalShowLabel = value)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Label place">
+            <PropertyGridSelect Value="@_draft!.DigitalLabelPlacement"
+                                Options="@DigitalLabelPlacementOptions"
+                                AriaLabel="Label place"
+                                ValueChanged="@SetDigitalLabelPlacementAsync" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Label color">
+            <PropertyGridColorPicker Value="@_draft!.DigitalLabelColor"
+                                     DefaultValue="@DashboardWidgetCatalog.MetricDigitalDefaultLabelColor"
+                                     AriaLabel="Label color"
+                                     ValueChanged="@SetDigitalLabelColorAsync" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Digits">
+            <input class="property-grid-input"
+                   type="number"
+                   min="@DashboardWidgetCatalog.MetricDigitalMinDigits"
+                   max="@DashboardWidgetCatalog.MetricDigitalMaxDigits"
+                   value="@_draft!.DigitalDigits"
+                   @oninput="@((ChangeEventArgs args) => SetDigitalDigits(args.Value?.ToString()))" />
+        </PropertyGridRow>
+    </text>;
+
+    private RenderFragment RenderDigitalReadoutRows() => @<text>
+        <PropertyGridRow Name="Digit style">
+            <PropertyGridSelect Value="@_draft!.DigitalStyle"
+                                Options="@DigitalStyleOptions"
+                                AriaLabel="Digit style"
+                                ValueChanged="@SetDigitalStyleAsync" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Glow">
+            <PropertyGridSelect Value="@_draft!.DigitalGlow"
+                                Options="@DigitalGlowOptions"
+                                AriaLabel="Glow"
+                                ValueChanged="@SetDigitalGlowAsync" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Fit">
+            <PropertyGridSelect Value="@_draft!.DigitalFitMode"
+                                Options="@DigitalFitModeOptions"
+                                AriaLabel="Fit"
+                                ValueChanged="@SetDigitalFitModeAsync" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Segment">
+            <PropertyGridColorPicker Value="@_draft!.DigitalSegmentColor"
+                                     DefaultValue="@DashboardWidgetCatalog.MetricDigitalDefaultSegmentColor"
+                                     AriaLabel="Segment color"
+                                     ValueChanged="@SetDigitalSegmentColorAsync" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Inactive">
+            <PropertyGridColorPicker Value="@_draft!.DigitalInactiveSegmentColor"
+                                     DefaultValue="@DashboardWidgetCatalog.MetricDigitalDefaultInactiveSegmentColor"
+                                     AriaLabel="Inactive color"
+                                     ValueChanged="@SetDigitalInactiveSegmentColorAsync" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Background">
+            <PropertyGridColorPicker Value="@_draft!.DigitalBackgroundColor"
+                                     DefaultValue="@DashboardWidgetCatalog.MetricDigitalDefaultBackgroundColor"
+                                     AriaLabel="Background color"
+                                     ValueChanged="@SetDigitalBackgroundColorAsync" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Border">
+            <PropertyGridColorPicker Value="@_draft!.DigitalBorderColor"
+                                     DefaultValue="@DashboardWidgetCatalog.MetricDigitalDefaultBorderColor"
+                                     AriaLabel="Border color"
+                                     ValueChanged="@SetDigitalBorderColorAsync" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Border width" Unit="px">
+            <input class="property-grid-input"
+                   type="number"
+                   min="0"
+                   max="8"
+                   value="@_draft!.DigitalBorderWidth"
+                   @oninput="@((ChangeEventArgs args) => SetDigitalBorderWidth(args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Radius" Unit="px">
+            <input class="property-grid-input"
+                   type="number"
+                   min="0"
+                   max="32"
+                   value="@_draft!.DigitalRadius"
+                   @oninput="@((ChangeEventArgs args) => SetDigitalRadius(args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Padding" Unit="px">
+            <input class="property-grid-input"
+                   type="number"
+                   min="0"
+                   max="32"
+                   value="@_draft!.DigitalPadding"
+                   @oninput="@((ChangeEventArgs args) => SetDigitalPadding(args.Value?.ToString()))" />
+        </PropertyGridRow>
+    </text>;
+
+    private RenderFragment RenderToggle(bool value, Action<bool> setValue) => @<text>
+        <div class="property-grid-button-group">
+            <button type="button"
+                    class="@ChoiceClass(value, true)"
+                    @onclick="@(() => SetBool(setValue, true))">Shown</button>
+            <button type="button"
+                    class="@ChoiceClass(value, false)"
+                    @onclick="@(() => SetBool(setValue, false))">Hidden</button>
+        </div>
+    </text>;
+
+    private void SetBool(Action<bool> setValue, bool value)
+    {
+        setValue(value);
+        StateHasChanged();
+    }
+
+    private void SetValueTitle(string? value) => _draft!.ValueTitle = value ?? string.Empty;
+
+    private void SetValueSubtitle(string? value) => _draft!.ValueSubtitle = value ?? string.Empty;
+
+    private Task SetValueTitleColorAsync(string? value)
+    {
+        _draft!.ValueTitleColor = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task SetValueSubtitleColorAsync(string? value)
+    {
+        _draft!.ValueSubtitleColor = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task SetValueValueColorAsync(string? value)
+    {
+        _draft!.ValueValueColor = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task SetValueTitleAlignAsync(string? value)
+    {
+        _draft!.ValueTitleAlign = DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(value);
+        return Task.CompletedTask;
+    }
+
+    private Task SetValueValueAlignAsync(string? value)
+    {
+        _draft!.ValueValueAlign = DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(value);
+        return Task.CompletedTask;
+    }
+
+    private Task SetValueValuePlacementAsync(string? value)
+    {
+        _draft!.ValueValuePlacement = DashboardWidgetCatalog.NormalizeKpiValuePlacement(value);
+        return Task.CompletedTask;
+    }
+
+    private void SetDigitalLabel(string? value) => _draft!.DigitalLabel = value ?? string.Empty;
+
+    private Task SetDigitalLabelPlacementAsync(string? value)
+    {
+        _draft!.DigitalLabelPlacement = DashboardWidgetCatalog.NormalizeMetricDigitalLabelPlacement(value);
+        return Task.CompletedTask;
+    }
+
+    private Task SetDigitalLabelColorAsync(string? value)
+    {
+        _draft!.DigitalLabelColor = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private void SetDigitalDigits(string? value)
+        => _draft!.DigitalDigits = DashboardWidgetCatalog.NormalizeMetricDigitalDigits(value);
+
+    private Task SetDigitalStyleAsync(string? value)
+    {
+        _draft!.DigitalStyle = DashboardWidgetCatalog.NormalizeMetricDigitalStyle(value);
+        return Task.CompletedTask;
+    }
+
+    private Task SetDigitalGlowAsync(string? value)
+    {
+        _draft!.DigitalGlow = DashboardWidgetCatalog.NormalizeMetricDigitalGlow(value);
+        return Task.CompletedTask;
+    }
+
+    private Task SetDigitalFitModeAsync(string? value)
+    {
+        _draft!.DigitalFitMode = DashboardWidgetCatalog.NormalizeMetricDigitalFitMode(value);
+        return Task.CompletedTask;
+    }
+
+    private Task SetDigitalSegmentColorAsync(string? value)
+    {
+        _draft!.DigitalSegmentColor = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task SetDigitalInactiveSegmentColorAsync(string? value)
+    {
+        _draft!.DigitalInactiveSegmentColor = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task SetDigitalBackgroundColorAsync(string? value)
+    {
+        _draft!.DigitalBackgroundColor = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task SetDigitalBorderColorAsync(string? value)
+    {
+        _draft!.DigitalBorderColor = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private void SetDigitalBorderWidth(string? value)
+        => _draft!.DigitalBorderWidth = NormalizeInt(value, DashboardWidgetCatalog.MetricDigitalDefaultBorderWidth, 0, 8);
+
+    private void SetDigitalRadius(string? value)
+        => _draft!.DigitalRadius = NormalizeInt(value, DashboardWidgetCatalog.MetricDigitalDefaultRadius, 0, 32);
+
+    private void SetDigitalPadding(string? value)
+        => _draft!.DigitalPadding = NormalizeInt(value, DashboardWidgetCatalog.MetricDigitalDefaultPadding, 0, 32);
+
+    private Task ResetVisualAsync()
+    {
+        _draft?.ResetSelectedVisual();
+        return Task.CompletedTask;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Submit()
+    {
+        if (_draft is null)
+        {
+            return;
+        }
+
+        MudDialog.Close(DialogResult.Ok(new DashboardMetricVisualizationUpdate(_draft.BuildConfiguration())));
+    }
+
+    private static int NormalizeInt(string? value, int fallback, int min, int max)
+        => int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var parsed)
+            ? Math.Clamp(parsed, min, max)
+            : fallback;
+
+    private static string ChoiceClass(bool current, bool value)
+        => current == value ? "property-grid-choice selected" : "property-grid-choice";
+
+    private static IReadOnlyList<PropertyGridSelectOption> DigitalLabelPlacementOptions =>
+    [
+        new(DashboardWidgetCatalog.MetricDigitalLabelPlacementTop, "Top"),
+        new(DashboardWidgetCatalog.MetricDigitalLabelPlacementBottom, "Bottom"),
+        new(DashboardWidgetCatalog.MetricDigitalLabelPlacementHidden, "Hidden")
+    ];
+
+    private static IReadOnlyList<PropertyGridSelectOption> DigitalStyleOptions =>
+    [
+        new(DashboardWidgetCatalog.MetricDigitalStylePanel, "Panel"),
+        new(DashboardWidgetCatalog.MetricDigitalStyleSegment, "Segment"),
+        new(DashboardWidgetCatalog.MetricDigitalStyleTerminal, "Terminal")
+    ];
+
+    private static IReadOnlyList<PropertyGridSelectOption> DigitalGlowOptions =>
+    [
+        new(DashboardWidgetCatalog.MetricDigitalGlowOff, "Off"),
+        new(DashboardWidgetCatalog.MetricDigitalGlowSoft, "Soft"),
+        new(DashboardWidgetCatalog.MetricDigitalGlowStrong, "Strong")
+    ];
+
+    private static IReadOnlyList<PropertyGridSelectOption> DigitalFitModeOptions =>
+    [
+        new(DashboardWidgetCatalog.MetricDigitalFitCompact, "Compact"),
+        new(DashboardWidgetCatalog.MetricDigitalFitFill, "Fill")
+    ];
+
+    public sealed record DashboardMetricVisualizationUpdate(IReadOnlyDictionary<string, string> Configuration);
+}
