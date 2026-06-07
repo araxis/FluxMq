@@ -2861,3 +2861,16 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 409 tests.
 - Next step: commit the Rate Tile app-metric slice, then choose between `status.value` and `event.gauge` as the next single metric consumer to clean up.
+- Status Value app-metric consumption:
+  - Moved `status.value` onto the app-level metric selector path as a count/status metric consumer.
+  - Replaced the old metric-card renderer with the shared metric value visualization view and made the widget host let the visual own its header.
+  - Removed `status.value` from the old visual-metric/default `primaryMetric` path so new status widgets save as display config plus selected metric binding.
+  - Filtered the Status Value selector to count-based app metrics to keep it distinct from rate widgets.
+  - Added coverage for clean status-value widget config, composer defaults, inspector source ownership, shared rendering, and runtime value resolution from a root app metric artifact.
+  - Verification:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetSettingsDraft_WritesStatusValueAsAppMetricConfiguration|FullyQualifiedName~DashboardInspector_UsesAppMetricsForFocusedMetricValueWidgets|FullyQualifiedName~DashboardWidgetModuleCatalog_ProvidesFocusedPropertyDefinitionsForAllPaletteWidgets|FullyQualifiedName~DashboardMetricValueWidgets_UseSharedVisualizationView|FullyQualifiedName~AddDashboardWidget_AddsStatusValueDefaults|FullyQualifiedName~GetDashboardMetricValue_UsesAppMetricArtifactForStatusValue" -p:UseAppHost=false --verbosity minimal` passed with 6 tests.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 411 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 738 tests.
+    - `git diff --check` passed with line-ending normalization warnings for the edited files.
+- Next step: commit the Status Value app-metric slice, then continue one widget at a time with `event.gauge` unless a review finds a smaller dashboard metric blocker.

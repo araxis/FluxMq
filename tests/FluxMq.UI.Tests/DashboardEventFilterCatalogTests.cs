@@ -384,7 +384,7 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
-    public void DashboardWidgetSettingsDraft_WritesFocusedMetricValueWithoutSlots()
+    public void DashboardWidgetSettingsDraft_WritesStatusValueAsAppMetricConfiguration()
     {
         var draft = DashboardWidgetSettingsDraft.Create(
             new DashboardWidgetSnapshot(
@@ -392,19 +392,27 @@ public sealed class DashboardEventFilterCatalogTests
                 DashboardWidgetCatalog.StatusValueType,
                 new Dictionary<string, string>(StringComparer.Ordinal)
                 {
+                    ["title"] = "Factory issues",
+                    ["metric"] = "factoryIssuesMetric",
+                    [DashboardEventFilterCatalog.EventTypeKey] = FluxMqEventTypes.MqttMessagePublished,
+                    [DashboardEventFilterCatalog.TopicStartsWithKey] = "factory/",
+                    [DashboardEventFilterCatalog.StatusKey] = "published",
                     [DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricRecent,
                     [DashboardWidgetCatalog.DisplayMetricsKey] = "messages,recent"
                 }),
             new DashboardEventFilterCatalog());
 
-        draft.SetPrimaryMetric(DashboardWidgetCatalog.MetricPayloadBytes);
-        draft.PrimaryMetric.ShouldBe(DashboardWidgetCatalog.MetricPayloadBytes);
-
+        draft.UsesMetricQueryBuilder.ShouldBeTrue();
         var configuration = draft.BuildConfiguration();
+
+        configuration["title"].ShouldBe("Factory issues");
+        configuration["metric"].ShouldBe("factoryIssuesMetric");
+        configuration.ContainsKey(DashboardEventFilterCatalog.EventTypeKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardEventFilterCatalog.TopicStartsWithKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardEventFilterCatalog.StatusKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardWidgetCatalog.DisplayMetricsKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardWidgetCatalog.MetricCardColumnsKey).ShouldBeFalse();
-        configuration[DashboardWidgetCatalog.PrimaryMetricKey]
-            .ShouldBe(DashboardWidgetCatalog.MetricPayloadBytes);
     }
 
     [Fact]
@@ -1552,7 +1560,7 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
-    public void DashboardInspector_UsesAppMetricsForKpiCounterAndRateWidgets()
+    public void DashboardInspector_UsesAppMetricsForFocusedMetricValueWidgets()
     {
         var root = FindRepositoryRoot();
         var inspector = File.ReadAllText(Path.Combine(
@@ -1576,6 +1584,7 @@ public sealed class DashboardEventFilterCatalogTests
         inspector.ShouldContain("DashboardInspectorMetricQueryRows");
         inspector.ShouldContain("OpenMetricBuilderAsync");
         inspector.ShouldContain("DashboardWidgetCatalog.KpiTileType");
+        inspector.ShouldContain("DashboardWidgetCatalog.StatusValueType");
         inspector.ShouldContain("DashboardWidgetCatalog.RateTileType");
         inspector.ShouldContain("DashboardWidgetCatalog.EventCounterType");
         inspector.ShouldContain("DashboardWidgetCatalog.EventRateType");
@@ -1652,8 +1661,14 @@ public sealed class DashboardEventFilterCatalogTests
             .Keys
             .ShouldBe(["title"]);
         modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.StatusValueType)
+            .DefaultConfiguration
+            .Keys
+            .ShouldBe(["title"]);
+        modules
             .Where(static module =>
                 string.Equals(module.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal) ||
+                string.Equals(module.Type, DashboardWidgetCatalog.StatusValueType, StringComparison.Ordinal) ||
                 string.Equals(module.Type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal) ||
                 string.Equals(module.Type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal) ||
                 string.Equals(module.Type, DashboardWidgetCatalog.RateTileType, StringComparison.Ordinal))
@@ -2283,16 +2298,20 @@ public sealed class DashboardEventFilterCatalogTests
         var counter = File.ReadAllText(Path.Combine(widgetsPath, "DashboardEventCounterModuleView.razor"));
         var eventRate = File.ReadAllText(Path.Combine(widgetsPath, "DashboardEventRateModuleView.razor"));
         var rateTile = File.ReadAllText(Path.Combine(widgetsPath, "DashboardRateTileModuleView.razor"));
+        var statusValue = File.ReadAllText(Path.Combine(widgetsPath, "DashboardStatusValueModuleView.razor"));
 
         kpi.ShouldContain("DashboardMetricVisualizationHost");
         counter.ShouldContain("DashboardMetricValueVisualizationView");
         eventRate.ShouldContain("DashboardMetricValueVisualizationView");
         rateTile.ShouldContain("DashboardMetricValueVisualizationView");
+        statusValue.ShouldContain("DashboardMetricValueVisualizationView");
+        statusValue.ShouldNotContain("DashboardMetricTile");
         eventRate.ShouldNotContain("DashboardEventRateWidget");
         eventRate.ShouldNotContain("Context.Snapshot");
         widgetView.ShouldContain("DashboardWidgetCatalog.EventCounterType");
         widgetView.ShouldContain("DashboardWidgetCatalog.EventRateType");
         widgetView.ShouldContain("DashboardWidgetCatalog.RateTileType");
+        widgetView.ShouldContain("DashboardWidgetCatalog.StatusValueType");
     }
 
     [Fact]

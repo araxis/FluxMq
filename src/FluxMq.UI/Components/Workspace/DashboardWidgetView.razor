@@ -52,6 +52,7 @@
 
     private bool VisualOwnsHeader =>
         string.Equals(Widget.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal) ||
+        string.Equals(Widget.Type, DashboardWidgetCatalog.StatusValueType, StringComparison.Ordinal) ||
         string.Equals(Widget.Type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal) ||
         string.Equals(Widget.Type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal) ||
         string.Equals(Widget.Type, DashboardWidgetCatalog.RateTileType, StringComparison.Ordinal);

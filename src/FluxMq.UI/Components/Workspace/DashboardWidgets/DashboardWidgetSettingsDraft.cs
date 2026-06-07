@@ -82,6 +82,7 @@ public sealed class DashboardWidgetSettingsDraft
 
     public bool UsesMetricQueryBuilder =>
         IsKpiTile ||
+        string.Equals(Profile.Type, DashboardWidgetCatalog.StatusValueType, StringComparison.Ordinal) ||
         string.Equals(Profile.Type, DashboardWidgetCatalog.RateTileType, StringComparison.Ordinal) ||
         string.Equals(Profile.Type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal) ||
         string.Equals(Profile.Type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal);

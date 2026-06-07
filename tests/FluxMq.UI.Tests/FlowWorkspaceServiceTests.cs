@@ -2534,6 +2534,55 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public void GetDashboardMetricValue_UsesAppMetricArtifactForStatusValue()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddMetric("publishedMessages");
+        service.UpdateMetric(
+            "publishedMessages",
+            FluxMetricArtifactDefinition.CreateDefault("publishedMessages", "Published messages") with
+            {
+                Definition = new FluxMetricDefinition(
+                    "Published messages",
+                    FluxMetricCatalog.RuntimeEventsSource,
+                    FluxMetricCatalog.MeasureCount,
+                    "60s",
+                    eventType: FlowEventTypes.MqttMessagePublished,
+                    topicStartsWith: "test/",
+                    status: "published",
+                    format: FluxMetricCatalog.FormatNumber)
+            });
+        service.AddDashboard("ops");
+        service.AddDashboardWidget(DashboardWidgetCatalog.StatusValueType, "slot:0:0");
+        service.UpdateDashboardWidget(
+            "statusValue",
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["title"] = "Published messages",
+                ["metric"] = "publishedMessages"
+            });
+        service.UpdateDashboardWidgetBinding(
+            "statusValue",
+            "publishedMessages",
+            ["publishedMessages"]);
+        service.SetActiveDashboard("ops");
+
+        service.RecordManualMqttPublish("test/one", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+        service.RecordManualMqttPublish("other/skip", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+        service.RecordManualMqttPublish("test/two", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+
+        var widget = service.GetActiveDashboardLayout()
+            .ShouldNotBeNull()
+            .Widgets["statusValue"];
+        var value = service.GetDashboardMetricValue(widget);
+
+        value.Label.ShouldBe("Count");
+        value.Value.ShouldBe(2);
+        value.Unit.ShouldBe("events");
+        value.FormattedValue.ShouldBe("2");
+    }
+
+    [Fact]
     public async Task RunAsync_CollectsRuntimeEventsForDashboardWidgets()
     {
         var mqttClient = new FakeRuntimeMqttBrokerClient();

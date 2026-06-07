@@ -1431,6 +1431,26 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void AddDashboardWidget_AddsStatusValueDefaults()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+
+        var updated = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.StatusValueType, "slot:0:0");
+
+        var layout = composer.GetDashboardLayout(updated, "ops").ShouldNotBeNull();
+        layout.Widgets.Keys.ShouldBe(["statusValue"]);
+        var widget = layout.Widgets["statusValue"];
+        widget.Type.ShouldBe(DashboardWidgetCatalog.StatusValueType);
+        widget.Configuration["title"].ShouldBe("Status value");
+        widget.Configuration.Keys.ShouldBe(["title", "metric"], ignoreOrder: true);
+        widget.Configuration["metric"].ShouldBe("ops.statusValueMetric");
+        layout.Metrics["ops.statusValueMetric"].Aggregation.ShouldBe("count");
+        layout.Bindings["statusValue"].PrimaryMetric.ShouldBe("ops.statusValueMetric");
+        layout.Cells.ShouldContain(cell => cell.Widget == "statusValue");
+    }
+
+    [Fact]
     public void AddDashboardWidget_AddsVisualDashboardWidgetDefaults()
     {
         var composer = new FlowDefinitionComposer();

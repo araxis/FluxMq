@@ -239,7 +239,8 @@ public static class DashboardWidgetModuleCatalog
                 configuration[key] = value;
             }
         }
-        else if (string.Equals(type, DashboardWidgetCatalog.RateTileType, StringComparison.Ordinal))
+        else if (string.Equals(type, DashboardWidgetCatalog.RateTileType, StringComparison.Ordinal) ||
+                 string.Equals(type, DashboardWidgetCatalog.StatusValueType, StringComparison.Ordinal))
         {
             configuration.Remove(DashboardWidgetCatalog.PrimaryMetricKey);
         }

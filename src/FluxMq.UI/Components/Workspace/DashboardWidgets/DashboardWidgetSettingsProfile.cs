@@ -94,6 +94,14 @@ public sealed record DashboardWidgetInspectorLabels(
         TitleRow = "Header"
     };
 
+    public static DashboardWidgetInspectorLabels StatusValue { get; } = Default with
+    {
+        DataGroup = "Status source",
+        MetricRow = "Status metric",
+        DisplayGroup = "Status display",
+        TitleRow = "Header"
+    };
+
     public static DashboardWidgetInspectorLabels LatestEvent { get; } = Default with
     {
         DataGroup = "Event source",
@@ -174,7 +182,7 @@ public static class DashboardWidgetSettingsProfiles
                 normalized,
                 "Status value",
                 Icons.Material.Filled.Verified,
-                usesVisualMetrics: true),
+                labels: DashboardWidgetInspectorLabels.StatusValue),
             DashboardWidgetCatalog.RateTileType => Event(
                 normalized,
                 "Rate tile",
