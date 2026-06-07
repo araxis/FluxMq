@@ -2,24 +2,56 @@
 @using MudBlazor
 @using MudBlazor.Utilities
 
-<div class="property-grid-mud-color-picker">
-    <MudColorPicker Value="@MudValue"
-                    ValueChanged="@SetMudColorAsync"
-                    ShowAlpha="true"
-                    ShowColorField="true"
-                    ShowInputs="true"
-                    ShowModeSwitch="true"
-                    ShowPreview="true"
-                    ShowSliders="true"
-                    ShowToolbar="true"
-                    ColorPickerMode="ColorPickerMode.HEX"
-                    Variant="Variant.Outlined"
-                    Margin="Margin.Dense"
-                    Label="@PickerLabel" />
+<div class="property-grid-color-picker">
+    <button type="button"
+            class="property-grid-color-button"
+            style="@SwatchStyle"
+            title="@PickerTitle"
+            aria-label="@PickerTitle"
+            @onclick="@TogglePicker">
+        <span class="property-grid-color-swatch" aria-hidden="true"></span>
+    </button>
+    <input class="property-grid-color-text"
+           type="text"
+           value="@TextValue"
+           spellcheck="false"
+           aria-label="@TextTitle"
+           @oninput="@SetTextFromEventAsync"
+           @onchange="@CommitTextAsync"
+           @onblur="@ResetInvalidText" />
+    <button type="button"
+            class="property-grid-color-picker-button"
+            title="@PickerTitle"
+            aria-label="@PickerTitle"
+            @onclick="@TogglePicker">
+        <MudIcon Icon="@Icons.Material.Filled.Palette" Size="Size.Small" />
+    </button>
+
+    <MudPopover Open="@_pickerOpen"
+                AnchorOrigin="Origin.BottomRight"
+                TransformOrigin="Origin.TopRight"
+                Class="property-grid-color-popover">
+        <div class="property-grid-color-popover-content" @onclick:stopPropagation="true">
+            <MudColorPicker Value="@MudValue"
+                            ValueChanged="@SetMudColorAsync"
+                            ShowAlpha="true"
+                            ShowColorField="true"
+                            ShowInputs="true"
+                            ShowModeSwitch="true"
+                            ShowPreview="true"
+                            ShowSliders="true"
+                            ShowToolbar="true"
+                            ColorPickerMode="ColorPickerMode.HEX"
+                            PickerVariant="PickerVariant.Static" />
+        </div>
+    </MudPopover>
 </div>
 
 @code {
     private const string FallbackColor = "#2ed3c6";
+    private string? _textValue;
+    private string? _lastCommittedColor;
+    private bool _pickerOpen;
 
     [Parameter]
     public string? Value { get; set; }
@@ -33,30 +65,143 @@
     [Parameter]
     public EventCallback<string?> ValueChanged { get; set; }
 
-    private MudColor MudValue => ParseColor(Value, DefaultValue);
+    private string CurrentColor => NormalizeColor(Value, DefaultValue);
 
-    private string PickerLabel => string.IsNullOrWhiteSpace(AriaLabel)
-        ? "Color"
+    private string TextValue => _textValue ?? CurrentColor;
+
+    private MudColor MudValue => ParseColor(CurrentColor);
+
+    private string PickerTitle => string.IsNullOrWhiteSpace(AriaLabel)
+        ? "Pick color"
         : AriaLabel;
 
-    private async Task SetMudColorAsync(MudColor color)
-        => await ValueChanged.InvokeAsync(ToPersistedColor(color));
+    private string TextTitle => string.IsNullOrWhiteSpace(AriaLabel)
+        ? "Edit color value"
+        : $"{AriaLabel} value";
 
-    private static MudColor ParseColor(string? value, string? fallback)
+    private string SwatchStyle => $"--property-grid-color-value: {CurrentColor};";
+
+    protected override void OnParametersSet()
     {
-        var candidate = string.IsNullOrWhiteSpace(value) ? fallback : value;
+        var current = CurrentColor;
+        if (!string.Equals(_lastCommittedColor, current, StringComparison.OrdinalIgnoreCase) || _textValue is null)
+        {
+            _textValue = current;
+            _lastCommittedColor = current;
+        }
+    }
+
+    private void TogglePicker()
+        => _pickerOpen = !_pickerOpen;
+
+    private async Task SetMudColorAsync(MudColor color)
+        => await SetColorAsync(ToPersistedColor(color));
+
+    private async Task SetTextFromEventAsync(ChangeEventArgs args)
+    {
+        _textValue = args.Value?.ToString() ?? string.Empty;
+        if (TryNormalizeColor(_textValue, out var next))
+        {
+            await SetColorAsync(next);
+        }
+    }
+
+    private async Task CommitTextAsync()
+    {
+        if (TryNormalizeColor(_textValue, out var next))
+        {
+            _textValue = next;
+            await SetColorAsync(next);
+            return;
+        }
+
+        ResetInvalidText();
+    }
+
+    private void ResetInvalidText()
+    {
+        if (!TryNormalizeColor(_textValue, out _))
+        {
+            _textValue = CurrentColor;
+        }
+    }
+
+    private async Task SetColorAsync(string next)
+    {
+        _textValue = next;
+        if (!string.Equals(next, CurrentColor, StringComparison.OrdinalIgnoreCase))
+        {
+            _lastCommittedColor = next;
+            await ValueChanged.InvokeAsync(next);
+        }
+    }
+
+    private static MudColor ParseColor(string value)
+        => MudColor.TryParse(value, out var parsed)
+            ? parsed
+            : MudColor.Parse(FallbackColor);
+
+    private static string NormalizeColor(string? value, string? defaultValue)
+    {
+        if (TryNormalizeColor(value, out var color))
+        {
+            return color;
+        }
+
+        if (TryNormalizeColor(defaultValue, out color))
+        {
+            return color;
+        }
+
+        return FallbackColor.ToUpperInvariant();
+    }
+
+    private static bool TryNormalizeColor(string? value, out string color)
+    {
+        color = string.Empty;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var candidate = value.Trim();
         if (string.Equals(candidate, "transparent", StringComparison.OrdinalIgnoreCase))
         {
-            candidate = "#00000000";
+            color = "#00000000";
+            return true;
         }
 
-        if (!string.IsNullOrWhiteSpace(candidate) &&
-            MudColor.TryParse(candidate, out var parsed))
+        if (candidate.Length == 4 &&
+            candidate[0] == '#' &&
+            candidate.Skip(1).All(IsHex))
         {
-            return parsed;
+            color = $"#{candidate[1]}{candidate[1]}{candidate[2]}{candidate[2]}{candidate[3]}{candidate[3]}".ToUpperInvariant();
+            return true;
         }
 
-        return MudColor.Parse(FallbackColor);
+        if (candidate.Length == 5 &&
+            candidate[0] == '#' &&
+            candidate.Skip(1).All(IsHex))
+        {
+            color = $"#{candidate[1]}{candidate[1]}{candidate[2]}{candidate[2]}{candidate[3]}{candidate[3]}{candidate[4]}{candidate[4]}".ToUpperInvariant();
+            return true;
+        }
+
+        if ((candidate.Length == 7 || candidate.Length == 9) &&
+            candidate[0] == '#' &&
+            candidate.Skip(1).All(IsHex))
+        {
+            color = candidate.ToUpperInvariant();
+            return true;
+        }
+
+        if (MudColor.TryParse(candidate, out var parsed))
+        {
+            color = ToPersistedColor(parsed);
+            return true;
+        }
+
+        return false;
     }
 
     private static string ToPersistedColor(MudColor color)
@@ -69,4 +214,9 @@
 
         return $"#{Convert.ToInt32(color.R):X2}{Convert.ToInt32(color.G):X2}{Convert.ToInt32(color.B):X2}{alpha:X2}";
     }
+
+    private static bool IsHex(char value)
+        => (value >= '0' && value <= '9') ||
+           (value >= 'a' && value <= 'f') ||
+           (value >= 'A' && value <= 'F');
 }

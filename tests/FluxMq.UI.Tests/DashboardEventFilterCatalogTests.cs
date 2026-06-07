@@ -1531,15 +1531,38 @@ public sealed class DashboardEventFilterCatalogTests
         var markup = File.ReadAllText(path);
 
         markup.ShouldContain("<MudColorPicker");
+        markup.ShouldContain("property-grid-color-picker");
+        markup.ShouldContain("property-grid-color-swatch");
+        markup.ShouldContain("<MudPopover");
         markup.ShouldContain("ShowAlpha=\"true\"");
         markup.ShouldContain("ShowColorField=\"true\"");
         markup.ShouldContain("ShowInputs=\"true\"");
         markup.ShouldContain("ShowModeSwitch=\"true\"");
         markup.ShouldContain("ColorPickerMode=\"ColorPickerMode.HEX\"");
+        markup.ShouldContain("PickerVariant=\"PickerVariant.Static\"");
         markup.ShouldContain("#00000000");
         markup.ShouldContain("MudColor.TryParse");
         markup.ShouldContain("ToPersistedColor");
+        markup.ShouldNotContain("property-grid-mud-color-picker");
         markup.ShouldNotContain("property-grid-color-alpha");
+    }
+
+    [Fact]
+    public void DashboardDesigner_EditPreviewKeepsMetricValuePlacement()
+    {
+        var root = FindRepositoryRoot();
+        var path = Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor.css");
+        var css = File.ReadAllText(path);
+
+        css.ShouldContain(".dashboard-cell-widget-preview ::deep .dashboard-metric-value-layout");
+        css.ShouldContain("justify-content: var(--dashboard-kpi-value-placement, flex-start);");
+        css.ShouldNotContain("justify-content: space-between;");
     }
 
     [Fact]

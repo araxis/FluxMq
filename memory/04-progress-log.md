@@ -2597,4 +2597,9 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - A normal app build reached the copy-to-output step but was blocked by the already-running desktop app locking `FluxMq.UI.exe`.
   - A separate-output UI build passed with no errors.
   - Separate-output UI tests passed with 375 tests.
+- Compact color-row correction:
+  - Restored the property-grid color row to the compact swatch/text/button layout.
+  - Kept the alpha-capable framework color picker behind a popover instead of rendering a full picker input inside each property row.
+  - Fixed dashboard edit-cell metric-value previews so top/middle/bottom value placement uses the same placement variable as live mode.
+  - Verified with separate-output UI build and focused UI tests for color picker and edit-preview placement.
 - Next step: run final diff checks and focused commit, then visually review inline KPI Value/Digital property rows before applying the pattern to another widget.

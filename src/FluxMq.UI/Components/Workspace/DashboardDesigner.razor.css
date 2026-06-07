@@ -426,7 +426,7 @@
 .dashboard-cell-widget-preview ::deep .dashboard-rate-layout,
 .dashboard-cell-widget-preview ::deep .dashboard-metric-value-layout {
     gap: 6px;
-    justify-content: space-between;
+    justify-content: var(--dashboard-kpi-value-placement, flex-start);
 }
 
 .dashboard-cell-widget-preview ::deep .dashboard-rate-track {
