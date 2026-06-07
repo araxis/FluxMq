@@ -2571,4 +2571,9 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Package-mode UI tests passed with 373 tests.
   - After the reusable readout refinement, UI build passed and package-mode UI tests passed with 374 tests.
   - After the digital-control expansion, UI build passed and package-mode UI tests passed with 374 tests.
+- Digital readout control fix:
+  - Removed inactive decimal-point drawing so the seven-segment readout no longer shows stray small circles under every digit.
+  - Extended the property-grid color picker to support alpha colors through `#RGBA`, `#RRGGBBAA`, `transparent`, and a compact alpha-percent field.
+  - Updated dashboard widget setting normalization so alpha hex values are preserved when saved.
+  - Verification passed with UI build and 375 package-mode UI tests.
 - Next step: visually review KPI `Value` versus `Digital`; if accepted, add the next visualization or reuse the pattern on the next metric widget one slice at a time.

@@ -111,13 +111,21 @@
     {
         var sequence = 0;
         var segments = SegmentMap.TryGetValue(glyph, out var value) ? value : string.Empty;
-        foreach (var segment in new[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g', '.' })
+        foreach (var segment in new[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g' })
         {
             builder.OpenElement(sequence++, "path");
             builder.AddAttribute(sequence++, "class", segments.Contains(segment, StringComparison.Ordinal)
                 ? "segment on"
                 : "segment off");
             builder.AddAttribute(sequence++, "d", SegmentPath(segment));
+            builder.CloseElement();
+        }
+
+        if (segments.Contains('.', StringComparison.Ordinal))
+        {
+            builder.OpenElement(sequence++, "path");
+            builder.AddAttribute(sequence++, "class", "segment on");
+            builder.AddAttribute(sequence++, "d", SegmentPath('.'));
             builder.CloseElement();
         }
     };

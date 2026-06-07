@@ -6,7 +6,7 @@
            title="@PickerTitle">
         <input class="property-grid-color-native"
                type="color"
-               value="@CurrentColor"
+               value="@NativeColor"
                aria-label="@PickerTitle"
                @oninput="@SetValueFromEventAsync"
                @onchange="@SetValueFromEventAsync" />
@@ -20,6 +20,14 @@
            @oninput="@SetTextFromEventAsync"
            @onchange="@CommitTextAsync"
            @onblur="@ResetInvalidText" />
+    <input class="property-grid-color-alpha"
+           type="number"
+           min="0"
+           max="100"
+           value="@AlphaPercent"
+           title="@AlphaTitle"
+           aria-label="@AlphaTitle"
+           @oninput="@SetAlphaFromEventAsync" />
 </div>
 
 @code {
@@ -41,7 +49,11 @@
 
     private string CurrentColor => NormalizeColor(Value, DefaultValue);
 
+    private string NativeColor => ToNativeColor(CurrentColor);
+
     private string TextValue => _textValue ?? CurrentColor;
+
+    private int AlphaPercent => ToAlphaPercent(CurrentColor);
 
     private string PickerTitle => string.IsNullOrWhiteSpace(AriaLabel)
         ? "Pick color"
@@ -50,6 +62,10 @@
     private string TextTitle => string.IsNullOrWhiteSpace(AriaLabel)
         ? "Edit color value"
         : $"{AriaLabel} value";
+
+    private string AlphaTitle => string.IsNullOrWhiteSpace(AriaLabel)
+        ? "Edit alpha percent"
+        : $"{AriaLabel} alpha";
 
     private string SwatchStyle => $"--property-grid-color-value: {CurrentColor};";
 
@@ -65,8 +81,14 @@
 
     private async Task SetValueFromEventAsync(ChangeEventArgs args)
     {
-        var next = NormalizeColor(args.Value?.ToString(), DefaultValue);
+        var next = WithExistingAlpha(NormalizeColor(args.Value?.ToString(), DefaultValue), CurrentColor);
         await SetColorAsync(next);
+    }
+
+    private async Task SetAlphaFromEventAsync(ChangeEventArgs args)
+    {
+        var alpha = NormalizeAlphaPercent(args.Value?.ToString());
+        await SetColorAsync(WithAlphaPercent(CurrentColor, alpha));
     }
 
     private async Task SetTextFromEventAsync(ChangeEventArgs args)
@@ -142,6 +164,14 @@
             return true;
         }
 
+        if (candidate.Length == 5 &&
+            candidate[0] == '#' &&
+            candidate.Skip(1).All(IsHex))
+        {
+            color = $"#{candidate[1]}{candidate[1]}{candidate[2]}{candidate[2]}{candidate[3]}{candidate[3]}{candidate[4]}{candidate[4]}".ToLowerInvariant();
+            return true;
+        }
+
         if (candidate.Length == 7 &&
             candidate[0] == '#' &&
             candidate.Skip(1).All(IsHex))
@@ -150,8 +180,56 @@
             return true;
         }
 
+        if (candidate.Length == 9 &&
+            candidate[0] == '#' &&
+            candidate.Skip(1).All(IsHex))
+        {
+            color = candidate.ToLowerInvariant();
+            return true;
+        }
+
+        if (string.Equals(candidate, "transparent", StringComparison.OrdinalIgnoreCase))
+        {
+            color = "#00000000";
+            return true;
+        }
+
         return false;
     }
+
+    private static string ToNativeColor(string color)
+        => color.Length >= 7 ? color[..7] : FallbackColor;
+
+    private static string WithExistingAlpha(string rgbColor, string existingColor)
+        => existingColor.Length == 9
+            ? rgbColor[..7] + existingColor[7..]
+            : rgbColor[..7];
+
+    private static int ToAlphaPercent(string color)
+    {
+        if (color.Length != 9 ||
+            !byte.TryParse(color[7..], System.Globalization.NumberStyles.HexNumber, null, out var alpha))
+        {
+            return 100;
+        }
+
+        return (int)Math.Round(alpha / 255d * 100d);
+    }
+
+    private static string WithAlphaPercent(string color, int alphaPercent)
+    {
+        var rgb = ToNativeColor(color);
+        if (alphaPercent >= 100)
+        {
+            return rgb;
+        }
+
+        var alpha = (int)Math.Round(Math.Clamp(alphaPercent, 0, 100) / 100d * 255d);
+        return rgb + alpha.ToString("x2", System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    private static int NormalizeAlphaPercent(string? value)
+        => int.TryParse(value, out var alpha) ? Math.Clamp(alpha, 0, 100) : 100;
 
     private static bool IsHex(char value)
         => value is >= '0' and <= '9' or >= 'a' and <= 'f' or >= 'A' and <= 'F';

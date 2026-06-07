@@ -504,7 +504,7 @@ public sealed class DashboardWidgetSettingsDraft
     }
 
     private static bool IsHexColor(string value)
-        => value.Length == 7 &&
+        => value.Length is 7 or 9 &&
            value[0] == '#' &&
            value.Skip(1).All(static character => character is >= '0' and <= '9' or >= 'a' and <= 'f' or >= 'A' and <= 'F');
 

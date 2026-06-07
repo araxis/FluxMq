@@ -433,8 +433,8 @@ public sealed class DashboardEventFilterCatalogTests
                     [DashboardWidgetCatalog.MetricVisualizationKey] = DashboardMetricVisualizationIds.Digital,
                     [DashboardWidgetCatalog.MetricDigitalStyleKey] = DashboardWidgetCatalog.MetricDigitalStyleTerminal,
                     [DashboardWidgetCatalog.MetricDigitalGlowKey] = DashboardWidgetCatalog.MetricDigitalGlowStrong,
-                    [DashboardWidgetCatalog.MetricDigitalBackgroundColorKey] = "#010203",
-                    [DashboardWidgetCatalog.MetricDigitalSegmentColorKey] = "#aabbcc",
+                    [DashboardWidgetCatalog.MetricDigitalBackgroundColorKey] = "#01020344",
+                    [DashboardWidgetCatalog.MetricDigitalSegmentColorKey] = "#aabbcc80",
                     [DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey] = "#112233",
                     [DashboardWidgetCatalog.MetricDigitalLabelColorKey] = "#ddeeff",
                     [DashboardWidgetCatalog.MetricDigitalDigitsKey] = "6"
@@ -444,8 +444,8 @@ public sealed class DashboardEventFilterCatalogTests
         draft.MetricVisualizationId.ShouldBe(DashboardMetricVisualizationIds.Digital);
         draft.DigitalStyle.ShouldBe(DashboardWidgetCatalog.MetricDigitalStyleTerminal);
         draft.DigitalGlow.ShouldBe(DashboardWidgetCatalog.MetricDigitalGlowStrong);
-        draft.DigitalBackgroundColor.ShouldBe("#010203");
-        draft.DigitalSegmentColor.ShouldBe("#aabbcc");
+        draft.DigitalBackgroundColor.ShouldBe("#01020344");
+        draft.DigitalSegmentColor.ShouldBe("#aabbcc80");
         draft.DigitalInactiveSegmentColor.ShouldBe("#112233");
         draft.DigitalLabelColor.ShouldBe("#ddeeff");
         draft.DigitalDigits.ShouldBe(6);
@@ -458,8 +458,8 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldBe(DashboardWidgetCatalog.MetricDigitalStyleTerminal);
         configuration[DashboardWidgetCatalog.MetricDigitalGlowKey]
             .ShouldBe(DashboardWidgetCatalog.MetricDigitalGlowStrong);
-        configuration[DashboardWidgetCatalog.MetricDigitalBackgroundColorKey].ShouldBe("#010203");
-        configuration[DashboardWidgetCatalog.MetricDigitalSegmentColorKey].ShouldBe("#aabbcc");
+        configuration[DashboardWidgetCatalog.MetricDigitalBackgroundColorKey].ShouldBe("#01020344");
+        configuration[DashboardWidgetCatalog.MetricDigitalSegmentColorKey].ShouldBe("#aabbcc80");
         configuration[DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey].ShouldBe("#112233");
         configuration[DashboardWidgetCatalog.MetricDigitalLabelColorKey].ShouldBe("#ddeeff");
         configuration[DashboardWidgetCatalog.MetricDigitalDigitsKey].ShouldBe("6");
@@ -1471,6 +1471,29 @@ public sealed class DashboardEventFilterCatalogTests
         readout.ShouldContain("public int MinimumDigits");
         readout.ShouldContain("viewBox=");
         readout.ShouldContain("SegmentPath");
+        readout.ShouldContain("foreach (var segment in new[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g' })");
+        readout.ShouldContain("if (segments.Contains('.', StringComparison.Ordinal))");
+    }
+
+    [Fact]
+    public void PropertyGridColorPicker_SupportsAlphaColorEditing()
+    {
+        var root = FindRepositoryRoot();
+        var path = Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "PropertyGridColorPicker.razor");
+        var markup = File.ReadAllText(path);
+
+        markup.ShouldContain("property-grid-color-alpha");
+        markup.ShouldContain("candidate.Length == 9");
+        markup.ShouldContain("candidate.Length == 5");
+        markup.ShouldContain("#00000000");
+        markup.ShouldContain("WithExistingAlpha");
+        markup.ShouldContain("WithAlphaPercent");
     }
 
     [Fact]
