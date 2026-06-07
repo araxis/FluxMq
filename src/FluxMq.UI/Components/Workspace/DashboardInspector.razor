@@ -299,7 +299,6 @@
         <PropertyGridRow Name="Metric query">
             <div class="dashboard-inspector-query-row">
                 <div class="dashboard-inspector-query-preview">
-                    <span>@MetricQueryPreviewValue</span>
                     <small title="@MetricQuerySummary">@MetricQuerySummary</small>
                 </div>
                 <button type="button"
@@ -887,26 +886,6 @@
     private string MetricQuerySummary => _metricDraft is null
         ? "No metric query"
         : DashboardMetricQuerySummary.DescribeSentence(_metricDraft.BuildQuery(), EventFilters, MetricRegistry);
-
-    private string MetricQueryPreviewValue
-    {
-        get
-        {
-            if (Widget is null || _metricDraft is null)
-            {
-                return "-";
-            }
-
-            var preview = DashboardMetricQueryPreviewFactory.Create(
-                _metricDraft.BuildQuery(),
-                Widget,
-                Project,
-                MetricRegistry,
-                EventFilters,
-                useSampleFallback: false);
-            return preview.Value.FormattedValue;
-        }
-    }
 
     private string MetricQueryEditTitle => IsEventRateQueryBuilderWidget
         ? "Edit event rate query"

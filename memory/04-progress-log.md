@@ -2607,4 +2607,8 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Added outside-click auto-close for the color picker popover.
   - Fixed duplicate edit-cell headers for event counter, event rate, and rate tile by letting metric-value visuals own their header consistently.
   - Verified with separate-output UI build and focused UI tests for color picker and metric-value widget rendering.
-- Next step: run final diff checks and focused commit, then visually review inline KPI Value/Digital property rows before applying the pattern to another widget.
+- Metric-query row polish:
+  - Removed the live preview value from the property-grid metric-query row so it shows only the query summary and edit action.
+  - Restyled the metric-query edit action as a quiet borderless property-grid icon button.
+  - Verification passed with separate-output UI build and the focused metric-query row UI test.
+- Next step: visually review the metric-query row in the open dashboard; if accepted, continue inline KPI Value/Digital property polish before applying the pattern to another widget.

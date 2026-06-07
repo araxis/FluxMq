@@ -1272,6 +1272,13 @@ public sealed class DashboardEventFilterCatalogTests
     [Fact]
     public void DashboardInspector_UsesCompactSingleLineMetricQueryRow()
     {
+        var markup = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot(),
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspector.razor"));
         var css = File.ReadAllText(Path.Combine(
             FindRepositoryRoot(),
             "src",
@@ -1283,9 +1290,12 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 32px;");
         css.ShouldContain(".dashboard-inspector-query-preview");
         css.ShouldContain("height: 100%;");
-        css.ShouldContain("max-width: 34px;");
         css.ShouldContain("width: 32px;");
         css.ShouldContain("white-space: nowrap;");
+        css.ShouldContain(".dashboard-inspector-query-edit");
+        css.ShouldContain("background: transparent;");
+        css.ShouldContain("border: 0;");
+        markup.ShouldNotContain("MetricQueryPreviewValue");
     }
 
     [Fact]
