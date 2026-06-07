@@ -880,11 +880,13 @@
             : "dashboard-cell-content";
 
     private static RenderFragment RenderEmptyCellContent(DashboardCellSnapshot cell) => @<text>
-        <span class="dashboard-cell-name">@CellTitle(cell)</span>
-        @if (cell.IsMerged)
-        {
-            <span class="dashboard-cell-span">@CellSpan(cell)</span>
-        }
+        <div class="dashboard-cell-placeholder" title="@($"{CellTitle(cell)} {CellSpan(cell)}")">
+            <span class="dashboard-cell-name">@CellTitle(cell)</span>
+            @if (cell.IsMerged)
+            {
+                <span class="dashboard-cell-span">@CellSpan(cell)</span>
+            }
+        </div>
     </text>;
 
     private DashboardWidgetSnapshot? FindWidget(string? widgetName)

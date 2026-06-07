@@ -2616,4 +2616,8 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Added `Show unit`, `Unit text`, and `Unit color` settings under the selected Value visualization.
   - Kept natural metric units as the default fallback when `Unit text` is empty.
   - Separate-output UI build and focused UI tests passed after the change.
-- Next step: visually review the Value visual unit controls in the open dashboard, then decide whether unit placement/case should also become visual settings.
+- Empty-cell shrink polish:
+  - Added a bounded empty-cell placeholder wrapper in the dashboard editor grid.
+  - Anchored empty-cell labels to the cell interior so merged/large cells do not place labels on visual seams when the grid is narrow.
+  - Separate-output UI build and focused UI test passed.
+- Next step: visually review the empty-cell labels at narrow widths, then decide whether unit placement/case should also become Value visual settings.

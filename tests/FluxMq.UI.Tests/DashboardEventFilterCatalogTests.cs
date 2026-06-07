@@ -1617,6 +1617,33 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardDesigner_EmptyCellLabelsStayBoundedWhenGridShrinks()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor.css"));
+
+        markup.ShouldContain("dashboard-cell-placeholder");
+        css.ShouldContain(".dashboard-cell-placeholder");
+        css.ShouldContain("align-items: flex-start;");
+        css.ShouldContain("max-width: 100%;");
+        css.ShouldContain(".dashboard-cell-span");
+        css.ShouldContain("text-overflow: ellipsis;");
+    }
+
+    [Fact]
     public void DashboardMetricValueWidgets_UseSharedVisualizationView()
     {
         var root = FindRepositoryRoot();
