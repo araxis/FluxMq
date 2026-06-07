@@ -368,97 +368,24 @@
 
         @if (draft.Profile.UsesVisualMetrics)
         {
-            <PropertyGridRow Name="@InspectorLabels.PrimaryCardRow">
-                <PropertyGridSelect Value="@draft.PrimaryMetric"
-                                    Options="@VisualMetricOptions"
-                                    AriaLabel="@InspectorLabels.PrimaryCardRow"
-                                    ValueChanged="@SetVisualPrimaryMetricAsync" />
-            </PropertyGridRow>
-
-            @if (draft.Profile.SupportsMetricSlots)
-            {
-                @foreach (var item in draft.DisplayMetrics.Select((metric, index) => new { Metric = metric, Index = index }))
-                {
-                    var currentMetric = item.Metric;
-                    <PropertyGridRow Name="@($"{InspectorLabels.CardRowPrefix} {item.Index + 1}")">
-                        <div class="property-grid-inline">
-                            <span class="property-grid-cell-text" title="@currentMetric">@VisualMetricLabel(currentMetric)</span>
-                            <button type="button"
-                                    class="property-grid-small-button"
-                                    title="Move up"
-                                    disabled="@(item.Index == 0)"
-                                    @onclick="@(() => MoveVisualMetricAsync(currentMetric, -1))">^</button>
-                            <button type="button"
-                                    class="property-grid-small-button"
-                                    title="Move down"
-                                    disabled="@(item.Index == draft.DisplayMetrics.Count - 1)"
-                                    @onclick="@(() => MoveVisualMetricAsync(currentMetric, 1))">v</button>
-                            <button type="button"
-                                    class="property-grid-small-button"
-                                    title="Remove"
-                                    disabled="@(!draft.CanRemoveDisplayMetric)"
-                                    @onclick="@(() => RemoveVisualMetricAsync(currentMetric))">x</button>
-                        </div>
-                    </PropertyGridRow>
-                }
-
-                <PropertyGridRow Name="@InspectorLabels.AddCardRow">
-                    <div class="property-grid-inline">
-                        <PropertyGridSelect Value="@(_displayMetricToAdd ?? string.Empty)"
-                                            Options="@AddVisualMetricOptions"
-                                            AriaLabel="@InspectorLabels.AddCardRow"
-                                            ValueChanged="@SetVisualMetricToAddAsync" />
-                        <button type="button"
-                                class="property-grid-small-button"
-                                disabled="@string.IsNullOrWhiteSpace(_displayMetricToAdd)"
-                                @onclick="@AddVisualMetricAsync">+</button>
-                    </div>
-                </PropertyGridRow>
-
-                <PropertyGridRow Name="@InspectorLabels.ColumnsRow" Unit="cols">
-                    <input class="property-grid-input"
-                           type="number"
-                           min="@DashboardWidgetCatalog.MinMetricCardColumns"
-                           max="@DashboardWidgetCatalog.MaxMetricCardColumns"
-                           step="1"
-                           value="@draft.MetricCardColumns"
-                           @oninput="@SetMetricCardColumnsFromEventAsync" />
-                </PropertyGridRow>
-            }
+            <DashboardInspectorVisualMetricRows Draft="@draft"
+                                                Labels="@InspectorLabels"
+                                                MetricToAdd="@_displayMetricToAdd"
+                                                MetricOptions="@VisualMetricOptions"
+                                                AddMetricOptions="@AddVisualMetricOptions"
+                                                PrimaryMetricChanged="@SetVisualPrimaryMetricAsync"
+                                                MetricToAddChanged="@SetVisualMetricToAddAsync"
+                                                AddMetric="@AddVisualMetricAsync"
+                                                MoveMetric="@MoveVisualMetricAsync"
+                                                RemoveMetric="@RemoveVisualMetricAsync"
+                                                CardColumnsChanged="@SetMetricCardColumnsAsync" />
         }
 
-        @if (draft.Profile.UsesGaugeStyle)
-        {
-            <PropertyGridRow Name="@InspectorLabels.GaugeRow">
-                <div class="property-grid-button-group">
-                    <button type="button" class="@ChoiceClass(draft.GaugeStyle, DashboardWidgetCatalog.GaugeStyleRing)" @onclick="@(() => SetGaugeStyleAsync(DashboardWidgetCatalog.GaugeStyleRing))">Ring</button>
-                    <button type="button" class="@ChoiceClass(draft.GaugeStyle, DashboardWidgetCatalog.GaugeStyleMeter)" @onclick="@(() => SetGaugeStyleAsync(DashboardWidgetCatalog.GaugeStyleMeter))">Meter</button>
-                    <button type="button" class="@ChoiceClass(draft.GaugeStyle, DashboardWidgetCatalog.GaugeStyleTiles)" @onclick="@(() => SetGaugeStyleAsync(DashboardWidgetCatalog.GaugeStyleTiles))">Tiles</button>
-                </div>
-            </PropertyGridRow>
-        }
-
-        @if (draft.Profile.UsesChartType)
-        {
-            <PropertyGridRow Name="@InspectorLabels.ChartRow">
-                <div class="property-grid-button-group">
-                    <button type="button" class="@ChoiceClass(draft.ChartType, DashboardWidgetCatalog.ChartTypeBars)" @onclick="@(() => SetChartTypeAsync(DashboardWidgetCatalog.ChartTypeBars))">Bars</button>
-                    <button type="button" class="@ChoiceClass(draft.ChartType, DashboardWidgetCatalog.ChartTypeLine)" @onclick="@(() => SetChartTypeAsync(DashboardWidgetCatalog.ChartTypeLine))">Line</button>
-                    <button type="button" class="@ChoiceClass(draft.ChartType, DashboardWidgetCatalog.ChartTypeArea)" @onclick="@(() => SetChartTypeAsync(DashboardWidgetCatalog.ChartTypeArea))">Area</button>
-                    <button type="button" class="@ChoiceClass(draft.ChartType, DashboardWidgetCatalog.ChartTypeTopics)" @onclick="@(() => SetChartTypeAsync(DashboardWidgetCatalog.ChartTypeTopics))">Topics</button>
-                </div>
-            </PropertyGridRow>
-        }
-
-        @if (draft.Profile.IsTopicTreeWidget)
-        {
-            <PropertyGridRow Name="@InspectorLabels.TopicSystemRow">
-                <div class="property-grid-button-group">
-                    <button type="button" class="@ChoiceClass(draft.ExcludeSystemTopics ? "false" : "true", "true")" @onclick="@(() => SetExcludeSystemTopicsAsync(false))">Show</button>
-                    <button type="button" class="@ChoiceClass(draft.ExcludeSystemTopics ? "true" : "false", "true")" @onclick="@(() => SetExcludeSystemTopicsAsync(true))">Hide</button>
-                </div>
-            </PropertyGridRow>
-        }
+        <DashboardInspectorDisplayModeRows Draft="@draft"
+                                           Labels="@InspectorLabels"
+                                           GaugeStyleChanged="@SetGaugeStyleAsync"
+                                           ChartTypeChanged="@SetChartTypeAsync"
+                                           ExcludeSystemTopicsChanged="@SetExcludeSystemTopicsAsync" />
 
         }
     </text>;
@@ -977,14 +904,6 @@
         await AutoApplyAsync();
     }
 
-    private async Task SetMetricCardColumnsFromEventAsync(ChangeEventArgs args)
-    {
-        if (int.TryParse(args.Value?.ToString(), out var value))
-        {
-            await SetMetricCardColumnsAsync(value);
-        }
-    }
-
     private async Task SetVisualPrimaryMetricAsync(string? value)
     {
         if (_widgetDraft is null)
@@ -1024,6 +943,9 @@
         _widgetDraft.MoveDisplayMetric(metricId, offset);
         await AutoApplyAsync();
     }
+
+    private Task MoveVisualMetricAsync(DashboardInspectorMetricMove move)
+        => MoveVisualMetricAsync(move.MetricName, move.Offset);
 
     private async Task RemoveVisualMetricAsync(string metricId)
     {
@@ -1423,16 +1345,6 @@
 
     private static string NormalizeValue(string? value)
         => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
-
-    private static string ChoiceClass(string? currentValue, string value)
-        => string.Equals(currentValue ?? string.Empty, value, StringComparison.Ordinal)
-            ? "property-grid-choice selected"
-            : "property-grid-choice";
-
-    private static string VisualMetricLabel(string metricId)
-        => DashboardWidgetCatalog.MetricOptions
-            .FirstOrDefault(metric => string.Equals(metric.Id, metricId, StringComparison.Ordinal))
-            ?.Label ?? metricId;
 
     private static IReadOnlyList<PropertyGridSelectOption> ToSelectOptions(IEnumerable<DashboardFilterChoice> options)
         => [.. options.Select(static option => new PropertyGridSelectOption(option.Value, option.Label))];

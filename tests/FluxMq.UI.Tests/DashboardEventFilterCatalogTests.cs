@@ -1929,6 +1929,69 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardInspector_UsesFocusedVisualMetricRowComponent()
+    {
+        var root = FindRepositoryRoot();
+        var inspector = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspector.razor"));
+        var visualRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorVisualMetricRows.razor"));
+
+        inspector.ShouldContain("DashboardInspectorVisualMetricRows");
+        inspector.ShouldNotContain("SetMetricCardColumnsFromEventAsync");
+        inspector.ShouldNotContain("private static string VisualMetricLabel");
+        inspector.ShouldNotContain("PropertyGridRow Name=\"@InspectorLabels.PrimaryCardRow\"");
+        visualRows.ShouldContain("PropertyGridRow Name=\"@Labels.PrimaryCardRow\"");
+        visualRows.ShouldContain("PropertyGridRow Name=\"@Labels.AddCardRow\"");
+        visualRows.ShouldContain("PropertyGridRow Name=\"@Labels.ColumnsRow\"");
+        visualRows.ShouldContain("DashboardInspectorMetricMove");
+        visualRows.ShouldContain("VisualMetricLabel");
+        visualRows.ShouldContain("CardColumnsChanged");
+    }
+
+    [Fact]
+    public void DashboardInspector_UsesFocusedDisplayModeRowComponent()
+    {
+        var root = FindRepositoryRoot();
+        var inspector = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspector.razor"));
+        var displayRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorDisplayModeRows.razor"));
+
+        inspector.ShouldContain("DashboardInspectorDisplayModeRows");
+        inspector.ShouldNotContain("private static string ChoiceClass");
+        inspector.ShouldNotContain("PropertyGridRow Name=\"@InspectorLabels.GaugeRow\"");
+        inspector.ShouldNotContain("PropertyGridRow Name=\"@InspectorLabels.ChartRow\"");
+        inspector.ShouldNotContain("PropertyGridRow Name=\"@InspectorLabels.TopicSystemRow\"");
+        displayRows.ShouldContain("PropertyGridRow Name=\"@Labels.GaugeRow\"");
+        displayRows.ShouldContain("PropertyGridRow Name=\"@Labels.ChartRow\"");
+        displayRows.ShouldContain("PropertyGridRow Name=\"@Labels.TopicSystemRow\"");
+        displayRows.ShouldContain("GaugeStyleChanged");
+        displayRows.ShouldContain("ChartTypeChanged");
+        displayRows.ShouldContain("ExcludeSystemTopicsChanged");
+    }
+
+    [Fact]
     public void DashboardDesigner_EmptyCellLabelsStayBoundedWhenGridShrinks()
     {
         var root = FindRepositoryRoot();
