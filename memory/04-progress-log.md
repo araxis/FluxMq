@@ -2694,3 +2694,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 711 tests.
     - `git diff --check` passed.
 - Next step: continue splitting dashboard inspector metric data rows next.
+- Dashboard inspector metric row split:
+  - Extracted app-level metric selection, generated metric parameter rows, preview, and open-metric action into `DashboardInspectorAppMetricRows`.
+  - Extracted legacy/dashboard-local metric query editing into `DashboardInspectorMetricQueryRows` so the parent inspector no longer owns the compact query row markup.
+  - Extracted metric binding and multi-series slot rows into `DashboardInspectorMetricBindingRows`.
+  - Kept `DashboardInspector` focused on state, widget classification, auto-apply commands, and group composition.
+  - Added source-boundary tests so the inspector delegates app metric rows, query rows, and binding rows to focused components.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardInspector"` passed with 6 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 387 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 712 tests.
+- Next step: run diff check, then commit the focused metric-row split.

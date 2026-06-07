@@ -1,0 +1,97 @@
+@using FluxMq.UI.Models
+@using FluxMq.UI.Services
+
+@if (!SupportsSlots)
+{
+    <PropertyGridRow Name="@Labels.MetricRow">
+        <PropertyGridSelect Value="@(PrimaryMetric ?? string.Empty)"
+                            Options="@MetricOptions"
+                            AriaLabel="@Labels.MetricRow"
+                            ValueChanged="@PrimaryMetricChanged" />
+    </PropertyGridRow>
+}
+else
+{
+    <PropertyGridRow Name="@Labels.PrimarySeriesRow">
+        <PropertyGridSelect Value="@(PrimaryMetric ?? string.Empty)"
+                            Options="@MetricOptions"
+                            AriaLabel="@Labels.PrimarySeriesRow"
+                            ValueChanged="@PrimaryMetricChanged" />
+    </PropertyGridRow>
+
+    @foreach (var item in Metrics.Select((metric, index) => new { Metric = metric, Index = index }))
+    {
+        var currentMetric = item.Metric;
+        <PropertyGridRow Name="@($"{Labels.SeriesRowPrefix} {item.Index + 1}")">
+            <div class="property-grid-inline">
+                <span class="property-grid-cell-text" title="@currentMetric">@DashboardWidgetFormatting.MetricDisplayName(currentMetric)</span>
+                <button type="button"
+                        class="property-grid-small-button"
+                        title="Move up"
+                        disabled="@(item.Index == 0)"
+                        @onclick="@(() => MoveMetric.InvokeAsync(new DashboardInspectorMetricMove(currentMetric, -1)))">^</button>
+                <button type="button"
+                        class="property-grid-small-button"
+                        title="Move down"
+                        disabled="@(item.Index == Metrics.Count - 1)"
+                        @onclick="@(() => MoveMetric.InvokeAsync(new DashboardInspectorMetricMove(currentMetric, 1)))">v</button>
+                <button type="button"
+                        class="property-grid-small-button"
+                        title="Remove"
+                        disabled="@(Metrics.Count == 1)"
+                        @onclick="@(() => RemoveMetric.InvokeAsync(currentMetric))">x</button>
+            </div>
+        </PropertyGridRow>
+    }
+
+    <PropertyGridRow Name="@Labels.AddSeriesRow">
+        <div class="property-grid-inline">
+            <PropertyGridSelect Value="@(MetricToAdd ?? string.Empty)"
+                                Options="@AddMetricOptions"
+                                AriaLabel="@Labels.AddSeriesRow"
+                                ValueChanged="@MetricToAddChanged" />
+            <button type="button"
+                    class="property-grid-small-button"
+                    disabled="@string.IsNullOrWhiteSpace(MetricToAdd)"
+                    @onclick="@(() => AddMetric.InvokeAsync())">+</button>
+        </div>
+    </PropertyGridRow>
+}
+
+@code {
+    [Parameter]
+    public DashboardWidgetInspectorLabels Labels { get; set; } = DashboardWidgetInspectorLabels.Default;
+
+    [Parameter]
+    public bool SupportsSlots { get; set; }
+
+    [Parameter]
+    public string? PrimaryMetric { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<string> Metrics { get; set; } = [];
+
+    [Parameter]
+    public string? MetricToAdd { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<PropertyGridSelectOption> MetricOptions { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<PropertyGridSelectOption> AddMetricOptions { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<string?> PrimaryMetricChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> MetricToAddChanged { get; set; }
+
+    [Parameter]
+    public EventCallback AddMetric { get; set; }
+
+    [Parameter]
+    public EventCallback<string> RemoveMetric { get; set; }
+
+    [Parameter]
+    public EventCallback<DashboardInspectorMetricMove> MoveMetric { get; set; }
+}

@@ -1323,15 +1323,16 @@ public sealed class DashboardEventFilterCatalogTests
     [Fact]
     public void DashboardInspector_UsesCompactSingleLineMetricQueryRow()
     {
+        var root = FindRepositoryRoot();
         var markup = File.ReadAllText(Path.Combine(
-            FindRepositoryRoot(),
+            root,
             "src",
             "FluxMq.UI",
             "Components",
             "Workspace",
-            "DashboardInspector.razor"));
+            "DashboardInspectorMetricQueryRows.razor"));
         var css = File.ReadAllText(Path.Combine(
-            FindRepositoryRoot(),
+            root,
             "src",
             "FluxMq.UI",
             "Components",
@@ -1346,33 +1347,47 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".dashboard-inspector-query-edit");
         css.ShouldContain("background: transparent;");
         css.ShouldContain("border: 0;");
+        markup.ShouldContain("dashboard-inspector-query-row");
+        markup.ShouldContain("dashboard-inspector-query-preview");
+        markup.ShouldContain("dashboard-inspector-query-edit");
+        markup.ShouldContain("Edit.InvokeAsync()");
         markup.ShouldNotContain("MetricQueryPreviewValue");
     }
 
     [Fact]
     public void DashboardInspector_UsesMetricBuilderForKpiCounterAndRateWidgets()
     {
-        var path = Path.Combine(
-            FindRepositoryRoot(),
+        var root = FindRepositoryRoot();
+        var inspector = File.ReadAllText(Path.Combine(
+            root,
             "src",
             "FluxMq.UI",
             "Components",
             "Workspace",
-            "DashboardInspector.razor");
-        var markup = File.ReadAllText(path);
+            "DashboardInspector.razor"));
+        var queryRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorMetricQueryRows.razor"));
 
-        markup.ShouldContain("IsEventCounterQueryBuilderWidget");
-        markup.ShouldContain("IsEventRateQueryBuilderWidget");
-        markup.ShouldContain("IsMetricQueryBuilderWidget");
-        markup.ShouldContain("!IsMetricQueryBuilderWidget");
-        markup.ShouldContain("OpenMetricBuilderAsync");
-        markup.ShouldContain("Event counter query");
-        markup.ShouldContain("Event rate query");
-        markup.ShouldContain("FluxMetricCatalog.MeasureCount");
-        markup.ShouldContain("FluxMetricCatalog.MeasureRate");
-        markup.ShouldContain("[nameof(DashboardMetricQueryBuilderDialog.AllowedMeasures)] = MetricQueryAllowedMeasures");
-        markup.ShouldNotContain("OpenKpiMetricBuilderAsync");
-        markup.ShouldNotContain("ApplyKpiMetricQueryAsync");
+        inspector.ShouldContain("IsEventCounterQueryBuilderWidget");
+        inspector.ShouldContain("IsEventRateQueryBuilderWidget");
+        inspector.ShouldContain("IsMetricQueryBuilderWidget");
+        inspector.ShouldContain("!IsMetricQueryBuilderWidget");
+        inspector.ShouldContain("DashboardInspectorMetricQueryRows");
+        inspector.ShouldContain("OpenMetricBuilderAsync");
+        inspector.ShouldContain("Event counter query");
+        inspector.ShouldContain("Event rate query");
+        inspector.ShouldContain("FluxMetricCatalog.MeasureCount");
+        inspector.ShouldContain("FluxMetricCatalog.MeasureRate");
+        inspector.ShouldContain("[nameof(DashboardMetricQueryBuilderDialog.AllowedMeasures)] = MetricQueryAllowedMeasures");
+        queryRows.ShouldContain("dashboard-inspector-query-row");
+        queryRows.ShouldContain("dashboard-inspector-query-edit");
+        inspector.ShouldNotContain("OpenKpiMetricBuilderAsync");
+        inspector.ShouldNotContain("ApplyKpiMetricQueryAsync");
     }
 
     [Fact]
@@ -1795,6 +1810,52 @@ public sealed class DashboardEventFilterCatalogTests
         layoutRows.ShouldContain("DuplicateWidget");
         layoutRows.ShouldContain("DeleteWidget");
         styleRows.ShouldContain("Reset cell style");
+    }
+
+    [Fact]
+    public void DashboardInspector_UsesFocusedMetricDataRowComponents()
+    {
+        var root = FindRepositoryRoot();
+        var inspector = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspector.razor"));
+        var appRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorAppMetricRows.razor"));
+        var bindingRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorMetricBindingRows.razor"));
+        var queryRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorMetricQueryRows.razor"));
+
+        inspector.ShouldContain("DashboardInspectorAppMetricRows");
+        inspector.ShouldContain("DashboardInspectorMetricBindingRows");
+        inspector.ShouldContain("DashboardInspectorMetricQueryRows");
+        inspector.ShouldNotContain("<PropertyGridRow Name=\"Metric query\">");
+        inspector.ShouldNotContain("private RenderFragment RenderMetricParameterField");
+        appRows.ShouldContain("Open metric");
+        appRows.ShouldContain("ParameterChanged");
+        bindingRows.ShouldContain("PrimaryMetricChanged");
+        bindingRows.ShouldContain("AddMetric");
+        bindingRows.ShouldContain("DashboardInspectorMetricMove");
+        queryRows.ShouldContain("dashboard-inspector-query-edit");
     }
 
     [Fact]
