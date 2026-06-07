@@ -60,6 +60,36 @@ public static class DashboardMetricQueryMapper
             AdditionalFilters: definition.AdditionalFilters);
     }
 
+    public static DashboardMetricSnapshot ToDashboardMetricSnapshot(
+        string metricName,
+        DashboardMetricQueryDefinition query)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(metricName);
+        ArgumentNullException.ThrowIfNull(query);
+
+        var filters = new Dictionary<string, string>(StringComparer.Ordinal);
+        AddIfPresent(filters, FluxMetricCatalog.EventTypeKey, query.EventType);
+        AddIfPresent(filters, FluxMetricCatalog.TopicStartsWithKey, query.TopicStartsWith);
+        AddIfPresent(filters, FluxMetricCatalog.TopicNotStartsWithKey, query.TopicNotStartsWith);
+        AddIfPresent(filters, FluxMetricCatalog.StatusKey, query.Status);
+        foreach (var (key, value) in query.AdditionalFilters)
+        {
+            AddIfPresent(filters, key, value);
+        }
+
+        return new DashboardMetricSnapshot(
+            metricName,
+            query.Source,
+            query.Aggregation,
+            query.Window,
+            query.GroupBy,
+            filters,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["unit"] = query.Format
+            });
+    }
+
     public static DashboardMetricValue ToDashboardMetricValue(FluxMetricValue value)
         => new(value.Label, value.Value, value.Unit, value.FormattedValue);
 

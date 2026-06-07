@@ -206,7 +206,7 @@
                     Widget.Configuration,
                     metricName)
                 .BuildDefinition(metricName);
-            metric = ToMetricSnapshot(
+            metric = DashboardMetricQueryMapper.ToDashboardMetricSnapshot(
                 metricName,
                 DashboardMetricQueryMapper.ToDashboardQuery(legacyDefinition));
         }
@@ -858,7 +858,7 @@
         _bindingMetrics = [metricName];
         _metricDraft = DashboardMetricEditorDraft.Create(
             metricName,
-            ToMetricSnapshot(metricName, query),
+            DashboardMetricQueryMapper.ToDashboardMetricSnapshot(metricName, query),
             EventFilters,
             MetricRegistry,
             Widget.Type);
@@ -1270,7 +1270,9 @@
         var definition = CreateAppMetricDefinition(metricName);
         return definition is null
             ? null
-            : ToMetricSnapshot(metricName, DashboardMetricQueryMapper.ToDashboardQuery(definition));
+            : DashboardMetricQueryMapper.ToDashboardMetricSnapshot(
+                metricName,
+                DashboardMetricQueryMapper.ToDashboardQuery(definition));
     }
 
     private FluxMetricDefinition? CreateSelectedAppMetricDefinition()
@@ -1291,41 +1293,6 @@
 
     private static bool IsKpiWidget(DashboardWidgetSnapshot widget)
         => string.Equals(widget.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal);
-
-    private static DashboardMetricSnapshot ToMetricSnapshot(
-        string metricName,
-        DashboardMetricQueryDefinition query)
-    {
-        var filters = new Dictionary<string, string>(StringComparer.Ordinal);
-        AddIfPresent(filters, DashboardEventFilterCatalog.EventTypeKey, query.EventType);
-        AddIfPresent(filters, DashboardEventFilterCatalog.TopicStartsWithKey, query.TopicStartsWith);
-        AddIfPresent(filters, DashboardEventFilterCatalog.TopicNotStartsWithKey, query.TopicNotStartsWith);
-        AddIfPresent(filters, DashboardEventFilterCatalog.StatusKey, query.Status);
-        foreach (var (key, value) in query.AdditionalFilters)
-        {
-            AddIfPresent(filters, key, value);
-        }
-
-        return new DashboardMetricSnapshot(
-            metricName,
-            query.Source,
-            query.Aggregation,
-            query.Window,
-            query.GroupBy,
-            filters,
-            new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["unit"] = query.Format
-            });
-    }
-
-    private static void AddIfPresent(Dictionary<string, string> target, string key, string? value)
-    {
-        if (!string.IsNullOrWhiteSpace(value))
-        {
-            target[key] = value.Trim();
-        }
-    }
 
     private static string NormalizeValue(string? value)
         => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();

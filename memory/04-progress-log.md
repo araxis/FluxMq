@@ -2749,3 +2749,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 717 tests.
     - `git diff --check` passed.
 - Next step: commit the focused metric query option-row split, then inspect the remaining dashboard inspector state-loading methods.
+- Dashboard metric query mapper cleanup:
+  - Moved dashboard query to `DashboardMetricSnapshot` conversion into `DashboardMetricQueryMapper`.
+  - Removed the duplicate local snapshot mapping helper from `DashboardInspector`.
+  - Added mapper and source-boundary tests so the inspector keeps delegating snapshot conversion.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardMetricQueryMapper|FullyQualifiedName~DashboardInspector"` passed with 14 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 394 tests.
+    - First full solution run hit a transient `ScenarioRunnerTests.RunAsync_SkipsRemainingStepsWhenWhenEventDoesNotMatch` assertion; the focused rerun passed.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed on rerun with 719 tests.
+- Next step: commit the metric mapper cleanup, then continue reducing the dashboard inspector state-loading path.

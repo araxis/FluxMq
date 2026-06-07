@@ -922,6 +922,63 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardMetricQueryMapper_CreatesDashboardMetricSnapshot()
+    {
+        var query = new DashboardMetricQueryDefinition(
+            "runtimeEvents",
+            "count",
+            "60s",
+            GroupBy: "topic",
+            EventType: FluxMqEventTypes.MqttMessagePublished,
+            TopicStartsWith: "factory/",
+            TopicNotStartsWith: "$SYS/",
+            Status: "published",
+            Format: "bytes",
+            AdditionalFilters: new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [DashboardEventFilterCatalog.AttributeFilterKey("qos")] = "1"
+            });
+
+        var metric = DashboardMetricQueryMapper.ToDashboardMetricSnapshot("publishedMetric", query);
+
+        metric.Name.ShouldBe("publishedMetric");
+        metric.Source.ShouldBe(query.Source);
+        metric.Aggregation.ShouldBe(query.Aggregation);
+        metric.Window.ShouldBe(query.Window);
+        metric.GroupBy.ShouldBe(query.GroupBy);
+        metric.ReadFilter(DashboardEventFilterCatalog.EventTypeKey).ShouldBe(FluxMqEventTypes.MqttMessagePublished);
+        metric.ReadFilter(DashboardEventFilterCatalog.TopicStartsWithKey).ShouldBe("factory/");
+        metric.ReadFilter(DashboardEventFilterCatalog.TopicNotStartsWithKey).ShouldBe("$SYS/");
+        metric.ReadFilter(DashboardEventFilterCatalog.StatusKey).ShouldBe("published");
+        metric.ReadFilter(DashboardEventFilterCatalog.AttributeFilterKey("qos")).ShouldBe("1");
+        metric.ReadFormat("unit").ShouldBe("bytes");
+    }
+
+    [Fact]
+    public void DashboardInspector_DelegatesMetricSnapshotMapping()
+    {
+        var root = FindRepositoryRoot();
+        var inspector = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspector.razor"));
+        var mapper = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Services",
+            "DashboardMetricQueryMapper.cs"));
+
+        inspector.ShouldNotContain("DashboardMetricSnapshot ToMetricSnapshot");
+        inspector.ShouldNotContain("private static void AddIfPresent");
+        inspector.ShouldContain("DashboardMetricQueryMapper.ToDashboardMetricSnapshot");
+        mapper.ShouldContain("ToDashboardMetricSnapshot");
+    }
+
+    [Fact]
     public void DashboardMetricQueryPreviewFactory_UsesSampleWhenNoLiveEventsMatch()
     {
         var service = new FlowWorkspaceService(new FlowDefinitionComposer());
