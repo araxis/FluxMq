@@ -51,7 +51,10 @@
         : Module!.LiveComponent;
 
     private bool VisualOwnsHeader =>
-        string.Equals(Widget.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal);
+        string.Equals(Widget.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal) ||
+        string.Equals(Widget.Type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal) ||
+        string.Equals(Widget.Type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal) ||
+        string.Equals(Widget.Type, DashboardWidgetCatalog.RateTileType, StringComparison.Ordinal);
 
     private IDictionary<string, object> ComponentParameters => new Dictionary<string, object>
     {

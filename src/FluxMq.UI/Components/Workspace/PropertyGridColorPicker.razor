@@ -27,10 +27,18 @@
         <MudIcon Icon="@Icons.Material.Filled.Palette" Size="Size.Small" />
     </button>
 
+    <MudOverlay Visible="@_pickerOpen"
+                AutoClose="true"
+                DarkBackground="false"
+                LightBackground="false"
+                LockScroll="false"
+                ZIndex="1280"
+                OnClosed="@ClosePicker" />
     <MudPopover Open="@_pickerOpen"
                 AnchorOrigin="Origin.BottomRight"
                 TransformOrigin="Origin.TopRight"
-                Class="property-grid-color-popover">
+                Class="property-grid-color-popover"
+                Style="z-index: 1290;">
         <div class="property-grid-color-popover-content" @onclick:stopPropagation="true">
             <MudColorPicker Value="@MudValue"
                             ValueChanged="@SetMudColorAsync"
@@ -93,6 +101,9 @@
 
     private void TogglePicker()
         => _pickerOpen = !_pickerOpen;
+
+    private void ClosePicker()
+        => _pickerOpen = false;
 
     private async Task SetMudColorAsync(MudColor color)
         => await SetColorAsync(ToPersistedColor(color));

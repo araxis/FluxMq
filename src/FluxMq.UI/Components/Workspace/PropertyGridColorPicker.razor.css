@@ -1,7 +1,7 @@
 .property-grid-color-picker {
     align-items: stretch;
     display: grid;
-    grid-template-columns: 36px minmax(0, 1fr) 34px;
+    grid-template-columns: 36px minmax(0, 1fr) 28px;
     height: 100%;
     min-height: 24px;
     min-width: 0;
@@ -27,6 +27,10 @@
 .property-grid-color-picker-button {
     border-left: 1px solid color-mix(in srgb, var(--flux-border) 70%, transparent);
     border-right: 0;
+}
+
+.property-grid-color-picker-button ::deep .mud-icon-root {
+    font-size: 17px;
 }
 
 .property-grid-color-button:hover,

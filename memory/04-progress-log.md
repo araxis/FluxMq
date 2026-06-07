@@ -2602,4 +2602,9 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Kept the alpha-capable framework color picker behind a popover instead of rendering a full picker input inside each property row.
   - Fixed dashboard edit-cell metric-value previews so top/middle/bottom value placement uses the same placement variable as live mode.
   - Verified with separate-output UI build and focused UI tests for color picker and edit-preview placement.
+- Follow-up compact-control fix:
+  - Shrank the property-grid palette action column.
+  - Added outside-click auto-close for the color picker popover.
+  - Fixed duplicate edit-cell headers for event counter, event rate, and rate tile by letting metric-value visuals own their header consistently.
+  - Verified with separate-output UI build and focused UI tests for color picker and metric-value widget rendering.
 - Next step: run final diff checks and focused commit, then visually review inline KPI Value/Digital property rows before applying the pattern to another widget.

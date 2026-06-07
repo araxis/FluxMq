@@ -1533,6 +1533,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("<MudColorPicker");
         markup.ShouldContain("property-grid-color-picker");
         markup.ShouldContain("property-grid-color-swatch");
+        markup.ShouldContain("<MudOverlay");
+        markup.ShouldContain("AutoClose=\"true\"");
+        markup.ShouldContain("OnClosed=\"@ClosePicker\"");
         markup.ShouldContain("<MudPopover");
         markup.ShouldContain("ShowAlpha=\"true\"");
         markup.ShouldContain("ShowColorField=\"true\"");
@@ -1540,11 +1543,22 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ShowModeSwitch=\"true\"");
         markup.ShouldContain("ColorPickerMode=\"ColorPickerMode.HEX\"");
         markup.ShouldContain("PickerVariant=\"PickerVariant.Static\"");
+        markup.ShouldContain("private void ClosePicker()");
         markup.ShouldContain("#00000000");
         markup.ShouldContain("MudColor.TryParse");
         markup.ShouldContain("ToPersistedColor");
         markup.ShouldNotContain("property-grid-mud-color-picker");
         markup.ShouldNotContain("property-grid-color-alpha");
+
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "PropertyGridColorPicker.razor.css"));
+        css.ShouldContain("grid-template-columns: 36px minmax(0, 1fr) 28px;");
+        css.ShouldContain("font-size: 17px;");
     }
 
     [Fact]
@@ -1570,6 +1584,7 @@ public sealed class DashboardEventFilterCatalogTests
     {
         var root = FindRepositoryRoot();
         var widgetsPath = Path.Combine(root, "src", "FluxMq.UI", "Components", "Workspace", "DashboardWidgets");
+        var widgetView = File.ReadAllText(Path.Combine(root, "src", "FluxMq.UI", "Components", "Workspace", "DashboardWidgetView.razor"));
         var kpi = File.ReadAllText(Path.Combine(widgetsPath, "DashboardKpiTileModuleView.razor"));
         var counter = File.ReadAllText(Path.Combine(widgetsPath, "DashboardEventCounterModuleView.razor"));
         var eventRate = File.ReadAllText(Path.Combine(widgetsPath, "DashboardEventRateModuleView.razor"));
@@ -1581,6 +1596,9 @@ public sealed class DashboardEventFilterCatalogTests
         rateTile.ShouldContain("DashboardMetricValueVisualizationView");
         eventRate.ShouldNotContain("DashboardEventRateWidget");
         eventRate.ShouldNotContain("Context.Snapshot");
+        widgetView.ShouldContain("DashboardWidgetCatalog.EventCounterType");
+        widgetView.ShouldContain("DashboardWidgetCatalog.EventRateType");
+        widgetView.ShouldContain("DashboardWidgetCatalog.RateTileType");
     }
 
     [Fact]
