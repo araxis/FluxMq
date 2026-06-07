@@ -305,29 +305,13 @@
         }
     </text>;
 
-    private RenderFragment RenderMetricQueryProperties() => @<text>
-        @if (_metricDraft is not null)
-        {
-            @if (_widgetDraft?.Profile.UsesMetricAggregation == true)
-            {
-                <PropertyGridRow Name="Aggregate">
-                    <PropertyGridSelect Value="@_metricDraft.Aggregation"
-                                        Options="@AggregationSelectOptions"
-                                        AriaLabel="Aggregate"
-                                        ValueChanged="@SetMetricAggregationAsync" />
-                </PropertyGridRow>
-            }
-            @if (_widgetDraft?.Profile.UsesMetricWindow == true)
-            {
-            <PropertyGridRow Name="@InspectorLabels.WindowRow">
-                <PropertyGridSelect Value="@_metricDraft.Window"
-                                    Options="@WindowSelectOptions"
-                                    AriaLabel="@InspectorLabels.WindowRow"
-                                    ValueChanged="@SetMetricWindowAsync" />
-            </PropertyGridRow>
-            }
-        }
-    </text>;
+    private RenderFragment RenderMetricQueryProperties() => @<DashboardInspectorMetricQueryOptionRows MetricDraft="@_metricDraft"
+                                                                                                       WidgetDraft="@_widgetDraft"
+                                                                                                       Labels="@InspectorLabels"
+                                                                                                       AggregationOptions="@AggregationSelectOptions"
+                                                                                                       WindowOptions="@WindowSelectOptions"
+                                                                                                       AggregationChanged="@SetMetricAggregationAsync"
+                                                                                                       WindowChanged="@SetMetricWindowAsync" />;
 
     private RenderFragment RenderFilterProperties() => @<DashboardInspectorEventFilterRows Draft="@_widgetDraft"
                                                                                            Labels="@InspectorLabels"

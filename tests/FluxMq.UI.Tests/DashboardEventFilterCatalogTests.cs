@@ -1867,6 +1867,34 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardInspector_UsesFocusedMetricQueryOptionRowComponent()
+    {
+        var root = FindRepositoryRoot();
+        var inspector = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspector.razor"));
+        var optionRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorMetricQueryOptionRows.razor"));
+
+        inspector.ShouldContain("DashboardInspectorMetricQueryOptionRows");
+        inspector.ShouldNotContain("PropertyGridRow Name=\"Aggregate\"");
+        inspector.ShouldNotContain("PropertyGridRow Name=\"@InspectorLabels.WindowRow\"");
+        optionRows.ShouldContain("PropertyGridRow Name=\"Aggregate\"");
+        optionRows.ShouldContain("PropertyGridRow Name=\"@Labels.WindowRow\"");
+        optionRows.ShouldContain("AggregationChanged");
+        optionRows.ShouldContain("WindowChanged");
+    }
+
+    [Fact]
     public void DashboardInspector_UsesFocusedEventFilterRowComponent()
     {
         var root = FindRepositoryRoot();

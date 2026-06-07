@@ -2737,4 +2737,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 391 tests.
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 716 tests.
     - `git diff --check` passed.
-- Next step: commit the focused display-row split, then continue with the next small dashboard inspector cleanup target.
+- Dashboard inspector metric query option row split:
+  - Extracted legacy aggregate/window option rows into `DashboardInspectorMetricQueryOptionRows`.
+  - Kept `DashboardInspector` responsible for metric draft mutation and auto-apply.
+  - Added a source-boundary test so aggregate/window row markup stays out of the parent inspector.
+  - Verification:
+    - Initial parallel build/test attempt hit a locked UI intermediate assembly; rerunning the build alone passed.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardInspector"` passed with 11 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 392 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 717 tests.
+    - `git diff --check` passed.
+- Next step: commit the focused metric query option-row split, then inspect the remaining dashboard inspector state-loading methods.
