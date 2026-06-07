@@ -3,8 +3,8 @@
 
 @{
     var metric = Context.MetricValue;
-    var showUnit = !string.IsNullOrWhiteSpace(metric.Unit) &&
-        !string.Equals(metric.Unit, "bytes", StringComparison.Ordinal);
+    var unitText = DisplayUnitText(metric.Unit);
+    var showUnit = ShouldShowUnit(metric.Unit, unitText);
     var showHeader = ShowTitle || ShowSubtitle;
 }
 
@@ -32,7 +32,7 @@
             <div class="dashboard-widget-value">@metric.FormattedValue</div>
             @if (showUnit)
             {
-                <div class="dashboard-metric-value-unit">@metric.Unit</div>
+                <div class="dashboard-metric-value-unit">@unitText</div>
             }
         </div>
     </div>
@@ -54,6 +54,8 @@
 
     private bool ShowSubtitle => ReadBool(DashboardWidgetCatalog.MetricValueShowSubtitleKey, true);
 
+    private bool ShowUnit => ReadBool(DashboardWidgetCatalog.MetricValueShowUnitKey, true);
+
     private string RootStyle
     {
         get
@@ -62,6 +64,7 @@
             Add(parts, "--dashboard-widget-title", Read(DashboardWidgetCatalog.MetricValueTitleColorKey) ?? Read(DashboardWidgetCatalog.KpiTitleColorKey));
             Add(parts, "--dashboard-widget-subtitle", Read(DashboardWidgetCatalog.MetricValueSubtitleColorKey) ?? Read(DashboardWidgetCatalog.KpiSubtitleColorKey));
             Add(parts, "--dashboard-widget-value", Read(DashboardWidgetCatalog.MetricValueValueColorKey) ?? Read(DashboardWidgetCatalog.KpiValueColorKey));
+            Add(parts, "--dashboard-metric-value-unit", Read(DashboardWidgetCatalog.MetricValueUnitColorKey));
             Add(parts, "--dashboard-kpi-title-align", DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(Read(DashboardWidgetCatalog.MetricValueTitleAlignKey) ?? Read(DashboardWidgetCatalog.KpiTitleAlignKey)));
             Add(parts, "--dashboard-kpi-title-items", HorizontalAlignmentCss(Read(DashboardWidgetCatalog.MetricValueTitleAlignKey) ?? Read(DashboardWidgetCatalog.KpiTitleAlignKey)));
             Add(parts, "--dashboard-kpi-value-align", DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(Read(DashboardWidgetCatalog.MetricValueValueAlignKey) ?? Read(DashboardWidgetCatalog.KpiValueAlignKey)));
@@ -75,6 +78,23 @@
 
     private bool ReadBool(string key, bool fallback)
         => bool.TryParse(Context.Widget.ReadString(key), out var parsed) ? parsed : fallback;
+
+    private string DisplayUnitText(string naturalUnit)
+    {
+        var configured = Read(DashboardWidgetCatalog.MetricValueUnitTextKey);
+        return string.IsNullOrWhiteSpace(configured) ? naturalUnit : configured;
+    }
+
+    private bool ShouldShowUnit(string naturalUnit, string unitText)
+    {
+        if (!ShowUnit || string.IsNullOrWhiteSpace(unitText))
+        {
+            return false;
+        }
+
+        var hasCustomUnit = !string.IsNullOrWhiteSpace(Read(DashboardWidgetCatalog.MetricValueUnitTextKey));
+        return hasCustomUnit || !string.Equals(naturalUnit, "bytes", StringComparison.Ordinal);
+    }
 
     private static void Add(List<string> parts, string name, string? value)
     {

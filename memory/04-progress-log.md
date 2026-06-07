@@ -2611,4 +2611,9 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Removed the live preview value from the property-grid metric-query row so it shows only the query summary and edit action.
   - Restyled the metric-query edit action as a quiet borderless property-grid icon button.
   - Verification passed with separate-output UI build and the focused metric-query row UI test.
-- Next step: visually review the metric-query row in the open dashboard; if accepted, continue inline KPI Value/Digital property polish before applying the pattern to another widget.
+- Value visual unit control:
+  - Made the `EVENTS` unit label part of the Value visual settings instead of hard-coded renderer behavior.
+  - Added `Show unit`, `Unit text`, and `Unit color` settings under the selected Value visualization.
+  - Kept natural metric units as the default fallback when `Unit text` is empty.
+  - Separate-output UI build and focused UI tests passed after the change.
+- Next step: visually review the Value visual unit controls in the open dashboard, then decide whether unit placement/case should also become visual settings.

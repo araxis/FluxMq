@@ -224,7 +224,7 @@
 .dashboard-kpi-unit,
 .dashboard-counter-unit,
 .dashboard-metric-value-unit {
-    color: var(--dashboard-widget-subtitle, var(--dashboard-widget-muted, var(--mud-palette-text-secondary)));
+    color: var(--dashboard-metric-value-unit, var(--dashboard-widget-subtitle, var(--dashboard-widget-muted, var(--mud-palette-text-secondary))));
     font-size: 12px;
     font-weight: 760;
     line-height: 1.15;

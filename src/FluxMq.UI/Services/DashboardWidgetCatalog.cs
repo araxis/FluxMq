@@ -42,9 +42,12 @@ public sealed class DashboardWidgetCatalog
     public const string MetricValueSubtitleKey = "metric.value.subtitle";
     public const string MetricValueShowTitleKey = "metric.value.showTitle";
     public const string MetricValueShowSubtitleKey = "metric.value.showSubtitle";
+    public const string MetricValueShowUnitKey = "metric.value.showUnit";
+    public const string MetricValueUnitTextKey = "metric.value.unitText";
     public const string MetricValueTitleColorKey = "metric.value.titleColor";
     public const string MetricValueSubtitleColorKey = "metric.value.subtitleColor";
     public const string MetricValueValueColorKey = "metric.value.valueColor";
+    public const string MetricValueUnitColorKey = "metric.value.unitColor";
     public const string MetricValueTitleAlignKey = "metric.value.titleAlign";
     public const string MetricValueValueAlignKey = "metric.value.valueAlign";
     public const string MetricValueValuePlacementKey = "metric.value.valuePlacement";
@@ -88,6 +91,7 @@ public sealed class DashboardWidgetCatalog
     public const string KpiDefaultValueColor = "#f3f7fb";
     public const string MetricValueDefaultTitle = "Messages";
     public const string MetricValueDefaultSubtitle = "Total matching events";
+    public const string MetricValueDefaultUnitText = "";
     public const string MetricDigitalDefaultBackgroundColor = "#040609";
     public const string MetricDigitalDefaultSegmentColor = "#db8b98";
     public const string MetricDigitalDefaultInactiveSegmentColor = "#351820";
