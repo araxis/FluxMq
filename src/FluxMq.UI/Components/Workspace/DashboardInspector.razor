@@ -76,12 +76,28 @@
         new("900s", "15m")
     ];
 
+    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> HorizontalAlignmentOptions =
+    [
+        new(DashboardWidgetCatalog.KpiAlignLeft, Icons.Material.Filled.FormatAlignLeft, "Left"),
+        new(DashboardWidgetCatalog.KpiAlignCenter, Icons.Material.Filled.FormatAlignCenter, "Center"),
+        new(DashboardWidgetCatalog.KpiAlignRight, Icons.Material.Filled.FormatAlignRight, "Right")
+    ];
+
+    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> ValuePlacementOptions =
+    [
+        new(DashboardWidgetCatalog.KpiValuePlacementTop, Icons.Material.Filled.VerticalAlignTop, "Top"),
+        new(DashboardWidgetCatalog.KpiValuePlacementMiddle, Icons.Material.Filled.VerticalAlignCenter, "Middle"),
+        new(DashboardWidgetCatalog.KpiValuePlacementBottom, Icons.Material.Filled.VerticalAlignBottom, "Bottom")
+    ];
+
     private const string DataGroupId = "data";
     private const string MetricQueryGroupId = "metric-query";
     private const string FilterGroupId = "filters";
     private const string DisplayGroupId = "display";
     private const string StyleGroupId = "style";
     private const string LayoutGroupId = "layout";
+    private const string TrueValue = "true";
+    private const string FalseValue = "false";
 
     [Parameter, EditorRequired]
     public FlowWorkspaceService Project { get; set; } = null!;
@@ -432,18 +448,7 @@
                                     ValueChanged="@SetMetricVisualizationAsync" />
             </PropertyGridRow>
 
-            <PropertyGridRow Name="Visual settings">
-                <div class="dashboard-inspector-visual-row">
-                    <span title="@MetricVisualizationSummary">@MetricVisualizationSummary</span>
-                    <button type="button"
-                            class="dashboard-inspector-query-edit"
-                            title="Edit visual"
-                            aria-label="Edit visual"
-                            @onclick="@OpenMetricVisualizationEditorAsync">
-                        <MudIcon Icon="@Icons.Material.Filled.Edit" Size="Size.Small" />
-                    </button>
-                </div>
-            </PropertyGridRow>
+            @RenderMetricVisualizationProperties(draft)
         }
 
         @if (draft.Profile.UsesVisualMetrics)
@@ -603,6 +608,63 @@
         }
     </text>;
 
+    private RenderFragment RenderMetricVisualizationProperties(DashboardWidgetSettingsDraft draft) => @<text>
+        @foreach (var property in CurrentMetricVisualizationProperties)
+        {
+            var currentProperty = property;
+            <PropertyGridRow Name="@currentProperty.Label" Unit="@currentProperty.Unit" HelpText="@currentProperty.HelpText">
+                @RenderMetricVisualizationProperty(draft, currentProperty)
+            </PropertyGridRow>
+        }
+    </text>;
+
+    private RenderFragment RenderMetricVisualizationProperty(
+        DashboardWidgetSettingsDraft draft,
+        DashboardWidgetPropertyDefinition property)
+    {
+        var value = MetricVisualizationPropertyValue(draft, property);
+        if (property.Editor == DashboardWidgetPropertyEditorKind.Color)
+        {
+            return @<PropertyGridColorPicker Value="@value"
+                                             DefaultValue="@property.DefaultValue"
+                                             AriaLabel="@property.Label"
+                                             ValueChanged="@((string? next) => SetMetricVisualizationValueAsync(property.Key, next))" />;
+        }
+
+        if (property.Editor == DashboardWidgetPropertyEditorKind.Select)
+        {
+            return @<PropertyGridSelect Value="@value"
+                                        Options="@ToSelectOptions(property.Options)"
+                                        AriaLabel="@property.Label"
+                                        ValueChanged="@((string? next) => SetMetricVisualizationValueAsync(property.Key, next))" />;
+        }
+
+        if (property.Editor == DashboardWidgetPropertyEditorKind.Toggle)
+        {
+            return @<div class="property-grid-button-group">
+                <button type="button"
+                        class="@ChoiceClass(value, TrueValue)"
+                        @onclick="@(() => SetMetricVisualizationValueAsync(property.Key, TrueValue))">On</button>
+                <button type="button"
+                        class="@ChoiceClass(value, FalseValue)"
+                        @onclick="@(() => SetMetricVisualizationValueAsync(property.Key, FalseValue))">Off</button>
+            </div>;
+        }
+
+        if (property.Editor == DashboardWidgetPropertyEditorKind.Segmented)
+        {
+            return @<PropertyGridIconSegment Value="@value"
+                                             Options="@MetricVisualizationSegmentOptions(property.Key)"
+                                             AriaLabel="@property.Label"
+                                             ValueChanged="@((string? next) => SetMetricVisualizationValueAsync(property.Key, next))" />;
+        }
+
+        return @<input class="property-grid-input"
+                       type="@(property.Editor == DashboardWidgetPropertyEditorKind.Number ? "number" : "text")"
+                       value="@value"
+                       @oninput="@((ChangeEventArgs args) => SetMetricVisualizationValueAsync(property.Key, args.Value?.ToString()))" />;
+    }
+
     private RenderFragment RenderFilterField(DashboardEventFilterFieldDescriptor field)
     {
         if (IsQosFilter(field))
@@ -701,7 +763,7 @@
 
     private int DisplayPropertyCount => _widgetDraft is null
         ? 0
-        : (_widgetDraft.Profile.UsesMetricVisualization ? 2 : 1 + (_widgetDraft.Profile.UsesSubtitle ? 1 : 0)) +
+        : (_widgetDraft.Profile.UsesMetricVisualization ? 1 + MetricVisualizationPropertyCount : 1 + (_widgetDraft.Profile.UsesSubtitle ? 1 : 0)) +
           (_widgetDraft.Profile.UsesGaugeStyle ? 1 : 0) +
           (_widgetDraft.Profile.UsesChartType ? 1 : 0) +
           (_widgetDraft.Profile.IsTopicTreeWidget ? 1 : 0) +
@@ -709,7 +771,15 @@
               ? 1 + (_widgetDraft.Profile.SupportsMetricSlots ? 2 + _widgetDraft.DisplayMetrics.Count : 0)
               : 0);
 
-    private string MetricVisualizationSummary => _widgetDraft?.MetricVisualization.Summary() ?? "Default visual";
+    private DashboardMetricVisualizationModule? CurrentMetricVisualizationModule =>
+        DashboardMetricVisualizationCatalog.Find(_widgetDraft?.MetricVisualizationId);
+
+    private IReadOnlyList<DashboardWidgetPropertyDefinition> CurrentMetricVisualizationProperties =>
+        CurrentMetricVisualizationModule?.PropertyGroups
+            .SelectMany(static group => group.Properties)
+            .ToArray() ?? [];
+
+    private int MetricVisualizationPropertyCount => CurrentMetricVisualizationProperties.Count;
 
     private int StylePropertyCount => _cellStyleDraft is null
         ? 0
@@ -895,29 +965,18 @@
         await AutoApplyAsync();
     }
 
-    private async Task OpenMetricVisualizationEditorAsync()
+    private async Task SetMetricVisualizationValueAsync(string key, string? value)
     {
-        if (Widget is null || _widgetDraft is null || !Widget.Type.Equals(DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal))
+        if (_widgetDraft is null)
         {
             return;
         }
 
-        var dialog = await DialogService.ShowAsync<DashboardMetricVisualizationEditorDialog>(
-            "Visual settings",
-            new DialogParameters
-            {
-                [nameof(DashboardMetricVisualizationEditorDialog.Project)] = Project,
-                [nameof(DashboardMetricVisualizationEditorDialog.Widget)] = PreviewWidget,
-                [nameof(DashboardMetricVisualizationEditorDialog.VisualizationId)] = _widgetDraft.MetricVisualizationId,
-                [nameof(DashboardMetricVisualizationEditorDialog.MetricValue)] = Project.GetDashboardMetricValue(PreviewWidget)
-            },
-            new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true });
-        var result = await dialog.Result;
-        if (result is { Canceled: false, Data: DashboardMetricVisualizationEditorDialog.DashboardMetricVisualizationUpdate update })
-        {
-            _widgetDraft.MetricVisualization.ApplyConfiguration(update.Configuration);
-            await AutoApplyAsync();
-        }
+        var configuration = _widgetDraft.MetricVisualization.BuildConfiguration()
+            .ToDictionary(static pair => pair.Key, static pair => pair.Value, StringComparer.Ordinal);
+        configuration[key] = value ?? string.Empty;
+        _widgetDraft.MetricVisualization.ApplyConfiguration(configuration);
+        await AutoApplyAsync();
     }
 
     private async Task SetGaugeStyleAsync(string? value)
@@ -1452,6 +1511,29 @@
         => string.Equals(currentValue ?? string.Empty, value, StringComparison.Ordinal)
             ? "property-grid-choice selected"
             : "property-grid-choice";
+
+    private static string MetricVisualizationPropertyValue(
+        DashboardWidgetSettingsDraft draft,
+        DashboardWidgetPropertyDefinition property)
+        => draft.MetricVisualization.BuildConfiguration().TryGetValue(property.Key, out var value)
+            ? value
+            : property.DefaultValue ?? string.Empty;
+
+    private static IReadOnlyList<PropertyGridIconSegmentOption> MetricVisualizationSegmentOptions(string key)
+    {
+        if (string.Equals(key, DashboardWidgetCatalog.MetricValueTitleAlignKey, StringComparison.Ordinal) ||
+            string.Equals(key, DashboardWidgetCatalog.MetricValueValueAlignKey, StringComparison.Ordinal))
+        {
+            return HorizontalAlignmentOptions;
+        }
+
+        if (string.Equals(key, DashboardWidgetCatalog.MetricValueValuePlacementKey, StringComparison.Ordinal))
+        {
+            return ValuePlacementOptions;
+        }
+
+        return [];
+    }
 
     private static string StyleInputType(DashboardStyleField field)
         => field.Editor == DashboardWidgetPropertyEditorKind.Number ? "number" : "text";

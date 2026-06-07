@@ -16,7 +16,7 @@ The dashboard does not replace the pipeline. It is a view over runtime/projectio
 - Metric visualization defines the inner presentation: label/title/subtitle, visibility, placement, alignment, inner background, inner border, colors, digits, glow, and fit behavior.
 - Cell style defines only the outer dashboard cell/container: background, border, radius, padding, and grid layout behavior.
 - KPI is the first widget using this ownership model. `metric.value` and `metric.digital` are separate visualization modules with their own defaults, property definitions, renderers, editor dialog, summary, and compatibility loading.
-- The KPI inspector should stay compact: one `Visualization` row plus one `Visual settings` row that opens the visualization editor. It should not expose flattened digital/value rows in the main property grid.
+- The KPI inspector should stay compact but inline: one `Visualization` row, followed by the selected visualization module's own property rows in the same property grid. Do not use a separate visual-settings popup for KPI unless the user explicitly re-approves that direction.
 - Existing dashboards remain loadable through compatibility fallbacks, but applying visualization settings writes visualization-owned keys such as `metric.value.*` and `metric.digital.*`, not old shared `kpi.*` display keys.
 - Next step after visual QA: review the KPI visualization editor flow manually, then reuse the approved pattern one widget at a time.
 

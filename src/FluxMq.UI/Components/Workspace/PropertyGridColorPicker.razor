@@ -1,39 +1,25 @@
 @namespace FluxMq.UI.Components.Workspace
+@using MudBlazor
+@using MudBlazor.Utilities
 
-<div class="property-grid-color-picker">
-    <label class="property-grid-color-button"
-           style="@SwatchStyle"
-           title="@PickerTitle">
-        <input class="property-grid-color-native"
-               type="color"
-               value="@NativeColor"
-               aria-label="@PickerTitle"
-               @oninput="@SetValueFromEventAsync"
-               @onchange="@SetValueFromEventAsync" />
-        <span class="property-grid-color-swatch" aria-hidden="true"></span>
-    </label>
-    <input class="property-grid-color-text"
-           type="text"
-           value="@TextValue"
-           spellcheck="false"
-           aria-label="@TextTitle"
-           @oninput="@SetTextFromEventAsync"
-           @onchange="@CommitTextAsync"
-           @onblur="@ResetInvalidText" />
-    <input class="property-grid-color-alpha"
-           type="number"
-           min="0"
-           max="100"
-           value="@AlphaPercent"
-           title="@AlphaTitle"
-           aria-label="@AlphaTitle"
-           @oninput="@SetAlphaFromEventAsync" />
+<div class="property-grid-mud-color-picker">
+    <MudColorPicker Value="@MudValue"
+                    ValueChanged="@SetMudColorAsync"
+                    ShowAlpha="true"
+                    ShowColorField="true"
+                    ShowInputs="true"
+                    ShowModeSwitch="true"
+                    ShowPreview="true"
+                    ShowSliders="true"
+                    ShowToolbar="true"
+                    ColorPickerMode="ColorPickerMode.HEX"
+                    Variant="Variant.Outlined"
+                    Margin="Margin.Dense"
+                    Label="@PickerLabel" />
 </div>
 
 @code {
     private const string FallbackColor = "#2ed3c6";
-    private string? _textValue;
-    private string? _lastCommittedColor;
 
     [Parameter]
     public string? Value { get; set; }
@@ -47,190 +33,40 @@
     [Parameter]
     public EventCallback<string?> ValueChanged { get; set; }
 
-    private string CurrentColor => NormalizeColor(Value, DefaultValue);
+    private MudColor MudValue => ParseColor(Value, DefaultValue);
 
-    private string NativeColor => ToNativeColor(CurrentColor);
-
-    private string TextValue => _textValue ?? CurrentColor;
-
-    private int AlphaPercent => ToAlphaPercent(CurrentColor);
-
-    private string PickerTitle => string.IsNullOrWhiteSpace(AriaLabel)
-        ? "Pick color"
+    private string PickerLabel => string.IsNullOrWhiteSpace(AriaLabel)
+        ? "Color"
         : AriaLabel;
 
-    private string TextTitle => string.IsNullOrWhiteSpace(AriaLabel)
-        ? "Edit color value"
-        : $"{AriaLabel} value";
+    private async Task SetMudColorAsync(MudColor color)
+        => await ValueChanged.InvokeAsync(ToPersistedColor(color));
 
-    private string AlphaTitle => string.IsNullOrWhiteSpace(AriaLabel)
-        ? "Edit alpha percent"
-        : $"{AriaLabel} alpha";
-
-    private string SwatchStyle => $"--property-grid-color-value: {CurrentColor};";
-
-    protected override void OnParametersSet()
+    private static MudColor ParseColor(string? value, string? fallback)
     {
-        var current = CurrentColor;
-        if (!string.Equals(_lastCommittedColor, current, StringComparison.OrdinalIgnoreCase) || _textValue is null)
-        {
-            _textValue = current;
-            _lastCommittedColor = current;
-        }
-    }
-
-    private async Task SetValueFromEventAsync(ChangeEventArgs args)
-    {
-        var next = WithExistingAlpha(NormalizeColor(args.Value?.ToString(), DefaultValue), CurrentColor);
-        await SetColorAsync(next);
-    }
-
-    private async Task SetAlphaFromEventAsync(ChangeEventArgs args)
-    {
-        var alpha = NormalizeAlphaPercent(args.Value?.ToString());
-        await SetColorAsync(WithAlphaPercent(CurrentColor, alpha));
-    }
-
-    private async Task SetTextFromEventAsync(ChangeEventArgs args)
-    {
-        _textValue = args.Value?.ToString() ?? string.Empty;
-        if (TryNormalizeColor(_textValue, out var next))
-        {
-            await SetColorAsync(next);
-        }
-    }
-
-    private async Task CommitTextAsync()
-    {
-        if (TryNormalizeColor(_textValue, out var next))
-        {
-            _textValue = next;
-            await SetColorAsync(next);
-            return;
-        }
-
-        ResetInvalidText();
-    }
-
-    private void ResetInvalidText()
-    {
-        if (!TryNormalizeColor(_textValue, out _))
-        {
-            _textValue = CurrentColor;
-        }
-    }
-
-    private async Task SetColorAsync(string next)
-    {
-        _textValue = next;
-        if (!string.Equals(next, CurrentColor, StringComparison.OrdinalIgnoreCase))
-        {
-            _lastCommittedColor = next;
-            await ValueChanged.InvokeAsync(next);
-        }
-    }
-
-    private static string NormalizeColor(string? value, string? defaultValue)
-    {
-        if (TryNormalizeColor(value, out var color))
-        {
-            return color;
-        }
-
-        if (TryNormalizeColor(defaultValue, out color))
-        {
-            return color;
-        }
-
-        return FallbackColor;
-    }
-
-    private static bool TryNormalizeColor(string? value, out string color)
-    {
-        color = string.Empty;
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return false;
-        }
-
-        var candidate = value.Trim();
-        if (candidate.Length == 4 &&
-            candidate[0] == '#' &&
-            IsHex(candidate[1]) &&
-            IsHex(candidate[2]) &&
-            IsHex(candidate[3]))
-        {
-            color = $"#{candidate[1]}{candidate[1]}{candidate[2]}{candidate[2]}{candidate[3]}{candidate[3]}".ToLowerInvariant();
-            return true;
-        }
-
-        if (candidate.Length == 5 &&
-            candidate[0] == '#' &&
-            candidate.Skip(1).All(IsHex))
-        {
-            color = $"#{candidate[1]}{candidate[1]}{candidate[2]}{candidate[2]}{candidate[3]}{candidate[3]}{candidate[4]}{candidate[4]}".ToLowerInvariant();
-            return true;
-        }
-
-        if (candidate.Length == 7 &&
-            candidate[0] == '#' &&
-            candidate.Skip(1).All(IsHex))
-        {
-            color = candidate.ToLowerInvariant();
-            return true;
-        }
-
-        if (candidate.Length == 9 &&
-            candidate[0] == '#' &&
-            candidate.Skip(1).All(IsHex))
-        {
-            color = candidate.ToLowerInvariant();
-            return true;
-        }
-
+        var candidate = string.IsNullOrWhiteSpace(value) ? fallback : value;
         if (string.Equals(candidate, "transparent", StringComparison.OrdinalIgnoreCase))
         {
-            color = "#00000000";
-            return true;
+            candidate = "#00000000";
         }
 
-        return false;
-    }
-
-    private static string ToNativeColor(string color)
-        => color.Length >= 7 ? color[..7] : FallbackColor;
-
-    private static string WithExistingAlpha(string rgbColor, string existingColor)
-        => existingColor.Length == 9
-            ? rgbColor[..7] + existingColor[7..]
-            : rgbColor[..7];
-
-    private static int ToAlphaPercent(string color)
-    {
-        if (color.Length != 9 ||
-            !byte.TryParse(color[7..], System.Globalization.NumberStyles.HexNumber, null, out var alpha))
+        if (!string.IsNullOrWhiteSpace(candidate) &&
+            MudColor.TryParse(candidate, out var parsed))
         {
-            return 100;
+            return parsed;
         }
 
-        return (int)Math.Round(alpha / 255d * 100d);
+        return MudColor.Parse(FallbackColor);
     }
 
-    private static string WithAlphaPercent(string color, int alphaPercent)
+    private static string ToPersistedColor(MudColor color)
     {
-        var rgb = ToNativeColor(color);
-        if (alphaPercent >= 100)
+        var alpha = Convert.ToInt32(color.A);
+        if (alpha >= 255)
         {
-            return rgb;
+            return $"#{Convert.ToInt32(color.R):X2}{Convert.ToInt32(color.G):X2}{Convert.ToInt32(color.B):X2}";
         }
 
-        var alpha = (int)Math.Round(Math.Clamp(alphaPercent, 0, 100) / 100d * 255d);
-        return rgb + alpha.ToString("x2", System.Globalization.CultureInfo.InvariantCulture);
+        return $"#{Convert.ToInt32(color.R):X2}{Convert.ToInt32(color.G):X2}{Convert.ToInt32(color.B):X2}{alpha:X2}";
     }
-
-    private static int NormalizeAlphaPercent(string? value)
-        => int.TryParse(value, out var alpha) ? Math.Clamp(alpha, 0, 100) : 100;
-
-    private static bool IsHex(char value)
-        => value is >= '0' and <= '9' or >= 'a' and <= 'f' or >= 'A' and <= 'F';
 }

@@ -1,105 +1,17 @@
-.property-grid-color-picker {
-    align-items: stretch;
-    display: grid;
-    grid-template-columns: 36px minmax(0, 1fr) 42px;
-    height: 100%;
-    min-height: 24px;
+.property-grid-mud-color-picker {
     min-width: 0;
     width: 100%;
 }
 
-.property-grid-color-button {
-    align-items: center;
-    align-self: stretch;
-    border-right: 1px solid color-mix(in srgb, var(--flux-border) 70%, transparent);
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    min-width: 0;
-    position: relative;
+.property-grid-mud-color-picker ::deep .mud-input-control {
+    margin: 0;
 }
 
-.property-grid-color-button:hover {
-    background: color-mix(in srgb, var(--mud-palette-primary) 10%, transparent);
+.property-grid-mud-color-picker ::deep .mud-input {
+    min-height: 30px;
 }
 
-.property-grid-color-button:focus-within {
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mud-palette-primary) 85%, white);
-}
-
-.property-grid-color-native {
-    cursor: pointer;
-    height: 100%;
-    inset: 0;
-    opacity: 0;
-    position: absolute;
-    width: 100%;
-}
-
-.property-grid-color-swatch {
-    background:
-        var(--property-grid-color-value),
-        linear-gradient(45deg, #2b3340 25%, transparent 25% 75%, #2b3340 75%),
-        linear-gradient(45deg, #2b3340 25%, transparent 25% 75%, #2b3340 75%),
-        #121821;
-    background-position: 0 0, 4px 4px, 0 0;
-    background-size: 8px 8px, 8px 8px, auto;
-    border: 1px solid color-mix(in srgb, white 54%, transparent);
-    border-radius: 5px;
-    box-shadow:
-        0 0 0 1px color-mix(in srgb, black 60%, transparent),
-        0 4px 14px color-mix(in srgb, var(--property-grid-color-value) 42%, transparent);
-    display: block;
-    height: 16px;
-    pointer-events: none;
-    width: 20px;
-}
-
-.property-grid-color-text {
-    background: transparent;
-    border: 0;
-    border-right: 1px solid color-mix(in srgb, var(--flux-border) 70%, transparent);
-    color: var(--mud-palette-text-primary);
-    font: inherit;
+.property-grid-mud-color-picker ::deep .mud-input-slot {
     font-size: 11.5px;
     font-weight: 760;
-    height: 100%;
-    min-width: 0;
-    outline: 0;
-    padding: 0 8px 0 10px;
-    text-transform: uppercase;
-    width: 100%;
-}
-
-.property-grid-color-alpha {
-    background: transparent;
-    border: 0;
-    color: var(--mud-palette-text-secondary);
-    font: inherit;
-    font-size: 10.5px;
-    font-weight: 760;
-    height: 100%;
-    min-width: 0;
-    outline: 0;
-    padding: 0 4px;
-    text-align: center;
-    width: 100%;
-}
-
-.property-grid-color-text:hover {
-    background: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent);
-}
-
-.property-grid-color-alpha:hover {
-    background: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent);
-}
-
-.property-grid-color-text:focus,
-.property-grid-color-alpha:focus {
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mud-palette-primary) 85%, white);
-}
-
-.property-grid-color-alpha::-webkit-outer-spin-button,
-.property-grid-color-alpha::-webkit-inner-spin-button {
-    margin: 0;
 }

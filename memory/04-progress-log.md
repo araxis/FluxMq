@@ -2582,14 +2582,19 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 
 - Refactored KPI visualization editing so the selected visual owns all inner display settings.
 - Added `DashboardMetricVisualizationSettingsDraft` as the compatibility/draft boundary for visual-owned config.
-- Replaced flattened KPI visual property rows in the inspector with:
+- Replaced flattened KPI-specific visual rows in the inspector with:
   - `Visualization` select
-  - `Visual settings` summary/edit action
-- Added `DashboardMetricVisualizationEditorDialog` with draft-only Value/Digital visual editing and real component preview.
+  - selected visualization module property rows rendered inline in the property grid
+- Removed the separate visualization editor popup after UI review; KPI visual settings stay directly editable in the inspector.
+- Replaced the custom property-grid color picker internals with the UI framework color picker so alpha-capable colors are handled by the shared component layer.
 - Moved saved Value visual settings to `metric.value.*` keys and Digital visual settings to `metric.digital.*` keys.
 - Kept outer dashboard cell style focused on cell/container background, border, radius, padding, and layout only.
 - Kept compatibility for old KPI keys (`title`, `subtitle`, `kpi.*`) when loading existing dashboards; applying visual settings rewrites to visual-owned keys.
 - Verification so far:
   - `dotnet build src\fluxmq.ui --no-restore --verbosity minimal` passed.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 375 tests.
-- Next step: run final diff checks and focused commit, then manually review KPI Value/Digital visual editor behavior before applying the pattern to the next widget.
+- Follow-up verification:
+  - A normal app build reached the copy-to-output step but was blocked by the already-running desktop app locking `FluxMq.UI.exe`.
+  - A separate-output UI build passed with no errors.
+  - Separate-output UI tests passed with 375 tests.
+- Next step: run final diff checks and focused commit, then visually review inline KPI Value/Digital property rows before applying the pattern to another widget.

@@ -1332,12 +1332,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("DashboardMetricVisualizationCatalog.CreateModules()");
         markup.ShouldContain("SetMetricVisualizationAsync");
         markup.ShouldContain("MetricVisualization.SetVisualization(value, applyDefaults: true)");
-        markup.ShouldContain("PropertyGridRow Name=\"Visual settings\"");
-        markup.ShouldContain("OpenMetricVisualizationEditorAsync");
-        markup.ShouldContain("DashboardMetricVisualizationEditorDialog");
-        markup.ShouldContain("MetricVisualization.Summary()");
-        markup.ShouldNotContain("RenderMetricVisualizationProperties(draft)");
-        markup.ShouldNotContain("MetricVisualizationPropertyCount");
+        markup.ShouldContain("RenderMetricVisualizationProperties(draft)");
+        markup.ShouldContain("CurrentMetricVisualizationModule");
+        markup.ShouldContain("MetricVisualizationPropertyCount");
+        markup.ShouldContain("SetMetricVisualizationValueAsync");
+        markup.ShouldContain("PropertyGridColorPicker");
+        markup.ShouldContain("PropertyGridIconSegment");
+        markup.ShouldNotContain("PropertyGridRow Name=\"Visual settings\"");
+        markup.ShouldNotContain("OpenMetricVisualizationEditorAsync");
+        markup.ShouldNotContain("DashboardMetricVisualizationEditorDialog");
         markup.ShouldNotContain("SetMetricDigitalStyleAsync");
         markup.ShouldNotContain("SetKpiTitleColorAsync");
     }
@@ -1515,7 +1518,7 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
-    public void PropertyGridColorPicker_SupportsAlphaColorEditing()
+    public void PropertyGridColorPicker_UsesAlphaCapableFrameworkPicker()
     {
         var root = FindRepositoryRoot();
         var path = Path.Combine(
@@ -1527,12 +1530,16 @@ public sealed class DashboardEventFilterCatalogTests
             "PropertyGridColorPicker.razor");
         var markup = File.ReadAllText(path);
 
-        markup.ShouldContain("property-grid-color-alpha");
-        markup.ShouldContain("candidate.Length == 9");
-        markup.ShouldContain("candidate.Length == 5");
+        markup.ShouldContain("<MudColorPicker");
+        markup.ShouldContain("ShowAlpha=\"true\"");
+        markup.ShouldContain("ShowColorField=\"true\"");
+        markup.ShouldContain("ShowInputs=\"true\"");
+        markup.ShouldContain("ShowModeSwitch=\"true\"");
+        markup.ShouldContain("ColorPickerMode=\"ColorPickerMode.HEX\"");
         markup.ShouldContain("#00000000");
-        markup.ShouldContain("WithExistingAlpha");
-        markup.ShouldContain("WithAlphaPercent");
+        markup.ShouldContain("MudColor.TryParse");
+        markup.ShouldContain("ToPersistedColor");
+        markup.ShouldNotContain("property-grid-color-alpha");
     }
 
     [Fact]
