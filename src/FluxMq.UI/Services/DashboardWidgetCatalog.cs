@@ -391,8 +391,7 @@ public sealed class DashboardWidgetCatalog
         => string.Equals(type, TopicTreeType, StringComparison.Ordinal);
 
     public static bool IsVisualEventWidget(string type)
-        => string.Equals(type, EventGaugeType, StringComparison.Ordinal) ||
-           string.Equals(type, EventChartType, StringComparison.Ordinal) ||
+        => string.Equals(type, EventChartType, StringComparison.Ordinal) ||
            string.Equals(type, StatusStripType, StringComparison.Ordinal) ||
            string.Equals(type, KpiTileType, StringComparison.Ordinal) ||
            string.Equals(type, LineChartType, StringComparison.Ordinal) ||

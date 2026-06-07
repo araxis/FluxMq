@@ -301,6 +301,14 @@ public static class DashboardWidgetFormatting
         return $"--gauge-progress:{percent.ToString("0.###", CultureInfo.InvariantCulture)}%;";
     }
 
+    public static string GaugeProgressStyle(DashboardMetricValue metric)
+    {
+        var percent = metric.Value <= 0
+            ? 0
+            : Math.Clamp(metric.Value, 12, 100);
+        return $"--gauge-progress:{percent.ToString("0.###", CultureInfo.InvariantCulture)}%;";
+    }
+
     public static string RateTrackStyle(DashboardEventSnapshot snapshot)
     {
         var percent = snapshot.RecentCount == 0

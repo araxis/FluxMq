@@ -288,11 +288,11 @@ public sealed class DashboardEventFilterCatalogTests
         kpi.UsesSubtitle.ShouldBeTrue();
         gauge.IsEventWidget.ShouldBeTrue();
         gauge.UsesMetricQuery.ShouldBeTrue();
-        gauge.UsesVisualMetrics.ShouldBeTrue();
+        gauge.UsesVisualMetrics.ShouldBeFalse();
         gauge.UsesGaugeStyle.ShouldBeTrue();
         gauge.UsesChartType.ShouldBeFalse();
         gauge.SupportsMetricSlots.ShouldBeFalse();
-        gauge.UsesMetricWindow.ShouldBeTrue();
+        gauge.UsesMetricWindow.ShouldBeFalse();
         chart.SupportsMetricSlots.ShouldBeFalse();
         chart.UsesMetricWindow.ShouldBeTrue();
         table.IsEventWidget.ShouldBeTrue();
@@ -312,6 +312,9 @@ public sealed class DashboardEventFilterCatalogTests
         rate.UsesMetricWindow.ShouldBeFalse();
         rate.InspectorLabels.TimeWindowGroup.ShouldBe("Rate window");
         rate.InspectorLabels.FilterGroup.ShouldBe("Traffic filter");
+        gauge.InspectorLabels.DataGroup.ShouldBe("Gauge source");
+        gauge.InspectorLabels.MetricRow.ShouldBe("Gauge metric");
+        gauge.InspectorLabels.GaugeRow.ShouldBe("Shape");
         latest.InspectorLabels.DataGroup.ShouldBe("Event source");
         latest.InspectorLabels.FilterGroup.ShouldBe("Match rules");
         table.InspectorLabels.DataGroup.ShouldBe("Table source");
@@ -327,8 +330,8 @@ public sealed class DashboardEventFilterCatalogTests
     {
         var catalog = new DashboardEventFilterCatalog();
         var widget = new DashboardWidgetSnapshot(
-            "gauge",
-            DashboardWidgetCatalog.EventGaugeType,
+            "latest",
+            DashboardWidgetCatalog.LatestEventType,
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["title"] = "  ",
@@ -336,10 +339,6 @@ public sealed class DashboardEventFilterCatalogTests
                 [DashboardEventFilterCatalog.TopicStartsWithKey] = "old/",
                 [DashboardEventFilterCatalog.SubjectStartsWithKey] = "stale/",
                 [DashboardEventFilterCatalog.StatusKey] = "received",
-                [DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricCurrentRate,
-                [DashboardWidgetCatalog.DisplayMetricsKey] = "messages,currentRate",
-                [DashboardWidgetCatalog.MetricCardColumnsKey] = "3",
-                [DashboardWidgetCatalog.GaugeStyleKey] = DashboardWidgetCatalog.GaugeStyleMeter
             });
 
         var draft = DashboardWidgetSettingsDraft.Create(widget, catalog);
@@ -349,14 +348,49 @@ public sealed class DashboardEventFilterCatalogTests
 
         var configuration = draft.BuildConfiguration();
 
-        configuration["title"].ShouldBe("Event gauge");
+        configuration["title"].ShouldBe("Latest event");
         configuration[DashboardEventFilterCatalog.EventTypeKey].ShouldBe(FluxMqEventTypes.MqttMessageReceived);
         configuration[DashboardEventFilterCatalog.TopicStartsWithKey].ShouldBe("factory/");
         configuration[DashboardEventFilterCatalog.SubjectStartsWithKey].ShouldBe(string.Empty);
         configuration[DashboardEventFilterCatalog.AttributeFilterKey("qos")].ShouldBe("1");
         configuration[DashboardEventFilterCatalog.AttributeFilterKey("retain")].ShouldBe("false");
-        configuration[DashboardWidgetCatalog.PrimaryMetricKey].ShouldBe(DashboardWidgetCatalog.MetricCurrentRate);
+        configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardWidgetCatalog.GaugeStyleKey).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DashboardWidgetSettingsDraft_WritesEventGaugeAsAppMetricConfiguration()
+    {
+        var draft = DashboardWidgetSettingsDraft.Create(
+            new DashboardWidgetSnapshot(
+                "gauge",
+                DashboardWidgetCatalog.EventGaugeType,
+                new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["title"] = "Factory load",
+                    ["metric"] = "factoryLoadMetric",
+                    [DashboardEventFilterCatalog.EventTypeKey] = FluxMqEventTypes.MqttMessageReceived,
+                    [DashboardEventFilterCatalog.TopicStartsWithKey] = "factory/",
+                    [DashboardEventFilterCatalog.StatusKey] = "received",
+                    [DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricCurrentRate,
+                    [DashboardWidgetCatalog.DisplayMetricsKey] = "messages,currentRate",
+                    [DashboardWidgetCatalog.MetricCardColumnsKey] = "3",
+                    [DashboardWidgetCatalog.GaugeStyleKey] = DashboardWidgetCatalog.GaugeStyleMeter
+                }),
+            new DashboardEventFilterCatalog());
+
+        draft.UsesMetricQueryBuilder.ShouldBeTrue();
+        var configuration = draft.BuildConfiguration();
+
+        configuration["title"].ShouldBe("Factory load");
+        configuration["metric"].ShouldBe("factoryLoadMetric");
         configuration[DashboardWidgetCatalog.GaugeStyleKey].ShouldBe(DashboardWidgetCatalog.GaugeStyleMeter);
+        configuration.ContainsKey(DashboardEventFilterCatalog.EventTypeKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardEventFilterCatalog.TopicStartsWithKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardEventFilterCatalog.StatusKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardWidgetCatalog.DisplayMetricsKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardWidgetCatalog.MetricCardColumnsKey).ShouldBeFalse();
     }
 
     [Fact]
@@ -1560,7 +1594,7 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
-    public void DashboardInspector_UsesAppMetricsForFocusedMetricValueWidgets()
+    public void DashboardInspector_UsesAppMetricsForFocusedMetricWidgets()
     {
         var root = FindRepositoryRoot();
         var inspector = File.ReadAllText(Path.Combine(
@@ -1585,6 +1619,7 @@ public sealed class DashboardEventFilterCatalogTests
         inspector.ShouldContain("OpenMetricBuilderAsync");
         inspector.ShouldContain("DashboardWidgetCatalog.KpiTileType");
         inspector.ShouldContain("DashboardWidgetCatalog.StatusValueType");
+        inspector.ShouldContain("DashboardWidgetCatalog.EventGaugeType");
         inspector.ShouldContain("DashboardWidgetCatalog.RateTileType");
         inspector.ShouldContain("DashboardWidgetCatalog.EventCounterType");
         inspector.ShouldContain("DashboardWidgetCatalog.EventRateType");
@@ -1665,6 +1700,15 @@ public sealed class DashboardEventFilterCatalogTests
             .DefaultConfiguration
             .Keys
             .ShouldBe(["title"]);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.EventGaugeType)
+            .DefaultConfiguration
+            .Keys
+            .ShouldBe(["title", DashboardWidgetCatalog.GaugeStyleKey], ignoreOrder: true);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.EventGaugeType)
+            .DefaultConfiguration[DashboardWidgetCatalog.GaugeStyleKey]
+            .ShouldBe(DashboardWidgetCatalog.GaugeStyleRing);
         modules
             .Where(static module =>
                 string.Equals(module.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal) ||
@@ -2299,6 +2343,8 @@ public sealed class DashboardEventFilterCatalogTests
         var eventRate = File.ReadAllText(Path.Combine(widgetsPath, "DashboardEventRateModuleView.razor"));
         var rateTile = File.ReadAllText(Path.Combine(widgetsPath, "DashboardRateTileModuleView.razor"));
         var statusValue = File.ReadAllText(Path.Combine(widgetsPath, "DashboardStatusValueModuleView.razor"));
+        var eventGaugeModule = File.ReadAllText(Path.Combine(widgetsPath, "DashboardEventGaugeModuleView.razor"));
+        var eventGauge = File.ReadAllText(Path.Combine(widgetsPath, "DashboardEventGaugeWidget.razor"));
 
         kpi.ShouldContain("DashboardMetricVisualizationHost");
         counter.ShouldContain("DashboardMetricValueVisualizationView");
@@ -2306,6 +2352,12 @@ public sealed class DashboardEventFilterCatalogTests
         rateTile.ShouldContain("DashboardMetricValueVisualizationView");
         statusValue.ShouldContain("DashboardMetricValueVisualizationView");
         statusValue.ShouldNotContain("DashboardMetricTile");
+        eventGaugeModule.ShouldContain("Metric=\"@Context.MetricValue\"");
+        eventGaugeModule.ShouldNotContain("Context.Snapshot");
+        eventGauge.ShouldContain("DashboardMetricValue Metric");
+        eventGauge.ShouldContain("Metric.FormattedValue");
+        eventGauge.ShouldNotContain("PrimaryMetricCard");
+        eventGauge.ShouldNotContain("DashboardEventSnapshot Snapshot");
         eventRate.ShouldNotContain("DashboardEventRateWidget");
         eventRate.ShouldNotContain("Context.Snapshot");
         widgetView.ShouldContain("DashboardWidgetCatalog.EventCounterType");

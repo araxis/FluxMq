@@ -1451,23 +1451,39 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void AddDashboardWidget_AddsEventGaugeDefaults()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+
+        var updated = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.EventGaugeType, "slot:0:0");
+
+        var layout = composer.GetDashboardLayout(updated, "ops").ShouldNotBeNull();
+        layout.Widgets.Keys.ShouldBe(["eventGauge"]);
+        var widget = layout.Widgets["eventGauge"];
+        widget.Type.ShouldBe(DashboardWidgetCatalog.EventGaugeType);
+        widget.Configuration["title"].ShouldBe("Event gauge");
+        widget.Configuration["metric"].ShouldBe("ops.eventGaugeMetric");
+        widget.Configuration[DashboardWidgetCatalog.GaugeStyleKey].ShouldBe(DashboardWidgetCatalog.GaugeStyleRing);
+        widget.Configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
+        widget.Configuration.Keys.ShouldBe(["title", "metric", DashboardWidgetCatalog.GaugeStyleKey], ignoreOrder: true);
+        layout.Metrics["ops.eventGaugeMetric"].Aggregation.ShouldBe("count");
+        layout.Bindings["eventGauge"].PrimaryMetric.ShouldBe("ops.eventGaugeMetric");
+        layout.Cells.ShouldContain(cell => cell.Widget == "eventGauge");
+    }
+
+    [Fact]
     public void AddDashboardWidget_AddsVisualDashboardWidgetDefaults()
     {
         var composer = new FlowDefinitionComposer();
         var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
 
-        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.EventGaugeType, "slot:0:0");
         json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.EventChartType, "slot:0:1");
         json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.EventTableType, "slot:1:0");
         json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.TopicActivityType, "slot:1:1");
         json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.TopicTreeType, "slot:2:0");
 
         var layout = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull();
-        layout.Widgets["eventGauge"].Configuration["title"].ShouldBe("Event gauge");
-        layout.Widgets["eventGauge"].Configuration[DashboardWidgetCatalog.PrimaryMetricKey].ShouldBe(DashboardWidgetCatalog.MetricRecent);
-        layout.Widgets["eventGauge"].Configuration[DashboardWidgetCatalog.GaugeStyleKey].ShouldBe(DashboardWidgetCatalog.GaugeStyleRing);
-        layout.Widgets["eventGauge"].Configuration.ContainsKey(DashboardWidgetCatalog.DisplayMetricsKey).ShouldBeFalse();
-        layout.Widgets["eventGauge"].Configuration.ContainsKey(DashboardWidgetCatalog.MetricCardColumnsKey).ShouldBeFalse();
         layout.Widgets["barChart"].Type.ShouldBe(DashboardWidgetCatalog.BarChartType);
         layout.Widgets["barChart"].Configuration["title"].ShouldBe("Bar chart");
         layout.Widgets["barChart"].Configuration[DashboardWidgetCatalog.PrimaryMetricKey].ShouldBe(DashboardWidgetCatalog.MetricMessages);

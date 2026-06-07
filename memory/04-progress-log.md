@@ -2874,3 +2874,16 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 738 tests.
     - `git diff --check` passed with line-ending normalization warnings for the edited files.
 - Next step: commit the Status Value app-metric slice, then continue one widget at a time with `event.gauge` unless a review finds a smaller dashboard metric blocker.
+- Event Gauge app-metric consumption:
+  - Moved `event.gauge` onto the app-level metric selector path while keeping the existing ring/meter gauge shape setting.
+  - Replaced snapshot-derived primary metric cards in the gauge renderer with `DashboardMetricValue` from the shared dashboard metric bridge.
+  - Removed `event.gauge` from the old visual-metric/default `primaryMetric` path so new gauges save as `title`, `metric`, and `gaugeStyle`.
+  - Kept compatibility fallback through existing metric binding/migration, but did not add new gauge range or threshold UI in this slice.
+  - Added coverage for clean gauge widget config, composer defaults, inspector source ownership, shared metric-value rendering, and runtime value resolution from a root app metric artifact.
+  - Verification:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetSettingsDraft_WritesEventGaugeAsAppMetricConfiguration|FullyQualifiedName~DashboardWidgetSettingsProfiles_ExposeDedicatedSettingsShape|FullyQualifiedName~DashboardMetricValueWidgets_UseSharedVisualizationView|FullyQualifiedName~DashboardInspector_UsesAppMetricsForFocusedMetricWidgets|FullyQualifiedName~DashboardWidgetModuleCatalog_ProvidesFocusedPropertyDefinitionsForAllPaletteWidgets|FullyQualifiedName~AddDashboardWidget_AddsEventGaugeDefaults|FullyQualifiedName~GetDashboardMetricValue_UsesAppMetricArtifactForEventGauge|FullyQualifiedName~UpdateDashboardMetric_WritesQueryShapeWithoutSchemaMigration" -p:UseAppHost=false --verbosity minimal` passed with 8 tests.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 414 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 741 tests.
+    - `git diff --check` passed with line-ending normalization warnings for the edited files.
+- Next step: commit the Event Gauge app-metric slice, then continue one widget at a time with chart/payload metric consumers or pause for a dashboard-gauge visual range/settings review.

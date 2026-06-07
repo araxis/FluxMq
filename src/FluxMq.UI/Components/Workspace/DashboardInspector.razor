@@ -1261,6 +1261,7 @@
     private static bool IsAppMetricConsumerType(string? type)
         => string.Equals(type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal) ||
            string.Equals(type, DashboardWidgetCatalog.StatusValueType, StringComparison.Ordinal) ||
+           string.Equals(type, DashboardWidgetCatalog.EventGaugeType, StringComparison.Ordinal) ||
            string.Equals(type, DashboardWidgetCatalog.RateTileType, StringComparison.Ordinal) ||
            string.Equals(type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal) ||
            string.Equals(type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal);

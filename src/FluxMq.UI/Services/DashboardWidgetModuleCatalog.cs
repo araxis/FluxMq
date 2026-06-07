@@ -80,7 +80,7 @@ public static class DashboardWidgetModuleCatalog
                 Icons.Material.Filled.DonutLarge,
                 typeof(DashboardEventGaugeModuleView),
                 "Event gauge",
-                [MetricGroup("metric", "Metric"), GaugeGroup(), ThresholdGroup()],
+                [MetricQueryGroup("gauge-source", "Gauge source"), GaugeGroup(), ThresholdGroup()],
                 preferredColumns: 2),
             ChartModule(
                 DashboardWidgetCatalog.LineChartType,
@@ -278,7 +278,6 @@ public static class DashboardWidgetModuleCatalog
             : EventConfiguration(title);
         if (string.Equals(type, DashboardWidgetCatalog.EventGaugeType, StringComparison.Ordinal))
         {
-            configuration[DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricRecent;
             configuration[DashboardWidgetCatalog.GaugeStyleKey] = DashboardWidgetCatalog.GaugeStyleRing;
         }
 
@@ -295,6 +294,7 @@ public static class DashboardWidgetModuleCatalog
 
     private static bool UsesFocusedMetricQuery(string type)
         => string.Equals(type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal) ||
+           string.Equals(type, DashboardWidgetCatalog.EventGaugeType, StringComparison.Ordinal) ||
            string.Equals(type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal);
 
     private static DashboardWidgetModule ChartModule(

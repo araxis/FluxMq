@@ -83,6 +83,7 @@ public sealed class DashboardWidgetSettingsDraft
     public bool UsesMetricQueryBuilder =>
         IsKpiTile ||
         string.Equals(Profile.Type, DashboardWidgetCatalog.StatusValueType, StringComparison.Ordinal) ||
+        string.Equals(Profile.Type, DashboardWidgetCatalog.EventGaugeType, StringComparison.Ordinal) ||
         string.Equals(Profile.Type, DashboardWidgetCatalog.RateTileType, StringComparison.Ordinal) ||
         string.Equals(Profile.Type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal) ||
         string.Equals(Profile.Type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal);
@@ -265,6 +266,7 @@ public sealed class DashboardWidgetSettingsDraft
 
             ApplyKpiConfiguration(metricQueryConfiguration);
             ApplyMetricVisualization(metricQueryConfiguration);
+            ApplyGaugeConfiguration(metricQueryConfiguration);
             ApplyMetricName(metricQueryConfiguration);
             return metricQueryConfiguration;
         }
@@ -347,6 +349,15 @@ public sealed class DashboardWidgetSettingsDraft
 
         configuration[DashboardWidgetCatalog.MetricVisualizationKey] =
             DashboardWidgetCatalog.NormalizeMetricVisualization(MetricVisualizationId);
+    }
+
+    private void ApplyGaugeConfiguration(Dictionary<string, string> configuration)
+    {
+        if (Profile.UsesGaugeStyle)
+        {
+            configuration[DashboardWidgetCatalog.GaugeStyleKey] =
+                DashboardWidgetCatalog.NormalizeGaugeStyle(GaugeStyle);
+        }
     }
 
     private void ApplyKpiConfiguration(Dictionary<string, string> configuration)
