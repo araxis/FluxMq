@@ -396,7 +396,6 @@ public sealed class DashboardWidgetCatalog
            string.Equals(type, StatusStripType, StringComparison.Ordinal) ||
            string.Equals(type, StatusValueType, StringComparison.Ordinal) ||
            string.Equals(type, KpiTileType, StringComparison.Ordinal) ||
-           string.Equals(type, RateTileType, StringComparison.Ordinal) ||
            string.Equals(type, LineChartType, StringComparison.Ordinal) ||
            string.Equals(type, AreaChartType, StringComparison.Ordinal) ||
            string.Equals(type, BarChartType, StringComparison.Ordinal) ||

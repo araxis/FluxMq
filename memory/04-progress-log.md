@@ -2850,3 +2850,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings on serial rerun.
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 406 tests.
 - Next step: commit the Event Rate app-metric slice, then review remaining dashboard metric consumers and choose the next single widget instead of doing a broad migration.
+- Rate Tile app-metric consumption:
+  - Moved `rate.tile` onto the app-level metric selector path.
+  - Removed `rate.tile` from the old visual-metric/default `primaryMetric` path so new rate tiles save as display config plus selected metric binding.
+  - Filtered the Rate Tile selector to rate-based app metrics.
+  - Kept the widget rendering as the existing focused value visual; no new visualization choices were added in this slice.
+  - Added coverage for clean rate-tile widget config, composer defaults, inspector source ownership, and runtime value resolution from a root app metric artifact.
+  - Verification:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardWidgetSettingsDraft_WritesRateTileAsAppMetricConfiguration|FullyQualifiedName~DashboardInspector_UsesAppMetricsForKpiCounterAndRateWidgets|FullyQualifiedName~AddDashboardWidget_AddsRateTileDefaults|FullyQualifiedName~GetDashboardMetricValue_UsesAppMetricArtifactForRateTile"` passed with 4 tests.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 409 tests.
+- Next step: commit the Rate Tile app-metric slice, then choose between `status.value` and `event.gauge` as the next single metric consumer to clean up.

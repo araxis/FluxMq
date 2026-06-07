@@ -239,6 +239,10 @@ public static class DashboardWidgetModuleCatalog
                 configuration[key] = value;
             }
         }
+        else if (string.Equals(type, DashboardWidgetCatalog.RateTileType, StringComparison.Ordinal))
+        {
+            configuration.Remove(DashboardWidgetCatalog.PrimaryMetricKey);
+        }
 
         return new DashboardWidgetModule(
             new DashboardWidgetDescriptor(type, displayName, category, description, icon, displayName, DashboardWidgetRendererKind.Kpi, DashboardWidgetEditorKind.MetricTile, ["runtimeEvents"]),

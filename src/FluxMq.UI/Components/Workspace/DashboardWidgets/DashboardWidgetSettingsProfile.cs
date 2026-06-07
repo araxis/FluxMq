@@ -179,8 +179,7 @@ public static class DashboardWidgetSettingsProfiles
                 normalized,
                 "Rate tile",
                 Icons.Material.Filled.QueryStats,
-                usesVisualMetrics: true,
-                usesMetricWindow: true),
+                labels: DashboardWidgetInspectorLabels.EventRate),
             DashboardWidgetCatalog.EventCounterType => Event(
                 normalized,
                 "Events",

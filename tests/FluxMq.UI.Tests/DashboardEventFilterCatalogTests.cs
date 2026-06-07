@@ -568,6 +568,35 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardWidgetSettingsDraft_WritesRateTileAsAppMetricConfiguration()
+    {
+        var draft = DashboardWidgetSettingsDraft.Create(
+            new DashboardWidgetSnapshot(
+                "rateTile",
+                DashboardWidgetCatalog.RateTileType,
+                new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["title"] = "Factory rate",
+                    ["metric"] = "factoryRateMetric",
+                    [DashboardEventFilterCatalog.EventTypeKey] = FluxMqEventTypes.MqttMessagePublished,
+                    [DashboardEventFilterCatalog.TopicStartsWithKey] = "factory/",
+                    [DashboardEventFilterCatalog.StatusKey] = "published",
+                    [DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricCurrentRate
+                }),
+            new DashboardEventFilterCatalog());
+
+        draft.UsesMetricQueryBuilder.ShouldBeTrue();
+        var configuration = draft.BuildConfiguration();
+
+        configuration["title"].ShouldBe("Factory rate");
+        configuration["metric"].ShouldBe("factoryRateMetric");
+        configuration.ContainsKey(DashboardEventFilterCatalog.EventTypeKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardEventFilterCatalog.TopicStartsWithKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardEventFilterCatalog.StatusKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
+    }
+
+    [Fact]
     public void DashboardInspectorMetricBindingState_InitializesSingleMetricWithoutSlots()
     {
         var metrics = DashboardInspectorMetricBindingState.Initialize(
@@ -1547,6 +1576,7 @@ public sealed class DashboardEventFilterCatalogTests
         inspector.ShouldContain("DashboardInspectorMetricQueryRows");
         inspector.ShouldContain("OpenMetricBuilderAsync");
         inspector.ShouldContain("DashboardWidgetCatalog.KpiTileType");
+        inspector.ShouldContain("DashboardWidgetCatalog.RateTileType");
         inspector.ShouldContain("DashboardWidgetCatalog.EventCounterType");
         inspector.ShouldContain("DashboardWidgetCatalog.EventRateType");
         inspector.ShouldContain("FluxMetricCatalog.MeasureCount");

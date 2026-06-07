@@ -1411,6 +1411,26 @@ public sealed class FlowDefinitionComposerTests
     }
 
     [Fact]
+    public void AddDashboardWidget_AddsRateTileDefaults()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+
+        var updated = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.RateTileType, "slot:0:0");
+
+        var layout = composer.GetDashboardLayout(updated, "ops").ShouldNotBeNull();
+        layout.Widgets.Keys.ShouldBe(["rateTile"]);
+        var widget = layout.Widgets["rateTile"];
+        widget.Type.ShouldBe(DashboardWidgetCatalog.RateTileType);
+        widget.Configuration["title"].ShouldBe("Rate tile");
+        widget.Configuration.Keys.ShouldBe(["title", "metric"], ignoreOrder: true);
+        widget.Configuration["metric"].ShouldBe("ops.rateTileMetric");
+        layout.Metrics["ops.rateTileMetric"].Aggregation.ShouldBe("rate");
+        layout.Bindings["rateTile"].PrimaryMetric.ShouldBe("ops.rateTileMetric");
+        layout.Cells.ShouldContain(cell => cell.Widget == "rateTile");
+    }
+
+    [Fact]
     public void AddDashboardWidget_AddsVisualDashboardWidgetDefaults()
     {
         var composer = new FlowDefinitionComposer();

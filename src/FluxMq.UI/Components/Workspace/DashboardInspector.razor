@@ -1260,6 +1260,7 @@
 
     private static bool IsAppMetricConsumerType(string? type)
         => string.Equals(type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal) ||
+           string.Equals(type, DashboardWidgetCatalog.RateTileType, StringComparison.Ordinal) ||
            string.Equals(type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal) ||
            string.Equals(type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal);
 
@@ -1270,7 +1271,8 @@
             return string.Equals(metric.Definition.Measure, FluxMetricCatalog.MeasureCount, StringComparison.Ordinal);
         }
 
-        if (string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal))
+        if (string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal) ||
+            string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.RateTileType, StringComparison.Ordinal))
         {
             return string.Equals(metric.Definition.Measure, FluxMetricCatalog.MeasureRate, StringComparison.Ordinal);
         }
