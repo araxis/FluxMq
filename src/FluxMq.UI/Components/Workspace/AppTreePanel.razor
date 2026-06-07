@@ -23,6 +23,7 @@ else
             var conns = GetConnections(a);
             var brokersCollapsed = IsSectionCollapsed(a, BrokerSection);
             var pipelinesCollapsed = IsSectionCollapsed(a, PipelineSection);
+            var metricsCollapsed = IsSectionCollapsed(a, MetricSection);
             var dashboardsCollapsed = IsSectionCollapsed(a, DashboardSection);
             var testsCollapsed = IsSectionCollapsed(a, TestSection);
 
@@ -167,6 +168,44 @@ else
                 </div>
 
                 <div class="tree-section">
+                    <div class="tree-section-header" @onclick="@(() => ToggleSection(a, MetricSection))">
+                        <div class="tree-section-title">
+                            <MudIcon Icon="@CollapseIcon(metricsCollapsed)"
+                                     Size="Size.Small"
+                                     Class="tree-section-chevron" />
+                            <MudIcon Icon="@Icons.Material.Filled.QueryStats"
+                                     Size="Size.Small"
+                                     Class="tree-section-icon dashboards" />
+                            <span>Metrics</span>
+                            <span class="tree-section-count">@a.MetricNames.Count</span>
+                        </div>
+                        <div class="tree-section-actions" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
+                            <MudTooltip Text="Add metric">
+                                <MudIconButton Size="Size.Small"
+                                               Icon="@Icons.Material.Filled.Add"
+                                               Class="tree-icon-button"
+                                               OnClick="@(() => AddMetricAsync(a))" />
+                            </MudTooltip>
+                        </div>
+                    </div>
+
+                    @if (!metricsCollapsed && a.MetricNames.Count == 0)
+                    {
+                        <div class="tree-muted-row">No metrics</div>
+                    }
+                    else if (!metricsCollapsed)
+                    {
+                        <div class="artifact-item @(a == Projects.ActiveProject && a.ActiveArtifactKind == WorkspaceArtifactKind.Metrics ? "active" : null)"
+                             @onclick="@(() => { Projects.SetActive(a); a.SetActiveMetrics(); })">
+                            <MudIcon Icon="@Icons.Material.Filled.QueryStats"
+                                     Size="Size.Small"
+                                     Class="artifact-icon dashboard" />
+                            <span>Metric Designer</span>
+                        </div>
+                    }
+                </div>
+
+                <div class="tree-section">
                     <div class="tree-section-header" @onclick="@(() => ToggleSection(a, DashboardSection))">
                         <div class="tree-section-title">
                             <MudIcon Icon="@CollapseIcon(dashboardsCollapsed)"
@@ -263,6 +302,7 @@ else
 @code {
     private const string BrokerSection = "brokers";
     private const string PipelineSection = "pipelines";
+    private const string MetricSection = "metrics";
     private const string DashboardSection = "dashboards";
     private const string TestSection = "tests";
 
@@ -291,6 +331,7 @@ else
         var parts = new[]
         {
             CountLabel(app.WorkflowNames.Count, "pipeline"),
+            CountLabel(app.MetricNames.Count, "metric"),
             CountLabel(app.DashboardNames.Count, "dashboard"),
             CountLabel(app.TestNames.Count, "test")
         };
@@ -392,6 +433,24 @@ else
         {
             app.AddDashboard(name.Trim());
             ExpandSection(app, DashboardSection);
+        }
+    }
+
+    private async Task AddMetricAsync(FlowWorkspaceService app)
+    {
+        Projects.SetActive(app);
+        var dialog = await DialogService.ShowAsync<NewPipelineDialog>(
+            "New Metric",
+            new DialogParameters
+            {
+                [nameof(NewPipelineDialog.Title)] = "New Metric"
+            });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string name } && !string.IsNullOrWhiteSpace(name))
+        {
+            app.AddMetric(name.Trim());
+            app.SetActiveMetrics();
+            ExpandSection(app, MetricSection);
         }
     }
 

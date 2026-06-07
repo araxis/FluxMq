@@ -47,6 +47,15 @@
                     </button>
                 </div>
             }
+            @{
+                var metricsActive = active.ActiveArtifactKind == WorkspaceArtifactKind.Metrics && !_jsonView;
+            }
+            <div class="project-tab project-tab-metrics @(metricsActive ? "project-tab-active" : "")"
+                 @onclick="@(() => { active.SetActiveMetrics(); _jsonView = false; })">
+                <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" Class="project-tab-icon" />
+                <span class="project-tab-name">Metrics</span>
+                <span class="project-tab-count">@active.MetricNames.Count</span>
+            </div>
             @foreach (var dashboard in active.DashboardNames)
             {
                 var d = dashboard;
@@ -116,6 +125,8 @@
                 <ChildContent>
                     <MudMenuItem Icon="@Icons.Material.Filled.Timeline"
                                  OnClick="@AddWorkflowAsync">Pipeline</MudMenuItem>
+                    <MudMenuItem Icon="@Icons.Material.Filled.QueryStats"
+                                 OnClick="@AddMetricAsync">Metric</MudMenuItem>
                     <MudMenuItem Icon="@Icons.Material.Filled.Dashboard"
                                  OnClick="@AddDashboardAsync">Dashboard</MudMenuItem>
                     <MudMenuItem Icon="@Icons.Material.Filled.FactCheck"
@@ -153,6 +164,7 @@
         }
         else if (active.ActiveArtifactName is null &&
                  active.WorkflowNames.Count == 0 &&
+                 active.MetricNames.Count == 0 &&
                  active.DashboardNames.Count == 0 &&
                  active.TestNames.Count == 0)
         {
@@ -165,6 +177,10 @@
                                OnClick="@AddWorkflowAsync">Add pipeline</MudButton>
                 </MudStack>
             </div>
+        }
+        else if (active.ActiveArtifactKind == WorkspaceArtifactKind.Metrics)
+        {
+            <MetricDesigner Project="@active" />
         }
         else if (active.ActiveArtifactKind == WorkspaceArtifactKind.Dashboard)
         {
@@ -407,6 +423,26 @@
         if (result is { Canceled: false, Data: string name } && !string.IsNullOrWhiteSpace(name))
         {
             active.AddDashboard(name.Trim());
+            _jsonView = false;
+        }
+    }
+
+    private async Task AddMetricAsync()
+    {
+        var active = Projects.ActiveProject;
+        if (active is null) return;
+
+        var dialog = await DialogService.ShowAsync<NewPipelineDialog>(
+            "New Metric",
+            new DialogParameters
+            {
+                [nameof(NewPipelineDialog.Title)] = "New Metric"
+            });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string name } && !string.IsNullOrWhiteSpace(name))
+        {
+            active.AddMetric(name.Trim());
+            active.SetActiveMetrics();
             _jsonView = false;
         }
     }

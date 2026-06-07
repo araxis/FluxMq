@@ -129,6 +129,7 @@
     private string? _metricToAdd;
     private string? _displayMetricToAdd;
     private List<string> _bindingMetrics = [];
+    private Dictionary<string, string> _bindingOptions = [];
     private string? _primaryBindingMetric;
 
     private string InspectorIcon => Widget is null
@@ -173,6 +174,7 @@
             _metricToAdd = null;
             _displayMetricToAdd = null;
             _bindingMetrics = [];
+            _bindingOptions = [];
             _primaryBindingMetric = null;
             return;
         }
@@ -183,6 +185,7 @@
         var metricName = binding?.PrimaryMetric ??
             Widget.ReadString("metric") ??
             binding?.Metrics.FirstOrDefault() ??
+            (IsKpiWidget(Widget) ? Project.MetricNames.FirstOrDefault() : null) ??
             $"{Widget.Name}Metric";
 
         if (string.Equals(_draftWidgetName, Widget.Name, StringComparison.Ordinal) &&
@@ -196,11 +199,15 @@
         _widgetDraft = DashboardWidgetSettingsDraft.Create(Widget, EventFilters);
         _metricToAdd = null;
         _displayMetricToAdd = null;
+        _bindingOptions = binding?.Options is null
+            ? []
+            : new Dictionary<string, string>(binding.Options, StringComparer.Ordinal);
 
         if (!_widgetDraft.Profile.UsesMetricQuery)
         {
             _metricDraft = null;
             _bindingMetrics = [];
+            _bindingOptions = [];
             _primaryBindingMetric = null;
             return;
         }
@@ -219,9 +226,10 @@
             _bindingMetrics.Insert(0, metricName);
         }
 
-        var metric = Layout?.Metrics.TryGetValue(metricName, out var foundMetric) == true
+        var metric = CreateMetricSnapshotFromAppMetric(metricName) ??
+            (Layout?.Metrics.TryGetValue(metricName, out var foundMetric) == true
             ? foundMetric
-            : null;
+            : null);
         if (metric is null && _widgetDraft.UsesMetricQueryBuilder)
         {
             var legacyDefinition = FluxMetricQueryDraft
@@ -294,7 +302,32 @@
     }
 
     private RenderFragment RenderDataProperties() => @<text>
-        @if (IsMetricQueryBuilderWidget)
+        @if (IsAppMetricConsumerWidget)
+        {
+        <PropertyGridRow Name="Metric">
+            <PropertyGridSelect Value="@(_primaryBindingMetric ?? string.Empty)"
+                                Options="@AppMetricNameOptions"
+                                AriaLabel="Metric"
+                                ValueChanged="@SetAppMetricAsync" />
+        </PropertyGridRow>
+        @foreach (var parameter in SelectedAppMetricParameters)
+        {
+            var currentParameter = parameter;
+            <PropertyGridRow Name="@currentParameter.LabelOrId()">
+                @RenderMetricParameterField(currentParameter)
+            </PropertyGridRow>
+        }
+        <PropertyGridRow Name="Preview">
+            <span class="property-grid-cell-text" title="@SelectedAppMetricSummary">@SelectedAppMetricPreview</span>
+        </PropertyGridRow>
+        <PropertyGridRow Name="Actions">
+            <button type="button"
+                    class="property-grid-action-button"
+                    disabled="@string.IsNullOrWhiteSpace(_primaryBindingMetric)"
+                    @onclick="@OpenSelectedMetricAsync">Open metric</button>
+        </PropertyGridRow>
+        }
+        else if (IsMetricQueryBuilderWidget)
         {
         <PropertyGridRow Name="Metric query">
             <div class="dashboard-inspector-query-row">
@@ -706,6 +739,34 @@
                        @oninput="@((ChangeEventArgs args) => SetFilterValueAsync(field.Key, args.Value?.ToString()))" />;
     }
 
+    private RenderFragment RenderMetricParameterField(FluxMetricParameterDefinition parameter)
+    {
+        var value = MetricParameterValue(parameter);
+        if (parameter.AllowedValues.Count > 0)
+        {
+            return @<PropertyGridSelect Value="@value"
+                                        Options="@ParameterSelectOptions(parameter)"
+                                        AriaLabel="@parameter.LabelOrId()"
+                                        ValueChanged="@((string? next) => SetMetricParameterAsync(parameter.Id, next))" />;
+        }
+
+        if (string.Equals(parameter.Kind, FluxMetricParameterKinds.Toggle, StringComparison.Ordinal))
+        {
+            return @<div class="property-grid-button-group">
+                <button type="button"
+                        class="@ChoiceClass(value, TrueValue)"
+                        @onclick="@(() => SetMetricParameterAsync(parameter.Id, TrueValue))">On</button>
+                <button type="button"
+                        class="@ChoiceClass(value, FalseValue)"
+                        @onclick="@(() => SetMetricParameterAsync(parameter.Id, FalseValue))">Off</button>
+            </div>;
+        }
+
+        return @<input class="property-grid-input"
+                       value="@value"
+                       @oninput="@((ChangeEventArgs args) => SetMetricParameterAsync(parameter.Id, args.Value?.ToString()))" />;
+    }
+
     private RenderFragment RenderCellSummary() => @<div class="dashboard-inspector-cell-summary">
         @if (SelectedCells.Count == 0)
         {
@@ -741,6 +802,9 @@
     private bool IsEventRateQueryBuilderWidget =>
         string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal);
 
+    private bool IsAppMetricConsumerWidget =>
+        string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal);
+
     private bool IsMetricQueryBuilderWidget => _widgetDraft?.UsesMetricQueryBuilder == true;
 
     private bool ShowsMetricQueryProperties =>
@@ -755,7 +819,7 @@
         _metricDraft is not null;
 
     private int DataPropertyCount => ShowsDataProperties
-        ? (IsMetricQueryBuilderWidget ? 1 : SupportsMetricSlots ? 2 + _bindingMetrics.Count : 1)
+        ? (IsAppMetricConsumerWidget ? 3 + SelectedAppMetricParameters.Count : IsMetricQueryBuilderWidget ? 1 : SupportsMetricSlots ? 2 + _bindingMetrics.Count : 1)
         : 0;
 
     private int MetricQueryPropertyCount => _widgetDraft is null || !ShowsMetricQueryProperties
@@ -842,6 +906,49 @@
         }
     }
 
+    private IReadOnlyDictionary<string, FluxMetricArtifactDefinition> AppMetricArtifacts => Project.GetMetricArtifacts();
+
+    private FluxMetricArtifactDefinition? SelectedAppMetric =>
+        !string.IsNullOrWhiteSpace(_primaryBindingMetric) &&
+        AppMetricArtifacts.TryGetValue(_primaryBindingMetric, out var metric)
+            ? metric
+            : null;
+
+    private IReadOnlyList<FluxMetricParameterDefinition> SelectedAppMetricParameters =>
+        SelectedAppMetric?.Parameters ?? [];
+
+    private IReadOnlyList<PropertyGridSelectOption> AppMetricNameOptions
+    {
+        get
+        {
+            var options = new List<PropertyGridSelectOption>();
+            if (AppMetricArtifacts.Count == 0)
+            {
+                options.Add(new("", "No metrics", true));
+                return options;
+            }
+
+            if (string.IsNullOrWhiteSpace(_primaryBindingMetric))
+            {
+                options.Add(new("", "Select metric", true));
+            }
+
+            options.AddRange(AppMetricArtifacts.Select(metric => new PropertyGridSelectOption(
+                metric.Key,
+                string.IsNullOrWhiteSpace(metric.Value.DisplayName)
+                    ? DashboardWidgetFormatting.MetricDisplayName(metric.Key)
+                    : metric.Value.DisplayName)));
+
+            if (!string.IsNullOrWhiteSpace(_primaryBindingMetric) &&
+                !AppMetricArtifacts.ContainsKey(_primaryBindingMetric))
+            {
+                options.Insert(0, new(_primaryBindingMetric, $"{_primaryBindingMetric} (missing)", true));
+            }
+
+            return options;
+        }
+    }
+
     private IReadOnlyList<PropertyGridSelectOption> MetricNameOptions
         => [.. AvailableMetricNames.Select(static metric => new PropertyGridSelectOption(
             metric,
@@ -893,6 +1000,25 @@
     private string MetricQuerySummary => _metricDraft is null
         ? "No metric query"
         : DashboardMetricQuerySummary.DescribeSentence(_metricDraft.BuildQuery(), EventFilters, MetricRegistry);
+
+    private string SelectedAppMetricSummary =>
+        CreateSelectedAppMetricDefinition() is { } definition
+            ? FluxMetricQuerySummary.DescribeSentence(definition)
+            : "Select an app metric";
+
+    private string SelectedAppMetricPreview
+    {
+        get
+        {
+            if (SelectedAppMetric is null)
+            {
+                return "No metric selected";
+            }
+
+            var value = Project.GetDashboardMetricValue(PreviewWidget);
+            return $"{value.FormattedValue} - {SelectedAppMetricSummary}";
+        }
+    }
 
     private string MetricQueryEditTitle => IsEventRateQueryBuilderWidget
         ? "Edit event rate query"
@@ -1056,16 +1182,31 @@
         var metricName = string.IsNullOrWhiteSpace(_draftMetricName)
             ? Widget.ReadString("metric") ?? $"{Widget.Name}Metric"
             : _draftMetricName;
+        if (IsAppMetricConsumerWidget)
+        {
+            metricName = Project.MetricNames.Contains(metricName, StringComparer.Ordinal)
+                ? metricName
+                : Project.MetricNames.FirstOrDefault() ?? metricName;
+            _bindingOptions = [];
+        }
+
         _draftMetricName = metricName;
         _widgetDraft.MetricName = metricName;
         _primaryBindingMetric = metricName;
         _bindingMetrics = [metricName];
-        _metricDraft = DashboardMetricEditorDraft.Create(
-            metricName,
-            null,
-            EventFilters,
-            MetricRegistry,
-            Widget.Type);
+        _metricDraft = IsAppMetricConsumerWidget
+            ? DashboardMetricEditorDraft.Create(
+                metricName,
+                CreateMetricSnapshotFromAppMetric(metricName),
+                EventFilters,
+                MetricRegistry,
+                Widget.Type)
+            : DashboardMetricEditorDraft.Create(
+                metricName,
+                null,
+                EventFilters,
+                MetricRegistry,
+                Widget.Type);
 
         await AutoApplyAsync();
     }
@@ -1317,6 +1458,51 @@
         await AutoApplyAsync();
     }
 
+    private async Task SetAppMetricAsync(string? value)
+    {
+        var normalized = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        _primaryBindingMetric = normalized;
+        _draftMetricName = normalized;
+        _bindingMetrics = string.IsNullOrWhiteSpace(normalized) ? [] : [normalized];
+        _bindingOptions = [];
+        if (_widgetDraft is not null)
+        {
+            _widgetDraft.MetricName = normalized ?? string.Empty;
+        }
+
+        if (!string.IsNullOrWhiteSpace(normalized))
+        {
+            LoadMetricDraft(normalized);
+        }
+
+        await AutoApplyAsync();
+    }
+
+    private async Task SetMetricParameterAsync(string parameterId, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(parameterId))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            _bindingOptions.Remove(parameterId);
+        }
+        else
+        {
+            _bindingOptions[parameterId] = value.Trim();
+        }
+
+        await AutoApplyAsync();
+    }
+
+    private async Task OpenSelectedMetricAsync()
+    {
+        Project.SetActiveMetrics();
+        await Changed.InvokeAsync();
+    }
+
     private Task SetMetricToAddAsync(string? value)
     {
         _metricToAdd = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
@@ -1383,6 +1569,7 @@
 
         Project.UpdateDashboardWidget(Widget.Name, _widgetDraft.BuildConfiguration());
         if (_widgetDraft.Profile.UsesMetricQuery &&
+            !IsAppMetricConsumerWidget &&
             _metricDraft is not null &&
             !string.IsNullOrWhiteSpace(_draftMetricName))
         {
@@ -1395,7 +1582,8 @@
             Project.UpdateDashboardWidgetBinding(
                 Widget.Name,
                 primaryMetric,
-                CurrentBindingMetrics(primaryMetric));
+                CurrentBindingMetrics(primaryMetric),
+                IsAppMetricConsumerWidget ? _bindingOptions : null);
         }
 
         await Changed.InvokeAsync();
@@ -1461,9 +1649,10 @@
             _widgetDraft.MetricName = metricName;
         }
 
-        var metric = Layout?.Metrics.TryGetValue(metricName, out var foundMetric) == true
+        var metric = CreateMetricSnapshotFromAppMetric(metricName) ??
+            (Layout?.Metrics.TryGetValue(metricName, out var foundMetric) == true
             ? foundMetric
-            : null;
+            : null);
         _metricDraft = DashboardMetricEditorDraft.Create(
             metricName,
             metric,
@@ -1471,6 +1660,44 @@
             MetricRegistry,
             Widget?.Type ?? DashboardWidgetCatalog.EventCounterType);
     }
+
+    private DashboardMetricSnapshot? CreateMetricSnapshotFromAppMetric(string metricName)
+    {
+        var definition = CreateAppMetricDefinition(metricName);
+        return definition is null
+            ? null
+            : ToMetricSnapshot(metricName, DashboardMetricQueryMapper.ToDashboardQuery(definition));
+    }
+
+    private FluxMetricDefinition? CreateSelectedAppMetricDefinition()
+        => string.IsNullOrWhiteSpace(_primaryBindingMetric)
+            ? null
+            : CreateAppMetricDefinition(_primaryBindingMetric);
+
+    private FluxMetricDefinition? CreateAppMetricDefinition(string metricName)
+    {
+        var artifact = Project.GetMetricArtifact(metricName);
+        if (artifact is null)
+        {
+            return null;
+        }
+
+        return new FluxMetricResolver().Resolve(artifact, _bindingOptions);
+    }
+
+    private string MetricParameterValue(FluxMetricParameterDefinition parameter)
+        => _bindingOptions.TryGetValue(parameter.Id, out var value)
+            ? value
+            : parameter.DefaultValue;
+
+    private static IReadOnlyList<PropertyGridSelectOption> ParameterSelectOptions(FluxMetricParameterDefinition parameter)
+        => [
+            new("", parameter.Required ? "Select value" : "Default"),
+            .. parameter.AllowedValues.Select(static value => new PropertyGridSelectOption(value, value))
+        ];
+
+    private static bool IsKpiWidget(DashboardWidgetSnapshot widget)
+        => string.Equals(widget.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal);
 
     private static DashboardMetricSnapshot ToMetricSnapshot(
         string metricName,

@@ -11,6 +11,7 @@ public sealed class DynamicMapperNodeModel(string id, DiagramPoint position, str
     public static readonly IReadOnlyList<string> InputTypes =
     [
         "MqttEnvelope",
+        "NumberMetricReading",
         "TimerTick",
         "ScheduleTick"
     ];
@@ -93,6 +94,11 @@ public sealed class DynamicMapperNodeModel(string id, DiagramPoint position, str
     {
         var isJsonata = string.Equals(engine, "jsonata", StringComparison.OrdinalIgnoreCase);
         var normalizedInputType = NormalizeInputType(inputType);
+
+        if (normalizedInputType is "NumberMetricReading")
+        {
+            return DefaultMetricReadingExpression(outputType, isJsonata);
+        }
 
         if (normalizedInputType is "TimerTick" or "ScheduleTick")
         {
@@ -247,6 +253,51 @@ public sealed class DynamicMapperNodeModel(string id, DiagramPoint position, str
             """
         };
     }
+
+    private static string DefaultMetricReadingExpression(string outputType, bool isJsonata)
+        => outputType switch
+        {
+            "FileWriteRequest" when isJsonata => """
+            {
+              "path": "metrics/" & metricId & ".json",
+              "content": {
+                "metricId": metricId,
+                "value": value,
+                "timestamp": timestamp
+              },
+              "mode": "Append",
+              "createDirectory": true
+            }
+            """,
+            "FileWriteRequest" => """
+            new FileWriteRequest {
+              Path = "metrics/" + metricId + ".json",
+              Content = Encoding.UTF8.GetBytes("{\"metricId\":\"" + metricId + "\",\"value\":" + value + "}"),
+              Mode = FileWriteMode.Append,
+              CreateDirectory = true
+            }
+            """,
+            _ when isJsonata => """
+            {
+              "topic": "metrics/" & metricId,
+              "payload": {
+                "metricId": metricId,
+                "value": value,
+                "timestamp": timestamp
+              },
+              "qos": 0,
+              "retain": false
+            }
+            """,
+            _ => """
+            new MqttPublishRequest {
+              Topic = "metrics/" + metricId,
+              Payload = Encoding.UTF8.GetBytes("{\"metricId\":\"" + metricId + "\",\"value\":" + value + "}"),
+              QualityOfService = MqttQualityOfServiceLevel.AtMostOnce,
+              Retain = false
+            }
+            """
+        };
 
     private static string ReadString(JsonObject? config, string key, string fallback)
         => config?[key]?.GetValue<string?>() is { Length: > 0 } value ? value : fallback;

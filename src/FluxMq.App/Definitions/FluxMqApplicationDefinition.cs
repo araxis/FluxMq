@@ -1,4 +1,5 @@
 using FluxMq.Scenarios;
+using FluxMq.App.Metrics;
 using EngineApplicationDefinition = FluxFlow.Engine.Definitions.ApplicationDefinition;
 using EngineNodeDefinition = FluxFlow.Engine.Definitions.NodeDefinition;
 using EngineWorkflowDefinition = FluxFlow.Engine.Definitions.WorkflowDefinition;
@@ -9,6 +10,7 @@ public sealed record FluxMqApplicationDefinition
 {
     private Dictionary<string, EngineNodeDefinition>? _resources = [];
     private Dictionary<string, EngineWorkflowDefinition>? _workflows = [];
+    private Dictionary<string, FluxMetricArtifactDefinition>? _metrics = [];
     private Dictionary<string, DashboardDefinition>? _dashboards = [];
     private Dictionary<string, ScenarioDefinition>? _tests = [];
 
@@ -22,6 +24,12 @@ public sealed record FluxMqApplicationDefinition
     {
         get => _workflows ??= [];
         init => _workflows = value ?? [];
+    }
+
+    public Dictionary<string, FluxMetricArtifactDefinition> Metrics
+    {
+        get => _metrics ??= [];
+        init => _metrics = value ?? [];
     }
 
     public Dictionary<string, DashboardDefinition> Dashboards

@@ -7,6 +7,7 @@ using FluxMq.Components.MqttPayloadInspector;
 using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
 using FluxMq.Core.Models;
+using FluxMq.Core.Metrics;
 using FluxFlow.Components.Http.Contracts;
 using FluxFlow.Components.Payloads.Contracts;
 using FluxFlow.Components.State.Contracts;
@@ -34,6 +35,7 @@ public static class FlowContractTypeNames
     public const string StateReducerResult = nameof(StateReducerResult);
     public const string FlowLogEntry = nameof(FlowLogEntry);
     public const string FlowError = nameof(FlowError);
+    public const string NumberMetricReading = "NumberMetricReading";
 
     public static readonly IReadOnlyList<string> AssertionInputTypes =
     [
@@ -53,7 +55,8 @@ public static class FlowContractTypeNames
         ScheduleTick,
         StateReducerResult,
         FlowLogEntry,
-        FlowError
+        FlowError,
+        NumberMetricReading
     ];
 
     public static string Normalize(string value)

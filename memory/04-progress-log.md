@@ -2639,3 +2639,23 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Normal UI build was blocked by the already-running desktop app locking output DLLs; separate-output UI build passed with no warnings or errors.
   - Focused dashboard UI tests passed after the change.
 - Next step: visually review wide, medium, and narrow dashboard sizes with Value and Digital visuals; if approved, continue with KPI unit placement/case or the next Value visual layout polish.
+
+## 2026-06-07 - Metric stream framework and pipeline integration
+
+- Added the numeric metric stream contract `FluxMetricReading<TValue>` in the shared core layer so App, Components, UI, and tests can use the same reading type without creating a project reference cycle.
+- Added focused app metric runtime classes for count, rate, unique topics, payload bytes, average payload, and retained count.
+- Added `FluxMetricRuntimeHost` as a lifecycle/lookup host only; each metric class owns its own runtime-event subscription, filtering, windowing, and reading emission.
+- Wired metric streams into `FlowApplicationHost` startup/shutdown and made dashboard metric value lookup prefer the latest app metric reading before falling back to offline/event-query evaluation.
+- Added the `metric.source` pipeline component:
+  - no input port
+  - `Output` as `NumberMetricReading`
+  - `Errors` as `FlowError`
+  - config for metric id, parameter values, latest-on-start, and buffer size
+- Added pipeline/UI support so condition routing, assertions, dynamic mapper previews, log shaping, and component metadata understand `NumberMetricReading`.
+- Added a dedicated Metric Source diagram node editor that selects app metrics, sets parameter values, and shows latest stream state without touching the existing MQTT metrics observer node.
+- Tightened dashboard metric migration so promoted app metric ids are idempotent (`ops.metric` does not become `ops.ops.metric`) and widget metric config is updated to the promoted app-level id.
+- Verification:
+  - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false -p:OutDir=artifacts\build-check\ui\` passed with 0 warnings.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 113 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 383 tests.
+- Next step: run full solution verification and then review the Metric Source node UX in the desktop designer before moving on to the next dashboard metric consumer.

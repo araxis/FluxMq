@@ -1,0 +1,619 @@
+@using FluxMq.App.Metrics
+@using FluxMq.App
+@using FluxMq.UI.Models
+@using FluxMq.UI.Services
+@inject DashboardEditorPreferenceService EditorPreferences
+@inject DashboardEventFilterCatalog EventFilters
+@inject DashboardMetricRegistry MetricRegistry
+@inject IDialogService DialogService
+
+<div class="workspace-tab-content">
+    <MudGrid Class="pa-3" Spacing="2" Style="height:100%; overflow:hidden;">
+        <MudItem xs="12" md="3" Style="height:100%; overflow:hidden;">
+            <MudPaper Outlined="true" Class="pa-3" Style="height:100%; overflow:auto;">
+                <MudStack Spacing="2">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                        <MudText Typo="Typo.subtitle1">Metrics</MudText>
+                        <MudMenu Dense="true"
+                                 Icon="@Icons.Material.Filled.Add"
+                                 Size="Size.Small"
+                                 AnchorOrigin="Origin.BottomRight"
+                                 TransformOrigin="Origin.TopRight">
+                            <ChildContent>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Tag"
+                                             OnClick="@(() => AddMetricFromTemplateAsync(MetricTemplate.Count))">Count metric</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Speed"
+                                             OnClick="@(() => AddMetricFromTemplateAsync(MetricTemplate.Rate))">Rate metric</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.DataUsage"
+                                             OnClick="@(() => AddMetricFromTemplateAsync(MetricTemplate.PayloadBytes))">Payload bytes</MudMenuItem>
+                            </ChildContent>
+                        </MudMenu>
+                    </MudStack>
+                    <MudTextField T="string"
+                                  Value="@_search"
+                                  ValueChanged="@((string? value) => { _search = value ?? string.Empty; return Task.CompletedTask; })"
+                                  Placeholder="Search metrics"
+                                  Immediate="true"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search" />
+                    @if (FilteredMetrics.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+                            No metrics yet.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudList T="string" Dense="true">
+                            @foreach (var metric in FilteredMetrics)
+                            {
+                                var currentMetric = metric;
+                                var artifact = Metrics[currentMetric];
+                                <MudListItem T="string"
+                                             Value="@currentMetric"
+                                             Icon="@Icons.Material.Filled.QueryStats"
+                                             Class="@(string.Equals(currentMetric, _selectedMetricName, StringComparison.Ordinal) ? "mud-primary-text" : null)"
+                                             OnClick="@(() => SelectMetric(currentMetric))">
+                                    <MudStack Spacing="0">
+                                        <MudText Typo="Typo.body2">@artifact.DisplayName</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@currentMetric</MudText>
+                                    </MudStack>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    }
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="6" Style="height:100%; overflow:auto;">
+            @if (_draft is null || SelectedArtifact is null)
+            {
+                <MudPaper Outlined="true" Class="pa-6">
+                    <MudStack AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Large" />
+                        <MudText Typo="Typo.h6">No metric selected</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">Add a metric template to start.</MudText>
+                    </MudStack>
+                </MudPaper>
+            }
+            else
+            {
+                <MudPaper Outlined="true" Class="pa-3 mb-2">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                        <MudStack Spacing="0" Style="min-width:0;">
+                            <MudText Typo="Typo.subtitle1">@_displayName</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@MetricSentence</MudText>
+                        </MudStack>
+                        <MudStack Row="true" Spacing="1">
+                            <MudButton Variant="Variant.Outlined"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.ContentCopy"
+                                       OnClick="@DuplicateSelectedMetricAsync">Duplicate</MudButton>
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Error"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.DeleteOutline"
+                                       OnClick="@DeleteSelectedMetricAsync">Delete</MudButton>
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.Check"
+                                       Disabled="@(!CanApply)"
+                                       OnClick="@ApplyMetricAsync">Apply metric</MudButton>
+                        </MudStack>
+                    </MudStack>
+                    <MudGrid Spacing="2" Class="mt-2">
+                        <MudItem xs="12" md="6">
+                            <MudTextField T="string"
+                                          Label="Name"
+                                          Value="@_displayName"
+                                          ValueChanged="@SetDisplayNameAsync"
+                                          Immediate="true"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField T="string"
+                                          Label="Description"
+                                          Value="@_description"
+                                          ValueChanged="@SetDescriptionAsync"
+                                          Immediate="true"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense" />
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+
+                <DashboardMetricQueryBuilder Draft="@_draft"
+                                             Preview="@_preview"
+                                             Project="@Project"
+                                             Widget="@PreviewWidget"
+                                             ShowHelp="@EditorPreferences.ShowQueryBuilderHelp"
+                                             ShowHelpChanged="@SetShowHelpAsync"
+                                             Changed="@RefreshPreviewAsync"
+                                             RefreshSample="@RefreshSampleAsync" />
+            }
+        </MudItem>
+
+        <MudItem xs="12" md="3" Style="height:100%; overflow:auto;">
+            <MudPaper Outlined="true" Class="pa-3">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.subtitle1">Parameters</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        Dashboard widgets provide these values when they use the metric.
+                    </MudText>
+                    @if (_parameters.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+                            No parameters. The metric is fixed.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        @foreach (var parameter in _parameters.Select((Value, Index) => new { Value, Index }))
+                        {
+                            var currentParameter = parameter.Value;
+                            <MudPaper Outlined="true" Class="pa-2" @key="currentParameter.Id">
+                                <MudStack Spacing="1">
+                                    <MudTextField T="string"
+                                                  Label="Id"
+                                                  Value="@currentParameter.Id"
+                                                  ValueChanged="@((string? value) => UpdateParameter(parameter.Index, currentParameter with { Id = Normalize(value) }))"
+                                                  Immediate="true"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense" />
+                                    <MudTextField T="string"
+                                                  Label="Label"
+                                                  Value="@currentParameter.Label"
+                                                  ValueChanged="@((string? value) => UpdateParameter(parameter.Index, currentParameter with { Label = Normalize(value) }))"
+                                                  Immediate="true"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense" />
+                                    <MudSelect T="string"
+                                               Label="Target"
+                                               Value="@currentParameter.Target"
+                                               ValueChanged="@((string? value) => UpdateParameter(parameter.Index, currentParameter with { Target = Normalize(value) }))"
+                                               Variant="Variant.Outlined"
+                                               Margin="Margin.Dense"
+                                               Dense="true">
+                                        @foreach (var target in ParameterTargets)
+                                        {
+                                            <MudSelectItem T="string" Value="@target.Value">@target.Label</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                    <MudTextField T="string"
+                                                  Label="Default"
+                                                  Value="@currentParameter.DefaultValue"
+                                                  ValueChanged="@((string? value) => UpdateParameter(parameter.Index, currentParameter with { DefaultValue = Normalize(value) }))"
+                                                  Immediate="true"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense" />
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                        <MudCheckBox T="bool"
+                                                     Label="Required"
+                                                     Value="@currentParameter.Required"
+                                                     ValueChanged="@((bool value) => UpdateParameter(parameter.Index, currentParameter with { Required = value }))"
+                                                     Dense="true" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
+                                                       Size="Size.Small"
+                                                       Color="Color.Error"
+                                                       OnClick="@(() => RemoveParameter(parameter.Index))" />
+                                    </MudStack>
+                                </MudStack>
+                            </MudPaper>
+                        }
+                    }
+                    <MudButton Variant="Variant.Outlined"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="@AddParameter">Add parameter</MudButton>
+                    <MudDivider />
+                    <MudText Typo="Typo.subtitle2">Validation</MudText>
+                    @if (ValidationErrors.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true">
+                            Metric is valid.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        @foreach (var error in ValidationErrors)
+                        {
+                            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true">@error</MudAlert>
+                        }
+                    }
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</div>
+
+@code {
+    private enum MetricTemplate
+    {
+        Count,
+        Rate,
+        PayloadBytes
+    }
+
+    private static readonly IReadOnlyList<(string Value, string Label)> ParameterTargets =
+    [
+        (FluxMetricParameterTargets.TopicStartsWith, "Topic prefix"),
+        (FluxMetricParameterTargets.EventType, "Event type"),
+        (FluxMetricParameterTargets.Status, "Status"),
+        (FluxMetricParameterTargets.Window, "Window"),
+        (FluxMetricParameterTargets.TopicNotStartsWith, "Exclude topic"),
+        (FluxMetricParameterTargets.Format, "Format"),
+        (FluxMetricParameterTargets.Attribute("qos"), "QoS"),
+        (FluxMetricParameterTargets.Attribute("retain"), "Retain")
+    ];
+
+    [Parameter, EditorRequired]
+    public FlowWorkspaceService Project { get; set; } = null!;
+
+    private long _revision = -1;
+    private string _search = string.Empty;
+    private string? _selectedMetricName;
+    private string _displayName = string.Empty;
+    private string _description = string.Empty;
+    private List<FluxMetricParameterDefinition> _parameters = [];
+    private FluxMetricQueryDraft? _draft;
+    private DashboardMetricQueryPreview _preview = EmptyPreview();
+
+    private IReadOnlyDictionary<string, FluxMetricArtifactDefinition> Metrics => Project.GetMetricArtifacts();
+
+    private FluxMetricArtifactDefinition? SelectedArtifact =>
+        !string.IsNullOrWhiteSpace(_selectedMetricName) &&
+        Metrics.TryGetValue(_selectedMetricName, out var artifact)
+            ? artifact
+            : null;
+
+    private IReadOnlyList<string> FilteredMetrics =>
+        [
+            .. Metrics
+                .Where(metric =>
+                    string.IsNullOrWhiteSpace(_search) ||
+                    metric.Key.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+                    metric.Value.DisplayName.Contains(_search, StringComparison.OrdinalIgnoreCase))
+                .Select(static metric => metric.Key)
+                .Order(StringComparer.OrdinalIgnoreCase)
+        ];
+
+    private DashboardWidgetSnapshot PreviewWidget =>
+        new(
+            "metricDesignerPreview",
+            DashboardWidgetCatalog.KpiTileType,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [DashboardWidgetCatalog.MetricVisualizationKey] = DashboardMetricVisualizationIds.Value,
+                [DashboardWidgetCatalog.MetricValueTitleKey] = string.IsNullOrWhiteSpace(_displayName) ? "Metric" : _displayName,
+                [DashboardWidgetCatalog.MetricValueSubtitleKey] = "Reusable app metric",
+                [DashboardWidgetCatalog.MetricValueShowSubtitleKey] = "true",
+                [DashboardWidgetCatalog.MetricValueShowUnitKey] = "true"
+            });
+
+    private string MetricSentence =>
+        _draft is null
+            ? "Select a metric to edit"
+            : FluxMetricQuerySummary.DescribeSentence(_draft.BuildDefinition(DisplayNameOrFallback));
+
+    private string DisplayNameOrFallback =>
+        string.IsNullOrWhiteSpace(_displayName)
+            ? _selectedMetricName ?? "Metric"
+            : _displayName.Trim();
+
+    private bool CanApply => _draft is not null &&
+                             _draft.HasValidWindow &&
+                             !string.IsNullOrWhiteSpace(_selectedMetricName) &&
+                             !string.IsNullOrWhiteSpace(_displayName) &&
+                             ValidationErrors.Count == 0;
+
+    private IReadOnlyList<string> ValidationErrors
+    {
+        get
+        {
+            var errors = new List<string>();
+            if (_draft is null)
+            {
+                return errors;
+            }
+
+            errors.AddRange(new FluxMetricValidator().Validate(_draft.BuildDefinition(DisplayNameOrFallback)).Errors);
+            foreach (var parameter in _parameters)
+            {
+                if (string.IsNullOrWhiteSpace(parameter.Id))
+                {
+                    errors.Add("A parameter has an empty id.");
+                }
+
+                if (string.IsNullOrWhiteSpace(parameter.Target))
+                {
+                    errors.Add($"Parameter '{parameter.LabelOrId()}' has no target.");
+                }
+            }
+
+            var duplicates = _parameters
+                .Where(static parameter => !string.IsNullOrWhiteSpace(parameter.Id))
+                .GroupBy(static parameter => parameter.Id, StringComparer.Ordinal)
+                .Where(static group => group.Count() > 1)
+                .Select(static group => group.Key);
+            foreach (var duplicate in duplicates)
+            {
+                errors.Add($"Parameter id '{duplicate}' is duplicated.");
+            }
+
+            return errors;
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (_revision == Project.DefinitionRevision)
+        {
+            return;
+        }
+
+        _revision = Project.DefinitionRevision;
+        if (_selectedMetricName is null || !Metrics.ContainsKey(_selectedMetricName))
+        {
+            _selectedMetricName = Metrics.Keys.Order(StringComparer.OrdinalIgnoreCase).FirstOrDefault();
+        }
+
+        LoadSelectedMetric();
+    }
+
+    private void SelectMetric(string metricName)
+    {
+        _selectedMetricName = metricName;
+        LoadSelectedMetric();
+    }
+
+    private void LoadSelectedMetric()
+    {
+        if (SelectedArtifact is not { } artifact)
+        {
+            _displayName = string.Empty;
+            _description = string.Empty;
+            _parameters = [];
+            _draft = null;
+            _preview = EmptyPreview();
+            return;
+        }
+
+        _displayName = artifact.DisplayName;
+        _description = artifact.Description;
+        _parameters = [.. artifact.Parameters];
+        _draft = FluxMetricQueryDraft.Create(artifact.Definition, null, _selectedMetricName ?? artifact.DisplayName);
+        RefreshPreview();
+    }
+
+    private Task SetDisplayNameAsync(string? value)
+    {
+        _displayName = value ?? string.Empty;
+        RefreshPreview();
+        return Task.CompletedTask;
+    }
+
+    private Task SetDescriptionAsync(string? value)
+    {
+        _description = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task SetShowHelpAsync(bool value)
+    {
+        EditorPreferences.SetShowQueryBuilderHelp(value);
+        return Task.CompletedTask;
+    }
+
+    private Task RefreshPreviewAsync()
+    {
+        RefreshPreview();
+        return Task.CompletedTask;
+    }
+
+    private Task RefreshSampleAsync()
+    {
+        RefreshPreview();
+        return Task.CompletedTask;
+    }
+
+    private void RefreshPreview()
+    {
+        if (_draft is null)
+        {
+            _preview = EmptyPreview();
+            return;
+        }
+
+        _preview = DashboardMetricQueryPreviewFactory.Create(
+            DashboardMetricQueryMapper.ToDashboardQuery(_draft.BuildDefinition(DisplayNameOrFallback)),
+            PreviewWidget,
+            Project,
+            MetricRegistry,
+            EventFilters,
+            useSampleFallback: true);
+    }
+
+    private async Task AddMetricFromTemplateAsync(MetricTemplate template)
+    {
+        var metricName = UniqueMetricName(template switch
+        {
+            MetricTemplate.Rate => "eventRate",
+            MetricTemplate.PayloadBytes => "payloadBytes",
+            _ => "eventCount"
+        });
+        var displayName = template switch
+        {
+            MetricTemplate.Rate => "Event rate",
+            MetricTemplate.PayloadBytes => "Payload bytes",
+            _ => "Event count"
+        };
+        var measure = template switch
+        {
+            MetricTemplate.Rate => FluxMetricCatalog.MeasureRate,
+            MetricTemplate.PayloadBytes => FluxMetricCatalog.MeasurePayloadBytes,
+            _ => FluxMetricCatalog.MeasureCount
+        };
+        var format = template == MetricTemplate.PayloadBytes
+            ? FluxMetricCatalog.FormatBytes
+            : FluxMetricCatalog.FormatNumber;
+
+        Project.AddMetric(metricName);
+        Project.UpdateMetric(metricName, new FluxMetricArtifactDefinition
+        {
+            DisplayName = displayName,
+            Description = "Reusable metric",
+            Definition = new FluxMetricDefinition(
+                displayName,
+                FluxMetricCatalog.RuntimeEventsSource,
+                measure,
+                "1m",
+                eventType: FluxMqEventTypes.MqttMessageReceived,
+                topicNotStartsWith: "$SYS",
+                format: format)
+        });
+        _selectedMetricName = metricName;
+        _revision = -1;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private Task ApplyMetricAsync()
+    {
+        if (_draft is null || string.IsNullOrWhiteSpace(_selectedMetricName))
+        {
+            return Task.CompletedTask;
+        }
+
+        var definition = _draft.BuildDefinition(DisplayNameOrFallback);
+        Project.UpdateMetric(_selectedMetricName, new FluxMetricArtifactDefinition
+        {
+            Version = SelectedArtifact?.Version ?? 1,
+            DisplayName = DisplayNameOrFallback,
+            Description = _description ?? string.Empty,
+            Definition = definition,
+            Parameters = [.. _parameters],
+            Labels = SelectedArtifact?.Labels ?? [],
+            ExportPolicy = SelectedArtifact?.ExportPolicy ?? FluxMetricExportPolicy.Disabled
+        });
+        _revision = -1;
+        return Task.CompletedTask;
+    }
+
+    private Task DuplicateSelectedMetricAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(_selectedMetricName))
+        {
+            Project.DuplicateMetric(_selectedMetricName);
+            _revision = -1;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task DeleteSelectedMetricAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_selectedMetricName))
+        {
+            return;
+        }
+
+        var references = Project.CountMetricReferences(_selectedMetricName);
+        var message = references == 0
+            ? $"Delete metric '{_selectedMetricName}'?"
+            : $"Delete metric '{_selectedMetricName}'? {references} dashboard binding(s) will need another metric.";
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            "Delete metric",
+            message,
+            "Delete",
+            null,
+            "Cancel",
+            new DialogOptions { MaxWidth = MaxWidth.ExtraSmall });
+        if (confirmed == true)
+        {
+            Project.RemoveMetric(_selectedMetricName);
+            _selectedMetricName = null;
+            _revision = -1;
+        }
+    }
+
+    private void AddParameter()
+    {
+        var id = UniqueParameterId("topicPrefix");
+        _parameters.Add(new FluxMetricParameterDefinition
+        {
+            Id = id,
+            Label = "Topic prefix",
+            Kind = FluxMetricParameterKinds.TopicPrefix,
+            Target = FluxMetricParameterTargets.TopicStartsWith
+        });
+    }
+
+    private Task UpdateParameter(int index, FluxMetricParameterDefinition parameter)
+    {
+        if (index >= 0 && index < _parameters.Count)
+        {
+            _parameters[index] = parameter;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private void RemoveParameter(int index)
+    {
+        if (index >= 0 && index < _parameters.Count)
+        {
+            _parameters.RemoveAt(index);
+        }
+    }
+
+    private string UniqueMetricName(string preferred)
+    {
+        var id = FluxMetricNaming.ToArtifactId(preferred);
+        if (!Project.MetricNames.Contains(id, StringComparer.Ordinal))
+        {
+            return id;
+        }
+
+        var index = 2;
+        while (Project.MetricNames.Contains($"{id}{index}", StringComparer.Ordinal))
+        {
+            index++;
+        }
+
+        return $"{id}{index}";
+    }
+
+    private string UniqueParameterId(string preferred)
+    {
+        var id = FluxMetricNaming.ToArtifactId(preferred);
+        if (!_parameters.Any(parameter => string.Equals(parameter.Id, id, StringComparison.Ordinal)))
+        {
+            return id;
+        }
+
+        var index = 2;
+        while (_parameters.Any(parameter => string.Equals(parameter.Id, $"{id}{index}", StringComparison.Ordinal)))
+        {
+            index++;
+        }
+
+        return $"{id}{index}";
+    }
+
+    private static string Normalize(string? value)
+        => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
+
+    private static DashboardMetricQueryPreview EmptyPreview()
+        => new(
+            new DashboardMetricValue("Metric", 0, string.Empty, "0"),
+            false,
+            0,
+            0,
+            string.Empty,
+            [],
+            new DashboardEventSnapshot(0, null, 0, TimeSpan.FromMinutes(1), 0, [], [], [], 0, 0, 0));
+}

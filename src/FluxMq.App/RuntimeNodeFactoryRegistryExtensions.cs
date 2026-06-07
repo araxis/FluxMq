@@ -15,6 +15,7 @@ using FluxMq.Components.MqttPayloadInspector;
 using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
 using FluxMq.Components.Storage.Repositories;
+using FluxMq.App.Metrics;
 using FluxFlow.Components.Assertions.Options;
 using FluxFlow.Components.Control.Contracts;
 using FluxFlow.Components.Control.Options;
@@ -44,6 +45,7 @@ using FluxFlow.Engine.Components;
 using FluxFlow.Engine.Definitions;
 using FluxFlow.Engine.Mapping;
 using FluxFlow.Engine.Runtime;
+using FluxMq.Core.Metrics;
 using MQTTnet.Protocol;
 using System.Text;
 using System.Text.Json;
@@ -75,7 +77,8 @@ public static class RuntimeNodeFactoryRegistryExtensions
         IMessageRepository? messageRepository = null,
         IFlowExpressionEngine? expressionEngine = null,
         string? fileSystemStorageRootDirectory = null,
-        ISecretResolver? secretResolver = null)
+        ISecretResolver? secretResolver = null,
+        FluxMetricRuntimeHost? metricRuntimeHost = null)
     {
         ArgumentNullException.ThrowIfNull(registry);
         clientFactory ??= profile => new MqttBrokerClient(profile, secretResolver);
@@ -94,14 +97,16 @@ public static class RuntimeNodeFactoryRegistryExtensions
         return registry.RegisterFluxMqRuntimeAdapters(
             clientFactory,
             messageRepository,
-            expressionEngine);
+            expressionEngine,
+            metricRuntimeHost);
     }
 
     private static RuntimeNodeFactoryRegistry RegisterFluxMqRuntimeAdapters(
         this RuntimeNodeFactoryRegistry registry,
         Func<MqttConnectionProfile, IMqttBrokerClient> clientFactory,
         IMessageRepository? messageRepository,
-        IFlowExpressionEngine expressionEngine)
+        IFlowExpressionEngine expressionEngine,
+        FluxMetricRuntimeHost? metricRuntimeHost)
         => registry
             .Register(FluxMqNodeTypes.Connection, context => CreateConnection(context.Address, context.Definition, clientFactory))
             .Register(FluxMqNodeTypes.Trigger, context => CreateTrigger(context.Address, context.Definition, context))
@@ -109,6 +114,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .Register(FluxMqNodeTypes.StoredSessionSource, context => CreateStoredSessionSource(context.Address, context.Definition, messageRepository))
             .Register(FluxMqNodeTypes.ReplaySource, context => CreateReplaySource(context.Address, context.Definition, messageRepository))
             .Register(FluxMqNodeTypes.GeneratedSource, context => CreateGeneratedMqttSource(context.Address, context.Definition))
+            .Register(FluxMqNodeTypes.MetricSource, context => CreateMetricSource(context.Address, context.Definition, metricRuntimeHost))
             .Register(FluxMqNodeTypes.PayloadInspector, CreatePayloadInspector)
             .Register(FluxMqNodeTypes.MqttMetrics, CreateMqttMetrics)
             .Register(FluxMqNodeTypes.FlowLogger, CreateFlowLogger)
@@ -132,7 +138,8 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .RegisterType<TimerTick>("TimerTick")
             .RegisterType<ScheduleTick>("ScheduleTick")
             .RegisterType<FlowLogEntry>("FlowLogEntry")
-            .RegisterType<FlowError>("FlowError");
+            .RegisterType<FlowError>("FlowError")
+            .RegisterType<FluxMetricReading<double>>(FlowContractTypeNames.NumberMetricReading);
     }
 
     private static void ConfigureMappingComponents(
@@ -157,7 +164,9 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .RegisterType<HttpErrorOutput>("HttpErrorOutput")
             .RegisterType<TimerTick>("TimerTick")
             .RegisterType<ScheduleTick>("ScheduleTick")
+            .RegisterType<FluxMetricReading<double>>(FlowContractTypeNames.NumberMetricReading)
             .UseContextFactory<MqttEnvelope>(new MqttEnvelopeFlowMapContextFactory())
+            .UseContextFactory<FluxMetricReading<double>>(new MetricReadingFlowMapContextFactory())
             .UseContextFactory<PayloadInspectionResult>(new PayloadInspectionResultFlowMapContextFactory())
             .UseContextFactory<HttpResponseOutput>(new HttpResponseOutputFlowMapContextFactory())
             .UseContextFactory<HttpErrorOutput>(new HttpErrorOutputFlowMapContextFactory());
@@ -232,7 +241,8 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .RegisterType<TimerTick>(FlowContractTypeNames.TimerTick)
             .RegisterType<ScheduleTick>(FlowContractTypeNames.ScheduleTick)
             .RegisterType<FlowLogEntry>(FlowContractTypeNames.FlowLogEntry)
-            .RegisterType<FlowError>(FlowContractTypeNames.FlowError);
+            .RegisterType<FlowError>(FlowContractTypeNames.FlowError)
+            .RegisterType<FluxMetricReading<double>>(FlowContractTypeNames.NumberMetricReading);
     }
 
     private static string GetDefaultFileSystemStorageRootDirectory()
@@ -572,23 +582,38 @@ public static class RuntimeNodeFactoryRegistryExtensions
         IFlowExpressionEngine expressionEngine)
     {
         var options = GetControlOptions(definition, FluxMqNodeTypes.ConditionRouter.Value);
-        var component = new FlowWhenComponent<MqttEnvelope>(
+        var inputType = FlowContractTypeNames.Normalize(options.InputType);
+        return inputType switch
+        {
+            FlowContractTypeNames.NumberMetricReading => CreateConditionRouter<FluxMetricReading<double>>(address, options, expressionEngine),
+            FlowContractTypeNames.MqttEnvelope => CreateConditionRouter<MqttEnvelope>(address, options, expressionEngine),
+            _ => throw new InvalidOperationException(
+                $"Flow condition inputType '{inputType}' is not supported yet. Supported inputType values: {FlowContractTypeNames.MqttEnvelope}, {FlowContractTypeNames.NumberMetricReading}.")
+        };
+    }
+
+    private static RuntimeNode CreateConditionRouter<TInput>(
+        NodeAddress address,
+        ControlExpressionOptions options,
+        IFlowExpressionEngine expressionEngine)
+    {
+        var component = new FlowWhenComponent<TInput>(
             options,
             GetControlExpressionEngine(options, expressionEngine),
             new FluxMqControlContextFactory(),
-            CreateControlNodeContext<MqttEnvelope>(address, options));
+            CreateControlNodeContext<TInput>(address, options));
 
         return RuntimeNode.Create(
             address,
             component,
             inputs:
             [
-                new InputPort<MqttEnvelope>(address.Port(InputPort), component.Input)
+                new InputPort<TInput>(address.Port(InputPort), component.Input)
             ],
             outputs:
             [
-                new OutputPort<MqttEnvelope>(address.Port(WhenTruePort), component.WhenTrue),
-                new OutputPort<MqttEnvelope>(address.Port(WhenFalsePort), component.WhenFalse),
+                new OutputPort<TInput>(address.Port(WhenTruePort), component.WhenTrue),
+                new OutputPort<TInput>(address.Port(WhenFalsePort), component.WhenFalse),
                 new OutputPort<FlowLogEntry>(address.Port(EntriesPort), component.Entries),
                 new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
             ]);
@@ -619,6 +644,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             FlowContractTypeNames.StateReducerResult => CreateFlowAssertion<StateReducerResult>(address, definition, expressionEngine),
             FlowContractTypeNames.FlowLogEntry => CreateFlowAssertion<FlowLogEntry>(address, definition, expressionEngine),
             FlowContractTypeNames.FlowError => CreateFlowAssertion<FlowError>(address, definition, expressionEngine),
+            FlowContractTypeNames.NumberMetricReading => CreateFlowAssertion<FluxMetricReading<double>>(address, definition, expressionEngine),
             _ => throw new InvalidOperationException(
                 $"Flow assertion inputType '{inputType}' is not supported yet. Supported inputType values: {FlowContractTypeNames.FormatAssertionInputTypes()}.")
         };
@@ -707,6 +733,33 @@ public static class RuntimeNodeFactoryRegistryExtensions
             outputs:
             [
                 new OutputPort<MqttMetricsSnapshot>(address.Port(SnapshotsPort), component.Snapshots),
+                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
+            ]);
+    }
+
+    private static RuntimeNode CreateMetricSource(
+        NodeAddress address,
+        NodeDefinition definition,
+        FluxMetricRuntimeHost? metricRuntimeHost)
+    {
+        if (metricRuntimeHost is null)
+        {
+            throw new InvalidOperationException("Metric source requires a metric runtime host.");
+        }
+
+        var component = new MetricSourceComponent(
+            metricRuntimeHost,
+            GetRequiredString(definition, "metricId"),
+            GetStringDictionary(definition, "parameters"),
+            emitLatestOnStart: GetBoolOrDefault(definition, "emitLatestOnStart", true),
+            boundedCapacity: GetBoundedCapacity(definition));
+
+        return RuntimeNode.Create(
+            address,
+            component,
+            outputs:
+            [
+                new OutputPort<FluxMetricReading<double>>(address.Port(OutputPort), component.Output),
                 new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
             ]);
     }
@@ -913,6 +966,43 @@ public static class RuntimeNodeFactoryRegistryExtensions
             return null;
         var s = value.GetString();
         return string.IsNullOrWhiteSpace(s) ? null : s;
+    }
+
+    private static IReadOnlyDictionary<string, string> GetStringDictionary(NodeDefinition definition, string key)
+    {
+        if (!definition.Configuration.TryGetValue(key, out var element) || element.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+        {
+            return new Dictionary<string, string>(StringComparer.Ordinal);
+        }
+
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            throw new InvalidOperationException($"Configuration value '{key}' must be an object.");
+        }
+
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var property in element.EnumerateObject())
+        {
+            if (string.IsNullOrWhiteSpace(property.Name))
+            {
+                continue;
+            }
+
+            var value = property.Value.ValueKind switch
+            {
+                JsonValueKind.String => property.Value.GetString(),
+                JsonValueKind.Number => property.Value.GetRawText(),
+                JsonValueKind.True => "true",
+                JsonValueKind.False => "false",
+                _ => null
+            };
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                result[property.Name.Trim()] = value.Trim();
+            }
+        }
+
+        return result;
     }
 
     private static string GetRequiredString(NodeDefinition definition, string key)

@@ -78,16 +78,18 @@ public sealed class FlowDefinitionComposerV2Tests
         json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.PayloadDistributionType, "slot:0:0");
 
         using var document = JsonDocument.Parse(json);
-        var dashboard = document.RootElement
+        var app = document.RootElement
             .GetProperty("FluxMq")
-            .GetProperty("FlowApplication")
+            .GetProperty("FlowApplication");
+        var dashboard = app
             .GetProperty("dashboards")
             .GetProperty("ops");
 
         dashboard.GetProperty("version").GetInt32().ShouldBe(2);
         dashboard.GetProperty("responsive").GetProperty("breakpoints").TryGetProperty("desktop", out _).ShouldBeTrue();
         dashboard.GetProperty("view").GetProperty("mode").GetString().ShouldBe("design");
-        dashboard.GetProperty("metrics").EnumerateObject().ShouldHaveSingleItem();
+        app.GetProperty("metrics").EnumerateObject().ShouldHaveSingleItem();
+        dashboard.TryGetProperty("metrics", out _).ShouldBeFalse();
         dashboard.GetProperty("bindings").EnumerateObject().ShouldHaveSingleItem();
     }
 
@@ -100,14 +102,15 @@ public sealed class FlowDefinitionComposerV2Tests
 
         var layout = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull();
         var widget = layout.Widgets["eventCounter"];
-        var metric = layout.Metrics["eventCounterMetric"];
+        var metricId = "ops.eventCounterMetric";
+        var metric = layout.Metrics[metricId];
 
         widget.Configuration.Keys.ShouldBe(["title", "metric"], ignoreOrder: true);
-        widget.Configuration["metric"].ShouldBe("eventCounterMetric");
+        widget.Configuration["metric"].ShouldBe(metricId);
         widget.Configuration.ContainsKey(DashboardEventFilterCatalog.EventTypeKey).ShouldBeFalse();
         metric.Aggregation.ShouldBe("count");
         metric.Source.ShouldBe("runtimeEvents");
-        layout.Bindings["eventCounter"].PrimaryMetric.ShouldBe("eventCounterMetric");
+        layout.Bindings["eventCounter"].PrimaryMetric.ShouldBe(metricId);
     }
 
     [Fact]
@@ -119,11 +122,12 @@ public sealed class FlowDefinitionComposerV2Tests
 
         var layout = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull();
 
-        layout.Metrics.ContainsKey("eventRateMetric").ShouldBeTrue();
-        layout.Metrics["eventRateMetric"].Aggregation.ShouldBe("rate");
+        var metricId = "ops.eventRateMetric";
+        layout.Metrics.ContainsKey(metricId).ShouldBeTrue();
+        layout.Metrics[metricId].Aggregation.ShouldBe("rate");
         layout.Bindings.ContainsKey("eventRate").ShouldBeTrue();
-        layout.Bindings["eventRate"].PrimaryMetric.ShouldBe("eventRateMetric");
-        layout.Bindings["eventRate"].Metrics.ShouldBe(["eventRateMetric"]);
+        layout.Bindings["eventRate"].PrimaryMetric.ShouldBe(metricId);
+        layout.Bindings["eventRate"].Metrics.ShouldBe([metricId]);
     }
 
     [Fact]
@@ -167,9 +171,10 @@ public sealed class FlowDefinitionComposerV2Tests
 
         layout.Widgets["payload"].Configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
         layout.Widgets["payload"].Configuration["title"].ShouldBe("Payload bytes");
-        layout.Metrics["payloadMetric"].Aggregation.ShouldBe("payloadBytes");
-        layout.Metrics["payloadMetric"].Format["unit"].ShouldBe("bytes");
-        layout.Bindings["payload"].PrimaryMetric.ShouldBe("payloadMetric");
+        layout.Widgets["payload"].Configuration["metric"].ShouldBe("ops.payloadMetric");
+        layout.Metrics["ops.payloadMetric"].Aggregation.ShouldBe("payloadBytes");
+        layout.Metrics["ops.payloadMetric"].Format["unit"].ShouldBe("bytes");
+        layout.Bindings["payload"].PrimaryMetric.ShouldBe("ops.payloadMetric");
     }
 
     [Fact]
@@ -178,14 +183,14 @@ public sealed class FlowDefinitionComposerV2Tests
         var composer = new FlowDefinitionComposer();
         var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
 
-        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.LatestEventType, "slot:0:0");
-        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.LatestEventType, "slot:0:1");
+        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.EventCounterType, "slot:0:0");
+        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.EventCounterType, "slot:0:1");
 
         var layout = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull();
-        layout.Widgets.Keys.ShouldBe(["latestEvent", "latestEvent2"]);
-        layout.Metrics.Keys.ShouldBe(["latestEventMetric", "latestEventMetric2"], ignoreOrder: true);
-        layout.Bindings["latestEvent2"].PrimaryMetric.ShouldBe("latestEventMetric2");
-        layout.Bindings["latestEvent2"].Metrics.ShouldBe(["latestEventMetric2"]);
+        layout.Widgets.Keys.ShouldBe(["eventCounter", "eventCounter2"]);
+        layout.Metrics.Keys.ShouldBe(["ops.eventCounterMetric", "ops.eventCounterMetric2"], ignoreOrder: true);
+        layout.Bindings["eventCounter2"].PrimaryMetric.ShouldBe("ops.eventCounterMetric2");
+        layout.Bindings["eventCounter2"].Metrics.ShouldBe(["ops.eventCounterMetric2"]);
     }
 
     [Fact]
@@ -215,7 +220,7 @@ public sealed class FlowDefinitionComposerV2Tests
                     [DashboardEventFilterCatalog.AttributeFilterKey("retain")] = "false"
                 }));
 
-        var metric = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull().Metrics["eventGaugeMetric"];
+        var metric = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull().Metrics["ops.eventGaugeMetric"];
         metric.Source.ShouldBe("runtimeEvents");
         metric.Aggregation.ShouldBe("count");
         metric.Window.ShouldBe("300s");
@@ -255,11 +260,11 @@ public sealed class FlowDefinitionComposerV2Tests
         json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.EventCounterType, "slot:0:0");
         json = composer.UpdateDashboardMetric(json, "ops", "unused", new DashboardMetricQueryDefinition("runtimeEvents", "count", "60s"));
 
-        json = composer.RemoveDashboardMetricIfUnused(json, "ops", "eventCounterMetric");
+        json = composer.RemoveDashboardMetricIfUnused(json, "ops", "ops.eventCounterMetric");
         json = composer.RemoveDashboardMetricIfUnused(json, "ops", "unused");
 
         var layout = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull();
-        layout.Metrics.ContainsKey("eventCounterMetric").ShouldBeTrue();
+        layout.Metrics.ContainsKey("ops.eventCounterMetric").ShouldBeTrue();
         layout.Metrics.ContainsKey("unused").ShouldBeFalse();
     }
 
@@ -285,7 +290,7 @@ public sealed class FlowDefinitionComposerV2Tests
         var layout = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull();
         layout.Widgets.ContainsKey("eventCounterCopy").ShouldBeTrue();
         layout.Widgets["eventCounterCopy"].Configuration["title"].ShouldBe("Factory events");
-        layout.Bindings["eventCounterCopy"].PrimaryMetric.ShouldBe("eventCounterMetric");
+        layout.Bindings["eventCounterCopy"].PrimaryMetric.ShouldBe("ops.eventCounterMetric");
         layout.Cells.ShouldContain(cell => cell.Widget == "eventCounterCopy" && cell.Column == 1);
     }
 }

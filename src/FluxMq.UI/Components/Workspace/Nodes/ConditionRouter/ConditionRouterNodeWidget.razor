@@ -19,6 +19,18 @@
     </Body>
     <Editor>
         <MudStack Spacing="2">
+            <MudSelect T="string"
+                       Value="@_inputType"
+                       ValueChanged="@SetInputType"
+                       Label="Input type"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       Dense="true">
+                @foreach (var inputType in ConditionRouterNodeModel.InputTypes)
+                {
+                    <MudSelectItem Value="@inputType">@InputTypeLabel(inputType)</MudSelectItem>
+                }
+            </MudSelect>
             <MudText Typo="Typo.subtitle2">Condition expression</MudText>
             <MudText Typo="Typo.caption" Color="Color.Secondary">
                 Evaluate to <code>true</code> → routed to <b>WhenTrue</b>, otherwise <b>WhenFalse</b>.
@@ -29,19 +41,29 @@
                           Variant="Variant.Outlined"
                           Lines="4"
                           Class="node-expr-field"
-                          Placeholder='topic.StartsWith("sensors/") && qos >= 1'
-                          HelperText="DynamicExpresso C# expression. Variables: topic, payload, qos, retain, receivedAt" />
+                          Placeholder="@ExpressionPlaceholder"
+                          HelperText="@ExpressionHelper" />
             <MudExpansionPanel Text="Available variables" Dense="true" Class="pa-0">
                 <MudSimpleTable Dense="true" Striped="true" Class="mt-1">
                     <thead>
                         <tr><th>Variable</th><th>Type</th><th>Example</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>topic</code></td><td>string</td><td><code>topic.StartsWith("sensors/")</code></td></tr>
-                        <tr><td><code>payload</code></td><td>string</td><td><code>payload.Contains("error")</code></td></tr>
-                        <tr><td><code>qos</code></td><td>int</td><td><code>qos >= 1</code></td></tr>
-                        <tr><td><code>retain</code></td><td>bool</td><td><code>retain == true</code></td></tr>
-                        <tr><td><code>receivedAt</code></td><td>DateTimeOffset</td><td><code>receivedAt.Hour >= 8</code></td></tr>
+                        @if (IsMetricInput)
+                        {
+                            <tr><td><code>metricId</code></td><td>string</td><td><code>metricId == "messageRate"</code></td></tr>
+                            <tr><td><code>value</code></td><td>double</td><td><code>value &gt; 10</code></td></tr>
+                            <tr><td><code>timestamp</code></td><td>DateTimeOffset</td><td><code>timestamp.Minute &gt;= 0</code></td></tr>
+                            <tr><td><code>reading</code></td><td>FluxMetricReading&lt;double&gt;</td><td><code>reading.Value &gt; 10</code></td></tr>
+                        }
+                        else
+                        {
+                            <tr><td><code>topic</code></td><td>string</td><td><code>topic.StartsWith("sensors/")</code></td></tr>
+                            <tr><td><code>payload</code></td><td>string</td><td><code>payload.Contains("error")</code></td></tr>
+                            <tr><td><code>qos</code></td><td>int</td><td><code>qos &gt;= 1</code></td></tr>
+                            <tr><td><code>retain</code></td><td>bool</td><td><code>retain == true</code></td></tr>
+                            <tr><td><code>receivedAt</code></td><td>DateTimeOffset</td><td><code>receivedAt.Hour &gt;= 8</code></td></tr>
+                        }
                     </tbody>
                 </MudSimpleTable>
             </MudExpansionPanel>
@@ -55,15 +77,45 @@
     private ConditionRouterNodeModel Model => (ConditionRouterNodeModel)Node;
 
     private string _expression = string.Empty;
+    private string _inputType = "MqttEnvelope";
+    private bool IsMetricInput => string.Equals(_inputType, "NumberMetricReading", StringComparison.Ordinal);
+    private string ExpressionPlaceholder => IsMetricInput ? "value > 10" : "topic.StartsWith(\"sensors/\") && qos >= 1";
+    private string ExpressionHelper => IsMetricInput
+        ? "DynamicExpresso C# expression. Variables: metricId, timestamp, value, reading."
+        : "DynamicExpresso C# expression. Variables: topic, payload, qos, retain, receivedAt.";
 
     protected override void OnParametersSet() => LoadDraft();
 
-    private void LoadDraft() => _expression = Model.Expression;
+    private void LoadDraft()
+    {
+        _inputType = ConditionRouterNodeModel.NormalizeInputType(Model.InputType);
+        _expression = string.IsNullOrWhiteSpace(Model.Expression)
+            ? ConditionRouterNodeModel.DefaultExpression(_inputType)
+            : Model.Expression;
+    }
 
     private Task SaveAsync()
     {
+        Model.InputType = ConditionRouterNodeModel.NormalizeInputType(_inputType);
         Model.Expression = _expression.Trim();
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
         return Task.CompletedTask;
     }
+
+    private Task SetInputType(string value)
+    {
+        var normalized = ConditionRouterNodeModel.NormalizeInputType(value);
+        if (!string.Equals(_inputType, normalized, StringComparison.Ordinal))
+        {
+            _inputType = normalized;
+            _expression = ConditionRouterNodeModel.DefaultExpression(_inputType);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private static string InputTypeLabel(string inputType)
+        => string.Equals(inputType, "NumberMetricReading", StringComparison.Ordinal)
+            ? "Number metric"
+            : "MQTT message";
 }
