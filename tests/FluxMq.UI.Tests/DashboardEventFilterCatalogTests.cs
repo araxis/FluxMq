@@ -51,6 +51,37 @@ public sealed class DashboardEventFilterCatalogTests
         DashboardWidgetFormatting.WidgetSubtitle(topicWidget).ShouldBe("Live topic map");
     }
 
+    [Fact]
+    public void DashboardWidgetFormatting_MapsGaugeMetricValueThroughConfiguredRange()
+    {
+        var widget = new DashboardWidgetSnapshot(
+            "gauge",
+            DashboardWidgetCatalog.EventGaugeType,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [DashboardWidgetCatalog.GaugeMinKey] = "20",
+                [DashboardWidgetCatalog.GaugeMaxKey] = "120",
+                [DashboardWidgetCatalog.GaugeTargetKey] = "90",
+                [DashboardWidgetCatalog.GaugeWarningKey] = "70",
+                [DashboardWidgetCatalog.GaugeCriticalKey] = "100",
+                [DashboardWidgetCatalog.GaugeNormalColorKey] = "#11aa99",
+                [DashboardWidgetCatalog.GaugeWarningColorKey] = "#ffaa00",
+                [DashboardWidgetCatalog.GaugeCriticalColorKey] = "#ff3355"
+            });
+        var metric = new DashboardMetricValue("Events", 80, "events", "80");
+
+        var state = DashboardWidgetFormatting.GaugeVisualState(widget, metric);
+
+        state.Progress.ShouldBe(60d);
+        state.TargetProgress.ShouldBe(70d);
+        state.RangeLabel.ShouldBe("20 - 120");
+        state.TargetLabel.ShouldBe("90");
+        state.Style.ShouldContain("--gauge-progress:60%;");
+        state.Style.ShouldContain("--gauge-target:70%;");
+        state.Style.ShouldContain("--gauge-target-angle:252deg;");
+        state.Style.ShouldContain("--gauge-fill:#ffaa00;");
+    }
+
     [Theory]
     [InlineData("eventRateMetric", "Event Rate metric")]
     [InlineData("latestEvent2Metric", "Latest Event metric #2")]
@@ -375,7 +406,15 @@ public sealed class DashboardEventFilterCatalogTests
                     [DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricCurrentRate,
                     [DashboardWidgetCatalog.DisplayMetricsKey] = "messages,currentRate",
                     [DashboardWidgetCatalog.MetricCardColumnsKey] = "3",
-                    [DashboardWidgetCatalog.GaugeStyleKey] = DashboardWidgetCatalog.GaugeStyleMeter
+                    [DashboardWidgetCatalog.GaugeStyleKey] = DashboardWidgetCatalog.GaugeStyleMeter,
+                    [DashboardWidgetCatalog.GaugeMinKey] = "10",
+                    [DashboardWidgetCatalog.GaugeMaxKey] = "250",
+                    [DashboardWidgetCatalog.GaugeTargetKey] = "200",
+                    [DashboardWidgetCatalog.GaugeWarningKey] = "150",
+                    [DashboardWidgetCatalog.GaugeCriticalKey] = "225",
+                    [DashboardWidgetCatalog.GaugeNormalColorKey] = "#123456",
+                    [DashboardWidgetCatalog.GaugeWarningColorKey] = "#abcdef",
+                    [DashboardWidgetCatalog.GaugeCriticalColorKey] = "#fedcba"
                 }),
             new DashboardEventFilterCatalog());
 
@@ -385,6 +424,14 @@ public sealed class DashboardEventFilterCatalogTests
         configuration["title"].ShouldBe("Factory load");
         configuration["metric"].ShouldBe("factoryLoadMetric");
         configuration[DashboardWidgetCatalog.GaugeStyleKey].ShouldBe(DashboardWidgetCatalog.GaugeStyleMeter);
+        configuration[DashboardWidgetCatalog.GaugeMinKey].ShouldBe("10");
+        configuration[DashboardWidgetCatalog.GaugeMaxKey].ShouldBe("250");
+        configuration[DashboardWidgetCatalog.GaugeTargetKey].ShouldBe("200");
+        configuration[DashboardWidgetCatalog.GaugeWarningKey].ShouldBe("150");
+        configuration[DashboardWidgetCatalog.GaugeCriticalKey].ShouldBe("225");
+        configuration[DashboardWidgetCatalog.GaugeNormalColorKey].ShouldBe("#123456");
+        configuration[DashboardWidgetCatalog.GaugeWarningColorKey].ShouldBe("#abcdef");
+        configuration[DashboardWidgetCatalog.GaugeCriticalColorKey].ShouldBe("#fedcba");
         configuration.ContainsKey(DashboardEventFilterCatalog.EventTypeKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardEventFilterCatalog.TopicStartsWithKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardEventFilterCatalog.StatusKey).ShouldBeFalse();
@@ -1704,11 +1751,26 @@ public sealed class DashboardEventFilterCatalogTests
             .Single(static module => module.Type == DashboardWidgetCatalog.EventGaugeType)
             .DefaultConfiguration
             .Keys
-            .ShouldBe(["title", DashboardWidgetCatalog.GaugeStyleKey], ignoreOrder: true);
+            .ShouldBe([
+                "title",
+                DashboardWidgetCatalog.GaugeStyleKey,
+                DashboardWidgetCatalog.GaugeMinKey,
+                DashboardWidgetCatalog.GaugeMaxKey,
+                DashboardWidgetCatalog.GaugeTargetKey,
+                DashboardWidgetCatalog.GaugeWarningKey,
+                DashboardWidgetCatalog.GaugeCriticalKey,
+                DashboardWidgetCatalog.GaugeNormalColorKey,
+                DashboardWidgetCatalog.GaugeWarningColorKey,
+                DashboardWidgetCatalog.GaugeCriticalColorKey
+            ], ignoreOrder: true);
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.EventGaugeType)
             .DefaultConfiguration[DashboardWidgetCatalog.GaugeStyleKey]
             .ShouldBe(DashboardWidgetCatalog.GaugeStyleRing);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.EventGaugeType)
+            .DefaultConfiguration[DashboardWidgetCatalog.GaugeMaxKey]
+            .ShouldBe(DashboardWidgetCatalog.GaugeDefaultMax);
         modules
             .Where(static module =>
                 string.Equals(module.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal) ||
@@ -2277,6 +2339,9 @@ public sealed class DashboardEventFilterCatalogTests
         inspector.ShouldNotContain("PropertyGridRow Name=\"@InspectorLabels.ChartRow\"");
         inspector.ShouldNotContain("PropertyGridRow Name=\"@InspectorLabels.TopicSystemRow\"");
         displayRows.ShouldContain("PropertyGridRow Name=\"@Labels.GaugeRow\"");
+        displayRows.ShouldContain("PropertyGridRow Name=\"Min\"");
+        displayRows.ShouldContain("PropertyGridColorPicker");
+        displayRows.ShouldContain("GaugePropertyChanged");
         displayRows.ShouldContain("PropertyGridRow Name=\"@Labels.ChartRow\"");
         displayRows.ShouldContain("PropertyGridRow Name=\"@Labels.TopicSystemRow\"");
         displayRows.ShouldContain("GaugeStyleChanged");

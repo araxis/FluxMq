@@ -291,22 +291,59 @@ public static class DashboardWidgetFormatting
     public static string ChartAreaPoints(DashboardEventSnapshot snapshot)
         => $"0,44 {ChartLinePoints(snapshot)} 100,44";
 
-    public static string GaugeProgressStyle(DashboardEventSnapshot snapshot)
+    public static DashboardGaugeVisualState GaugeVisualState(
+        DashboardWidgetSnapshot widget,
+        DashboardMetricValue metric)
     {
-        var maxBucket = Math.Max(1, snapshot.BucketCounts.DefaultIfEmpty(0).Max());
-        var capacity = Math.Max(1, maxBucket * Math.Max(1, snapshot.BucketCounts.Count));
-        var percent = snapshot.RecentCount == 0
-            ? 0
-            : Math.Clamp(snapshot.RecentCount / (double)capacity * 100, 12, 100);
-        return $"--gauge-progress:{percent.ToString("0.###", CultureInfo.InvariantCulture)}%;";
-    }
+        var min = ReadGaugeNumber(widget, DashboardWidgetCatalog.GaugeMinKey, DashboardWidgetCatalog.GaugeDefaultMin);
+        var max = ReadGaugeNumber(widget, DashboardWidgetCatalog.GaugeMaxKey, DashboardWidgetCatalog.GaugeDefaultMax);
+        if (max <= min)
+        {
+            max = min + 1;
+        }
 
-    public static string GaugeProgressStyle(DashboardMetricValue metric)
-    {
-        var percent = metric.Value <= 0
-            ? 0
-            : Math.Clamp(metric.Value, 12, 100);
-        return $"--gauge-progress:{percent.ToString("0.###", CultureInfo.InvariantCulture)}%;";
+        var target = Math.Clamp(
+            ReadGaugeNumber(widget, DashboardWidgetCatalog.GaugeTargetKey, DashboardWidgetCatalog.GaugeDefaultTarget),
+            min,
+            max);
+        var warning = Math.Clamp(
+            ReadGaugeNumber(widget, DashboardWidgetCatalog.GaugeWarningKey, DashboardWidgetCatalog.GaugeDefaultWarning),
+            min,
+            max);
+        var critical = Math.Clamp(
+            ReadGaugeNumber(widget, DashboardWidgetCatalog.GaugeCriticalKey, DashboardWidgetCatalog.GaugeDefaultCritical),
+            min,
+            max);
+        if (critical < warning)
+        {
+            (warning, critical) = (critical, warning);
+        }
+
+        var progress = Math.Clamp((metric.Value - min) / (max - min) * 100, 0, 100);
+        var targetProgress = Math.Clamp((target - min) / (max - min) * 100, 0, 100);
+        var fillColor = metric.Value >= critical
+            ? ReadGaugeColor(widget, DashboardWidgetCatalog.GaugeCriticalColorKey, DashboardWidgetCatalog.GaugeDefaultCriticalColor)
+            : metric.Value >= warning
+                ? ReadGaugeColor(widget, DashboardWidgetCatalog.GaugeWarningColorKey, DashboardWidgetCatalog.GaugeDefaultWarningColor)
+                : ReadGaugeColor(widget, DashboardWidgetCatalog.GaugeNormalColorKey, DashboardWidgetCatalog.GaugeDefaultNormalColor);
+
+        var style = string.Concat(
+            "--gauge-progress:",
+            progress.ToString("0.###", CultureInfo.InvariantCulture),
+            "%;--gauge-target:",
+            targetProgress.ToString("0.###", CultureInfo.InvariantCulture),
+            "%;--gauge-target-angle:",
+            (targetProgress * 3.6).ToString("0.###", CultureInfo.InvariantCulture),
+            "deg;--gauge-fill:",
+            fillColor,
+            ";");
+
+        return new DashboardGaugeVisualState(
+            style,
+            $"{FormatGaugeNumber(min)} - {FormatGaugeNumber(max)}",
+            FormatGaugeNumber(target),
+            progress,
+            targetProgress);
     }
 
     public static string RateTrackStyle(DashboardEventSnapshot snapshot)
@@ -539,6 +576,51 @@ public static class DashboardWidgetFormatting
            !value.Contains("url", StringComparison.OrdinalIgnoreCase) &&
            !value.Contains("expression", StringComparison.OrdinalIgnoreCase);
 
+    private static double ReadGaugeNumber(
+        DashboardWidgetSnapshot widget,
+        string key,
+        string fallback)
+        => double.TryParse(
+            widget.ReadString(key) ?? fallback,
+            NumberStyles.Float,
+            CultureInfo.InvariantCulture,
+            out var parsed) &&
+           double.IsFinite(parsed)
+            ? parsed
+            : double.Parse(fallback, CultureInfo.InvariantCulture);
+
+    private static string ReadGaugeColor(
+        DashboardWidgetSnapshot widget,
+        string key,
+        string fallback)
+    {
+        var value = widget.ReadString(key);
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return fallback;
+        }
+
+        var normalized = value.Trim().ToLowerInvariant();
+        if (string.Equals(normalized, "transparent", StringComparison.Ordinal) ||
+            (normalized.Length is 4 or 5 or 7 or 9 &&
+             normalized[0] == '#' &&
+             normalized.Skip(1).All(static character => character is >= '0' and <= '9' or >= 'a' and <= 'f')))
+        {
+            return normalized;
+        }
+
+        return fallback;
+    }
+
+    private static string FormatGaugeNumber(double value)
+        => value.ToString(value switch
+        {
+            >= 1000 or <= -1000 => "0.#",
+            >= 100 or <= -100 => "0.#",
+            >= 10 or <= -10 => "0.##",
+            _ => "0.###"
+        }, CultureInfo.InvariantCulture);
+
     private static string ExtractTrailingDigits(string value, out string stem)
     {
         var index = value.Length;
@@ -589,6 +671,13 @@ public static class DashboardWidgetFormatting
 }
 
 public sealed record DashboardMetricDisplayCard(string Icon, string Value, string Label, string CssClass);
+
+public sealed record DashboardGaugeVisualState(
+    string Style,
+    string RangeLabel,
+    string TargetLabel,
+    double Progress,
+    double TargetProgress);
 
 public readonly record struct DashboardChartBucket(string Style, string Label);
 

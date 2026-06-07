@@ -1465,8 +1465,28 @@ public sealed class FlowDefinitionComposerTests
         widget.Configuration["title"].ShouldBe("Event gauge");
         widget.Configuration["metric"].ShouldBe("ops.eventGaugeMetric");
         widget.Configuration[DashboardWidgetCatalog.GaugeStyleKey].ShouldBe(DashboardWidgetCatalog.GaugeStyleRing);
+        widget.Configuration[DashboardWidgetCatalog.GaugeMinKey].ShouldBe(DashboardWidgetCatalog.GaugeDefaultMin);
+        widget.Configuration[DashboardWidgetCatalog.GaugeMaxKey].ShouldBe(DashboardWidgetCatalog.GaugeDefaultMax);
+        widget.Configuration[DashboardWidgetCatalog.GaugeTargetKey].ShouldBe(DashboardWidgetCatalog.GaugeDefaultTarget);
+        widget.Configuration[DashboardWidgetCatalog.GaugeWarningKey].ShouldBe(DashboardWidgetCatalog.GaugeDefaultWarning);
+        widget.Configuration[DashboardWidgetCatalog.GaugeCriticalKey].ShouldBe(DashboardWidgetCatalog.GaugeDefaultCritical);
+        widget.Configuration[DashboardWidgetCatalog.GaugeNormalColorKey].ShouldBe(DashboardWidgetCatalog.GaugeDefaultNormalColor);
+        widget.Configuration[DashboardWidgetCatalog.GaugeWarningColorKey].ShouldBe(DashboardWidgetCatalog.GaugeDefaultWarningColor);
+        widget.Configuration[DashboardWidgetCatalog.GaugeCriticalColorKey].ShouldBe(DashboardWidgetCatalog.GaugeDefaultCriticalColor);
         widget.Configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
-        widget.Configuration.Keys.ShouldBe(["title", "metric", DashboardWidgetCatalog.GaugeStyleKey], ignoreOrder: true);
+        widget.Configuration.Keys.ShouldBe([
+            "title",
+            "metric",
+            DashboardWidgetCatalog.GaugeStyleKey,
+            DashboardWidgetCatalog.GaugeMinKey,
+            DashboardWidgetCatalog.GaugeMaxKey,
+            DashboardWidgetCatalog.GaugeTargetKey,
+            DashboardWidgetCatalog.GaugeWarningKey,
+            DashboardWidgetCatalog.GaugeCriticalKey,
+            DashboardWidgetCatalog.GaugeNormalColorKey,
+            DashboardWidgetCatalog.GaugeWarningColorKey,
+            DashboardWidgetCatalog.GaugeCriticalColorKey
+        ], ignoreOrder: true);
         layout.Metrics["ops.eventGaugeMetric"].Aggregation.ShouldBe("count");
         layout.Bindings["eventGauge"].PrimaryMetric.ShouldBe("ops.eventGaugeMetric");
         layout.Cells.ShouldContain(cell => cell.Widget == "eventGauge");

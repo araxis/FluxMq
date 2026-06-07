@@ -571,7 +571,7 @@
 }
 
 .dashboard-rate-track span,
-.dashboard-gauge-meter span {
+.dashboard-gauge-meter-fill {
     background: linear-gradient(90deg, color-mix(in srgb, var(--widget-accent) 42%, transparent), var(--widget-accent));
     border-radius: inherit;
     display: block;
@@ -626,10 +626,26 @@
 
 .dashboard-gauge-meter {
     height: 20px;
+    position: relative;
 }
 
-.dashboard-gauge-meter span {
+.dashboard-gauge-meter-fill {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--gauge-fill, var(--widget-accent)) 42%, transparent), var(--gauge-fill, var(--widget-accent)));
     width: var(--gauge-progress);
+}
+
+.dashboard-gauge-meter-target {
+    background: var(--mud-palette-text-primary);
+    border-radius: 999px;
+    box-shadow: 0 0 10px color-mix(in srgb, var(--mud-palette-text-primary) 32%, transparent);
+    display: block;
+    height: calc(100% + 8px);
+    left: var(--gauge-target);
+    opacity: 0.82;
+    position: absolute;
+    top: -4px;
+    transform: translateX(-1px);
+    width: 2px;
 }
 
 .dashboard-widget-gauge-shell {
@@ -652,7 +668,7 @@
     aspect-ratio: 1;
     background:
         radial-gradient(circle at center, var(--flux-surface) 0 52%, transparent 53%),
-        conic-gradient(var(--widget-accent) 0 var(--gauge-progress), color-mix(in srgb, var(--mud-palette-text-primary) 12%, transparent) var(--gauge-progress) 100%);
+        conic-gradient(var(--gauge-fill, var(--widget-accent)) 0 var(--gauge-progress), color-mix(in srgb, var(--mud-palette-text-primary) 12%, transparent) var(--gauge-progress) 100%);
     border-radius: 50%;
     display: flex;
     justify-content: center;
@@ -660,6 +676,21 @@
     min-width: 84px;
     padding: 12px;
     position: relative;
+}
+
+.dashboard-widget-gauge-target {
+    background: var(--mud-palette-text-primary);
+    border-radius: 999px;
+    box-shadow: 0 0 10px color-mix(in srgb, var(--mud-palette-text-primary) 28%, transparent);
+    height: 23px;
+    left: calc(50% - 1px);
+    opacity: 0.82;
+    position: absolute;
+    top: 5px;
+    transform: rotate(var(--gauge-target-angle)) translateY(-2px);
+    transform-origin: 1px calc(50% + 46px);
+    width: 2px;
+    z-index: 1;
 }
 
 .dashboard-widget-gauge::after {

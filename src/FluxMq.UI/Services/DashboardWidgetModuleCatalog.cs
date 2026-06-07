@@ -279,6 +279,14 @@ public static class DashboardWidgetModuleCatalog
         if (string.Equals(type, DashboardWidgetCatalog.EventGaugeType, StringComparison.Ordinal))
         {
             configuration[DashboardWidgetCatalog.GaugeStyleKey] = DashboardWidgetCatalog.GaugeStyleRing;
+            configuration[DashboardWidgetCatalog.GaugeMinKey] = DashboardWidgetCatalog.GaugeDefaultMin;
+            configuration[DashboardWidgetCatalog.GaugeMaxKey] = DashboardWidgetCatalog.GaugeDefaultMax;
+            configuration[DashboardWidgetCatalog.GaugeTargetKey] = DashboardWidgetCatalog.GaugeDefaultTarget;
+            configuration[DashboardWidgetCatalog.GaugeWarningKey] = DashboardWidgetCatalog.GaugeDefaultWarning;
+            configuration[DashboardWidgetCatalog.GaugeCriticalKey] = DashboardWidgetCatalog.GaugeDefaultCritical;
+            configuration[DashboardWidgetCatalog.GaugeNormalColorKey] = DashboardWidgetCatalog.GaugeDefaultNormalColor;
+            configuration[DashboardWidgetCatalog.GaugeWarningColorKey] = DashboardWidgetCatalog.GaugeDefaultWarningColor;
+            configuration[DashboardWidgetCatalog.GaugeCriticalColorKey] = DashboardWidgetCatalog.GaugeDefaultCriticalColor;
         }
 
         return new DashboardWidgetModule(
@@ -421,9 +429,14 @@ public static class DashboardWidgetModuleCatalog
                 new(DashboardWidgetCatalog.GaugeStyleRing, "Ring"),
                 new(DashboardWidgetCatalog.GaugeStyleMeter, "Meter")
             ]),
-            new("min", "Min", DashboardWidgetPropertyEditorKind.Number),
-            new("max", "Max", DashboardWidgetPropertyEditorKind.Number),
-            new("target", "Target", DashboardWidgetPropertyEditorKind.Number)
+            new(DashboardWidgetCatalog.GaugeMinKey, "Min", DashboardWidgetPropertyEditorKind.Number, DefaultValue: DashboardWidgetCatalog.GaugeDefaultMin),
+            new(DashboardWidgetCatalog.GaugeMaxKey, "Max", DashboardWidgetPropertyEditorKind.Number, DefaultValue: DashboardWidgetCatalog.GaugeDefaultMax),
+            new(DashboardWidgetCatalog.GaugeTargetKey, "Target", DashboardWidgetPropertyEditorKind.Number, DefaultValue: DashboardWidgetCatalog.GaugeDefaultTarget),
+            new(DashboardWidgetCatalog.GaugeWarningKey, "Warning", DashboardWidgetPropertyEditorKind.Number, DefaultValue: DashboardWidgetCatalog.GaugeDefaultWarning),
+            new(DashboardWidgetCatalog.GaugeCriticalKey, "Critical", DashboardWidgetPropertyEditorKind.Number, DefaultValue: DashboardWidgetCatalog.GaugeDefaultCritical),
+            new(DashboardWidgetCatalog.GaugeNormalColorKey, "Normal color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardWidgetCatalog.GaugeDefaultNormalColor),
+            new(DashboardWidgetCatalog.GaugeWarningColorKey, "Warning color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardWidgetCatalog.GaugeDefaultWarningColor),
+            new(DashboardWidgetCatalog.GaugeCriticalColorKey, "Critical color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardWidgetCatalog.GaugeDefaultCriticalColor)
         ]);
 
     private static DashboardWidgetPropertyGroupDefinition AxisGroup()

@@ -2887,3 +2887,18 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 741 tests.
     - `git diff --check` passed with line-ending normalization warnings for the edited files.
 - Next step: commit the Event Gauge app-metric slice, then continue one widget at a time with chart/payload metric consumers or pause for a dashboard-gauge visual range/settings review.
+- Event Gauge range/settings polish:
+  - Added gauge-owned range settings for `event.gauge`: min, max, target, warning threshold, critical threshold, and normal/warning/critical colors.
+  - Kept these settings in widget presentation config, separate from app-level metric definitions and metric streams.
+  - Updated the gauge renderer so ring and meter shapes map the latest `DashboardMetricValue` through the configured range instead of treating the raw metric value as a percent.
+  - Removed the old raw gauge-percent helper so range-aware gauge state is the only remaining gauge calculation path.
+  - Added a target marker and range/target labels to the rendered gauge state.
+  - Exposed the new settings in the existing property grid with auto-apply, using numeric rows and compact color-picker rows. No popup editor or schema change was added.
+  - Added coverage for gauge range math, module defaults, draft save output, inspector rows, and composer defaults.
+  - Verification:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetFormatting_MapsGaugeMetricValueThroughConfiguredRange|FullyQualifiedName~DashboardWidgetModuleCatalog_ProvidesFocusedPropertyDefinitionsForAllPaletteWidgets|FullyQualifiedName~DashboardWidgetSettingsDraft_WritesEventGaugeAsAppMetricConfiguration|FullyQualifiedName~DashboardInspector_UsesFocusedDisplayModeRowComponent|FullyQualifiedName~AddDashboardWidget_AddsEventGaugeDefaults" -p:UseAppHost=false --verbosity minimal` passed with 5 tests.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 415 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 742 tests.
+    - A parallel build/test rerun hit the known XAML compiler file-lock condition; the serial build and final solution rerun both passed.
+- Next step: run `git diff --check`, commit the Event Gauge range/settings slice, then review the gauge UI in the running dashboard before choosing the next single widget consumer.

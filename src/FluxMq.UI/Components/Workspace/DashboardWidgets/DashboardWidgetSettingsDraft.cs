@@ -30,6 +30,14 @@ public sealed class DashboardWidgetSettingsDraft
             widget.ReadString(DashboardWidgetCatalog.PrimaryMetricKey));
         GaugeStyle = DashboardWidgetCatalog.NormalizeGaugeStyle(
             widget.ReadString(DashboardWidgetCatalog.GaugeStyleKey));
+        GaugeMin = ReadString(widget.Configuration, DashboardWidgetCatalog.GaugeMinKey) ?? DashboardWidgetCatalog.GaugeDefaultMin;
+        GaugeMax = ReadString(widget.Configuration, DashboardWidgetCatalog.GaugeMaxKey) ?? DashboardWidgetCatalog.GaugeDefaultMax;
+        GaugeTarget = ReadString(widget.Configuration, DashboardWidgetCatalog.GaugeTargetKey) ?? DashboardWidgetCatalog.GaugeDefaultTarget;
+        GaugeWarning = ReadString(widget.Configuration, DashboardWidgetCatalog.GaugeWarningKey) ?? DashboardWidgetCatalog.GaugeDefaultWarning;
+        GaugeCritical = ReadString(widget.Configuration, DashboardWidgetCatalog.GaugeCriticalKey) ?? DashboardWidgetCatalog.GaugeDefaultCritical;
+        GaugeNormalColor = ReadString(widget.Configuration, DashboardWidgetCatalog.GaugeNormalColorKey) ?? DashboardWidgetCatalog.GaugeDefaultNormalColor;
+        GaugeWarningColor = ReadString(widget.Configuration, DashboardWidgetCatalog.GaugeWarningColorKey) ?? DashboardWidgetCatalog.GaugeDefaultWarningColor;
+        GaugeCriticalColor = ReadString(widget.Configuration, DashboardWidgetCatalog.GaugeCriticalColorKey) ?? DashboardWidgetCatalog.GaugeDefaultCriticalColor;
         ChartType = DashboardWidgetCatalog.NormalizeChartType(
             widget.ReadString(DashboardWidgetCatalog.ChartTypeKey));
         MetricCardColumns = DashboardWidgetCatalog.NormalizeMetricCardColumns(
@@ -72,6 +80,22 @@ public sealed class DashboardWidgetSettingsDraft
 
     public string GaugeStyle { get; set; }
 
+    public string GaugeMin { get; set; }
+
+    public string GaugeMax { get; set; }
+
+    public string GaugeTarget { get; set; }
+
+    public string GaugeWarning { get; set; }
+
+    public string GaugeCritical { get; set; }
+
+    public string GaugeNormalColor { get; set; }
+
+    public string GaugeWarningColor { get; set; }
+
+    public string GaugeCriticalColor { get; set; }
+
     public string ChartType { get; set; }
 
     public int MetricCardColumns { get; set; }
@@ -113,6 +137,14 @@ public sealed class DashboardWidgetSettingsDraft
             ReadString(configuration, DashboardWidgetCatalog.PrimaryMetricKey));
         GaugeStyle = DashboardWidgetCatalog.NormalizeGaugeStyle(
             ReadString(configuration, DashboardWidgetCatalog.GaugeStyleKey));
+        GaugeMin = ReadString(configuration, DashboardWidgetCatalog.GaugeMinKey) ?? DashboardWidgetCatalog.GaugeDefaultMin;
+        GaugeMax = ReadString(configuration, DashboardWidgetCatalog.GaugeMaxKey) ?? DashboardWidgetCatalog.GaugeDefaultMax;
+        GaugeTarget = ReadString(configuration, DashboardWidgetCatalog.GaugeTargetKey) ?? DashboardWidgetCatalog.GaugeDefaultTarget;
+        GaugeWarning = ReadString(configuration, DashboardWidgetCatalog.GaugeWarningKey) ?? DashboardWidgetCatalog.GaugeDefaultWarning;
+        GaugeCritical = ReadString(configuration, DashboardWidgetCatalog.GaugeCriticalKey) ?? DashboardWidgetCatalog.GaugeDefaultCritical;
+        GaugeNormalColor = ReadString(configuration, DashboardWidgetCatalog.GaugeNormalColorKey) ?? DashboardWidgetCatalog.GaugeDefaultNormalColor;
+        GaugeWarningColor = ReadString(configuration, DashboardWidgetCatalog.GaugeWarningColorKey) ?? DashboardWidgetCatalog.GaugeDefaultWarningColor;
+        GaugeCriticalColor = ReadString(configuration, DashboardWidgetCatalog.GaugeCriticalColorKey) ?? DashboardWidgetCatalog.GaugeDefaultCriticalColor;
         ChartType = DashboardWidgetCatalog.NormalizeChartType(
             ReadString(configuration, DashboardWidgetCatalog.ChartTypeKey));
         MetricCardColumns = DashboardWidgetCatalog.NormalizeMetricCardColumns(
@@ -357,6 +389,22 @@ public sealed class DashboardWidgetSettingsDraft
         {
             configuration[DashboardWidgetCatalog.GaugeStyleKey] =
                 DashboardWidgetCatalog.NormalizeGaugeStyle(GaugeStyle);
+            configuration[DashboardWidgetCatalog.GaugeMinKey] =
+                NormalizeNumber(GaugeMin, DashboardWidgetCatalog.GaugeDefaultMin);
+            configuration[DashboardWidgetCatalog.GaugeMaxKey] =
+                NormalizeNumber(GaugeMax, DashboardWidgetCatalog.GaugeDefaultMax);
+            configuration[DashboardWidgetCatalog.GaugeTargetKey] =
+                NormalizeNumber(GaugeTarget, DashboardWidgetCatalog.GaugeDefaultTarget);
+            configuration[DashboardWidgetCatalog.GaugeWarningKey] =
+                NormalizeNumber(GaugeWarning, DashboardWidgetCatalog.GaugeDefaultWarning);
+            configuration[DashboardWidgetCatalog.GaugeCriticalKey] =
+                NormalizeNumber(GaugeCritical, DashboardWidgetCatalog.GaugeDefaultCritical);
+            configuration[DashboardWidgetCatalog.GaugeNormalColorKey] =
+                NormalizeColor(GaugeNormalColor, DashboardWidgetCatalog.GaugeDefaultNormalColor);
+            configuration[DashboardWidgetCatalog.GaugeWarningColorKey] =
+                NormalizeColor(GaugeWarningColor, DashboardWidgetCatalog.GaugeDefaultWarningColor);
+            configuration[DashboardWidgetCatalog.GaugeCriticalColorKey] =
+                NormalizeColor(GaugeCriticalColor, DashboardWidgetCatalog.GaugeDefaultCriticalColor);
         }
     }
 
@@ -392,6 +440,27 @@ public sealed class DashboardWidgetSettingsDraft
 
     private static string Normalize(string? value)
         => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
+
+    private static string NormalizeNumber(string? value, string fallback)
+        => double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed) &&
+           double.IsFinite(parsed)
+            ? parsed.ToString("0.###", CultureInfo.InvariantCulture)
+            : fallback;
+
+    private static string NormalizeColor(string? value, string fallback)
+    {
+        var normalized = Normalize(value).ToLowerInvariant();
+        if (string.Equals(normalized, "transparent", StringComparison.Ordinal))
+        {
+            return normalized;
+        }
+
+        return normalized.Length is 4 or 5 or 7 or 9 &&
+               normalized[0] == '#' &&
+               normalized.Skip(1).All(static character => character is >= '0' and <= '9' or >= 'a' and <= 'f')
+            ? normalized
+            : fallback;
+    }
 
     private static string? ReadString(IReadOnlyDictionary<string, string> configuration, string key)
         => configuration.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value)

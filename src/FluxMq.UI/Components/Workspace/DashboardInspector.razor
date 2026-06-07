@@ -419,6 +419,7 @@
         <DashboardInspectorDisplayModeRows Draft="@draft"
                                            Labels="@InspectorLabels"
                                            GaugeStyleChanged="@SetGaugeStyleAsync"
+                                           GaugePropertyChanged="@SetGaugePropertyAsync"
                                            ChartTypeChanged="@SetChartTypeAsync"
                                            ExcludeSystemTopicsChanged="@SetExcludeSystemTopicsAsync" />
 
@@ -496,7 +497,7 @@
     private int DisplayPropertyCount => _widgetDraft is null
         ? 0
         : (_widgetDraft.Profile.UsesMetricVisualization ? 1 + MetricVisualizationPropertyCount : 1 + (_widgetDraft.Profile.UsesSubtitle ? 1 : 0)) +
-          (_widgetDraft.Profile.UsesGaugeStyle ? 1 : 0) +
+          (_widgetDraft.Profile.UsesGaugeStyle ? 9 : 0) +
           (_widgetDraft.Profile.UsesChartType ? 1 : 0) +
           (_widgetDraft.Profile.IsTopicTreeWidget ? 1 : 0) +
           (_widgetDraft.Profile.UsesVisualMetrics
@@ -737,6 +738,50 @@
         _widgetDraft.GaugeStyle = string.IsNullOrWhiteSpace(value)
             ? DashboardWidgetCatalog.GaugeStyleRing
             : value.Trim();
+        await AutoApplyAsync();
+    }
+
+    private Task SetGaugePropertyAsync(DashboardInspectorPropertyValueChange change)
+        => SetGaugePropertyAsync(change.Key, change.Value);
+
+    private async Task SetGaugePropertyAsync(string key, string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        var normalized = value ?? string.Empty;
+        switch (key)
+        {
+            case DashboardWidgetCatalog.GaugeMinKey:
+                _widgetDraft.GaugeMin = normalized;
+                break;
+            case DashboardWidgetCatalog.GaugeMaxKey:
+                _widgetDraft.GaugeMax = normalized;
+                break;
+            case DashboardWidgetCatalog.GaugeTargetKey:
+                _widgetDraft.GaugeTarget = normalized;
+                break;
+            case DashboardWidgetCatalog.GaugeWarningKey:
+                _widgetDraft.GaugeWarning = normalized;
+                break;
+            case DashboardWidgetCatalog.GaugeCriticalKey:
+                _widgetDraft.GaugeCritical = normalized;
+                break;
+            case DashboardWidgetCatalog.GaugeNormalColorKey:
+                _widgetDraft.GaugeNormalColor = normalized;
+                break;
+            case DashboardWidgetCatalog.GaugeWarningColorKey:
+                _widgetDraft.GaugeWarningColor = normalized;
+                break;
+            case DashboardWidgetCatalog.GaugeCriticalColorKey:
+                _widgetDraft.GaugeCriticalColor = normalized;
+                break;
+            default:
+                return;
+        }
+
         await AutoApplyAsync();
     }
 
