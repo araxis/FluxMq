@@ -1,0 +1,48 @@
+@using FluxMq.UI.Models
+@using FluxMq.UI.Services
+
+@if (MetricDraft is not null && WidgetDraft is not null)
+{
+    @if (WidgetDraft.Profile.UsesMetricAggregation)
+    {
+        <PropertyGridRow Name="Aggregate">
+            <PropertyGridSelect Value="@MetricDraft.Aggregation"
+                                Options="@AggregationOptions"
+                                AriaLabel="Aggregate"
+                                ValueChanged="@AggregationChanged" />
+        </PropertyGridRow>
+    }
+
+    @if (WidgetDraft.Profile.UsesMetricWindow)
+    {
+        <PropertyGridRow Name="@Labels.WindowRow">
+            <PropertyGridSelect Value="@MetricDraft.Window"
+                                Options="@WindowOptions"
+                                AriaLabel="@Labels.WindowRow"
+                                ValueChanged="@WindowChanged" />
+        </PropertyGridRow>
+    }
+}
+
+@code {
+    [Parameter]
+    public DashboardMetricEditorDraft? MetricDraft { get; set; }
+
+    [Parameter]
+    public DashboardWidgetSettingsDraft? WidgetDraft { get; set; }
+
+    [Parameter]
+    public DashboardWidgetInspectorLabels Labels { get; set; } = DashboardWidgetInspectorLabels.Default;
+
+    [Parameter]
+    public IReadOnlyList<PropertyGridSelectOption> AggregationOptions { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<PropertyGridSelectOption> WindowOptions { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<string?> AggregationChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> WindowChanged { get; set; }
+}

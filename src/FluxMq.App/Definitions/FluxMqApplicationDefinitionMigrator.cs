@@ -1,3 +1,4 @@
+using FluxMq.App.Metrics;
 using System.Text.Json.Nodes;
 
 namespace FluxMq.App.Definitions;
@@ -246,20 +247,7 @@ public static class FluxMqApplicationDefinitionMigrator
            string.Equals(key, "status", StringComparison.Ordinal);
 
     private static string MakeMetricArtifactName(string dashboardName, string metricName)
-    {
-        var prefix = $"{dashboardName}.";
-        if (metricName.StartsWith(prefix, StringComparison.Ordinal))
-        {
-            return metricName;
-        }
-
-        var text = $"{dashboardName}.{metricName}".Trim();
-        var result = new string(text
-            .Select(static character => char.IsLetterOrDigit(character) || character is '.' or '_' or '-' ? character : '-')
-            .ToArray())
-            .Trim('.', '_', '-');
-        return string.IsNullOrWhiteSpace(result) ? "metric" : result;
-    }
+        => FluxMetricNaming.ToDashboardScopedId(dashboardName, metricName);
 
     private static void EnsureDashboardResponsiveDefinition(JsonObject dashboard, JsonObject layout)
     {

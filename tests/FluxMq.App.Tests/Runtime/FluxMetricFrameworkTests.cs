@@ -31,6 +31,24 @@ public sealed class FluxMetricFrameworkTests
     }
 
     [Fact]
+    public void FluxMetricNaming_CreatesStableDashboardScopedMetricIds()
+    {
+        FluxMetricNaming.ToDashboardScopedId("ops", "messageCount")
+            .ShouldBe("ops.messageCount");
+        FluxMetricNaming.ToDashboardScopedId("ops", "ops.messageCount")
+            .ShouldBe("ops.messageCount");
+        FluxMetricNaming.ToDashboardScopedId("Ops Dashboard", "message count")
+            .ShouldBe("Ops-Dashboard.message-count");
+
+        FluxMetricNaming.RemoveDashboardScope("ops", "ops.messageCount")
+            .ShouldBe("messageCount");
+        FluxMetricNaming.RemoveDashboardScope("ops", "messageCount")
+            .ShouldBe("messageCount");
+        FluxMetricNaming.HasDashboardScope("ops", "ops.messageCount")
+            .ShouldBeTrue();
+    }
+
+    [Fact]
     public void FluxMetricQueryDraft_CreatesDefinitionFromReusableMetricAndLegacyFilters()
     {
         var metric = new FluxMetricDefinition(

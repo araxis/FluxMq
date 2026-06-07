@@ -1,0 +1,104 @@
+@using FluxMq.App.Metrics
+
+<PropertyGridRow Name="Metric">
+    <PropertyGridSelect Value="@(MetricId ?? string.Empty)"
+                        Options="@MetricOptions"
+                        AriaLabel="Metric"
+                        ValueChanged="@MetricChanged" />
+</PropertyGridRow>
+@foreach (var parameter in Parameters)
+{
+    var currentParameter = parameter;
+    <PropertyGridRow Name="@currentParameter.LabelOrId()">
+        @RenderParameterField(currentParameter)
+    </PropertyGridRow>
+}
+<PropertyGridRow Name="Preview">
+    <span class="property-grid-cell-text" title="@Summary">@Preview</span>
+</PropertyGridRow>
+<PropertyGridRow Name="Actions">
+    <button type="button"
+            class="property-grid-action-button"
+            disabled="@string.IsNullOrWhiteSpace(MetricId)"
+            @onclick="@(() => OpenMetric.InvokeAsync())">Open metric</button>
+</PropertyGridRow>
+
+@code {
+    private const string TrueValue = "true";
+    private const string FalseValue = "false";
+
+    [Parameter]
+    public string? MetricId { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<PropertyGridSelectOption> MetricOptions { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<FluxMetricParameterDefinition> Parameters { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyDictionary<string, string> ParameterValues { get; set; } =
+        new Dictionary<string, string>(StringComparer.Ordinal);
+
+    [Parameter]
+    public string Summary { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Preview { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string?> MetricChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<DashboardInspectorPropertyValueChange> ParameterChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OpenMetric { get; set; }
+
+    private RenderFragment RenderParameterField(FluxMetricParameterDefinition parameter)
+    {
+        var value = ParameterValue(parameter);
+        if (parameter.AllowedValues.Count > 0)
+        {
+            return @<PropertyGridSelect Value="@value"
+                                        Options="@ParameterSelectOptions(parameter)"
+                                        AriaLabel="@parameter.LabelOrId()"
+                                        ValueChanged="@((string? next) => SetParameterAsync(parameter.Id, next))" />;
+        }
+
+        if (string.Equals(parameter.Kind, FluxMetricParameterKinds.Toggle, StringComparison.Ordinal))
+        {
+            return @<div class="property-grid-button-group">
+                <button type="button"
+                        class="@ChoiceClass(value, TrueValue)"
+                        @onclick="@(() => SetParameterAsync(parameter.Id, TrueValue))">On</button>
+                <button type="button"
+                        class="@ChoiceClass(value, FalseValue)"
+                        @onclick="@(() => SetParameterAsync(parameter.Id, FalseValue))">Off</button>
+            </div>;
+        }
+
+        return @<input class="property-grid-input"
+                       value="@value"
+                       @oninput="@((ChangeEventArgs args) => SetParameterAsync(parameter.Id, args.Value?.ToString()))" />;
+    }
+
+    private string ParameterValue(FluxMetricParameterDefinition parameter)
+        => ParameterValues.TryGetValue(parameter.Id, out var value)
+            ? value
+            : parameter.DefaultValue;
+
+    private Task SetParameterAsync(string key, string? value)
+        => ParameterChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
+
+    private static IReadOnlyList<PropertyGridSelectOption> ParameterSelectOptions(FluxMetricParameterDefinition parameter)
+        => [
+            new("", parameter.Required ? "Select value" : "Default"),
+            .. parameter.AllowedValues.Select(static value => new PropertyGridSelectOption(value, value))
+        ];
+
+    private static string ChoiceClass(string? currentValue, string value)
+        => string.Equals(currentValue ?? string.Empty, value, StringComparison.Ordinal)
+            ? "property-grid-choice selected"
+            : "property-grid-choice";
+}

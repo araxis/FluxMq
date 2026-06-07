@@ -2659,3 +2659,158 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 113 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 383 tests.
 - Next step: run full solution verification and then review the Metric Source node UX in the desktop designer before moving on to the next dashboard metric consumer.
+
+## 2026-06-07 - Metric/dashboard boundary cleanup
+
+- Started the post-merge cleanup branch after the metric stream framework landed.
+- Centralized dashboard-scoped metric id handling in `FluxMetricNaming` so app migration and UI composition share one policy.
+- Kept dashboard metric promotion idempotent: `ops.metric` remains `ops.metric` and cannot become `ops.ops.metric`.
+- Updated dashboard metric cleanup so unused dashboard-promoted app metrics can be removed after local dashboard `metrics` have already migrated away.
+- Added regression coverage for scoped metric naming, double-scope prevention, and removal of unused promoted metrics.
+- Verification so far:
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 114 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 384 tests.
+- Full cleanup-slice verification:
+  - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed.
+  - `git diff --check` passed.
+- Follow-up metric bridge extraction:
+  - Added `DashboardMetricValueBridge` so dashboard widget binding, app metric resolution, latest metric reading lookup, and offline fallback evaluation are no longer embedded directly in `FlowWorkspaceService`.
+  - Kept `FlowWorkspaceService` responsible for runtime state, active layout access, runtime event snapshots, and host access.
+  - Added a source-boundary regression test so the workspace service keeps delegating dashboard metric resolution to the bridge.
+  - Verification:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 385 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 710 tests.
+    - `git diff --check` passed.
+- Next step: the next cleanup target is the dashboard inspector/property row split.
+- Dashboard inspector row split:
+  - Extracted layout property rows into `DashboardInspectorLayoutRows`.
+  - Extracted cell style property rows into `DashboardInspectorCellStyleRows`.
+  - Kept `DashboardInspector` responsible for state, group composition, and commands while the focused row components own their own row markup.
+  - Added source-boundary tests so the inspector keeps delegating layout/style rows to focused components.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardInspector"` passed with 5 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 386 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 711 tests.
+    - `git diff --check` passed.
+- Next step: continue splitting dashboard inspector metric data rows next.
+- Dashboard inspector metric row split:
+  - Extracted app-level metric selection, generated metric parameter rows, preview, and open-metric action into `DashboardInspectorAppMetricRows`.
+  - Extracted legacy/dashboard-local metric query editing into `DashboardInspectorMetricQueryRows` so the parent inspector no longer owns the compact query row markup.
+  - Extracted metric binding and multi-series slot rows into `DashboardInspectorMetricBindingRows`.
+  - Kept `DashboardInspector` focused on state, widget classification, auto-apply commands, and group composition.
+  - Added source-boundary tests so the inspector delegates app metric rows, query rows, and binding rows to focused components.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardInspector"` passed with 6 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 387 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 712 tests.
+- Dashboard inspector event filter row split:
+  - Extracted event/status/filter field rows into `DashboardInspectorEventFilterRows`.
+  - Kept `DashboardInspector` responsible for draft mutation and metric-query synchronization while the focused component owns filter row markup.
+  - Moved QoS/retain segmented filter rendering out of the parent inspector.
+  - Added a source-boundary test so the inspector keeps delegating filter rows to the focused component.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardInspector"` passed with 7 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 388 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 713 tests.
+- Dashboard inspector metric visualization row split:
+  - Extracted visualization selection and dynamic value/digital visualization property rows into `DashboardInspectorMetricVisualizationRows`.
+  - Moved visualization property editor rendering, color picker/select/toggle/segmented handling, and alignment option lookup out of the parent inspector.
+  - Kept `DashboardInspector` responsible for applying visualization config changes and composing property groups.
+  - Added source-boundary tests so the inspector delegates visualization rows to the focused component.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardInspector"` passed with 8 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 389 tests.
+    - First full solution run hit a transient `JsonSchemaValidatorComponentTests.Input_RoutesValidAndInvalidEnvelopesToBranchOutputs` miss; the focused rerun passed.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed on rerun with 714 tests.
+- Dashboard inspector display row split:
+  - Extracted visual metric/card rows into `DashboardInspectorVisualMetricRows`.
+  - Extracted gauge, chart, and topic display-mode rows into `DashboardInspectorDisplayModeRows`.
+  - Kept `DashboardInspector` responsible for state mutation and property-group composition while focused row components own their own markup.
+  - Added source-boundary tests so the inspector delegates visual metric/card rows and display-mode rows to focused components.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardInspector"` passed with 10 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 391 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 716 tests.
+    - `git diff --check` passed.
+- Dashboard inspector metric query option row split:
+  - Extracted legacy aggregate/window option rows into `DashboardInspectorMetricQueryOptionRows`.
+  - Kept `DashboardInspector` responsible for metric draft mutation and auto-apply.
+  - Added a source-boundary test so aggregate/window row markup stays out of the parent inspector.
+  - Verification:
+    - Initial parallel build/test attempt hit a locked UI intermediate assembly; rerunning the build alone passed.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardInspector"` passed with 11 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 392 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 717 tests.
+    - `git diff --check` passed.
+- Next step: commit the focused metric query option-row split, then inspect the remaining dashboard inspector state-loading methods.
+- Dashboard metric query mapper cleanup:
+  - Moved dashboard query to `DashboardMetricSnapshot` conversion into `DashboardMetricQueryMapper`.
+  - Removed the duplicate local snapshot mapping helper from `DashboardInspector`.
+  - Added mapper and source-boundary tests so the inspector keeps delegating snapshot conversion.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardMetricQueryMapper|FullyQualifiedName~DashboardInspector"` passed with 14 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 394 tests.
+    - First full solution run hit a transient `ScenarioRunnerTests.RunAsync_SkipsRemainingStepsWhenWhenEventDoesNotMatch` assertion; the focused rerun passed.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed on rerun with 719 tests.
+- Next step: commit the metric mapper cleanup, then continue reducing the dashboard inspector state-loading path.
+- Dashboard metric reference resolver cleanup:
+  - Added `DashboardMetricReferenceResolver` as a thin UI-service adapter over app metric artifacts and `FluxMetricResolver`.
+  - Moved app metric definition/snapshot resolution out of `DashboardInspector`.
+  - Kept the inspector's artifact dictionary read only for metric selector options.
+  - Added tests for parameterized app metric reference resolution and inspector boundary enforcement.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardMetricReferenceResolver|FullyQualifiedName~DashboardInspector"` passed with 13 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 395 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 720 tests.
+    - `git diff --check` passed.
+- Next step: commit the metric reference resolver cleanup, then continue with a small dashboard inspector draft-loading extraction.
+- Dashboard inspector metric binding state cleanup:
+  - Added `DashboardInspectorMetricBindingState` to own metric binding list initialization and save-time normalization.
+  - Removed inline initial binding list normalization and final binding list construction from `DashboardInspector`.
+  - Kept add, remove, move, and primary metric commands in the inspector for now.
+  - Added unit coverage for slot/non-slot binding normalization plus source-boundary coverage for inspector delegation.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardInspectorMetricBindingState|FullyQualifiedName~DashboardInspector"` passed with 15 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 398 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 723 tests.
+    - `git diff --check` passed.
+- Next step: commit the metric binding state cleanup, then inspect whether `OnParametersSet` can be safely reduced without obscuring UI state.
+- Dashboard inspector draft-loading cleanup:
+  - Reduced `OnParametersSet` to lifecycle coordination: selected-cell draft load, empty-widget cleanup, and selected-widget draft load.
+  - Split widget metric name resolution, metric draft setup, dashboard metric snapshot resolution, and legacy query-builder snapshot creation into focused local helpers.
+  - Kept behavior unchanged and avoided new public abstractions in this slice.
+  - Added source-boundary coverage for the draft-loading lifecycle shape.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardInspector"` passed with 16 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 399 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 724 tests.
+    - `git diff --check` passed.
+- Next step: commit the draft-loading cleanup, then review remaining dashboard inspector command handlers to decide if this cleanup phase is complete.
+- Dashboard inspector metric binding command cleanup:
+  - Moved primary/add/remove/move metric binding rules into `DashboardInspectorMetricBindingState`.
+  - Kept `DashboardInspector` responsible for invoking auto-apply and loading the selected metric draft.
+  - Added coverage for binding list add/remove/move and primary insertion behavior.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardInspectorMetricBindingState|FullyQualifiedName~DashboardInspector"` passed with 18 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 401 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 726 tests.
+    - `git diff --check` passed.
+- Next step: commit the binding-command cleanup, then stop this cleanup phase unless a review exposes a concrete remaining blocker.
+- Dashboard metric cleanup PR:
+  - Pushed `work/metric-dashboard-cleanup`.
+  - Opened draft PR #169: `Clean up dashboard metric boundaries`.
+  - GitHub validation:
+    - `Validate Windows desktop app` passed.
+    - `Package Windows desktop app` was skipped.
+- Next step: keep PR #169 in draft for review, then mark ready or merge only after approval.

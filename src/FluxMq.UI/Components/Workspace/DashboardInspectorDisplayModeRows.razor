@@ -1,0 +1,78 @@
+@using FluxMq.UI.Models
+@using FluxMq.UI.Services
+
+@if (Draft is not null)
+{
+    @if (Draft.Profile.UsesGaugeStyle)
+    {
+        <PropertyGridRow Name="@Labels.GaugeRow">
+            <div class="property-grid-button-group">
+                <button type="button"
+                        class="@ChoiceClass(Draft.GaugeStyle, DashboardWidgetCatalog.GaugeStyleRing)"
+                        @onclick="@(() => GaugeStyleChanged.InvokeAsync(DashboardWidgetCatalog.GaugeStyleRing))">Ring</button>
+                <button type="button"
+                        class="@ChoiceClass(Draft.GaugeStyle, DashboardWidgetCatalog.GaugeStyleMeter)"
+                        @onclick="@(() => GaugeStyleChanged.InvokeAsync(DashboardWidgetCatalog.GaugeStyleMeter))">Meter</button>
+                <button type="button"
+                        class="@ChoiceClass(Draft.GaugeStyle, DashboardWidgetCatalog.GaugeStyleTiles)"
+                        @onclick="@(() => GaugeStyleChanged.InvokeAsync(DashboardWidgetCatalog.GaugeStyleTiles))">Tiles</button>
+            </div>
+        </PropertyGridRow>
+    }
+
+    @if (Draft.Profile.UsesChartType)
+    {
+        <PropertyGridRow Name="@Labels.ChartRow">
+            <div class="property-grid-button-group">
+                <button type="button"
+                        class="@ChoiceClass(Draft.ChartType, DashboardWidgetCatalog.ChartTypeBars)"
+                        @onclick="@(() => ChartTypeChanged.InvokeAsync(DashboardWidgetCatalog.ChartTypeBars))">Bars</button>
+                <button type="button"
+                        class="@ChoiceClass(Draft.ChartType, DashboardWidgetCatalog.ChartTypeLine)"
+                        @onclick="@(() => ChartTypeChanged.InvokeAsync(DashboardWidgetCatalog.ChartTypeLine))">Line</button>
+                <button type="button"
+                        class="@ChoiceClass(Draft.ChartType, DashboardWidgetCatalog.ChartTypeArea)"
+                        @onclick="@(() => ChartTypeChanged.InvokeAsync(DashboardWidgetCatalog.ChartTypeArea))">Area</button>
+                <button type="button"
+                        class="@ChoiceClass(Draft.ChartType, DashboardWidgetCatalog.ChartTypeTopics)"
+                        @onclick="@(() => ChartTypeChanged.InvokeAsync(DashboardWidgetCatalog.ChartTypeTopics))">Topics</button>
+            </div>
+        </PropertyGridRow>
+    }
+
+    @if (Draft.Profile.IsTopicTreeWidget)
+    {
+        <PropertyGridRow Name="@Labels.TopicSystemRow">
+            <div class="property-grid-button-group">
+                <button type="button"
+                        class="@ChoiceClass(Draft.ExcludeSystemTopics ? "false" : "true", "true")"
+                        @onclick="@(() => ExcludeSystemTopicsChanged.InvokeAsync(false))">Show</button>
+                <button type="button"
+                        class="@ChoiceClass(Draft.ExcludeSystemTopics ? "true" : "false", "true")"
+                        @onclick="@(() => ExcludeSystemTopicsChanged.InvokeAsync(true))">Hide</button>
+            </div>
+        </PropertyGridRow>
+    }
+}
+
+@code {
+    [Parameter]
+    public DashboardWidgetSettingsDraft? Draft { get; set; }
+
+    [Parameter]
+    public DashboardWidgetInspectorLabels Labels { get; set; } = DashboardWidgetInspectorLabels.Default;
+
+    [Parameter]
+    public EventCallback<string?> GaugeStyleChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> ChartTypeChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> ExcludeSystemTopicsChanged { get; set; }
+
+    private static string ChoiceClass(string? currentValue, string value)
+        => string.Equals(currentValue ?? string.Empty, value, StringComparison.Ordinal)
+            ? "property-grid-choice selected"
+            : "property-grid-choice";
+}

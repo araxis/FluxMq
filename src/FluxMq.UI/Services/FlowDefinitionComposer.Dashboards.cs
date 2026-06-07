@@ -235,21 +235,42 @@ public sealed partial class FlowDefinitionComposer
         var flowApplication = GetFlowApplication(root);
         if (flowApplication["dashboards"] is not JsonObject dashboards ||
             dashboards[dashboardName] is not JsonObject dashboard ||
-            dashboard["metrics"] is not JsonObject metrics ||
             dashboard["bindings"] is not JsonObject bindings)
         {
             return json;
         }
 
-        var normalized = metricName.Trim();
+        var localMetricName = FluxMetricNaming.RemoveDashboardScope(dashboardName, metricName);
+        var scopedMetricName = FluxMetricNaming.ToDashboardScopedId(dashboardName, metricName);
+        var referenceCandidates = new[]
+            {
+                metricName.Trim(),
+                FluxMetricNaming.ToArtifactId(metricName),
+                localMetricName,
+                scopedMetricName
+            }
+            .Where(static candidate => !string.IsNullOrWhiteSpace(candidate))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
         var isUsed = bindings
             .Select(binding => binding.Value as JsonObject)
             .Where(static binding => binding is not null)
             .Cast<JsonObject>()
-            .Any(binding => BindingUsesMetric(binding, normalized));
+            .Any(binding => referenceCandidates.Any(candidate => BindingUsesMetric(binding, candidate)));
         if (!isUsed)
         {
-            metrics.Remove(normalized);
+            if (dashboard["metrics"] is JsonObject metrics)
+            {
+                metrics.Remove(localMetricName);
+                metrics.Remove(scopedMetricName);
+            }
+
+            if (flowApplication["metrics"] is JsonObject appMetrics &&
+                appMetrics[scopedMetricName] is JsonObject metricArtifact &&
+                IsDashboardPromotedMetric(metricArtifact))
+            {
+                appMetrics.Remove(scopedMetricName);
+            }
         }
 
         return root.ToJsonString(Options);
@@ -1202,13 +1223,7 @@ public sealed partial class FlowDefinitionComposer
     }
 
     private static string NormalizeDashboardLocalMetricName(string dashboardName, string metricName)
-    {
-        var normalized = metricName.Trim();
-        var prefix = $"{dashboardName.Trim()}.";
-        return normalized.StartsWith(prefix, StringComparison.Ordinal)
-            ? normalized[prefix.Length..]
-            : normalized;
-    }
+        => FluxMetricNaming.RemoveDashboardScope(dashboardName, metricName);
 
     private static bool BindingUsesMetric(JsonObject binding, string metricName)
     {
@@ -1220,6 +1235,10 @@ public sealed partial class FlowDefinitionComposer
         return binding["metrics"] is JsonArray metrics &&
             ReadStringArray(metrics).Contains(metricName, StringComparer.Ordinal);
     }
+
+    private static bool IsDashboardPromotedMetric(JsonObject metricArtifact)
+        => metricArtifact["labels"] is JsonObject labels &&
+           !string.IsNullOrWhiteSpace(ReadString(labels, "promotedFrom"));
 
     private static int ReadInt(JsonObject obj, string propertyName, int fallback = 0)
     {
