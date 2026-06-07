@@ -2670,4 +2670,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Verification so far:
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 114 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 384 tests.
-- Next step: run full solution verification and `git diff --check`; if green, review whether `FlowWorkspaceService` metric lookup should be the next cleanup target.
+- Full cleanup-slice verification:
+  - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed.
+  - `git diff --check` passed.
+- Follow-up metric bridge extraction:
+  - Added `DashboardMetricValueBridge` so dashboard widget binding, app metric resolution, latest metric reading lookup, and offline fallback evaluation are no longer embedded directly in `FlowWorkspaceService`.
+  - Kept `FlowWorkspaceService` responsible for runtime state, active layout access, runtime event snapshots, and host access.
+  - Added a source-boundary regression test so the workspace service keeps delegating dashboard metric resolution to the bridge.
+  - Verification:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 385 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 710 tests.
+    - `git diff --check` passed.
+- Next step: the next cleanup target is the dashboard inspector/property row split.

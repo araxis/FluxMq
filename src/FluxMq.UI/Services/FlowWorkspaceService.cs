@@ -35,7 +35,6 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
     private const double AddedNodeColumnSpacing = 300d;
     private const double AddedNodeRowSpacing = 170d;
     private const int AddedNodeRowsBeforeNewColumn = 4;
-    private static readonly TimeSpan DashboardRateWindow = TimeSpan.FromMinutes(1);
     private static readonly TimeSpan RuntimeStopTimeout = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan RuntimeProjectionNotificationInterval = TimeSpan.FromMilliseconds(250);
     private static readonly Encoding StrictUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
@@ -44,8 +43,7 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
     private readonly IScenarioRunHistoryRepository? _scenarioRunHistoryRepository;
     private readonly Func<MqttConnectionProfile, IMqttBrokerClient>? _runtimeClientFactory;
     private readonly DashboardEventFilterCatalog _dashboardEventFilters;
-    private readonly DashboardMetricRegistry _dashboardMetricRegistry = new();
-    private readonly FluxMetricResolver _metricResolver = new();
+    private readonly DashboardMetricValueBridge _dashboardMetricBridge;
     private readonly DashboardRuntimeMetrics? _runtimeMetrics;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly object _logSync = new();
@@ -78,6 +76,7 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
         _scenarioRunHistoryRepository = scenarioRunHistory;
         _runtimeClientFactory = runtimeClientFactory;
         _dashboardEventFilters = dashboardEventFilters ?? DashboardEventFilterCatalog.Shared;
+        _dashboardMetricBridge = new DashboardMetricValueBridge(_definitionComposer);
         _runtimeMetrics = runtimeMetrics;
         DefinitionJson = _definitionComposer.CreateEmptyDefinition();
     }
@@ -163,7 +162,11 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
 
     public DashboardEventSnapshot GetDashboardEventSnapshot(DashboardWidgetSnapshot widget)
     {
-        var effectiveWidget = ResolveDashboardMetricWidget(widget, out var rateWindow);
+        var effectiveWidget = _dashboardMetricBridge.ResolveMetricWidget(
+            widget,
+            GetActiveDashboardLayout(),
+            DefinitionJson,
+            out var rateWindow);
         lock (_runtimeEventSync)
         {
             var matching = _runtimeEvents
@@ -189,24 +192,12 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
     }
 
     public DashboardMetricValue GetDashboardMetricValue(DashboardWidgetSnapshot widget)
-    {
-        if (TryGetDashboardMetricReadingValue(widget, out var readingValue))
-        {
-            return readingValue;
-        }
-
-        var snapshot = GetDashboardEventSnapshot(widget);
-        var metric = ResolveDashboardMetric(widget);
-        if (metric is null)
-        {
-            return DashboardMetricRegistry.EvaluateLegacyMetric(
-                DashboardWidgetCatalog.NormalizePrimaryMetric(
-                    widget.ReadString(DashboardWidgetCatalog.PrimaryMetricKey)),
-                snapshot);
-        }
-
-        return _dashboardMetricRegistry.Evaluate(ToDashboardMetricQuery(metric), snapshot);
-    }
+        => _dashboardMetricBridge.GetMetricValue(
+            widget,
+            GetActiveDashboardLayout(),
+            DefinitionJson,
+            GetDashboardEventSnapshot,
+            TryGetLatestMetricReading);
 
     public bool TryGetLatestMetricReading(
         string? metricId,
@@ -2735,172 +2726,6 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
 
     private bool MatchesDashboardEventWidget(DashboardWidgetSnapshot widget, FlowEvent flowEvent)
         => _dashboardEventFilters.Matches(widget, flowEvent);
-
-    private DashboardWidgetSnapshot ResolveDashboardMetricWidget(DashboardWidgetSnapshot widget, out TimeSpan rateWindow)
-    {
-        rateWindow = DashboardRateWindow;
-        var metric = ResolveDashboardMetric(widget);
-        if (metric is null)
-        {
-            return widget;
-        }
-
-        rateWindow = ParseDashboardWindow(metric.Window);
-        var configuration = new Dictionary<string, string>(widget.Configuration, StringComparer.Ordinal);
-        foreach (var filter in metric.Filters)
-        {
-            configuration[filter.Key] = filter.Value;
-        }
-
-        return widget with { Configuration = configuration };
-    }
-
-    private DashboardMetricSnapshot? ResolveDashboardMetric(DashboardWidgetSnapshot widget)
-    {
-        var layout = GetActiveDashboardLayout();
-        if (layout is null ||
-            !layout.Bindings.TryGetValue(widget.Name, out var binding))
-        {
-            return null;
-        }
-
-        var metricName = string.IsNullOrWhiteSpace(binding.PrimaryMetric)
-            ? binding.Metrics.FirstOrDefault()
-            : binding.PrimaryMetric;
-        if (string.IsNullOrWhiteSpace(metricName))
-        {
-            return null;
-        }
-
-        var appMetric = _definitionComposer.GetMetricArtifact(DefinitionJson, metricName);
-        if (appMetric is not null)
-        {
-            var validation = _metricResolver.ValidateReference(appMetric, binding.Options);
-            if (!validation.IsValid)
-            {
-                return null;
-            }
-
-            return ToDashboardMetricSnapshot(metricName, _metricResolver.Resolve(appMetric, binding.Options));
-        }
-
-        return layout.Metrics.TryGetValue(metricName, out var metric)
-            ? metric
-            : null;
-    }
-
-    private bool TryGetDashboardMetricReadingValue(
-        DashboardWidgetSnapshot widget,
-        out DashboardMetricValue value)
-    {
-        value = default!;
-        var layout = GetActiveDashboardLayout();
-        if (layout is null ||
-            !layout.Bindings.TryGetValue(widget.Name, out var binding))
-        {
-            return false;
-        }
-
-        var metricName = string.IsNullOrWhiteSpace(binding.PrimaryMetric)
-            ? binding.Metrics.FirstOrDefault()
-            : binding.PrimaryMetric;
-        if (string.IsNullOrWhiteSpace(metricName))
-        {
-            return false;
-        }
-
-        var appMetric = _definitionComposer.GetMetricArtifact(DefinitionJson, metricName);
-        if (appMetric is null ||
-            !TryGetLatestMetricReading(metricName, binding.Options, out var reading))
-        {
-            return false;
-        }
-
-        var definition = _metricResolver.Resolve(appMetric, binding.Options);
-        var measure = FluxMetricCatalog.Shared.FindMeasure(definition.Measure);
-        value = new DashboardMetricValue(
-            measure.Label,
-            reading.Value,
-            measure.Unit,
-            FluxMetricEvaluationEngine.FormatValue(reading.Value, measure.Unit, definition.Format));
-        return true;
-    }
-
-    private static DashboardMetricSnapshot ToDashboardMetricSnapshot(string metricName, FluxMetricDefinition definition)
-    {
-        var filters = new Dictionary<string, string>(definition.AdditionalFilters, StringComparer.Ordinal);
-        AddIfPresent(filters, DashboardEventFilterCatalog.EventTypeKey, definition.EventType);
-        AddIfPresent(filters, DashboardEventFilterCatalog.TopicStartsWithKey, definition.TopicStartsWith);
-        AddIfPresent(filters, DashboardEventFilterCatalog.TopicNotStartsWithKey, definition.TopicNotStartsWith);
-        AddIfPresent(filters, DashboardEventFilterCatalog.StatusKey, definition.Status);
-
-        return new DashboardMetricSnapshot(
-            metricName,
-            definition.Source,
-            definition.Measure,
-            definition.Window,
-            definition.GroupBy,
-            filters,
-            new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["unit"] = definition.Format
-            });
-    }
-
-    private static void AddIfPresent(IDictionary<string, string> target, string key, string? value)
-    {
-        if (!string.IsNullOrWhiteSpace(value))
-        {
-            target[key] = value.Trim();
-        }
-    }
-
-    private static DashboardMetricQueryDefinition ToDashboardMetricQuery(DashboardMetricSnapshot metric)
-        => new(
-            metric.Source,
-            metric.Aggregation,
-            metric.Window,
-            EventType: metric.ReadFilter(DashboardEventFilterCatalog.EventTypeKey),
-            TopicStartsWith: metric.ReadFilter(DashboardEventFilterCatalog.TopicStartsWithKey),
-            TopicNotStartsWith: metric.ReadFilter(DashboardEventFilterCatalog.TopicNotStartsWithKey),
-            Status: metric.ReadFilter(DashboardEventFilterCatalog.StatusKey),
-            GroupBy: metric.GroupBy,
-            Format: metric.ReadFormat("unit") ?? "number",
-            AdditionalFilters: metric.Filters
-                .Where(static filter =>
-                    !string.Equals(filter.Key, DashboardEventFilterCatalog.EventTypeKey, StringComparison.Ordinal) &&
-                    !string.Equals(filter.Key, DashboardEventFilterCatalog.TopicStartsWithKey, StringComparison.Ordinal) &&
-                    !string.Equals(filter.Key, DashboardEventFilterCatalog.TopicNotStartsWithKey, StringComparison.Ordinal) &&
-                    !string.Equals(filter.Key, DashboardEventFilterCatalog.StatusKey, StringComparison.Ordinal))
-                .ToDictionary(static filter => filter.Key, static filter => filter.Value, StringComparer.Ordinal));
-
-    private static TimeSpan ParseDashboardWindow(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return DashboardRateWindow;
-        }
-
-        var normalized = value.Trim();
-        var suffix = normalized[^1];
-        var numberText = char.IsLetter(suffix)
-            ? normalized[..^1]
-            : normalized;
-        if (!double.TryParse(numberText, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var amount) ||
-            amount <= 0)
-        {
-            return DashboardRateWindow;
-        }
-
-        var window = char.ToLowerInvariant(suffix) switch
-        {
-            'h' => TimeSpan.FromHours(amount),
-            'm' => TimeSpan.FromMinutes(amount),
-            _ => TimeSpan.FromSeconds(amount)
-        };
-
-        return TimeSpan.FromSeconds(Math.Clamp(window.TotalSeconds, 1, 86_400));
-    }
 
     private static IReadOnlyList<int> BuildDashboardEventBuckets(
         IReadOnlyList<FlowEvent> events,

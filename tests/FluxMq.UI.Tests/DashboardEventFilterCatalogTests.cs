@@ -1804,6 +1804,21 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void FlowWorkspaceService_DelegatesDashboardMetricResolutionToBridge()
+    {
+        var root = FindRepositoryRoot();
+        var service = File.ReadAllText(Path.Combine(root, "src", "FluxMq.UI", "Services", "FlowWorkspaceService.cs"));
+        var bridge = File.ReadAllText(Path.Combine(root, "src", "FluxMq.UI", "Services", "DashboardMetricValueBridge.cs"));
+
+        service.ShouldContain("DashboardMetricValueBridge");
+        service.ShouldNotContain("DashboardMetricRegistry _dashboardMetricRegistry");
+        service.ShouldNotContain("FluxMetricResolver _metricResolver");
+        bridge.ShouldContain("ResolveMetricWidget");
+        bridge.ShouldContain("GetMetricValue");
+        bridge.ShouldContain("TryGetMetricReading");
+    }
+
+    [Fact]
     public void DashboardPreviewSampleFactory_CreatesDesignOnlyTrafficFromWidgetFilters()
     {
         var widget = new DashboardWidgetSnapshot(
