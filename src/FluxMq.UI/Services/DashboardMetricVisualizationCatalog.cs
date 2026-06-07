@@ -37,7 +37,8 @@ public static class DashboardMetricVisualizationCatalog
                     [DashboardWidgetCatalog.MetricValueUnitColorKey] = DashboardWidgetCatalog.KpiDefaultSubtitleColor,
                     [DashboardWidgetCatalog.MetricValueTitleAlignKey] = DashboardWidgetCatalog.KpiAlignLeft,
                     [DashboardWidgetCatalog.MetricValueValueAlignKey] = DashboardWidgetCatalog.KpiAlignLeft,
-                    [DashboardWidgetCatalog.MetricValueValuePlacementKey] = DashboardWidgetCatalog.KpiValuePlacementTop
+                    [DashboardWidgetCatalog.MetricValueValuePlacementKey] = DashboardWidgetCatalog.KpiValuePlacementTop,
+                    [DashboardWidgetCatalog.MetricValuePaddingKey] = DashboardWidgetCatalog.MetricValueDefaultPadding.ToString(CultureInfo.InvariantCulture)
                 },
                 [new("value-visual", "Value visual", ValueProperties())],
                 typeof(DashboardMetricValueVisualizationView),
@@ -108,7 +109,8 @@ public static class DashboardMetricVisualizationCatalog
             new(DashboardWidgetCatalog.MetricValueUnitColorKey, "Unit color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardWidgetCatalog.KpiDefaultSubtitleColor),
             new(DashboardWidgetCatalog.MetricValueTitleAlignKey, "Title align", DashboardWidgetPropertyEditorKind.Segmented, DefaultValue: DashboardWidgetCatalog.KpiAlignLeft),
             new(DashboardWidgetCatalog.MetricValueValueAlignKey, "Value align", DashboardWidgetPropertyEditorKind.Segmented, DefaultValue: DashboardWidgetCatalog.KpiAlignLeft),
-            new(DashboardWidgetCatalog.MetricValueValuePlacementKey, "Value place", DashboardWidgetPropertyEditorKind.Segmented, DefaultValue: DashboardWidgetCatalog.KpiValuePlacementTop)
+            new(DashboardWidgetCatalog.MetricValueValuePlacementKey, "Value place", DashboardWidgetPropertyEditorKind.Segmented, DefaultValue: DashboardWidgetCatalog.KpiValuePlacementTop),
+            new(DashboardWidgetCatalog.MetricValuePaddingKey, "Padding", DashboardWidgetPropertyEditorKind.Number, Unit: "px", DefaultValue: DashboardWidgetCatalog.MetricValueDefaultPadding.ToString(CultureInfo.InvariantCulture))
         ];
 
     private static IReadOnlyList<DashboardWidgetPropertyDefinition> DigitalProperties()

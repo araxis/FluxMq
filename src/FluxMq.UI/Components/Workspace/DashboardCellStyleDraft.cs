@@ -93,7 +93,7 @@ public sealed class DashboardCellStyleDraft
         AddCssVariable(parts, "--dashboard-widget-border", ReadStyleValue(style, "borderColor"), IsSafeCssToken);
         AddCssVariable(parts, "--dashboard-widget-border-width", BorderWidthValue(style), static value => value.EndsWith("px", StringComparison.Ordinal));
         AddCssVariable(parts, "--dashboard-widget-radius", PixelValue(ReadStyleValue(style, "radius")), static value => value.EndsWith("px", StringComparison.Ordinal));
-        AddCssVariable(parts, "--dashboard-widget-padding", PixelValue(ReadStyleValue(style, "padding")), static value => value.EndsWith("px", StringComparison.Ordinal));
+        AddCssVariable(parts, "--dashboard-cell-padding", PixelValue(ReadStyleValue(style, "padding")), static value => value.EndsWith("px", StringComparison.Ordinal));
         if (string.Equals(NormalizeWidgetFit(ReadStyleValue(style, WidgetFitKey)), WidgetFitContent, StringComparison.Ordinal))
         {
             var alignment = NormalizeWidgetAlignment(ReadStyleValue(style, WidgetAlignmentKey));

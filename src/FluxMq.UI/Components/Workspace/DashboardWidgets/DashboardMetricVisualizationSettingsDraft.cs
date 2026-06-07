@@ -30,6 +30,7 @@ public sealed class DashboardMetricVisualizationSettingsDraft
         DashboardWidgetCatalog.MetricValueTitleAlignKey,
         DashboardWidgetCatalog.MetricValueValueAlignKey,
         DashboardWidgetCatalog.MetricValueValuePlacementKey,
+        DashboardWidgetCatalog.MetricValuePaddingKey,
         DashboardWidgetCatalog.MetricDigitalLabelKey,
         DashboardWidgetCatalog.MetricDigitalShowLabelKey,
         DashboardWidgetCatalog.MetricDigitalLabelPlacementKey,
@@ -74,6 +75,8 @@ public sealed class DashboardMetricVisualizationSettingsDraft
     public string ValueValueAlign { get; set; } = DashboardWidgetCatalog.KpiAlignLeft;
 
     public string ValueValuePlacement { get; set; } = DashboardWidgetCatalog.KpiValuePlacementTop;
+
+    public int ValuePadding { get; set; } = DashboardWidgetCatalog.MetricValueDefaultPadding;
 
     public string DigitalLabel { get; set; } = DashboardWidgetCatalog.MetricValueDefaultTitle;
 
@@ -204,6 +207,8 @@ public sealed class DashboardMetricVisualizationSettingsDraft
             DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(ValueValueAlign);
         configuration[DashboardWidgetCatalog.MetricValueValuePlacementKey] =
             DashboardWidgetCatalog.NormalizeKpiValuePlacement(ValueValuePlacement);
+        configuration[DashboardWidgetCatalog.MetricValuePaddingKey] =
+            Clamp(ValuePadding, 0, 64).ToString(CultureInfo.InvariantCulture);
         return configuration;
     }
 
@@ -277,6 +282,17 @@ public sealed class DashboardMetricVisualizationSettingsDraft
         ValueValuePlacement = DashboardWidgetCatalog.NormalizeKpiValuePlacement(
             ReadString(configuration, DashboardWidgetCatalog.MetricValueValuePlacementKey) ??
             (useCompatibilityFallbacks ? ReadString(configuration, DashboardWidgetCatalog.KpiValuePlacementKey) : null));
+        ValuePadding = ReadInt(
+            configuration,
+            DashboardWidgetCatalog.MetricValuePaddingKey,
+            ReadInt(
+                configuration,
+                "style.padding",
+                DashboardWidgetCatalog.MetricValueDefaultPadding,
+                0,
+                64),
+            0,
+            64);
 
         DigitalLabel = ReadString(configuration, DashboardWidgetCatalog.MetricDigitalLabelKey) ??
             (useCompatibilityFallbacks ? ReadString(configuration, "title") : null) ??

@@ -51,6 +51,7 @@ public sealed class DashboardWidgetCatalog
     public const string MetricValueTitleAlignKey = "metric.value.titleAlign";
     public const string MetricValueValueAlignKey = "metric.value.valueAlign";
     public const string MetricValueValuePlacementKey = "metric.value.valuePlacement";
+    public const string MetricValuePaddingKey = "metric.value.padding";
     public const string MetricDigitalLabelKey = "metric.digital.label";
     public const string MetricDigitalShowLabelKey = "metric.digital.showLabel";
     public const string MetricDigitalLabelPlacementKey = "metric.digital.labelPlacement";
@@ -92,6 +93,7 @@ public sealed class DashboardWidgetCatalog
     public const string MetricValueDefaultTitle = "Messages";
     public const string MetricValueDefaultSubtitle = "Total matching events";
     public const string MetricValueDefaultUnitText = "";
+    public const int MetricValueDefaultPadding = 14;
     public const string MetricDigitalDefaultBackgroundColor = "#040609";
     public const string MetricDigitalDefaultSegmentColor = "#db8b98";
     public const string MetricDigitalDefaultInactiveSegmentColor = "#351820";

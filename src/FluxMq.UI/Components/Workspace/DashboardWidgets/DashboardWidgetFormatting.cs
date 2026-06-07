@@ -150,7 +150,7 @@ public static class DashboardWidgetFormatting
         AddCssVariable(parts, "--dashboard-widget-border", widget.ReadString("style.border"), IsSafeCssToken);
         AddCssVariable(parts, "--dashboard-widget-border-width", BorderWidthValue(widget), static value => value.EndsWith("px", StringComparison.Ordinal));
         AddCssVariable(parts, "--dashboard-widget-radius", PixelValue(widget.ReadString("style.radius")), static value => value.EndsWith("px", StringComparison.Ordinal));
-        AddCssVariable(parts, "--dashboard-widget-padding", PixelValue(widget.ReadString("style.padding")), static value => value.EndsWith("px", StringComparison.Ordinal));
+        AddCssVariable(parts, "--dashboard-widget-padding", WidgetPaddingValue(widget), static value => value.EndsWith("px", StringComparison.Ordinal));
         AddKpiCssVariables(parts, widget);
         return string.Join(string.Empty, parts);
     }
@@ -423,6 +423,18 @@ public static class DashboardWidgetFormatting
         }
 
         return PixelValue(widget.ReadString("style.borderWidth"));
+    }
+
+    private static string? WidgetPaddingValue(DashboardWidgetSnapshot widget)
+    {
+        var visualization = DashboardWidgetCatalog.NormalizeMetricVisualization(
+            widget.ReadString(DashboardWidgetCatalog.MetricVisualizationKey));
+        if (string.Equals(visualization, DashboardMetricVisualizationIds.Value, StringComparison.Ordinal))
+        {
+            return PixelValue(widget.ReadString(DashboardWidgetCatalog.MetricValuePaddingKey) ?? widget.ReadString("style.padding"));
+        }
+
+        return PixelValue(widget.ReadString("style.padding"));
     }
 
     private static string? TitleColor(DashboardWidgetSnapshot widget)

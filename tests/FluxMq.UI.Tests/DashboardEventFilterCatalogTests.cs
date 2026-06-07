@@ -151,6 +151,7 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain("--dashboard-widget-bg:#161b24;");
         css.ShouldContain("--dashboard-widget-accent:#2ed3c6;");
+        css.ShouldNotContain("--dashboard-widget-padding");
         css.ShouldNotContain("--dashboard-widget-surface");
         css.ShouldNotContain("--dashboard-widget-text");
         css.ShouldNotContain("--dashboard-widget-muted");
@@ -192,7 +193,8 @@ public sealed class DashboardEventFilterCatalogTests
                 [DashboardWidgetCatalog.KpiValueColorKey] = "#778899",
                 [DashboardWidgetCatalog.KpiTitleAlignKey] = DashboardWidgetCatalog.KpiAlignCenter,
                 [DashboardWidgetCatalog.KpiValueAlignKey] = DashboardWidgetCatalog.KpiAlignRight,
-                [DashboardWidgetCatalog.KpiValuePlacementKey] = DashboardWidgetCatalog.KpiValuePlacementBottom
+                [DashboardWidgetCatalog.KpiValuePlacementKey] = DashboardWidgetCatalog.KpiValuePlacementBottom,
+                [DashboardWidgetCatalog.MetricValuePaddingKey] = "22"
             });
 
         var style = DashboardWidgetFormatting.WidgetStyle(widget);
@@ -205,6 +207,7 @@ public sealed class DashboardEventFilterCatalogTests
         style.ShouldContain("--dashboard-kpi-value-align:right;");
         style.ShouldContain("--dashboard-kpi-value-items:flex-end;");
         style.ShouldContain("--dashboard-kpi-value-placement:flex-end;");
+        style.ShouldContain("--dashboard-widget-padding:22px;");
     }
 
     [Fact]
@@ -234,13 +237,16 @@ public sealed class DashboardEventFilterCatalogTests
         {
             ["borderMode"] = "none",
             ["borderWidth"] = "3",
-            ["radius"] = "14"
+            ["radius"] = "14",
+            ["padding"] = "18"
         };
 
         var css = DashboardCellStyleDraft.CssVariables(cellStyle);
 
         css.ShouldContain("--dashboard-widget-border-width:0px;");
         css.ShouldContain("--dashboard-widget-radius:14px;");
+        css.ShouldContain("--dashboard-cell-padding:18px;");
+        css.ShouldNotContain("--dashboard-widget-padding");
     }
 
     [Fact]
@@ -426,6 +432,7 @@ public sealed class DashboardEventFilterCatalogTests
         draft.MetricVisualization.ValueTitleAlign = DashboardWidgetCatalog.KpiAlignCenter;
         draft.MetricVisualization.ValueValueAlign = DashboardWidgetCatalog.KpiAlignRight;
         draft.MetricVisualization.ValueValuePlacement = DashboardWidgetCatalog.KpiValuePlacementMiddle;
+        draft.MetricVisualization.ValuePadding = 22;
 
         var configuration = draft.BuildConfiguration();
 
@@ -442,6 +449,7 @@ public sealed class DashboardEventFilterCatalogTests
         configuration[DashboardWidgetCatalog.MetricValueTitleAlignKey].ShouldBe(DashboardWidgetCatalog.KpiAlignCenter);
         configuration[DashboardWidgetCatalog.MetricValueValueAlignKey].ShouldBe(DashboardWidgetCatalog.KpiAlignRight);
         configuration[DashboardWidgetCatalog.MetricValueValuePlacementKey].ShouldBe(DashboardWidgetCatalog.KpiValuePlacementMiddle);
+        configuration[DashboardWidgetCatalog.MetricValuePaddingKey].ShouldBe("22");
         configuration.ContainsKey("title").ShouldBeFalse();
         configuration.ContainsKey("subtitle").ShouldBeFalse();
         configuration.ContainsKey(DashboardWidgetCatalog.KpiTitleColorKey).ShouldBeFalse();
@@ -1466,6 +1474,8 @@ public sealed class DashboardEventFilterCatalogTests
         value.DefaultConfiguration[DashboardWidgetCatalog.MetricValueSubtitleColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultSubtitleColor);
         value.DefaultConfiguration[DashboardWidgetCatalog.MetricValueValueColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultValueColor);
         value.DefaultConfiguration[DashboardWidgetCatalog.MetricValueUnitColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultSubtitleColor);
+        value.DefaultConfiguration[DashboardWidgetCatalog.MetricValuePaddingKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricValueDefaultPadding.ToString(System.Globalization.CultureInfo.InvariantCulture));
         value.DefaultConfiguration.ContainsKey(DashboardWidgetCatalog.KpiTitleColorKey).ShouldBeFalse();
         value.DefaultConfiguration.ContainsKey(DashboardWidgetCatalog.KpiSubtitleColorKey).ShouldBeFalse();
         value.DefaultConfiguration.ContainsKey(DashboardWidgetCatalog.KpiValueColorKey).ShouldBeFalse();
@@ -1490,7 +1500,8 @@ public sealed class DashboardEventFilterCatalogTests
                 DashboardWidgetCatalog.MetricValueUnitColorKey,
                 DashboardWidgetCatalog.MetricValueTitleAlignKey,
                 DashboardWidgetCatalog.MetricValueValueAlignKey,
-                DashboardWidgetCatalog.MetricValueValuePlacementKey
+                DashboardWidgetCatalog.MetricValueValuePlacementKey,
+                DashboardWidgetCatalog.MetricValuePaddingKey
             ]);
 
         digital.DisplayName.ShouldBe("Digital");
@@ -1606,6 +1617,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("#00000000");
         markup.ShouldContain("MudColor.TryParse");
         markup.ShouldContain("ToPersistedColor");
+        markup.ShouldContain("SwatchCssColor");
+        markup.ShouldContain("rgba(");
         markup.ShouldNotContain("property-grid-mud-color-picker");
         markup.ShouldNotContain("property-grid-color-alpha");
 
@@ -1617,6 +1630,7 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "PropertyGridColorPicker.razor.css"));
         css.ShouldContain("grid-template-columns: 36px minmax(0, 1fr) 28px;");
+        css.ShouldContain("background-color: var(--property-grid-color-value);");
         css.ShouldContain("font-size: 17px;");
     }
 
@@ -1655,6 +1669,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("justify-content: var(--dashboard-cell-widget-justify, flex-start);");
         css.ShouldContain("flex: var(--dashboard-cell-widget-flex, 1 1 auto);");
         css.ShouldContain("width: var(--dashboard-cell-widget-width, 100%);");
+        css.ShouldContain("padding: var(--dashboard-cell-padding, 0);");
         css.ShouldContain(".dashboard-live-cell");
         css.ShouldContain(".dashboard-live-cell ::deep .dashboard-widget");
     }

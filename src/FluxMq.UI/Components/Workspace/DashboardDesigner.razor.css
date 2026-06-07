@@ -375,6 +375,7 @@
 
 .dashboard-cell-widget-preview {
     align-items: var(--dashboard-cell-widget-align, stretch);
+    box-sizing: border-box;
     container-type: size;
     display: flex;
     flex: 1 1 auto;
@@ -382,6 +383,7 @@
     min-height: 0;
     min-width: 0;
     overflow: hidden;
+    padding: var(--dashboard-cell-padding, 0);
 }
 
 .dashboard-cell-widget-preview[draggable="true"] {
@@ -742,11 +744,13 @@
     background: transparent;
     border: 1px solid transparent;
     border-radius: 6px;
+    box-sizing: border-box;
     display: flex;
     justify-content: var(--dashboard-cell-widget-justify, flex-start);
     min-height: 0;
     min-width: 0;
     overflow: hidden;
+    padding: var(--dashboard-cell-padding, 0);
 }
 
 .dashboard-live-cell.has-widget {

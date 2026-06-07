@@ -2625,4 +2625,10 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Kept the default as stretch/fill; selecting an alignment dot switches the cell to content fit so the placement is visible immediately.
   - Added a compact 3x3 property-grid alignment pad and applied the same CSS variables to edit-cell previews and live dashboard cells.
   - Separate-output UI build and focused UI tests passed after the change.
-- Next step: visually review `Widget fit = Content` with Value and Digital KPI visuals, then continue with unit placement/case if the cell alignment behavior is approved.
+- Padding and color ownership correction:
+  - Split cell padding from widget padding: `Cell style > Padding` now pads the dashboard cell wrapper, not the widget content.
+  - Added `Value visual > Padding` as visualization-owned widget padding for `metric.value`; existing `style.padding` still loads as a compatibility fallback.
+  - Kept Digital visual padding owned by `metric.digital.padding`.
+  - Fixed property-grid color swatches to render alpha-safe `rgba(...)` colors over a checker background so selected colors are visible in the compact rows.
+  - Separate-output UI build and focused UI tests passed after the change.
+- Next step: visually review cell padding versus Value/Digital visual padding together; if approved, continue with unit placement/case or the next Value visual layout polish.
