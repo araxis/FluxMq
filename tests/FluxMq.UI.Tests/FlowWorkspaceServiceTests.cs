@@ -1,6 +1,7 @@
 using FluxMq.Core.Models;
 using FluxMq.Core.Payloads;
 using FluxMq.Core.Mqtt;
+using FluxMq.App.Metrics;
 using FluxFlow.Components.Control;
 using FluxFlow.Engine.Components;
 using FluxMq.Scenarios;
@@ -2383,6 +2384,55 @@ public sealed class FlowWorkspaceServiceTests
         value.Value.ShouldBe(expectedBytes);
         value.Unit.ShouldBe("bytes");
         value.FormattedValue.ShouldBe($"{expectedBytes} B");
+    }
+
+    [Fact]
+    public void GetDashboardMetricValue_UsesAppMetricArtifactForEventCounter()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddMetric("publishedMessages");
+        service.UpdateMetric(
+            "publishedMessages",
+            FluxMetricArtifactDefinition.CreateDefault("publishedMessages", "Published messages") with
+            {
+                Definition = new FluxMetricDefinition(
+                    "Published messages",
+                    FluxMetricCatalog.RuntimeEventsSource,
+                    FluxMetricCatalog.MeasureCount,
+                    "60s",
+                    eventType: FlowEventTypes.MqttMessagePublished,
+                    topicStartsWith: "test/",
+                    status: "published",
+                    format: FluxMetricCatalog.FormatNumber)
+            });
+        service.AddDashboard("ops");
+        service.AddDashboardWidget(DashboardWidgetCatalog.EventCounterType, "slot:0:0");
+        service.UpdateDashboardWidget(
+            "eventCounter",
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["title"] = "Published messages",
+                ["metric"] = "publishedMessages"
+            });
+        service.UpdateDashboardWidgetBinding(
+            "eventCounter",
+            "publishedMessages",
+            ["publishedMessages"]);
+        service.SetActiveDashboard("ops");
+
+        service.RecordManualMqttPublish("test/one", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+        service.RecordManualMqttPublish("other/skip", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+        service.RecordManualMqttPublish("test/two", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+
+        var widget = service.GetActiveDashboardLayout()
+            .ShouldNotBeNull()
+            .Widgets["eventCounter"];
+        var value = service.GetDashboardMetricValue(widget);
+
+        value.Label.ShouldBe("Count");
+        value.Value.ShouldBe(2);
+        value.Unit.ShouldBe("events");
+        value.FormattedValue.ShouldBe("2");
     }
 
     [Fact]

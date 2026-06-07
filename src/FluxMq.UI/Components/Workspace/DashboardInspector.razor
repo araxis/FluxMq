@@ -202,7 +202,7 @@
         => binding?.PrimaryMetric ??
             widget.ReadString("metric") ??
             binding?.Metrics.FirstOrDefault() ??
-            (IsKpiWidget(widget) ? Project.MetricNames.FirstOrDefault() : null) ??
+            (IsAppMetricConsumerType(widget.Type) ? Project.MetricNames.FirstOrDefault() : null) ??
             $"{widget.Name}Metric";
 
     private void ClearMetricDraftState()
@@ -464,16 +464,13 @@
 
     private bool ShowsDataProperties => _widgetDraft?.Profile.UsesMetricQuery == true;
 
-    private bool IsEventCounterQueryBuilderWidget =>
-        string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal);
-
     private bool IsEventRateQueryBuilderWidget =>
         string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal);
 
     private bool IsAppMetricConsumerWidget =>
-        string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal);
+        IsAppMetricConsumerType(_widgetDraft?.Profile.Type);
 
-    private bool IsMetricQueryBuilderWidget => _widgetDraft?.UsesMetricQueryBuilder == true;
+    private bool IsMetricQueryBuilderWidget => _widgetDraft?.UsesMetricQueryBuilder == true && !IsAppMetricConsumerWidget;
 
     private bool ShowsMetricQueryProperties =>
         _widgetDraft?.Profile.UsesMetricQuery == true &&
@@ -578,16 +575,26 @@
                 options.Add(new("", "Select metric", true));
             }
 
-            options.AddRange(AppMetricArtifacts.Select(metric => new PropertyGridSelectOption(
+            var compatibleMetrics = AppMetricArtifacts
+                .Where(metric => IsCompatibleAppMetric(metric.Value))
+                .ToArray();
+            if (compatibleMetrics.Length == 0)
+            {
+                options.Add(new("", "No compatible metrics", true));
+            }
+
+            options.AddRange(compatibleMetrics.Select(metric => new PropertyGridSelectOption(
                 metric.Key,
-                string.IsNullOrWhiteSpace(metric.Value.DisplayName)
-                    ? DashboardWidgetFormatting.MetricDisplayName(metric.Key)
-                    : metric.Value.DisplayName)));
+                AppMetricDisplayName(metric.Key, metric.Value))));
 
             if (!string.IsNullOrWhiteSpace(_primaryBindingMetric) &&
-                !AppMetricArtifacts.ContainsKey(_primaryBindingMetric))
+                (!AppMetricArtifacts.TryGetValue(_primaryBindingMetric, out var selectedMetric) ||
+                 !IsCompatibleAppMetric(selectedMetric)))
             {
-                options.Insert(0, new(_primaryBindingMetric, $"{_primaryBindingMetric} (missing)", true));
+                var label = selectedMetric is null
+                    ? $"{_primaryBindingMetric} (missing)"
+                    : $"{AppMetricDisplayName(_primaryBindingMetric, selectedMetric)} (incompatible)";
+                options.Insert(0, new(_primaryBindingMetric, label, true));
             }
 
             return options;
@@ -667,27 +674,19 @@
 
     private string MetricQueryEditTitle => IsEventRateQueryBuilderWidget
         ? "Edit event rate query"
-        : IsEventCounterQueryBuilderWidget
-            ? "Edit event counter query"
-            : "Edit metric query";
+        : "Edit metric query";
 
     private string MetricQueryDialogTitle => IsEventRateQueryBuilderWidget
         ? "Event rate query"
-        : IsEventCounterQueryBuilderWidget
-            ? "Event counter query"
-            : "KPI query";
+        : "Metric query";
 
     private string MetricQueryApplyNote => IsEventRateQueryBuilderWidget
         ? "Draft query. Apply updates this event rate metric only."
-        : IsEventCounterQueryBuilderWidget
-            ? "Draft query. Apply updates this event counter metric only."
-            : "Draft query. Apply updates this KPI metric only.";
+        : "Draft query. Apply updates this metric only.";
 
     private IReadOnlyList<string> MetricQueryAllowedMeasures => IsEventRateQueryBuilderWidget
         ? [FluxMetricCatalog.MeasureRate]
-        : IsEventCounterQueryBuilderWidget
-            ? [FluxMetricCatalog.MeasureCount]
-            : [];
+        : [];
 
     private async Task SetTitleAsync(string? value)
     {
@@ -1209,15 +1208,15 @@
         if (_widgetDraft.Profile.UsesMetricQuery)
         {
             var primaryMetric = _primaryBindingMetric ?? _draftMetricName;
-        Project.UpdateDashboardWidgetBinding(
-            Widget.Name,
-            primaryMetric,
-            DashboardInspectorMetricBindingState.Current(
-                SupportsMetricSlots,
-                _bindingMetrics,
+            Project.UpdateDashboardWidgetBinding(
+                Widget.Name,
                 primaryMetric,
-                _draftMetricName),
-            IsAppMetricConsumerWidget ? _bindingOptions : null);
+                DashboardInspectorMetricBindingState.Current(
+                    SupportsMetricSlots,
+                    _bindingMetrics,
+                    primaryMetric,
+                    _draftMetricName),
+                IsAppMetricConsumerWidget ? _bindingOptions : null);
         }
 
         await Changed.InvokeAsync();
@@ -1270,8 +1269,24 @@
             ? null
             : DashboardMetricReferenceResolver.ResolveAppMetricDefinition(Project, _primaryBindingMetric, _bindingOptions);
 
-    private static bool IsKpiWidget(DashboardWidgetSnapshot widget)
-        => string.Equals(widget.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal);
+    private static bool IsAppMetricConsumerType(string? type)
+        => string.Equals(type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal) ||
+           string.Equals(type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal);
+
+    private bool IsCompatibleAppMetric(FluxMetricArtifactDefinition metric)
+    {
+        if (string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal))
+        {
+            return string.Equals(metric.Definition.Measure, FluxMetricCatalog.MeasureCount, StringComparison.Ordinal);
+        }
+
+        return true;
+    }
+
+    private static string AppMetricDisplayName(string metricName, FluxMetricArtifactDefinition metric)
+        => string.IsNullOrWhiteSpace(metric.DisplayName)
+            ? DashboardWidgetFormatting.MetricDisplayName(metricName)
+            : metric.DisplayName;
 
     private static string NormalizeValue(string? value)
         => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();

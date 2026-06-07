@@ -2828,3 +2828,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 404 tests.
     - `git diff --check` passed with line-ending normalization warnings for the edited files.
 - Next step: run the broader UI/App test gate, then move `event.counter` from dashboard-local metric query editing to app-level metric selection if the Metric Source editor QA looks good.
+- Event Counter app-metric consumption:
+  - Moved `event.counter` inspector editing onto the same app-level metric selector path as KPI.
+  - Kept legacy widget-side metric query fallback intact for old dashboard JSON.
+  - Filtered the Event Counter metric selector to count-based app metrics so the widget remains focused on one responsibility.
+  - Added behavior coverage proving Event Counter can resolve a root app metric artifact and calculate its value from runtime events through the shared dashboard metric bridge.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardEventFilterCatalogTests"` passed with 94 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardEventFilterCatalogTests|FullyQualifiedName~GetDashboardMetricValue_UsesAppMetricArtifactForEventCounter"` passed with 95 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 405 tests.
+- Next step: commit the Event Counter app-metric slice, then continue one widget at a time with `event.rate` moving from dashboard-local query editing to app-level rate metric selection.
