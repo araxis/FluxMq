@@ -1083,21 +1083,11 @@
 
     private async Task SetPrimaryBindingMetricAsync(string? value)
     {
-        _primaryBindingMetric = string.IsNullOrWhiteSpace(value) ? _draftMetricName : value.Trim();
-        if (!SupportsMetricSlots)
-        {
-            _bindingMetrics = string.IsNullOrWhiteSpace(_primaryBindingMetric)
-                ? []
-                : [_primaryBindingMetric];
-        }
-        else
-        {
-            if (!string.IsNullOrWhiteSpace(_primaryBindingMetric) &&
-                !_bindingMetrics.Contains(_primaryBindingMetric, StringComparer.Ordinal))
-            {
-                _bindingMetrics.Insert(0, _primaryBindingMetric);
-            }
-        }
+        _primaryBindingMetric = DashboardInspectorMetricBindingState.NormalizeSelection(value, _draftMetricName);
+        _bindingMetrics = DashboardInspectorMetricBindingState.EnsurePrimary(
+            _bindingMetrics,
+            _primaryBindingMetric,
+            SupportsMetricSlots);
 
         if (!string.IsNullOrWhiteSpace(_primaryBindingMetric))
         {
@@ -1163,10 +1153,8 @@
 
     private async Task AddBindingMetricAsync()
     {
-        if (!string.IsNullOrWhiteSpace(_metricToAdd) &&
-            !_bindingMetrics.Contains(_metricToAdd, StringComparer.Ordinal))
+        if (DashboardInspectorMetricBindingState.TryAdd(_bindingMetrics, _metricToAdd))
         {
-            _bindingMetrics.Add(_metricToAdd);
             _metricToAdd = null;
             await AutoApplyAsync();
         }
@@ -1179,12 +1167,10 @@
             return;
         }
 
-        _bindingMetrics.RemoveAll(metric => string.Equals(metric, metricName, StringComparison.Ordinal));
-        if (string.Equals(_primaryBindingMetric, metricName, StringComparison.Ordinal))
-        {
-            _primaryBindingMetric = _bindingMetrics[0];
-        }
-
+        _primaryBindingMetric = DashboardInspectorMetricBindingState.Remove(
+            _bindingMetrics,
+            _primaryBindingMetric,
+            metricName);
         await AutoApplyAsync();
     }
 
@@ -1193,21 +1179,10 @@
 
     private async Task MoveBindingMetricAsync(string metricName, int offset)
     {
-        var index = _bindingMetrics.FindIndex(metric => string.Equals(metric, metricName, StringComparison.Ordinal));
-        if (index < 0)
+        if (DashboardInspectorMetricBindingState.TryMove(_bindingMetrics, metricName, offset))
         {
-            return;
+            await AutoApplyAsync();
         }
-
-        var next = Math.Clamp(index + offset, 0, _bindingMetrics.Count - 1);
-        if (next == index)
-        {
-            return;
-        }
-
-        _bindingMetrics.RemoveAt(index);
-        _bindingMetrics.Insert(next, metricName);
-        await AutoApplyAsync();
     }
 
     private async Task AutoApplyAsync()

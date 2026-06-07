@@ -2796,3 +2796,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 724 tests.
     - `git diff --check` passed.
 - Next step: commit the draft-loading cleanup, then review remaining dashboard inspector command handlers to decide if this cleanup phase is complete.
+- Dashboard inspector metric binding command cleanup:
+  - Moved primary/add/remove/move metric binding rules into `DashboardInspectorMetricBindingState`.
+  - Kept `DashboardInspector` responsible for invoking auto-apply and loading the selected metric draft.
+  - Added coverage for binding list add/remove/move and primary insertion behavior.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardInspectorMetricBindingState|FullyQualifiedName~DashboardInspector"` passed with 18 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 401 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 726 tests.
+    - `git diff --check` passed.
+- Next step: commit the binding-command cleanup, then stop this cleanup phase unless a review exposes a concrete remaining blocker.

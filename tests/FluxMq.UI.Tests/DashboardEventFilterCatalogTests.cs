@@ -602,6 +602,31 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardInspectorMetricBindingState_EnsuresPrimaryForSlotMode()
+    {
+        var metrics = DashboardInspectorMetricBindingState.EnsurePrimary(
+            ["secondary"],
+            "primary",
+            supportsSlots: true);
+
+        metrics.ShouldBe(["primary", "secondary"]);
+    }
+
+    [Fact]
+    public void DashboardInspectorMetricBindingState_AddRemoveAndMoveMutateBindingList()
+    {
+        var metrics = new List<string> { "primary", "secondary" };
+
+        DashboardInspectorMetricBindingState.TryAdd(metrics, "third").ShouldBeTrue();
+        DashboardInspectorMetricBindingState.TryAdd(metrics, "third").ShouldBeFalse();
+        DashboardInspectorMetricBindingState.TryMove(metrics, "third", -2).ShouldBeTrue();
+        var primary = DashboardInspectorMetricBindingState.Remove(metrics, "third", "third");
+
+        metrics.ShouldBe(["primary", "secondary"]);
+        primary.ShouldBe("primary");
+    }
+
+    [Fact]
     public void DashboardWidgetSettingsDraft_ResetToDefaultConfiguration_RestoresKpiDefaults()
     {
         var draft = DashboardWidgetSettingsDraft.Create(
@@ -2001,6 +2026,9 @@ public sealed class DashboardEventFilterCatalogTests
         inspector.ShouldContain("DashboardInspectorMetricQueryRows");
         inspector.ShouldContain("DashboardInspectorMetricBindingState.Initialize");
         inspector.ShouldContain("DashboardInspectorMetricBindingState.Current");
+        inspector.ShouldContain("DashboardInspectorMetricBindingState.TryAdd");
+        inspector.ShouldContain("DashboardInspectorMetricBindingState.Remove");
+        inspector.ShouldContain("DashboardInspectorMetricBindingState.TryMove");
         inspector.ShouldNotContain("<PropertyGridRow Name=\"Metric query\">");
         inspector.ShouldNotContain("private RenderFragment RenderMetricParameterField");
         inspector.ShouldNotContain("CurrentBindingMetrics(");
