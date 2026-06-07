@@ -1,0 +1,133 @@
+@namespace FluxMq.UI.Components.Workspace
+
+<div class="@RootClass" @onfocusout="@CloseAfterFocusLossAsync">
+    <button type="button"
+            class="property-grid-select-trigger"
+            disabled="@Disabled"
+            aria-haspopup="listbox"
+            aria-expanded="@_isOpen"
+            aria-label="@ResolvedAriaLabel"
+            @onclick="@ToggleAsync"
+            @onkeydown="@OnTriggerKeyDownAsync">
+        <span class="property-grid-select-label">@SelectedLabel</span>
+        <span class="property-grid-select-arrow">v</span>
+    </button>
+
+    @if (_isOpen && !Disabled)
+    {
+        <div class="property-grid-select-menu" role="listbox">
+            @foreach (var option in Options)
+            {
+                <button type="button"
+                        class="@OptionClass(option)"
+                        disabled="@option.Disabled"
+                        role="option"
+                        aria-selected="@IsSelected(option)"
+                        @onmousedown="@(() => SelectOptionAsync(option))">
+                    @option.Label
+                </button>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<PropertyGridSelectOption> Options { get; set; } = [];
+
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> ValueChanged { get; set; }
+
+    [Parameter]
+    public string? Placeholder { get; set; }
+
+    [Parameter]
+    public string? AriaLabel { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    private bool _isOpen;
+
+    private string RootClass => _isOpen
+        ? "property-grid-select-control open"
+        : "property-grid-select-control";
+
+    private string ResolvedAriaLabel => string.IsNullOrWhiteSpace(AriaLabel)
+        ? "Select value"
+        : AriaLabel;
+
+    private string SelectedLabel => SelectedOption?.Label ??
+        (string.IsNullOrWhiteSpace(Placeholder) ? "Select" : Placeholder);
+
+    private PropertyGridSelectOption? SelectedOption => Options.FirstOrDefault(option => IsSelected(option));
+
+    private Task ToggleAsync()
+    {
+        if (Disabled)
+        {
+            return Task.CompletedTask;
+        }
+
+        _isOpen = !_isOpen;
+        return Task.CompletedTask;
+    }
+
+    private async Task SelectOptionAsync(PropertyGridSelectOption option)
+    {
+        if (option.Disabled)
+        {
+            return;
+        }
+
+        _isOpen = false;
+        if (!string.Equals(Value ?? string.Empty, option.Value, StringComparison.Ordinal))
+        {
+            await ValueChanged.InvokeAsync(option.Value);
+        }
+    }
+
+    private async Task OnTriggerKeyDownAsync(KeyboardEventArgs args)
+    {
+        if (Disabled)
+        {
+            return;
+        }
+
+        if (string.Equals(args.Key, "Escape", StringComparison.Ordinal))
+        {
+            _isOpen = false;
+        }
+        else if (string.Equals(args.Key, "Enter", StringComparison.Ordinal) ||
+                 string.Equals(args.Key, " ", StringComparison.Ordinal) ||
+                 string.Equals(args.Key, "ArrowDown", StringComparison.Ordinal))
+        {
+            _isOpen = true;
+        }
+
+        await Task.CompletedTask;
+    }
+
+    private async Task CloseAfterFocusLossAsync()
+    {
+        await Task.Delay(120);
+        if (_isOpen)
+        {
+            _isOpen = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private bool IsSelected(PropertyGridSelectOption option)
+        => string.Equals(Value ?? string.Empty, option.Value, StringComparison.Ordinal);
+
+    private string OptionClass(PropertyGridSelectOption option)
+    {
+        var selected = IsSelected(option) ? " selected" : string.Empty;
+        var disabled = option.Disabled ? " disabled" : string.Empty;
+        return $"property-grid-select-option{selected}{disabled}";
+    }
+}

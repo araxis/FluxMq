@@ -5,6 +5,7 @@ public enum DashboardWidgetRendererKind
     Unknown,
     Kpi,
     StatusStrip,
+    StatusValue,
     Rate,
     Gauge,
     Chart,
@@ -14,7 +15,9 @@ public enum DashboardWidgetRendererKind
     TopicTree,
     TopicActivity,
     PayloadDistribution,
-    QosRetainBreakdown
+    QosRetainBreakdown,
+    QosBreakdown,
+    RetainBreakdown
 }
 
 public enum DashboardWidgetEditorKind

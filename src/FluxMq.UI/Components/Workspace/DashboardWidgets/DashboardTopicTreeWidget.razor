@@ -27,11 +27,14 @@
     [Parameter, EditorRequired]
     public DashboardWidgetSnapshot Widget { get; set; } = null!;
 
+    [Parameter]
+    public IReadOnlyList<MqttEnvelope>? MessagesOverride { get; set; }
+
     private IReadOnlyList<MqttEnvelope> TopicMessages
     {
         get
         {
-            var messages = Live.RecentMessages;
+            var messages = MessagesOverride ?? Live.RecentMessages;
             return ExcludeSystemTopics
                 ? messages.Where(static message => !message.Topic.StartsWith("$SYS/", StringComparison.Ordinal)).ToArray()
                 : messages;

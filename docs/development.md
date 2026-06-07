@@ -86,6 +86,12 @@ Run it from Visual Studio or with:
 dotnet run --project src\FluxMq.UI\FluxMq.UI.csproj -f net10.0-windows10.0.19041.0
 ```
 
+Local desktop builds use package-backed component references by default so app startup builds stay smaller. Use source references only when checking component integration across both repos:
+
+```powershell
+dotnet run --project src\FluxMq.UI\FluxMq.UI.csproj -f net10.0-windows10.0.19041.0 -p:UseFluxFlowSourceReferences=true
+```
+
 The alpha workspace assumes a local MQTT broker is available at `localhost:1883` unless the user edits the broker profile in the app.
 
 ## Windows Packaging

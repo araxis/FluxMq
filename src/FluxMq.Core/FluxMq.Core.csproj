@@ -6,8 +6,15 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(UseFluxFlowSourceReferences)' != 'true'">
     <PackageReference Include="FluxFlow.Components.Secrets" Version="$(FluxFlowComponentsSecretsVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UseFluxFlowSourceReferences)' == 'true'">
+    <ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.Secrets\FluxFlow.Components.Secrets.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="MQTTnet" Version="5.1.0.1559" />
     <PackageReference Include="Polly" Version="8.6.6" />
   </ItemGroup>

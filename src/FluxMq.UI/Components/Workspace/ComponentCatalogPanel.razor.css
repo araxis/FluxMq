@@ -173,6 +173,48 @@
     white-space: nowrap;
 }
 
+.catalog-item-main {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.catalog-item-description {
+    color: var(--mud-palette-text-secondary);
+    display: -webkit-box;
+    font-size: 10.5px;
+    line-height: 1.25;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.catalog-item-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.catalog-item-badge {
+    background: color-mix(in srgb, var(--mud-palette-info) 16%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-info) 30%, var(--flux-border));
+    border-radius: 4px;
+    color: color-mix(in srgb, var(--mud-palette-info) 86%, var(--mud-palette-text-primary));
+    font-size: 9.5px;
+    font-weight: 700;
+    line-height: 1;
+    padding: 3px 5px;
+    white-space: nowrap;
+}
+
+.component-catalog.dashboard .catalog-item {
+    align-items: start;
+    grid-template-columns: 24px minmax(0, 1fr) 24px;
+    min-height: 58px;
+    padding: 7px 6px;
+}
+
 .catalog-add-button {
     color: var(--mud-palette-text-secondary);
     justify-self: end;

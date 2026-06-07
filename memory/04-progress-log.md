@@ -2512,3 +2512,34 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
 - Deleting the active artifact falls back to the next available artifact, and deleting a pipeline clears stored diagram positions for that pipeline.
 - Verified:
   - `dotnet test .\tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false --nologo -v minimal` passes with 268 tests.
+
+## 2026-06-07 - Dashboard metric visualization separation
+
+- Added the first UI-only metric visualization module, `metric.value`, to keep metric query evaluation separate from widget presentation and cell styling.
+- Routed KPI, event counter, event rate, and rate tile through a shared metric-value view so editor-cell, preview, and live paths stay aligned.
+- Converted `event.rate` to the metric-query builder path with Rate as the only allowed measure; widget config no longer owns event filters/window/primary metric behavior.
+- Kept future gauges/meters/digital readouts as separate visualization modules, not hidden modes inside `event.rate`.
+- Follow-up: made KPI the first edit-view consumer of the visualization layer by adding a catalog-backed `Visualization` row and persisting `visualization = metric.value` in KPI defaults/config.
+- Verified focused dashboard/composer tests after source-mode restore:
+  - `dotnet restore FluxMq.sln -p:UseFluxFlowSourceReferences=true -p:FluxFlowSourceRoot=D:\Projects\FluxFlow\`
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseFluxFlowSourceReferences=true -p:FluxFlowSourceRoot=D:\Projects\FluxFlow\ -p:UseAppHost=false --filter "FullyQualifiedName~DashboardEventFilterCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests|FullyQualifiedName~FlowDefinitionComposerV2Tests"`
+- Final verification:
+  - Source-mode UI tests passed with 371 tests.
+  - Package-only UI tests passed with 371 tests.
+  - Full solution tests passed on rerun after one timing-sensitive scenario test passed independently.
+  - `git diff --check` passed; FluxFlow remained clean.
+- KPI visualization follow-up verification:
+  - Focused dashboard/composer tests passed with 184 tests.
+  - Source-mode UI tests passed with 372 tests.
+- The NuGet upgrade briefly exposed stale restore-mode CLI metadata while switching between source and package FluxFlow references; a full matching restore confirmed `run`, `validate`, and `scenario` should keep the public `ExecuteAsync` override used by the committed CLI package graph.
+- Final verification after the CLI restore check:
+  - CLI tests passed with 18 tests.
+  - Full solution tests passed with Core 44, Scenarios 36, Components 113, App 108, CLI 18, and UI 372 tests.
+  - `git diff --check` passed with line-ending warnings only; FluxFlow remained clean.
+- KPI visualization editing now uses the selected visualization module as the source for follow-up property rows. `metric.value` owns the title/subtitle/value colors and title/value alignment/placement rows, while KPI keeps only widget text and metric binding concerns.
+- After the package upgrade, source-reference and package-reference builds require their matching restore mode before `--no-restore`; otherwise stale assets can mix FluxFlow project and package references.
+- Verified after the visualization-property refactor:
+  - Source-mode dashboard tests passed with 66 focused tests.
+  - Source-mode UI tests passed with 372 tests.
+  - Default/package-mode app build passed for `src\fluxmq.ui` with no `InitializeComponent` error.
+- Next step: visually review KPI `Visualization` editing first; if accepted, reuse the pattern for the next focused metric widget before adding a new visualization module.

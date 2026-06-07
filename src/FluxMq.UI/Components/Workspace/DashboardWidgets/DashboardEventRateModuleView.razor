@@ -1,0 +1,8 @@
+@namespace FluxMq.UI.Components.Workspace
+
+<DashboardMetricValueVisualizationView Context="@Context" />
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardWidgetRenderContext Context { get; set; } = null!;
+}

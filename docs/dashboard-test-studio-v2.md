@@ -40,6 +40,14 @@ The dashboard studio keeps the structured grid as the source of truth. Design mo
 
 The stabilization pass tightened dashboard widget containment across desktop, tablet, and narrow windows so KPI values, event tables, gauge panels, topic activity, payload distribution, and QoS/retain breakdowns shrink without overlapping neighboring cells.
 
+## Metric Query Builder Direction
+
+The dashboard metric query builder is the standard, visual path for defining metrics. It should read like a sentence and keep common setup easy: choose the measure, source, time window, match rules, and number format, then preview the result against live or generated sample data.
+
+Architecturally, this visual builder is a facade over a richer metric-function model. A metric should be able to evaluate against the active app context, runtime events, topic projections, payload summaries, and saved resources, then return a typed scalar, series, or breakdown for widgets. Future advanced editing can allow expression-backed metric definitions for users who want to write logic directly, but the persisted dashboard model should stay neutral and structured so visual and advanced editors can round-trip safely.
+
+KPI remains the first consumer of this builder. The metric engine must not become KPI-specific; the same builder model should later serve counter, rate, chart, table, and topic-focused widgets.
+
 The test studio keeps authoring and execution separate. Scenario Designer remains the phase-lane authoring surface, while Runner Console now carries run preflight, active timeline, event/log streams, diagnosis, run-history selection, and report preview/copy/save actions.
 
 Component catalog fallback is covered so package-backed serialization transforms and FluxMQ aliases remain visible when source references are unavailable.

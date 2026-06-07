@@ -1,0 +1,9 @@
+@namespace FluxMq.UI.Components.Workspace
+@inject IFluxChartAdapter Charts
+
+<DashboardSeriesBars Series="@Charts.CreateRetainSeries(Context.Snapshot)" />
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardWidgetRenderContext Context { get; set; } = null!;
+}

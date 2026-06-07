@@ -30,6 +30,15 @@
 	  <Content Include="Components\**\*.razor.css" />
 	</ItemGroup>
 
+	<Target Name="FluxMqExcludeEmbeddedEditorStaticWebAssetsFromWindowsPri"
+	        BeforeTargets="_GenerateProjectPriConfigurationFiles">
+		<ItemGroup>
+			<_FluxMqEmbeddedEditorStaticWebAssetPriOutput Include="@(PriOutputs)"
+				Condition="$([System.String]::Copy('%(PriOutputs.TargetPath)').Replace('\','/').StartsWith('wwwroot/_content/BlazorMonaco/lib/monaco-editor/min/vs/'))" />
+			<PriOutputs Remove="@(_FluxMqEmbeddedEditorStaticWebAssetPriOutput)" />
+		</ItemGroup>
+	</Target>
+
 	<ItemGroup>
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#0A0D12" />
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#0A0D12" BaseSize="192,192" />

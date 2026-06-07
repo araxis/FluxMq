@@ -102,6 +102,11 @@ select {
     --flux-shadow-pop: 0 18px 40px -24px rgba(15, 23, 42, 0.34), 0 0 0 1px var(--flux-border);
 }
 
+.flux-theme-scope {
+    height: 100%;
+    min-height: 0;
+}
+
 ::-webkit-scrollbar {
     height: 10px;
     width: 10px;
@@ -392,6 +397,46 @@ select {
     flex: 1 1 auto;
     min-width: 0;
     overflow: visible;
+}
+
+/* Dashboard query editors are MudDialog-hosted, so the dialog paper must be styled globally. */
+.flux-theme-dark .mud-overlay {
+    background-color: rgba(3, 7, 13, 0.76) !important;
+}
+
+.flux-theme-light .mud-overlay {
+    background-color: rgba(15, 23, 42, 0.36) !important;
+}
+
+.mud-dialog.dashboard-query-dialog-modal {
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--flux-surface-2, #161b24) 96%, transparent), var(--flux-surface, #11151c)) !important;
+    border: 1px solid color-mix(in srgb, var(--flux-accent, #2dd4bf) 24%, var(--flux-border-strong, #2a313d));
+    border-radius: 8px;
+    box-shadow: var(--flux-shadow-pop), 0 24px 80px -28px rgba(0, 0, 0, 0.86);
+    color: var(--mud-palette-text-primary, #f3f7fb);
+    max-height: min(82vh, 820px);
+    overflow: hidden;
+}
+
+.mud-dialog.dashboard-query-dialog-modal .mud-dialog-title {
+    background: color-mix(in srgb, var(--flux-surface-2, #161b24) 94%, var(--flux-canvas, #0c1016));
+    border-bottom: 1px solid var(--flux-border, #1d232e);
+    padding: 10px 12px;
+}
+
+.mud-dialog.dashboard-query-dialog-modal .mud-dialog-content {
+    background: color-mix(in srgb, var(--flux-surface, #11151c) 96%, var(--flux-canvas, #0c1016));
+    max-height: calc(min(82vh, 820px) - 122px);
+    overflow: auto;
+    padding: 10px 12px 12px;
+}
+
+.mud-dialog.dashboard-query-dialog-modal .mud-dialog-actions {
+    background: color-mix(in srgb, var(--flux-surface-2, #161b24) 86%, var(--flux-surface, #11151c));
+    border-top: 1px solid var(--flux-border, #1d232e);
+    gap: 8px;
+    padding: 8px 12px;
 }
 
 /* Expression preview in collapsed node body */

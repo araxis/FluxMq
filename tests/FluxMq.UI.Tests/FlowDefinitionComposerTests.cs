@@ -1378,8 +1378,10 @@ public sealed class FlowDefinitionComposerTests
         var layout = composer.GetDashboardLayout(updated, "ops").ShouldNotBeNull();
         layout.Widgets.Keys.ShouldBe(["eventCounter"]);
         layout.Widgets["eventCounter"].Type.ShouldBe("event.counter");
-        layout.Widgets["eventCounter"].Configuration["status"].ShouldBe(string.Empty);
-        layout.Widgets["eventCounter"].Configuration["subjectStartsWith"].ShouldBe(string.Empty);
+        layout.Widgets["eventCounter"].Configuration.Keys.ShouldBe(["title", "metric"], ignoreOrder: true);
+        layout.Widgets["eventCounter"].Configuration["metric"].ShouldBe("eventCounterMetric");
+        layout.Metrics["eventCounterMetric"].Aggregation.ShouldBe("count");
+        layout.Bindings["eventCounter"].PrimaryMetric.ShouldBe("eventCounterMetric");
 
         var cell = layout.Cells.ShouldHaveSingleItem();
         cell.Row.ShouldBe(0);
@@ -1400,8 +1402,10 @@ public sealed class FlowDefinitionComposerTests
         var widget = layout.Widgets["eventRate"];
         widget.Type.ShouldBe(DashboardWidgetCatalog.EventRateType);
         widget.Configuration["title"].ShouldBe("Event rate");
-        widget.Configuration["eventType"].ShouldBe(string.Empty);
-        widget.Configuration["status"].ShouldBe(string.Empty);
+        widget.Configuration.Keys.ShouldBe(["title", "metric"], ignoreOrder: true);
+        widget.Configuration["metric"].ShouldBe("eventRateMetric");
+        layout.Metrics["eventRateMetric"].Aggregation.ShouldBe("rate");
+        layout.Bindings["eventRate"].PrimaryMetric.ShouldBe("eventRateMetric");
         layout.Cells.ShouldContain(cell => cell.Widget == "eventRate");
     }
 
@@ -1421,13 +1425,14 @@ public sealed class FlowDefinitionComposerTests
         layout.Widgets["eventGauge"].Configuration["title"].ShouldBe("Event gauge");
         layout.Widgets["eventGauge"].Configuration[DashboardWidgetCatalog.PrimaryMetricKey].ShouldBe(DashboardWidgetCatalog.MetricRecent);
         layout.Widgets["eventGauge"].Configuration[DashboardWidgetCatalog.GaugeStyleKey].ShouldBe(DashboardWidgetCatalog.GaugeStyleRing);
-        layout.Widgets["eventGauge"].Configuration[DashboardWidgetCatalog.DisplayMetricsKey].ShouldBe("messages,recent,currentRate,payloadBytes");
-        layout.Widgets["eventGauge"].Configuration[DashboardWidgetCatalog.MetricCardColumnsKey].ShouldBe("4");
-        layout.Widgets["eventChart"].Configuration["title"].ShouldBe("Event chart");
-        layout.Widgets["eventChart"].Configuration[DashboardWidgetCatalog.PrimaryMetricKey].ShouldBe(DashboardWidgetCatalog.MetricMessages);
-        layout.Widgets["eventChart"].Configuration[DashboardWidgetCatalog.ChartTypeKey].ShouldBe(DashboardWidgetCatalog.ChartTypeBars);
-        layout.Widgets["eventChart"].Configuration[DashboardWidgetCatalog.DisplayMetricsKey].ShouldBe("messages,recent,currentRate,payloadBytes");
-        layout.Widgets["eventChart"].Configuration[DashboardWidgetCatalog.MetricCardColumnsKey].ShouldBe("4");
+        layout.Widgets["eventGauge"].Configuration.ContainsKey(DashboardWidgetCatalog.DisplayMetricsKey).ShouldBeFalse();
+        layout.Widgets["eventGauge"].Configuration.ContainsKey(DashboardWidgetCatalog.MetricCardColumnsKey).ShouldBeFalse();
+        layout.Widgets["barChart"].Type.ShouldBe(DashboardWidgetCatalog.BarChartType);
+        layout.Widgets["barChart"].Configuration["title"].ShouldBe("Bar chart");
+        layout.Widgets["barChart"].Configuration[DashboardWidgetCatalog.PrimaryMetricKey].ShouldBe(DashboardWidgetCatalog.MetricMessages);
+        layout.Widgets["barChart"].Configuration[DashboardWidgetCatalog.ChartTypeKey].ShouldBe(DashboardWidgetCatalog.ChartTypeBars);
+        layout.Widgets["barChart"].Configuration.ContainsKey(DashboardWidgetCatalog.DisplayMetricsKey).ShouldBeFalse();
+        layout.Widgets["barChart"].Configuration.ContainsKey(DashboardWidgetCatalog.MetricCardColumnsKey).ShouldBeFalse();
         layout.Widgets["eventTable"].Configuration["title"].ShouldBe("Event table");
         layout.Widgets["eventTable"].Configuration["eventType"].ShouldBe(string.Empty);
         layout.Widgets["eventTable"].Configuration["status"].ShouldBe(string.Empty);
@@ -1503,6 +1508,33 @@ public sealed class FlowDefinitionComposerTests
             });
 
         updated.ShouldBe(json);
+    }
+
+    [Fact]
+    public void UpdateDashboardCellStyle_WritesStyleOnCellNotWidget()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+        json = composer.AddDashboardWidget(json, "ops", "event.counter", "slot:0:0");
+
+        var updated = composer.UpdateDashboardCellStyle(
+            json,
+            "ops",
+            "cell",
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["background"] = "#161b24",
+                ["borderMode"] = "none",
+                ["radius"] = "14"
+            });
+
+        var layout = composer.GetDashboardLayout(updated, "ops").ShouldNotBeNull();
+        var cell = layout.Cells.ShouldHaveSingleItem();
+        cell.Style["background"].ShouldBe("#161b24");
+        cell.Style["borderMode"].ShouldBe("none");
+        cell.Style["radius"].ShouldBe("14");
+        layout.Widgets["eventCounter"].Configuration.Keys.ShouldNotContain("background");
+        layout.Widgets["eventCounter"].Configuration.Keys.ShouldNotContain("mainText");
     }
 
     [Fact]

@@ -122,11 +122,12 @@
     {
         @if (IsEditMode)
         {
-            <div class="dashboard-grid-frame"
-                 @onpointerenter="HandleDesignerPointerEnter"
-                 @onpointermove="HandleDesignerPointerMove"
-                 @onpointerleave="HandleDesignerPointerLeave">
-            <div class="dashboard-grid-stage">
+            <div class="dashboard-editor-workbench">
+                <div class="dashboard-grid-frame"
+                     @onpointerenter="HandleDesignerPointerEnter"
+                     @onpointermove="HandleDesignerPointerMove"
+                     @onpointerleave="HandleDesignerPointerLeave">
+                <div class="dashboard-grid-stage">
                 <div class="dashboard-column-handles" style="@ColumnHandleStyle">
                     @for (var column = 0; column < _layout.Columns.Count; column++)
                     {
@@ -176,45 +177,62 @@
                                  @ondragleave="@(() => ClearWidgetMoveCell(currentCell))"
                                  @onclick="@((MouseEventArgs args) => SelectCell(currentCell, args))"
                                  @key="currentCell.Name">
-                            <div class="dashboard-cell-content">
-                                <span class="dashboard-cell-name">@CellTitle(currentCell)</span>
-                                @if (currentCell.IsMerged)
-                                {
-                                    <span class="dashboard-cell-span">@CellSpan(currentCell)</span>
-                                }
+                            <div class="@CellContentClass(currentCell)">
                                 @if (!string.IsNullOrWhiteSpace(currentCell.Widget))
                                 {
-                                    <div class="dashboard-cell-widget"
-                                         draggable="true"
-                                         title="Drag to move widget"
-                                         @ondragstart="@(() => BeginWidgetMove(currentCell.Widget, currentCell.Name))"
-                                         @ondragend="@EndWidgetMove"
-                                         @onclick:stopPropagation="true">
-                                        <span class="dashboard-cell-widget-grip">
-                                            <MudIcon Icon="@Icons.Material.Filled.DragIndicator" Size="Size.Small" />
-                                        </span>
-                                        <span class="dashboard-cell-widget-label">@WidgetLabel(currentCell.Widget)</span>
-                                        <button type="button"
-                                                class="dashboard-cell-widget-action"
-                                                title="Edit widget"
-                                                @onclick:stopPropagation="true"
-                                                @onclick="@(() => OpenWidgetEditorAsync(currentCell.Widget))">
-                                            <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
-                                        </button>
-                                        <button type="button"
-                                                class="dashboard-cell-widget-action danger"
-                                                title="Delete widget"
-                                                @onclick:stopPropagation="true"
-                                                @onclick="@(() => RemoveWidget(currentCell.Widget))">
-                                            <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" />
-                                        </button>
-                                    </div>
+                                    var widget = FindWidget(currentCell.Widget);
+                                    if (widget is not null)
+                                    {
+                                        var previewSample = PreviewSample(widget.Name);
+                                        <div class="dashboard-cell-widget-preview"
+                                             draggable="true"
+                                             title="Drag to move widget"
+                                             @ondragstart="@(() => BeginWidgetMove(currentCell.Widget, currentCell.Name))"
+                                             @ondragend="@EndWidgetMove">
+                                            <DashboardWidgetView Project="@Project"
+                                                                 Widget="@widget"
+                                                                 Mode="DashboardWidgetRenderMode.EditCell"
+                                                                 SnapshotOverride="@previewSample?.Snapshot"
+                                                                 TopicMessagesOverride="@previewSample?.TopicMessages" />
+                                        </div>
+                                        <div class="dashboard-cell-widget-toolbar"
+                                             @onclick:stopPropagation="true">
+                                            <button type="button"
+                                                    class="dashboard-cell-widget-action simulate"
+                                                    title="Simulate widget data"
+                                                    @onclick="@(() => SimulateWidgetPreview(currentCell.Widget))">
+                                                <MudIcon Icon="@Icons.Material.Filled.Refresh" Size="Size.Small" />
+                                            </button>
+                                            <button type="button"
+                                                    class="dashboard-cell-widget-action danger"
+                                                    title="Delete widget"
+                                                    @onclick="@(() => RemoveWidget(currentCell.Widget))">
+                                                <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" />
+                                            </button>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        @RenderEmptyCellContent(currentCell)
+                                    }
+                                }
+                                else
+                                {
+                                    @RenderEmptyCellContent(currentCell)
                                 }
                             </div>
                         </section>
                     }
                 </div>
-            </div>
+                </div>
+                </div>
+                <DashboardInspector Project="@Project"
+                                    Layout="@_layout"
+                                    SelectedCells="@SelectedCells"
+                                    Widget="@SelectedWidget"
+                                    CollapsedPropertyGroups="@_inspectorCollapsedPropertyGroups"
+                                    CollapsedPropertyGroupsChanged="@RememberInspectorCollapsedPropertyGroups"
+                                    Changed="@OnInspectorChanged" />
             </div>
         }
         else
@@ -232,7 +250,7 @@
                                 var widget = FindWidget(currentCell.Widget);
                                 if (widget is not null)
                                 {
-                                    <DashboardWidgetView Project="@Project" Widget="@widget" />
+                                    <DashboardWidgetView Project="@Project" Widget="@widget" Mode="DashboardWidgetRenderMode.Live" />
                                 }
                                 else
                                 {
@@ -255,6 +273,7 @@
     private const string RowAxis = "row";
     private const string DashboardModeEdit = "edit";
     private const string DashboardModeLive = "live";
+    private const string StylePropertyGroupId = "style";
 
     [Parameter, EditorRequired]
     public FlowWorkspaceService Project { get; set; } = default!;
@@ -277,6 +296,11 @@
     private string? _movingWidgetName;
     private string? _movingWidgetSourceCellName;
     private string? _hoveredWidgetMoveCellName;
+    private readonly HashSet<string> _inspectorCollapsedPropertyGroups = new(StringComparer.Ordinal)
+    {
+        StylePropertyGroupId
+    };
+    private readonly Dictionary<string, DashboardPreviewSample> _previewSamples = new(StringComparer.Ordinal);
     private bool? _lastNotifiedEditMode;
     private long _definitionRevision = -1;
     private FlowWorkspaceService? _subscribedProject;
@@ -321,6 +345,9 @@
 
     private IReadOnlyList<DashboardCellSnapshot> SelectedCells
         => VisibleCells.Where(cell => _selectedCellIds.Contains(cell.Name)).ToArray();
+
+    private DashboardWidgetSnapshot? SelectedWidget
+        => SelectedCells.Count == 1 ? FindWidget(SelectedCells[0].Widget) : null;
 
     private bool CanMerge => IsRectangularSelection(SelectedCells);
 
@@ -403,6 +430,7 @@
         }
 
         TrimSelection();
+        TrimPreviewSamples();
     }
 
     private async Task OpenTrackEditorAsync(string axis, int index)
@@ -465,6 +493,7 @@
         }
 
         Project.RemoveDashboardWidget(widgetName);
+        _previewSamples.Remove(widgetName);
         CaptureDashboardError();
         RefreshLayoutAfterCommand();
     }
@@ -696,6 +725,17 @@
         _isSplitPickerOpen = false;
     }
 
+    private Task RememberInspectorCollapsedPropertyGroups(IReadOnlySet<string> collapsedGroups)
+    {
+        _inspectorCollapsedPropertyGroups.Clear();
+        foreach (var group in collapsedGroups)
+        {
+            _inspectorCollapsedPropertyGroups.Add(group);
+        }
+
+        return Task.CompletedTask;
+    }
+
     private void PreviewGrid(int rows, int columns)
     {
         _previewRows = rows;
@@ -744,6 +784,14 @@
         _previewRows = _layout?.Rows.Count ?? _previewRows;
         _previewColumns = _layout?.Columns.Count ?? _previewColumns;
         TrimSelection();
+        TrimPreviewSamples();
+    }
+
+    private Task OnInspectorChanged()
+    {
+        CaptureDashboardError();
+        RefreshLayoutAfterCommand();
+        return Task.CompletedTask;
     }
 
     private void TrimSelection()
@@ -798,7 +846,7 @@
     {
         var rowPadding = GetCellRowPadding(cell);
         var columnPadding = GetCellColumnPadding(cell);
-        return $"grid-row:{cell.Row + 1} / span {cell.RowSpan};grid-column:{cell.Column + 1} / span {cell.ColumnSpan};margin:{FormatNumber(rowPadding)}px {FormatNumber(columnPadding)}px;";
+        return $"grid-row:{cell.Row + 1} / span {cell.RowSpan};grid-column:{cell.Column + 1} / span {cell.ColumnSpan};margin:{FormatNumber(rowPadding)}px {FormatNumber(columnPadding)}px;{DashboardCellStyleDraft.CssVariables(cell.Style)}";
     }
 
     private double GetCellRowPadding(DashboardCellSnapshot cell)
@@ -826,11 +874,55 @@
     private static string CellSpan(DashboardCellSnapshot cell)
         => $"{cell.ColumnSpan} x {cell.RowSpan}";
 
+    private string CellContentClass(DashboardCellSnapshot cell)
+        => !string.IsNullOrWhiteSpace(cell.Widget) && FindWidget(cell.Widget) is not null
+            ? "dashboard-cell-content has-widget-preview"
+            : "dashboard-cell-content";
+
+    private static RenderFragment RenderEmptyCellContent(DashboardCellSnapshot cell) => @<text>
+        <span class="dashboard-cell-name">@CellTitle(cell)</span>
+        @if (cell.IsMerged)
+        {
+            <span class="dashboard-cell-span">@CellSpan(cell)</span>
+        }
+    </text>;
+
     private DashboardWidgetSnapshot? FindWidget(string? widgetName)
         => !string.IsNullOrWhiteSpace(widgetName) &&
            _layout?.Widgets.TryGetValue(widgetName, out var widget) == true
             ? widget
             : null;
+
+    private DashboardPreviewSample? PreviewSample(string widgetName)
+        => _previewSamples.TryGetValue(widgetName, out var sample)
+            ? sample
+            : null;
+
+    private void SimulateWidgetPreview(string? widgetName)
+    {
+        var widget = FindWidget(widgetName);
+        if (widget is null)
+        {
+            return;
+        }
+
+        _previewSamples[widget.Name] = DashboardPreviewSampleFactory.Create(widget);
+    }
+
+    private void TrimPreviewSamples()
+    {
+        if (_layout is null)
+        {
+            _previewSamples.Clear();
+            return;
+        }
+
+        var widgetNames = _layout.Widgets.Keys.ToHashSet(StringComparer.Ordinal);
+        foreach (var widgetName in _previewSamples.Keys.Where(widgetName => !widgetNames.Contains(widgetName)).ToArray())
+        {
+            _previewSamples.Remove(widgetName);
+        }
+    }
 
     private string WidgetLabel(string? widgetName)
     {

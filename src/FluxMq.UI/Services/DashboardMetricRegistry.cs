@@ -1,27 +1,23 @@
+using FluxMq.App.Metrics;
 using FluxMq.UI.Models;
-using System.Globalization;
 
 namespace FluxMq.UI.Services;
 
 public sealed class DashboardMetricRegistry
 {
     public IReadOnlyList<DashboardMetricSourceDescriptor> Sources { get; } =
-    [
-        new("runtimeEvents", "Runtime events", "Events emitted by the active app runtime."),
-        new("topicProjection", "Topic projection", "Topic and message activity derived from runtime events."),
-        new("mqttSnapshots", "MQTT snapshots", "Broker throughput, QoS, retain, and payload metrics."),
-        new("payloadInspection", "Payload inspection", "Payload size and content inspection summaries.")
-    ];
+        [.. FluxMetricCatalog.Shared.Sources.Select(static source => new DashboardMetricSourceDescriptor(
+            source.Id,
+            source.Label,
+            source.Description))];
 
     public IReadOnlyList<DashboardMetricAggregationDescriptor> Aggregations { get; } =
-    [
-        new("count", "Count", "events"),
-        new("rate", "Rate", "/s"),
-        new("topics", "Topics", "topics"),
-        new("payloadBytes", "Payload bytes", "bytes"),
-        new("averagePayload", "Average payload", "bytes"),
-        new("retained", "Retained", "messages")
-    ];
+        [.. FluxMetricCatalog.Shared.Measures.Select(static measure => new DashboardMetricAggregationDescriptor(
+            measure.Id,
+            measure.Label,
+            measure.Unit))];
+
+    private readonly FluxMetricEvaluationEngine _engine = new();
 
     public DashboardMetricSourceDescriptor? FindSource(string? source)
         => Sources.FirstOrDefault(item => string.Equals(item.Id, source, StringComparison.Ordinal));
@@ -36,58 +32,67 @@ public sealed class DashboardMetricRegistry
         ArgumentNullException.ThrowIfNull(query);
         ArgumentNullException.ThrowIfNull(snapshot);
 
-        var aggregation = FindAggregation(query.Aggregation) ?? Aggregations[0];
-        var value = query.Aggregation switch
-        {
-            "rate" => snapshot.EventsPerSecond,
-            "topics" => snapshot.UniqueTopicCount,
-            "payloadBytes" => snapshot.TotalPayloadBytes,
-            "averagePayload" => snapshot.AveragePayloadBytes,
-            "retained" => snapshot.RetainedCount,
-            _ => snapshot.Count
-        };
+        var definition = DashboardMetricQueryMapper.ToFluxMetricDefinition("metric", query);
+        var value = _engine.Evaluate(definition, DashboardMetricQueryMapper.ToFluxMetricRuntimeSnapshot(snapshot));
+        return DashboardMetricQueryMapper.ToDashboardMetricValue(value);
+    }
 
-        return new DashboardMetricValue(
-            aggregation.DisplayName,
-            value,
-            aggregation.Unit,
-            FormatValue(value, aggregation.Unit, query.Format));
+    public static DashboardMetricValue EvaluateLegacyMetric(
+        string metric,
+        DashboardEventSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+
+        return metric switch
+        {
+            DashboardWidgetCatalog.MetricCurrentRate => new(
+                "Rate",
+                snapshot.EventsPerSecond,
+                "/s",
+                FluxMetricEvaluationEngine.FormatValue(snapshot.EventsPerSecond, "/s", FluxMetricCatalog.FormatNumber)),
+            DashboardWidgetCatalog.MetricRecent => new(
+                "Recent",
+                snapshot.RecentCount,
+                "events",
+                FluxMetricEvaluationEngine.FormatValue(snapshot.RecentCount, "events", FluxMetricCatalog.FormatNumber)),
+            DashboardWidgetCatalog.MetricPayloadBytes => new(
+                "Payload bytes",
+                snapshot.TotalPayloadBytes,
+                "bytes",
+                FluxMetricEvaluationEngine.FormatValue(snapshot.TotalPayloadBytes, "bytes", FluxMetricCatalog.FormatBytes)),
+            DashboardWidgetCatalog.MetricTopics => new(
+                "Topics",
+                snapshot.UniqueTopicCount,
+                "topics",
+                FluxMetricEvaluationEngine.FormatValue(snapshot.UniqueTopicCount, "topics", FluxMetricCatalog.FormatNumber)),
+            DashboardWidgetCatalog.MetricRetained => new(
+                "Retained",
+                snapshot.RetainedCount,
+                "messages",
+                FluxMetricEvaluationEngine.FormatValue(snapshot.RetainedCount, "messages", FluxMetricCatalog.FormatNumber)),
+            DashboardWidgetCatalog.MetricAveragePayload => new(
+                "Average payload",
+                snapshot.AveragePayloadBytes,
+                "bytes",
+                FluxMetricEvaluationEngine.FormatValue(snapshot.AveragePayloadBytes, "bytes", FluxMetricCatalog.FormatBytes)),
+            _ => new(
+                "Count",
+                snapshot.Count,
+                "events",
+                FluxMetricEvaluationEngine.FormatValue(snapshot.Count, "events", FluxMetricCatalog.FormatNumber))
+        };
     }
 
     public DashboardMetricQueryDefinition CreateDefaultQuery(string widgetType)
         => widgetType switch
         {
-            DashboardWidgetCatalog.RateTileType or DashboardWidgetCatalog.EventRateType => new("runtimeEvents", "rate", "60s"),
-            DashboardWidgetCatalog.TopicActivityType or DashboardWidgetCatalog.TopicTreeType => new("topicProjection", "topics", "60s", GroupBy: "topic"),
-            DashboardWidgetCatalog.PayloadDistributionType => new("payloadInspection", "payloadBytes", "60s", GroupBy: "bucket"),
-            DashboardWidgetCatalog.QosRetainBreakdownType => new("mqttSnapshots", "count", "60s", GroupBy: "qosRetain"),
-            _ => new("runtimeEvents", "count", "60s")
+            DashboardWidgetCatalog.RateTileType or DashboardWidgetCatalog.EventRateType => new(FluxMetricCatalog.RuntimeEventsSource, FluxMetricCatalog.MeasureRate, "60s"),
+            DashboardWidgetCatalog.TopicActivityType or DashboardWidgetCatalog.TopicTreeType => new(FluxMetricCatalog.TopicProjectionSource, FluxMetricCatalog.MeasureTopics, "60s", GroupBy: "topic"),
+            DashboardWidgetCatalog.PayloadDistributionType => new(FluxMetricCatalog.PayloadInspectionSource, FluxMetricCatalog.MeasurePayloadBytes, "60s", GroupBy: "bucket"),
+            DashboardWidgetCatalog.QosRetainBreakdownType => new(FluxMetricCatalog.MqttSnapshotsSource, FluxMetricCatalog.MeasureCount, "60s", GroupBy: "qosRetain"),
+            DashboardWidgetCatalog.QosBreakdownType => new(FluxMetricCatalog.MqttSnapshotsSource, FluxMetricCatalog.MeasureCount, "60s", GroupBy: "qos"),
+            DashboardWidgetCatalog.RetainBreakdownType => new(FluxMetricCatalog.MqttSnapshotsSource, FluxMetricCatalog.MeasureCount, "60s", GroupBy: "retain"),
+            DashboardWidgetCatalog.StatusValueType => new(FluxMetricCatalog.RuntimeEventsSource, FluxMetricCatalog.MeasureCount, "60s"),
+            _ => DashboardMetricQueryMapper.ToDashboardQuery(FluxMetricCatalog.Shared.CreateDefaultDefinition("metric"))
         };
-
-    private static string FormatValue(double value, string unit, string format)
-    {
-        var formatted = format switch
-        {
-            "bytes" => FormatBytes(value),
-            "percent" => $"{value:0.#}%",
-            _ => value.ToString(value >= 100 ? "0" : "0.##", CultureInfo.InvariantCulture)
-        };
-
-        return string.IsNullOrWhiteSpace(unit) || format == "bytes"
-            ? formatted
-            : $"{formatted} {unit}";
-    }
-
-    private static string FormatBytes(double value)
-    {
-        string[] units = ["B", "KB", "MB", "GB"];
-        var unitIndex = 0;
-        while (value >= 1024 && unitIndex < units.Length - 1)
-        {
-            value /= 1024;
-            unitIndex++;
-        }
-
-        return $"{value:0.#} {units[unitIndex]}";
-    }
 }

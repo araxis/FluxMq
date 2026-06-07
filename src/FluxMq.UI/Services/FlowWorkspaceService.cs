@@ -1,5 +1,6 @@
 using FluxMq.App;
 using FluxMq.App.Scenarios;
+using FluxMq.App.Metrics;
 using FluxMq.Core.Ids;
 using FluxMq.Components.MqttMetrics;
 using FluxMq.Components.MqttPayloadInspector;
@@ -42,6 +43,8 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
     private readonly IScenarioRunHistoryRepository? _scenarioRunHistoryRepository;
     private readonly Func<MqttConnectionProfile, IMqttBrokerClient>? _runtimeClientFactory;
     private readonly DashboardEventFilterCatalog _dashboardEventFilters;
+    private readonly DashboardMetricRegistry _dashboardMetricRegistry = new();
+    private readonly DashboardRuntimeMetrics? _runtimeMetrics;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly object _logSync = new();
     private readonly object _metricsSync = new();
@@ -65,13 +68,15 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
         IMessageRepository? messageRepository = null,
         IScenarioRunHistoryRepository? scenarioRunHistory = null,
         Func<MqttConnectionProfile, IMqttBrokerClient>? runtimeClientFactory = null,
-        DashboardEventFilterCatalog? dashboardEventFilters = null)
+        DashboardEventFilterCatalog? dashboardEventFilters = null,
+        DashboardRuntimeMetrics? runtimeMetrics = null)
     {
         _definitionComposer = definitionComposer;
         _messageRepository = messageRepository;
         _scenarioRunHistoryRepository = scenarioRunHistory;
         _runtimeClientFactory = runtimeClientFactory;
         _dashboardEventFilters = dashboardEventFilters ?? DashboardEventFilterCatalog.Shared;
+        _runtimeMetrics = runtimeMetrics;
         DefinitionJson = _definitionComposer.CreateEmptyDefinition();
     }
 
@@ -154,28 +159,44 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
 
     public DashboardEventSnapshot GetDashboardEventSnapshot(DashboardWidgetSnapshot widget)
     {
+        var effectiveWidget = ResolveDashboardMetricWidget(widget, out var rateWindow);
         lock (_runtimeEventSync)
         {
             var matching = _runtimeEvents
-                .Where(flowEvent => MatchesDashboardEventWidget(widget, flowEvent))
+                .Where(flowEvent => MatchesDashboardEventWidget(effectiveWidget, flowEvent))
                 .ToArray();
-            var recentThreshold = DateTimeOffset.UtcNow.Subtract(DashboardRateWindow);
+            var recentThreshold = DateTimeOffset.UtcNow.Subtract(rateWindow);
             var recentCount = matching.Count(flowEvent => flowEvent.Timestamp >= recentThreshold);
-            var eventsPerSecond = recentCount / DashboardRateWindow.TotalSeconds;
+            var eventsPerSecond = recentCount / rateWindow.TotalSeconds;
             var topicCounts = BuildDashboardTopicMetrics(matching);
             return new DashboardEventSnapshot(
                 matching.Length,
                 matching.LastOrDefault(),
                 recentCount,
-                DashboardRateWindow,
+                rateWindow,
                 eventsPerSecond,
                 matching.Reverse().Take(12).ToArray(),
-                BuildDashboardEventBuckets(matching, recentThreshold),
+                BuildDashboardEventBuckets(matching, recentThreshold, rateWindow),
                 topicCounts,
                 matching.Sum(static flowEvent => (long)(flowEvent.PayloadBytes ?? 0)),
                 topicCounts.Count,
                 matching.Count(static flowEvent => IsRetained(flowEvent)));
         }
+    }
+
+    public DashboardMetricValue GetDashboardMetricValue(DashboardWidgetSnapshot widget)
+    {
+        var snapshot = GetDashboardEventSnapshot(widget);
+        var metric = ResolveDashboardMetric(widget);
+        if (metric is null)
+        {
+            return DashboardMetricRegistry.EvaluateLegacyMetric(
+                DashboardWidgetCatalog.NormalizePrimaryMetric(
+                    widget.ReadString(DashboardWidgetCatalog.PrimaryMetricKey)),
+                snapshot);
+        }
+
+        return _dashboardMetricRegistry.Evaluate(ToDashboardMetricQuery(metric), snapshot);
     }
 
     public void RecordManualMqttPublish(
@@ -225,6 +246,27 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
 
     public IReadOnlyList<(string Name, string Type)> GetWorkflowNodes(string workflowName)
         => _definitionComposer.GetWorkflowNodes(DefinitionJson, workflowName);
+
+    public IReadOnlyList<string> GetAssertionNames()
+    {
+        var definition = CreateApplicationDefinition(DefinitionJson);
+        return
+        [
+            .. definition.Workflows.Values
+                .SelectMany(static workflow => workflow.Nodes.Values)
+                .Where(static node => string.Equals(node.Type.Value, FluxMqNodeTypes.FlowAssertion.Value, StringComparison.Ordinal))
+                .Select(static node => ReadConfigurationString(node.Configuration, "assertionName"))
+                .Where(static name => !string.IsNullOrWhiteSpace(name))
+                .Select(static name => name!.Trim())
+                .Distinct(StringComparer.Ordinal)
+                .Order(StringComparer.OrdinalIgnoreCase)
+        ];
+    }
+
+    private static string? ReadConfigurationString(IReadOnlyDictionary<string, JsonElement> configuration, string key)
+        => configuration.TryGetValue(key, out var value) && value.ValueKind == JsonValueKind.String
+            ? value.GetString()
+            : null;
 
     public Func<IReadOnlyDictionary<string, (double X, double Y, bool Collapsed)>>? GetDiagramState { get; set; }
     public IReadOnlyDictionary<string, (double X, double Y, bool Collapsed)>? StagedNodePositions { get; private set; }
@@ -466,6 +508,172 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
         {
             State = RuntimeWorkspaceState.Faulted;
             Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "DashboardWidgetUpdateFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
+    public void UpdateDashboardCellStyle(string cellName, IReadOnlyDictionary<string, string> style)
+    {
+        if (string.IsNullOrWhiteSpace(_activeDashboardName) ||
+            string.IsNullOrWhiteSpace(cellName))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.UpdateDashboardCellStyle(
+                DefinitionJson,
+                _activeDashboardName,
+                cellName,
+                style));
+            _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "DashboardCellStyleUpdateFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
+    public void UpdateDashboardMetric(string metricName, DashboardMetricQueryDefinition query)
+    {
+        if (string.IsNullOrWhiteSpace(_activeDashboardName) ||
+            string.IsNullOrWhiteSpace(metricName))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.UpdateDashboardMetric(
+                DefinitionJson,
+                _activeDashboardName,
+                metricName,
+                query));
+            _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "DashboardMetricUpdateFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
+    public void UpdateDashboardWidgetBinding(string widgetName, string? primaryMetric, IEnumerable<string> metrics)
+    {
+        if (string.IsNullOrWhiteSpace(_activeDashboardName) ||
+            string.IsNullOrWhiteSpace(widgetName))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.UpdateDashboardWidgetBinding(
+                DefinitionJson,
+                _activeDashboardName,
+                widgetName,
+                primaryMetric,
+                metrics));
+            _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "DashboardBindingUpdateFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
+    public void DuplicateDashboardWidget(string widgetName, string? targetCellName = null)
+    {
+        if (string.IsNullOrWhiteSpace(_activeDashboardName) ||
+            string.IsNullOrWhiteSpace(widgetName))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.DuplicateDashboardWidget(
+                DefinitionJson,
+                _activeDashboardName,
+                widgetName,
+                targetCellName));
+            _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "DashboardWidgetDuplicateFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
+    public void ReplaceDashboardWidgetType(string widgetName, string widgetType)
+    {
+        if (string.IsNullOrWhiteSpace(_activeDashboardName) ||
+            string.IsNullOrWhiteSpace(widgetName) ||
+            string.IsNullOrWhiteSpace(widgetType))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.ReplaceDashboardWidgetType(
+                DefinitionJson,
+                _activeDashboardName,
+                widgetName,
+                widgetType));
+            _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "DashboardWidgetReplaceFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
+    public void RemoveDashboardMetricIfUnused(string metricName)
+    {
+        if (string.IsNullOrWhiteSpace(_activeDashboardName) ||
+            string.IsNullOrWhiteSpace(metricName))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.RemoveDashboardMetricIfUnused(DefinitionJson, _activeDashboardName, metricName));
+            _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "DashboardMetricRemoveFailed", exception.Message)];
         }
 
         NotifyChanged();
@@ -2006,6 +2214,7 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
             RuntimeEvents = _runtimeEvents.ToArray();
         }
 
+        _runtimeMetrics?.Record(flowEvent);
         AppendLogs([ToWorkspaceLogEntry(flowEvent, address)], notify: false);
         NotifyRuntimeProjectionChanged();
     }
@@ -2352,10 +2561,100 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
     private bool MatchesDashboardEventWidget(DashboardWidgetSnapshot widget, FlowEvent flowEvent)
         => _dashboardEventFilters.Matches(widget, flowEvent);
 
-    private static IReadOnlyList<int> BuildDashboardEventBuckets(IReadOnlyList<FlowEvent> events, DateTimeOffset start)
+    private DashboardWidgetSnapshot ResolveDashboardMetricWidget(DashboardWidgetSnapshot widget, out TimeSpan rateWindow)
+    {
+        rateWindow = DashboardRateWindow;
+        var metric = ResolveDashboardMetric(widget);
+        if (metric is null)
+        {
+            return widget;
+        }
+
+        rateWindow = ParseDashboardWindow(metric.Window);
+        var configuration = new Dictionary<string, string>(widget.Configuration, StringComparer.Ordinal);
+        foreach (var filter in metric.Filters)
+        {
+            configuration[filter.Key] = filter.Value;
+        }
+
+        return widget with { Configuration = configuration };
+    }
+
+    private DashboardMetricSnapshot? ResolveDashboardMetric(DashboardWidgetSnapshot widget)
+    {
+        var layout = GetActiveDashboardLayout();
+        if (layout is null ||
+            !layout.Bindings.TryGetValue(widget.Name, out var binding))
+        {
+            return null;
+        }
+
+        var metricName = string.IsNullOrWhiteSpace(binding.PrimaryMetric)
+            ? binding.Metrics.FirstOrDefault()
+            : binding.PrimaryMetric;
+        if (string.IsNullOrWhiteSpace(metricName) ||
+            !layout.Metrics.TryGetValue(metricName, out var metric))
+        {
+            return null;
+        }
+
+        return metric;
+    }
+
+    private static DashboardMetricQueryDefinition ToDashboardMetricQuery(DashboardMetricSnapshot metric)
+        => new(
+            metric.Source,
+            metric.Aggregation,
+            metric.Window,
+            EventType: metric.ReadFilter(DashboardEventFilterCatalog.EventTypeKey),
+            TopicStartsWith: metric.ReadFilter(DashboardEventFilterCatalog.TopicStartsWithKey),
+            TopicNotStartsWith: metric.ReadFilter(DashboardEventFilterCatalog.TopicNotStartsWithKey),
+            Status: metric.ReadFilter(DashboardEventFilterCatalog.StatusKey),
+            GroupBy: metric.GroupBy,
+            Format: metric.ReadFormat("unit") ?? "number",
+            AdditionalFilters: metric.Filters
+                .Where(static filter =>
+                    !string.Equals(filter.Key, DashboardEventFilterCatalog.EventTypeKey, StringComparison.Ordinal) &&
+                    !string.Equals(filter.Key, DashboardEventFilterCatalog.TopicStartsWithKey, StringComparison.Ordinal) &&
+                    !string.Equals(filter.Key, DashboardEventFilterCatalog.TopicNotStartsWithKey, StringComparison.Ordinal) &&
+                    !string.Equals(filter.Key, DashboardEventFilterCatalog.StatusKey, StringComparison.Ordinal))
+                .ToDictionary(static filter => filter.Key, static filter => filter.Value, StringComparer.Ordinal));
+
+    private static TimeSpan ParseDashboardWindow(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return DashboardRateWindow;
+        }
+
+        var normalized = value.Trim();
+        var suffix = normalized[^1];
+        var numberText = char.IsLetter(suffix)
+            ? normalized[..^1]
+            : normalized;
+        if (!double.TryParse(numberText, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var amount) ||
+            amount <= 0)
+        {
+            return DashboardRateWindow;
+        }
+
+        var window = char.ToLowerInvariant(suffix) switch
+        {
+            'h' => TimeSpan.FromHours(amount),
+            'm' => TimeSpan.FromMinutes(amount),
+            _ => TimeSpan.FromSeconds(amount)
+        };
+
+        return TimeSpan.FromSeconds(Math.Clamp(window.TotalSeconds, 1, 86_400));
+    }
+
+    private static IReadOnlyList<int> BuildDashboardEventBuckets(
+        IReadOnlyList<FlowEvent> events,
+        DateTimeOffset start,
+        TimeSpan window)
     {
         var buckets = new int[DashboardEventBucketCount];
-        var bucketDuration = DashboardRateWindow.TotalMilliseconds / DashboardEventBucketCount;
+        var bucketDuration = window.TotalMilliseconds / DashboardEventBucketCount;
         foreach (var flowEvent in events)
         {
             if (flowEvent.Timestamp < start)

@@ -1,5 +1,5 @@
 @inject FlowComponentCatalog Catalog
-@inject DashboardWidgetCatalog DashboardWidgets
+@inject DashboardWidgetRegistry DashboardWidgets
 @inject ScenarioStepCatalog ScenarioSteps
 @inject ProjectManagerService Projects
 @inject DragStateService DragState
@@ -61,7 +61,22 @@
             <span class="@IconTileClass(item.Category)" aria-hidden="true">
                 <MudIcon Icon="@item.Icon" Size="Size.Small" />
             </span>
-            <span class="catalog-item-name">@item.DisplayName</span>
+            <span class="catalog-item-main">
+                <span class="catalog-item-name">@item.DisplayName</span>
+                @if (ArtifactKind == WorkspaceArtifactKind.Dashboard)
+                {
+                    <span class="catalog-item-description">@item.Description</span>
+                    @if (item.DataRequirements.Count > 0)
+                    {
+                        <span class="catalog-item-badges">
+                            @foreach (var requirement in item.DataRequirements.Take(2))
+                            {
+                                <span class="catalog-item-badge">@RequirementLabel(requirement)</span>
+                            }
+                        </span>
+                    }
+                }
+            </span>
             <span class="catalog-add-button" aria-hidden="true">
                 <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
             </span>
@@ -246,8 +261,11 @@
         string DisplayName,
         string Category,
         string Description,
-        string Icon)
+        string Icon,
+        IReadOnlyList<string>? DataRequirements = null)
     {
+        public IReadOnlyList<string> DataRequirements { get; init; } = DataRequirements ?? [];
+
         public CatalogSearchFields SearchFields => new(Type, DisplayName, Category, Description);
 
         public static CatalogEntry FromComponent(FlowComponentDescriptor descriptor)
@@ -256,7 +274,8 @@
                 descriptor.DisplayName,
                 descriptor.Category,
                 descriptor.Summary,
-                IconFor(descriptor));
+                IconFor(descriptor),
+                []);
 
         public static CatalogEntry FromWidget(DashboardWidgetDescriptor descriptor)
             => new(
@@ -264,7 +283,8 @@
                 descriptor.DisplayName,
                 descriptor.Category,
                 descriptor.Description,
-                descriptor.Icon);
+                descriptor.Icon,
+                descriptor.DataRequirements);
 
         public static CatalogEntry FromStep(ScenarioStepDescriptor descriptor)
             => new(
@@ -272,6 +292,18 @@
                 descriptor.DisplayName,
                 descriptor.Category,
                 descriptor.Description,
-                descriptor.Icon);
+                descriptor.Icon,
+                []);
     }
+
+    private static string RequirementLabel(string requirement)
+        => requirement switch
+        {
+            "runtimeEvents" => "Events",
+            "topicProjection" => "Topics",
+            "mqttAttributes" => "MQTT",
+            "mqttSnapshots" => "MQTT",
+            "payload" => "Payload",
+            _ => requirement
+        };
 }

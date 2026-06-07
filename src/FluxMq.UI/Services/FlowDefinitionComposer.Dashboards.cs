@@ -51,6 +51,8 @@ public sealed partial class FlowDefinitionComposer
         var layout = dashboard["layout"] as JsonObject ?? new JsonObject();
         var cells = layout["cells"] as JsonObject ?? new JsonObject();
         var widgets = dashboard["widgets"] as JsonObject ?? new JsonObject();
+        var metrics = dashboard["metrics"] as JsonObject ?? new JsonObject();
+        var bindings = dashboard["bindings"] as JsonObject ?? new JsonObject();
 
         var columns = ReadTrackStrings(layout, "columns", ["*"]);
         var rows = ReadTrackStrings(layout, "rows", ["*"]);
@@ -61,7 +63,9 @@ public sealed partial class FlowDefinitionComposer
             NormalizePaddingValues(ReadPaddingValues(layout, "columnPadding"), columns.Count),
             NormalizePaddingValues(ReadPaddingValues(layout, "rowPadding"), rows.Count),
             ReadDashboardCells(cells),
-            ReadDashboardWidgets(widgets));
+            ReadDashboardWidgets(widgets),
+            ReadDashboardMetrics(metrics),
+            ReadDashboardBindings(bindings));
     }
 
     public string AddDashboardWidget(string json, string dashboardName, string widgetType, string? cellName = null)
@@ -73,7 +77,7 @@ public sealed partial class FlowDefinitionComposer
 
         var normalizedType = string.IsNullOrWhiteSpace(widgetType)
             ? DashboardWidgetCatalog.EventCounterType
-            : widgetType.Trim();
+            : DashboardWidgetCatalog.NormalizeWidgetTypeForAdd(widgetType);
         var root = ParseOrCreate(json);
         var dashboard = GetOrCreateDashboardObject(GetFlowApplication(root), dashboardName);
         var layout = GetOrCreateObject(dashboard, "layout");
@@ -111,6 +115,205 @@ public sealed partial class FlowDefinitionComposer
         }
 
         widget["configuration"] = FlowDashboardDefinitionFactory.CreateConfiguration(configuration);
+        return root.ToJsonString(Options);
+    }
+
+    public string UpdateDashboardCellStyle(
+        string json,
+        string dashboardName,
+        string cellName,
+        IReadOnlyDictionary<string, string> style)
+    {
+        if (string.IsNullOrWhiteSpace(dashboardName) ||
+            string.IsNullOrWhiteSpace(cellName))
+        {
+            return json;
+        }
+
+        var root = ParseOrCreate(json);
+        var dashboard = GetOrCreateDashboardObject(GetFlowApplication(root), dashboardName);
+        var layout = GetOrCreateObject(dashboard, "layout");
+        var cells = GetOrCreateObject(layout, "cells");
+        if (!TryFindOrCreateDashboardCell(layout, cells, cellName, out _, out var cell))
+        {
+            return json;
+        }
+
+        if (style.Count == 0)
+        {
+            cell.Remove("style");
+        }
+        else
+        {
+            cell["style"] = FlowDashboardDefinitionFactory.CreateConfiguration(style);
+        }
+
+        return root.ToJsonString(Options);
+    }
+
+    public string UpdateDashboardMetric(
+        string json,
+        string dashboardName,
+        string metricName,
+        DashboardMetricQueryDefinition query)
+    {
+        if (string.IsNullOrWhiteSpace(dashboardName) ||
+            string.IsNullOrWhiteSpace(metricName))
+        {
+            return json;
+        }
+
+        ArgumentNullException.ThrowIfNull(query);
+
+        var root = ParseOrCreate(json);
+        var dashboard = GetOrCreateDashboardObject(GetFlowApplication(root), dashboardName);
+        var metrics = GetOrCreateObject(dashboard, "metrics");
+        metrics[metricName.Trim()] = FlowDashboardDefinitionFactory.CreateMetric(query);
+        FluxMqApplicationDefinitionMigrator.MigrateRoot(root);
+        return root.ToJsonString(Options);
+    }
+
+    public string UpdateDashboardWidgetBinding(
+        string json,
+        string dashboardName,
+        string widgetName,
+        string? primaryMetric,
+        IEnumerable<string> metrics)
+    {
+        if (string.IsNullOrWhiteSpace(dashboardName) ||
+            string.IsNullOrWhiteSpace(widgetName))
+        {
+            return json;
+        }
+
+        var metricNames = NormalizeMetricNames(metrics).ToArray();
+        var normalizedPrimary = string.IsNullOrWhiteSpace(primaryMetric)
+            ? metricNames.FirstOrDefault()
+            : primaryMetric.Trim();
+        if (metricNames.Length == 0 && !string.IsNullOrWhiteSpace(normalizedPrimary))
+        {
+            metricNames = [normalizedPrimary];
+        }
+
+        var root = ParseOrCreate(json);
+        var dashboard = GetOrCreateDashboardObject(GetFlowApplication(root), dashboardName);
+        var bindings = GetOrCreateObject(dashboard, "bindings");
+        bindings[widgetName.Trim()] = new JsonObject
+        {
+            ["primaryMetric"] = normalizedPrimary ?? string.Empty,
+            ["metrics"] = CreateStringArray(metricNames)
+        };
+
+        FluxMqApplicationDefinitionMigrator.MigrateRoot(root);
+        return root.ToJsonString(Options);
+    }
+
+    public string RemoveDashboardMetricIfUnused(
+        string json,
+        string dashboardName,
+        string metricName)
+    {
+        if (string.IsNullOrWhiteSpace(dashboardName) ||
+            string.IsNullOrWhiteSpace(metricName))
+        {
+            return json;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["dashboards"] is not JsonObject dashboards ||
+            dashboards[dashboardName] is not JsonObject dashboard ||
+            dashboard["metrics"] is not JsonObject metrics ||
+            dashboard["bindings"] is not JsonObject bindings)
+        {
+            return json;
+        }
+
+        var normalized = metricName.Trim();
+        var isUsed = bindings
+            .Select(binding => binding.Value as JsonObject)
+            .Where(static binding => binding is not null)
+            .Cast<JsonObject>()
+            .Any(binding => BindingUsesMetric(binding, normalized));
+        if (!isUsed)
+        {
+            metrics.Remove(normalized);
+        }
+
+        return root.ToJsonString(Options);
+    }
+
+    public string DuplicateDashboardWidget(
+        string json,
+        string dashboardName,
+        string widgetName,
+        string? targetCellName = null)
+    {
+        if (string.IsNullOrWhiteSpace(dashboardName) ||
+            string.IsNullOrWhiteSpace(widgetName))
+        {
+            return json;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["dashboards"] is not JsonObject dashboards ||
+            dashboards[dashboardName] is not JsonObject dashboard ||
+            dashboard["widgets"] is not JsonObject widgets ||
+            widgets[widgetName] is not JsonObject widget)
+        {
+            return json;
+        }
+
+        var layout = GetOrCreateObject(dashboard, "layout");
+        var cells = GetOrCreateObject(layout, "cells");
+        var bindings = GetOrCreateObject(dashboard, "bindings");
+        var newName = MakeUniqueDashboardWidgetName(widgets, $"{NormalizeDashboardIdentifier(widgetName)}Copy");
+        widgets[newName] = widget.DeepClone();
+        if (bindings[widgetName] is JsonObject binding)
+        {
+            bindings[newName] = binding.DeepClone();
+        }
+
+        AssignWidgetToDashboardCell(layout, cells, newName, targetCellName);
+        FluxMqApplicationDefinitionMigrator.MigrateRoot(root);
+        return root.ToJsonString(Options);
+    }
+
+    public string ReplaceDashboardWidgetType(
+        string json,
+        string dashboardName,
+        string widgetName,
+        string widgetType)
+    {
+        if (string.IsNullOrWhiteSpace(dashboardName) ||
+            string.IsNullOrWhiteSpace(widgetName) ||
+            string.IsNullOrWhiteSpace(widgetType))
+        {
+            return json;
+        }
+
+        var root = ParseOrCreate(json);
+        var flowApplication = GetFlowApplication(root);
+        if (flowApplication["dashboards"] is not JsonObject dashboards ||
+            dashboards[dashboardName] is not JsonObject dashboard ||
+            dashboard["widgets"] is not JsonObject widgets ||
+            widgets[widgetName] is not JsonObject widget)
+        {
+            return json;
+        }
+
+        var configuration = widget["configuration"] as JsonObject ?? new JsonObject();
+        var title = ReadString(configuration, "title");
+        widget["type"] = widgetType.Trim();
+        var nextConfiguration = FlowDashboardDefinitionFactory.CreateWidgetConfiguration(widgetType);
+        if (!string.IsNullOrWhiteSpace(title))
+        {
+            nextConfiguration["title"] = title;
+        }
+
+        widget["configuration"] = nextConfiguration;
+        FluxMqApplicationDefinitionMigrator.MigrateRoot(root);
         return root.ToJsonString(Options);
     }
 
@@ -733,7 +936,8 @@ public sealed partial class FlowDefinitionComposer
                 ReadInt(cellObject, "column"),
                 Math.Max(1, ReadInt(cellObject, "rowSpan", 1)),
                 Math.Max(1, ReadInt(cellObject, "columnSpan", 1)),
-                ReadString(cellObject, "widget")));
+                ReadString(cellObject, "widget"),
+                Style: ReadConfigurationStrings(cellObject["style"] as JsonObject ?? new JsonObject())));
         }
 
         return result
@@ -758,6 +962,52 @@ public sealed partial class FlowDefinitionComposer
                 widget.Key,
                 ReadString(widgetObject, "type") ?? string.Empty,
                 ReadConfigurationStrings(configuration));
+        }
+
+        return result;
+    }
+
+    private static IReadOnlyDictionary<string, DashboardMetricSnapshot> ReadDashboardMetrics(JsonObject metrics)
+    {
+        var result = new Dictionary<string, DashboardMetricSnapshot>(StringComparer.Ordinal);
+        foreach (var metric in metrics)
+        {
+            if (metric.Value is not JsonObject metricObject)
+            {
+                continue;
+            }
+
+            var filters = metricObject["filters"] as JsonObject ?? new JsonObject();
+            var format = metricObject["format"] as JsonObject ?? new JsonObject();
+            result[metric.Key] = new DashboardMetricSnapshot(
+                metric.Key,
+                ReadString(metricObject, "source") ?? "runtimeEvents",
+                ReadString(metricObject, "aggregation") ?? "count",
+                ReadString(metricObject, "window") ?? "60s",
+                ReadString(metricObject, "groupBy"),
+                ReadConfigurationStrings(filters),
+                ReadConfigurationStrings(format));
+        }
+
+        return result;
+    }
+
+    private static IReadOnlyDictionary<string, DashboardWidgetBindingSnapshot> ReadDashboardBindings(JsonObject bindings)
+    {
+        var result = new Dictionary<string, DashboardWidgetBindingSnapshot>(StringComparer.Ordinal);
+        foreach (var binding in bindings)
+        {
+            if (binding.Value is not JsonObject bindingObject)
+            {
+                continue;
+            }
+
+            var metrics = bindingObject["metrics"] as JsonArray;
+            result[binding.Key] = new DashboardWidgetBindingSnapshot(
+                binding.Key,
+                ReadString(bindingObject, "primaryMetric"),
+                ReadStringArray(metrics),
+                ReadConfigurationStrings(bindingObject["options"] as JsonObject ?? new JsonObject()));
         }
 
         return result;
@@ -816,6 +1066,79 @@ public sealed partial class FlowDefinitionComposer
 
         value = node?.ToJsonString() ?? string.Empty;
         return true;
+    }
+
+    private static IReadOnlyList<string> ReadStringArray(JsonArray? values)
+    {
+        if (values is null)
+        {
+            return [];
+        }
+
+        return values
+            .Select(static value => value is JsonValue jsonValue && jsonValue.TryGetValue<string>(out var text) ? text : null)
+            .Where(static value => !string.IsNullOrWhiteSpace(value))
+            .Select(static value => value!.Trim())
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+    }
+
+    private static IEnumerable<string> NormalizeMetricNames(IEnumerable<string>? metrics)
+    {
+        if (metrics is null)
+        {
+            yield break;
+        }
+
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var metric in metrics)
+        {
+            if (string.IsNullOrWhiteSpace(metric))
+            {
+                continue;
+            }
+
+            var normalized = metric.Trim();
+            if (seen.Add(normalized))
+            {
+                yield return normalized;
+            }
+        }
+    }
+
+    private static JsonArray CreateStringArray(IEnumerable<string> values)
+    {
+        var array = new JsonArray();
+        foreach (var value in values)
+        {
+            array.Add(value);
+        }
+
+        return array;
+    }
+
+    private static string NormalizeDashboardIdentifier(string value)
+    {
+        var chars = value
+            .Where(char.IsLetterOrDigit)
+            .ToArray();
+        if (chars.Length == 0)
+        {
+            return "widget";
+        }
+
+        return char.ToLowerInvariant(chars[0]) + new string(chars[1..]);
+    }
+
+    private static bool BindingUsesMetric(JsonObject binding, string metricName)
+    {
+        if (string.Equals(ReadString(binding, "primaryMetric"), metricName, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        return binding["metrics"] is JsonArray metrics &&
+            ReadStringArray(metrics).Contains(metricName, StringComparer.Ordinal);
     }
 
     private static int ReadInt(JsonObject obj, string propertyName, int fallback = 0)

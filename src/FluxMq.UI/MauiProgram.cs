@@ -1,3 +1,4 @@
+using FluxMq.App.Metrics;
 using FluxMq.Core.Mqtt;
 using FluxMq.Core.TopicIndex;
 using FluxMq.Components.Storage;
@@ -45,6 +46,7 @@ public static class MauiProgram
 
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddMudServices();
+        builder.Services.AddMetrics();
 
         builder.Services.AddSingleton<ITopicIndex, TopicIndex>();
         builder.Services.AddSingleton<IMqttConnectionManager, MqttConnectionManager>();
@@ -67,6 +69,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<DashboardWidgetCatalog>();
         builder.Services.AddSingleton<DashboardWidgetRegistry>();
         builder.Services.AddSingleton<DashboardMetricRegistry>();
+        builder.Services.AddSingleton<DashboardRuntimeMetrics>();
         builder.Services.AddSingleton<IFluxChartAdapter, FluxChartAdapter>();
         builder.Services.AddSingleton(ScenarioStepCatalog.Shared);
         builder.Services.AddSingleton(DashboardEventFilterCatalog.Shared);
@@ -75,6 +78,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<ProjectManagerService>();
         builder.Services.AddSingleton<LiveMqttWorkspaceService>();
         builder.Services.AddSingleton<AppThemeService>();
+        builder.Services.AddSingleton<DashboardEditorPreferenceService>();
         builder.Services.AddSingleton<DragStateService>();
         builder.Services.AddSingleton<NodeEditDialogRefreshService>();
 

@@ -1,0 +1,208 @@
+.property-grid-row {
+    align-items: center;
+    background: color-mix(in srgb, var(--flux-surface) 88%, black);
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border) 64%, transparent);
+    display: grid;
+    gap: 0;
+    grid-template-columns: var(--property-grid-name-width, 148px) minmax(0, 1fr);
+    min-height: 25px;
+    min-width: 0;
+    padding: 0;
+}
+
+.property-grid-row.has-unit {
+    grid-template-columns: var(--property-grid-name-width, 148px) minmax(0, 1fr) 38px;
+}
+
+.property-grid-row:last-child {
+    border-bottom: 0;
+}
+
+.property-grid-row.stacked {
+    align-items: stretch;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 5px;
+    padding-bottom: 7px;
+    padding-top: 7px;
+}
+
+.property-grid-row.stacked .property-grid-unit {
+    display: none;
+}
+
+.property-grid-name {
+    align-items: center;
+    align-self: stretch;
+    border-right: 1px solid color-mix(in srgb, var(--flux-border) 78%, transparent);
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 84%, var(--mud-palette-primary));
+    display: flex;
+    font-size: 11.5px;
+    font-weight: 750;
+    gap: 4px;
+    line-height: 1.2;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0 8px 0 12px;
+}
+
+.property-grid-name span:first-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.property-grid-help {
+    align-items: center;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 65%, transparent);
+    border-radius: 999px;
+    color: var(--mud-palette-primary);
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 9px;
+    height: 13px;
+    justify-content: center;
+    line-height: 1;
+    width: 13px;
+}
+
+.property-grid-value {
+    align-items: center;
+    align-self: stretch;
+    display: flex;
+    min-width: 0;
+}
+
+.property-grid-unit {
+    align-items: center;
+    align-self: stretch;
+    border-left: 1px solid color-mix(in srgb, var(--flux-border) 58%, transparent);
+    color: var(--mud-palette-primary);
+    display: flex;
+    font-size: 10.5px;
+    font-weight: 800;
+    justify-content: flex-end;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0 8px 0 4px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.property-grid-value ::deep .property-grid-input,
+.property-grid-value ::deep .property-grid-select-trigger {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 0;
+    box-sizing: border-box;
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    font-size: 11.5px;
+    font-weight: 760;
+    height: 100%;
+    min-width: 0;
+    min-height: 24px;
+    outline: 0;
+    padding: 0 8px 0 10px;
+    width: 100%;
+}
+
+.property-grid-value ::deep .property-grid-input:hover,
+.property-grid-value ::deep .property-grid-select-trigger:hover {
+    background: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-primary) 42%, var(--flux-border));
+}
+
+.property-grid-value ::deep .property-grid-input:focus,
+.property-grid-value ::deep .property-grid-select-trigger:focus {
+    border-color: color-mix(in srgb, var(--mud-palette-primary) 85%, white);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--mud-palette-primary) 35%, transparent);
+}
+
+.property-grid-value ::deep .property-grid-inline {
+    align-items: center;
+    display: flex;
+    height: 100%;
+    min-width: 0;
+    width: 100%;
+}
+
+.property-grid-value ::deep .property-grid-inline .property-grid-select-control,
+.property-grid-value ::deep .property-grid-inline .property-grid-input {
+    flex: 1 1 auto;
+}
+
+.property-grid-value ::deep .property-grid-button-group {
+    align-items: stretch;
+    display: grid;
+    gap: 0;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    height: 100%;
+    min-width: 0;
+    width: 100%;
+}
+
+.property-grid-value ::deep .property-grid-choice,
+.property-grid-value ::deep .property-grid-small-button,
+.property-grid-value ::deep .property-grid-action-button {
+    background: transparent;
+    border: 0;
+    border-left: 1px solid color-mix(in srgb, var(--flux-border) 70%, transparent);
+    color: var(--mud-palette-text-primary);
+    cursor: pointer;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 760;
+    min-height: 24px;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0 8px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.property-grid-value ::deep .property-grid-choice + .property-grid-choice,
+.property-grid-value ::deep .property-grid-action-button + .property-grid-action-button {
+    border-left: 1px solid color-mix(in srgb, var(--flux-border) 70%, transparent);
+}
+
+.property-grid-value ::deep .property-grid-choice:hover,
+.property-grid-value ::deep .property-grid-small-button:hover,
+.property-grid-value ::deep .property-grid-action-button:hover {
+    background: color-mix(in srgb, var(--mud-palette-primary) 14%, var(--flux-surface-2));
+}
+
+.property-grid-value ::deep .property-grid-choice.selected,
+.property-grid-value ::deep .property-grid-action-button.danger {
+    background: color-mix(in srgb, var(--mud-palette-primary) 11%, transparent);
+    color: var(--mud-palette-primary);
+}
+
+.property-grid-value ::deep .property-grid-action-button.danger {
+    background: color-mix(in srgb, var(--mud-palette-error) 10%, transparent);
+    color: var(--mud-palette-error);
+}
+
+.property-grid-value ::deep .property-grid-small-button {
+    flex: 0 0 26px;
+    padding: 0;
+}
+
+.property-grid-value ::deep .property-grid-cell-text {
+    color: var(--mud-palette-text-primary);
+    display: block;
+    flex: 1 1 auto;
+    font-size: 11.5px;
+    font-weight: 760;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0 8px 0 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.property-grid-value ::deep button:disabled {
+    cursor: default;
+    opacity: 0.42;
+}

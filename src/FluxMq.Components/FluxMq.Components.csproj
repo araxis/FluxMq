@@ -4,7 +4,7 @@
     <ProjectReference Include="..\FluxMq.Core\FluxMq.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(UseFluxFlowSourceReferences)' != 'true'">
     <PackageReference Include="FluxFlow.Components.Assertions" Version="$(FluxFlowComponentsAssertionsVersion)" />
     <PackageReference Include="FluxFlow.Components.Control" Version="$(FluxFlowComponentsControlVersion)" />
     <PackageReference Include="FluxFlow.Components.FileSystem" Version="$(FluxFlowComponentsFileSystemVersion)" />
@@ -18,6 +18,25 @@
     <PackageReference Include="FluxFlow.Components.Timers" Version="$(FluxFlowComponentsTimersVersion)" />
     <PackageReference Include="FluxFlow.Components.Validation" Version="$(FluxFlowComponentsValidationVersion)" />
     <PackageReference Include="FluxFlow.Engine" Version="$(FluxFlowEngineVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UseFluxFlowSourceReferences)' == 'true'">
+    <ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.Assertions\FluxFlow.Components.Assertions.csproj" />
+    <ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.Control\FluxFlow.Components.Control.csproj" />
+    <ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.FileSystem\FluxFlow.Components.FileSystem.csproj" />
+    <ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.Http\FluxFlow.Components.Http.csproj" />
+    <ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.Metrics\FluxFlow.Components.Metrics.csproj" />
+    <ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.Mqtt\FluxFlow.Components.Mqtt.csproj" />
+    <ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.Observability\FluxFlow.Components.Observability.csproj" />
+    <ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.Payloads\FluxFlow.Components.Payloads.csproj" />
+    <ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.Sessions\FluxFlow.Components.Sessions.csproj" />
+    <ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.State\FluxFlow.Components.State.csproj" />
+    <ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.Timers\FluxFlow.Components.Timers.csproj" />
+    <ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Components.Validation\FluxFlow.Components.Validation.csproj" />
+    <ProjectReference Include="$(FluxFlowSourceRoot)src\FluxFlow.Engine\FluxFlow.Engine.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="DynamicExpresso.Core" Version="2.19.3" />
     <PackageReference Include="Jsonata.Net.Native" Version="3.0.0" />
     <PackageReference Include="LiteDB" Version="5.0.21" />

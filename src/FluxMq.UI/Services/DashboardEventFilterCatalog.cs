@@ -34,18 +34,17 @@ public sealed class DashboardEventFilterCatalog
     {
         EventTypes =
         [
-            new(AnyValue, "Any event", [], AllStatusOptions),
+            new(AnyValue, "All runtime events", [], [new(AnyValue, "Any status")]),
             new(FluxMqEventTypes.MqttMessageReceived, "MQTT message received", MqttEventFields("received"), StatusOptions("received")),
             new(FluxMqEventTypes.MqttMessagePublished, "MQTT message published", MqttEventFields("published"), StatusOptions("published")),
             new(FluxMqEventTypes.MqttMessageRecorded, "MQTT message recorded", MqttEventFields("recorded"), StatusOptions("recorded")),
-            new(FluxMqEventTypes.FileWritten, "File written", [SubjectField("Path prefix", null, "Filters by written file path.")], StatusOptions("written")),
+            new(FluxMqEventTypes.FileWritten, "File written", [SubjectField("File path", "logs/", "Filters by written file path prefix.")], StatusOptions("written")),
             new(FluxMqEventTypes.JsonSchemaValidated, "JSON schema validated", [
                 TopicField("Topic prefix", "factory/line-a/", "Filters by validated message topic."),
                 AttributeField("schemaId", "Schema id", "temperature", "Filters by schema id.")
             ], StatusOptions("valid", "invalid")),
             new(FluxMqEventTypes.AssertionEvaluated, "Assertion evaluated", [
-                TopicField("Topic prefix", "factory/line-a/", "Filters by assertion event topic when present."),
-                SubjectField("Assertion name prefix", null, "Filters by assertion name.")
+                SubjectField("Assertion", null, "Filters by assertion name.")
             ], StatusOptions("passed", "failed"))
         ];
 
@@ -63,6 +62,22 @@ public sealed class DashboardEventFilterCatalog
     public DashboardEventTypeDescriptor Find(string? eventType)
         => EventTypes.FirstOrDefault(option => string.Equals(option.Value, eventType ?? AnyValue, StringComparison.Ordinal)) ??
            EventTypes[0];
+
+    public static bool ShouldExposeStatus(DashboardEventTypeDescriptor eventType)
+    {
+        ArgumentNullException.ThrowIfNull(eventType);
+
+        return eventType.StatusOptions.Count(static option => !string.IsNullOrWhiteSpace(option.Value)) > 1;
+    }
+
+    public static bool IsRedundantStatus(DashboardEventTypeDescriptor eventType, string? status)
+    {
+        ArgumentNullException.ThrowIfNull(eventType);
+
+        return !string.IsNullOrWhiteSpace(status) &&
+               !ShouldExposeStatus(eventType) &&
+               eventType.StatusOptions.Any(option => string.Equals(option.Value, status.Trim(), StringComparison.Ordinal));
+    }
 
     public static string AttributeFilterKey(string attributeName)
         => ScenarioStepConfigurationKeys.AttributeFilterKey(attributeName);

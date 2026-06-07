@@ -1,6 +1,7 @@
 @namespace FluxMq.UI.Components.Workspace
+@inject DashboardWidgetRegistry Widgets
 
-<div class="dashboard-widget @DashboardWidgetFormatting.WidgetClass(Widget)">
+<div class="dashboard-widget @DashboardWidgetFormatting.WidgetClass(Widget)" style="@DashboardWidgetFormatting.WidgetStyle(Widget)">
     <div class="dashboard-widget-header">
         <div class="dashboard-widget-icon">
             <MudIcon Icon="@DashboardWidgetFormatting.WidgetIcon(Widget)" Size="Size.Small" />
@@ -11,55 +12,13 @@
         </div>
     </div>
 
-    @if (DashboardWidgetCatalog.IsTopicTreeWidget(Widget.Type))
+    @if (Module is { } module)
     {
-        <DashboardTopicTreeWidget Widget="@Widget" />
+        <DynamicComponent Type="@ComponentType" Parameters="@ComponentParameters" />
     }
     else
     {
-        var snapshot = Project.GetDashboardEventSnapshot(Widget);
-        @switch (Widget.Type)
-        {
-            case DashboardWidgetCatalog.KpiTileType:
-            case DashboardWidgetCatalog.EventCounterType:
-                <DashboardEventCounterWidget Snapshot="@snapshot" />
-                break;
-            case DashboardWidgetCatalog.RateTileType:
-            case DashboardWidgetCatalog.EventRateType:
-                <DashboardEventRateWidget Snapshot="@snapshot" />
-                break;
-            case DashboardWidgetCatalog.EventGaugeType:
-                <DashboardEventGaugeWidget Widget="@Widget" Snapshot="@snapshot" />
-                break;
-            case DashboardWidgetCatalog.LineChartType:
-            case DashboardWidgetCatalog.AreaChartType:
-            case DashboardWidgetCatalog.BarChartType:
-            case DashboardWidgetCatalog.EventChartType:
-                <DashboardEventChartWidget Widget="@Widget" Snapshot="@snapshot" />
-                break;
-            case DashboardWidgetCatalog.StatusStripType:
-                <DashboardStatusStripWidget Widget="@Widget" Snapshot="@snapshot" />
-                break;
-            case DashboardWidgetCatalog.DonutChartType:
-            case DashboardWidgetCatalog.QosRetainBreakdownType:
-                <DashboardQosRetainBreakdownWidget Snapshot="@snapshot" />
-                break;
-            case DashboardWidgetCatalog.PayloadDistributionType:
-                <DashboardPayloadDistributionWidget Snapshot="@snapshot" />
-                break;
-            case DashboardWidgetCatalog.EventTableType:
-                <DashboardEventTableWidget Snapshot="@snapshot" />
-                break;
-            case DashboardWidgetCatalog.TopicActivityType:
-                <DashboardTopicActivityWidget Snapshot="@snapshot" />
-                break;
-            case DashboardWidgetCatalog.LatestEventType:
-                <DashboardLatestEventWidget Snapshot="@snapshot" />
-                break;
-            default:
-                <DashboardUnknownWidget Type="@Widget.Type" />
-                break;
-        }
+        <DashboardUnknownWidget Type="@Widget.Type" />
     }
 </div>
 
@@ -69,4 +28,33 @@
 
     [Parameter, EditorRequired]
     public DashboardWidgetSnapshot Widget { get; set; } = null!;
+
+    [Parameter]
+    public DashboardEventSnapshot? SnapshotOverride { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<MqttEnvelope>? TopicMessagesOverride { get; set; }
+
+    [Parameter]
+    public DashboardMetricValue? MetricValueOverride { get; set; }
+
+    [Parameter]
+    public DashboardWidgetRenderMode Mode { get; set; } = DashboardWidgetRenderMode.Live;
+
+    private DashboardWidgetModule? Module => Widgets.FindModule(Widget.Type);
+
+    private Type ComponentType => Mode == DashboardWidgetRenderMode.EditCell
+        ? Module!.EditCellComponent
+        : Module!.LiveComponent;
+
+    private IDictionary<string, object> ComponentParameters => new Dictionary<string, object>
+    {
+        ["Context"] = new DashboardWidgetRenderContext(
+            Project,
+            Widget,
+            Mode,
+            SnapshotOverride,
+            TopicMessagesOverride,
+            MetricValueOverride)
+    };
 }

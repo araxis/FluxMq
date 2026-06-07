@@ -1,0 +1,125 @@
+.property-grid {
+    --property-grid-name-width: 148px;
+    background: var(--flux-surface);
+    border-top: 1px solid var(--flux-border);
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    position: relative;
+}
+
+.property-grid.resizing,
+.property-grid.resizing * {
+    cursor: col-resize !important;
+    user-select: none;
+}
+
+.property-grid-column-resizer {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    bottom: 0;
+    cursor: col-resize;
+    left: calc(var(--property-grid-name-width) - 3px);
+    padding: 0;
+    position: absolute;
+    top: 0;
+    width: 7px;
+    z-index: 45;
+}
+
+.property-grid-column-resizer::after {
+    background: color-mix(in srgb, var(--flux-border) 82%, transparent);
+    bottom: 0;
+    content: "";
+    left: 3px;
+    position: absolute;
+    top: 0;
+    width: 1px;
+}
+
+.property-grid-column-resizer:hover::after,
+.property-grid-column-resizer:focus-visible::after,
+.property-grid.resizing .property-grid-column-resizer::after {
+    background: color-mix(in srgb, var(--mud-palette-primary) 82%, white);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--mud-palette-primary) 22%, transparent);
+}
+
+.property-grid-column-resizer:focus-visible {
+    outline: 0;
+}
+
+.property-grid-group {
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border) 78%, transparent);
+    min-width: 0;
+}
+
+.property-grid-group-header {
+    align-items: center;
+    appearance: none;
+    background: color-mix(in srgb, var(--mud-palette-primary) 9%, var(--flux-surface));
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border) 78%, transparent);
+    box-sizing: border-box;
+    color: var(--mud-palette-text-primary);
+    cursor: pointer;
+    display: grid;
+    font-size: 11px;
+    font-weight: 760;
+    gap: 0;
+    grid-template-columns: 20px calc(var(--property-grid-name-width) - 20px) minmax(0, 1fr);
+    min-height: 25px;
+    min-width: 0;
+    padding: 0;
+    text-align: left;
+    width: 100%;
+}
+
+.property-grid-group-header:hover {
+    background: color-mix(in srgb, var(--mud-palette-primary) 15%, var(--flux-surface));
+}
+
+.property-grid-group-header:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--mud-palette-primary) 70%, transparent);
+    outline-offset: -2px;
+}
+
+.property-grid-group.collapsed .property-grid-group-header {
+    border-bottom: 0;
+}
+
+.property-grid-group-toggle {
+    color: var(--mud-palette-primary);
+    font-size: 12px;
+    font-weight: 900;
+    justify-self: center;
+    line-height: 1;
+}
+
+.property-grid-group-title {
+    color: var(--mud-palette-text-primary);
+    font-size: 11.5px;
+    font-weight: 820;
+    min-width: 0;
+    overflow: hidden;
+    padding-left: 4px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.property-grid-group-count {
+    color: color-mix(in srgb, var(--mud-palette-info) 78%, var(--mud-palette-text-secondary));
+    font-size: 10.5px;
+    font-weight: 800;
+    grid-column: 3 / 4;
+    justify-self: end;
+    min-width: 0;
+    overflow: hidden;
+    padding-right: 8px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.property-grid-group-body {
+    min-width: 0;
+}

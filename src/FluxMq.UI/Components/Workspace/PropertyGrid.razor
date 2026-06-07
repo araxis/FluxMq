@@ -1,0 +1,196 @@
+@namespace FluxMq.UI.Components.Workspace
+@using System.Globalization
+
+<div class="@GridClass"
+     role="treegrid"
+     style="@GridStyle"
+     @onpointermove="@ResizeNameColumn"
+     @onpointerup="@StopNameColumnResize"
+     @onpointerleave="@StopNameColumnResize"
+     @onpointercancel="@StopNameColumnResize">
+    <button type="button"
+            class="property-grid-column-resizer"
+            role="separator"
+            title="Resize property name column"
+            aria-label="Resize property name column"
+            aria-orientation="vertical"
+            aria-valuemin="@MinNameColumnWidth"
+            aria-valuemax="@MaxNameColumnWidth"
+            aria-valuenow="@NameColumnWidthValue"
+            tabindex="0"
+            @onclick:stopPropagation="true"
+            @ondblclick="@ResetNameColumnWidth"
+            @ondblclick:stopPropagation="true"
+            @onpointerdown="@StartNameColumnResize"
+            @onpointerdown:stopPropagation="true"
+            @onkeydown="@OnNameColumnResizeKeyDown"></button>
+
+    @foreach (var group in Groups)
+    {
+        var collapsed = IsCollapsed(group);
+        <section class="property-grid-group @(collapsed ? "collapsed" : null)" @key="group.Id">
+            <button type="button"
+                    class="property-grid-group-header"
+                    aria-expanded="@(!collapsed)"
+                    @onclick="@(() => ToggleGroupAsync(group.Id))">
+                <span class="property-grid-group-toggle">@ToggleText(collapsed)</span>
+                <span class="property-grid-group-title">@group.Title</span>
+                <span class="property-grid-group-count">@FormatSettingCount(group.SettingCount)</span>
+            </button>
+            @if (!collapsed)
+            {
+                <div class="property-grid-group-body">
+                    @group.Content
+                </div>
+            }
+        </section>
+    }
+</div>
+
+@code {
+    private const double DefaultNameColumnWidth = 148;
+    private const double MinNameColumnWidth = 92;
+    private const double MaxNameColumnWidth = 230;
+
+    [Parameter]
+    public IReadOnlyList<PropertyGridGroup> Groups { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlySet<string>? CollapsedGroupIds { get; set; }
+
+    [Parameter]
+    public EventCallback<IReadOnlySet<string>> CollapsedGroupIdsChanged { get; set; }
+
+    private readonly HashSet<string> _collapsedGroups = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _initializedCollapsedGroups = new(StringComparer.Ordinal);
+    private double _nameColumnWidth = DefaultNameColumnWidth;
+    private double _resizeStartClientX;
+    private double _resizeStartNameColumnWidth;
+    private bool _isResizing;
+
+    private string GridClass => _isResizing
+        ? "property-grid resizing"
+        : "property-grid";
+
+    private string GridStyle
+        => $"--property-grid-name-width: {_nameColumnWidth.ToString("0", CultureInfo.InvariantCulture)}px;";
+
+    private string NameColumnWidthValue
+        => _nameColumnWidth.ToString("0", CultureInfo.InvariantCulture);
+
+    protected override void OnParametersSet()
+    {
+        var knownGroups = Groups.Select(static group => group.Id).ToHashSet(StringComparer.Ordinal);
+        if (CollapsedGroupIds is not null)
+        {
+            _collapsedGroups.Clear();
+            foreach (var groupId in CollapsedGroupIds)
+            {
+                if (knownGroups.Contains(groupId))
+                {
+                    _collapsedGroups.Add(groupId);
+                }
+            }
+
+            _initializedCollapsedGroups.Clear();
+            foreach (var group in Groups)
+            {
+                _initializedCollapsedGroups.Add(group.Id);
+            }
+
+            return;
+        }
+
+        _collapsedGroups.RemoveWhere(groupId => !knownGroups.Contains(groupId));
+        _initializedCollapsedGroups.RemoveWhere(groupId => !knownGroups.Contains(groupId));
+
+        foreach (var group in Groups)
+        {
+            if (group.StartCollapsed && _initializedCollapsedGroups.Add(group.Id))
+            {
+                _collapsedGroups.Add(group.Id);
+            }
+        }
+    }
+
+    private bool IsCollapsed(PropertyGridGroup group)
+        => _collapsedGroups.Contains(group.Id);
+
+    private async Task ToggleGroupAsync(string groupId)
+    {
+        if (!_collapsedGroups.Add(groupId))
+        {
+            _collapsedGroups.Remove(groupId);
+        }
+
+        _initializedCollapsedGroups.Add(groupId);
+
+        if (CollapsedGroupIdsChanged.HasDelegate)
+        {
+            await CollapsedGroupIdsChanged.InvokeAsync(_collapsedGroups.ToHashSet(StringComparer.Ordinal));
+        }
+    }
+
+    private static string ToggleText(bool collapsed)
+        => collapsed ? "+" : "-";
+
+    private static string FormatSettingCount(int count)
+        => count == 1 ? "1 setting" : $"{count} settings";
+
+    private void StartNameColumnResize(PointerEventArgs args)
+    {
+        _isResizing = true;
+        _resizeStartClientX = args.ClientX;
+        _resizeStartNameColumnWidth = _nameColumnWidth;
+    }
+
+    private void ResizeNameColumn(PointerEventArgs args)
+    {
+        if (!_isResizing)
+        {
+            return;
+        }
+
+        SetNameColumnWidth(_resizeStartNameColumnWidth + args.ClientX - _resizeStartClientX);
+    }
+
+    private void StopNameColumnResize()
+    {
+        _isResizing = false;
+    }
+
+    private void ResetNameColumnWidth()
+    {
+        SetNameColumnWidth(DefaultNameColumnWidth);
+    }
+
+    private void OnNameColumnResizeKeyDown(KeyboardEventArgs args)
+    {
+        var step = args.ShiftKey ? 16 : 8;
+        if (string.Equals(args.Key, "ArrowLeft", StringComparison.Ordinal))
+        {
+            SetNameColumnWidth(_nameColumnWidth - step);
+        }
+        else if (string.Equals(args.Key, "ArrowRight", StringComparison.Ordinal))
+        {
+            SetNameColumnWidth(_nameColumnWidth + step);
+        }
+        else if (string.Equals(args.Key, "Home", StringComparison.Ordinal))
+        {
+            SetNameColumnWidth(MinNameColumnWidth);
+        }
+        else if (string.Equals(args.Key, "End", StringComparison.Ordinal))
+        {
+            SetNameColumnWidth(MaxNameColumnWidth);
+        }
+        else if (string.Equals(args.Key, "Enter", StringComparison.Ordinal))
+        {
+            ResetNameColumnWidth();
+        }
+    }
+
+    private void SetNameColumnWidth(double value)
+    {
+        _nameColumnWidth = Math.Clamp(value, MinNameColumnWidth, MaxNameColumnWidth);
+    }
+}

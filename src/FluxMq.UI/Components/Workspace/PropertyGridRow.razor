@@ -1,0 +1,46 @@
+@namespace FluxMq.UI.Components.Workspace
+
+<div class="@RowClass" role="row">
+    <div class="property-grid-name" title="@HelpText">
+        <span>@Name</span>
+        @if (!string.IsNullOrWhiteSpace(HelpText))
+        {
+            <span class="property-grid-help" aria-label="@HelpText">?</span>
+        }
+    </div>
+    <div class="property-grid-value">
+        @ChildContent
+    </div>
+    @if (HasUnit)
+    {
+        <div class="property-grid-unit">@Unit</div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Name { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? Unit { get; set; }
+
+    [Parameter]
+    public string? HelpText { get; set; }
+
+    [Parameter]
+    public bool Stacked { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private bool HasUnit => !string.IsNullOrWhiteSpace(Unit);
+
+    private string RowClass
+    {
+        get
+        {
+            var rowClass = Stacked ? "property-grid-row stacked" : "property-grid-row";
+            return HasUnit ? $"{rowClass} has-unit" : rowClass;
+        }
+    }
+}

@@ -8,6 +8,7 @@ public sealed class DashboardWidgetCatalog
     public const string EventCounterType = "event.counter";
     public const string KpiTileType = "kpi.tile";
     public const string StatusStripType = "status.strip";
+    public const string StatusValueType = "status.value";
     public const string RateTileType = "rate.tile";
     public const string LatestEventType = "event.latest";
     public const string EventRateType = "event.rate";
@@ -21,6 +22,8 @@ public sealed class DashboardWidgetCatalog
     public const string TopicActivityType = "topic.activity";
     public const string PayloadDistributionType = "payload.size.distribution";
     public const string QosRetainBreakdownType = "qos.retain.breakdown";
+    public const string QosBreakdownType = "qos.breakdown";
+    public const string RetainBreakdownType = "retain.breakdown";
     public const string TopicTreeType = "topic.tree";
     public const string ExcludeSystemTopicsKey = "excludeSystemTopics";
     public const string PrimaryMetricKey = "primaryMetric";
@@ -28,6 +31,13 @@ public sealed class DashboardWidgetCatalog
     public const string MetricCardColumnsKey = "metricCardColumns";
     public const string GaugeStyleKey = "gaugeStyle";
     public const string ChartTypeKey = "chartType";
+    public const string MetricVisualizationKey = "visualization";
+    public const string KpiTitleColorKey = "kpi.titleColor";
+    public const string KpiSubtitleColorKey = "kpi.subtitleColor";
+    public const string KpiValueColorKey = "kpi.valueColor";
+    public const string KpiTitleAlignKey = "kpi.titleAlign";
+    public const string KpiValueAlignKey = "kpi.valueAlign";
+    public const string KpiValuePlacementKey = "kpi.valuePlacement";
     public const string MetricMessages = "messages";
     public const string MetricRecent = "recent";
     public const string MetricCurrentRate = "currentRate";
@@ -42,6 +52,15 @@ public sealed class DashboardWidgetCatalog
     public const string ChartTypeLine = "line";
     public const string ChartTypeArea = "area";
     public const string ChartTypeTopics = "topics";
+    public const string KpiAlignLeft = "left";
+    public const string KpiAlignCenter = "center";
+    public const string KpiAlignRight = "right";
+    public const string KpiValuePlacementTop = "top";
+    public const string KpiValuePlacementMiddle = "middle";
+    public const string KpiValuePlacementBottom = "bottom";
+    public const string KpiDefaultTitleColor = "#f3f7fb";
+    public const string KpiDefaultSubtitleColor = "#9fb0c5";
+    public const string KpiDefaultValueColor = "#f3f7fb";
 
     public const int DefaultMetricCardColumns = 4;
     public const int MinMetricCardColumns = 1;
@@ -90,14 +109,14 @@ public sealed class DashboardWidgetCatalog
             DashboardWidgetEditorKind.MetricTile,
             ["runtimeEvents"]),
         new(
-            StatusStripType,
-            "Status Strip",
+            StatusValueType,
+            "Status Value",
             "Metrics",
-            "Shows a dense strip of message, rate, topic, retain, and payload metrics.",
-            Icons.Material.Filled.ViewWeek,
-            "Metric strip",
-            DashboardWidgetRendererKind.StatusStrip,
-            DashboardWidgetEditorKind.StatusStrip,
+            "Shows one operational status or selected metric value.",
+            Icons.Material.Filled.Verified,
+            "Single status value",
+            DashboardWidgetRendererKind.StatusValue,
+            DashboardWidgetEditorKind.MetricTile,
             ["runtimeEvents"]),
         new(
             RateTileType,
@@ -148,16 +167,6 @@ public sealed class DashboardWidgetCatalog
             "Activity gauge",
             DashboardWidgetRendererKind.Gauge,
             DashboardWidgetEditorKind.Gauge,
-            ["runtimeEvents"]),
-        new(
-            EventChartType,
-            "Event Chart",
-            "Events",
-            "Shows matching runtime event activity over the last minute.",
-            Icons.Material.Filled.BarChart,
-            "Trend",
-            DashboardWidgetRendererKind.Chart,
-            DashboardWidgetEditorKind.Chart,
             ["runtimeEvents"]),
         new(
             LineChartType,
@@ -230,13 +239,23 @@ public sealed class DashboardWidgetCatalog
             DashboardWidgetEditorKind.Payload,
             ["runtimeEvents", "payload"]),
         new(
-            QosRetainBreakdownType,
-            "QoS / Retain Breakdown",
+            QosBreakdownType,
+            "QoS Breakdown",
             "MQTT Ops",
-            "Shows QoS and retained-message distribution for matching events.",
+            "Shows QoS distribution for matching MQTT events.",
             Icons.Material.Filled.PieChart,
-            "QoS and retain",
-            DashboardWidgetRendererKind.QosRetainBreakdown,
+            "QoS distribution",
+            DashboardWidgetRendererKind.QosBreakdown,
+            DashboardWidgetEditorKind.Breakdown,
+            ["runtimeEvents", "mqttAttributes"]),
+        new(
+            RetainBreakdownType,
+            "Retain Breakdown",
+            "MQTT Ops",
+            "Shows retained-message distribution for matching MQTT events.",
+            Icons.Material.Filled.PushPin,
+            "Retain distribution",
+            DashboardWidgetRendererKind.RetainBreakdown,
             DashboardWidgetEditorKind.Breakdown,
             ["runtimeEvents", "mqttAttributes"]),
         new(
@@ -251,15 +270,52 @@ public sealed class DashboardWidgetCatalog
             ["topicProjection"])
     ];
 
+    private readonly IReadOnlyList<DashboardWidgetDescriptor> _legacyWidgets =
+    [
+        new(
+            StatusStripType,
+            "Status Strip",
+            "Compatibility",
+            "Legacy multi-metric strip. Existing dashboards migrate to focused status values.",
+            Icons.Material.Filled.ViewWeek,
+            "Legacy metric strip",
+            DashboardWidgetRendererKind.StatusStrip,
+            DashboardWidgetEditorKind.StatusStrip,
+            ["runtimeEvents"]),
+        new(
+            EventChartType,
+            "Event Chart",
+            "Compatibility",
+            "Legacy generic chart. Existing dashboards migrate to line, area, or bar charts.",
+            Icons.Material.Filled.BarChart,
+            "Legacy chart",
+            DashboardWidgetRendererKind.Chart,
+            DashboardWidgetEditorKind.Chart,
+            ["runtimeEvents"]),
+        new(
+            QosRetainBreakdownType,
+            "QoS / Retain Breakdown",
+            "Compatibility",
+            "Legacy combined breakdown. Existing dashboards migrate to focused QoS and retain widgets.",
+            Icons.Material.Filled.PieChart,
+            "Legacy breakdown",
+            DashboardWidgetRendererKind.QosRetainBreakdown,
+            DashboardWidgetEditorKind.Breakdown,
+            ["runtimeEvents", "mqttAttributes"])
+    ];
+
     public IReadOnlyList<DashboardWidgetDescriptor> Widgets => _widgets;
 
     public DashboardWidgetDescriptor? Find(string type)
-        => _widgets.FirstOrDefault(widget => string.Equals(widget.Type, type, StringComparison.Ordinal));
+        => _widgets
+            .Concat(_legacyWidgets)
+            .FirstOrDefault(widget => string.Equals(widget.Type, type, StringComparison.Ordinal));
 
     public static bool IsEventWidget(string type)
         => string.Equals(type, EventCounterType, StringComparison.Ordinal) ||
            string.Equals(type, KpiTileType, StringComparison.Ordinal) ||
            string.Equals(type, StatusStripType, StringComparison.Ordinal) ||
+           string.Equals(type, StatusValueType, StringComparison.Ordinal) ||
            string.Equals(type, RateTileType, StringComparison.Ordinal) ||
            string.Equals(type, LatestEventType, StringComparison.Ordinal) ||
            string.Equals(type, EventRateType, StringComparison.Ordinal) ||
@@ -272,7 +328,9 @@ public sealed class DashboardWidgetCatalog
            string.Equals(type, EventTableType, StringComparison.Ordinal) ||
            string.Equals(type, TopicActivityType, StringComparison.Ordinal) ||
            string.Equals(type, PayloadDistributionType, StringComparison.Ordinal) ||
-           string.Equals(type, QosRetainBreakdownType, StringComparison.Ordinal);
+           string.Equals(type, QosRetainBreakdownType, StringComparison.Ordinal) ||
+           string.Equals(type, QosBreakdownType, StringComparison.Ordinal) ||
+           string.Equals(type, RetainBreakdownType, StringComparison.Ordinal);
 
     public static bool IsTopicTreeWidget(string type)
         => string.Equals(type, TopicTreeType, StringComparison.Ordinal);
@@ -281,6 +339,7 @@ public sealed class DashboardWidgetCatalog
         => string.Equals(type, EventGaugeType, StringComparison.Ordinal) ||
            string.Equals(type, EventChartType, StringComparison.Ordinal) ||
            string.Equals(type, StatusStripType, StringComparison.Ordinal) ||
+           string.Equals(type, StatusValueType, StringComparison.Ordinal) ||
            string.Equals(type, KpiTileType, StringComparison.Ordinal) ||
            string.Equals(type, RateTileType, StringComparison.Ordinal) ||
            string.Equals(type, LineChartType, StringComparison.Ordinal) ||
@@ -288,7 +347,9 @@ public sealed class DashboardWidgetCatalog
            string.Equals(type, BarChartType, StringComparison.Ordinal) ||
            string.Equals(type, DonutChartType, StringComparison.Ordinal) ||
            string.Equals(type, PayloadDistributionType, StringComparison.Ordinal) ||
-           string.Equals(type, QosRetainBreakdownType, StringComparison.Ordinal);
+           string.Equals(type, QosRetainBreakdownType, StringComparison.Ordinal) ||
+           string.Equals(type, QosBreakdownType, StringComparison.Ordinal) ||
+           string.Equals(type, RetainBreakdownType, StringComparison.Ordinal);
 
     public static bool IsChartWidget(string type)
         => string.Equals(type, EventChartType, StringComparison.Ordinal) ||
@@ -300,7 +361,20 @@ public sealed class DashboardWidgetCatalog
 
     public static bool IsBreakdownWidget(string type)
         => string.Equals(type, DonutChartType, StringComparison.Ordinal) ||
-           string.Equals(type, QosRetainBreakdownType, StringComparison.Ordinal);
+           string.Equals(type, QosRetainBreakdownType, StringComparison.Ordinal) ||
+           string.Equals(type, QosBreakdownType, StringComparison.Ordinal) ||
+           string.Equals(type, RetainBreakdownType, StringComparison.Ordinal);
+
+    public static string NormalizeWidgetTypeForAdd(string? type)
+        => string.IsNullOrWhiteSpace(type)
+            ? EventCounterType
+            : type.Trim() switch
+            {
+                StatusStripType => StatusValueType,
+                EventChartType => BarChartType,
+                QosRetainBreakdownType => QosBreakdownType,
+                var value => value
+            };
 
     public static IReadOnlyList<string> NormalizeDisplayMetrics(string? metrics)
         => NormalizeDisplayMetrics((metrics ?? string.Empty)
@@ -366,6 +440,29 @@ public sealed class DashboardWidgetCatalog
             ChartTypeTopics => ChartTypeTopics,
             _ => ChartTypeBars
         };
+
+    public static string NormalizeKpiHorizontalAlignment(string? value)
+        => value switch
+        {
+            KpiAlignCenter => KpiAlignCenter,
+            KpiAlignRight => KpiAlignRight,
+            _ => KpiAlignLeft
+        };
+
+    public static string NormalizeKpiValuePlacement(string? value)
+        => value switch
+        {
+            KpiValuePlacementMiddle => KpiValuePlacementMiddle,
+            KpiValuePlacementBottom => KpiValuePlacementBottom,
+            _ => KpiValuePlacementTop
+        };
+
+    public static string NormalizeMetricVisualization(string? value)
+    {
+        var normalized = NormalizeMetric(value);
+        return DashboardMetricVisualizationCatalog.Find(normalized)?.Id ??
+            DashboardMetricVisualizationIds.Value;
+    }
 
     private static string NormalizeMetric(string? value)
         => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
