@@ -974,8 +974,60 @@ public sealed class DashboardEventFilterCatalogTests
 
         inspector.ShouldNotContain("DashboardMetricSnapshot ToMetricSnapshot");
         inspector.ShouldNotContain("private static void AddIfPresent");
+        inspector.ShouldNotContain("new FluxMetricResolver");
+        inspector.ShouldNotContain("Project.GetMetricArtifact(");
         inspector.ShouldContain("DashboardMetricQueryMapper.ToDashboardMetricSnapshot");
         mapper.ShouldContain("ToDashboardMetricSnapshot");
+    }
+
+    [Fact]
+    public void DashboardMetricReferenceResolver_ResolvesAppMetricParameters()
+    {
+        var project = new FlowWorkspaceService(new FlowDefinitionComposer());
+        project.AddMetric("publishedMetric");
+        project.UpdateMetric(
+            "publishedMetric",
+            new FluxMetricArtifactDefinition
+            {
+                DisplayName = "Published metric",
+                Definition = new FluxMetricDefinition(
+                    "Published metric",
+                    FluxMetricCatalog.RuntimeEventsSource,
+                    FluxMetricCatalog.MeasureCount,
+                    "60s",
+                    eventType: FluxMqEventTypes.MqttMessagePublished,
+                    topicStartsWith: "default/",
+                    status: "published"),
+                Parameters =
+                [
+                    new FluxMetricParameterDefinition
+                    {
+                        Id = "topic",
+                        Label = "Topic",
+                        Target = FluxMetricParameterTargets.TopicStartsWith,
+                        DefaultValue = "default/"
+                    }
+                ]
+            });
+        var parameterValues = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["topic"] = "factory/line-a/"
+        };
+
+        var definition = DashboardMetricReferenceResolver.ResolveAppMetricDefinition(
+            project,
+            "publishedMetric",
+            parameterValues);
+        var snapshot = DashboardMetricReferenceResolver.ResolveAppMetricSnapshot(
+            project,
+            "publishedMetric",
+            parameterValues);
+
+        definition.ShouldNotBeNull();
+        definition.TopicStartsWith.ShouldBe("factory/line-a/");
+        snapshot.ShouldNotBeNull();
+        snapshot.ReadFilter(DashboardEventFilterCatalog.TopicStartsWithKey).ShouldBe("factory/line-a/");
+        snapshot.ReadFilter(DashboardEventFilterCatalog.EventTypeKey).ShouldBe(FluxMqEventTypes.MqttMessagePublished);
     }
 
     [Fact]

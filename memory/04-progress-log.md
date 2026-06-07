@@ -2760,3 +2760,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - First full solution run hit a transient `ScenarioRunnerTests.RunAsync_SkipsRemainingStepsWhenWhenEventDoesNotMatch` assertion; the focused rerun passed.
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed on rerun with 719 tests.
 - Next step: commit the metric mapper cleanup, then continue reducing the dashboard inspector state-loading path.
+- Dashboard metric reference resolver cleanup:
+  - Added `DashboardMetricReferenceResolver` as a thin UI-service adapter over app metric artifacts and `FluxMetricResolver`.
+  - Moved app metric definition/snapshot resolution out of `DashboardInspector`.
+  - Kept the inspector's artifact dictionary read only for metric selector options.
+  - Added tests for parameterized app metric reference resolution and inspector boundary enforcement.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardMetricReferenceResolver|FullyQualifiedName~DashboardInspector"` passed with 13 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 395 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 720 tests.
+    - `git diff --check` passed.
+- Next step: commit the metric reference resolver cleanup, then continue with a small dashboard inspector draft-loading extraction.

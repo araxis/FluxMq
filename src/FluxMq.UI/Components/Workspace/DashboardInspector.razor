@@ -194,7 +194,7 @@
             _bindingMetrics.Insert(0, metricName);
         }
 
-        var metric = CreateMetricSnapshotFromAppMetric(metricName) ??
+        var metric = DashboardMetricReferenceResolver.ResolveAppMetricSnapshot(Project, metricName, _bindingOptions) ??
             (Layout?.Metrics.TryGetValue(metricName, out var foundMetric) == true
             ? foundMetric
             : null);
@@ -797,7 +797,7 @@
         _metricDraft = IsAppMetricConsumerWidget
             ? DashboardMetricEditorDraft.Create(
                 metricName,
-                CreateMetricSnapshotFromAppMetric(metricName),
+                DashboardMetricReferenceResolver.ResolveAppMetricSnapshot(Project, metricName, _bindingOptions),
                 EventFilters,
                 MetricRegistry,
                 Widget.Type)
@@ -1253,7 +1253,7 @@
             _widgetDraft.MetricName = metricName;
         }
 
-        var metric = CreateMetricSnapshotFromAppMetric(metricName) ??
+        var metric = DashboardMetricReferenceResolver.ResolveAppMetricSnapshot(Project, metricName, _bindingOptions) ??
             (Layout?.Metrics.TryGetValue(metricName, out var foundMetric) == true
             ? foundMetric
             : null);
@@ -1265,31 +1265,10 @@
             Widget?.Type ?? DashboardWidgetCatalog.EventCounterType);
     }
 
-    private DashboardMetricSnapshot? CreateMetricSnapshotFromAppMetric(string metricName)
-    {
-        var definition = CreateAppMetricDefinition(metricName);
-        return definition is null
-            ? null
-            : DashboardMetricQueryMapper.ToDashboardMetricSnapshot(
-                metricName,
-                DashboardMetricQueryMapper.ToDashboardQuery(definition));
-    }
-
     private FluxMetricDefinition? CreateSelectedAppMetricDefinition()
         => string.IsNullOrWhiteSpace(_primaryBindingMetric)
             ? null
-            : CreateAppMetricDefinition(_primaryBindingMetric);
-
-    private FluxMetricDefinition? CreateAppMetricDefinition(string metricName)
-    {
-        var artifact = Project.GetMetricArtifact(metricName);
-        if (artifact is null)
-        {
-            return null;
-        }
-
-        return new FluxMetricResolver().Resolve(artifact, _bindingOptions);
-    }
+            : DashboardMetricReferenceResolver.ResolveAppMetricDefinition(Project, _primaryBindingMetric, _bindingOptions);
 
     private static bool IsKpiWidget(DashboardWidgetSnapshot widget)
         => string.Equals(widget.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal);
