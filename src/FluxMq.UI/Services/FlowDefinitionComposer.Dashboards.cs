@@ -1,4 +1,5 @@
 using FluxMq.App.Definitions;
+using FluxMq.App.Metrics;
 using FluxMq.UI.Models;
 using System.Text.Json.Nodes;
 
@@ -51,6 +52,7 @@ public sealed partial class FlowDefinitionComposer
         var layout = dashboard["layout"] as JsonObject ?? new JsonObject();
         var cells = layout["cells"] as JsonObject ?? new JsonObject();
         var widgets = dashboard["widgets"] as JsonObject ?? new JsonObject();
+        var appMetrics = flowApplication["metrics"] as JsonObject ?? new JsonObject();
         var metrics = dashboard["metrics"] as JsonObject ?? new JsonObject();
         var bindings = dashboard["bindings"] as JsonObject ?? new JsonObject();
 
@@ -64,7 +66,7 @@ public sealed partial class FlowDefinitionComposer
             NormalizePaddingValues(ReadPaddingValues(layout, "rowPadding"), rows.Count),
             ReadDashboardCells(cells),
             ReadDashboardWidgets(widgets),
-            ReadDashboardMetrics(metrics),
+            ReadDashboardMetrics(appMetrics, metrics),
             ReadDashboardBindings(bindings));
     }
 
@@ -168,7 +170,7 @@ public sealed partial class FlowDefinitionComposer
         var root = ParseOrCreate(json);
         var dashboard = GetOrCreateDashboardObject(GetFlowApplication(root), dashboardName);
         var metrics = GetOrCreateObject(dashboard, "metrics");
-        metrics[metricName.Trim()] = FlowDashboardDefinitionFactory.CreateMetric(query);
+        metrics[NormalizeDashboardLocalMetricName(dashboardName, metricName)] = FlowDashboardDefinitionFactory.CreateMetric(query);
         FluxMqApplicationDefinitionMigrator.MigrateRoot(root);
         return root.ToJsonString(Options);
     }
@@ -179,6 +181,15 @@ public sealed partial class FlowDefinitionComposer
         string widgetName,
         string? primaryMetric,
         IEnumerable<string> metrics)
+        => UpdateDashboardWidgetBinding(json, dashboardName, widgetName, primaryMetric, metrics, null);
+
+    public string UpdateDashboardWidgetBinding(
+        string json,
+        string dashboardName,
+        string widgetName,
+        string? primaryMetric,
+        IEnumerable<string> metrics,
+        IReadOnlyDictionary<string, string>? options)
     {
         if (string.IsNullOrWhiteSpace(dashboardName) ||
             string.IsNullOrWhiteSpace(widgetName))
@@ -201,7 +212,8 @@ public sealed partial class FlowDefinitionComposer
         bindings[widgetName.Trim()] = new JsonObject
         {
             ["primaryMetric"] = normalizedPrimary ?? string.Empty,
-            ["metrics"] = CreateStringArray(metricNames)
+            ["metrics"] = CreateStringArray(metricNames),
+            ["options"] = FlowDashboardDefinitionFactory.CreateConfiguration(options ?? new Dictionary<string, string>(StringComparer.Ordinal))
         };
 
         FluxMqApplicationDefinitionMigrator.MigrateRoot(root);
@@ -967,7 +979,37 @@ public sealed partial class FlowDefinitionComposer
         return result;
     }
 
-    private static IReadOnlyDictionary<string, DashboardMetricSnapshot> ReadDashboardMetrics(JsonObject metrics)
+    private static IReadOnlyDictionary<string, DashboardMetricSnapshot> ReadDashboardMetrics(
+        JsonObject appMetrics,
+        JsonObject dashboardMetrics)
+    {
+        var result = new Dictionary<string, DashboardMetricSnapshot>(StringComparer.Ordinal);
+        foreach (var metric in ReadAppDashboardMetrics(appMetrics))
+        {
+            result[metric.Key] = metric.Value;
+        }
+
+        foreach (var metric in ReadLegacyDashboardMetrics(dashboardMetrics))
+        {
+            result[metric.Key] = metric.Value;
+        }
+
+        return result;
+    }
+
+    private static IReadOnlyDictionary<string, DashboardMetricSnapshot> ReadAppDashboardMetrics(JsonObject metrics)
+    {
+        var result = new Dictionary<string, DashboardMetricSnapshot>(StringComparer.Ordinal);
+        foreach (var (metricName, artifact) in ReadMetricArtifacts(metrics))
+        {
+            var definition = artifact.Definition;
+            result[metricName] = ToDashboardMetricSnapshot(metricName, definition);
+        }
+
+        return result;
+    }
+
+    private static IReadOnlyDictionary<string, DashboardMetricSnapshot> ReadLegacyDashboardMetrics(JsonObject metrics)
     {
         var result = new Dictionary<string, DashboardMetricSnapshot>(StringComparer.Ordinal);
         foreach (var metric in metrics)
@@ -990,6 +1032,35 @@ public sealed partial class FlowDefinitionComposer
         }
 
         return result;
+    }
+
+    private static DashboardMetricSnapshot ToDashboardMetricSnapshot(string metricName, FluxMetricDefinition definition)
+    {
+        var filters = new Dictionary<string, string>(definition.AdditionalFilters, StringComparer.Ordinal);
+        AddIfPresent(filters, DashboardEventFilterCatalog.EventTypeKey, definition.EventType);
+        AddIfPresent(filters, DashboardEventFilterCatalog.TopicStartsWithKey, definition.TopicStartsWith);
+        AddIfPresent(filters, DashboardEventFilterCatalog.TopicNotStartsWithKey, definition.TopicNotStartsWith);
+        AddIfPresent(filters, DashboardEventFilterCatalog.StatusKey, definition.Status);
+
+        return new DashboardMetricSnapshot(
+            metricName,
+            definition.Source,
+            definition.Measure,
+            definition.Window,
+            definition.GroupBy,
+            filters,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["unit"] = definition.Format
+            });
+    }
+
+    private static void AddIfPresent(IDictionary<string, string> target, string key, string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            target[key] = value.Trim();
+        }
     }
 
     private static IReadOnlyDictionary<string, DashboardWidgetBindingSnapshot> ReadDashboardBindings(JsonObject bindings)
@@ -1128,6 +1199,15 @@ public sealed partial class FlowDefinitionComposer
         }
 
         return char.ToLowerInvariant(chars[0]) + new string(chars[1..]);
+    }
+
+    private static string NormalizeDashboardLocalMetricName(string dashboardName, string metricName)
+    {
+        var normalized = metricName.Trim();
+        var prefix = $"{dashboardName.Trim()}.";
+        return normalized.StartsWith(prefix, StringComparison.Ordinal)
+            ? normalized[prefix.Length..]
+            : normalized;
     }
 
     private static bool BindingUsesMetric(JsonObject binding, string metricName)

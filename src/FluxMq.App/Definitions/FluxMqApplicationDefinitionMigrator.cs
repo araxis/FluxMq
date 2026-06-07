@@ -88,17 +88,177 @@ public static class FluxMqApplicationDefinitionMigrator
 
             var metrics = GetOrCreateObject(dashboardObject, "metrics");
             var bindings = GetOrCreateObject(dashboardObject, "bindings");
+            var appMetrics = GetOrCreateObject(flowApplication, "metrics");
             if (dashboardObject["widgets"] is JsonObject widgets)
             {
                 foreach (var widget in widgets)
                 {
                     if (widget.Value is JsonObject widgetObject)
                     {
-                        EnsureDashboardWidgetBinding(widget.Key, widgetObject, metrics, bindings);
+                        EnsureDashboardWidgetBinding(widget.Key, widgetObject, metrics, bindings, appMetrics);
+                    }
+                }
+            }
+
+            PromoteDashboardMetrics(flowApplication, dashboard.Key, dashboardObject, metrics, bindings);
+        }
+    }
+
+    private static void PromoteDashboardMetrics(
+        JsonObject flowApplication,
+        string dashboardName,
+        JsonObject dashboard,
+        JsonObject dashboardMetrics,
+        JsonObject bindings)
+    {
+        if (dashboardMetrics.Count == 0)
+        {
+            return;
+        }
+
+        var appMetrics = GetOrCreateObject(flowApplication, "metrics");
+        var promotedNames = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var metric in dashboardMetrics)
+        {
+            if (metric.Value is not JsonObject metricObject)
+            {
+                continue;
+            }
+
+            var promotedName = MakeMetricArtifactName(dashboardName, metric.Key);
+            promotedNames[metric.Key] = promotedName;
+            appMetrics[promotedName] = CreateMetricArtifact(promotedName, metric.Key, metricObject);
+        }
+
+        if (promotedNames.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var binding in bindings)
+        {
+            if (binding.Value is not JsonObject bindingObject)
+            {
+                continue;
+            }
+
+            if (ReadString(bindingObject, "primaryMetric") is { } primaryMetric &&
+                promotedNames.TryGetValue(primaryMetric, out var promotedPrimary))
+            {
+                bindingObject["primaryMetric"] = promotedPrimary;
+            }
+
+            if (bindingObject["metrics"] is JsonArray metricArray)
+            {
+                for (var index = 0; index < metricArray.Count; index++)
+                {
+                    if (metricArray[index] is JsonValue value &&
+                        value.TryGetValue<string>(out var metricName) &&
+                        promotedNames.TryGetValue(metricName, out var promotedMetric))
+                    {
+                        metricArray[index] = promotedMetric;
                     }
                 }
             }
         }
+
+        if (dashboard["widgets"] is JsonObject widgets)
+        {
+            foreach (var widget in widgets)
+            {
+                if (widget.Value is not JsonObject widgetObject ||
+                    widgetObject["configuration"] is not JsonObject configuration ||
+                    ReadString(configuration, "metric") is not { } metricName ||
+                    !promotedNames.TryGetValue(metricName, out var promotedMetric))
+                {
+                    continue;
+                }
+
+                configuration["metric"] = promotedMetric;
+            }
+        }
+
+        dashboard.Remove("metrics");
+    }
+
+    private static JsonObject CreateMetricArtifact(
+        string promotedName,
+        string localMetricName,
+        JsonObject metric)
+    {
+        var filters = metric["filters"] as JsonObject ?? new JsonObject();
+        var format = metric["format"] as JsonObject ?? new JsonObject();
+        var additionalFilters = new JsonObject();
+        foreach (var filter in filters)
+        {
+            if (IsCoreMetricFilter(filter.Key))
+            {
+                continue;
+            }
+
+            if (filter.Value?.DeepClone() is { } value)
+            {
+                additionalFilters[filter.Key] = value;
+            }
+        }
+
+        return new JsonObject
+        {
+            ["version"] = 1,
+            ["displayName"] = ToDisplayName(localMetricName),
+            ["description"] = string.Empty,
+            ["definition"] = new JsonObject
+            {
+                ["name"] = ToDisplayName(localMetricName),
+                ["source"] = ReadString(metric, "source") ?? "runtimeEvents",
+                ["measure"] = ReadString(metric, "aggregation") ?? "count",
+                ["window"] = ReadString(metric, "window") ?? "60s",
+                ["eventType"] = ReadString(filters, "eventType"),
+                ["topicStartsWith"] = ReadString(filters, "topicStartsWith"),
+                ["topicNotStartsWith"] = ReadString(filters, "topicNotStartsWith"),
+                ["status"] = ReadString(filters, "status"),
+                ["groupBy"] = ReadString(metric, "groupBy"),
+                ["format"] = ReadString(format, "unit") ?? "number",
+                ["additionalFilters"] = additionalFilters,
+                ["labels"] = new JsonObject(),
+                ["exportPolicy"] = new JsonObject
+                {
+                    ["enabled"] = false
+                },
+                ["mode"] = "builder"
+            },
+            ["parameters"] = new JsonArray(),
+            ["labels"] = new JsonObject
+            {
+                ["promotedFrom"] = promotedName
+            },
+            ["exportPolicy"] = new JsonObject
+            {
+                ["enabled"] = false
+            }
+        };
+    }
+
+    private static bool IsCoreMetricFilter(string key)
+        => string.Equals(key, "eventType", StringComparison.Ordinal) ||
+           string.Equals(key, "topicStartsWith", StringComparison.Ordinal) ||
+           string.Equals(key, "topicNotStartsWith", StringComparison.Ordinal) ||
+           string.Equals(key, "status", StringComparison.Ordinal);
+
+    private static string MakeMetricArtifactName(string dashboardName, string metricName)
+    {
+        var prefix = $"{dashboardName}.";
+        if (metricName.StartsWith(prefix, StringComparison.Ordinal))
+        {
+            return metricName;
+        }
+
+        var text = $"{dashboardName}.{metricName}".Trim();
+        var result = new string(text
+            .Select(static character => char.IsLetterOrDigit(character) || character is '.' or '_' or '-' ? character : '-')
+            .ToArray())
+            .Trim('.', '_', '-');
+        return string.IsNullOrWhiteSpace(result) ? "metric" : result;
     }
 
     private static void EnsureDashboardResponsiveDefinition(JsonObject dashboard, JsonObject layout)
@@ -343,7 +503,8 @@ public static class FluxMqApplicationDefinitionMigrator
         string widgetName,
         JsonObject widget,
         JsonObject metrics,
-        JsonObject bindings)
+        JsonObject bindings,
+        JsonObject appMetrics)
     {
         var configuration = GetOrCreateObject(widget, "configuration");
         var metricName = ReadString(configuration, "metric");
@@ -353,7 +514,7 @@ public static class FluxMqApplicationDefinitionMigrator
             configuration["metric"] = metricName;
         }
 
-        if (!metrics.ContainsKey(metricName))
+        if (!metrics.ContainsKey(metricName) && !appMetrics.ContainsKey(metricName))
         {
             metrics[metricName] = CreateMetricFromWidget(widget, configuration);
         }
@@ -714,6 +875,15 @@ public static class FluxMqApplicationDefinitionMigrator
         => string.IsNullOrWhiteSpace(value)
             ? "Phase"
             : char.ToUpperInvariant(value[0]) + value[1..];
+
+    private static string ToDisplayName(string value)
+        => string.IsNullOrWhiteSpace(value)
+            ? "Metric"
+            : value
+                .Replace('.', ' ')
+                .Replace('_', ' ')
+                .Replace('-', ' ')
+                .Trim();
 
     private static int PhaseOrder(string phaseName)
         => DefaultPhases.FirstOrDefault(phase => string.Equals(phase.Name, phaseName, StringComparison.Ordinal)).Order;

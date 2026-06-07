@@ -3,6 +3,7 @@ using FluxMq.Components.JsonSchema;
 using FluxMq.Components.MqttPayloadInspector;
 using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
+using FluxMq.Core.Metrics;
 using FluxMq.Core.Models;
 using FluxFlow.Components.Http.Contracts;
 using FluxFlow.Components.Payloads.Contracts;
@@ -19,6 +20,11 @@ internal static class FlowControlLogShape
         {
             parts.Add($"qos={(int)envelope.QualityOfService}");
             parts.Add($"retain={envelope.Retain}");
+        }
+        else if (value is FluxMetricReading<double> reading)
+        {
+            parts.Add($"metricId={reading.MetricId}");
+            parts.Add($"value={reading.Value:0.###}");
         }
 
         return string.Join("; ", parts);
@@ -38,6 +44,7 @@ internal static class FlowControlLogShape
             HttpRequestInput request => (request.Url, request.Bytes?.Length ?? ByteCount(request.Body)),
             HttpResponseOutput response => (response.Url, response.BodyBytes.Length),
             HttpErrorOutput error => (error.Url, null),
+            FluxMetricReading<double> reading => (reading.MetricId, null),
             _ => (null, null)
         };
 

@@ -138,6 +138,37 @@
         </MudMenu>
 
         <MudMenu Dense="true"
+                 Label="@($"Metrics ({active.MetricNames.Count})")"
+                 StartIcon="@Icons.Material.Filled.QueryStats"
+                 EndIcon="@Icons.Material.Filled.ExpandMore"
+                 Size="Size.Small"
+                 Variant="Variant.Text"
+                 Class="app-structure-menu"
+                 PopoverClass="app-structure-popover"
+                 AnchorOrigin="Origin.BottomLeft"
+                 TransformOrigin="Origin.TopLeft">
+            <ChildContent>
+                @if (active.MetricNames.Count == 0)
+                {
+                    <MudMenuItem Disabled="true" Class="app-menu-muted">No metrics</MudMenuItem>
+                }
+                else
+                {
+                    <MudMenuItem Icon="@Icons.Material.Filled.QueryStats"
+                                 OnClick="@(() => SelectMetrics(active))"
+                                 Class="@ArtifactItemClass(active, WorkspaceArtifactKind.Metrics, "Metrics")">
+                        Open Metric Designer
+                    </MudMenuItem>
+                }
+
+                <MudDivider Class="app-menu-divider" />
+                <MudMenuItem Icon="@Icons.Material.Filled.Add"
+                             OnClick="@(() => AddMetricAsync(active))"
+                             Class="app-menu-child app-menu-add">Add metric</MudMenuItem>
+            </ChildContent>
+        </MudMenu>
+
+        <MudMenu Dense="true"
                  Label="@($"Tests ({active.TestNames.Count})")"
                  StartIcon="@Icons.Material.Filled.FactCheck"
                  EndIcon="@Icons.Material.Filled.ExpandMore"
@@ -206,6 +237,7 @@
         var artifact = app.ActiveArtifactKind switch
         {
             WorkspaceArtifactKind.Dashboard => app.ActiveDashboardName,
+            WorkspaceArtifactKind.Metrics => "Metrics",
             WorkspaceArtifactKind.Test => app.ActiveTestName,
             WorkspaceArtifactKind.Topics => "Topics",
             WorkspaceArtifactKind.Logs => "Logs",
@@ -215,6 +247,7 @@
         var prefix = app.ActiveArtifactKind switch
         {
             WorkspaceArtifactKind.Dashboard => "dashboard",
+            WorkspaceArtifactKind.Metrics => "metrics",
             WorkspaceArtifactKind.Test => "test",
             WorkspaceArtifactKind.Topics => "page",
             WorkspaceArtifactKind.Logs => "page",
@@ -231,6 +264,7 @@
         var parts = new[]
         {
             CountLabel(app.WorkflowNames.Count, "pipeline"),
+            CountLabel(app.MetricNames.Count, "metric"),
             CountLabel(app.DashboardNames.Count, "dashboard"),
             CountLabel(app.TestNames.Count, "test")
         };
@@ -298,6 +332,12 @@
     {
         Projects.SetActive(app);
         app.SetActiveDashboard(name);
+    }
+
+    private void SelectMetrics(FlowWorkspaceService app)
+    {
+        Projects.SetActive(app);
+        app.SetActiveMetrics();
     }
 
     private void SelectTest(FlowWorkspaceService app, string name)
@@ -385,6 +425,23 @@
         if (result is { Canceled: false, Data: string name } && !string.IsNullOrWhiteSpace(name))
         {
             app.AddDashboard(name.Trim());
+        }
+    }
+
+    private async Task AddMetricAsync(FlowWorkspaceService app)
+    {
+        Projects.SetActive(app);
+        var dialog = await DialogService.ShowAsync<NewPipelineDialog>(
+            "New Metric",
+            new DialogParameters
+            {
+                [nameof(NewPipelineDialog.Title)] = "New Metric"
+            });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string name } && !string.IsNullOrWhiteSpace(name))
+        {
+            app.AddMetric(name.Trim());
+            app.SetActiveMetrics();
         }
     }
 

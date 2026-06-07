@@ -109,8 +109,9 @@ public sealed class FlowDefinitionComposerTests
         var catalog = new FlowComponentCatalog();
 
         var router = catalog.Find("flow.when").ShouldNotBeNull();
-        router.Ports.ShouldContain(port => port.Name == "WhenTrue" && port.ValueType == "MqttEnvelope" && !port.IsInput);
-        router.Ports.ShouldContain(port => port.Name == "WhenFalse" && port.ValueType == "MqttEnvelope" && !port.IsInput);
+        router.Ports.ShouldContain(port => port.Name == "Input" && port.ValueType == "Configured input type" && port.IsInput);
+        router.Ports.ShouldContain(port => port.Name == "WhenTrue" && port.ValueType == "Configured input type" && !port.IsInput);
+        router.Ports.ShouldContain(port => port.Name == "WhenFalse" && port.ValueType == "Configured input type" && !port.IsInput);
         router.Ports.ShouldNotContain(port => port.Name == "Entries");
 
         var validator = catalog.Find("json.schema-validator").ShouldNotBeNull();
@@ -1379,9 +1380,9 @@ public sealed class FlowDefinitionComposerTests
         layout.Widgets.Keys.ShouldBe(["eventCounter"]);
         layout.Widgets["eventCounter"].Type.ShouldBe("event.counter");
         layout.Widgets["eventCounter"].Configuration.Keys.ShouldBe(["title", "metric"], ignoreOrder: true);
-        layout.Widgets["eventCounter"].Configuration["metric"].ShouldBe("eventCounterMetric");
-        layout.Metrics["eventCounterMetric"].Aggregation.ShouldBe("count");
-        layout.Bindings["eventCounter"].PrimaryMetric.ShouldBe("eventCounterMetric");
+        layout.Widgets["eventCounter"].Configuration["metric"].ShouldBe("ops.eventCounterMetric");
+        layout.Metrics["ops.eventCounterMetric"].Aggregation.ShouldBe("count");
+        layout.Bindings["eventCounter"].PrimaryMetric.ShouldBe("ops.eventCounterMetric");
 
         var cell = layout.Cells.ShouldHaveSingleItem();
         cell.Row.ShouldBe(0);
@@ -1403,9 +1404,9 @@ public sealed class FlowDefinitionComposerTests
         widget.Type.ShouldBe(DashboardWidgetCatalog.EventRateType);
         widget.Configuration["title"].ShouldBe("Event rate");
         widget.Configuration.Keys.ShouldBe(["title", "metric"], ignoreOrder: true);
-        widget.Configuration["metric"].ShouldBe("eventRateMetric");
-        layout.Metrics["eventRateMetric"].Aggregation.ShouldBe("rate");
-        layout.Bindings["eventRate"].PrimaryMetric.ShouldBe("eventRateMetric");
+        widget.Configuration["metric"].ShouldBe("ops.eventRateMetric");
+        layout.Metrics["ops.eventRateMetric"].Aggregation.ShouldBe("rate");
+        layout.Bindings["eventRate"].PrimaryMetric.ShouldBe("ops.eventRateMetric");
         layout.Cells.ShouldContain(cell => cell.Widget == "eventRate");
     }
 

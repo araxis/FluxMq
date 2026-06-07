@@ -2,6 +2,7 @@ using FluxMq.Components.FileWriter;
 using FluxMq.Components.Mapping;
 using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
+using FluxMq.Core.Metrics;
 using FluxMq.Core.Models;
 using FluxFlow.Components.Http.Contracts;
 using FluxFlow.Components.Payloads.Contracts;
@@ -102,6 +103,14 @@ public static class DynamicMapperWorkbenchPreview
                     ["cron"] = "0 12 * * MON-FRI",
                     ["timeZoneId"] = "UTC",
                     ["driftMilliseconds"] = 0
+                },
+                JsonOptions),
+            "NumberMetricReading" => JsonSerializer.Serialize(
+                new Dictionary<string, object?>
+                {
+                    ["metricId"] = "messageRate",
+                    ["timestamp"] = DateTimeOffset.Parse("2026-05-23T10:00:00Z"),
+                    ["value"] = 42.5
                 },
                 JsonOptions),
             _ => InputJson(envelope)
@@ -256,6 +265,13 @@ public static class DynamicMapperWorkbenchPreview
                 new("cron", "cron", "cron", "0 12 * * MON-FRI"),
                 new("timeZoneId", "timeZoneId", "timeZoneId", "UTC"),
                 new("driftMilliseconds", "driftMilliseconds", "driftMilliseconds", "0")
+            ],
+            "NumberMetricReading" =>
+            [
+                new("metricId", "metricId", "metricId", "messageRate"),
+                new("value", "value", "value", "42.5"),
+                new("timestamp", "timestamp", "timestamp", "2026-05-23T10:00:00.0000000Z"),
+                new("reading", "reading", "reading", "{...}")
             ],
             _ => Variables(envelope)
         };
@@ -511,7 +527,16 @@ public static class DynamicMapperWorkbenchPreview
         {
             "TimerTick" => TimerTickExpressionContextFactory.Create(FallbackTimerTick()),
             "ScheduleTick" => ScheduleTickExpressionContextFactory.Create(FallbackScheduleTick()),
+            "NumberMetricReading" => new MetricReadingFlowMapContextFactory().Create(FallbackMetricReading()),
             _ => MqttEnvelopeExpressionContextFactory.Create(envelope)
+        };
+
+    private static FluxMetricReading<double> FallbackMetricReading()
+        => new()
+        {
+            MetricId = "messageRate",
+            Timestamp = DateTimeOffset.Parse("2026-05-23T10:00:00Z"),
+            Value = 42.5
         };
 
     private static TimerTick FallbackTimerTick()

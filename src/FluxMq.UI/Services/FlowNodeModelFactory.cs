@@ -8,6 +8,7 @@ using FluxMq.UI.Components.Workspace.Nodes.Http;
 using FluxMq.UI.Components.Workspace.Nodes.JsonSchemaValidator;
 using FluxMq.UI.Components.Workspace.Nodes.MessageFilter;
 using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
+using FluxMq.UI.Components.Workspace.Nodes.MetricSource;
 using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
 using FluxMq.UI.Components.Workspace.Nodes.Payloads;
 using FluxMq.UI.Components.Workspace.Nodes.PayloadInspector;
@@ -46,6 +47,7 @@ public static class FlowNodeModelFactory
         "flow.mapper" => new DynamicMapperNodeModel(id, position, nodeName, descriptor, isResource),
         "state.reducer" => new StateReducerNodeModel(id, position, nodeName, descriptor, isResource),
         "generated.source" => new GeneratedSourceNodeModel(id, position, nodeName, descriptor, isResource),
+        "metric.source" => new MetricSourceNodeModel(id, position, nodeName, descriptor, isResource),
         "replay.source" => new ReplaySourceNodeModel(id, position, nodeName, descriptor, isResource),
         "session.source" => new SessionSourceNodeModel(id, position, nodeName, descriptor, isResource),
         "mqtt.publisher" => new MqttPublisherNodeModel(id, position, nodeName, descriptor, isResource),

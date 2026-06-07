@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using FluxMq.App.Metrics;
 using EngineApplicationDefinitionJson = FluxFlow.Engine.Definitions.ApplicationDefinitionJson;
 
 namespace FluxMq.App.Definitions;
@@ -10,6 +11,8 @@ public static class FluxMqApplicationDefinitionJson
     {
         var options = EngineApplicationDefinitionJson.CreateSerializerOptions();
         options.Converters.Add(new DashboardGridTrackDefinitionJsonConverter());
+        options.Converters.Add(new JsonStringEnumConverter<MetricDefinitionMode>(JsonNamingPolicy.CamelCase));
+        options.Converters.Add(new JsonStringEnumConverter<FluxMetricInstrumentKind>(JsonNamingPolicy.CamelCase));
         return options;
     }
 

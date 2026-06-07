@@ -1,3 +1,4 @@
+using FluxMq.UI.Components.Workspace.Nodes.ConditionRouter;
 using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
 using FluxMq.UI.Components.Workspace.Nodes.FlowAssertion;
 using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
@@ -183,12 +184,12 @@ public static class FlowComponentMetadataRegistry
             "Splits inputs into true and false branches.",
             FlowDefinitionComposer.RouterNodeName,
             [
-                new("Input", "MqttEnvelope", IsInput: true),
-                new("WhenTrue", "MqttEnvelope", IsInput: false),
-                new("WhenFalse", "MqttEnvelope", IsInput: false),
+                new("Input", "Configured input type", IsInput: true),
+                new("WhenTrue", "Configured input type", IsInput: false),
+                new("WhenFalse", "Configured input type", IsInput: false),
                 new("Errors", "FlowError", IsInput: false)
             ],
-            createDefaultConfiguration: _ => CreateConditionRouterConfiguration()),
+            createDefaultConfiguration: context => CreateConditionRouterConfiguration(context.DefaultInputType)),
         Component(
             RoutingNodeTypes.Switch,
             "Switch",
@@ -313,6 +314,18 @@ public static class FlowComponentMetadataRegistry
             ],
             makePreferredNodeNameUnique: true,
             createDefaultConfiguration: context => CreateDynamicMapperConfiguration("MqttPublishRequest", context.DefaultInputType)),
+        Component(
+            "metric.source",
+            "Metric Source",
+            "Source",
+            "Streams readings from a reusable app metric into a pipeline.",
+            "metricSource",
+            [
+                new("Output", "NumberMetricReading", IsInput: false),
+                new("Errors", "FlowError", IsInput: false)
+            ],
+            makePreferredNodeNameUnique: true,
+            createDefaultConfiguration: _ => CreateMetricSourceConfiguration()),
         Component(
             "state.reducer",
             "State Reducer",
@@ -486,12 +499,16 @@ public static class FlowComponentMetadataRegistry
             """
         };
 
-    private static JsonObject CreateConditionRouterConfiguration()
-        => new()
+    private static JsonObject CreateConditionRouterConfiguration(string inputType = "MqttEnvelope")
+    {
+        var normalizedInputType = ConditionRouterNodeModel.NormalizeInputType(inputType);
+        return new()
         {
-            ["expression"] = "qos >= 1",
+            ["inputType"] = normalizedInputType,
+            ["expression"] = ConditionRouterNodeModel.DefaultExpression(normalizedInputType),
             ["boundedCapacity"] = 1000
         };
+    }
 
     private static JsonObject CreateRoutingSwitchConfiguration(string inputType = RoutingSwitchNodeModel.DefaultInputType)
     {
@@ -697,6 +714,15 @@ public static class FlowComponentMetadataRegistry
             ["rateWindowSeconds"] = MqttMetricsNodeModel.DefaultRateWindowSeconds,
             ["metricCardColumns"] = MqttMetricsNodeModel.DefaultMetricCardColumns,
             ["displayMetrics"] = MqttMetricsNodeModel.BuildDisplayMetrics(MqttMetricsNodeModel.DefaultDisplayMetrics)
+        };
+
+    private static JsonObject CreateMetricSourceConfiguration()
+        => new()
+        {
+            ["metricId"] = string.Empty,
+            ["parameters"] = new JsonObject(),
+            ["emitLatestOnStart"] = true,
+            ["boundedCapacity"] = 1000
         };
 
     private static JsonObject CreateHttpRequestConfiguration()

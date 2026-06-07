@@ -2,15 +2,18 @@
 @inject DashboardWidgetRegistry Widgets
 
 <div class="dashboard-widget @DashboardWidgetFormatting.WidgetClass(Widget)" style="@DashboardWidgetFormatting.WidgetStyle(Widget)">
-    <div class="dashboard-widget-header">
-        <div class="dashboard-widget-icon">
-            <MudIcon Icon="@DashboardWidgetFormatting.WidgetIcon(Widget)" Size="Size.Small" />
+    @if (!VisualOwnsHeader)
+    {
+        <div class="dashboard-widget-header">
+            <div class="dashboard-widget-icon">
+                <MudIcon Icon="@DashboardWidgetFormatting.WidgetIcon(Widget)" Size="Size.Small" />
+            </div>
+            <div class="dashboard-widget-title-block">
+                <span class="dashboard-widget-title">@DashboardWidgetFormatting.WidgetTitle(Widget)</span>
+                <span class="dashboard-widget-subtitle">@DashboardWidgetFormatting.WidgetSubtitle(Widget)</span>
+            </div>
         </div>
-        <div class="dashboard-widget-title-block">
-            <span class="dashboard-widget-title">@DashboardWidgetFormatting.WidgetTitle(Widget)</span>
-            <span class="dashboard-widget-subtitle">@DashboardWidgetFormatting.WidgetSubtitle(Widget)</span>
-        </div>
-    </div>
+    }
 
     @if (Module is { } module)
     {
@@ -46,6 +49,12 @@
     private Type ComponentType => Mode == DashboardWidgetRenderMode.EditCell
         ? Module!.EditCellComponent
         : Module!.LiveComponent;
+
+    private bool VisualOwnsHeader =>
+        string.Equals(Widget.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal) ||
+        string.Equals(Widget.Type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal) ||
+        string.Equals(Widget.Type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal) ||
+        string.Equals(Widget.Type, DashboardWidgetCatalog.RateTileType, StringComparison.Ordinal);
 
     private IDictionary<string, object> ComponentParameters => new Dictionary<string, object>
     {

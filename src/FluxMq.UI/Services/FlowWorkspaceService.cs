@@ -2,6 +2,7 @@ using FluxMq.App;
 using FluxMq.App.Scenarios;
 using FluxMq.App.Metrics;
 using FluxMq.Core.Ids;
+using FluxMq.Core.Metrics;
 using FluxMq.Components.MqttMetrics;
 using FluxMq.Components.MqttPayloadInspector;
 using FluxMq.Components.MessageSource;
@@ -44,6 +45,7 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
     private readonly Func<MqttConnectionProfile, IMqttBrokerClient>? _runtimeClientFactory;
     private readonly DashboardEventFilterCatalog _dashboardEventFilters;
     private readonly DashboardMetricRegistry _dashboardMetricRegistry = new();
+    private readonly FluxMetricResolver _metricResolver = new();
     private readonly DashboardRuntimeMetrics? _runtimeMetrics;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly object _logSync = new();
@@ -109,6 +111,7 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
     public IReadOnlyList<ScenarioRunResult> ScenarioRunHistory { get; private set; } = [];
 
     public IReadOnlyList<string> WorkflowNames => _definitionComposer.GetWorkflowNames(DefinitionJson);
+    public IReadOnlyList<string> MetricNames => _definitionComposer.GetMetricNames(DefinitionJson);
     public IReadOnlyList<string> DashboardNames => _definitionComposer.GetDashboardNames(DefinitionJson);
     public IReadOnlyList<string> TestNames => _definitionComposer.GetTestNames(DefinitionJson);
     public string? ActiveWorkflowName => _activeWorkflowName;
@@ -120,6 +123,7 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
     public string? ActiveArtifactName => _activeArtifactKind switch
     {
         WorkspaceArtifactKind.Pipeline => _activeWorkflowName,
+        WorkspaceArtifactKind.Metrics => "Metrics",
         WorkspaceArtifactKind.Dashboard => _activeDashboardName,
         WorkspaceArtifactKind.Test => _activeTestName,
         WorkspaceArtifactKind.Topics => "Topics",
@@ -186,6 +190,11 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
 
     public DashboardMetricValue GetDashboardMetricValue(DashboardWidgetSnapshot widget)
     {
+        if (TryGetDashboardMetricReadingValue(widget, out var readingValue))
+        {
+            return readingValue;
+        }
+
         var snapshot = GetDashboardEventSnapshot(widget);
         var metric = ResolveDashboardMetric(widget);
         if (metric is null)
@@ -197,6 +206,29 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
         }
 
         return _dashboardMetricRegistry.Evaluate(ToDashboardMetricQuery(metric), snapshot);
+    }
+
+    public bool TryGetLatestMetricReading(
+        string? metricId,
+        IReadOnlyDictionary<string, string>? parameters,
+        out FluxMetricReading<double> reading)
+    {
+        if (string.IsNullOrWhiteSpace(metricId) || _host is null)
+        {
+            reading = default!;
+            return false;
+        }
+
+        try
+        {
+            _host.MetricRuntimeHost.GetNumberStream(metricId.Trim(), parameters);
+            return _host.MetricRuntimeHost.TryGetLatestNumber(metricId.Trim(), parameters, out reading);
+        }
+        catch
+        {
+            reading = default!;
+            return false;
+        }
     }
 
     public void RecordManualMqttPublish(
@@ -307,6 +339,19 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
         NotifyChanged();
     }
 
+    public void SetActiveMetrics()
+    {
+        if (_activeArtifactKind == WorkspaceArtifactKind.Metrics)
+        {
+            return;
+        }
+
+        ActiveDashboardCellName = null;
+        IsActiveDashboardLive = false;
+        _activeArtifactKind = WorkspaceArtifactKind.Metrics;
+        NotifyChanged();
+    }
+
     public void SetActiveDashboard(string name)
     {
         if (string.Equals(_activeDashboardName, name, StringComparison.Ordinal) &&
@@ -395,6 +440,128 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
             State = RuntimeWorkspaceState.Faulted;
             Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "WorkflowAddFailed", exception.Message)];
         }
+        NotifyChanged();
+    }
+
+    public void AddMetric(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return;
+        try
+        {
+            ReplaceDefinition(_definitionComposer.AddMetric(DefinitionJson, name));
+            ActiveDashboardCellName = null;
+            IsActiveDashboardLive = false;
+            _activeArtifactKind = WorkspaceArtifactKind.Metrics;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Metrics", "MetricAddFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
+    public IReadOnlyDictionary<string, FluxMetricArtifactDefinition> GetMetricArtifacts()
+        => _definitionComposer.GetMetricArtifacts(DefinitionJson);
+
+    public FluxMetricArtifactDefinition? GetMetricArtifact(string metricName)
+        => _definitionComposer.GetMetricArtifact(DefinitionJson, metricName);
+
+    public int CountMetricReferences(string metricName)
+        => _definitionComposer.CountMetricReferences(DefinitionJson, metricName);
+
+    public void UpdateMetric(string metricName, FluxMetricArtifactDefinition metric)
+    {
+        if (string.IsNullOrWhiteSpace(metricName))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.UpdateMetric(DefinitionJson, metricName, metric));
+            _activeArtifactKind = WorkspaceArtifactKind.Metrics;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Metrics", "MetricUpdateFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
+    public void DuplicateMetric(string metricName)
+    {
+        if (string.IsNullOrWhiteSpace(metricName))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.DuplicateMetric(DefinitionJson, metricName));
+            _activeArtifactKind = WorkspaceArtifactKind.Metrics;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Metrics", "MetricDuplicateFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
+    public void RenameMetric(string currentName, string nextName)
+    {
+        if (string.IsNullOrWhiteSpace(currentName) || string.IsNullOrWhiteSpace(nextName))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.RenameMetric(DefinitionJson, currentName, nextName));
+            _activeArtifactKind = WorkspaceArtifactKind.Metrics;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Metrics", "MetricRenameFailed", exception.Message)];
+        }
+
+        NotifyChanged();
+    }
+
+    public void RemoveMetric(string metricName)
+    {
+        if (string.IsNullOrWhiteSpace(metricName))
+        {
+            return;
+        }
+
+        try
+        {
+            ReplaceDefinition(_definitionComposer.RemoveMetric(DefinitionJson, metricName));
+            _activeArtifactKind = WorkspaceArtifactKind.Metrics;
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Metrics", "MetricRemoveFailed", exception.Message)];
+        }
+
         NotifyChanged();
     }
 
@@ -570,6 +737,13 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
     }
 
     public void UpdateDashboardWidgetBinding(string widgetName, string? primaryMetric, IEnumerable<string> metrics)
+        => UpdateDashboardWidgetBinding(widgetName, primaryMetric, metrics, null);
+
+    public void UpdateDashboardWidgetBinding(
+        string widgetName,
+        string? primaryMetric,
+        IEnumerable<string> metrics,
+        IReadOnlyDictionary<string, string>? options)
     {
         if (string.IsNullOrWhiteSpace(_activeDashboardName) ||
             string.IsNullOrWhiteSpace(widgetName))
@@ -584,7 +758,8 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
                 _activeDashboardName,
                 widgetName,
                 primaryMetric,
-                metrics));
+                metrics,
+                options));
             _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
             State = RuntimeWorkspaceState.Idle;
             Diagnostics = [];
@@ -2509,7 +2684,7 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
             _activeTestName = tests.FirstOrDefault();
         }
 
-        if (_activeArtifactKind is WorkspaceArtifactKind.Logs or WorkspaceArtifactKind.Topics)
+        if (_activeArtifactKind is WorkspaceArtifactKind.Logs or WorkspaceArtifactKind.Topics or WorkspaceArtifactKind.Metrics)
         {
             ActiveDashboardCellName = null;
             IsActiveDashboardLive = false;
@@ -2592,13 +2767,92 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
         var metricName = string.IsNullOrWhiteSpace(binding.PrimaryMetric)
             ? binding.Metrics.FirstOrDefault()
             : binding.PrimaryMetric;
-        if (string.IsNullOrWhiteSpace(metricName) ||
-            !layout.Metrics.TryGetValue(metricName, out var metric))
+        if (string.IsNullOrWhiteSpace(metricName))
         {
             return null;
         }
 
-        return metric;
+        var appMetric = _definitionComposer.GetMetricArtifact(DefinitionJson, metricName);
+        if (appMetric is not null)
+        {
+            var validation = _metricResolver.ValidateReference(appMetric, binding.Options);
+            if (!validation.IsValid)
+            {
+                return null;
+            }
+
+            return ToDashboardMetricSnapshot(metricName, _metricResolver.Resolve(appMetric, binding.Options));
+        }
+
+        return layout.Metrics.TryGetValue(metricName, out var metric)
+            ? metric
+            : null;
+    }
+
+    private bool TryGetDashboardMetricReadingValue(
+        DashboardWidgetSnapshot widget,
+        out DashboardMetricValue value)
+    {
+        value = default!;
+        var layout = GetActiveDashboardLayout();
+        if (layout is null ||
+            !layout.Bindings.TryGetValue(widget.Name, out var binding))
+        {
+            return false;
+        }
+
+        var metricName = string.IsNullOrWhiteSpace(binding.PrimaryMetric)
+            ? binding.Metrics.FirstOrDefault()
+            : binding.PrimaryMetric;
+        if (string.IsNullOrWhiteSpace(metricName))
+        {
+            return false;
+        }
+
+        var appMetric = _definitionComposer.GetMetricArtifact(DefinitionJson, metricName);
+        if (appMetric is null ||
+            !TryGetLatestMetricReading(metricName, binding.Options, out var reading))
+        {
+            return false;
+        }
+
+        var definition = _metricResolver.Resolve(appMetric, binding.Options);
+        var measure = FluxMetricCatalog.Shared.FindMeasure(definition.Measure);
+        value = new DashboardMetricValue(
+            measure.Label,
+            reading.Value,
+            measure.Unit,
+            FluxMetricEvaluationEngine.FormatValue(reading.Value, measure.Unit, definition.Format));
+        return true;
+    }
+
+    private static DashboardMetricSnapshot ToDashboardMetricSnapshot(string metricName, FluxMetricDefinition definition)
+    {
+        var filters = new Dictionary<string, string>(definition.AdditionalFilters, StringComparer.Ordinal);
+        AddIfPresent(filters, DashboardEventFilterCatalog.EventTypeKey, definition.EventType);
+        AddIfPresent(filters, DashboardEventFilterCatalog.TopicStartsWithKey, definition.TopicStartsWith);
+        AddIfPresent(filters, DashboardEventFilterCatalog.TopicNotStartsWithKey, definition.TopicNotStartsWith);
+        AddIfPresent(filters, DashboardEventFilterCatalog.StatusKey, definition.Status);
+
+        return new DashboardMetricSnapshot(
+            metricName,
+            definition.Source,
+            definition.Measure,
+            definition.Window,
+            definition.GroupBy,
+            filters,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["unit"] = definition.Format
+            });
+    }
+
+    private static void AddIfPresent(IDictionary<string, string> target, string key, string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            target[key] = value.Trim();
+        }
     }
 
     private static DashboardMetricQueryDefinition ToDashboardMetricQuery(DashboardMetricSnapshot metric)

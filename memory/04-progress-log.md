@@ -2543,3 +2543,119 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-mode UI tests passed with 372 tests.
   - Default/package-mode app build passed for `src\fluxmq.ui` with no `InitializeComponent` error.
 - Next step: visually review KPI `Visualization` editing first; if accepted, reuse the pattern for the next focused metric widget before adding a new visualization module.
+
+## 2026-06-07 - KPI digital visualization slice
+
+- Merged PR #167 and synced `main`; post-merge Windows validation passed and FluxFlow stayed clean.
+- Started `work/dashboard-metric-digital-visualization` for the next focused dashboard slice.
+- Added `metric.digital` as the first second visualization module for KPI:
+  - KPI now routes through a visualization host instead of directly rendering `metric.value`.
+  - `metric.digital` has its own renderer, defaults, supported metric kinds, and property rows.
+  - Digital-specific settings are `Digit style` and `Glow`; they are saved only when the digital visualization is selected.
+- Refined `metric.digital` into a reusable Blazor component:
+  - Added `DashboardDigitalReadout` with simple parameters for value, label, accent color, style, glow, and minimum digits.
+  - The visualization view now passes metric values into the component instead of owning the SVG drawing.
+  - The readout uses SVG seven-segment paths so the digital visual can move toward a real meter/readout look without leaking implementation details into KPI.
+- Expanded the digital visual controls:
+  - Added readout-specific background, segment, inactive segment, label color, and digit count settings.
+  - Hid the generic `Value color` row for `metric.digital`; `Segment color` is the digital value color.
+  - These settings remain visualization-owned and are saved only when `metric.digital` is selected.
+- Kept the separation intact:
+  - Metric query still chooses the number.
+  - Visualization chooses the presentation.
+  - Cell style still owns container background, border, radius, padding, and shared colors.
+- Verification:
+  - Source-mode restore completed after the package update.
+  - Source-mode UI tests passed with 373 tests.
+  - Package-mode restore completed.
+  - Package-mode UI tests passed with 373 tests.
+  - After the reusable readout refinement, UI build passed and package-mode UI tests passed with 374 tests.
+  - After the digital-control expansion, UI build passed and package-mode UI tests passed with 374 tests.
+- Digital readout control fix:
+  - Removed inactive decimal-point drawing so the seven-segment readout no longer shows stray small circles under every digit.
+  - Extended the property-grid color picker to support alpha colors through `#RGBA`, `#RRGGBBAA`, `transparent`, and a compact alpha-percent field.
+  - Updated dashboard widget setting normalization so alpha hex values are preserved when saved.
+  - Verification passed with UI build and 375 package-mode UI tests.
+- Next step: visually review KPI `Value` versus `Digital`; if accepted, add the next visualization or reuse the pattern on the next metric widget one slice at a time.
+
+## 2026-06-07 - KPI visualization ownership refactor
+
+- Refactored KPI visualization editing so the selected visual owns all inner display settings.
+- Added `DashboardMetricVisualizationSettingsDraft` as the compatibility/draft boundary for visual-owned config.
+- Replaced flattened KPI-specific visual rows in the inspector with:
+  - `Visualization` select
+  - selected visualization module property rows rendered inline in the property grid
+- Removed the separate visualization editor popup after UI review; KPI visual settings stay directly editable in the inspector.
+- Replaced the custom property-grid color picker internals with the UI framework color picker so alpha-capable colors are handled by the shared component layer.
+- Moved saved Value visual settings to `metric.value.*` keys and Digital visual settings to `metric.digital.*` keys.
+- Kept outer dashboard cell style focused on cell/container background, border, radius, padding, and layout only.
+- Kept compatibility for old KPI keys (`title`, `subtitle`, `kpi.*`) when loading existing dashboards; applying visual settings rewrites to visual-owned keys.
+- Verification so far:
+  - `dotnet build src\fluxmq.ui --no-restore --verbosity minimal` passed.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 375 tests.
+- Follow-up verification:
+  - A normal app build reached the copy-to-output step but was blocked by the already-running desktop app locking `FluxMq.UI.exe`.
+  - A separate-output UI build passed with no errors.
+  - Separate-output UI tests passed with 375 tests.
+- Compact color-row correction:
+  - Restored the property-grid color row to the compact swatch/text/button layout.
+  - Kept the alpha-capable framework color picker behind a popover instead of rendering a full picker input inside each property row.
+  - Fixed dashboard edit-cell metric-value previews so top/middle/bottom value placement uses the same placement variable as live mode.
+  - Verified with separate-output UI build and focused UI tests for color picker and edit-preview placement.
+- Follow-up compact-control fix:
+  - Shrank the property-grid palette action column.
+  - Added outside-click auto-close for the color picker popover.
+  - Fixed duplicate edit-cell headers for event counter, event rate, and rate tile by letting metric-value visuals own their header consistently.
+  - Verified with separate-output UI build and focused UI tests for color picker and metric-value widget rendering.
+- Metric-query row polish:
+  - Removed the live preview value from the property-grid metric-query row so it shows only the query summary and edit action.
+  - Restyled the metric-query edit action as a quiet borderless property-grid icon button.
+  - Verification passed with separate-output UI build and the focused metric-query row UI test.
+- Value visual unit control:
+  - Made the `EVENTS` unit label part of the Value visual settings instead of hard-coded renderer behavior.
+  - Added `Show unit`, `Unit text`, and `Unit color` settings under the selected Value visualization.
+  - Kept natural metric units as the default fallback when `Unit text` is empty.
+  - Separate-output UI build and focused UI tests passed after the change.
+- Empty-cell shrink polish:
+  - Added a bounded empty-cell placeholder wrapper in the dashboard editor grid.
+  - Anchored empty-cell labels to the cell interior so merged/large cells do not place labels on visual seams when the grid is narrow.
+  - Separate-output UI build and focused UI test passed.
+- Cell widget alignment:
+  - Added shared cell-level `Widget fit` and `Widget align` settings so the whole widget frame can be placed inside a dashboard cell.
+  - Kept the default as stretch/fill; selecting an alignment dot switches the cell to content fit so the placement is visible immediately.
+  - Added a compact 3x3 property-grid alignment pad and applied the same CSS variables to edit-cell previews and live dashboard cells.
+  - Separate-output UI build and focused UI tests passed after the change.
+- Padding and color ownership correction:
+  - Split cell padding from widget padding: `Cell style > Padding` now pads the dashboard cell wrapper, not the widget content.
+  - Added `Value visual > Padding` as visualization-owned widget padding for `metric.value`; existing `style.padding` still loads as a compatibility fallback.
+  - Kept Digital visual padding owned by `metric.digital.padding`.
+  - Fixed property-grid color swatches to render alpha-safe `rgba(...)` colors over a checker background so selected colors are visible in the compact rows.
+  - Separate-output UI build and focused UI tests passed after the change.
+- Responsive dashboard grid slice:
+  - Added runtime responsive cell variables for column span, row span, tablet/mobile span, track padding, and responsive minimum height without changing dashboard V2 JSON.
+  - Updated edit and live dashboard grids to use container-query reflow: desktop keeps the designed grid, tablet derives two columns, and mobile derives one column.
+  - Added safe track minimums so fixed/star/percent tracks stop crushing widgets and scroll the dashboard frame when the available area is too small.
+  - Made Value and Digital metric visuals use container-aware sizing so titles, values, units, and digital readouts adapt to narrow or short cells in edit and live views.
+  - Normal UI build was blocked by the already-running desktop app locking output DLLs; separate-output UI build passed with no warnings or errors.
+  - Focused dashboard UI tests passed after the change.
+- Next step: visually review wide, medium, and narrow dashboard sizes with Value and Digital visuals; if approved, continue with KPI unit placement/case or the next Value visual layout polish.
+
+## 2026-06-07 - Metric stream framework and pipeline integration
+
+- Added the numeric metric stream contract `FluxMetricReading<TValue>` in the shared core layer so App, Components, UI, and tests can use the same reading type without creating a project reference cycle.
+- Added focused app metric runtime classes for count, rate, unique topics, payload bytes, average payload, and retained count.
+- Added `FluxMetricRuntimeHost` as a lifecycle/lookup host only; each metric class owns its own runtime-event subscription, filtering, windowing, and reading emission.
+- Wired metric streams into `FlowApplicationHost` startup/shutdown and made dashboard metric value lookup prefer the latest app metric reading before falling back to offline/event-query evaluation.
+- Added the `metric.source` pipeline component:
+  - no input port
+  - `Output` as `NumberMetricReading`
+  - `Errors` as `FlowError`
+  - config for metric id, parameter values, latest-on-start, and buffer size
+- Added pipeline/UI support so condition routing, assertions, dynamic mapper previews, log shaping, and component metadata understand `NumberMetricReading`.
+- Added a dedicated Metric Source diagram node editor that selects app metrics, sets parameter values, and shows latest stream state without touching the existing MQTT metrics observer node.
+- Tightened dashboard metric migration so promoted app metric ids are idempotent (`ops.metric` does not become `ops.ops.metric`) and widget metric config is updated to the promoted app-level id.
+- Verification:
+  - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false -p:OutDir=artifacts\build-check\ui\` passed with 0 warnings.
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 113 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 383 tests.
+- Next step: run full solution verification and then review the Metric Source node UX in the desktop designer before moving on to the next dashboard metric consumer.

@@ -1,0 +1,224 @@
+@namespace FluxMq.UI.Components.Workspace
+@using System.Globalization
+@using FluxMq.UI.Services
+
+<div class="@RootClass" style="@RootStyle" aria-label="@AriaLabel">
+    <div class="dashboard-digital-readout-face">
+        @if (ShouldShowTopLabel)
+        {
+            <span class="dashboard-digital-readout-label">@Label</span>
+        }
+        <svg class="dashboard-digital-readout-display"
+             viewBox="@ViewBox"
+             role="img"
+             aria-hidden="true"
+             preserveAspectRatio="xMidYMid meet">
+            @foreach (var item in Glyphs.Select((glyph, index) => new { glyph, index }))
+            {
+                <g transform="@GlyphTransform(item.index)">
+                    @RenderGlyph(item.glyph)
+                </g>
+            }
+        </svg>
+        @if (ShouldShowBottomLabel)
+        {
+            <span class="dashboard-digital-readout-label">@Label</span>
+        }
+    </div>
+</div>
+
+@code {
+    private const double GlyphWidth = 28;
+    private const double GlyphHeight = 48;
+    private const double GlyphGap = 4;
+
+    private static readonly IReadOnlyDictionary<char, string> SegmentMap = new Dictionary<char, string>
+    {
+        ['0'] = "abcfed",
+        ['1'] = "bc",
+        ['2'] = "abged",
+        ['3'] = "abgcd",
+        ['4'] = "fgbc",
+        ['5'] = "afgcd",
+        ['6'] = "afgecd",
+        ['7'] = "abc",
+        ['8'] = "abcdefg",
+        ['9'] = "abfgcd",
+        ['.'] = ".",
+        ['-'] = "g"
+    };
+
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter]
+    public string? Label { get; set; }
+
+    [Parameter]
+    public bool ShowLabel { get; set; } = true;
+
+    [Parameter]
+    public string LabelPlacement { get; set; } = DashboardWidgetCatalog.MetricDigitalLabelPlacementBottom;
+
+    [Parameter]
+    public string? AccentColor { get; set; }
+
+    [Parameter]
+    public string? BackgroundColor { get; set; }
+
+    [Parameter]
+    public string? InactiveSegmentColor { get; set; }
+
+    [Parameter]
+    public string? LabelColor { get; set; }
+
+    [Parameter]
+    public string? BorderColor { get; set; }
+
+    [Parameter]
+    public int BorderWidth { get; set; } = DashboardWidgetCatalog.MetricDigitalDefaultBorderWidth;
+
+    [Parameter]
+    public int Radius { get; set; } = DashboardWidgetCatalog.MetricDigitalDefaultRadius;
+
+    [Parameter]
+    public int Padding { get; set; } = DashboardWidgetCatalog.MetricDigitalDefaultPadding;
+
+    [Parameter]
+    public string FitMode { get; set; } = DashboardWidgetCatalog.MetricDigitalFitCompact;
+
+    [Parameter]
+    public string StyleKind { get; set; } = DashboardWidgetCatalog.MetricDigitalStylePanel;
+
+    [Parameter]
+    public string Glow { get; set; } = DashboardWidgetCatalog.MetricDigitalGlowSoft;
+
+    [Parameter]
+    public int MinimumDigits { get; set; } = 4;
+
+    private string NormalizedValue => NormalizeValue(Value);
+
+    private IReadOnlyList<char> Glyphs
+    {
+        get
+        {
+            var value = NormalizedValue;
+            var padLength = Math.Max(0, MinimumDigits - value.Length);
+            return [.. Enumerable.Repeat(' ', padLength).Concat(value)];
+        }
+    }
+
+    private string ViewBox
+    {
+        get
+        {
+            var width = Math.Max(GlyphWidth, Glyphs.Count * GlyphWidth + Math.Max(0, Glyphs.Count - 1) * GlyphGap);
+            return $"0 0 {width.ToString("0.###", CultureInfo.InvariantCulture)} 58";
+        }
+    }
+
+    private string RootClass =>
+        $"dashboard-digital-readout style-{DashboardWidgetCatalog.NormalizeMetricDigitalStyle(StyleKind)} glow-{DashboardWidgetCatalog.NormalizeMetricDigitalGlow(Glow)} fit-{DashboardWidgetCatalog.NormalizeMetricDigitalFitMode(FitMode)}";
+
+    private string? RootStyle => BuildRootStyle();
+
+    private string AriaLabel => string.IsNullOrWhiteSpace(Label)
+        ? NormalizedValue
+        : $"{Label}: {NormalizedValue}";
+
+    private bool ShouldShowTopLabel =>
+        ShowLabel &&
+        !string.IsNullOrWhiteSpace(Label) &&
+        string.Equals(
+            DashboardWidgetCatalog.NormalizeMetricDigitalLabelPlacement(LabelPlacement),
+            DashboardWidgetCatalog.MetricDigitalLabelPlacementTop,
+            StringComparison.Ordinal);
+
+    private bool ShouldShowBottomLabel =>
+        ShowLabel &&
+        !string.IsNullOrWhiteSpace(Label) &&
+        string.Equals(
+            DashboardWidgetCatalog.NormalizeMetricDigitalLabelPlacement(LabelPlacement),
+            DashboardWidgetCatalog.MetricDigitalLabelPlacementBottom,
+            StringComparison.Ordinal);
+
+    private string GlyphTransform(int index)
+    {
+        var x = index * (GlyphWidth + GlyphGap);
+        return $"translate({x.ToString("0.###", CultureInfo.InvariantCulture)} 0)";
+    }
+
+    private RenderFragment RenderGlyph(char glyph) => builder =>
+    {
+        var sequence = 0;
+        var segments = SegmentMap.TryGetValue(glyph, out var value) ? value : string.Empty;
+        foreach (var segment in new[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g' })
+        {
+            builder.OpenElement(sequence++, "path");
+            builder.AddAttribute(sequence++, "class", segments.Contains(segment, StringComparison.Ordinal)
+                ? "segment on"
+                : "segment off");
+            builder.AddAttribute(sequence++, "d", SegmentPath(segment));
+            builder.CloseElement();
+        }
+
+        if (segments.Contains('.', StringComparison.Ordinal))
+        {
+            builder.OpenElement(sequence++, "path");
+            builder.AddAttribute(sequence++, "class", "segment on");
+            builder.AddAttribute(sequence++, "d", SegmentPath('.'));
+            builder.CloseElement();
+        }
+    };
+
+    private static string NormalizeValue(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "0";
+        }
+
+        var filtered = new string(value
+            .Trim()
+            .Where(static character => char.IsDigit(character) || character is '-' or '.')
+            .Take(8)
+            .ToArray());
+        return string.IsNullOrWhiteSpace(filtered) ? "0" : filtered;
+    }
+
+    private static string SegmentPath(char segment)
+        => segment switch
+        {
+            'a' => "M7 2 H21 L24 5 L21 8 H7 L4 5 Z",
+            'b' => "M22 7 L25 10 V22 L22 25 L19 22 V10 Z",
+            'c' => "M22 27 L25 30 V42 L22 45 L19 42 V30 Z",
+            'd' => "M7 44 H21 L24 47 L21 50 H7 L4 47 Z",
+            'e' => "M6 27 L9 30 V42 L6 45 L3 42 V30 Z",
+            'f' => "M6 7 L9 10 V22 L6 25 L3 22 V10 Z",
+            'g' => "M7 23 H21 L24 26 L21 29 H7 L4 26 Z",
+            '.' => "M21 45 A3 3 0 1 1 21 51 A3 3 0 1 1 21 45",
+            _ => string.Empty
+        };
+
+    private string? BuildRootStyle()
+    {
+        var values = new List<string>();
+        AddCssVariable(values, "--dashboard-digital-accent", AccentColor);
+        AddCssVariable(values, "--dashboard-digital-background", BackgroundColor);
+        AddCssVariable(values, "--dashboard-digital-inactive", InactiveSegmentColor);
+        AddCssVariable(values, "--dashboard-digital-label", LabelColor);
+        AddCssVariable(values, "--dashboard-digital-border", BorderColor);
+        values.Add($"--dashboard-digital-border-width:{Math.Clamp(BorderWidth, 0, 8).ToString(CultureInfo.InvariantCulture)}px;");
+        values.Add($"--dashboard-digital-radius:{Math.Clamp(Radius, 0, 32).ToString(CultureInfo.InvariantCulture)}px;");
+        values.Add($"--dashboard-digital-padding:{Math.Clamp(Padding, 0, 32).ToString(CultureInfo.InvariantCulture)}px;");
+        return values.Count == 0 ? null : string.Join(string.Empty, values);
+    }
+
+    private static void AddCssVariable(List<string> values, string name, string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            values.Add($"{name}:{value.Trim()};");
+        }
+    }
+}

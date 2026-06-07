@@ -1,0 +1,28 @@
+@namespace FluxMq.UI.Components.Workspace
+@using FluxMq.UI.Services
+
+@if (Module is { } module)
+{
+    <DynamicComponent Type="@ComponentType" Parameters="@ComponentParameters" />
+}
+else
+{
+    <DashboardMetricValueVisualizationView Context="@Context" />
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardWidgetRenderContext Context { get; set; } = null!;
+
+    private DashboardMetricVisualizationModule? Module => DashboardMetricVisualizationCatalog.Find(
+        Context.Widget.ReadString(DashboardWidgetCatalog.MetricVisualizationKey));
+
+    private Type ComponentType => Context.Mode == DashboardWidgetRenderMode.EditCell
+        ? Module!.EditCellComponent
+        : Module!.LiveComponent;
+
+    private IDictionary<string, object> ComponentParameters => new Dictionary<string, object>
+    {
+        ["Context"] = Context
+    };
+}

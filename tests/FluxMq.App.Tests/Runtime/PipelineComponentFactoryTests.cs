@@ -3,7 +3,9 @@ using FluxMq.Core.Ids;
 using FluxMq.Core.Models;
 using FluxMq.Core.Payloads;
 using FluxMq.Core.Mqtt;
+using FluxMq.Core.Metrics;
 using FluxMq.App;
+using FluxMq.App.Metrics;
 using FluxMq.Components.Assertions;
 using FluxMq.Components.JsonSchema;
 using FluxMq.Components.Logging;
@@ -12,6 +14,7 @@ using FluxMq.Components.MqttMetrics;
 using FluxMq.Components.MqttPayloadInspector;
 using FluxMq.Components.Storage.Models;
 using FluxMq.Components.Storage.Repositories;
+using FluxMq.Scenarios;
 using FluxFlow.Components.Http.Contracts;
 using FluxFlow.Components.Payloads.Contracts;
 using FluxFlow.Components.Routing;
@@ -52,6 +55,7 @@ public sealed class PipelineComponentFactoryTests
             FluxMqNodeTypes.StoredSessionSource,
             FluxMqNodeTypes.ReplaySource,
             FluxMqNodeTypes.GeneratedSource,
+            FluxMqNodeTypes.MetricSource,
             FluxMqNodeTypes.PayloadInspect,
             FluxMqNodeTypes.PayloadInspector,
             FluxMqNodeTypes.HttpRequest,
@@ -493,6 +497,74 @@ public sealed class PipelineComponentFactoryTests
         sink!.Values.Count.ShouldBe(2);
         sink.Values[^1].MessageCount.ShouldBe(2);
         sink.Values[^1].TotalPayloadBytes.ShouldBe(5);
+    }
+
+    [Fact]
+    public async Task MetricSourceFactory_CreatesLinkableRuntimeNode()
+    {
+        TestSinkNode<FluxMetricReading<double>>? sink = null;
+        var runtimeEvents = new BroadcastBlock<FlowEvent>(static flowEvent => flowEvent);
+        var metricRuntimeHost = new FluxMetricRuntimeHost();
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories(metricRuntimeHost: metricRuntimeHost)
+            .Register(new NodeType("test.metric-sink"), (address, _) =>
+            {
+                sink = new TestSinkNode<FluxMetricReading<double>>();
+                return SinkNode(address, sink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node(FluxMqNodeTypes.MetricSource, new Dictionary<string, object?>
+                        {
+                            ["metricId"] = "messageRate",
+                            ["emitLatestOnStart"] = true
+                        }),
+                        ["sink"] = NodeWithPort("test.metric-sink", "Input", "\"source.Output\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(result.Errors.FirstOrDefault()?.Message);
+        metricRuntimeHost.Configure(
+            new Dictionary<string, FluxMetricArtifactDefinition>(StringComparer.Ordinal)
+            {
+                ["messageRate"] = new()
+                {
+                    DisplayName = "Message rate",
+                    Definition = new FluxMetricDefinition(
+                        "messageRate",
+                        FluxMetricCatalog.RuntimeEventsSource,
+                        FluxMetricCatalog.MeasureRate,
+                        "60s",
+                        eventType: FlowEventTypes.MqttMessagePublished)
+                }
+            },
+            runtimeEvents);
+        await metricRuntimeHost.StartAsync();
+        await result.Runtime!.StartAsync();
+
+        runtimeEvents.Post(new FlowEvent
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Type = FlowEventTypes.MqttMessagePublished,
+            Source = "test",
+            Channel = "factory/a",
+            Status = "published"
+        });
+
+        await Eventually(() => sink!.Values.Count > 0);
+
+        sink!.Values[0].MetricId.ShouldBe("messageRate");
+        sink.Values[0].Value.ShouldBe(1d / 60d, tolerance: 0.0001);
     }
 
     [Fact]
@@ -2718,6 +2790,30 @@ public sealed class PipelineComponentFactoryTests
     private static NodeDefinition Node(string type) => new()
     {
         Type = new NodeType(type)
+    };
+
+    private static async Task Eventually(Func<bool> condition)
+    {
+        for (var attempt = 0; attempt < 30; attempt++)
+        {
+            if (condition())
+            {
+                return;
+            }
+
+            await Task.Delay(50);
+        }
+
+        condition().ShouldBeTrue();
+    }
+
+    private static NodeDefinition Node(NodeType type, IReadOnlyDictionary<string, object?> configuration) => new()
+    {
+        Type = type,
+        Configuration = configuration.ToDictionary(
+            static pair => pair.Key,
+            static pair => JsonSerializer.SerializeToElement(pair.Value).Clone(),
+            StringComparer.Ordinal)
     };
 
     private static NodeDefinition NodeWithPort(NodeType type, string portName, string linkJson) => new()

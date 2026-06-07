@@ -1,4 +1,5 @@
 using FluxFlow.Engine.Definitions;
+using FluxMq.App.Metrics;
 using FluxMq.Scenarios;
 using System.Text.Json;
 using EngineApplicationDefinitionValidationError = FluxFlow.Engine.Definitions.ApplicationDefinitionValidationError;
@@ -45,7 +46,11 @@ public enum FluxMqApplicationDefinitionValidationErrorCode
     EmptyScenarioStepType = 21,
     UnknownScenarioStepType = 22,
     MissingScenarioStepResource = 23,
-    InvalidScenarioStepConfiguration = 24
+    InvalidScenarioStepConfiguration = 24,
+    EmptyMetricName = 25,
+    InvalidMetricDefinition = 26,
+    InvalidMetricParameter = 27,
+    MissingDashboardMetric = 28
 }
 
 public sealed class FluxMqApplicationDefinitionValidator
@@ -75,9 +80,14 @@ public sealed class FluxMqApplicationDefinitionValidator
             .Select(FromEngineError)
             .ToList();
 
+        foreach (var metric in definition.Metrics)
+        {
+            ValidateMetric(metric.Key, metric.Value, errors);
+        }
+
         foreach (var dashboard in definition.Dashboards)
         {
-            ValidateDashboard(dashboard.Key, dashboard.Value, errors);
+            ValidateDashboard(dashboard.Key, dashboard.Value, definition, errors);
         }
 
         foreach (var test in definition.Tests)
@@ -104,6 +114,7 @@ public sealed class FluxMqApplicationDefinitionValidator
     private static void ValidateDashboard(
         string dashboardName,
         DashboardDefinition dashboard,
+        FluxMqApplicationDefinition definition,
         List<FluxMqApplicationDefinitionValidationError> errors)
     {
         if (string.IsNullOrWhiteSpace(dashboardName))
@@ -194,6 +205,69 @@ public sealed class FluxMqApplicationDefinitionValidator
                 errors.Add(new(
                     FluxMqApplicationDefinitionValidationErrorCode.MissingDashboardWidget,
                     $"Dashboard '{dashboardName}' cell '{cell.Key}' references missing widget '{cell.Value.Widget}'."));
+            }
+        }
+
+        foreach (var binding in dashboard.Bindings)
+        {
+            var metricNames = binding.Value.Metrics
+                .Append(binding.Value.PrimaryMetric ?? string.Empty)
+                .Where(static metric => !string.IsNullOrWhiteSpace(metric))
+                .Distinct(StringComparer.Ordinal);
+            foreach (var metricName in metricNames)
+            {
+                if (!dashboard.Metrics.ContainsKey(metricName) &&
+                    !definition.Metrics.ContainsKey(metricName))
+                {
+                    errors.Add(new(
+                        FluxMqApplicationDefinitionValidationErrorCode.MissingDashboardMetric,
+                        $"Dashboard '{dashboardName}' widget '{binding.Key}' references missing metric '{metricName}'."));
+                }
+            }
+        }
+    }
+
+    private static void ValidateMetric(
+        string metricName,
+        FluxMetricArtifactDefinition metric,
+        List<FluxMqApplicationDefinitionValidationError> errors)
+    {
+        if (string.IsNullOrWhiteSpace(metricName))
+        {
+            errors.Add(new(
+                FluxMqApplicationDefinitionValidationErrorCode.EmptyMetricName,
+                "Metric name cannot be empty."));
+        }
+
+        if (string.IsNullOrWhiteSpace(metric.DisplayName))
+        {
+            errors.Add(new(
+                FluxMqApplicationDefinitionValidationErrorCode.EmptyMetricName,
+                $"Metric '{metricName}' must define a display name."));
+        }
+
+        var validation = new FluxMetricValidator().Validate(metric.Definition);
+        foreach (var error in validation.Errors)
+        {
+            errors.Add(new(
+                FluxMqApplicationDefinitionValidationErrorCode.InvalidMetricDefinition,
+                $"Metric '{metricName}' is invalid: {error}"));
+        }
+
+        foreach (var parameter in metric.Parameters)
+        {
+            if (string.IsNullOrWhiteSpace(parameter.Id))
+            {
+                errors.Add(new(
+                    FluxMqApplicationDefinitionValidationErrorCode.InvalidMetricParameter,
+                    $"Metric '{metricName}' has a parameter without an id."));
+            }
+
+            if (string.IsNullOrWhiteSpace(parameter.Target))
+            {
+                errors.Add(new(
+                    FluxMqApplicationDefinitionValidationErrorCode.InvalidMetricParameter,
+                    $"Metric '{metricName}' parameter '{parameter.LabelOrId()}' must define a target field."));
             }
         }
     }

@@ -1,0 +1,61 @@
+@namespace FluxMq.UI.Components.Workspace
+
+<div class="property-grid-alignment-pad" role="group" aria-label="@ResolvedAriaLabel">
+    @foreach (var option in Options)
+    {
+        <button type="button"
+                class="@OptionClass(option)"
+                title="@option.Label"
+                aria-label="@option.Label"
+                aria-pressed="@IsSelected(option)"
+                @onclick="@(() => SelectOptionAsync(option.Value))">
+            <span></span>
+        </button>
+    }
+</div>
+
+@code {
+    private static readonly IReadOnlyList<AlignmentOption> Options =
+    [
+        new(DashboardCellStyleDraft.WidgetAlignmentTopLeft, "Top left"),
+        new(DashboardCellStyleDraft.WidgetAlignmentTopCenter, "Top center"),
+        new(DashboardCellStyleDraft.WidgetAlignmentTopRight, "Top right"),
+        new(DashboardCellStyleDraft.WidgetAlignmentMiddleLeft, "Middle left"),
+        new(DashboardCellStyleDraft.WidgetAlignmentMiddleCenter, "Middle center"),
+        new(DashboardCellStyleDraft.WidgetAlignmentMiddleRight, "Middle right"),
+        new(DashboardCellStyleDraft.WidgetAlignmentBottomLeft, "Bottom left"),
+        new(DashboardCellStyleDraft.WidgetAlignmentBottomCenter, "Bottom center"),
+        new(DashboardCellStyleDraft.WidgetAlignmentBottomRight, "Bottom right")
+    ];
+
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> ValueChanged { get; set; }
+
+    [Parameter]
+    public string? AriaLabel { get; set; }
+
+    private string ResolvedAriaLabel => string.IsNullOrWhiteSpace(AriaLabel)
+        ? "Choose widget alignment"
+        : AriaLabel;
+
+    private async Task SelectOptionAsync(string value)
+    {
+        if (!string.Equals(Value ?? string.Empty, value, StringComparison.Ordinal))
+        {
+            await ValueChanged.InvokeAsync(value);
+        }
+    }
+
+    private bool IsSelected(AlignmentOption option)
+        => string.Equals(Value ?? DashboardCellStyleDraft.WidgetAlignmentMiddleCenter, option.Value, StringComparison.Ordinal);
+
+    private string OptionClass(AlignmentOption option)
+        => IsSelected(option)
+            ? "property-grid-alignment-pad-button selected"
+            : "property-grid-alignment-pad-button";
+
+    private sealed record AlignmentOption(string Value, string Label);
+}

@@ -128,7 +128,9 @@ public sealed class DashboardEventFilterCatalogTests
             "borderColor",
             "borderWidth",
             "radius",
-            "padding"
+            "padding",
+            "widgetFit",
+            "widgetAlignment"
         ]);
         fields.ShouldNotContain("surface");
         fields.ShouldNotContain("mainText");
@@ -149,6 +151,7 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain("--dashboard-widget-bg:#161b24;");
         css.ShouldContain("--dashboard-widget-accent:#2ed3c6;");
+        css.ShouldNotContain("--dashboard-widget-padding");
         css.ShouldNotContain("--dashboard-widget-surface");
         css.ShouldNotContain("--dashboard-widget-text");
         css.ShouldNotContain("--dashboard-widget-muted");
@@ -190,7 +193,8 @@ public sealed class DashboardEventFilterCatalogTests
                 [DashboardWidgetCatalog.KpiValueColorKey] = "#778899",
                 [DashboardWidgetCatalog.KpiTitleAlignKey] = DashboardWidgetCatalog.KpiAlignCenter,
                 [DashboardWidgetCatalog.KpiValueAlignKey] = DashboardWidgetCatalog.KpiAlignRight,
-                [DashboardWidgetCatalog.KpiValuePlacementKey] = DashboardWidgetCatalog.KpiValuePlacementBottom
+                [DashboardWidgetCatalog.KpiValuePlacementKey] = DashboardWidgetCatalog.KpiValuePlacementBottom,
+                [DashboardWidgetCatalog.MetricValuePaddingKey] = "22"
             });
 
         var style = DashboardWidgetFormatting.WidgetStyle(widget);
@@ -203,6 +207,7 @@ public sealed class DashboardEventFilterCatalogTests
         style.ShouldContain("--dashboard-kpi-value-align:right;");
         style.ShouldContain("--dashboard-kpi-value-items:flex-end;");
         style.ShouldContain("--dashboard-kpi-value-placement:flex-end;");
+        style.ShouldContain("--dashboard-widget-padding:22px;");
     }
 
     [Fact]
@@ -232,13 +237,36 @@ public sealed class DashboardEventFilterCatalogTests
         {
             ["borderMode"] = "none",
             ["borderWidth"] = "3",
-            ["radius"] = "14"
+            ["radius"] = "14",
+            ["padding"] = "18"
         };
 
         var css = DashboardCellStyleDraft.CssVariables(cellStyle);
 
         css.ShouldContain("--dashboard-widget-border-width:0px;");
         css.ShouldContain("--dashboard-widget-radius:14px;");
+        css.ShouldContain("--dashboard-cell-padding:18px;");
+        css.ShouldNotContain("--dashboard-widget-padding");
+    }
+
+    [Fact]
+    public void DashboardCellStyleDraft_WritesContentFitAlignmentVariables()
+    {
+        var cellStyle = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["widgetFit"] = DashboardCellStyleDraft.WidgetFitContent,
+            ["widgetAlignment"] = DashboardCellStyleDraft.WidgetAlignmentBottomRight
+        };
+
+        var css = DashboardCellStyleDraft.CssVariables(cellStyle);
+
+        css.ShouldContain("--dashboard-cell-widget-flex:0 1 auto;");
+        css.ShouldContain("--dashboard-cell-widget-width:auto;");
+        css.ShouldContain("--dashboard-cell-widget-height:auto;");
+        css.ShouldContain("--dashboard-cell-widget-max-width:100%;");
+        css.ShouldContain("--dashboard-cell-widget-max-height:100%;");
+        css.ShouldContain("--dashboard-cell-widget-justify:flex-end;");
+        css.ShouldContain("--dashboard-cell-widget-align:flex-end;");
     }
 
     [Fact]
@@ -380,7 +408,7 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
-    public void DashboardWidgetSettingsDraft_WritesKpiSpecificTextAndLayoutSettings()
+    public void DashboardWidgetSettingsDraft_WritesValueVisualizationSettings()
     {
         var draft = DashboardWidgetSettingsDraft.Create(
             new DashboardWidgetSnapshot(
@@ -392,31 +420,93 @@ public sealed class DashboardEventFilterCatalogTests
                 }),
             new DashboardEventFilterCatalog());
 
-        draft.Title = "Messages";
-        draft.Subtitle = "Total matching events";
-        draft.TitleColor = "#112233";
-        draft.SubtitleColor = "#445566";
-        draft.ValueColor = "#778899";
         draft.MetricVisualizationId = DashboardMetricVisualizationIds.Value;
-        draft.TitleAlign = DashboardWidgetCatalog.KpiAlignCenter;
-        draft.ValueAlign = DashboardWidgetCatalog.KpiAlignRight;
-        draft.ValuePlacement = DashboardWidgetCatalog.KpiValuePlacementMiddle;
+        draft.MetricVisualization.ValueTitle = "Messages";
+        draft.MetricVisualization.ValueSubtitle = "Total matching events";
+        draft.MetricVisualization.ValueShowUnit = false;
+        draft.MetricVisualization.ValueUnitText = "messages";
+        draft.MetricVisualization.ValueTitleColor = "#112233";
+        draft.MetricVisualization.ValueSubtitleColor = "#445566";
+        draft.MetricVisualization.ValueValueColor = "#778899";
+        draft.MetricVisualization.ValueUnitColor = "#99aabb";
+        draft.MetricVisualization.ValueTitleAlign = DashboardWidgetCatalog.KpiAlignCenter;
+        draft.MetricVisualization.ValueValueAlign = DashboardWidgetCatalog.KpiAlignRight;
+        draft.MetricVisualization.ValueValuePlacement = DashboardWidgetCatalog.KpiValuePlacementMiddle;
+        draft.MetricVisualization.ValuePadding = 22;
 
         var configuration = draft.BuildConfiguration();
 
-        configuration["title"].ShouldBe("Messages");
-        configuration["subtitle"].ShouldBe("Total matching events");
         configuration[DashboardWidgetCatalog.MetricVisualizationKey].ShouldBe(DashboardMetricVisualizationIds.Value);
         configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
-        configuration[DashboardWidgetCatalog.KpiTitleColorKey].ShouldBe("#112233");
-        configuration[DashboardWidgetCatalog.KpiSubtitleColorKey].ShouldBe("#445566");
-        configuration[DashboardWidgetCatalog.KpiValueColorKey].ShouldBe("#778899");
-        configuration[DashboardWidgetCatalog.KpiTitleAlignKey].ShouldBe(DashboardWidgetCatalog.KpiAlignCenter);
-        configuration[DashboardWidgetCatalog.KpiValueAlignKey].ShouldBe(DashboardWidgetCatalog.KpiAlignRight);
-        configuration[DashboardWidgetCatalog.KpiValuePlacementKey].ShouldBe(DashboardWidgetCatalog.KpiValuePlacementMiddle);
+        configuration[DashboardWidgetCatalog.MetricValueTitleKey].ShouldBe("Messages");
+        configuration[DashboardWidgetCatalog.MetricValueSubtitleKey].ShouldBe("Total matching events");
+        configuration[DashboardWidgetCatalog.MetricValueShowUnitKey].ShouldBe("false");
+        configuration[DashboardWidgetCatalog.MetricValueUnitTextKey].ShouldBe("messages");
+        configuration[DashboardWidgetCatalog.MetricValueTitleColorKey].ShouldBe("#112233");
+        configuration[DashboardWidgetCatalog.MetricValueSubtitleColorKey].ShouldBe("#445566");
+        configuration[DashboardWidgetCatalog.MetricValueValueColorKey].ShouldBe("#778899");
+        configuration[DashboardWidgetCatalog.MetricValueUnitColorKey].ShouldBe("#99aabb");
+        configuration[DashboardWidgetCatalog.MetricValueTitleAlignKey].ShouldBe(DashboardWidgetCatalog.KpiAlignCenter);
+        configuration[DashboardWidgetCatalog.MetricValueValueAlignKey].ShouldBe(DashboardWidgetCatalog.KpiAlignRight);
+        configuration[DashboardWidgetCatalog.MetricValueValuePlacementKey].ShouldBe(DashboardWidgetCatalog.KpiValuePlacementMiddle);
+        configuration[DashboardWidgetCatalog.MetricValuePaddingKey].ShouldBe("22");
+        configuration.ContainsKey("title").ShouldBeFalse();
+        configuration.ContainsKey("subtitle").ShouldBeFalse();
+        configuration.ContainsKey(DashboardWidgetCatalog.KpiTitleColorKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardWidgetCatalog.KpiSubtitleColorKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardWidgetCatalog.KpiValueColorKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardWidgetCatalog.MetricDigitalStyleKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardWidgetCatalog.MetricDigitalGlowKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardWidgetCatalog.DisplayMetricsKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardWidgetCatalog.MetricCardColumnsKey).ShouldBeFalse();
         configuration.Keys.ShouldNotContain("style.titleColor");
+    }
+
+    [Fact]
+    public void DashboardWidgetSettingsDraft_WritesDigitalVisualizationSettingsOnlyWhenSelected()
+    {
+        var draft = DashboardWidgetSettingsDraft.Create(
+            new DashboardWidgetSnapshot(
+                "kpi",
+                DashboardWidgetCatalog.KpiTileType,
+                new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    [DashboardWidgetCatalog.MetricVisualizationKey] = DashboardMetricVisualizationIds.Digital,
+                    [DashboardWidgetCatalog.MetricDigitalStyleKey] = DashboardWidgetCatalog.MetricDigitalStyleTerminal,
+                    [DashboardWidgetCatalog.MetricDigitalGlowKey] = DashboardWidgetCatalog.MetricDigitalGlowStrong,
+                    [DashboardWidgetCatalog.MetricDigitalBackgroundColorKey] = "#01020344",
+                    [DashboardWidgetCatalog.MetricDigitalSegmentColorKey] = "#aabbcc80",
+                    [DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey] = "#112233",
+                    [DashboardWidgetCatalog.MetricDigitalLabelColorKey] = "#ddeeff",
+                    [DashboardWidgetCatalog.MetricDigitalDigitsKey] = "6"
+                }),
+            new DashboardEventFilterCatalog());
+
+        draft.MetricVisualizationId.ShouldBe(DashboardMetricVisualizationIds.Digital);
+        draft.MetricVisualization.DigitalStyle.ShouldBe(DashboardWidgetCatalog.MetricDigitalStyleTerminal);
+        draft.MetricVisualization.DigitalGlow.ShouldBe(DashboardWidgetCatalog.MetricDigitalGlowStrong);
+        draft.MetricVisualization.DigitalBackgroundColor.ShouldBe("#01020344");
+        draft.MetricVisualization.DigitalSegmentColor.ShouldBe("#aabbcc80");
+        draft.MetricVisualization.DigitalInactiveSegmentColor.ShouldBe("#112233");
+        draft.MetricVisualization.DigitalLabelColor.ShouldBe("#ddeeff");
+        draft.MetricVisualization.DigitalDigits.ShouldBe(6);
+
+        var configuration = draft.BuildConfiguration();
+
+        configuration[DashboardWidgetCatalog.MetricVisualizationKey]
+            .ShouldBe(DashboardMetricVisualizationIds.Digital);
+        configuration[DashboardWidgetCatalog.MetricDigitalStyleKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalStyleTerminal);
+        configuration[DashboardWidgetCatalog.MetricDigitalGlowKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalGlowStrong);
+        configuration[DashboardWidgetCatalog.MetricDigitalBackgroundColorKey].ShouldBe("#01020344");
+        configuration[DashboardWidgetCatalog.MetricDigitalSegmentColorKey].ShouldBe("#aabbcc80");
+        configuration[DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey].ShouldBe("#112233");
+        configuration[DashboardWidgetCatalog.MetricDigitalLabelColorKey].ShouldBe("#ddeeff");
+        configuration[DashboardWidgetCatalog.MetricDigitalDigitsKey].ShouldBe("6");
+        configuration.Keys.ShouldAllBe(key =>
+            string.Equals(key, DashboardWidgetCatalog.MetricVisualizationKey, StringComparison.Ordinal) ||
+            key.StartsWith("metric.digital.", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -510,20 +600,23 @@ public sealed class DashboardEventFilterCatalogTests
 
         var configuration = draft.BuildConfiguration();
 
-        configuration["title"].ShouldBe("Messages");
-        configuration["subtitle"].ShouldBe("Total matching events");
         configuration["metric"].ShouldBe("receivedMetric");
         configuration[DashboardWidgetCatalog.MetricVisualizationKey].ShouldBe(DashboardMetricVisualizationIds.Value);
         configuration.ContainsKey(DashboardEventFilterCatalog.EventTypeKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardEventFilterCatalog.TopicStartsWithKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardEventFilterCatalog.StatusKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
-        configuration[DashboardWidgetCatalog.KpiTitleColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultTitleColor);
-        configuration[DashboardWidgetCatalog.KpiSubtitleColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultSubtitleColor);
-        configuration[DashboardWidgetCatalog.KpiValueColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultValueColor);
-        configuration[DashboardWidgetCatalog.KpiTitleAlignKey].ShouldBe(DashboardWidgetCatalog.KpiAlignLeft);
-        configuration[DashboardWidgetCatalog.KpiValueAlignKey].ShouldBe(DashboardWidgetCatalog.KpiAlignLeft);
-        configuration[DashboardWidgetCatalog.KpiValuePlacementKey].ShouldBe(DashboardWidgetCatalog.KpiValuePlacementTop);
+        configuration[DashboardWidgetCatalog.MetricValueTitleKey].ShouldBe("Messages");
+        configuration[DashboardWidgetCatalog.MetricValueSubtitleKey].ShouldBe("Total matching events");
+        configuration[DashboardWidgetCatalog.MetricValueTitleColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultTitleColor);
+        configuration[DashboardWidgetCatalog.MetricValueSubtitleColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultSubtitleColor);
+        configuration[DashboardWidgetCatalog.MetricValueValueColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultValueColor);
+        configuration[DashboardWidgetCatalog.MetricValueTitleAlignKey].ShouldBe(DashboardWidgetCatalog.KpiAlignLeft);
+        configuration[DashboardWidgetCatalog.MetricValueValueAlignKey].ShouldBe(DashboardWidgetCatalog.KpiAlignLeft);
+        configuration[DashboardWidgetCatalog.MetricValueValuePlacementKey].ShouldBe(DashboardWidgetCatalog.KpiValuePlacementTop);
+        configuration.ContainsKey("title").ShouldBeFalse();
+        configuration.ContainsKey("subtitle").ShouldBeFalse();
+        configuration.ContainsKey(DashboardWidgetCatalog.KpiTitleColorKey).ShouldBeFalse();
     }
 
     [Fact]
@@ -1210,11 +1303,33 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("Context.Snapshot");
         css.ShouldContain(".dashboard-metric-value-layout");
         css.ShouldContain(".dashboard-metric-value-unit");
+        css.ShouldContain("--dashboard-metric-value-unit");
+
+        var valueMarkup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardWidgets",
+            "DashboardMetricValueVisualizationView.razor"));
+
+        valueMarkup.ShouldContain("MetricValueShowUnitKey");
+        valueMarkup.ShouldContain("MetricValueUnitTextKey");
+        valueMarkup.ShouldContain("MetricValueUnitColorKey");
+        valueMarkup.ShouldContain("DisplayUnitText");
     }
 
     [Fact]
     public void DashboardInspector_UsesCompactSingleLineMetricQueryRow()
     {
+        var markup = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot(),
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspector.razor"));
         var css = File.ReadAllText(Path.Combine(
             FindRepositoryRoot(),
             "src",
@@ -1226,9 +1341,12 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 32px;");
         css.ShouldContain(".dashboard-inspector-query-preview");
         css.ShouldContain("height: 100%;");
-        css.ShouldContain("max-width: 34px;");
         css.ShouldContain("width: 32px;");
         css.ShouldContain("white-space: nowrap;");
+        css.ShouldContain(".dashboard-inspector-query-edit");
+        css.ShouldContain("background: transparent;");
+        css.ShouldContain("border: 0;");
+        markup.ShouldNotContain("MetricQueryPreviewValue");
     }
 
     [Fact]
@@ -1274,10 +1392,18 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("MetricVisualizationOptions");
         markup.ShouldContain("DashboardMetricVisualizationCatalog.CreateModules()");
         markup.ShouldContain("SetMetricVisualizationAsync");
-        markup.ShouldContain("DashboardWidgetCatalog.NormalizeMetricVisualization(value)");
+        markup.ShouldContain("MetricVisualization.SetVisualization(value, applyDefaults: true)");
         markup.ShouldContain("RenderMetricVisualizationProperties(draft)");
-        markup.ShouldContain("CurrentMetricVisualizationModule.PropertyGroups");
+        markup.ShouldContain("CurrentMetricVisualizationModule");
         markup.ShouldContain("MetricVisualizationPropertyCount");
+        markup.ShouldContain("SetMetricVisualizationValueAsync");
+        markup.ShouldContain("PropertyGridColorPicker");
+        markup.ShouldContain("PropertyGridIconSegment");
+        markup.ShouldNotContain("PropertyGridRow Name=\"Visual settings\"");
+        markup.ShouldNotContain("OpenMetricVisualizationEditorAsync");
+        markup.ShouldNotContain("DashboardMetricVisualizationEditorDialog");
+        markup.ShouldNotContain("SetMetricDigitalStyleAsync");
+        markup.ShouldNotContain("SetKpiTitleColorAsync");
     }
 
     [Fact]
@@ -1334,14 +1460,25 @@ public sealed class DashboardEventFilterCatalogTests
     {
         var modules = DashboardMetricVisualizationCatalog.CreateModules();
         var value = modules.Single(static module => module.Id == DashboardMetricVisualizationIds.Value);
+        var digital = modules.Single(static module => module.Id == DashboardMetricVisualizationIds.Digital);
 
         value.DisplayName.ShouldBe("Value");
         value.EditCellComponent.ShouldBe(typeof(DashboardMetricValueVisualizationView));
         value.LiveComponent.ShouldBe(typeof(DashboardMetricValueVisualizationView));
         value.DefaultConfiguration["visualization"].ShouldBe(DashboardMetricVisualizationIds.Value);
-        value.DefaultConfiguration[DashboardWidgetCatalog.KpiTitleColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultTitleColor);
-        value.DefaultConfiguration[DashboardWidgetCatalog.KpiSubtitleColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultSubtitleColor);
-        value.DefaultConfiguration[DashboardWidgetCatalog.KpiValueColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultValueColor);
+        value.DefaultConfiguration[DashboardWidgetCatalog.MetricValueTitleKey].ShouldBe(DashboardWidgetCatalog.MetricValueDefaultTitle);
+        value.DefaultConfiguration[DashboardWidgetCatalog.MetricValueSubtitleKey].ShouldBe(DashboardWidgetCatalog.MetricValueDefaultSubtitle);
+        value.DefaultConfiguration[DashboardWidgetCatalog.MetricValueShowUnitKey].ShouldBe("true");
+        value.DefaultConfiguration[DashboardWidgetCatalog.MetricValueUnitTextKey].ShouldBe(DashboardWidgetCatalog.MetricValueDefaultUnitText);
+        value.DefaultConfiguration[DashboardWidgetCatalog.MetricValueTitleColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultTitleColor);
+        value.DefaultConfiguration[DashboardWidgetCatalog.MetricValueSubtitleColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultSubtitleColor);
+        value.DefaultConfiguration[DashboardWidgetCatalog.MetricValueValueColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultValueColor);
+        value.DefaultConfiguration[DashboardWidgetCatalog.MetricValueUnitColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultSubtitleColor);
+        value.DefaultConfiguration[DashboardWidgetCatalog.MetricValuePaddingKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricValueDefaultPadding.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        value.DefaultConfiguration.ContainsKey(DashboardWidgetCatalog.KpiTitleColorKey).ShouldBeFalse();
+        value.DefaultConfiguration.ContainsKey(DashboardWidgetCatalog.KpiSubtitleColorKey).ShouldBeFalse();
+        value.DefaultConfiguration.ContainsKey(DashboardWidgetCatalog.KpiValueColorKey).ShouldBeFalse();
         value.SupportedValueKinds.ShouldContain(DashboardMetricValueKinds.Number);
         value.SupportedValueKinds.ShouldContain(DashboardMetricValueKinds.Rate);
         value.SupportedValueKinds.ShouldContain(DashboardMetricValueKinds.Bytes);
@@ -1351,13 +1488,297 @@ public sealed class DashboardEventFilterCatalogTests
             .SelectMany(static group => group.Properties)
             .Select(static property => property.Key)
             .ShouldBe([
-                DashboardWidgetCatalog.KpiTitleColorKey,
-                DashboardWidgetCatalog.KpiSubtitleColorKey,
-                DashboardWidgetCatalog.KpiValueColorKey,
-                DashboardWidgetCatalog.KpiTitleAlignKey,
-                DashboardWidgetCatalog.KpiValueAlignKey,
-                DashboardWidgetCatalog.KpiValuePlacementKey
+                DashboardWidgetCatalog.MetricValueTitleKey,
+                DashboardWidgetCatalog.MetricValueShowTitleKey,
+                DashboardWidgetCatalog.MetricValueSubtitleKey,
+                DashboardWidgetCatalog.MetricValueShowSubtitleKey,
+                DashboardWidgetCatalog.MetricValueShowUnitKey,
+                DashboardWidgetCatalog.MetricValueUnitTextKey,
+                DashboardWidgetCatalog.MetricValueTitleColorKey,
+                DashboardWidgetCatalog.MetricValueSubtitleColorKey,
+                DashboardWidgetCatalog.MetricValueValueColorKey,
+                DashboardWidgetCatalog.MetricValueUnitColorKey,
+                DashboardWidgetCatalog.MetricValueTitleAlignKey,
+                DashboardWidgetCatalog.MetricValueValueAlignKey,
+                DashboardWidgetCatalog.MetricValueValuePlacementKey,
+                DashboardWidgetCatalog.MetricValuePaddingKey
             ]);
+
+        digital.DisplayName.ShouldBe("Digital");
+        digital.EditCellComponent.ShouldBe(typeof(DashboardMetricDigitalVisualizationView));
+        digital.LiveComponent.ShouldBe(typeof(DashboardMetricDigitalVisualizationView));
+        digital.DefaultConfiguration[DashboardWidgetCatalog.MetricVisualizationKey]
+            .ShouldBe(DashboardMetricVisualizationIds.Digital);
+        digital.DefaultConfiguration[DashboardWidgetCatalog.MetricDigitalStyleKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalStylePanel);
+        digital.DefaultConfiguration[DashboardWidgetCatalog.MetricDigitalGlowKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalGlowSoft);
+        digital.DefaultConfiguration[DashboardWidgetCatalog.MetricDigitalBackgroundColorKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalDefaultBackgroundColor);
+        digital.DefaultConfiguration[DashboardWidgetCatalog.MetricDigitalSegmentColorKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalDefaultSegmentColor);
+        digital.DefaultConfiguration[DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalDefaultInactiveSegmentColor);
+        digital.DefaultConfiguration[DashboardWidgetCatalog.MetricDigitalLabelColorKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalDefaultLabelColor);
+        digital.DefaultConfiguration[DashboardWidgetCatalog.MetricDigitalDigitsKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalDefaultDigits.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        digital.DefaultConfiguration[DashboardWidgetCatalog.MetricDigitalBorderColorKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalDefaultBorderColor);
+        digital.DefaultConfiguration[DashboardWidgetCatalog.MetricDigitalBorderWidthKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalDefaultBorderWidth.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        digital.DefaultConfiguration[DashboardWidgetCatalog.MetricDigitalRadiusKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalDefaultRadius.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        digital.DefaultConfiguration[DashboardWidgetCatalog.MetricDigitalPaddingKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalDefaultPadding.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        digital.DefaultConfiguration[DashboardWidgetCatalog.MetricDigitalFitModeKey]
+            .ShouldBe(DashboardWidgetCatalog.MetricDigitalFitCompact);
+        digital.SupportedValueKinds.ShouldContain(DashboardMetricValueKinds.Number);
+        digital.SupportedValueKinds.ShouldContain(DashboardMetricValueKinds.Rate);
+        var digitalPropertyKeys = digital.PropertyGroups
+            .SelectMany(static group => group.Properties)
+            .Select(static property => property.Key)
+            .ToArray();
+        digitalPropertyKeys.ShouldContain(DashboardWidgetCatalog.MetricDigitalStyleKey);
+        digitalPropertyKeys.ShouldContain(DashboardWidgetCatalog.MetricDigitalGlowKey);
+        digitalPropertyKeys.ShouldContain(DashboardWidgetCatalog.MetricDigitalBackgroundColorKey);
+        digitalPropertyKeys.ShouldContain(DashboardWidgetCatalog.MetricDigitalSegmentColorKey);
+        digitalPropertyKeys.ShouldContain(DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey);
+        digitalPropertyKeys.ShouldContain(DashboardWidgetCatalog.MetricDigitalLabelColorKey);
+        digitalPropertyKeys.ShouldContain(DashboardWidgetCatalog.MetricDigitalDigitsKey);
+        digitalPropertyKeys.ShouldContain(DashboardWidgetCatalog.MetricDigitalBorderColorKey);
+        digitalPropertyKeys.ShouldContain(DashboardWidgetCatalog.MetricDigitalBorderWidthKey);
+        digitalPropertyKeys.ShouldContain(DashboardWidgetCatalog.MetricDigitalRadiusKey);
+        digitalPropertyKeys.ShouldContain(DashboardWidgetCatalog.MetricDigitalPaddingKey);
+        digitalPropertyKeys.ShouldContain(DashboardWidgetCatalog.MetricDigitalFitModeKey);
+        digitalPropertyKeys.ShouldNotContain(DashboardWidgetCatalog.KpiValueColorKey);
+        digitalPropertyKeys.ShouldNotContain(DashboardWidgetCatalog.MetricValueValueColorKey);
+    }
+
+    [Fact]
+    public void DashboardMetricDigitalVisualization_UsesReusableReadoutComponent()
+    {
+        var root = FindRepositoryRoot();
+        var widgetsPath = Path.Combine(root, "src", "FluxMq.UI", "Components", "Workspace", "DashboardWidgets");
+        var digitalView = File.ReadAllText(Path.Combine(widgetsPath, "DashboardMetricDigitalVisualizationView.razor"));
+        var readout = File.ReadAllText(Path.Combine(widgetsPath, "DashboardDigitalReadout.razor"));
+
+        digitalView.ShouldContain("<DashboardDigitalReadout");
+        digitalView.ShouldContain("Value=\"@DigitalValue(metric.Value)\"");
+        digitalView.ShouldContain("Label=\"@label\"");
+        digitalView.ShouldContain("AccentColor=");
+        digitalView.ShouldContain("BackgroundColor=");
+        digitalView.ShouldContain("InactiveSegmentColor=");
+        digitalView.ShouldContain("LabelColor=");
+        digitalView.ShouldContain("MinimumDigits=");
+        digitalView.ShouldNotContain("<svg");
+
+        readout.ShouldContain("[Parameter]");
+        readout.ShouldContain("public string? Value");
+        readout.ShouldContain("public string? Label");
+        readout.ShouldContain("public string? AccentColor");
+        readout.ShouldContain("public string? BackgroundColor");
+        readout.ShouldContain("public string? InactiveSegmentColor");
+        readout.ShouldContain("public string? LabelColor");
+        readout.ShouldContain("public int MinimumDigits");
+        readout.ShouldContain("viewBox=");
+        readout.ShouldContain("SegmentPath");
+        readout.ShouldContain("foreach (var segment in new[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g' })");
+        readout.ShouldContain("if (segments.Contains('.', StringComparison.Ordinal))");
+    }
+
+    [Fact]
+    public void PropertyGridColorPicker_UsesAlphaCapableFrameworkPicker()
+    {
+        var root = FindRepositoryRoot();
+        var path = Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "PropertyGridColorPicker.razor");
+        var markup = File.ReadAllText(path);
+
+        markup.ShouldContain("<MudColorPicker");
+        markup.ShouldContain("property-grid-color-picker");
+        markup.ShouldContain("property-grid-color-swatch");
+        markup.ShouldContain("<MudOverlay");
+        markup.ShouldContain("AutoClose=\"true\"");
+        markup.ShouldContain("OnClosed=\"@ClosePicker\"");
+        markup.ShouldContain("<MudPopover");
+        markup.ShouldContain("ShowAlpha=\"true\"");
+        markup.ShouldContain("ShowColorField=\"true\"");
+        markup.ShouldContain("ShowInputs=\"true\"");
+        markup.ShouldContain("ShowModeSwitch=\"true\"");
+        markup.ShouldContain("ColorPickerMode=\"ColorPickerMode.HEX\"");
+        markup.ShouldContain("PickerVariant=\"PickerVariant.Static\"");
+        markup.ShouldContain("private void ClosePicker()");
+        markup.ShouldContain("#00000000");
+        markup.ShouldContain("MudColor.TryParse");
+        markup.ShouldContain("ToPersistedColor");
+        markup.ShouldContain("SwatchCssColor");
+        markup.ShouldContain("rgba(");
+        markup.ShouldNotContain("property-grid-mud-color-picker");
+        markup.ShouldNotContain("property-grid-color-alpha");
+
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "PropertyGridColorPicker.razor.css"));
+        css.ShouldContain("grid-template-columns: 36px minmax(0, 1fr) 28px;");
+        css.ShouldContain("background-color: var(--property-grid-color-value);");
+        css.ShouldContain("font-size: 17px;");
+    }
+
+    [Fact]
+    public void DashboardDesigner_EditPreviewKeepsMetricValuePlacement()
+    {
+        var root = FindRepositoryRoot();
+        var path = Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor.css");
+        var css = File.ReadAllText(path);
+
+        css.ShouldContain(".dashboard-cell-widget-preview ::deep .dashboard-metric-value-layout");
+        css.ShouldContain("justify-content: var(--dashboard-kpi-value-placement, flex-start);");
+        css.ShouldNotContain("justify-content: space-between;");
+    }
+
+    [Fact]
+    public void DashboardDesigner_AppliesCellWidgetAlignmentToEditAndLiveViews()
+    {
+        var root = FindRepositoryRoot();
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor.css"));
+
+        css.ShouldContain(".dashboard-cell-widget-preview");
+        css.ShouldContain("align-items: var(--dashboard-cell-widget-align, stretch);");
+        css.ShouldContain("justify-content: var(--dashboard-cell-widget-justify, flex-start);");
+        css.ShouldContain("flex: var(--dashboard-cell-widget-flex, 1 1 auto);");
+        css.ShouldContain("width: var(--dashboard-cell-widget-width, 100%);");
+        css.ShouldContain("padding: var(--dashboard-cell-padding, 0);");
+        css.ShouldContain(".dashboard-live-cell");
+        css.ShouldContain(".dashboard-live-cell ::deep .dashboard-widget");
+    }
+
+    [Fact]
+    public void DashboardDesigner_EmitsResponsiveCellVariables()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor"));
+
+        markup.ShouldContain("CellResponsiveVariables");
+        markup.ShouldContain("--dashboard-cell-column-span");
+        markup.ShouldContain("--dashboard-cell-row-span");
+        markup.ShouldContain("--dashboard-cell-tablet-span");
+        markup.ShouldContain("--dashboard-cell-mobile-span");
+        markup.ShouldContain("--dashboard-cell-responsive-min-height");
+        markup.ShouldContain("CssTemplate(_layout.Columns, ColumnAxis)");
+        markup.ShouldContain("CssTemplate(_layout.Rows, RowAxis)");
+    }
+
+    [Fact]
+    public void DashboardDesigner_UsesContainerResponsiveGridForEditAndLive()
+    {
+        var root = FindRepositoryRoot();
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor.css"));
+
+        css.ShouldContain("container-name: dashboard-layout;");
+        css.ShouldContain("@container dashboard-layout (max-width: 980px)");
+        css.ShouldContain("@container dashboard-layout (max-width: 620px)");
+        css.ShouldContain("grid-template-columns: repeat(2, minmax(var(--dashboard-grid-column-min, 156px), 1fr)) !important;");
+        css.ShouldContain("grid-column: span var(--dashboard-cell-tablet-span, 1) !important;");
+        css.ShouldContain("grid-column: span var(--dashboard-cell-mobile-span, 1) !important;");
+        css.ShouldContain(".dashboard-live-grid");
+        css.ShouldContain("grid-auto-rows: minmax(var(--dashboard-grid-row-min, 136px), 1fr);");
+    }
+
+    [Fact]
+    public void DashboardWidgets_UseContainerResponsiveValueAndDigitalSizing()
+    {
+        var root = FindRepositoryRoot();
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "wwwroot",
+            "dashboard-widgets.css"));
+
+        css.ShouldContain("font-size: clamp(28px, 8cqw, 46px);");
+        css.ShouldContain("font-size: clamp(30px, 10cqw, 52px);");
+        css.ShouldContain("height: clamp(34px, 42cqh, 74px);");
+        css.ShouldContain("@container (max-width: 240px)");
+        css.ShouldContain("@container (max-height: 150px)");
+        css.ShouldContain(".dashboard-digital-readout-display");
+    }
+
+    [Fact]
+    public void DashboardInspector_RendersCellWidgetAlignmentPad()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspector.razor"));
+
+        markup.ShouldContain("<PropertyGridAlignmentPad");
+        markup.ShouldContain("SetCellWidgetAlignmentAsync");
+        markup.ShouldContain("DashboardCellStyleDraft.WidgetFitContent");
+    }
+
+    [Fact]
+    public void DashboardDesigner_EmptyCellLabelsStayBoundedWhenGridShrinks()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor.css"));
+
+        markup.ShouldContain("dashboard-cell-placeholder");
+        css.ShouldContain(".dashboard-cell-placeholder");
+        css.ShouldContain("align-items: flex-start;");
+        css.ShouldContain("max-width: 100%;");
+        css.ShouldContain(".dashboard-cell-span");
+        css.ShouldContain("text-overflow: ellipsis;");
     }
 
     [Fact]
@@ -1365,17 +1786,21 @@ public sealed class DashboardEventFilterCatalogTests
     {
         var root = FindRepositoryRoot();
         var widgetsPath = Path.Combine(root, "src", "FluxMq.UI", "Components", "Workspace", "DashboardWidgets");
+        var widgetView = File.ReadAllText(Path.Combine(root, "src", "FluxMq.UI", "Components", "Workspace", "DashboardWidgetView.razor"));
         var kpi = File.ReadAllText(Path.Combine(widgetsPath, "DashboardKpiTileModuleView.razor"));
         var counter = File.ReadAllText(Path.Combine(widgetsPath, "DashboardEventCounterModuleView.razor"));
         var eventRate = File.ReadAllText(Path.Combine(widgetsPath, "DashboardEventRateModuleView.razor"));
         var rateTile = File.ReadAllText(Path.Combine(widgetsPath, "DashboardRateTileModuleView.razor"));
 
-        kpi.ShouldContain("DashboardMetricValueVisualizationView");
+        kpi.ShouldContain("DashboardMetricVisualizationHost");
         counter.ShouldContain("DashboardMetricValueVisualizationView");
         eventRate.ShouldContain("DashboardMetricValueVisualizationView");
         rateTile.ShouldContain("DashboardMetricValueVisualizationView");
         eventRate.ShouldNotContain("DashboardEventRateWidget");
         eventRate.ShouldNotContain("Context.Snapshot");
+        widgetView.ShouldContain("DashboardWidgetCatalog.EventCounterType");
+        widgetView.ShouldContain("DashboardWidgetCatalog.EventRateType");
+        widgetView.ShouldContain("DashboardWidgetCatalog.RateTileType");
     }
 
     [Fact]

@@ -1,8 +1,10 @@
 using FluxFlow.Engine.Components;
 using FluxMq.App.Metrics;
+using FluxMq.Core.Metrics;
 using FluxMq.Scenarios;
 using Shouldly;
 using System.Diagnostics.Metrics;
+using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.App.Tests.Runtime;
 
@@ -246,6 +248,123 @@ public sealed class FluxMetricFrameworkTests
         mqttMeasurement.Tags.ShouldContain(tag => tag.Key == "retain" && Equals(tag.Value, "true"));
     }
 
+    [Fact]
+    public async Task FluxEventCountMetric_EmitsNumberReadings()
+    {
+        var events = CreateRuntimeEventSource();
+        var metric = new FluxEventCountMetric(
+            "messageCount",
+            new FluxMetricDefinition(
+                "messageCount",
+                FluxMetricCatalog.RuntimeEventsSource,
+                FluxMetricCatalog.MeasureCount,
+                "60s",
+                eventType: FlowEventTypes.MqttMessageReceived),
+            events);
+
+        await metric.StartAsync();
+        events.Post(Event(FlowEventTypes.MqttMessageReceived, DateTimeOffset.UtcNow, "factory/a"));
+
+        var reading = await ReceiveAsync(metric.Output);
+
+        reading.MetricId.ShouldBe("messageCount");
+        reading.Value.ShouldBe(1);
+        metric.Latest.ShouldBe(reading);
+    }
+
+    [Fact]
+    public async Task FluxEventRateMetric_PrunesOldEventsFromWindow()
+    {
+        var events = CreateRuntimeEventSource();
+        var metric = new FluxEventRateMetric(
+            "messageRate",
+            new FluxMetricDefinition(
+                "messageRate",
+                FluxMetricCatalog.RuntimeEventsSource,
+                FluxMetricCatalog.MeasureRate,
+                "60s",
+                eventType: FlowEventTypes.MqttMessageReceived),
+            events);
+
+        await metric.StartAsync();
+        events.Post(Event(FlowEventTypes.MqttMessageReceived, DateTimeOffset.UtcNow.AddMinutes(-2), "factory/old"));
+        events.Post(Event(FlowEventTypes.MqttMessageReceived, DateTimeOffset.UtcNow, "factory/current"));
+
+        var first = await ReceiveAsync(metric.Output);
+        var second = first.Value > 0 ? first : await ReceiveAsync(metric.Output);
+
+        second.Value.ShouldBe(1d / 60d, tolerance: 0.0001);
+    }
+
+    [Fact]
+    public async Task FluxMetricRuntimeHost_StartsConfiguredMetricStreams()
+    {
+        var events = CreateRuntimeEventSource();
+        var host = new FluxMetricRuntimeHost();
+        host.Configure(
+            new Dictionary<string, FluxMetricArtifactDefinition>(StringComparer.Ordinal)
+            {
+                ["messageCount"] = new()
+                {
+                    DisplayName = "Message count",
+                    Definition = new FluxMetricDefinition(
+                        "messageCount",
+                        FluxMetricCatalog.RuntimeEventsSource,
+                        FluxMetricCatalog.MeasureCount,
+                        "60s",
+                        eventType: FlowEventTypes.MqttMessagePublished)
+                }
+            },
+            events);
+        var stream = host.GetNumberStream("messageCount");
+
+        await host.StartAsync();
+        events.Post(Event(FlowEventTypes.MqttMessagePublished, DateTimeOffset.UtcNow, "factory/a"));
+
+        var reading = await ReceiveAsync(stream);
+
+        reading.MetricId.ShouldBe("messageCount");
+        reading.Value.ShouldBe(1);
+        host.TryGetLatestNumber("messageCount", null, out var latest).ShouldBeTrue();
+        latest.ShouldBe(reading);
+    }
+
+    [Fact]
+    public async Task MetricSourceComponent_RelaysExistingMetricStream()
+    {
+        var events = CreateRuntimeEventSource();
+        var host = new FluxMetricRuntimeHost();
+        host.Configure(
+            new Dictionary<string, FluxMetricArtifactDefinition>(StringComparer.Ordinal)
+            {
+                ["retainedMessages"] = new()
+                {
+                    DisplayName = "Retained messages",
+                    Definition = new FluxMetricDefinition(
+                        "retainedMessages",
+                        FluxMetricCatalog.RuntimeEventsSource,
+                        FluxMetricCatalog.MeasureRetained,
+                        "60s",
+                        eventType: FlowEventTypes.MqttMessagePublished)
+                }
+            },
+            events);
+        var source = new MetricSourceComponent(host, "retainedMessages");
+
+        await host.StartAsync();
+        await source.StartAsync();
+        events.Post(Event(
+            FlowEventTypes.MqttMessagePublished,
+            DateTimeOffset.UtcNow,
+            "factory/a",
+            attributes: new Dictionary<string, string> { ["retain"] = "true" }));
+
+        var reading = await ReceiveAsync(source.Output);
+
+        reading.MetricId.ShouldBe("retainedMessages");
+        reading.Value.ShouldBe(1);
+    }
+
     private static FlowEvent Event(
         string type,
         DateTimeOffset timestamp,
@@ -265,6 +384,16 @@ public sealed class FluxMetricFrameworkTests
             PayloadBytes = payloadBytes,
             Attributes = attributes ?? new Dictionary<string, string>(StringComparer.Ordinal)
         };
+
+    private static BroadcastBlock<FlowEvent> CreateRuntimeEventSource()
+        => new(static flowEvent => flowEvent);
+
+    private static async Task<FluxMetricReading<double>> ReceiveAsync(
+        ISourceBlock<FluxMetricReading<double>> source)
+    {
+        using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+        return await source.ReceiveAsync(cancellation.Token);
+    }
 
     private sealed record RecordedMeasurement(
         string InstrumentName,

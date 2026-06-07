@@ -6,6 +6,7 @@ using FluxMq.Components.MqttPayloadInspector;
 using FluxMq.Components.MqttPublisher;
 using FluxMq.Components.Replay;
 using FluxMq.Core.Ids;
+using FluxMq.Core.Metrics;
 using FluxMq.Core.Models;
 using FluxFlow.Components.Http.Contracts;
 using FluxFlow.Components.Payloads.Contracts;
@@ -133,6 +134,13 @@ public static class FluxMqControlExpressionContextFactory
                 break;
             case ScheduleTick tick:
                 Merge(variables, ScheduleTickExpressionContextFactory.Create(tick));
+                break;
+            case FluxMetricReading<double> reading:
+                variables["reading"] = reading;
+                variables["metricId"] = reading.MetricId;
+                variables["timestamp"] = reading.Timestamp;
+                variables["value"] = reading.Value;
+                variables["input"] = reading;
                 break;
         }
     }
