@@ -38,18 +38,19 @@
                 </MudAlert>
             }
 
+            @if (!string.IsNullOrWhiteSpace(SelectedMetricSummary))
+            {
+                <MudAlert Severity="Severity.Normal" Variant="Variant.Outlined" Dense="true">
+                    @SelectedMetricSummary
+                </MudAlert>
+            }
+
             @if (SelectedMetric?.Parameters.Count > 0)
             {
                 <MudText Typo="Typo.caption" Color="Color.Secondary">Parameters</MudText>
                 @foreach (var parameter in SelectedMetric.Parameters)
                 {
-                    <MudTextField T="string"
-                                  Label="@parameter.LabelOrId()"
-                                  Value="@ParameterValue(parameter)"
-                                  ValueChanged="@(value => SetParameterValue(parameter.Id, value))"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  HelperText="@ParameterHelper(parameter)" />
+                    @RenderParameterField(parameter)
                 }
             }
 
@@ -79,15 +80,41 @@
     private bool _emitLatestOnStart = true;
     private int _boundedCapacity = 1000;
     private readonly Dictionary<string, string> _parameters = new(StringComparer.Ordinal);
+    private readonly FluxMetricResolver _metricResolver = new();
 
     private IReadOnlyList<MetricOption> MetricOptions
         => Flow.GetMetricArtifacts()
-            .Select(static pair => new MetricOption(pair.Key, pair.Value.DisplayName))
+            .Select(static pair => new MetricOption(
+                pair.Key,
+                string.IsNullOrWhiteSpace(pair.Value.DisplayName)
+                    ? pair.Key
+                    : pair.Value.DisplayName))
             .OrderBy(static option => option.Label, StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
     private FluxMetricArtifactDefinition? SelectedMetric
         => string.IsNullOrWhiteSpace(_metricId) ? null : Flow.GetMetricArtifact(_metricId);
+
+    private string SelectedMetricSummary
+    {
+        get
+        {
+            if (SelectedMetric is null)
+            {
+                return string.Empty;
+            }
+
+            try
+            {
+                return FluxMetricQuerySummary.DescribeSentence(
+                    _metricResolver.Resolve(SelectedMetric, _parameters));
+            }
+            catch
+            {
+                return "Metric parameters need attention before this source can run.";
+            }
+        }
+    }
 
     private string LatestValue
         => Flow.TryGetLatestMetricReading(Model.MetricId, Model.Parameters, out var reading)
@@ -141,6 +168,55 @@
     private string ParameterValue(FluxMetricParameterDefinition parameter)
         => _parameters.TryGetValue(parameter.Id, out var value) ? value : parameter.DefaultValue;
 
+    private RenderFragment RenderParameterField(FluxMetricParameterDefinition parameter)
+    {
+        var value = ParameterValue(parameter);
+        if (parameter.AllowedValues.Count > 0)
+        {
+            return @<MudSelect T="string"
+                               Label="@parameter.LabelOrId()"
+                               Value="@value"
+                               ValueChanged="@(next => SetParameterValue(parameter.Id, next))"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true"
+                               HelperText="@ParameterHelper(parameter)">
+                @if (!parameter.Required)
+                {
+                    <MudSelectItem Value="@string.Empty">Default</MudSelectItem>
+                }
+                @foreach (var option in parameter.AllowedValues)
+                {
+                    <MudSelectItem Value="@option">@option</MudSelectItem>
+                }
+            </MudSelect>;
+        }
+
+        if (string.Equals(parameter.Kind, FluxMetricParameterKinds.Toggle, StringComparison.Ordinal))
+        {
+            return @<MudSelect T="string"
+                               Label="@parameter.LabelOrId()"
+                               Value="@value"
+                               ValueChanged="@(next => SetParameterValue(parameter.Id, next))"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true"
+                               HelperText="@ParameterHelper(parameter)">
+                <MudSelectItem Value="@string.Empty">Default</MudSelectItem>
+                <MudSelectItem Value="@TrueValue">On</MudSelectItem>
+                <MudSelectItem Value="@FalseValue">Off</MudSelectItem>
+            </MudSelect>;
+        }
+
+        return @<MudTextField T="string"
+                              Label="@parameter.LabelOrId()"
+                              Value="@value"
+                              ValueChanged="@(next => SetParameterValue(parameter.Id, next))"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              HelperText="@ParameterHelper(parameter)" />;
+    }
+
     private void SetParameterValue(string parameterId, string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -162,6 +238,9 @@
         => string.IsNullOrWhiteSpace(parameter.Target)
             ? parameter.Kind
             : $"{parameter.Kind} · {parameter.Target}";
+
+    private const string TrueValue = "true";
+    private const string FalseValue = "false";
 
     private sealed record MetricOption(string Id, string Label);
 }

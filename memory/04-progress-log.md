@@ -2814,3 +2814,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `Validate Windows desktop app` passed.
     - `Package Windows desktop app` was skipped.
 - Next step: keep PR #169 in draft for review, then mark ready or merge only after approval.
+- Metric stream integration follow-up:
+  - Started `work/metric-stream-integration` from clean `main` after PR #169 was merged and local `main` was synced.
+  - Added focused pipeline acceptance coverage proving `metric.source` can route `FluxMetricReading<double>` through `flow.when`.
+  - Added focused pipeline acceptance coverage proving `metric.source` can feed `flow.mapper` and map a metric reading into an MQTT publish request.
+  - Added UI model coverage for `MetricSourceNodeModel` creation, configuration normalization, typed output, and parameter round-trip.
+  - Polished the Metric Source node editor so metric parameters use allowed-value selects, boolean selects, and a readable app-metric sentence instead of treating every parameter as plain text.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricSourceFactory|FullyQualifiedName~FluxMetricRuntimeHost|FullyQualifiedName~MetricSourceComponent" -p:UseAppHost=false --verbosity minimal` passed with 5 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~SourceNodeModelTests" -p:UseAppHost=false --verbosity minimal` passed with 9 tests.
+    - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 116 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 404 tests.
+    - `git diff --check` passed with line-ending normalization warnings for the edited files.
+- Next step: run the broader UI/App test gate, then move `event.counter` from dashboard-local metric query editing to app-level metric selection if the Metric Source editor QA looks good.
