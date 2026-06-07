@@ -2807,3 +2807,10 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 726 tests.
     - `git diff --check` passed.
 - Next step: commit the binding-command cleanup, then stop this cleanup phase unless a review exposes a concrete remaining blocker.
+- Dashboard metric cleanup PR:
+  - Pushed `work/metric-dashboard-cleanup`.
+  - Opened draft PR #169: `Clean up dashboard metric boundaries`.
+  - GitHub validation:
+    - `Validate Windows desktop app` passed.
+    - `Package Windows desktop app` was skipped.
+- Next step: keep PR #169 in draft for review, then mark ready or merge only after approval.
