@@ -241,6 +241,33 @@ public static class FluxMetricNaming
         return string.IsNullOrWhiteSpace(normalized) ? "metric" : normalized;
     }
 
+    public static string ToDashboardScopedId(string dashboardName, string metricName)
+    {
+        var dashboardId = ToArtifactId(dashboardName);
+        var metricId = ToArtifactId(metricName);
+        var prefix = $"{dashboardId}.";
+        return metricId.StartsWith(prefix, StringComparison.Ordinal)
+            ? metricId
+            : ToArtifactId($"{dashboardId}.{metricId}");
+    }
+
+    public static string RemoveDashboardScope(string dashboardName, string metricName)
+    {
+        var dashboardId = ToArtifactId(dashboardName);
+        var metricId = ToArtifactId(metricName);
+        var prefix = $"{dashboardId}.";
+        return metricId.StartsWith(prefix, StringComparison.Ordinal) && metricId.Length > prefix.Length
+            ? metricId[prefix.Length..]
+            : metricId;
+    }
+
+    public static bool HasDashboardScope(string dashboardName, string metricName)
+    {
+        var dashboardId = ToArtifactId(dashboardName);
+        var metricId = ToArtifactId(metricName);
+        return metricId.StartsWith($"{dashboardId}.", StringComparison.Ordinal);
+    }
+
     public static string ToDisplayName(string value)
     {
         var text = (value ?? string.Empty)

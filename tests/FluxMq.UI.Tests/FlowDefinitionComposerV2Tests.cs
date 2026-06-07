@@ -265,7 +265,27 @@ public sealed class FlowDefinitionComposerV2Tests
 
         var layout = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull();
         layout.Metrics.ContainsKey("ops.eventCounterMetric").ShouldBeTrue();
+        layout.Metrics.ContainsKey("ops.unused").ShouldBeFalse();
         layout.Metrics.ContainsKey("unused").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void UpdateDashboardMetric_DoesNotDoubleScopePromotedMetricIds()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.EventCounterType, "slot:0:0");
+
+        json = composer.UpdateDashboardMetric(
+            json,
+            "ops",
+            "ops.eventCounterMetric",
+            new DashboardMetricQueryDefinition("runtimeEvents", "count", "300s"));
+
+        var layout = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull();
+        layout.Metrics.ContainsKey("ops.eventCounterMetric").ShouldBeTrue();
+        layout.Metrics.ContainsKey("ops.ops.eventCounterMetric").ShouldBeFalse();
+        layout.Metrics["ops.eventCounterMetric"].Window.ShouldBe("300s");
     }
 
     [Fact]

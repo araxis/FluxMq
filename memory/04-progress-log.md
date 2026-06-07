@@ -2659,3 +2659,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 113 tests.
   - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 383 tests.
 - Next step: run full solution verification and then review the Metric Source node UX in the desktop designer before moving on to the next dashboard metric consumer.
+
+## 2026-06-07 - Metric/dashboard boundary cleanup
+
+- Started the post-merge cleanup branch after the metric stream framework landed.
+- Centralized dashboard-scoped metric id handling in `FluxMetricNaming` so app migration and UI composition share one policy.
+- Kept dashboard metric promotion idempotent: `ops.metric` remains `ops.metric` and cannot become `ops.ops.metric`.
+- Updated dashboard metric cleanup so unused dashboard-promoted app metrics can be removed after local dashboard `metrics` have already migrated away.
+- Added regression coverage for scoped metric naming, double-scope prevention, and removal of unused promoted metrics.
+- Verification so far:
+  - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 114 tests.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 384 tests.
+- Next step: run full solution verification and `git diff --check`; if green, review whether `FlowWorkspaceService` metric lookup should be the next cleanup target.
