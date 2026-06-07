@@ -464,9 +464,6 @@
 
     private bool ShowsDataProperties => _widgetDraft?.Profile.UsesMetricQuery == true;
 
-    private bool IsEventRateQueryBuilderWidget =>
-        string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal);
-
     private bool IsAppMetricConsumerWidget =>
         IsAppMetricConsumerType(_widgetDraft?.Profile.Type);
 
@@ -672,21 +669,13 @@
         }
     }
 
-    private string MetricQueryEditTitle => IsEventRateQueryBuilderWidget
-        ? "Edit event rate query"
-        : "Edit metric query";
+    private string MetricQueryEditTitle => "Edit metric query";
 
-    private string MetricQueryDialogTitle => IsEventRateQueryBuilderWidget
-        ? "Event rate query"
-        : "Metric query";
+    private string MetricQueryDialogTitle => "Metric query";
 
-    private string MetricQueryApplyNote => IsEventRateQueryBuilderWidget
-        ? "Draft query. Apply updates this event rate metric only."
-        : "Draft query. Apply updates this metric only.";
+    private string MetricQueryApplyNote => "Draft query. Apply updates this metric only.";
 
-    private IReadOnlyList<string> MetricQueryAllowedMeasures => IsEventRateQueryBuilderWidget
-        ? [FluxMetricCatalog.MeasureRate]
-        : [];
+    private IReadOnlyList<string> MetricQueryAllowedMeasures => [];
 
     private async Task SetTitleAsync(string? value)
     {
@@ -1271,13 +1260,19 @@
 
     private static bool IsAppMetricConsumerType(string? type)
         => string.Equals(type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal) ||
-           string.Equals(type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal);
+           string.Equals(type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal) ||
+           string.Equals(type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal);
 
     private bool IsCompatibleAppMetric(FluxMetricArtifactDefinition metric)
     {
         if (string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal))
         {
             return string.Equals(metric.Definition.Measure, FluxMetricCatalog.MeasureCount, StringComparison.Ordinal);
+        }
+
+        if (string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal))
+        {
+            return string.Equals(metric.Definition.Measure, FluxMetricCatalog.MeasureRate, StringComparison.Ordinal);
         }
 
         return true;

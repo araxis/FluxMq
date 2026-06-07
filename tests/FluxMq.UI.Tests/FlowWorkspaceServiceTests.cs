@@ -2436,6 +2436,55 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public void GetDashboardMetricValue_UsesAppMetricArtifactForEventRate()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddMetric("publishedRate");
+        service.UpdateMetric(
+            "publishedRate",
+            FluxMetricArtifactDefinition.CreateDefault("publishedRate", "Published rate") with
+            {
+                Definition = new FluxMetricDefinition(
+                    "Published rate",
+                    FluxMetricCatalog.RuntimeEventsSource,
+                    FluxMetricCatalog.MeasureRate,
+                    "60s",
+                    eventType: FlowEventTypes.MqttMessagePublished,
+                    topicStartsWith: "test/",
+                    status: "published",
+                    format: FluxMetricCatalog.FormatNumber)
+            });
+        service.AddDashboard("ops");
+        service.AddDashboardWidget(DashboardWidgetCatalog.EventRateType, "slot:0:0");
+        service.UpdateDashboardWidget(
+            "eventRate",
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["title"] = "Published rate",
+                ["metric"] = "publishedRate"
+            });
+        service.UpdateDashboardWidgetBinding(
+            "eventRate",
+            "publishedRate",
+            ["publishedRate"]);
+        service.SetActiveDashboard("ops");
+
+        service.RecordManualMqttPublish("test/one", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+        service.RecordManualMqttPublish("other/skip", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+        service.RecordManualMqttPublish("test/two", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+
+        var widget = service.GetActiveDashboardLayout()
+            .ShouldNotBeNull()
+            .Widgets["eventRate"];
+        var value = service.GetDashboardMetricValue(widget);
+
+        value.Label.ShouldBe("Rate");
+        value.Value.ShouldBe(2d / 60d, 0.0001);
+        value.Unit.ShouldBe("/s");
+        value.FormattedValue.ShouldBe("0.03");
+    }
+
+    [Fact]
     public async Task RunAsync_CollectsRuntimeEventsForDashboardWidgets()
     {
         var mqttClient = new FakeRuntimeMqttBrokerClient();

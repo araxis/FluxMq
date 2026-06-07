@@ -2839,3 +2839,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardEventFilterCatalogTests|FullyQualifiedName~GetDashboardMetricValue_UsesAppMetricArtifactForEventCounter"` passed with 95 tests.
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 405 tests.
 - Next step: commit the Event Counter app-metric slice, then continue one widget at a time with `event.rate` moving from dashboard-local query editing to app-level rate metric selection.
+- Event Rate app-metric consumption:
+  - Moved `event.rate` inspector editing onto the app-level metric selector path.
+  - Filtered the Event Rate selector to rate-based app metrics so it remains a focused rate widget.
+  - Kept legacy query fallback in place for existing dashboard-local rate query JSON.
+  - Added behavior coverage proving Event Rate can resolve a root app metric artifact and calculate events-per-second from runtime events through the shared dashboard metric bridge.
+  - Verification:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardEventFilterCatalogTests|FullyQualifiedName~GetDashboardMetricValue_UsesAppMetricArtifactForEventRate"` passed with 95 tests.
+    - A parallel UI build attempt hit a transient XAML compiler file lock; the serial rerun passed.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings on serial rerun.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 406 tests.
+- Next step: commit the Event Rate app-metric slice, then review remaining dashboard metric consumers and choose the next single widget instead of doing a broad migration.

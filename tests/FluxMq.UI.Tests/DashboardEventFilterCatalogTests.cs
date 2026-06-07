@@ -1523,7 +1523,7 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
-    public void DashboardInspector_UsesAppMetricsForKpiAndCounterAndMetricBuilderForRate()
+    public void DashboardInspector_UsesAppMetricsForKpiCounterAndRateWidgets()
     {
         var root = FindRepositoryRoot();
         var inspector = File.ReadAllText(Path.Combine(
@@ -1541,19 +1541,19 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "DashboardInspectorMetricQueryRows.razor"));
 
-        inspector.ShouldContain("IsEventRateQueryBuilderWidget");
         inspector.ShouldContain("IsMetricQueryBuilderWidget");
         inspector.ShouldContain("!IsMetricQueryBuilderWidget");
         inspector.ShouldContain("DashboardInspectorAppMetricRows");
         inspector.ShouldContain("DashboardInspectorMetricQueryRows");
         inspector.ShouldContain("OpenMetricBuilderAsync");
-        inspector.ShouldContain("Event rate query");
         inspector.ShouldContain("DashboardWidgetCatalog.KpiTileType");
         inspector.ShouldContain("DashboardWidgetCatalog.EventCounterType");
+        inspector.ShouldContain("DashboardWidgetCatalog.EventRateType");
         inspector.ShouldContain("FluxMetricCatalog.MeasureCount");
         inspector.ShouldContain("FluxMetricCatalog.MeasureRate");
         inspector.ShouldContain("[nameof(DashboardMetricQueryBuilderDialog.AllowedMeasures)] = MetricQueryAllowedMeasures");
         inspector.ShouldNotContain("Event counter query");
+        inspector.ShouldNotContain("Event rate query");
         queryRows.ShouldContain("dashboard-inspector-query-row");
         queryRows.ShouldContain("dashboard-inspector-query-edit");
         inspector.ShouldNotContain("OpenKpiMetricBuilderAsync");
