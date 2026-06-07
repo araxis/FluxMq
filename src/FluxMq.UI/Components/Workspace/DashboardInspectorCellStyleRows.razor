@@ -1,0 +1,66 @@
+@using FluxMq.UI.Models
+@using FluxMq.UI.Services
+
+@if (Draft is { } draft)
+{
+    @foreach (var field in DashboardCellStyleDraft.Fields)
+    {
+        var currentField = field;
+        <PropertyGridRow Name="@currentField.Label" Unit="@currentField.Unit">
+            @if (currentField.Editor == DashboardWidgetPropertyEditorKind.Color)
+            {
+                <PropertyGridColorPicker Value="@draft.GetValue(currentField.Key)"
+                                         DefaultValue="@currentField.DefaultValue"
+                                         AriaLabel="@currentField.Label"
+                                         ValueChanged="@((string? value) => SetValueAsync(currentField.Key, value))" />
+            }
+            else if (currentField.Editor == DashboardWidgetPropertyEditorKind.Select)
+            {
+                <PropertyGridSelect Value="@draft.GetValue(currentField.Key)"
+                                    Options="@StyleSelectOptions(currentField)"
+                                    AriaLabel="@currentField.Label"
+                                    ValueChanged="@((string? value) => SetValueAsync(currentField.Key, value))" />
+            }
+            else if (currentField.Editor == DashboardWidgetPropertyEditorKind.Segmented &&
+                string.Equals(currentField.Key, DashboardCellStyleDraft.WidgetAlignmentKey, StringComparison.Ordinal))
+            {
+                <PropertyGridAlignmentPad Value="@draft.GetValue(currentField.Key)"
+                                          AriaLabel="@currentField.Label"
+                                          ValueChanged="@WidgetAlignmentChanged" />
+            }
+            else
+            {
+                <input class="property-grid-input"
+                       type="@StyleInputType(currentField)"
+                       value="@draft.GetValue(currentField.Key)"
+                       @oninput="@((ChangeEventArgs args) => SetValueAsync(currentField.Key, args.Value?.ToString()))" />
+            }
+        </PropertyGridRow>
+    }
+    <PropertyGridRow Name="Defaults">
+        <button type="button" class="property-grid-action-button" @onclick="@(() => Reset.InvokeAsync())">Reset cell style</button>
+    </PropertyGridRow>
+}
+
+@code {
+    [Parameter]
+    public DashboardCellStyleDraft? Draft { get; set; }
+
+    [Parameter]
+    public EventCallback<DashboardInspectorPropertyValueChange> ValueChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> WidgetAlignmentChanged { get; set; }
+
+    [Parameter]
+    public EventCallback Reset { get; set; }
+
+    private Task SetValueAsync(string key, string? value)
+        => ValueChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
+
+    private static string StyleInputType(DashboardStyleField field)
+        => field.Editor == DashboardWidgetPropertyEditorKind.Number ? "number" : "text";
+
+    private static IReadOnlyList<PropertyGridSelectOption> StyleSelectOptions(DashboardStyleField field)
+        => [.. field.Options.Select(static option => new PropertyGridSelectOption(option.Value, option.Label))];
+}

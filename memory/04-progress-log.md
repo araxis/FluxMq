@@ -2682,3 +2682,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 710 tests.
     - `git diff --check` passed.
 - Next step: the next cleanup target is the dashboard inspector/property row split.
+- Dashboard inspector row split:
+  - Extracted layout property rows into `DashboardInspectorLayoutRows`.
+  - Extracted cell style property rows into `DashboardInspectorCellStyleRows`.
+  - Kept `DashboardInspector` responsible for state, group composition, and commands while the focused row components own their own row markup.
+  - Added source-boundary tests so the inspector keeps delegating layout/style rows to focused components.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardInspector"` passed with 5 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 386 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 711 tests.
+    - `git diff --check` passed.
+- Next step: continue splitting dashboard inspector metric data rows next.

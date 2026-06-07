@@ -1741,17 +1741,60 @@ public sealed class DashboardEventFilterCatalogTests
     public void DashboardInspector_RendersCellWidgetAlignmentPad()
     {
         var root = FindRepositoryRoot();
-        var markup = File.ReadAllText(Path.Combine(
+        var inspector = File.ReadAllText(Path.Combine(
             root,
             "src",
             "FluxMq.UI",
             "Components",
             "Workspace",
             "DashboardInspector.razor"));
+        var styleRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorCellStyleRows.razor"));
 
-        markup.ShouldContain("<PropertyGridAlignmentPad");
-        markup.ShouldContain("SetCellWidgetAlignmentAsync");
-        markup.ShouldContain("DashboardCellStyleDraft.WidgetFitContent");
+        inspector.ShouldContain("DashboardInspectorCellStyleRows");
+        inspector.ShouldContain("SetCellWidgetAlignmentAsync");
+        inspector.ShouldContain("DashboardCellStyleDraft.WidgetFitContent");
+        styleRows.ShouldContain("<PropertyGridAlignmentPad");
+    }
+
+    [Fact]
+    public void DashboardInspector_UsesFocusedLayoutAndStyleRowComponents()
+    {
+        var root = FindRepositoryRoot();
+        var inspector = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspector.razor"));
+        var layoutRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorLayoutRows.razor"));
+        var styleRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorCellStyleRows.razor"));
+
+        inspector.ShouldContain("DashboardInspectorLayoutRows");
+        inspector.ShouldContain("DashboardInspectorCellStyleRows");
+        inspector.ShouldNotContain("private string LayoutSelectionName");
+        inspector.ShouldNotContain("StyleInputType(DashboardStyleField");
+        layoutRows.ShouldContain("DuplicateWidget");
+        layoutRows.ShouldContain("DeleteWidget");
+        styleRows.ShouldContain("Reset cell style");
     }
 
     [Fact]

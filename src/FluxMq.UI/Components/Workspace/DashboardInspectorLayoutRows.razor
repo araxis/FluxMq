@@ -1,0 +1,64 @@
+@using FluxMq.UI.Models
+
+<PropertyGridRow Name="@LayoutSelectionName">
+    <span class="property-grid-cell-text">@LayoutSelectionValue</span>
+</PropertyGridRow>
+<PropertyGridRow Name="Position">
+    <span class="property-grid-cell-text">@LayoutPositionValue</span>
+</PropertyGridRow>
+<PropertyGridRow Name="Span">
+    <span class="property-grid-cell-text">@LayoutSpanValue</span>
+</PropertyGridRow>
+<PropertyGridRow Name="Widget">
+    <span class="property-grid-cell-text">@LayoutWidgetValue</span>
+</PropertyGridRow>
+@if (Widget is not null)
+{
+    <PropertyGridRow Name="Actions">
+        <div class="property-grid-button-group">
+            <button type="button" class="property-grid-action-button" @onclick="@(() => DuplicateWidget.InvokeAsync())">Duplicate</button>
+            <button type="button" class="property-grid-action-button danger" @onclick="@(() => DeleteWidget.InvokeAsync())">Delete</button>
+        </div>
+    </PropertyGridRow>
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<DashboardCellSnapshot> SelectedCells { get; set; } = [];
+
+    [Parameter]
+    public DashboardWidgetSnapshot? Widget { get; set; }
+
+    [Parameter]
+    public EventCallback DuplicateWidget { get; set; }
+
+    [Parameter]
+    public EventCallback DeleteWidget { get; set; }
+
+    private DashboardCellSnapshot? PrimarySelectedCell => SelectedCells.Count == 1
+        ? SelectedCells[0]
+        : null;
+
+    private string LayoutSelectionName => SelectedCells.Count == 1
+        ? "Cell"
+        : "Selection";
+
+    private string LayoutSelectionValue => SelectedCells.Count switch
+    {
+        0 => "No cell selected",
+        1 => PrimarySelectedCell?.Label ?? "Cell",
+        _ => $"{SelectedCells.Count} cells"
+    };
+
+    private string LayoutPositionValue => PrimarySelectedCell is { } cell
+        ? $"Row {cell.Row + 1}, column {cell.Column + 1}"
+        : "-";
+
+    private string LayoutSpanValue => PrimarySelectedCell is { } cell
+        ? $"{cell.ColumnSpan} x {cell.RowSpan}"
+        : "-";
+
+    private string LayoutWidgetValue => Widget?.Name ??
+        PrimarySelectedCell?.Widget ??
+        "-";
+}
