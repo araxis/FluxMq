@@ -2971,3 +2971,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 752 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit and PR the focused gauge cleanup, then continue with the next cleanup target after it is merged.
+- Runtime package option cleanup:
+  - Merged PR #171 (`Remove unsupported gauge shape option`) into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Started `work/runtime-node-helper-cleanup` from clean `main`.
+  - Extracted package component option wiring for timers, mapping, state, storage, and routing from `RuntimeNodeFactoryRegistryExtensions` into `FluxMqRuntimePackageComponentOptions`.
+  - Kept FluxMQ runtime node module adaptation and node-specific creation helpers in the registry extension.
+  - Moved the routing context factory beside the routing package option registration; message-filter topic context remains node-specific.
+  - Verification:
+    - `dotnet build src\FluxMq.App\FluxMq.App.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~AddFluxMqRuntimeNodes_RegistersFluxMqNodeModulesAsKeyedServices|FullyQualifiedName~RegisterPipelineComponentFactories_RegistersStableComponentTypes|FullyQualifiedName~MetricSourceComponent_RelaysExistingMetricStream" -p:UseAppHost=false --verbosity minimal` passed with 3 tests.
+    - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 118 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 423 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 752 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit and PR the focused runtime helper cleanup.

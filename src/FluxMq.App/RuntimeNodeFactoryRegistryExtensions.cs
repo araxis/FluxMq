@@ -89,12 +89,14 @@ public static class RuntimeNodeFactoryRegistryExtensions
         registry
             .RegisterPayloadComponents()
             .RegisterHttpComponents()
-            .RegisterTimerComponents(ConfigureTimerComponents)
-            .RegisterMappingComponents(options => ConfigureMappingComponents(options, expressionEngine))
-            .RegisterStateComponents(options => ConfigureStateComponents(options, expressionEngine))
-            .RegisterStorageComponents(options => ConfigureStorageComponents(options, fileSystemStorageRootDirectory))
+            .RegisterTimerComponents(FluxMqRuntimePackageComponentOptions.ConfigureTimerComponents)
+            .RegisterMappingComponents(options => FluxMqRuntimePackageComponentOptions.ConfigureMappingComponents(options, expressionEngine))
+            .RegisterStateComponents(options => FluxMqRuntimePackageComponentOptions.ConfigureStateComponents(options, expressionEngine))
+            .RegisterStorageComponents(options => FluxMqRuntimePackageComponentOptions.ConfigureStorageComponents(options, fileSystemStorageRootDirectory))
             .RegisterSerializationComponents()
-            .RegisterRoutingComponents(options => ConfigureRoutingComponents(options, expressionEngine));
+            .RegisterRoutingComponents(options => FluxMqRuntimePackageComponentOptions.ConfigureRoutingComponents(
+                options,
+                engine => GetExpressionEngine(engine, expressionEngine)));
 
         return registry.RegisterFluxMqRuntimeAdapters(
             ResolveFluxMqRuntimeNodeModules(runtimeServices),
@@ -159,131 +161,6 @@ public static class RuntimeNodeFactoryRegistryExtensions
             new MqttRecorderRuntimeNodeModule(),
             new FileWriterRuntimeNodeModule()
         ];
-
-    private static void ConfigureTimerComponents(TimerComponentOptions options)
-    {
-        ArgumentNullException.ThrowIfNull(options);
-
-        options
-            .RegisterType<MqttEnvelope>("MqttEnvelope")
-            .RegisterType<MqttPublishRequest>("MqttPublishRequest")
-            .RegisterType<MqttRecordingRequest>("MqttRecordingRequest")
-            .RegisterType<FileWriteRequest>("FileWriteRequest")
-            .RegisterType<TimerTick>("TimerTick")
-            .RegisterType<ScheduleTick>("ScheduleTick")
-            .RegisterType<FlowLogEntry>("FlowLogEntry")
-            .RegisterType<FlowError>("FlowError")
-            .RegisterType<FluxMetricReading<double>>(FlowContractTypeNames.NumberMetricReading);
-    }
-
-    private static void ConfigureMappingComponents(
-        MappingComponentOptions options,
-        IFlowExpressionEngine expressionEngine)
-    {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(expressionEngine);
-
-        options
-            .UseExpressionEngine(new FluxMqRequestMappingExpressionEngine(expressionEngine))
-            .RegisterType<object>("Any")
-            .RegisterType<MqttEnvelope>("MqttEnvelope")
-            .RegisterType<MqttPublishRequest>("MqttPublishRequest")
-            .RegisterType<MqttRecordingRequest>("MqttRecordingRequest")
-            .RegisterType<FileWriteRequest>("FileWriteRequest")
-            .RegisterType<StateReducerInput>("StateReducerInput")
-            .RegisterType<PayloadInspectionRequest>("PayloadInspectionRequest")
-            .RegisterType<PayloadInspectionResult>("PayloadInspectionResult")
-            .RegisterType<HttpRequestInput>("HttpRequestInput")
-            .RegisterType<HttpResponseOutput>("HttpResponseOutput")
-            .RegisterType<HttpErrorOutput>("HttpErrorOutput")
-            .RegisterType<TimerTick>("TimerTick")
-            .RegisterType<ScheduleTick>("ScheduleTick")
-            .RegisterType<FluxMetricReading<double>>(FlowContractTypeNames.NumberMetricReading)
-            .UseContextFactory<MqttEnvelope>(new MqttEnvelopeFlowMapContextFactory())
-            .UseContextFactory<FluxMetricReading<double>>(new MetricReadingFlowMapContextFactory())
-            .UseContextFactory<PayloadInspectionResult>(new PayloadInspectionResultFlowMapContextFactory())
-            .UseContextFactory<HttpResponseOutput>(new HttpResponseOutputFlowMapContextFactory())
-            .UseContextFactory<HttpErrorOutput>(new HttpErrorOutputFlowMapContextFactory());
-        options
-            .UseContextFactory<TimerTick>(new TimerTickFlowMapContextFactory())
-            .UseContextFactory<ScheduleTick>(new ScheduleTickFlowMapContextFactory());
-
-        if (!string.Equals(expressionEngine.Name, "jsonata", StringComparison.OrdinalIgnoreCase))
-        {
-            options.UseExpressionEngine(
-                new FluxMqRequestMappingExpressionEngine(FluxMqExpressionEngines.CreateJsonata()),
-                useAsDefault: false);
-        }
-    }
-
-    private static void ConfigureStateComponents(
-        StateComponentOptions options,
-        IFlowExpressionEngine expressionEngine)
-    {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(expressionEngine);
-
-        options.UseExpressionEngine(expressionEngine);
-
-        if (!string.Equals(expressionEngine.Name, "jsonata", StringComparison.OrdinalIgnoreCase))
-        {
-            options.UseExpressionEngine(FluxMqExpressionEngines.CreateJsonata(), useAsDefault: false);
-        }
-    }
-
-    private static void ConfigureStorageComponents(
-        StorageComponentOptions options,
-        string? fileSystemStorageRootDirectory)
-    {
-        ArgumentNullException.ThrowIfNull(options);
-
-        options.UseFileSystemStorage(new FileSystemStorageStoreOptions
-        {
-            RootDirectory = string.IsNullOrWhiteSpace(fileSystemStorageRootDirectory)
-                ? GetDefaultFileSystemStorageRootDirectory()
-                : fileSystemStorageRootDirectory,
-            CreateDirectory = true,
-            DefaultCollection = "default"
-        });
-    }
-
-    private static void ConfigureRoutingComponents(
-        RoutingComponentOptions options,
-        IFlowExpressionEngine expressionEngine)
-    {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(expressionEngine);
-
-        options
-            .UseExpressionEngineResolver(engine => GetExpressionEngine(engine, expressionEngine))
-            .UseDefaultContextFactory(new FluxMqRoutingContextFactory())
-            .RegisterType<object>("Any")
-            .RegisterType<MqttEnvelope>(FlowContractTypeNames.MqttEnvelope)
-            .RegisterType<MqttPublishRequest>(FlowContractTypeNames.MqttPublishRequest)
-            .RegisterType<MqttRecordingRequest>(FlowContractTypeNames.MqttRecordingRequest)
-            .RegisterType<FileWriteRequest>(FlowContractTypeNames.FileWriteRequest)
-            .RegisterType<StateReducerInput>(nameof(StateReducerInput))
-            .RegisterType<StateReducerResult>(FlowContractTypeNames.StateReducerResult)
-            .RegisterType<PayloadInspectionRequest>(FlowContractTypeNames.PayloadInspectionRequest)
-            .RegisterType<PayloadInspectionResult>(FlowContractTypeNames.PayloadInspectionResult)
-            .RegisterType<HttpRequestInput>(FlowContractTypeNames.HttpRequestInput)
-            .RegisterType<HttpResponseOutput>(FlowContractTypeNames.HttpResponseOutput)
-            .RegisterType<HttpErrorOutput>(FlowContractTypeNames.HttpErrorOutput)
-            .RegisterType<JsonSchemaValidationResult>(FlowContractTypeNames.JsonSchemaValidationResult)
-            .RegisterType<InspectedMqttMessage>(FlowContractTypeNames.InspectedMqttMessage)
-            .RegisterType<MqttMetricsSnapshot>(FlowContractTypeNames.MqttMetricsSnapshot)
-            .RegisterType<TimerTick>(FlowContractTypeNames.TimerTick)
-            .RegisterType<ScheduleTick>(FlowContractTypeNames.ScheduleTick)
-            .RegisterType<FlowLogEntry>(FlowContractTypeNames.FlowLogEntry)
-            .RegisterType<FlowError>(FlowContractTypeNames.FlowError)
-            .RegisterType<FluxMetricReading<double>>(FlowContractTypeNames.NumberMetricReading);
-    }
-
-    private static string GetDefaultFileSystemStorageRootDirectory()
-        => Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FluxMq",
-            "storage");
 
     private static ControlExpressionOptions GetFilterControlOptions(NodeDefinition definition)
     {
@@ -1480,24 +1357,4 @@ public static class RuntimeNodeFactoryRegistryExtensions
         }
     }
 
-    private sealed class FluxMqRoutingContextFactory : IRoutingContextFactory
-    {
-        public FlowMapContext Create(object? input, RoutingNodeContext context)
-        {
-            if (input is not null)
-            {
-                return FluxMqControlExpressionContextFactory.Create(input);
-            }
-
-            return new FlowMapContext
-            {
-                Variables = new Dictionary<string, object?>
-                {
-                    ["input"] = null,
-                    ["value"] = null,
-                    ["inputType"] = context.InputType.Name
-                }
-            };
-        }
-    }
 }
