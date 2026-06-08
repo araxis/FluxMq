@@ -2814,3 +2814,147 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `Validate Windows desktop app` passed.
     - `Package Windows desktop app` was skipped.
 - Next step: keep PR #169 in draft for review, then mark ready or merge only after approval.
+- Metric stream integration follow-up:
+  - Started `work/metric-stream-integration` from clean `main` after PR #169 was merged and local `main` was synced.
+  - Added focused pipeline acceptance coverage proving `metric.source` can route `FluxMetricReading<double>` through `flow.when`.
+  - Added focused pipeline acceptance coverage proving `metric.source` can feed `flow.mapper` and map a metric reading into an MQTT publish request.
+  - Added UI model coverage for `MetricSourceNodeModel` creation, configuration normalization, typed output, and parameter round-trip.
+  - Polished the Metric Source node editor so metric parameters use allowed-value selects, boolean selects, and a readable app-metric sentence instead of treating every parameter as plain text.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricSourceFactory|FullyQualifiedName~FluxMetricRuntimeHost|FullyQualifiedName~MetricSourceComponent" -p:UseAppHost=false --verbosity minimal` passed with 5 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~SourceNodeModelTests" -p:UseAppHost=false --verbosity minimal` passed with 9 tests.
+    - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 116 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 404 tests.
+    - `git diff --check` passed with line-ending normalization warnings for the edited files.
+- Next step: run the broader UI/App test gate, then move `event.counter` from dashboard-local metric query editing to app-level metric selection if the Metric Source editor QA looks good.
+- Event Counter app-metric consumption:
+  - Moved `event.counter` inspector editing onto the same app-level metric selector path as KPI.
+  - Kept legacy widget-side metric query fallback intact for old dashboard JSON.
+  - Filtered the Event Counter metric selector to count-based app metrics so the widget remains focused on one responsibility.
+  - Added behavior coverage proving Event Counter can resolve a root app metric artifact and calculate its value from runtime events through the shared dashboard metric bridge.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardEventFilterCatalogTests"` passed with 94 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardEventFilterCatalogTests|FullyQualifiedName~GetDashboardMetricValue_UsesAppMetricArtifactForEventCounter"` passed with 95 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 405 tests.
+- Next step: commit the Event Counter app-metric slice, then continue one widget at a time with `event.rate` moving from dashboard-local query editing to app-level rate metric selection.
+- Event Rate app-metric consumption:
+  - Moved `event.rate` inspector editing onto the app-level metric selector path.
+  - Filtered the Event Rate selector to rate-based app metrics so it remains a focused rate widget.
+  - Kept legacy query fallback in place for existing dashboard-local rate query JSON.
+  - Added behavior coverage proving Event Rate can resolve a root app metric artifact and calculate events-per-second from runtime events through the shared dashboard metric bridge.
+  - Verification:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardEventFilterCatalogTests|FullyQualifiedName~GetDashboardMetricValue_UsesAppMetricArtifactForEventRate"` passed with 95 tests.
+    - A parallel UI build attempt hit a transient XAML compiler file lock; the serial rerun passed.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings on serial rerun.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 406 tests.
+- Next step: commit the Event Rate app-metric slice, then review remaining dashboard metric consumers and choose the next single widget instead of doing a broad migration.
+- Rate Tile app-metric consumption:
+  - Moved `rate.tile` onto the app-level metric selector path.
+  - Removed `rate.tile` from the old visual-metric/default `primaryMetric` path so new rate tiles save as display config plus selected metric binding.
+  - Filtered the Rate Tile selector to rate-based app metrics.
+  - Kept the widget rendering as the existing focused value visual; no new visualization choices were added in this slice.
+  - Added coverage for clean rate-tile widget config, composer defaults, inspector source ownership, and runtime value resolution from a root app metric artifact.
+  - Verification:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal --filter "FullyQualifiedName~DashboardWidgetSettingsDraft_WritesRateTileAsAppMetricConfiguration|FullyQualifiedName~DashboardInspector_UsesAppMetricsForKpiCounterAndRateWidgets|FullyQualifiedName~AddDashboardWidget_AddsRateTileDefaults|FullyQualifiedName~GetDashboardMetricValue_UsesAppMetricArtifactForRateTile"` passed with 4 tests.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 409 tests.
+- Next step: commit the Rate Tile app-metric slice, then choose between `status.value` and `event.gauge` as the next single metric consumer to clean up.
+- Status Value app-metric consumption:
+  - Moved `status.value` onto the app-level metric selector path as a count/status metric consumer.
+  - Replaced the old metric-card renderer with the shared metric value visualization view and made the widget host let the visual own its header.
+  - Removed `status.value` from the old visual-metric/default `primaryMetric` path so new status widgets save as display config plus selected metric binding.
+  - Filtered the Status Value selector to count-based app metrics to keep it distinct from rate widgets.
+  - Added coverage for clean status-value widget config, composer defaults, inspector source ownership, shared rendering, and runtime value resolution from a root app metric artifact.
+  - Verification:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetSettingsDraft_WritesStatusValueAsAppMetricConfiguration|FullyQualifiedName~DashboardInspector_UsesAppMetricsForFocusedMetricValueWidgets|FullyQualifiedName~DashboardWidgetModuleCatalog_ProvidesFocusedPropertyDefinitionsForAllPaletteWidgets|FullyQualifiedName~DashboardMetricValueWidgets_UseSharedVisualizationView|FullyQualifiedName~AddDashboardWidget_AddsStatusValueDefaults|FullyQualifiedName~GetDashboardMetricValue_UsesAppMetricArtifactForStatusValue" -p:UseAppHost=false --verbosity minimal` passed with 6 tests.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 411 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 738 tests.
+    - `git diff --check` passed with line-ending normalization warnings for the edited files.
+- Next step: commit the Status Value app-metric slice, then continue one widget at a time with `event.gauge` unless a review finds a smaller dashboard metric blocker.
+- Event Gauge app-metric consumption:
+  - Moved `event.gauge` onto the app-level metric selector path while keeping the existing ring/meter gauge shape setting.
+  - Replaced snapshot-derived primary metric cards in the gauge renderer with `DashboardMetricValue` from the shared dashboard metric bridge.
+  - Removed `event.gauge` from the old visual-metric/default `primaryMetric` path so new gauges save as `title`, `metric`, and `gaugeStyle`.
+  - Kept compatibility fallback through existing metric binding/migration, but did not add new gauge range or threshold UI in this slice.
+  - Added coverage for clean gauge widget config, composer defaults, inspector source ownership, shared metric-value rendering, and runtime value resolution from a root app metric artifact.
+  - Verification:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetSettingsDraft_WritesEventGaugeAsAppMetricConfiguration|FullyQualifiedName~DashboardWidgetSettingsProfiles_ExposeDedicatedSettingsShape|FullyQualifiedName~DashboardMetricValueWidgets_UseSharedVisualizationView|FullyQualifiedName~DashboardInspector_UsesAppMetricsForFocusedMetricWidgets|FullyQualifiedName~DashboardWidgetModuleCatalog_ProvidesFocusedPropertyDefinitionsForAllPaletteWidgets|FullyQualifiedName~AddDashboardWidget_AddsEventGaugeDefaults|FullyQualifiedName~GetDashboardMetricValue_UsesAppMetricArtifactForEventGauge|FullyQualifiedName~UpdateDashboardMetric_WritesQueryShapeWithoutSchemaMigration" -p:UseAppHost=false --verbosity minimal` passed with 8 tests.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 414 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 741 tests.
+    - `git diff --check` passed with line-ending normalization warnings for the edited files.
+- Next step: commit the Event Gauge app-metric slice, then continue one widget at a time with chart/payload metric consumers or pause for a dashboard-gauge visual range/settings review.
+- Event Gauge range/settings polish:
+  - Added gauge-owned range settings for `event.gauge`: min, max, target, warning threshold, critical threshold, and normal/warning/critical colors.
+  - Kept these settings in widget presentation config, separate from app-level metric definitions and metric streams.
+  - Updated the gauge renderer so ring and meter shapes map the latest `DashboardMetricValue` through the configured range instead of treating the raw metric value as a percent.
+  - Removed the old raw gauge-percent helper so range-aware gauge state is the only remaining gauge calculation path.
+  - Added a target marker and range/target labels to the rendered gauge state.
+  - Exposed the new settings in the existing property grid with auto-apply, using numeric rows and compact color-picker rows. No popup editor or schema change was added.
+  - Added coverage for gauge range math, module defaults, draft save output, inspector rows, and composer defaults.
+  - Verification:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetFormatting_MapsGaugeMetricValueThroughConfiguredRange|FullyQualifiedName~DashboardWidgetModuleCatalog_ProvidesFocusedPropertyDefinitionsForAllPaletteWidgets|FullyQualifiedName~DashboardWidgetSettingsDraft_WritesEventGaugeAsAppMetricConfiguration|FullyQualifiedName~DashboardInspector_UsesFocusedDisplayModeRowComponent|FullyQualifiedName~AddDashboardWidget_AddsEventGaugeDefaults" -p:UseAppHost=false --verbosity minimal` passed with 5 tests.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 415 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 742 tests.
+    - A parallel build/test rerun hit the known XAML compiler file-lock condition; the serial build and final solution rerun both passed.
+- Next step: run `git diff --check`, commit the Event Gauge range/settings slice, then review the gauge UI in the running dashboard before choosing the next single widget consumer.
+- DI-first runtime cleanup:
+  - Replaced the metric runtime measure switch with keyed metric stream modules for count, rate, unique topics, payload bytes, average payload, and retained counts.
+  - Kept `FluxMetricRuntimeHost` focused on lifecycle, stream reuse, latest-reading lookup, and app-runtime event attachment; metric classes still own calculation.
+  - Added FluxMQ runtime node modules keyed by node type and changed the engine registry extension to project those modules into the existing FluxFlow `RuntimeNodeFactoryRegistry`.
+  - Added `AddFluxMqMetricStreams`, `AddFluxMqRuntimeNodes`, and `AddFluxMqAppRuntime` registration extensions.
+  - Wired default app hosts and the CLI validation/run path through the new app runtime composition while preserving existing `FlowApplicationHost.CreateDefault(...)` entrypoints.
+  - Added synchronous disposal to `FluxMetricRuntimeHost` so DI containers can be disposed safely from both sync and async host paths.
+  - Kept dashboard/widget/scenario metadata catalogs untouched in this slice.
+  - Verification:
+    - `dotnet build src\FluxMq.App\FluxMq.App.csproj --no-restore --verbosity minimal` passed with 0 warnings.
+    - `dotnet build src\FluxMq.Cli\FluxMq.Cli.csproj --no-restore --verbosity minimal` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~AddFluxMqMetricStreams_RegistersAllNumberMeasureModulesAsKeyedServices|FullyQualifiedName~AddFluxMqRuntimeNodes_RegistersFluxMqNodeModulesAsKeyedServices|FullyQualifiedName~RegisterPipelineComponentFactories_RegistersStableComponentTypes|FullyQualifiedName~FluxMetricRuntimeHost_StartsConfiguredMetricStreams|FullyQualifiedName~MetricSourceComponent_RelaysExistingMetricStream" -p:UseAppHost=false --verbosity minimal` passed with 5 tests.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 118 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 415 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 744 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: choose either dashboard catalog/module cleanup or unsupported gauge-shape cleanup as the next focused cleanup slice.
+- Dashboard catalog/module cleanup:
+  - Split `DashboardMetricVisualizationCatalog` into explicit visualization module providers for `metric.value` and `metric.digital`.
+  - Added a provider-composition seam to `DashboardWidgetModuleCatalog` and grouped widgets by Metrics, Events, Charts, MQTT Ops, and Topics providers.
+  - Moved Metrics provider-owned module construction and metric property groups out of `DashboardWidgetModuleCatalog` into `DashboardMetricWidgetModuleProvider`.
+  - Removed obsolete KPI/metric module helper methods from the central catalog so it now acts more like a thin provider composer for metric widgets.
+  - Moved Events provider-owned module construction, event filter groups, metric-query groups, latest-event field settings, event table settings, and event-gauge range groups into `DashboardEventWidgetModuleProvider`.
+  - Removed the corresponding event-only helper methods from the central catalog; shared helpers remained only where Charts, MQTT Ops, or Topics still needed them.
+  - Moved Charts provider-owned module construction and chart-specific property groups into `DashboardChartWidgetModuleProvider`.
+  - Removed the central chart-only helper methods from `DashboardWidgetModuleCatalog`.
+  - Kept the old chart compatibility alias on the line-chart module and kept donut chart sizing/defaults unchanged.
+  - Moved MQTT Ops provider-owned module construction, payload bucket settings, and QoS/retain breakdown settings into `DashboardMqttOpsWidgetModuleProvider`.
+  - Removed the central MQTT Ops-only bucket and breakdown helper methods from `DashboardWidgetModuleCatalog`.
+  - Kept payload distribution, QoS breakdown, retain breakdown, data requirements, sizing, and the old QoS/retain compatibility alias unchanged.
+  - Moved Topics provider-owned module construction, topic activity settings, and topic tree settings into `DashboardTopicWidgetModuleProvider`.
+  - Deleted the remaining central event-style factory/helper block from `DashboardWidgetModuleCatalog`.
+  - Left `DashboardWidgetModuleCatalog` as a thin provider composer and compatibility lookup surface only.
+  - Kept all dashboard widget ids, visualization ids, property definitions, defaults, schema, and UI behavior unchanged.
+  - Used explicit provider lists rather than reflection scanning or DI for static/listable dashboard metadata.
+  - Added catalog coverage proving provider ids are unique and provider-built modules match the catalog module order.
+  - Added coverage proving the Metrics provider owns the KPI, Status Value, and Rate Tile definitions and keeps their clean metric defaults.
+  - Added coverage proving the Events provider owns Event Counter, Latest Event, Event Rate, Event Gauge, and Event Table definitions and keeps their clean event defaults.
+  - Added coverage proving the Charts provider owns Line Chart, Area Chart, Bar Chart, and Donut Chart definitions and keeps their chart defaults/alias behavior.
+  - Added coverage proving the MQTT Ops provider owns Payload Size Distribution, QoS Breakdown, and Retain Breakdown definitions and keeps their groups/alias behavior.
+  - Added coverage proving the Topics provider owns Topic Activity and Topic Tree definitions and keeps their groups/defaults/layout behavior.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetModuleCatalog|FullyQualifiedName~DashboardMetricVisualizationCatalog" -p:UseAppHost=false --verbosity minimal` passed with 4 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetModuleCatalog|FullyQualifiedName~DashboardMetricWidgetModuleProvider|FullyQualifiedName~DashboardMetricVisualizationCatalog" -p:UseAppHost=false --verbosity minimal` passed with 5 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetModuleCatalog|FullyQualifiedName~DashboardMetricWidgetModuleProvider|FullyQualifiedName~DashboardEventWidgetModuleProvider|FullyQualifiedName~DashboardMetricVisualizationCatalog" -p:UseAppHost=false --verbosity minimal` passed with 6 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetModuleCatalog_ComposesCategoryProviderModules|FullyQualifiedName~DashboardMetricWidgetModuleProvider_OwnsMetricWidgetDefinitions|FullyQualifiedName~DashboardEventWidgetModuleProvider_OwnsEventWidgetDefinitions|FullyQualifiedName~DashboardChartWidgetModuleProvider_OwnsChartWidgetDefinitions" -p:UseAppHost=false --verbosity minimal` passed with 4 tests.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings after the MQTT Ops move.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetModuleCatalog_ComposesCategoryProviderModules|FullyQualifiedName~DashboardChartWidgetModuleProvider_OwnsChartWidgetDefinitions|FullyQualifiedName~DashboardMqttOpsWidgetModuleProvider_OwnsMqttOpsWidgetDefinitions" -p:UseAppHost=false --verbosity minimal` passed with 3 tests.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings after the Topics move.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetModuleCatalog_ComposesCategoryProviderModules|FullyQualifiedName~DashboardMetricWidgetModuleProvider_OwnsMetricWidgetDefinitions|FullyQualifiedName~DashboardEventWidgetModuleProvider_OwnsEventWidgetDefinitions|FullyQualifiedName~DashboardChartWidgetModuleProvider_OwnsChartWidgetDefinitions|FullyQualifiedName~DashboardMqttOpsWidgetModuleProvider_OwnsMqttOpsWidgetDefinitions|FullyQualifiedName~DashboardTopicWidgetModuleProvider_OwnsTopicWidgetDefinitions" -p:UseAppHost=false --verbosity minimal` passed with 6 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 422 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 751 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: split the DI runtime cleanup and dashboard catalog cleanup into focused commits before starting another cleanup target.

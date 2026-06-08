@@ -46,6 +46,7 @@ using FluxFlow.Engine.Definitions;
 using FluxFlow.Engine.Mapping;
 using FluxFlow.Engine.Runtime;
 using FluxMq.Core.Metrics;
+using Microsoft.Extensions.DependencyInjection;
 using MQTTnet.Protocol;
 using System.Text;
 using System.Text.Json;
@@ -78,7 +79,8 @@ public static class RuntimeNodeFactoryRegistryExtensions
         IFlowExpressionEngine? expressionEngine = null,
         string? fileSystemStorageRootDirectory = null,
         ISecretResolver? secretResolver = null,
-        FluxMetricRuntimeHost? metricRuntimeHost = null)
+        FluxMetricRuntimeHost? metricRuntimeHost = null,
+        IServiceProvider? runtimeServices = null)
     {
         ArgumentNullException.ThrowIfNull(registry);
         clientFactory ??= profile => new MqttBrokerClient(profile, secretResolver);
@@ -95,6 +97,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             .RegisterRoutingComponents(options => ConfigureRoutingComponents(options, expressionEngine));
 
         return registry.RegisterFluxMqRuntimeAdapters(
+            ResolveFluxMqRuntimeNodeModules(runtimeServices),
             clientFactory,
             messageRepository,
             expressionEngine,
@@ -103,28 +106,59 @@ public static class RuntimeNodeFactoryRegistryExtensions
 
     private static RuntimeNodeFactoryRegistry RegisterFluxMqRuntimeAdapters(
         this RuntimeNodeFactoryRegistry registry,
+        IReadOnlyList<IFluxMqRuntimeNodeModule> modules,
         Func<MqttConnectionProfile, IMqttBrokerClient> clientFactory,
         IMessageRepository? messageRepository,
         IFlowExpressionEngine expressionEngine,
         FluxMetricRuntimeHost? metricRuntimeHost)
-        => registry
-            .Register(FluxMqNodeTypes.Connection, context => CreateConnection(context.Address, context.Definition, clientFactory))
-            .Register(FluxMqNodeTypes.Trigger, context => CreateTrigger(context.Address, context.Definition, context))
-            .Register(FluxMqNodeTypes.ConnectionStateTrigger, context => CreateConnectionStateTrigger(context.Address, context.Definition, context))
-            .Register(FluxMqNodeTypes.StoredSessionSource, context => CreateStoredSessionSource(context.Address, context.Definition, messageRepository))
-            .Register(FluxMqNodeTypes.ReplaySource, context => CreateReplaySource(context.Address, context.Definition, messageRepository))
-            .Register(FluxMqNodeTypes.GeneratedSource, context => CreateGeneratedMqttSource(context.Address, context.Definition))
-            .Register(FluxMqNodeTypes.MetricSource, context => CreateMetricSource(context.Address, context.Definition, metricRuntimeHost))
-            .Register(FluxMqNodeTypes.PayloadInspector, CreatePayloadInspector)
-            .Register(FluxMqNodeTypes.MqttMetrics, CreateMqttMetrics)
-            .Register(FluxMqNodeTypes.FlowLogger, CreateFlowLogger)
-            .Register(FluxMqNodeTypes.MessageFilter, context => CreateMessageFilter(context.Address, context.Definition, expressionEngine))
-            .Register(FluxMqNodeTypes.ConditionRouter, context => CreateConditionRouter(context.Address, context.Definition, expressionEngine))
-            .Register(FluxMqNodeTypes.FlowAssertion, context => CreateFlowAssertion(context.Address, context.Definition, expressionEngine))
-            .Register(FluxMqNodeTypes.JsonSchemaValidator, context => CreateJsonSchemaValidator(context.Address, context.Definition))
-            .Register(FluxMqNodeTypes.MqttPublisher, context => CreatePublisher(context.Address, context.Definition, context))
-            .Register(FluxMqNodeTypes.MqttRecorder, context => CreateRecorder(context.Address, context.Definition, messageRepository))
-            .Register(FluxMqNodeTypes.FileWriter, CreateFileWriter);
+    {
+        ArgumentNullException.ThrowIfNull(modules);
+
+        foreach (var module in modules)
+        {
+            registry.Register(module.Type, context => module.Build(new FluxMqRuntimeNodeBuildContext(
+                context,
+                clientFactory,
+                messageRepository,
+                expressionEngine,
+                metricRuntimeHost)));
+        }
+
+        return registry;
+    }
+
+    private static IReadOnlyList<IFluxMqRuntimeNodeModule> ResolveFluxMqRuntimeNodeModules(IServiceProvider? runtimeServices)
+    {
+        if (runtimeServices is null)
+        {
+            return CreateDefaultFluxMqRuntimeNodeModules();
+        }
+
+        return [.. FluxMqRuntimeNodeModuleTypes.All.Select(type =>
+            runtimeServices.GetRequiredKeyedService<IFluxMqRuntimeNodeModule>(type.Value))];
+    }
+
+    private static IReadOnlyList<IFluxMqRuntimeNodeModule> CreateDefaultFluxMqRuntimeNodeModules()
+        =>
+        [
+            new MqttConnectionRuntimeNodeModule(),
+            new MqttTriggerRuntimeNodeModule(),
+            new ConnectionStateTriggerRuntimeNodeModule(),
+            new StoredSessionSourceRuntimeNodeModule(),
+            new ReplaySourceRuntimeNodeModule(),
+            new GeneratedMqttSourceRuntimeNodeModule(),
+            new MetricSourceRuntimeNodeModule(),
+            new PayloadInspectorRuntimeNodeModule(),
+            new MqttMetricsRuntimeNodeModule(),
+            new FlowLoggerRuntimeNodeModule(),
+            new MessageFilterRuntimeNodeModule(),
+            new ConditionRouterRuntimeNodeModule(),
+            new FlowAssertionRuntimeNodeModule(),
+            new JsonSchemaValidatorRuntimeNodeModule(),
+            new MqttPublisherRuntimeNodeModule(),
+            new MqttRecorderRuntimeNodeModule(),
+            new FileWriterRuntimeNodeModule()
+        ];
 
     private static void ConfigureTimerComponents(TimerComponentOptions options)
     {
@@ -355,7 +389,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             InputType = typeof(TInput)
         };
 
-    private static RuntimeNode CreateConnection(
+    internal static RuntimeNode CreateConnection(
         NodeAddress address,
         NodeDefinition definition,
         Func<MqttConnectionProfile, IMqttBrokerClient> clientFactory)
@@ -372,7 +406,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
-    private static RuntimeNode CreateStoredSessionSource(
+    internal static RuntimeNode CreateStoredSessionSource(
         NodeAddress address,
         NodeDefinition definition,
         IMessageRepository? messageRepository)
@@ -398,7 +432,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
         return SourceRuntimeNode(address, component, component.Output);
     }
 
-    private static RuntimeNode CreateReplaySource(
+    internal static RuntimeNode CreateReplaySource(
         NodeAddress address,
         NodeDefinition definition,
         IMessageRepository? messageRepository)
@@ -433,7 +467,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
         return SourceRuntimeNode(address, component, component.Output);
     }
 
-    private static RuntimeNode CreateGeneratedMqttSource(NodeAddress address, NodeDefinition definition)
+    internal static RuntimeNode CreateGeneratedMqttSource(NodeAddress address, NodeDefinition definition)
     {
         var component = new GeneratedSourceNode<MqttEnvelope>(
             GetGeneratedSourceOptions(definition),
@@ -478,7 +512,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
-    private static RuntimeNode CreateTrigger(
+    internal static RuntimeNode CreateTrigger(
         NodeAddress address,
         NodeDefinition definition,
         RuntimeNodeFactoryContext context)
@@ -507,7 +541,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
-    private static RuntimeNode CreateConnectionStateTrigger(
+    internal static RuntimeNode CreateConnectionStateTrigger(
         NodeAddress address,
         NodeDefinition definition,
         RuntimeNodeFactoryContext context)
@@ -532,7 +566,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
-    private static RuntimeNode CreateMessageFilter(
+    internal static RuntimeNode CreateMessageFilter(
         NodeAddress address,
         NodeDefinition definition,
         IFlowExpressionEngine expressionEngine)
@@ -558,7 +592,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
-    private static RuntimeNode CreatePayloadInspector(NodeAddress address, NodeDefinition definition)
+    internal static RuntimeNode CreatePayloadInspector(NodeAddress address, NodeDefinition definition)
     {
         var component = new PayloadInspectorMapperComponent(boundedCapacity: GetBoundedCapacity(definition));
 
@@ -576,7 +610,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
-    private static RuntimeNode CreateConditionRouter(
+    internal static RuntimeNode CreateConditionRouter(
         NodeAddress address,
         NodeDefinition definition,
         IFlowExpressionEngine expressionEngine)
@@ -619,7 +653,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
-    private static RuntimeNode CreateFlowAssertion(
+    internal static RuntimeNode CreateFlowAssertion(
         NodeAddress address,
         NodeDefinition definition,
         IFlowExpressionEngine expressionEngine)
@@ -714,7 +748,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             InputType = typeof(TInput)
         };
 
-    private static RuntimeNode CreateMqttMetrics(NodeAddress address, NodeDefinition definition)
+    internal static RuntimeNode CreateMqttMetrics(NodeAddress address, NodeDefinition definition)
     {
         var component = new MqttMetricsComponent(
             boundedCapacity: GetBoundedCapacity(definition),
@@ -737,7 +771,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
-    private static RuntimeNode CreateMetricSource(
+    internal static RuntimeNode CreateMetricSource(
         NodeAddress address,
         NodeDefinition definition,
         FluxMetricRuntimeHost? metricRuntimeHost)
@@ -764,7 +798,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
-    private static RuntimeNode CreateFlowLogger(NodeAddress address, NodeDefinition definition)
+    internal static RuntimeNode CreateFlowLogger(NodeAddress address, NodeDefinition definition)
     {
         var hasMessageInput = definition.Ports.ContainsKey(InputPort.Value);
         var hasFlowErrorInput = definition.Ports.ContainsKey(FlowErrorsPort.Value);
@@ -796,7 +830,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
-    private static RuntimeNode CreateJsonSchemaValidator(NodeAddress address, NodeDefinition definition)
+    internal static RuntimeNode CreateJsonSchemaValidator(NodeAddress address, NodeDefinition definition)
     {
         var component = new JsonSchemaValidatorComponent(
             GetJsonSchemaValidatorDefinition(definition),
@@ -818,7 +852,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
-    private static RuntimeNode CreatePublisher(
+    internal static RuntimeNode CreatePublisher(
         NodeAddress address,
         NodeDefinition definition,
         RuntimeNodeFactoryContext context)
@@ -847,7 +881,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
-    private static RuntimeNode CreateRecorder(NodeAddress address, NodeDefinition definition, IMessageRepository? messageRepository)
+    internal static RuntimeNode CreateRecorder(NodeAddress address, NodeDefinition definition, IMessageRepository? messageRepository)
     {
         if (messageRepository is null)
         {
@@ -869,7 +903,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
-    private static RuntimeNode CreateFileWriter(NodeAddress address, NodeDefinition definition)
+    internal static RuntimeNode CreateFileWriter(NodeAddress address, NodeDefinition definition)
     {
         var component = new FileWriterComponent(boundedCapacity: GetBoundedCapacity(definition));
 

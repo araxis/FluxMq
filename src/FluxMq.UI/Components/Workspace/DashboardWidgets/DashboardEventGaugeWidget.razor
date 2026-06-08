@@ -1,8 +1,8 @@
 @namespace FluxMq.UI.Components.Workspace
 
 @{
-    var primary = DashboardWidgetFormatting.PrimaryMetricCard(Widget, Snapshot);
     var gaugeStyle = DashboardWidgetCatalog.NormalizeGaugeStyle(Widget.ReadString(DashboardWidgetCatalog.GaugeStyleKey));
+    var gauge = DashboardWidgetFormatting.GaugeVisualState(Widget, Metric);
 }
 
 <div class="dashboard-single-gauge-layout">
@@ -10,26 +10,33 @@
     {
         <div class="dashboard-gauge-meter-panel">
             <div class="dashboard-gauge-meter-header">
-                <span>@primary.Label</span>
-                <strong>@primary.Value</strong>
+                <span>@Metric.Label</span>
+                <strong>@Metric.FormattedValue</strong>
             </div>
-            <div class="dashboard-gauge-meter" style="@DashboardWidgetFormatting.GaugeProgressStyle(Snapshot)" aria-hidden="true">
-                <span></span>
+            <div class="dashboard-gauge-meter" style="@gauge.Style" aria-hidden="true">
+                <span class="dashboard-gauge-meter-fill"></span>
+                <span class="dashboard-gauge-meter-target"></span>
             </div>
             <div class="dashboard-gauge-meter-footer">
-                <span>@DashboardWidgetFormatting.FormatDuration(Snapshot.RateWindow)</span>
-                <span>@DashboardWidgetFormatting.FormatNumber(Snapshot.Count) total</span>
+                <span>@gauge.RangeLabel</span>
+                <span>target @gauge.TargetLabel</span>
             </div>
         </div>
     }
     else
     {
         <div class="dashboard-widget-gauge-shell">
-            <div class="dashboard-widget-gauge" style="@DashboardWidgetFormatting.GaugeProgressStyle(Snapshot)">
+            <div class="dashboard-widget-gauge" style="@gauge.Style">
+                <span class="dashboard-widget-gauge-target" aria-hidden="true"></span>
                 <div>
-                    <strong>@primary.Value</strong>
-                    <span>@primary.Label</span>
+                    <strong>@Metric.FormattedValue</strong>
+                    <span>@Metric.Label</span>
                 </div>
+            </div>
+            <div class="dashboard-widget-gauge-meta">
+                <strong>@DashboardWidgetFormatting.WidgetTitle(Widget)</strong>
+                <span>@gauge.RangeLabel</span>
+                <span>target @gauge.TargetLabel</span>
             </div>
         </div>
     }
@@ -40,5 +47,5 @@
     public DashboardWidgetSnapshot Widget { get; set; } = null!;
 
     [Parameter, EditorRequired]
-    public DashboardEventSnapshot Snapshot { get; set; } = null!;
+    public DashboardMetricValue Metric { get; set; } = null!;
 }

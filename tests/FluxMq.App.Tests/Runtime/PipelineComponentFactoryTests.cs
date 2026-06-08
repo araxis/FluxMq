@@ -27,6 +27,7 @@ using FluxFlow.Components.Serialization.Contracts;
 using FluxFlow.Components.Storage;
 using FluxFlow.Components.Storage.Contracts;
 using FluxFlow.Components.Timers.Contracts;
+using Microsoft.Extensions.DependencyInjection;
 using MQTTnet.Protocol;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -92,6 +93,21 @@ public sealed class PipelineComponentFactoryTests
             FluxMqNodeTypes.TimerDebounce,
             FluxMqNodeTypes.TimerThrottle
         }, ignoreOrder: true);
+    }
+
+    [Fact]
+    public void AddFluxMqRuntimeNodes_RegistersFluxMqNodeModulesAsKeyedServices()
+    {
+        using var services = new ServiceCollection()
+            .AddFluxMqRuntimeNodes()
+            .BuildServiceProvider();
+
+        foreach (var type in FluxMqRuntimeNodeModuleTypes.All)
+        {
+            var module = services.GetRequiredKeyedService<IFluxMqRuntimeNodeModule>(type.Value);
+
+            module.Type.ShouldBe(type);
+        }
     }
 
     [Fact]
@@ -565,6 +581,222 @@ public sealed class PipelineComponentFactoryTests
 
         sink!.Values[0].MetricId.ShouldBe("messageRate");
         sink.Values[0].Value.ShouldBe(1d / 60d, tolerance: 0.0001);
+    }
+
+    [Fact]
+    public async Task MetricSourceFactory_CanRouteReadingsThroughCondition()
+    {
+        TestSinkNode<FluxMetricReading<double>>? matchedSink = null;
+        TestSinkNode<FluxMetricReading<double>>? unmatchedSink = null;
+        var runtimeEvents = new BroadcastBlock<FlowEvent>(static flowEvent => flowEvent);
+        var metricRuntimeHost = new FluxMetricRuntimeHost();
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories(metricRuntimeHost: metricRuntimeHost)
+            .Register(new NodeType("test.metric-matched"), (address, _) =>
+            {
+                matchedSink = new TestSinkNode<FluxMetricReading<double>>();
+                return SinkNode(address, matchedSink);
+            })
+            .Register(new NodeType("test.metric-unmatched"), (address, _) =>
+            {
+                unmatchedSink = new TestSinkNode<FluxMetricReading<double>>();
+                return SinkNode(address, unmatchedSink);
+            }));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node(FluxMqNodeTypes.MetricSource, new Dictionary<string, object?>
+                        {
+                            ["metricId"] = "messageCount",
+                            ["emitLatestOnStart"] = true
+                        }),
+                        ["when"] = new NodeDefinition
+                        {
+                            Type = FluxMqNodeTypes.ConditionRouter,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["inputType"] = JsonDocument.Parse("\"NumberMetricReading\"").RootElement.Clone(),
+                                ["expression"] = JsonDocument.Parse("\"value >= 2\"").RootElement.Clone()
+                            }
+                        },
+                        ["matched"] = NodeWithPort("test.metric-matched", "Input", "\"when.WhenTrue\""),
+                        ["unmatched"] = NodeWithPort("test.metric-unmatched", "Input", "\"when.WhenFalse\"")
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(result.Errors.FirstOrDefault()?.Message);
+        metricRuntimeHost.Configure(
+            new Dictionary<string, FluxMetricArtifactDefinition>(StringComparer.Ordinal)
+            {
+                ["messageCount"] = new()
+                {
+                    DisplayName = "Message count",
+                    Definition = new FluxMetricDefinition(
+                        "messageCount",
+                        FluxMetricCatalog.RuntimeEventsSource,
+                        FluxMetricCatalog.MeasureCount,
+                        "60s",
+                        eventType: FlowEventTypes.MqttMessagePublished)
+                }
+            },
+            runtimeEvents);
+        await metricRuntimeHost.StartAsync();
+        await result.Runtime!.StartAsync();
+
+        runtimeEvents.Post(new FlowEvent
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Type = FlowEventTypes.MqttMessagePublished,
+            Source = "test",
+            Channel = "factory/a",
+            Status = "published"
+        });
+        runtimeEvents.Post(new FlowEvent
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Type = FlowEventTypes.MqttMessagePublished,
+            Source = "test",
+            Channel = "factory/b",
+            Status = "published"
+        });
+
+        await Eventually(() => matchedSink!.Values.Any(reading => reading.Value >= 2));
+        await Eventually(() => unmatchedSink!.Values.Any(reading => reading.Value < 2));
+
+        matchedSink!.Values.Last().MetricId.ShouldBe("messageCount");
+        matchedSink.Values.Last().Value.ShouldBe(2);
+        unmatchedSink!.Values.ShouldContain(reading => reading.Value == 1);
+    }
+
+    [Fact]
+    public async Task MetricSourceFactory_CanMapReadingsToMqttPublishRequests()
+    {
+        FakeMqttBrokerClient? mqttClient = null;
+        var runtimeEvents = new BroadcastBlock<FlowEvent>(static flowEvent => flowEvent);
+        var metricRuntimeHost = new FluxMetricRuntimeHost();
+        const string mapperExpression = """
+        {
+          "topic": "metrics/" & metricId,
+          "payload": "value=" & $string(value),
+          "qos": 0,
+          "retain": false
+        }
+        """;
+
+        var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
+            .RegisterPipelineComponentFactories(
+                _ =>
+                {
+                    mqttClient = new FakeMqttBrokerClient();
+                    return mqttClient;
+                },
+                metricRuntimeHost: metricRuntimeHost));
+
+        var result = builder.Build(new ApplicationDefinition
+        {
+            Resources =
+            {
+                ["broker"] = new NodeDefinition
+                {
+                    Type = FluxMqNodeTypes.Connection,
+                    Configuration =
+                    {
+                        ["profile"] = JsonDocument.Parse("""{"name":"broker","host":"localhost","port":1883}""").RootElement.Clone()
+                    }
+                }
+            },
+            Workflows =
+            {
+                ["flow"] = new WorkflowDefinition
+                {
+                    Nodes =
+                    {
+                        ["source"] = Node(FluxMqNodeTypes.MetricSource, new Dictionary<string, object?>
+                        {
+                            ["metricId"] = "messageCount",
+                            ["emitLatestOnStart"] = true
+                        }),
+                        ["mapper"] = new NodeDefinition
+                        {
+                            Type = FluxMqNodeTypes.DynamicMapper,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"source.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["engine"] = JsonDocument.Parse("\"jsonata\"").RootElement.Clone(),
+                                ["inputType"] = JsonDocument.Parse("\"NumberMetricReading\"").RootElement.Clone(),
+                                ["outputType"] = JsonDocument.Parse("\"MqttPublishRequest\"").RootElement.Clone(),
+                                ["expression"] = JsonDocument.Parse(JsonSerializer.Serialize(mapperExpression)).RootElement.Clone()
+                            }
+                        },
+                        ["publisher"] = new NodeDefinition
+                        {
+                            Type = FluxMqNodeTypes.MqttPublisher,
+                            Ports =
+                            {
+                                ["Input"] = JsonDocument.Parse("\"mapper.Output\"").RootElement.Clone()
+                            },
+                            Configuration =
+                            {
+                                ["connection"] = JsonDocument.Parse("\"broker\"").RootElement.Clone()
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+        metricRuntimeHost.Configure(
+            new Dictionary<string, FluxMetricArtifactDefinition>(StringComparer.Ordinal)
+            {
+                ["messageCount"] = new()
+                {
+                    DisplayName = "Message count",
+                    Definition = new FluxMetricDefinition(
+                        "messageCount",
+                        FluxMetricCatalog.RuntimeEventsSource,
+                        FluxMetricCatalog.MeasureCount,
+                        "60s",
+                        eventType: FlowEventTypes.MqttMessagePublished)
+                }
+            },
+            runtimeEvents);
+        await metricRuntimeHost.StartAsync();
+        await result.Runtime!.StartAsync();
+
+        runtimeEvents.Post(new FlowEvent
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Type = FlowEventTypes.MqttMessagePublished,
+            Source = "test",
+            Channel = "factory/a",
+            Status = "published"
+        });
+
+        mqttClient.ShouldNotBeNull();
+        await Eventually(() => mqttClient!.Published.Count > 0);
+
+        var publish = mqttClient!.Published.ShouldHaveSingleItem();
+        publish.Topic.ShouldBe("metrics/messageCount");
+        publish.Payload.ShouldBe("value=1"u8.ToArray());
+        publish.QualityOfService.ShouldBe(MqttQualityOfServiceLevel.AtMostOnce);
+        publish.Retain.ShouldBeFalse();
     }
 
     [Fact]

@@ -94,6 +94,23 @@ public sealed record DashboardWidgetInspectorLabels(
         TitleRow = "Header"
     };
 
+    public static DashboardWidgetInspectorLabels StatusValue { get; } = Default with
+    {
+        DataGroup = "Status source",
+        MetricRow = "Status metric",
+        DisplayGroup = "Status display",
+        TitleRow = "Header"
+    };
+
+    public static DashboardWidgetInspectorLabels EventGauge { get; } = Default with
+    {
+        DataGroup = "Gauge source",
+        MetricRow = "Gauge metric",
+        DisplayGroup = "Gauge display",
+        TitleRow = "Header",
+        GaugeRow = "Shape"
+    };
+
     public static DashboardWidgetInspectorLabels LatestEvent { get; } = Default with
     {
         DataGroup = "Event source",
@@ -174,13 +191,12 @@ public static class DashboardWidgetSettingsProfiles
                 normalized,
                 "Status value",
                 Icons.Material.Filled.Verified,
-                usesVisualMetrics: true),
+                labels: DashboardWidgetInspectorLabels.StatusValue),
             DashboardWidgetCatalog.RateTileType => Event(
                 normalized,
                 "Rate tile",
                 Icons.Material.Filled.QueryStats,
-                usesVisualMetrics: true,
-                usesMetricWindow: true),
+                labels: DashboardWidgetInspectorLabels.EventRate),
             DashboardWidgetCatalog.EventCounterType => Event(
                 normalized,
                 "Events",
@@ -200,9 +216,8 @@ public static class DashboardWidgetSettingsProfiles
                 normalized,
                 "Event gauge",
                 Icons.Material.Filled.DonutLarge,
-                usesVisualMetrics: true,
                 usesGaugeStyle: true,
-                usesMetricWindow: true),
+                labels: DashboardWidgetInspectorLabels.EventGauge),
             DashboardWidgetCatalog.EventChartType => Event(
                 normalized,
                 "Event chart",

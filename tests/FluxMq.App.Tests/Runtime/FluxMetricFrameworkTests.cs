@@ -2,6 +2,7 @@ using FluxFlow.Engine.Components;
 using FluxMq.App.Metrics;
 using FluxMq.Core.Metrics;
 using FluxMq.Scenarios;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using System.Diagnostics.Metrics;
 using System.Threading.Tasks.Dataflow;
@@ -28,6 +29,21 @@ public sealed class FluxMetricFrameworkTests
         metric.Measure.ShouldBe(FluxMetricCatalog.MeasureCount);
         metric.Window.ShouldBe("60s");
         metric.ExportPolicy.Enabled.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void AddFluxMqMetricStreams_RegistersAllNumberMeasureModulesAsKeyedServices()
+    {
+        using var services = new ServiceCollection()
+            .AddFluxMqMetricStreams()
+            .BuildServiceProvider();
+
+        foreach (var measure in FluxMetricCatalog.Shared.Measures)
+        {
+            var module = services.GetRequiredKeyedService<IFluxMetricStreamModule<double>>(measure.Id);
+
+            module.MeasureId.ShouldBe(measure.Id);
+        }
     }
 
     [Fact]

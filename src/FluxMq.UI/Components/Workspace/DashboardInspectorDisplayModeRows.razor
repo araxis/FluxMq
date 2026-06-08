@@ -18,6 +18,43 @@
                         @onclick="@(() => GaugeStyleChanged.InvokeAsync(DashboardWidgetCatalog.GaugeStyleTiles))">Tiles</button>
             </div>
         </PropertyGridRow>
+        <PropertyGridRow Name="Min">
+            <input class="property-grid-input"
+                   value="@Draft.GaugeMin"
+                   @oninput="@((ChangeEventArgs args) => ChangeGaugePropertyAsync(DashboardWidgetCatalog.GaugeMinKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Max">
+            <input class="property-grid-input"
+                   value="@Draft.GaugeMax"
+                   @oninput="@((ChangeEventArgs args) => ChangeGaugePropertyAsync(DashboardWidgetCatalog.GaugeMaxKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Target">
+            <input class="property-grid-input"
+                   value="@Draft.GaugeTarget"
+                   @oninput="@((ChangeEventArgs args) => ChangeGaugePropertyAsync(DashboardWidgetCatalog.GaugeTargetKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Warning">
+            <input class="property-grid-input"
+                   value="@Draft.GaugeWarning"
+                   @oninput="@((ChangeEventArgs args) => ChangeGaugePropertyAsync(DashboardWidgetCatalog.GaugeWarningKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Critical">
+            <input class="property-grid-input"
+                   value="@Draft.GaugeCritical"
+                   @oninput="@((ChangeEventArgs args) => ChangeGaugePropertyAsync(DashboardWidgetCatalog.GaugeCriticalKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Normal color">
+            <PropertyGridColorPicker Value="@Draft.GaugeNormalColor"
+                                     ValueChanged="@((string? value) => ChangeGaugePropertyAsync(DashboardWidgetCatalog.GaugeNormalColorKey, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Warning color">
+            <PropertyGridColorPicker Value="@Draft.GaugeWarningColor"
+                                     ValueChanged="@((string? value) => ChangeGaugePropertyAsync(DashboardWidgetCatalog.GaugeWarningColorKey, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Critical color">
+            <PropertyGridColorPicker Value="@Draft.GaugeCriticalColor"
+                                     ValueChanged="@((string? value) => ChangeGaugePropertyAsync(DashboardWidgetCatalog.GaugeCriticalColorKey, value))" />
+        </PropertyGridRow>
     }
 
     @if (Draft.Profile.UsesChartType)
@@ -66,6 +103,9 @@
     public EventCallback<string?> GaugeStyleChanged { get; set; }
 
     [Parameter]
+    public EventCallback<DashboardInspectorPropertyValueChange> GaugePropertyChanged { get; set; }
+
+    [Parameter]
     public EventCallback<string?> ChartTypeChanged { get; set; }
 
     [Parameter]
@@ -75,4 +115,7 @@
         => string.Equals(currentValue ?? string.Empty, value, StringComparison.Ordinal)
             ? "property-grid-choice selected"
             : "property-grid-choice";
+
+    private Task ChangeGaugePropertyAsync(string key, string? value)
+        => GaugePropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
 }

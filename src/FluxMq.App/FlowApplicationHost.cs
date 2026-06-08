@@ -10,6 +10,7 @@ using FluxMq.Components.Mapping;
 using FluxMq.Scenarios;
 using FluxFlow.Components.Secrets;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FluxMq.App;
 
@@ -22,7 +23,8 @@ public sealed class FlowApplicationHost(
     Func<MqttConnectionProfile, IMqttBrokerClient>? scenarioClientFactory = null,
     ISecretResolver? secretResolver = null,
     FluxMqApplicationDefinition? applicationDefinition = null,
-    FluxMetricRuntimeHost? metricRuntimeHost = null)
+    FluxMetricRuntimeHost? metricRuntimeHost = null,
+    IDisposable? ownedRuntimeServices = null)
     : IAsyncDisposable, IDisposable
 {
     private readonly IConfiguration? _configuration = configuration;
@@ -33,6 +35,7 @@ public sealed class FlowApplicationHost(
         scenarioClientFactory ?? (profile => new MqttBrokerClient(profile, secretResolver));
     private readonly FluxMqApplicationDefinition? _applicationDefinition = applicationDefinition;
     private readonly FluxMetricRuntimeHost _metricRuntimeHost = metricRuntimeHost ?? new FluxMetricRuntimeHost();
+    private readonly IDisposable? _ownedRuntimeServices = ownedRuntimeServices;
     private FluxMqApplicationDefinition? _definition;
     private ApplicationRuntime? _runtime;
     private bool _disposed;
@@ -48,20 +51,30 @@ public sealed class FlowApplicationHost(
         IConfiguration configuration,
         IMessageRepository? messageRepository = null,
         Func<MqttConnectionProfile, IMqttBrokerClient>? clientFactory = null,
-        ISecretResolver? secretResolver = null)
+        ISecretResolver? secretResolver = null,
+        string sectionName = FlowApplicationConfigurationLoader.DefaultSectionName)
     {
         clientFactory ??= profile => new MqttBrokerClient(profile, secretResolver);
         var expressionEngine = FluxMqExpressionEngines.CreateDefault();
-        var metricRuntimeHost = new FluxMetricRuntimeHost();
+        var runtimeServices = CreateDefaultRuntimeServices();
+        var metricRuntimeHost = runtimeServices.GetRequiredService<FluxMetricRuntimeHost>();
         var factories = new RuntimeNodeFactoryRegistry()
-            .RegisterPipelineComponentFactories(clientFactory, messageRepository, expressionEngine, secretResolver: secretResolver, metricRuntimeHost: metricRuntimeHost);
+            .RegisterPipelineComponentFactories(
+                clientFactory,
+                messageRepository,
+                expressionEngine,
+                secretResolver: secretResolver,
+                metricRuntimeHost: metricRuntimeHost,
+                runtimeServices: runtimeServices);
 
         return new FlowApplicationHost(
             configuration,
             new ApplicationRuntimeBuilder(factories, linkConditionExpressionEngine: expressionEngine),
+            sectionName: sectionName,
             scenarioClientFactory: clientFactory,
             secretResolver: secretResolver,
-            metricRuntimeHost: metricRuntimeHost);
+            metricRuntimeHost: metricRuntimeHost,
+            ownedRuntimeServices: runtimeServices);
     }
 
     public static FlowApplicationHost CreateDefault(
@@ -74,9 +87,16 @@ public sealed class FlowApplicationHost(
 
         clientFactory ??= profile => new MqttBrokerClient(profile, secretResolver);
         var expressionEngine = FluxMqExpressionEngines.CreateDefault();
-        var metricRuntimeHost = new FluxMetricRuntimeHost();
+        var runtimeServices = CreateDefaultRuntimeServices();
+        var metricRuntimeHost = runtimeServices.GetRequiredService<FluxMetricRuntimeHost>();
         var factories = new RuntimeNodeFactoryRegistry()
-            .RegisterPipelineComponentFactories(clientFactory, messageRepository, expressionEngine, secretResolver: secretResolver, metricRuntimeHost: metricRuntimeHost);
+            .RegisterPipelineComponentFactories(
+                clientFactory,
+                messageRepository,
+                expressionEngine,
+                secretResolver: secretResolver,
+                metricRuntimeHost: metricRuntimeHost,
+                runtimeServices: runtimeServices);
 
         return new FlowApplicationHost(
             null,
@@ -84,7 +104,15 @@ public sealed class FlowApplicationHost(
             scenarioClientFactory: clientFactory,
             secretResolver: secretResolver,
             applicationDefinition: definition,
-            metricRuntimeHost: metricRuntimeHost);
+            metricRuntimeHost: metricRuntimeHost,
+            ownedRuntimeServices: runtimeServices);
+    }
+
+    public static ServiceProvider CreateDefaultRuntimeServices()
+    {
+        var services = new ServiceCollection();
+        services.AddFluxMqAppRuntime();
+        return services.BuildServiceProvider();
     }
 
     public static ScenarioRunner CreateDefaultScenarioRunner()
@@ -310,6 +338,7 @@ public sealed class FlowApplicationHost(
 
         _disposed = true;
         DisposeRuntime();
+        _ownedRuntimeServices?.Dispose();
     }
 
     public async ValueTask DisposeAsync()
@@ -321,6 +350,7 @@ public sealed class FlowApplicationHost(
 
         _disposed = true;
         await DisposeRuntimeAsync().ConfigureAwait(false);
+        _ownedRuntimeServices?.Dispose();
     }
 
     private void DisposeRuntime()

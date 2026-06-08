@@ -19,50 +19,12 @@ public interface IFluxMetric<TValue>
     Task Completion { get; }
 }
 
-public sealed class FluxMetricRuntimeCatalog
-{
-    private readonly FluxMetricCatalog _catalog;
-    private readonly FluxMetricResolver _resolver;
-    private readonly TimeProvider _timeProvider;
-
-    public FluxMetricRuntimeCatalog(
-        FluxMetricCatalog? catalog = null,
-        FluxMetricResolver? resolver = null,
-        TimeProvider? timeProvider = null)
-    {
-        _catalog = catalog ?? FluxMetricCatalog.Shared;
-        _resolver = resolver ?? new FluxMetricResolver();
-        _timeProvider = timeProvider ?? TimeProvider.System;
-    }
-
-    public IFluxMetric<double> CreateNumberMetric(
-        string id,
-        FluxMetricArtifactDefinition artifact,
-        IReadOnlyDictionary<string, string>? parameterValues,
-        ISourceBlock<FlowEvent> events,
-        int boundedCapacity = 1000)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(id);
-        ArgumentNullException.ThrowIfNull(artifact);
-        ArgumentNullException.ThrowIfNull(events);
-
-        var definition = _resolver.Resolve(artifact, parameterValues);
-        return _catalog.FindMeasure(definition.Measure).Id switch
-        {
-            FluxMetricCatalog.MeasureRate => new FluxEventRateMetric(id, definition, events, _catalog, boundedCapacity, _timeProvider),
-            FluxMetricCatalog.MeasureTopics => new FluxUniqueTopicCountMetric(id, definition, events, _catalog, boundedCapacity, _timeProvider),
-            FluxMetricCatalog.MeasurePayloadBytes => new FluxPayloadBytesMetric(id, definition, events, _catalog, boundedCapacity, _timeProvider),
-            FluxMetricCatalog.MeasureAveragePayload => new FluxAveragePayloadMetric(id, definition, events, _catalog, boundedCapacity, _timeProvider),
-            FluxMetricCatalog.MeasureRetained => new FluxRetainedCountMetric(id, definition, events, _catalog, boundedCapacity, _timeProvider),
-            _ => new FluxEventCountMetric(id, definition, events, _catalog, boundedCapacity, _timeProvider)
-        };
-    }
-}
-
-public sealed class FluxMetricRuntimeHost : IAsyncDisposable
+public sealed class FluxMetricRuntimeHost : IAsyncDisposable, IDisposable
 {
     private readonly Lock _sync = new();
-    private readonly FluxMetricRuntimeCatalog _catalog;
+    private readonly FluxMetricCatalog _catalog;
+    private readonly FluxMetricResolver _resolver;
+    private readonly IFluxMetricStreamModuleResolver _moduleResolver;
     private readonly Dictionary<FluxMetricStreamKey, IFluxMetric<double>> _numberMetrics = new();
     private IReadOnlyDictionary<string, FluxMetricArtifactDefinition> _artifacts =
         new Dictionary<string, FluxMetricArtifactDefinition>(StringComparer.Ordinal);
@@ -70,9 +32,14 @@ public sealed class FluxMetricRuntimeHost : IAsyncDisposable
     private bool _started;
     private bool _completed;
 
-    public FluxMetricRuntimeHost(FluxMetricRuntimeCatalog? catalog = null)
+    public FluxMetricRuntimeHost(
+        FluxMetricCatalog? catalog = null,
+        FluxMetricResolver? resolver = null,
+        IFluxMetricStreamModuleResolver? moduleResolver = null)
     {
-        _catalog = catalog ?? new FluxMetricRuntimeCatalog();
+        _catalog = catalog ?? FluxMetricCatalog.Shared;
+        _resolver = resolver ?? new FluxMetricResolver();
+        _moduleResolver = moduleResolver ?? FluxMetricStreamModuleResolver.CreateDefault(_catalog);
     }
 
     public void Configure(
@@ -146,6 +113,9 @@ public sealed class FluxMetricRuntimeHost : IAsyncDisposable
         }
     }
 
+    public void Dispose()
+        => Complete();
+
     public async ValueTask DisposeAsync()
     {
         IFluxMetric<double>[] metrics;
@@ -200,12 +170,14 @@ public sealed class FluxMetricRuntimeHost : IAsyncDisposable
                 throw new InvalidOperationException($"Metric '{metricId}' does not exist.");
             }
 
-            metric = _catalog.CreateNumberMetric(
+            var definition = _resolver.Resolve(artifact, key.Parameters);
+            var measure = _catalog.FindMeasure(definition.Measure).Id;
+            var module = _moduleResolver.GetNumberModule(measure);
+            metric = module.Build(new FluxMetricStreamBuildContext<double>(
                 key.MetricId,
-                artifact,
-                key.Parameters,
+                definition,
                 _events,
-                boundedCapacity);
+                boundedCapacity));
             _numberMetrics[key] = metric;
             start = _started && !_completed;
         }

@@ -1,3 +1,4 @@
+using FluxMq.App;
 using FluxMq.App.Metrics;
 using FluxMq.Core.Mqtt;
 using FluxMq.Core.TopicIndex;
@@ -47,6 +48,7 @@ public static class MauiProgram
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddMudServices();
         builder.Services.AddMetrics();
+        builder.Services.AddFluxMqAppRuntime();
 
         builder.Services.AddSingleton<ITopicIndex, TopicIndex>();
         builder.Services.AddSingleton<IMqttConnectionManager, MqttConnectionManager>();

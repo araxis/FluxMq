@@ -1,5 +1,6 @@
 using FluxMq.UI.Components.Workspace.Nodes.Sources;
 using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
+using FluxMq.UI.Components.Workspace.Nodes.MetricSource;
 using FluxMq.UI.Services;
 using Shouldly;
 using System.Text.Json.Nodes;
@@ -11,6 +12,7 @@ public sealed class SourceNodeModelTests
 {
     [Theory]
     [InlineData("generated.source", typeof(GeneratedSourceNodeModel))]
+    [InlineData("metric.source", typeof(MetricSourceNodeModel))]
     [InlineData("replay.source", typeof(ReplaySourceNodeModel))]
     public void FlowNodeModelFactory_CreatesTypedSourceModels(string nodeType, Type expectedType)
     {
@@ -29,6 +31,73 @@ public sealed class SourceNodeModelTests
         model.Category.ShouldBe("Source");
         model.PortDescriptors.ShouldContain(port => port.Name == "Output" && !port.IsInput);
         model.PortDescriptors.ShouldContain(port => port.Name == "Errors" && !port.IsInput);
+    }
+
+    [Fact]
+    public void MetricSourceNodeModel_BuildsMetricSourceConfiguration()
+    {
+        var catalog = new FlowComponentCatalog();
+        var descriptor = catalog.Find("metric.source").ShouldNotBeNull();
+        var model = new MetricSourceNodeModel(
+            "workflow1.metricSource",
+            new DiagramPoint(10, 20),
+            "metricSource",
+            descriptor,
+            isResource: false)
+        {
+            MetricId = " messageRate ",
+            EmitLatestOnStart = false,
+            BoundedCapacity = 500
+        };
+        model.SetParameters(new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [" topicPrefix "] = " factory/ ",
+            ["empty"] = ""
+        });
+
+        var config = model.BuildConfiguration();
+        var parameters = config["parameters"]!.AsObject();
+
+        config["metricId"]!.GetValue<string>().ShouldBe("messageRate");
+        config["emitLatestOnStart"]!.GetValue<bool>().ShouldBeFalse();
+        config["boundedCapacity"]!.GetValue<int>().ShouldBe(500);
+        parameters.Count.ShouldBe(1);
+        parameters["topicPrefix"]!.GetValue<string>().ShouldBe("factory/");
+    }
+
+    [Fact]
+    public void MetricSourceNodeModel_ReadsMetricSourceConfiguration()
+    {
+        var catalog = new FlowComponentCatalog();
+        var descriptor = catalog.Find("metric.source").ShouldNotBeNull();
+        var model = new MetricSourceNodeModel(
+            "workflow1.metricSource",
+            new DiagramPoint(10, 20),
+            "metricSource",
+            descriptor,
+            isResource: false);
+
+        model.LoadConfiguration(new JsonObject
+        {
+            ["metricId"] = "messageRate",
+            ["emitLatestOnStart"] = false,
+            ["boundedCapacity"] = 250,
+            ["parameters"] = new JsonObject
+            {
+                ["topicPrefix"] = "factory/",
+                ["qos"] = 1,
+                ["retain"] = true
+            }
+        });
+
+        model.MetricId.ShouldBe("messageRate");
+        model.EmitLatestOnStart.ShouldBeFalse();
+        model.BoundedCapacity.ShouldBe(250);
+        model.Parameters["topicPrefix"].ShouldBe("factory/");
+        model.Parameters["qos"].ShouldBe("1");
+        model.Parameters["retain"].ShouldBe("true");
+        model.ResolvePortValueType(model.PortDescriptors.Single(port => port.Name == "Output"))
+            .ShouldBe("NumberMetricReading");
     }
 
     [Fact]
