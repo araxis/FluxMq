@@ -27,6 +27,7 @@ using FluxFlow.Components.Serialization.Contracts;
 using FluxFlow.Components.Storage;
 using FluxFlow.Components.Storage.Contracts;
 using FluxFlow.Components.Timers.Contracts;
+using Microsoft.Extensions.DependencyInjection;
 using MQTTnet.Protocol;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -92,6 +93,21 @@ public sealed class PipelineComponentFactoryTests
             FluxMqNodeTypes.TimerDebounce,
             FluxMqNodeTypes.TimerThrottle
         }, ignoreOrder: true);
+    }
+
+    [Fact]
+    public void AddFluxMqRuntimeNodes_RegistersFluxMqNodeModulesAsKeyedServices()
+    {
+        using var services = new ServiceCollection()
+            .AddFluxMqRuntimeNodes()
+            .BuildServiceProvider();
+
+        foreach (var type in FluxMqRuntimeNodeModuleTypes.All)
+        {
+            var module = services.GetRequiredKeyedService<IFluxMqRuntimeNodeModule>(type.Value);
+
+            module.Type.ShouldBe(type);
+        }
     }
 
     [Fact]

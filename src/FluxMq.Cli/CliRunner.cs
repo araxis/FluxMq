@@ -2,9 +2,7 @@ using FluxMq.App;
 using FluxMq.App.Definitions;
 using FluxMq.App.Scenarios;
 using FluxMq.Cli.Commands;
-using FluxMq.Components.Mapping;
 using FluxFlow.Engine.Components;
-using FluxFlow.Engine.Runtime;
 using FluxMq.Scenarios;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -267,14 +265,7 @@ public sealed class CliRunner
             .AddJsonFile(configurationPath, optional: false, reloadOnChange: false)
             .Build();
 
-        var expressionEngine = FluxMqExpressionEngines.CreateDefault();
-        host = new FlowApplicationHost(
-            configuration,
-            new ApplicationRuntimeBuilder(
-                new RuntimeNodeFactoryRegistry()
-                    .RegisterPipelineComponentFactories(expressionEngine: expressionEngine),
-                linkConditionExpressionEngine: expressionEngine),
-            sectionName: options.SectionName);
+        host = FlowApplicationHost.CreateDefault(configuration, sectionName: options.SectionName);
         exitCode = (int)CliExitCode.Success;
         return true;
     }
