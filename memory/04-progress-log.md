@@ -2958,3 +2958,16 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 751 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: split the DI runtime cleanup and dashboard catalog cleanup into focused commits before starting another cleanup target.
+- Event Gauge shape cleanup:
+  - Merged PR #170 (`Modernize runtime composition and dashboard catalogs`) into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Started `work/dashboard-gauge-cleanup` from clean `main`.
+  - Removed the unsupported `tiles` gauge style from dashboard inspector controls and the widget editor dialog.
+  - Deleted the unused `GaugeStyleTiles` constant and made old/unknown `tiles` values normalize to the implemented `ring` style.
+  - Added coverage proving only implemented gauge shapes are exposed and stale `tiles` values fall back to `ring`.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~GaugeStyleOptions_ExposeOnlyImplementedShapes|FullyQualifiedName~DashboardWidgetSettingsDraft_WritesEventGaugeAsAppMetricConfiguration|FullyQualifiedName~DashboardWidgetFormatting_MapsGaugeMetricValueThroughConfiguredRange" -p:UseAppHost=false --verbosity minimal` passed with 3 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 423 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 752 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit and PR the focused gauge cleanup, then continue with the next cleanup target after it is merged.
