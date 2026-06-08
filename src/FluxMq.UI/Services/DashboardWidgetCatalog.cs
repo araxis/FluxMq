@@ -84,7 +84,6 @@ public sealed class DashboardWidgetCatalog
     public const string MetricAveragePayload = "averagePayload";
     public const string GaugeStyleRing = "ring";
     public const string GaugeStyleMeter = "meter";
-    public const string GaugeStyleTiles = "tiles";
     public const string GaugeDefaultMin = "0";
     public const string GaugeDefaultMax = "100";
     public const string GaugeDefaultTarget = "80";
@@ -496,7 +495,6 @@ public sealed class DashboardWidgetCatalog
         => value switch
         {
             GaugeStyleMeter => GaugeStyleMeter,
-            GaugeStyleTiles => GaugeStyleTiles,
             _ => GaugeStyleRing
         };
 

@@ -357,6 +357,43 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void GaugeStyleOptions_ExposeOnlyImplementedShapes()
+    {
+        DashboardWidgetCatalog.NormalizeGaugeStyle(DashboardWidgetCatalog.GaugeStyleRing)
+            .ShouldBe(DashboardWidgetCatalog.GaugeStyleRing);
+        DashboardWidgetCatalog.NormalizeGaugeStyle(DashboardWidgetCatalog.GaugeStyleMeter)
+            .ShouldBe(DashboardWidgetCatalog.GaugeStyleMeter);
+        DashboardWidgetCatalog.NormalizeGaugeStyle("tiles")
+            .ShouldBe(DashboardWidgetCatalog.GaugeStyleRing);
+
+        var root = FindRepositoryRoot();
+        var displayRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorDisplayModeRows.razor"));
+        var dialog = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "DashboardWidgetEditorDialog.razor"));
+
+        displayRows.ShouldContain("GaugeStyleRing");
+        displayRows.ShouldContain("GaugeStyleMeter");
+        displayRows.ShouldNotContain("GaugeStyleTiles");
+        displayRows.ShouldNotContain(">Tiles</button>");
+        dialog.ShouldContain("GaugeStyleRing");
+        dialog.ShouldContain("GaugeStyleMeter");
+        dialog.ShouldNotContain("GaugeStyleTiles");
+        dialog.ShouldNotContain("Text=\"Tiles\"");
+    }
+
+    [Fact]
     public void DashboardWidgetSettingsDraft_BuildsEventConfigurationForActiveFieldsOnly()
     {
         var catalog = new DashboardEventFilterCatalog();
