@@ -1800,6 +1800,196 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardWidgetModuleCatalog_ComposesCategoryProviderModules()
+    {
+        var providers = DashboardWidgetModuleCatalog.CreateProviders();
+        var providerModules = providers.SelectMany(static provider => provider.CreateModules()).ToArray();
+        var catalogModules = DashboardWidgetModuleCatalog.CreateModules();
+
+        providers.Select(static provider => provider.Id).ShouldBe([
+            "metrics",
+            "events",
+            "charts",
+            "mqtt-ops",
+            "topics"
+        ]);
+        providers.Select(static provider => provider.Id).Distinct(StringComparer.Ordinal).Count()
+            .ShouldBe(providers.Count);
+        providerModules.Select(static module => module.Type)
+            .ShouldBe(catalogModules.Select(static module => module.Type));
+        providerModules.Select(static module => module.Type).Distinct(StringComparer.Ordinal).Count()
+            .ShouldBe(providerModules.Length);
+    }
+
+    [Fact]
+    public void DashboardMetricWidgetModuleProvider_OwnsMetricWidgetDefinitions()
+    {
+        var modules = new DashboardMetricWidgetModuleProvider().CreateModules();
+
+        modules.Select(static module => module.Type).ShouldBe([
+            DashboardWidgetCatalog.KpiTileType,
+            DashboardWidgetCatalog.StatusValueType,
+            DashboardWidgetCatalog.RateTileType
+        ]);
+        modules.All(static module => string.Equals(module.Descriptor.Category, "Metrics", StringComparison.Ordinal))
+            .ShouldBeTrue();
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.KpiTileType)
+            .DefaultConfiguration
+            .Keys
+            .ShouldContain(DashboardWidgetCatalog.MetricVisualizationKey);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.KpiTileType)
+            .DefaultConfiguration
+            .Keys
+            .ShouldNotContain(DashboardWidgetCatalog.PrimaryMetricKey);
+        modules
+            .Where(static module => module.Type is DashboardWidgetCatalog.StatusValueType or DashboardWidgetCatalog.RateTileType)
+            .All(static module => !module.DefaultConfiguration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey))
+            .ShouldBeTrue();
+    }
+
+    [Fact]
+    public void DashboardEventWidgetModuleProvider_OwnsEventWidgetDefinitions()
+    {
+        var modules = new DashboardEventWidgetModuleProvider().CreateModules();
+
+        modules.Select(static module => module.Type).ShouldBe([
+            DashboardWidgetCatalog.EventCounterType,
+            DashboardWidgetCatalog.LatestEventType,
+            DashboardWidgetCatalog.EventRateType,
+            DashboardWidgetCatalog.EventGaugeType,
+            DashboardWidgetCatalog.EventTableType
+        ]);
+        modules.All(static module => string.Equals(module.Descriptor.Category, "Events", StringComparison.Ordinal))
+            .ShouldBeTrue();
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.EventCounterType)
+            .DefaultConfiguration
+            .Keys
+            .ShouldBe(["title"]);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.LatestEventType)
+            .DefaultConfiguration
+            .Keys
+            .ShouldContain(DashboardEventFilterCatalog.EventTypeKey);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.EventGaugeType)
+            .DefaultConfiguration[DashboardWidgetCatalog.GaugeStyleKey]
+            .ShouldBe(DashboardWidgetCatalog.GaugeStyleRing);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.EventTableType)
+            .Layout
+            .PreferredRowSpan
+            .ShouldBe(2);
+    }
+
+    [Fact]
+    public void DashboardChartWidgetModuleProvider_OwnsChartWidgetDefinitions()
+    {
+        var modules = new DashboardChartWidgetModuleProvider().CreateModules();
+
+        modules.Select(static module => module.Type).ShouldBe([
+            DashboardWidgetCatalog.LineChartType,
+            DashboardWidgetCatalog.AreaChartType,
+            DashboardWidgetCatalog.BarChartType,
+            DashboardWidgetCatalog.DonutChartType
+        ]);
+        modules.All(static module => string.Equals(module.Descriptor.Category, "Charts", StringComparison.Ordinal))
+            .ShouldBeTrue();
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.LineChartType)
+            .DefaultConfiguration[DashboardWidgetCatalog.ChartTypeKey]
+            .ShouldBe(DashboardWidgetCatalog.ChartTypeLine);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.AreaChartType)
+            .DefaultConfiguration[DashboardWidgetCatalog.ChartTypeKey]
+            .ShouldBe(DashboardWidgetCatalog.ChartTypeArea);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.BarChartType)
+            .DefaultConfiguration[DashboardWidgetCatalog.ChartTypeKey]
+            .ShouldBe(DashboardWidgetCatalog.ChartTypeBars);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.LineChartType)
+            .CompatibilityTypeIds
+            .ShouldContain(DashboardWidgetCatalog.EventChartType);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.DonutChartType)
+            .Layout
+            .PreferredColumnSpan
+            .ShouldBe(2);
+    }
+
+    [Fact]
+    public void DashboardMqttOpsWidgetModuleProvider_OwnsMqttOpsWidgetDefinitions()
+    {
+        var modules = new DashboardMqttOpsWidgetModuleProvider().CreateModules();
+
+        modules.Select(static module => module.Type).ShouldBe([
+            DashboardWidgetCatalog.PayloadDistributionType,
+            DashboardWidgetCatalog.QosBreakdownType,
+            DashboardWidgetCatalog.RetainBreakdownType
+        ]);
+        modules.All(static module => string.Equals(module.Descriptor.Category, "MQTT Ops", StringComparison.Ordinal))
+            .ShouldBeTrue();
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.PayloadDistributionType)
+            .Descriptor
+            .RendererKind
+            .ShouldBe(DashboardWidgetRendererKind.PayloadDistribution);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.PayloadDistributionType)
+            .PropertyGroups
+            .Select(static group => group.Id)
+            .ShouldBe(["source", "buckets"]);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.QosBreakdownType)
+            .CompatibilityTypeIds
+            .ShouldContain(DashboardWidgetCatalog.QosRetainBreakdownType);
+        modules
+            .Where(static module => module.Type is DashboardWidgetCatalog.QosBreakdownType or DashboardWidgetCatalog.RetainBreakdownType)
+            .All(static module => module.PropertyGroups.Select(static group => group.Id).SequenceEqual(["source", "breakdown"]))
+            .ShouldBeTrue();
+    }
+
+    [Fact]
+    public void DashboardTopicWidgetModuleProvider_OwnsTopicWidgetDefinitions()
+    {
+        var modules = new DashboardTopicWidgetModuleProvider().CreateModules();
+
+        modules.Select(static module => module.Type).ShouldBe([
+            DashboardWidgetCatalog.TopicActivityType,
+            DashboardWidgetCatalog.TopicTreeType
+        ]);
+        modules.All(static module => string.Equals(module.Descriptor.Category, "Topics", StringComparison.Ordinal))
+            .ShouldBeTrue();
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.TopicActivityType)
+            .Descriptor
+            .RendererKind
+            .ShouldBe(DashboardWidgetRendererKind.TopicActivity);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.TopicActivityType)
+            .PropertyGroups
+            .Select(static group => group.Id)
+            .ShouldBe(["topic-metric", "top-topics"]);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.TopicTreeType)
+            .PropertyGroups
+            .Select(static group => group.Id)
+            .ShouldBe(["topic-tree"]);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.TopicTreeType)
+            .DefaultConfiguration[DashboardWidgetCatalog.ExcludeSystemTopicsKey]
+            .ShouldBe("true");
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.TopicTreeType)
+            .Layout
+            .PreferredRowSpan
+            .ShouldBe(2);
+    }
+
+    [Fact]
     public void DashboardMetricVisualizationCatalog_ProvidesMetricValueFoundation()
     {
         var modules = DashboardMetricVisualizationCatalog.CreateModules();
@@ -1897,6 +2087,25 @@ public sealed class DashboardEventFilterCatalogTests
         digitalPropertyKeys.ShouldContain(DashboardWidgetCatalog.MetricDigitalFitModeKey);
         digitalPropertyKeys.ShouldNotContain(DashboardWidgetCatalog.KpiValueColorKey);
         digitalPropertyKeys.ShouldNotContain(DashboardWidgetCatalog.MetricValueValueColorKey);
+    }
+
+    [Fact]
+    public void DashboardMetricVisualizationCatalog_ComposesExplicitProviderModules()
+    {
+        var providers = DashboardMetricVisualizationCatalog.CreateProviders();
+        var modules = providers.Select(static provider => provider.CreateModule()).ToArray();
+
+        providers.Select(static provider => provider.Id).ShouldBe([
+            DashboardMetricVisualizationIds.Value,
+            DashboardMetricVisualizationIds.Digital
+        ]);
+        providers.Select(static provider => provider.Id).Distinct(StringComparer.Ordinal).Count()
+            .ShouldBe(providers.Count);
+        modules.Select(static module => module.Id).ShouldBe(providers.Select(static provider => provider.Id));
+        foreach (var provider in providers)
+        {
+            provider.CreateModule().Id.ShouldBe(provider.Id);
+        }
     }
 
     [Fact]
