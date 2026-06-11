@@ -2985,3 +2985,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 752 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit and PR the focused runtime helper cleanup.
+- Runtime node config reader cleanup:
+  - Merged PR #172 (`Extract runtime package option wiring`) into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Started `work/runtime-node-config-reader-cleanup` from clean `main`.
+  - Extracted generic runtime node configuration readers from `RuntimeNodeFactoryRegistryExtensions` into `FluxMqRuntimeNodeConfigurationReader`.
+  - Kept node-specific MQTT subscription, generated message, connection-profile, and topic-filter behavior in the runtime registry extension.
+  - Left runtime node ids, metric source behavior, dashboard/test schemas, and FluxFlow unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.App\FluxMq.App.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~AddFluxMqRuntimeNodes_RegistersFluxMqNodeModulesAsKeyedServices|FullyQualifiedName~RegisterPipelineComponentFactories_RegistersStableComponentTypes|FullyQualifiedName~MetricSourceComponent_RelaysExistingMetricStream" -p:UseAppHost=false --verbosity minimal` passed with 3 tests.
+    - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 118 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 423 tests.
+    - First parallel `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` attempt hit a Windows App SDK `input.json` file lock while the UI test project was running in parallel.
+    - Serial rerun of `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 752 tests.
+  - Next step: commit/PR/merge the focused config-reader cleanup, then continue the cleanup phase with the next runtime module split.
