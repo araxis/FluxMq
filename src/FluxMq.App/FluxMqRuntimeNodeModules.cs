@@ -192,27 +192,3 @@ internal sealed class JsonSchemaValidatorRuntimeNodeModule : IFluxMqRuntimeNodeM
     public RuntimeNode Build(FluxMqRuntimeNodeBuildContext context)
         => RuntimeNodeFactoryRegistryExtensions.CreateJsonSchemaValidator(context.Address, context.Definition);
 }
-
-internal sealed class MqttPublisherRuntimeNodeModule : IFluxMqRuntimeNodeModule
-{
-    public NodeType Type => FluxMqNodeTypes.MqttPublisher;
-
-    public RuntimeNode Build(FluxMqRuntimeNodeBuildContext context)
-        => RuntimeNodeFactoryRegistryExtensions.CreatePublisher(context.Address, context.Definition, context.EngineContext);
-}
-
-internal sealed class MqttRecorderRuntimeNodeModule : IFluxMqRuntimeNodeModule
-{
-    public NodeType Type => FluxMqNodeTypes.MqttRecorder;
-
-    public RuntimeNode Build(FluxMqRuntimeNodeBuildContext context)
-        => RuntimeNodeFactoryRegistryExtensions.CreateRecorder(context.Address, context.Definition, context.MessageRepository);
-}
-
-internal sealed class FileWriterRuntimeNodeModule : IFluxMqRuntimeNodeModule
-{
-    public NodeType Type => FluxMqNodeTypes.FileWriter;
-
-    public RuntimeNode Build(FluxMqRuntimeNodeBuildContext context)
-        => RuntimeNodeFactoryRegistryExtensions.CreateFileWriter(context.Address, context.Definition);
-}
