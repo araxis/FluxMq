@@ -3016,4 +3016,22 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 118 tests.
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 423 tests.
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 752 tests.
-  - Next step: run final diff checks, commit/PR/merge this focused source-node cleanup, then continue with the next runtime node family split.
+    - PR #174 (`Extract runtime source node modules`) merged into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Next step: continue with the next runtime node family split.
+- Runtime sink node module cleanup:
+  - Started `work/runtime-sink-node-modules-cleanup` from clean `main`.
+  - Moved MQTT publisher, MQTT recorder, and file writer runtime module implementations into `FluxMqSinkRuntimeNodeModules`.
+  - Removed the corresponding sink creation bodies from `RuntimeNodeFactoryRegistryExtensions` and the thin adapter classes from `FluxMqRuntimeNodeModules`.
+  - Kept sink node ids, port names, DI registration keys, repository requirements, dashboard/test schemas, and FluxFlow unchanged.
+  - Current line movement before staging:
+    - `RuntimeNodeFactoryRegistryExtensions.cs`: 68 lines removed.
+    - `FluxMqRuntimeNodeModules.cs`: 24 lines removed.
+    - `FluxMqSinkRuntimeNodeModules.cs`: 115-line sink module file added.
+  - Verification:
+    - `dotnet build src\FluxMq.App\FluxMq.App.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings after adding the missing `FlowError` namespace.
+    - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~AddFluxMqRuntimeNodes_RegistersFluxMqNodeModulesAsKeyedServices|FullyQualifiedName~RegisterPipelineComponentFactories_RegistersStableComponentTypes|FullyQualifiedName~MetricSourceComponent_RelaysExistingMetricStream" -p:UseAppHost=false --verbosity minimal` passed with 3 tests.
+    - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 118 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 423 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 752 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this focused sink-node cleanup, then continue with the next runtime node family split.
