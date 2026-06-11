@@ -3035,3 +3035,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false` passed with 752 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this focused sink-node cleanup, then continue with the next runtime node family split.
+- MQTT metrics rate-refresh blocker fix:
+  - Merged PR #175 (`Extract runtime sink node modules`) into `main`; PR validation passed, then post-merge Windows validation exposed a release-only timing failure in `MqttMetricsComponentTests.Snapshots_EmitsRateDecayWhenTrafficStops`.
+  - Root cause: the rate refresh timer could fire after input started the timer but before the inner metrics aggregate emitted its first package snapshot; the old refresh path treated a missing package snapshot like an empty stream and disposed the timer permanently.
+  - Started `fix/mqtt-metrics-rate-refresh-race` from clean `main`.
+  - Updated `MqttMetricsComponent.RefreshRateSnapshot` so a missing first aggregate snapshot keeps the refresh timer alive, while a real zero-sample package snapshot still stops the timer.
+  - Verification so far:
+    - Focused release test `MqttMetricsComponentTests.Snapshots_EmitsRateDecayWhenTrafficStops` passed.
+    - First full release Components test run hit a separate transient LiteDB enumeration failure in `SessionRepositoryTests.GetAll_ReturnsMostRecentFirst`; immediate rerun passed.
+    - Full release solution test with `win-x64`, serial execution, and shared compilation disabled passed.
+  - Next step: run final diff hygiene, commit/PR/merge the blocker fix, then continue the runtime cleanup phase after main is green.
