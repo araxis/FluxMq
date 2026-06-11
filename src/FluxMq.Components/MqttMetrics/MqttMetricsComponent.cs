@@ -272,7 +272,12 @@ public sealed class MqttMetricsComponent : FlowNodeBase, IDisposable
                 return;
             }
 
-            if (_latestPackageSnapshot is null || _latestPackageSnapshot.SampleCount == 0)
+            if (_latestPackageSnapshot is null)
+            {
+                return;
+            }
+
+            if (_latestPackageSnapshot.SampleCount == 0)
             {
                 DisposeRateRefreshTimer();
                 return;
