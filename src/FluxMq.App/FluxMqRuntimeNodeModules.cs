@@ -137,38 +137,6 @@ internal sealed class ConnectionStateTriggerRuntimeNodeModule : IFluxMqRuntimeNo
         => RuntimeNodeFactoryRegistryExtensions.CreateConnectionStateTrigger(context.Address, context.Definition, context.EngineContext);
 }
 
-internal sealed class StoredSessionSourceRuntimeNodeModule : IFluxMqRuntimeNodeModule
-{
-    public NodeType Type => FluxMqNodeTypes.StoredSessionSource;
-
-    public RuntimeNode Build(FluxMqRuntimeNodeBuildContext context)
-        => RuntimeNodeFactoryRegistryExtensions.CreateStoredSessionSource(context.Address, context.Definition, context.MessageRepository);
-}
-
-internal sealed class ReplaySourceRuntimeNodeModule : IFluxMqRuntimeNodeModule
-{
-    public NodeType Type => FluxMqNodeTypes.ReplaySource;
-
-    public RuntimeNode Build(FluxMqRuntimeNodeBuildContext context)
-        => RuntimeNodeFactoryRegistryExtensions.CreateReplaySource(context.Address, context.Definition, context.MessageRepository);
-}
-
-internal sealed class GeneratedMqttSourceRuntimeNodeModule : IFluxMqRuntimeNodeModule
-{
-    public NodeType Type => FluxMqNodeTypes.GeneratedSource;
-
-    public RuntimeNode Build(FluxMqRuntimeNodeBuildContext context)
-        => RuntimeNodeFactoryRegistryExtensions.CreateGeneratedMqttSource(context.Address, context.Definition);
-}
-
-internal sealed class MetricSourceRuntimeNodeModule : IFluxMqRuntimeNodeModule
-{
-    public NodeType Type => FluxMqNodeTypes.MetricSource;
-
-    public RuntimeNode Build(FluxMqRuntimeNodeBuildContext context)
-        => RuntimeNodeFactoryRegistryExtensions.CreateMetricSource(context.Address, context.Definition, context.MetricRuntimeHost);
-}
-
 internal sealed class PayloadInspectorRuntimeNodeModule : IFluxMqRuntimeNodeModule
 {
     public NodeType Type => FluxMqNodeTypes.PayloadInspector;
