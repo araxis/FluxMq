@@ -283,112 +283,6 @@ public static class RuntimeNodeFactoryRegistryExtensions
             ]);
     }
 
-    internal static RuntimeNode CreateStoredSessionSource(
-        NodeAddress address,
-        NodeDefinition definition,
-        IMessageRepository? messageRepository)
-    {
-        var sessionId = GetOptionalSessionId(definition, "sessionId");
-        if (sessionId is null)
-        {
-            return CreateEmptyMqttSource(address, definition);
-        }
-
-        if (messageRepository is null)
-        {
-            throw new InvalidOperationException("Stored session source requires a message repository.");
-        }
-
-        var component = new StoredSessionSourceComponent(
-            messageRepository,
-            sessionId.Value,
-            preserveTiming: GetBoolOrDefault(definition, "preserveTiming", false),
-            speed: GetDoubleOrDefault(definition, "speed", 1),
-            boundedCapacity: GetBoundedCapacity(definition));
-
-        return SourceRuntimeNode(address, component, component.Output);
-    }
-
-    internal static RuntimeNode CreateReplaySource(
-        NodeAddress address,
-        NodeDefinition definition,
-        IMessageRepository? messageRepository)
-    {
-        var sessionId = GetOptionalSessionId(definition, "sessionId");
-        if (sessionId is null)
-        {
-            return CreateEmptyMqttSource(address, definition);
-        }
-
-        if (messageRepository is null)
-        {
-            throw new InvalidOperationException("Replay source requires a message repository.");
-        }
-
-        var component = new StoredSessionSourceComponent(
-            messageRepository,
-            sessionId.Value,
-            preserveTiming: true,
-            speed: GetDoubleOrDefault(definition, "speed", 1),
-            boundedCapacity: GetBoundedCapacity(definition));
-
-        return SourceRuntimeNode(address, component, component.Output);
-    }
-
-    private static RuntimeNode CreateEmptyMqttSource(NodeAddress address, NodeDefinition definition)
-    {
-        var component = new GeneratedSourceNode<MqttEnvelope>(
-            GetGeneratedSourceOptions(definition),
-            []);
-
-        return SourceRuntimeNode(address, component, component.Output);
-    }
-
-    internal static RuntimeNode CreateGeneratedMqttSource(NodeAddress address, NodeDefinition definition)
-    {
-        var component = new GeneratedSourceNode<MqttEnvelope>(
-            GetGeneratedSourceOptions(definition),
-            GetGeneratedMessages(definition));
-
-        return SourceRuntimeNode(address, component, component.Output);
-    }
-
-    private static GeneratedSourceOptions GetGeneratedSourceOptions(NodeDefinition definition)
-    {
-        var loop = GetBoolOrDefault(definition, "loop", false);
-        var maxItems = GetOptionalInt(definition, "maxItems", minValue: 1);
-        if (loop && !maxItems.HasValue)
-        {
-            throw new InvalidOperationException("generated.source option 'maxItems' is required when 'loop' is true.");
-        }
-
-        return new GeneratedSourceOptions
-        {
-            Name = GetNullableString(definition, "name") ?? "generated",
-            OutputType = FlowContractTypeNames.MqttEnvelope,
-            Loop = loop,
-            MaxItems = maxItems,
-            InitialDelayMilliseconds = GetIntOrDefault(definition, "initialDelayMilliseconds", 0, minValue: 0),
-            IntervalMilliseconds = GetIntOrDefault(definition, "intervalMilliseconds", 0, minValue: 0),
-            BoundedCapacity = GetBoundedCapacity(definition)
-        };
-    }
-
-    private static RuntimeNode SourceRuntimeNode(
-        NodeAddress address,
-        IFlowNode component,
-        ISourceBlock<MqttEnvelope> output)
-    {
-        return RuntimeNode.Create(
-            address,
-            component,
-            outputs:
-            [
-                new OutputPort<MqttEnvelope>(address.Port(OutputPort), output),
-                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
-            ]);
-    }
-
     internal static RuntimeNode CreateTrigger(
         NodeAddress address,
         NodeDefinition definition,
@@ -644,33 +538,6 @@ public static class RuntimeNodeFactoryRegistryExtensions
             outputs:
             [
                 new OutputPort<MqttMetricsSnapshot>(address.Port(SnapshotsPort), component.Snapshots),
-                new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
-            ]);
-    }
-
-    internal static RuntimeNode CreateMetricSource(
-        NodeAddress address,
-        NodeDefinition definition,
-        FluxMetricRuntimeHost? metricRuntimeHost)
-    {
-        if (metricRuntimeHost is null)
-        {
-            throw new InvalidOperationException("Metric source requires a metric runtime host.");
-        }
-
-        var component = new MetricSourceComponent(
-            metricRuntimeHost,
-            GetRequiredString(definition, "metricId"),
-            GetStringDictionary(definition, "parameters"),
-            emitLatestOnStart: GetBoolOrDefault(definition, "emitLatestOnStart", true),
-            boundedCapacity: GetBoundedCapacity(definition));
-
-        return RuntimeNode.Create(
-            address,
-            component,
-            outputs:
-            [
-                new OutputPort<FluxMetricReading<double>>(address.Port(OutputPort), component.Output),
                 new OutputPort<FlowError>(address.Port(ErrorsPort), component.Errors)
             ]);
     }
@@ -990,54 +857,6 @@ public static class RuntimeNodeFactoryRegistryExtensions
         }
 
         throw new InvalidOperationException("Configuration value 'qos' must be 0, 1, 2, AtMostOnce, AtLeastOnce, or ExactlyOnce.");
-    }
-
-    private static IReadOnlyList<MqttEnvelope> GetGeneratedMessages(NodeDefinition definition)
-    {
-        if (!definition.Configuration.TryGetValue("messages", out var messagesElement))
-        {
-            return [];
-        }
-
-        if (messagesElement.ValueKind != JsonValueKind.Array)
-        {
-            throw new InvalidOperationException("Configuration value 'messages' must be an array.");
-        }
-
-        var messages = new List<MqttEnvelope>();
-        foreach (var item in messagesElement.EnumerateArray())
-        {
-            if (item.ValueKind != JsonValueKind.Object)
-            {
-                throw new InvalidOperationException("Each generated message must be an object.");
-            }
-
-            messages.Add(new MqttEnvelope
-            {
-                Topic = ReadRequiredString(item, "topic"),
-                Payload = ReadPayload(item),
-                ReceivedAt = ReadDateTimeOffsetOrDefault(item, "receivedAt", DateTimeOffset.UtcNow),
-                QualityOfService = ParseQualityOfService(item),
-                Retain = ReadBoolOrDefault(item, "retain", false)
-            });
-        }
-
-        return messages;
-    }
-
-    private static byte[] ReadPayload(JsonElement item)
-    {
-        if (!item.TryGetProperty("payload", out var payload))
-        {
-            return [];
-        }
-
-        return payload.ValueKind switch
-        {
-            JsonValueKind.String => DecodePayload(payload.GetString() ?? string.Empty, ReadStringOrDefault(item, "payloadEncoding", "utf8")),
-            JsonValueKind.Array => payload.EnumerateArray().Select(ReadByte).ToArray(),
-            _ => throw new InvalidOperationException("Generated message payload must be a string or byte array.")
-        };
     }
 
     private static string ReadTopicFilter(string? value, string propertyName = "topicFilter")
