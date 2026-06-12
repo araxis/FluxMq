@@ -3497,3 +3497,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal` passed with 763 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this topic-tree visual UX slice, then continue one-widget-at-a-time by reviewing topic activity/top topics before changing it.
+- Dashboard topic activity visual UX:
+  - Merged PR #205 (`Align topic tree visual settings`) into `main`; post-merge Windows validation passed before this slice.
+  - Started `work/dashboard-topic-activity-visual-ux` from clean `main`.
+  - Refactored `topic.activity` so the topic activity visual owns focused display settings: header, topic limit, count visibility, empty text, and visual colors.
+  - Kept topic projection/event filtering behavior unchanged; this slice only separates topic activity presentation from the generic dashboard shell and removes unused category/palette property metadata.
+  - Updated edit-cell and live rendering to use the same topic activity visual component, with the widget owning its header instead of the outer dashboard chrome.
+  - New topic-activity defaults and saves write `topic.activity.*` visual keys while existing `title` and legacy `limit` still load as fallback.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --filter "FullyQualifiedName~DashboardEventFilterCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests" --verbosity minimal` passed with 227 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 435 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 764 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this topic-activity visual UX slice before selecting the next dashboard component.

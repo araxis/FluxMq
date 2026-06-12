@@ -1,6 +1,7 @@
 using FluxMq.UI.Components.Workspace;
 using FluxMq.UI.Models;
 using MudBlazor;
+using System.Globalization;
 
 namespace FluxMq.UI.Services;
 
@@ -21,8 +22,7 @@ public sealed class DashboardTopicWidgetModuleProvider : IDashboardWidgetModuleP
                 "Topic activity",
                 "topicActivity",
                 [
-                    MetricGroup("topic-metric", "Topic metric"),
-                    CategoryGroup("top-topics", "Top topics")
+                    TopicActivityGroup()
                 ],
                 dataRequirements: ["topicProjection"],
                 preferredColumns: 2,
@@ -73,7 +73,7 @@ public sealed class DashboardTopicWidgetModuleProvider : IDashboardWidgetModuleP
                 dataRequirements),
             component,
             component,
-            EventConfiguration(title),
+            TopicActivityConfiguration(title),
             groups,
             new DashboardWidgetStyleDefinition(),
             new DashboardWidgetLayoutContract(1, 1, preferredColumns, preferredRows),
@@ -86,6 +86,22 @@ public sealed class DashboardTopicWidgetModuleProvider : IDashboardWidgetModuleP
             ["title"] = title,
             [DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricMessages
         };
+        return configuration;
+    }
+
+    private static Dictionary<string, string> TopicActivityConfiguration(string header)
+    {
+        var configuration = EventConfiguration(header);
+        configuration[DashboardTopicActivityVisualOptions.HeaderKey] = header;
+        configuration[DashboardTopicActivityVisualOptions.ShowHeaderKey] = "true";
+        configuration[DashboardTopicActivityVisualOptions.LimitKey] =
+            DashboardTopicActivityVisualOptions.DefaultLimit.ToString(CultureInfo.InvariantCulture);
+        configuration[DashboardTopicActivityVisualOptions.ShowCountsKey] = "true";
+        configuration[DashboardTopicActivityVisualOptions.EmptyTextKey] = DashboardTopicActivityVisualOptions.DefaultEmptyText;
+        configuration[DashboardTopicActivityVisualOptions.HeaderColorKey] = DashboardTopicActivityVisualOptions.DefaultHeaderColor;
+        configuration[DashboardTopicActivityVisualOptions.TextColorKey] = DashboardTopicActivityVisualOptions.DefaultTextColor;
+        configuration[DashboardTopicActivityVisualOptions.MutedColorKey] = DashboardTopicActivityVisualOptions.DefaultMutedColor;
+        configuration[DashboardTopicActivityVisualOptions.AccentColorKey] = DashboardTopicActivityVisualOptions.DefaultAccentColor;
         return configuration;
     }
 
@@ -106,17 +122,17 @@ public sealed class DashboardTopicWidgetModuleProvider : IDashboardWidgetModuleP
             [DashboardTopicTreeVisualOptions.AccentColorKey] = DashboardTopicTreeVisualOptions.DefaultAccentColor
         };
 
-    private static DashboardWidgetPropertyGroupDefinition MetricGroup(string id, string title)
-        => new(id, title, [
-            new("metric", "Metric", DashboardWidgetPropertyEditorKind.Metric, HelpText: "Named metric used by this widget."),
-            new(DashboardWidgetCatalog.PrimaryMetricKey, "Value", DashboardWidgetPropertyEditorKind.Select, Options: MetricOptions())
-        ]);
-
-    private static DashboardWidgetPropertyGroupDefinition CategoryGroup(string id = "categories", string title = "Categories")
-        => new(id, title, [
-            new("groupBy", "Group by", DashboardWidgetPropertyEditorKind.Select),
-            new("limit", "Limit", DashboardWidgetPropertyEditorKind.Number),
-            new("palette", "Palette", DashboardWidgetPropertyEditorKind.Select)
+    private static DashboardWidgetPropertyGroupDefinition TopicActivityGroup()
+        => new("topic-activity", "Topic activity", [
+            new(DashboardTopicActivityVisualOptions.HeaderKey, "Header", DashboardWidgetPropertyEditorKind.Text),
+            new(DashboardTopicActivityVisualOptions.ShowHeaderKey, "Show header", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardTopicActivityVisualOptions.LimitKey, "Topics", DashboardWidgetPropertyEditorKind.Number),
+            new(DashboardTopicActivityVisualOptions.ShowCountsKey, "Counts", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardTopicActivityVisualOptions.EmptyTextKey, "Empty text", DashboardWidgetPropertyEditorKind.Text),
+            new(DashboardTopicActivityVisualOptions.HeaderColorKey, "Header color", DashboardWidgetPropertyEditorKind.Color),
+            new(DashboardTopicActivityVisualOptions.TextColorKey, "Text color", DashboardWidgetPropertyEditorKind.Color),
+            new(DashboardTopicActivityVisualOptions.MutedColorKey, "Muted color", DashboardWidgetPropertyEditorKind.Color),
+            new(DashboardTopicActivityVisualOptions.AccentColorKey, "Accent color", DashboardWidgetPropertyEditorKind.Color)
         ]);
 
     private static DashboardWidgetPropertyGroupDefinition TopicTreeGroup()
@@ -133,7 +149,4 @@ public sealed class DashboardTopicWidgetModuleProvider : IDashboardWidgetModuleP
             new(DashboardTopicTreeVisualOptions.MutedColorKey, "Muted color", DashboardWidgetPropertyEditorKind.Color),
             new(DashboardTopicTreeVisualOptions.AccentColorKey, "Accent color", DashboardWidgetPropertyEditorKind.Color)
         ]);
-
-    private static IReadOnlyList<DashboardWidgetPropertyOption> MetricOptions()
-        => [.. DashboardWidgetCatalog.MetricOptions.Select(static metric => new DashboardWidgetPropertyOption(metric.Id, metric.Label))];
 }

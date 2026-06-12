@@ -378,6 +378,7 @@
         @if (!draft.Profile.UsesMetricVisualization &&
              !draft.Profile.UsesLatestEventVisual &&
              !draft.Profile.UsesEventTableVisual &&
+             !draft.Profile.UsesTopicActivityVisual &&
              !draft.Profile.UsesTopicTreeVisual)
         {
             <PropertyGridRow Name="@InspectorLabels.TitleRow">
@@ -425,6 +426,7 @@
                                            GaugePropertyChanged="@SetGaugePropertyAsync"
                                            LatestEventVisualPropertyChanged="@SetLatestEventVisualPropertyAsync"
                                            EventTableVisualPropertyChanged="@SetEventTableVisualPropertyAsync"
+                                           TopicActivityVisualPropertyChanged="@SetTopicActivityVisualPropertyAsync"
                                            TopicTreeVisualPropertyChanged="@SetTopicTreeVisualPropertyAsync"
                                            ChartTypeChanged="@SetChartTypeAsync" />
 
@@ -501,9 +503,10 @@
 
     private int DisplayPropertyCount => _widgetDraft is null
         ? 0
-        : (_widgetDraft.Profile.UsesMetricVisualization ? 1 + MetricVisualizationPropertyCount : _widgetDraft.Profile.UsesLatestEventVisual || _widgetDraft.Profile.UsesEventTableVisual || _widgetDraft.Profile.UsesTopicTreeVisual ? 0 : 1 + (_widgetDraft.Profile.UsesSubtitle ? 1 : 0)) +
+        : (_widgetDraft.Profile.UsesMetricVisualization ? 1 + MetricVisualizationPropertyCount : _widgetDraft.Profile.UsesLatestEventVisual || _widgetDraft.Profile.UsesEventTableVisual || _widgetDraft.Profile.UsesTopicActivityVisual || _widgetDraft.Profile.UsesTopicTreeVisual ? 0 : 1 + (_widgetDraft.Profile.UsesSubtitle ? 1 : 0)) +
           (_widgetDraft.Profile.UsesLatestEventVisual ? 11 : 0) +
           (_widgetDraft.Profile.UsesEventTableVisual ? 13 : 0) +
+          (_widgetDraft.Profile.UsesTopicActivityVisual ? 9 : 0) +
           (_widgetDraft.Profile.UsesTopicTreeVisual ? 11 : 0) +
           (_widgetDraft.Profile.UsesGaugeStyle ? 9 : 0) +
           (_widgetDraft.Profile.UsesChartType ? 1 : 0) +
@@ -817,6 +820,20 @@
         }
 
         _widgetDraft.SetEventTableVisualValue(key, value);
+        await AutoApplyAsync();
+    }
+
+    private Task SetTopicActivityVisualPropertyAsync(DashboardInspectorPropertyValueChange change)
+        => SetTopicActivityVisualPropertyAsync(change.Key, change.Value);
+
+    private async Task SetTopicActivityVisualPropertyAsync(string key, string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.SetTopicActivityVisualValue(key, value);
         await AutoApplyAsync();
     }
 

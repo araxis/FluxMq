@@ -1532,6 +1532,12 @@ public sealed class FlowDefinitionComposerTests
         layout.Widgets["topicActivity"].Configuration["title"].ShouldBe("Topic activity");
         layout.Widgets["topicActivity"].Configuration["eventType"].ShouldBe(string.Empty);
         layout.Widgets["topicActivity"].Configuration["topicStartsWith"].ShouldBe(string.Empty);
+        layout.Widgets["topicActivity"].Configuration[DashboardTopicActivityVisualOptions.HeaderKey].ShouldBe("Topic activity");
+        layout.Widgets["topicActivity"].Configuration[DashboardTopicActivityVisualOptions.ShowHeaderKey].ShouldBe("true");
+        layout.Widgets["topicActivity"].Configuration[DashboardTopicActivityVisualOptions.LimitKey].ShouldBe("8");
+        layout.Widgets["topicActivity"].Configuration[DashboardTopicActivityVisualOptions.ShowCountsKey].ShouldBe("true");
+        layout.Widgets["topicActivity"].Configuration[DashboardTopicActivityVisualOptions.EmptyTextKey]
+            .ShouldBe(DashboardTopicActivityVisualOptions.DefaultEmptyText);
         layout.Widgets["topicTree"].Configuration["title"].ShouldBe("Topic tree");
         layout.Widgets["topicTree"].Configuration[DashboardWidgetCatalog.ExcludeSystemTopicsKey].ShouldBe("true");
     }

@@ -311,6 +311,7 @@ public sealed class DashboardEventFilterCatalogTests
         var latest = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.LatestEventType);
         var chart = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.LineChartType);
         var table = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.EventTableType);
+        var topicActivity = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.TopicActivityType);
         var tree = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.TopicTreeType);
 
         kpi.UsesMetricQuery.ShouldBeTrue();
@@ -334,6 +335,10 @@ public sealed class DashboardEventFilterCatalogTests
         table.SupportsMetricSlots.ShouldBeFalse();
         table.UsesMetricWindow.ShouldBeFalse();
         table.UsesEventTableVisual.ShouldBeTrue();
+        topicActivity.IsEventWidget.ShouldBeTrue();
+        topicActivity.UsesTopicActivityVisual.ShouldBeTrue();
+        topicActivity.UsesMetricVisualization.ShouldBeFalse();
+        topicActivity.SupportsMetricSlots.ShouldBeFalse();
         tree.IsEventWidget.ShouldBeFalse();
         tree.IsTopicTreeWidget.ShouldBeTrue();
         tree.UsesTopicTreeVisual.ShouldBeTrue();
@@ -591,6 +596,44 @@ public sealed class DashboardEventFilterCatalogTests
         configuration[DashboardTopicTreeVisualOptions.TextColorKey].ShouldBe(DashboardTopicTreeVisualOptions.DefaultTextColor);
         configuration[DashboardTopicTreeVisualOptions.MutedColorKey].ShouldBe(DashboardTopicTreeVisualOptions.DefaultMutedColor);
         configuration[DashboardTopicTreeVisualOptions.AccentColorKey].ShouldBe("#33ccaa");
+    }
+
+    [Fact]
+    public void DashboardWidgetSettingsDraft_BuildsTopicActivityConfiguration()
+    {
+        var draft = DashboardWidgetSettingsDraft.Create(
+            new DashboardWidgetSnapshot(
+                "activity",
+                DashboardWidgetCatalog.TopicActivityType,
+                new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["title"] = "Topics",
+                    ["limit"] = "18",
+                    [DashboardEventFilterCatalog.EventTypeKey] = FluxMqEventTypes.MqttMessagePublished,
+                    [DashboardEventFilterCatalog.TopicStartsWithKey] = "factory/"
+                }),
+            new DashboardEventFilterCatalog());
+
+        draft.SetTopicActivityVisualValue(DashboardTopicActivityVisualOptions.HeaderKey, "Hot topics");
+        draft.SetTopicActivityVisualValue(DashboardTopicActivityVisualOptions.LimitKey, "3");
+        draft.SetTopicActivityVisualValue(DashboardTopicActivityVisualOptions.ShowCountsKey, bool.FalseString);
+        draft.SetTopicActivityVisualValue(DashboardTopicActivityVisualOptions.AccentColorKey, "#44ddbb");
+
+        var configuration = draft.BuildConfiguration();
+
+        configuration["title"].ShouldBe("Hot topics");
+        configuration[DashboardTopicActivityVisualOptions.HeaderKey].ShouldBe("Hot topics");
+        configuration[DashboardTopicActivityVisualOptions.ShowHeaderKey].ShouldBe(bool.TrueString);
+        configuration[DashboardTopicActivityVisualOptions.LimitKey].ShouldBe("3");
+        configuration[DashboardTopicActivityVisualOptions.ShowCountsKey].ShouldBe(bool.FalseString);
+        configuration[DashboardTopicActivityVisualOptions.EmptyTextKey].ShouldBe(DashboardTopicActivityVisualOptions.DefaultEmptyText);
+        configuration[DashboardTopicActivityVisualOptions.HeaderColorKey].ShouldBe(DashboardTopicActivityVisualOptions.DefaultHeaderColor);
+        configuration[DashboardTopicActivityVisualOptions.TextColorKey].ShouldBe(DashboardTopicActivityVisualOptions.DefaultTextColor);
+        configuration[DashboardTopicActivityVisualOptions.MutedColorKey].ShouldBe(DashboardTopicActivityVisualOptions.DefaultMutedColor);
+        configuration[DashboardTopicActivityVisualOptions.AccentColorKey].ShouldBe("#44ddbb");
+        configuration[DashboardEventFilterCatalog.EventTypeKey].ShouldBe(FluxMqEventTypes.MqttMessagePublished);
+        configuration[DashboardEventFilterCatalog.TopicStartsWithKey].ShouldBe("factory/");
+        configuration.ContainsKey("limit").ShouldBeFalse();
     }
 
     [Fact]
@@ -2457,7 +2500,32 @@ public sealed class DashboardEventFilterCatalogTests
             .Single(static module => module.Type == DashboardWidgetCatalog.TopicActivityType)
             .PropertyGroups
             .Select(static group => group.Id)
-            .ShouldBe(["topic-metric", "top-topics"]);
+            .ShouldBe(["topic-activity"]);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.TopicActivityType)
+            .PropertyGroups
+            .Single()
+            .Properties
+            .Select(static property => property.Key)
+            .ShouldBe([
+                DashboardTopicActivityVisualOptions.HeaderKey,
+                DashboardTopicActivityVisualOptions.ShowHeaderKey,
+                DashboardTopicActivityVisualOptions.LimitKey,
+                DashboardTopicActivityVisualOptions.ShowCountsKey,
+                DashboardTopicActivityVisualOptions.EmptyTextKey,
+                DashboardTopicActivityVisualOptions.HeaderColorKey,
+                DashboardTopicActivityVisualOptions.TextColorKey,
+                DashboardTopicActivityVisualOptions.MutedColorKey,
+                DashboardTopicActivityVisualOptions.AccentColorKey
+            ]);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.TopicActivityType)
+            .DefaultConfiguration[DashboardTopicActivityVisualOptions.HeaderKey]
+            .ShouldBe("Topic activity");
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.TopicActivityType)
+            .DefaultConfiguration[DashboardTopicActivityVisualOptions.LimitKey]
+            .ShouldBe(DashboardTopicActivityVisualOptions.DefaultLimit.ToString(System.Globalization.CultureInfo.InvariantCulture));
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.TopicTreeType)
             .PropertyGroups
@@ -3152,7 +3220,9 @@ public sealed class DashboardEventFilterCatalogTests
         displayRows.ShouldContain("PropertyGridRow Name=\"@Labels.TopicSystemRow\"");
         displayRows.ShouldContain("GaugeStyleChanged");
         displayRows.ShouldContain("ChartTypeChanged");
+        displayRows.ShouldContain("TopicActivityVisualPropertyChanged");
         displayRows.ShouldContain("TopicTreeVisualPropertyChanged");
+        inspector.ShouldContain("TopicActivityVisualPropertyChanged=\"@SetTopicActivityVisualPropertyAsync\"");
         inspector.ShouldContain("TopicTreeVisualPropertyChanged=\"@SetTopicTreeVisualPropertyAsync\"");
     }
 

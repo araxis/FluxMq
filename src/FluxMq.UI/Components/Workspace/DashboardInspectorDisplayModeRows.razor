@@ -109,6 +109,50 @@
         </PropertyGridRow>
     }
 
+    @if (Draft.Profile.UsesTopicActivityVisual)
+    {
+        <PropertyGridRow Name="Header">
+            <input class="property-grid-input"
+                   value="@Draft.TopicActivityHeader"
+                   @oninput="@((ChangeEventArgs args) => ChangeTopicActivityVisualPropertyAsync(DashboardTopicActivityVisualOptions.HeaderKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Show header">
+            @TopicActivityBooleanRow(DashboardTopicActivityVisualOptions.ShowHeaderKey, Draft.TopicActivityShowHeader)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Topics">
+            <input class="property-grid-input"
+                   type="number"
+                   min="@DashboardTopicActivityVisualOptions.MinLimit"
+                   max="@DashboardTopicActivityVisualOptions.MaxLimit"
+                   value="@Draft.TopicActivityLimit"
+                   @oninput="@((ChangeEventArgs args) => ChangeTopicActivityVisualPropertyAsync(DashboardTopicActivityVisualOptions.LimitKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Counts">
+            @TopicActivityBooleanRow(DashboardTopicActivityVisualOptions.ShowCountsKey, Draft.TopicActivityShowCounts)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Empty text">
+            <input class="property-grid-input"
+                   value="@Draft.TopicActivityEmptyText"
+                   @oninput="@((ChangeEventArgs args) => ChangeTopicActivityVisualPropertyAsync(DashboardTopicActivityVisualOptions.EmptyTextKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Header color">
+            <PropertyGridColorPicker Value="@Draft.TopicActivityHeaderColor"
+                                     ValueChanged="@((string? value) => ChangeTopicActivityVisualPropertyAsync(DashboardTopicActivityVisualOptions.HeaderColorKey, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Text color">
+            <PropertyGridColorPicker Value="@Draft.TopicActivityTextColor"
+                                     ValueChanged="@((string? value) => ChangeTopicActivityVisualPropertyAsync(DashboardTopicActivityVisualOptions.TextColorKey, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Muted color">
+            <PropertyGridColorPicker Value="@Draft.TopicActivityMutedColor"
+                                     ValueChanged="@((string? value) => ChangeTopicActivityVisualPropertyAsync(DashboardTopicActivityVisualOptions.MutedColorKey, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Accent color">
+            <PropertyGridColorPicker Value="@Draft.TopicActivityAccentColor"
+                                     ValueChanged="@((string? value) => ChangeTopicActivityVisualPropertyAsync(DashboardTopicActivityVisualOptions.AccentColorKey, value))" />
+        </PropertyGridRow>
+    }
+
     @if (Draft.Profile.UsesTopicTreeVisual)
     {
         <PropertyGridRow Name="Header">
@@ -254,6 +298,9 @@
     public EventCallback<DashboardInspectorPropertyValueChange> EventTableVisualPropertyChanged { get; set; }
 
     [Parameter]
+    public EventCallback<DashboardInspectorPropertyValueChange> TopicActivityVisualPropertyChanged { get; set; }
+
+    [Parameter]
     public EventCallback<DashboardInspectorPropertyValueChange> TopicTreeVisualPropertyChanged { get; set; }
 
     [Parameter]
@@ -278,6 +325,9 @@
     private Task ChangeEventTableVisualPropertyAsync(string key, string? value)
         => EventTableVisualPropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
 
+    private Task ChangeTopicActivityVisualPropertyAsync(string key, string? value)
+        => TopicActivityVisualPropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
+
     private Task ChangeTopicTreeVisualPropertyAsync(string key, string? value)
         => TopicTreeVisualPropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
 
@@ -297,6 +347,15 @@
         <button type="button"
                 class="@BooleanChoiceClass(value, false)"
                 @onclick="@(() => ChangeEventTableVisualPropertyAsync(key, bool.FalseString))">Off</button>
+    </div>;
+
+    private RenderFragment TopicActivityBooleanRow(string key, bool value) => @<div class="property-grid-button-group">
+        <button type="button"
+                class="@BooleanChoiceClass(value, true)"
+                @onclick="@(() => ChangeTopicActivityVisualPropertyAsync(key, bool.TrueString))">On</button>
+        <button type="button"
+                class="@BooleanChoiceClass(value, false)"
+                @onclick="@(() => ChangeTopicActivityVisualPropertyAsync(key, bool.FalseString))">Off</button>
     </div>;
 
     private RenderFragment TopicTreeBooleanRow(string key, bool value) => @<div class="property-grid-button-group">

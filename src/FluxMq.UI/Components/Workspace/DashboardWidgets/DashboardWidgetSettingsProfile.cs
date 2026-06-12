@@ -19,6 +19,7 @@ public sealed record DashboardWidgetSettingsProfile(
     bool UsesSubtitle = false,
     bool UsesLatestEventVisual = false,
     bool UsesEventTableVisual = false,
+    bool UsesTopicActivityVisual = false,
     bool UsesTopicTreeVisual = false,
     DashboardWidgetInspectorLabels? Labels = null)
 {
@@ -272,7 +273,8 @@ public static class DashboardWidgetSettingsProfiles
             DashboardWidgetCatalog.TopicActivityType => Event(
                 normalized,
                 "Topic activity",
-                Icons.Material.Filled.GridOn),
+                Icons.Material.Filled.GridOn,
+                usesTopicActivityVisual: true),
             DashboardWidgetCatalog.PayloadDistributionType => Event(
                 normalized,
                 "Payload sizes",
@@ -324,6 +326,7 @@ public static class DashboardWidgetSettingsProfiles
         bool usesSubtitle = false,
         bool usesLatestEventVisual = false,
         bool usesEventTableVisual = false,
+        bool usesTopicActivityVisual = false,
         DashboardWidgetInspectorLabels? labels = null)
         => new(
             type,
@@ -341,6 +344,7 @@ public static class DashboardWidgetSettingsProfiles
             usesSubtitle,
             usesLatestEventVisual,
             usesEventTableVisual,
+            usesTopicActivityVisual,
             UsesTopicTreeVisual: false,
             labels);
 }
