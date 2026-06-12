@@ -43,33 +43,33 @@
     public DashboardWidgetRenderContext Context { get; set; } = null!;
 
     private string Title =>
-        Read(DashboardWidgetCatalog.MetricValueTitleKey) ??
+        Read(DashboardMetricValueVisualizationOptions.TitleKey) ??
         DashboardWidgetFormatting.WidgetTitle(Context.Widget);
 
     private string Subtitle =>
-        Read(DashboardWidgetCatalog.MetricValueSubtitleKey) ??
+        Read(DashboardMetricValueVisualizationOptions.SubtitleKey) ??
         DashboardWidgetFormatting.WidgetSubtitle(Context.Widget);
 
-    private bool ShowTitle => ReadBool(DashboardWidgetCatalog.MetricValueShowTitleKey, true);
+    private bool ShowTitle => ReadBool(DashboardMetricValueVisualizationOptions.ShowTitleKey, true);
 
-    private bool ShowSubtitle => ReadBool(DashboardWidgetCatalog.MetricValueShowSubtitleKey, true);
+    private bool ShowSubtitle => ReadBool(DashboardMetricValueVisualizationOptions.ShowSubtitleKey, true);
 
-    private bool ShowUnit => ReadBool(DashboardWidgetCatalog.MetricValueShowUnitKey, true);
+    private bool ShowUnit => ReadBool(DashboardMetricValueVisualizationOptions.ShowUnitKey, true);
 
     private string RootStyle
     {
         get
         {
             var parts = new List<string>();
-            Add(parts, "--dashboard-widget-title", Read(DashboardWidgetCatalog.MetricValueTitleColorKey) ?? Read(DashboardWidgetCatalog.KpiTitleColorKey));
-            Add(parts, "--dashboard-widget-subtitle", Read(DashboardWidgetCatalog.MetricValueSubtitleColorKey) ?? Read(DashboardWidgetCatalog.KpiSubtitleColorKey));
-            Add(parts, "--dashboard-widget-value", Read(DashboardWidgetCatalog.MetricValueValueColorKey) ?? Read(DashboardWidgetCatalog.KpiValueColorKey));
-            Add(parts, "--dashboard-metric-value-unit", Read(DashboardWidgetCatalog.MetricValueUnitColorKey));
-            Add(parts, "--dashboard-kpi-title-align", DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(Read(DashboardWidgetCatalog.MetricValueTitleAlignKey) ?? Read(DashboardWidgetCatalog.KpiTitleAlignKey)));
-            Add(parts, "--dashboard-kpi-title-items", HorizontalAlignmentCss(Read(DashboardWidgetCatalog.MetricValueTitleAlignKey) ?? Read(DashboardWidgetCatalog.KpiTitleAlignKey)));
-            Add(parts, "--dashboard-kpi-value-align", DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(Read(DashboardWidgetCatalog.MetricValueValueAlignKey) ?? Read(DashboardWidgetCatalog.KpiValueAlignKey)));
-            Add(parts, "--dashboard-kpi-value-items", HorizontalAlignmentCss(Read(DashboardWidgetCatalog.MetricValueValueAlignKey) ?? Read(DashboardWidgetCatalog.KpiValueAlignKey)));
-            Add(parts, "--dashboard-kpi-value-placement", ValuePlacementCss(Read(DashboardWidgetCatalog.MetricValueValuePlacementKey) ?? Read(DashboardWidgetCatalog.KpiValuePlacementKey)));
+            Add(parts, "--dashboard-widget-title", Read(DashboardMetricValueVisualizationOptions.TitleColorKey) ?? Read(DashboardWidgetCatalog.KpiTitleColorKey));
+            Add(parts, "--dashboard-widget-subtitle", Read(DashboardMetricValueVisualizationOptions.SubtitleColorKey) ?? Read(DashboardWidgetCatalog.KpiSubtitleColorKey));
+            Add(parts, "--dashboard-widget-value", Read(DashboardMetricValueVisualizationOptions.ValueColorKey) ?? Read(DashboardWidgetCatalog.KpiValueColorKey));
+            Add(parts, "--dashboard-metric-value-unit", Read(DashboardMetricValueVisualizationOptions.UnitColorKey));
+            Add(parts, "--dashboard-kpi-title-align", DashboardMetricValueVisualizationOptions.NormalizeHorizontalAlignment(Read(DashboardMetricValueVisualizationOptions.TitleAlignKey) ?? Read(DashboardWidgetCatalog.KpiTitleAlignKey)));
+            Add(parts, "--dashboard-kpi-title-items", HorizontalAlignmentCss(Read(DashboardMetricValueVisualizationOptions.TitleAlignKey) ?? Read(DashboardWidgetCatalog.KpiTitleAlignKey)));
+            Add(parts, "--dashboard-kpi-value-align", DashboardMetricValueVisualizationOptions.NormalizeHorizontalAlignment(Read(DashboardMetricValueVisualizationOptions.ValueAlignKey) ?? Read(DashboardWidgetCatalog.KpiValueAlignKey)));
+            Add(parts, "--dashboard-kpi-value-items", HorizontalAlignmentCss(Read(DashboardMetricValueVisualizationOptions.ValueAlignKey) ?? Read(DashboardWidgetCatalog.KpiValueAlignKey)));
+            Add(parts, "--dashboard-kpi-value-placement", ValuePlacementCss(Read(DashboardMetricValueVisualizationOptions.ValuePlacementKey) ?? Read(DashboardWidgetCatalog.KpiValuePlacementKey)));
             return string.Join(string.Empty, parts);
         }
     }
@@ -81,7 +81,7 @@
 
     private string DisplayUnitText(string naturalUnit)
     {
-        var configured = Read(DashboardWidgetCatalog.MetricValueUnitTextKey);
+        var configured = Read(DashboardMetricValueVisualizationOptions.UnitTextKey);
         return string.IsNullOrWhiteSpace(configured) ? naturalUnit : configured;
     }
 
@@ -92,7 +92,7 @@
             return false;
         }
 
-        var hasCustomUnit = !string.IsNullOrWhiteSpace(Read(DashboardWidgetCatalog.MetricValueUnitTextKey));
+        var hasCustomUnit = !string.IsNullOrWhiteSpace(Read(DashboardMetricValueVisualizationOptions.UnitTextKey));
         return hasCustomUnit || !string.Equals(naturalUnit, "bytes", StringComparison.Ordinal);
     }
 
@@ -105,18 +105,18 @@
     }
 
     private static string HorizontalAlignmentCss(string? value)
-        => DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(value) switch
+        => DashboardMetricValueVisualizationOptions.NormalizeHorizontalAlignment(value) switch
         {
-            DashboardWidgetCatalog.KpiAlignCenter => "center",
-            DashboardWidgetCatalog.KpiAlignRight => "flex-end",
+            DashboardMetricValueVisualizationOptions.AlignCenter => "center",
+            DashboardMetricValueVisualizationOptions.AlignRight => "flex-end",
             _ => "flex-start"
         };
 
     private static string ValuePlacementCss(string? value)
-        => DashboardWidgetCatalog.NormalizeKpiValuePlacement(value) switch
+        => DashboardMetricValueVisualizationOptions.NormalizeValuePlacement(value) switch
         {
-            DashboardWidgetCatalog.KpiValuePlacementMiddle => "center",
-            DashboardWidgetCatalog.KpiValuePlacementBottom => "flex-end",
+            DashboardMetricValueVisualizationOptions.ValuePlacementMiddle => "center",
+            DashboardMetricValueVisualizationOptions.ValuePlacementBottom => "flex-end",
             _ => "flex-start"
         };
 }

@@ -3295,3 +3295,18 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 757 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this digital visual ownership cleanup, then inspect value visual constant ownership as the next small cleanup candidate.
+- Dashboard value visualization constant cleanup:
+  - Merged PR #191 (`Move digital visualization constants`) into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Started `work/dashboard-value-visualization-constant-cleanup` from clean `main`.
+  - Moved value visual keys, defaults, alignment values, placement values, and normalizers from the general `DashboardWidgetCatalog` into `DashboardMetricValueVisualizationOptions`.
+  - Kept legacy `kpi.*` compatibility keys in `DashboardWidgetCatalog` so old saved widget config can still be read as fallback input.
+  - Updated the value visualization module provider, value visualization view, inspector visual rows, metric designer preview config, settings draft, widget formatting, and tests to depend on the focused value owner.
+  - Kept persisted key strings, visualization id, widget ids, defaults, schema, UI text, and rendering behavior unchanged.
+  - Added guard coverage proving the general dashboard widget catalog no longer owns value or digital visual constants and the value options class owns default/normalization behavior.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetCatalog_IsStaticAndNotRegisteredAsAService|FullyQualifiedName~DashboardMetricValueVisualizationOptions_OwnsValueVisualDefaults|FullyQualifiedName~DashboardMetricVisualizationCatalog_ProvidesMetricValueFoundation|FullyQualifiedName~DashboardWidgetSettingsDraft_WritesValueVisualizationSettingsOnlyWhenSelected|FullyQualifiedName~DashboardMetricValueModuleAddsUnitVisibilityAndCustomUnitText" -p:UseAppHost=false --verbosity minimal` passed with 3 matching tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 429 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 758 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this value visual ownership cleanup, then inspect gauge/chart constant ownership as the next small cleanup candidate.

@@ -17,20 +17,20 @@ public sealed class DashboardMetricVisualizationSettingsDraft
         DashboardWidgetCatalog.KpiValueAlignKey,
         DashboardWidgetCatalog.KpiValuePlacementKey,
         DashboardWidgetCatalog.MetricVisualizationKey,
-        DashboardWidgetCatalog.MetricValueTitleKey,
-        DashboardWidgetCatalog.MetricValueSubtitleKey,
-        DashboardWidgetCatalog.MetricValueShowTitleKey,
-        DashboardWidgetCatalog.MetricValueShowSubtitleKey,
-        DashboardWidgetCatalog.MetricValueShowUnitKey,
-        DashboardWidgetCatalog.MetricValueUnitTextKey,
-        DashboardWidgetCatalog.MetricValueTitleColorKey,
-        DashboardWidgetCatalog.MetricValueSubtitleColorKey,
-        DashboardWidgetCatalog.MetricValueValueColorKey,
-        DashboardWidgetCatalog.MetricValueUnitColorKey,
-        DashboardWidgetCatalog.MetricValueTitleAlignKey,
-        DashboardWidgetCatalog.MetricValueValueAlignKey,
-        DashboardWidgetCatalog.MetricValueValuePlacementKey,
-        DashboardWidgetCatalog.MetricValuePaddingKey,
+        DashboardMetricValueVisualizationOptions.TitleKey,
+        DashboardMetricValueVisualizationOptions.SubtitleKey,
+        DashboardMetricValueVisualizationOptions.ShowTitleKey,
+        DashboardMetricValueVisualizationOptions.ShowSubtitleKey,
+        DashboardMetricValueVisualizationOptions.ShowUnitKey,
+        DashboardMetricValueVisualizationOptions.UnitTextKey,
+        DashboardMetricValueVisualizationOptions.TitleColorKey,
+        DashboardMetricValueVisualizationOptions.SubtitleColorKey,
+        DashboardMetricValueVisualizationOptions.ValueColorKey,
+        DashboardMetricValueVisualizationOptions.UnitColorKey,
+        DashboardMetricValueVisualizationOptions.TitleAlignKey,
+        DashboardMetricValueVisualizationOptions.ValueAlignKey,
+        DashboardMetricValueVisualizationOptions.ValuePlacementKey,
+        DashboardMetricValueVisualizationOptions.PaddingKey,
         DashboardMetricDigitalVisualizationOptions.LabelKey,
         DashboardMetricDigitalVisualizationOptions.ShowLabelKey,
         DashboardMetricDigitalVisualizationOptions.LabelPlacementKey,
@@ -50,9 +50,9 @@ public sealed class DashboardMetricVisualizationSettingsDraft
 
     public string VisualizationId { get; private set; } = DashboardMetricVisualizationIds.Value;
 
-    public string ValueTitle { get; set; } = DashboardWidgetCatalog.MetricValueDefaultTitle;
+    public string ValueTitle { get; set; } = DashboardMetricValueVisualizationOptions.DefaultTitle;
 
-    public string ValueSubtitle { get; set; } = DashboardWidgetCatalog.MetricValueDefaultSubtitle;
+    public string ValueSubtitle { get; set; } = DashboardMetricValueVisualizationOptions.DefaultSubtitle;
 
     public bool ValueShowTitle { get; set; } = true;
 
@@ -60,23 +60,23 @@ public sealed class DashboardMetricVisualizationSettingsDraft
 
     public bool ValueShowUnit { get; set; } = true;
 
-    public string ValueUnitText { get; set; } = DashboardWidgetCatalog.MetricValueDefaultUnitText;
+    public string ValueUnitText { get; set; } = DashboardMetricValueVisualizationOptions.DefaultUnitText;
 
-    public string ValueTitleColor { get; set; } = DashboardWidgetCatalog.KpiDefaultTitleColor;
+    public string ValueTitleColor { get; set; } = DashboardMetricValueVisualizationOptions.DefaultTitleColor;
 
-    public string ValueSubtitleColor { get; set; } = DashboardWidgetCatalog.KpiDefaultSubtitleColor;
+    public string ValueSubtitleColor { get; set; } = DashboardMetricValueVisualizationOptions.DefaultSubtitleColor;
 
-    public string ValueValueColor { get; set; } = DashboardWidgetCatalog.KpiDefaultValueColor;
+    public string ValueValueColor { get; set; } = DashboardMetricValueVisualizationOptions.DefaultValueColor;
 
-    public string ValueUnitColor { get; set; } = DashboardWidgetCatalog.KpiDefaultSubtitleColor;
+    public string ValueUnitColor { get; set; } = DashboardMetricValueVisualizationOptions.DefaultUnitColor;
 
-    public string ValueTitleAlign { get; set; } = DashboardWidgetCatalog.KpiAlignLeft;
+    public string ValueTitleAlign { get; set; } = DashboardMetricValueVisualizationOptions.AlignLeft;
 
-    public string ValueValueAlign { get; set; } = DashboardWidgetCatalog.KpiAlignLeft;
+    public string ValueValueAlign { get; set; } = DashboardMetricValueVisualizationOptions.AlignLeft;
 
-    public string ValueValuePlacement { get; set; } = DashboardWidgetCatalog.KpiValuePlacementTop;
+    public string ValueValuePlacement { get; set; } = DashboardMetricValueVisualizationOptions.ValuePlacementTop;
 
-    public int ValuePadding { get; set; } = DashboardWidgetCatalog.MetricValueDefaultPadding;
+    public int ValuePadding { get; set; } = DashboardMetricValueVisualizationOptions.DefaultPadding;
 
     public string DigitalLabel { get; set; } = DashboardMetricDigitalVisualizationOptions.DefaultLabel;
 
@@ -185,29 +185,29 @@ public sealed class DashboardMetricVisualizationSettingsDraft
             return configuration;
         }
 
-        configuration[DashboardWidgetCatalog.MetricValueTitleKey] =
-            NormalizeText(ValueTitle, DashboardWidgetCatalog.MetricValueDefaultTitle);
-        configuration[DashboardWidgetCatalog.MetricValueSubtitleKey] =
-            NormalizeText(ValueSubtitle, DashboardWidgetCatalog.MetricValueDefaultSubtitle);
-        configuration[DashboardWidgetCatalog.MetricValueShowTitleKey] = ValueShowTitle ? "true" : "false";
-        configuration[DashboardWidgetCatalog.MetricValueShowSubtitleKey] = ValueShowSubtitle ? "true" : "false";
-        configuration[DashboardWidgetCatalog.MetricValueShowUnitKey] = ValueShowUnit ? "true" : "false";
-        configuration[DashboardWidgetCatalog.MetricValueUnitTextKey] = NormalizeOptionalText(ValueUnitText);
-        configuration[DashboardWidgetCatalog.MetricValueTitleColorKey] =
-            NormalizeColor(ValueTitleColor, DashboardWidgetCatalog.KpiDefaultTitleColor);
-        configuration[DashboardWidgetCatalog.MetricValueSubtitleColorKey] =
-            NormalizeColor(ValueSubtitleColor, DashboardWidgetCatalog.KpiDefaultSubtitleColor);
-        configuration[DashboardWidgetCatalog.MetricValueValueColorKey] =
-            NormalizeColor(ValueValueColor, DashboardWidgetCatalog.KpiDefaultValueColor);
-        configuration[DashboardWidgetCatalog.MetricValueUnitColorKey] =
-            NormalizeColor(ValueUnitColor, DashboardWidgetCatalog.KpiDefaultSubtitleColor);
-        configuration[DashboardWidgetCatalog.MetricValueTitleAlignKey] =
-            DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(ValueTitleAlign);
-        configuration[DashboardWidgetCatalog.MetricValueValueAlignKey] =
-            DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(ValueValueAlign);
-        configuration[DashboardWidgetCatalog.MetricValueValuePlacementKey] =
-            DashboardWidgetCatalog.NormalizeKpiValuePlacement(ValueValuePlacement);
-        configuration[DashboardWidgetCatalog.MetricValuePaddingKey] =
+        configuration[DashboardMetricValueVisualizationOptions.TitleKey] =
+            NormalizeText(ValueTitle, DashboardMetricValueVisualizationOptions.DefaultTitle);
+        configuration[DashboardMetricValueVisualizationOptions.SubtitleKey] =
+            NormalizeText(ValueSubtitle, DashboardMetricValueVisualizationOptions.DefaultSubtitle);
+        configuration[DashboardMetricValueVisualizationOptions.ShowTitleKey] = ValueShowTitle ? "true" : "false";
+        configuration[DashboardMetricValueVisualizationOptions.ShowSubtitleKey] = ValueShowSubtitle ? "true" : "false";
+        configuration[DashboardMetricValueVisualizationOptions.ShowUnitKey] = ValueShowUnit ? "true" : "false";
+        configuration[DashboardMetricValueVisualizationOptions.UnitTextKey] = NormalizeOptionalText(ValueUnitText);
+        configuration[DashboardMetricValueVisualizationOptions.TitleColorKey] =
+            NormalizeColor(ValueTitleColor, DashboardMetricValueVisualizationOptions.DefaultTitleColor);
+        configuration[DashboardMetricValueVisualizationOptions.SubtitleColorKey] =
+            NormalizeColor(ValueSubtitleColor, DashboardMetricValueVisualizationOptions.DefaultSubtitleColor);
+        configuration[DashboardMetricValueVisualizationOptions.ValueColorKey] =
+            NormalizeColor(ValueValueColor, DashboardMetricValueVisualizationOptions.DefaultValueColor);
+        configuration[DashboardMetricValueVisualizationOptions.UnitColorKey] =
+            NormalizeColor(ValueUnitColor, DashboardMetricValueVisualizationOptions.DefaultUnitColor);
+        configuration[DashboardMetricValueVisualizationOptions.TitleAlignKey] =
+            DashboardMetricValueVisualizationOptions.NormalizeHorizontalAlignment(ValueTitleAlign);
+        configuration[DashboardMetricValueVisualizationOptions.ValueAlignKey] =
+            DashboardMetricValueVisualizationOptions.NormalizeHorizontalAlignment(ValueValueAlign);
+        configuration[DashboardMetricValueVisualizationOptions.ValuePlacementKey] =
+            DashboardMetricValueVisualizationOptions.NormalizeValuePlacement(ValueValuePlacement);
+        configuration[DashboardMetricValueVisualizationOptions.PaddingKey] =
             Clamp(ValuePadding, 0, 64).ToString(CultureInfo.InvariantCulture);
         return configuration;
     }
@@ -244,51 +244,51 @@ public sealed class DashboardMetricVisualizationSettingsDraft
         VisualizationId = DashboardWidgetCatalog.NormalizeMetricVisualization(
             ReadString(configuration, DashboardWidgetCatalog.MetricVisualizationKey) ?? VisualizationId);
 
-        ValueTitle = ReadString(configuration, DashboardWidgetCatalog.MetricValueTitleKey) ??
+        ValueTitle = ReadString(configuration, DashboardMetricValueVisualizationOptions.TitleKey) ??
             (useCompatibilityFallbacks ? ReadString(configuration, "title") : null) ??
-            DashboardWidgetCatalog.MetricValueDefaultTitle;
-        ValueSubtitle = ReadString(configuration, DashboardWidgetCatalog.MetricValueSubtitleKey) ??
+            DashboardMetricValueVisualizationOptions.DefaultTitle;
+        ValueSubtitle = ReadString(configuration, DashboardMetricValueVisualizationOptions.SubtitleKey) ??
             (useCompatibilityFallbacks ? ReadString(configuration, "subtitle") : null) ??
-            DashboardWidgetCatalog.MetricValueDefaultSubtitle;
-        ValueShowTitle = ReadBool(configuration, DashboardWidgetCatalog.MetricValueShowTitleKey, true);
-        ValueShowSubtitle = ReadBool(configuration, DashboardWidgetCatalog.MetricValueShowSubtitleKey, true);
-        ValueShowUnit = ReadBool(configuration, DashboardWidgetCatalog.MetricValueShowUnitKey, true);
-        ValueUnitText = ReadString(configuration, DashboardWidgetCatalog.MetricValueUnitTextKey) ??
-            DashboardWidgetCatalog.MetricValueDefaultUnitText;
+            DashboardMetricValueVisualizationOptions.DefaultSubtitle;
+        ValueShowTitle = ReadBool(configuration, DashboardMetricValueVisualizationOptions.ShowTitleKey, true);
+        ValueShowSubtitle = ReadBool(configuration, DashboardMetricValueVisualizationOptions.ShowSubtitleKey, true);
+        ValueShowUnit = ReadBool(configuration, DashboardMetricValueVisualizationOptions.ShowUnitKey, true);
+        ValueUnitText = ReadString(configuration, DashboardMetricValueVisualizationOptions.UnitTextKey) ??
+            DashboardMetricValueVisualizationOptions.DefaultUnitText;
         ValueTitleColor = NormalizeColor(
-            ReadString(configuration, DashboardWidgetCatalog.MetricValueTitleColorKey) ??
+            ReadString(configuration, DashboardMetricValueVisualizationOptions.TitleColorKey) ??
             (useCompatibilityFallbacks ? ReadString(configuration, DashboardWidgetCatalog.KpiTitleColorKey) : null) ??
             (useCompatibilityFallbacks ? ReadString(configuration, "style.titleColor") : null),
-            DashboardWidgetCatalog.KpiDefaultTitleColor);
+            DashboardMetricValueVisualizationOptions.DefaultTitleColor);
         ValueSubtitleColor = NormalizeColor(
-            ReadString(configuration, DashboardWidgetCatalog.MetricValueSubtitleColorKey) ??
+            ReadString(configuration, DashboardMetricValueVisualizationOptions.SubtitleColorKey) ??
             (useCompatibilityFallbacks ? ReadString(configuration, DashboardWidgetCatalog.KpiSubtitleColorKey) : null) ??
             (useCompatibilityFallbacks ? ReadString(configuration, "style.subtitleColor") : null),
-            DashboardWidgetCatalog.KpiDefaultSubtitleColor);
+            DashboardMetricValueVisualizationOptions.DefaultUnitColor);
         ValueValueColor = NormalizeColor(
-            ReadString(configuration, DashboardWidgetCatalog.MetricValueValueColorKey) ??
+            ReadString(configuration, DashboardMetricValueVisualizationOptions.ValueColorKey) ??
             (useCompatibilityFallbacks ? ReadString(configuration, DashboardWidgetCatalog.KpiValueColorKey) : null) ??
             (useCompatibilityFallbacks ? ReadString(configuration, "style.valueColor") : null),
-            DashboardWidgetCatalog.KpiDefaultValueColor);
+            DashboardMetricValueVisualizationOptions.DefaultValueColor);
         ValueUnitColor = NormalizeColor(
-            ReadString(configuration, DashboardWidgetCatalog.MetricValueUnitColorKey),
-            DashboardWidgetCatalog.KpiDefaultSubtitleColor);
-        ValueTitleAlign = DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(
-            ReadString(configuration, DashboardWidgetCatalog.MetricValueTitleAlignKey) ??
+            ReadString(configuration, DashboardMetricValueVisualizationOptions.UnitColorKey),
+            DashboardMetricValueVisualizationOptions.DefaultSubtitleColor);
+        ValueTitleAlign = DashboardMetricValueVisualizationOptions.NormalizeHorizontalAlignment(
+            ReadString(configuration, DashboardMetricValueVisualizationOptions.TitleAlignKey) ??
             (useCompatibilityFallbacks ? ReadString(configuration, DashboardWidgetCatalog.KpiTitleAlignKey) : null));
-        ValueValueAlign = DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(
-            ReadString(configuration, DashboardWidgetCatalog.MetricValueValueAlignKey) ??
+        ValueValueAlign = DashboardMetricValueVisualizationOptions.NormalizeHorizontalAlignment(
+            ReadString(configuration, DashboardMetricValueVisualizationOptions.ValueAlignKey) ??
             (useCompatibilityFallbacks ? ReadString(configuration, DashboardWidgetCatalog.KpiValueAlignKey) : null));
-        ValueValuePlacement = DashboardWidgetCatalog.NormalizeKpiValuePlacement(
-            ReadString(configuration, DashboardWidgetCatalog.MetricValueValuePlacementKey) ??
+        ValueValuePlacement = DashboardMetricValueVisualizationOptions.NormalizeValuePlacement(
+            ReadString(configuration, DashboardMetricValueVisualizationOptions.ValuePlacementKey) ??
             (useCompatibilityFallbacks ? ReadString(configuration, DashboardWidgetCatalog.KpiValuePlacementKey) : null));
         ValuePadding = ReadInt(
             configuration,
-            DashboardWidgetCatalog.MetricValuePaddingKey,
+            DashboardMetricValueVisualizationOptions.PaddingKey,
             ReadInt(
                 configuration,
                 "style.padding",
-                DashboardWidgetCatalog.MetricValueDefaultPadding,
+                DashboardMetricValueVisualizationOptions.DefaultPadding,
                 0,
                 64),
             0,

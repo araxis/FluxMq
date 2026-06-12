@@ -21,16 +21,16 @@
 @code {
     private static readonly IReadOnlyList<PropertyGridIconSegmentOption> HorizontalAlignmentOptions =
     [
-        new(DashboardWidgetCatalog.KpiAlignLeft, Icons.Material.Filled.FormatAlignLeft, "Left"),
-        new(DashboardWidgetCatalog.KpiAlignCenter, Icons.Material.Filled.FormatAlignCenter, "Center"),
-        new(DashboardWidgetCatalog.KpiAlignRight, Icons.Material.Filled.FormatAlignRight, "Right")
+        new(DashboardMetricValueVisualizationOptions.AlignLeft, Icons.Material.Filled.FormatAlignLeft, "Left"),
+        new(DashboardMetricValueVisualizationOptions.AlignCenter, Icons.Material.Filled.FormatAlignCenter, "Center"),
+        new(DashboardMetricValueVisualizationOptions.AlignRight, Icons.Material.Filled.FormatAlignRight, "Right")
     ];
 
     private static readonly IReadOnlyList<PropertyGridIconSegmentOption> ValuePlacementOptions =
     [
-        new(DashboardWidgetCatalog.KpiValuePlacementTop, Icons.Material.Filled.VerticalAlignTop, "Top"),
-        new(DashboardWidgetCatalog.KpiValuePlacementMiddle, Icons.Material.Filled.VerticalAlignCenter, "Middle"),
-        new(DashboardWidgetCatalog.KpiValuePlacementBottom, Icons.Material.Filled.VerticalAlignBottom, "Bottom")
+        new(DashboardMetricValueVisualizationOptions.ValuePlacementTop, Icons.Material.Filled.VerticalAlignTop, "Top"),
+        new(DashboardMetricValueVisualizationOptions.ValuePlacementMiddle, Icons.Material.Filled.VerticalAlignCenter, "Middle"),
+        new(DashboardMetricValueVisualizationOptions.ValuePlacementBottom, Icons.Material.Filled.VerticalAlignBottom, "Bottom")
     ];
 
     private const string TrueValue = "true";
@@ -106,13 +106,13 @@
 
     private static IReadOnlyList<PropertyGridIconSegmentOption> SegmentOptions(string key)
     {
-        if (string.Equals(key, DashboardWidgetCatalog.MetricValueTitleAlignKey, StringComparison.Ordinal) ||
-            string.Equals(key, DashboardWidgetCatalog.MetricValueValueAlignKey, StringComparison.Ordinal))
+        if (string.Equals(key, DashboardMetricValueVisualizationOptions.TitleAlignKey, StringComparison.Ordinal) ||
+            string.Equals(key, DashboardMetricValueVisualizationOptions.ValueAlignKey, StringComparison.Ordinal))
         {
             return HorizontalAlignmentOptions;
         }
 
-        if (string.Equals(key, DashboardWidgetCatalog.MetricValueValuePlacementKey, StringComparison.Ordinal))
+        if (string.Equals(key, DashboardMetricValueVisualizationOptions.ValuePlacementKey, StringComparison.Ordinal))
         {
             return ValuePlacementOptions;
         }

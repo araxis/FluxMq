@@ -12,7 +12,7 @@ public static class DashboardWidgetFormatting
 {
     public static string WidgetTitle(DashboardWidgetSnapshot widget)
     {
-        var configuredTitle = widget.ReadString(DashboardWidgetCatalog.MetricValueTitleKey) ??
+        var configuredTitle = widget.ReadString(DashboardMetricValueVisualizationOptions.TitleKey) ??
             widget.ReadString(DashboardMetricDigitalVisualizationOptions.LabelKey) ??
             widget.ReadString("title");
         if (string.Equals(widget.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal) &&
@@ -79,7 +79,7 @@ public static class DashboardWidgetFormatting
 
     private static string KpiSubtitle(DashboardWidgetSnapshot widget)
     {
-        var subtitle = widget.ReadString(DashboardWidgetCatalog.MetricValueSubtitleKey) ??
+        var subtitle = widget.ReadString(DashboardMetricValueVisualizationOptions.SubtitleKey) ??
             widget.ReadString("subtitle");
         return string.IsNullOrWhiteSpace(subtitle) ? "Total matching events" : subtitle;
     }
@@ -476,34 +476,34 @@ public static class DashboardWidgetFormatting
             widget.ReadString(DashboardWidgetCatalog.MetricVisualizationKey));
         if (string.Equals(visualization, DashboardMetricVisualizationIds.Value, StringComparison.Ordinal))
         {
-            return PixelValue(widget.ReadString(DashboardWidgetCatalog.MetricValuePaddingKey) ?? widget.ReadString("style.padding"));
+            return PixelValue(widget.ReadString(DashboardMetricValueVisualizationOptions.PaddingKey) ?? widget.ReadString("style.padding"));
         }
 
         return PixelValue(widget.ReadString("style.padding"));
     }
 
     private static string? TitleColor(DashboardWidgetSnapshot widget)
-        => widget.ReadString(DashboardWidgetCatalog.MetricValueTitleColorKey) ??
+        => widget.ReadString(DashboardMetricValueVisualizationOptions.TitleColorKey) ??
            widget.ReadString(DashboardWidgetCatalog.KpiTitleColorKey) ??
            widget.ReadString("style.titleColor") ??
            widget.ReadString("style.text");
 
     private static string? SubtitleColor(DashboardWidgetSnapshot widget)
-        => widget.ReadString(DashboardWidgetCatalog.MetricValueSubtitleColorKey) ??
+        => widget.ReadString(DashboardMetricValueVisualizationOptions.SubtitleColorKey) ??
            widget.ReadString(DashboardWidgetCatalog.KpiSubtitleColorKey) ??
            widget.ReadString("style.subtitleColor") ??
            widget.ReadString("style.mutedText");
 
     private static string? ValueColor(DashboardWidgetSnapshot widget)
-        => widget.ReadString(DashboardWidgetCatalog.MetricValueValueColorKey) ??
+        => widget.ReadString(DashboardMetricValueVisualizationOptions.ValueColorKey) ??
            widget.ReadString(DashboardWidgetCatalog.KpiValueColorKey) ??
            widget.ReadString("style.valueColor") ??
            widget.ReadString("style.text");
 
     private static string? BodyTextColor(DashboardWidgetSnapshot widget)
-        => widget.ReadString(DashboardWidgetCatalog.MetricValueValueColorKey) ??
+        => widget.ReadString(DashboardMetricValueVisualizationOptions.ValueColorKey) ??
            widget.ReadString(DashboardWidgetCatalog.KpiValueColorKey) ??
-           widget.ReadString(DashboardWidgetCatalog.MetricValueTitleColorKey) ??
+           widget.ReadString(DashboardMetricValueVisualizationOptions.TitleColorKey) ??
            widget.ReadString(DashboardWidgetCatalog.KpiTitleColorKey) ??
            widget.ReadString("style.valueColor") ??
            widget.ReadString("style.titleColor") ??
@@ -519,50 +519,50 @@ public static class DashboardWidgetFormatting
         AddCssVariable(
             parts,
             "--dashboard-kpi-title-align",
-            DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(widget.ReadString(DashboardWidgetCatalog.MetricValueTitleAlignKey) ?? widget.ReadString(DashboardWidgetCatalog.KpiTitleAlignKey)),
+            DashboardMetricValueVisualizationOptions.NormalizeHorizontalAlignment(widget.ReadString(DashboardMetricValueVisualizationOptions.TitleAlignKey) ?? widget.ReadString(DashboardWidgetCatalog.KpiTitleAlignKey)),
             IsKpiHorizontalAlignment);
         AddCssVariable(
             parts,
             "--dashboard-kpi-title-items",
-            KpiHorizontalAlignmentCss(widget.ReadString(DashboardWidgetCatalog.MetricValueTitleAlignKey) ?? widget.ReadString(DashboardWidgetCatalog.KpiTitleAlignKey)),
+            KpiHorizontalAlignmentCss(widget.ReadString(DashboardMetricValueVisualizationOptions.TitleAlignKey) ?? widget.ReadString(DashboardWidgetCatalog.KpiTitleAlignKey)),
             IsKpiItemAlignment);
         AddCssVariable(
             parts,
             "--dashboard-kpi-value-align",
-            DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(widget.ReadString(DashboardWidgetCatalog.MetricValueValueAlignKey) ?? widget.ReadString(DashboardWidgetCatalog.KpiValueAlignKey)),
+            DashboardMetricValueVisualizationOptions.NormalizeHorizontalAlignment(widget.ReadString(DashboardMetricValueVisualizationOptions.ValueAlignKey) ?? widget.ReadString(DashboardWidgetCatalog.KpiValueAlignKey)),
             IsKpiHorizontalAlignment);
         AddCssVariable(
             parts,
             "--dashboard-kpi-value-items",
-            KpiHorizontalAlignmentCss(widget.ReadString(DashboardWidgetCatalog.MetricValueValueAlignKey) ?? widget.ReadString(DashboardWidgetCatalog.KpiValueAlignKey)),
+            KpiHorizontalAlignmentCss(widget.ReadString(DashboardMetricValueVisualizationOptions.ValueAlignKey) ?? widget.ReadString(DashboardWidgetCatalog.KpiValueAlignKey)),
             IsKpiItemAlignment);
         AddCssVariable(
             parts,
             "--dashboard-kpi-value-placement",
-            KpiValuePlacementCss(widget.ReadString(DashboardWidgetCatalog.MetricValueValuePlacementKey) ?? widget.ReadString(DashboardWidgetCatalog.KpiValuePlacementKey)),
+            KpiValuePlacementCss(widget.ReadString(DashboardMetricValueVisualizationOptions.ValuePlacementKey) ?? widget.ReadString(DashboardWidgetCatalog.KpiValuePlacementKey)),
             IsKpiPlacement);
     }
 
     private static string KpiHorizontalAlignmentCss(string? value)
-        => DashboardWidgetCatalog.NormalizeKpiHorizontalAlignment(value) switch
+        => DashboardMetricValueVisualizationOptions.NormalizeHorizontalAlignment(value) switch
         {
-            DashboardWidgetCatalog.KpiAlignCenter => "center",
-            DashboardWidgetCatalog.KpiAlignRight => "flex-end",
+            DashboardMetricValueVisualizationOptions.AlignCenter => "center",
+            DashboardMetricValueVisualizationOptions.AlignRight => "flex-end",
             _ => "flex-start"
         };
 
     private static string KpiValuePlacementCss(string? value)
-        => DashboardWidgetCatalog.NormalizeKpiValuePlacement(value) switch
+        => DashboardMetricValueVisualizationOptions.NormalizeValuePlacement(value) switch
         {
-            DashboardWidgetCatalog.KpiValuePlacementMiddle => "center",
-            DashboardWidgetCatalog.KpiValuePlacementBottom => "flex-end",
+            DashboardMetricValueVisualizationOptions.ValuePlacementMiddle => "center",
+            DashboardMetricValueVisualizationOptions.ValuePlacementBottom => "flex-end",
             _ => "flex-start"
         };
 
     private static bool IsKpiHorizontalAlignment(string value)
-        => value is DashboardWidgetCatalog.KpiAlignLeft or
-            DashboardWidgetCatalog.KpiAlignCenter or
-            DashboardWidgetCatalog.KpiAlignRight;
+        => value is DashboardMetricValueVisualizationOptions.AlignLeft or
+            DashboardMetricValueVisualizationOptions.AlignCenter or
+            DashboardMetricValueVisualizationOptions.AlignRight;
 
     private static bool IsKpiItemAlignment(string value)
         => value is "flex-start" or "center" or "flex-end";
