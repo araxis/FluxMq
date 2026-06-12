@@ -296,7 +296,7 @@ public sealed class DashboardWidgetSettingsDraft
                 metricQueryConfiguration["subtitle"] = subtitle;
             }
 
-            ApplyKpiConfiguration(metricQueryConfiguration);
+            ApplyMetricVisualizationConfiguration(metricQueryConfiguration);
             ApplyMetricVisualization(metricQueryConfiguration);
             ApplyGaugeConfiguration(metricQueryConfiguration);
             ApplyMetricName(metricQueryConfiguration);
@@ -327,7 +327,7 @@ public sealed class DashboardWidgetSettingsDraft
         }
 
         ApplyVisualConfiguration(configuration);
-        ApplyKpiConfiguration(configuration);
+        ApplyMetricVisualizationConfiguration(configuration);
         ApplyMetricVisualization(configuration);
         ApplyMetricName(configuration);
         return configuration;
@@ -408,9 +408,9 @@ public sealed class DashboardWidgetSettingsDraft
         }
     }
 
-    private void ApplyKpiConfiguration(Dictionary<string, string> configuration)
+    private void ApplyMetricVisualizationConfiguration(Dictionary<string, string> configuration)
     {
-        if (!IsKpiTile)
+        if (!Profile.UsesMetricVisualization)
         {
             return;
         }

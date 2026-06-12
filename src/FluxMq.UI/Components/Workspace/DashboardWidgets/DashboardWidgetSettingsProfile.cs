@@ -201,6 +201,7 @@ public static class DashboardWidgetSettingsProfiles
                 normalized,
                 "Events",
                 Icons.Material.Filled.Numbers,
+                usesMetricVisualization: true,
                 labels: DashboardWidgetInspectorLabels.EventCounter),
             DashboardWidgetCatalog.LatestEventType => Event(
                 normalized,

@@ -105,8 +105,10 @@ public sealed class FlowDefinitionComposerV2Tests
         var metricId = "ops.eventCounterMetric";
         var metric = layout.Metrics[metricId];
 
-        widget.Configuration.Keys.ShouldBe(["title", "metric"], ignoreOrder: true);
+        widget.Configuration.Keys.ShouldContain(DashboardWidgetCatalog.MetricVisualizationKey);
         widget.Configuration["metric"].ShouldBe(metricId);
+        widget.Configuration[DashboardMetricValueVisualizationOptions.TitleKey].ShouldBe("Events");
+        widget.Configuration[DashboardMetricValueVisualizationOptions.SubtitleKey].ShouldBe("All runtime events");
         widget.Configuration.ContainsKey(DashboardEventFilterCatalog.EventTypeKey).ShouldBeFalse();
         metric.Aggregation.ShouldBe("count");
         metric.Source.ShouldBe("runtimeEvents");

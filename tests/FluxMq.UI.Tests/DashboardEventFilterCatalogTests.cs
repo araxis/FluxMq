@@ -655,6 +655,7 @@ public sealed class DashboardEventFilterCatalogTests
                 new Dictionary<string, string>(StringComparer.Ordinal)
                 {
                     ["title"] = "Factory events",
+                    ["subtitle"] = "Published factory events",
                     ["metric"] = "factoryEventsMetric",
                     [DashboardEventFilterCatalog.EventTypeKey] = FluxMqEventTypes.MqttMessagePublished,
                     [DashboardEventFilterCatalog.TopicStartsWithKey] = "factory/",
@@ -668,10 +669,14 @@ public sealed class DashboardEventFilterCatalogTests
 
         configuration["title"].ShouldBe("Factory events");
         configuration["metric"].ShouldBe("factoryEventsMetric");
+        configuration[DashboardWidgetCatalog.MetricVisualizationKey].ShouldBe(DashboardMetricVisualizationIds.Value);
+        configuration[DashboardMetricValueVisualizationOptions.TitleKey].ShouldBe("Factory events");
+        configuration[DashboardMetricValueVisualizationOptions.SubtitleKey].ShouldBe("Published factory events");
         configuration.ContainsKey(DashboardEventFilterCatalog.EventTypeKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardEventFilterCatalog.TopicStartsWithKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardEventFilterCatalog.StatusKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
+        configuration.ContainsKey("subtitle").ShouldBeFalse();
     }
 
     [Fact]
@@ -1783,7 +1788,18 @@ public sealed class DashboardEventFilterCatalogTests
             .Single(static module => module.Type == DashboardWidgetCatalog.EventCounterType)
             .DefaultConfiguration
             .Keys
-            .ShouldBe(["title"]);
+            .ShouldContain(DashboardWidgetCatalog.MetricVisualizationKey);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.EventCounterType)
+            .DefaultConfiguration[DashboardMetricValueVisualizationOptions.TitleKey]
+            .ShouldBe("Events");
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.EventCounterType)
+            .DefaultConfiguration[DashboardMetricValueVisualizationOptions.SubtitleKey]
+            .ShouldBe("All runtime events");
+        DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.EventCounterType)
+            .UsesMetricVisualization
+            .ShouldBeTrue();
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.EventRateType)
             .DefaultConfiguration
@@ -2118,7 +2134,13 @@ public sealed class DashboardEventFilterCatalogTests
             .Single(static module => module.Type == DashboardWidgetCatalog.EventCounterType)
             .DefaultConfiguration
             .Keys
-            .ShouldBe(["title"]);
+            .ShouldContain(DashboardWidgetCatalog.MetricVisualizationKey);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.EventCounterType)
+            .PropertyGroups
+            .SelectMany(static group => group.Properties)
+            .Select(static property => property.Key)
+            .ShouldNotContain("unit");
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.LatestEventType)
             .DefaultConfiguration
