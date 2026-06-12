@@ -1840,8 +1840,10 @@ public sealed class DashboardEventFilterCatalogTests
     public void DashboardWidgetModuleCatalog_ComposesCategoryProviderModules()
     {
         var providers = DashboardWidgetModuleCatalog.CreateProviders();
+        var secondProviders = DashboardWidgetModuleCatalog.CreateProviders();
         var providerModules = providers.SelectMany(static provider => provider.CreateModules()).ToArray();
         var catalogModules = DashboardWidgetModuleCatalog.CreateModules();
+        var secondCatalogModules = DashboardWidgetModuleCatalog.CreateModules();
 
         providers.Select(static provider => provider.Id).ShouldBe([
             "metrics",
@@ -1850,6 +1852,8 @@ public sealed class DashboardEventFilterCatalogTests
             "mqtt-ops",
             "topics"
         ]);
+        secondProviders.ShouldBeSameAs(providers);
+        secondCatalogModules.ShouldBeSameAs(catalogModules);
         providers.Select(static provider => provider.Id).Distinct(StringComparer.Ordinal).Count()
             .ShouldBe(providers.Count);
         providerModules.Select(static module => module.Type)
@@ -2130,15 +2134,21 @@ public sealed class DashboardEventFilterCatalogTests
     public void DashboardMetricVisualizationCatalog_ComposesExplicitProviderModules()
     {
         var providers = DashboardMetricVisualizationCatalog.CreateProviders();
+        var secondProviders = DashboardMetricVisualizationCatalog.CreateProviders();
         var modules = providers.Select(static provider => provider.CreateModule()).ToArray();
+        var catalogModules = DashboardMetricVisualizationCatalog.CreateModules();
+        var secondCatalogModules = DashboardMetricVisualizationCatalog.CreateModules();
 
         providers.Select(static provider => provider.Id).ShouldBe([
             DashboardMetricVisualizationIds.Value,
             DashboardMetricVisualizationIds.Digital
         ]);
+        secondProviders.ShouldBeSameAs(providers);
+        secondCatalogModules.ShouldBeSameAs(catalogModules);
         providers.Select(static provider => provider.Id).Distinct(StringComparer.Ordinal).Count()
             .ShouldBe(providers.Count);
         modules.Select(static module => module.Id).ShouldBe(providers.Select(static provider => provider.Id));
+        modules.Select(static module => module.Id).ShouldBe(catalogModules.Select(static module => module.Id));
         foreach (var provider in providers)
         {
             provider.CreateModule().Id.ShouldBe(provider.Id);

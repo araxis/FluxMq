@@ -11,18 +11,24 @@ public interface IDashboardWidgetModuleProvider
 
 public static class DashboardWidgetModuleCatalog
 {
-    public static IReadOnlyList<DashboardWidgetModule> CreateModules()
-        => [.. CreateProviders().SelectMany(static provider => provider.CreateModules())];
-
-    public static IReadOnlyList<IDashboardWidgetModuleProvider> CreateProviders()
-        =>
+    private static readonly IReadOnlyList<IDashboardWidgetModuleProvider> Providers =
+        Array.AsReadOnly<IDashboardWidgetModuleProvider>(
         [
             new DashboardMetricWidgetModuleProvider(),
             new DashboardEventWidgetModuleProvider(),
             new DashboardChartWidgetModuleProvider(),
             new DashboardMqttOpsWidgetModuleProvider(),
             new DashboardTopicWidgetModuleProvider()
-        ];
+        ]);
+
+    private static readonly IReadOnlyList<DashboardWidgetModule> Modules =
+        Array.AsReadOnly(Providers.SelectMany(static provider => provider.CreateModules()).ToArray());
+
+    public static IReadOnlyList<DashboardWidgetModule> CreateModules()
+        => Modules;
+
+    public static IReadOnlyList<IDashboardWidgetModuleProvider> CreateProviders()
+        => Providers;
 
     public static DashboardWidgetModule? Find(string? type)
     {

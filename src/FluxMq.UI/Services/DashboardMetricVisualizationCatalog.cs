@@ -11,15 +11,21 @@ public interface IDashboardMetricVisualizationModuleProvider
 
 public static class DashboardMetricVisualizationCatalog
 {
-    public static IReadOnlyList<IDashboardMetricVisualizationModuleProvider> CreateProviders()
-        =>
+    private static readonly IReadOnlyList<IDashboardMetricVisualizationModuleProvider> Providers =
+        Array.AsReadOnly<IDashboardMetricVisualizationModuleProvider>(
         [
             new DashboardMetricValueVisualizationModuleProvider(),
             new DashboardMetricDigitalVisualizationModuleProvider()
-        ];
+        ]);
+
+    private static readonly IReadOnlyList<DashboardMetricVisualizationModule> Modules =
+        Array.AsReadOnly(Providers.Select(static provider => provider.CreateModule()).ToArray());
+
+    public static IReadOnlyList<IDashboardMetricVisualizationModuleProvider> CreateProviders()
+        => Providers;
 
     public static IReadOnlyList<DashboardMetricVisualizationModule> CreateModules()
-        => [.. CreateProviders().Select(static provider => provider.CreateModule())];
+        => Modules;
 
     public static DashboardMetricVisualizationModule? Find(string? id)
     {
