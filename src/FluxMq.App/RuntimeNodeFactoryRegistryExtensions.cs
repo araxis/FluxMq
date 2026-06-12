@@ -21,7 +21,6 @@ using FluxFlow.Components.Timers;
 using FluxFlow.Components.Timers.Options;
 using FluxFlow.Engine.Mapping;
 using FluxFlow.Engine.Runtime;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace FluxMq.App;
 
@@ -54,7 +53,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
                 engine => FluxMqControlNodeConfiguration.GetExpressionEngine(engine, expressionEngine)));
 
         return registry.RegisterFluxMqRuntimeAdapters(
-            ResolveFluxMqRuntimeNodeModules(runtimeServices),
+            FluxMqRuntimeNodeModuleCatalog.Resolve(runtimeServices),
             clientFactory,
             messageRepository,
             expressionEngine,
@@ -83,37 +82,4 @@ public static class RuntimeNodeFactoryRegistryExtensions
 
         return registry;
     }
-
-    private static IReadOnlyList<IFluxMqRuntimeNodeModule> ResolveFluxMqRuntimeNodeModules(IServiceProvider? runtimeServices)
-    {
-        if (runtimeServices is null)
-        {
-            return CreateDefaultFluxMqRuntimeNodeModules();
-        }
-
-        return [.. FluxMqRuntimeNodeModuleTypes.All.Select(type =>
-            runtimeServices.GetRequiredKeyedService<IFluxMqRuntimeNodeModule>(type.Value))];
-    }
-
-    private static IReadOnlyList<IFluxMqRuntimeNodeModule> CreateDefaultFluxMqRuntimeNodeModules()
-        =>
-        [
-            new MqttConnectionRuntimeNodeModule(),
-            new MqttTriggerRuntimeNodeModule(),
-            new ConnectionStateTriggerRuntimeNodeModule(),
-            new StoredSessionSourceRuntimeNodeModule(),
-            new ReplaySourceRuntimeNodeModule(),
-            new GeneratedMqttSourceRuntimeNodeModule(),
-            new MetricSourceRuntimeNodeModule(),
-            new PayloadInspectorRuntimeNodeModule(),
-            new MqttMetricsRuntimeNodeModule(),
-            new FlowLoggerRuntimeNodeModule(),
-            new MessageFilterRuntimeNodeModule(),
-            new ConditionRouterRuntimeNodeModule(),
-            new FlowAssertionRuntimeNodeModule(),
-            new JsonSchemaValidatorRuntimeNodeModule(),
-            new MqttPublisherRuntimeNodeModule(),
-            new MqttRecorderRuntimeNodeModule(),
-            new FileWriterRuntimeNodeModule()
-        ];
 }

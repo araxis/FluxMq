@@ -3098,3 +3098,21 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - Second `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` run passed with 752 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this focused inspection-node cleanup, then audit whether the remaining runtime composition list should stay in the registry extension or move to a small module catalog file.
+- Runtime module catalog cleanup:
+  - Merged PR #179 (`Extract runtime inspection node modules`) into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Started `work/runtime-module-catalog-cleanup` from clean `main`.
+  - Moved fallback runtime module resolution and no-DI default module instance creation into `FluxMqRuntimeNodeModuleCatalog`.
+  - Kept `RuntimeNodeFactoryRegistryExtensions` focused on package component registration plus FluxMQ runtime adapter registration.
+  - Kept runtime node ids, keyed-DI registration order, fallback no-DI behavior, dashboard/test schemas, and FluxFlow unchanged.
+  - Current line movement before staging:
+    - `RuntimeNodeFactoryRegistryExtensions.cs`: 35 lines removed and 1 composition call updated.
+    - `FluxMqRuntimeNodeModuleCatalog.cs`: 39-line runtime module catalog file added.
+    - `FluxMqRuntimeNodeModules.cs`: 1 spacing line added between service collection extension classes.
+  - Verification so far:
+    - `dotnet build src\FluxMq.App\FluxMq.App.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~AddFluxMqRuntimeNodes_RegistersFluxMqNodeModulesAsKeyedServices|FullyQualifiedName~RegisterPipelineComponentFactories_RegistersStableComponentTypes|FullyQualifiedName~MetricSourceComponent_RelaysExistingMetricStream" -p:UseAppHost=false --verbosity minimal` passed with 3 tests.
+    - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 118 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 423 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 752 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this focused runtime module catalog cleanup, then move to dashboard catalog/module cleanup as the next non-runtime phase.

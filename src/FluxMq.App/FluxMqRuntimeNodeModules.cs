@@ -94,6 +94,7 @@ public static class FluxMqRuntimeNodeServiceCollectionExtensions
         return services;
     }
 }
+
 public static class FluxMqAppRuntimeServiceCollectionExtensions
 {
     public static IServiceCollection AddFluxMqAppRuntime(
