@@ -1925,6 +1925,28 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardWidgetRegistry_ExposesFocusedDescriptorsAndKeepsCompatibilityLookup()
+    {
+        var registry = new DashboardWidgetRegistry();
+
+        var widgetTypes = registry.Widgets.Select(static widget => widget.Type).ToArray();
+        var categories = registry.Widgets.Select(static widget => widget.Category).ToArray();
+
+        widgetTypes.Contains(DashboardWidgetCatalog.StatusStripType, StringComparer.Ordinal).ShouldBeFalse();
+        widgetTypes.Contains(DashboardWidgetCatalog.EventChartType, StringComparer.Ordinal).ShouldBeFalse();
+        widgetTypes.Contains(DashboardWidgetCatalog.QosRetainBreakdownType, StringComparer.Ordinal).ShouldBeFalse();
+        categories.Contains("Compatibility", StringComparer.Ordinal).ShouldBeFalse();
+
+        registry.Find(DashboardWidgetCatalog.StatusStripType)!.Type
+            .ShouldBe(DashboardWidgetCatalog.StatusValueType);
+        registry.Find(DashboardWidgetCatalog.EventChartType)!.Type
+            .ShouldBe(DashboardWidgetCatalog.LineChartType);
+        registry.Find(DashboardWidgetCatalog.QosRetainBreakdownType)!.Type
+            .ShouldBe(DashboardWidgetCatalog.QosBreakdownType);
+        registry.Find("custom.widget").ShouldBeNull();
+    }
+
+    [Fact]
     public void DashboardMetricWidgetModuleProvider_OwnsMetricWidgetDefinitions()
     {
         var modules = new DashboardMetricWidgetModuleProvider().CreateModules();
