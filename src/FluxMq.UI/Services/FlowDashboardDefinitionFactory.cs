@@ -53,87 +53,9 @@ public static class FlowDashboardDefinitionFactory
     {
         var normalizedType = DashboardWidgetCatalog.NormalizeWidgetTypeForAdd(widgetType);
         var module = DashboardWidgetModuleCatalog.Find(normalizedType);
-        if (module is not null)
-        {
-            return CreateConfiguration(module.DefaultConfiguration);
-        }
-
-        var title = widgetType switch
-        {
-            DashboardWidgetCatalog.KpiTileType => "KPI tile",
-            DashboardWidgetCatalog.StatusStripType => "Status strip",
-            DashboardWidgetCatalog.StatusValueType => "Status value",
-            DashboardWidgetCatalog.RateTileType => "Rate tile",
-            DashboardWidgetCatalog.EventCounterType => "Events",
-            DashboardWidgetCatalog.LatestEventType => "Latest event",
-            DashboardWidgetCatalog.EventRateType => "Event rate",
-            DashboardWidgetCatalog.EventGaugeType => "Event gauge",
-            DashboardWidgetCatalog.EventChartType => "Event chart",
-            DashboardWidgetCatalog.LineChartType => "Line chart",
-            DashboardWidgetCatalog.AreaChartType => "Area chart",
-            DashboardWidgetCatalog.BarChartType => "Bar chart",
-            DashboardWidgetCatalog.DonutChartType => "Donut chart",
-            DashboardWidgetCatalog.EventTableType => "Event table",
-            DashboardWidgetCatalog.TopicActivityType => "Topic activity",
-            DashboardWidgetCatalog.PayloadDistributionType => "Payload sizes",
-            DashboardWidgetCatalog.QosRetainBreakdownType => "QoS / retain",
-            DashboardWidgetCatalog.QosBreakdownType => "QoS breakdown",
-            DashboardWidgetCatalog.RetainBreakdownType => "Retain breakdown",
-            DashboardWidgetCatalog.TopicTreeType => "Topic tree",
-            _ => null
-        };
-        if (title is null)
-        {
-            return new JsonObject();
-        }
-
-        if (DashboardWidgetCatalog.IsTopicTreeWidget(widgetType))
-        {
-            return new JsonObject
-            {
-                ["title"] = title,
-                [DashboardWidgetCatalog.ExcludeSystemTopicsKey] = "true"
-            };
-        }
-
-        var configuration = DashboardWidgetCatalog.IsEventWidget(widgetType)
-            ? CreateConfiguration(DashboardEventFilterCatalog.Shared.CreateEmptyConfiguration())
-            : new JsonObject();
-        configuration["title"] = title;
-        if (DashboardWidgetCatalog.IsVisualEventWidget(widgetType))
-        {
-            configuration[DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricRecent;
-            configuration[DashboardWidgetCatalog.DisplayMetricsKey] =
-                DashboardWidgetCatalog.BuildDisplayMetrics(null);
-            configuration[DashboardWidgetCatalog.MetricCardColumnsKey] =
-                DashboardWidgetCatalog.DefaultMetricCardColumns.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        }
-
-        if (string.Equals(widgetType, DashboardWidgetCatalog.EventGaugeType, StringComparison.Ordinal))
-        {
-            configuration[DashboardWidgetCatalog.GaugeStyleKey] = DashboardWidgetCatalog.GaugeStyleRing;
-        }
-        else if (DashboardWidgetCatalog.IsChartWidget(widgetType))
-        {
-            configuration[DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricMessages;
-            configuration[DashboardWidgetCatalog.ChartTypeKey] = widgetType switch
-            {
-                DashboardWidgetCatalog.LineChartType => DashboardWidgetCatalog.ChartTypeLine,
-                DashboardWidgetCatalog.AreaChartType => DashboardWidgetCatalog.ChartTypeArea,
-                DashboardWidgetCatalog.TopicActivityType => DashboardWidgetCatalog.ChartTypeTopics,
-                _ => DashboardWidgetCatalog.ChartTypeBars
-            };
-        }
-        else if (DashboardWidgetCatalog.IsBreakdownWidget(widgetType))
-        {
-            configuration[DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricMessages;
-            configuration[DashboardWidgetCatalog.DisplayMetricsKey] =
-                DashboardWidgetCatalog.BuildDisplayMetrics(null);
-            configuration[DashboardWidgetCatalog.MetricCardColumnsKey] =
-                DashboardWidgetCatalog.DefaultMetricCardColumns.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        }
-
-        return configuration;
+        return module is null
+            ? new JsonObject()
+            : CreateConfiguration(module.DefaultConfiguration);
     }
 
     public static JsonObject CreateConfiguration(IReadOnlyDictionary<string, string> configuration)

@@ -381,57 +381,6 @@ public sealed class DashboardWidgetCatalog
             .Concat(_legacyWidgets)
             .FirstOrDefault(widget => string.Equals(widget.Type, type, StringComparison.Ordinal));
 
-    public static bool IsEventWidget(string type)
-        => string.Equals(type, EventCounterType, StringComparison.Ordinal) ||
-           string.Equals(type, KpiTileType, StringComparison.Ordinal) ||
-           string.Equals(type, StatusStripType, StringComparison.Ordinal) ||
-           string.Equals(type, StatusValueType, StringComparison.Ordinal) ||
-           string.Equals(type, RateTileType, StringComparison.Ordinal) ||
-           string.Equals(type, LatestEventType, StringComparison.Ordinal) ||
-           string.Equals(type, EventRateType, StringComparison.Ordinal) ||
-           string.Equals(type, EventGaugeType, StringComparison.Ordinal) ||
-           string.Equals(type, EventChartType, StringComparison.Ordinal) ||
-           string.Equals(type, LineChartType, StringComparison.Ordinal) ||
-           string.Equals(type, AreaChartType, StringComparison.Ordinal) ||
-           string.Equals(type, BarChartType, StringComparison.Ordinal) ||
-           string.Equals(type, DonutChartType, StringComparison.Ordinal) ||
-           string.Equals(type, EventTableType, StringComparison.Ordinal) ||
-           string.Equals(type, TopicActivityType, StringComparison.Ordinal) ||
-           string.Equals(type, PayloadDistributionType, StringComparison.Ordinal) ||
-           string.Equals(type, QosRetainBreakdownType, StringComparison.Ordinal) ||
-           string.Equals(type, QosBreakdownType, StringComparison.Ordinal) ||
-           string.Equals(type, RetainBreakdownType, StringComparison.Ordinal);
-
-    public static bool IsTopicTreeWidget(string type)
-        => string.Equals(type, TopicTreeType, StringComparison.Ordinal);
-
-    public static bool IsVisualEventWidget(string type)
-        => string.Equals(type, EventChartType, StringComparison.Ordinal) ||
-           string.Equals(type, StatusStripType, StringComparison.Ordinal) ||
-           string.Equals(type, KpiTileType, StringComparison.Ordinal) ||
-           string.Equals(type, LineChartType, StringComparison.Ordinal) ||
-           string.Equals(type, AreaChartType, StringComparison.Ordinal) ||
-           string.Equals(type, BarChartType, StringComparison.Ordinal) ||
-           string.Equals(type, DonutChartType, StringComparison.Ordinal) ||
-           string.Equals(type, PayloadDistributionType, StringComparison.Ordinal) ||
-           string.Equals(type, QosRetainBreakdownType, StringComparison.Ordinal) ||
-           string.Equals(type, QosBreakdownType, StringComparison.Ordinal) ||
-           string.Equals(type, RetainBreakdownType, StringComparison.Ordinal);
-
-    public static bool IsChartWidget(string type)
-        => string.Equals(type, EventChartType, StringComparison.Ordinal) ||
-           string.Equals(type, LineChartType, StringComparison.Ordinal) ||
-           string.Equals(type, AreaChartType, StringComparison.Ordinal) ||
-           string.Equals(type, BarChartType, StringComparison.Ordinal) ||
-           string.Equals(type, TopicActivityType, StringComparison.Ordinal) ||
-           string.Equals(type, PayloadDistributionType, StringComparison.Ordinal);
-
-    public static bool IsBreakdownWidget(string type)
-        => string.Equals(type, DonutChartType, StringComparison.Ordinal) ||
-           string.Equals(type, QosRetainBreakdownType, StringComparison.Ordinal) ||
-           string.Equals(type, QosBreakdownType, StringComparison.Ordinal) ||
-           string.Equals(type, RetainBreakdownType, StringComparison.Ordinal);
-
     public static string NormalizeWidgetTypeForAdd(string? type)
         => string.IsNullOrWhiteSpace(type)
             ? EventCounterType

@@ -1837,6 +1837,29 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void FlowDashboardDefinitionFactory_CreatesWidgetDefaultsFromModuleCatalog()
+    {
+        var modules = DashboardWidgetModuleCatalog.CreateModules();
+        foreach (var module in modules)
+        {
+            ShouldMatchConfiguration(
+                FlowDashboardDefinitionFactory.CreateWidgetConfiguration(module.Type),
+                module.DefaultConfiguration);
+        }
+
+        ShouldMatchConfiguration(
+            FlowDashboardDefinitionFactory.CreateWidgetConfiguration(DashboardWidgetCatalog.StatusStripType),
+            modules.Single(static module => module.Type == DashboardWidgetCatalog.StatusValueType).DefaultConfiguration);
+        ShouldMatchConfiguration(
+            FlowDashboardDefinitionFactory.CreateWidgetConfiguration(DashboardWidgetCatalog.EventChartType),
+            modules.Single(static module => module.Type == DashboardWidgetCatalog.BarChartType).DefaultConfiguration);
+        ShouldMatchConfiguration(
+            FlowDashboardDefinitionFactory.CreateWidgetConfiguration(DashboardWidgetCatalog.QosRetainBreakdownType),
+            modules.Single(static module => module.Type == DashboardWidgetCatalog.QosBreakdownType).DefaultConfiguration);
+        FlowDashboardDefinitionFactory.CreateWidgetConfiguration("custom.widget").Count.ShouldBe(0);
+    }
+
+    [Fact]
     public void DashboardWidgetModuleCatalog_ComposesCategoryProviderModules()
     {
         var providers = DashboardWidgetModuleCatalog.CreateProviders();
@@ -2966,6 +2989,25 @@ public sealed class DashboardEventFilterCatalogTests
         => FluxMetricQueryDraft.Create(
             metric: null,
             metricName: DashboardWidgetCatalog.KpiTileType);
+
+    private static IReadOnlyDictionary<string, string> ToConfigurationDictionary(
+        System.Text.Json.Nodes.JsonObject configuration)
+        => configuration.ToDictionary(
+            static item => item.Key,
+            static item => item.Value?.GetValue<string>() ?? string.Empty,
+            StringComparer.Ordinal);
+
+    private static void ShouldMatchConfiguration(
+        System.Text.Json.Nodes.JsonObject configuration,
+        IReadOnlyDictionary<string, string> expected)
+    {
+        var actual = ToConfigurationDictionary(configuration);
+        actual.Keys.ShouldBe(expected.Keys, ignoreOrder: true);
+        foreach (var (key, value) in expected)
+        {
+            actual[key].ShouldBe(value);
+        }
+    }
 
     private static string FindRepositoryRoot()
     {

@@ -3211,3 +3211,20 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 752 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this catalog-cache cleanup, then inspect obsolete dashboard fallback/default configuration paths as the next small cleanup candidate.
+- Dashboard default fallback cleanup:
+  - Merged PR #186 (`Cache dashboard catalog composition`) into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Started `work/dashboard-default-fallback-cleanup` from clean `main`.
+  - Removed the obsolete default-configuration switch from `FlowDashboardDefinitionFactory.CreateWidgetConfiguration`; known widget defaults now come only from `DashboardWidgetModuleCatalog`.
+  - Kept unknown/custom widget types as empty configuration.
+  - Removed stale dashboard widget category predicate helpers from `DashboardWidgetCatalog`; the remaining topic subtitle check now uses the focused widget id directly.
+  - Added a regression test proving every current module type and legacy focused alias gets defaults from the module catalog.
+  - Current line movement before staging:
+    - 133 lines removed.
+    - 46 lines added.
+  - Verification:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDashboardDefinitionFactory_CreatesWidgetDefaultsFromModuleCatalog|FullyQualifiedName~AddDashboardWidget_AddsVisualDashboardWidgetDefaults|FullyQualifiedName~AddDashboardWidget_AddsFocusedGaugeDefaults" -p:UseAppHost=false --verbosity minimal` passed with 2 tests.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 424 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 753 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this default fallback cleanup, then inspect the remaining legacy dashboard descriptor/migration surface before deciding the next small cleanup.
