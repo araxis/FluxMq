@@ -3181,3 +3181,19 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 752 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this focused MQTT Ops provider file cleanup, then split the Topics provider into its own file as the final small dashboard provider cleanup slice.
+- Dashboard topics provider file cleanup:
+  - Merged PR #184 (`Extract dashboard MQTT ops provider`) into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Started `work/dashboard-topics-provider-file-cleanup` from clean `main`.
+  - Moved `DashboardTopicWidgetModuleProvider` and its topic-specific helper methods out of the remaining dashboard provider bundle into `DashboardTopicWidgetModuleProvider.cs`.
+  - Deleted the now-obsolete `DashboardWidgetModuleProviders.cs` bundle file.
+  - Kept `DashboardWidgetModuleCatalog` provider composition, Topics provider id, widget ids, renderer kinds, defaults, property groups, layout spans, dashboard schema, and UI behavior unchanged.
+  - Current line movement before staging:
+    - `DashboardWidgetModuleProviders.cs`: 115-line bundle file deleted.
+    - `DashboardTopicWidgetModuleProvider.cs`: 115-line Topics provider file added.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetModuleCatalog_ComposesCategoryProviderModules|FullyQualifiedName~DashboardTopicWidgetModuleProvider_OwnsTopicWidgetDefinitions" -p:UseAppHost=false --verbosity minimal` passed with 2 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 423 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 752 tests.
+    - `git diff --check` passed with a line-ending normalization warning for the edited progress log.
+  - Next step: commit/PR/merge this final provider-file cleanup, then choose the next cleanup slice now that dashboard widget provider files are fully split.
