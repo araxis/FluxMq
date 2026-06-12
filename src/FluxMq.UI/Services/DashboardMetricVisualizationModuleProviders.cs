@@ -25,20 +25,20 @@ public sealed class DashboardMetricValueVisualizationModuleProvider : IDashboard
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 [DashboardWidgetCatalog.MetricVisualizationKey] = DashboardMetricVisualizationIds.Value,
-                [DashboardWidgetCatalog.MetricValueTitleKey] = DashboardWidgetCatalog.MetricValueDefaultTitle,
-                [DashboardWidgetCatalog.MetricValueSubtitleKey] = DashboardWidgetCatalog.MetricValueDefaultSubtitle,
-                [DashboardWidgetCatalog.MetricValueShowTitleKey] = "true",
-                [DashboardWidgetCatalog.MetricValueShowSubtitleKey] = "true",
-                [DashboardWidgetCatalog.MetricValueShowUnitKey] = "true",
-                [DashboardWidgetCatalog.MetricValueUnitTextKey] = DashboardWidgetCatalog.MetricValueDefaultUnitText,
-                [DashboardWidgetCatalog.MetricValueTitleColorKey] = DashboardWidgetCatalog.KpiDefaultTitleColor,
-                [DashboardWidgetCatalog.MetricValueSubtitleColorKey] = DashboardWidgetCatalog.KpiDefaultSubtitleColor,
-                [DashboardWidgetCatalog.MetricValueValueColorKey] = DashboardWidgetCatalog.KpiDefaultValueColor,
-                [DashboardWidgetCatalog.MetricValueUnitColorKey] = DashboardWidgetCatalog.KpiDefaultSubtitleColor,
-                [DashboardWidgetCatalog.MetricValueTitleAlignKey] = DashboardWidgetCatalog.KpiAlignLeft,
-                [DashboardWidgetCatalog.MetricValueValueAlignKey] = DashboardWidgetCatalog.KpiAlignLeft,
-                [DashboardWidgetCatalog.MetricValueValuePlacementKey] = DashboardWidgetCatalog.KpiValuePlacementTop,
-                [DashboardWidgetCatalog.MetricValuePaddingKey] = DashboardWidgetCatalog.MetricValueDefaultPadding.ToString(CultureInfo.InvariantCulture)
+                [DashboardMetricValueVisualizationOptions.TitleKey] = DashboardMetricValueVisualizationOptions.DefaultTitle,
+                [DashboardMetricValueVisualizationOptions.SubtitleKey] = DashboardMetricValueVisualizationOptions.DefaultSubtitle,
+                [DashboardMetricValueVisualizationOptions.ShowTitleKey] = "true",
+                [DashboardMetricValueVisualizationOptions.ShowSubtitleKey] = "true",
+                [DashboardMetricValueVisualizationOptions.ShowUnitKey] = "true",
+                [DashboardMetricValueVisualizationOptions.UnitTextKey] = DashboardMetricValueVisualizationOptions.DefaultUnitText,
+                [DashboardMetricValueVisualizationOptions.TitleColorKey] = DashboardMetricValueVisualizationOptions.DefaultTitleColor,
+                [DashboardMetricValueVisualizationOptions.SubtitleColorKey] = DashboardMetricValueVisualizationOptions.DefaultSubtitleColor,
+                [DashboardMetricValueVisualizationOptions.ValueColorKey] = DashboardMetricValueVisualizationOptions.DefaultValueColor,
+                [DashboardMetricValueVisualizationOptions.UnitColorKey] = DashboardMetricValueVisualizationOptions.DefaultUnitColor,
+                [DashboardMetricValueVisualizationOptions.TitleAlignKey] = DashboardMetricValueVisualizationOptions.AlignLeft,
+                [DashboardMetricValueVisualizationOptions.ValueAlignKey] = DashboardMetricValueVisualizationOptions.AlignLeft,
+                [DashboardMetricValueVisualizationOptions.ValuePlacementKey] = DashboardMetricValueVisualizationOptions.ValuePlacementTop,
+                [DashboardMetricValueVisualizationOptions.PaddingKey] = DashboardMetricValueVisualizationOptions.DefaultPadding.ToString(CultureInfo.InvariantCulture)
             },
             [new("value-visual", "Value visual", Properties())],
             typeof(DashboardMetricValueVisualizationView),
@@ -48,20 +48,20 @@ public sealed class DashboardMetricValueVisualizationModuleProvider : IDashboard
     private static IReadOnlyList<DashboardWidgetPropertyDefinition> Properties()
         =>
         [
-            new(DashboardWidgetCatalog.MetricValueTitleKey, "Title", DashboardWidgetPropertyEditorKind.Text, DefaultValue: DashboardWidgetCatalog.MetricValueDefaultTitle),
-            new(DashboardWidgetCatalog.MetricValueShowTitleKey, "Show title", DashboardWidgetPropertyEditorKind.Toggle, DefaultValue: "true"),
-            new(DashboardWidgetCatalog.MetricValueSubtitleKey, "Subtitle", DashboardWidgetPropertyEditorKind.Text, DefaultValue: DashboardWidgetCatalog.MetricValueDefaultSubtitle),
-            new(DashboardWidgetCatalog.MetricValueShowSubtitleKey, "Show subtitle", DashboardWidgetPropertyEditorKind.Toggle, DefaultValue: "true"),
-            new(DashboardWidgetCatalog.MetricValueShowUnitKey, "Show unit", DashboardWidgetPropertyEditorKind.Toggle, DefaultValue: "true"),
-            new(DashboardWidgetCatalog.MetricValueUnitTextKey, "Unit text", DashboardWidgetPropertyEditorKind.Text, DefaultValue: DashboardWidgetCatalog.MetricValueDefaultUnitText, HelpText: "Leave empty to use the metric's natural unit."),
-            new(DashboardWidgetCatalog.MetricValueTitleColorKey, "Title color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardWidgetCatalog.KpiDefaultTitleColor),
-            new(DashboardWidgetCatalog.MetricValueSubtitleColorKey, "Subtitle color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardWidgetCatalog.KpiDefaultSubtitleColor),
-            new(DashboardWidgetCatalog.MetricValueValueColorKey, "Value color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardWidgetCatalog.KpiDefaultValueColor),
-            new(DashboardWidgetCatalog.MetricValueUnitColorKey, "Unit color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardWidgetCatalog.KpiDefaultSubtitleColor),
-            new(DashboardWidgetCatalog.MetricValueTitleAlignKey, "Title align", DashboardWidgetPropertyEditorKind.Segmented, DefaultValue: DashboardWidgetCatalog.KpiAlignLeft),
-            new(DashboardWidgetCatalog.MetricValueValueAlignKey, "Value align", DashboardWidgetPropertyEditorKind.Segmented, DefaultValue: DashboardWidgetCatalog.KpiAlignLeft),
-            new(DashboardWidgetCatalog.MetricValueValuePlacementKey, "Value place", DashboardWidgetPropertyEditorKind.Segmented, DefaultValue: DashboardWidgetCatalog.KpiValuePlacementTop),
-            new(DashboardWidgetCatalog.MetricValuePaddingKey, "Padding", DashboardWidgetPropertyEditorKind.Number, Unit: "px", DefaultValue: DashboardWidgetCatalog.MetricValueDefaultPadding.ToString(CultureInfo.InvariantCulture))
+            new(DashboardMetricValueVisualizationOptions.TitleKey, "Title", DashboardWidgetPropertyEditorKind.Text, DefaultValue: DashboardMetricValueVisualizationOptions.DefaultTitle),
+            new(DashboardMetricValueVisualizationOptions.ShowTitleKey, "Show title", DashboardWidgetPropertyEditorKind.Toggle, DefaultValue: "true"),
+            new(DashboardMetricValueVisualizationOptions.SubtitleKey, "Subtitle", DashboardWidgetPropertyEditorKind.Text, DefaultValue: DashboardMetricValueVisualizationOptions.DefaultSubtitle),
+            new(DashboardMetricValueVisualizationOptions.ShowSubtitleKey, "Show subtitle", DashboardWidgetPropertyEditorKind.Toggle, DefaultValue: "true"),
+            new(DashboardMetricValueVisualizationOptions.ShowUnitKey, "Show unit", DashboardWidgetPropertyEditorKind.Toggle, DefaultValue: "true"),
+            new(DashboardMetricValueVisualizationOptions.UnitTextKey, "Unit text", DashboardWidgetPropertyEditorKind.Text, DefaultValue: DashboardMetricValueVisualizationOptions.DefaultUnitText, HelpText: "Leave empty to use the metric's natural unit."),
+            new(DashboardMetricValueVisualizationOptions.TitleColorKey, "Title color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardMetricValueVisualizationOptions.DefaultTitleColor),
+            new(DashboardMetricValueVisualizationOptions.SubtitleColorKey, "Subtitle color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardMetricValueVisualizationOptions.DefaultSubtitleColor),
+            new(DashboardMetricValueVisualizationOptions.ValueColorKey, "Value color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardMetricValueVisualizationOptions.DefaultValueColor),
+            new(DashboardMetricValueVisualizationOptions.UnitColorKey, "Unit color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardMetricValueVisualizationOptions.DefaultUnitColor),
+            new(DashboardMetricValueVisualizationOptions.TitleAlignKey, "Title align", DashboardWidgetPropertyEditorKind.Segmented, DefaultValue: DashboardMetricValueVisualizationOptions.AlignLeft),
+            new(DashboardMetricValueVisualizationOptions.ValueAlignKey, "Value align", DashboardWidgetPropertyEditorKind.Segmented, DefaultValue: DashboardMetricValueVisualizationOptions.AlignLeft),
+            new(DashboardMetricValueVisualizationOptions.ValuePlacementKey, "Value place", DashboardWidgetPropertyEditorKind.Segmented, DefaultValue: DashboardMetricValueVisualizationOptions.ValuePlacementTop),
+            new(DashboardMetricValueVisualizationOptions.PaddingKey, "Padding", DashboardWidgetPropertyEditorKind.Number, Unit: "px", DefaultValue: DashboardMetricValueVisualizationOptions.DefaultPadding.ToString(CultureInfo.InvariantCulture))
         ];
 }
 

@@ -222,10 +222,10 @@ public sealed class DashboardEventFilterCatalogTests
                 [DashboardWidgetCatalog.KpiTitleColorKey] = "#112233",
                 [DashboardWidgetCatalog.KpiSubtitleColorKey] = "#445566",
                 [DashboardWidgetCatalog.KpiValueColorKey] = "#778899",
-                [DashboardWidgetCatalog.KpiTitleAlignKey] = DashboardWidgetCatalog.KpiAlignCenter,
-                [DashboardWidgetCatalog.KpiValueAlignKey] = DashboardWidgetCatalog.KpiAlignRight,
-                [DashboardWidgetCatalog.KpiValuePlacementKey] = DashboardWidgetCatalog.KpiValuePlacementBottom,
-                [DashboardWidgetCatalog.MetricValuePaddingKey] = "22"
+                [DashboardWidgetCatalog.KpiTitleAlignKey] = DashboardMetricValueVisualizationOptions.AlignCenter,
+                [DashboardWidgetCatalog.KpiValueAlignKey] = DashboardMetricValueVisualizationOptions.AlignRight,
+                [DashboardWidgetCatalog.KpiValuePlacementKey] = DashboardMetricValueVisualizationOptions.ValuePlacementBottom,
+                [DashboardMetricValueVisualizationOptions.PaddingKey] = "22"
             });
 
         var style = DashboardWidgetFormatting.WidgetStyle(widget);
@@ -555,27 +555,27 @@ public sealed class DashboardEventFilterCatalogTests
         draft.MetricVisualization.ValueSubtitleColor = "#445566";
         draft.MetricVisualization.ValueValueColor = "#778899";
         draft.MetricVisualization.ValueUnitColor = "#99aabb";
-        draft.MetricVisualization.ValueTitleAlign = DashboardWidgetCatalog.KpiAlignCenter;
-        draft.MetricVisualization.ValueValueAlign = DashboardWidgetCatalog.KpiAlignRight;
-        draft.MetricVisualization.ValueValuePlacement = DashboardWidgetCatalog.KpiValuePlacementMiddle;
+        draft.MetricVisualization.ValueTitleAlign = DashboardMetricValueVisualizationOptions.AlignCenter;
+        draft.MetricVisualization.ValueValueAlign = DashboardMetricValueVisualizationOptions.AlignRight;
+        draft.MetricVisualization.ValueValuePlacement = DashboardMetricValueVisualizationOptions.ValuePlacementMiddle;
         draft.MetricVisualization.ValuePadding = 22;
 
         var configuration = draft.BuildConfiguration();
 
         configuration[DashboardWidgetCatalog.MetricVisualizationKey].ShouldBe(DashboardMetricVisualizationIds.Value);
         configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
-        configuration[DashboardWidgetCatalog.MetricValueTitleKey].ShouldBe("Messages");
-        configuration[DashboardWidgetCatalog.MetricValueSubtitleKey].ShouldBe("Total matching events");
-        configuration[DashboardWidgetCatalog.MetricValueShowUnitKey].ShouldBe("false");
-        configuration[DashboardWidgetCatalog.MetricValueUnitTextKey].ShouldBe("messages");
-        configuration[DashboardWidgetCatalog.MetricValueTitleColorKey].ShouldBe("#112233");
-        configuration[DashboardWidgetCatalog.MetricValueSubtitleColorKey].ShouldBe("#445566");
-        configuration[DashboardWidgetCatalog.MetricValueValueColorKey].ShouldBe("#778899");
-        configuration[DashboardWidgetCatalog.MetricValueUnitColorKey].ShouldBe("#99aabb");
-        configuration[DashboardWidgetCatalog.MetricValueTitleAlignKey].ShouldBe(DashboardWidgetCatalog.KpiAlignCenter);
-        configuration[DashboardWidgetCatalog.MetricValueValueAlignKey].ShouldBe(DashboardWidgetCatalog.KpiAlignRight);
-        configuration[DashboardWidgetCatalog.MetricValueValuePlacementKey].ShouldBe(DashboardWidgetCatalog.KpiValuePlacementMiddle);
-        configuration[DashboardWidgetCatalog.MetricValuePaddingKey].ShouldBe("22");
+        configuration[DashboardMetricValueVisualizationOptions.TitleKey].ShouldBe("Messages");
+        configuration[DashboardMetricValueVisualizationOptions.SubtitleKey].ShouldBe("Total matching events");
+        configuration[DashboardMetricValueVisualizationOptions.ShowUnitKey].ShouldBe("false");
+        configuration[DashboardMetricValueVisualizationOptions.UnitTextKey].ShouldBe("messages");
+        configuration[DashboardMetricValueVisualizationOptions.TitleColorKey].ShouldBe("#112233");
+        configuration[DashboardMetricValueVisualizationOptions.SubtitleColorKey].ShouldBe("#445566");
+        configuration[DashboardMetricValueVisualizationOptions.ValueColorKey].ShouldBe("#778899");
+        configuration[DashboardMetricValueVisualizationOptions.UnitColorKey].ShouldBe("#99aabb");
+        configuration[DashboardMetricValueVisualizationOptions.TitleAlignKey].ShouldBe(DashboardMetricValueVisualizationOptions.AlignCenter);
+        configuration[DashboardMetricValueVisualizationOptions.ValueAlignKey].ShouldBe(DashboardMetricValueVisualizationOptions.AlignRight);
+        configuration[DashboardMetricValueVisualizationOptions.ValuePlacementKey].ShouldBe(DashboardMetricValueVisualizationOptions.ValuePlacementMiddle);
+        configuration[DashboardMetricValueVisualizationOptions.PaddingKey].ShouldBe("22");
         configuration.ContainsKey("title").ShouldBeFalse();
         configuration.ContainsKey("subtitle").ShouldBeFalse();
         configuration.ContainsKey(DashboardWidgetCatalog.KpiTitleColorKey).ShouldBeFalse();
@@ -800,9 +800,9 @@ public sealed class DashboardEventFilterCatalogTests
                     [DashboardWidgetCatalog.KpiTitleColorKey] = "#112233",
                     [DashboardWidgetCatalog.KpiSubtitleColorKey] = "#445566",
                     [DashboardWidgetCatalog.KpiValueColorKey] = "#778899",
-                    [DashboardWidgetCatalog.KpiTitleAlignKey] = DashboardWidgetCatalog.KpiAlignCenter,
-                    [DashboardWidgetCatalog.KpiValueAlignKey] = DashboardWidgetCatalog.KpiAlignRight,
-                    [DashboardWidgetCatalog.KpiValuePlacementKey] = DashboardWidgetCatalog.KpiValuePlacementBottom
+                    [DashboardWidgetCatalog.KpiTitleAlignKey] = DashboardMetricValueVisualizationOptions.AlignCenter,
+                    [DashboardWidgetCatalog.KpiValueAlignKey] = DashboardMetricValueVisualizationOptions.AlignRight,
+                    [DashboardWidgetCatalog.KpiValuePlacementKey] = DashboardMetricValueVisualizationOptions.ValuePlacementBottom
                 }),
             new DashboardEventFilterCatalog());
 
@@ -820,14 +820,14 @@ public sealed class DashboardEventFilterCatalogTests
         configuration.ContainsKey(DashboardEventFilterCatalog.TopicStartsWithKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardEventFilterCatalog.StatusKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
-        configuration[DashboardWidgetCatalog.MetricValueTitleKey].ShouldBe("Messages");
-        configuration[DashboardWidgetCatalog.MetricValueSubtitleKey].ShouldBe("Total matching events");
-        configuration[DashboardWidgetCatalog.MetricValueTitleColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultTitleColor);
-        configuration[DashboardWidgetCatalog.MetricValueSubtitleColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultSubtitleColor);
-        configuration[DashboardWidgetCatalog.MetricValueValueColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultValueColor);
-        configuration[DashboardWidgetCatalog.MetricValueTitleAlignKey].ShouldBe(DashboardWidgetCatalog.KpiAlignLeft);
-        configuration[DashboardWidgetCatalog.MetricValueValueAlignKey].ShouldBe(DashboardWidgetCatalog.KpiAlignLeft);
-        configuration[DashboardWidgetCatalog.MetricValueValuePlacementKey].ShouldBe(DashboardWidgetCatalog.KpiValuePlacementTop);
+        configuration[DashboardMetricValueVisualizationOptions.TitleKey].ShouldBe("Messages");
+        configuration[DashboardMetricValueVisualizationOptions.SubtitleKey].ShouldBe("Total matching events");
+        configuration[DashboardMetricValueVisualizationOptions.TitleColorKey].ShouldBe(DashboardMetricValueVisualizationOptions.DefaultTitleColor);
+        configuration[DashboardMetricValueVisualizationOptions.SubtitleColorKey].ShouldBe(DashboardMetricValueVisualizationOptions.DefaultSubtitleColor);
+        configuration[DashboardMetricValueVisualizationOptions.ValueColorKey].ShouldBe(DashboardMetricValueVisualizationOptions.DefaultValueColor);
+        configuration[DashboardMetricValueVisualizationOptions.TitleAlignKey].ShouldBe(DashboardMetricValueVisualizationOptions.AlignLeft);
+        configuration[DashboardMetricValueVisualizationOptions.ValueAlignKey].ShouldBe(DashboardMetricValueVisualizationOptions.AlignLeft);
+        configuration[DashboardMetricValueVisualizationOptions.ValuePlacementKey].ShouldBe(DashboardMetricValueVisualizationOptions.ValuePlacementTop);
         configuration.ContainsKey("title").ShouldBeFalse();
         configuration.ContainsKey("subtitle").ShouldBeFalse();
         configuration.ContainsKey(DashboardWidgetCatalog.KpiTitleColorKey).ShouldBeFalse();
@@ -1637,9 +1637,9 @@ public sealed class DashboardEventFilterCatalogTests
             "DashboardWidgets",
             "DashboardMetricValueVisualizationView.razor"));
 
-        valueMarkup.ShouldContain("MetricValueShowUnitKey");
-        valueMarkup.ShouldContain("MetricValueUnitTextKey");
-        valueMarkup.ShouldContain("MetricValueUnitColorKey");
+        valueMarkup.ShouldContain("DashboardMetricValueVisualizationOptions.ShowUnitKey");
+        valueMarkup.ShouldContain("DashboardMetricValueVisualizationOptions.UnitTextKey");
+        valueMarkup.ShouldContain("DashboardMetricValueVisualizationOptions.UnitColorKey");
         valueMarkup.ShouldContain("DisplayUnitText");
     }
 
@@ -1957,6 +1957,7 @@ public sealed class DashboardEventFilterCatalogTests
         var catalogSource = File.ReadAllText(catalogPath);
         catalogSource.ShouldContain("public static class DashboardWidgetCatalog");
         catalogSource.ShouldNotContain("MetricDigital");
+        catalogSource.ShouldNotContain("MetricValue");
         File.ReadAllText(mauiProgramPath).ShouldNotContain("AddSingleton<DashboardWidgetCatalog>");
 
         Directory
@@ -1989,6 +1990,25 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldBe(DashboardMetricDigitalVisualizationOptions.MaxDigits);
         DashboardMetricDigitalVisualizationOptions.NormalizeDigits("bad")
             .ShouldBe(DashboardMetricDigitalVisualizationOptions.DefaultDigits);
+    }
+
+    [Fact]
+    public void DashboardMetricValueVisualizationOptions_OwnsValueVisualDefaults()
+    {
+        DashboardMetricValueVisualizationOptions.TitleKey.ShouldBe("metric.value.title");
+        DashboardMetricValueVisualizationOptions.ValueColorKey.ShouldBe("metric.value.valueColor");
+        DashboardMetricValueVisualizationOptions.DefaultTitle.ShouldBe("Messages");
+        DashboardMetricValueVisualizationOptions.DefaultUnitColor
+            .ShouldBe(DashboardMetricValueVisualizationOptions.DefaultSubtitleColor);
+
+        DashboardMetricValueVisualizationOptions.NormalizeHorizontalAlignment("unknown")
+            .ShouldBe(DashboardMetricValueVisualizationOptions.AlignLeft);
+        DashboardMetricValueVisualizationOptions.NormalizeHorizontalAlignment(DashboardMetricValueVisualizationOptions.AlignRight)
+            .ShouldBe(DashboardMetricValueVisualizationOptions.AlignRight);
+        DashboardMetricValueVisualizationOptions.NormalizeValuePlacement("unknown")
+            .ShouldBe(DashboardMetricValueVisualizationOptions.ValuePlacementTop);
+        DashboardMetricValueVisualizationOptions.NormalizeValuePlacement(DashboardMetricValueVisualizationOptions.ValuePlacementBottom)
+            .ShouldBe(DashboardMetricValueVisualizationOptions.ValuePlacementBottom);
     }
 
     [Fact]
@@ -2170,16 +2190,16 @@ public sealed class DashboardEventFilterCatalogTests
         value.EditCellComponent.ShouldBe(typeof(DashboardMetricValueVisualizationView));
         value.LiveComponent.ShouldBe(typeof(DashboardMetricValueVisualizationView));
         value.DefaultConfiguration["visualization"].ShouldBe(DashboardMetricVisualizationIds.Value);
-        value.DefaultConfiguration[DashboardWidgetCatalog.MetricValueTitleKey].ShouldBe(DashboardWidgetCatalog.MetricValueDefaultTitle);
-        value.DefaultConfiguration[DashboardWidgetCatalog.MetricValueSubtitleKey].ShouldBe(DashboardWidgetCatalog.MetricValueDefaultSubtitle);
-        value.DefaultConfiguration[DashboardWidgetCatalog.MetricValueShowUnitKey].ShouldBe("true");
-        value.DefaultConfiguration[DashboardWidgetCatalog.MetricValueUnitTextKey].ShouldBe(DashboardWidgetCatalog.MetricValueDefaultUnitText);
-        value.DefaultConfiguration[DashboardWidgetCatalog.MetricValueTitleColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultTitleColor);
-        value.DefaultConfiguration[DashboardWidgetCatalog.MetricValueSubtitleColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultSubtitleColor);
-        value.DefaultConfiguration[DashboardWidgetCatalog.MetricValueValueColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultValueColor);
-        value.DefaultConfiguration[DashboardWidgetCatalog.MetricValueUnitColorKey].ShouldBe(DashboardWidgetCatalog.KpiDefaultSubtitleColor);
-        value.DefaultConfiguration[DashboardWidgetCatalog.MetricValuePaddingKey]
-            .ShouldBe(DashboardWidgetCatalog.MetricValueDefaultPadding.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        value.DefaultConfiguration[DashboardMetricValueVisualizationOptions.TitleKey].ShouldBe(DashboardMetricValueVisualizationOptions.DefaultTitle);
+        value.DefaultConfiguration[DashboardMetricValueVisualizationOptions.SubtitleKey].ShouldBe(DashboardMetricValueVisualizationOptions.DefaultSubtitle);
+        value.DefaultConfiguration[DashboardMetricValueVisualizationOptions.ShowUnitKey].ShouldBe("true");
+        value.DefaultConfiguration[DashboardMetricValueVisualizationOptions.UnitTextKey].ShouldBe(DashboardMetricValueVisualizationOptions.DefaultUnitText);
+        value.DefaultConfiguration[DashboardMetricValueVisualizationOptions.TitleColorKey].ShouldBe(DashboardMetricValueVisualizationOptions.DefaultTitleColor);
+        value.DefaultConfiguration[DashboardMetricValueVisualizationOptions.SubtitleColorKey].ShouldBe(DashboardMetricValueVisualizationOptions.DefaultSubtitleColor);
+        value.DefaultConfiguration[DashboardMetricValueVisualizationOptions.ValueColorKey].ShouldBe(DashboardMetricValueVisualizationOptions.DefaultValueColor);
+        value.DefaultConfiguration[DashboardMetricValueVisualizationOptions.UnitColorKey].ShouldBe(DashboardMetricValueVisualizationOptions.DefaultUnitColor);
+        value.DefaultConfiguration[DashboardMetricValueVisualizationOptions.PaddingKey]
+            .ShouldBe(DashboardMetricValueVisualizationOptions.DefaultPadding.ToString(System.Globalization.CultureInfo.InvariantCulture));
         value.DefaultConfiguration.ContainsKey(DashboardWidgetCatalog.KpiTitleColorKey).ShouldBeFalse();
         value.DefaultConfiguration.ContainsKey(DashboardWidgetCatalog.KpiSubtitleColorKey).ShouldBeFalse();
         value.DefaultConfiguration.ContainsKey(DashboardWidgetCatalog.KpiValueColorKey).ShouldBeFalse();
@@ -2192,20 +2212,20 @@ public sealed class DashboardEventFilterCatalogTests
             .SelectMany(static group => group.Properties)
             .Select(static property => property.Key)
             .ShouldBe([
-                DashboardWidgetCatalog.MetricValueTitleKey,
-                DashboardWidgetCatalog.MetricValueShowTitleKey,
-                DashboardWidgetCatalog.MetricValueSubtitleKey,
-                DashboardWidgetCatalog.MetricValueShowSubtitleKey,
-                DashboardWidgetCatalog.MetricValueShowUnitKey,
-                DashboardWidgetCatalog.MetricValueUnitTextKey,
-                DashboardWidgetCatalog.MetricValueTitleColorKey,
-                DashboardWidgetCatalog.MetricValueSubtitleColorKey,
-                DashboardWidgetCatalog.MetricValueValueColorKey,
-                DashboardWidgetCatalog.MetricValueUnitColorKey,
-                DashboardWidgetCatalog.MetricValueTitleAlignKey,
-                DashboardWidgetCatalog.MetricValueValueAlignKey,
-                DashboardWidgetCatalog.MetricValueValuePlacementKey,
-                DashboardWidgetCatalog.MetricValuePaddingKey
+                DashboardMetricValueVisualizationOptions.TitleKey,
+                DashboardMetricValueVisualizationOptions.ShowTitleKey,
+                DashboardMetricValueVisualizationOptions.SubtitleKey,
+                DashboardMetricValueVisualizationOptions.ShowSubtitleKey,
+                DashboardMetricValueVisualizationOptions.ShowUnitKey,
+                DashboardMetricValueVisualizationOptions.UnitTextKey,
+                DashboardMetricValueVisualizationOptions.TitleColorKey,
+                DashboardMetricValueVisualizationOptions.SubtitleColorKey,
+                DashboardMetricValueVisualizationOptions.ValueColorKey,
+                DashboardMetricValueVisualizationOptions.UnitColorKey,
+                DashboardMetricValueVisualizationOptions.TitleAlignKey,
+                DashboardMetricValueVisualizationOptions.ValueAlignKey,
+                DashboardMetricValueVisualizationOptions.ValuePlacementKey,
+                DashboardMetricValueVisualizationOptions.PaddingKey
             ]);
 
         digital.DisplayName.ShouldBe("Digital");
@@ -2256,7 +2276,7 @@ public sealed class DashboardEventFilterCatalogTests
         digitalPropertyKeys.ShouldContain(DashboardMetricDigitalVisualizationOptions.PaddingKey);
         digitalPropertyKeys.ShouldContain(DashboardMetricDigitalVisualizationOptions.FitModeKey);
         digitalPropertyKeys.ShouldNotContain(DashboardWidgetCatalog.KpiValueColorKey);
-        digitalPropertyKeys.ShouldNotContain(DashboardWidgetCatalog.MetricValueValueColorKey);
+        digitalPropertyKeys.ShouldNotContain(DashboardMetricValueVisualizationOptions.ValueColorKey);
     }
 
     [Fact]

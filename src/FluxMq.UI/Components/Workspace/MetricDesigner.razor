@@ -289,10 +289,10 @@
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 [DashboardWidgetCatalog.MetricVisualizationKey] = DashboardMetricVisualizationIds.Value,
-                [DashboardWidgetCatalog.MetricValueTitleKey] = string.IsNullOrWhiteSpace(_displayName) ? "Metric" : _displayName,
-                [DashboardWidgetCatalog.MetricValueSubtitleKey] = "Reusable app metric",
-                [DashboardWidgetCatalog.MetricValueShowSubtitleKey] = "true",
-                [DashboardWidgetCatalog.MetricValueShowUnitKey] = "true"
+                [DashboardMetricValueVisualizationOptions.TitleKey] = string.IsNullOrWhiteSpace(_displayName) ? "Metric" : _displayName,
+                [DashboardMetricValueVisualizationOptions.SubtitleKey] = "Reusable app metric",
+                [DashboardMetricValueVisualizationOptions.ShowSubtitleKey] = "true",
+                [DashboardMetricValueVisualizationOptions.ShowUnitKey] = "true"
             });
 
     private string MetricSentence =>

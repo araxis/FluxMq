@@ -45,20 +45,6 @@ public static class DashboardWidgetCatalog
     public const string KpiTitleAlignKey = "kpi.titleAlign";
     public const string KpiValueAlignKey = "kpi.valueAlign";
     public const string KpiValuePlacementKey = "kpi.valuePlacement";
-    public const string MetricValueTitleKey = "metric.value.title";
-    public const string MetricValueSubtitleKey = "metric.value.subtitle";
-    public const string MetricValueShowTitleKey = "metric.value.showTitle";
-    public const string MetricValueShowSubtitleKey = "metric.value.showSubtitle";
-    public const string MetricValueShowUnitKey = "metric.value.showUnit";
-    public const string MetricValueUnitTextKey = "metric.value.unitText";
-    public const string MetricValueTitleColorKey = "metric.value.titleColor";
-    public const string MetricValueSubtitleColorKey = "metric.value.subtitleColor";
-    public const string MetricValueValueColorKey = "metric.value.valueColor";
-    public const string MetricValueUnitColorKey = "metric.value.unitColor";
-    public const string MetricValueTitleAlignKey = "metric.value.titleAlign";
-    public const string MetricValueValueAlignKey = "metric.value.valueAlign";
-    public const string MetricValueValuePlacementKey = "metric.value.valuePlacement";
-    public const string MetricValuePaddingKey = "metric.value.padding";
     public const string MetricMessages = "messages";
     public const string MetricRecent = "recent";
     public const string MetricCurrentRate = "currentRate";
@@ -80,19 +66,6 @@ public static class DashboardWidgetCatalog
     public const string ChartTypeLine = "line";
     public const string ChartTypeArea = "area";
     public const string ChartTypeTopics = "topics";
-    public const string KpiAlignLeft = "left";
-    public const string KpiAlignCenter = "center";
-    public const string KpiAlignRight = "right";
-    public const string KpiValuePlacementTop = "top";
-    public const string KpiValuePlacementMiddle = "middle";
-    public const string KpiValuePlacementBottom = "bottom";
-    public const string KpiDefaultTitleColor = "#f3f7fb";
-    public const string KpiDefaultSubtitleColor = "#9fb0c5";
-    public const string KpiDefaultValueColor = "#f3f7fb";
-    public const string MetricValueDefaultTitle = "Messages";
-    public const string MetricValueDefaultSubtitle = "Total matching events";
-    public const string MetricValueDefaultUnitText = "";
-    public const int MetricValueDefaultPadding = 14;
     public const int DefaultMetricCardColumns = 4;
     public const int MinMetricCardColumns = 1;
     public const int MaxMetricCardColumns = 4;
@@ -200,22 +173,6 @@ public static class DashboardWidgetCatalog
             ChartTypeArea => ChartTypeArea,
             ChartTypeTopics => ChartTypeTopics,
             _ => ChartTypeBars
-        };
-
-    public static string NormalizeKpiHorizontalAlignment(string? value)
-        => value switch
-        {
-            KpiAlignCenter => KpiAlignCenter,
-            KpiAlignRight => KpiAlignRight,
-            _ => KpiAlignLeft
-        };
-
-    public static string NormalizeKpiValuePlacement(string? value)
-        => value switch
-        {
-            KpiValuePlacementMiddle => KpiValuePlacementMiddle,
-            KpiValuePlacementBottom => KpiValuePlacementBottom,
-            _ => KpiValuePlacementTop
         };
 
     public static string NormalizeMetricVisualization(string? value)
