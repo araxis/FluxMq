@@ -28,15 +28,6 @@ public static class DashboardWidgetCatalog
     public const string PrimaryMetricKey = "primaryMetric";
     public const string DisplayMetricsKey = "displayMetrics";
     public const string MetricCardColumnsKey = "metricCardColumns";
-    public const string GaugeStyleKey = "gaugeStyle";
-    public const string GaugeMinKey = "gauge.min";
-    public const string GaugeMaxKey = "gauge.max";
-    public const string GaugeTargetKey = "gauge.target";
-    public const string GaugeWarningKey = "gauge.warning";
-    public const string GaugeCriticalKey = "gauge.critical";
-    public const string GaugeNormalColorKey = "gauge.normalColor";
-    public const string GaugeWarningColorKey = "gauge.warningColor";
-    public const string GaugeCriticalColorKey = "gauge.criticalColor";
     public const string ChartTypeKey = "chartType";
     public const string MetricVisualizationKey = "visualization";
     public const string KpiTitleColorKey = "kpi.titleColor";
@@ -52,16 +43,6 @@ public static class DashboardWidgetCatalog
     public const string MetricPayloadBytes = "payloadBytes";
     public const string MetricRetained = "retained";
     public const string MetricAveragePayload = "averagePayload";
-    public const string GaugeStyleRing = "ring";
-    public const string GaugeStyleMeter = "meter";
-    public const string GaugeDefaultMin = "0";
-    public const string GaugeDefaultMax = "100";
-    public const string GaugeDefaultTarget = "80";
-    public const string GaugeDefaultWarning = "70";
-    public const string GaugeDefaultCritical = "90";
-    public const string GaugeDefaultNormalColor = "#2ed3c6";
-    public const string GaugeDefaultWarningColor = "#f4b642";
-    public const string GaugeDefaultCriticalColor = "#ff5f6d";
     public const string ChartTypeBars = "bars";
     public const string ChartTypeLine = "line";
     public const string ChartTypeArea = "area";
@@ -158,13 +139,6 @@ public static class DashboardWidgetCatalog
         var metric = NormalizeMetric(value);
         return KnownDisplayMetrics.Contains(metric) ? metric : MetricRecent;
     }
-
-    public static string NormalizeGaugeStyle(string? value)
-        => value switch
-        {
-            GaugeStyleMeter => GaugeStyleMeter,
-            _ => GaugeStyleRing
-        };
 
     public static string NormalizeChartType(string? value)
         => value switch

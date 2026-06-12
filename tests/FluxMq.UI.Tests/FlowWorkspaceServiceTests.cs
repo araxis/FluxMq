@@ -2609,7 +2609,7 @@ public sealed class FlowWorkspaceServiceTests
             {
                 ["title"] = "Published messages",
                 ["metric"] = "publishedMessages",
-                [DashboardWidgetCatalog.GaugeStyleKey] = DashboardWidgetCatalog.GaugeStyleMeter
+                [DashboardEventGaugeWidgetOptions.StyleKey] = DashboardEventGaugeWidgetOptions.StyleMeter
             });
         service.UpdateDashboardWidgetBinding(
             "eventGauge",
