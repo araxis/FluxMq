@@ -51,7 +51,7 @@ public static class DashboardWidgetFormatting
     public static string WidgetSubtitle(DashboardWidgetSnapshot widget)
         => string.Equals(widget.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal)
             ? KpiSubtitle(widget)
-            : DashboardWidgetCatalog.IsTopicTreeWidget(widget.Type)
+            : string.Equals(widget.Type, DashboardWidgetCatalog.TopicTreeType, StringComparison.Ordinal)
             ? "Live topic map"
             : EventFilterSummary(widget);
 
