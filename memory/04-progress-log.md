@@ -3246,3 +3246,21 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - Second `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 754 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this legacy surface cleanup, then inspect the remaining legacy dashboard descriptor list and decide whether compatibility descriptors can become module metadata or should stay as explicit migration-only entries.
+- Dashboard compatibility descriptor cleanup:
+  - Merged PR #188 (`Move dashboard widget names into modules`) into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Started `work/dashboard-compat-descriptor-cleanup` from clean `main`.
+  - Removed the duplicated focused and legacy dashboard widget descriptor lists from `DashboardWidgetCatalog`; widget descriptors now come from `DashboardWidgetModuleCatalog` through `DashboardWidgetRegistry`.
+  - Kept `DashboardWidgetCatalog` as the constants/normalization home, including legacy add-time alias normalization for `status.strip`, `event.chart`, and `qos.retain.breakdown`.
+  - Routed dashboard designer widget labels through `DashboardWidgetRegistry`, so load-time compatibility ids still resolve through module-owned compatibility metadata without exposing legacy compatibility descriptors as visible catalog items.
+  - Added regression coverage proving the registry exposes only focused descriptors while old ids still resolve to their focused modules.
+  - Current line movement before staging:
+    - 221 lines removed.
+    - 37 lines added.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - Initial parallel focused test command collided with the simultaneous UI build on the generated XAML intermediate output.
+    - Serial rerun of `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetRegistry_ExposesFocusedDescriptorsAndKeepsCompatibilityLookup|FullyQualifiedName~DashboardWidgetModuleCatalog_ComposesCategoryProviderModules|FullyQualifiedName~DashboardWidgetModuleCatalog_OwnsInstanceNamePrefixes|FullyQualifiedName~DashboardWidgetModuleCatalog_ProvidesFocusedPropertyDefinitionsForAllPaletteWidgets" -p:UseAppHost=false --verbosity minimal` passed with 4 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 426 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 755 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this focused descriptor cleanup, then inspect whether `DashboardWidgetCatalog` constants can be split into focused constant groups or should stay as the temporary dashboard id/key compatibility home.

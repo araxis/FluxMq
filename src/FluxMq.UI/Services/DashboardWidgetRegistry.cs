@@ -2,9 +2,8 @@ using FluxMq.UI.Models;
 
 namespace FluxMq.UI.Services;
 
-public sealed class DashboardWidgetRegistry(DashboardWidgetCatalog catalog)
+public sealed class DashboardWidgetRegistry
 {
-    private readonly DashboardWidgetCatalog _catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
     private readonly IReadOnlyList<DashboardWidgetModule> _modules = DashboardWidgetModuleCatalog.CreateModules();
 
     public IReadOnlyList<DashboardWidgetModule> Modules => _modules;
@@ -13,8 +12,7 @@ public sealed class DashboardWidgetRegistry(DashboardWidgetCatalog catalog)
         => _modules.Select(static module => module.Descriptor).ToArray();
 
     public DashboardWidgetDescriptor? Find(string? type)
-        => FindModule(type)?.Descriptor ??
-           (string.IsNullOrWhiteSpace(type) ? null : _catalog.Find(type));
+        => FindModule(type)?.Descriptor;
 
     public DashboardWidgetModule? FindModule(string? type)
     {
