@@ -1450,7 +1450,10 @@ public sealed class FlowDefinitionComposerTests
         var widget = layout.Widgets["statusValue"];
         widget.Type.ShouldBe(DashboardWidgetCatalog.StatusValueType);
         widget.Configuration["title"].ShouldBe("Status value");
-        widget.Configuration.Keys.ShouldBe(["title", "metric"], ignoreOrder: true);
+        widget.Configuration.Keys.ShouldContain(DashboardWidgetCatalog.MetricVisualizationKey);
+        widget.Configuration[DashboardWidgetCatalog.MetricVisualizationKey].ShouldBe(DashboardMetricVisualizationIds.Value);
+        widget.Configuration[DashboardMetricValueVisualizationOptions.TitleKey].ShouldBe("Status value");
+        widget.Configuration[DashboardMetricValueVisualizationOptions.SubtitleKey].ShouldBe("Selected status metric");
         widget.Configuration["metric"].ShouldBe("ops.statusValueMetric");
         layout.Metrics["ops.statusValueMetric"].Aggregation.ShouldBe("count");
         layout.Bindings["statusValue"].PrimaryMetric.ShouldBe("ops.statusValueMetric");

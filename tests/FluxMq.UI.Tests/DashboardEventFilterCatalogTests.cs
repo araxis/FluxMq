@@ -305,6 +305,7 @@ public sealed class DashboardEventFilterCatalogTests
     {
         var gauge = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.EventGaugeType);
         var kpi = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.KpiTileType);
+        var statusValue = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.StatusValueType);
         var rate = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.EventRateType);
         var rateTile = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.RateTileType);
         var latest = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.LatestEventType);
@@ -341,6 +342,8 @@ public sealed class DashboardEventFilterCatalogTests
         rate.UsesMetricVisualization.ShouldBeTrue();
         rateTile.InspectorLabels.DataGroup.ShouldBe("Rate source");
         rateTile.UsesMetricVisualization.ShouldBeTrue();
+        statusValue.InspectorLabels.DataGroup.ShouldBe("Status source");
+        statusValue.UsesMetricVisualization.ShouldBeTrue();
         kpi.InspectorLabels.DataGroup.ShouldBe("KPI source");
         kpi.InspectorLabels.TimeWindowGroup.ShouldBe("Metric query");
         rate.UsesMetricWindow.ShouldBeFalse();
@@ -529,6 +532,10 @@ public sealed class DashboardEventFilterCatalogTests
 
         configuration["title"].ShouldBe("Factory issues");
         configuration["metric"].ShouldBe("factoryIssuesMetric");
+        configuration[DashboardWidgetCatalog.MetricVisualizationKey].ShouldBe(DashboardMetricVisualizationIds.Value);
+        configuration[DashboardMetricValueVisualizationOptions.TitleKey].ShouldBe("Factory issues");
+        configuration[DashboardMetricValueVisualizationOptions.SubtitleKey].ShouldBe(DashboardMetricValueVisualizationOptions.DefaultSubtitle);
+        configuration[DashboardMetricValueVisualizationOptions.UnitTextKey].ShouldBeEmpty();
         configuration.ContainsKey(DashboardEventFilterCatalog.EventTypeKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardEventFilterCatalog.TopicStartsWithKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardEventFilterCatalog.StatusKey).ShouldBeFalse();
@@ -1848,7 +1855,18 @@ public sealed class DashboardEventFilterCatalogTests
             .Single(static module => module.Type == DashboardWidgetCatalog.StatusValueType)
             .DefaultConfiguration
             .Keys
-            .ShouldBe(["title"]);
+            .ShouldContain(DashboardWidgetCatalog.MetricVisualizationKey);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.StatusValueType)
+            .DefaultConfiguration[DashboardMetricValueVisualizationOptions.TitleKey]
+            .ShouldBe("Status value");
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.StatusValueType)
+            .DefaultConfiguration[DashboardMetricValueVisualizationOptions.SubtitleKey]
+            .ShouldBe("Selected status metric");
+        DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.StatusValueType)
+            .UsesMetricVisualization
+            .ShouldBeTrue();
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.EventGaugeType)
             .DefaultConfiguration
@@ -1894,6 +1912,12 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldNotContain(DashboardWidgetCatalog.PrimaryMetricKey);
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.RateTileType)
+            .PropertyGroups
+            .SelectMany(static group => group.Properties)
+            .Select(static property => property.Key)
+            .ShouldNotContain(DashboardWidgetCatalog.PrimaryMetricKey);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.StatusValueType)
             .PropertyGroups
             .SelectMany(static group => group.Properties)
             .Select(static property => property.Key)
