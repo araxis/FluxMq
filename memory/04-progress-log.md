@@ -3116,3 +3116,19 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 752 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this focused runtime module catalog cleanup, then move to dashboard catalog/module cleanup as the next non-runtime phase.
+- Dashboard metric provider file cleanup:
+  - Merged PR #180 (`Extract runtime module catalog`) into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Started `work/dashboard-metric-provider-file-cleanup` from clean `main`.
+  - Moved `DashboardMetricWidgetModuleProvider` and its metric-specific helper methods out of the shared dashboard provider bundle into `DashboardMetricWidgetModuleProvider.cs`.
+  - Kept `DashboardWidgetModuleCatalog` provider composition, Metrics provider id, widget ids, defaults, property groups, visualization defaults, dashboard schema, and UI behavior unchanged.
+  - Left Events, Charts, MQTT Ops, and Topics providers in `DashboardWidgetModuleProviders.cs` for later focused splits.
+  - Current line movement before staging:
+    - `DashboardWidgetModuleProviders.cs`: 160 lines removed.
+    - `DashboardMetricWidgetModuleProvider.cs`: 165-line Metrics provider file added.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetModuleCatalog_ComposesCategoryProviderModules|FullyQualifiedName~DashboardMetricWidgetModuleProvider_OwnsMetricWidgetDefinitions" -p:UseAppHost=false --verbosity minimal` passed with 2 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 423 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 752 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this focused Metrics provider file cleanup, then split the Events provider into its own file as the next small dashboard cleanup slice.
