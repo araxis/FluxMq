@@ -94,7 +94,6 @@ public static class FluxMqRuntimeNodeServiceCollectionExtensions
         return services;
     }
 }
-
 public static class FluxMqAppRuntimeServiceCollectionExtensions
 {
     public static IServiceCollection AddFluxMqAppRuntime(
@@ -111,36 +110,4 @@ public static class FluxMqAppRuntimeServiceCollectionExtensions
 
         return services;
     }
-}
-
-internal sealed class PayloadInspectorRuntimeNodeModule : IFluxMqRuntimeNodeModule
-{
-    public NodeType Type => FluxMqNodeTypes.PayloadInspector;
-
-    public RuntimeNode Build(FluxMqRuntimeNodeBuildContext context)
-        => RuntimeNodeFactoryRegistryExtensions.CreatePayloadInspector(context.Address, context.Definition);
-}
-
-internal sealed class MqttMetricsRuntimeNodeModule : IFluxMqRuntimeNodeModule
-{
-    public NodeType Type => FluxMqNodeTypes.MqttMetrics;
-
-    public RuntimeNode Build(FluxMqRuntimeNodeBuildContext context)
-        => RuntimeNodeFactoryRegistryExtensions.CreateMqttMetrics(context.Address, context.Definition);
-}
-
-internal sealed class FlowLoggerRuntimeNodeModule : IFluxMqRuntimeNodeModule
-{
-    public NodeType Type => FluxMqNodeTypes.FlowLogger;
-
-    public RuntimeNode Build(FluxMqRuntimeNodeBuildContext context)
-        => RuntimeNodeFactoryRegistryExtensions.CreateFlowLogger(context.Address, context.Definition);
-}
-
-internal sealed class JsonSchemaValidatorRuntimeNodeModule : IFluxMqRuntimeNodeModule
-{
-    public NodeType Type => FluxMqNodeTypes.JsonSchemaValidator;
-
-    public RuntimeNode Build(FluxMqRuntimeNodeBuildContext context)
-        => RuntimeNodeFactoryRegistryExtensions.CreateJsonSchemaValidator(context.Address, context.Definition);
 }

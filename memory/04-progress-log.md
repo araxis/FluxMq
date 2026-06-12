@@ -3079,3 +3079,22 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 423 tests.
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 752 tests.
   - Next step: run final diff hygiene, then commit/PR/merge this focused MQTT-node cleanup.
+- Runtime inspection node module cleanup:
+  - Merged PR #178 (`Extract runtime MQTT node modules`) into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Started `work/runtime-inspection-node-modules-cleanup` from clean `main`.
+  - Moved payload inspector, MQTT metrics, flow logger, and JSON schema validator runtime module implementations into `FluxMqInspectionRuntimeNodeModules`.
+  - Moved payload inspection output wiring, metrics snapshot output wiring, flow logger input selection, and JSON schema definition parsing beside those modules.
+  - Kept inspection node ids, port names, schema validation behavior, logging behavior, metrics behavior, dashboard/test schemas, and FluxFlow unchanged.
+  - Current line movement before staging:
+    - `RuntimeNodeFactoryRegistryExtensions.cs`: 158 lines removed.
+    - `FluxMqRuntimeNodeModules.cs`: 33 lines removed.
+    - `FluxMqInspectionRuntimeNodeModules.cs`: 192-line inspection module file added.
+  - Verification so far:
+    - `dotnet build src\FluxMq.App\FluxMq.App.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~AddFluxMqRuntimeNodes_RegistersFluxMqNodeModulesAsKeyedServices|FullyQualifiedName~RegisterPipelineComponentFactories_RegistersStableComponentTypes|FullyQualifiedName~MetricSourceComponent_RelaysExistingMetricStream" -p:UseAppHost=false --verbosity minimal` passed with 3 tests.
+    - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 118 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 423 tests.
+    - First `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` run hit the known transient LiteDB enumeration failure in `SessionRepositoryTests.GetAll_ReturnsMostRecentFirst`; the focused failed test passed on immediate rerun.
+    - Second `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` run passed with 752 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this focused inspection-node cleanup, then audit whether the remaining runtime composition list should stay in the registry extension or move to a small module catalog file.
