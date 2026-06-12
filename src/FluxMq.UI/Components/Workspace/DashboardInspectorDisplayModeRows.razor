@@ -3,6 +3,50 @@
 
 @if (Draft is not null)
 {
+    @if (Draft.Profile.UsesLatestEventVisual)
+    {
+        <PropertyGridRow Name="Header">
+            <input class="property-grid-input"
+                   value="@Draft.LatestHeader"
+                   @oninput="@((ChangeEventArgs args) => ChangeLatestEventVisualPropertyAsync(DashboardLatestEventVisualOptions.HeaderKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Show header">
+            @BooleanRow(DashboardLatestEventVisualOptions.ShowHeaderKey, Draft.LatestShowHeader)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Event type">
+            @BooleanRow(DashboardLatestEventVisualOptions.ShowTypeKey, Draft.LatestShowType)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Topic">
+            @BooleanRow(DashboardLatestEventVisualOptions.ShowTopicKey, Draft.LatestShowTopic)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Status">
+            @BooleanRow(DashboardLatestEventVisualOptions.ShowStatusKey, Draft.LatestShowStatus)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Time">
+            @BooleanRow(DashboardLatestEventVisualOptions.ShowTimestampKey, Draft.LatestShowTimestamp)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Payload">
+            @BooleanRow(DashboardLatestEventVisualOptions.ShowPayloadKey, Draft.LatestShowPayload)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Empty text">
+            <input class="property-grid-input"
+                   value="@Draft.LatestEmptyText"
+                   @oninput="@((ChangeEventArgs args) => ChangeLatestEventVisualPropertyAsync(DashboardLatestEventVisualOptions.EmptyTextKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Header color">
+            <PropertyGridColorPicker Value="@Draft.LatestHeaderColor"
+                                     ValueChanged="@((string? value) => ChangeLatestEventVisualPropertyAsync(DashboardLatestEventVisualOptions.HeaderColorKey, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Detail color">
+            <PropertyGridColorPicker Value="@Draft.LatestDetailColor"
+                                     ValueChanged="@((string? value) => ChangeLatestEventVisualPropertyAsync(DashboardLatestEventVisualOptions.DetailColorKey, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Payload color">
+            <PropertyGridColorPicker Value="@Draft.LatestPayloadColor"
+                                     ValueChanged="@((string? value) => ChangeLatestEventVisualPropertyAsync(DashboardLatestEventVisualOptions.PayloadColorKey, value))" />
+        </PropertyGridRow>
+    }
+
     @if (Draft.Profile.UsesGaugeStyle)
     {
         <PropertyGridRow Name="@Labels.GaugeRow">
@@ -103,6 +147,9 @@
     public EventCallback<DashboardInspectorPropertyValueChange> GaugePropertyChanged { get; set; }
 
     [Parameter]
+    public EventCallback<DashboardInspectorPropertyValueChange> LatestEventVisualPropertyChanged { get; set; }
+
+    [Parameter]
     public EventCallback<string?> ChartTypeChanged { get; set; }
 
     [Parameter]
@@ -113,6 +160,23 @@
             ? "property-grid-choice selected"
             : "property-grid-choice";
 
+    private static string BooleanChoiceClass(bool currentValue, bool value)
+        => currentValue == value
+            ? "property-grid-choice selected"
+            : "property-grid-choice";
+
     private Task ChangeGaugePropertyAsync(string key, string? value)
         => GaugePropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
+
+    private Task ChangeLatestEventVisualPropertyAsync(string key, string? value)
+        => LatestEventVisualPropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
+
+    private RenderFragment BooleanRow(string key, bool value) => @<div class="property-grid-button-group">
+        <button type="button"
+                class="@BooleanChoiceClass(value, true)"
+                @onclick="@(() => ChangeLatestEventVisualPropertyAsync(key, bool.TrueString))">On</button>
+        <button type="button"
+                class="@BooleanChoiceClass(value, false)"
+                @onclick="@(() => ChangeLatestEventVisualPropertyAsync(key, bool.FalseString))">Off</button>
+    </div>;
 }

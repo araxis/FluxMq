@@ -3455,3 +3455,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 761 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this event-gauge visual UX slice, then continue dashboard behavior/UX one widget at a time with manual review of gauge visual settings before selecting the next component.
+- Dashboard latest event visual UX:
+  - Merged PR #202 (`Align event gauge visual settings`) into `main`; post-merge Windows validation passed before this slice.
+  - Started `work/dashboard-latest-event-visual-ux` from clean `main`.
+  - Refactored `latest.event` so the widget owns focused latest-event display settings: header, field visibility, empty text, and latest-event text colors.
+  - Kept event matching/filter behavior unchanged; this slice only separates display behavior from the old generic field toggles.
+  - Updated edit-cell and live rendering to use the same latest-event visual component, with the widget owning its header instead of the outer dashboard chrome.
+  - New latest-event defaults and saves write `latest.*` visual keys while existing legacy field keys still load as fallback.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --filter "FullyQualifiedName~DashboardEventFilterCatalogTests" --verbosity minimal` passed with 115 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 433 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 762 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this latest-event visual UX slice, then continue one-widget-at-a-time with `event.table` only after visual review passes.

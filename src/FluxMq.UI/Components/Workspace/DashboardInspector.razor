@@ -375,7 +375,7 @@
     private RenderFragment RenderDisplayProperties() => @<text>
         @if (_widgetDraft is { } draft)
         {
-        @if (!draft.Profile.UsesMetricVisualization)
+        @if (!draft.Profile.UsesMetricVisualization && !draft.Profile.UsesLatestEventVisual)
         {
             <PropertyGridRow Name="@InspectorLabels.TitleRow">
                 <input class="property-grid-input"
@@ -420,6 +420,7 @@
                                            Labels="@InspectorLabels"
                                            GaugeStyleChanged="@SetGaugeStyleAsync"
                                            GaugePropertyChanged="@SetGaugePropertyAsync"
+                                           LatestEventVisualPropertyChanged="@SetLatestEventVisualPropertyAsync"
                                            ChartTypeChanged="@SetChartTypeAsync"
                                            ExcludeSystemTopicsChanged="@SetExcludeSystemTopicsAsync" />
 
@@ -496,7 +497,8 @@
 
     private int DisplayPropertyCount => _widgetDraft is null
         ? 0
-        : (_widgetDraft.Profile.UsesMetricVisualization ? 1 + MetricVisualizationPropertyCount : 1 + (_widgetDraft.Profile.UsesSubtitle ? 1 : 0)) +
+        : (_widgetDraft.Profile.UsesMetricVisualization ? 1 + MetricVisualizationPropertyCount : _widgetDraft.Profile.UsesLatestEventVisual ? 0 : 1 + (_widgetDraft.Profile.UsesSubtitle ? 1 : 0)) +
+          (_widgetDraft.Profile.UsesLatestEventVisual ? 11 : 0) +
           (_widgetDraft.Profile.UsesGaugeStyle ? 9 : 0) +
           (_widgetDraft.Profile.UsesChartType ? 1 : 0) +
           (_widgetDraft.Profile.IsTopicTreeWidget ? 1 : 0) +
@@ -782,6 +784,20 @@
                 return;
         }
 
+        await AutoApplyAsync();
+    }
+
+    private Task SetLatestEventVisualPropertyAsync(DashboardInspectorPropertyValueChange change)
+        => SetLatestEventVisualPropertyAsync(change.Key, change.Value);
+
+    private async Task SetLatestEventVisualPropertyAsync(string key, string? value)
+    {
+        if (_widgetDraft is null)
+        {
+            return;
+        }
+
+        _widgetDraft.SetLatestEventVisualValue(key, value);
         await AutoApplyAsync();
     }
 
