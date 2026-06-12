@@ -3132,3 +3132,20 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 752 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this focused Metrics provider file cleanup, then split the Events provider into its own file as the next small dashboard cleanup slice.
+- Dashboard events provider file cleanup:
+  - Merged PR #181 (`Extract dashboard metric provider`) into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Started `work/dashboard-events-provider-file-cleanup` from clean `main`.
+  - Moved `DashboardEventWidgetModuleProvider` and its event-specific helper methods out of the shared dashboard provider bundle into `DashboardEventWidgetModuleProvider.cs`.
+  - Kept `DashboardWidgetModuleCatalog` provider composition, Events provider id, event widget ids, renderer kinds, defaults, property groups, layout spans, dashboard schema, and UI behavior unchanged.
+  - Left Charts, MQTT Ops, and Topics providers in `DashboardWidgetModuleProviders.cs` for later focused splits.
+  - Current line movement before staging:
+    - `DashboardWidgetModuleProviders.cs`: 206 lines removed.
+    - `DashboardEventWidgetModuleProvider.cs`: 211-line Events provider file added.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetModuleCatalog_ComposesCategoryProviderModules|FullyQualifiedName~DashboardEventWidgetModuleProvider_OwnsEventWidgetDefinitions" -p:UseAppHost=false --verbosity minimal` passed with 2 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 423 tests.
+    - First `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` run hit the known transient LiteDB enumeration failure in `SessionRepositoryTests.GetAll_ReturnsMostRecentFirst`; the focused failed test passed on immediate rerun.
+    - Second `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` run passed with 752 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this focused Events provider file cleanup, then split the Charts provider into its own file as the next small dashboard cleanup slice.
