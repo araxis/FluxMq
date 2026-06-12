@@ -954,6 +954,35 @@
     color: var(--topic-tree-muted-color);
 }
 
+.dashboard-topic-activity-visual {
+    --topic-activity-header-color: var(--mud-palette-text-primary);
+    --topic-activity-text-color: var(--mud-palette-text-primary);
+    --topic-activity-muted-color: var(--mud-palette-text-secondary);
+    --topic-activity-accent-color: var(--widget-accent);
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: clamp(8px, 3cqh, 12px);
+    min-height: 0;
+    min-width: 0;
+}
+
+.dashboard-topic-activity-header {
+    align-items: center;
+    display: flex;
+    flex: 0 0 auto;
+    gap: 10px;
+    min-width: 0;
+}
+
+.dashboard-topic-activity-header .dashboard-widget-title {
+    color: var(--topic-activity-header-color);
+}
+
+.dashboard-topic-activity-header .dashboard-widget-subtitle {
+    color: var(--topic-activity-muted-color);
+}
+
 .dashboard-topic-summary {
     display: grid;
     gap: 8px;
@@ -1117,9 +1146,9 @@
 
 .dashboard-topic-activity-cell {
     background:
-        linear-gradient(145deg, color-mix(in srgb, var(--widget-accent) var(--topic-heat), transparent), transparent),
+        linear-gradient(145deg, color-mix(in srgb, var(--topic-activity-accent-color) var(--topic-heat), transparent), transparent),
         color-mix(in srgb, var(--flux-canvas) 70%, transparent);
-    border: 1px solid color-mix(in srgb, var(--widget-accent) 34%, var(--flux-border));
+    border: 1px solid color-mix(in srgb, var(--topic-activity-accent-color) 34%, var(--flux-border));
     border-radius: 7px;
     display: flex;
     flex-direction: column;
@@ -1131,7 +1160,7 @@
 }
 
 .dashboard-topic-activity-cell span {
-    color: var(--mud-palette-text-secondary);
+    color: var(--topic-activity-muted-color);
     font-size: 11px;
     font-weight: 750;
     min-width: 0;
@@ -1141,7 +1170,7 @@
 }
 
 .dashboard-topic-activity-cell strong {
-    color: var(--mud-palette-text-primary);
+    color: var(--topic-activity-text-color);
     font-size: 24px;
     font-weight: 850;
     line-height: 1;

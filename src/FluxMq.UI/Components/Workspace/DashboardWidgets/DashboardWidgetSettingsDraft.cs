@@ -46,6 +46,7 @@ public sealed class DashboardWidgetSettingsDraft
             widget.ReadString(DashboardWidgetCatalog.DisplayMetricsKey))];
         ApplyLatestEventVisualValues(widget.Configuration);
         ApplyEventTableVisualValues(widget.Configuration);
+        ApplyTopicActivityVisualValues(widget.Configuration);
         ApplyTopicTreeVisualValues(widget.Configuration);
 
         foreach (var key in eventFilters.FilterKeys)
@@ -153,6 +154,25 @@ public sealed class DashboardWidgetSettingsDraft
 
     public string TableMutedColor { get; set; } = DashboardEventTableVisualOptions.DefaultMutedColor;
 
+    public string TopicActivityHeader { get; set; } = DashboardTopicActivityVisualOptions.DefaultHeader;
+
+    public bool TopicActivityShowHeader { get; set; } = true;
+
+    public string TopicActivityLimit { get; set; } =
+        DashboardTopicActivityVisualOptions.DefaultLimit.ToString(CultureInfo.InvariantCulture);
+
+    public bool TopicActivityShowCounts { get; set; } = true;
+
+    public string TopicActivityEmptyText { get; set; } = DashboardTopicActivityVisualOptions.DefaultEmptyText;
+
+    public string TopicActivityHeaderColor { get; set; } = DashboardTopicActivityVisualOptions.DefaultHeaderColor;
+
+    public string TopicActivityTextColor { get; set; } = DashboardTopicActivityVisualOptions.DefaultTextColor;
+
+    public string TopicActivityMutedColor { get; set; } = DashboardTopicActivityVisualOptions.DefaultMutedColor;
+
+    public string TopicActivityAccentColor { get; set; } = DashboardTopicActivityVisualOptions.DefaultAccentColor;
+
     public string TopicTreeHeader { get; set; } = DashboardTopicTreeVisualOptions.DefaultHeader;
 
     public bool TopicTreeShowHeader { get; set; } = true;
@@ -225,6 +245,7 @@ public sealed class DashboardWidgetSettingsDraft
             ReadString(configuration, DashboardWidgetCatalog.DisplayMetricsKey)));
         ApplyLatestEventVisualValues(configuration);
         ApplyEventTableVisualValues(configuration);
+        ApplyTopicActivityVisualValues(configuration);
         ApplyTopicTreeVisualValues(configuration);
 
         foreach (var key in _eventFilters.FilterKeys)
@@ -478,6 +499,48 @@ public sealed class DashboardWidgetSettingsDraft
         }
     }
 
+    public void SetTopicActivityVisualValue(string key, string? value)
+    {
+        if (!Profile.UsesTopicActivityVisual)
+        {
+            return;
+        }
+
+        switch (key)
+        {
+            case DashboardTopicActivityVisualOptions.HeaderKey:
+                TopicActivityHeader = NormalizeText(value, DashboardTopicActivityVisualOptions.DefaultHeader);
+                Title = TopicActivityHeader;
+                break;
+            case DashboardTopicActivityVisualOptions.ShowHeaderKey:
+                TopicActivityShowHeader = NormalizeBoolean(value, TopicActivityShowHeader);
+                break;
+            case DashboardTopicActivityVisualOptions.LimitKey:
+                TopicActivityLimit = DashboardTopicActivityVisualOptions
+                    .NormalizeLimit(value)
+                    .ToString(CultureInfo.InvariantCulture);
+                break;
+            case DashboardTopicActivityVisualOptions.ShowCountsKey:
+                TopicActivityShowCounts = NormalizeBoolean(value, TopicActivityShowCounts);
+                break;
+            case DashboardTopicActivityVisualOptions.EmptyTextKey:
+                TopicActivityEmptyText = NormalizeText(value, DashboardTopicActivityVisualOptions.DefaultEmptyText);
+                break;
+            case DashboardTopicActivityVisualOptions.HeaderColorKey:
+                TopicActivityHeaderColor = Normalize(value);
+                break;
+            case DashboardTopicActivityVisualOptions.TextColorKey:
+                TopicActivityTextColor = Normalize(value);
+                break;
+            case DashboardTopicActivityVisualOptions.MutedColorKey:
+                TopicActivityMutedColor = Normalize(value);
+                break;
+            case DashboardTopicActivityVisualOptions.AccentColorKey:
+                TopicActivityAccentColor = Normalize(value);
+                break;
+        }
+    }
+
     public IReadOnlyDictionary<string, string> BuildConfiguration()
     {
         var title = string.IsNullOrWhiteSpace(Title) ? Profile.Title : Title.Trim();
@@ -550,6 +613,7 @@ public sealed class DashboardWidgetSettingsDraft
         ApplyVisualConfiguration(configuration);
         ApplyLatestEventVisualConfiguration(configuration);
         ApplyEventTableVisualConfiguration(configuration);
+        ApplyTopicActivityVisualConfiguration(configuration);
         ApplyMetricVisualizationConfiguration(configuration);
         ApplyMetricVisualization(configuration);
         ApplyMetricName(configuration);
@@ -789,6 +853,67 @@ public sealed class DashboardWidgetSettingsDraft
         configuration[DashboardEventTableVisualOptions.MutedColorKey] = NormalizeColor(
             TableMutedColor,
             DashboardEventTableVisualOptions.DefaultMutedColor);
+    }
+
+    private void ApplyTopicActivityVisualValues(IReadOnlyDictionary<string, string> configuration)
+    {
+        if (!Profile.UsesTopicActivityVisual)
+        {
+            return;
+        }
+
+        TopicActivityHeader = ReadString(configuration, DashboardTopicActivityVisualOptions.HeaderKey) ??
+            ReadString(configuration, "title") ??
+            DashboardTopicActivityVisualOptions.DefaultHeader;
+        Title = TopicActivityHeader;
+        TopicActivityShowHeader = ReadBoolean(configuration, DashboardTopicActivityVisualOptions.ShowHeaderKey, true);
+        TopicActivityLimit = DashboardTopicActivityVisualOptions
+            .NormalizeLimit(ReadString(configuration, DashboardTopicActivityVisualOptions.LimitKey) ?? ReadString(configuration, "limit"))
+            .ToString(CultureInfo.InvariantCulture);
+        TopicActivityShowCounts = ReadBoolean(configuration, DashboardTopicActivityVisualOptions.ShowCountsKey, true);
+        TopicActivityEmptyText = ReadString(configuration, DashboardTopicActivityVisualOptions.EmptyTextKey) ??
+            DashboardTopicActivityVisualOptions.DefaultEmptyText;
+        TopicActivityHeaderColor = ReadString(configuration, DashboardTopicActivityVisualOptions.HeaderColorKey) ??
+            DashboardTopicActivityVisualOptions.DefaultHeaderColor;
+        TopicActivityTextColor = ReadString(configuration, DashboardTopicActivityVisualOptions.TextColorKey) ??
+            DashboardTopicActivityVisualOptions.DefaultTextColor;
+        TopicActivityMutedColor = ReadString(configuration, DashboardTopicActivityVisualOptions.MutedColorKey) ??
+            DashboardTopicActivityVisualOptions.DefaultMutedColor;
+        TopicActivityAccentColor = ReadString(configuration, DashboardTopicActivityVisualOptions.AccentColorKey) ??
+            DashboardTopicActivityVisualOptions.DefaultAccentColor;
+    }
+
+    private void ApplyTopicActivityVisualConfiguration(Dictionary<string, string> configuration)
+    {
+        if (!Profile.UsesTopicActivityVisual)
+        {
+            return;
+        }
+
+        var header = string.IsNullOrWhiteSpace(TopicActivityHeader)
+            ? DashboardTopicActivityVisualOptions.DefaultHeader
+            : TopicActivityHeader.Trim();
+        configuration["title"] = header;
+        configuration[DashboardTopicActivityVisualOptions.HeaderKey] = header;
+        configuration[DashboardTopicActivityVisualOptions.ShowHeaderKey] = TopicActivityShowHeader ? bool.TrueString : bool.FalseString;
+        configuration[DashboardTopicActivityVisualOptions.LimitKey] =
+            DashboardTopicActivityVisualOptions.NormalizeLimit(TopicActivityLimit).ToString(CultureInfo.InvariantCulture);
+        configuration[DashboardTopicActivityVisualOptions.ShowCountsKey] = TopicActivityShowCounts ? bool.TrueString : bool.FalseString;
+        configuration[DashboardTopicActivityVisualOptions.EmptyTextKey] = string.IsNullOrWhiteSpace(TopicActivityEmptyText)
+            ? DashboardTopicActivityVisualOptions.DefaultEmptyText
+            : TopicActivityEmptyText.Trim();
+        configuration[DashboardTopicActivityVisualOptions.HeaderColorKey] = NormalizeColor(
+            TopicActivityHeaderColor,
+            DashboardTopicActivityVisualOptions.DefaultHeaderColor);
+        configuration[DashboardTopicActivityVisualOptions.TextColorKey] = NormalizeColor(
+            TopicActivityTextColor,
+            DashboardTopicActivityVisualOptions.DefaultTextColor);
+        configuration[DashboardTopicActivityVisualOptions.MutedColorKey] = NormalizeColor(
+            TopicActivityMutedColor,
+            DashboardTopicActivityVisualOptions.DefaultMutedColor);
+        configuration[DashboardTopicActivityVisualOptions.AccentColorKey] = NormalizeColor(
+            TopicActivityAccentColor,
+            DashboardTopicActivityVisualOptions.DefaultAccentColor);
     }
 
     private void ApplyTopicTreeVisualValues(IReadOnlyDictionary<string, string> configuration)
