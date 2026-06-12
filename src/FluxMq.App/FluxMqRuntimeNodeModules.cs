@@ -113,30 +113,6 @@ public static class FluxMqAppRuntimeServiceCollectionExtensions
     }
 }
 
-internal sealed class MqttConnectionRuntimeNodeModule : IFluxMqRuntimeNodeModule
-{
-    public NodeType Type => FluxMqNodeTypes.Connection;
-
-    public RuntimeNode Build(FluxMqRuntimeNodeBuildContext context)
-        => RuntimeNodeFactoryRegistryExtensions.CreateConnection(context.Address, context.Definition, context.ClientFactory);
-}
-
-internal sealed class MqttTriggerRuntimeNodeModule : IFluxMqRuntimeNodeModule
-{
-    public NodeType Type => FluxMqNodeTypes.Trigger;
-
-    public RuntimeNode Build(FluxMqRuntimeNodeBuildContext context)
-        => RuntimeNodeFactoryRegistryExtensions.CreateTrigger(context.Address, context.Definition, context.EngineContext);
-}
-
-internal sealed class ConnectionStateTriggerRuntimeNodeModule : IFluxMqRuntimeNodeModule
-{
-    public NodeType Type => FluxMqNodeTypes.ConnectionStateTrigger;
-
-    public RuntimeNode Build(FluxMqRuntimeNodeBuildContext context)
-        => RuntimeNodeFactoryRegistryExtensions.CreateConnectionStateTrigger(context.Address, context.Definition, context.EngineContext);
-}
-
 internal sealed class PayloadInspectorRuntimeNodeModule : IFluxMqRuntimeNodeModule
 {
     public NodeType Type => FluxMqNodeTypes.PayloadInspector;

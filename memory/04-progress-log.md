@@ -3062,3 +3062,20 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 423 tests.
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 752 tests.
   - Next step: run final diff hygiene, then commit/PR/merge this focused control-node cleanup.
+- Runtime MQTT node module cleanup:
+  - Merged PR #177 (`Extract runtime control node modules`) into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Started `work/runtime-mqtt-node-modules-cleanup` from clean `main`.
+  - Moved MQTT connection, MQTT trigger, and MQTT connection-state trigger runtime module implementations into `FluxMqMqttRuntimeNodeModules`.
+  - Moved MQTT connection profile parsing, subscription parsing, QoS parsing, and topic-filter validation beside the MQTT runtime modules.
+  - Kept MQTT node ids, port names, subscription semantics, connection resource lookup, dashboard/test schemas, and FluxFlow unchanged.
+  - Current line movement before staging:
+    - `RuntimeNodeFactoryRegistryExtensions.cs`: 206 lines removed.
+    - `FluxMqRuntimeNodeModules.cs`: 24 lines removed.
+    - `FluxMqMqttRuntimeNodeModules.cs`: 222-line MQTT module file added.
+  - Verification so far:
+    - `dotnet build src\FluxMq.App\FluxMq.App.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~AddFluxMqRuntimeNodes_RegistersFluxMqNodeModulesAsKeyedServices|FullyQualifiedName~RegisterPipelineComponentFactories_RegistersStableComponentTypes|FullyQualifiedName~MetricSourceComponent_RelaysExistingMetricStream" -p:UseAppHost=false --verbosity minimal` passed with 3 tests.
+    - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 118 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 423 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 752 tests.
+  - Next step: run final diff hygiene, then commit/PR/merge this focused MQTT-node cleanup.
