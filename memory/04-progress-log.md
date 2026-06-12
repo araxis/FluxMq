@@ -3045,3 +3045,20 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - First full release Components test run hit a separate transient LiteDB enumeration failure in `SessionRepositoryTests.GetAll_ReturnsMostRecentFirst`; immediate rerun passed.
     - Full release solution test with `win-x64`, serial execution, and shared compilation disabled passed.
   - Next step: run final diff hygiene, commit/PR/merge the blocker fix, then continue the runtime cleanup phase after main is green.
+- Runtime control node module cleanup:
+  - Merged PR #176 (`Fix MQTT metrics rate refresh race`) into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Started `work/runtime-control-node-modules-cleanup` from clean `main`.
+  - Moved message filter, condition router, and flow assertion runtime module implementations into `FluxMqControlRuntimeNodeModules`.
+  - Moved control expression option building, assertion option building, topic-filter control context, and expression-engine resolution beside the control modules.
+  - Kept control node ids, port names, supported assertion input types, expression engine behavior, dashboard/test schemas, and FluxFlow unchanged.
+  - Current line movement before staging:
+    - `RuntimeNodeFactoryRegistryExtensions.cs`: 340 lines removed, 1 composition call updated.
+    - `FluxMqRuntimeNodeModules.cs`: 24 lines removed.
+    - `FluxMqControlRuntimeNodeModules.cs`: 367-line control module file added.
+  - Verification so far:
+    - `dotnet build src\FluxMq.App\FluxMq.App.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --filter "FullyQualifiedName~AddFluxMqRuntimeNodes_RegistersFluxMqNodeModulesAsKeyedServices|FullyQualifiedName~RegisterPipelineComponentFactories_RegistersStableComponentTypes|FullyQualifiedName~MetricSourceComponent_RelaysExistingMetricStream" -p:UseAppHost=false --verbosity minimal` passed with 3 tests.
+    - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 118 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 423 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 752 tests.
+  - Next step: run final diff hygiene, then commit/PR/merge this focused control-node cleanup.

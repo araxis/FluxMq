@@ -161,30 +161,6 @@ internal sealed class FlowLoggerRuntimeNodeModule : IFluxMqRuntimeNodeModule
         => RuntimeNodeFactoryRegistryExtensions.CreateFlowLogger(context.Address, context.Definition);
 }
 
-internal sealed class MessageFilterRuntimeNodeModule : IFluxMqRuntimeNodeModule
-{
-    public NodeType Type => FluxMqNodeTypes.MessageFilter;
-
-    public RuntimeNode Build(FluxMqRuntimeNodeBuildContext context)
-        => RuntimeNodeFactoryRegistryExtensions.CreateMessageFilter(context.Address, context.Definition, context.ExpressionEngine);
-}
-
-internal sealed class ConditionRouterRuntimeNodeModule : IFluxMqRuntimeNodeModule
-{
-    public NodeType Type => FluxMqNodeTypes.ConditionRouter;
-
-    public RuntimeNode Build(FluxMqRuntimeNodeBuildContext context)
-        => RuntimeNodeFactoryRegistryExtensions.CreateConditionRouter(context.Address, context.Definition, context.ExpressionEngine);
-}
-
-internal sealed class FlowAssertionRuntimeNodeModule : IFluxMqRuntimeNodeModule
-{
-    public NodeType Type => FluxMqNodeTypes.FlowAssertion;
-
-    public RuntimeNode Build(FluxMqRuntimeNodeBuildContext context)
-        => RuntimeNodeFactoryRegistryExtensions.CreateFlowAssertion(context.Address, context.Definition, context.ExpressionEngine);
-}
-
 internal sealed class JsonSchemaValidatorRuntimeNodeModule : IFluxMqRuntimeNodeModule
 {
     public NodeType Type => FluxMqNodeTypes.JsonSchemaValidator;
