@@ -3384,3 +3384,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 761 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this visual fit slice, then continue dashboard behavior work with the next one-widget discussion and manual UI feedback.
+- Dashboard event counter visual UX:
+  - Merged PR #197 (`Improve metric visual fit controls`) into `main`; post-merge Windows validation passed.
+  - Started `work/dashboard-event-counter-visual-ux` from clean `main`.
+  - Promoted `event.counter` from generic display rows to the focused metric visualization path.
+  - Seeded counter widgets with value-visual defaults while preserving counter-specific title/subtitle text.
+  - Removed the old counter-specific display property group so title, subtitle, unit, fit, alignment, padding, and colors are owned by the selected visual representation.
+  - Kept metric query/binding behavior unchanged and avoided schema, widget type, metric model, or FluxFlow changes.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetSettingsDraft_WritesEventCounterAsMetricQueryConfiguration|FullyQualifiedName~DashboardWidgetModuleCatalog_ProvidesFocusedPropertyDefinitionsForAllPaletteWidgets|FullyQualifiedName~DashboardEventWidgetModuleProvider_OwnsEventWidgetDefinitions|FullyQualifiedName~AddDashboardWidget_WritesFocusedEventCounterWidgetAndMetricQuery|FullyQualifiedName~AddDashboardWidget_AddsWidgetAndAssignsSelectedSlot|FullyQualifiedName~DashboardEventCounterModuleView_UsesFocusedMetricValueRenderPath" -p:UseAppHost=false --verbosity minimal` passed with 6 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 432 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 761 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this event-counter visual UX slice, then continue one-widget-at-a-time dashboard work with `event.rate` visual ownership if review passes.

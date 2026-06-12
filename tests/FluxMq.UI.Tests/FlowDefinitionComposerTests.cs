@@ -1379,8 +1379,10 @@ public sealed class FlowDefinitionComposerTests
         var layout = composer.GetDashboardLayout(updated, "ops").ShouldNotBeNull();
         layout.Widgets.Keys.ShouldBe(["eventCounter"]);
         layout.Widgets["eventCounter"].Type.ShouldBe("event.counter");
-        layout.Widgets["eventCounter"].Configuration.Keys.ShouldBe(["title", "metric"], ignoreOrder: true);
+        layout.Widgets["eventCounter"].Configuration.Keys.ShouldContain(DashboardWidgetCatalog.MetricVisualizationKey);
         layout.Widgets["eventCounter"].Configuration["metric"].ShouldBe("ops.eventCounterMetric");
+        layout.Widgets["eventCounter"].Configuration[DashboardMetricValueVisualizationOptions.TitleKey].ShouldBe("Events");
+        layout.Widgets["eventCounter"].Configuration[DashboardMetricValueVisualizationOptions.SubtitleKey].ShouldBe("All runtime events");
         layout.Metrics["ops.eventCounterMetric"].Aggregation.ShouldBe("count");
         layout.Bindings["eventCounter"].PrimaryMetric.ShouldBe("ops.eventCounterMetric");
 

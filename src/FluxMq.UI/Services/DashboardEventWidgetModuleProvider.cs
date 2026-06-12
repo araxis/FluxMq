@@ -23,8 +23,7 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
                 "Events",
                 "eventCounter",
                 [
-                    MetricQueryGroup("counter-source", "Counter source"),
-                    FormatGroup("count-format", "Count display")
+                    MetricQueryGroup("counter-source", "Counter source")
                 ]),
             EventModule(
                 DashboardWidgetCatalog.LatestEventType,
@@ -112,6 +111,16 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
             configuration[DashboardEventGaugeWidgetOptions.NormalColorKey] = DashboardEventGaugeWidgetOptions.DefaultNormalColor;
             configuration[DashboardEventGaugeWidgetOptions.WarningColorKey] = DashboardEventGaugeWidgetOptions.DefaultWarningColor;
             configuration[DashboardEventGaugeWidgetOptions.CriticalColorKey] = DashboardEventGaugeWidgetOptions.DefaultCriticalColor;
+        }
+        else if (string.Equals(type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal))
+        {
+            foreach (var (key, value) in DashboardMetricVisualizationCatalog.Find(DashboardMetricVisualizationIds.Value)!.DefaultConfiguration)
+            {
+                configuration[key] = value;
+            }
+
+            configuration[DashboardMetricValueVisualizationOptions.TitleKey] = title;
+            configuration[DashboardMetricValueVisualizationOptions.SubtitleKey] = "All runtime events";
         }
 
         return new DashboardWidgetModule(
