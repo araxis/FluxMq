@@ -3197,3 +3197,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 752 tests.
     - `git diff --check` passed with a line-ending normalization warning for the edited progress log.
   - Next step: commit/PR/merge this final provider-file cleanup, then choose the next cleanup slice now that dashboard widget provider files are fully split.
+- Dashboard catalog cache cleanup:
+  - Merged PR #185 (`Extract dashboard topics provider`) into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Started `work/dashboard-catalog-cache-cleanup` from clean `main`.
+  - Cached dashboard widget provider composition and module composition in `DashboardWidgetModuleCatalog` so repeated lookup paths reuse the same explicit metadata set.
+  - Cached metric visualization provider composition and module composition in `DashboardMetricVisualizationCatalog` for the same reason.
+  - Kept provider ids, provider order, module ids, widget ids, visualization ids, defaults, schema, UI text, and rendering behavior unchanged.
+  - Added focused assertions that repeated catalog reads return the cached provider/module lists while preserving provider/module order.
+  - Verification:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetModuleCatalog_ComposesCategoryProviderModules|FullyQualifiedName~DashboardMetricVisualizationCatalog_ComposesExplicitProviderModules" -p:UseAppHost=false --verbosity minimal` passed with 2 tests.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 423 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 752 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this catalog-cache cleanup, then inspect obsolete dashboard fallback/default configuration paths as the next small cleanup candidate.
