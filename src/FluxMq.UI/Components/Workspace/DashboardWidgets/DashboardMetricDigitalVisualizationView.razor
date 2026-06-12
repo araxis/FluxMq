@@ -11,14 +11,14 @@
                              Label="@label"
                              ShowLabel="@ShowLabel"
                              LabelPlacement="@LabelPlacement"
-                             AccentColor="@Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalSegmentColorKey)"
-                             BackgroundColor="@Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalBackgroundColorKey)"
-                             InactiveSegmentColor="@Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey)"
-                             LabelColor="@Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalLabelColorKey)"
-                             BorderColor="@Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalBorderColorKey)"
-                             BorderWidth="@ReadInt(DashboardWidgetCatalog.MetricDigitalBorderWidthKey, DashboardWidgetCatalog.MetricDigitalDefaultBorderWidth)"
-                             Radius="@ReadInt(DashboardWidgetCatalog.MetricDigitalRadiusKey, DashboardWidgetCatalog.MetricDigitalDefaultRadius)"
-                             Padding="@ReadInt(DashboardWidgetCatalog.MetricDigitalPaddingKey, DashboardWidgetCatalog.MetricDigitalDefaultPadding)"
+                             AccentColor="@Context.Widget.ReadString(DashboardMetricDigitalVisualizationOptions.SegmentColorKey)"
+                             BackgroundColor="@Context.Widget.ReadString(DashboardMetricDigitalVisualizationOptions.BackgroundColorKey)"
+                             InactiveSegmentColor="@Context.Widget.ReadString(DashboardMetricDigitalVisualizationOptions.InactiveSegmentColorKey)"
+                             LabelColor="@Context.Widget.ReadString(DashboardMetricDigitalVisualizationOptions.LabelColorKey)"
+                             BorderColor="@Context.Widget.ReadString(DashboardMetricDigitalVisualizationOptions.BorderColorKey)"
+                             BorderWidth="@ReadInt(DashboardMetricDigitalVisualizationOptions.BorderWidthKey, DashboardMetricDigitalVisualizationOptions.DefaultBorderWidth)"
+                             Radius="@ReadInt(DashboardMetricDigitalVisualizationOptions.RadiusKey, DashboardMetricDigitalVisualizationOptions.DefaultRadius)"
+                             Padding="@ReadInt(DashboardMetricDigitalVisualizationOptions.PaddingKey, DashboardMetricDigitalVisualizationOptions.DefaultPadding)"
                              FitMode="@FitMode"
                              StyleKind="@DigitalStyle"
                              Glow="@DigitalGlow"
@@ -33,34 +33,34 @@
         "dashboard-metric-digital-layout";
 
     private string Label =>
-        Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalLabelKey) ??
+        Context.Widget.ReadString(DashboardMetricDigitalVisualizationOptions.LabelKey) ??
         Context.Widget.ReadString("title") ??
         DashboardWidgetFormatting.WidgetTitle(Context.Widget);
 
     private bool ShowLabel =>
         !string.Equals(
             LabelPlacement,
-            DashboardWidgetCatalog.MetricDigitalLabelPlacementHidden,
+            DashboardMetricDigitalVisualizationOptions.LabelPlacementHidden,
             StringComparison.Ordinal) &&
         !string.Equals(
-            Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalShowLabelKey),
+            Context.Widget.ReadString(DashboardMetricDigitalVisualizationOptions.ShowLabelKey),
             "false",
             StringComparison.OrdinalIgnoreCase);
 
-    private string LabelPlacement => DashboardWidgetCatalog.NormalizeMetricDigitalLabelPlacement(
-        Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalLabelPlacementKey));
+    private string LabelPlacement => DashboardMetricDigitalVisualizationOptions.NormalizeLabelPlacement(
+        Context.Widget.ReadString(DashboardMetricDigitalVisualizationOptions.LabelPlacementKey));
 
-    private string DigitalStyle => DashboardWidgetCatalog.NormalizeMetricDigitalStyle(
-        Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalStyleKey));
+    private string DigitalStyle => DashboardMetricDigitalVisualizationOptions.NormalizeStyle(
+        Context.Widget.ReadString(DashboardMetricDigitalVisualizationOptions.StyleKey));
 
-    private string DigitalGlow => DashboardWidgetCatalog.NormalizeMetricDigitalGlow(
-        Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalGlowKey));
+    private string DigitalGlow => DashboardMetricDigitalVisualizationOptions.NormalizeGlow(
+        Context.Widget.ReadString(DashboardMetricDigitalVisualizationOptions.GlowKey));
 
-    private int MinimumDigits => DashboardWidgetCatalog.NormalizeMetricDigitalDigits(
-        Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalDigitsKey));
+    private int MinimumDigits => DashboardMetricDigitalVisualizationOptions.NormalizeDigits(
+        Context.Widget.ReadString(DashboardMetricDigitalVisualizationOptions.DigitsKey));
 
-    private string FitMode => DashboardWidgetCatalog.NormalizeMetricDigitalFitMode(
-        Context.Widget.ReadString(DashboardWidgetCatalog.MetricDigitalFitModeKey));
+    private string FitMode => DashboardMetricDigitalVisualizationOptions.NormalizeFitMode(
+        Context.Widget.ReadString(DashboardMetricDigitalVisualizationOptions.FitModeKey));
 
     private int ReadInt(string key, int fallback)
         => int.TryParse(
