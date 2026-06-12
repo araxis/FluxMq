@@ -3440,3 +3440,18 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 761 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this status-value visual UX slice, then decide whether `event.gauge` should become a focused gauge visualization consumer or stay gauge-specific for now.
+- Dashboard gauge visualization UX:
+  - Merged PR #201 (`Align status value visual settings`) into `main`; post-merge Windows validation passed.
+  - Started `work/dashboard-gauge-visualization-ux` from clean `main`.
+  - Promoted `event.gauge` to the shared metric visualization host with a new reusable `metric.radialGauge` visualization module.
+  - Moved gauge shape, label, range, target, thresholds, and threshold colors into `metric.gauge.*` visualization-owned settings.
+  - Kept legacy `gauge.*` keys as render/draft fallback only; new event-gauge defaults and saves write visualization-owned keys.
+  - Removed event-gauge module ownership of hard-coded gauge/threshold property groups so the widget owns metric source and the visualization owns gauge display.
+  - Kept this as an event-gauge alignment slice only: no new widget type, schema, metric model, or FluxFlow change.
+  - Verification:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetSettingsProfiles_ExposeDedicatedSettingsShape|FullyQualifiedName~DashboardWidgetSettingsDraft_WritesEventGaugeAsAppMetricConfiguration|FullyQualifiedName~DashboardWidgetModuleCatalog_ProvidesFocusedPropertyDefinitionsForAllPaletteWidgets|FullyQualifiedName~DashboardMetricVisualizationCatalog_ProvidesMetricValueFoundation|FullyQualifiedName~DashboardMetricVisualizationCatalog_ComposesExplicitProviderModules|FullyQualifiedName~AddDashboardWidget_AddsEventGaugeDefaults|FullyQualifiedName~DashboardMetricValueWidgets_UseSharedVisualizationView|FullyQualifiedName~GaugeStyleOptions_ExposeOnlyImplementedShapes" -p:UseAppHost=false --verbosity minimal` passed with 8 matching tests.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 432 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 761 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this event-gauge visual UX slice, then continue dashboard behavior/UX one widget at a time with manual review of gauge visual settings before selecting the next component.

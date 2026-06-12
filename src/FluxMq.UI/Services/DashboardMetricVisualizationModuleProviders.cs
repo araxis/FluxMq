@@ -169,3 +169,63 @@ public sealed class DashboardMetricDigitalVisualizationModuleProvider : IDashboa
             new(DashboardMetricDigitalVisualizationOptions.FitFill, "Fill")
         ];
 }
+
+public sealed class DashboardMetricGaugeVisualizationModuleProvider : IDashboardMetricVisualizationModuleProvider
+{
+    public string Id => DashboardMetricVisualizationIds.RadialGauge;
+
+    public DashboardMetricVisualizationModule CreateModule()
+        => new(
+            DashboardMetricVisualizationIds.RadialGauge,
+            "Gauge",
+            Icons.Material.Filled.Speed,
+            new HashSet<string>(StringComparer.Ordinal)
+            {
+                DashboardMetricValueKinds.Number,
+                DashboardMetricValueKinds.Rate,
+                DashboardMetricValueKinds.Bytes,
+                DashboardMetricValueKinds.Percent
+            },
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [DashboardWidgetCatalog.MetricVisualizationKey] = DashboardMetricVisualizationIds.RadialGauge,
+                [DashboardMetricGaugeVisualizationOptions.ShapeKey] = DashboardMetricGaugeVisualizationOptions.ShapeRing,
+                [DashboardMetricGaugeVisualizationOptions.LabelKey] = DashboardMetricGaugeVisualizationOptions.DefaultLabel,
+                [DashboardMetricGaugeVisualizationOptions.ShowLabelKey] = "true",
+                [DashboardMetricGaugeVisualizationOptions.MinKey] = DashboardMetricGaugeVisualizationOptions.DefaultMin,
+                [DashboardMetricGaugeVisualizationOptions.MaxKey] = DashboardMetricGaugeVisualizationOptions.DefaultMax,
+                [DashboardMetricGaugeVisualizationOptions.TargetKey] = DashboardMetricGaugeVisualizationOptions.DefaultTarget,
+                [DashboardMetricGaugeVisualizationOptions.WarningKey] = DashboardMetricGaugeVisualizationOptions.DefaultWarning,
+                [DashboardMetricGaugeVisualizationOptions.CriticalKey] = DashboardMetricGaugeVisualizationOptions.DefaultCritical,
+                [DashboardMetricGaugeVisualizationOptions.NormalColorKey] = DashboardMetricGaugeVisualizationOptions.DefaultNormalColor,
+                [DashboardMetricGaugeVisualizationOptions.WarningColorKey] = DashboardMetricGaugeVisualizationOptions.DefaultWarningColor,
+                [DashboardMetricGaugeVisualizationOptions.CriticalColorKey] = DashboardMetricGaugeVisualizationOptions.DefaultCriticalColor
+            },
+            [new("gauge-visual", "Gauge visual", Properties())],
+            typeof(DashboardMetricGaugeVisualizationView),
+            typeof(DashboardMetricGaugeVisualizationView),
+            "Shows one metric result as a threshold gauge.");
+
+    private static IReadOnlyList<DashboardWidgetPropertyDefinition> Properties()
+        =>
+        [
+            new(DashboardMetricGaugeVisualizationOptions.LabelKey, "Label", DashboardWidgetPropertyEditorKind.Text, DefaultValue: DashboardMetricGaugeVisualizationOptions.DefaultLabel),
+            new(DashboardMetricGaugeVisualizationOptions.ShowLabelKey, "Show label", DashboardWidgetPropertyEditorKind.Toggle, DefaultValue: "true"),
+            new(DashboardMetricGaugeVisualizationOptions.ShapeKey, "Shape", DashboardWidgetPropertyEditorKind.Select, DefaultValue: DashboardMetricGaugeVisualizationOptions.ShapeRing, Options: ShapeOptions()),
+            new(DashboardMetricGaugeVisualizationOptions.MinKey, "Min", DashboardWidgetPropertyEditorKind.Number, DefaultValue: DashboardMetricGaugeVisualizationOptions.DefaultMin),
+            new(DashboardMetricGaugeVisualizationOptions.MaxKey, "Max", DashboardWidgetPropertyEditorKind.Number, DefaultValue: DashboardMetricGaugeVisualizationOptions.DefaultMax),
+            new(DashboardMetricGaugeVisualizationOptions.TargetKey, "Target", DashboardWidgetPropertyEditorKind.Number, DefaultValue: DashboardMetricGaugeVisualizationOptions.DefaultTarget),
+            new(DashboardMetricGaugeVisualizationOptions.WarningKey, "Warning", DashboardWidgetPropertyEditorKind.Number, DefaultValue: DashboardMetricGaugeVisualizationOptions.DefaultWarning),
+            new(DashboardMetricGaugeVisualizationOptions.CriticalKey, "Critical", DashboardWidgetPropertyEditorKind.Number, DefaultValue: DashboardMetricGaugeVisualizationOptions.DefaultCritical),
+            new(DashboardMetricGaugeVisualizationOptions.NormalColorKey, "Normal color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardMetricGaugeVisualizationOptions.DefaultNormalColor),
+            new(DashboardMetricGaugeVisualizationOptions.WarningColorKey, "Warning color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardMetricGaugeVisualizationOptions.DefaultWarningColor),
+            new(DashboardMetricGaugeVisualizationOptions.CriticalColorKey, "Critical color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardMetricGaugeVisualizationOptions.DefaultCriticalColor)
+        ];
+
+    private static IReadOnlyList<DashboardWidgetPropertyOption> ShapeOptions()
+        =>
+        [
+            new(DashboardMetricGaugeVisualizationOptions.ShapeRing, "Ring"),
+            new(DashboardMetricGaugeVisualizationOptions.ShapeMeter, "Meter")
+        ];
+}

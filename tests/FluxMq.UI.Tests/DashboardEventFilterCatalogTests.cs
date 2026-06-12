@@ -321,8 +321,9 @@ public sealed class DashboardEventFilterCatalogTests
         kpi.UsesSubtitle.ShouldBeTrue();
         gauge.IsEventWidget.ShouldBeTrue();
         gauge.UsesMetricQuery.ShouldBeTrue();
+        gauge.UsesMetricVisualization.ShouldBeTrue();
         gauge.UsesVisualMetrics.ShouldBeFalse();
-        gauge.UsesGaugeStyle.ShouldBeTrue();
+        gauge.UsesGaugeStyle.ShouldBeFalse();
         gauge.UsesChartType.ShouldBeFalse();
         gauge.SupportsMetricSlots.ShouldBeFalse();
         gauge.UsesMetricWindow.ShouldBeFalse();
@@ -366,6 +367,12 @@ public sealed class DashboardEventFilterCatalogTests
     [Fact]
     public void GaugeStyleOptions_ExposeOnlyImplementedShapes()
     {
+        DashboardMetricGaugeVisualizationOptions.NormalizeShape(DashboardMetricGaugeVisualizationOptions.ShapeRing)
+            .ShouldBe(DashboardMetricGaugeVisualizationOptions.ShapeRing);
+        DashboardMetricGaugeVisualizationOptions.NormalizeShape(DashboardMetricGaugeVisualizationOptions.ShapeMeter)
+            .ShouldBe(DashboardMetricGaugeVisualizationOptions.ShapeMeter);
+        DashboardMetricGaugeVisualizationOptions.NormalizeShape("tiles")
+            .ShouldBe(DashboardMetricGaugeVisualizationOptions.ShapeRing);
         DashboardEventGaugeWidgetOptions.NormalizeStyle(DashboardEventGaugeWidgetOptions.StyleRing)
             .ShouldBe(DashboardEventGaugeWidgetOptions.StyleRing);
         DashboardEventGaugeWidgetOptions.NormalizeStyle(DashboardEventGaugeWidgetOptions.StyleMeter)
@@ -374,30 +381,17 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldBe(DashboardEventGaugeWidgetOptions.StyleRing);
 
         var root = FindRepositoryRoot();
-        var displayRows = File.ReadAllText(Path.Combine(
+        var gaugeOptions = File.ReadAllText(Path.Combine(
             root,
             "src",
             "FluxMq.UI",
-            "Components",
-            "Workspace",
-            "DashboardInspectorDisplayModeRows.razor"));
-        var dialog = File.ReadAllText(Path.Combine(
-            root,
-            "src",
-            "FluxMq.UI",
-            "Components",
-            "Workspace",
-            "Dialogs",
-            "DashboardWidgetEditorDialog.razor"));
+            "Services",
+            "DashboardMetricGaugeVisualizationOptions.cs"));
 
-        displayRows.ShouldContain("DashboardEventGaugeWidgetOptions.StyleRing");
-        displayRows.ShouldContain("DashboardEventGaugeWidgetOptions.StyleMeter");
-        displayRows.ShouldNotContain("GaugeStyleTiles");
-        displayRows.ShouldNotContain(">Tiles</button>");
-        dialog.ShouldContain("DashboardEventGaugeWidgetOptions.StyleRing");
-        dialog.ShouldContain("DashboardEventGaugeWidgetOptions.StyleMeter");
-        dialog.ShouldNotContain("GaugeStyleTiles");
-        dialog.ShouldNotContain("Text=\"Tiles\"");
+        gaugeOptions.ShouldContain("ShapeRing");
+        gaugeOptions.ShouldContain("ShapeMeter");
+        gaugeOptions.ShouldNotContain("GaugeStyleTiles");
+        gaugeOptions.ShouldNotContain("\"tiles\"");
     }
 
     [Fact]
@@ -467,21 +461,25 @@ public sealed class DashboardEventFilterCatalogTests
 
         configuration["title"].ShouldBe("Factory load");
         configuration["metric"].ShouldBe("factoryLoadMetric");
-        configuration[DashboardEventGaugeWidgetOptions.StyleKey].ShouldBe(DashboardEventGaugeWidgetOptions.StyleMeter);
-        configuration[DashboardEventGaugeWidgetOptions.MinKey].ShouldBe("10");
-        configuration[DashboardEventGaugeWidgetOptions.MaxKey].ShouldBe("250");
-        configuration[DashboardEventGaugeWidgetOptions.TargetKey].ShouldBe("200");
-        configuration[DashboardEventGaugeWidgetOptions.WarningKey].ShouldBe("150");
-        configuration[DashboardEventGaugeWidgetOptions.CriticalKey].ShouldBe("225");
-        configuration[DashboardEventGaugeWidgetOptions.NormalColorKey].ShouldBe("#123456");
-        configuration[DashboardEventGaugeWidgetOptions.WarningColorKey].ShouldBe("#abcdef");
-        configuration[DashboardEventGaugeWidgetOptions.CriticalColorKey].ShouldBe("#fedcba");
+        configuration[DashboardWidgetCatalog.MetricVisualizationKey].ShouldBe(DashboardMetricVisualizationIds.RadialGauge);
+        configuration[DashboardMetricGaugeVisualizationOptions.ShapeKey].ShouldBe(DashboardMetricGaugeVisualizationOptions.ShapeMeter);
+        configuration[DashboardMetricGaugeVisualizationOptions.LabelKey].ShouldBe("Factory load");
+        configuration[DashboardMetricGaugeVisualizationOptions.MinKey].ShouldBe("10");
+        configuration[DashboardMetricGaugeVisualizationOptions.MaxKey].ShouldBe("250");
+        configuration[DashboardMetricGaugeVisualizationOptions.TargetKey].ShouldBe("200");
+        configuration[DashboardMetricGaugeVisualizationOptions.WarningKey].ShouldBe("150");
+        configuration[DashboardMetricGaugeVisualizationOptions.CriticalKey].ShouldBe("225");
+        configuration[DashboardMetricGaugeVisualizationOptions.NormalColorKey].ShouldBe("#123456");
+        configuration[DashboardMetricGaugeVisualizationOptions.WarningColorKey].ShouldBe("#abcdef");
+        configuration[DashboardMetricGaugeVisualizationOptions.CriticalColorKey].ShouldBe("#fedcba");
         configuration.ContainsKey(DashboardEventFilterCatalog.EventTypeKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardEventFilterCatalog.TopicStartsWithKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardEventFilterCatalog.StatusKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardWidgetCatalog.DisplayMetricsKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardWidgetCatalog.MetricCardColumnsKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardEventGaugeWidgetOptions.StyleKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardEventGaugeWidgetOptions.MaxKey).ShouldBeFalse();
     }
 
     [Fact]
@@ -1873,24 +1871,34 @@ public sealed class DashboardEventFilterCatalogTests
             .Keys
             .ShouldBe([
                 "title",
-                DashboardEventGaugeWidgetOptions.StyleKey,
-                DashboardEventGaugeWidgetOptions.MinKey,
-                DashboardEventGaugeWidgetOptions.MaxKey,
-                DashboardEventGaugeWidgetOptions.TargetKey,
-                DashboardEventGaugeWidgetOptions.WarningKey,
-                DashboardEventGaugeWidgetOptions.CriticalKey,
-                DashboardEventGaugeWidgetOptions.NormalColorKey,
-                DashboardEventGaugeWidgetOptions.WarningColorKey,
-                DashboardEventGaugeWidgetOptions.CriticalColorKey
+                DashboardWidgetCatalog.MetricVisualizationKey,
+                DashboardMetricGaugeVisualizationOptions.ShapeKey,
+                DashboardMetricGaugeVisualizationOptions.LabelKey,
+                DashboardMetricGaugeVisualizationOptions.ShowLabelKey,
+                DashboardMetricGaugeVisualizationOptions.MinKey,
+                DashboardMetricGaugeVisualizationOptions.MaxKey,
+                DashboardMetricGaugeVisualizationOptions.TargetKey,
+                DashboardMetricGaugeVisualizationOptions.WarningKey,
+                DashboardMetricGaugeVisualizationOptions.CriticalKey,
+                DashboardMetricGaugeVisualizationOptions.NormalColorKey,
+                DashboardMetricGaugeVisualizationOptions.WarningColorKey,
+                DashboardMetricGaugeVisualizationOptions.CriticalColorKey
             ], ignoreOrder: true);
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.EventGaugeType)
-            .DefaultConfiguration[DashboardEventGaugeWidgetOptions.StyleKey]
-            .ShouldBe(DashboardEventGaugeWidgetOptions.StyleRing);
+            .DefaultConfiguration[DashboardWidgetCatalog.MetricVisualizationKey]
+            .ShouldBe(DashboardMetricVisualizationIds.RadialGauge);
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.EventGaugeType)
-            .DefaultConfiguration[DashboardEventGaugeWidgetOptions.MaxKey]
-            .ShouldBe(DashboardEventGaugeWidgetOptions.DefaultMax);
+            .DefaultConfiguration[DashboardMetricGaugeVisualizationOptions.LabelKey]
+            .ShouldBe("Event gauge");
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.EventGaugeType)
+            .DefaultConfiguration[DashboardMetricGaugeVisualizationOptions.MaxKey]
+            .ShouldBe(DashboardMetricGaugeVisualizationOptions.DefaultMax);
+        DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.EventGaugeType)
+            .UsesMetricVisualization
+            .ShouldBeTrue();
         modules
             .Where(static module =>
                 string.Equals(module.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal) ||
@@ -1904,6 +1912,16 @@ public sealed class DashboardEventFilterCatalogTests
             .Single(static module => module.Type == DashboardWidgetCatalog.KpiTileType)
             .DefaultConfiguration[DashboardWidgetCatalog.MetricVisualizationKey]
             .ShouldBe(DashboardMetricVisualizationIds.Value);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.EventGaugeType)
+            .MetricVisualizationId
+            .ShouldBe(DashboardMetricVisualizationIds.RadialGauge);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.EventGaugeType)
+            .PropertyGroups
+            .SelectMany(static group => group.Properties)
+            .Select(static property => property.Key)
+            .ShouldNotContain(DashboardEventGaugeWidgetOptions.StyleKey);
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.KpiTileType)
             .PropertyGroups
@@ -2217,8 +2235,12 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldContain(DashboardEventFilterCatalog.EventTypeKey);
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.EventGaugeType)
-            .DefaultConfiguration[DashboardEventGaugeWidgetOptions.StyleKey]
-            .ShouldBe(DashboardEventGaugeWidgetOptions.StyleRing);
+            .DefaultConfiguration[DashboardWidgetCatalog.MetricVisualizationKey]
+            .ShouldBe(DashboardMetricVisualizationIds.RadialGauge);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.EventGaugeType)
+            .DefaultConfiguration[DashboardMetricGaugeVisualizationOptions.ShapeKey]
+            .ShouldBe(DashboardMetricGaugeVisualizationOptions.ShapeRing);
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.EventTableType)
             .Layout
@@ -2337,6 +2359,7 @@ public sealed class DashboardEventFilterCatalogTests
         var modules = DashboardMetricVisualizationCatalog.CreateModules();
         var value = modules.Single(static module => module.Id == DashboardMetricVisualizationIds.Value);
         var digital = modules.Single(static module => module.Id == DashboardMetricVisualizationIds.Digital);
+        var gauge = modules.Single(static module => module.Id == DashboardMetricVisualizationIds.RadialGauge);
 
         value.DisplayName.ShouldBe("Value");
         value.EditCellComponent.ShouldBe(typeof(DashboardMetricValueVisualizationView));
@@ -2438,6 +2461,33 @@ public sealed class DashboardEventFilterCatalogTests
         digitalPropertyKeys.ShouldContain(DashboardMetricDigitalVisualizationOptions.PlacementKey);
         digitalPropertyKeys.ShouldNotContain(DashboardWidgetCatalog.KpiValueColorKey);
         digitalPropertyKeys.ShouldNotContain(DashboardMetricValueVisualizationOptions.ValueColorKey);
+
+        gauge.DisplayName.ShouldBe("Gauge");
+        gauge.EditCellComponent.ShouldBe(typeof(DashboardMetricGaugeVisualizationView));
+        gauge.LiveComponent.ShouldBe(typeof(DashboardMetricGaugeVisualizationView));
+        gauge.DefaultConfiguration[DashboardWidgetCatalog.MetricVisualizationKey]
+            .ShouldBe(DashboardMetricVisualizationIds.RadialGauge);
+        gauge.DefaultConfiguration[DashboardMetricGaugeVisualizationOptions.ShapeKey]
+            .ShouldBe(DashboardMetricGaugeVisualizationOptions.ShapeRing);
+        gauge.DefaultConfiguration[DashboardMetricGaugeVisualizationOptions.LabelKey]
+            .ShouldBe(DashboardMetricGaugeVisualizationOptions.DefaultLabel);
+        gauge.DefaultConfiguration[DashboardMetricGaugeVisualizationOptions.MaxKey]
+            .ShouldBe(DashboardMetricGaugeVisualizationOptions.DefaultMax);
+        gauge.SupportedValueKinds.ShouldContain(DashboardMetricValueKinds.Number);
+        gauge.SupportedValueKinds.ShouldContain(DashboardMetricValueKinds.Rate);
+        gauge.SupportedValueKinds.ShouldContain(DashboardMetricValueKinds.Bytes);
+        gauge.SupportedValueKinds.ShouldContain(DashboardMetricValueKinds.Percent);
+        var gaugePropertyKeys = gauge.PropertyGroups
+            .SelectMany(static group => group.Properties)
+            .Select(static property => property.Key)
+            .ToArray();
+        gaugePropertyKeys.ShouldContain(DashboardMetricGaugeVisualizationOptions.ShapeKey);
+        gaugePropertyKeys.ShouldContain(DashboardMetricGaugeVisualizationOptions.LabelKey);
+        gaugePropertyKeys.ShouldContain(DashboardMetricGaugeVisualizationOptions.ShowLabelKey);
+        gaugePropertyKeys.ShouldContain(DashboardMetricGaugeVisualizationOptions.NormalColorKey);
+        gaugePropertyKeys.ShouldContain(DashboardMetricGaugeVisualizationOptions.WarningColorKey);
+        gaugePropertyKeys.ShouldContain(DashboardMetricGaugeVisualizationOptions.CriticalColorKey);
+        gaugePropertyKeys.ShouldNotContain(DashboardEventGaugeWidgetOptions.StyleKey);
     }
 
     [Fact]
@@ -2451,7 +2501,8 @@ public sealed class DashboardEventFilterCatalogTests
 
         providers.Select(static provider => provider.Id).ShouldBe([
             DashboardMetricVisualizationIds.Value,
-            DashboardMetricVisualizationIds.Digital
+            DashboardMetricVisualizationIds.Digital,
+            DashboardMetricVisualizationIds.RadialGauge
         ]);
         secondProviders.ShouldBeSameAs(providers);
         secondCatalogModules.ShouldBeSameAs(catalogModules);
@@ -3020,7 +3071,7 @@ public sealed class DashboardEventFilterCatalogTests
         var rateTile = File.ReadAllText(Path.Combine(widgetsPath, "DashboardRateTileModuleView.razor"));
         var statusValue = File.ReadAllText(Path.Combine(widgetsPath, "DashboardStatusValueModuleView.razor"));
         var eventGaugeModule = File.ReadAllText(Path.Combine(widgetsPath, "DashboardEventGaugeModuleView.razor"));
-        var eventGauge = File.ReadAllText(Path.Combine(widgetsPath, "DashboardEventGaugeWidget.razor"));
+        var eventGauge = File.ReadAllText(Path.Combine(widgetsPath, "DashboardMetricGaugeVisualizationView.razor"));
 
         kpi.ShouldContain("DashboardMetricVisualizationHost");
         counter.ShouldContain("DashboardMetricValueVisualizationView");
@@ -3028,9 +3079,10 @@ public sealed class DashboardEventFilterCatalogTests
         rateTile.ShouldContain("DashboardMetricValueVisualizationView");
         statusValue.ShouldContain("DashboardMetricValueVisualizationView");
         statusValue.ShouldNotContain("DashboardMetricTile");
-        eventGaugeModule.ShouldContain("Metric=\"@Context.MetricValue\"");
+        eventGaugeModule.ShouldContain("DashboardMetricVisualizationHost");
+        eventGaugeModule.ShouldNotContain("DashboardEventGaugeWidget");
         eventGaugeModule.ShouldNotContain("Context.Snapshot");
-        eventGauge.ShouldContain("DashboardMetricValue Metric");
+        eventGauge.ShouldContain("Context.MetricValue");
         eventGauge.ShouldContain("Metric.FormattedValue");
         eventGauge.ShouldNotContain("PrimaryMetricCard");
         eventGauge.ShouldNotContain("DashboardEventSnapshot Snapshot");

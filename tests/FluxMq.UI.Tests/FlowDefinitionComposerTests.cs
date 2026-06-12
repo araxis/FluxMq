@@ -1474,28 +1474,34 @@ public sealed class FlowDefinitionComposerTests
         widget.Type.ShouldBe(DashboardWidgetCatalog.EventGaugeType);
         widget.Configuration["title"].ShouldBe("Event gauge");
         widget.Configuration["metric"].ShouldBe("ops.eventGaugeMetric");
-        widget.Configuration[DashboardEventGaugeWidgetOptions.StyleKey].ShouldBe(DashboardEventGaugeWidgetOptions.StyleRing);
-        widget.Configuration[DashboardEventGaugeWidgetOptions.MinKey].ShouldBe(DashboardEventGaugeWidgetOptions.DefaultMin);
-        widget.Configuration[DashboardEventGaugeWidgetOptions.MaxKey].ShouldBe(DashboardEventGaugeWidgetOptions.DefaultMax);
-        widget.Configuration[DashboardEventGaugeWidgetOptions.TargetKey].ShouldBe(DashboardEventGaugeWidgetOptions.DefaultTarget);
-        widget.Configuration[DashboardEventGaugeWidgetOptions.WarningKey].ShouldBe(DashboardEventGaugeWidgetOptions.DefaultWarning);
-        widget.Configuration[DashboardEventGaugeWidgetOptions.CriticalKey].ShouldBe(DashboardEventGaugeWidgetOptions.DefaultCritical);
-        widget.Configuration[DashboardEventGaugeWidgetOptions.NormalColorKey].ShouldBe(DashboardEventGaugeWidgetOptions.DefaultNormalColor);
-        widget.Configuration[DashboardEventGaugeWidgetOptions.WarningColorKey].ShouldBe(DashboardEventGaugeWidgetOptions.DefaultWarningColor);
-        widget.Configuration[DashboardEventGaugeWidgetOptions.CriticalColorKey].ShouldBe(DashboardEventGaugeWidgetOptions.DefaultCriticalColor);
+        widget.Configuration[DashboardWidgetCatalog.MetricVisualizationKey].ShouldBe(DashboardMetricVisualizationIds.RadialGauge);
+        widget.Configuration[DashboardMetricGaugeVisualizationOptions.ShapeKey].ShouldBe(DashboardMetricGaugeVisualizationOptions.ShapeRing);
+        widget.Configuration[DashboardMetricGaugeVisualizationOptions.LabelKey].ShouldBe("Event gauge");
+        widget.Configuration[DashboardMetricGaugeVisualizationOptions.ShowLabelKey].ShouldBe("true");
+        widget.Configuration[DashboardMetricGaugeVisualizationOptions.MinKey].ShouldBe(DashboardMetricGaugeVisualizationOptions.DefaultMin);
+        widget.Configuration[DashboardMetricGaugeVisualizationOptions.MaxKey].ShouldBe(DashboardMetricGaugeVisualizationOptions.DefaultMax);
+        widget.Configuration[DashboardMetricGaugeVisualizationOptions.TargetKey].ShouldBe(DashboardMetricGaugeVisualizationOptions.DefaultTarget);
+        widget.Configuration[DashboardMetricGaugeVisualizationOptions.WarningKey].ShouldBe(DashboardMetricGaugeVisualizationOptions.DefaultWarning);
+        widget.Configuration[DashboardMetricGaugeVisualizationOptions.CriticalKey].ShouldBe(DashboardMetricGaugeVisualizationOptions.DefaultCritical);
+        widget.Configuration[DashboardMetricGaugeVisualizationOptions.NormalColorKey].ShouldBe(DashboardMetricGaugeVisualizationOptions.DefaultNormalColor);
+        widget.Configuration[DashboardMetricGaugeVisualizationOptions.WarningColorKey].ShouldBe(DashboardMetricGaugeVisualizationOptions.DefaultWarningColor);
+        widget.Configuration[DashboardMetricGaugeVisualizationOptions.CriticalColorKey].ShouldBe(DashboardMetricGaugeVisualizationOptions.DefaultCriticalColor);
         widget.Configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
         widget.Configuration.Keys.ShouldBe([
             "title",
             "metric",
-            DashboardEventGaugeWidgetOptions.StyleKey,
-            DashboardEventGaugeWidgetOptions.MinKey,
-            DashboardEventGaugeWidgetOptions.MaxKey,
-            DashboardEventGaugeWidgetOptions.TargetKey,
-            DashboardEventGaugeWidgetOptions.WarningKey,
-            DashboardEventGaugeWidgetOptions.CriticalKey,
-            DashboardEventGaugeWidgetOptions.NormalColorKey,
-            DashboardEventGaugeWidgetOptions.WarningColorKey,
-            DashboardEventGaugeWidgetOptions.CriticalColorKey
+            DashboardWidgetCatalog.MetricVisualizationKey,
+            DashboardMetricGaugeVisualizationOptions.ShapeKey,
+            DashboardMetricGaugeVisualizationOptions.LabelKey,
+            DashboardMetricGaugeVisualizationOptions.ShowLabelKey,
+            DashboardMetricGaugeVisualizationOptions.MinKey,
+            DashboardMetricGaugeVisualizationOptions.MaxKey,
+            DashboardMetricGaugeVisualizationOptions.TargetKey,
+            DashboardMetricGaugeVisualizationOptions.WarningKey,
+            DashboardMetricGaugeVisualizationOptions.CriticalKey,
+            DashboardMetricGaugeVisualizationOptions.NormalColorKey,
+            DashboardMetricGaugeVisualizationOptions.WarningColorKey,
+            DashboardMetricGaugeVisualizationOptions.CriticalColorKey
         ], ignoreOrder: true);
         layout.Metrics["ops.eventGaugeMetric"].Aggregation.ShouldBe("count");
         layout.Bindings["eventGauge"].PrimaryMetric.ShouldBe("ops.eventGaugeMetric");

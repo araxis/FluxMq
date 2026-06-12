@@ -48,7 +48,27 @@ public sealed class DashboardMetricVisualizationSettingsDraft
         DashboardMetricDigitalVisualizationOptions.PaddingKey,
         DashboardMetricDigitalVisualizationOptions.FitModeKey,
         DashboardMetricDigitalVisualizationOptions.AlignKey,
-        DashboardMetricDigitalVisualizationOptions.PlacementKey
+        DashboardMetricDigitalVisualizationOptions.PlacementKey,
+        DashboardMetricGaugeVisualizationOptions.ShapeKey,
+        DashboardMetricGaugeVisualizationOptions.LabelKey,
+        DashboardMetricGaugeVisualizationOptions.ShowLabelKey,
+        DashboardMetricGaugeVisualizationOptions.MinKey,
+        DashboardMetricGaugeVisualizationOptions.MaxKey,
+        DashboardMetricGaugeVisualizationOptions.TargetKey,
+        DashboardMetricGaugeVisualizationOptions.WarningKey,
+        DashboardMetricGaugeVisualizationOptions.CriticalKey,
+        DashboardMetricGaugeVisualizationOptions.NormalColorKey,
+        DashboardMetricGaugeVisualizationOptions.WarningColorKey,
+        DashboardMetricGaugeVisualizationOptions.CriticalColorKey,
+        DashboardEventGaugeWidgetOptions.StyleKey,
+        DashboardEventGaugeWidgetOptions.MinKey,
+        DashboardEventGaugeWidgetOptions.MaxKey,
+        DashboardEventGaugeWidgetOptions.TargetKey,
+        DashboardEventGaugeWidgetOptions.WarningKey,
+        DashboardEventGaugeWidgetOptions.CriticalKey,
+        DashboardEventGaugeWidgetOptions.NormalColorKey,
+        DashboardEventGaugeWidgetOptions.WarningColorKey,
+        DashboardEventGaugeWidgetOptions.CriticalColorKey
     };
 
     public string VisualizationId { get; private set; } = DashboardMetricVisualizationIds.Value;
@@ -116,6 +136,28 @@ public sealed class DashboardMetricVisualizationSettingsDraft
     public string DigitalAlign { get; set; } = DashboardMetricDigitalVisualizationOptions.AlignCenter;
 
     public string DigitalPlacement { get; set; } = DashboardMetricDigitalVisualizationOptions.PlacementMiddle;
+
+    public string GaugeShape { get; set; } = DashboardMetricGaugeVisualizationOptions.ShapeRing;
+
+    public string GaugeLabel { get; set; } = DashboardMetricGaugeVisualizationOptions.DefaultLabel;
+
+    public bool GaugeShowLabel { get; set; } = true;
+
+    public string GaugeMin { get; set; } = DashboardMetricGaugeVisualizationOptions.DefaultMin;
+
+    public string GaugeMax { get; set; } = DashboardMetricGaugeVisualizationOptions.DefaultMax;
+
+    public string GaugeTarget { get; set; } = DashboardMetricGaugeVisualizationOptions.DefaultTarget;
+
+    public string GaugeWarning { get; set; } = DashboardMetricGaugeVisualizationOptions.DefaultWarning;
+
+    public string GaugeCritical { get; set; } = DashboardMetricGaugeVisualizationOptions.DefaultCritical;
+
+    public string GaugeNormalColor { get; set; } = DashboardMetricGaugeVisualizationOptions.DefaultNormalColor;
+
+    public string GaugeWarningColor { get; set; } = DashboardMetricGaugeVisualizationOptions.DefaultWarningColor;
+
+    public string GaugeCriticalColor { get; set; } = DashboardMetricGaugeVisualizationOptions.DefaultCriticalColor;
 
     public string DisplayName =>
         DashboardMetricVisualizationCatalog.Find(VisualizationId)?.DisplayName ?? "Value";
@@ -198,6 +240,32 @@ public sealed class DashboardMetricVisualizationSettingsDraft
             return configuration;
         }
 
+        if (string.Equals(VisualizationId, DashboardMetricVisualizationIds.RadialGauge, StringComparison.Ordinal))
+        {
+            configuration[DashboardMetricGaugeVisualizationOptions.ShapeKey] =
+                DashboardMetricGaugeVisualizationOptions.NormalizeShape(GaugeShape);
+            configuration[DashboardMetricGaugeVisualizationOptions.LabelKey] =
+                NormalizeText(GaugeLabel, DashboardMetricGaugeVisualizationOptions.DefaultLabel);
+            configuration[DashboardMetricGaugeVisualizationOptions.ShowLabelKey] = GaugeShowLabel ? "true" : "false";
+            configuration[DashboardMetricGaugeVisualizationOptions.MinKey] =
+                NormalizeNumber(GaugeMin, DashboardMetricGaugeVisualizationOptions.DefaultMin);
+            configuration[DashboardMetricGaugeVisualizationOptions.MaxKey] =
+                NormalizeNumber(GaugeMax, DashboardMetricGaugeVisualizationOptions.DefaultMax);
+            configuration[DashboardMetricGaugeVisualizationOptions.TargetKey] =
+                NormalizeNumber(GaugeTarget, DashboardMetricGaugeVisualizationOptions.DefaultTarget);
+            configuration[DashboardMetricGaugeVisualizationOptions.WarningKey] =
+                NormalizeNumber(GaugeWarning, DashboardMetricGaugeVisualizationOptions.DefaultWarning);
+            configuration[DashboardMetricGaugeVisualizationOptions.CriticalKey] =
+                NormalizeNumber(GaugeCritical, DashboardMetricGaugeVisualizationOptions.DefaultCritical);
+            configuration[DashboardMetricGaugeVisualizationOptions.NormalColorKey] =
+                NormalizeColor(GaugeNormalColor, DashboardMetricGaugeVisualizationOptions.DefaultNormalColor);
+            configuration[DashboardMetricGaugeVisualizationOptions.WarningColorKey] =
+                NormalizeColor(GaugeWarningColor, DashboardMetricGaugeVisualizationOptions.DefaultWarningColor);
+            configuration[DashboardMetricGaugeVisualizationOptions.CriticalColorKey] =
+                NormalizeColor(GaugeCriticalColor, DashboardMetricGaugeVisualizationOptions.DefaultCriticalColor);
+            return configuration;
+        }
+
         configuration[DashboardMetricValueVisualizationOptions.TitleKey] =
             NormalizeText(ValueTitle, DashboardMetricValueVisualizationOptions.DefaultTitle);
         configuration[DashboardMetricValueVisualizationOptions.SubtitleKey] =
@@ -241,16 +309,25 @@ public sealed class DashboardMetricVisualizationSettingsDraft
     }
 
     public string Summary()
-        => string.Equals(VisualizationId, DashboardMetricVisualizationIds.Digital, StringComparison.Ordinal)
-            ? $"Digital, {DigitalDigits} digits, {Readable(DigitalFitMode)}, {Readable(DigitalPlacement)}"
-            : $"Value, {Readable(ValueFitMode)}, {Readable(ValueValuePlacement)}, unit {(ValueShowUnit ? "shown" : "hidden")}";
+        => VisualizationId switch
+        {
+            DashboardMetricVisualizationIds.Digital => $"Digital, {DigitalDigits} digits, {Readable(DigitalFitMode)}, {Readable(DigitalPlacement)}",
+            DashboardMetricVisualizationIds.RadialGauge => $"Gauge, {Readable(GaugeShape)}, {GaugeMin}-{GaugeMax}, target {GaugeTarget}",
+            _ => $"Value, {Readable(ValueFitMode)}, {Readable(ValueValuePlacement)}, unit {(ValueShowUnit ? "shown" : "hidden")}"
+        };
 
     private void LoadFromWidget(DashboardWidgetSnapshot widget)
     {
         VisualizationId = DashboardWidgetCatalog.NormalizeMetricVisualization(
-            widget.ReadString(DashboardWidgetCatalog.MetricVisualizationKey));
+            widget.ReadString(DashboardWidgetCatalog.MetricVisualizationKey) ??
+            DefaultVisualizationForWidget(widget.Type));
         LoadFromConfiguration(widget.Configuration, useCompatibilityFallbacks: true);
     }
+
+    private static string DefaultVisualizationForWidget(string type)
+        => string.Equals(type, DashboardWidgetCatalog.EventGaugeType, StringComparison.Ordinal)
+            ? DashboardMetricVisualizationIds.RadialGauge
+            : DashboardMetricVisualizationIds.Value;
 
     private void LoadFromConfiguration(
         IReadOnlyDictionary<string, string> configuration,
@@ -362,6 +439,46 @@ public sealed class DashboardMetricVisualizationSettingsDraft
             ReadString(configuration, DashboardMetricDigitalVisualizationOptions.AlignKey));
         DigitalPlacement = DashboardMetricDigitalVisualizationOptions.NormalizePlacement(
             ReadString(configuration, DashboardMetricDigitalVisualizationOptions.PlacementKey));
+
+        GaugeShape = DashboardMetricGaugeVisualizationOptions.NormalizeShape(
+            ReadString(configuration, DashboardMetricGaugeVisualizationOptions.ShapeKey) ??
+            (useCompatibilityFallbacks ? ReadString(configuration, DashboardEventGaugeWidgetOptions.StyleKey) : null));
+        GaugeLabel = ReadString(configuration, DashboardMetricGaugeVisualizationOptions.LabelKey) ??
+            (useCompatibilityFallbacks ? ReadString(configuration, "title") : null) ??
+            DashboardMetricGaugeVisualizationOptions.DefaultLabel;
+        GaugeShowLabel = ReadBool(configuration, DashboardMetricGaugeVisualizationOptions.ShowLabelKey, true);
+        GaugeMin = NormalizeNumber(
+            ReadString(configuration, DashboardMetricGaugeVisualizationOptions.MinKey) ??
+            (useCompatibilityFallbacks ? ReadString(configuration, DashboardEventGaugeWidgetOptions.MinKey) : null),
+            DashboardMetricGaugeVisualizationOptions.DefaultMin);
+        GaugeMax = NormalizeNumber(
+            ReadString(configuration, DashboardMetricGaugeVisualizationOptions.MaxKey) ??
+            (useCompatibilityFallbacks ? ReadString(configuration, DashboardEventGaugeWidgetOptions.MaxKey) : null),
+            DashboardMetricGaugeVisualizationOptions.DefaultMax);
+        GaugeTarget = NormalizeNumber(
+            ReadString(configuration, DashboardMetricGaugeVisualizationOptions.TargetKey) ??
+            (useCompatibilityFallbacks ? ReadString(configuration, DashboardEventGaugeWidgetOptions.TargetKey) : null),
+            DashboardMetricGaugeVisualizationOptions.DefaultTarget);
+        GaugeWarning = NormalizeNumber(
+            ReadString(configuration, DashboardMetricGaugeVisualizationOptions.WarningKey) ??
+            (useCompatibilityFallbacks ? ReadString(configuration, DashboardEventGaugeWidgetOptions.WarningKey) : null),
+            DashboardMetricGaugeVisualizationOptions.DefaultWarning);
+        GaugeCritical = NormalizeNumber(
+            ReadString(configuration, DashboardMetricGaugeVisualizationOptions.CriticalKey) ??
+            (useCompatibilityFallbacks ? ReadString(configuration, DashboardEventGaugeWidgetOptions.CriticalKey) : null),
+            DashboardMetricGaugeVisualizationOptions.DefaultCritical);
+        GaugeNormalColor = NormalizeColor(
+            ReadString(configuration, DashboardMetricGaugeVisualizationOptions.NormalColorKey) ??
+            (useCompatibilityFallbacks ? ReadString(configuration, DashboardEventGaugeWidgetOptions.NormalColorKey) : null),
+            DashboardMetricGaugeVisualizationOptions.DefaultNormalColor);
+        GaugeWarningColor = NormalizeColor(
+            ReadString(configuration, DashboardMetricGaugeVisualizationOptions.WarningColorKey) ??
+            (useCompatibilityFallbacks ? ReadString(configuration, DashboardEventGaugeWidgetOptions.WarningColorKey) : null),
+            DashboardMetricGaugeVisualizationOptions.DefaultWarningColor);
+        GaugeCriticalColor = NormalizeColor(
+            ReadString(configuration, DashboardMetricGaugeVisualizationOptions.CriticalColorKey) ??
+            (useCompatibilityFallbacks ? ReadString(configuration, DashboardEventGaugeWidgetOptions.CriticalColorKey) : null),
+            DashboardMetricGaugeVisualizationOptions.DefaultCriticalColor);
     }
 
     private static string NormalizeText(string? value, string fallback)
@@ -369,6 +486,16 @@ public sealed class DashboardMetricVisualizationSettingsDraft
 
     private static string NormalizeOptionalText(string? value)
         => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
+
+    private static string NormalizeNumber(string? value, string fallback)
+        => double.TryParse(
+            value,
+            NumberStyles.Float,
+            CultureInfo.InvariantCulture,
+            out var parsed) &&
+           double.IsFinite(parsed)
+            ? parsed.ToString("0.###", CultureInfo.InvariantCulture)
+            : fallback;
 
     private static string? ReadString(IReadOnlyDictionary<string, string> configuration, string key)
         => configuration.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value)
