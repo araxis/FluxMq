@@ -19,6 +19,7 @@ public sealed record DashboardWidgetSettingsProfile(
     bool UsesSubtitle = false,
     bool UsesLatestEventVisual = false,
     bool UsesEventTableVisual = false,
+    bool UsesTopicTreeVisual = false,
     DashboardWidgetInspectorLabels? Labels = null)
 {
     public bool ShowsEventTabs => IsEventWidget;
@@ -298,6 +299,7 @@ public static class DashboardWidgetSettingsProfiles
                 Icons.Material.Filled.AccountTree,
                 IsEventWidget: false,
                 IsTopicTreeWidget: true,
+                UsesTopicTreeVisual: true,
                 Labels: DashboardWidgetInspectorLabels.TopicTree),
             _ => new(
                 normalized,
@@ -339,5 +341,6 @@ public static class DashboardWidgetSettingsProfiles
             usesSubtitle,
             usesLatestEventVisual,
             usesEventTableVisual,
+            UsesTopicTreeVisual: false,
             labels);
 }

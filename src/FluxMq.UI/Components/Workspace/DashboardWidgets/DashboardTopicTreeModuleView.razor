@@ -1,6 +1,6 @@
 @namespace FluxMq.UI.Components.Workspace
 
-<DashboardTopicTreeWidget Widget="@Context.Widget" MessagesOverride="@Context.TopicMessages" />
+<DashboardTopicTreeWidget Context="@Context" />
 
 @code {
     [Parameter, EditorRequired]
