@@ -45,6 +45,7 @@ public sealed class DashboardWidgetSettingsDraft
         DisplayMetrics = [.. DashboardWidgetCatalog.NormalizeDisplayMetrics(
             widget.ReadString(DashboardWidgetCatalog.DisplayMetricsKey))];
         ApplyLatestEventVisualValues(widget.Configuration);
+        ApplyEventTableVisualValues(widget.Configuration);
 
         foreach (var key in eventFilters.FilterKeys)
         {
@@ -125,6 +126,32 @@ public sealed class DashboardWidgetSettingsDraft
 
     public string LatestPayloadColor { get; set; } = DashboardLatestEventVisualOptions.DefaultPayloadColor;
 
+    public string TableHeader { get; set; } = DashboardEventTableVisualOptions.DefaultHeader;
+
+    public bool TableShowHeader { get; set; } = true;
+
+    public string TableRowCount { get; set; } = DashboardEventTableVisualOptions.DefaultRowCount.ToString(CultureInfo.InvariantCulture);
+
+    public string TableDensity { get; set; } = DashboardEventTableVisualOptions.DensityCompact;
+
+    public bool TableShowTime { get; set; } = true;
+
+    public bool TableShowEvent { get; set; } = true;
+
+    public bool TableShowTopic { get; set; } = true;
+
+    public bool TableShowStatus { get; set; } = true;
+
+    public bool TableShowPayload { get; set; } = true;
+
+    public string TableEmptyText { get; set; } = DashboardEventTableVisualOptions.DefaultEmptyText;
+
+    public string TableHeaderColor { get; set; } = DashboardEventTableVisualOptions.DefaultHeaderColor;
+
+    public string TableTextColor { get; set; } = DashboardEventTableVisualOptions.DefaultTextColor;
+
+    public string TableMutedColor { get; set; } = DashboardEventTableVisualOptions.DefaultMutedColor;
+
     public bool IsKpiTile => string.Equals(Profile.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal);
 
     public bool UsesMetricQueryBuilder =>
@@ -176,6 +203,7 @@ public sealed class DashboardWidgetSettingsDraft
         DisplayMetrics.AddRange(DashboardWidgetCatalog.NormalizeDisplayMetrics(
             ReadString(configuration, DashboardWidgetCatalog.DisplayMetricsKey)));
         ApplyLatestEventVisualValues(configuration);
+        ApplyEventTableVisualValues(configuration);
 
         foreach (var key in _eventFilters.FilterKeys)
         {
@@ -328,6 +356,60 @@ public sealed class DashboardWidgetSettingsDraft
         }
     }
 
+    public void SetEventTableVisualValue(string key, string? value)
+    {
+        if (!Profile.UsesEventTableVisual)
+        {
+            return;
+        }
+
+        switch (key)
+        {
+            case DashboardEventTableVisualOptions.HeaderKey:
+                TableHeader = NormalizeText(value, DashboardEventTableVisualOptions.DefaultHeader);
+                Title = TableHeader;
+                break;
+            case DashboardEventTableVisualOptions.ShowHeaderKey:
+                TableShowHeader = NormalizeBoolean(value, TableShowHeader);
+                break;
+            case DashboardEventTableVisualOptions.RowCountKey:
+                TableRowCount = DashboardEventTableVisualOptions
+                    .NormalizeRowCount(value)
+                    .ToString(CultureInfo.InvariantCulture);
+                break;
+            case DashboardEventTableVisualOptions.DensityKey:
+                TableDensity = DashboardEventTableVisualOptions.NormalizeDensity(value);
+                break;
+            case DashboardEventTableVisualOptions.ShowTimeKey:
+                TableShowTime = NormalizeBoolean(value, TableShowTime);
+                break;
+            case DashboardEventTableVisualOptions.ShowEventKey:
+                TableShowEvent = NormalizeBoolean(value, TableShowEvent);
+                break;
+            case DashboardEventTableVisualOptions.ShowTopicKey:
+                TableShowTopic = NormalizeBoolean(value, TableShowTopic);
+                break;
+            case DashboardEventTableVisualOptions.ShowStatusKey:
+                TableShowStatus = NormalizeBoolean(value, TableShowStatus);
+                break;
+            case DashboardEventTableVisualOptions.ShowPayloadKey:
+                TableShowPayload = NormalizeBoolean(value, TableShowPayload);
+                break;
+            case DashboardEventTableVisualOptions.EmptyTextKey:
+                TableEmptyText = NormalizeText(value, DashboardEventTableVisualOptions.DefaultEmptyText);
+                break;
+            case DashboardEventTableVisualOptions.HeaderColorKey:
+                TableHeaderColor = Normalize(value);
+                break;
+            case DashboardEventTableVisualOptions.TextColorKey:
+                TableTextColor = Normalize(value);
+                break;
+            case DashboardEventTableVisualOptions.MutedColorKey:
+                TableMutedColor = Normalize(value);
+                break;
+        }
+    }
+
     public IReadOnlyDictionary<string, string> BuildConfiguration()
     {
         var title = string.IsNullOrWhiteSpace(Title) ? Profile.Title : Title.Trim();
@@ -398,6 +480,7 @@ public sealed class DashboardWidgetSettingsDraft
 
         ApplyVisualConfiguration(configuration);
         ApplyLatestEventVisualConfiguration(configuration);
+        ApplyEventTableVisualConfiguration(configuration);
         ApplyMetricVisualizationConfiguration(configuration);
         ApplyMetricVisualization(configuration);
         ApplyMetricName(configuration);
@@ -564,6 +647,79 @@ public sealed class DashboardWidgetSettingsDraft
         configuration[DashboardLatestEventVisualOptions.PayloadColorKey] = NormalizeColor(
             LatestPayloadColor,
             DashboardLatestEventVisualOptions.DefaultPayloadColor);
+    }
+
+    private void ApplyEventTableVisualValues(IReadOnlyDictionary<string, string> configuration)
+    {
+        if (!Profile.UsesEventTableVisual)
+        {
+            return;
+        }
+
+        TableHeader = ReadString(configuration, DashboardEventTableVisualOptions.HeaderKey) ??
+            ReadString(configuration, "title") ??
+            DashboardEventTableVisualOptions.DefaultHeader;
+        Title = TableHeader;
+        TableShowHeader = ReadBoolean(configuration, DashboardEventTableVisualOptions.ShowHeaderKey, true);
+        TableRowCount = DashboardEventTableVisualOptions
+            .NormalizeRowCount(
+                ReadString(configuration, DashboardEventTableVisualOptions.RowCountKey) ??
+                ReadString(configuration, DashboardEventTableVisualOptions.LegacyRowCountKey))
+            .ToString(CultureInfo.InvariantCulture);
+        TableDensity = DashboardEventTableVisualOptions.NormalizeDensity(
+            ReadString(configuration, DashboardEventTableVisualOptions.DensityKey) ??
+            ReadString(configuration, DashboardEventTableVisualOptions.LegacyDensityKey));
+        TableShowTime = ReadBoolean(configuration, DashboardEventTableVisualOptions.ShowTimeKey, true);
+        TableShowEvent = ReadBoolean(configuration, DashboardEventTableVisualOptions.ShowEventKey, true);
+        TableShowTopic = ReadBoolean(configuration, DashboardEventTableVisualOptions.ShowTopicKey, true);
+        TableShowStatus = ReadBoolean(configuration, DashboardEventTableVisualOptions.ShowStatusKey, true);
+        TableShowPayload = ReadBoolean(
+            configuration,
+            DashboardEventTableVisualOptions.ShowPayloadKey,
+            ReadBoolean(configuration, DashboardEventTableVisualOptions.LegacyPayloadPreviewKey, true));
+        TableEmptyText = ReadString(configuration, DashboardEventTableVisualOptions.EmptyTextKey) ??
+            DashboardEventTableVisualOptions.DefaultEmptyText;
+        TableHeaderColor = ReadString(configuration, DashboardEventTableVisualOptions.HeaderColorKey) ??
+            DashboardEventTableVisualOptions.DefaultHeaderColor;
+        TableTextColor = ReadString(configuration, DashboardEventTableVisualOptions.TextColorKey) ??
+            DashboardEventTableVisualOptions.DefaultTextColor;
+        TableMutedColor = ReadString(configuration, DashboardEventTableVisualOptions.MutedColorKey) ??
+            DashboardEventTableVisualOptions.DefaultMutedColor;
+    }
+
+    private void ApplyEventTableVisualConfiguration(Dictionary<string, string> configuration)
+    {
+        if (!Profile.UsesEventTableVisual)
+        {
+            return;
+        }
+
+        var header = string.IsNullOrWhiteSpace(TableHeader)
+            ? DashboardEventTableVisualOptions.DefaultHeader
+            : TableHeader.Trim();
+        configuration["title"] = header;
+        configuration[DashboardEventTableVisualOptions.HeaderKey] = header;
+        configuration[DashboardEventTableVisualOptions.ShowHeaderKey] = TableShowHeader ? bool.TrueString : bool.FalseString;
+        configuration[DashboardEventTableVisualOptions.RowCountKey] =
+            DashboardEventTableVisualOptions.NormalizeRowCount(TableRowCount).ToString(CultureInfo.InvariantCulture);
+        configuration[DashboardEventTableVisualOptions.DensityKey] = DashboardEventTableVisualOptions.NormalizeDensity(TableDensity);
+        configuration[DashboardEventTableVisualOptions.ShowTimeKey] = TableShowTime ? bool.TrueString : bool.FalseString;
+        configuration[DashboardEventTableVisualOptions.ShowEventKey] = TableShowEvent ? bool.TrueString : bool.FalseString;
+        configuration[DashboardEventTableVisualOptions.ShowTopicKey] = TableShowTopic ? bool.TrueString : bool.FalseString;
+        configuration[DashboardEventTableVisualOptions.ShowStatusKey] = TableShowStatus ? bool.TrueString : bool.FalseString;
+        configuration[DashboardEventTableVisualOptions.ShowPayloadKey] = TableShowPayload ? bool.TrueString : bool.FalseString;
+        configuration[DashboardEventTableVisualOptions.EmptyTextKey] = string.IsNullOrWhiteSpace(TableEmptyText)
+            ? DashboardEventTableVisualOptions.DefaultEmptyText
+            : TableEmptyText.Trim();
+        configuration[DashboardEventTableVisualOptions.HeaderColorKey] = NormalizeColor(
+            TableHeaderColor,
+            DashboardEventTableVisualOptions.DefaultHeaderColor);
+        configuration[DashboardEventTableVisualOptions.TextColorKey] = NormalizeColor(
+            TableTextColor,
+            DashboardEventTableVisualOptions.DefaultTextColor);
+        configuration[DashboardEventTableVisualOptions.MutedColorKey] = NormalizeColor(
+            TableMutedColor,
+            DashboardEventTableVisualOptions.DefaultMutedColor);
     }
 
     private void TrimFiltersToEventType()

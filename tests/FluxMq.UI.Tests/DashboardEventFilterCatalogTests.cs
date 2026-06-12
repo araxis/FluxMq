@@ -333,6 +333,7 @@ public sealed class DashboardEventFilterCatalogTests
         table.UsesVisualMetrics.ShouldBeFalse();
         table.SupportsMetricSlots.ShouldBeFalse();
         table.UsesMetricWindow.ShouldBeFalse();
+        table.UsesEventTableVisual.ShouldBeTrue();
         tree.IsEventWidget.ShouldBeFalse();
         tree.IsTopicTreeWidget.ShouldBeTrue();
         tree.UsesMetricQuery.ShouldBeFalse();
@@ -465,6 +466,40 @@ public sealed class DashboardEventFilterCatalogTests
         configuration[DashboardLatestEventVisualOptions.ShowPayloadKey].ShouldBe(bool.TrueString);
         configuration[DashboardLatestEventVisualOptions.EmptyTextKey].ShouldBe("Waiting for an event");
         configuration[DashboardLatestEventVisualOptions.HeaderColorKey].ShouldBe("#112233");
+    }
+
+    [Fact]
+    public void DashboardWidgetSettingsDraft_WritesEventTableVisualConfiguration()
+    {
+        var draft = DashboardWidgetSettingsDraft.Create(
+            new DashboardWidgetSnapshot(
+                "table",
+                DashboardWidgetCatalog.EventTableType,
+                new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["title"] = "Runtime table",
+                    [DashboardEventTableVisualOptions.LegacyRowCountKey] = "4",
+                    [DashboardEventTableVisualOptions.LegacyPayloadPreviewKey] = bool.FalseString
+                }),
+            new DashboardEventFilterCatalog());
+
+        draft.SetEventTableVisualValue(DashboardEventTableVisualOptions.HeaderKey, "Recent events");
+        draft.SetEventTableVisualValue(DashboardEventTableVisualOptions.RowCountKey, "9");
+        draft.SetEventTableVisualValue(DashboardEventTableVisualOptions.DensityKey, DashboardEventTableVisualOptions.DensityComfortable);
+        draft.SetEventTableVisualValue(DashboardEventTableVisualOptions.ShowTopicKey, bool.FalseString);
+        draft.SetEventTableVisualValue(DashboardEventTableVisualOptions.EmptyTextKey, "Waiting for events");
+
+        var configuration = draft.BuildConfiguration();
+
+        configuration["title"].ShouldBe("Recent events");
+        configuration[DashboardEventTableVisualOptions.HeaderKey].ShouldBe("Recent events");
+        configuration[DashboardEventTableVisualOptions.RowCountKey].ShouldBe("9");
+        configuration[DashboardEventTableVisualOptions.DensityKey].ShouldBe(DashboardEventTableVisualOptions.DensityComfortable);
+        configuration[DashboardEventTableVisualOptions.ShowTopicKey].ShouldBe(bool.FalseString);
+        configuration[DashboardEventTableVisualOptions.ShowPayloadKey].ShouldBe(bool.FalseString);
+        configuration[DashboardEventTableVisualOptions.EmptyTextKey].ShouldBe("Waiting for events");
+        configuration.ContainsKey(DashboardEventTableVisualOptions.LegacyRowCountKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardEventTableVisualOptions.LegacyPayloadPreviewKey).ShouldBeFalse();
     }
 
     [Fact]
@@ -2303,6 +2338,23 @@ public sealed class DashboardEventFilterCatalogTests
             .Layout
             .PreferredRowSpan
             .ShouldBe(2);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.EventTableType)
+            .DefaultConfiguration
+            .Keys
+            .ShouldContain(DashboardEventTableVisualOptions.HeaderKey);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.EventTableType)
+            .PropertyGroups
+            .SelectMany(static group => group.Properties)
+            .Select(static property => property.Key)
+            .ShouldNotContain(DashboardEventTableVisualOptions.LegacyRowCountKey);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.EventTableType)
+            .PropertyGroups
+            .SelectMany(static group => group.Properties)
+            .Select(static property => property.Key)
+            .ShouldContain(DashboardEventTableVisualOptions.RowCountKey);
     }
 
     [Fact]

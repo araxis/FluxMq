@@ -47,6 +47,68 @@
         </PropertyGridRow>
     }
 
+    @if (Draft.Profile.UsesEventTableVisual)
+    {
+        <PropertyGridRow Name="Header">
+            <input class="property-grid-input"
+                   value="@Draft.TableHeader"
+                   @oninput="@((ChangeEventArgs args) => ChangeEventTableVisualPropertyAsync(DashboardEventTableVisualOptions.HeaderKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Show header">
+            @TableBooleanRow(DashboardEventTableVisualOptions.ShowHeaderKey, Draft.TableShowHeader)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Rows">
+            <input class="property-grid-input"
+                   type="number"
+                   min="@DashboardEventTableVisualOptions.MinRowCount"
+                   max="@DashboardEventTableVisualOptions.MaxRowCount"
+                   value="@Draft.TableRowCount"
+                   @oninput="@((ChangeEventArgs args) => ChangeEventTableVisualPropertyAsync(DashboardEventTableVisualOptions.RowCountKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Density">
+            <div class="property-grid-button-group">
+                <button type="button"
+                        class="@ChoiceClass(Draft.TableDensity, DashboardEventTableVisualOptions.DensityCompact)"
+                        @onclick="@(() => ChangeEventTableVisualPropertyAsync(DashboardEventTableVisualOptions.DensityKey, DashboardEventTableVisualOptions.DensityCompact))">Compact</button>
+                <button type="button"
+                        class="@ChoiceClass(Draft.TableDensity, DashboardEventTableVisualOptions.DensityComfortable)"
+                        @onclick="@(() => ChangeEventTableVisualPropertyAsync(DashboardEventTableVisualOptions.DensityKey, DashboardEventTableVisualOptions.DensityComfortable))">Comfort</button>
+            </div>
+        </PropertyGridRow>
+        <PropertyGridRow Name="Time">
+            @TableBooleanRow(DashboardEventTableVisualOptions.ShowTimeKey, Draft.TableShowTime)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Event">
+            @TableBooleanRow(DashboardEventTableVisualOptions.ShowEventKey, Draft.TableShowEvent)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Topic">
+            @TableBooleanRow(DashboardEventTableVisualOptions.ShowTopicKey, Draft.TableShowTopic)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Status">
+            @TableBooleanRow(DashboardEventTableVisualOptions.ShowStatusKey, Draft.TableShowStatus)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Payload">
+            @TableBooleanRow(DashboardEventTableVisualOptions.ShowPayloadKey, Draft.TableShowPayload)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Empty text">
+            <input class="property-grid-input"
+                   value="@Draft.TableEmptyText"
+                   @oninput="@((ChangeEventArgs args) => ChangeEventTableVisualPropertyAsync(DashboardEventTableVisualOptions.EmptyTextKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Header color">
+            <PropertyGridColorPicker Value="@Draft.TableHeaderColor"
+                                     ValueChanged="@((string? value) => ChangeEventTableVisualPropertyAsync(DashboardEventTableVisualOptions.HeaderColorKey, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Text color">
+            <PropertyGridColorPicker Value="@Draft.TableTextColor"
+                                     ValueChanged="@((string? value) => ChangeEventTableVisualPropertyAsync(DashboardEventTableVisualOptions.TextColorKey, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Muted color">
+            <PropertyGridColorPicker Value="@Draft.TableMutedColor"
+                                     ValueChanged="@((string? value) => ChangeEventTableVisualPropertyAsync(DashboardEventTableVisualOptions.MutedColorKey, value))" />
+        </PropertyGridRow>
+    }
+
     @if (Draft.Profile.UsesGaugeStyle)
     {
         <PropertyGridRow Name="@Labels.GaugeRow">
@@ -150,6 +212,9 @@
     public EventCallback<DashboardInspectorPropertyValueChange> LatestEventVisualPropertyChanged { get; set; }
 
     [Parameter]
+    public EventCallback<DashboardInspectorPropertyValueChange> EventTableVisualPropertyChanged { get; set; }
+
+    [Parameter]
     public EventCallback<string?> ChartTypeChanged { get; set; }
 
     [Parameter]
@@ -171,6 +236,9 @@
     private Task ChangeLatestEventVisualPropertyAsync(string key, string? value)
         => LatestEventVisualPropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
 
+    private Task ChangeEventTableVisualPropertyAsync(string key, string? value)
+        => EventTableVisualPropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
+
     private RenderFragment BooleanRow(string key, bool value) => @<div class="property-grid-button-group">
         <button type="button"
                 class="@BooleanChoiceClass(value, true)"
@@ -178,5 +246,14 @@
         <button type="button"
                 class="@BooleanChoiceClass(value, false)"
                 @onclick="@(() => ChangeLatestEventVisualPropertyAsync(key, bool.FalseString))">Off</button>
+    </div>;
+
+    private RenderFragment TableBooleanRow(string key, bool value) => @<div class="property-grid-button-group">
+        <button type="button"
+                class="@BooleanChoiceClass(value, true)"
+                @onclick="@(() => ChangeEventTableVisualPropertyAsync(key, bool.TrueString))">On</button>
+        <button type="button"
+                class="@BooleanChoiceClass(value, false)"
+                @onclick="@(() => ChangeEventTableVisualPropertyAsync(key, bool.FalseString))">Off</button>
     </div>;
 }

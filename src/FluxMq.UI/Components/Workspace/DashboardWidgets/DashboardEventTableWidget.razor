@@ -1,35 +1,145 @@
+@using FluxFlow.Engine.Components
 @namespace FluxMq.UI.Components.Workspace
 
-@if (Snapshot.Events.Count == 0)
-{
-    <div class="dashboard-widget-empty">No events yet</div>
+@{
+    var widget = Context.Widget;
+    var rows = Context.Snapshot.Events
+        .Take(RowCount(widget))
+        .ToArray();
+    var columns = Columns(widget);
 }
-else
-{
-    <div class="dashboard-event-table">
-        <div class="dashboard-event-table-head">
-            <span>Time</span>
-            <span>Event</span>
-            <span>Status</span>
-            <span>Payload</span>
+
+<div class="@TableClass(widget)" style="@TableStyle(widget, columns)">
+    @if (ShowHeader(widget))
+    {
+        <div class="dashboard-event-table-title">
+            <div class="dashboard-widget-icon">
+                <MudIcon Icon="@DashboardWidgetFormatting.WidgetIcon(widget)" Size="Size.Small" />
+            </div>
+            <div class="dashboard-widget-title-block">
+                <span class="dashboard-widget-title">@Header(widget)</span>
+                <span class="dashboard-widget-subtitle">@DashboardWidgetFormatting.EventFilterSummary(widget)</span>
+            </div>
         </div>
-        <div class="dashboard-event-table-body">
-            @foreach (var flowEvent in Snapshot.Events)
-            {
-                <div class="dashboard-event-table-row">
-                    <span>@DashboardWidgetFormatting.FormatEventTime(flowEvent)</span>
-                    <span title="@flowEvent.Type">@flowEvent.Type</span>
-                    <span>@(flowEvent.Status ?? "-")</span>
-                    <span title="@flowEvent.PayloadPreview">@PayloadPreview(flowEvent.PayloadPreview)</span>
-                </div>
-            }
+    }
+
+    @if (rows.Length == 0)
+    {
+        <div class="dashboard-widget-empty">@EmptyText(widget)</div>
+    }
+    else
+    {
+        <div class="dashboard-event-table-grid">
+            <div class="dashboard-event-table-head">
+                @foreach (var column in columns)
+                {
+                    <span>@column.Label</span>
+                }
+            </div>
+            <div class="dashboard-event-table-body">
+                @foreach (var flowEvent in rows)
+                {
+                    <div class="dashboard-event-table-row">
+                        @foreach (var column in columns)
+                        {
+                            var value = column.Value(flowEvent);
+                            <span title="@value">@value</span>
+                        }
+                    </div>
+                }
+            </div>
         </div>
-    </div>
-}
+    }
+</div>
 
 @code {
     [Parameter, EditorRequired]
-    public DashboardEventSnapshot Snapshot { get; set; } = null!;
+    public DashboardWidgetRenderContext Context { get; set; } = null!;
+
+    private static string Header(DashboardWidgetSnapshot widget)
+        => widget.ReadString(DashboardEventTableVisualOptions.HeaderKey) ??
+           widget.ReadString("title") ??
+           DashboardEventTableVisualOptions.DefaultHeader;
+
+    private static string EmptyText(DashboardWidgetSnapshot widget)
+        => widget.ReadString(DashboardEventTableVisualOptions.EmptyTextKey) ??
+           DashboardEventTableVisualOptions.DefaultEmptyText;
+
+    private static bool ShowHeader(DashboardWidgetSnapshot widget)
+        => ReadBoolean(widget, DashboardEventTableVisualOptions.ShowHeaderKey, true);
+
+    private static int RowCount(DashboardWidgetSnapshot widget)
+        => DashboardEventTableVisualOptions.NormalizeRowCount(
+            widget.ReadString(DashboardEventTableVisualOptions.RowCountKey) ??
+            widget.ReadString(DashboardEventTableVisualOptions.LegacyRowCountKey));
+
+    private static string Density(DashboardWidgetSnapshot widget)
+        => DashboardEventTableVisualOptions.NormalizeDensity(
+            widget.ReadString(DashboardEventTableVisualOptions.DensityKey) ??
+            widget.ReadString(DashboardEventTableVisualOptions.LegacyDensityKey));
+
+    private static string TableClass(DashboardWidgetSnapshot widget)
+        => string.Equals(Density(widget), DashboardEventTableVisualOptions.DensityComfortable, StringComparison.Ordinal)
+            ? "dashboard-event-table dashboard-event-table-comfortable"
+            : "dashboard-event-table";
+
+    private static string TableStyle(DashboardWidgetSnapshot widget, IReadOnlyList<EventTableColumn> columns)
+    {
+        var header = widget.ReadString(DashboardEventTableVisualOptions.HeaderColorKey) ??
+            DashboardEventTableVisualOptions.DefaultHeaderColor;
+        var text = widget.ReadString(DashboardEventTableVisualOptions.TextColorKey) ??
+            DashboardEventTableVisualOptions.DefaultTextColor;
+        var muted = widget.ReadString(DashboardEventTableVisualOptions.MutedColorKey) ??
+            DashboardEventTableVisualOptions.DefaultMutedColor;
+        var tracks = string.Join(" ", columns.Select(static column => column.Track));
+        return $"--event-table-header-color:{header};--event-table-text-color:{text};--event-table-muted-color:{muted};--event-table-columns:{tracks};";
+    }
+
+    private static IReadOnlyList<EventTableColumn> Columns(DashboardWidgetSnapshot widget)
+    {
+        var columns = new List<EventTableColumn>();
+        if (ReadBoolean(widget, DashboardEventTableVisualOptions.ShowTimeKey, true))
+        {
+            columns.Add(new("Time", "58px", static flowEvent => DashboardWidgetFormatting.FormatEventTime(flowEvent)));
+        }
+
+        if (ReadBoolean(widget, DashboardEventTableVisualOptions.ShowEventKey, true))
+        {
+            columns.Add(new("Event", "minmax(100px, 1.15fr)", static flowEvent => flowEvent.Type));
+        }
+
+        if (ReadBoolean(widget, DashboardEventTableVisualOptions.ShowTopicKey, true))
+        {
+            columns.Add(new("Topic", "minmax(110px, 1.2fr)", Topic));
+        }
+
+        if (ReadBoolean(widget, DashboardEventTableVisualOptions.ShowStatusKey, true))
+        {
+            columns.Add(new("Status", "minmax(58px, 0.55fr)", static flowEvent => flowEvent.Status ?? "-"));
+        }
+
+        if (ReadBoolean(
+            widget,
+            DashboardEventTableVisualOptions.ShowPayloadKey,
+            ReadBoolean(widget, DashboardEventTableVisualOptions.LegacyPayloadPreviewKey, true)))
+        {
+            columns.Add(new("Payload", "minmax(0, 1fr)", static flowEvent => PayloadPreview(flowEvent.PayloadPreview)));
+        }
+
+        if (columns.Count == 0)
+        {
+            columns.Add(new("Event", "minmax(0, 1fr)", static flowEvent => flowEvent.Type));
+        }
+
+        return columns;
+    }
+
+    private static string Topic(FlowEvent flowEvent)
+        => !string.IsNullOrWhiteSpace(flowEvent.Channel)
+            ? flowEvent.Channel
+            : !string.IsNullOrWhiteSpace(flowEvent.Subject)
+            ? flowEvent.Subject
+            : "-";
 
     private static string PayloadPreview(string? value)
     {
@@ -41,4 +151,11 @@ else
         var trimmed = value.Trim();
         return trimmed.Length <= 42 ? trimmed : trimmed[..39] + "...";
     }
+
+    private static bool ReadBoolean(DashboardWidgetSnapshot widget, string key, bool fallback)
+        => bool.TryParse(widget.ReadString(key), out var parsed)
+            ? parsed
+            : fallback;
+
+    private sealed record EventTableColumn(string Label, string Track, Func<FlowEvent, string> Value);
 }
