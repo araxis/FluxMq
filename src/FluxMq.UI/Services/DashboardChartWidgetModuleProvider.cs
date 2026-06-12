@@ -20,7 +20,7 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
                 typeof(DashboardLineChartModuleView),
                 "Line chart",
                 "lineChart",
-                DashboardWidgetCatalog.ChartTypeLine,
+                DashboardChartWidgetOptions.TypeLine,
                 [
                     MetricGroup("metric", "Metric"),
                     WindowGroup(),
@@ -37,7 +37,7 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
                 typeof(DashboardAreaChartModuleView),
                 "Area chart",
                 "areaChart",
-                DashboardWidgetCatalog.ChartTypeArea,
+                DashboardChartWidgetOptions.TypeArea,
                 [
                     MetricGroup("metric", "Metric"),
                     WindowGroup(),
@@ -53,7 +53,7 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
                 typeof(DashboardBarChartModuleView),
                 "Bar chart",
                 "barChart",
-                DashboardWidgetCatalog.ChartTypeBars,
+                DashboardChartWidgetOptions.TypeBars,
                 [
                     MetricGroup("metric", "Metric"),
                     WindowGroup(),
@@ -90,7 +90,7 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
     {
         var configuration = EventConfiguration(title);
         configuration[DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricMessages;
-        configuration[DashboardWidgetCatalog.ChartTypeKey] = chartType;
+        configuration[DashboardChartWidgetOptions.TypeKey] = chartType;
         return new DashboardWidgetModule(
             new DashboardWidgetDescriptor(
                 type,

@@ -793,7 +793,7 @@
         }
 
         _widgetDraft.ChartType = string.IsNullOrWhiteSpace(value)
-            ? DashboardWidgetCatalog.ChartTypeBars
+            ? DashboardChartWidgetOptions.TypeBars
             : value.Trim();
         await AutoApplyAsync();
     }

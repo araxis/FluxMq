@@ -1,18 +1,18 @@
 @namespace FluxMq.UI.Components.Workspace
 
 @{
-    var chartType = DashboardWidgetCatalog.NormalizeChartType(Widget.ReadString(DashboardWidgetCatalog.ChartTypeKey));
+    var chartType = DashboardChartWidgetOptions.NormalizeType(Widget.ReadString(DashboardChartWidgetOptions.TypeKey));
 }
 
 <div class="dashboard-widget-chart">
-    @if (chartType == DashboardWidgetCatalog.ChartTypeLine ||
-         chartType == DashboardWidgetCatalog.ChartTypeArea)
+    @if (chartType == DashboardChartWidgetOptions.TypeLine ||
+         chartType == DashboardChartWidgetOptions.TypeArea)
     {
         <svg class="dashboard-widget-chart-line @chartType"
              viewBox="0 0 100 44"
              preserveAspectRatio="none"
              aria-hidden="true">
-            @if (chartType == DashboardWidgetCatalog.ChartTypeArea)
+            @if (chartType == DashboardChartWidgetOptions.TypeArea)
             {
                 <polygon points="@DashboardWidgetFormatting.ChartAreaPoints(Snapshot)" />
             }

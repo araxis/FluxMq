@@ -3341,3 +3341,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - Local YAML parsing was unavailable because PyYAML is not installed in this shell.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this CI speedup, confirm the PR shows only normal validation, then continue with chart constant ownership cleanup.
+- Dashboard chart constant cleanup:
+  - Merged PR #194 (`Speed up normal Windows validation`) into `main`; post-merge Windows validation passed with only the fast validation job.
+  - Started `work/dashboard-chart-constant-cleanup` from clean `main`.
+  - Moved chart option key, chart type values, and chart type normalization from the general `DashboardWidgetCatalog` into `DashboardChartWidgetOptions`.
+  - Updated the chart module provider, inspector rows, chart renderer, settings draft, widget editor dialog, and tests to depend on the focused chart owner.
+  - Kept persisted key strings, chart widget ids, legacy `event.chart` compatibility, defaults, schema, UI text, and rendering behavior unchanged.
+  - Added guard coverage proving the general dashboard widget catalog no longer owns chart option constants and the chart options class owns default/normalization behavior.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardChartWidgetOptions_OwnsChartDefaults|FullyQualifiedName~DashboardChartWidgetModuleProvider_OwnsChartWidgetDefinitions|FullyQualifiedName~AddDashboardWidget_NormalizesLegacyEventChart|FullyQualifiedName~DashboardWidgetCatalog_IsStaticAndNotRegisteredAsAService" -p:UseAppHost=false --verbosity minimal` passed with 3 matching tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 431 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 760 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this chart ownership cleanup, then inspect whether remaining shared visual metric constants should move next or whether to pause cleanup and return to dashboard behavior work.

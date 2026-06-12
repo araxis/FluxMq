@@ -28,7 +28,6 @@ public static class DashboardWidgetCatalog
     public const string PrimaryMetricKey = "primaryMetric";
     public const string DisplayMetricsKey = "displayMetrics";
     public const string MetricCardColumnsKey = "metricCardColumns";
-    public const string ChartTypeKey = "chartType";
     public const string MetricVisualizationKey = "visualization";
     public const string KpiTitleColorKey = "kpi.titleColor";
     public const string KpiSubtitleColorKey = "kpi.subtitleColor";
@@ -43,10 +42,6 @@ public static class DashboardWidgetCatalog
     public const string MetricPayloadBytes = "payloadBytes";
     public const string MetricRetained = "retained";
     public const string MetricAveragePayload = "averagePayload";
-    public const string ChartTypeBars = "bars";
-    public const string ChartTypeLine = "line";
-    public const string ChartTypeArea = "area";
-    public const string ChartTypeTopics = "topics";
     public const int DefaultMetricCardColumns = 4;
     public const int MinMetricCardColumns = 1;
     public const int MaxMetricCardColumns = 4;
@@ -139,15 +134,6 @@ public static class DashboardWidgetCatalog
         var metric = NormalizeMetric(value);
         return KnownDisplayMetrics.Contains(metric) ? metric : MetricRecent;
     }
-
-    public static string NormalizeChartType(string? value)
-        => value switch
-        {
-            ChartTypeLine => ChartTypeLine,
-            ChartTypeArea => ChartTypeArea,
-            ChartTypeTopics => ChartTypeTopics,
-            _ => ChartTypeBars
-        };
 
     public static string NormalizeMetricVisualization(string? value)
     {
