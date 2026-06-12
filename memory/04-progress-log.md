@@ -3412,3 +3412,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - Initial full-solution run hit the known transient LiteDB storage test race in `SessionRepositoryTests.GetAll_ReturnsMostRecentFirst`; the isolated test rerun passed.
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 761 tests on rerun.
   - Next step: commit/PR/merge this event-rate visual UX slice, then continue one-widget-at-a-time dashboard work with `rate.tile` visual ownership if review passes.
+- Dashboard rate tile visual UX:
+  - Merged PR #199 (`Align event rate visual settings`) into `main`; post-merge Windows validation passed.
+  - Started `work/dashboard-rate-tile-visual-ux` from clean `main`.
+  - Promoted `rate.tile` from the old plain title/format default shape to the focused metric visualization path.
+  - Seeded rate-tile widgets with value-visual defaults while preserving the rate-tile metric source behavior.
+  - Removed stale rate-tile module property groups for local window, format, and threshold settings; metric definition owns query behavior and the selected visualization owns display behavior.
+  - Kept the app-metric binding path unchanged and avoided schema, widget type, metric model, or FluxFlow changes.
+  - Verification:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetSettingsProfiles_ExposeDedicatedSettingsShape|FullyQualifiedName~DashboardWidgetSettingsDraft_WritesRateTileAsAppMetricConfiguration|FullyQualifiedName~DashboardWidgetModuleCatalog_ProvidesFocusedPropertyDefinitionsForAllPaletteWidgets|FullyQualifiedName~AddDashboardWidget_AddsRateTileDefaults|FullyQualifiedName~DashboardEventCounterRateAndRateTileModuleViews_UseFocusedMetricValueRenderPath" -p:UseAppHost=false --verbosity minimal` passed with 4 matching tests.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 432 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 761 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this rate-tile visual UX slice, then continue one-widget-at-a-time dashboard work by reviewing the next metric visual consumer before changing it.

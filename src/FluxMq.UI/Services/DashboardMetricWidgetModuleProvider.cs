@@ -53,10 +53,7 @@ public sealed class DashboardMetricWidgetModuleProvider : IDashboardWidgetModule
                 "rateTile",
                 "currentRate",
                 [
-                    MetricGroup("metric", "Metric"),
-                    WindowGroup(),
-                    FormatGroup(),
-                    ThresholdGroup()
+                    MetricOnlyGroup("metric", "Metric", "Named rate metric used by this widget.")
                 ])
         ];
 
@@ -87,6 +84,10 @@ public sealed class DashboardMetricWidgetModuleProvider : IDashboardWidgetModule
                  string.Equals(type, DashboardWidgetCatalog.StatusValueType, StringComparison.Ordinal))
         {
             configuration.Remove(DashboardWidgetCatalog.PrimaryMetricKey);
+            if (string.Equals(type, DashboardWidgetCatalog.RateTileType, StringComparison.Ordinal))
+            {
+                ApplyValueVisualizationDefaults(configuration, title, "Selected rate metric");
+            }
         }
 
         return new DashboardWidgetModule(
@@ -117,6 +118,20 @@ public sealed class DashboardMetricWidgetModuleProvider : IDashboardWidgetModule
             [DashboardWidgetCatalog.PrimaryMetricKey] = primaryMetric
         };
 
+    private static void ApplyValueVisualizationDefaults(
+        Dictionary<string, string> configuration,
+        string title,
+        string subtitle)
+    {
+        foreach (var (key, value) in DashboardMetricVisualizationCatalog.Find(DashboardMetricVisualizationIds.Value)!.DefaultConfiguration)
+        {
+            configuration[key] = value;
+        }
+
+        configuration[DashboardMetricValueVisualizationOptions.TitleKey] = title;
+        configuration[DashboardMetricValueVisualizationOptions.SubtitleKey] = subtitle;
+    }
+
     private static DashboardWidgetPropertyGroupDefinition MetricGroup(string id, string title)
         => new(id, title, [
             new("metric", "Metric", DashboardWidgetPropertyEditorKind.Metric, HelpText: "Named metric used by this widget."),
@@ -126,6 +141,11 @@ public sealed class DashboardMetricWidgetModuleProvider : IDashboardWidgetModule
     private static DashboardWidgetPropertyGroupDefinition KpiMetricGroup()
         => new("data", "Data", [
             new("metric", "Metric", DashboardWidgetPropertyEditorKind.Metric, HelpText: "Named scalar metric shown by this KPI.")
+        ]);
+
+    private static DashboardWidgetPropertyGroupDefinition MetricOnlyGroup(string id, string title, string helpText)
+        => new(id, title, [
+            new("metric", "Metric", DashboardWidgetPropertyEditorKind.Metric, HelpText: helpText)
         ]);
 
     private static DashboardWidgetPropertyGroupDefinition VisualizationGroup()

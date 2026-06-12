@@ -306,6 +306,7 @@ public sealed class DashboardEventFilterCatalogTests
         var gauge = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.EventGaugeType);
         var kpi = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.KpiTileType);
         var rate = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.EventRateType);
+        var rateTile = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.RateTileType);
         var latest = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.LatestEventType);
         var chart = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.LineChartType);
         var table = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.EventTableType);
@@ -338,9 +339,12 @@ public sealed class DashboardEventFilterCatalogTests
 
         rate.InspectorLabels.DataGroup.ShouldBe("Rate source");
         rate.UsesMetricVisualization.ShouldBeTrue();
+        rateTile.InspectorLabels.DataGroup.ShouldBe("Rate source");
+        rateTile.UsesMetricVisualization.ShouldBeTrue();
         kpi.InspectorLabels.DataGroup.ShouldBe("KPI source");
         kpi.InspectorLabels.TimeWindowGroup.ShouldBe("Metric query");
         rate.UsesMetricWindow.ShouldBeFalse();
+        rateTile.UsesMetricWindow.ShouldBeFalse();
         rate.InspectorLabels.TimeWindowGroup.ShouldBe("Rate window");
         rate.InspectorLabels.FilterGroup.ShouldBe("Traffic filter");
         gauge.InspectorLabels.DataGroup.ShouldBe("Gauge source");
@@ -735,6 +739,10 @@ public sealed class DashboardEventFilterCatalogTests
 
         configuration["title"].ShouldBe("Factory rate");
         configuration["metric"].ShouldBe("factoryRateMetric");
+        configuration[DashboardWidgetCatalog.MetricVisualizationKey].ShouldBe(DashboardMetricVisualizationIds.Value);
+        configuration[DashboardMetricValueVisualizationOptions.TitleKey].ShouldBe("Factory rate");
+        configuration[DashboardMetricValueVisualizationOptions.SubtitleKey].ShouldBe(DashboardMetricValueVisualizationOptions.DefaultSubtitle);
+        configuration[DashboardMetricValueVisualizationOptions.UnitTextKey].ShouldBeEmpty();
         configuration.ContainsKey(DashboardEventFilterCatalog.EventTypeKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardEventFilterCatalog.TopicStartsWithKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardEventFilterCatalog.StatusKey).ShouldBeFalse();
@@ -1821,6 +1829,22 @@ public sealed class DashboardEventFilterCatalogTests
             .UsesMetricVisualization
             .ShouldBeTrue();
         modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.RateTileType)
+            .DefaultConfiguration
+            .Keys
+            .ShouldContain(DashboardWidgetCatalog.MetricVisualizationKey);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.RateTileType)
+            .DefaultConfiguration[DashboardMetricValueVisualizationOptions.TitleKey]
+            .ShouldBe("Rate tile");
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.RateTileType)
+            .DefaultConfiguration[DashboardMetricValueVisualizationOptions.SubtitleKey]
+            .ShouldBe("Selected rate metric");
+        DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.RateTileType)
+            .UsesMetricVisualization
+            .ShouldBeTrue();
+        modules
             .Single(static module => module.Type == DashboardWidgetCatalog.StatusValueType)
             .DefaultConfiguration
             .Keys
@@ -1864,6 +1888,12 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldBe(DashboardMetricVisualizationIds.Value);
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.KpiTileType)
+            .PropertyGroups
+            .SelectMany(static group => group.Properties)
+            .Select(static property => property.Key)
+            .ShouldNotContain(DashboardWidgetCatalog.PrimaryMetricKey);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.RateTileType)
             .PropertyGroups
             .SelectMany(static group => group.Properties)
             .Select(static property => property.Key)
