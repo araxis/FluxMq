@@ -736,7 +736,7 @@
         }
 
         _widgetDraft.GaugeStyle = string.IsNullOrWhiteSpace(value)
-            ? DashboardWidgetCatalog.GaugeStyleRing
+            ? DashboardEventGaugeWidgetOptions.StyleRing
             : value.Trim();
         await AutoApplyAsync();
     }
@@ -754,28 +754,28 @@
         var normalized = value ?? string.Empty;
         switch (key)
         {
-            case DashboardWidgetCatalog.GaugeMinKey:
+            case DashboardEventGaugeWidgetOptions.MinKey:
                 _widgetDraft.GaugeMin = normalized;
                 break;
-            case DashboardWidgetCatalog.GaugeMaxKey:
+            case DashboardEventGaugeWidgetOptions.MaxKey:
                 _widgetDraft.GaugeMax = normalized;
                 break;
-            case DashboardWidgetCatalog.GaugeTargetKey:
+            case DashboardEventGaugeWidgetOptions.TargetKey:
                 _widgetDraft.GaugeTarget = normalized;
                 break;
-            case DashboardWidgetCatalog.GaugeWarningKey:
+            case DashboardEventGaugeWidgetOptions.WarningKey:
                 _widgetDraft.GaugeWarning = normalized;
                 break;
-            case DashboardWidgetCatalog.GaugeCriticalKey:
+            case DashboardEventGaugeWidgetOptions.CriticalKey:
                 _widgetDraft.GaugeCritical = normalized;
                 break;
-            case DashboardWidgetCatalog.GaugeNormalColorKey:
+            case DashboardEventGaugeWidgetOptions.NormalColorKey:
                 _widgetDraft.GaugeNormalColor = normalized;
                 break;
-            case DashboardWidgetCatalog.GaugeWarningColorKey:
+            case DashboardEventGaugeWidgetOptions.WarningColorKey:
                 _widgetDraft.GaugeWarningColor = normalized;
                 break;
-            case DashboardWidgetCatalog.GaugeCriticalColorKey:
+            case DashboardEventGaugeWidgetOptions.CriticalColorKey:
                 _widgetDraft.GaugeCriticalColor = normalized;
                 break;
             default:

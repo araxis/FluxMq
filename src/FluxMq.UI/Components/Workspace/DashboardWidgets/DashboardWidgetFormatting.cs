@@ -295,23 +295,23 @@ public static class DashboardWidgetFormatting
         DashboardWidgetSnapshot widget,
         DashboardMetricValue metric)
     {
-        var min = ReadGaugeNumber(widget, DashboardWidgetCatalog.GaugeMinKey, DashboardWidgetCatalog.GaugeDefaultMin);
-        var max = ReadGaugeNumber(widget, DashboardWidgetCatalog.GaugeMaxKey, DashboardWidgetCatalog.GaugeDefaultMax);
+        var min = ReadGaugeNumber(widget, DashboardEventGaugeWidgetOptions.MinKey, DashboardEventGaugeWidgetOptions.DefaultMin);
+        var max = ReadGaugeNumber(widget, DashboardEventGaugeWidgetOptions.MaxKey, DashboardEventGaugeWidgetOptions.DefaultMax);
         if (max <= min)
         {
             max = min + 1;
         }
 
         var target = Math.Clamp(
-            ReadGaugeNumber(widget, DashboardWidgetCatalog.GaugeTargetKey, DashboardWidgetCatalog.GaugeDefaultTarget),
+            ReadGaugeNumber(widget, DashboardEventGaugeWidgetOptions.TargetKey, DashboardEventGaugeWidgetOptions.DefaultTarget),
             min,
             max);
         var warning = Math.Clamp(
-            ReadGaugeNumber(widget, DashboardWidgetCatalog.GaugeWarningKey, DashboardWidgetCatalog.GaugeDefaultWarning),
+            ReadGaugeNumber(widget, DashboardEventGaugeWidgetOptions.WarningKey, DashboardEventGaugeWidgetOptions.DefaultWarning),
             min,
             max);
         var critical = Math.Clamp(
-            ReadGaugeNumber(widget, DashboardWidgetCatalog.GaugeCriticalKey, DashboardWidgetCatalog.GaugeDefaultCritical),
+            ReadGaugeNumber(widget, DashboardEventGaugeWidgetOptions.CriticalKey, DashboardEventGaugeWidgetOptions.DefaultCritical),
             min,
             max);
         if (critical < warning)
@@ -322,10 +322,10 @@ public static class DashboardWidgetFormatting
         var progress = Math.Clamp((metric.Value - min) / (max - min) * 100, 0, 100);
         var targetProgress = Math.Clamp((target - min) / (max - min) * 100, 0, 100);
         var fillColor = metric.Value >= critical
-            ? ReadGaugeColor(widget, DashboardWidgetCatalog.GaugeCriticalColorKey, DashboardWidgetCatalog.GaugeDefaultCriticalColor)
+            ? ReadGaugeColor(widget, DashboardEventGaugeWidgetOptions.CriticalColorKey, DashboardEventGaugeWidgetOptions.DefaultCriticalColor)
             : metric.Value >= warning
-                ? ReadGaugeColor(widget, DashboardWidgetCatalog.GaugeWarningColorKey, DashboardWidgetCatalog.GaugeDefaultWarningColor)
-                : ReadGaugeColor(widget, DashboardWidgetCatalog.GaugeNormalColorKey, DashboardWidgetCatalog.GaugeDefaultNormalColor);
+                ? ReadGaugeColor(widget, DashboardEventGaugeWidgetOptions.WarningColorKey, DashboardEventGaugeWidgetOptions.DefaultWarningColor)
+                : ReadGaugeColor(widget, DashboardEventGaugeWidgetOptions.NormalColorKey, DashboardEventGaugeWidgetOptions.DefaultNormalColor);
 
         var style = string.Concat(
             "--gauge-progress:",

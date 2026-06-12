@@ -1,12 +1,12 @@
 @namespace FluxMq.UI.Components.Workspace
 
 @{
-    var gaugeStyle = DashboardWidgetCatalog.NormalizeGaugeStyle(Widget.ReadString(DashboardWidgetCatalog.GaugeStyleKey));
+    var gaugeStyle = DashboardEventGaugeWidgetOptions.NormalizeStyle(Widget.ReadString(DashboardEventGaugeWidgetOptions.StyleKey));
     var gauge = DashboardWidgetFormatting.GaugeVisualState(Widget, Metric);
 }
 
 <div class="dashboard-single-gauge-layout">
-    @if (gaugeStyle == DashboardWidgetCatalog.GaugeStyleMeter)
+    @if (gaugeStyle == DashboardEventGaugeWidgetOptions.StyleMeter)
     {
         <div class="dashboard-gauge-meter-panel">
             <div class="dashboard-gauge-meter-header">

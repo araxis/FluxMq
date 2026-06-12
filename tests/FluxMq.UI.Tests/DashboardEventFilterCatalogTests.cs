@@ -59,14 +59,14 @@ public sealed class DashboardEventFilterCatalogTests
             DashboardWidgetCatalog.EventGaugeType,
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
-                [DashboardWidgetCatalog.GaugeMinKey] = "20",
-                [DashboardWidgetCatalog.GaugeMaxKey] = "120",
-                [DashboardWidgetCatalog.GaugeTargetKey] = "90",
-                [DashboardWidgetCatalog.GaugeWarningKey] = "70",
-                [DashboardWidgetCatalog.GaugeCriticalKey] = "100",
-                [DashboardWidgetCatalog.GaugeNormalColorKey] = "#11aa99",
-                [DashboardWidgetCatalog.GaugeWarningColorKey] = "#ffaa00",
-                [DashboardWidgetCatalog.GaugeCriticalColorKey] = "#ff3355"
+                [DashboardEventGaugeWidgetOptions.MinKey] = "20",
+                [DashboardEventGaugeWidgetOptions.MaxKey] = "120",
+                [DashboardEventGaugeWidgetOptions.TargetKey] = "90",
+                [DashboardEventGaugeWidgetOptions.WarningKey] = "70",
+                [DashboardEventGaugeWidgetOptions.CriticalKey] = "100",
+                [DashboardEventGaugeWidgetOptions.NormalColorKey] = "#11aa99",
+                [DashboardEventGaugeWidgetOptions.WarningColorKey] = "#ffaa00",
+                [DashboardEventGaugeWidgetOptions.CriticalColorKey] = "#ff3355"
             });
         var metric = new DashboardMetricValue("Events", 80, "events", "80");
 
@@ -359,12 +359,12 @@ public sealed class DashboardEventFilterCatalogTests
     [Fact]
     public void GaugeStyleOptions_ExposeOnlyImplementedShapes()
     {
-        DashboardWidgetCatalog.NormalizeGaugeStyle(DashboardWidgetCatalog.GaugeStyleRing)
-            .ShouldBe(DashboardWidgetCatalog.GaugeStyleRing);
-        DashboardWidgetCatalog.NormalizeGaugeStyle(DashboardWidgetCatalog.GaugeStyleMeter)
-            .ShouldBe(DashboardWidgetCatalog.GaugeStyleMeter);
-        DashboardWidgetCatalog.NormalizeGaugeStyle("tiles")
-            .ShouldBe(DashboardWidgetCatalog.GaugeStyleRing);
+        DashboardEventGaugeWidgetOptions.NormalizeStyle(DashboardEventGaugeWidgetOptions.StyleRing)
+            .ShouldBe(DashboardEventGaugeWidgetOptions.StyleRing);
+        DashboardEventGaugeWidgetOptions.NormalizeStyle(DashboardEventGaugeWidgetOptions.StyleMeter)
+            .ShouldBe(DashboardEventGaugeWidgetOptions.StyleMeter);
+        DashboardEventGaugeWidgetOptions.NormalizeStyle("tiles")
+            .ShouldBe(DashboardEventGaugeWidgetOptions.StyleRing);
 
         var root = FindRepositoryRoot();
         var displayRows = File.ReadAllText(Path.Combine(
@@ -383,12 +383,12 @@ public sealed class DashboardEventFilterCatalogTests
             "Dialogs",
             "DashboardWidgetEditorDialog.razor"));
 
-        displayRows.ShouldContain("GaugeStyleRing");
-        displayRows.ShouldContain("GaugeStyleMeter");
+        displayRows.ShouldContain("DashboardEventGaugeWidgetOptions.StyleRing");
+        displayRows.ShouldContain("DashboardEventGaugeWidgetOptions.StyleMeter");
         displayRows.ShouldNotContain("GaugeStyleTiles");
         displayRows.ShouldNotContain(">Tiles</button>");
-        dialog.ShouldContain("GaugeStyleRing");
-        dialog.ShouldContain("GaugeStyleMeter");
+        dialog.ShouldContain("DashboardEventGaugeWidgetOptions.StyleRing");
+        dialog.ShouldContain("DashboardEventGaugeWidgetOptions.StyleMeter");
         dialog.ShouldNotContain("GaugeStyleTiles");
         dialog.ShouldNotContain("Text=\"Tiles\"");
     }
@@ -423,7 +423,7 @@ public sealed class DashboardEventFilterCatalogTests
         configuration[DashboardEventFilterCatalog.AttributeFilterKey("qos")].ShouldBe("1");
         configuration[DashboardEventFilterCatalog.AttributeFilterKey("retain")].ShouldBe("false");
         configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
-        configuration.ContainsKey(DashboardWidgetCatalog.GaugeStyleKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardEventGaugeWidgetOptions.StyleKey).ShouldBeFalse();
     }
 
     [Fact]
@@ -443,15 +443,15 @@ public sealed class DashboardEventFilterCatalogTests
                     [DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricCurrentRate,
                     [DashboardWidgetCatalog.DisplayMetricsKey] = "messages,currentRate",
                     [DashboardWidgetCatalog.MetricCardColumnsKey] = "3",
-                    [DashboardWidgetCatalog.GaugeStyleKey] = DashboardWidgetCatalog.GaugeStyleMeter,
-                    [DashboardWidgetCatalog.GaugeMinKey] = "10",
-                    [DashboardWidgetCatalog.GaugeMaxKey] = "250",
-                    [DashboardWidgetCatalog.GaugeTargetKey] = "200",
-                    [DashboardWidgetCatalog.GaugeWarningKey] = "150",
-                    [DashboardWidgetCatalog.GaugeCriticalKey] = "225",
-                    [DashboardWidgetCatalog.GaugeNormalColorKey] = "#123456",
-                    [DashboardWidgetCatalog.GaugeWarningColorKey] = "#abcdef",
-                    [DashboardWidgetCatalog.GaugeCriticalColorKey] = "#fedcba"
+                    [DashboardEventGaugeWidgetOptions.StyleKey] = DashboardEventGaugeWidgetOptions.StyleMeter,
+                    [DashboardEventGaugeWidgetOptions.MinKey] = "10",
+                    [DashboardEventGaugeWidgetOptions.MaxKey] = "250",
+                    [DashboardEventGaugeWidgetOptions.TargetKey] = "200",
+                    [DashboardEventGaugeWidgetOptions.WarningKey] = "150",
+                    [DashboardEventGaugeWidgetOptions.CriticalKey] = "225",
+                    [DashboardEventGaugeWidgetOptions.NormalColorKey] = "#123456",
+                    [DashboardEventGaugeWidgetOptions.WarningColorKey] = "#abcdef",
+                    [DashboardEventGaugeWidgetOptions.CriticalColorKey] = "#fedcba"
                 }),
             new DashboardEventFilterCatalog());
 
@@ -460,15 +460,15 @@ public sealed class DashboardEventFilterCatalogTests
 
         configuration["title"].ShouldBe("Factory load");
         configuration["metric"].ShouldBe("factoryLoadMetric");
-        configuration[DashboardWidgetCatalog.GaugeStyleKey].ShouldBe(DashboardWidgetCatalog.GaugeStyleMeter);
-        configuration[DashboardWidgetCatalog.GaugeMinKey].ShouldBe("10");
-        configuration[DashboardWidgetCatalog.GaugeMaxKey].ShouldBe("250");
-        configuration[DashboardWidgetCatalog.GaugeTargetKey].ShouldBe("200");
-        configuration[DashboardWidgetCatalog.GaugeWarningKey].ShouldBe("150");
-        configuration[DashboardWidgetCatalog.GaugeCriticalKey].ShouldBe("225");
-        configuration[DashboardWidgetCatalog.GaugeNormalColorKey].ShouldBe("#123456");
-        configuration[DashboardWidgetCatalog.GaugeWarningColorKey].ShouldBe("#abcdef");
-        configuration[DashboardWidgetCatalog.GaugeCriticalColorKey].ShouldBe("#fedcba");
+        configuration[DashboardEventGaugeWidgetOptions.StyleKey].ShouldBe(DashboardEventGaugeWidgetOptions.StyleMeter);
+        configuration[DashboardEventGaugeWidgetOptions.MinKey].ShouldBe("10");
+        configuration[DashboardEventGaugeWidgetOptions.MaxKey].ShouldBe("250");
+        configuration[DashboardEventGaugeWidgetOptions.TargetKey].ShouldBe("200");
+        configuration[DashboardEventGaugeWidgetOptions.WarningKey].ShouldBe("150");
+        configuration[DashboardEventGaugeWidgetOptions.CriticalKey].ShouldBe("225");
+        configuration[DashboardEventGaugeWidgetOptions.NormalColorKey].ShouldBe("#123456");
+        configuration[DashboardEventGaugeWidgetOptions.WarningColorKey].ShouldBe("#abcdef");
+        configuration[DashboardEventGaugeWidgetOptions.CriticalColorKey].ShouldBe("#fedcba");
         configuration.ContainsKey(DashboardEventFilterCatalog.EventTypeKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardEventFilterCatalog.TopicStartsWithKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardEventFilterCatalog.StatusKey).ShouldBeFalse();
@@ -1790,24 +1790,24 @@ public sealed class DashboardEventFilterCatalogTests
             .Keys
             .ShouldBe([
                 "title",
-                DashboardWidgetCatalog.GaugeStyleKey,
-                DashboardWidgetCatalog.GaugeMinKey,
-                DashboardWidgetCatalog.GaugeMaxKey,
-                DashboardWidgetCatalog.GaugeTargetKey,
-                DashboardWidgetCatalog.GaugeWarningKey,
-                DashboardWidgetCatalog.GaugeCriticalKey,
-                DashboardWidgetCatalog.GaugeNormalColorKey,
-                DashboardWidgetCatalog.GaugeWarningColorKey,
-                DashboardWidgetCatalog.GaugeCriticalColorKey
+                DashboardEventGaugeWidgetOptions.StyleKey,
+                DashboardEventGaugeWidgetOptions.MinKey,
+                DashboardEventGaugeWidgetOptions.MaxKey,
+                DashboardEventGaugeWidgetOptions.TargetKey,
+                DashboardEventGaugeWidgetOptions.WarningKey,
+                DashboardEventGaugeWidgetOptions.CriticalKey,
+                DashboardEventGaugeWidgetOptions.NormalColorKey,
+                DashboardEventGaugeWidgetOptions.WarningColorKey,
+                DashboardEventGaugeWidgetOptions.CriticalColorKey
             ], ignoreOrder: true);
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.EventGaugeType)
-            .DefaultConfiguration[DashboardWidgetCatalog.GaugeStyleKey]
-            .ShouldBe(DashboardWidgetCatalog.GaugeStyleRing);
+            .DefaultConfiguration[DashboardEventGaugeWidgetOptions.StyleKey]
+            .ShouldBe(DashboardEventGaugeWidgetOptions.StyleRing);
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.EventGaugeType)
-            .DefaultConfiguration[DashboardWidgetCatalog.GaugeMaxKey]
-            .ShouldBe(DashboardWidgetCatalog.GaugeDefaultMax);
+            .DefaultConfiguration[DashboardEventGaugeWidgetOptions.MaxKey]
+            .ShouldBe(DashboardEventGaugeWidgetOptions.DefaultMax);
         modules
             .Where(static module =>
                 string.Equals(module.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal) ||
@@ -1958,6 +1958,8 @@ public sealed class DashboardEventFilterCatalogTests
         catalogSource.ShouldContain("public static class DashboardWidgetCatalog");
         catalogSource.ShouldNotContain("MetricDigital");
         catalogSource.ShouldNotContain("MetricValue");
+        catalogSource.ShouldNotContain("GaugeStyleKey");
+        catalogSource.ShouldNotContain("GaugeDefault");
         File.ReadAllText(mauiProgramPath).ShouldNotContain("AddSingleton<DashboardWidgetCatalog>");
 
         Directory
@@ -1965,6 +1967,22 @@ public sealed class DashboardEventFilterCatalogTests
             .Select(File.ReadAllText)
             .Any(static source => source.Contains("@inject DashboardWidgetCatalog", StringComparison.Ordinal))
             .ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DashboardEventGaugeWidgetOptions_OwnsGaugeDefaults()
+    {
+        DashboardEventGaugeWidgetOptions.StyleKey.ShouldBe("gaugeStyle");
+        DashboardEventGaugeWidgetOptions.MinKey.ShouldBe("gauge.min");
+        DashboardEventGaugeWidgetOptions.MaxKey.ShouldBe("gauge.max");
+        DashboardEventGaugeWidgetOptions.DefaultNormalColor.ShouldBe("#2ed3c6");
+        DashboardEventGaugeWidgetOptions.DefaultWarningColor.ShouldBe("#f4b642");
+        DashboardEventGaugeWidgetOptions.DefaultCriticalColor.ShouldBe("#ff5f6d");
+
+        DashboardEventGaugeWidgetOptions.NormalizeStyle("unknown")
+            .ShouldBe(DashboardEventGaugeWidgetOptions.StyleRing);
+        DashboardEventGaugeWidgetOptions.NormalizeStyle(DashboardEventGaugeWidgetOptions.StyleMeter)
+            .ShouldBe(DashboardEventGaugeWidgetOptions.StyleMeter);
     }
 
     [Fact]
@@ -2065,8 +2083,8 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldContain(DashboardEventFilterCatalog.EventTypeKey);
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.EventGaugeType)
-            .DefaultConfiguration[DashboardWidgetCatalog.GaugeStyleKey]
-            .ShouldBe(DashboardWidgetCatalog.GaugeStyleRing);
+            .DefaultConfiguration[DashboardEventGaugeWidgetOptions.StyleKey]
+            .ShouldBe(DashboardEventGaugeWidgetOptions.StyleRing);
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.EventTableType)
             .Layout

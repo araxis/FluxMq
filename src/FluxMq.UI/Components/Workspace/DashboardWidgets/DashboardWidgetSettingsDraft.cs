@@ -28,16 +28,16 @@ public sealed class DashboardWidgetSettingsDraft
         MetricVisualization = DashboardMetricVisualizationSettingsDraft.Create(widget);
         PrimaryMetric = DashboardWidgetCatalog.NormalizePrimaryMetric(
             widget.ReadString(DashboardWidgetCatalog.PrimaryMetricKey));
-        GaugeStyle = DashboardWidgetCatalog.NormalizeGaugeStyle(
-            widget.ReadString(DashboardWidgetCatalog.GaugeStyleKey));
-        GaugeMin = ReadString(widget.Configuration, DashboardWidgetCatalog.GaugeMinKey) ?? DashboardWidgetCatalog.GaugeDefaultMin;
-        GaugeMax = ReadString(widget.Configuration, DashboardWidgetCatalog.GaugeMaxKey) ?? DashboardWidgetCatalog.GaugeDefaultMax;
-        GaugeTarget = ReadString(widget.Configuration, DashboardWidgetCatalog.GaugeTargetKey) ?? DashboardWidgetCatalog.GaugeDefaultTarget;
-        GaugeWarning = ReadString(widget.Configuration, DashboardWidgetCatalog.GaugeWarningKey) ?? DashboardWidgetCatalog.GaugeDefaultWarning;
-        GaugeCritical = ReadString(widget.Configuration, DashboardWidgetCatalog.GaugeCriticalKey) ?? DashboardWidgetCatalog.GaugeDefaultCritical;
-        GaugeNormalColor = ReadString(widget.Configuration, DashboardWidgetCatalog.GaugeNormalColorKey) ?? DashboardWidgetCatalog.GaugeDefaultNormalColor;
-        GaugeWarningColor = ReadString(widget.Configuration, DashboardWidgetCatalog.GaugeWarningColorKey) ?? DashboardWidgetCatalog.GaugeDefaultWarningColor;
-        GaugeCriticalColor = ReadString(widget.Configuration, DashboardWidgetCatalog.GaugeCriticalColorKey) ?? DashboardWidgetCatalog.GaugeDefaultCriticalColor;
+        GaugeStyle = DashboardEventGaugeWidgetOptions.NormalizeStyle(
+            widget.ReadString(DashboardEventGaugeWidgetOptions.StyleKey));
+        GaugeMin = ReadString(widget.Configuration, DashboardEventGaugeWidgetOptions.MinKey) ?? DashboardEventGaugeWidgetOptions.DefaultMin;
+        GaugeMax = ReadString(widget.Configuration, DashboardEventGaugeWidgetOptions.MaxKey) ?? DashboardEventGaugeWidgetOptions.DefaultMax;
+        GaugeTarget = ReadString(widget.Configuration, DashboardEventGaugeWidgetOptions.TargetKey) ?? DashboardEventGaugeWidgetOptions.DefaultTarget;
+        GaugeWarning = ReadString(widget.Configuration, DashboardEventGaugeWidgetOptions.WarningKey) ?? DashboardEventGaugeWidgetOptions.DefaultWarning;
+        GaugeCritical = ReadString(widget.Configuration, DashboardEventGaugeWidgetOptions.CriticalKey) ?? DashboardEventGaugeWidgetOptions.DefaultCritical;
+        GaugeNormalColor = ReadString(widget.Configuration, DashboardEventGaugeWidgetOptions.NormalColorKey) ?? DashboardEventGaugeWidgetOptions.DefaultNormalColor;
+        GaugeWarningColor = ReadString(widget.Configuration, DashboardEventGaugeWidgetOptions.WarningColorKey) ?? DashboardEventGaugeWidgetOptions.DefaultWarningColor;
+        GaugeCriticalColor = ReadString(widget.Configuration, DashboardEventGaugeWidgetOptions.CriticalColorKey) ?? DashboardEventGaugeWidgetOptions.DefaultCriticalColor;
         ChartType = DashboardWidgetCatalog.NormalizeChartType(
             widget.ReadString(DashboardWidgetCatalog.ChartTypeKey));
         MetricCardColumns = DashboardWidgetCatalog.NormalizeMetricCardColumns(
@@ -135,16 +135,16 @@ public sealed class DashboardWidgetSettingsDraft
         MetricVisualization.ApplyConfiguration(configuration);
         PrimaryMetric = DashboardWidgetCatalog.NormalizePrimaryMetric(
             ReadString(configuration, DashboardWidgetCatalog.PrimaryMetricKey));
-        GaugeStyle = DashboardWidgetCatalog.NormalizeGaugeStyle(
-            ReadString(configuration, DashboardWidgetCatalog.GaugeStyleKey));
-        GaugeMin = ReadString(configuration, DashboardWidgetCatalog.GaugeMinKey) ?? DashboardWidgetCatalog.GaugeDefaultMin;
-        GaugeMax = ReadString(configuration, DashboardWidgetCatalog.GaugeMaxKey) ?? DashboardWidgetCatalog.GaugeDefaultMax;
-        GaugeTarget = ReadString(configuration, DashboardWidgetCatalog.GaugeTargetKey) ?? DashboardWidgetCatalog.GaugeDefaultTarget;
-        GaugeWarning = ReadString(configuration, DashboardWidgetCatalog.GaugeWarningKey) ?? DashboardWidgetCatalog.GaugeDefaultWarning;
-        GaugeCritical = ReadString(configuration, DashboardWidgetCatalog.GaugeCriticalKey) ?? DashboardWidgetCatalog.GaugeDefaultCritical;
-        GaugeNormalColor = ReadString(configuration, DashboardWidgetCatalog.GaugeNormalColorKey) ?? DashboardWidgetCatalog.GaugeDefaultNormalColor;
-        GaugeWarningColor = ReadString(configuration, DashboardWidgetCatalog.GaugeWarningColorKey) ?? DashboardWidgetCatalog.GaugeDefaultWarningColor;
-        GaugeCriticalColor = ReadString(configuration, DashboardWidgetCatalog.GaugeCriticalColorKey) ?? DashboardWidgetCatalog.GaugeDefaultCriticalColor;
+        GaugeStyle = DashboardEventGaugeWidgetOptions.NormalizeStyle(
+            ReadString(configuration, DashboardEventGaugeWidgetOptions.StyleKey));
+        GaugeMin = ReadString(configuration, DashboardEventGaugeWidgetOptions.MinKey) ?? DashboardEventGaugeWidgetOptions.DefaultMin;
+        GaugeMax = ReadString(configuration, DashboardEventGaugeWidgetOptions.MaxKey) ?? DashboardEventGaugeWidgetOptions.DefaultMax;
+        GaugeTarget = ReadString(configuration, DashboardEventGaugeWidgetOptions.TargetKey) ?? DashboardEventGaugeWidgetOptions.DefaultTarget;
+        GaugeWarning = ReadString(configuration, DashboardEventGaugeWidgetOptions.WarningKey) ?? DashboardEventGaugeWidgetOptions.DefaultWarning;
+        GaugeCritical = ReadString(configuration, DashboardEventGaugeWidgetOptions.CriticalKey) ?? DashboardEventGaugeWidgetOptions.DefaultCritical;
+        GaugeNormalColor = ReadString(configuration, DashboardEventGaugeWidgetOptions.NormalColorKey) ?? DashboardEventGaugeWidgetOptions.DefaultNormalColor;
+        GaugeWarningColor = ReadString(configuration, DashboardEventGaugeWidgetOptions.WarningColorKey) ?? DashboardEventGaugeWidgetOptions.DefaultWarningColor;
+        GaugeCriticalColor = ReadString(configuration, DashboardEventGaugeWidgetOptions.CriticalColorKey) ?? DashboardEventGaugeWidgetOptions.DefaultCriticalColor;
         ChartType = DashboardWidgetCatalog.NormalizeChartType(
             ReadString(configuration, DashboardWidgetCatalog.ChartTypeKey));
         MetricCardColumns = DashboardWidgetCatalog.NormalizeMetricCardColumns(
@@ -361,8 +361,8 @@ public sealed class DashboardWidgetSettingsDraft
 
         if (Profile.UsesGaugeStyle)
         {
-            configuration[DashboardWidgetCatalog.GaugeStyleKey] =
-                DashboardWidgetCatalog.NormalizeGaugeStyle(GaugeStyle);
+            configuration[DashboardEventGaugeWidgetOptions.StyleKey] =
+                DashboardEventGaugeWidgetOptions.NormalizeStyle(GaugeStyle);
         }
 
         if (Profile.UsesChartType)
@@ -387,24 +387,24 @@ public sealed class DashboardWidgetSettingsDraft
     {
         if (Profile.UsesGaugeStyle)
         {
-            configuration[DashboardWidgetCatalog.GaugeStyleKey] =
-                DashboardWidgetCatalog.NormalizeGaugeStyle(GaugeStyle);
-            configuration[DashboardWidgetCatalog.GaugeMinKey] =
-                NormalizeNumber(GaugeMin, DashboardWidgetCatalog.GaugeDefaultMin);
-            configuration[DashboardWidgetCatalog.GaugeMaxKey] =
-                NormalizeNumber(GaugeMax, DashboardWidgetCatalog.GaugeDefaultMax);
-            configuration[DashboardWidgetCatalog.GaugeTargetKey] =
-                NormalizeNumber(GaugeTarget, DashboardWidgetCatalog.GaugeDefaultTarget);
-            configuration[DashboardWidgetCatalog.GaugeWarningKey] =
-                NormalizeNumber(GaugeWarning, DashboardWidgetCatalog.GaugeDefaultWarning);
-            configuration[DashboardWidgetCatalog.GaugeCriticalKey] =
-                NormalizeNumber(GaugeCritical, DashboardWidgetCatalog.GaugeDefaultCritical);
-            configuration[DashboardWidgetCatalog.GaugeNormalColorKey] =
-                NormalizeColor(GaugeNormalColor, DashboardWidgetCatalog.GaugeDefaultNormalColor);
-            configuration[DashboardWidgetCatalog.GaugeWarningColorKey] =
-                NormalizeColor(GaugeWarningColor, DashboardWidgetCatalog.GaugeDefaultWarningColor);
-            configuration[DashboardWidgetCatalog.GaugeCriticalColorKey] =
-                NormalizeColor(GaugeCriticalColor, DashboardWidgetCatalog.GaugeDefaultCriticalColor);
+            configuration[DashboardEventGaugeWidgetOptions.StyleKey] =
+                DashboardEventGaugeWidgetOptions.NormalizeStyle(GaugeStyle);
+            configuration[DashboardEventGaugeWidgetOptions.MinKey] =
+                NormalizeNumber(GaugeMin, DashboardEventGaugeWidgetOptions.DefaultMin);
+            configuration[DashboardEventGaugeWidgetOptions.MaxKey] =
+                NormalizeNumber(GaugeMax, DashboardEventGaugeWidgetOptions.DefaultMax);
+            configuration[DashboardEventGaugeWidgetOptions.TargetKey] =
+                NormalizeNumber(GaugeTarget, DashboardEventGaugeWidgetOptions.DefaultTarget);
+            configuration[DashboardEventGaugeWidgetOptions.WarningKey] =
+                NormalizeNumber(GaugeWarning, DashboardEventGaugeWidgetOptions.DefaultWarning);
+            configuration[DashboardEventGaugeWidgetOptions.CriticalKey] =
+                NormalizeNumber(GaugeCritical, DashboardEventGaugeWidgetOptions.DefaultCritical);
+            configuration[DashboardEventGaugeWidgetOptions.NormalColorKey] =
+                NormalizeColor(GaugeNormalColor, DashboardEventGaugeWidgetOptions.DefaultNormalColor);
+            configuration[DashboardEventGaugeWidgetOptions.WarningColorKey] =
+                NormalizeColor(GaugeWarningColor, DashboardEventGaugeWidgetOptions.DefaultWarningColor);
+            configuration[DashboardEventGaugeWidgetOptions.CriticalColorKey] =
+                NormalizeColor(GaugeCriticalColor, DashboardEventGaugeWidgetOptions.DefaultCriticalColor);
         }
     }
 

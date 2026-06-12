@@ -3310,3 +3310,21 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 758 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this value visual ownership cleanup, then inspect gauge/chart constant ownership as the next small cleanup candidate.
+- Dashboard gauge widget constant cleanup:
+  - Merged PR #192 (`Move value visualization constants`) into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Started `work/dashboard-gauge-constant-cleanup` from clean `main`.
+  - Moved event gauge keys, defaults, style values, colors, and style normalization from the general `DashboardWidgetCatalog` into `DashboardEventGaugeWidgetOptions`.
+  - Updated the event gauge module provider, inspector rows, widget settings draft, gauge renderer, gauge formatting, and tests to depend on the focused gauge owner.
+  - Kept persisted key strings, `event.gauge` widget id, defaults, schema, UI text, and rendering behavior unchanged.
+  - Added guard coverage proving the general dashboard widget catalog no longer owns gauge option constants and the gauge options class owns default/normalization behavior.
+  - Current line movement before memory update:
+    - 182 lines added.
+    - 190 lines removed.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - Initial parallel focused test command collided with the simultaneous UI build on the generated XAML intermediate output.
+    - Serial rerun of `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardEventGaugeWidgetOptions_OwnsGaugeDefaults|FullyQualifiedName~GaugeStyleOptions_ExposeOnlyImplementedShapes|FullyQualifiedName~AddDashboardWidget_AddsEventGaugeDefaults|FullyQualifiedName~DashboardWidgetFormatting_MapsGaugeMetricValueThroughConfiguredRange|FullyQualifiedName~DashboardWidgetCatalog_IsStaticAndNotRegisteredAsAService" -p:UseAppHost=false --verbosity minimal` passed with 5 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 430 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 759 tests.
+    - `git diff --check` passed with line-ending normalization warnings for the edited test file.
+  - Next step: commit/PR/merge this gauge ownership cleanup, then inspect chart constant ownership as the next small cleanup candidate.
