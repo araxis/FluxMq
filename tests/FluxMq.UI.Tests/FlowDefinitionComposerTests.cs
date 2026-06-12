@@ -1427,7 +1427,10 @@ public sealed class FlowDefinitionComposerTests
         var widget = layout.Widgets["rateTile"];
         widget.Type.ShouldBe(DashboardWidgetCatalog.RateTileType);
         widget.Configuration["title"].ShouldBe("Rate tile");
-        widget.Configuration.Keys.ShouldBe(["title", "metric"], ignoreOrder: true);
+        widget.Configuration.Keys.ShouldContain(DashboardWidgetCatalog.MetricVisualizationKey);
+        widget.Configuration[DashboardWidgetCatalog.MetricVisualizationKey].ShouldBe(DashboardMetricVisualizationIds.Value);
+        widget.Configuration[DashboardMetricValueVisualizationOptions.TitleKey].ShouldBe("Rate tile");
+        widget.Configuration[DashboardMetricValueVisualizationOptions.SubtitleKey].ShouldBe("Selected rate metric");
         widget.Configuration["metric"].ShouldBe("ops.rateTileMetric");
         layout.Metrics["ops.rateTileMetric"].Aggregation.ShouldBe("rate");
         layout.Bindings["rateTile"].PrimaryMetric.ShouldBe("ops.rateTileMetric");
