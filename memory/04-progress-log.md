@@ -3149,3 +3149,19 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - Second `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` run passed with 752 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this focused Events provider file cleanup, then split the Charts provider into its own file as the next small dashboard cleanup slice.
+- Dashboard charts provider file cleanup:
+  - Merged PR #182 (`Extract dashboard events provider`) into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Started `work/dashboard-charts-provider-file-cleanup` from clean `main`.
+  - Moved `DashboardChartWidgetModuleProvider` and its chart-specific helper methods out of the shared dashboard provider bundle into `DashboardChartWidgetModuleProvider.cs`.
+  - Kept `DashboardWidgetModuleCatalog` provider composition, Charts provider id, chart widget ids, renderer kinds, defaults, property groups, layout spans, compatibility aliases, dashboard schema, and UI behavior unchanged.
+  - Left MQTT Ops and Topics providers in `DashboardWidgetModuleProviders.cs` for later focused splits.
+  - Current line movement before staging:
+    - `DashboardWidgetModuleProviders.cs`: 199 lines removed.
+    - `DashboardChartWidgetModuleProvider.cs`: 198-line Charts provider file added.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - First focused chart provider test command collided with the parallel UI build over the intermediate XAML assembly; immediate serial rerun passed with 2 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 423 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 752 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this focused Charts provider file cleanup, then split the MQTT Ops provider into its own file as the next small dashboard cleanup slice.
