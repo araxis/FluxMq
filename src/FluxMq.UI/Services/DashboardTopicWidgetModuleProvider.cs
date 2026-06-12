@@ -40,11 +40,7 @@ public sealed class DashboardTopicWidgetModuleProvider : IDashboardWidgetModuleP
                     ["topicProjection"]),
                 typeof(DashboardTopicTreeModuleView),
                 typeof(DashboardTopicTreeModuleView),
-                new Dictionary<string, string>(StringComparer.Ordinal)
-                {
-                    ["title"] = "Topic tree",
-                    [DashboardWidgetCatalog.ExcludeSystemTopicsKey] = "true"
-                },
+                TopicTreeConfiguration("Topic tree"),
                 [TopicTreeGroup()],
                 new DashboardWidgetStyleDefinition(),
                 new DashboardWidgetLayoutContract(1, 2, 2, 2),
@@ -93,6 +89,23 @@ public sealed class DashboardTopicWidgetModuleProvider : IDashboardWidgetModuleP
         return configuration;
     }
 
+    private static Dictionary<string, string> TopicTreeConfiguration(string header)
+        => new(StringComparer.Ordinal)
+        {
+            ["title"] = header,
+            [DashboardTopicTreeVisualOptions.HeaderKey] = header,
+            [DashboardTopicTreeVisualOptions.ShowHeaderKey] = "true",
+            [DashboardTopicTreeVisualOptions.ShowSummaryKey] = "true",
+            [DashboardTopicTreeVisualOptions.ShowTopicCountKey] = "true",
+            [DashboardTopicTreeVisualOptions.ShowMessageCountKey] = "true",
+            [DashboardTopicTreeVisualOptions.ExcludeSystemTopicsKey] = "true",
+            [DashboardTopicTreeVisualOptions.EmptyTextKey] = DashboardTopicTreeVisualOptions.DefaultEmptyText,
+            [DashboardTopicTreeVisualOptions.HeaderColorKey] = DashboardTopicTreeVisualOptions.DefaultHeaderColor,
+            [DashboardTopicTreeVisualOptions.TextColorKey] = DashboardTopicTreeVisualOptions.DefaultTextColor,
+            [DashboardTopicTreeVisualOptions.MutedColorKey] = DashboardTopicTreeVisualOptions.DefaultMutedColor,
+            [DashboardTopicTreeVisualOptions.AccentColorKey] = DashboardTopicTreeVisualOptions.DefaultAccentColor
+        };
+
     private static DashboardWidgetPropertyGroupDefinition MetricGroup(string id, string title)
         => new(id, title, [
             new("metric", "Metric", DashboardWidgetPropertyEditorKind.Metric, HelpText: "Named metric used by this widget."),
@@ -108,10 +121,17 @@ public sealed class DashboardTopicWidgetModuleProvider : IDashboardWidgetModuleP
 
     private static DashboardWidgetPropertyGroupDefinition TopicTreeGroup()
         => new("topic-tree", "Topic tree", [
-            new("title", "Title", DashboardWidgetPropertyEditorKind.Text),
-            new(DashboardWidgetCatalog.ExcludeSystemTopicsKey, "System topics", DashboardWidgetPropertyEditorKind.Toggle),
-            new("depth", "Depth", DashboardWidgetPropertyEditorKind.Number),
-            new("badges", "Badges", DashboardWidgetPropertyEditorKind.Select)
+            new(DashboardTopicTreeVisualOptions.HeaderKey, "Header", DashboardWidgetPropertyEditorKind.Text),
+            new(DashboardTopicTreeVisualOptions.ShowHeaderKey, "Show header", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardTopicTreeVisualOptions.ShowSummaryKey, "Summary", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardTopicTreeVisualOptions.ShowTopicCountKey, "Topic count", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardTopicTreeVisualOptions.ShowMessageCountKey, "Message count", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardTopicTreeVisualOptions.ExcludeSystemTopicsKey, "System topics", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardTopicTreeVisualOptions.EmptyTextKey, "Empty text", DashboardWidgetPropertyEditorKind.Text),
+            new(DashboardTopicTreeVisualOptions.HeaderColorKey, "Header color", DashboardWidgetPropertyEditorKind.Color),
+            new(DashboardTopicTreeVisualOptions.TextColorKey, "Text color", DashboardWidgetPropertyEditorKind.Color),
+            new(DashboardTopicTreeVisualOptions.MutedColorKey, "Muted color", DashboardWidgetPropertyEditorKind.Color),
+            new(DashboardTopicTreeVisualOptions.AccentColorKey, "Accent color", DashboardWidgetPropertyEditorKind.Color)
         ]);
 
     private static IReadOnlyList<DashboardWidgetPropertyOption> MetricOptions()

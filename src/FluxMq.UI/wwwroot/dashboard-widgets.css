@@ -926,6 +926,34 @@
     white-space: pre-wrap;
 }
 
+.dashboard-topic-tree-visual {
+    --topic-tree-header-color: var(--mud-palette-text-primary);
+    --topic-tree-text-color: var(--mud-palette-text-primary);
+    --topic-tree-muted-color: var(--mud-palette-text-secondary);
+    --topic-tree-accent-color: var(--widget-accent);
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: clamp(8px, 3cqh, 12px);
+    min-height: 0;
+    min-width: 0;
+}
+
+.dashboard-topic-tree-header {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    min-width: 0;
+}
+
+.dashboard-topic-tree-header .dashboard-widget-title {
+    color: var(--topic-tree-header-color);
+}
+
+.dashboard-topic-tree-header .dashboard-widget-subtitle {
+    color: var(--topic-tree-muted-color);
+}
+
 .dashboard-topic-summary {
     display: grid;
     gap: 8px;
@@ -933,8 +961,8 @@
 }
 
 .dashboard-topic-summary div {
-    background: color-mix(in srgb, var(--widget-accent) 11%, var(--flux-surface-2));
-    border: 1px solid color-mix(in srgb, var(--widget-accent) 28%, var(--flux-border));
+    background: color-mix(in srgb, var(--topic-tree-accent-color) 11%, var(--flux-surface-2));
+    border: 1px solid color-mix(in srgb, var(--topic-tree-accent-color) 28%, var(--flux-border));
     border-radius: 7px;
     display: flex;
     flex-direction: column;
@@ -943,14 +971,14 @@
 }
 
 .dashboard-topic-summary strong {
-    color: var(--mud-palette-text-primary);
+    color: var(--topic-tree-text-color);
     font-size: 22px;
     font-weight: 850;
     line-height: 1;
 }
 
 .dashboard-topic-summary span {
-    color: var(--mud-palette-text-secondary);
+    color: var(--topic-tree-muted-color);
     font-size: 10.5px;
     font-weight: 700;
     margin-top: 4px;
@@ -959,7 +987,7 @@
 
 .dashboard-topic-tree {
     background: color-mix(in srgb, var(--flux-canvas) 62%, transparent);
-    border: 1px solid color-mix(in srgb, var(--widget-accent) 22%, var(--flux-border));
+    border: 1px solid color-mix(in srgb, var(--topic-tree-accent-color) 22%, var(--flux-border));
     border-radius: 7px;
     flex: 1 1 auto;
     min-height: 0;

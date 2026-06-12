@@ -46,6 +46,7 @@ public sealed class DashboardWidgetSettingsDraft
             widget.ReadString(DashboardWidgetCatalog.DisplayMetricsKey))];
         ApplyLatestEventVisualValues(widget.Configuration);
         ApplyEventTableVisualValues(widget.Configuration);
+        ApplyTopicTreeVisualValues(widget.Configuration);
 
         foreach (var key in eventFilters.FilterKeys)
         {
@@ -152,6 +153,26 @@ public sealed class DashboardWidgetSettingsDraft
 
     public string TableMutedColor { get; set; } = DashboardEventTableVisualOptions.DefaultMutedColor;
 
+    public string TopicTreeHeader { get; set; } = DashboardTopicTreeVisualOptions.DefaultHeader;
+
+    public bool TopicTreeShowHeader { get; set; } = true;
+
+    public bool TopicTreeShowSummary { get; set; } = true;
+
+    public bool TopicTreeShowTopicCount { get; set; } = true;
+
+    public bool TopicTreeShowMessageCount { get; set; } = true;
+
+    public string TopicTreeEmptyText { get; set; } = DashboardTopicTreeVisualOptions.DefaultEmptyText;
+
+    public string TopicTreeHeaderColor { get; set; } = DashboardTopicTreeVisualOptions.DefaultHeaderColor;
+
+    public string TopicTreeTextColor { get; set; } = DashboardTopicTreeVisualOptions.DefaultTextColor;
+
+    public string TopicTreeMutedColor { get; set; } = DashboardTopicTreeVisualOptions.DefaultMutedColor;
+
+    public string TopicTreeAccentColor { get; set; } = DashboardTopicTreeVisualOptions.DefaultAccentColor;
+
     public bool IsKpiTile => string.Equals(Profile.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal);
 
     public bool UsesMetricQueryBuilder =>
@@ -204,6 +225,7 @@ public sealed class DashboardWidgetSettingsDraft
             ReadString(configuration, DashboardWidgetCatalog.DisplayMetricsKey)));
         ApplyLatestEventVisualValues(configuration);
         ApplyEventTableVisualValues(configuration);
+        ApplyTopicTreeVisualValues(configuration);
 
         foreach (var key in _eventFilters.FilterKeys)
         {
@@ -410,6 +432,52 @@ public sealed class DashboardWidgetSettingsDraft
         }
     }
 
+    public void SetTopicTreeVisualValue(string key, string? value)
+    {
+        if (!Profile.UsesTopicTreeVisual)
+        {
+            return;
+        }
+
+        switch (key)
+        {
+            case DashboardTopicTreeVisualOptions.HeaderKey:
+                TopicTreeHeader = NormalizeText(value, DashboardTopicTreeVisualOptions.DefaultHeader);
+                Title = TopicTreeHeader;
+                break;
+            case DashboardTopicTreeVisualOptions.ShowHeaderKey:
+                TopicTreeShowHeader = NormalizeBoolean(value, TopicTreeShowHeader);
+                break;
+            case DashboardTopicTreeVisualOptions.ShowSummaryKey:
+                TopicTreeShowSummary = NormalizeBoolean(value, TopicTreeShowSummary);
+                break;
+            case DashboardTopicTreeVisualOptions.ShowTopicCountKey:
+                TopicTreeShowTopicCount = NormalizeBoolean(value, TopicTreeShowTopicCount);
+                break;
+            case DashboardTopicTreeVisualOptions.ShowMessageCountKey:
+                TopicTreeShowMessageCount = NormalizeBoolean(value, TopicTreeShowMessageCount);
+                break;
+            case DashboardTopicTreeVisualOptions.ExcludeSystemTopicsKey:
+                ExcludeSystemTopics = NormalizeBoolean(value, ExcludeSystemTopics);
+                break;
+            case DashboardTopicTreeVisualOptions.EmptyTextKey:
+                TopicTreeEmptyText = NormalizeText(value, DashboardTopicTreeVisualOptions.DefaultEmptyText);
+                break;
+            case DashboardTopicTreeVisualOptions.HeaderColorKey:
+                TopicTreeHeaderColor = Normalize(value);
+                break;
+            case DashboardTopicTreeVisualOptions.TextColorKey:
+                TopicTreeTextColor = Normalize(value);
+                break;
+            case DashboardTopicTreeVisualOptions.MutedColorKey:
+                TopicTreeMutedColor = Normalize(value);
+                break;
+            case DashboardTopicTreeVisualOptions.AccentColorKey:
+                TopicTreeAccentColor = Normalize(value);
+                break;
+        }
+    }
+
     public IReadOnlyDictionary<string, string> BuildConfiguration()
     {
         var title = string.IsNullOrWhiteSpace(Title) ? Profile.Title : Title.Trim();
@@ -421,6 +489,7 @@ public sealed class DashboardWidgetSettingsDraft
                 ["title"] = title,
                 [DashboardWidgetCatalog.ExcludeSystemTopicsKey] = ExcludeSystemTopics ? "true" : "false"
             };
+            ApplyTopicTreeVisualConfiguration(topicConfiguration);
             ApplyMetricName(topicConfiguration);
             return topicConfiguration;
         }
@@ -720,6 +789,68 @@ public sealed class DashboardWidgetSettingsDraft
         configuration[DashboardEventTableVisualOptions.MutedColorKey] = NormalizeColor(
             TableMutedColor,
             DashboardEventTableVisualOptions.DefaultMutedColor);
+    }
+
+    private void ApplyTopicTreeVisualValues(IReadOnlyDictionary<string, string> configuration)
+    {
+        if (!Profile.UsesTopicTreeVisual)
+        {
+            return;
+        }
+
+        TopicTreeHeader = ReadString(configuration, DashboardTopicTreeVisualOptions.HeaderKey) ??
+            ReadString(configuration, "title") ??
+            DashboardTopicTreeVisualOptions.DefaultHeader;
+        Title = TopicTreeHeader;
+        TopicTreeShowHeader = ReadBoolean(configuration, DashboardTopicTreeVisualOptions.ShowHeaderKey, true);
+        TopicTreeShowSummary = ReadBoolean(configuration, DashboardTopicTreeVisualOptions.ShowSummaryKey, true);
+        TopicTreeShowTopicCount = ReadBoolean(configuration, DashboardTopicTreeVisualOptions.ShowTopicCountKey, true);
+        TopicTreeShowMessageCount = ReadBoolean(configuration, DashboardTopicTreeVisualOptions.ShowMessageCountKey, true);
+        ExcludeSystemTopics = ReadBoolean(configuration, DashboardTopicTreeVisualOptions.ExcludeSystemTopicsKey, true);
+        TopicTreeEmptyText = ReadString(configuration, DashboardTopicTreeVisualOptions.EmptyTextKey) ??
+            DashboardTopicTreeVisualOptions.DefaultEmptyText;
+        TopicTreeHeaderColor = ReadString(configuration, DashboardTopicTreeVisualOptions.HeaderColorKey) ??
+            DashboardTopicTreeVisualOptions.DefaultHeaderColor;
+        TopicTreeTextColor = ReadString(configuration, DashboardTopicTreeVisualOptions.TextColorKey) ??
+            DashboardTopicTreeVisualOptions.DefaultTextColor;
+        TopicTreeMutedColor = ReadString(configuration, DashboardTopicTreeVisualOptions.MutedColorKey) ??
+            DashboardTopicTreeVisualOptions.DefaultMutedColor;
+        TopicTreeAccentColor = ReadString(configuration, DashboardTopicTreeVisualOptions.AccentColorKey) ??
+            DashboardTopicTreeVisualOptions.DefaultAccentColor;
+    }
+
+    private void ApplyTopicTreeVisualConfiguration(Dictionary<string, string> configuration)
+    {
+        if (!Profile.UsesTopicTreeVisual)
+        {
+            return;
+        }
+
+        var header = string.IsNullOrWhiteSpace(TopicTreeHeader)
+            ? DashboardTopicTreeVisualOptions.DefaultHeader
+            : TopicTreeHeader.Trim();
+        configuration["title"] = header;
+        configuration[DashboardTopicTreeVisualOptions.HeaderKey] = header;
+        configuration[DashboardTopicTreeVisualOptions.ShowHeaderKey] = TopicTreeShowHeader ? bool.TrueString : bool.FalseString;
+        configuration[DashboardTopicTreeVisualOptions.ShowSummaryKey] = TopicTreeShowSummary ? bool.TrueString : bool.FalseString;
+        configuration[DashboardTopicTreeVisualOptions.ShowTopicCountKey] = TopicTreeShowTopicCount ? bool.TrueString : bool.FalseString;
+        configuration[DashboardTopicTreeVisualOptions.ShowMessageCountKey] = TopicTreeShowMessageCount ? bool.TrueString : bool.FalseString;
+        configuration[DashboardTopicTreeVisualOptions.ExcludeSystemTopicsKey] = ExcludeSystemTopics ? bool.TrueString : bool.FalseString;
+        configuration[DashboardTopicTreeVisualOptions.EmptyTextKey] = string.IsNullOrWhiteSpace(TopicTreeEmptyText)
+            ? DashboardTopicTreeVisualOptions.DefaultEmptyText
+            : TopicTreeEmptyText.Trim();
+        configuration[DashboardTopicTreeVisualOptions.HeaderColorKey] = NormalizeColor(
+            TopicTreeHeaderColor,
+            DashboardTopicTreeVisualOptions.DefaultHeaderColor);
+        configuration[DashboardTopicTreeVisualOptions.TextColorKey] = NormalizeColor(
+            TopicTreeTextColor,
+            DashboardTopicTreeVisualOptions.DefaultTextColor);
+        configuration[DashboardTopicTreeVisualOptions.MutedColorKey] = NormalizeColor(
+            TopicTreeMutedColor,
+            DashboardTopicTreeVisualOptions.DefaultMutedColor);
+        configuration[DashboardTopicTreeVisualOptions.AccentColorKey] = NormalizeColor(
+            TopicTreeAccentColor,
+            DashboardTopicTreeVisualOptions.DefaultAccentColor);
     }
 
     private void TrimFiltersToEventType()

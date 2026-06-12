@@ -1,7 +1,7 @@
 .topic-tree-view {
     background:
-        linear-gradient(color-mix(in srgb, var(--mud-palette-info) 10%, transparent) 1px, transparent 1px),
-        linear-gradient(90deg, color-mix(in srgb, var(--mud-palette-info) 8%, transparent) 1px, transparent 1px);
+        linear-gradient(color-mix(in srgb, var(--topic-tree-accent-color, var(--mud-palette-info)) 10%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, var(--topic-tree-accent-color, var(--mud-palette-info)) 8%, transparent) 1px, transparent 1px);
     background-size: 30px 30px;
     border-radius: 8px;
     height: 100%;
@@ -30,8 +30,8 @@
 }
 
 .topic-node-flat:hover {
-    background: color-mix(in srgb, var(--mud-palette-info) 9%, var(--flux-surface-2));
-    border-color: color-mix(in srgb, var(--mud-palette-info) 32%, transparent);
+    background: color-mix(in srgb, var(--topic-tree-accent-color, var(--mud-palette-info)) 9%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--topic-tree-accent-color, var(--mud-palette-info)) 32%, transparent);
     transform: translateX(1px);
 }
 
@@ -43,13 +43,13 @@
 
 .topic-node-flat-icon {
     align-items: center;
-    color: var(--mud-palette-info);
+    color: var(--topic-tree-accent-color, var(--mud-palette-info));
     display: inline-flex;
     flex: 0 0 auto;
 }
 
 .topic-path {
-    color: var(--mud-palette-text-primary);
+    color: var(--topic-tree-text-color, var(--mud-palette-text-primary));
     flex: 1;
     font-weight: 700;
     min-width: 0;

@@ -4,45 +4,103 @@
 @inject LiveMqttWorkspaceService Live
 
 @{
+    var widget = Context.Widget;
     var messages = TopicMessages;
+    var showTopicCount = ReadBoolean(widget, DashboardTopicTreeVisualOptions.ShowTopicCountKey, true);
+    var showMessageCount = ReadBoolean(widget, DashboardTopicTreeVisualOptions.ShowMessageCountKey, true);
 }
 
-<div class="dashboard-topic-summary">
-    <div>
-        <strong>@DashboardWidgetFormatting.TopicCount(messages)</strong>
-        <span>topics</span>
+<div class="dashboard-topic-tree-visual" style="@VisualStyle(widget)">
+    @if (ShowHeader(widget))
+    {
+        <div class="dashboard-topic-tree-header">
+            <div class="dashboard-widget-icon">
+                <MudIcon Icon="@DashboardWidgetFormatting.WidgetIcon(widget)" Size="Size.Small" />
+            </div>
+            <div class="dashboard-widget-title-block">
+                <span class="dashboard-widget-title">@Header(widget)</span>
+                <span class="dashboard-widget-subtitle">@Subtitle(widget)</span>
+            </div>
+        </div>
+    }
+
+    @if (ShowSummary(widget) && (showTopicCount || showMessageCount))
+    {
+        <div class="dashboard-topic-summary">
+            @if (showTopicCount)
+            {
+                <div>
+                    <strong>@DashboardWidgetFormatting.TopicCount(messages)</strong>
+                    <span>topics</span>
+                </div>
+            }
+            @if (showMessageCount)
+            {
+                <div>
+                    <strong>@messages.Count</strong>
+                    <span>messages</span>
+                </div>
+            }
+        </div>
+    }
+
+    <div class="dashboard-topic-tree">
+        <TopicTreeView Messages="@messages"
+                       Compact="true"
+                       EmptyMessage="@EmptyText(widget)" />
     </div>
-    <div>
-        <strong>@messages.Count</strong>
-        <span>messages</span>
-    </div>
-</div>
-<div class="dashboard-topic-tree">
-    <TopicTreeView Messages="@messages"
-                   Compact="true"
-                   EmptyMessage="No topic traffic yet" />
 </div>
 
 @code {
     [Parameter, EditorRequired]
-    public DashboardWidgetSnapshot Widget { get; set; } = null!;
-
-    [Parameter]
-    public IReadOnlyList<MqttEnvelope>? MessagesOverride { get; set; }
+    public DashboardWidgetRenderContext Context { get; set; } = null!;
 
     private IReadOnlyList<MqttEnvelope> TopicMessages
     {
         get
         {
-            var messages = MessagesOverride ?? Live.RecentMessages;
-            return ExcludeSystemTopics
+            var messages = Context.TopicMessages ?? Live.RecentMessages;
+            return ExcludeSystemTopics(Context.Widget)
                 ? messages.Where(static message => !message.Topic.StartsWith("$SYS/", StringComparison.Ordinal)).ToArray()
                 : messages;
         }
     }
 
-    private bool ExcludeSystemTopics
-        => !string.Equals(Widget.ReadString(DashboardWidgetCatalog.ExcludeSystemTopicsKey), "false", StringComparison.OrdinalIgnoreCase);
+    private static string Header(DashboardWidgetSnapshot widget)
+        => widget.ReadString(DashboardTopicTreeVisualOptions.HeaderKey) ??
+           widget.ReadString("title") ??
+           DashboardTopicTreeVisualOptions.DefaultHeader;
+
+    private static string EmptyText(DashboardWidgetSnapshot widget)
+        => widget.ReadString(DashboardTopicTreeVisualOptions.EmptyTextKey) ??
+           DashboardTopicTreeVisualOptions.DefaultEmptyText;
+
+    private static string Subtitle(DashboardWidgetSnapshot widget)
+        => ExcludeSystemTopics(widget)
+            ? "System topics hidden"
+            : "System topics shown";
+
+    private static bool ShowHeader(DashboardWidgetSnapshot widget)
+        => ReadBoolean(widget, DashboardTopicTreeVisualOptions.ShowHeaderKey, true);
+
+    private static bool ShowSummary(DashboardWidgetSnapshot widget)
+        => ReadBoolean(widget, DashboardTopicTreeVisualOptions.ShowSummaryKey, true);
+
+    private static bool ExcludeSystemTopics(DashboardWidgetSnapshot widget)
+        => ReadBoolean(widget, DashboardTopicTreeVisualOptions.ExcludeSystemTopicsKey, true);
+
+    private static string VisualStyle(DashboardWidgetSnapshot widget)
+    {
+        var header = widget.ReadString(DashboardTopicTreeVisualOptions.HeaderColorKey) ??
+            DashboardTopicTreeVisualOptions.DefaultHeaderColor;
+        var text = widget.ReadString(DashboardTopicTreeVisualOptions.TextColorKey) ??
+            DashboardTopicTreeVisualOptions.DefaultTextColor;
+        var muted = widget.ReadString(DashboardTopicTreeVisualOptions.MutedColorKey) ??
+            DashboardTopicTreeVisualOptions.DefaultMutedColor;
+        var accent = widget.ReadString(DashboardTopicTreeVisualOptions.AccentColorKey) ??
+            DashboardTopicTreeVisualOptions.DefaultAccentColor;
+        return $"--topic-tree-header-color:{header};--topic-tree-text-color:{text};--topic-tree-muted-color:{muted};--topic-tree-accent-color:{accent};";
+    }
 
     protected override void OnInitialized()
     {
@@ -58,4 +116,9 @@
     {
         Live.Changed -= OnLiveChanged;
     }
+
+    private static bool ReadBoolean(DashboardWidgetSnapshot widget, string key, bool fallback)
+        => bool.TryParse(widget.ReadString(key), out var parsed)
+            ? parsed
+            : fallback;
 }

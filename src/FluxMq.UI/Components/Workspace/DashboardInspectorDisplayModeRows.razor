@@ -109,6 +109,58 @@
         </PropertyGridRow>
     }
 
+    @if (Draft.Profile.UsesTopicTreeVisual)
+    {
+        <PropertyGridRow Name="Header">
+            <input class="property-grid-input"
+                   value="@Draft.TopicTreeHeader"
+                   @oninput="@((ChangeEventArgs args) => ChangeTopicTreeVisualPropertyAsync(DashboardTopicTreeVisualOptions.HeaderKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Show header">
+            @TopicTreeBooleanRow(DashboardTopicTreeVisualOptions.ShowHeaderKey, Draft.TopicTreeShowHeader)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Summary">
+            @TopicTreeBooleanRow(DashboardTopicTreeVisualOptions.ShowSummaryKey, Draft.TopicTreeShowSummary)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Topic count">
+            @TopicTreeBooleanRow(DashboardTopicTreeVisualOptions.ShowTopicCountKey, Draft.TopicTreeShowTopicCount)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Message count">
+            @TopicTreeBooleanRow(DashboardTopicTreeVisualOptions.ShowMessageCountKey, Draft.TopicTreeShowMessageCount)
+        </PropertyGridRow>
+        <PropertyGridRow Name="@Labels.TopicSystemRow">
+            <div class="property-grid-button-group">
+                <button type="button"
+                        class="@BooleanChoiceClass(!Draft.ExcludeSystemTopics, true)"
+                        @onclick="@(() => ChangeTopicTreeVisualPropertyAsync(DashboardTopicTreeVisualOptions.ExcludeSystemTopicsKey, bool.FalseString))">Show</button>
+                <button type="button"
+                        class="@BooleanChoiceClass(Draft.ExcludeSystemTopics, true)"
+                        @onclick="@(() => ChangeTopicTreeVisualPropertyAsync(DashboardTopicTreeVisualOptions.ExcludeSystemTopicsKey, bool.TrueString))">Hide</button>
+            </div>
+        </PropertyGridRow>
+        <PropertyGridRow Name="Empty text">
+            <input class="property-grid-input"
+                   value="@Draft.TopicTreeEmptyText"
+                   @oninput="@((ChangeEventArgs args) => ChangeTopicTreeVisualPropertyAsync(DashboardTopicTreeVisualOptions.EmptyTextKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Header color">
+            <PropertyGridColorPicker Value="@Draft.TopicTreeHeaderColor"
+                                     ValueChanged="@((string? value) => ChangeTopicTreeVisualPropertyAsync(DashboardTopicTreeVisualOptions.HeaderColorKey, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Text color">
+            <PropertyGridColorPicker Value="@Draft.TopicTreeTextColor"
+                                     ValueChanged="@((string? value) => ChangeTopicTreeVisualPropertyAsync(DashboardTopicTreeVisualOptions.TextColorKey, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Muted color">
+            <PropertyGridColorPicker Value="@Draft.TopicTreeMutedColor"
+                                     ValueChanged="@((string? value) => ChangeTopicTreeVisualPropertyAsync(DashboardTopicTreeVisualOptions.MutedColorKey, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Accent color">
+            <PropertyGridColorPicker Value="@Draft.TopicTreeAccentColor"
+                                     ValueChanged="@((string? value) => ChangeTopicTreeVisualPropertyAsync(DashboardTopicTreeVisualOptions.AccentColorKey, value))" />
+        </PropertyGridRow>
+    }
+
     @if (Draft.Profile.UsesGaugeStyle)
     {
         <PropertyGridRow Name="@Labels.GaugeRow">
@@ -180,19 +232,6 @@
         </PropertyGridRow>
     }
 
-    @if (Draft.Profile.IsTopicTreeWidget)
-    {
-        <PropertyGridRow Name="@Labels.TopicSystemRow">
-            <div class="property-grid-button-group">
-                <button type="button"
-                        class="@ChoiceClass(Draft.ExcludeSystemTopics ? "false" : "true", "true")"
-                        @onclick="@(() => ExcludeSystemTopicsChanged.InvokeAsync(false))">Show</button>
-                <button type="button"
-                        class="@ChoiceClass(Draft.ExcludeSystemTopics ? "true" : "false", "true")"
-                        @onclick="@(() => ExcludeSystemTopicsChanged.InvokeAsync(true))">Hide</button>
-            </div>
-        </PropertyGridRow>
-    }
 }
 
 @code {
@@ -215,10 +254,10 @@
     public EventCallback<DashboardInspectorPropertyValueChange> EventTableVisualPropertyChanged { get; set; }
 
     [Parameter]
-    public EventCallback<string?> ChartTypeChanged { get; set; }
+    public EventCallback<DashboardInspectorPropertyValueChange> TopicTreeVisualPropertyChanged { get; set; }
 
     [Parameter]
-    public EventCallback<bool> ExcludeSystemTopicsChanged { get; set; }
+    public EventCallback<string?> ChartTypeChanged { get; set; }
 
     private static string ChoiceClass(string? currentValue, string value)
         => string.Equals(currentValue ?? string.Empty, value, StringComparison.Ordinal)
@@ -239,6 +278,9 @@
     private Task ChangeEventTableVisualPropertyAsync(string key, string? value)
         => EventTableVisualPropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
 
+    private Task ChangeTopicTreeVisualPropertyAsync(string key, string? value)
+        => TopicTreeVisualPropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
+
     private RenderFragment BooleanRow(string key, bool value) => @<div class="property-grid-button-group">
         <button type="button"
                 class="@BooleanChoiceClass(value, true)"
@@ -255,5 +297,14 @@
         <button type="button"
                 class="@BooleanChoiceClass(value, false)"
                 @onclick="@(() => ChangeEventTableVisualPropertyAsync(key, bool.FalseString))">Off</button>
+    </div>;
+
+    private RenderFragment TopicTreeBooleanRow(string key, bool value) => @<div class="property-grid-button-group">
+        <button type="button"
+                class="@BooleanChoiceClass(value, true)"
+                @onclick="@(() => ChangeTopicTreeVisualPropertyAsync(key, bool.TrueString))">On</button>
+        <button type="button"
+                class="@BooleanChoiceClass(value, false)"
+                @onclick="@(() => ChangeTopicTreeVisualPropertyAsync(key, bool.FalseString))">Off</button>
     </div>;
 }

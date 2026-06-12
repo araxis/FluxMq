@@ -336,6 +336,7 @@ public sealed class DashboardEventFilterCatalogTests
         table.UsesEventTableVisual.ShouldBeTrue();
         tree.IsEventWidget.ShouldBeFalse();
         tree.IsTopicTreeWidget.ShouldBeTrue();
+        tree.UsesTopicTreeVisual.ShouldBeTrue();
         tree.UsesMetricQuery.ShouldBeFalse();
         tree.UsesEventFilters.ShouldBeFalse();
         tree.UsesMetricWindow.ShouldBeFalse();
@@ -571,14 +572,25 @@ public sealed class DashboardEventFilterCatalogTests
                 }),
             new DashboardEventFilterCatalog());
 
-        draft.Title = "Broker topics";
-        draft.ExcludeSystemTopics = true;
+        draft.SetTopicTreeVisualValue(DashboardTopicTreeVisualOptions.HeaderKey, "Broker topics");
+        draft.SetTopicTreeVisualValue(DashboardTopicTreeVisualOptions.ShowSummaryKey, bool.FalseString);
+        draft.SetTopicTreeVisualValue(DashboardTopicTreeVisualOptions.ShowMessageCountKey, bool.FalseString);
+        draft.SetTopicTreeVisualValue(DashboardTopicTreeVisualOptions.ExcludeSystemTopicsKey, bool.TrueString);
+        draft.SetTopicTreeVisualValue(DashboardTopicTreeVisualOptions.AccentColorKey, "#33ccaa");
 
         var configuration = draft.BuildConfiguration();
 
-        configuration.Keys.ShouldBe(["title", DashboardWidgetCatalog.ExcludeSystemTopicsKey], ignoreOrder: true);
         configuration["title"].ShouldBe("Broker topics");
-        configuration[DashboardWidgetCatalog.ExcludeSystemTopicsKey].ShouldBe("true");
+        configuration[DashboardTopicTreeVisualOptions.HeaderKey].ShouldBe("Broker topics");
+        configuration[DashboardTopicTreeVisualOptions.ShowSummaryKey].ShouldBe(bool.FalseString);
+        configuration[DashboardTopicTreeVisualOptions.ShowTopicCountKey].ShouldBe(bool.TrueString);
+        configuration[DashboardTopicTreeVisualOptions.ShowMessageCountKey].ShouldBe(bool.FalseString);
+        configuration[DashboardTopicTreeVisualOptions.ExcludeSystemTopicsKey].ShouldBe(bool.TrueString);
+        configuration[DashboardTopicTreeVisualOptions.EmptyTextKey].ShouldBe(DashboardTopicTreeVisualOptions.DefaultEmptyText);
+        configuration[DashboardTopicTreeVisualOptions.HeaderColorKey].ShouldBe(DashboardTopicTreeVisualOptions.DefaultHeaderColor);
+        configuration[DashboardTopicTreeVisualOptions.TextColorKey].ShouldBe(DashboardTopicTreeVisualOptions.DefaultTextColor);
+        configuration[DashboardTopicTreeVisualOptions.MutedColorKey].ShouldBe(DashboardTopicTreeVisualOptions.DefaultMutedColor);
+        configuration[DashboardTopicTreeVisualOptions.AccentColorKey].ShouldBe("#33ccaa");
     }
 
     [Fact]
@@ -2453,8 +2465,31 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldBe(["topic-tree"]);
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.TopicTreeType)
+            .PropertyGroups
+            .Single()
+            .Properties
+            .Select(static property => property.Key)
+            .ShouldBe([
+                DashboardTopicTreeVisualOptions.HeaderKey,
+                DashboardTopicTreeVisualOptions.ShowHeaderKey,
+                DashboardTopicTreeVisualOptions.ShowSummaryKey,
+                DashboardTopicTreeVisualOptions.ShowTopicCountKey,
+                DashboardTopicTreeVisualOptions.ShowMessageCountKey,
+                DashboardTopicTreeVisualOptions.ExcludeSystemTopicsKey,
+                DashboardTopicTreeVisualOptions.EmptyTextKey,
+                DashboardTopicTreeVisualOptions.HeaderColorKey,
+                DashboardTopicTreeVisualOptions.TextColorKey,
+                DashboardTopicTreeVisualOptions.MutedColorKey,
+                DashboardTopicTreeVisualOptions.AccentColorKey
+            ]);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.TopicTreeType)
             .DefaultConfiguration[DashboardWidgetCatalog.ExcludeSystemTopicsKey]
             .ShouldBe("true");
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.TopicTreeType)
+            .DefaultConfiguration[DashboardTopicTreeVisualOptions.HeaderKey]
+            .ShouldBe("Topic tree");
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.TopicTreeType)
             .Layout
@@ -3117,7 +3152,8 @@ public sealed class DashboardEventFilterCatalogTests
         displayRows.ShouldContain("PropertyGridRow Name=\"@Labels.TopicSystemRow\"");
         displayRows.ShouldContain("GaugeStyleChanged");
         displayRows.ShouldContain("ChartTypeChanged");
-        displayRows.ShouldContain("ExcludeSystemTopicsChanged");
+        displayRows.ShouldContain("TopicTreeVisualPropertyChanged");
+        inspector.ShouldContain("TopicTreeVisualPropertyChanged=\"@SetTopicTreeVisualPropertyAsync\"");
     }
 
     [Fact]
