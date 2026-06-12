@@ -20,6 +20,7 @@ public sealed record DashboardWidgetSettingsProfile(
     bool UsesLatestEventVisual = false,
     bool UsesEventTableVisual = false,
     bool UsesTopicActivityVisual = false,
+    bool UsesLineChartVisual = false,
     bool UsesTopicTreeVisual = false,
     DashboardWidgetInspectorLabels? Labels = null)
 {
@@ -239,9 +240,8 @@ public static class DashboardWidgetSettingsProfiles
                 normalized,
                 "Line chart",
                 Icons.Material.Filled.StackedLineChart,
-                usesVisualMetrics: true,
-                usesChartType: true,
                 usesMetricWindow: true,
+                usesLineChartVisual: true,
                 labels: DashboardWidgetInspectorLabels.Chart),
             DashboardWidgetCatalog.AreaChartType => Event(
                 normalized,
@@ -327,6 +327,7 @@ public static class DashboardWidgetSettingsProfiles
         bool usesLatestEventVisual = false,
         bool usesEventTableVisual = false,
         bool usesTopicActivityVisual = false,
+        bool usesLineChartVisual = false,
         DashboardWidgetInspectorLabels? labels = null)
         => new(
             type,
@@ -345,6 +346,7 @@ public static class DashboardWidgetSettingsProfiles
             usesLatestEventVisual,
             usesEventTableVisual,
             usesTopicActivityVisual,
+            usesLineChartVisual,
             UsesTopicTreeVisual: false,
             labels);
 }

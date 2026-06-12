@@ -47,6 +47,7 @@ public sealed class DashboardWidgetSettingsDraft
         ApplyLatestEventVisualValues(widget.Configuration);
         ApplyEventTableVisualValues(widget.Configuration);
         ApplyTopicActivityVisualValues(widget.Configuration);
+        ApplyLineChartVisualValues(widget.Configuration);
         ApplyTopicTreeVisualValues(widget.Configuration);
 
         foreach (var key in eventFilters.FilterKeys)
@@ -173,6 +174,27 @@ public sealed class DashboardWidgetSettingsDraft
 
     public string TopicActivityAccentColor { get; set; } = DashboardTopicActivityVisualOptions.DefaultAccentColor;
 
+    public string LineChartHeader { get; set; } = DashboardLineChartVisualOptions.DefaultHeader;
+
+    public bool LineChartShowHeader { get; set; } = true;
+
+    public bool LineChartShowGrid { get; set; } = true;
+
+    public bool LineChartShowLabels { get; set; } = true;
+
+    public bool LineChartShowPoints { get; set; }
+
+    public string LineChartLineWidth { get; set; } =
+        DashboardLineChartVisualOptions.DefaultLineWidth.ToString(CultureInfo.InvariantCulture);
+
+    public string LineChartEmptyText { get; set; } = DashboardLineChartVisualOptions.DefaultEmptyText;
+
+    public string LineChartLineColor { get; set; } = DashboardLineChartVisualOptions.DefaultLineColor;
+
+    public string LineChartGridColor { get; set; } = DashboardLineChartVisualOptions.DefaultGridColor;
+
+    public string LineChartLabelColor { get; set; } = DashboardLineChartVisualOptions.DefaultLabelColor;
+
     public string TopicTreeHeader { get; set; } = DashboardTopicTreeVisualOptions.DefaultHeader;
 
     public bool TopicTreeShowHeader { get; set; } = true;
@@ -246,6 +268,7 @@ public sealed class DashboardWidgetSettingsDraft
         ApplyLatestEventVisualValues(configuration);
         ApplyEventTableVisualValues(configuration);
         ApplyTopicActivityVisualValues(configuration);
+        ApplyLineChartVisualValues(configuration);
         ApplyTopicTreeVisualValues(configuration);
 
         foreach (var key in _eventFilters.FilterKeys)
@@ -541,6 +564,51 @@ public sealed class DashboardWidgetSettingsDraft
         }
     }
 
+    public void SetLineChartVisualValue(string key, string? value)
+    {
+        if (!Profile.UsesLineChartVisual)
+        {
+            return;
+        }
+
+        switch (key)
+        {
+            case DashboardLineChartVisualOptions.HeaderKey:
+                LineChartHeader = NormalizeText(value, DashboardLineChartVisualOptions.DefaultHeader);
+                Title = LineChartHeader;
+                break;
+            case DashboardLineChartVisualOptions.ShowHeaderKey:
+                LineChartShowHeader = NormalizeBoolean(value, LineChartShowHeader);
+                break;
+            case DashboardLineChartVisualOptions.ShowGridKey:
+                LineChartShowGrid = NormalizeBoolean(value, LineChartShowGrid);
+                break;
+            case DashboardLineChartVisualOptions.ShowLabelsKey:
+                LineChartShowLabels = NormalizeBoolean(value, LineChartShowLabels);
+                break;
+            case DashboardLineChartVisualOptions.ShowPointsKey:
+                LineChartShowPoints = NormalizeBoolean(value, LineChartShowPoints);
+                break;
+            case DashboardLineChartVisualOptions.LineWidthKey:
+                LineChartLineWidth = DashboardLineChartVisualOptions
+                    .NormalizeLineWidth(value)
+                    .ToString(CultureInfo.InvariantCulture);
+                break;
+            case DashboardLineChartVisualOptions.EmptyTextKey:
+                LineChartEmptyText = NormalizeText(value, DashboardLineChartVisualOptions.DefaultEmptyText);
+                break;
+            case DashboardLineChartVisualOptions.LineColorKey:
+                LineChartLineColor = Normalize(value);
+                break;
+            case DashboardLineChartVisualOptions.GridColorKey:
+                LineChartGridColor = Normalize(value);
+                break;
+            case DashboardLineChartVisualOptions.LabelColorKey:
+                LineChartLabelColor = Normalize(value);
+                break;
+        }
+    }
+
     public IReadOnlyDictionary<string, string> BuildConfiguration()
     {
         var title = string.IsNullOrWhiteSpace(Title) ? Profile.Title : Title.Trim();
@@ -614,6 +682,7 @@ public sealed class DashboardWidgetSettingsDraft
         ApplyLatestEventVisualConfiguration(configuration);
         ApplyEventTableVisualConfiguration(configuration);
         ApplyTopicActivityVisualConfiguration(configuration);
+        ApplyLineChartVisualConfiguration(configuration);
         ApplyMetricVisualizationConfiguration(configuration);
         ApplyMetricVisualization(configuration);
         ApplyMetricName(configuration);
@@ -976,6 +1045,77 @@ public sealed class DashboardWidgetSettingsDraft
         configuration[DashboardTopicTreeVisualOptions.AccentColorKey] = NormalizeColor(
             TopicTreeAccentColor,
             DashboardTopicTreeVisualOptions.DefaultAccentColor);
+    }
+
+    private void ApplyLineChartVisualValues(IReadOnlyDictionary<string, string> configuration)
+    {
+        if (!Profile.UsesLineChartVisual)
+        {
+            return;
+        }
+
+        LineChartHeader = ReadString(configuration, DashboardLineChartVisualOptions.HeaderKey) ??
+            ReadString(configuration, "title") ??
+            DashboardLineChartVisualOptions.DefaultHeader;
+        Title = LineChartHeader;
+        LineChartShowHeader = ReadBoolean(configuration, DashboardLineChartVisualOptions.ShowHeaderKey, true);
+        LineChartShowGrid = ReadBoolean(
+            configuration,
+            DashboardLineChartVisualOptions.ShowGridKey,
+            ReadBoolean(configuration, DashboardLineChartVisualOptions.LegacyShowGridKey, true));
+        LineChartShowLabels = ReadBoolean(
+            configuration,
+            DashboardLineChartVisualOptions.ShowLabelsKey,
+            ReadBoolean(configuration, DashboardLineChartVisualOptions.LegacyShowLabelsKey, true));
+        LineChartShowPoints = ReadBoolean(
+            configuration,
+            DashboardLineChartVisualOptions.ShowPointsKey,
+            ReadBoolean(configuration, DashboardLineChartVisualOptions.LegacyShowPointsKey, false));
+        LineChartLineWidth = DashboardLineChartVisualOptions
+            .NormalizeLineWidth(ReadString(configuration, DashboardLineChartVisualOptions.LineWidthKey))
+            .ToString(CultureInfo.InvariantCulture);
+        LineChartEmptyText = ReadString(configuration, DashboardLineChartVisualOptions.EmptyTextKey) ??
+            DashboardLineChartVisualOptions.DefaultEmptyText;
+        LineChartLineColor = ReadString(configuration, DashboardLineChartVisualOptions.LineColorKey) ??
+            ReadString(configuration, DashboardLineChartVisualOptions.LegacyLineColorKey) ??
+            DashboardLineChartVisualOptions.DefaultLineColor;
+        LineChartGridColor = ReadString(configuration, DashboardLineChartVisualOptions.GridColorKey) ??
+            DashboardLineChartVisualOptions.DefaultGridColor;
+        LineChartLabelColor = ReadString(configuration, DashboardLineChartVisualOptions.LabelColorKey) ??
+            DashboardLineChartVisualOptions.DefaultLabelColor;
+    }
+
+    private void ApplyLineChartVisualConfiguration(Dictionary<string, string> configuration)
+    {
+        if (!Profile.UsesLineChartVisual)
+        {
+            return;
+        }
+
+        var header = string.IsNullOrWhiteSpace(LineChartHeader)
+            ? DashboardLineChartVisualOptions.DefaultHeader
+            : LineChartHeader.Trim();
+        configuration["title"] = header;
+        configuration[DashboardChartWidgetOptions.TypeKey] = DashboardChartWidgetOptions.TypeLine;
+        configuration[DashboardLineChartVisualOptions.HeaderKey] = header;
+        configuration[DashboardLineChartVisualOptions.ShowHeaderKey] = LineChartShowHeader ? bool.TrueString : bool.FalseString;
+        configuration[DashboardLineChartVisualOptions.ShowGridKey] = LineChartShowGrid ? bool.TrueString : bool.FalseString;
+        configuration[DashboardLineChartVisualOptions.ShowLabelsKey] = LineChartShowLabels ? bool.TrueString : bool.FalseString;
+        configuration[DashboardLineChartVisualOptions.ShowPointsKey] = LineChartShowPoints ? bool.TrueString : bool.FalseString;
+        configuration[DashboardLineChartVisualOptions.LineWidthKey] =
+            DashboardLineChartVisualOptions.NormalizeLineWidth(LineChartLineWidth).ToString(CultureInfo.InvariantCulture);
+        configuration[DashboardLineChartVisualOptions.EmptyTextKey] = string.IsNullOrWhiteSpace(LineChartEmptyText)
+            ? DashboardLineChartVisualOptions.DefaultEmptyText
+            : LineChartEmptyText.Trim();
+        configuration[DashboardLineChartVisualOptions.LineColorKey] = NormalizeColor(
+            LineChartLineColor,
+            DashboardLineChartVisualOptions.DefaultLineColor);
+        configuration[DashboardLineChartVisualOptions.GridColorKey] = NormalizeColor(
+            LineChartGridColor,
+            DashboardLineChartVisualOptions.DefaultGridColor);
+        configuration[DashboardLineChartVisualOptions.LabelColorKey] = NormalizeColor(
+            LineChartLabelColor,
+            DashboardLineChartVisualOptions.DefaultLabelColor);
     }
 
     private void TrimFiltersToEventType()

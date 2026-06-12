@@ -3511,3 +3511,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 764 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this topic-activity visual UX slice before selecting the next dashboard component.
+- Dashboard line chart visual UX:
+  - Merged PR #206 (`Align topic activity visual settings`) into `main`; post-merge Windows validation passed before this slice.
+  - Started `work/dashboard-line-chart-visual-ux` from clean `main`.
+  - Refactored `chart.line` so the line chart visual owns focused display settings: header, grid visibility, label visibility, point visibility, line width, empty text, and line/grid/label colors.
+  - Kept event matching, windowing, and bucket calculation behavior unchanged; this slice only separates line-chart presentation from the old shared chart renderer/type switch.
+  - Updated edit-cell and live rendering to use a focused line-chart component, with the widget owning its header instead of the outer dashboard chrome.
+  - New line-chart defaults and saves write `chart.line.*` visual keys while existing `showGrid`, `showLabels`, `showPoints`, and `lineColor` keys still load as fallback.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --filter "FullyQualifiedName~DashboardEventFilterCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests" --verbosity minimal` passed with 228 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 436 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 765 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this line-chart visual UX slice, then review `chart.line` manually before selecting the next dashboard component.

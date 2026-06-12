@@ -330,6 +330,9 @@ public sealed class DashboardEventFilterCatalogTests
         gauge.UsesMetricWindow.ShouldBeFalse();
         chart.SupportsMetricSlots.ShouldBeFalse();
         chart.UsesMetricWindow.ShouldBeTrue();
+        chart.UsesVisualMetrics.ShouldBeFalse();
+        chart.UsesChartType.ShouldBeFalse();
+        chart.UsesLineChartVisual.ShouldBeTrue();
         table.IsEventWidget.ShouldBeTrue();
         table.UsesVisualMetrics.ShouldBeFalse();
         table.SupportsMetricSlots.ShouldBeFalse();
@@ -634,6 +637,54 @@ public sealed class DashboardEventFilterCatalogTests
         configuration[DashboardEventFilterCatalog.EventTypeKey].ShouldBe(FluxMqEventTypes.MqttMessagePublished);
         configuration[DashboardEventFilterCatalog.TopicStartsWithKey].ShouldBe("factory/");
         configuration.ContainsKey("limit").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DashboardWidgetSettingsDraft_BuildsLineChartVisualConfiguration()
+    {
+        var draft = DashboardWidgetSettingsDraft.Create(
+            new DashboardWidgetSnapshot(
+                "throughput",
+                DashboardWidgetCatalog.LineChartType,
+                new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["title"] = "Throughput",
+                    [DashboardChartWidgetOptions.TypeKey] = DashboardChartWidgetOptions.TypeArea,
+                    [DashboardLineChartVisualOptions.LegacyShowGridKey] = bool.FalseString,
+                    [DashboardLineChartVisualOptions.LegacyShowPointsKey] = bool.TrueString,
+                    [DashboardLineChartVisualOptions.LegacyLineColorKey] = "#112233",
+                    [DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricMessages,
+                    [DashboardEventFilterCatalog.EventTypeKey] = FluxMqEventTypes.MqttMessageReceived
+                }),
+            new DashboardEventFilterCatalog());
+
+        draft.SetLineChartVisualValue(DashboardLineChartVisualOptions.HeaderKey, "Received throughput");
+        draft.SetLineChartVisualValue(DashboardLineChartVisualOptions.ShowGridKey, bool.TrueString);
+        draft.SetLineChartVisualValue(DashboardLineChartVisualOptions.ShowLabelsKey, bool.FalseString);
+        draft.SetLineChartVisualValue(DashboardLineChartVisualOptions.LineWidthKey, "5");
+        draft.SetLineChartVisualValue(DashboardLineChartVisualOptions.EmptyTextKey, "No throughput");
+        draft.SetLineChartVisualValue(DashboardLineChartVisualOptions.LineColorKey, "#33ccaa");
+        draft.SetLineChartVisualValue(DashboardLineChartVisualOptions.GridColorKey, "#203040");
+        draft.SetLineChartVisualValue(DashboardLineChartVisualOptions.LabelColorKey, "#8899aa");
+
+        var configuration = draft.BuildConfiguration();
+
+        configuration["title"].ShouldBe("Received throughput");
+        configuration[DashboardChartWidgetOptions.TypeKey].ShouldBe(DashboardChartWidgetOptions.TypeLine);
+        configuration[DashboardLineChartVisualOptions.HeaderKey].ShouldBe("Received throughput");
+        configuration[DashboardLineChartVisualOptions.ShowHeaderKey].ShouldBe(bool.TrueString);
+        configuration[DashboardLineChartVisualOptions.ShowGridKey].ShouldBe(bool.TrueString);
+        configuration[DashboardLineChartVisualOptions.ShowLabelsKey].ShouldBe(bool.FalseString);
+        configuration[DashboardLineChartVisualOptions.ShowPointsKey].ShouldBe(bool.TrueString);
+        configuration[DashboardLineChartVisualOptions.LineWidthKey].ShouldBe("5");
+        configuration[DashboardLineChartVisualOptions.EmptyTextKey].ShouldBe("No throughput");
+        configuration[DashboardLineChartVisualOptions.LineColorKey].ShouldBe("#33ccaa");
+        configuration[DashboardLineChartVisualOptions.GridColorKey].ShouldBe("#203040");
+        configuration[DashboardLineChartVisualOptions.LabelColorKey].ShouldBe("#8899aa");
+        configuration[DashboardEventFilterCatalog.EventTypeKey].ShouldBe(FluxMqEventTypes.MqttMessageReceived);
+        configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardLineChartVisualOptions.LegacyShowGridKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardLineChartVisualOptions.LegacyLineColorKey).ShouldBeFalse();
     }
 
     [Fact]
@@ -2430,6 +2481,26 @@ public sealed class DashboardEventFilterCatalogTests
             .DefaultConfiguration[DashboardChartWidgetOptions.TypeKey]
             .ShouldBe(DashboardChartWidgetOptions.TypeLine);
         modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.LineChartType)
+            .DefaultConfiguration
+            .ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey)
+            .ShouldBeFalse();
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.LineChartType)
+            .DefaultConfiguration[DashboardLineChartVisualOptions.HeaderKey]
+            .ShouldBe("Line chart");
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.LineChartType)
+            .PropertyGroups
+            .Select(static group => group.Id)
+            .ShouldBe(["line-chart"]);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.LineChartType)
+            .PropertyGroups
+            .SelectMany(static group => group.Properties)
+            .Select(static property => property.Key)
+            .ShouldContain(DashboardLineChartVisualOptions.LineColorKey);
+        modules
             .Single(static module => module.Type == DashboardWidgetCatalog.AreaChartType)
             .DefaultConfiguration[DashboardChartWidgetOptions.TypeKey]
             .ShouldBe(DashboardChartWidgetOptions.TypeArea);
@@ -3217,13 +3288,16 @@ public sealed class DashboardEventFilterCatalogTests
         displayRows.ShouldContain("PropertyGridColorPicker");
         displayRows.ShouldContain("GaugePropertyChanged");
         displayRows.ShouldContain("PropertyGridRow Name=\"@Labels.ChartRow\"");
+        displayRows.ShouldContain("PropertyGridRow Name=\"Line width\"");
         displayRows.ShouldContain("PropertyGridRow Name=\"@Labels.TopicSystemRow\"");
         displayRows.ShouldContain("GaugeStyleChanged");
         displayRows.ShouldContain("ChartTypeChanged");
         displayRows.ShouldContain("TopicActivityVisualPropertyChanged");
         displayRows.ShouldContain("TopicTreeVisualPropertyChanged");
+        displayRows.ShouldContain("LineChartVisualPropertyChanged");
         inspector.ShouldContain("TopicActivityVisualPropertyChanged=\"@SetTopicActivityVisualPropertyAsync\"");
         inspector.ShouldContain("TopicTreeVisualPropertyChanged=\"@SetTopicTreeVisualPropertyAsync\"");
+        inspector.ShouldContain("LineChartVisualPropertyChanged=\"@SetLineChartVisualPropertyAsync\"");
     }
 
     [Fact]
@@ -3287,6 +3361,8 @@ public sealed class DashboardEventFilterCatalogTests
         var statusValue = File.ReadAllText(Path.Combine(widgetsPath, "DashboardStatusValueModuleView.razor"));
         var eventGaugeModule = File.ReadAllText(Path.Combine(widgetsPath, "DashboardEventGaugeModuleView.razor"));
         var eventGauge = File.ReadAllText(Path.Combine(widgetsPath, "DashboardMetricGaugeVisualizationView.razor"));
+        var lineChartModule = File.ReadAllText(Path.Combine(widgetsPath, "DashboardLineChartModuleView.razor"));
+        var lineChart = File.ReadAllText(Path.Combine(widgetsPath, "DashboardLineChartWidget.razor"));
 
         kpi.ShouldContain("DashboardMetricVisualizationHost");
         counter.ShouldContain("DashboardMetricValueVisualizationView");
@@ -3303,10 +3379,16 @@ public sealed class DashboardEventFilterCatalogTests
         eventGauge.ShouldNotContain("DashboardEventSnapshot Snapshot");
         eventRate.ShouldNotContain("DashboardEventRateWidget");
         eventRate.ShouldNotContain("Context.Snapshot");
+        lineChartModule.ShouldContain("DashboardLineChartWidget");
+        lineChartModule.ShouldNotContain("DashboardEventChartWidget");
+        lineChart.ShouldContain("DashboardLineChartVisualOptions");
+        lineChart.ShouldContain("Context.Snapshot");
+        lineChart.ShouldNotContain("DashboardChartWidgetOptions.NormalizeType");
         widgetView.ShouldContain("DashboardWidgetCatalog.EventCounterType");
         widgetView.ShouldContain("DashboardWidgetCatalog.EventRateType");
         widgetView.ShouldContain("DashboardWidgetCatalog.RateTileType");
         widgetView.ShouldContain("DashboardWidgetCatalog.StatusValueType");
+        widgetView.ShouldContain("DashboardWidgetCatalog.LineChartType");
     }
 
     [Fact]

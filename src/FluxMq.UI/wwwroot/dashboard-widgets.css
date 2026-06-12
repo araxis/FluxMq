@@ -569,6 +569,88 @@
     stroke: none;
 }
 
+.dashboard-line-chart-visual {
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--line-chart-line-color, var(--widget-accent)) 7%, transparent), transparent),
+        color-mix(in srgb, var(--flux-canvas) 58%, transparent);
+    border: 1px solid color-mix(in srgb, var(--line-chart-line-color, var(--widget-accent)) 22%, var(--flux-border));
+    border-radius: 7px;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+    overflow: hidden;
+    padding: clamp(10px, 4cqi, 14px);
+}
+
+.dashboard-line-chart-header {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    min-width: 0;
+}
+
+.dashboard-line-chart-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: center;
+    min-height: 0;
+}
+
+.dashboard-line-chart-svg {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+}
+
+.dashboard-line-chart-grid-line {
+    stroke: var(--line-chart-grid-color, var(--flux-border));
+    stroke-dasharray: 2 4;
+    stroke-linecap: round;
+    stroke-width: 0.8;
+    vector-effect: non-scaling-stroke;
+}
+
+.dashboard-line-chart-path {
+    fill: none;
+    stroke: var(--line-chart-line-color, var(--widget-accent));
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: var(--line-chart-width, 3);
+    vector-effect: non-scaling-stroke;
+}
+
+.dashboard-line-chart-point {
+    fill: var(--line-chart-line-color, var(--widget-accent));
+    stroke: color-mix(in srgb, var(--flux-canvas) 70%, transparent);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+}
+
+.dashboard-line-chart-labels {
+    align-items: center;
+    color: var(--line-chart-label-color, var(--mud-palette-text-secondary));
+    display: flex;
+    font-size: clamp(10px, 3cqi, 12px);
+    font-weight: 750;
+    gap: 8px;
+    justify-content: space-between;
+    line-height: 1.1;
+    min-width: 0;
+    text-transform: uppercase;
+}
+
+.dashboard-line-chart-labels span,
+.dashboard-line-chart-labels strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .dashboard-rate-track,
 .dashboard-gauge-meter {
     background: color-mix(in srgb, var(--mud-palette-text-primary) 9%, transparent);
