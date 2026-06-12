@@ -58,7 +58,7 @@
     public bool ShowLabel { get; set; } = true;
 
     [Parameter]
-    public string LabelPlacement { get; set; } = DashboardWidgetCatalog.MetricDigitalLabelPlacementBottom;
+    public string LabelPlacement { get; set; } = DashboardMetricDigitalVisualizationOptions.LabelPlacementBottom;
 
     [Parameter]
     public string? AccentColor { get; set; }
@@ -76,22 +76,22 @@
     public string? BorderColor { get; set; }
 
     [Parameter]
-    public int BorderWidth { get; set; } = DashboardWidgetCatalog.MetricDigitalDefaultBorderWidth;
+    public int BorderWidth { get; set; } = DashboardMetricDigitalVisualizationOptions.DefaultBorderWidth;
 
     [Parameter]
-    public int Radius { get; set; } = DashboardWidgetCatalog.MetricDigitalDefaultRadius;
+    public int Radius { get; set; } = DashboardMetricDigitalVisualizationOptions.DefaultRadius;
 
     [Parameter]
-    public int Padding { get; set; } = DashboardWidgetCatalog.MetricDigitalDefaultPadding;
+    public int Padding { get; set; } = DashboardMetricDigitalVisualizationOptions.DefaultPadding;
 
     [Parameter]
-    public string FitMode { get; set; } = DashboardWidgetCatalog.MetricDigitalFitCompact;
+    public string FitMode { get; set; } = DashboardMetricDigitalVisualizationOptions.FitCompact;
 
     [Parameter]
-    public string StyleKind { get; set; } = DashboardWidgetCatalog.MetricDigitalStylePanel;
+    public string StyleKind { get; set; } = DashboardMetricDigitalVisualizationOptions.StylePanel;
 
     [Parameter]
-    public string Glow { get; set; } = DashboardWidgetCatalog.MetricDigitalGlowSoft;
+    public string Glow { get; set; } = DashboardMetricDigitalVisualizationOptions.GlowSoft;
 
     [Parameter]
     public int MinimumDigits { get; set; } = 4;
@@ -118,7 +118,7 @@
     }
 
     private string RootClass =>
-        $"dashboard-digital-readout style-{DashboardWidgetCatalog.NormalizeMetricDigitalStyle(StyleKind)} glow-{DashboardWidgetCatalog.NormalizeMetricDigitalGlow(Glow)} fit-{DashboardWidgetCatalog.NormalizeMetricDigitalFitMode(FitMode)}";
+        $"dashboard-digital-readout style-{DashboardMetricDigitalVisualizationOptions.NormalizeStyle(StyleKind)} glow-{DashboardMetricDigitalVisualizationOptions.NormalizeGlow(Glow)} fit-{DashboardMetricDigitalVisualizationOptions.NormalizeFitMode(FitMode)}";
 
     private string? RootStyle => BuildRootStyle();
 
@@ -130,16 +130,16 @@
         ShowLabel &&
         !string.IsNullOrWhiteSpace(Label) &&
         string.Equals(
-            DashboardWidgetCatalog.NormalizeMetricDigitalLabelPlacement(LabelPlacement),
-            DashboardWidgetCatalog.MetricDigitalLabelPlacementTop,
+            DashboardMetricDigitalVisualizationOptions.NormalizeLabelPlacement(LabelPlacement),
+            DashboardMetricDigitalVisualizationOptions.LabelPlacementTop,
             StringComparison.Ordinal);
 
     private bool ShouldShowBottomLabel =>
         ShowLabel &&
         !string.IsNullOrWhiteSpace(Label) &&
         string.Equals(
-            DashboardWidgetCatalog.NormalizeMetricDigitalLabelPlacement(LabelPlacement),
-            DashboardWidgetCatalog.MetricDigitalLabelPlacementBottom,
+            DashboardMetricDigitalVisualizationOptions.NormalizeLabelPlacement(LabelPlacement),
+            DashboardMetricDigitalVisualizationOptions.LabelPlacementBottom,
             StringComparison.Ordinal);
 
     private string GlyphTransform(int index)

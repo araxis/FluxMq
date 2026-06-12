@@ -13,7 +13,7 @@ public static class DashboardWidgetFormatting
     public static string WidgetTitle(DashboardWidgetSnapshot widget)
     {
         var configuredTitle = widget.ReadString(DashboardWidgetCatalog.MetricValueTitleKey) ??
-            widget.ReadString(DashboardWidgetCatalog.MetricDigitalLabelKey) ??
+            widget.ReadString(DashboardMetricDigitalVisualizationOptions.LabelKey) ??
             widget.ReadString("title");
         if (string.Equals(widget.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal) &&
             (string.IsNullOrWhiteSpace(configuredTitle) ||

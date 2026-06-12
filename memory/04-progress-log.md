@@ -3281,3 +3281,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 756 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this static catalog cleanup, then inspect focused constant ownership for the next small cleanup slice.
+- Dashboard digital visualization constant cleanup:
+  - Merged PR #190 (`Make dashboard widget catalog static`) into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Started `work/dashboard-visualization-constant-cleanup` from clean `main`.
+  - Moved digital readout visual keys, defaults, option values, and normalizers from the general `DashboardWidgetCatalog` into `DashboardMetricDigitalVisualizationOptions`.
+  - Updated the digital visualization module provider, reusable digital readout, digital visualization view, settings draft, widget formatting, and tests to depend on the focused digital owner.
+  - Kept persisted key strings, visualization id, widget ids, defaults, schema, UI text, and rendering behavior unchanged.
+  - Added guard coverage proving the general dashboard widget catalog no longer owns digital visual constants and the digital options class owns default/normalization behavior.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetCatalog_IsStaticAndNotRegisteredAsAService|FullyQualifiedName~DashboardMetricDigitalVisualizationOptions_OwnsDigitalVisualDefaults|FullyQualifiedName~DashboardMetricVisualizationCatalog_ProvidesMetricValueFoundation|FullyQualifiedName~DashboardWidgetSettingsDraft_WritesDigitalVisualizationSettingsOnlyWhenSelected" -p:UseAppHost=false --verbosity minimal` passed with 4 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 428 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 757 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this digital visual ownership cleanup, then inspect value visual constant ownership as the next small cleanup candidate.

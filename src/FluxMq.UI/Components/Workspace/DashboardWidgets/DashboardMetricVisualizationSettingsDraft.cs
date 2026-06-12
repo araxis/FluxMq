@@ -31,21 +31,21 @@ public sealed class DashboardMetricVisualizationSettingsDraft
         DashboardWidgetCatalog.MetricValueValueAlignKey,
         DashboardWidgetCatalog.MetricValueValuePlacementKey,
         DashboardWidgetCatalog.MetricValuePaddingKey,
-        DashboardWidgetCatalog.MetricDigitalLabelKey,
-        DashboardWidgetCatalog.MetricDigitalShowLabelKey,
-        DashboardWidgetCatalog.MetricDigitalLabelPlacementKey,
-        DashboardWidgetCatalog.MetricDigitalStyleKey,
-        DashboardWidgetCatalog.MetricDigitalGlowKey,
-        DashboardWidgetCatalog.MetricDigitalBackgroundColorKey,
-        DashboardWidgetCatalog.MetricDigitalSegmentColorKey,
-        DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey,
-        DashboardWidgetCatalog.MetricDigitalLabelColorKey,
-        DashboardWidgetCatalog.MetricDigitalDigitsKey,
-        DashboardWidgetCatalog.MetricDigitalBorderColorKey,
-        DashboardWidgetCatalog.MetricDigitalBorderWidthKey,
-        DashboardWidgetCatalog.MetricDigitalRadiusKey,
-        DashboardWidgetCatalog.MetricDigitalPaddingKey,
-        DashboardWidgetCatalog.MetricDigitalFitModeKey
+        DashboardMetricDigitalVisualizationOptions.LabelKey,
+        DashboardMetricDigitalVisualizationOptions.ShowLabelKey,
+        DashboardMetricDigitalVisualizationOptions.LabelPlacementKey,
+        DashboardMetricDigitalVisualizationOptions.StyleKey,
+        DashboardMetricDigitalVisualizationOptions.GlowKey,
+        DashboardMetricDigitalVisualizationOptions.BackgroundColorKey,
+        DashboardMetricDigitalVisualizationOptions.SegmentColorKey,
+        DashboardMetricDigitalVisualizationOptions.InactiveSegmentColorKey,
+        DashboardMetricDigitalVisualizationOptions.LabelColorKey,
+        DashboardMetricDigitalVisualizationOptions.DigitsKey,
+        DashboardMetricDigitalVisualizationOptions.BorderColorKey,
+        DashboardMetricDigitalVisualizationOptions.BorderWidthKey,
+        DashboardMetricDigitalVisualizationOptions.RadiusKey,
+        DashboardMetricDigitalVisualizationOptions.PaddingKey,
+        DashboardMetricDigitalVisualizationOptions.FitModeKey
     };
 
     public string VisualizationId { get; private set; } = DashboardMetricVisualizationIds.Value;
@@ -78,35 +78,35 @@ public sealed class DashboardMetricVisualizationSettingsDraft
 
     public int ValuePadding { get; set; } = DashboardWidgetCatalog.MetricValueDefaultPadding;
 
-    public string DigitalLabel { get; set; } = DashboardWidgetCatalog.MetricValueDefaultTitle;
+    public string DigitalLabel { get; set; } = DashboardMetricDigitalVisualizationOptions.DefaultLabel;
 
     public bool DigitalShowLabel { get; set; } = true;
 
-    public string DigitalLabelPlacement { get; set; } = DashboardWidgetCatalog.MetricDigitalLabelPlacementBottom;
+    public string DigitalLabelPlacement { get; set; } = DashboardMetricDigitalVisualizationOptions.LabelPlacementBottom;
 
-    public string DigitalStyle { get; set; } = DashboardWidgetCatalog.MetricDigitalStylePanel;
+    public string DigitalStyle { get; set; } = DashboardMetricDigitalVisualizationOptions.StylePanel;
 
-    public string DigitalGlow { get; set; } = DashboardWidgetCatalog.MetricDigitalGlowSoft;
+    public string DigitalGlow { get; set; } = DashboardMetricDigitalVisualizationOptions.GlowSoft;
 
-    public string DigitalBackgroundColor { get; set; } = DashboardWidgetCatalog.MetricDigitalDefaultBackgroundColor;
+    public string DigitalBackgroundColor { get; set; } = DashboardMetricDigitalVisualizationOptions.DefaultBackgroundColor;
 
-    public string DigitalSegmentColor { get; set; } = DashboardWidgetCatalog.MetricDigitalDefaultSegmentColor;
+    public string DigitalSegmentColor { get; set; } = DashboardMetricDigitalVisualizationOptions.DefaultSegmentColor;
 
-    public string DigitalInactiveSegmentColor { get; set; } = DashboardWidgetCatalog.MetricDigitalDefaultInactiveSegmentColor;
+    public string DigitalInactiveSegmentColor { get; set; } = DashboardMetricDigitalVisualizationOptions.DefaultInactiveSegmentColor;
 
-    public string DigitalLabelColor { get; set; } = DashboardWidgetCatalog.MetricDigitalDefaultLabelColor;
+    public string DigitalLabelColor { get; set; } = DashboardMetricDigitalVisualizationOptions.DefaultLabelColor;
 
-    public string DigitalBorderColor { get; set; } = DashboardWidgetCatalog.MetricDigitalDefaultBorderColor;
+    public string DigitalBorderColor { get; set; } = DashboardMetricDigitalVisualizationOptions.DefaultBorderColor;
 
-    public int DigitalBorderWidth { get; set; } = DashboardWidgetCatalog.MetricDigitalDefaultBorderWidth;
+    public int DigitalBorderWidth { get; set; } = DashboardMetricDigitalVisualizationOptions.DefaultBorderWidth;
 
-    public int DigitalRadius { get; set; } = DashboardWidgetCatalog.MetricDigitalDefaultRadius;
+    public int DigitalRadius { get; set; } = DashboardMetricDigitalVisualizationOptions.DefaultRadius;
 
-    public int DigitalPadding { get; set; } = DashboardWidgetCatalog.MetricDigitalDefaultPadding;
+    public int DigitalPadding { get; set; } = DashboardMetricDigitalVisualizationOptions.DefaultPadding;
 
-    public int DigitalDigits { get; set; } = DashboardWidgetCatalog.MetricDigitalDefaultDigits;
+    public int DigitalDigits { get; set; } = DashboardMetricDigitalVisualizationOptions.DefaultDigits;
 
-    public string DigitalFitMode { get; set; } = DashboardWidgetCatalog.MetricDigitalFitCompact;
+    public string DigitalFitMode { get; set; } = DashboardMetricDigitalVisualizationOptions.FitCompact;
 
     public string DisplayName =>
         DashboardMetricVisualizationCatalog.Find(VisualizationId)?.DisplayName ?? "Value";
@@ -153,35 +153,35 @@ public sealed class DashboardMetricVisualizationSettingsDraft
 
         if (string.Equals(VisualizationId, DashboardMetricVisualizationIds.Digital, StringComparison.Ordinal))
         {
-            configuration[DashboardWidgetCatalog.MetricDigitalLabelKey] =
-                NormalizeText(DigitalLabel, DashboardWidgetCatalog.MetricValueDefaultTitle);
-            configuration[DashboardWidgetCatalog.MetricDigitalShowLabelKey] = DigitalShowLabel ? "true" : "false";
-            configuration[DashboardWidgetCatalog.MetricDigitalLabelPlacementKey] =
-                DashboardWidgetCatalog.NormalizeMetricDigitalLabelPlacement(DigitalLabelPlacement);
-            configuration[DashboardWidgetCatalog.MetricDigitalStyleKey] =
-                DashboardWidgetCatalog.NormalizeMetricDigitalStyle(DigitalStyle);
-            configuration[DashboardWidgetCatalog.MetricDigitalGlowKey] =
-                DashboardWidgetCatalog.NormalizeMetricDigitalGlow(DigitalGlow);
-            configuration[DashboardWidgetCatalog.MetricDigitalBackgroundColorKey] =
-                NormalizeColor(DigitalBackgroundColor, DashboardWidgetCatalog.MetricDigitalDefaultBackgroundColor);
-            configuration[DashboardWidgetCatalog.MetricDigitalSegmentColorKey] =
-                NormalizeColor(DigitalSegmentColor, DashboardWidgetCatalog.MetricDigitalDefaultSegmentColor);
-            configuration[DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey] =
-                NormalizeColor(DigitalInactiveSegmentColor, DashboardWidgetCatalog.MetricDigitalDefaultInactiveSegmentColor);
-            configuration[DashboardWidgetCatalog.MetricDigitalLabelColorKey] =
-                NormalizeColor(DigitalLabelColor, DashboardWidgetCatalog.MetricDigitalDefaultLabelColor);
-            configuration[DashboardWidgetCatalog.MetricDigitalBorderColorKey] =
-                NormalizeColor(DigitalBorderColor, DashboardWidgetCatalog.MetricDigitalDefaultBorderColor);
-            configuration[DashboardWidgetCatalog.MetricDigitalBorderWidthKey] =
+            configuration[DashboardMetricDigitalVisualizationOptions.LabelKey] =
+                NormalizeText(DigitalLabel, DashboardMetricDigitalVisualizationOptions.DefaultLabel);
+            configuration[DashboardMetricDigitalVisualizationOptions.ShowLabelKey] = DigitalShowLabel ? "true" : "false";
+            configuration[DashboardMetricDigitalVisualizationOptions.LabelPlacementKey] =
+                DashboardMetricDigitalVisualizationOptions.NormalizeLabelPlacement(DigitalLabelPlacement);
+            configuration[DashboardMetricDigitalVisualizationOptions.StyleKey] =
+                DashboardMetricDigitalVisualizationOptions.NormalizeStyle(DigitalStyle);
+            configuration[DashboardMetricDigitalVisualizationOptions.GlowKey] =
+                DashboardMetricDigitalVisualizationOptions.NormalizeGlow(DigitalGlow);
+            configuration[DashboardMetricDigitalVisualizationOptions.BackgroundColorKey] =
+                NormalizeColor(DigitalBackgroundColor, DashboardMetricDigitalVisualizationOptions.DefaultBackgroundColor);
+            configuration[DashboardMetricDigitalVisualizationOptions.SegmentColorKey] =
+                NormalizeColor(DigitalSegmentColor, DashboardMetricDigitalVisualizationOptions.DefaultSegmentColor);
+            configuration[DashboardMetricDigitalVisualizationOptions.InactiveSegmentColorKey] =
+                NormalizeColor(DigitalInactiveSegmentColor, DashboardMetricDigitalVisualizationOptions.DefaultInactiveSegmentColor);
+            configuration[DashboardMetricDigitalVisualizationOptions.LabelColorKey] =
+                NormalizeColor(DigitalLabelColor, DashboardMetricDigitalVisualizationOptions.DefaultLabelColor);
+            configuration[DashboardMetricDigitalVisualizationOptions.BorderColorKey] =
+                NormalizeColor(DigitalBorderColor, DashboardMetricDigitalVisualizationOptions.DefaultBorderColor);
+            configuration[DashboardMetricDigitalVisualizationOptions.BorderWidthKey] =
                 Clamp(DigitalBorderWidth, 0, 8).ToString(CultureInfo.InvariantCulture);
-            configuration[DashboardWidgetCatalog.MetricDigitalRadiusKey] =
+            configuration[DashboardMetricDigitalVisualizationOptions.RadiusKey] =
                 Clamp(DigitalRadius, 0, 32).ToString(CultureInfo.InvariantCulture);
-            configuration[DashboardWidgetCatalog.MetricDigitalPaddingKey] =
+            configuration[DashboardMetricDigitalVisualizationOptions.PaddingKey] =
                 Clamp(DigitalPadding, 0, 32).ToString(CultureInfo.InvariantCulture);
-            configuration[DashboardWidgetCatalog.MetricDigitalDigitsKey] =
-                DashboardWidgetCatalog.NormalizeMetricDigitalDigits(DigitalDigits).ToString(CultureInfo.InvariantCulture);
-            configuration[DashboardWidgetCatalog.MetricDigitalFitModeKey] =
-                DashboardWidgetCatalog.NormalizeMetricDigitalFitMode(DigitalFitMode);
+            configuration[DashboardMetricDigitalVisualizationOptions.DigitsKey] =
+                DashboardMetricDigitalVisualizationOptions.NormalizeDigits(DigitalDigits).ToString(CultureInfo.InvariantCulture);
+            configuration[DashboardMetricDigitalVisualizationOptions.FitModeKey] =
+                DashboardMetricDigitalVisualizationOptions.NormalizeFitMode(DigitalFitMode);
             return configuration;
         }
 
@@ -294,53 +294,53 @@ public sealed class DashboardMetricVisualizationSettingsDraft
             0,
             64);
 
-        DigitalLabel = ReadString(configuration, DashboardWidgetCatalog.MetricDigitalLabelKey) ??
+        DigitalLabel = ReadString(configuration, DashboardMetricDigitalVisualizationOptions.LabelKey) ??
             (useCompatibilityFallbacks ? ReadString(configuration, "title") : null) ??
-            DashboardWidgetCatalog.MetricValueDefaultTitle;
-        DigitalShowLabel = ReadBool(configuration, DashboardWidgetCatalog.MetricDigitalShowLabelKey, true);
-        DigitalLabelPlacement = DashboardWidgetCatalog.NormalizeMetricDigitalLabelPlacement(
-            ReadString(configuration, DashboardWidgetCatalog.MetricDigitalLabelPlacementKey));
-        DigitalStyle = DashboardWidgetCatalog.NormalizeMetricDigitalStyle(
-            ReadString(configuration, DashboardWidgetCatalog.MetricDigitalStyleKey));
-        DigitalGlow = DashboardWidgetCatalog.NormalizeMetricDigitalGlow(
-            ReadString(configuration, DashboardWidgetCatalog.MetricDigitalGlowKey));
+            DashboardMetricDigitalVisualizationOptions.DefaultLabel;
+        DigitalShowLabel = ReadBool(configuration, DashboardMetricDigitalVisualizationOptions.ShowLabelKey, true);
+        DigitalLabelPlacement = DashboardMetricDigitalVisualizationOptions.NormalizeLabelPlacement(
+            ReadString(configuration, DashboardMetricDigitalVisualizationOptions.LabelPlacementKey));
+        DigitalStyle = DashboardMetricDigitalVisualizationOptions.NormalizeStyle(
+            ReadString(configuration, DashboardMetricDigitalVisualizationOptions.StyleKey));
+        DigitalGlow = DashboardMetricDigitalVisualizationOptions.NormalizeGlow(
+            ReadString(configuration, DashboardMetricDigitalVisualizationOptions.GlowKey));
         DigitalBackgroundColor = NormalizeColor(
-            ReadString(configuration, DashboardWidgetCatalog.MetricDigitalBackgroundColorKey),
-            DashboardWidgetCatalog.MetricDigitalDefaultBackgroundColor);
+            ReadString(configuration, DashboardMetricDigitalVisualizationOptions.BackgroundColorKey),
+            DashboardMetricDigitalVisualizationOptions.DefaultBackgroundColor);
         DigitalSegmentColor = NormalizeColor(
-            ReadString(configuration, DashboardWidgetCatalog.MetricDigitalSegmentColorKey),
-            DashboardWidgetCatalog.MetricDigitalDefaultSegmentColor);
+            ReadString(configuration, DashboardMetricDigitalVisualizationOptions.SegmentColorKey),
+            DashboardMetricDigitalVisualizationOptions.DefaultSegmentColor);
         DigitalInactiveSegmentColor = NormalizeColor(
-            ReadString(configuration, DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey),
-            DashboardWidgetCatalog.MetricDigitalDefaultInactiveSegmentColor);
+            ReadString(configuration, DashboardMetricDigitalVisualizationOptions.InactiveSegmentColorKey),
+            DashboardMetricDigitalVisualizationOptions.DefaultInactiveSegmentColor);
         DigitalLabelColor = NormalizeColor(
-            ReadString(configuration, DashboardWidgetCatalog.MetricDigitalLabelColorKey),
-            DashboardWidgetCatalog.MetricDigitalDefaultLabelColor);
+            ReadString(configuration, DashboardMetricDigitalVisualizationOptions.LabelColorKey),
+            DashboardMetricDigitalVisualizationOptions.DefaultLabelColor);
         DigitalBorderColor = NormalizeColor(
-            ReadString(configuration, DashboardWidgetCatalog.MetricDigitalBorderColorKey),
-            DashboardWidgetCatalog.MetricDigitalDefaultBorderColor);
+            ReadString(configuration, DashboardMetricDigitalVisualizationOptions.BorderColorKey),
+            DashboardMetricDigitalVisualizationOptions.DefaultBorderColor);
         DigitalBorderWidth = ReadInt(
             configuration,
-            DashboardWidgetCatalog.MetricDigitalBorderWidthKey,
-            DashboardWidgetCatalog.MetricDigitalDefaultBorderWidth,
+            DashboardMetricDigitalVisualizationOptions.BorderWidthKey,
+            DashboardMetricDigitalVisualizationOptions.DefaultBorderWidth,
             0,
             8);
         DigitalRadius = ReadInt(
             configuration,
-            DashboardWidgetCatalog.MetricDigitalRadiusKey,
-            DashboardWidgetCatalog.MetricDigitalDefaultRadius,
+            DashboardMetricDigitalVisualizationOptions.RadiusKey,
+            DashboardMetricDigitalVisualizationOptions.DefaultRadius,
             0,
             32);
         DigitalPadding = ReadInt(
             configuration,
-            DashboardWidgetCatalog.MetricDigitalPaddingKey,
-            DashboardWidgetCatalog.MetricDigitalDefaultPadding,
+            DashboardMetricDigitalVisualizationOptions.PaddingKey,
+            DashboardMetricDigitalVisualizationOptions.DefaultPadding,
             0,
             32);
-        DigitalDigits = DashboardWidgetCatalog.NormalizeMetricDigitalDigits(
-            ReadString(configuration, DashboardWidgetCatalog.MetricDigitalDigitsKey));
-        DigitalFitMode = DashboardWidgetCatalog.NormalizeMetricDigitalFitMode(
-            ReadString(configuration, DashboardWidgetCatalog.MetricDigitalFitModeKey));
+        DigitalDigits = DashboardMetricDigitalVisualizationOptions.NormalizeDigits(
+            ReadString(configuration, DashboardMetricDigitalVisualizationOptions.DigitsKey));
+        DigitalFitMode = DashboardMetricDigitalVisualizationOptions.NormalizeFitMode(
+            ReadString(configuration, DashboardMetricDigitalVisualizationOptions.FitModeKey));
     }
 
     private static string NormalizeText(string? value, string fallback)

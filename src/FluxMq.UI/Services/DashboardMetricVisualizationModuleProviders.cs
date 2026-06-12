@@ -84,21 +84,21 @@ public sealed class DashboardMetricDigitalVisualizationModuleProvider : IDashboa
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 [DashboardWidgetCatalog.MetricVisualizationKey] = DashboardMetricVisualizationIds.Digital,
-                [DashboardWidgetCatalog.MetricDigitalLabelKey] = DashboardWidgetCatalog.MetricValueDefaultTitle,
-                [DashboardWidgetCatalog.MetricDigitalShowLabelKey] = "true",
-                [DashboardWidgetCatalog.MetricDigitalLabelPlacementKey] = DashboardWidgetCatalog.MetricDigitalLabelPlacementBottom,
-                [DashboardWidgetCatalog.MetricDigitalStyleKey] = DashboardWidgetCatalog.MetricDigitalStylePanel,
-                [DashboardWidgetCatalog.MetricDigitalGlowKey] = DashboardWidgetCatalog.MetricDigitalGlowSoft,
-                [DashboardWidgetCatalog.MetricDigitalBackgroundColorKey] = DashboardWidgetCatalog.MetricDigitalDefaultBackgroundColor,
-                [DashboardWidgetCatalog.MetricDigitalSegmentColorKey] = DashboardWidgetCatalog.MetricDigitalDefaultSegmentColor,
-                [DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey] = DashboardWidgetCatalog.MetricDigitalDefaultInactiveSegmentColor,
-                [DashboardWidgetCatalog.MetricDigitalLabelColorKey] = DashboardWidgetCatalog.MetricDigitalDefaultLabelColor,
-                [DashboardWidgetCatalog.MetricDigitalDigitsKey] = DashboardWidgetCatalog.MetricDigitalDefaultDigits.ToString(CultureInfo.InvariantCulture),
-                [DashboardWidgetCatalog.MetricDigitalBorderColorKey] = DashboardWidgetCatalog.MetricDigitalDefaultBorderColor,
-                [DashboardWidgetCatalog.MetricDigitalBorderWidthKey] = DashboardWidgetCatalog.MetricDigitalDefaultBorderWidth.ToString(CultureInfo.InvariantCulture),
-                [DashboardWidgetCatalog.MetricDigitalRadiusKey] = DashboardWidgetCatalog.MetricDigitalDefaultRadius.ToString(CultureInfo.InvariantCulture),
-                [DashboardWidgetCatalog.MetricDigitalPaddingKey] = DashboardWidgetCatalog.MetricDigitalDefaultPadding.ToString(CultureInfo.InvariantCulture),
-                [DashboardWidgetCatalog.MetricDigitalFitModeKey] = DashboardWidgetCatalog.MetricDigitalFitCompact
+                [DashboardMetricDigitalVisualizationOptions.LabelKey] = DashboardMetricDigitalVisualizationOptions.DefaultLabel,
+                [DashboardMetricDigitalVisualizationOptions.ShowLabelKey] = "true",
+                [DashboardMetricDigitalVisualizationOptions.LabelPlacementKey] = DashboardMetricDigitalVisualizationOptions.LabelPlacementBottom,
+                [DashboardMetricDigitalVisualizationOptions.StyleKey] = DashboardMetricDigitalVisualizationOptions.StylePanel,
+                [DashboardMetricDigitalVisualizationOptions.GlowKey] = DashboardMetricDigitalVisualizationOptions.GlowSoft,
+                [DashboardMetricDigitalVisualizationOptions.BackgroundColorKey] = DashboardMetricDigitalVisualizationOptions.DefaultBackgroundColor,
+                [DashboardMetricDigitalVisualizationOptions.SegmentColorKey] = DashboardMetricDigitalVisualizationOptions.DefaultSegmentColor,
+                [DashboardMetricDigitalVisualizationOptions.InactiveSegmentColorKey] = DashboardMetricDigitalVisualizationOptions.DefaultInactiveSegmentColor,
+                [DashboardMetricDigitalVisualizationOptions.LabelColorKey] = DashboardMetricDigitalVisualizationOptions.DefaultLabelColor,
+                [DashboardMetricDigitalVisualizationOptions.DigitsKey] = DashboardMetricDigitalVisualizationOptions.DefaultDigits.ToString(CultureInfo.InvariantCulture),
+                [DashboardMetricDigitalVisualizationOptions.BorderColorKey] = DashboardMetricDigitalVisualizationOptions.DefaultBorderColor,
+                [DashboardMetricDigitalVisualizationOptions.BorderWidthKey] = DashboardMetricDigitalVisualizationOptions.DefaultBorderWidth.ToString(CultureInfo.InvariantCulture),
+                [DashboardMetricDigitalVisualizationOptions.RadiusKey] = DashboardMetricDigitalVisualizationOptions.DefaultRadius.ToString(CultureInfo.InvariantCulture),
+                [DashboardMetricDigitalVisualizationOptions.PaddingKey] = DashboardMetricDigitalVisualizationOptions.DefaultPadding.ToString(CultureInfo.InvariantCulture),
+                [DashboardMetricDigitalVisualizationOptions.FitModeKey] = DashboardMetricDigitalVisualizationOptions.FitCompact
             },
             [new("digital-visual", "Digital visual", Properties())],
             typeof(DashboardMetricDigitalVisualizationView),
@@ -108,51 +108,51 @@ public sealed class DashboardMetricDigitalVisualizationModuleProvider : IDashboa
     private static IReadOnlyList<DashboardWidgetPropertyDefinition> Properties()
         =>
         [
-            new(DashboardWidgetCatalog.MetricDigitalLabelKey, "Label", DashboardWidgetPropertyEditorKind.Text, DefaultValue: DashboardWidgetCatalog.MetricValueDefaultTitle),
-            new(DashboardWidgetCatalog.MetricDigitalShowLabelKey, "Show label", DashboardWidgetPropertyEditorKind.Toggle, DefaultValue: "true"),
-            new(DashboardWidgetCatalog.MetricDigitalLabelPlacementKey, "Label place", DashboardWidgetPropertyEditorKind.Select, DefaultValue: DashboardWidgetCatalog.MetricDigitalLabelPlacementBottom, Options: LabelPlacementOptions()),
-            new(DashboardWidgetCatalog.MetricDigitalStyleKey, "Digit style", DashboardWidgetPropertyEditorKind.Select, DefaultValue: DashboardWidgetCatalog.MetricDigitalStylePanel, Options: StyleOptions()),
-            new(DashboardWidgetCatalog.MetricDigitalGlowKey, "Glow", DashboardWidgetPropertyEditorKind.Select, DefaultValue: DashboardWidgetCatalog.MetricDigitalGlowSoft, Options: GlowOptions()),
-            new(DashboardWidgetCatalog.MetricDigitalSegmentColorKey, "Segment color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultSegmentColor),
-            new(DashboardWidgetCatalog.MetricDigitalInactiveSegmentColorKey, "Inactive color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultInactiveSegmentColor),
-            new(DashboardWidgetCatalog.MetricDigitalBackgroundColorKey, "Display bg", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultBackgroundColor),
-            new(DashboardWidgetCatalog.MetricDigitalLabelColorKey, "Label color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultLabelColor),
-            new(DashboardWidgetCatalog.MetricDigitalBorderColorKey, "Border color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultBorderColor),
-            new(DashboardWidgetCatalog.MetricDigitalBorderWidthKey, "Border width", DashboardWidgetPropertyEditorKind.Number, Unit: "px", DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultBorderWidth.ToString(CultureInfo.InvariantCulture)),
-            new(DashboardWidgetCatalog.MetricDigitalRadiusKey, "Radius", DashboardWidgetPropertyEditorKind.Number, Unit: "px", DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultRadius.ToString(CultureInfo.InvariantCulture)),
-            new(DashboardWidgetCatalog.MetricDigitalPaddingKey, "Padding", DashboardWidgetPropertyEditorKind.Number, Unit: "px", DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultPadding.ToString(CultureInfo.InvariantCulture)),
-            new(DashboardWidgetCatalog.MetricDigitalDigitsKey, "Digits", DashboardWidgetPropertyEditorKind.Number, DefaultValue: DashboardWidgetCatalog.MetricDigitalDefaultDigits.ToString(CultureInfo.InvariantCulture)),
-            new(DashboardWidgetCatalog.MetricDigitalFitModeKey, "Fit", DashboardWidgetPropertyEditorKind.Select, DefaultValue: DashboardWidgetCatalog.MetricDigitalFitCompact, Options: FitModeOptions())
+            new(DashboardMetricDigitalVisualizationOptions.LabelKey, "Label", DashboardWidgetPropertyEditorKind.Text, DefaultValue: DashboardMetricDigitalVisualizationOptions.DefaultLabel),
+            new(DashboardMetricDigitalVisualizationOptions.ShowLabelKey, "Show label", DashboardWidgetPropertyEditorKind.Toggle, DefaultValue: "true"),
+            new(DashboardMetricDigitalVisualizationOptions.LabelPlacementKey, "Label place", DashboardWidgetPropertyEditorKind.Select, DefaultValue: DashboardMetricDigitalVisualizationOptions.LabelPlacementBottom, Options: LabelPlacementOptions()),
+            new(DashboardMetricDigitalVisualizationOptions.StyleKey, "Digit style", DashboardWidgetPropertyEditorKind.Select, DefaultValue: DashboardMetricDigitalVisualizationOptions.StylePanel, Options: StyleOptions()),
+            new(DashboardMetricDigitalVisualizationOptions.GlowKey, "Glow", DashboardWidgetPropertyEditorKind.Select, DefaultValue: DashboardMetricDigitalVisualizationOptions.GlowSoft, Options: GlowOptions()),
+            new(DashboardMetricDigitalVisualizationOptions.SegmentColorKey, "Segment color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardMetricDigitalVisualizationOptions.DefaultSegmentColor),
+            new(DashboardMetricDigitalVisualizationOptions.InactiveSegmentColorKey, "Inactive color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardMetricDigitalVisualizationOptions.DefaultInactiveSegmentColor),
+            new(DashboardMetricDigitalVisualizationOptions.BackgroundColorKey, "Display bg", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardMetricDigitalVisualizationOptions.DefaultBackgroundColor),
+            new(DashboardMetricDigitalVisualizationOptions.LabelColorKey, "Label color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardMetricDigitalVisualizationOptions.DefaultLabelColor),
+            new(DashboardMetricDigitalVisualizationOptions.BorderColorKey, "Border color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardMetricDigitalVisualizationOptions.DefaultBorderColor),
+            new(DashboardMetricDigitalVisualizationOptions.BorderWidthKey, "Border width", DashboardWidgetPropertyEditorKind.Number, Unit: "px", DefaultValue: DashboardMetricDigitalVisualizationOptions.DefaultBorderWidth.ToString(CultureInfo.InvariantCulture)),
+            new(DashboardMetricDigitalVisualizationOptions.RadiusKey, "Radius", DashboardWidgetPropertyEditorKind.Number, Unit: "px", DefaultValue: DashboardMetricDigitalVisualizationOptions.DefaultRadius.ToString(CultureInfo.InvariantCulture)),
+            new(DashboardMetricDigitalVisualizationOptions.PaddingKey, "Padding", DashboardWidgetPropertyEditorKind.Number, Unit: "px", DefaultValue: DashboardMetricDigitalVisualizationOptions.DefaultPadding.ToString(CultureInfo.InvariantCulture)),
+            new(DashboardMetricDigitalVisualizationOptions.DigitsKey, "Digits", DashboardWidgetPropertyEditorKind.Number, DefaultValue: DashboardMetricDigitalVisualizationOptions.DefaultDigits.ToString(CultureInfo.InvariantCulture)),
+            new(DashboardMetricDigitalVisualizationOptions.FitModeKey, "Fit", DashboardWidgetPropertyEditorKind.Select, DefaultValue: DashboardMetricDigitalVisualizationOptions.FitCompact, Options: FitModeOptions())
         ];
 
     private static IReadOnlyList<DashboardWidgetPropertyOption> LabelPlacementOptions()
         =>
         [
-            new(DashboardWidgetCatalog.MetricDigitalLabelPlacementTop, "Top"),
-            new(DashboardWidgetCatalog.MetricDigitalLabelPlacementBottom, "Bottom"),
-            new(DashboardWidgetCatalog.MetricDigitalLabelPlacementHidden, "Hidden")
+            new(DashboardMetricDigitalVisualizationOptions.LabelPlacementTop, "Top"),
+            new(DashboardMetricDigitalVisualizationOptions.LabelPlacementBottom, "Bottom"),
+            new(DashboardMetricDigitalVisualizationOptions.LabelPlacementHidden, "Hidden")
         ];
 
     private static IReadOnlyList<DashboardWidgetPropertyOption> StyleOptions()
         =>
         [
-            new(DashboardWidgetCatalog.MetricDigitalStylePanel, "Panel"),
-            new(DashboardWidgetCatalog.MetricDigitalStyleSegment, "Segment"),
-            new(DashboardWidgetCatalog.MetricDigitalStyleTerminal, "Terminal")
+            new(DashboardMetricDigitalVisualizationOptions.StylePanel, "Panel"),
+            new(DashboardMetricDigitalVisualizationOptions.StyleSegment, "Segment"),
+            new(DashboardMetricDigitalVisualizationOptions.StyleTerminal, "Terminal")
         ];
 
     private static IReadOnlyList<DashboardWidgetPropertyOption> GlowOptions()
         =>
         [
-            new(DashboardWidgetCatalog.MetricDigitalGlowOff, "Off"),
-            new(DashboardWidgetCatalog.MetricDigitalGlowSoft, "Soft"),
-            new(DashboardWidgetCatalog.MetricDigitalGlowStrong, "Strong")
+            new(DashboardMetricDigitalVisualizationOptions.GlowOff, "Off"),
+            new(DashboardMetricDigitalVisualizationOptions.GlowSoft, "Soft"),
+            new(DashboardMetricDigitalVisualizationOptions.GlowStrong, "Strong")
         ];
 
     private static IReadOnlyList<DashboardWidgetPropertyOption> FitModeOptions()
         =>
         [
-            new(DashboardWidgetCatalog.MetricDigitalFitCompact, "Compact"),
-            new(DashboardWidgetCatalog.MetricDigitalFitFill, "Fill")
+            new(DashboardMetricDigitalVisualizationOptions.FitCompact, "Compact"),
+            new(DashboardMetricDigitalVisualizationOptions.FitFill, "Fill")
         ];
 }
