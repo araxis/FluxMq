@@ -42,4 +42,7 @@ public static class DashboardWidgetModuleCatalog
             string.Equals(module.Type, normalized, StringComparison.Ordinal) ||
             module.CompatibilityTypeIds.Contains(normalized, StringComparer.Ordinal));
     }
+
+    public static string InstanceNamePrefixFor(string? type)
+        => Find(DashboardWidgetCatalog.NormalizeWidgetTypeForAdd(type))?.InstanceNamePrefix ?? "widget";
 }

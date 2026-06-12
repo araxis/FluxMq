@@ -19,6 +19,7 @@ public sealed class DashboardMetricWidgetModuleProvider : IDashboardWidgetModule
                 Icons.Material.Filled.Speed,
                 typeof(DashboardKpiTileModuleView),
                 "Messages",
+                "kpiTile",
                 "messages",
                 [
                     KpiMetricGroup(),
@@ -34,6 +35,7 @@ public sealed class DashboardMetricWidgetModuleProvider : IDashboardWidgetModule
                 Icons.Material.Filled.Verified,
                 typeof(DashboardStatusValueModuleView),
                 "Status value",
+                "statusValue",
                 "recent",
                 [
                     MetricGroup("status-source", "Status source"),
@@ -48,6 +50,7 @@ public sealed class DashboardMetricWidgetModuleProvider : IDashboardWidgetModule
                 Icons.Material.Filled.QueryStats,
                 typeof(DashboardRateTileModuleView),
                 "Rate tile",
+                "rateTile",
                 "currentRate",
                 [
                     MetricGroup("metric", "Metric"),
@@ -65,6 +68,7 @@ public sealed class DashboardMetricWidgetModuleProvider : IDashboardWidgetModule
         string icon,
         Type component,
         string title,
+        string instanceNamePrefix,
         string primaryMetric,
         IReadOnlyList<DashboardWidgetPropertyGroupDefinition> groups,
         IReadOnlyList<string>? compatibilityTypeIds = null)
@@ -102,7 +106,8 @@ public sealed class DashboardMetricWidgetModuleProvider : IDashboardWidgetModule
             groups,
             new DashboardWidgetStyleDefinition(),
             new DashboardWidgetLayoutContract(),
-            compatibilityTypeIds);
+            compatibilityTypeIds,
+            InstanceNamePrefix: instanceNamePrefix);
     }
 
     private static Dictionary<string, string> BaseMetricConfiguration(string title, string primaryMetric)

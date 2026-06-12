@@ -21,6 +21,7 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
                 Icons.Material.Filled.Numbers,
                 typeof(DashboardEventCounterModuleView),
                 "Events",
+                "eventCounter",
                 [
                     MetricQueryGroup("counter-source", "Counter source"),
                     FormatGroup("count-format", "Count display")
@@ -33,6 +34,7 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
                 Icons.Material.Filled.Bolt,
                 typeof(DashboardLatestEventModuleView),
                 "Latest event",
+                "latestEvent",
                 [eventFilter, FieldGroup("fields", "Fields")],
                 preferredColumns: 2,
                 preferredRows: 1),
@@ -44,6 +46,7 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
                 Icons.Material.Filled.Speed,
                 typeof(DashboardEventRateModuleView),
                 "Event rate",
+                "eventRate",
                 [
                     MetricQueryGroup("rate-source", "Rate source"),
                     FormatGroup("rate-format", "Rate display")
@@ -57,6 +60,7 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
                 Icons.Material.Filled.DonutLarge,
                 typeof(DashboardEventGaugeModuleView),
                 "Event gauge",
+                "eventGauge",
                 [
                     MetricQueryGroup("gauge-source", "Gauge source"),
                     GaugeGroup(),
@@ -71,6 +75,7 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
                 Icons.Material.Filled.TableRows,
                 typeof(DashboardEventTableModuleView),
                 "Event table",
+                "eventTable",
                 [eventFilter, TableGroup()],
                 preferredColumns: 2,
                 preferredRows: 2)
@@ -85,6 +90,7 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
         string icon,
         Type component,
         string title,
+        string instanceNamePrefix,
         IReadOnlyList<DashboardWidgetPropertyGroupDefinition> groups,
         int preferredColumns = 1,
         int preferredRows = 1)
@@ -124,7 +130,8 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
             configuration,
             groups,
             new DashboardWidgetStyleDefinition(),
-            new DashboardWidgetLayoutContract(1, 1, preferredColumns, preferredRows));
+            new DashboardWidgetLayoutContract(1, 1, preferredColumns, preferredRows),
+            InstanceNamePrefix: instanceNamePrefix);
     }
 
     private static bool UsesFocusedMetricQuery(string type)

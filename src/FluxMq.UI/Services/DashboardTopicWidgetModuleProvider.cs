@@ -19,6 +19,7 @@ public sealed class DashboardTopicWidgetModuleProvider : IDashboardWidgetModuleP
                 Icons.Material.Filled.GridOn,
                 typeof(DashboardTopicActivityModuleView),
                 "Topic activity",
+                "topicActivity",
                 [
                     MetricGroup("topic-metric", "Topic metric"),
                     CategoryGroup("top-topics", "Top topics")
@@ -46,7 +47,8 @@ public sealed class DashboardTopicWidgetModuleProvider : IDashboardWidgetModuleP
                 },
                 [TopicTreeGroup()],
                 new DashboardWidgetStyleDefinition(),
-                new DashboardWidgetLayoutContract(1, 2, 2, 2))
+                new DashboardWidgetLayoutContract(1, 2, 2, 2),
+                InstanceNamePrefix: "topicTree")
         ];
 
     private static DashboardWidgetModule TopicActivityModule(
@@ -57,6 +59,7 @@ public sealed class DashboardTopicWidgetModuleProvider : IDashboardWidgetModuleP
         string icon,
         Type component,
         string title,
+        string instanceNamePrefix,
         IReadOnlyList<DashboardWidgetPropertyGroupDefinition> groups,
         IReadOnlyList<string> dataRequirements,
         int preferredColumns,
@@ -77,7 +80,8 @@ public sealed class DashboardTopicWidgetModuleProvider : IDashboardWidgetModuleP
             EventConfiguration(title),
             groups,
             new DashboardWidgetStyleDefinition(),
-            new DashboardWidgetLayoutContract(1, 1, preferredColumns, preferredRows));
+            new DashboardWidgetLayoutContract(1, 1, preferredColumns, preferredRows),
+            InstanceNamePrefix: instanceNamePrefix);
 
     private static Dictionary<string, string> EventConfiguration(string title)
     {

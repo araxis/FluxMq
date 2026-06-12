@@ -19,6 +19,7 @@ public sealed class DashboardMqttOpsWidgetModuleProvider : IDashboardWidgetModul
                 Icons.Material.Filled.DataArray,
                 typeof(DashboardPayloadDistributionModuleView),
                 "Payload sizes",
+                "payloadDistribution",
                 [
                     MetricGroup("source", "Source"),
                     BucketGroup()
@@ -33,6 +34,7 @@ public sealed class DashboardMqttOpsWidgetModuleProvider : IDashboardWidgetModul
                 Icons.Material.Filled.PieChart,
                 typeof(DashboardQosBreakdownModuleView),
                 "QoS breakdown",
+                "qosBreakdown",
                 [
                     MetricGroup("source", "Source"),
                     BreakdownGroup()
@@ -48,6 +50,7 @@ public sealed class DashboardMqttOpsWidgetModuleProvider : IDashboardWidgetModul
                 Icons.Material.Filled.PushPin,
                 typeof(DashboardRetainBreakdownModuleView),
                 "Retain breakdown",
+                "retainBreakdown",
                 [
                     MetricGroup("source", "Source"),
                     BreakdownGroup()
@@ -64,6 +67,7 @@ public sealed class DashboardMqttOpsWidgetModuleProvider : IDashboardWidgetModul
         string icon,
         Type component,
         string title,
+        string instanceNamePrefix,
         IReadOnlyList<DashboardWidgetPropertyGroupDefinition> groups,
         IReadOnlyList<string> dataRequirements,
         int preferredColumns,
@@ -85,7 +89,8 @@ public sealed class DashboardMqttOpsWidgetModuleProvider : IDashboardWidgetModul
             groups,
             new DashboardWidgetStyleDefinition(),
             new DashboardWidgetLayoutContract(1, 1, preferredColumns, 1),
-            compatibilityTypeIds);
+            compatibilityTypeIds,
+            InstanceNamePrefix: instanceNamePrefix);
 
     private static DashboardWidgetRendererKind RendererKind(string type)
         => type switch

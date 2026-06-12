@@ -9,11 +9,16 @@ public sealed record DashboardWidgetModule(
     DashboardWidgetStyleDefinition DefaultStyle,
     DashboardWidgetLayoutContract Layout,
     IReadOnlyList<string>? CompatibilityTypeIds = null,
-    string MetricVisualizationId = DashboardMetricVisualizationIds.Value)
+    string MetricVisualizationId = DashboardMetricVisualizationIds.Value,
+    string? InstanceNamePrefix = null)
 {
     public string Type => Descriptor.Type;
 
     public IReadOnlyList<string> CompatibilityTypeIds { get; init; } = CompatibilityTypeIds ?? [];
+
+    public string InstanceNamePrefix { get; init; } = string.IsNullOrWhiteSpace(InstanceNamePrefix)
+        ? "widget"
+        : InstanceNamePrefix.Trim();
 }
 
 public static class DashboardMetricVisualizationIds

@@ -1860,6 +1860,45 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardWidgetModuleCatalog_OwnsInstanceNamePrefixes()
+    {
+        var expected = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [DashboardWidgetCatalog.KpiTileType] = "kpiTile",
+            [DashboardWidgetCatalog.StatusValueType] = "statusValue",
+            [DashboardWidgetCatalog.RateTileType] = "rateTile",
+            [DashboardWidgetCatalog.EventCounterType] = "eventCounter",
+            [DashboardWidgetCatalog.LatestEventType] = "latestEvent",
+            [DashboardWidgetCatalog.EventRateType] = "eventRate",
+            [DashboardWidgetCatalog.EventGaugeType] = "eventGauge",
+            [DashboardWidgetCatalog.EventTableType] = "eventTable",
+            [DashboardWidgetCatalog.LineChartType] = "lineChart",
+            [DashboardWidgetCatalog.AreaChartType] = "areaChart",
+            [DashboardWidgetCatalog.BarChartType] = "barChart",
+            [DashboardWidgetCatalog.DonutChartType] = "donutChart",
+            [DashboardWidgetCatalog.TopicActivityType] = "topicActivity",
+            [DashboardWidgetCatalog.TopicTreeType] = "topicTree",
+            [DashboardWidgetCatalog.PayloadDistributionType] = "payloadDistribution",
+            [DashboardWidgetCatalog.QosBreakdownType] = "qosBreakdown",
+            [DashboardWidgetCatalog.RetainBreakdownType] = "retainBreakdown"
+        };
+
+        foreach (var module in DashboardWidgetModuleCatalog.CreateModules())
+        {
+            DashboardWidgetModuleCatalog.InstanceNamePrefixFor(module.Type)
+                .ShouldBe(expected[module.Type]);
+        }
+
+        DashboardWidgetModuleCatalog.InstanceNamePrefixFor(DashboardWidgetCatalog.StatusStripType)
+            .ShouldBe("statusValue");
+        DashboardWidgetModuleCatalog.InstanceNamePrefixFor(DashboardWidgetCatalog.EventChartType)
+            .ShouldBe("barChart");
+        DashboardWidgetModuleCatalog.InstanceNamePrefixFor(DashboardWidgetCatalog.QosRetainBreakdownType)
+            .ShouldBe("qosBreakdown");
+        DashboardWidgetModuleCatalog.InstanceNamePrefixFor("custom.widget").ShouldBe("widget");
+    }
+
+    [Fact]
     public void DashboardWidgetModuleCatalog_ComposesCategoryProviderModules()
     {
         var providers = DashboardWidgetModuleCatalog.CreateProviders();

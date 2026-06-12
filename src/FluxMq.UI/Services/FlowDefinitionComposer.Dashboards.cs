@@ -86,7 +86,7 @@ public sealed partial class FlowDefinitionComposer
         var cells = GetOrCreateObject(layout, "cells");
         var widgets = GetOrCreateObject(dashboard, "widgets");
 
-        var widgetName = MakeUniqueDashboardWidgetName(widgets, FlowDashboardDefinitionFactory.WidgetNamePrefix(normalizedType));
+        var widgetName = MakeUniqueDashboardWidgetName(widgets, DashboardWidgetModuleCatalog.InstanceNamePrefixFor(normalizedType));
         widgets[widgetName] = FlowDashboardDefinitionFactory.CreateWidget(normalizedType);
         AssignWidgetToDashboardCell(layout, cells, widgetName, cellName);
 
