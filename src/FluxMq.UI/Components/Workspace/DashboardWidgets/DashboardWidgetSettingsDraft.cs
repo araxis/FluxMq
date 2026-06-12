@@ -38,8 +38,8 @@ public sealed class DashboardWidgetSettingsDraft
         GaugeNormalColor = ReadString(widget.Configuration, DashboardEventGaugeWidgetOptions.NormalColorKey) ?? DashboardEventGaugeWidgetOptions.DefaultNormalColor;
         GaugeWarningColor = ReadString(widget.Configuration, DashboardEventGaugeWidgetOptions.WarningColorKey) ?? DashboardEventGaugeWidgetOptions.DefaultWarningColor;
         GaugeCriticalColor = ReadString(widget.Configuration, DashboardEventGaugeWidgetOptions.CriticalColorKey) ?? DashboardEventGaugeWidgetOptions.DefaultCriticalColor;
-        ChartType = DashboardWidgetCatalog.NormalizeChartType(
-            widget.ReadString(DashboardWidgetCatalog.ChartTypeKey));
+        ChartType = DashboardChartWidgetOptions.NormalizeType(
+            widget.ReadString(DashboardChartWidgetOptions.TypeKey));
         MetricCardColumns = DashboardWidgetCatalog.NormalizeMetricCardColumns(
             widget.ReadString(DashboardWidgetCatalog.MetricCardColumnsKey));
         DisplayMetrics = [.. DashboardWidgetCatalog.NormalizeDisplayMetrics(
@@ -145,8 +145,8 @@ public sealed class DashboardWidgetSettingsDraft
         GaugeNormalColor = ReadString(configuration, DashboardEventGaugeWidgetOptions.NormalColorKey) ?? DashboardEventGaugeWidgetOptions.DefaultNormalColor;
         GaugeWarningColor = ReadString(configuration, DashboardEventGaugeWidgetOptions.WarningColorKey) ?? DashboardEventGaugeWidgetOptions.DefaultWarningColor;
         GaugeCriticalColor = ReadString(configuration, DashboardEventGaugeWidgetOptions.CriticalColorKey) ?? DashboardEventGaugeWidgetOptions.DefaultCriticalColor;
-        ChartType = DashboardWidgetCatalog.NormalizeChartType(
-            ReadString(configuration, DashboardWidgetCatalog.ChartTypeKey));
+        ChartType = DashboardChartWidgetOptions.NormalizeType(
+            ReadString(configuration, DashboardChartWidgetOptions.TypeKey));
         MetricCardColumns = DashboardWidgetCatalog.NormalizeMetricCardColumns(
             ReadString(configuration, DashboardWidgetCatalog.MetricCardColumnsKey));
         DisplayMetrics.Clear();
@@ -367,8 +367,8 @@ public sealed class DashboardWidgetSettingsDraft
 
         if (Profile.UsesChartType)
         {
-            configuration[DashboardWidgetCatalog.ChartTypeKey] =
-                DashboardWidgetCatalog.NormalizeChartType(ChartType);
+            configuration[DashboardChartWidgetOptions.TypeKey] =
+                DashboardChartWidgetOptions.NormalizeType(ChartType);
         }
     }
 

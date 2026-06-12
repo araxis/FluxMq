@@ -59,17 +59,17 @@
         <PropertyGridRow Name="@Labels.ChartRow">
             <div class="property-grid-button-group">
                 <button type="button"
-                        class="@ChoiceClass(Draft.ChartType, DashboardWidgetCatalog.ChartTypeBars)"
-                        @onclick="@(() => ChartTypeChanged.InvokeAsync(DashboardWidgetCatalog.ChartTypeBars))">Bars</button>
+                        class="@ChoiceClass(Draft.ChartType, DashboardChartWidgetOptions.TypeBars)"
+                        @onclick="@(() => ChartTypeChanged.InvokeAsync(DashboardChartWidgetOptions.TypeBars))">Bars</button>
                 <button type="button"
-                        class="@ChoiceClass(Draft.ChartType, DashboardWidgetCatalog.ChartTypeLine)"
-                        @onclick="@(() => ChartTypeChanged.InvokeAsync(DashboardWidgetCatalog.ChartTypeLine))">Line</button>
+                        class="@ChoiceClass(Draft.ChartType, DashboardChartWidgetOptions.TypeLine)"
+                        @onclick="@(() => ChartTypeChanged.InvokeAsync(DashboardChartWidgetOptions.TypeLine))">Line</button>
                 <button type="button"
-                        class="@ChoiceClass(Draft.ChartType, DashboardWidgetCatalog.ChartTypeArea)"
-                        @onclick="@(() => ChartTypeChanged.InvokeAsync(DashboardWidgetCatalog.ChartTypeArea))">Area</button>
+                        class="@ChoiceClass(Draft.ChartType, DashboardChartWidgetOptions.TypeArea)"
+                        @onclick="@(() => ChartTypeChanged.InvokeAsync(DashboardChartWidgetOptions.TypeArea))">Area</button>
                 <button type="button"
-                        class="@ChoiceClass(Draft.ChartType, DashboardWidgetCatalog.ChartTypeTopics)"
-                        @onclick="@(() => ChartTypeChanged.InvokeAsync(DashboardWidgetCatalog.ChartTypeTopics))">Topics</button>
+                        class="@ChoiceClass(Draft.ChartType, DashboardChartWidgetOptions.TypeTopics)"
+                        @onclick="@(() => ChartTypeChanged.InvokeAsync(DashboardChartWidgetOptions.TypeTopics))">Topics</button>
             </div>
         </PropertyGridRow>
     }

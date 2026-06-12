@@ -1507,7 +1507,7 @@ public sealed class FlowDefinitionComposerTests
         layout.Widgets["barChart"].Type.ShouldBe(DashboardWidgetCatalog.BarChartType);
         layout.Widgets["barChart"].Configuration["title"].ShouldBe("Bar chart");
         layout.Widgets["barChart"].Configuration[DashboardWidgetCatalog.PrimaryMetricKey].ShouldBe(DashboardWidgetCatalog.MetricMessages);
-        layout.Widgets["barChart"].Configuration[DashboardWidgetCatalog.ChartTypeKey].ShouldBe(DashboardWidgetCatalog.ChartTypeBars);
+        layout.Widgets["barChart"].Configuration[DashboardChartWidgetOptions.TypeKey].ShouldBe(DashboardChartWidgetOptions.TypeBars);
         layout.Widgets["barChart"].Configuration.ContainsKey(DashboardWidgetCatalog.DisplayMetricsKey).ShouldBeFalse();
         layout.Widgets["barChart"].Configuration.ContainsKey(DashboardWidgetCatalog.MetricCardColumnsKey).ShouldBeFalse();
         layout.Widgets["eventTable"].Configuration["title"].ShouldBe("Event table");

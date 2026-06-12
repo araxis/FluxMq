@@ -1960,6 +1960,8 @@ public sealed class DashboardEventFilterCatalogTests
         catalogSource.ShouldNotContain("MetricValue");
         catalogSource.ShouldNotContain("GaugeStyleKey");
         catalogSource.ShouldNotContain("GaugeDefault");
+        catalogSource.ShouldNotContain("ChartTypeKey");
+        catalogSource.ShouldNotContain("ChartTypeBars");
         File.ReadAllText(mauiProgramPath).ShouldNotContain("AddSingleton<DashboardWidgetCatalog>");
 
         Directory
@@ -1967,6 +1969,25 @@ public sealed class DashboardEventFilterCatalogTests
             .Select(File.ReadAllText)
             .Any(static source => source.Contains("@inject DashboardWidgetCatalog", StringComparison.Ordinal))
             .ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DashboardChartWidgetOptions_OwnsChartDefaults()
+    {
+        DashboardChartWidgetOptions.TypeKey.ShouldBe("chartType");
+        DashboardChartWidgetOptions.TypeBars.ShouldBe("bars");
+        DashboardChartWidgetOptions.TypeLine.ShouldBe("line");
+        DashboardChartWidgetOptions.TypeArea.ShouldBe("area");
+        DashboardChartWidgetOptions.TypeTopics.ShouldBe("topics");
+
+        DashboardChartWidgetOptions.NormalizeType("unknown")
+            .ShouldBe(DashboardChartWidgetOptions.TypeBars);
+        DashboardChartWidgetOptions.NormalizeType(DashboardChartWidgetOptions.TypeLine)
+            .ShouldBe(DashboardChartWidgetOptions.TypeLine);
+        DashboardChartWidgetOptions.NormalizeType(DashboardChartWidgetOptions.TypeArea)
+            .ShouldBe(DashboardChartWidgetOptions.TypeArea);
+        DashboardChartWidgetOptions.NormalizeType(DashboardChartWidgetOptions.TypeTopics)
+            .ShouldBe(DashboardChartWidgetOptions.TypeTopics);
     }
 
     [Fact]
@@ -2107,16 +2128,16 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldBeTrue();
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.LineChartType)
-            .DefaultConfiguration[DashboardWidgetCatalog.ChartTypeKey]
-            .ShouldBe(DashboardWidgetCatalog.ChartTypeLine);
+            .DefaultConfiguration[DashboardChartWidgetOptions.TypeKey]
+            .ShouldBe(DashboardChartWidgetOptions.TypeLine);
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.AreaChartType)
-            .DefaultConfiguration[DashboardWidgetCatalog.ChartTypeKey]
-            .ShouldBe(DashboardWidgetCatalog.ChartTypeArea);
+            .DefaultConfiguration[DashboardChartWidgetOptions.TypeKey]
+            .ShouldBe(DashboardChartWidgetOptions.TypeArea);
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.BarChartType)
-            .DefaultConfiguration[DashboardWidgetCatalog.ChartTypeKey]
-            .ShouldBe(DashboardWidgetCatalog.ChartTypeBars);
+            .DefaultConfiguration[DashboardChartWidgetOptions.TypeKey]
+            .ShouldBe(DashboardChartWidgetOptions.TypeBars);
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.LineChartType)
             .CompatibilityTypeIds
