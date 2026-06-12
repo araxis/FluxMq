@@ -60,11 +60,10 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
                 "Event gauge",
                 "eventGauge",
                 [
-                    MetricQueryGroup("gauge-source", "Gauge source"),
-                    GaugeGroup(),
-                    ThresholdGroup()
+                    MetricQueryGroup("gauge-source", "Gauge source")
                 ],
-                preferredColumns: 2),
+                preferredColumns: 2,
+                metricVisualizationId: DashboardMetricVisualizationIds.RadialGauge),
             EventModule(
                 DashboardWidgetCatalog.EventTableType,
                 "Event Table",
@@ -91,7 +90,8 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
         string instanceNamePrefix,
         IReadOnlyList<DashboardWidgetPropertyGroupDefinition> groups,
         int preferredColumns = 1,
-        int preferredRows = 1)
+        int preferredRows = 1,
+        string metricVisualizationId = DashboardMetricVisualizationIds.Value)
     {
         var configuration = UsesFocusedMetricQuery(type)
             ? new Dictionary<string, string>(StringComparer.Ordinal)
@@ -101,15 +101,7 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
             : EventConfiguration(title);
         if (string.Equals(type, DashboardWidgetCatalog.EventGaugeType, StringComparison.Ordinal))
         {
-            configuration[DashboardEventGaugeWidgetOptions.StyleKey] = DashboardEventGaugeWidgetOptions.StyleRing;
-            configuration[DashboardEventGaugeWidgetOptions.MinKey] = DashboardEventGaugeWidgetOptions.DefaultMin;
-            configuration[DashboardEventGaugeWidgetOptions.MaxKey] = DashboardEventGaugeWidgetOptions.DefaultMax;
-            configuration[DashboardEventGaugeWidgetOptions.TargetKey] = DashboardEventGaugeWidgetOptions.DefaultTarget;
-            configuration[DashboardEventGaugeWidgetOptions.WarningKey] = DashboardEventGaugeWidgetOptions.DefaultWarning;
-            configuration[DashboardEventGaugeWidgetOptions.CriticalKey] = DashboardEventGaugeWidgetOptions.DefaultCritical;
-            configuration[DashboardEventGaugeWidgetOptions.NormalColorKey] = DashboardEventGaugeWidgetOptions.DefaultNormalColor;
-            configuration[DashboardEventGaugeWidgetOptions.WarningColorKey] = DashboardEventGaugeWidgetOptions.DefaultWarningColor;
-            configuration[DashboardEventGaugeWidgetOptions.CriticalColorKey] = DashboardEventGaugeWidgetOptions.DefaultCriticalColor;
+            ApplyGaugeVisualizationDefaults(configuration, title);
         }
         else if (string.Equals(type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal) ||
                  string.Equals(type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal))
@@ -134,6 +126,7 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
             groups,
             new DashboardWidgetStyleDefinition(),
             new DashboardWidgetLayoutContract(1, 1, preferredColumns, preferredRows),
+            MetricVisualizationId: metricVisualizationId,
             InstanceNamePrefix: instanceNamePrefix);
     }
 
@@ -154,6 +147,18 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
 
         configuration[DashboardMetricValueVisualizationOptions.TitleKey] = title;
         configuration[DashboardMetricValueVisualizationOptions.SubtitleKey] = subtitle;
+    }
+
+    private static void ApplyGaugeVisualizationDefaults(
+        Dictionary<string, string> configuration,
+        string label)
+    {
+        foreach (var (key, value) in DashboardMetricVisualizationCatalog.Find(DashboardMetricVisualizationIds.RadialGauge)!.DefaultConfiguration)
+        {
+            configuration[key] = value;
+        }
+
+        configuration[DashboardMetricGaugeVisualizationOptions.LabelKey] = label;
     }
 
     private static Dictionary<string, string> EventConfiguration(string title)
@@ -194,28 +199,6 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
             new("title", "Title", DashboardWidgetPropertyEditorKind.Text),
             new("unit", "Unit", DashboardWidgetPropertyEditorKind.Text),
             new("precision", "Decimals", DashboardWidgetPropertyEditorKind.Number)
-        ]);
-
-    private static DashboardWidgetPropertyGroupDefinition ThresholdGroup()
-        => new("threshold", "Threshold", [
-            new("warning", "Warning", DashboardWidgetPropertyEditorKind.Number),
-            new("critical", "Critical", DashboardWidgetPropertyEditorKind.Number)
-        ], StartCollapsed: true);
-
-    private static DashboardWidgetPropertyGroupDefinition GaugeGroup()
-        => new("gauge", "Gauge", [
-            new(DashboardEventGaugeWidgetOptions.StyleKey, "Shape", DashboardWidgetPropertyEditorKind.Segmented, Options: [
-                new(DashboardEventGaugeWidgetOptions.StyleRing, "Ring"),
-                new(DashboardEventGaugeWidgetOptions.StyleMeter, "Meter")
-            ]),
-            new(DashboardEventGaugeWidgetOptions.MinKey, "Min", DashboardWidgetPropertyEditorKind.Number, DefaultValue: DashboardEventGaugeWidgetOptions.DefaultMin),
-            new(DashboardEventGaugeWidgetOptions.MaxKey, "Max", DashboardWidgetPropertyEditorKind.Number, DefaultValue: DashboardEventGaugeWidgetOptions.DefaultMax),
-            new(DashboardEventGaugeWidgetOptions.TargetKey, "Target", DashboardWidgetPropertyEditorKind.Number, DefaultValue: DashboardEventGaugeWidgetOptions.DefaultTarget),
-            new(DashboardEventGaugeWidgetOptions.WarningKey, "Warning", DashboardWidgetPropertyEditorKind.Number, DefaultValue: DashboardEventGaugeWidgetOptions.DefaultWarning),
-            new(DashboardEventGaugeWidgetOptions.CriticalKey, "Critical", DashboardWidgetPropertyEditorKind.Number, DefaultValue: DashboardEventGaugeWidgetOptions.DefaultCritical),
-            new(DashboardEventGaugeWidgetOptions.NormalColorKey, "Normal color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardEventGaugeWidgetOptions.DefaultNormalColor),
-            new(DashboardEventGaugeWidgetOptions.WarningColorKey, "Warning color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardEventGaugeWidgetOptions.DefaultWarningColor),
-            new(DashboardEventGaugeWidgetOptions.CriticalColorKey, "Critical color", DashboardWidgetPropertyEditorKind.Color, DefaultValue: DashboardEventGaugeWidgetOptions.DefaultCriticalColor)
         ]);
 
     private static DashboardWidgetPropertyGroupDefinition TableGroup()

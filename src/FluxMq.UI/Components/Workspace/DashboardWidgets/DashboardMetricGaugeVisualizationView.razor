@@ -1,0 +1,74 @@
+@namespace FluxMq.UI.Components.Workspace
+@using FluxMq.UI.Services
+
+@{
+    var widget = Context.Widget;
+    var metric = Context.MetricValue;
+    var gaugeShape = DashboardMetricGaugeVisualizationOptions.NormalizeShape(
+        widget.ReadString(DashboardMetricGaugeVisualizationOptions.ShapeKey) ??
+        widget.ReadString(DashboardEventGaugeWidgetOptions.StyleKey));
+    var gauge = DashboardWidgetFormatting.GaugeVisualState(widget, metric);
+    var label = Label;
+}
+
+<div class="dashboard-single-gauge-layout">
+    @if (gaugeShape == DashboardMetricGaugeVisualizationOptions.ShapeMeter)
+    {
+        <div class="dashboard-gauge-meter-panel">
+            <div class="dashboard-gauge-meter-header">
+                @if (ShowLabel)
+                {
+                    <span>@label</span>
+                }
+                <strong>@metric.FormattedValue</strong>
+            </div>
+            <div class="dashboard-gauge-meter" style="@gauge.Style" aria-hidden="true">
+                <span class="dashboard-gauge-meter-fill"></span>
+                <span class="dashboard-gauge-meter-target"></span>
+            </div>
+            <div class="dashboard-gauge-meter-footer">
+                <span>@gauge.RangeLabel</span>
+                <span>target @gauge.TargetLabel</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="dashboard-widget-gauge-shell">
+            <div class="dashboard-widget-gauge" style="@gauge.Style">
+                <span class="dashboard-widget-gauge-target" aria-hidden="true"></span>
+                <div>
+                    <strong>@metric.FormattedValue</strong>
+                    @if (ShowLabel)
+                    {
+                        <span>@metric.Label</span>
+                    }
+                </div>
+            </div>
+            <div class="dashboard-widget-gauge-meta">
+                @if (ShowLabel)
+                {
+                    <strong>@label</strong>
+                }
+                <span>@gauge.RangeLabel</span>
+                <span>target @gauge.TargetLabel</span>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardWidgetRenderContext Context { get; set; } = null!;
+
+    private string Label =>
+        Context.Widget.ReadString(DashboardMetricGaugeVisualizationOptions.LabelKey) ??
+        Context.Widget.ReadString("title") ??
+        DashboardMetricGaugeVisualizationOptions.DefaultLabel;
+
+    private bool ShowLabel =>
+        !string.Equals(
+            Context.Widget.ReadString(DashboardMetricGaugeVisualizationOptions.ShowLabelKey),
+            "false",
+            StringComparison.OrdinalIgnoreCase);
+}

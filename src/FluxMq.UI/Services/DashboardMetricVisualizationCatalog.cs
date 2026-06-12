@@ -15,7 +15,8 @@ public static class DashboardMetricVisualizationCatalog
         Array.AsReadOnly<IDashboardMetricVisualizationModuleProvider>(
         [
             new DashboardMetricValueVisualizationModuleProvider(),
-            new DashboardMetricDigitalVisualizationModuleProvider()
+            new DashboardMetricDigitalVisualizationModuleProvider(),
+            new DashboardMetricGaugeVisualizationModuleProvider()
         ]);
 
     private static readonly IReadOnlyList<DashboardMetricVisualizationModule> Modules =

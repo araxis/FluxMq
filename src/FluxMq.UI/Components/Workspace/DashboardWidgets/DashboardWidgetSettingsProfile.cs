@@ -220,7 +220,7 @@ public static class DashboardWidgetSettingsProfiles
                 normalized,
                 "Event gauge",
                 Icons.Material.Filled.DonutLarge,
-                usesGaugeStyle: true,
+                usesMetricVisualization: true,
                 labels: DashboardWidgetInspectorLabels.EventGauge),
             DashboardWidgetCatalog.EventChartType => Event(
                 normalized,
