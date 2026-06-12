@@ -3264,3 +3264,20 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 755 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this focused descriptor cleanup, then inspect whether `DashboardWidgetCatalog` constants can be split into focused constant groups or should stay as the temporary dashboard id/key compatibility home.
+- Dashboard widget catalog static cleanup:
+  - Merged PR #189 (`Remove dashboard compatibility descriptors`) into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Started `work/dashboard-widget-catalog-static-cleanup` from clean `main`.
+  - Converted `DashboardWidgetCatalog` to a static constants/normalizer class now that descriptor ownership moved to widget modules and no instance consumers remain.
+  - Removed the stale `DashboardWidgetCatalog` service registration from `MauiProgram`.
+  - Added source guard coverage proving the catalog stays static and is not reintroduced as a workspace component injection or DI service.
+  - Current line movement before staging:
+    - 2 lines removed.
+    - 33 lines added.
+  - Verification:
+    - Initial parallel build/test found a missing `FluxMq.UI.Models` using after the static-class edit; adding the using back fixed it.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetCatalog_IsStaticAndNotRegisteredAsAService|FullyQualifiedName~DashboardWidgetRegistry_ExposesFocusedDescriptorsAndKeepsCompatibilityLookup" -p:UseAppHost=false --verbosity minimal` passed with 2 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 427 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 756 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this static catalog cleanup, then inspect focused constant ownership for the next small cleanup slice.

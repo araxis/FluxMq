@@ -1947,6 +1947,24 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardWidgetCatalog_IsStaticAndNotRegisteredAsAService()
+    {
+        var root = FindRepositoryRoot();
+        var catalogPath = Path.Combine(root, "src", "FluxMq.UI", "Services", "DashboardWidgetCatalog.cs");
+        var mauiProgramPath = Path.Combine(root, "src", "FluxMq.UI", "MauiProgram.cs");
+        var workspaceComponentsPath = Path.Combine(root, "src", "FluxMq.UI", "Components", "Workspace");
+
+        File.ReadAllText(catalogPath).ShouldContain("public static class DashboardWidgetCatalog");
+        File.ReadAllText(mauiProgramPath).ShouldNotContain("AddSingleton<DashboardWidgetCatalog>");
+
+        Directory
+            .EnumerateFiles(workspaceComponentsPath, "*.razor", SearchOption.AllDirectories)
+            .Select(File.ReadAllText)
+            .Any(static source => source.Contains("@inject DashboardWidgetCatalog", StringComparison.Ordinal))
+            .ShouldBeFalse();
+    }
+
+    [Fact]
     public void DashboardMetricWidgetModuleProvider_OwnsMetricWidgetDefinitions()
     {
         var modules = new DashboardMetricWidgetModuleProvider().CreateModules();

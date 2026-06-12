@@ -2,7 +2,7 @@ using FluxMq.UI.Models;
 
 namespace FluxMq.UI.Services;
 
-public sealed class DashboardWidgetCatalog
+public static class DashboardWidgetCatalog
 {
     public const string EventCounterType = "event.counter";
     public const string KpiTileType = "kpi.tile";
