@@ -3469,3 +3469,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 762 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this latest-event visual UX slice, then continue one-widget-at-a-time with `event.table` only after visual review passes.
+- Dashboard event table visual UX:
+  - Merged PR #203 (`Align latest event visual settings`) into `main`; post-merge Windows validation passed before this slice.
+  - Started `work/dashboard-event-table-visual-ux` from clean `main`.
+  - Refactored `event.table` so table display settings are owned by focused `table.*` visual keys: header, row count, density, column visibility, empty text, and table colors.
+  - Kept event matching/filter behavior unchanged; this slice only separates table display behavior from the old raw table rows.
+  - Updated edit-cell and live rendering to use the same table visual component, with the widget owning its header instead of the outer dashboard chrome.
+  - New event-table defaults and saves write `table.*` visual keys while existing legacy `rowCount`, `density`, and `payloadPreview` keys still load as fallback.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --filter "FullyQualifiedName~DashboardEventFilterCatalogTests" --verbosity minimal` passed with 116 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 434 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 763 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this event-table visual UX slice, then continue one-widget-at-a-time with the next dashboard component only after review passes.

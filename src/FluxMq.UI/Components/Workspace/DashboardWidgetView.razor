@@ -56,7 +56,8 @@
         string.Equals(Widget.Type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal) ||
         string.Equals(Widget.Type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal) ||
         string.Equals(Widget.Type, DashboardWidgetCatalog.RateTileType, StringComparison.Ordinal) ||
-        string.Equals(Widget.Type, DashboardWidgetCatalog.LatestEventType, StringComparison.Ordinal);
+        string.Equals(Widget.Type, DashboardWidgetCatalog.LatestEventType, StringComparison.Ordinal) ||
+        string.Equals(Widget.Type, DashboardWidgetCatalog.EventTableType, StringComparison.Ordinal);
 
     private IDictionary<string, object> ComponentParameters => new Dictionary<string, object>
     {

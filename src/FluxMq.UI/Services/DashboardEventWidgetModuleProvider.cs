@@ -73,7 +73,7 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
                 typeof(DashboardEventTableModuleView),
                 "Event table",
                 "eventTable",
-                [eventFilter, TableGroup()],
+                [eventFilter, EventTableVisualGroup()],
                 preferredColumns: 2,
                 preferredRows: 2)
         ];
@@ -106,6 +106,10 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
         else if (string.Equals(type, DashboardWidgetCatalog.LatestEventType, StringComparison.Ordinal))
         {
             ApplyLatestEventVisualDefaults(configuration, title);
+        }
+        else if (string.Equals(type, DashboardWidgetCatalog.EventTableType, StringComparison.Ordinal))
+        {
+            ApplyEventTableVisualDefaults(configuration, title);
         }
         else if (string.Equals(type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal) ||
                  string.Equals(type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal))
@@ -182,6 +186,26 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
         configuration[DashboardLatestEventVisualOptions.PayloadColorKey] = DashboardLatestEventVisualOptions.DefaultPayloadColor;
     }
 
+    private static void ApplyEventTableVisualDefaults(
+        Dictionary<string, string> configuration,
+        string header)
+    {
+        configuration[DashboardEventTableVisualOptions.HeaderKey] = header;
+        configuration[DashboardEventTableVisualOptions.ShowHeaderKey] = bool.TrueString;
+        configuration[DashboardEventTableVisualOptions.RowCountKey] =
+            DashboardEventTableVisualOptions.DefaultRowCount.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        configuration[DashboardEventTableVisualOptions.DensityKey] = DashboardEventTableVisualOptions.DensityCompact;
+        configuration[DashboardEventTableVisualOptions.ShowTimeKey] = bool.TrueString;
+        configuration[DashboardEventTableVisualOptions.ShowEventKey] = bool.TrueString;
+        configuration[DashboardEventTableVisualOptions.ShowTopicKey] = bool.TrueString;
+        configuration[DashboardEventTableVisualOptions.ShowStatusKey] = bool.TrueString;
+        configuration[DashboardEventTableVisualOptions.ShowPayloadKey] = bool.TrueString;
+        configuration[DashboardEventTableVisualOptions.EmptyTextKey] = DashboardEventTableVisualOptions.DefaultEmptyText;
+        configuration[DashboardEventTableVisualOptions.HeaderColorKey] = DashboardEventTableVisualOptions.DefaultHeaderColor;
+        configuration[DashboardEventTableVisualOptions.TextColorKey] = DashboardEventTableVisualOptions.DefaultTextColor;
+        configuration[DashboardEventTableVisualOptions.MutedColorKey] = DashboardEventTableVisualOptions.DefaultMutedColor;
+    }
+
     private static Dictionary<string, string> EventConfiguration(string title)
     {
         var configuration = new Dictionary<string, string>(DashboardEventFilterCatalog.Shared.CreateEmptyConfiguration(), StringComparer.Ordinal)
@@ -222,11 +246,18 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
             new("precision", "Decimals", DashboardWidgetPropertyEditorKind.Number)
         ]);
 
-    private static DashboardWidgetPropertyGroupDefinition TableGroup()
-        => new("table", "Table", [
-            new("rowCount", "Rows", DashboardWidgetPropertyEditorKind.Number),
-            new("density", "Density", DashboardWidgetPropertyEditorKind.Select),
-            new("payloadPreview", "Payload", DashboardWidgetPropertyEditorKind.Toggle)
+    private static DashboardWidgetPropertyGroupDefinition EventTableVisualGroup()
+        => new("event-table-visual", "Event table", [
+            new(DashboardEventTableVisualOptions.HeaderKey, "Header", DashboardWidgetPropertyEditorKind.Text),
+            new(DashboardEventTableVisualOptions.ShowHeaderKey, "Show header", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardEventTableVisualOptions.RowCountKey, "Rows", DashboardWidgetPropertyEditorKind.Number),
+            new(DashboardEventTableVisualOptions.DensityKey, "Density", DashboardWidgetPropertyEditorKind.Select),
+            new(DashboardEventTableVisualOptions.ShowTimeKey, "Time", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardEventTableVisualOptions.ShowEventKey, "Event", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardEventTableVisualOptions.ShowTopicKey, "Topic", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardEventTableVisualOptions.ShowStatusKey, "Status", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardEventTableVisualOptions.ShowPayloadKey, "Payload", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardEventTableVisualOptions.EmptyTextKey, "Empty text", DashboardWidgetPropertyEditorKind.Text)
         ]);
 
     private static DashboardWidgetPropertyGroupDefinition LatestEventVisualGroup()

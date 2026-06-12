@@ -18,6 +18,7 @@ public sealed record DashboardWidgetSettingsProfile(
     bool UsesMetricWindow = false,
     bool UsesSubtitle = false,
     bool UsesLatestEventVisual = false,
+    bool UsesEventTableVisual = false,
     DashboardWidgetInspectorLabels? Labels = null)
 {
     public bool ShowsEventTabs => IsEventWidget;
@@ -265,6 +266,7 @@ public static class DashboardWidgetSettingsProfiles
                 normalized,
                 "Event table",
                 Icons.Material.Filled.TableRows,
+                usesEventTableVisual: true,
                 labels: DashboardWidgetInspectorLabels.EventTable),
             DashboardWidgetCatalog.TopicActivityType => Event(
                 normalized,
@@ -319,6 +321,7 @@ public static class DashboardWidgetSettingsProfiles
         bool usesMetricWindow = false,
         bool usesSubtitle = false,
         bool usesLatestEventVisual = false,
+        bool usesEventTableVisual = false,
         DashboardWidgetInspectorLabels? labels = null)
         => new(
             type,
@@ -335,5 +338,6 @@ public static class DashboardWidgetSettingsProfiles
             usesMetricWindow,
             usesSubtitle,
             usesLatestEventVisual,
+            usesEventTableVisual,
             labels);
 }
