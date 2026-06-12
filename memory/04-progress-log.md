@@ -3328,3 +3328,16 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 759 tests.
     - `git diff --check` passed with line-ending normalization warnings for the edited test file.
   - Next step: commit/PR/merge this gauge ownership cleanup, then inspect chart constant ownership as the next small cleanup candidate.
+- CI fast validation split:
+  - Merged PR #193 (`Move gauge widget constants`) into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Started `work/ci-fast-validation` from clean `main`.
+  - Split normal Windows validation from packaging so pull requests and pushes to `main` run only the fast validation path.
+  - Moved release validation and package artifact creation into a manual-only workflow.
+  - Removed the package job from the normal validation workflow so pull requests no longer show a skipped package stage.
+  - Kept packaging available on demand for candidate/release checks; no app code, schema, dashboard, or test-studio behavior changed.
+  - Verification:
+    - Workflow files were inspected for tabs/trailing whitespace and normalized to LF.
+    - Source grep confirmed the normal validation workflow no longer contains the package or release-validation steps; those live in the manual package workflow.
+    - Local YAML parsing was unavailable because PyYAML is not installed in this shell.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this CI speedup, confirm the PR shows only normal validation, then continue with chart constant ownership cleanup.
