@@ -3355,3 +3355,18 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 760 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this chart ownership cleanup, then inspect whether remaining shared visual metric constants should move next or whether to pause cleanup and return to dashboard behavior work.
+- Dashboard cell fit UX:
+  - Merged PR #195 (`Move chart widget constants`) into `main`; post-merge Windows validation passed.
+  - Started `work/dashboard-cell-fit-ux` from clean `main`.
+  - Returned from cleanup to dashboard behavior/UX work.
+  - Kept the existing responsive grid contract and focused this slice on cell adaptation.
+  - Removed fixed edit-cell metric value font sizes so editor previews scale with cell width and height like live dashboard widgets.
+  - Updated shared value and digital metric visuals to scale from both container width and height, improving short, wide, tall, and narrow cell behavior.
+  - Lowered tablet/mobile runtime grid minimums through container-query variables so cells reflow before widgets feel crushed.
+  - No dashboard schema, widget type, metric model, or FluxFlow change.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_UsesContainerResponsiveGridForEditAndLive|FullyQualifiedName~DashboardWidgets_UseContainerResponsiveValueAndDigitalSizing|FullyQualifiedName~DashboardDesigner_EditPreviewKeepsMetricValuePlacement|FullyQualifiedName~DashboardDesigner_AppliesCellWidgetAlignmentToEditAndLiveViews" -p:UseAppHost=false --verbosity minimal` passed with 4 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 431 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this focused dashboard UX patch, then continue KPI/value visual polish if it passes review.

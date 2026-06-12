@@ -434,7 +434,7 @@
 }
 
 .dashboard-cell-widget-preview ::deep .dashboard-widget-value {
-    font-size: 38px;
+    font-size: clamp(24px, min(16cqw, 30cqh), 38px);
     line-height: 1;
 }
 
@@ -444,7 +444,7 @@
 }
 
 .dashboard-cell-widget-preview ::deep .dashboard-widget.kpi-tile .dashboard-widget-value {
-    font-size: 42px;
+    font-size: clamp(26px, min(18cqw, 32cqh), 42px);
     line-height: 0.9;
 }
 
@@ -820,6 +820,8 @@
 
 @container dashboard-layout (max-width: 980px) {
     .dashboard-grid-frame {
+        --dashboard-grid-column-min: 132px;
+        --dashboard-grid-row-min: 128px;
         padding: 12px;
     }
 
@@ -855,6 +857,8 @@
 @container dashboard-layout (max-width: 620px) {
     .dashboard-grid-frame,
     .dashboard-live-frame {
+        --dashboard-grid-column-min: 0px;
+        --dashboard-grid-row-min: 112px;
         padding: 8px;
     }
 

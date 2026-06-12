@@ -2499,6 +2499,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("container-name: dashboard-layout;");
         css.ShouldContain("@container dashboard-layout (max-width: 980px)");
         css.ShouldContain("@container dashboard-layout (max-width: 620px)");
+        css.ShouldContain("--dashboard-grid-column-min: 132px;");
+        css.ShouldContain("--dashboard-grid-row-min: 128px;");
+        css.ShouldContain("--dashboard-grid-column-min: 0px;");
+        css.ShouldContain("--dashboard-grid-row-min: 112px;");
         css.ShouldContain("grid-template-columns: repeat(2, minmax(var(--dashboard-grid-column-min, 156px), 1fr)) !important;");
         css.ShouldContain("grid-column: span var(--dashboard-cell-tablet-span, 1) !important;");
         css.ShouldContain("grid-column: span var(--dashboard-cell-mobile-span, 1) !important;");
@@ -2517,12 +2521,24 @@ public sealed class DashboardEventFilterCatalogTests
             "wwwroot",
             "dashboard-widgets.css"));
 
-        css.ShouldContain("font-size: clamp(28px, 8cqw, 46px);");
-        css.ShouldContain("font-size: clamp(30px, 10cqw, 52px);");
-        css.ShouldContain("height: clamp(34px, 42cqh, 74px);");
+        css.ShouldContain("font-size: clamp(24px, min(8cqw, 30cqh), 46px);");
+        css.ShouldContain("font-size: clamp(28px, min(10cqw, 34cqh), 52px);");
+        css.ShouldContain("height: clamp(30px, min(42cqh, 38cqw), 74px);");
         css.ShouldContain("@container (max-width: 240px)");
         css.ShouldContain("@container (max-height: 150px)");
         css.ShouldContain(".dashboard-digital-readout-display");
+
+        var designerCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor.css"));
+        designerCss.ShouldContain("font-size: clamp(24px, min(16cqw, 30cqh), 38px);");
+        designerCss.ShouldContain("font-size: clamp(26px, min(18cqw, 32cqh), 42px);");
+        designerCss.ShouldNotContain("font-size: 38px;");
+        designerCss.ShouldNotContain("font-size: 42px;");
     }
 
     [Fact]
