@@ -1,6 +1,7 @@
 using FluxMq.UI.Components.Workspace;
 using FluxMq.UI.Models;
 using MudBlazor;
+using System.Globalization;
 
 namespace FluxMq.UI.Services;
 
@@ -11,7 +12,7 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
     public IReadOnlyList<DashboardWidgetModule> CreateModules()
         =>
         [
-            ChartModule(
+            LineChartModule(
                 DashboardWidgetCatalog.LineChartType,
                 "Line Chart",
                 "Charts",
@@ -20,12 +21,8 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
                 typeof(DashboardLineChartModuleView),
                 "Line chart",
                 "lineChart",
-                DashboardChartWidgetOptions.TypeLine,
                 [
-                    MetricGroup("metric", "Metric"),
-                    WindowGroup(),
-                    AxisGroup(),
-                    ChartLineGroup()
+                    LineChartGroup()
                 ],
                 [DashboardWidgetCatalog.EventChartType]),
             ChartModule(
@@ -112,6 +109,53 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
             InstanceNamePrefix: instanceNamePrefix);
     }
 
+    private static DashboardWidgetModule LineChartModule(
+        string type,
+        string displayName,
+        string category,
+        string description,
+        string icon,
+        Type component,
+        string title,
+        string instanceNamePrefix,
+        IReadOnlyList<DashboardWidgetPropertyGroupDefinition> groups,
+        IReadOnlyList<string>? compatibilityTypeIds = null)
+    {
+        var configuration = EventConfiguration(title);
+        configuration.Remove(DashboardWidgetCatalog.PrimaryMetricKey);
+        configuration[DashboardChartWidgetOptions.TypeKey] = DashboardChartWidgetOptions.TypeLine;
+        configuration[DashboardLineChartVisualOptions.HeaderKey] = title;
+        configuration[DashboardLineChartVisualOptions.ShowHeaderKey] = bool.TrueString;
+        configuration[DashboardLineChartVisualOptions.ShowGridKey] = bool.TrueString;
+        configuration[DashboardLineChartVisualOptions.ShowLabelsKey] = bool.TrueString;
+        configuration[DashboardLineChartVisualOptions.ShowPointsKey] = bool.FalseString;
+        configuration[DashboardLineChartVisualOptions.EmptyTextKey] = DashboardLineChartVisualOptions.DefaultEmptyText;
+        configuration[DashboardLineChartVisualOptions.LineColorKey] = DashboardLineChartVisualOptions.DefaultLineColor;
+        configuration[DashboardLineChartVisualOptions.GridColorKey] = DashboardLineChartVisualOptions.DefaultGridColor;
+        configuration[DashboardLineChartVisualOptions.LabelColorKey] = DashboardLineChartVisualOptions.DefaultLabelColor;
+        configuration[DashboardLineChartVisualOptions.LineWidthKey] =
+            DashboardLineChartVisualOptions.DefaultLineWidth.ToString(CultureInfo.InvariantCulture);
+        return new DashboardWidgetModule(
+            new DashboardWidgetDescriptor(
+                type,
+                displayName,
+                category,
+                description,
+                icon,
+                displayName,
+                DashboardWidgetRendererKind.Chart,
+                DashboardWidgetEditorKind.Chart,
+                ["runtimeEvents"]),
+            component,
+            component,
+            configuration,
+            groups,
+            new DashboardWidgetStyleDefinition(),
+            new DashboardWidgetLayoutContract(2, 1, 2, 1),
+            compatibilityTypeIds,
+            InstanceNamePrefix: instanceNamePrefix);
+    }
+
     private static DashboardWidgetModule DonutChartModule(
         string type,
         string displayName,
@@ -177,6 +221,20 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
         => new("line", "Line", [
             new("lineColor", "Line", DashboardWidgetPropertyEditorKind.Color),
             new("showPoints", "Points", DashboardWidgetPropertyEditorKind.Toggle)
+        ]);
+
+    private static DashboardWidgetPropertyGroupDefinition LineChartGroup()
+        => new("line-chart", "Line chart", [
+            new(DashboardLineChartVisualOptions.HeaderKey, "Header", DashboardWidgetPropertyEditorKind.Text),
+            new(DashboardLineChartVisualOptions.ShowHeaderKey, "Show header", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardLineChartVisualOptions.ShowGridKey, "Grid", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardLineChartVisualOptions.ShowLabelsKey, "Labels", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardLineChartVisualOptions.ShowPointsKey, "Points", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardLineChartVisualOptions.LineWidthKey, "Line width", DashboardWidgetPropertyEditorKind.Number, Unit: "px"),
+            new(DashboardLineChartVisualOptions.EmptyTextKey, "Empty text", DashboardWidgetPropertyEditorKind.Text),
+            new(DashboardLineChartVisualOptions.LineColorKey, "Line color", DashboardWidgetPropertyEditorKind.Color),
+            new(DashboardLineChartVisualOptions.GridColorKey, "Grid color", DashboardWidgetPropertyEditorKind.Color),
+            new(DashboardLineChartVisualOptions.LabelColorKey, "Label color", DashboardWidgetPropertyEditorKind.Color)
         ]);
 
     private static DashboardWidgetPropertyGroupDefinition ChartFillGroup()

@@ -256,6 +256,52 @@
         </PropertyGridRow>
     }
 
+    @if (Draft.Profile.UsesLineChartVisual)
+    {
+        <PropertyGridRow Name="Header">
+            <input class="property-grid-input"
+                   value="@Draft.LineChartHeader"
+                   @oninput="@((ChangeEventArgs args) => ChangeLineChartVisualPropertyAsync(DashboardLineChartVisualOptions.HeaderKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Show header">
+            @LineChartBooleanRow(DashboardLineChartVisualOptions.ShowHeaderKey, Draft.LineChartShowHeader)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Grid">
+            @LineChartBooleanRow(DashboardLineChartVisualOptions.ShowGridKey, Draft.LineChartShowGrid)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Labels">
+            @LineChartBooleanRow(DashboardLineChartVisualOptions.ShowLabelsKey, Draft.LineChartShowLabels)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Points">
+            @LineChartBooleanRow(DashboardLineChartVisualOptions.ShowPointsKey, Draft.LineChartShowPoints)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Line width" Unit="px">
+            <input class="property-grid-input"
+                   type="number"
+                   min="@DashboardLineChartVisualOptions.MinLineWidth"
+                   max="@DashboardLineChartVisualOptions.MaxLineWidth"
+                   value="@Draft.LineChartLineWidth"
+                   @oninput="@((ChangeEventArgs args) => ChangeLineChartVisualPropertyAsync(DashboardLineChartVisualOptions.LineWidthKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Empty text">
+            <input class="property-grid-input"
+                   value="@Draft.LineChartEmptyText"
+                   @oninput="@((ChangeEventArgs args) => ChangeLineChartVisualPropertyAsync(DashboardLineChartVisualOptions.EmptyTextKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Line color">
+            <PropertyGridColorPicker Value="@Draft.LineChartLineColor"
+                                     ValueChanged="@((string? value) => ChangeLineChartVisualPropertyAsync(DashboardLineChartVisualOptions.LineColorKey, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Grid color">
+            <PropertyGridColorPicker Value="@Draft.LineChartGridColor"
+                                     ValueChanged="@((string? value) => ChangeLineChartVisualPropertyAsync(DashboardLineChartVisualOptions.GridColorKey, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Label color">
+            <PropertyGridColorPicker Value="@Draft.LineChartLabelColor"
+                                     ValueChanged="@((string? value) => ChangeLineChartVisualPropertyAsync(DashboardLineChartVisualOptions.LabelColorKey, value))" />
+        </PropertyGridRow>
+    }
+
     @if (Draft.Profile.UsesChartType)
     {
         <PropertyGridRow Name="@Labels.ChartRow">
@@ -304,6 +350,9 @@
     public EventCallback<DashboardInspectorPropertyValueChange> TopicTreeVisualPropertyChanged { get; set; }
 
     [Parameter]
+    public EventCallback<DashboardInspectorPropertyValueChange> LineChartVisualPropertyChanged { get; set; }
+
+    [Parameter]
     public EventCallback<string?> ChartTypeChanged { get; set; }
 
     private static string ChoiceClass(string? currentValue, string value)
@@ -330,6 +379,9 @@
 
     private Task ChangeTopicTreeVisualPropertyAsync(string key, string? value)
         => TopicTreeVisualPropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
+
+    private Task ChangeLineChartVisualPropertyAsync(string key, string? value)
+        => LineChartVisualPropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
 
     private RenderFragment BooleanRow(string key, bool value) => @<div class="property-grid-button-group">
         <button type="button"
@@ -365,5 +417,14 @@
         <button type="button"
                 class="@BooleanChoiceClass(value, false)"
                 @onclick="@(() => ChangeTopicTreeVisualPropertyAsync(key, bool.FalseString))">Off</button>
+    </div>;
+
+    private RenderFragment LineChartBooleanRow(string key, bool value) => @<div class="property-grid-button-group">
+        <button type="button"
+                class="@BooleanChoiceClass(value, true)"
+                @onclick="@(() => ChangeLineChartVisualPropertyAsync(key, bool.TrueString))">On</button>
+        <button type="button"
+                class="@BooleanChoiceClass(value, false)"
+                @onclick="@(() => ChangeLineChartVisualPropertyAsync(key, bool.FalseString))">Off</button>
     </div>;
 }

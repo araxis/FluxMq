@@ -277,16 +277,26 @@ public static class DashboardWidgetFormatting
     }
 
     public static string ChartLinePoints(DashboardEventSnapshot snapshot)
+        => string.Join(" ", ChartLinePointValues(snapshot)
+            .Select(static point => $"{point.X},{point.Y}"));
+
+    public static IReadOnlyList<DashboardChartPoint> ChartLinePointValues(DashboardEventSnapshot snapshot)
     {
         var buckets = snapshot.BucketCounts.Count == 0 ? [0] : snapshot.BucketCounts;
         var max = Math.Max(1, buckets.Max());
         var lastIndex = Math.Max(1, buckets.Count - 1);
-        return string.Join(" ", buckets.Select((count, index) =>
-        {
-            var x = index * 100d / lastIndex;
-            var y = count == 0 ? 41d : 42d - Math.Clamp(count / (double)max * 36d, 8d, 36d);
-            return $"{x.ToString("0.###", CultureInfo.InvariantCulture)},{y.ToString("0.###", CultureInfo.InvariantCulture)}";
-        }));
+        return buckets
+            .Select((count, index) =>
+            {
+                var x = index * 100d / lastIndex;
+                var y = count == 0 ? 41d : 42d - Math.Clamp(count / (double)max * 36d, 8d, 36d);
+                return new DashboardChartPoint(
+                    x.ToString("0.###", CultureInfo.InvariantCulture),
+                    y.ToString("0.###", CultureInfo.InvariantCulture),
+                    count,
+                    $"{FormatNumber(count)} events");
+            })
+            .ToArray();
     }
 
     public static string ChartAreaPoints(DashboardEventSnapshot snapshot)
@@ -704,6 +714,8 @@ public static class DashboardWidgetFormatting
                 : char.ToUpperInvariant(word[0]) + word[1..]
         };
 }
+
+public sealed record DashboardChartPoint(string X, string Y, int Count, string Tooltip);
 
 public sealed record DashboardMetricDisplayCard(string Icon, string Value, string Label, string CssClass);
 

@@ -1,0 +1,131 @@
+@namespace FluxMq.UI.Components.Workspace
+@using FluxMq.UI.Services
+
+@{
+    var widget = Context.Widget;
+    var snapshot = Context.Snapshot;
+    var points = DashboardWidgetFormatting.ChartLinePointValues(snapshot);
+    var hasData = snapshot.BucketCounts.Any(static count => count > 0);
+}
+
+<div class="dashboard-line-chart-visual" style="@VisualStyle(widget)">
+    @if (ShowHeader(widget))
+    {
+        <div class="dashboard-line-chart-header">
+            <div class="dashboard-widget-icon">
+                <MudIcon Icon="@DashboardWidgetFormatting.WidgetIcon(widget)" Size="Size.Small" />
+            </div>
+            <div class="dashboard-widget-title-block">
+                <span class="dashboard-widget-title">@Header(widget)</span>
+                <span class="dashboard-widget-subtitle">@DashboardWidgetFormatting.EventFilterSummary(widget)</span>
+            </div>
+        </div>
+    }
+
+    <div class="dashboard-line-chart-body">
+        @if (hasData)
+        {
+            <svg class="dashboard-line-chart-svg"
+                 viewBox="0 0 100 44"
+                 preserveAspectRatio="none"
+                 role="img"
+                 aria-label="@Header(widget)">
+                @if (ShowGrid(widget))
+                {
+                    <line class="dashboard-line-chart-grid-line" x1="0" y1="12" x2="100" y2="12" />
+                    <line class="dashboard-line-chart-grid-line" x1="0" y1="24" x2="100" y2="24" />
+                    <line class="dashboard-line-chart-grid-line" x1="0" y1="36" x2="100" y2="36" />
+                }
+                <polyline class="dashboard-line-chart-path"
+                          points="@DashboardWidgetFormatting.ChartLinePoints(snapshot)" />
+                @if (ShowPoints(widget))
+                {
+                    @foreach (var point in points)
+                    {
+                        <circle class="dashboard-line-chart-point"
+                                cx="@point.X"
+                                cy="@point.Y"
+                                r="1.7">
+                            <title>@point.Tooltip</title>
+                        </circle>
+                    }
+                }
+            </svg>
+            @if (ShowLabels(widget))
+            {
+                <div class="dashboard-line-chart-labels">
+                    <span>@WindowLabel(snapshot.RateWindow)</span>
+                    <strong>@DashboardWidgetFormatting.RateMeta(snapshot)</strong>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="dashboard-widget-empty">@EmptyText(widget)</div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardWidgetRenderContext Context { get; set; } = null!;
+
+    private static string Header(DashboardWidgetSnapshot widget)
+        => widget.ReadString(DashboardLineChartVisualOptions.HeaderKey) ??
+           widget.ReadString("title") ??
+           DashboardLineChartVisualOptions.DefaultHeader;
+
+    private static string EmptyText(DashboardWidgetSnapshot widget)
+        => widget.ReadString(DashboardLineChartVisualOptions.EmptyTextKey) ??
+           DashboardLineChartVisualOptions.DefaultEmptyText;
+
+    private static bool ShowHeader(DashboardWidgetSnapshot widget)
+        => ReadBoolean(widget, DashboardLineChartVisualOptions.ShowHeaderKey, true);
+
+    private static bool ShowGrid(DashboardWidgetSnapshot widget)
+        => ReadBoolean(
+            widget,
+            DashboardLineChartVisualOptions.ShowGridKey,
+            ReadBoolean(widget, DashboardLineChartVisualOptions.LegacyShowGridKey, true));
+
+    private static bool ShowLabels(DashboardWidgetSnapshot widget)
+        => ReadBoolean(
+            widget,
+            DashboardLineChartVisualOptions.ShowLabelsKey,
+            ReadBoolean(widget, DashboardLineChartVisualOptions.LegacyShowLabelsKey, true));
+
+    private static bool ShowPoints(DashboardWidgetSnapshot widget)
+        => ReadBoolean(
+            widget,
+            DashboardLineChartVisualOptions.ShowPointsKey,
+            ReadBoolean(widget, DashboardLineChartVisualOptions.LegacyShowPointsKey, false));
+
+    private static string VisualStyle(DashboardWidgetSnapshot widget)
+    {
+        var line = widget.ReadString(DashboardLineChartVisualOptions.LineColorKey) ??
+            widget.ReadString(DashboardLineChartVisualOptions.LegacyLineColorKey) ??
+            DashboardLineChartVisualOptions.DefaultLineColor;
+        var grid = widget.ReadString(DashboardLineChartVisualOptions.GridColorKey) ??
+            DashboardLineChartVisualOptions.DefaultGridColor;
+        var label = widget.ReadString(DashboardLineChartVisualOptions.LabelColorKey) ??
+            DashboardLineChartVisualOptions.DefaultLabelColor;
+        var width = DashboardLineChartVisualOptions.NormalizeLineWidth(
+            widget.ReadString(DashboardLineChartVisualOptions.LineWidthKey));
+        return $"--line-chart-line-color:{line};--line-chart-grid-color:{grid};--line-chart-label-color:{label};--line-chart-width:{width};";
+    }
+
+    private static bool ReadBoolean(DashboardWidgetSnapshot widget, string key, bool fallback)
+        => bool.TryParse(widget.ReadString(key), out var parsed)
+            ? parsed
+            : fallback;
+
+    private static string WindowLabel(TimeSpan window)
+    {
+        if (window.TotalMinutes >= 1)
+        {
+            return $"{Math.Max(1, (int)Math.Round(window.TotalMinutes))}m window";
+        }
+
+        return $"{Math.Max(1, (int)Math.Round(window.TotalSeconds))}s window";
+    }
+}
