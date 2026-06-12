@@ -212,6 +212,7 @@ public static class DashboardWidgetSettingsProfiles
                 normalized,
                 "Event rate",
                 Icons.Material.Filled.Speed,
+                usesMetricVisualization: true,
                 labels: DashboardWidgetInspectorLabels.EventRate),
             DashboardWidgetCatalog.EventGaugeType => Event(
                 normalized,

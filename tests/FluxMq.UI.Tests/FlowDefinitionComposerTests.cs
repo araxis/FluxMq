@@ -1405,7 +1405,9 @@ public sealed class FlowDefinitionComposerTests
         var widget = layout.Widgets["eventRate"];
         widget.Type.ShouldBe(DashboardWidgetCatalog.EventRateType);
         widget.Configuration["title"].ShouldBe("Event rate");
-        widget.Configuration.Keys.ShouldBe(["title", "metric"], ignoreOrder: true);
+        widget.Configuration.Keys.ShouldContain(DashboardWidgetCatalog.MetricVisualizationKey);
+        widget.Configuration[DashboardMetricValueVisualizationOptions.TitleKey].ShouldBe("Event rate");
+        widget.Configuration[DashboardMetricValueVisualizationOptions.SubtitleKey].ShouldBe("All runtime events");
         widget.Configuration["metric"].ShouldBe("ops.eventRateMetric");
         layout.Metrics["ops.eventRateMetric"].Aggregation.ShouldBe("rate");
         layout.Bindings["eventRate"].PrimaryMetric.ShouldBe("ops.eventRateMetric");
