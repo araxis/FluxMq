@@ -3426,3 +3426,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 761 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this rate-tile visual UX slice, then continue one-widget-at-a-time dashboard work by reviewing the next metric visual consumer before changing it.
+- Dashboard status value visual UX:
+  - Merged PR #200 (`Align rate tile visual settings`) into `main`; post-merge Windows validation passed.
+  - Started `work/dashboard-status-value-visual-ux` from clean `main`.
+  - Promoted `status.value` from old plain title/format rows to the focused metric visualization path used by its renderer.
+  - Seeded status-value widgets with value-visual defaults while preserving the app-metric source behavior.
+  - Removed stale status-value module ownership for the local `Value` select and local format rows; metric definition owns the source and the selected visualization owns display.
+  - Kept this as a status-value alignment slice only: no new status visual, schema, widget type, metric model, or FluxFlow change.
+  - Verification:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetSettingsProfiles_ExposeDedicatedSettingsShape|FullyQualifiedName~DashboardWidgetSettingsDraft_WritesStatusValueAsAppMetricConfiguration|FullyQualifiedName~DashboardWidgetModuleCatalog_ProvidesFocusedPropertyDefinitionsForAllPaletteWidgets|FullyQualifiedName~AddDashboardWidget_AddsStatusValueDefaults|FullyQualifiedName~DashboardMetricValueWidgets_UseSharedVisualizationView|FullyQualifiedName~GetDashboardMetricValue_UsesAppMetricArtifactForStatusValue" -p:UseAppHost=false --verbosity minimal` passed with 6 matching tests.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 432 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 761 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this status-value visual UX slice, then decide whether `event.gauge` should become a focused gauge visualization consumer or stay gauge-specific for now.

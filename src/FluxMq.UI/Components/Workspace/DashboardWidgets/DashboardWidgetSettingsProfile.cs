@@ -191,6 +191,7 @@ public static class DashboardWidgetSettingsProfiles
                 normalized,
                 "Status value",
                 Icons.Material.Filled.Verified,
+                usesMetricVisualization: true,
                 labels: DashboardWidgetInspectorLabels.StatusValue),
             DashboardWidgetCatalog.RateTileType => Event(
                 normalized,

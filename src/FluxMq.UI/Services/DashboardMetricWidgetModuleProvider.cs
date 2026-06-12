@@ -38,8 +38,7 @@ public sealed class DashboardMetricWidgetModuleProvider : IDashboardWidgetModule
                 "statusValue",
                 "recent",
                 [
-                    MetricGroup("status-source", "Status source"),
-                    FormatGroup()
+                    MetricOnlyGroup("status-source", "Status source", "Named status metric used by this widget.")
                 ],
                 [DashboardWidgetCatalog.StatusStripType]),
             MetricModule(
@@ -87,6 +86,10 @@ public sealed class DashboardMetricWidgetModuleProvider : IDashboardWidgetModule
             if (string.Equals(type, DashboardWidgetCatalog.RateTileType, StringComparison.Ordinal))
             {
                 ApplyValueVisualizationDefaults(configuration, title, "Selected rate metric");
+            }
+            else if (string.Equals(type, DashboardWidgetCatalog.StatusValueType, StringComparison.Ordinal))
+            {
+                ApplyValueVisualizationDefaults(configuration, title, "Selected status metric");
             }
         }
 
