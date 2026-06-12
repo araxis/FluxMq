@@ -8,7 +8,7 @@
     var showHeader = ShowTitle || ShowSubtitle;
 }
 
-<div class="dashboard-metric-value-visual" style="@RootStyle">
+<div class="@RootClass" style="@RootStyle">
     @if (showHeader)
     {
         <div class="dashboard-metric-value-titlebar">
@@ -41,6 +41,9 @@
 @code {
     [Parameter, EditorRequired]
     public DashboardWidgetRenderContext Context { get; set; } = null!;
+
+    private string RootClass =>
+        $"dashboard-metric-value-visual fit-{DashboardMetricValueVisualizationOptions.NormalizeFitMode(Read(DashboardMetricValueVisualizationOptions.FitModeKey))}";
 
     private string Title =>
         Read(DashboardMetricValueVisualizationOptions.TitleKey) ??

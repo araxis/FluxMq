@@ -16,6 +16,7 @@ public static class DashboardMetricValueVisualizationOptions
     public const string ValueAlignKey = "metric.value.valueAlign";
     public const string ValuePlacementKey = "metric.value.valuePlacement";
     public const string PaddingKey = "metric.value.padding";
+    public const string FitModeKey = "metric.value.fitMode";
 
     public const string DefaultTitle = "Messages";
     public const string DefaultSubtitle = "Total matching events";
@@ -32,6 +33,8 @@ public static class DashboardMetricValueVisualizationOptions
     public const string ValuePlacementTop = "top";
     public const string ValuePlacementMiddle = "middle";
     public const string ValuePlacementBottom = "bottom";
+    public const string FitFill = "fill";
+    public const string FitCompact = "compact";
 
     public static string NormalizeHorizontalAlignment(string? value)
         => value switch
@@ -47,5 +50,12 @@ public static class DashboardMetricValueVisualizationOptions
             ValuePlacementMiddle => ValuePlacementMiddle,
             ValuePlacementBottom => ValuePlacementBottom,
             _ => ValuePlacementTop
+        };
+
+    public static string NormalizeFitMode(string? value)
+        => value switch
+        {
+            FitCompact => FitCompact,
+            _ => FitFill
         };
 }

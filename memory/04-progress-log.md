@@ -3370,3 +3370,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 431 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this focused dashboard UX patch, then continue KPI/value visual polish if it passes review.
+- Dashboard value/digital visual fit UX:
+  - Merged PR #196 (`Improve dashboard cell adaptation`) into `main`; post-merge Windows validation passed.
+  - Started `work/dashboard-value-fit-ux` from clean `main`.
+  - Added value visual `Fit` ownership so KPI/value-style metric widgets can explicitly fill the cell or render compactly.
+  - Added digital visual readout alignment and placement ownership so the selected digital representation can be positioned independently of the outer cell.
+  - Wired value fit and digital alignment/placement through module defaults, property definitions, settings draft serialization, render components, and shared dashboard widget CSS.
+  - Kept the change focused on existing KPI/value and digital visual behavior: no schema, widget type, metric model, or FluxFlow change.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetSettingsDraft_WritesValueVisualizationSettings|FullyQualifiedName~DashboardWidgetSettingsDraft_WritesDigitalVisualizationSettingsOnlyWhenSelected|FullyQualifiedName~DashboardMetricVisualizationCatalog_ProvidesMetricValueFoundation|FullyQualifiedName~DashboardMetricValueVisualizationOptions_OwnsValueVisualDefaults|FullyQualifiedName~DashboardMetricDigitalVisualizationOptions_OwnsDigitalVisualDefaults|FullyQualifiedName~DashboardMetricDigitalVisualization_UsesReusableReadoutComponent|FullyQualifiedName~DashboardMetricValueVisualization_UsesFitClassForEditorAndLiveParity" -p:UseAppHost=false --verbosity minimal` passed with 7 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 432 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 761 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this visual fit slice, then continue dashboard behavior work with the next one-widget discussion and manual UI feedback.

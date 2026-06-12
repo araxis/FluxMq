@@ -17,6 +17,8 @@ public static class DashboardMetricDigitalVisualizationOptions
     public const string RadiusKey = "metric.digital.radius";
     public const string PaddingKey = "metric.digital.padding";
     public const string FitModeKey = "metric.digital.fitMode";
+    public const string AlignKey = "metric.digital.align";
+    public const string PlacementKey = "metric.digital.placement";
 
     public const string DefaultLabel = "Messages";
     public const string DefaultBackgroundColor = "#040609";
@@ -42,6 +44,12 @@ public static class DashboardMetricDigitalVisualizationOptions
     public const string GlowStrong = "strong";
     public const string FitCompact = "compact";
     public const string FitFill = "fill";
+    public const string AlignLeft = DashboardMetricValueVisualizationOptions.AlignLeft;
+    public const string AlignCenter = DashboardMetricValueVisualizationOptions.AlignCenter;
+    public const string AlignRight = DashboardMetricValueVisualizationOptions.AlignRight;
+    public const string PlacementTop = DashboardMetricValueVisualizationOptions.ValuePlacementTop;
+    public const string PlacementMiddle = DashboardMetricValueVisualizationOptions.ValuePlacementMiddle;
+    public const string PlacementBottom = DashboardMetricValueVisualizationOptions.ValuePlacementBottom;
 
     public static string NormalizeStyle(string? value)
         => value switch
@@ -72,6 +80,22 @@ public static class DashboardMetricDigitalVisualizationOptions
         {
             FitFill => FitFill,
             _ => FitCompact
+        };
+
+    public static string NormalizeAlignment(string? value)
+        => value switch
+        {
+            AlignLeft => AlignLeft,
+            AlignRight => AlignRight,
+            _ => AlignCenter
+        };
+
+    public static string NormalizePlacement(string? value)
+        => value switch
+        {
+            PlacementTop => PlacementTop,
+            PlacementBottom => PlacementBottom,
+            _ => PlacementMiddle
         };
 
     public static int NormalizeDigits(string? value)
