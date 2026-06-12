@@ -337,7 +337,7 @@ public sealed class DashboardEventFilterCatalogTests
         tree.UsesMetricWindow.ShouldBeFalse();
 
         rate.InspectorLabels.DataGroup.ShouldBe("Rate source");
-        rate.UsesMetricVisualization.ShouldBeFalse();
+        rate.UsesMetricVisualization.ShouldBeTrue();
         kpi.InspectorLabels.DataGroup.ShouldBe("KPI source");
         kpi.InspectorLabels.TimeWindowGroup.ShouldBe("Metric query");
         rate.UsesMetricWindow.ShouldBeFalse();
@@ -702,6 +702,10 @@ public sealed class DashboardEventFilterCatalogTests
 
         configuration["title"].ShouldBe("Factory rate");
         configuration["metric"].ShouldBe("factoryRateMetric");
+        configuration[DashboardWidgetCatalog.MetricVisualizationKey].ShouldBe(DashboardMetricVisualizationIds.Value);
+        configuration[DashboardMetricValueVisualizationOptions.TitleKey].ShouldBe("Factory rate");
+        configuration[DashboardMetricValueVisualizationOptions.SubtitleKey].ShouldBe(DashboardMetricValueVisualizationOptions.DefaultSubtitle);
+        configuration[DashboardMetricValueVisualizationOptions.UnitTextKey].ShouldBeEmpty();
         configuration.ContainsKey(DashboardEventFilterCatalog.EventTypeKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardEventFilterCatalog.TopicStartsWithKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardEventFilterCatalog.StatusKey).ShouldBeFalse();
@@ -1804,7 +1808,18 @@ public sealed class DashboardEventFilterCatalogTests
             .Single(static module => module.Type == DashboardWidgetCatalog.EventRateType)
             .DefaultConfiguration
             .Keys
-            .ShouldBe(["title"]);
+            .ShouldContain(DashboardWidgetCatalog.MetricVisualizationKey);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.EventRateType)
+            .DefaultConfiguration[DashboardMetricValueVisualizationOptions.TitleKey]
+            .ShouldBe("Event rate");
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.EventRateType)
+            .DefaultConfiguration[DashboardMetricValueVisualizationOptions.SubtitleKey]
+            .ShouldBe("All runtime events");
+        DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.EventRateType)
+            .UsesMetricVisualization
+            .ShouldBeTrue();
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.StatusValueType)
             .DefaultConfiguration

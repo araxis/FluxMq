@@ -47,8 +47,7 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
                 "Event rate",
                 "eventRate",
                 [
-                    MetricQueryGroup("rate-source", "Rate source"),
-                    FormatGroup("rate-format", "Rate display")
+                    MetricQueryGroup("rate-source", "Rate source")
                 ],
                 preferredColumns: 2),
             EventModule(
@@ -112,15 +111,10 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
             configuration[DashboardEventGaugeWidgetOptions.WarningColorKey] = DashboardEventGaugeWidgetOptions.DefaultWarningColor;
             configuration[DashboardEventGaugeWidgetOptions.CriticalColorKey] = DashboardEventGaugeWidgetOptions.DefaultCriticalColor;
         }
-        else if (string.Equals(type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal))
+        else if (string.Equals(type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal) ||
+                 string.Equals(type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal))
         {
-            foreach (var (key, value) in DashboardMetricVisualizationCatalog.Find(DashboardMetricVisualizationIds.Value)!.DefaultConfiguration)
-            {
-                configuration[key] = value;
-            }
-
-            configuration[DashboardMetricValueVisualizationOptions.TitleKey] = title;
-            configuration[DashboardMetricValueVisualizationOptions.SubtitleKey] = "All runtime events";
+            ApplyValueVisualizationDefaults(configuration, title, "All runtime events");
         }
 
         return new DashboardWidgetModule(
@@ -147,6 +141,20 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
         => string.Equals(type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal) ||
            string.Equals(type, DashboardWidgetCatalog.EventGaugeType, StringComparison.Ordinal) ||
            string.Equals(type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal);
+
+    private static void ApplyValueVisualizationDefaults(
+        Dictionary<string, string> configuration,
+        string title,
+        string subtitle)
+    {
+        foreach (var (key, value) in DashboardMetricVisualizationCatalog.Find(DashboardMetricVisualizationIds.Value)!.DefaultConfiguration)
+        {
+            configuration[key] = value;
+        }
+
+        configuration[DashboardMetricValueVisualizationOptions.TitleKey] = title;
+        configuration[DashboardMetricValueVisualizationOptions.SubtitleKey] = subtitle;
+    }
 
     private static Dictionary<string, string> EventConfiguration(string title)
     {
