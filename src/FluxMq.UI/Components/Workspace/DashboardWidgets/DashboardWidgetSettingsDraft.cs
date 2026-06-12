@@ -44,6 +44,7 @@ public sealed class DashboardWidgetSettingsDraft
             widget.ReadString(DashboardWidgetCatalog.MetricCardColumnsKey));
         DisplayMetrics = [.. DashboardWidgetCatalog.NormalizeDisplayMetrics(
             widget.ReadString(DashboardWidgetCatalog.DisplayMetricsKey))];
+        ApplyLatestEventVisualValues(widget.Configuration);
 
         foreach (var key in eventFilters.FilterKeys)
         {
@@ -102,6 +103,28 @@ public sealed class DashboardWidgetSettingsDraft
 
     public List<string> DisplayMetrics { get; }
 
+    public string LatestHeader { get; set; } = DashboardLatestEventVisualOptions.DefaultHeader;
+
+    public bool LatestShowHeader { get; set; } = true;
+
+    public bool LatestShowType { get; set; } = true;
+
+    public bool LatestShowTopic { get; set; } = true;
+
+    public bool LatestShowStatus { get; set; } = true;
+
+    public bool LatestShowTimestamp { get; set; } = true;
+
+    public bool LatestShowPayload { get; set; } = true;
+
+    public string LatestEmptyText { get; set; } = DashboardLatestEventVisualOptions.DefaultEmptyText;
+
+    public string LatestHeaderColor { get; set; } = DashboardLatestEventVisualOptions.DefaultHeaderColor;
+
+    public string LatestDetailColor { get; set; } = DashboardLatestEventVisualOptions.DefaultDetailColor;
+
+    public string LatestPayloadColor { get; set; } = DashboardLatestEventVisualOptions.DefaultPayloadColor;
+
     public bool IsKpiTile => string.Equals(Profile.Type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal);
 
     public bool UsesMetricQueryBuilder =>
@@ -152,6 +175,7 @@ public sealed class DashboardWidgetSettingsDraft
         DisplayMetrics.Clear();
         DisplayMetrics.AddRange(DashboardWidgetCatalog.NormalizeDisplayMetrics(
             ReadString(configuration, DashboardWidgetCatalog.DisplayMetricsKey)));
+        ApplyLatestEventVisualValues(configuration);
 
         foreach (var key in _eventFilters.FilterKeys)
         {
@@ -258,6 +282,52 @@ public sealed class DashboardWidgetSettingsDraft
     public void SetFilterValue(string key, string? value)
         => _filterValues[key] = Normalize(value);
 
+    public void SetLatestEventVisualValue(string key, string? value)
+    {
+        if (!Profile.UsesLatestEventVisual)
+        {
+            return;
+        }
+
+        switch (key)
+        {
+            case DashboardLatestEventVisualOptions.HeaderKey:
+                LatestHeader = NormalizeText(value, DashboardLatestEventVisualOptions.DefaultHeader);
+                Title = LatestHeader;
+                break;
+            case DashboardLatestEventVisualOptions.ShowHeaderKey:
+                LatestShowHeader = NormalizeBoolean(value, LatestShowHeader);
+                break;
+            case DashboardLatestEventVisualOptions.ShowTypeKey:
+                LatestShowType = NormalizeBoolean(value, LatestShowType);
+                break;
+            case DashboardLatestEventVisualOptions.ShowTopicKey:
+                LatestShowTopic = NormalizeBoolean(value, LatestShowTopic);
+                break;
+            case DashboardLatestEventVisualOptions.ShowStatusKey:
+                LatestShowStatus = NormalizeBoolean(value, LatestShowStatus);
+                break;
+            case DashboardLatestEventVisualOptions.ShowTimestampKey:
+                LatestShowTimestamp = NormalizeBoolean(value, LatestShowTimestamp);
+                break;
+            case DashboardLatestEventVisualOptions.ShowPayloadKey:
+                LatestShowPayload = NormalizeBoolean(value, LatestShowPayload);
+                break;
+            case DashboardLatestEventVisualOptions.EmptyTextKey:
+                LatestEmptyText = NormalizeText(value, DashboardLatestEventVisualOptions.DefaultEmptyText);
+                break;
+            case DashboardLatestEventVisualOptions.HeaderColorKey:
+                LatestHeaderColor = Normalize(value);
+                break;
+            case DashboardLatestEventVisualOptions.DetailColorKey:
+                LatestDetailColor = Normalize(value);
+                break;
+            case DashboardLatestEventVisualOptions.PayloadColorKey:
+                LatestPayloadColor = Normalize(value);
+                break;
+        }
+    }
+
     public IReadOnlyDictionary<string, string> BuildConfiguration()
     {
         var title = string.IsNullOrWhiteSpace(Title) ? Profile.Title : Title.Trim();
@@ -327,6 +397,7 @@ public sealed class DashboardWidgetSettingsDraft
         }
 
         ApplyVisualConfiguration(configuration);
+        ApplyLatestEventVisualConfiguration(configuration);
         ApplyMetricVisualizationConfiguration(configuration);
         ApplyMetricVisualization(configuration);
         ApplyMetricName(configuration);
@@ -421,6 +492,80 @@ public sealed class DashboardWidgetSettingsDraft
         }
     }
 
+    private void ApplyLatestEventVisualValues(IReadOnlyDictionary<string, string> configuration)
+    {
+        if (!Profile.UsesLatestEventVisual)
+        {
+            return;
+        }
+
+        LatestHeader = ReadString(configuration, DashboardLatestEventVisualOptions.HeaderKey) ??
+            ReadString(configuration, "title") ??
+            DashboardLatestEventVisualOptions.DefaultHeader;
+        Title = LatestHeader;
+        LatestShowHeader = ReadBoolean(configuration, DashboardLatestEventVisualOptions.ShowHeaderKey, true);
+        LatestShowType = ReadBoolean(configuration, DashboardLatestEventVisualOptions.ShowTypeKey, true);
+        LatestShowTopic = ReadBoolean(
+            configuration,
+            DashboardLatestEventVisualOptions.ShowTopicKey,
+            ReadBoolean(configuration, DashboardLatestEventVisualOptions.LegacyShowTopicKey, true));
+        LatestShowStatus = ReadBoolean(
+            configuration,
+            DashboardLatestEventVisualOptions.ShowStatusKey,
+            ReadBoolean(configuration, DashboardLatestEventVisualOptions.LegacyShowStatusKey, true));
+        LatestShowTimestamp = ReadBoolean(
+            configuration,
+            DashboardLatestEventVisualOptions.ShowTimestampKey,
+            !string.Equals(
+                ReadString(configuration, DashboardLatestEventVisualOptions.LegacyTimestampFormatKey),
+                "hidden",
+                StringComparison.OrdinalIgnoreCase));
+        LatestShowPayload = ReadBoolean(
+            configuration,
+            DashboardLatestEventVisualOptions.ShowPayloadKey,
+            ReadBoolean(configuration, DashboardLatestEventVisualOptions.LegacyShowPayloadKey, true));
+        LatestEmptyText = ReadString(configuration, DashboardLatestEventVisualOptions.EmptyTextKey) ??
+            DashboardLatestEventVisualOptions.DefaultEmptyText;
+        LatestHeaderColor = ReadString(configuration, DashboardLatestEventVisualOptions.HeaderColorKey) ??
+            DashboardLatestEventVisualOptions.DefaultHeaderColor;
+        LatestDetailColor = ReadString(configuration, DashboardLatestEventVisualOptions.DetailColorKey) ??
+            DashboardLatestEventVisualOptions.DefaultDetailColor;
+        LatestPayloadColor = ReadString(configuration, DashboardLatestEventVisualOptions.PayloadColorKey) ??
+            DashboardLatestEventVisualOptions.DefaultPayloadColor;
+    }
+
+    private void ApplyLatestEventVisualConfiguration(Dictionary<string, string> configuration)
+    {
+        if (!Profile.UsesLatestEventVisual)
+        {
+            return;
+        }
+
+        var header = string.IsNullOrWhiteSpace(LatestHeader)
+            ? DashboardLatestEventVisualOptions.DefaultHeader
+            : LatestHeader.Trim();
+        configuration["title"] = header;
+        configuration[DashboardLatestEventVisualOptions.HeaderKey] = header;
+        configuration[DashboardLatestEventVisualOptions.ShowHeaderKey] = LatestShowHeader ? bool.TrueString : bool.FalseString;
+        configuration[DashboardLatestEventVisualOptions.ShowTypeKey] = LatestShowType ? bool.TrueString : bool.FalseString;
+        configuration[DashboardLatestEventVisualOptions.ShowTopicKey] = LatestShowTopic ? bool.TrueString : bool.FalseString;
+        configuration[DashboardLatestEventVisualOptions.ShowStatusKey] = LatestShowStatus ? bool.TrueString : bool.FalseString;
+        configuration[DashboardLatestEventVisualOptions.ShowTimestampKey] = LatestShowTimestamp ? bool.TrueString : bool.FalseString;
+        configuration[DashboardLatestEventVisualOptions.ShowPayloadKey] = LatestShowPayload ? bool.TrueString : bool.FalseString;
+        configuration[DashboardLatestEventVisualOptions.EmptyTextKey] = string.IsNullOrWhiteSpace(LatestEmptyText)
+            ? DashboardLatestEventVisualOptions.DefaultEmptyText
+            : LatestEmptyText.Trim();
+        configuration[DashboardLatestEventVisualOptions.HeaderColorKey] = NormalizeColor(
+            LatestHeaderColor,
+            DashboardLatestEventVisualOptions.DefaultHeaderColor);
+        configuration[DashboardLatestEventVisualOptions.DetailColorKey] = NormalizeColor(
+            LatestDetailColor,
+            DashboardLatestEventVisualOptions.DefaultDetailColor);
+        configuration[DashboardLatestEventVisualOptions.PayloadColorKey] = NormalizeColor(
+            LatestPayloadColor,
+            DashboardLatestEventVisualOptions.DefaultPayloadColor);
+    }
+
     private void TrimFiltersToEventType()
     {
         var activeFieldKeys = CurrentEventType.Fields.Select(static field => field.Key).ToHashSet(StringComparer.Ordinal);
@@ -440,6 +585,12 @@ public sealed class DashboardWidgetSettingsDraft
 
     private static string Normalize(string? value)
         => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
+
+    private static string NormalizeText(string? value, string fallback)
+        => string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
+
+    private static bool NormalizeBoolean(string? value, bool fallback)
+        => bool.TryParse(value, out var parsed) ? parsed : fallback;
 
     private static string NormalizeNumber(string? value, string fallback)
         => double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed) &&
@@ -466,6 +617,11 @@ public sealed class DashboardWidgetSettingsDraft
         => configuration.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value)
             ? value
             : null;
+
+    private static bool ReadBoolean(IReadOnlyDictionary<string, string> configuration, string key, bool fallback)
+        => configuration.TryGetValue(key, out var value) && bool.TryParse(value, out var parsed)
+            ? parsed
+            : fallback;
 
     private static string DefaultSubtitle(string type)
         => string.Equals(type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal)

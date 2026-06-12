@@ -34,7 +34,7 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
                 typeof(DashboardLatestEventModuleView),
                 "Latest event",
                 "latestEvent",
-                [eventFilter, FieldGroup("fields", "Fields")],
+                [eventFilter, LatestEventVisualGroup()],
                 preferredColumns: 2,
                 preferredRows: 1),
             EventModule(
@@ -103,6 +103,10 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
         {
             ApplyGaugeVisualizationDefaults(configuration, title);
         }
+        else if (string.Equals(type, DashboardWidgetCatalog.LatestEventType, StringComparison.Ordinal))
+        {
+            ApplyLatestEventVisualDefaults(configuration, title);
+        }
         else if (string.Equals(type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal) ||
                  string.Equals(type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal))
         {
@@ -161,6 +165,23 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
         configuration[DashboardMetricGaugeVisualizationOptions.LabelKey] = label;
     }
 
+    private static void ApplyLatestEventVisualDefaults(
+        Dictionary<string, string> configuration,
+        string header)
+    {
+        configuration[DashboardLatestEventVisualOptions.HeaderKey] = header;
+        configuration[DashboardLatestEventVisualOptions.ShowHeaderKey] = bool.TrueString;
+        configuration[DashboardLatestEventVisualOptions.ShowTypeKey] = bool.TrueString;
+        configuration[DashboardLatestEventVisualOptions.ShowTopicKey] = bool.TrueString;
+        configuration[DashboardLatestEventVisualOptions.ShowStatusKey] = bool.TrueString;
+        configuration[DashboardLatestEventVisualOptions.ShowTimestampKey] = bool.TrueString;
+        configuration[DashboardLatestEventVisualOptions.ShowPayloadKey] = bool.TrueString;
+        configuration[DashboardLatestEventVisualOptions.EmptyTextKey] = DashboardLatestEventVisualOptions.DefaultEmptyText;
+        configuration[DashboardLatestEventVisualOptions.HeaderColorKey] = DashboardLatestEventVisualOptions.DefaultHeaderColor;
+        configuration[DashboardLatestEventVisualOptions.DetailColorKey] = DashboardLatestEventVisualOptions.DefaultDetailColor;
+        configuration[DashboardLatestEventVisualOptions.PayloadColorKey] = DashboardLatestEventVisualOptions.DefaultPayloadColor;
+    }
+
     private static Dictionary<string, string> EventConfiguration(string title)
     {
         var configuration = new Dictionary<string, string>(DashboardEventFilterCatalog.Shared.CreateEmptyConfiguration(), StringComparer.Ordinal)
@@ -208,11 +229,15 @@ public sealed class DashboardEventWidgetModuleProvider : IDashboardWidgetModuleP
             new("payloadPreview", "Payload", DashboardWidgetPropertyEditorKind.Toggle)
         ]);
 
-    private static DashboardWidgetPropertyGroupDefinition FieldGroup(string id, string title)
-        => new(id, title, [
-            new("showTopic", "Topic", DashboardWidgetPropertyEditorKind.Toggle),
-            new("showStatus", "Status", DashboardWidgetPropertyEditorKind.Toggle),
-            new("showPayload", "Payload", DashboardWidgetPropertyEditorKind.Toggle),
-            new("timestampFormat", "Time", DashboardWidgetPropertyEditorKind.Select)
+    private static DashboardWidgetPropertyGroupDefinition LatestEventVisualGroup()
+        => new("latest-visual", "Latest event", [
+            new(DashboardLatestEventVisualOptions.HeaderKey, "Header", DashboardWidgetPropertyEditorKind.Text),
+            new(DashboardLatestEventVisualOptions.ShowHeaderKey, "Show header", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardLatestEventVisualOptions.ShowTypeKey, "Event type", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardLatestEventVisualOptions.ShowTopicKey, "Topic", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardLatestEventVisualOptions.ShowStatusKey, "Status", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardLatestEventVisualOptions.ShowTimestampKey, "Time", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardLatestEventVisualOptions.ShowPayloadKey, "Payload", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardLatestEventVisualOptions.EmptyTextKey, "Empty text", DashboardWidgetPropertyEditorKind.Text)
         ]);
 }

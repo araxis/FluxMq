@@ -1,20 +1,152 @@
+@using FluxFlow.Engine.Components
 @namespace FluxMq.UI.Components.Workspace
 
-@if (Snapshot.LatestEvent is { } latest)
-{
-    <div class="dashboard-widget-event-type">@latest.Type</div>
-    <div class="dashboard-widget-meta">@DashboardWidgetFormatting.EventMeta(latest)</div>
-    @if (!string.IsNullOrWhiteSpace(latest.PayloadPreview))
+@{
+    var widget = Context.Widget;
+    var latest = Context.Snapshot.LatestEvent;
+}
+
+<div class="dashboard-latest-event-visual" style="@VisualStyle(widget)">
+    @if (ShowHeader(widget))
     {
-        <pre class="dashboard-widget-payload">@latest.PayloadPreview</pre>
+        <div class="dashboard-latest-event-header">
+            <div class="dashboard-widget-icon">
+                <MudIcon Icon="@DashboardWidgetFormatting.WidgetIcon(widget)" Size="Size.Small" />
+            </div>
+            <div class="dashboard-widget-title-block">
+                <span class="dashboard-widget-title">@Header(widget)</span>
+                <span class="dashboard-widget-subtitle">@DashboardWidgetFormatting.EventFilterSummary(widget)</span>
+            </div>
+        </div>
     }
-}
-else
-{
-    <div class="dashboard-widget-empty">No events yet</div>
-}
+
+    @if (latest is not null)
+    {
+        <div class="dashboard-latest-event-body">
+            @if (ShowType(widget))
+            {
+                <div class="dashboard-widget-event-type">@latest.Type</div>
+            }
+
+            @if (DetailItems(widget, latest) is { Count: > 0 } details)
+            {
+                <div class="dashboard-latest-event-details">
+                    @foreach (var detail in details)
+                    {
+                        <div class="dashboard-latest-event-detail">
+                            <span>@detail.Label</span>
+                            <strong title="@detail.Value">@detail.Value</strong>
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (ShowPayload(widget) && !string.IsNullOrWhiteSpace(latest.PayloadPreview))
+            {
+                <pre class="dashboard-widget-payload">@latest.PayloadPreview</pre>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="dashboard-widget-empty">@EmptyText(widget)</div>
+    }
+</div>
 
 @code {
     [Parameter, EditorRequired]
-    public DashboardEventSnapshot Snapshot { get; set; } = null!;
+    public DashboardWidgetRenderContext Context { get; set; } = null!;
+
+    private static string Header(DashboardWidgetSnapshot widget)
+        => widget.ReadString(DashboardLatestEventVisualOptions.HeaderKey) ??
+           widget.ReadString("title") ??
+           DashboardLatestEventVisualOptions.DefaultHeader;
+
+    private static string EmptyText(DashboardWidgetSnapshot widget)
+        => widget.ReadString(DashboardLatestEventVisualOptions.EmptyTextKey) ??
+           DashboardLatestEventVisualOptions.DefaultEmptyText;
+
+    private static bool ShowHeader(DashboardWidgetSnapshot widget)
+        => ReadBoolean(widget, DashboardLatestEventVisualOptions.ShowHeaderKey, true);
+
+    private static bool ShowType(DashboardWidgetSnapshot widget)
+        => ReadBoolean(widget, DashboardLatestEventVisualOptions.ShowTypeKey, true);
+
+    private static bool ShowTopic(DashboardWidgetSnapshot widget)
+        => ReadBoolean(
+            widget,
+            DashboardLatestEventVisualOptions.ShowTopicKey,
+            ReadBoolean(widget, DashboardLatestEventVisualOptions.LegacyShowTopicKey, true));
+
+    private static bool ShowStatus(DashboardWidgetSnapshot widget)
+        => ReadBoolean(
+            widget,
+            DashboardLatestEventVisualOptions.ShowStatusKey,
+            ReadBoolean(widget, DashboardLatestEventVisualOptions.LegacyShowStatusKey, true));
+
+    private static bool ShowTimestamp(DashboardWidgetSnapshot widget)
+        => ReadBoolean(
+            widget,
+            DashboardLatestEventVisualOptions.ShowTimestampKey,
+            !string.Equals(
+                widget.ReadString(DashboardLatestEventVisualOptions.LegacyTimestampFormatKey),
+                "hidden",
+                StringComparison.OrdinalIgnoreCase));
+
+    private static bool ShowPayload(DashboardWidgetSnapshot widget)
+        => ReadBoolean(
+            widget,
+            DashboardLatestEventVisualOptions.ShowPayloadKey,
+            ReadBoolean(widget, DashboardLatestEventVisualOptions.LegacyShowPayloadKey, true));
+
+    private static string VisualStyle(DashboardWidgetSnapshot widget)
+    {
+        var header = widget.ReadString(DashboardLatestEventVisualOptions.HeaderColorKey) ??
+            DashboardLatestEventVisualOptions.DefaultHeaderColor;
+        var detail = widget.ReadString(DashboardLatestEventVisualOptions.DetailColorKey) ??
+            DashboardLatestEventVisualOptions.DefaultDetailColor;
+        var payload = widget.ReadString(DashboardLatestEventVisualOptions.PayloadColorKey) ??
+            DashboardLatestEventVisualOptions.DefaultPayloadColor;
+        return $"--latest-header-color:{header};--latest-detail-color:{detail};--latest-payload-color:{payload};";
+    }
+
+    private static IReadOnlyList<EventDetailItem> DetailItems(DashboardWidgetSnapshot widget, FlowEvent latest)
+    {
+        var details = new List<EventDetailItem>();
+        if (ShowTopic(widget) && Topic(latest) is { } topic)
+        {
+            details.Add(new("Topic", topic));
+        }
+
+        if (ShowStatus(widget) && !string.IsNullOrWhiteSpace(latest.Status))
+        {
+            details.Add(new("Status", latest.Status));
+        }
+
+        if (ShowPayload(widget) && latest.PayloadBytes is { } bytes)
+        {
+            details.Add(new("Payload", $"{bytes} B"));
+        }
+
+        if (ShowTimestamp(widget))
+        {
+            details.Add(new("Time", DashboardWidgetFormatting.FormatEventTime(latest)));
+        }
+
+        return details;
+    }
+
+    private static string? Topic(FlowEvent latest)
+        => !string.IsNullOrWhiteSpace(latest.Channel)
+            ? latest.Channel
+            : !string.IsNullOrWhiteSpace(latest.Subject)
+            ? latest.Subject
+            : null;
+
+    private static bool ReadBoolean(DashboardWidgetSnapshot widget, string key, bool fallback)
+        => bool.TryParse(widget.ReadString(key), out var parsed)
+            ? parsed
+            : fallback;
+
+    private sealed record EventDetailItem(string Label, string Value);
 }

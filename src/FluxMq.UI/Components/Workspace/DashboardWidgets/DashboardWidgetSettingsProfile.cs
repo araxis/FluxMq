@@ -17,6 +17,7 @@ public sealed record DashboardWidgetSettingsProfile(
     bool SupportsMetricSlots = false,
     bool UsesMetricWindow = false,
     bool UsesSubtitle = false,
+    bool UsesLatestEventVisual = false,
     DashboardWidgetInspectorLabels? Labels = null)
 {
     public bool ShowsEventTabs => IsEventWidget;
@@ -209,6 +210,7 @@ public static class DashboardWidgetSettingsProfiles
                 normalized,
                 "Latest event",
                 Icons.Material.Filled.Bolt,
+                usesLatestEventVisual: true,
                 labels: DashboardWidgetInspectorLabels.LatestEvent),
             DashboardWidgetCatalog.EventRateType => Event(
                 normalized,
@@ -316,6 +318,7 @@ public static class DashboardWidgetSettingsProfiles
         bool supportsMetricSlots = false,
         bool usesMetricWindow = false,
         bool usesSubtitle = false,
+        bool usesLatestEventVisual = false,
         DashboardWidgetInspectorLabels? labels = null)
         => new(
             type,
@@ -331,5 +334,6 @@ public static class DashboardWidgetSettingsProfiles
             supportsMetricSlots,
             usesMetricWindow,
             usesSubtitle,
+            usesLatestEventVisual,
             labels);
 }

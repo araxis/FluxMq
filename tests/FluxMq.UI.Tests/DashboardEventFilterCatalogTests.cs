@@ -356,6 +356,8 @@ public sealed class DashboardEventFilterCatalogTests
         gauge.InspectorLabels.GaugeRow.ShouldBe("Shape");
         latest.InspectorLabels.DataGroup.ShouldBe("Event source");
         latest.InspectorLabels.FilterGroup.ShouldBe("Match rules");
+        latest.UsesLatestEventVisual.ShouldBeTrue();
+        latest.UsesMetricVisualization.ShouldBeFalse();
         table.InspectorLabels.DataGroup.ShouldBe("Table source");
         table.InspectorLabels.FilterGroup.ShouldBe("Row filter");
         tree.InspectorLabels.DisplayGroup.ShouldBe("Topic tree");
@@ -408,6 +410,8 @@ public sealed class DashboardEventFilterCatalogTests
                 [DashboardEventFilterCatalog.TopicStartsWithKey] = "old/",
                 [DashboardEventFilterCatalog.SubjectStartsWithKey] = "stale/",
                 [DashboardEventFilterCatalog.StatusKey] = "received",
+                [DashboardLatestEventVisualOptions.LegacyShowPayloadKey] = bool.FalseString,
+                [DashboardLatestEventVisualOptions.LegacyTimestampFormatKey] = "hidden",
             });
 
         var draft = DashboardWidgetSettingsDraft.Create(widget, catalog);
@@ -423,8 +427,44 @@ public sealed class DashboardEventFilterCatalogTests
         configuration[DashboardEventFilterCatalog.SubjectStartsWithKey].ShouldBe(string.Empty);
         configuration[DashboardEventFilterCatalog.AttributeFilterKey("qos")].ShouldBe("1");
         configuration[DashboardEventFilterCatalog.AttributeFilterKey("retain")].ShouldBe("false");
+        configuration[DashboardLatestEventVisualOptions.HeaderKey].ShouldBe("Latest event");
+        configuration[DashboardLatestEventVisualOptions.ShowPayloadKey].ShouldBe(bool.FalseString);
+        configuration[DashboardLatestEventVisualOptions.ShowTimestampKey].ShouldBe(bool.FalseString);
+        configuration.ContainsKey(DashboardLatestEventVisualOptions.LegacyShowPayloadKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardLatestEventVisualOptions.LegacyTimestampFormatKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardEventGaugeWidgetOptions.StyleKey).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DashboardWidgetSettingsDraft_WritesLatestEventVisualConfiguration()
+    {
+        var draft = DashboardWidgetSettingsDraft.Create(
+            new DashboardWidgetSnapshot(
+                "latest",
+                DashboardWidgetCatalog.LatestEventType,
+                new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["title"] = "Runtime event",
+                    [DashboardLatestEventVisualOptions.ShowTopicKey] = bool.FalseString,
+                    [DashboardLatestEventVisualOptions.HeaderColorKey] = "#112233"
+                }),
+            new DashboardEventFilterCatalog());
+
+        draft.SetLatestEventVisualValue(DashboardLatestEventVisualOptions.HeaderKey, "Broker event");
+        draft.SetLatestEventVisualValue(DashboardLatestEventVisualOptions.ShowStatusKey, bool.FalseString);
+        draft.SetLatestEventVisualValue(DashboardLatestEventVisualOptions.ShowPayloadKey, bool.TrueString);
+        draft.SetLatestEventVisualValue(DashboardLatestEventVisualOptions.EmptyTextKey, "Waiting for an event");
+
+        var configuration = draft.BuildConfiguration();
+
+        configuration["title"].ShouldBe("Broker event");
+        configuration[DashboardLatestEventVisualOptions.HeaderKey].ShouldBe("Broker event");
+        configuration[DashboardLatestEventVisualOptions.ShowTopicKey].ShouldBe(bool.FalseString);
+        configuration[DashboardLatestEventVisualOptions.ShowStatusKey].ShouldBe(bool.FalseString);
+        configuration[DashboardLatestEventVisualOptions.ShowPayloadKey].ShouldBe(bool.TrueString);
+        configuration[DashboardLatestEventVisualOptions.EmptyTextKey].ShouldBe("Waiting for an event");
+        configuration[DashboardLatestEventVisualOptions.HeaderColorKey].ShouldBe("#112233");
     }
 
     [Fact]
@@ -2233,6 +2273,23 @@ public sealed class DashboardEventFilterCatalogTests
             .DefaultConfiguration
             .Keys
             .ShouldContain(DashboardEventFilterCatalog.EventTypeKey);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.LatestEventType)
+            .DefaultConfiguration
+            .Keys
+            .ShouldContain(DashboardLatestEventVisualOptions.HeaderKey);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.LatestEventType)
+            .PropertyGroups
+            .SelectMany(static group => group.Properties)
+            .Select(static property => property.Key)
+            .ShouldNotContain(DashboardLatestEventVisualOptions.LegacyShowPayloadKey);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.LatestEventType)
+            .PropertyGroups
+            .SelectMany(static group => group.Properties)
+            .Select(static property => property.Key)
+            .ShouldContain(DashboardLatestEventVisualOptions.ShowPayloadKey);
         modules
             .Single(static module => module.Type == DashboardWidgetCatalog.EventGaugeType)
             .DefaultConfiguration[DashboardWidgetCatalog.MetricVisualizationKey]
