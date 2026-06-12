@@ -38,7 +38,8 @@ public sealed class DashboardMetricValueVisualizationModuleProvider : IDashboard
                 [DashboardMetricValueVisualizationOptions.TitleAlignKey] = DashboardMetricValueVisualizationOptions.AlignLeft,
                 [DashboardMetricValueVisualizationOptions.ValueAlignKey] = DashboardMetricValueVisualizationOptions.AlignLeft,
                 [DashboardMetricValueVisualizationOptions.ValuePlacementKey] = DashboardMetricValueVisualizationOptions.ValuePlacementTop,
-                [DashboardMetricValueVisualizationOptions.PaddingKey] = DashboardMetricValueVisualizationOptions.DefaultPadding.ToString(CultureInfo.InvariantCulture)
+                [DashboardMetricValueVisualizationOptions.PaddingKey] = DashboardMetricValueVisualizationOptions.DefaultPadding.ToString(CultureInfo.InvariantCulture),
+                [DashboardMetricValueVisualizationOptions.FitModeKey] = DashboardMetricValueVisualizationOptions.FitFill
             },
             [new("value-visual", "Value visual", Properties())],
             typeof(DashboardMetricValueVisualizationView),
@@ -61,7 +62,15 @@ public sealed class DashboardMetricValueVisualizationModuleProvider : IDashboard
             new(DashboardMetricValueVisualizationOptions.TitleAlignKey, "Title align", DashboardWidgetPropertyEditorKind.Segmented, DefaultValue: DashboardMetricValueVisualizationOptions.AlignLeft),
             new(DashboardMetricValueVisualizationOptions.ValueAlignKey, "Value align", DashboardWidgetPropertyEditorKind.Segmented, DefaultValue: DashboardMetricValueVisualizationOptions.AlignLeft),
             new(DashboardMetricValueVisualizationOptions.ValuePlacementKey, "Value place", DashboardWidgetPropertyEditorKind.Segmented, DefaultValue: DashboardMetricValueVisualizationOptions.ValuePlacementTop),
-            new(DashboardMetricValueVisualizationOptions.PaddingKey, "Padding", DashboardWidgetPropertyEditorKind.Number, Unit: "px", DefaultValue: DashboardMetricValueVisualizationOptions.DefaultPadding.ToString(CultureInfo.InvariantCulture))
+            new(DashboardMetricValueVisualizationOptions.PaddingKey, "Padding", DashboardWidgetPropertyEditorKind.Number, Unit: "px", DefaultValue: DashboardMetricValueVisualizationOptions.DefaultPadding.ToString(CultureInfo.InvariantCulture)),
+            new(DashboardMetricValueVisualizationOptions.FitModeKey, "Fit", DashboardWidgetPropertyEditorKind.Select, DefaultValue: DashboardMetricValueVisualizationOptions.FitFill, Options: ValueFitModeOptions())
+        ];
+
+    private static IReadOnlyList<DashboardWidgetPropertyOption> ValueFitModeOptions()
+        =>
+        [
+            new(DashboardMetricValueVisualizationOptions.FitFill, "Fill"),
+            new(DashboardMetricValueVisualizationOptions.FitCompact, "Compact")
         ];
 }
 
@@ -98,7 +107,9 @@ public sealed class DashboardMetricDigitalVisualizationModuleProvider : IDashboa
                 [DashboardMetricDigitalVisualizationOptions.BorderWidthKey] = DashboardMetricDigitalVisualizationOptions.DefaultBorderWidth.ToString(CultureInfo.InvariantCulture),
                 [DashboardMetricDigitalVisualizationOptions.RadiusKey] = DashboardMetricDigitalVisualizationOptions.DefaultRadius.ToString(CultureInfo.InvariantCulture),
                 [DashboardMetricDigitalVisualizationOptions.PaddingKey] = DashboardMetricDigitalVisualizationOptions.DefaultPadding.ToString(CultureInfo.InvariantCulture),
-                [DashboardMetricDigitalVisualizationOptions.FitModeKey] = DashboardMetricDigitalVisualizationOptions.FitCompact
+                [DashboardMetricDigitalVisualizationOptions.FitModeKey] = DashboardMetricDigitalVisualizationOptions.FitCompact,
+                [DashboardMetricDigitalVisualizationOptions.AlignKey] = DashboardMetricDigitalVisualizationOptions.AlignCenter,
+                [DashboardMetricDigitalVisualizationOptions.PlacementKey] = DashboardMetricDigitalVisualizationOptions.PlacementMiddle
             },
             [new("digital-visual", "Digital visual", Properties())],
             typeof(DashboardMetricDigitalVisualizationView),
@@ -122,7 +133,9 @@ public sealed class DashboardMetricDigitalVisualizationModuleProvider : IDashboa
             new(DashboardMetricDigitalVisualizationOptions.RadiusKey, "Radius", DashboardWidgetPropertyEditorKind.Number, Unit: "px", DefaultValue: DashboardMetricDigitalVisualizationOptions.DefaultRadius.ToString(CultureInfo.InvariantCulture)),
             new(DashboardMetricDigitalVisualizationOptions.PaddingKey, "Padding", DashboardWidgetPropertyEditorKind.Number, Unit: "px", DefaultValue: DashboardMetricDigitalVisualizationOptions.DefaultPadding.ToString(CultureInfo.InvariantCulture)),
             new(DashboardMetricDigitalVisualizationOptions.DigitsKey, "Digits", DashboardWidgetPropertyEditorKind.Number, DefaultValue: DashboardMetricDigitalVisualizationOptions.DefaultDigits.ToString(CultureInfo.InvariantCulture)),
-            new(DashboardMetricDigitalVisualizationOptions.FitModeKey, "Fit", DashboardWidgetPropertyEditorKind.Select, DefaultValue: DashboardMetricDigitalVisualizationOptions.FitCompact, Options: FitModeOptions())
+            new(DashboardMetricDigitalVisualizationOptions.FitModeKey, "Fit", DashboardWidgetPropertyEditorKind.Select, DefaultValue: DashboardMetricDigitalVisualizationOptions.FitCompact, Options: FitModeOptions()),
+            new(DashboardMetricDigitalVisualizationOptions.AlignKey, "Readout align", DashboardWidgetPropertyEditorKind.Segmented, DefaultValue: DashboardMetricDigitalVisualizationOptions.AlignCenter),
+            new(DashboardMetricDigitalVisualizationOptions.PlacementKey, "Readout place", DashboardWidgetPropertyEditorKind.Segmented, DefaultValue: DashboardMetricDigitalVisualizationOptions.PlacementMiddle)
         ];
 
     private static IReadOnlyList<DashboardWidgetPropertyOption> LabelPlacementOptions()

@@ -107,12 +107,14 @@
     private static IReadOnlyList<PropertyGridIconSegmentOption> SegmentOptions(string key)
     {
         if (string.Equals(key, DashboardMetricValueVisualizationOptions.TitleAlignKey, StringComparison.Ordinal) ||
-            string.Equals(key, DashboardMetricValueVisualizationOptions.ValueAlignKey, StringComparison.Ordinal))
+            string.Equals(key, DashboardMetricValueVisualizationOptions.ValueAlignKey, StringComparison.Ordinal) ||
+            string.Equals(key, DashboardMetricDigitalVisualizationOptions.AlignKey, StringComparison.Ordinal))
         {
             return HorizontalAlignmentOptions;
         }
 
-        if (string.Equals(key, DashboardMetricValueVisualizationOptions.ValuePlacementKey, StringComparison.Ordinal))
+        if (string.Equals(key, DashboardMetricValueVisualizationOptions.ValuePlacementKey, StringComparison.Ordinal) ||
+            string.Equals(key, DashboardMetricDigitalVisualizationOptions.PlacementKey, StringComparison.Ordinal))
         {
             return ValuePlacementOptions;
         }

@@ -6,7 +6,7 @@
     var label = Label;
 }
 
-<div class="@RootClass">
+<div class="@RootClass" style="@RootStyle">
     <DashboardDigitalReadout Value="@DigitalValue(metric.Value)"
                              Label="@label"
                              ShowLabel="@ShowLabel"
@@ -31,6 +31,20 @@
 
     private string RootClass =>
         "dashboard-metric-digital-layout";
+
+    private string RootStyle
+    {
+        get
+        {
+            var alignment = Read(DashboardMetricDigitalVisualizationOptions.AlignKey);
+            var placement = Read(DashboardMetricDigitalVisualizationOptions.PlacementKey);
+            return string.Join(
+                string.Empty,
+                $"--dashboard-kpi-value-align:{DashboardMetricDigitalVisualizationOptions.NormalizeAlignment(alignment)};",
+                $"--dashboard-kpi-value-items:{HorizontalAlignmentCss(alignment)};",
+                $"--dashboard-kpi-value-placement:{PlacementCss(placement)};");
+        }
+    }
 
     private string Label =>
         Context.Widget.ReadString(DashboardMetricDigitalVisualizationOptions.LabelKey) ??
@@ -62,6 +76,8 @@
     private string FitMode => DashboardMetricDigitalVisualizationOptions.NormalizeFitMode(
         Context.Widget.ReadString(DashboardMetricDigitalVisualizationOptions.FitModeKey));
 
+    private string? Read(string key) => Context.Widget.ReadString(key);
+
     private int ReadInt(string key, int fallback)
         => int.TryParse(
             Context.Widget.ReadString(key),
@@ -75,4 +91,20 @@
         => Math.Abs(value % 1) < 0.001
             ? value.ToString("0", System.Globalization.CultureInfo.InvariantCulture)
             : value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+
+    private static string HorizontalAlignmentCss(string? value)
+        => DashboardMetricDigitalVisualizationOptions.NormalizeAlignment(value) switch
+        {
+            DashboardMetricDigitalVisualizationOptions.AlignLeft => "flex-start",
+            DashboardMetricDigitalVisualizationOptions.AlignRight => "flex-end",
+            _ => "center"
+        };
+
+    private static string PlacementCss(string? value)
+        => DashboardMetricDigitalVisualizationOptions.NormalizePlacement(value) switch
+        {
+            DashboardMetricDigitalVisualizationOptions.PlacementTop => "flex-start",
+            DashboardMetricDigitalVisualizationOptions.PlacementBottom => "flex-end",
+            _ => "center"
+        };
 }

@@ -136,6 +136,18 @@
     overflow: hidden;
 }
 
+.dashboard-metric-value-visual.fit-fill {
+    height: 100%;
+}
+
+.dashboard-metric-value-visual.fit-compact {
+    flex: 0 1 auto;
+}
+
+.dashboard-metric-value-visual.fit-compact .dashboard-metric-value-layout {
+    flex: 0 1 auto;
+}
+
 .dashboard-metric-value-titlebar {
     align-items: flex-start;
     display: flex;

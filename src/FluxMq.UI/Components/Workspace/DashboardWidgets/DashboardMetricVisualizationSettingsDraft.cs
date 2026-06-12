@@ -31,6 +31,7 @@ public sealed class DashboardMetricVisualizationSettingsDraft
         DashboardMetricValueVisualizationOptions.ValueAlignKey,
         DashboardMetricValueVisualizationOptions.ValuePlacementKey,
         DashboardMetricValueVisualizationOptions.PaddingKey,
+        DashboardMetricValueVisualizationOptions.FitModeKey,
         DashboardMetricDigitalVisualizationOptions.LabelKey,
         DashboardMetricDigitalVisualizationOptions.ShowLabelKey,
         DashboardMetricDigitalVisualizationOptions.LabelPlacementKey,
@@ -45,7 +46,9 @@ public sealed class DashboardMetricVisualizationSettingsDraft
         DashboardMetricDigitalVisualizationOptions.BorderWidthKey,
         DashboardMetricDigitalVisualizationOptions.RadiusKey,
         DashboardMetricDigitalVisualizationOptions.PaddingKey,
-        DashboardMetricDigitalVisualizationOptions.FitModeKey
+        DashboardMetricDigitalVisualizationOptions.FitModeKey,
+        DashboardMetricDigitalVisualizationOptions.AlignKey,
+        DashboardMetricDigitalVisualizationOptions.PlacementKey
     };
 
     public string VisualizationId { get; private set; } = DashboardMetricVisualizationIds.Value;
@@ -78,6 +81,8 @@ public sealed class DashboardMetricVisualizationSettingsDraft
 
     public int ValuePadding { get; set; } = DashboardMetricValueVisualizationOptions.DefaultPadding;
 
+    public string ValueFitMode { get; set; } = DashboardMetricValueVisualizationOptions.FitFill;
+
     public string DigitalLabel { get; set; } = DashboardMetricDigitalVisualizationOptions.DefaultLabel;
 
     public bool DigitalShowLabel { get; set; } = true;
@@ -107,6 +112,10 @@ public sealed class DashboardMetricVisualizationSettingsDraft
     public int DigitalDigits { get; set; } = DashboardMetricDigitalVisualizationOptions.DefaultDigits;
 
     public string DigitalFitMode { get; set; } = DashboardMetricDigitalVisualizationOptions.FitCompact;
+
+    public string DigitalAlign { get; set; } = DashboardMetricDigitalVisualizationOptions.AlignCenter;
+
+    public string DigitalPlacement { get; set; } = DashboardMetricDigitalVisualizationOptions.PlacementMiddle;
 
     public string DisplayName =>
         DashboardMetricVisualizationCatalog.Find(VisualizationId)?.DisplayName ?? "Value";
@@ -182,6 +191,10 @@ public sealed class DashboardMetricVisualizationSettingsDraft
                 DashboardMetricDigitalVisualizationOptions.NormalizeDigits(DigitalDigits).ToString(CultureInfo.InvariantCulture);
             configuration[DashboardMetricDigitalVisualizationOptions.FitModeKey] =
                 DashboardMetricDigitalVisualizationOptions.NormalizeFitMode(DigitalFitMode);
+            configuration[DashboardMetricDigitalVisualizationOptions.AlignKey] =
+                DashboardMetricDigitalVisualizationOptions.NormalizeAlignment(DigitalAlign);
+            configuration[DashboardMetricDigitalVisualizationOptions.PlacementKey] =
+                DashboardMetricDigitalVisualizationOptions.NormalizePlacement(DigitalPlacement);
             return configuration;
         }
 
@@ -209,6 +222,8 @@ public sealed class DashboardMetricVisualizationSettingsDraft
             DashboardMetricValueVisualizationOptions.NormalizeValuePlacement(ValueValuePlacement);
         configuration[DashboardMetricValueVisualizationOptions.PaddingKey] =
             Clamp(ValuePadding, 0, 64).ToString(CultureInfo.InvariantCulture);
+        configuration[DashboardMetricValueVisualizationOptions.FitModeKey] =
+            DashboardMetricValueVisualizationOptions.NormalizeFitMode(ValueFitMode);
         return configuration;
     }
 
@@ -227,8 +242,8 @@ public sealed class DashboardMetricVisualizationSettingsDraft
 
     public string Summary()
         => string.Equals(VisualizationId, DashboardMetricVisualizationIds.Digital, StringComparison.Ordinal)
-            ? $"Digital, {DigitalDigits} digits, {Readable(DigitalStyle)}, {Readable(DigitalGlow)} glow"
-            : $"Value, {Readable(ValueValuePlacement)}, title {(ValueShowTitle ? "shown" : "hidden")}, unit {(ValueShowUnit ? "shown" : "hidden")}";
+            ? $"Digital, {DigitalDigits} digits, {Readable(DigitalFitMode)}, {Readable(DigitalPlacement)}"
+            : $"Value, {Readable(ValueFitMode)}, {Readable(ValueValuePlacement)}, unit {(ValueShowUnit ? "shown" : "hidden")}";
 
     private void LoadFromWidget(DashboardWidgetSnapshot widget)
     {
@@ -293,6 +308,8 @@ public sealed class DashboardMetricVisualizationSettingsDraft
                 64),
             0,
             64);
+        ValueFitMode = DashboardMetricValueVisualizationOptions.NormalizeFitMode(
+            ReadString(configuration, DashboardMetricValueVisualizationOptions.FitModeKey));
 
         DigitalLabel = ReadString(configuration, DashboardMetricDigitalVisualizationOptions.LabelKey) ??
             (useCompatibilityFallbacks ? ReadString(configuration, "title") : null) ??
@@ -341,6 +358,10 @@ public sealed class DashboardMetricVisualizationSettingsDraft
             ReadString(configuration, DashboardMetricDigitalVisualizationOptions.DigitsKey));
         DigitalFitMode = DashboardMetricDigitalVisualizationOptions.NormalizeFitMode(
             ReadString(configuration, DashboardMetricDigitalVisualizationOptions.FitModeKey));
+        DigitalAlign = DashboardMetricDigitalVisualizationOptions.NormalizeAlignment(
+            ReadString(configuration, DashboardMetricDigitalVisualizationOptions.AlignKey));
+        DigitalPlacement = DashboardMetricDigitalVisualizationOptions.NormalizePlacement(
+            ReadString(configuration, DashboardMetricDigitalVisualizationOptions.PlacementKey));
     }
 
     private static string NormalizeText(string? value, string fallback)
