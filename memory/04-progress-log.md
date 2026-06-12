@@ -3165,3 +3165,19 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 752 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this focused Charts provider file cleanup, then split the MQTT Ops provider into its own file as the next small dashboard cleanup slice.
+- Dashboard MQTT Ops provider file cleanup:
+  - Merged PR #183 (`Extract dashboard charts provider`) into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Started `work/dashboard-mqtt-ops-provider-file-cleanup` from clean `main`.
+  - Moved `DashboardMqttOpsWidgetModuleProvider` and its MQTT Ops-specific helper methods out of the shared dashboard provider bundle into `DashboardMqttOpsWidgetModuleProvider.cs`.
+  - Kept `DashboardWidgetModuleCatalog` provider composition, MQTT Ops provider id, widget ids, renderer kinds, defaults, property groups, layout spans, compatibility aliases, dashboard schema, and UI behavior unchanged.
+  - Left the Topics provider in `DashboardWidgetModuleProviders.cs` for the final focused split.
+  - Current line movement before staging:
+    - `DashboardWidgetModuleProviders.cs`: 126 lines removed.
+    - `DashboardMqttOpsWidgetModuleProvider.cs`: 131-line MQTT Ops provider file added.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetModuleCatalog_ComposesCategoryProviderModules|FullyQualifiedName~DashboardMqttOpsWidgetModuleProvider_OwnsMqttOpsWidgetDefinitions" -p:UseAppHost=false --verbosity minimal` passed with 2 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 423 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 752 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this focused MQTT Ops provider file cleanup, then split the Topics provider into its own file as the final small dashboard provider cleanup slice.
