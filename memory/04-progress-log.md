@@ -3228,3 +3228,21 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 753 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this default fallback cleanup, then inspect the remaining legacy dashboard descriptor/migration surface before deciding the next small cleanup.
+- Dashboard legacy surface cleanup:
+  - Merged PR #187 (`Remove dashboard default fallback`) into `main`; post-merge Windows validation passed, with the package job skipped as optional.
+  - Started `work/dashboard-legacy-surface-cleanup` from clean `main`.
+  - Moved dashboard widget instance-name prefixes into `DashboardWidgetModule` so module metadata owns add-time names together with defaults, compatibility ids, property groups, and layout contracts.
+  - Replaced the old `FlowDashboardDefinitionFactory.WidgetNamePrefix` switch with `DashboardWidgetModuleCatalog.InstanceNamePrefixFor`.
+  - Kept legacy add aliases normalized through focused widget types, so `status.strip`, `event.chart`, and `qos.retain.breakdown` still create `statusValue`, `barChart`, and `qosBreakdown` instances.
+  - Added regression coverage for module-owned prefixes and unknown widget fallback naming.
+  - Current line movement before staging:
+    - 85 lines added.
+    - 35 lines removed.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetModuleCatalog_OwnsInstanceNamePrefixes|FullyQualifiedName~AddDashboardWidget_AddsWidgetAndAssignsSelectedSlot|FullyQualifiedName~AddDashboardWidget_AddsVisualDashboardWidgetDefaults|FullyQualifiedName~AddDashboardWidget_PlacesDuplicateOrdinalAfterMetricSuffix" -p:UseAppHost=false --verbosity minimal` passed with 4 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 425 tests.
+    - First full solution run hit the known transient LiteDB session repository collection-modified failure; immediate focused rerun of the failed test passed with 1 test.
+    - Second `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 754 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this legacy surface cleanup, then inspect the remaining legacy dashboard descriptor list and decide whether compatibility descriptors can become module metadata or should stay as explicit migration-only entries.

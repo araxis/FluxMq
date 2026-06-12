@@ -19,6 +19,7 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
                 Icons.Material.Filled.StackedLineChart,
                 typeof(DashboardLineChartModuleView),
                 "Line chart",
+                "lineChart",
                 DashboardWidgetCatalog.ChartTypeLine,
                 [
                     MetricGroup("metric", "Metric"),
@@ -35,6 +36,7 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
                 Icons.Material.Filled.AreaChart,
                 typeof(DashboardAreaChartModuleView),
                 "Area chart",
+                "areaChart",
                 DashboardWidgetCatalog.ChartTypeArea,
                 [
                     MetricGroup("metric", "Metric"),
@@ -50,6 +52,7 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
                 Icons.Material.Filled.BarChart,
                 typeof(DashboardBarChartModuleView),
                 "Bar chart",
+                "barChart",
                 DashboardWidgetCatalog.ChartTypeBars,
                 [
                     MetricGroup("metric", "Metric"),
@@ -65,6 +68,7 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
                 Icons.Material.Filled.DonutLarge,
                 typeof(DashboardDonutChartModuleView),
                 "Donut chart",
+                "donutChart",
                 [
                     MetricGroup("metric", "Metric"),
                     CategoryGroup()
@@ -79,6 +83,7 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
         string icon,
         Type component,
         string title,
+        string instanceNamePrefix,
         string chartType,
         IReadOnlyList<DashboardWidgetPropertyGroupDefinition> groups,
         IReadOnlyList<string>? compatibilityTypeIds = null)
@@ -103,7 +108,8 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
             groups,
             new DashboardWidgetStyleDefinition(),
             new DashboardWidgetLayoutContract(2, 1, 2, 1),
-            compatibilityTypeIds);
+            compatibilityTypeIds,
+            InstanceNamePrefix: instanceNamePrefix);
     }
 
     private static DashboardWidgetModule DonutChartModule(
@@ -114,6 +120,7 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
         string icon,
         Type component,
         string title,
+        string instanceNamePrefix,
         IReadOnlyList<DashboardWidgetPropertyGroupDefinition> groups)
         => new(
             new DashboardWidgetDescriptor(
@@ -131,7 +138,8 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
             EventConfiguration(title),
             groups,
             new DashboardWidgetStyleDefinition(),
-            new DashboardWidgetLayoutContract(1, 1, 2, 1));
+            new DashboardWidgetLayoutContract(1, 1, 2, 1),
+            InstanceNamePrefix: instanceNamePrefix);
 
     private static Dictionary<string, string> EventConfiguration(string title)
     {

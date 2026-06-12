@@ -106,32 +106,6 @@ public static class FlowDashboardDefinitionFactory
         return result;
     }
 
-    public static string WidgetNamePrefix(string widgetType)
-        => widgetType switch
-        {
-            DashboardWidgetCatalog.KpiTileType => "kpiTile",
-            DashboardWidgetCatalog.StatusStripType => "statusStrip",
-            DashboardWidgetCatalog.StatusValueType => "statusValue",
-            DashboardWidgetCatalog.RateTileType => "rateTile",
-            DashboardWidgetCatalog.EventCounterType => "eventCounter",
-            DashboardWidgetCatalog.LatestEventType => "latestEvent",
-            DashboardWidgetCatalog.EventRateType => "eventRate",
-            DashboardWidgetCatalog.EventGaugeType => "eventGauge",
-            DashboardWidgetCatalog.EventChartType => "eventChart",
-            DashboardWidgetCatalog.LineChartType => "lineChart",
-            DashboardWidgetCatalog.AreaChartType => "areaChart",
-            DashboardWidgetCatalog.BarChartType => "barChart",
-            DashboardWidgetCatalog.DonutChartType => "donutChart",
-            DashboardWidgetCatalog.EventTableType => "eventTable",
-            DashboardWidgetCatalog.TopicActivityType => "topicActivity",
-            DashboardWidgetCatalog.PayloadDistributionType => "payloadDistribution",
-            DashboardWidgetCatalog.QosRetainBreakdownType => "qosRetainBreakdown",
-            DashboardWidgetCatalog.QosBreakdownType => "qosBreakdown",
-            DashboardWidgetCatalog.RetainBreakdownType => "retainBreakdown",
-            DashboardWidgetCatalog.TopicTreeType => "topicTree",
-            _ => "widget"
-        };
-
     private static void AddIfPresent(JsonObject target, string key, string? value)
     {
         if (!string.IsNullOrWhiteSpace(value))
