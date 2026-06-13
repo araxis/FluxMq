@@ -149,7 +149,7 @@ public sealed class FlowDefinitionComposerV2Tests
 
         var metricId = "ops.eventRateMetric";
         layout.Metrics.ContainsKey(metricId).ShouldBeTrue();
-        layout.Metrics[metricId].Aggregation.ShouldBe("rate");
+        layout.Metrics[metricId].Aggregation.ShouldBe("count");
         layout.Bindings.ContainsKey("eventRate").ShouldBeTrue();
         layout.Bindings["eventRate"].PrimaryMetric.ShouldBe(metricId);
         layout.Bindings["eventRate"].Metrics.ShouldBe([metricId]);
@@ -197,7 +197,7 @@ public sealed class FlowDefinitionComposerV2Tests
         layout.Widgets["payload"].Configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
         layout.Widgets["payload"].Configuration["title"].ShouldBe("Payload bytes");
         layout.Widgets["payload"].Configuration["metric"].ShouldBe("ops.payloadMetric");
-        layout.Metrics["ops.payloadMetric"].Aggregation.ShouldBe("payloadBytes");
+        layout.Metrics["ops.payloadMetric"].Aggregation.ShouldBe("count");
         layout.Metrics["ops.payloadMetric"].Format["unit"].ShouldBe("bytes");
         layout.Bindings["payload"].PrimaryMetric.ShouldBe("ops.payloadMetric");
     }

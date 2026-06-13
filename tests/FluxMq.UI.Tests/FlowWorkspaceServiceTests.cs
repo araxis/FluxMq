@@ -2406,81 +2406,6 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
-    public void GetDashboardMetricValue_UsesBoundMetricAggregationForKpi()
-    {
-        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
-        service.SetDefinitionJson("""
-        {
-          "FluxMq": {
-            "FlowApplication": {
-              "dashboards": {
-                "ops": {
-                  "layout": {
-                    "columns": ["*"],
-                    "rows": ["*"],
-                    "cells": {
-                      "payload": {
-                        "row": 0,
-                        "column": 0,
-                        "widget": "payload"
-                      }
-                    }
-                  },
-                  "metrics": {
-                    "payloadMetric": {
-                      "source": "runtimeEvents",
-                      "aggregation": "payloadBytes",
-                      "window": "60s",
-                      "filters": {
-                        "eventType": "mqtt.message.published",
-                        "topicStartsWith": "test/",
-                        "status": "published"
-                      },
-                      "format": {
-                        "unit": "bytes"
-                      }
-                    }
-                  },
-                  "bindings": {
-                    "payload": {
-                      "primaryMetric": "payloadMetric",
-                      "metrics": ["payloadMetric"]
-                    }
-                  },
-                  "widgets": {
-                    "payload": {
-                      "type": "kpi.tile",
-                      "configuration": {
-                        "title": "Payload",
-                        "primaryMetric": "messages"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-        """);
-        service.SetActiveDashboard("ops");
-        var widget = service.GetActiveDashboardLayout()
-            .ShouldNotBeNull()
-            .Widgets["payload"];
-
-        service.RecordManualMqttPublish("test/one", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
-        service.RecordManualMqttPublish("other/skip", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
-        service.RecordManualMqttPublish("test/two", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
-
-        var value = service.GetDashboardMetricValue(widget);
-
-        var expectedBytes = Encoding.UTF8.GetByteCount("""{"hello":"fluxmq"}""") * 2;
-        value.Label.ShouldBe("Payload bytes");
-        value.Value.ShouldBe(expectedBytes);
-        value.Unit.ShouldBe("bytes");
-        value.FormattedValue.ShouldBe($"{expectedBytes} B");
-    }
-
-    [Fact]
     public void GetDashboardMetricValue_UsesAppMetricArtifactForEventCounter()
     {
         var service = new FlowWorkspaceService(new FlowDefinitionComposer());
@@ -2489,14 +2414,14 @@ public sealed class FlowWorkspaceServiceTests
             "publishedMessages",
             new FluxMetricResourceDefinition
             {
-                TypeId = EventCountMetricType.Id,
+                TypeId = "event.count",
                 DisplayName = "Published messages",
                 Parameters = new Dictionary<string, string>(StringComparer.Ordinal)
                 {
-                    [MetricParameterKeys.Window] = "60s",
-                    [MetricParameterKeys.EventType] = FlowEventTypes.MqttMessagePublished,
-                    [MetricParameterKeys.TopicStartsWith] = "test/",
-                    [MetricParameterKeys.Status] = "published"
+                    ["window"] = "60s",
+                    ["eventType"] = FlowEventTypes.MqttMessagePublished,
+                    ["topicStartsWith"] = "test/",
+                    ["status"] = "published"
                 }
             });
         service.AddDashboard("ops");
@@ -2530,104 +2455,6 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
-    public void GetDashboardMetricValue_UsesAppMetricArtifactForEventRate()
-    {
-        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
-        service.AddMetric("publishedRate");
-        service.UpdateMetric(
-            "publishedRate",
-            new FluxMetricResourceDefinition
-            {
-                TypeId = EventRateMetricType.Id,
-                DisplayName = "Published rate",
-                Parameters = new Dictionary<string, string>(StringComparer.Ordinal)
-                {
-                    [MetricParameterKeys.Window] = "60s",
-                    [MetricParameterKeys.EventType] = FlowEventTypes.MqttMessagePublished,
-                    [MetricParameterKeys.TopicStartsWith] = "test/",
-                    [MetricParameterKeys.Status] = "published"
-                }
-            });
-        service.AddDashboard("ops");
-        service.AddDashboardWidget(DashboardWidgetCatalog.EventRateType, "slot:0:0");
-        service.UpdateDashboardWidget(
-            "eventRate",
-            new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["title"] = "Published rate",
-                ["metric"] = "publishedRate"
-            });
-        service.UpdateDashboardWidgetBinding(
-            "eventRate",
-            "publishedRate",
-            ["publishedRate"]);
-        service.SetActiveDashboard("ops");
-
-        service.RecordManualMqttPublish("test/one", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
-        service.RecordManualMqttPublish("other/skip", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
-        service.RecordManualMqttPublish("test/two", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
-
-        var widget = service.GetActiveDashboardLayout()
-            .ShouldNotBeNull()
-            .Widgets["eventRate"];
-        var value = service.GetDashboardMetricValue(widget);
-
-        value.Label.ShouldBe("Event rate");
-        value.Value.ShouldBe(2d / 60d, 0.0001);
-        value.Unit.ShouldBe("/s");
-        value.FormattedValue.ShouldBe("0.03");
-    }
-
-    [Fact]
-    public void GetDashboardMetricValue_UsesAppMetricArtifactForRateTile()
-    {
-        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
-        service.AddMetric("publishedRate");
-        service.UpdateMetric(
-            "publishedRate",
-            new FluxMetricResourceDefinition
-            {
-                TypeId = EventRateMetricType.Id,
-                DisplayName = "Published rate",
-                Parameters = new Dictionary<string, string>(StringComparer.Ordinal)
-                {
-                    [MetricParameterKeys.Window] = "60s",
-                    [MetricParameterKeys.EventType] = FlowEventTypes.MqttMessagePublished,
-                    [MetricParameterKeys.TopicStartsWith] = "test/",
-                    [MetricParameterKeys.Status] = "published"
-                }
-            });
-        service.AddDashboard("ops");
-        service.AddDashboardWidget(DashboardWidgetCatalog.RateTileType, "slot:0:0");
-        service.UpdateDashboardWidget(
-            "rateTile",
-            new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["title"] = "Published rate",
-                ["metric"] = "publishedRate"
-            });
-        service.UpdateDashboardWidgetBinding(
-            "rateTile",
-            "publishedRate",
-            ["publishedRate"]);
-        service.SetActiveDashboard("ops");
-
-        service.RecordManualMqttPublish("test/one", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
-        service.RecordManualMqttPublish("other/skip", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
-        service.RecordManualMqttPublish("test/two", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
-
-        var widget = service.GetActiveDashboardLayout()
-            .ShouldNotBeNull()
-            .Widgets["rateTile"];
-        var value = service.GetDashboardMetricValue(widget);
-
-        value.Label.ShouldBe("Event rate");
-        value.Value.ShouldBe(2d / 60d, 0.0001);
-        value.Unit.ShouldBe("/s");
-        value.FormattedValue.ShouldBe("0.03");
-    }
-
-    [Fact]
     public void GetDashboardMetricValue_UsesAppMetricArtifactForStatusValue()
     {
         var service = new FlowWorkspaceService(new FlowDefinitionComposer());
@@ -2636,14 +2463,14 @@ public sealed class FlowWorkspaceServiceTests
             "publishedMessages",
             new FluxMetricResourceDefinition
             {
-                TypeId = EventCountMetricType.Id,
+                TypeId = "event.count",
                 DisplayName = "Published messages",
                 Parameters = new Dictionary<string, string>(StringComparer.Ordinal)
                 {
-                    [MetricParameterKeys.Window] = "60s",
-                    [MetricParameterKeys.EventType] = FlowEventTypes.MqttMessagePublished,
-                    [MetricParameterKeys.TopicStartsWith] = "test/",
-                    [MetricParameterKeys.Status] = "published"
+                    ["window"] = "60s",
+                    ["eventType"] = FlowEventTypes.MqttMessagePublished,
+                    ["topicStartsWith"] = "test/",
+                    ["status"] = "published"
                 }
             });
         service.AddDashboard("ops");
@@ -2685,14 +2512,14 @@ public sealed class FlowWorkspaceServiceTests
             "publishedMessages",
             new FluxMetricResourceDefinition
             {
-                TypeId = EventCountMetricType.Id,
+                TypeId = "event.count",
                 DisplayName = "Published messages",
                 Parameters = new Dictionary<string, string>(StringComparer.Ordinal)
                 {
-                    [MetricParameterKeys.Window] = "60s",
-                    [MetricParameterKeys.EventType] = FlowEventTypes.MqttMessagePublished,
-                    [MetricParameterKeys.TopicStartsWith] = "test/",
-                    [MetricParameterKeys.Status] = "published"
+                    ["window"] = "60s",
+                    ["eventType"] = FlowEventTypes.MqttMessagePublished,
+                    ["topicStartsWith"] = "test/",
+                    ["status"] = "published"
                 }
             });
         service.AddDashboard("ops");

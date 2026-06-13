@@ -69,7 +69,6 @@ public static class MauiProgram
                 services.GetRequiredService<IReadOnlyList<FluxFlow.Components.Designer.IComponentDesignMetadataProvider>>()));
         builder.Services.AddSingleton<FlowComponentCatalog>();
         builder.Services.AddSingleton<DashboardWidgetRegistry>();
-        builder.Services.AddFluxMqMetricTypes();
         builder.Services.AddSingleton<DashboardMetricRegistry>();
         builder.Services.AddSingleton<DashboardRuntimeMetrics>();
         builder.Services.AddSingleton<IFluxChartAdapter, FluxChartAdapter>();

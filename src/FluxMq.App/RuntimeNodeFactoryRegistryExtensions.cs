@@ -33,7 +33,6 @@ public static class RuntimeNodeFactoryRegistryExtensions
         IFlowExpressionEngine? expressionEngine = null,
         string? fileSystemStorageRootDirectory = null,
         ISecretResolver? secretResolver = null,
-        FluxMetricStreamHost? metricStreamHost = null,
         IServiceProvider? runtimeServices = null)
     {
         ArgumentNullException.ThrowIfNull(registry);
@@ -56,8 +55,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
             FluxMqRuntimeNodeModuleCatalog.Resolve(runtimeServices),
             clientFactory,
             messageRepository,
-            expressionEngine,
-            metricStreamHost);
+            expressionEngine);
     }
 
     private static RuntimeNodeFactoryRegistry RegisterFluxMqRuntimeAdapters(
@@ -65,8 +63,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
         IReadOnlyList<IFluxMqRuntimeNodeModule> modules,
         Func<MqttConnectionProfile, IMqttBrokerClient> clientFactory,
         IMessageRepository? messageRepository,
-        IFlowExpressionEngine expressionEngine,
-        FluxMetricStreamHost? metricStreamHost)
+        IFlowExpressionEngine expressionEngine)
     {
         ArgumentNullException.ThrowIfNull(modules);
 
@@ -76,8 +73,7 @@ public static class RuntimeNodeFactoryRegistryExtensions
                 context,
                 clientFactory,
                 messageRepository,
-                expressionEngine,
-                metricStreamHost)));
+                expressionEngine)));
         }
 
         return registry;

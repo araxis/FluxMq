@@ -240,7 +240,7 @@ public sealed class FluxMqApplicationDefinitionJsonTests
 
         definition.ShouldNotBeNull();
         var metric = definition!.Metrics["d1.eventCounterMetric"];
-        metric.TypeId.ShouldBe(EventCountMetricType.Id);
+        metric.TypeId.ShouldBe("event.count");
         metric.DisplayName.ShouldBe("Event counter");
         metric.GetParameter("eventType").ShouldBe("mqtt.message.published");
         metric.GetParameter("qos").ShouldBe("1");
@@ -286,7 +286,7 @@ public sealed class FluxMqApplicationDefinitionJsonTests
         var flowApplication = root["FluxMq"]!["FlowApplication"]!.AsObject();
         var metric = flowApplication["metrics"]!["d1.eventCounterMetric"]!.AsObject();
         metric.ContainsKey("definition").ShouldBeFalse();
-        metric["typeId"]!.GetValue<string>().ShouldBe(EventCountMetricType.Id);
+        metric["typeId"]!.GetValue<string>().ShouldBe(WindowedMessageCountMetric.TypeId);
         var parameters = metric["parameters"]!.AsObject();
         parameters["eventType"]!.GetValue<string>().ShouldBe("mqtt.message.published");
         parameters["qos"]!.GetValue<string>().ShouldBe("1");

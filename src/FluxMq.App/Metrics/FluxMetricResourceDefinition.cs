@@ -44,17 +44,15 @@ public sealed record FluxMetricResourceDefinition
             : fallback;
 
     /// <summary>
-    /// Creates a default event-count resource with a one-minute window.
+    /// Creates a default message-count resource. The chosen metric kind owns its own parameters; the UI
+    /// fills them in (for example the topic filter and QoS) when the resource is edited.
     /// </summary>
     public static FluxMetricResourceDefinition CreateDefault(string id, string? displayName = null)
         => new()
         {
             Id = id,
-            TypeId = EventCountMetricType.Id,
+            TypeId = MessageCountMetric.TypeId,
             DisplayName = string.IsNullOrWhiteSpace(displayName) ? FluxMetricNaming.ToDisplayName(id) : displayName.Trim(),
             Parameters = new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                [MetricParameterKeys.Window] = MetricWindow.Default
-            }
         };
 }

@@ -345,15 +345,14 @@ public static class FluxMqApplicationDefinitionMigrator
         };
     }
 
+    // Legacy dashboards carried generic measures (rate/topics/payloadBytes/...) that the flat metric model
+    // no longer has. Collapse them onto the nearest surviving windowed metric so migrated resources still
+    // reference a registered type id; the legacy filter parameters are harmless extra keys the new metrics ignore.
     private static string MeasureToTypeId(string measure)
         => measure switch
         {
-            "rate" => EventRateMetricType.Id,
-            "topics" => UniqueTopicCountMetricType.Id,
-            "payloadBytes" => PayloadBytesMetricType.Id,
-            "averagePayload" => AveragePayloadMetricType.Id,
-            "retained" => RetainedCountMetricType.Id,
-            _ => EventCountMetricType.Id
+            "topics" or "uniqueTopics" => WindowedTopicCountMetric.TypeId,
+            _ => WindowedMessageCountMetric.TypeId
         };
 
     private static void AddParameter(JsonObject parameters, string key, string? value)

@@ -1409,7 +1409,8 @@ public sealed class FlowDefinitionComposerTests
         widget.Configuration[DashboardMetricValueVisualizationOptions.TitleKey].ShouldBe("Event rate");
         widget.Configuration[DashboardMetricValueVisualizationOptions.SubtitleKey].ShouldBe("All runtime events");
         widget.Configuration["metric"].ShouldBe("ops.eventRateMetric");
-        layout.Metrics["ops.eventRateMetric"].Aggregation.ShouldBe("rate");
+        // The flat framework no longer distinguishes rate vs count metric types; the dashboard projection reports "count".
+        layout.Metrics["ops.eventRateMetric"].Aggregation.ShouldBe("count");
         layout.Bindings["eventRate"].PrimaryMetric.ShouldBe("ops.eventRateMetric");
         layout.Cells.ShouldContain(cell => cell.Widget == "eventRate");
     }
@@ -1432,7 +1433,7 @@ public sealed class FlowDefinitionComposerTests
         widget.Configuration[DashboardMetricValueVisualizationOptions.TitleKey].ShouldBe("Rate tile");
         widget.Configuration[DashboardMetricValueVisualizationOptions.SubtitleKey].ShouldBe("Selected rate metric");
         widget.Configuration["metric"].ShouldBe("ops.rateTileMetric");
-        layout.Metrics["ops.rateTileMetric"].Aggregation.ShouldBe("rate");
+        layout.Metrics["ops.rateTileMetric"].Aggregation.ShouldBe("count");
         layout.Bindings["rateTile"].PrimaryMetric.ShouldBe("ops.rateTileMetric");
         layout.Cells.ShouldContain(cell => cell.Widget == "rateTile");
     }

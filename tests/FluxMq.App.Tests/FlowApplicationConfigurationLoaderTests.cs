@@ -168,7 +168,7 @@ public sealed class FlowApplicationConfigurationLoaderTests
         var definition = new FlowApplicationConfigurationLoader().Load(configuration);
 
         var metric = definition.Metrics["d1.eventCounterMetric"];
-        metric.TypeId.ShouldBe(EventCountMetricType.Id);
+        metric.TypeId.ShouldBe(WindowedMessageCountMetric.TypeId);
         metric.GetParameter("eventType").ShouldBe("mqtt.message.published");
         metric.GetParameter("qos").ShouldBe("1");
         metric.GetParameter("retain").ShouldBe("false");

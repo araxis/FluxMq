@@ -204,22 +204,10 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
         IReadOnlyDictionary<string, string>? parameters,
         out FluxMetricReading<double> reading)
     {
-        if (string.IsNullOrWhiteSpace(metricId) || _host is null)
-        {
-            reading = default!;
-            return false;
-        }
-
-        try
-        {
-            _host.MetricStreamHost.GetNumberStream(metricId.Trim(), parameters);
-            return _host.MetricStreamHost.TryGetLatestNumber(metricId.Trim(), parameters, out reading);
-        }
-        catch
-        {
-            reading = default!;
-            return false;
-        }
+        // Live metric readings are temporarily unavailable: the flat metric framework has no runtime
+        // stream-host coordinator yet. Widgets fall back to the event-snapshot value path.
+        reading = default!;
+        return false;
     }
 
     public void RecordManualMqttPublish(

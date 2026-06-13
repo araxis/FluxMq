@@ -4,67 +4,28 @@ using FluxMq.UI.Models;
 namespace FluxMq.UI.Services;
 
 /// <summary>
-/// UI-side bridge that maps a metric type id to the matching <see cref="DashboardEventSnapshot"/> aggregate and
-/// formats it for display using the registered <see cref="IFluxMetricType{TValue}"/> metadata.
+/// UI-side helper that turns a dashboard event snapshot into a formatted scalar for a tile. The flat metric
+/// framework no longer exposes per-type display/format metadata to the dashboard layer, so this currently
+/// formats with a neutral default; the dashboard value path is being reconnected to the new framework later.
 /// </summary>
 public sealed class DashboardMetricRegistry
 {
-    private readonly IFluxMetricTypeRegistry _types;
-
-    public DashboardMetricRegistry()
-        : this(FluxMetricTypeRegistry.CreateDefault())
-    {
-    }
-
-    public DashboardMetricRegistry(IFluxMetricTypeRegistry types)
-    {
-        ArgumentNullException.ThrowIfNull(types);
-        _types = types;
-    }
-
-    public IReadOnlyList<IFluxMetricType<double>> Types => _types.NumberTypes;
-
-    /// <summary>Maps a legacy aggregation token to the metric type id (inverse of <see cref="MeasureForType"/>).</summary>
-    public static string TypeForMeasure(string? measure)
-        => measure switch
-        {
-            "rate" => EventRateMetricType.Id,
-            "topics" => UniqueTopicCountMetricType.Id,
-            "payloadBytes" => PayloadBytesMetricType.Id,
-            "averagePayload" => AveragePayloadMetricType.Id,
-            "retained" => RetainedCountMetricType.Id,
-            _ => EventCountMetricType.Id
-        };
+    /// <summary>Maps a legacy aggregation token to a registered metric type id.</summary>
+    public static string TypeForMeasure(string? measure) => MessageCountMetric.TypeId;
 
     /// <summary>Maps a metric type id back to the legacy aggregation token used by the dashboard projection.</summary>
-    public static string MeasureForType(string? typeId)
-        => typeId switch
-        {
-            EventRateMetricType.Id => "rate",
-            UniqueTopicCountMetricType.Id => "topics",
-            PayloadBytesMetricType.Id => "payloadBytes",
-            AveragePayloadMetricType.Id => "averagePayload",
-            RetainedCountMetricType.Id => "retained",
-            _ => "count"
-        };
+    public static string MeasureForType(string? typeId) => "count";
 
-    /// <summary>Reads the snapshot aggregate that the given metric type computes and formats it.</summary>
+    /// <summary>Reads the snapshot aggregate for the given metric type and formats it.</summary>
     public DashboardMetricValue Evaluate(string? typeId, DashboardEventSnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         return Format(typeId, SnapshotValue(typeId, snapshot));
     }
 
-    /// <summary>Formats an already-known value (e.g. a live stream reading) using the metric type metadata.</summary>
+    /// <summary>Formats an already-known value using a neutral default.</summary>
     public DashboardMetricValue Format(string? typeId, double value)
-    {
-        if (!string.IsNullOrWhiteSpace(typeId) && _types.TryGetNumberType(typeId, out var type))
-        {
-            return new DashboardMetricValue(type.DisplayName, value, type.Unit, MetricFormats.Format(value, type.Format));
-        }
-
-        return new DashboardMetricValue("Event count", value, "events", MetricFormats.Format(value, MetricFormats.Number));
-    }
+        => new("Event count", value, "events", MetricFormats.Format(value, MetricFormats.Number));
 
     public static DashboardMetricValue EvaluateLegacyMetric(string metric, DashboardEventSnapshot snapshot)
     {
@@ -89,14 +50,5 @@ public sealed class DashboardMetricRegistry
         };
     }
 
-    private static double SnapshotValue(string? typeId, DashboardEventSnapshot snapshot)
-        => typeId switch
-        {
-            EventRateMetricType.Id => snapshot.EventsPerSecond,
-            UniqueTopicCountMetricType.Id => snapshot.UniqueTopicCount,
-            PayloadBytesMetricType.Id => snapshot.TotalPayloadBytes,
-            AveragePayloadMetricType.Id => snapshot.AveragePayloadBytes,
-            RetainedCountMetricType.Id => snapshot.RetainedCount,
-            _ => snapshot.RecentCount
-        };
+    private static double SnapshotValue(string? typeId, DashboardEventSnapshot snapshot) => snapshot.RecentCount;
 }
