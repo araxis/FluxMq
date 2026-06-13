@@ -3540,3 +3540,18 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 766 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this area-chart visual UX slice, then review `chart.area` manually before selecting `chart.bar`.
+- Dashboard bar chart visual UX:
+  - Merged PR #208 (`Align area chart visual settings`) into `main`; post-merge Windows validation passed before this slice.
+  - Started `work/dashboard-bar-chart-visual-ux` from clean `main`.
+  - Refactored `chart.bar` so the bar chart visual owns focused display settings: header, grid visibility, label visibility, orientation, bar radius, empty text, and bar/grid/label colors.
+  - Kept event matching, windowing, and bucket calculation behavior unchanged; this slice only separates bar-chart presentation from the old shared chart renderer/type switch.
+  - Updated edit-cell and live rendering to use a focused bar-chart component, with the widget owning its header instead of the outer dashboard chrome.
+  - New bar-chart defaults and saves write `chart.bar.*` visual keys while existing `showGrid`, `showLabels`, `barColor`, and `orientation` keys still load as fallback.
+  - FluxFlow remained unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --filter "FullyQualifiedName~DashboardEventFilterCatalogTests|FullyQualifiedName~FlowDefinitionComposerTests" --verbosity minimal` passed with 230 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 438 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 767 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: commit/PR/merge this bar-chart visual UX slice, then review `chart.bar` manually before selecting the next dashboard component.

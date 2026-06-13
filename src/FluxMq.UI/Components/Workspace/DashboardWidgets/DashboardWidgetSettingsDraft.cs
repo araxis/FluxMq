@@ -49,6 +49,7 @@ public sealed class DashboardWidgetSettingsDraft
         ApplyTopicActivityVisualValues(widget.Configuration);
         ApplyLineChartVisualValues(widget.Configuration);
         ApplyAreaChartVisualValues(widget.Configuration);
+        ApplyBarChartVisualValues(widget.Configuration);
         ApplyTopicTreeVisualValues(widget.Configuration);
 
         foreach (var key in eventFilters.FilterKeys)
@@ -222,6 +223,27 @@ public sealed class DashboardWidgetSettingsDraft
 
     public string AreaChartLabelColor { get; set; } = DashboardAreaChartVisualOptions.DefaultLabelColor;
 
+    public string BarChartHeader { get; set; } = DashboardBarChartVisualOptions.DefaultHeader;
+
+    public bool BarChartShowHeader { get; set; } = true;
+
+    public bool BarChartShowGrid { get; set; } = true;
+
+    public bool BarChartShowLabels { get; set; } = true;
+
+    public string BarChartOrientation { get; set; } = DashboardBarChartVisualOptions.OrientationVertical;
+
+    public string BarChartBarRadius { get; set; } =
+        DashboardBarChartVisualOptions.DefaultBarRadius.ToString(CultureInfo.InvariantCulture);
+
+    public string BarChartEmptyText { get; set; } = DashboardBarChartVisualOptions.DefaultEmptyText;
+
+    public string BarChartBarColor { get; set; } = DashboardBarChartVisualOptions.DefaultBarColor;
+
+    public string BarChartGridColor { get; set; } = DashboardBarChartVisualOptions.DefaultGridColor;
+
+    public string BarChartLabelColor { get; set; } = DashboardBarChartVisualOptions.DefaultLabelColor;
+
     public string TopicTreeHeader { get; set; } = DashboardTopicTreeVisualOptions.DefaultHeader;
 
     public bool TopicTreeShowHeader { get; set; } = true;
@@ -297,6 +319,7 @@ public sealed class DashboardWidgetSettingsDraft
         ApplyTopicActivityVisualValues(configuration);
         ApplyLineChartVisualValues(configuration);
         ApplyAreaChartVisualValues(configuration);
+        ApplyBarChartVisualValues(configuration);
         ApplyTopicTreeVisualValues(configuration);
 
         foreach (var key in _eventFilters.FilterKeys)
@@ -690,6 +713,51 @@ public sealed class DashboardWidgetSettingsDraft
         }
     }
 
+    public void SetBarChartVisualValue(string key, string? value)
+    {
+        if (!Profile.UsesBarChartVisual)
+        {
+            return;
+        }
+
+        switch (key)
+        {
+            case DashboardBarChartVisualOptions.HeaderKey:
+                BarChartHeader = NormalizeText(value, DashboardBarChartVisualOptions.DefaultHeader);
+                Title = BarChartHeader;
+                break;
+            case DashboardBarChartVisualOptions.ShowHeaderKey:
+                BarChartShowHeader = NormalizeBoolean(value, BarChartShowHeader);
+                break;
+            case DashboardBarChartVisualOptions.ShowGridKey:
+                BarChartShowGrid = NormalizeBoolean(value, BarChartShowGrid);
+                break;
+            case DashboardBarChartVisualOptions.ShowLabelsKey:
+                BarChartShowLabels = NormalizeBoolean(value, BarChartShowLabels);
+                break;
+            case DashboardBarChartVisualOptions.OrientationKey:
+                BarChartOrientation = DashboardBarChartVisualOptions.NormalizeOrientation(value);
+                break;
+            case DashboardBarChartVisualOptions.BarRadiusKey:
+                BarChartBarRadius = DashboardBarChartVisualOptions
+                    .NormalizeBarRadius(value)
+                    .ToString(CultureInfo.InvariantCulture);
+                break;
+            case DashboardBarChartVisualOptions.EmptyTextKey:
+                BarChartEmptyText = NormalizeText(value, DashboardBarChartVisualOptions.DefaultEmptyText);
+                break;
+            case DashboardBarChartVisualOptions.BarColorKey:
+                BarChartBarColor = Normalize(value);
+                break;
+            case DashboardBarChartVisualOptions.GridColorKey:
+                BarChartGridColor = Normalize(value);
+                break;
+            case DashboardBarChartVisualOptions.LabelColorKey:
+                BarChartLabelColor = Normalize(value);
+                break;
+        }
+    }
+
     public IReadOnlyDictionary<string, string> BuildConfiguration()
     {
         var title = string.IsNullOrWhiteSpace(Title) ? Profile.Title : Title.Trim();
@@ -765,6 +833,7 @@ public sealed class DashboardWidgetSettingsDraft
         ApplyTopicActivityVisualConfiguration(configuration);
         ApplyLineChartVisualConfiguration(configuration);
         ApplyAreaChartVisualConfiguration(configuration);
+        ApplyBarChartVisualConfiguration(configuration);
         ApplyMetricVisualizationConfiguration(configuration);
         ApplyMetricVisualization(configuration);
         ApplyMetricName(configuration);
@@ -1282,6 +1351,78 @@ public sealed class DashboardWidgetSettingsDraft
         configuration[DashboardAreaChartVisualOptions.LabelColorKey] = NormalizeColor(
             AreaChartLabelColor,
             DashboardAreaChartVisualOptions.DefaultLabelColor);
+    }
+
+    private void ApplyBarChartVisualValues(IReadOnlyDictionary<string, string> configuration)
+    {
+        if (!Profile.UsesBarChartVisual)
+        {
+            return;
+        }
+
+        BarChartHeader = ReadString(configuration, DashboardBarChartVisualOptions.HeaderKey) ??
+            ReadString(configuration, "title") ??
+            DashboardBarChartVisualOptions.DefaultHeader;
+        Title = BarChartHeader;
+        BarChartShowHeader = ReadBoolean(configuration, DashboardBarChartVisualOptions.ShowHeaderKey, true);
+        BarChartShowGrid = ReadBoolean(
+            configuration,
+            DashboardBarChartVisualOptions.ShowGridKey,
+            ReadBoolean(configuration, DashboardBarChartVisualOptions.LegacyShowGridKey, true));
+        BarChartShowLabels = ReadBoolean(
+            configuration,
+            DashboardBarChartVisualOptions.ShowLabelsKey,
+            ReadBoolean(configuration, DashboardBarChartVisualOptions.LegacyShowLabelsKey, true));
+        BarChartOrientation = DashboardBarChartVisualOptions.NormalizeOrientation(
+            ReadString(configuration, DashboardBarChartVisualOptions.OrientationKey) ??
+            ReadString(configuration, DashboardBarChartVisualOptions.LegacyOrientationKey));
+        BarChartBarRadius = DashboardBarChartVisualOptions
+            .NormalizeBarRadius(ReadString(configuration, DashboardBarChartVisualOptions.BarRadiusKey))
+            .ToString(CultureInfo.InvariantCulture);
+        BarChartEmptyText = ReadString(configuration, DashboardBarChartVisualOptions.EmptyTextKey) ??
+            DashboardBarChartVisualOptions.DefaultEmptyText;
+        BarChartBarColor = ReadString(configuration, DashboardBarChartVisualOptions.BarColorKey) ??
+            ReadString(configuration, DashboardBarChartVisualOptions.LegacyBarColorKey) ??
+            DashboardBarChartVisualOptions.DefaultBarColor;
+        BarChartGridColor = ReadString(configuration, DashboardBarChartVisualOptions.GridColorKey) ??
+            DashboardBarChartVisualOptions.DefaultGridColor;
+        BarChartLabelColor = ReadString(configuration, DashboardBarChartVisualOptions.LabelColorKey) ??
+            DashboardBarChartVisualOptions.DefaultLabelColor;
+    }
+
+    private void ApplyBarChartVisualConfiguration(Dictionary<string, string> configuration)
+    {
+        if (!Profile.UsesBarChartVisual)
+        {
+            return;
+        }
+
+        var header = string.IsNullOrWhiteSpace(BarChartHeader)
+            ? DashboardBarChartVisualOptions.DefaultHeader
+            : BarChartHeader.Trim();
+        configuration["title"] = header;
+        configuration[DashboardChartWidgetOptions.TypeKey] = DashboardChartWidgetOptions.TypeBars;
+        configuration.Remove(DashboardWidgetCatalog.PrimaryMetricKey);
+        configuration[DashboardBarChartVisualOptions.HeaderKey] = header;
+        configuration[DashboardBarChartVisualOptions.ShowHeaderKey] = BarChartShowHeader ? bool.TrueString : bool.FalseString;
+        configuration[DashboardBarChartVisualOptions.ShowGridKey] = BarChartShowGrid ? bool.TrueString : bool.FalseString;
+        configuration[DashboardBarChartVisualOptions.ShowLabelsKey] = BarChartShowLabels ? bool.TrueString : bool.FalseString;
+        configuration[DashboardBarChartVisualOptions.OrientationKey] =
+            DashboardBarChartVisualOptions.NormalizeOrientation(BarChartOrientation);
+        configuration[DashboardBarChartVisualOptions.BarRadiusKey] =
+            DashboardBarChartVisualOptions.NormalizeBarRadius(BarChartBarRadius).ToString(CultureInfo.InvariantCulture);
+        configuration[DashboardBarChartVisualOptions.EmptyTextKey] = string.IsNullOrWhiteSpace(BarChartEmptyText)
+            ? DashboardBarChartVisualOptions.DefaultEmptyText
+            : BarChartEmptyText.Trim();
+        configuration[DashboardBarChartVisualOptions.BarColorKey] = NormalizeColor(
+            BarChartBarColor,
+            DashboardBarChartVisualOptions.DefaultBarColor);
+        configuration[DashboardBarChartVisualOptions.GridColorKey] = NormalizeColor(
+            BarChartGridColor,
+            DashboardBarChartVisualOptions.DefaultGridColor);
+        configuration[DashboardBarChartVisualOptions.LabelColorKey] = NormalizeColor(
+            BarChartLabelColor,
+            DashboardBarChartVisualOptions.DefaultLabelColor);
     }
 
     private void TrimFiltersToEventType()
