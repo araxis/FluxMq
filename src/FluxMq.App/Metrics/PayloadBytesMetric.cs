@@ -33,7 +33,7 @@ public sealed class PayloadBytesMetric : IFluxMetricSource<double>
         _topic = topic;
         _qos = qos;
         _window = new SlidingEventWindow(window);
-        _pump = new MetricEventPump<double>(metricId, events, Observe, boundedCapacity, timeProvider);
+        _pump = new MetricEventPump<double>(metricId, events, Observe, boundedCapacity, timeProvider, Recompute);
     }
 
     private MetricSample<double> Observe(FlowEvent flowEvent, DateTimeOffset now)
@@ -47,6 +47,13 @@ public sealed class PayloadBytesMetric : IFluxMetricSource<double>
         }
 
         _window.Add(flowEvent, now);
+        return MetricSample<double>.Of(_window.TotalPayloadBytes);
+    }
+
+    // Idle decay tick: prune aged-out events and re-report the byte total (settling to 0 when traffic stops).
+    private MetricSample<double> Recompute(DateTimeOffset now)
+    {
+        _window.Prune(now);
         return MetricSample<double>.Of(_window.TotalPayloadBytes);
     }
 
