@@ -57,12 +57,14 @@ public sealed class FlowApplicationHost(
         clientFactory ??= profile => new MqttBrokerClient(profile, secretResolver);
         var expressionEngine = FluxMqExpressionEngines.CreateDefault();
         var runtimeServices = CreateDefaultRuntimeServices();
+        var metricStreamCoordinator = runtimeServices.GetRequiredService<FluxMetricStreamCoordinator>();
         var factories = new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories(
                 clientFactory,
                 messageRepository,
                 expressionEngine,
                 secretResolver: secretResolver,
+                metricStreamCoordinator: metricStreamCoordinator,
                 runtimeServices: runtimeServices);
 
         return new FlowApplicationHost(
@@ -71,7 +73,7 @@ public sealed class FlowApplicationHost(
             sectionName: sectionName,
             scenarioClientFactory: clientFactory,
             secretResolver: secretResolver,
-            metricStreamCoordinator: runtimeServices.GetRequiredService<FluxMetricStreamCoordinator>(),
+            metricStreamCoordinator: metricStreamCoordinator,
             ownedRuntimeServices: runtimeServices);
     }
 
@@ -86,12 +88,14 @@ public sealed class FlowApplicationHost(
         clientFactory ??= profile => new MqttBrokerClient(profile, secretResolver);
         var expressionEngine = FluxMqExpressionEngines.CreateDefault();
         var runtimeServices = CreateDefaultRuntimeServices();
+        var metricStreamCoordinator = runtimeServices.GetRequiredService<FluxMetricStreamCoordinator>();
         var factories = new RuntimeNodeFactoryRegistry()
             .RegisterPipelineComponentFactories(
                 clientFactory,
                 messageRepository,
                 expressionEngine,
                 secretResolver: secretResolver,
+                metricStreamCoordinator: metricStreamCoordinator,
                 runtimeServices: runtimeServices);
 
         return new FlowApplicationHost(
@@ -100,7 +104,7 @@ public sealed class FlowApplicationHost(
             scenarioClientFactory: clientFactory,
             secretResolver: secretResolver,
             applicationDefinition: definition,
-            metricStreamCoordinator: runtimeServices.GetRequiredService<FluxMetricStreamCoordinator>(),
+            metricStreamCoordinator: metricStreamCoordinator,
             ownedRuntimeServices: runtimeServices);
     }
 

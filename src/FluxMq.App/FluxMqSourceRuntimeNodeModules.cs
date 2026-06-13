@@ -152,6 +152,35 @@ internal sealed class GeneratedMqttSourceRuntimeNodeModule : IFluxMqRuntimeNodeM
     }
 }
 
+internal sealed class MetricSourceRuntimeNodeModule : IFluxMqRuntimeNodeModule
+{
+    public NodeType Type => FluxMqNodeTypes.MetricSource;
+
+    public RuntimeNode Build(FluxMqRuntimeNodeBuildContext context)
+    {
+        if (context.MetricStreamCoordinator is null)
+        {
+            throw new InvalidOperationException("Metric source requires a metric stream coordinator.");
+        }
+
+        var component = new MetricSourceComponent(
+            context.MetricStreamCoordinator,
+            GetRequiredString(context.Definition, "metricId"),
+            GetStringDictionary(context.Definition, "parameters"),
+            emitLatestOnStart: GetBoolOrDefault(context.Definition, "emitLatestOnStart", true),
+            boundedCapacity: GetBoundedCapacity(context.Definition));
+
+        return RuntimeNode.Create(
+            context.Address,
+            component,
+            outputs:
+            [
+                new OutputPort<FluxMetricReading<double>>(context.Address.Port(MqttSourceNodeConfiguration.OutputPort), component.Output),
+                new OutputPort<FlowError>(context.Address.Port(MqttSourceNodeConfiguration.ErrorsPort), component.Errors)
+            ]);
+    }
+}
+
 internal static class MqttSourceNodeConfiguration
 {
     public static readonly PortName OutputPort = new("Output");

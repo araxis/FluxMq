@@ -15,7 +15,8 @@ public sealed record FluxMqRuntimeNodeBuildContext(
     RuntimeNodeFactoryContext EngineContext,
     Func<MqttConnectionProfile, IMqttBrokerClient> ClientFactory,
     IMessageRepository? MessageRepository,
-    IFlowExpressionEngine ExpressionEngine)
+    IFlowExpressionEngine ExpressionEngine,
+    FluxMetricStreamCoordinator? MetricStreamCoordinator)
 {
     public NodeAddress Address => EngineContext.Address;
 
@@ -39,6 +40,7 @@ public static class FluxMqRuntimeNodeModuleTypes
         FluxMqNodeTypes.StoredSessionSource,
         FluxMqNodeTypes.ReplaySource,
         FluxMqNodeTypes.GeneratedSource,
+        FluxMqNodeTypes.MetricSource,
         FluxMqNodeTypes.PayloadInspector,
         FluxMqNodeTypes.MqttMetrics,
         FluxMqNodeTypes.FlowLogger,
@@ -64,6 +66,7 @@ public static class FluxMqRuntimeNodeServiceCollectionExtensions
         services.AddFluxMqRuntimeNodeModule<StoredSessionSourceRuntimeNodeModule>(FluxMqNodeTypes.StoredSessionSource);
         services.AddFluxMqRuntimeNodeModule<ReplaySourceRuntimeNodeModule>(FluxMqNodeTypes.ReplaySource);
         services.AddFluxMqRuntimeNodeModule<GeneratedMqttSourceRuntimeNodeModule>(FluxMqNodeTypes.GeneratedSource);
+        services.AddFluxMqRuntimeNodeModule<MetricSourceRuntimeNodeModule>(FluxMqNodeTypes.MetricSource);
         services.AddFluxMqRuntimeNodeModule<PayloadInspectorRuntimeNodeModule>(FluxMqNodeTypes.PayloadInspector);
         services.AddFluxMqRuntimeNodeModule<MqttMetricsRuntimeNodeModule>(FluxMqNodeTypes.MqttMetrics);
         services.AddFluxMqRuntimeNodeModule<FlowLoggerRuntimeNodeModule>(FluxMqNodeTypes.FlowLogger);

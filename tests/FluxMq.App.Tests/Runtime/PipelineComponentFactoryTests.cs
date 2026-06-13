@@ -56,6 +56,7 @@ public sealed class PipelineComponentFactoryTests
             FluxMqNodeTypes.StoredSessionSource,
             FluxMqNodeTypes.ReplaySource,
             FluxMqNodeTypes.GeneratedSource,
+            FluxMqNodeTypes.MetricSource,
             FluxMqNodeTypes.PayloadInspect,
             FluxMqNodeTypes.PayloadInspector,
             FluxMqNodeTypes.HttpRequest,

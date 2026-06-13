@@ -8,6 +8,7 @@ using FluxMq.UI.Components.Workspace.Nodes.Http;
 using FluxMq.UI.Components.Workspace.Nodes.JsonSchemaValidator;
 using FluxMq.UI.Components.Workspace.Nodes.MessageFilter;
 using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
+using FluxMq.UI.Components.Workspace.Nodes.MetricSource;
 using FluxMq.UI.Components.Workspace.Nodes.MqttTrigger;
 using FluxMq.UI.Components.Workspace.Nodes.Payloads;
 using FluxMq.UI.Components.Workspace.Nodes.PayloadInspector;
@@ -34,6 +35,7 @@ public sealed class NodeWidgetRegistry
         ["mqtt.connection-state-trigger"] = typeof(ConnectionStateTriggerNodeWidget),
         ["flow.filter"] = typeof(MessageFilterNodeWidget),
         ["generated.source"] = typeof(GeneratedSourceNodeWidget),
+        ["metric.source"] = typeof(MetricSourceNodeWidget),
         ["replay.source"] = typeof(ReplaySourceNodeWidget),
         ["mqtt.payload-inspector"] = typeof(PayloadInspectorNodeWidget),
         ["flow.when"] = typeof(ConditionRouterNodeWidget),
