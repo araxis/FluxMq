@@ -2583,28 +2583,16 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "DashboardInspectorAppMetricRows.razor"));
-        var bindingRows = File.ReadAllText(Path.Combine(
-            root,
-            "src",
-            "FluxMq.UI",
-            "Components",
-            "Workspace",
-            "DashboardInspectorMetricBindingRows.razor"));
+        // Only app-metric tiles show a data group now; the multi-metric binding editor was retired.
         inspector.ShouldContain("DashboardInspectorAppMetricRows");
-        inspector.ShouldContain("DashboardInspectorMetricBindingRows");
+        inspector.ShouldNotContain("DashboardInspectorMetricBindingRows");
         inspector.ShouldContain("DashboardInspectorMetricBindingState.Initialize");
         inspector.ShouldContain("DashboardInspectorMetricBindingState.Current");
-        inspector.ShouldContain("DashboardInspectorMetricBindingState.TryAdd");
-        inspector.ShouldContain("DashboardInspectorMetricBindingState.Remove");
-        inspector.ShouldContain("DashboardInspectorMetricBindingState.TryMove");
         inspector.ShouldNotContain("<PropertyGridRow Name=\"Metric query\">");
         inspector.ShouldNotContain("private RenderFragment RenderMetricParameterField");
         inspector.ShouldNotContain("CurrentBindingMetrics(");
         appRows.ShouldContain("Open metric");
         appRows.ShouldContain("ParameterChanged");
-        bindingRows.ShouldContain("PrimaryMetricChanged");
-        bindingRows.ShouldContain("AddMetric");
-        bindingRows.ShouldContain("DashboardInspectorMetricMove");
     }
 
     [Fact]

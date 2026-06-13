@@ -294,6 +294,81 @@ public sealed class FluxMqApplicationDefinitionJsonTests
     }
 
     [Fact]
+    public void MigrateRoot_InlinesSetBWidgetFiltersAndRemovesOrphanedPromotedMetric()
+    {
+        // A dashboard authored before the inline rework: a Set B chart and a Set A counter each bound to a
+        // promoted metric resource. After migration the chart goes inline (filters + window lifted into its
+        // configuration, binding dropped, orphaned resource removed) while the counter keeps its metric + binding.
+        var root = JsonNode.Parse(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "metrics": {
+                    "ops.chartMetric": {
+                      "typeId": "event.count",
+                      "displayName": "Chart",
+                      "parameters": {
+                        "window": "120s",
+                        "eventType": "mqtt.message.published",
+                        "topicStartsWith": "factory/",
+                        "qos": "1"
+                      },
+                      "labels": { "promotedFrom": "ops.chartMetric" }
+                    },
+                    "ops.counterMetric": {
+                      "typeId": "event.count",
+                      "displayName": "Counter",
+                      "parameters": { "window": "60s" },
+                      "labels": { "promotedFrom": "ops.counterMetric" }
+                    }
+                  },
+                  "dashboards": {
+                    "ops": {
+                      "layout": {
+                        "columns": ["*"],
+                        "rows": ["*"],
+                        "cells": {
+                          "chart": { "row": 0, "column": 0, "widget": "chart" },
+                          "counter": { "row": 0, "column": 1, "widget": "counter" }
+                        }
+                      },
+                      "bindings": {
+                        "chart": { "primaryMetric": "ops.chartMetric", "metrics": ["ops.chartMetric"] },
+                        "counter": { "primaryMetric": "ops.counterMetric", "metrics": ["ops.counterMetric"] }
+                      },
+                      "widgets": {
+                        "chart": { "type": "chart.line", "configuration": { "metric": "ops.chartMetric" } },
+                        "counter": { "type": "event.counter", "configuration": { "metric": "ops.counterMetric" } }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """)!.AsObject();
+
+        FluxMqApplicationDefinitionMigrator.MigrateRoot(root);
+
+        var flowApplication = root["FluxMq"]!["FlowApplication"]!.AsObject();
+        var dashboard = flowApplication["dashboards"]!["ops"]!.AsObject();
+        var chartConfig = dashboard["widgets"]!["chart"]!["configuration"]!.AsObject();
+
+        // Set B chart: filters + window lifted inline, metric reference + binding gone.
+        chartConfig["eventType"]!.GetValue<string>().ShouldBe("mqtt.message.published");
+        chartConfig["topicStartsWith"]!.GetValue<string>().ShouldBe("factory/");
+        chartConfig["window"]!.GetValue<string>().ShouldBe("120s");
+        chartConfig["attribute:qos"]!.GetValue<string>().ShouldBe("1");
+        chartConfig.ContainsKey("metric").ShouldBeFalse();
+        dashboard["bindings"]!.AsObject().ContainsKey("chart").ShouldBeFalse();
+
+        // The orphaned promoted resource is swept; the Set A counter keeps its metric + binding.
+        flowApplication["metrics"]!.AsObject().ContainsKey("ops.chartMetric").ShouldBeFalse();
+        flowApplication["metrics"]!.AsObject().ContainsKey("ops.counterMetric").ShouldBeTrue();
+        dashboard["bindings"]!["counter"]!["primaryMetric"]!.GetValue<string>().ShouldBe("ops.counterMetric");
+    }
+
+    [Fact]
     public void Serialize_KeepsWorkflowsAndNodesAsObjectProperties()
     {
         var definition = new FluxMqApplicationDefinition

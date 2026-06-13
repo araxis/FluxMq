@@ -306,16 +306,6 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
             new(DashboardWidgetCatalog.PrimaryMetricKey, "Value", DashboardWidgetPropertyEditorKind.Select, Options: MetricOptions())
         ]);
 
-    private static DashboardWidgetPropertyGroupDefinition WindowGroup()
-        => new("window", "Window", [
-            new("window", "Window", DashboardWidgetPropertyEditorKind.Select, Options: [
-                new("30s", "30 sec"),
-                new("60s", "1 min"),
-                new("300s", "5 min"),
-                new("900s", "15 min")
-            ])
-        ]);
-
     private static DashboardWidgetPropertyGroupDefinition AxisGroup()
         => new("axis", "Axis", [
             new("showGrid", "Grid", DashboardWidgetPropertyEditorKind.Toggle),

@@ -79,6 +79,11 @@ public static class FluxMqApplicationDefinitionMigrator
             return;
         }
 
+        // Metric names that an inline (Set B) widget gave up while being unbound. After all dashboards
+        // are migrated, any of these that is a promoted resource no longer referenced by any binding is
+        // an orphan left over from the old dashboard-local metric model and is removed.
+        var unboundInlineMetrics = new HashSet<string>(StringComparer.Ordinal);
+
         foreach (var dashboard in dashboards)
         {
             if (dashboard.Value is not JsonObject dashboardObject)
@@ -101,13 +106,83 @@ public static class FluxMqApplicationDefinitionMigrator
                 {
                     if (widget.Value is JsonObject widgetObject)
                     {
-                        EnsureDashboardWidgetBinding(widget.Key, widgetObject, metrics, bindings, appMetrics);
+                        EnsureDashboardWidgetBinding(widget.Key, widgetObject, metrics, bindings, appMetrics, unboundInlineMetrics);
                     }
                 }
             }
 
             PromoteDashboardMetrics(flowApplication, dashboard.Key, dashboardObject, metrics, bindings);
         }
+
+        RemoveOrphanedInlineMetrics(flowApplication, dashboards, unboundInlineMetrics);
+    }
+
+    // Removes promoted metric resources that an inline widget gave up and that no binding references any more.
+    // Scoped to the just-unbound names so legitimately promoted-but-unwired metrics are left untouched.
+    private static void RemoveOrphanedInlineMetrics(
+        JsonObject flowApplication,
+        JsonObject dashboards,
+        IReadOnlySet<string> unboundInlineMetrics)
+    {
+        if (unboundInlineMetrics.Count == 0 ||
+            flowApplication["metrics"] is not JsonObject appMetrics)
+        {
+            return;
+        }
+
+        foreach (var metricName in unboundInlineMetrics)
+        {
+            if (appMetrics[metricName] is JsonObject resource &&
+                IsPromotedMetricResource(resource) &&
+                !IsMetricReferencedByAnyBinding(dashboards, metricName))
+            {
+                appMetrics.Remove(metricName);
+            }
+        }
+    }
+
+    private static bool IsPromotedMetricResource(JsonObject resource)
+        => resource["labels"] is JsonObject labels &&
+           !string.IsNullOrWhiteSpace(ReadString(labels, "promotedFrom"));
+
+    private static bool IsMetricReferencedByAnyBinding(JsonObject dashboards, string metricName)
+    {
+        foreach (var dashboard in dashboards)
+        {
+            if (dashboard.Value is not JsonObject dashboardObject ||
+                dashboardObject["bindings"] is not JsonObject bindings)
+            {
+                continue;
+            }
+
+            foreach (var binding in bindings)
+            {
+                if (binding.Value is not JsonObject bindingObject)
+                {
+                    continue;
+                }
+
+                if (string.Equals(ReadString(bindingObject, "primaryMetric"), metricName, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+
+                if (bindingObject["metrics"] is JsonArray array)
+                {
+                    foreach (var item in array)
+                    {
+                        if (item is JsonValue value &&
+                            value.TryGetValue<string>(out var name) &&
+                            string.Equals(name, metricName, StringComparison.Ordinal))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     private static void PromoteDashboardMetrics(
@@ -577,13 +652,23 @@ public static class FluxMqApplicationDefinitionMigrator
         JsonObject widget,
         JsonObject metrics,
         JsonObject bindings,
-        JsonObject appMetrics)
+        JsonObject appMetrics,
+        ISet<string> unboundInlineMetrics)
     {
         var configuration = GetOrCreateObject(widget, "configuration");
         if (!IsAppMetricWidgetType(ReadString(widget, "type")))
         {
-            // Inline widget: drop any stale metric reference/binding left over from the
-            // generic dashboard-local metric model so the runtime uses inline configuration.
+            // Inline widget: lift any filters/window that only lived on the referenced metric
+            // (promoted resource or pre-promotion dashboard-local metric) into the widget
+            // configuration, then drop the stale metric reference/binding so the runtime uses
+            // inline configuration. Filters that already exist in the config are left untouched.
+            var inlineMetricName = ReadString(configuration, "metric") ?? PrimaryBindingMetricName(bindings, widgetName);
+            PreserveInlineWidgetFilters(configuration, inlineMetricName, metrics, appMetrics);
+            if (!string.IsNullOrWhiteSpace(inlineMetricName))
+            {
+                unboundInlineMetrics.Add(inlineMetricName);
+            }
+
             configuration.Remove("metric");
             bindings.Remove(widgetName);
             return;
@@ -632,6 +717,93 @@ public static class FluxMqApplicationDefinitionMigrator
         {
             binding["metrics"] = new JsonArray(metricName);
         }
+    }
+
+    private static string? PrimaryBindingMetricName(JsonObject bindings, string widgetName)
+    {
+        if (bindings[widgetName] is not JsonObject binding)
+        {
+            return null;
+        }
+
+        if (ReadString(binding, "primaryMetric") is { } primary && !string.IsNullOrWhiteSpace(primary))
+        {
+            return primary;
+        }
+
+        if (binding["metrics"] is JsonArray array &&
+            array.Count > 0 &&
+            array[0] is JsonValue value &&
+            value.TryGetValue<string>(out var first))
+        {
+            return first;
+        }
+
+        return null;
+    }
+
+    // Copies the filters/window that an inline widget referenced via a metric into the widget configuration,
+    // reading from a promoted resource ({ parameters: { window, eventType, ..., qos, retain } }) or a
+    // pre-promotion dashboard-local metric ({ window, filters: { eventType, ..., attributes/attribute:* } }).
+    // Only keys missing from the configuration are written, so explicit inline filters always win.
+    private static void PreserveInlineWidgetFilters(
+        JsonObject configuration,
+        string? metricName,
+        JsonObject dashboardMetrics,
+        JsonObject appMetrics)
+    {
+        if (string.IsNullOrWhiteSpace(metricName))
+        {
+            return;
+        }
+
+        if (appMetrics[metricName] is JsonObject resource &&
+            resource["parameters"] is JsonObject parameters)
+        {
+            foreach (var key in DashboardFilterKeys)
+            {
+                CopyInlineFilter(configuration, key, ReadString(parameters, key));
+            }
+
+            CopyInlineFilter(configuration, "attribute:qos", ReadString(parameters, "qos"));
+            CopyInlineFilter(configuration, "attribute:retain", ReadString(parameters, "retain"));
+            CopyInlineFilter(configuration, "window", ReadString(parameters, "window"));
+            return;
+        }
+
+        if (dashboardMetrics[metricName] is JsonObject local)
+        {
+            var filters = local["filters"] as JsonObject ?? new JsonObject();
+            foreach (var key in DashboardFilterKeys)
+            {
+                CopyInlineFilter(configuration, key, ReadString(filters, key));
+            }
+
+            CopyInlineAttribute(configuration, filters, "qos");
+            CopyInlineAttribute(configuration, filters, "retain");
+            CopyInlineFilter(configuration, "window", ReadString(local, "window"));
+        }
+    }
+
+    private static void CopyInlineFilter(JsonObject configuration, string key, string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value) && !configuration.ContainsKey(key))
+        {
+            configuration[key] = value;
+        }
+    }
+
+    private static void CopyInlineAttribute(JsonObject configuration, JsonObject filters, string name)
+    {
+        string? value = null;
+        if (filters["attributes"] is JsonObject attributes &&
+            TryReadScalarString(attributes[name], out var nested))
+        {
+            value = nested;
+        }
+
+        value ??= ReadString(filters, "attribute:" + name);
+        CopyInlineFilter(configuration, "attribute:" + name, value);
     }
 
     private static JsonObject CreateMetricFromWidget(JsonObject widget, JsonObject configuration)

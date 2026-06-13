@@ -6,6 +6,9 @@ namespace FluxMq.UI.Services;
 
 internal sealed class DashboardMetricValueBridge(FlowDefinitionComposer definitionComposer)
 {
+    // Fallback rate window for widgets with no bound metric and no inline "window" key
+    // (e.g. payload/breakdown/table/latest/topic-activity, which have no window editor).
+    // Intentionally 1 minute — the same window those widgets used before the inline rework.
     private static readonly TimeSpan DefaultRateWindow = TimeSpan.FromMinutes(1);
     private readonly DashboardMetricRegistry _dashboardMetricRegistry = new();
 
