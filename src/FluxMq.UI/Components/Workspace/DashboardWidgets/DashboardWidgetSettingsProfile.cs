@@ -21,6 +21,7 @@ public sealed record DashboardWidgetSettingsProfile(
     bool UsesEventTableVisual = false,
     bool UsesTopicActivityVisual = false,
     bool UsesLineChartVisual = false,
+    bool UsesAreaChartVisual = false,
     bool UsesTopicTreeVisual = false,
     DashboardWidgetInspectorLabels? Labels = null)
 {
@@ -247,9 +248,8 @@ public static class DashboardWidgetSettingsProfiles
                 normalized,
                 "Area chart",
                 Icons.Material.Filled.AreaChart,
-                usesVisualMetrics: true,
-                usesChartType: true,
                 usesMetricWindow: true,
+                usesAreaChartVisual: true,
                 labels: DashboardWidgetInspectorLabels.Chart),
             DashboardWidgetCatalog.BarChartType => Event(
                 normalized,
@@ -328,6 +328,7 @@ public static class DashboardWidgetSettingsProfiles
         bool usesEventTableVisual = false,
         bool usesTopicActivityVisual = false,
         bool usesLineChartVisual = false,
+        bool usesAreaChartVisual = false,
         DashboardWidgetInspectorLabels? labels = null)
         => new(
             type,
@@ -347,6 +348,7 @@ public static class DashboardWidgetSettingsProfiles
             usesEventTableVisual,
             usesTopicActivityVisual,
             usesLineChartVisual,
+            usesAreaChartVisual,
             UsesTopicTreeVisual: false,
             labels);
 }

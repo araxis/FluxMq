@@ -25,7 +25,7 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
                     LineChartGroup()
                 ],
                 [DashboardWidgetCatalog.EventChartType]),
-            ChartModule(
+            AreaChartModule(
                 DashboardWidgetCatalog.AreaChartType,
                 "Area Chart",
                 "Charts",
@@ -34,12 +34,8 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
                 typeof(DashboardAreaChartModuleView),
                 "Area chart",
                 "areaChart",
-                DashboardChartWidgetOptions.TypeArea,
                 [
-                    MetricGroup("metric", "Metric"),
-                    WindowGroup(),
-                    AxisGroup(),
-                    ChartFillGroup()
+                    AreaChartGroup()
                 ]),
             ChartModule(
                 DashboardWidgetCatalog.BarChartType,
@@ -156,6 +152,54 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
             InstanceNamePrefix: instanceNamePrefix);
     }
 
+    private static DashboardWidgetModule AreaChartModule(
+        string type,
+        string displayName,
+        string category,
+        string description,
+        string icon,
+        Type component,
+        string title,
+        string instanceNamePrefix,
+        IReadOnlyList<DashboardWidgetPropertyGroupDefinition> groups)
+    {
+        var configuration = EventConfiguration(title);
+        configuration.Remove(DashboardWidgetCatalog.PrimaryMetricKey);
+        configuration[DashboardChartWidgetOptions.TypeKey] = DashboardChartWidgetOptions.TypeArea;
+        configuration[DashboardAreaChartVisualOptions.HeaderKey] = title;
+        configuration[DashboardAreaChartVisualOptions.ShowHeaderKey] = bool.TrueString;
+        configuration[DashboardAreaChartVisualOptions.ShowGridKey] = bool.TrueString;
+        configuration[DashboardAreaChartVisualOptions.ShowLabelsKey] = bool.TrueString;
+        configuration[DashboardAreaChartVisualOptions.ShowPointsKey] = bool.FalseString;
+        configuration[DashboardAreaChartVisualOptions.EmptyTextKey] = DashboardAreaChartVisualOptions.DefaultEmptyText;
+        configuration[DashboardAreaChartVisualOptions.LineColorKey] = DashboardAreaChartVisualOptions.DefaultLineColor;
+        configuration[DashboardAreaChartVisualOptions.FillColorKey] = DashboardAreaChartVisualOptions.DefaultFillColor;
+        configuration[DashboardAreaChartVisualOptions.FillOpacityKey] =
+            DashboardAreaChartVisualOptions.DefaultFillOpacity.ToString(CultureInfo.InvariantCulture);
+        configuration[DashboardAreaChartVisualOptions.GridColorKey] = DashboardAreaChartVisualOptions.DefaultGridColor;
+        configuration[DashboardAreaChartVisualOptions.LabelColorKey] = DashboardAreaChartVisualOptions.DefaultLabelColor;
+        configuration[DashboardAreaChartVisualOptions.LineWidthKey] =
+            DashboardAreaChartVisualOptions.DefaultLineWidth.ToString(CultureInfo.InvariantCulture);
+        return new DashboardWidgetModule(
+            new DashboardWidgetDescriptor(
+                type,
+                displayName,
+                category,
+                description,
+                icon,
+                displayName,
+                DashboardWidgetRendererKind.Chart,
+                DashboardWidgetEditorKind.Chart,
+                ["runtimeEvents"]),
+            component,
+            component,
+            configuration,
+            groups,
+            new DashboardWidgetStyleDefinition(),
+            new DashboardWidgetLayoutContract(2, 1, 2, 1),
+            InstanceNamePrefix: instanceNamePrefix);
+    }
+
     private static DashboardWidgetModule DonutChartModule(
         string type,
         string displayName,
@@ -217,12 +261,6 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
             new("showLabels", "Labels", DashboardWidgetPropertyEditorKind.Toggle)
         ]);
 
-    private static DashboardWidgetPropertyGroupDefinition ChartLineGroup()
-        => new("line", "Line", [
-            new("lineColor", "Line", DashboardWidgetPropertyEditorKind.Color),
-            new("showPoints", "Points", DashboardWidgetPropertyEditorKind.Toggle)
-        ]);
-
     private static DashboardWidgetPropertyGroupDefinition LineChartGroup()
         => new("line-chart", "Line chart", [
             new(DashboardLineChartVisualOptions.HeaderKey, "Header", DashboardWidgetPropertyEditorKind.Text),
@@ -237,10 +275,20 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
             new(DashboardLineChartVisualOptions.LabelColorKey, "Label color", DashboardWidgetPropertyEditorKind.Color)
         ]);
 
-    private static DashboardWidgetPropertyGroupDefinition ChartFillGroup()
-        => new("fill", "Fill", [
-            new("fillColor", "Fill", DashboardWidgetPropertyEditorKind.Color),
-            new("fillOpacity", "Opacity", DashboardWidgetPropertyEditorKind.Number)
+    private static DashboardWidgetPropertyGroupDefinition AreaChartGroup()
+        => new("area-chart", "Area chart", [
+            new(DashboardAreaChartVisualOptions.HeaderKey, "Header", DashboardWidgetPropertyEditorKind.Text),
+            new(DashboardAreaChartVisualOptions.ShowHeaderKey, "Show header", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardAreaChartVisualOptions.ShowGridKey, "Grid", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardAreaChartVisualOptions.ShowLabelsKey, "Labels", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardAreaChartVisualOptions.ShowPointsKey, "Points", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardAreaChartVisualOptions.LineWidthKey, "Line width", DashboardWidgetPropertyEditorKind.Number, Unit: "px"),
+            new(DashboardAreaChartVisualOptions.FillOpacityKey, "Fill opacity", DashboardWidgetPropertyEditorKind.Number, Unit: "%"),
+            new(DashboardAreaChartVisualOptions.EmptyTextKey, "Empty text", DashboardWidgetPropertyEditorKind.Text),
+            new(DashboardAreaChartVisualOptions.LineColorKey, "Line color", DashboardWidgetPropertyEditorKind.Color),
+            new(DashboardAreaChartVisualOptions.FillColorKey, "Fill color", DashboardWidgetPropertyEditorKind.Color),
+            new(DashboardAreaChartVisualOptions.GridColorKey, "Grid color", DashboardWidgetPropertyEditorKind.Color),
+            new(DashboardAreaChartVisualOptions.LabelColorKey, "Label color", DashboardWidgetPropertyEditorKind.Color)
         ]);
 
     private static DashboardWidgetPropertyGroupDefinition BarGroup()

@@ -302,6 +302,64 @@
         </PropertyGridRow>
     }
 
+    @if (Draft.Profile.UsesAreaChartVisual)
+    {
+        <PropertyGridRow Name="Header">
+            <input class="property-grid-input"
+                   value="@Draft.AreaChartHeader"
+                   @oninput="@((ChangeEventArgs args) => ChangeAreaChartVisualPropertyAsync(DashboardAreaChartVisualOptions.HeaderKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Show header">
+            @AreaChartBooleanRow(DashboardAreaChartVisualOptions.ShowHeaderKey, Draft.AreaChartShowHeader)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Grid">
+            @AreaChartBooleanRow(DashboardAreaChartVisualOptions.ShowGridKey, Draft.AreaChartShowGrid)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Labels">
+            @AreaChartBooleanRow(DashboardAreaChartVisualOptions.ShowLabelsKey, Draft.AreaChartShowLabels)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Points">
+            @AreaChartBooleanRow(DashboardAreaChartVisualOptions.ShowPointsKey, Draft.AreaChartShowPoints)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Line width" Unit="px">
+            <input class="property-grid-input"
+                   type="number"
+                   min="@DashboardAreaChartVisualOptions.MinLineWidth"
+                   max="@DashboardAreaChartVisualOptions.MaxLineWidth"
+                   value="@Draft.AreaChartLineWidth"
+                   @oninput="@((ChangeEventArgs args) => ChangeAreaChartVisualPropertyAsync(DashboardAreaChartVisualOptions.LineWidthKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Fill opacity" Unit="%">
+            <input class="property-grid-input"
+                   type="number"
+                   min="@DashboardAreaChartVisualOptions.MinFillOpacity"
+                   max="@DashboardAreaChartVisualOptions.MaxFillOpacity"
+                   value="@Draft.AreaChartFillOpacity"
+                   @oninput="@((ChangeEventArgs args) => ChangeAreaChartVisualPropertyAsync(DashboardAreaChartVisualOptions.FillOpacityKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Empty text">
+            <input class="property-grid-input"
+                   value="@Draft.AreaChartEmptyText"
+                   @oninput="@((ChangeEventArgs args) => ChangeAreaChartVisualPropertyAsync(DashboardAreaChartVisualOptions.EmptyTextKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Line color">
+            <PropertyGridColorPicker Value="@Draft.AreaChartLineColor"
+                                     ValueChanged="@((string? value) => ChangeAreaChartVisualPropertyAsync(DashboardAreaChartVisualOptions.LineColorKey, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Fill color">
+            <PropertyGridColorPicker Value="@Draft.AreaChartFillColor"
+                                     ValueChanged="@((string? value) => ChangeAreaChartVisualPropertyAsync(DashboardAreaChartVisualOptions.FillColorKey, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Grid color">
+            <PropertyGridColorPicker Value="@Draft.AreaChartGridColor"
+                                     ValueChanged="@((string? value) => ChangeAreaChartVisualPropertyAsync(DashboardAreaChartVisualOptions.GridColorKey, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Label color">
+            <PropertyGridColorPicker Value="@Draft.AreaChartLabelColor"
+                                     ValueChanged="@((string? value) => ChangeAreaChartVisualPropertyAsync(DashboardAreaChartVisualOptions.LabelColorKey, value))" />
+        </PropertyGridRow>
+    }
+
     @if (Draft.Profile.UsesChartType)
     {
         <PropertyGridRow Name="@Labels.ChartRow">
@@ -353,6 +411,9 @@
     public EventCallback<DashboardInspectorPropertyValueChange> LineChartVisualPropertyChanged { get; set; }
 
     [Parameter]
+    public EventCallback<DashboardInspectorPropertyValueChange> AreaChartVisualPropertyChanged { get; set; }
+
+    [Parameter]
     public EventCallback<string?> ChartTypeChanged { get; set; }
 
     private static string ChoiceClass(string? currentValue, string value)
@@ -382,6 +443,9 @@
 
     private Task ChangeLineChartVisualPropertyAsync(string key, string? value)
         => LineChartVisualPropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
+
+    private Task ChangeAreaChartVisualPropertyAsync(string key, string? value)
+        => AreaChartVisualPropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
 
     private RenderFragment BooleanRow(string key, bool value) => @<div class="property-grid-button-group">
         <button type="button"
@@ -426,5 +490,14 @@
         <button type="button"
                 class="@BooleanChoiceClass(value, false)"
                 @onclick="@(() => ChangeLineChartVisualPropertyAsync(key, bool.FalseString))">Off</button>
+    </div>;
+
+    private RenderFragment AreaChartBooleanRow(string key, bool value) => @<div class="property-grid-button-group">
+        <button type="button"
+                class="@BooleanChoiceClass(value, true)"
+                @onclick="@(() => ChangeAreaChartVisualPropertyAsync(key, bool.TrueString))">On</button>
+        <button type="button"
+                class="@BooleanChoiceClass(value, false)"
+                @onclick="@(() => ChangeAreaChartVisualPropertyAsync(key, bool.FalseString))">Off</button>
     </div>;
 }
