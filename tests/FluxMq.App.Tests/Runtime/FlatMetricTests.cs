@@ -220,6 +220,47 @@ public sealed class FlatMetricTests
         coordinator.Complete();
     }
 
+    [Fact]
+    public async Task MetricSourceComponent_RelaysCoordinatorReadingsAsDoubles()
+    {
+        var coordinator = new FluxMetricStreamCoordinator(FluxMetricCatalog.CreateDefault());
+        var events = new BroadcastBlock<FlowEvent>(static flowEvent => flowEvent);
+        coordinator.Configure(
+            new Dictionary<string, FluxMetricResourceDefinition>(StringComparer.Ordinal)
+            {
+                ["topics"] = new()
+                {
+                    Id = "topics",
+                    TypeId = TopicCountMetric.TypeId,
+                    Parameters = new Dictionary<string, string>(StringComparer.Ordinal)
+                    {
+                        ["topic"] = "factory/#",
+                        ["qos"] = "0"
+                    }
+                }
+            },
+            events);
+
+        var component = new MetricSourceComponent(coordinator, "topics", emitLatestOnStart: false);
+        var readings = new List<FluxMetricReading<double>>();
+        var sink = new ActionBlock<FluxMetricReading<double>>(readings.Add);
+        component.Output.LinkTo(sink);
+
+        await component.StartAsync();
+        events.Post(Event("factory/a", qos: "0"));
+        events.Post(Event("other/b", qos: "0"));   // filtered out
+        events.Post(Event("factory/c", qos: "0"));
+
+        await PollAsync(
+            () => readings.Count > 0 ? readings[^1] : null,
+            reading => reading.Value == 2);
+
+        readings[^1].Value.ShouldBe(2);
+        readings[^1].MetricId.ShouldBe("topics");
+
+        component.Complete();
+    }
+
     private static async Task<FluxMetricReading<double>> PollAsync(
         Func<FluxMetricReading<double>?> read,
         Func<FluxMetricReading<double>, bool> done)

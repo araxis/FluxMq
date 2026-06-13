@@ -51,6 +51,20 @@ public sealed class FluxMetricStreamCoordinator
         return Task.CompletedTask;
     }
 
+    /// <summary>Returns the running metric's readings as a numeric stream, creating it on first use.</summary>
+    public ISourceBlock<FluxMetricReading<double>> GetNumberStream(
+        string metricId,
+        IReadOnlyDictionary<string, string>? overrides)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(metricId);
+        if (!TryGetStream(metricId.Trim(), overrides, out var running))
+        {
+            throw new InvalidOperationException($"Metric '{metricId}' is not available.");
+        }
+
+        return running.NumberStream;
+    }
+
     /// <summary>Reads the latest numeric reading for a metric, creating and starting its stream on first use.</summary>
     public bool TryGetLatestNumber(
         string? metricId,
@@ -103,12 +117,40 @@ public sealed class FluxMetricStreamCoordinator
                     resource.TypeId,
                     new MetricSourceContext(metricId, parameters, _events, DefaultBoundedCapacity));
                 source.StartAsync();
-                running = new RunningMetric(source, descriptor.ValueKind);
+                running = new RunningMetric(
+                    source,
+                    descriptor.ValueKind,
+                    CreateNumberStream(source, descriptor.ValueKind));
                 _streams[key] = running;
             }
 
             return true;
         }
+    }
+
+    // Exposes a metric source as a double-valued stream so consumers (e.g. the metric.source pipeline node)
+    // do not need to know whether the metric is int- or double-valued.
+    private static ISourceBlock<FluxMetricReading<double>> CreateNumberStream(IFluxMetricSource source, MetricValueKind valueKind)
+    {
+        if (valueKind == MetricValueKind.Double)
+        {
+            return ((IFluxMetricSource<double>)source).Output;
+        }
+
+        var broadcast = new BroadcastBlock<FluxMetricReading<double>>(
+            static reading => reading,
+            new DataflowBlockOptions { BoundedCapacity = DefaultBoundedCapacity });
+        var transform = new TransformBlock<FluxMetricReading<int>, FluxMetricReading<double>>(
+            static reading => new FluxMetricReading<double>
+            {
+                MetricId = reading.MetricId,
+                Timestamp = reading.Timestamp,
+                Value = reading.Value
+            },
+            new ExecutionDataflowBlockOptions { BoundedCapacity = DefaultBoundedCapacity });
+        transform.LinkTo(broadcast, new DataflowLinkOptions { PropagateCompletion = true });
+        ((IFluxMetricSource<int>)source).Output.LinkTo(transform, new DataflowLinkOptions { PropagateCompletion = true });
+        return broadcast;
     }
 
     private static FluxMetricReading<double>? ReadLatest(RunningMetric running)
@@ -175,5 +217,8 @@ public sealed class FluxMetricStreamCoordinator
         return builder.ToString();
     }
 
-    private readonly record struct RunningMetric(IFluxMetricSource Source, MetricValueKind ValueKind);
+    private readonly record struct RunningMetric(
+        IFluxMetricSource Source,
+        MetricValueKind ValueKind,
+        ISourceBlock<FluxMetricReading<double>> NumberStream);
 }
