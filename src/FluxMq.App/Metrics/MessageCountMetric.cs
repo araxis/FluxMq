@@ -17,6 +17,8 @@ public sealed class MessageCountMetric : IFluxMetricSource<int>
     private readonly MetricEventPump<int> _pump;
     private readonly TopicFilter _topic;
     private readonly int _qos;
+    // Cumulative running total since start (use the windowed variant for a bounded count). An int comfortably
+    // covers any realistic lifetime message volume for a monitoring counter.
     private int _count;
 
     public MessageCountMetric(

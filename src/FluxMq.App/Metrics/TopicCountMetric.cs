@@ -17,6 +17,8 @@ public sealed class TopicCountMetric : IFluxMetricSource<int>
     private const string QosKey = "qos";
 
     private readonly MetricEventPump<int> _pump;
+    // Cumulative by design: retains every distinct matching topic for the source's lifetime (use the windowed
+    // variant for a bounded, decaying count). Growth is bounded by the broker's distinct-topic space.
     private readonly HashSet<string> _topics = new(StringComparer.Ordinal);
     private readonly TopicFilter _topic;
     private readonly int _qos;

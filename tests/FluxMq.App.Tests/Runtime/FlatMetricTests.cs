@@ -193,6 +193,18 @@ public sealed class FlatMetricTests
     }
 
     [Fact]
+    public void FluxMetricCatalog_CreateDefault_ReturnsSharedInstance()
+    {
+        // The default catalog is immutable and reused, so repeated calls must hand back the same instance
+        // rather than rebuilding (and discarding) a ServiceProvider each time.
+        var first = FluxMetricCatalog.CreateDefault();
+        var second = FluxMetricCatalog.CreateDefault();
+
+        second.ShouldBeSameAs(first);
+        first.Describe(TopicCountMetric.TypeId).ShouldNotBeNull();
+    }
+
+    [Fact]
     public void AddFluxMetrics_RegistersCatalogWithAllBuiltInMetrics()
     {
         using var provider = new ServiceCollection().AddFluxMetrics().BuildServiceProvider();
