@@ -4,9 +4,9 @@ using FluxMq.UI.Models;
 namespace FluxMq.UI.Services;
 
 /// <summary>
-/// UI-side helper that turns a dashboard event snapshot into a formatted scalar for a tile. The flat metric
-/// framework no longer exposes per-type display/format metadata to the dashboard layer, so this currently
-/// formats with a neutral default; the dashboard value path is being reconnected to the new framework later.
+/// UI-side helper that turns a dashboard event snapshot into a formatted scalar for a tile. It reads the snapshot
+/// aggregate that matches the metric's type id and formats it using that kind's display metadata from the catalog,
+/// so a tile shows the right value, label, and unit whether it comes from a live reading or the snapshot fallback.
 /// </summary>
 public sealed class DashboardMetricRegistry
 {
@@ -62,5 +62,15 @@ public sealed class DashboardMetricRegistry
         };
     }
 
-    private static double SnapshotValue(string? typeId, DashboardEventSnapshot snapshot) => snapshot.RecentCount;
+    // Maps each metric kind to the snapshot aggregate it reports, so the snapshot fallback (no live reading) is
+    // still type-correct: a topic.count tile shows distinct topics, an event.rate tile shows the per-second rate, etc.
+    private static double SnapshotValue(string? typeId, DashboardEventSnapshot snapshot)
+        => typeId switch
+        {
+            TopicCountMetric.TypeId or WindowedTopicCountMetric.TypeId => snapshot.UniqueTopicCount,
+            EventRateMetric.TypeId => snapshot.EventsPerSecond,
+            PayloadBytesMetric.TypeId => snapshot.TotalPayloadBytes,
+            RetainedCountMetric.TypeId => snapshot.RetainedCount,
+            _ => snapshot.RecentCount
+        };
 }

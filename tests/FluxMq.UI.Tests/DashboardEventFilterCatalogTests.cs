@@ -119,6 +119,41 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardMetricRegistry_MapsSnapshotAggregateAndLabelPerMetricType()
+    {
+        var registry = new DashboardMetricRegistry();
+        var snapshot = new DashboardEventSnapshot(
+            60,
+            LatestEvent: null,
+            RecentCount: 18,
+            RateWindow: TimeSpan.FromSeconds(60),
+            EventsPerSecond: 0.3,
+            Events: [],
+            BucketCounts: [],
+            TopicCounts: [],
+            TotalPayloadBytes: 2048,
+            UniqueTopicCount: 4,
+            RetainedCount: 2);
+
+        var topics = registry.Evaluate(TopicCountMetric.TypeId, snapshot);
+        topics.Label.ShouldBe("Topic count");
+        topics.Value.ShouldBe(4);
+        topics.Unit.ShouldBe("topics");
+
+        var rate = registry.Evaluate(EventRateMetric.TypeId, snapshot);
+        rate.Label.ShouldBe("Event rate");
+        rate.Value.ShouldBe(0.3);
+        rate.Unit.ShouldBe("/s");
+
+        var bytes = registry.Evaluate(PayloadBytesMetric.TypeId, snapshot);
+        bytes.Value.ShouldBe(2048);
+        bytes.Unit.ShouldBe("bytes");
+
+        registry.Evaluate(RetainedCountMetric.TypeId, snapshot).Value.ShouldBe(2);
+        registry.Evaluate(MessageCountMetric.TypeId, snapshot).Value.ShouldBe(18);
+    }
+
+    [Fact]
     public void DashboardCellStyleDraft_ExposesOnlyCellContainerFields()
     {
         var fields = DashboardCellStyleDraft.Fields
