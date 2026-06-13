@@ -204,10 +204,8 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
         IReadOnlyDictionary<string, string>? parameters,
         out FluxMetricReading<double> reading)
     {
-        // Live metric readings are temporarily unavailable: the flat metric framework has no runtime
-        // stream-host coordinator yet. Widgets fall back to the event-snapshot value path.
         reading = default!;
-        return false;
+        return _host?.MetricStreamCoordinator?.TryGetLatestNumber(metricId, parameters, out reading) ?? false;
     }
 
     public void RecordManualMqttPublish(

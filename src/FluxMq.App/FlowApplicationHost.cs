@@ -23,6 +23,7 @@ public sealed class FlowApplicationHost(
     Func<MqttConnectionProfile, IMqttBrokerClient>? scenarioClientFactory = null,
     ISecretResolver? secretResolver = null,
     FluxMqApplicationDefinition? applicationDefinition = null,
+    FluxMetricStreamCoordinator? metricStreamCoordinator = null,
     IDisposable? ownedRuntimeServices = null)
     : IAsyncDisposable, IDisposable
 {
@@ -33,6 +34,7 @@ public sealed class FlowApplicationHost(
     private readonly Func<MqttConnectionProfile, IMqttBrokerClient> _scenarioClientFactory =
         scenarioClientFactory ?? (profile => new MqttBrokerClient(profile, secretResolver));
     private readonly FluxMqApplicationDefinition? _applicationDefinition = applicationDefinition;
+    private readonly FluxMetricStreamCoordinator? _metricStreamCoordinator = metricStreamCoordinator;
     private readonly IDisposable? _ownedRuntimeServices = ownedRuntimeServices;
     private FluxMqApplicationDefinition? _definition;
     private ApplicationRuntime? _runtime;
@@ -41,6 +43,7 @@ public sealed class FlowApplicationHost(
     public FlowApplicationHostState State { get; private set; } = FlowApplicationHostState.Empty;
     public FluxMqApplicationDefinition? Definition => _definition;
     public ApplicationRuntime? Runtime => _runtime;
+    public FluxMetricStreamCoordinator? MetricStreamCoordinator => _metricStreamCoordinator;
     public FlowApplicationHostBuildResult? LastBuildResult { get; private set; }
     public Exception? LastException { get; private set; }
 
@@ -68,6 +71,7 @@ public sealed class FlowApplicationHost(
             sectionName: sectionName,
             scenarioClientFactory: clientFactory,
             secretResolver: secretResolver,
+            metricStreamCoordinator: runtimeServices.GetRequiredService<FluxMetricStreamCoordinator>(),
             ownedRuntimeServices: runtimeServices);
     }
 
@@ -96,6 +100,7 @@ public sealed class FlowApplicationHost(
             scenarioClientFactory: clientFactory,
             secretResolver: secretResolver,
             applicationDefinition: definition,
+            metricStreamCoordinator: runtimeServices.GetRequiredService<FluxMetricStreamCoordinator>(),
             ownedRuntimeServices: runtimeServices);
     }
 
@@ -159,6 +164,7 @@ public sealed class FlowApplicationHost(
             if (runtimeBuild.IsSuccess && runtimeBuild.Runtime is not null)
             {
                 _runtime = runtimeBuild.Runtime;
+                _metricStreamCoordinator?.Configure(definition.Metrics, _runtime.Events);
                 State = FlowApplicationHostState.Built;
             }
             else
@@ -301,6 +307,7 @@ public sealed class FlowApplicationHost(
         {
             _runtime.Complete();
             await _runtime.Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
+            _metricStreamCoordinator?.Complete();
             State = FlowApplicationHostState.Stopped;
             LastException = null;
         }
@@ -343,6 +350,7 @@ public sealed class FlowApplicationHost(
     {
         _runtime?.Dispose();
         _runtime = null;
+        _metricStreamCoordinator?.Complete();
     }
 
     private async ValueTask DisposeRuntimeAsync()
@@ -352,6 +360,8 @@ public sealed class FlowApplicationHost(
             await _runtime.DisposeAsync().ConfigureAwait(false);
             _runtime = null;
         }
+
+        _metricStreamCoordinator?.Complete();
     }
 
     private FluxMqApplicationDefinition LoadDefinitionFromConfiguration()

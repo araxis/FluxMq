@@ -101,6 +101,7 @@ public static class FluxMqAppRuntimeServiceCollectionExtensions
         services
             .AddFluxMetrics()
             .AddFluxMqRuntimeNodes();
+        services.TryAddSingleton<FluxMetricStreamCoordinator>();
 
         return services;
     }

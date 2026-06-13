@@ -127,6 +127,63 @@ public sealed class FlatMetricTests
         registration.Descriptor.DisplayName.ShouldBe("Message count");
     }
 
+    [Fact]
+    public async Task FluxMetricStreamCoordinator_StreamsLatestReadingForConfiguredResource()
+    {
+        var coordinator = new FluxMetricStreamCoordinator(FluxMetricCatalog.CreateDefault());
+        var events = new BroadcastBlock<FlowEvent>(static flowEvent => flowEvent);
+        coordinator.Configure(
+            new Dictionary<string, FluxMetricResourceDefinition>(StringComparer.Ordinal)
+            {
+                ["topics"] = new()
+                {
+                    Id = "topics",
+                    TypeId = TopicCountMetric.TypeId,
+                    Parameters = new Dictionary<string, string>(StringComparer.Ordinal)
+                    {
+                        ["topic"] = "factory/#",
+                        ["qos"] = "0"
+                    }
+                }
+            },
+            events);
+
+        // First call creates + starts the stream; no reading has been produced yet.
+        coordinator.TryGetLatestNumber("topics", null, out _).ShouldBeFalse();
+        coordinator.TryGetLatestNumber("missing", null, out _).ShouldBeFalse();
+
+        events.Post(Event("factory/a", qos: "0"));
+        events.Post(Event("other/b", qos: "0"));   // filtered out by the topic filter
+        events.Post(Event("factory/c", qos: "0"));
+
+        var reading = await PollAsync(() =>
+            coordinator.TryGetLatestNumber("topics", null, out var value) ? value : null,
+            target => target.Value == 2);
+
+        reading.Value.ShouldBe(2);
+        reading.MetricId.ShouldBe("topics");
+
+        coordinator.Complete();
+    }
+
+    private static async Task<FluxMetricReading<double>> PollAsync(
+        Func<FluxMetricReading<double>?> read,
+        Func<FluxMetricReading<double>, bool> done)
+    {
+        using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+        while (!cancellation.IsCancellationRequested)
+        {
+            if (read() is { } reading && done(reading))
+            {
+                return reading;
+            }
+
+            await Task.Delay(10, cancellation.Token);
+        }
+
+        throw new TimeoutException("Coordinator did not produce the expected reading in time.");
+    }
+
     private static async Task<List<FluxMetricReading<int>>> RunAsync(
         IFluxMetricSource<int> metric,
         BufferBlock<FlowEvent> events,

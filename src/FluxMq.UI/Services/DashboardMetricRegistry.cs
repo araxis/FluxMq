@@ -10,6 +10,11 @@ namespace FluxMq.UI.Services;
 /// </summary>
 public sealed class DashboardMetricRegistry
 {
+    private readonly IFluxMetricCatalog _catalog;
+
+    public DashboardMetricRegistry(IFluxMetricCatalog? catalog = null)
+        => _catalog = catalog ?? FluxMetricCatalog.CreateDefault();
+
     /// <summary>Maps a legacy aggregation token to a registered metric type id.</summary>
     public static string TypeForMeasure(string? measure) => MessageCountMetric.TypeId;
 
@@ -23,9 +28,16 @@ public sealed class DashboardMetricRegistry
         return Format(typeId, SnapshotValue(typeId, snapshot));
     }
 
-    /// <summary>Formats an already-known value using a neutral default.</summary>
+    /// <summary>Formats an already-known value (e.g. a live reading) using the metric kind's display metadata.</summary>
     public DashboardMetricValue Format(string? typeId, double value)
-        => new("Event count", value, "events", MetricFormats.Format(value, MetricFormats.Number));
+    {
+        if (!string.IsNullOrWhiteSpace(typeId) && _catalog.Describe(typeId) is { } descriptor)
+        {
+            return new(descriptor.DisplayName, value, descriptor.Unit, MetricFormats.Format(value, descriptor.Format));
+        }
+
+        return new("Event count", value, "events", MetricFormats.Format(value, MetricFormats.Number));
+    }
 
     public static DashboardMetricValue EvaluateLegacyMetric(string metric, DashboardEventSnapshot snapshot)
     {
