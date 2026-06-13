@@ -363,42 +363,6 @@ public sealed class FluxMetricFrameworkTests
         latest.ShouldBe(reading);
     }
 
-    [Fact]
-    public async Task MetricSourceComponent_RelaysExistingMetricStream()
-    {
-        var events = CreateRuntimeEventSource();
-        var host = new FluxMetricRuntimeHost();
-        host.Configure(
-            new Dictionary<string, FluxMetricArtifactDefinition>(StringComparer.Ordinal)
-            {
-                ["retainedMessages"] = new()
-                {
-                    DisplayName = "Retained messages",
-                    Definition = new FluxMetricDefinition(
-                        "retainedMessages",
-                        FluxMetricCatalog.RuntimeEventsSource,
-                        FluxMetricCatalog.MeasureRetained,
-                        "60s",
-                        eventType: FlowEventTypes.MqttMessagePublished)
-                }
-            },
-            events);
-        var source = new MetricSourceComponent(host, "retainedMessages");
-
-        await host.StartAsync();
-        await source.StartAsync();
-        events.Post(Event(
-            FlowEventTypes.MqttMessagePublished,
-            DateTimeOffset.UtcNow,
-            "factory/a",
-            attributes: new Dictionary<string, string> { ["retain"] = "true" }));
-
-        var reading = await ReceiveAsync(source.Output);
-
-        reading.MetricId.ShouldBe("retainedMessages");
-        reading.Value.ShouldBe(1);
-    }
-
     private static FlowEvent Event(
         string type,
         DateTimeOffset timestamp,

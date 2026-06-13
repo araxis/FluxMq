@@ -57,6 +57,7 @@ public sealed class FluxMqApplicationDefinitionValidator
 {
     private readonly EngineApplicationDefinitionValidator _engineValidator = new();
     private readonly ScenarioStepDefinitionCatalog _scenarioStepDefinitions;
+    private readonly IFluxMetricTypeRegistry _metricTypes;
 
     public FluxMqApplicationDefinitionValidator()
         : this(ScenarioStepDefinitionCatalog.Shared)
@@ -64,10 +65,19 @@ public sealed class FluxMqApplicationDefinitionValidator
     }
 
     public FluxMqApplicationDefinitionValidator(ScenarioStepDefinitionCatalog scenarioStepDefinitions)
+        : this(scenarioStepDefinitions, FluxMetricTypeRegistry.CreateDefault())
+    {
+    }
+
+    public FluxMqApplicationDefinitionValidator(
+        ScenarioStepDefinitionCatalog scenarioStepDefinitions,
+        IFluxMetricTypeRegistry metricTypes)
     {
         ArgumentNullException.ThrowIfNull(scenarioStepDefinitions);
+        ArgumentNullException.ThrowIfNull(metricTypes);
 
         _scenarioStepDefinitions = scenarioStepDefinitions;
+        _metricTypes = metricTypes;
     }
 
     public FluxMqApplicationDefinitionValidationResult Validate(FluxMqApplicationDefinition definition)
@@ -84,6 +94,7 @@ public sealed class FluxMqApplicationDefinitionValidator
         {
             ValidateMetric(metric.Key, metric.Value, errors);
         }
+
 
         foreach (var dashboard in definition.Dashboards)
         {
@@ -227,9 +238,9 @@ public sealed class FluxMqApplicationDefinitionValidator
         }
     }
 
-    private static void ValidateMetric(
+    private void ValidateMetric(
         string metricName,
-        FluxMetricArtifactDefinition metric,
+        FluxMetricResourceDefinition resource,
         List<FluxMqApplicationDefinitionValidationError> errors)
     {
         if (string.IsNullOrWhiteSpace(metricName))
@@ -239,36 +250,26 @@ public sealed class FluxMqApplicationDefinitionValidator
                 "Metric name cannot be empty."));
         }
 
-        if (string.IsNullOrWhiteSpace(metric.DisplayName))
+        if (string.IsNullOrWhiteSpace(resource.DisplayName))
         {
             errors.Add(new(
                 FluxMqApplicationDefinitionValidationErrorCode.EmptyMetricName,
                 $"Metric '{metricName}' must define a display name."));
         }
 
-        var validation = new FluxMetricValidator().Validate(metric.Definition);
-        foreach (var error in validation.Errors)
+        if (!_metricTypes.TryGetNumberType(resource.TypeId, out var type))
         {
             errors.Add(new(
                 FluxMqApplicationDefinitionValidationErrorCode.InvalidMetricDefinition,
-                $"Metric '{metricName}' is invalid: {error}"));
+                $"Metric '{metricName}' has unknown metric type '{resource.TypeId}'."));
+            return;
         }
 
-        foreach (var parameter in metric.Parameters)
+        foreach (var error in type.Validate(resource).Errors)
         {
-            if (string.IsNullOrWhiteSpace(parameter.Id))
-            {
-                errors.Add(new(
-                    FluxMqApplicationDefinitionValidationErrorCode.InvalidMetricParameter,
-                    $"Metric '{metricName}' has a parameter without an id."));
-            }
-
-            if (string.IsNullOrWhiteSpace(parameter.Target))
-            {
-                errors.Add(new(
-                    FluxMqApplicationDefinitionValidationErrorCode.InvalidMetricParameter,
-                    $"Metric '{metricName}' parameter '{parameter.LabelOrId()}' must define a target field."));
-            }
+            errors.Add(new(
+                FluxMqApplicationDefinitionValidationErrorCode.InvalidMetricParameter,
+                $"Metric '{metricName}' is invalid: {error}"));
         }
     }
 

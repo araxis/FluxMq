@@ -16,7 +16,7 @@ public sealed record FluxMqRuntimeNodeBuildContext(
     Func<MqttConnectionProfile, IMqttBrokerClient> ClientFactory,
     IMessageRepository? MessageRepository,
     IFlowExpressionEngine ExpressionEngine,
-    FluxMetricRuntimeHost? MetricRuntimeHost)
+    FluxMetricStreamHost? MetricStreamHost)
 {
     public NodeAddress Address => EngineContext.Address;
 
@@ -97,17 +97,14 @@ public static class FluxMqRuntimeNodeServiceCollectionExtensions
 
 public static class FluxMqAppRuntimeServiceCollectionExtensions
 {
-    public static IServiceCollection AddFluxMqAppRuntime(
-        this IServiceCollection services,
-        FluxMetricCatalog? metricCatalog = null,
-        TimeProvider? timeProvider = null)
+    public static IServiceCollection AddFluxMqAppRuntime(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
 
         services
-            .AddFluxMqMetricStreams(metricCatalog, timeProvider)
+            .AddFluxMqMetricTypes()
             .AddFluxMqRuntimeNodes();
-        services.TryAddSingleton<FluxMetricRuntimeHost>();
+        services.TryAddSingleton<FluxMetricStreamHost>();
 
         return services;
     }

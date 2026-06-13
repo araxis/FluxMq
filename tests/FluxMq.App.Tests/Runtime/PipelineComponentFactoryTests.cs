@@ -520,10 +520,10 @@ public sealed class PipelineComponentFactoryTests
     {
         TestSinkNode<FluxMetricReading<double>>? sink = null;
         var runtimeEvents = new BroadcastBlock<FlowEvent>(static flowEvent => flowEvent);
-        var metricRuntimeHost = new FluxMetricRuntimeHost();
+        var metricStreamHost = new FluxMetricStreamHost();
 
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
-            .RegisterPipelineComponentFactories(metricRuntimeHost: metricRuntimeHost)
+            .RegisterPipelineComponentFactories(metricStreamHost: metricStreamHost)
             .Register(new NodeType("test.metric-sink"), (address, _) =>
             {
                 sink = new TestSinkNode<FluxMetricReading<double>>();
@@ -550,22 +550,22 @@ public sealed class PipelineComponentFactoryTests
         });
 
         result.IsSuccess.ShouldBeTrue(result.Errors.FirstOrDefault()?.Message);
-        metricRuntimeHost.Configure(
-            new Dictionary<string, FluxMetricArtifactDefinition>(StringComparer.Ordinal)
+        metricStreamHost.Configure(
+            new Dictionary<string, FluxMetricResourceDefinition>(StringComparer.Ordinal)
             {
                 ["messageRate"] = new()
                 {
+                    Id = "messageRate",
+                    TypeId = EventRateMetricType.Id,
                     DisplayName = "Message rate",
-                    Definition = new FluxMetricDefinition(
-                        "messageRate",
-                        FluxMetricCatalog.RuntimeEventsSource,
-                        FluxMetricCatalog.MeasureRate,
-                        "60s",
-                        eventType: FlowEventTypes.MqttMessagePublished)
+                    Parameters = new(StringComparer.Ordinal)
+                    {
+                        ["eventType"] = FlowEventTypes.MqttMessagePublished
+                    }
                 }
             },
             runtimeEvents);
-        await metricRuntimeHost.StartAsync();
+        await metricStreamHost.StartAsync();
         await result.Runtime!.StartAsync();
 
         runtimeEvents.Post(new FlowEvent
@@ -589,10 +589,10 @@ public sealed class PipelineComponentFactoryTests
         TestSinkNode<FluxMetricReading<double>>? matchedSink = null;
         TestSinkNode<FluxMetricReading<double>>? unmatchedSink = null;
         var runtimeEvents = new BroadcastBlock<FlowEvent>(static flowEvent => flowEvent);
-        var metricRuntimeHost = new FluxMetricRuntimeHost();
+        var metricStreamHost = new FluxMetricStreamHost();
 
         var builder = new ApplicationRuntimeBuilder(new RuntimeNodeFactoryRegistry()
-            .RegisterPipelineComponentFactories(metricRuntimeHost: metricRuntimeHost)
+            .RegisterPipelineComponentFactories(metricStreamHost: metricStreamHost)
             .Register(new NodeType("test.metric-matched"), (address, _) =>
             {
                 matchedSink = new TestSinkNode<FluxMetricReading<double>>();
@@ -638,22 +638,22 @@ public sealed class PipelineComponentFactoryTests
         });
 
         result.IsSuccess.ShouldBeTrue(result.Errors.FirstOrDefault()?.Message);
-        metricRuntimeHost.Configure(
-            new Dictionary<string, FluxMetricArtifactDefinition>(StringComparer.Ordinal)
+        metricStreamHost.Configure(
+            new Dictionary<string, FluxMetricResourceDefinition>(StringComparer.Ordinal)
             {
                 ["messageCount"] = new()
                 {
+                    Id = "messageCount",
+                    TypeId = EventCountMetricType.Id,
                     DisplayName = "Message count",
-                    Definition = new FluxMetricDefinition(
-                        "messageCount",
-                        FluxMetricCatalog.RuntimeEventsSource,
-                        FluxMetricCatalog.MeasureCount,
-                        "60s",
-                        eventType: FlowEventTypes.MqttMessagePublished)
+                    Parameters = new(StringComparer.Ordinal)
+                    {
+                        ["eventType"] = FlowEventTypes.MqttMessagePublished
+                    }
                 }
             },
             runtimeEvents);
-        await metricRuntimeHost.StartAsync();
+        await metricStreamHost.StartAsync();
         await result.Runtime!.StartAsync();
 
         runtimeEvents.Post(new FlowEvent
@@ -686,7 +686,7 @@ public sealed class PipelineComponentFactoryTests
     {
         FakeMqttBrokerClient? mqttClient = null;
         var runtimeEvents = new BroadcastBlock<FlowEvent>(static flowEvent => flowEvent);
-        var metricRuntimeHost = new FluxMetricRuntimeHost();
+        var metricStreamHost = new FluxMetricStreamHost();
         const string mapperExpression = """
         {
           "topic": "metrics/" & metricId,
@@ -703,7 +703,7 @@ public sealed class PipelineComponentFactoryTests
                     mqttClient = new FakeMqttBrokerClient();
                     return mqttClient;
                 },
-                metricRuntimeHost: metricRuntimeHost));
+                metricStreamHost: metricStreamHost));
 
         var result = builder.Build(new ApplicationDefinition
         {
@@ -762,22 +762,22 @@ public sealed class PipelineComponentFactoryTests
         });
 
         result.IsSuccess.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
-        metricRuntimeHost.Configure(
-            new Dictionary<string, FluxMetricArtifactDefinition>(StringComparer.Ordinal)
+        metricStreamHost.Configure(
+            new Dictionary<string, FluxMetricResourceDefinition>(StringComparer.Ordinal)
             {
                 ["messageCount"] = new()
                 {
+                    Id = "messageCount",
+                    TypeId = EventCountMetricType.Id,
                     DisplayName = "Message count",
-                    Definition = new FluxMetricDefinition(
-                        "messageCount",
-                        FluxMetricCatalog.RuntimeEventsSource,
-                        FluxMetricCatalog.MeasureCount,
-                        "60s",
-                        eventType: FlowEventTypes.MqttMessagePublished)
+                    Parameters = new(StringComparer.Ordinal)
+                    {
+                        ["eventType"] = FlowEventTypes.MqttMessagePublished
+                    }
                 }
             },
             runtimeEvents);
-        await metricRuntimeHost.StartAsync();
+        await metricStreamHost.StartAsync();
         await result.Runtime!.StartAsync();
 
         runtimeEvents.Post(new FlowEvent

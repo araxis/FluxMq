@@ -215,31 +215,19 @@ public sealed class FluxMqApplicationDefinitionJsonTests
     }
 
     [Fact]
-    public void Deserialize_NormalizesLegacyNestedMetricAttributeFilters()
+    public void Deserialize_ReadsMetricResourceWithFlatParameters()
     {
         const string json = """
             {
               "metrics": {
                 "d1.eventCounterMetric": {
-                  "version": 1,
+                  "typeId": "event.count",
                   "displayName": "Event counter",
-                  "definition": {
-                    "name": "Event counter",
-                    "source": "runtimeEvents",
-                    "measure": "count",
+                  "parameters": {
                     "window": "60s",
-                    "format": "number",
-                    "additionalFilters": {
-                      "attributes": {
-                        "qos": "1",
-                        "retain": false
-                      }
-                    },
-                    "labels": {},
-                    "exportPolicy": {
-                      "enabled": false
-                    },
-                    "mode": "builder"
+                    "eventType": "mqtt.message.published",
+                    "qos": "1",
+                    "retain": "false"
                   }
                 }
               }
@@ -251,14 +239,16 @@ public sealed class FluxMqApplicationDefinitionJsonTests
             FluxMqApplicationDefinitionJson.CreateSerializerOptions());
 
         definition.ShouldNotBeNull();
-        var filters = definition!.Metrics["d1.eventCounterMetric"].Definition.AdditionalFilters;
-        filters[FluxMetricCatalog.AttributeFilterKey("qos")].ShouldBe("1");
-        filters[FluxMetricCatalog.AttributeFilterKey("retain")].ShouldBe("false");
-        filters.ContainsKey("attributes").ShouldBeFalse();
+        var metric = definition!.Metrics["d1.eventCounterMetric"];
+        metric.TypeId.ShouldBe(EventCountMetricType.Id);
+        metric.DisplayName.ShouldBe("Event counter");
+        metric.GetParameter("eventType").ShouldBe("mqtt.message.published");
+        metric.GetParameter("qos").ShouldBe("1");
+        metric.GetParameter("retain").ShouldBe("false");
     }
 
     [Fact]
-    public void MigrateRoot_PromotesDashboardMetricAttributesAsFlatAdditionalFilters()
+    public void MigrateRoot_PromotesDashboardMetricsAsTypeIdResources()
     {
         var root = JsonNode.Parse(
             """
@@ -294,10 +284,13 @@ public sealed class FluxMqApplicationDefinitionJsonTests
         FluxMqApplicationDefinitionMigrator.MigrateRoot(root);
 
         var flowApplication = root["FluxMq"]!["FlowApplication"]!.AsObject();
-        var additionalFilters = flowApplication["metrics"]!["d1.eventCounterMetric"]!["definition"]!["additionalFilters"]!.AsObject();
-        additionalFilters.ContainsKey("attributes").ShouldBeFalse();
-        additionalFilters[FluxMetricCatalog.AttributeFilterKey("qos")]!.GetValue<string>().ShouldBe("1");
-        additionalFilters[FluxMetricCatalog.AttributeFilterKey("retain")]!.GetValue<string>().ShouldBe("false");
+        var metric = flowApplication["metrics"]!["d1.eventCounterMetric"]!.AsObject();
+        metric.ContainsKey("definition").ShouldBeFalse();
+        metric["typeId"]!.GetValue<string>().ShouldBe(EventCountMetricType.Id);
+        var parameters = metric["parameters"]!.AsObject();
+        parameters["eventType"]!.GetValue<string>().ShouldBe("mqtt.message.published");
+        parameters["qos"]!.GetValue<string>().ShouldBe("1");
+        parameters["retain"]!.GetValue<string>().ShouldBe("false");
     }
 
     [Fact]

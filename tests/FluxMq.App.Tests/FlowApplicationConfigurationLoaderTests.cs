@@ -167,10 +167,11 @@ public sealed class FlowApplicationConfigurationLoaderTests
 
         var definition = new FlowApplicationConfigurationLoader().Load(configuration);
 
-        var filters = definition.Metrics["d1.eventCounterMetric"].Definition.AdditionalFilters;
-        filters[FluxMetricCatalog.AttributeFilterKey("qos")].ShouldBe("1");
-        filters[FluxMetricCatalog.AttributeFilterKey("retain")].ShouldBe("false");
-        filters.ContainsKey("attributes").ShouldBeFalse();
+        var metric = definition.Metrics["d1.eventCounterMetric"];
+        metric.TypeId.ShouldBe(EventCountMetricType.Id);
+        metric.GetParameter("eventType").ShouldBe("mqtt.message.published");
+        metric.GetParameter("qos").ShouldBe("1");
+        metric.GetParameter("retain").ShouldBe("false");
         definition.Dashboards["d1"].Metrics.ShouldBeEmpty();
     }
 

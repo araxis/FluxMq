@@ -48,7 +48,7 @@ public static class FluxMqApplicationDefinitionMigrator
 
         var flowApplication = GetFlowApplication(root);
         MigrateDashboards(flowApplication);
-        NormalizeAppMetricAdditionalFilters(flowApplication);
+        NormalizeAppMetrics(flowApplication);
         MigrateTests(flowApplication);
         return root;
     }
@@ -130,7 +130,7 @@ public static class FluxMqApplicationDefinitionMigrator
 
             var promotedName = MakeMetricArtifactName(dashboardName, metric.Key);
             promotedNames[metric.Key] = promotedName;
-            appMetrics[promotedName] = CreateMetricArtifact(promotedName, metric.Key, metricObject);
+            appMetrics[promotedName] = CreateMetricResource(promotedName, metric.Key, metricObject);
         }
 
         if (promotedNames.Count == 0)
@@ -184,50 +184,30 @@ public static class FluxMqApplicationDefinitionMigrator
         dashboard.Remove("metrics");
     }
 
-    private static JsonObject CreateMetricArtifact(
+    // Builds a typeId + flat-parameters metric resource from a legacy dashboard-local metric
+    // ({ source, aggregation, window, groupBy, filters{...}, format{...} }).
+    private static JsonObject CreateMetricResource(
         string promotedName,
         string localMetricName,
         JsonObject metric)
     {
         var filters = metric["filters"] as JsonObject ?? new JsonObject();
-        var format = metric["format"] as JsonObject ?? new JsonObject();
-        var additionalFilters = new JsonObject();
-        foreach (var filter in filters)
+        var parameters = new JsonObject
         {
-            if (IsCoreMetricFilter(filter.Key))
-            {
-                continue;
-            }
-
-            AddAdditionalFilter(additionalFilters, filter.Key, filter.Value);
-        }
+            ["window"] = ReadString(metric, "window") ?? "60s"
+        };
+        AddParameter(parameters, "eventType", ReadString(filters, "eventType"));
+        AddParameter(parameters, "topicStartsWith", ReadString(filters, "topicStartsWith"));
+        AddParameter(parameters, "topicNotStartsWith", ReadString(filters, "topicNotStartsWith"));
+        AddParameter(parameters, "status", ReadString(filters, "status"));
+        LiftAttributeParameters(parameters, filters);
 
         return new JsonObject
         {
-            ["version"] = 1,
+            ["typeId"] = MeasureToTypeId(ReadString(metric, "aggregation") ?? "count"),
             ["displayName"] = ToDisplayName(localMetricName),
             ["description"] = string.Empty,
-            ["definition"] = new JsonObject
-            {
-                ["name"] = ToDisplayName(localMetricName),
-                ["source"] = ReadString(metric, "source") ?? "runtimeEvents",
-                ["measure"] = ReadString(metric, "aggregation") ?? "count",
-                ["window"] = ReadString(metric, "window") ?? "60s",
-                ["eventType"] = ReadString(filters, "eventType"),
-                ["topicStartsWith"] = ReadString(filters, "topicStartsWith"),
-                ["topicNotStartsWith"] = ReadString(filters, "topicNotStartsWith"),
-                ["status"] = ReadString(filters, "status"),
-                ["groupBy"] = ReadString(metric, "groupBy"),
-                ["format"] = ReadString(format, "unit") ?? "number",
-                ["additionalFilters"] = additionalFilters,
-                ["labels"] = new JsonObject(),
-                ["exportPolicy"] = new JsonObject
-                {
-                    ["enabled"] = false
-                },
-                ["mode"] = "builder"
-            },
-            ["parameters"] = new JsonArray(),
+            ["parameters"] = parameters,
             ["labels"] = new JsonObject
             {
                 ["promotedFrom"] = promotedName
@@ -239,70 +219,103 @@ public static class FluxMqApplicationDefinitionMigrator
         };
     }
 
-    private static bool IsCoreMetricFilter(string key)
-        => string.Equals(key, "eventType", StringComparison.Ordinal) ||
-           string.Equals(key, "topicStartsWith", StringComparison.Ordinal) ||
-           string.Equals(key, "topicNotStartsWith", StringComparison.Ordinal) ||
-           string.Equals(key, "status", StringComparison.Ordinal);
-
-    private static void NormalizeAppMetricAdditionalFilters(JsonObject flowApplication)
+    // Migrates app-level metric entries to the resource shape. Legacy artifact entries (with a nested
+    // "definition") are converted to typeId + parameters; entries that already carry a "typeId" are left as-is.
+    private static void NormalizeAppMetrics(JsonObject flowApplication)
     {
         if (flowApplication["metrics"] is not JsonObject metrics)
         {
             return;
         }
 
-        foreach (var metric in metrics)
+        foreach (var metric in metrics.ToArray())
         {
-            if (metric.Value is not JsonObject metricArtifact ||
-                metricArtifact["definition"] is not JsonObject definition ||
-                definition["additionalFilters"] is not JsonObject additionalFilters)
+            if (metric.Value is JsonObject metricObject && metricObject["definition"] is JsonObject)
             {
-                continue;
+                metrics[metric.Key] = ConvertArtifactToResource(metricObject);
             }
-
-            NormalizeAdditionalFilters(additionalFilters);
         }
     }
 
-    private static void NormalizeAdditionalFilters(JsonObject additionalFilters)
+    private static JsonObject ConvertArtifactToResource(JsonObject artifact)
     {
-        var normalized = new JsonObject();
-        foreach (var filter in additionalFilters)
+        var definition = artifact["definition"] as JsonObject ?? new JsonObject();
+        var parameters = new JsonObject
         {
-            AddAdditionalFilter(normalized, filter.Key, filter.Value);
+            ["window"] = ReadString(definition, "window") ?? "60s"
+        };
+        AddParameter(parameters, "eventType", ReadString(definition, "eventType"));
+        AddParameter(parameters, "topicStartsWith", ReadString(definition, "topicStartsWith"));
+        AddParameter(parameters, "topicNotStartsWith", ReadString(definition, "topicNotStartsWith"));
+        AddParameter(parameters, "status", ReadString(definition, "status"));
+        if (definition["additionalFilters"] is JsonObject additionalFilters)
+        {
+            LiftAttributeParameters(parameters, additionalFilters);
         }
 
-        foreach (var key in additionalFilters.Select(static filter => filter.Key).ToArray())
+        return new JsonObject
         {
-            additionalFilters.Remove(key);
-        }
+            ["typeId"] = MeasureToTypeId(ReadString(definition, "measure") ?? "count"),
+            ["displayName"] = ReadString(artifact, "displayName") ?? ReadString(definition, "name") ?? "Metric",
+            ["description"] = ReadString(artifact, "description") ?? string.Empty,
+            ["parameters"] = parameters,
+            ["labels"] = (artifact["labels"] as JsonObject)?.DeepClone() as JsonObject ?? new JsonObject(),
+            ["exportPolicy"] = (artifact["exportPolicy"] as JsonObject)?.DeepClone() as JsonObject
+                ?? new JsonObject { ["enabled"] = false }
+        };
+    }
 
-        foreach (var filter in normalized)
+    private static string MeasureToTypeId(string measure)
+        => measure switch
         {
-            additionalFilters[filter.Key] = filter.Value?.DeepClone();
+            "rate" => EventRateMetricType.Id,
+            "topics" => UniqueTopicCountMetricType.Id,
+            "payloadBytes" => PayloadBytesMetricType.Id,
+            "averagePayload" => AveragePayloadMetricType.Id,
+            "retained" => RetainedCountMetricType.Id,
+            _ => EventCountMetricType.Id
+        };
+
+    private static void AddParameter(JsonObject parameters, string key, string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            parameters[key] = value;
         }
     }
 
-    private static void AddAdditionalFilter(JsonObject additionalFilters, string key, JsonNode? value)
+    // The new event filter model keeps qos and retain as first-class flat parameters; accepts both a nested
+    // "attributes" object and flat "attribute:<name>" keys, and drops attributes the model no longer supports.
+    private static void LiftAttributeParameters(JsonObject parameters, JsonObject source)
     {
-        if (string.Equals(key, "attributes", StringComparison.Ordinal) &&
-            value is JsonObject attributes)
+        if (source["attributes"] is JsonObject attributes)
         {
             foreach (var attribute in attributes)
             {
-                if (TryReadScalarString(attribute.Value, out var attributeValue))
-                {
-                    additionalFilters[FluxMetricCatalog.AttributeFilterKey(attribute.Key)] = attributeValue;
-                }
+                AddAttributeParameter(parameters, attribute.Key, attribute.Value);
             }
+        }
 
+        foreach (var item in source)
+        {
+            if (item.Key.StartsWith("attribute:", StringComparison.Ordinal))
+            {
+                AddAttributeParameter(parameters, item.Key["attribute:".Length..], item.Value);
+            }
+        }
+    }
+
+    private static void AddAttributeParameter(JsonObject parameters, string name, JsonNode? value)
+    {
+        if (!string.Equals(name, "qos", StringComparison.Ordinal) &&
+            !string.Equals(name, "retain", StringComparison.Ordinal))
+        {
             return;
         }
 
-        if (TryReadScalarString(value, out var filterValue))
+        if (TryReadScalarString(value, out var text))
         {
-            additionalFilters[key] = filterValue;
+            parameters[name] = text;
         }
     }
 

@@ -212,8 +212,8 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
 
         try
         {
-            _host.MetricRuntimeHost.GetNumberStream(metricId.Trim(), parameters);
-            return _host.MetricRuntimeHost.TryGetLatestNumber(metricId.Trim(), parameters, out reading);
+            _host.MetricStreamHost.GetNumberStream(metricId.Trim(), parameters);
+            return _host.MetricStreamHost.TryGetLatestNumber(metricId.Trim(), parameters, out reading);
         }
         catch
         {

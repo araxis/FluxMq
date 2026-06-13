@@ -197,6 +197,56 @@ public sealed class MetricTypeFrameworkTests
             .Message.ShouldBe("Metric 'missing' does not exist.");
     }
 
+    [Fact]
+    public async Task MetricSourceComponent_RelaysHostStream()
+    {
+        var events = CreateRuntimeEventSource();
+        var host = new FluxMetricStreamHost();
+        host.Configure(
+            new Dictionary<string, FluxMetricResourceDefinition>(StringComparer.Ordinal)
+            {
+                ["retainedMessages"] = new()
+                {
+                    Id = "retainedMessages",
+                    TypeId = RetainedCountMetricType.Id,
+                    DisplayName = "Retained messages",
+                    Parameters = new(StringComparer.Ordinal)
+                    {
+                        ["eventType"] = FlowEventTypes.MqttMessagePublished
+                    }
+                }
+            },
+            events);
+        var source = new MetricSourceComponent(host, "retainedMessages");
+
+        await host.StartAsync();
+        await source.StartAsync();
+        events.Post(Event(
+            FlowEventTypes.MqttMessagePublished,
+            DateTimeOffset.UtcNow,
+            "factory/a",
+            attributes: new Dictionary<string, string>(StringComparer.Ordinal) { ["retain"] = "true" }));
+
+        var reading = await ReceiveAsync(source.Output);
+
+        reading.MetricId.ShouldBe("retainedMessages");
+        reading.Value.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task MetricSourceComponent_ReportsClearErrorWhenMetricMissing()
+    {
+        var host = new FluxMetricStreamHost();
+        host.Configure(
+            new Dictionary<string, FluxMetricResourceDefinition>(StringComparer.Ordinal),
+            CreateRuntimeEventSource());
+        var source = new MetricSourceComponent(host, "missing");
+
+        var error = await Should.ThrowAsync<InvalidOperationException>(() => source.StartAsync());
+
+        error.Message.ShouldBe("Metric 'missing' does not exist.");
+    }
+
     private static FluxMetricResourceDefinition Resource(Dictionary<string, string> parameters)
         => new()
         {
