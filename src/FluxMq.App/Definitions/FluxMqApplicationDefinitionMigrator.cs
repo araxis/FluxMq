@@ -11,6 +11,9 @@ public static class FluxMqApplicationDefinitionMigrator
     private const string StatusStripType = "status.strip";
     private const string StatusValueType = "status.value";
     private const string EventGaugeType = "event.gauge";
+    private const string EventCounterType = "event.counter";
+    private const string EventRateType = "event.rate";
+    private const string RateTileType = "rate.tile";
     private const string EventChartType = "event.chart";
     private const string LineChartType = "chart.line";
     private const string AreaChartType = "chart.area";
@@ -562,6 +565,13 @@ public static class FluxMqApplicationDefinitionMigrator
             _ => metric
         };
 
+    // App-metric tiles bind to a promoted metric resource and read a single scalar value.
+    // Every other event widget is inline: it carries its own filters + window in the widget
+    // configuration and renders directly from the runtime event snapshot (no metric/binding).
+    private static bool IsAppMetricWidgetType(string? type)
+        => type is KpiTileType or StatusValueType or EventGaugeType
+            or EventCounterType or EventRateType or RateTileType;
+
     private static void EnsureDashboardWidgetBinding(
         string widgetName,
         JsonObject widget,
@@ -570,6 +580,15 @@ public static class FluxMqApplicationDefinitionMigrator
         JsonObject appMetrics)
     {
         var configuration = GetOrCreateObject(widget, "configuration");
+        if (!IsAppMetricWidgetType(ReadString(widget, "type")))
+        {
+            // Inline widget: drop any stale metric reference/binding left over from the
+            // generic dashboard-local metric model so the runtime uses inline configuration.
+            configuration.Remove("metric");
+            bindings.Remove(widgetName);
+            return;
+        }
+
         var metricName = ReadString(configuration, "metric");
         if (string.IsNullOrWhiteSpace(metricName))
         {

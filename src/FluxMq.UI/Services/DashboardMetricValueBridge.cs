@@ -24,6 +24,14 @@ internal sealed class DashboardMetricValueBridge(FlowDefinitionComposer definiti
         var resolved = ResolveMetric(widget, layout, definitionJson);
         if (resolved is null)
         {
+            // Inline event widgets (charts/topic/payload/breakdowns/table/latest/activity) carry their
+            // own window in the widget configuration instead of binding to a metric resource.
+            if (widget.ReadString(DashboardWidgetCatalog.WindowKey) is { } inlineWindow &&
+                !string.IsNullOrWhiteSpace(inlineWindow))
+            {
+                rateWindow = MetricWindow.Parse(inlineWindow);
+            }
+
             return widget;
         }
 

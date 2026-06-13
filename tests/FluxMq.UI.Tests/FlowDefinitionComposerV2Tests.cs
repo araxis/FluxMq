@@ -75,7 +75,7 @@ public sealed class FlowDefinitionComposerV2Tests
     {
         var composer = new FlowDefinitionComposer();
         var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
-        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.PayloadDistributionType, "slot:0:0");
+        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.EventCounterType, "slot:0:0");
 
         using var document = JsonDocument.Parse(json);
         var app = document.RootElement
@@ -91,6 +91,29 @@ public sealed class FlowDefinitionComposerV2Tests
         app.GetProperty("metrics").EnumerateObject().ShouldHaveSingleItem();
         dashboard.TryGetProperty("metrics", out _).ShouldBeFalse();
         dashboard.GetProperty("bindings").EnumerateObject().ShouldHaveSingleItem();
+    }
+
+    [Fact]
+    public void AddDashboardWidget_InlineEventWidgetHasNoMetricResourceOrBinding()
+    {
+        // Inline event widgets (charts/topic/payload/breakdowns/table/latest/activity) render directly
+        // from the runtime event snapshot using their own configuration: no promoted metric, no binding.
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.LineChartType, "slot:0:0");
+
+        using var document = JsonDocument.Parse(json);
+        var app = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication");
+        var dashboard = app
+            .GetProperty("dashboards")
+            .GetProperty("ops");
+
+        app.GetProperty("metrics").EnumerateObject().ShouldBeEmpty();
+        dashboard.GetProperty("bindings").EnumerateObject().ShouldBeEmpty();
+        var widget = dashboard.GetProperty("widgets").EnumerateObject().ShouldHaveSingleItem().Value;
+        widget.GetProperty("configuration").TryGetProperty("metric", out _).ShouldBeFalse();
     }
 
     [Fact]
@@ -196,98 +219,62 @@ public sealed class FlowDefinitionComposerV2Tests
     }
 
     [Fact]
-    public void UpdateDashboardMetric_WritesQueryShapeWithoutSchemaMigration()
-    {
-        var composer = new FlowDefinitionComposer();
-        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
-        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.EventGaugeType, "slot:0:0");
-
-        json = composer.UpdateDashboardMetric(
-            json,
-            "ops",
-            "eventGaugeMetric",
-            new DashboardMetricQueryDefinition(
-                "runtimeEvents",
-                "count",
-                "300s",
-                EventType: "mqtt.message.received",
-                TopicStartsWith: "factory/",
-                TopicNotStartsWith: "$SYS/",
-                Status: "received",
-                GroupBy: "topic",
-                Format: "bytes",
-                AdditionalFilters: new Dictionary<string, string>(StringComparer.Ordinal)
-                {
-                    [DashboardEventFilterCatalog.AttributeFilterKey("qos")] = "1",
-                    [DashboardEventFilterCatalog.AttributeFilterKey("retain")] = "false"
-                }));
-
-        var metric = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull().Metrics["ops.eventGaugeMetric"];
-        metric.Source.ShouldBe("runtimeEvents");
-        metric.Aggregation.ShouldBe("count");
-        metric.Window.ShouldBe("300s");
-        metric.GroupBy.ShouldBe("topic");
-        metric.Filters[DashboardEventFilterCatalog.EventTypeKey].ShouldBe("mqtt.message.received");
-        metric.Filters[DashboardEventFilterCatalog.TopicStartsWithKey].ShouldBe("factory/");
-        metric.Filters[DashboardEventFilterCatalog.AttributeFilterKey("qos")].ShouldBe("1");
-        metric.Filters[DashboardEventFilterCatalog.AttributeFilterKey("retain")].ShouldBe("false");
-        metric.Format["unit"].ShouldBe("bytes");
-    }
-
-    [Fact]
-    public void UpdateDashboardWidgetBinding_PreservesOrderedMetricSlots()
-    {
-        var composer = new FlowDefinitionComposer();
-        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
-        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.StatusStripType, "slot:0:0");
-        json = composer.UpdateDashboardMetric(json, "ops", "rate", new DashboardMetricQueryDefinition("runtimeEvents", "rate", "60s"));
-
-        json = composer.UpdateDashboardWidgetBinding(
-            json,
-            "ops",
-            "statusStrip",
-            "rate",
-            ["rate", "statusStripMetric"]);
-
-        var binding = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull().Bindings["statusStrip"];
-        binding.PrimaryMetric.ShouldBe("rate");
-        binding.Metrics.ShouldBe(["rate", "statusStripMetric"]);
-    }
-
-    [Fact]
     public void RemoveDashboardMetricIfUnused_KeepsSharedMetricAndDeletesUnusedMetric()
     {
+        // A bound app metric is kept; an unreferenced promoted metric is removed.
+        const string json = """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "metrics": {
+                    "ops.eventCounterMetric": {
+                      "typeId": "event.count",
+                      "displayName": "Events",
+                      "parameters": { "window": "60s" },
+                      "labels": { "promotedFrom": "ops.eventCounterMetric" }
+                    },
+                    "ops.unused": {
+                      "typeId": "event.count",
+                      "displayName": "Unused",
+                      "parameters": { "window": "60s" },
+                      "labels": { "promotedFrom": "ops.unused" }
+                    }
+                  },
+                  "dashboards": {
+                    "ops": {
+                      "layout": {
+                        "columns": ["*"],
+                        "rows": ["*"],
+                        "cells": {
+                          "eventCounter": { "row": 0, "column": 0, "widget": "eventCounter" }
+                        }
+                      },
+                      "bindings": {
+                        "eventCounter": {
+                          "primaryMetric": "ops.eventCounterMetric",
+                          "metrics": ["ops.eventCounterMetric"]
+                        }
+                      },
+                      "widgets": {
+                        "eventCounter": {
+                          "type": "event.counter",
+                          "configuration": { "metric": "ops.eventCounterMetric" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """;
+
         var composer = new FlowDefinitionComposer();
-        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
-        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.EventCounterType, "slot:0:0");
-        json = composer.UpdateDashboardMetric(json, "ops", "unused", new DashboardMetricQueryDefinition("runtimeEvents", "count", "60s"));
+        var trimmed = composer.RemoveDashboardMetricIfUnused(json, "ops", "ops.eventCounterMetric");
+        trimmed = composer.RemoveDashboardMetricIfUnused(trimmed, "ops", "ops.unused");
 
-        json = composer.RemoveDashboardMetricIfUnused(json, "ops", "ops.eventCounterMetric");
-        json = composer.RemoveDashboardMetricIfUnused(json, "ops", "unused");
-
-        var layout = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull();
+        var layout = composer.GetDashboardLayout(trimmed, "ops").ShouldNotBeNull();
         layout.Metrics.ContainsKey("ops.eventCounterMetric").ShouldBeTrue();
         layout.Metrics.ContainsKey("ops.unused").ShouldBeFalse();
-        layout.Metrics.ContainsKey("unused").ShouldBeFalse();
-    }
-
-    [Fact]
-    public void UpdateDashboardMetric_DoesNotDoubleScopePromotedMetricIds()
-    {
-        var composer = new FlowDefinitionComposer();
-        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
-        json = composer.AddDashboardWidget(json, "ops", DashboardWidgetCatalog.EventCounterType, "slot:0:0");
-
-        json = composer.UpdateDashboardMetric(
-            json,
-            "ops",
-            "ops.eventCounterMetric",
-            new DashboardMetricQueryDefinition("runtimeEvents", "count", "300s"));
-
-        var layout = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull();
-        layout.Metrics.ContainsKey("ops.eventCounterMetric").ShouldBeTrue();
-        layout.Metrics.ContainsKey("ops.ops.eventCounterMetric").ShouldBeFalse();
-        layout.Metrics["ops.eventCounterMetric"].Window.ShouldBe("300s");
     }
 
     [Fact]

@@ -29,6 +29,7 @@ public static class DashboardWidgetCatalog
     public const string DisplayMetricsKey = "displayMetrics";
     public const string MetricCardColumnsKey = "metricCardColumns";
     public const string MetricVisualizationKey = "visualization";
+    public const string WindowKey = "window";
     public const string KpiTitleColorKey = "kpi.titleColor";
     public const string KpiSubtitleColorKey = "kpi.subtitleColor";
     public const string KpiValueColorKey = "kpi.valueColor";

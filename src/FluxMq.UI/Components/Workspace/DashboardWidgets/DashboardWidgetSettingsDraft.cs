@@ -7,6 +7,7 @@ namespace FluxMq.UI.Components.Workspace;
 public sealed class DashboardWidgetSettingsDraft
 {
     private const string AnyValue = "";
+    private const string DefaultWindow = "60s";
     private readonly DashboardEventFilterCatalog _eventFilters;
     private readonly Dictionary<string, string> _filterValues = new(StringComparer.Ordinal);
 
@@ -25,6 +26,7 @@ public sealed class DashboardWidgetSettingsDraft
         EventType = widget.ReadString(DashboardEventFilterCatalog.EventTypeKey) ?? AnyValue;
         Status = widget.ReadString(DashboardEventFilterCatalog.StatusKey) ?? AnyValue;
         MetricName = widget.ReadString("metric") ?? string.Empty;
+        Window = widget.ReadString(DashboardWidgetCatalog.WindowKey) ?? DefaultWindow;
         MetricVisualization = DashboardMetricVisualizationSettingsDraft.Create(widget);
         PrimaryMetric = DashboardWidgetCatalog.NormalizePrimaryMetric(
             widget.ReadString(DashboardWidgetCatalog.PrimaryMetricKey));
@@ -73,6 +75,8 @@ public sealed class DashboardWidgetSettingsDraft
     public string Status { get; set; }
 
     public string MetricName { get; set; }
+
+    public string Window { get; set; } = DefaultWindow;
 
     public DashboardMetricVisualizationSettingsDraft MetricVisualization { get; }
 
@@ -325,6 +329,7 @@ public sealed class DashboardWidgetSettingsDraft
         EventType = ReadString(configuration, DashboardEventFilterCatalog.EventTypeKey) ?? AnyValue;
         Status = ReadString(configuration, DashboardEventFilterCatalog.StatusKey) ?? AnyValue;
         MetricName = ReadString(configuration, "metric") ?? MetricName;
+        Window = ReadString(configuration, DashboardWidgetCatalog.WindowKey) ?? DefaultWindow;
         MetricVisualization.ApplyConfiguration(configuration);
         PrimaryMetric = DashboardWidgetCatalog.NormalizePrimaryMetric(
             ReadString(configuration, DashboardWidgetCatalog.PrimaryMetricKey));
@@ -908,6 +913,11 @@ public sealed class DashboardWidgetSettingsDraft
         if (Profile.UsesSubtitle)
         {
             configuration["subtitle"] = subtitle;
+        }
+
+        if (Profile.UsesMetricWindow)
+        {
+            configuration[DashboardWidgetCatalog.WindowKey] = string.IsNullOrWhiteSpace(Window) ? DefaultWindow : Window.Trim();
         }
 
         var activeFieldKeys = eventType.Fields.Select(static field => field.Key).ToHashSet(StringComparer.Ordinal);

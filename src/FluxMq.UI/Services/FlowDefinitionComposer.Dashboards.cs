@@ -153,28 +153,6 @@ public sealed partial class FlowDefinitionComposer
         return root.ToJsonString(Options);
     }
 
-    public string UpdateDashboardMetric(
-        string json,
-        string dashboardName,
-        string metricName,
-        DashboardMetricQueryDefinition query)
-    {
-        if (string.IsNullOrWhiteSpace(dashboardName) ||
-            string.IsNullOrWhiteSpace(metricName))
-        {
-            return json;
-        }
-
-        ArgumentNullException.ThrowIfNull(query);
-
-        var root = ParseOrCreate(json);
-        var dashboard = GetOrCreateDashboardObject(GetFlowApplication(root), dashboardName);
-        var metrics = GetOrCreateObject(dashboard, "metrics");
-        metrics[NormalizeDashboardLocalMetricName(dashboardName, metricName)] = FlowDashboardDefinitionFactory.CreateMetric(query);
-        FluxMqApplicationDefinitionMigrator.MigrateRoot(root);
-        return root.ToJsonString(Options);
-    }
-
     public string UpdateDashboardWidgetBinding(
         string json,
         string dashboardName,
@@ -1229,9 +1207,6 @@ public sealed partial class FlowDefinitionComposer
 
         return char.ToLowerInvariant(chars[0]) + new string(chars[1..]);
     }
-
-    private static string NormalizeDashboardLocalMetricName(string dashboardName, string metricName)
-        => FluxMetricNaming.RemoveDashboardScope(dashboardName, metricName);
 
     private static bool BindingUsesMetric(JsonObject binding, string metricName)
     {
