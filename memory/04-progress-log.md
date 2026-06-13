@@ -3555,3 +3555,16 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 767 tests.
     - `git diff --check` passed with line-ending normalization warnings for edited files.
   - Next step: commit/PR/merge this bar-chart visual UX slice, then review `chart.bar` manually before selecting the next dashboard component.
+- Metric attribute filter JSON compatibility:
+  - Merged PR #209 (`Align bar chart visual settings`) into `main`; post-merge Windows validation passed before this slice.
+  - Started `fix/metric-attribute-filter-json` from clean `main` after app startup failed on metric `additionalFilters.attributes`.
+  - Fixed dashboard metric promotion so legacy nested `filters.attributes` values are written as flat metric additional filters such as `attribute:qos`.
+  - Added tolerant metric additional-filter JSON reading so already-saved app metrics with nested `additionalFilters.attributes` load without crashing.
+  - Aligned configuration/CLI loading with workspace migration so validation uses the same normalized app definition shape.
+  - Verified the local file `C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json` now validates with `isValid: true`.
+  - Verification:
+    - `dotnet test tests\FluxMq.App.Tests\FluxMq.App.Tests.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 121 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 438 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 770 tests.
+    - `dotnet run --project src\FluxMq.Cli\FluxMq.Cli.csproj -- validate --config C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json --output json` returned `isValid: true`.
+  - Next step: commit/PR/merge this focused compatibility fix, then return to one-dashboard-component-at-a-time review.

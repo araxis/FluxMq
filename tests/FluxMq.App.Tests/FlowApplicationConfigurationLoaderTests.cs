@@ -1,6 +1,7 @@
 using Shouldly;
 using FluxMq.App;
 using FluxMq.App.Definitions;
+using FluxMq.App.Metrics;
 using Microsoft.Extensions.Configuration;
 using System.Text;
 
@@ -121,6 +122,56 @@ public sealed class FlowApplicationConfigurationLoaderTests
         definition.Dashboards["d1"].Layout.Cells.ShouldBeEmpty();
         definition.Tests["t1"].Steps.ShouldBeEmpty();
         result.IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Load_MigratesLegacyDashboardMetricAttributeFilters()
+    {
+        var configuration = BuildConfiguration(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "workflows": {
+                    "pip1": {
+                      "trigger": {
+                        "type": "generated.source"
+                      }
+                    }
+                  },
+                  "dashboards": {
+                    "d1": {
+                      "metrics": {
+                        "eventCounterMetric": {
+                          "source": "runtimeEvents",
+                          "aggregation": "count",
+                          "window": "60s",
+                          "filters": {
+                            "eventType": "mqtt.message.published",
+                            "attributes": {
+                              "qos": "1",
+                              "retain": false
+                            }
+                          },
+                          "format": {
+                            "unit": "number"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """);
+
+        var definition = new FlowApplicationConfigurationLoader().Load(configuration);
+
+        var filters = definition.Metrics["d1.eventCounterMetric"].Definition.AdditionalFilters;
+        filters[FluxMetricCatalog.AttributeFilterKey("qos")].ShouldBe("1");
+        filters[FluxMetricCatalog.AttributeFilterKey("retain")].ShouldBe("false");
+        filters.ContainsKey("attributes").ShouldBeFalse();
+        definition.Dashboards["d1"].Metrics.ShouldBeEmpty();
     }
 
     [Fact]

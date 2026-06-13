@@ -28,6 +28,11 @@ public sealed class FlowApplicationConfigurationLoader
 
         try
         {
+            if (json is JsonObject jsonObject)
+            {
+                FluxMqApplicationDefinitionMigrator.MigrateRoot(jsonObject);
+            }
+
             var definition = json.Deserialize<FluxMqApplicationDefinition>(FluxMqApplicationDefinitionJson.CreateSerializerOptions())
                 ?? throw new FlowApplicationConfigurationException($"Configuration section '{sectionName}' did not contain a flow application definition.");
             return definition with
