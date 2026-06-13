@@ -32,6 +32,9 @@ public static class FluxMetricServiceCollectionExtensions
             .AddTopicCountMetric()
             .AddMessageCountMetric()
             .AddWindowedTopicCountMetric()
-            .AddWindowedMessageCountMetric();
+            .AddWindowedMessageCountMetric()
+            .AddEventRateMetric()
+            .AddPayloadBytesMetric()
+            .AddRetainedCountMetric();
     }
 }

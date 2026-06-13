@@ -60,6 +60,55 @@ public sealed class FlatMetricTests
     }
 
     [Fact]
+    public async Task EventRateMetric_ComputesPerSecondRateOverWindow()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        var metric = new EventRateMetric(
+            "rate", TopicFilter.Parse("factory/#"), qos: 0, TimeSpan.FromSeconds(60), events);
+
+        var readings = await RunAsync(metric, events,
+            Event("factory/a", qos: "0"),
+            Event("factory/b", qos: "0"),
+            Event("other/c", qos: "0"),   // filtered out
+            Event("factory/d", qos: "0"));
+
+        // 3 matching events over a 60s window => 0.05/s.
+        metric.Latest!.Value.ShouldBe(3d / 60d, 0.0001);
+        readings.Count.ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task PayloadBytesMetric_SumsMatchingPayloadBytesInWindow()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        var metric = new PayloadBytesMetric(
+            "bytes", TopicFilter.Parse("factory/#"), qos: 0, TimeSpan.FromMinutes(5), events);
+
+        await RunAsync(metric, events,
+            Event("factory/a", qos: "0", payloadBytes: 100),
+            Event("other/b", qos: "0", payloadBytes: 999),   // filtered out
+            Event("factory/c", qos: "0", payloadBytes: 50));
+
+        metric.Latest!.Value.ShouldBe(150);
+    }
+
+    [Fact]
+    public async Task RetainedCountMetric_CountsOnlyRetainedMatchingMessages()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        var metric = new RetainedCountMetric("retained", TopicFilter.Parse("factory/#"), qos: 0, events);
+
+        var readings = await RunAsync(metric, events,
+            Event("factory/a", qos: "0", retain: true),
+            Event("factory/b", qos: "0", retain: false),   // not retained
+            Event("other/c", qos: "0", retain: true),       // wrong topic
+            Event("factory/d", qos: "0", retain: true));
+
+        metric.Latest!.Value.ShouldBe(2);
+        readings.Select(static reading => reading.Value).ShouldBe([1, 2]);
+    }
+
+    [Fact]
     public void SlidingEventWindow_PrunesEventsOlderThanWindow()
     {
         var start = DateTimeOffset.Parse("2026-06-13T12:00:00Z");
@@ -95,7 +144,11 @@ public sealed class FlatMetricTests
         var catalog = FluxMetricCatalog.CreateDefault();
 
         catalog.Descriptors.Select(static descriptor => descriptor.TypeId).ShouldBe(
-            [TopicCountMetric.TypeId, MessageCountMetric.TypeId, WindowedTopicCountMetric.TypeId, WindowedMessageCountMetric.TypeId],
+            [
+                TopicCountMetric.TypeId, MessageCountMetric.TypeId, WindowedTopicCountMetric.TypeId,
+                WindowedMessageCountMetric.TypeId, EventRateMetric.TypeId, PayloadBytesMetric.TypeId,
+                RetainedCountMetric.TypeId
+            ],
             ignoreOrder: true);
 
         var topicCount = catalog.Describe(TopicCountMetric.TypeId).ShouldNotBeNull();
@@ -122,9 +175,10 @@ public sealed class FlatMetricTests
 
         var catalog = provider.GetRequiredService<IFluxMetricCatalog>();
 
-        catalog.Descriptors.Count.ShouldBe(4);
+        catalog.Descriptors.Count.ShouldBe(7);
         catalog.TryGet(MessageCountMetric.TypeId, out var registration).ShouldBeTrue();
         registration.Descriptor.DisplayName.ShouldBe("Message count");
+        catalog.Describe(EventRateMetric.TypeId).ShouldNotBeNull().ValueKind.ShouldBe(MetricValueKind.Double);
     }
 
     [Fact]
@@ -184,13 +238,13 @@ public sealed class FlatMetricTests
         throw new TimeoutException("Coordinator did not produce the expected reading in time.");
     }
 
-    private static async Task<List<FluxMetricReading<int>>> RunAsync(
-        IFluxMetricSource<int> metric,
+    private static async Task<List<FluxMetricReading<TValue>>> RunAsync<TValue>(
+        IFluxMetricSource<TValue> metric,
         BufferBlock<FlowEvent> events,
         params FlowEvent[] inputs)
     {
-        var readings = new List<FluxMetricReading<int>>();
-        var sink = new ActionBlock<FluxMetricReading<int>>(readings.Add);
+        var readings = new List<FluxMetricReading<TValue>>();
+        var sink = new ActionBlock<FluxMetricReading<TValue>>(readings.Add);
         metric.Output.LinkTo(sink, new DataflowLinkOptions { PropagateCompletion = true });
 
         await metric.StartAsync();
@@ -205,16 +259,21 @@ public sealed class FlatMetricTests
         return readings;
     }
 
-    private static FlowEvent Event(string topic, string qos)
-        => EventAt(topic, DateTimeOffset.UtcNow, qos);
+    private static FlowEvent Event(string topic, string qos, int? payloadBytes = null, bool retain = false)
+        => EventAt(topic, DateTimeOffset.UtcNow, qos, payloadBytes, retain);
 
-    private static FlowEvent EventAt(string topic, DateTimeOffset timestamp, string qos = "0")
+    private static FlowEvent EventAt(string topic, DateTimeOffset timestamp, string qos = "0", int? payloadBytes = null, bool retain = false)
         => new()
         {
             Timestamp = timestamp,
             Type = FlowEventTypes.MqttMessageReceived,
             Source = "test",
             Channel = topic,
-            Attributes = new Dictionary<string, string>(StringComparer.Ordinal) { ["qos"] = qos }
+            PayloadBytes = payloadBytes,
+            Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["qos"] = qos,
+                ["retain"] = retain ? "true" : "false"
+            }
         };
 }
