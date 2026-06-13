@@ -2312,6 +2312,100 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public void GetDashboardEventSnapshot_UsesInlineWindowAndFiltersForUnboundChartWidget()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "dashboards": {
+                "ops": {
+                  "layout": {
+                    "columns": ["*"],
+                    "rows": ["*"],
+                    "cells": {
+                      "trend": { "row": 0, "column": 0, "widget": "trend" }
+                    }
+                  },
+                  "widgets": {
+                    "trend": {
+                      "type": "chart.line",
+                      "configuration": {
+                        "eventType": "mqtt.message.published",
+                        "topicStartsWith": "test/",
+                        "status": "published",
+                        "window": "300s"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+        service.SetActiveDashboard("ops");
+        var widget = service.GetActiveDashboardLayout()
+            .ShouldNotBeNull()
+            .Widgets["trend"];
+
+        // Inline chart widget has no binding and no metric resource: filters + window come from config.
+        service.GetActiveDashboardLayout().ShouldNotBeNull().Bindings.ContainsKey("trend").ShouldBeFalse();
+
+        service.RecordManualMqttPublish("test/one", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+        service.RecordManualMqttPublish("other/skip", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+        service.RecordManualMqttPublish("test/two", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+
+        var snapshot = service.GetDashboardEventSnapshot(widget);
+
+        snapshot.Count.ShouldBe(2);
+        snapshot.RateWindow.ShouldBe(TimeSpan.FromMinutes(5));
+        snapshot.Events.Select(static flowEvent => flowEvent.Channel).ShouldBe(["test/two", "test/one"]);
+    }
+
+    [Fact]
+    public void GetDashboardEventSnapshot_FallsBackToOneMinuteWindowWhenInlineWidgetHasNoWindow()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.SetDefinitionJson("""
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "dashboards": {
+                "ops": {
+                  "layout": {
+                    "columns": ["*"],
+                    "rows": ["*"],
+                    "cells": {
+                      "sizes": { "row": 0, "column": 0, "widget": "sizes" }
+                    }
+                  },
+                  "widgets": {
+                    "sizes": {
+                      "type": "payload.size.distribution",
+                      "configuration": { "eventType": "mqtt.message.published" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """);
+        service.SetActiveDashboard("ops");
+        var widget = service.GetActiveDashboardLayout()
+            .ShouldNotBeNull()
+            .Widgets["sizes"];
+
+        service.RecordManualMqttPublish("test/one", """{"hello":"fluxmq"}""", 0, retain: false, "local-broker");
+
+        var snapshot = service.GetDashboardEventSnapshot(widget);
+
+        snapshot.RateWindow.ShouldBe(TimeSpan.FromMinutes(1));
+    }
+
+    [Fact]
     public void GetDashboardMetricValue_UsesBoundMetricAggregationForKpi()
     {
         var service = new FlowWorkspaceService(new FlowDefinitionComposer());

@@ -162,16 +162,6 @@ public sealed class DashboardMetricWidgetModuleProvider : IDashboardWidgetModule
                 Options: MetricVisualizationOptions())
         ]);
 
-    private static DashboardWidgetPropertyGroupDefinition WindowGroup()
-        => new("window", "Window", [
-            new("window", "Window", DashboardWidgetPropertyEditorKind.Select, Options: [
-                new("30s", "30 sec"),
-                new("60s", "1 min"),
-                new("300s", "5 min"),
-                new("900s", "15 min")
-            ])
-        ]);
-
     private static DashboardWidgetPropertyGroupDefinition FormatGroup(string id = "format", string title = "Format")
         => new(id, title, [
             new("title", "Title", DashboardWidgetPropertyEditorKind.Text),

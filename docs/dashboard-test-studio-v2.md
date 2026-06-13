@@ -40,13 +40,15 @@ The dashboard studio keeps the structured grid as the source of truth. Design mo
 
 The stabilization pass tightened dashboard widget containment across desktop, tablet, and narrow windows so KPI values, event tables, gauge panels, topic activity, payload distribution, and QoS/retain breakdowns shrink without overlapping neighboring cells.
 
-## Metric Query Builder Direction
+## Dashboard Metric Model
 
-The dashboard metric query builder is the standard, visual path for defining metrics. It should read like a sentence and keep common setup easy: choose the measure, source, time window, match rules, and number format, then preview the result against live or generated sample data.
+Dashboard event widgets fall into two groups, and the inspector adapts its data editor to each.
 
-Architecturally, this visual builder is a facade over a richer metric-function model. A metric should be able to evaluate against the active app context, runtime events, topic projections, payload summaries, and saved resources, then return a typed scalar, series, or breakdown for widgets. Future advanced editing can allow expression-backed metric definitions for users who want to write logic directly, but the persisted dashboard model should stay neutral and structured so visual and advanced editors can round-trip safely.
+**App-metric tiles** — `kpi.tile`, `status.value`, `event.gauge`, `rate.tile`, `event.counter`, and `event.rate` — read a single scalar from a named, app-level **metric resource** (a `typeId` plus flat parameters such as `window`, `eventType`, `topicStartsWith`, `status`, `qos`, `retain`). They bind to that resource and are edited through the app-metric rows (pick the resource, then override its parameters); the runtime resolves the bound resource and formats its value via the metric type.
 
-KPI remains the first consumer of this builder. The metric engine must not become KPI-specific; the same builder model should later serve counter, rate, chart, table, and topic-focused widgets.
+**Inline event widgets** — the charts (`event.chart`, `chart.line/area/bar/donut`), `status.strip`, `payload.size.distribution`, the QoS/retain breakdowns, `event.table`, `event.latest`, and `topic.activity` — carry their event filters and (where applicable) a single `window` key directly in the widget configuration. They have no metric resource and no binding: each renders straight from the runtime event snapshot, filtered by its own configuration. The inspector edits these inline (event/status/topic filters plus a window selector), so what you see in the widget config is exactly what the runtime evaluates.
+
+The persisted dashboard model stays neutral and structured so both editors round-trip safely. The generic measure/source/filters query builder that previously fronted all metric widgets has been retired in favour of this split.
 
 The test studio keeps authoring and execution separate. Scenario Designer remains the phase-lane authoring surface, while Runner Console now carries run preflight, active timeline, event/log streams, diagnosis, run-history selection, and report preview/copy/save actions.
 

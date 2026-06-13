@@ -93,7 +93,6 @@
     private string? _draftWidgetName;
     private string? _draftCellName;
     private string? _draftMetricName;
-    private string? _metricToAdd;
     private string? _displayMetricToAdd;
     private List<string> _bindingMetrics = [];
     private Dictionary<string, string> _bindingOptions = [];
@@ -153,7 +152,6 @@
         _widgetDraft = null;
         _draftWidgetName = null;
         _draftMetricName = null;
-        _metricToAdd = null;
         _displayMetricToAdd = null;
         _bindingMetrics = [];
         _bindingOptions = [];
@@ -174,7 +172,6 @@
         _draftWidgetName = widget.Name;
         _draftMetricName = metricName;
         _widgetDraft = DashboardWidgetSettingsDraft.Create(widget, EventFilters);
-        _metricToAdd = null;
         _displayMetricToAdd = null;
         _bindingOptions = binding?.Options is null
             ? []
@@ -277,10 +274,7 @@
         return groups;
     }
 
-    private RenderFragment RenderDataProperties() => @<text>
-        @if (IsAppMetricConsumerWidget)
-        {
-        <DashboardInspectorAppMetricRows MetricId="@_primaryBindingMetric"
+    private RenderFragment RenderDataProperties() => @<DashboardInspectorAppMetricRows MetricId="@_primaryBindingMetric"
                                          MetricOptions="@AppMetricNameOptions"
                                          Parameters="@SelectedAppMetricParameters"
                                          ParameterValues="@_bindingOptions"
@@ -288,24 +282,7 @@
                                          Preview="@SelectedAppMetricPreview"
                                          MetricChanged="@SetAppMetricAsync"
                                          ParameterChanged="@SetMetricParameterAsync"
-                                         OpenMetric="@OpenSelectedMetricAsync" />
-        }
-        else
-        {
-        <DashboardInspectorMetricBindingRows Labels="@InspectorLabels"
-                                             SupportsSlots="@SupportsMetricSlots"
-                                             PrimaryMetric="@_primaryBindingMetric"
-                                             Metrics="@_bindingMetrics"
-                                             MetricToAdd="@_metricToAdd"
-                                             MetricOptions="@MetricNameOptions"
-                                             AddMetricOptions="@AddMetricOptions"
-                                             PrimaryMetricChanged="@SetPrimaryBindingMetricAsync"
-                                             MetricToAddChanged="@SetMetricToAddAsync"
-                                             AddMetric="@AddBindingMetricAsync"
-                                             RemoveMetric="@RemoveBindingMetricAsync"
-                                             MoveMetric="@MoveBindingMetricAsync" />
-        }
-    </text>;
+                                         OpenMetric="@OpenSelectedMetricAsync" />;
 
     private RenderFragment RenderMetricQueryProperties() => @<text>
         @if (_widgetDraft is { } draft && draft.Profile.UsesMetricWindow)
@@ -494,28 +471,6 @@
         ? SelectedCells[0]
         : null;
 
-    private IEnumerable<string> AvailableMetricNames
-    {
-        get
-        {
-            var names = new HashSet<string>(StringComparer.Ordinal);
-            if (!string.IsNullOrWhiteSpace(_draftMetricName))
-            {
-                names.Add(_draftMetricName);
-            }
-
-            if (Layout is not null)
-            {
-                foreach (var name in Layout.Metrics.Keys)
-                {
-                    names.Add(name);
-                }
-            }
-
-            return names.OrderBy(DashboardWidgetFormatting.MetricDisplayName, StringComparer.Ordinal);
-        }
-    }
-
     private IReadOnlyDictionary<string, FluxMetricResourceDefinition> AppMetricArtifacts => Project.GetMetricResources();
 
     private FluxMetricResourceDefinition? SelectedAppMetric =>
@@ -570,21 +525,6 @@
             return options;
         }
     }
-
-    private IReadOnlyList<PropertyGridSelectOption> MetricNameOptions
-        => [.. AvailableMetricNames.Select(static metric => new PropertyGridSelectOption(
-            metric,
-            DashboardWidgetFormatting.MetricDisplayName(metric)))];
-
-    private IReadOnlyList<PropertyGridSelectOption> AddMetricOptions
-        => [
-            new("", "Select metric", true),
-            .. AvailableMetricNames
-                .Where(metric => !_bindingMetrics.Contains(metric, StringComparer.Ordinal))
-                .Select(static metric => new PropertyGridSelectOption(
-                    metric,
-                    DashboardWidgetFormatting.MetricDisplayName(metric)))
-        ];
 
     private IReadOnlyList<PropertyGridSelectOption> VisualMetricOptions
         => [.. DashboardWidgetCatalog.MetricOptions.Select(static metric => new PropertyGridSelectOption(metric.Id, metric.Label))];
@@ -924,7 +864,6 @@
         }
 
         _widgetDraft.ResetToDefaultConfiguration(WidgetRegistry.CreateDefaultConfiguration(Widget.Type));
-        _metricToAdd = null;
         _displayMetricToAdd = null;
 
         if (!IsAppMetricConsumerWidget)
@@ -1065,22 +1004,6 @@
         await AutoApplyAsync();
     }
 
-    private async Task SetPrimaryBindingMetricAsync(string? value)
-    {
-        _primaryBindingMetric = DashboardInspectorMetricBindingState.NormalizeSelection(value, _draftMetricName);
-        _bindingMetrics = DashboardInspectorMetricBindingState.EnsurePrimary(
-            _bindingMetrics,
-            _primaryBindingMetric,
-            SupportsMetricSlots);
-
-        if (!string.IsNullOrWhiteSpace(_primaryBindingMetric))
-        {
-            LoadMetricDraft(_primaryBindingMetric);
-        }
-
-        await AutoApplyAsync();
-    }
-
     private async Task SetAppMetricAsync(string? value)
     {
         var normalized = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
@@ -1127,46 +1050,6 @@
     {
         Project.SetActiveMetrics();
         await Changed.InvokeAsync();
-    }
-
-    private Task SetMetricToAddAsync(string? value)
-    {
-        _metricToAdd = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-        return Task.CompletedTask;
-    }
-
-    private async Task AddBindingMetricAsync()
-    {
-        if (DashboardInspectorMetricBindingState.TryAdd(_bindingMetrics, _metricToAdd))
-        {
-            _metricToAdd = null;
-            await AutoApplyAsync();
-        }
-    }
-
-    private async Task RemoveBindingMetricAsync(string metricName)
-    {
-        if (_bindingMetrics.Count <= 1)
-        {
-            return;
-        }
-
-        _primaryBindingMetric = DashboardInspectorMetricBindingState.Remove(
-            _bindingMetrics,
-            _primaryBindingMetric,
-            metricName);
-        await AutoApplyAsync();
-    }
-
-    private Task MoveBindingMetricAsync(DashboardInspectorMetricMove move)
-        => MoveBindingMetricAsync(move.MetricName, move.Offset);
-
-    private async Task MoveBindingMetricAsync(string metricName, int offset)
-    {
-        if (DashboardInspectorMetricBindingState.TryMove(_bindingMetrics, metricName, offset))
-        {
-            await AutoApplyAsync();
-        }
     }
 
     private async Task AutoApplyAsync()
