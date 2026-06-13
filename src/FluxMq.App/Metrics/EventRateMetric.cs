@@ -7,13 +7,8 @@ namespace FluxMq.App.Metrics;
 
 /// <summary>
 /// Events per second on traffic matching a topic filter and QoS, measured over a rolling window.
-/// A double-valued flat metric.
+/// A double-valued flat metric that decays toward zero on idle via the pump's recompute tick.
 /// </summary>
-/// <remarks>
-/// Known limitation (carried over from the previous framework): the value is recomputed only when a matching
-/// event arrives, so after traffic stops the last rate persists rather than decaying toward zero. Adding a
-/// periodic prune+recompute tick is a future improvement.
-/// </remarks>
 public sealed class EventRateMetric : IFluxMetricSource<double>
 {
     public const string TypeId = "event.rate";
@@ -41,7 +36,7 @@ public sealed class EventRateMetric : IFluxMetricSource<double>
         _qos = qos;
         _window = new SlidingEventWindow(window);
         _windowSeconds = window <= TimeSpan.Zero ? 60d : window.TotalSeconds;
-        _pump = new MetricEventPump<double>(metricId, events, Observe, boundedCapacity, timeProvider);
+        _pump = new MetricEventPump<double>(metricId, events, Observe, boundedCapacity, timeProvider, Recompute);
     }
 
     private MetricSample<double> Observe(FlowEvent flowEvent, DateTimeOffset now)
@@ -55,6 +50,13 @@ public sealed class EventRateMetric : IFluxMetricSource<double>
         }
 
         _window.Add(flowEvent, now);
+        return MetricSample<double>.Of(_window.Count / _windowSeconds);
+    }
+
+    // Idle decay tick: prune aged-out events and re-report the rate (settling to 0 when traffic stops).
+    private MetricSample<double> Recompute(DateTimeOffset now)
+    {
+        _window.Prune(now);
         return MetricSample<double>.Of(_window.Count / _windowSeconds);
     }
 

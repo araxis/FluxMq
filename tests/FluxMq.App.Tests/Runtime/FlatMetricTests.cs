@@ -109,6 +109,30 @@ public sealed class FlatMetricTests
     }
 
     [Fact]
+    public async Task WindowedMessageCountMetric_DecaysToZeroWhenTrafficStops()
+    {
+        var start = DateTimeOffset.Parse("2026-06-13T12:00:00Z");
+        var time = new TestTimeProvider(start);
+        var events = new BroadcastBlock<FlowEvent>(static flowEvent => flowEvent);
+        var metric = new WindowedMessageCountMetric(
+            "windowed", TopicFilter.Parse("factory/#"), qos: 0, TimeSpan.FromSeconds(10), events, timeProvider: time);
+        var sink = new ActionBlock<FluxMetricReading<int>>(static _ => { });
+        metric.Output.LinkTo(sink);
+
+        await metric.StartAsync();
+        events.Post(EventAt("factory/a", start, "0"));
+        events.Post(EventAt("factory/b", start, "0"));
+        await PollUntilAsync(() => metric.Latest, reading => reading.Value == 2);
+
+        // Advance past the 10s window with no new traffic: a decay tick prunes the aged-out events and re-reports 0.
+        time.Advance(TimeSpan.FromSeconds(11));
+        await PollUntilAsync(() => metric.Latest, reading => reading.Value == 0);
+
+        metric.Latest!.Value.ShouldBe(0);
+        metric.Complete();
+    }
+
+    [Fact]
     public void SlidingEventWindow_PrunesEventsOlderThanWindow()
     {
         var start = DateTimeOffset.Parse("2026-06-13T12:00:00Z");
@@ -318,19 +342,128 @@ public sealed class FlatMetricTests
     private static async Task<FluxMetricReading<double>> PollAsync(
         Func<FluxMetricReading<double>?> read,
         Func<FluxMetricReading<double>, bool> done)
+        => await PollUntilAsync(read, done);
+
+    private static async Task<T> PollUntilAsync<T>(Func<T?> read, Func<T, bool> done)
+        where T : class
     {
         using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(3));
         while (!cancellation.IsCancellationRequested)
         {
-            if (read() is { } reading && done(reading))
+            if (read() is { } value && done(value))
             {
-                return reading;
+                return value;
             }
 
             await Task.Delay(10, cancellation.Token);
         }
 
-        throw new TimeoutException("Coordinator did not produce the expected reading in time.");
+        throw new TimeoutException("The expected reading did not arrive in time.");
+    }
+
+    // Minimal controllable TimeProvider whose timers fire only when the test advances the clock — enough to
+    // drive the metric pump's decay tick deterministically without a wall-clock wait.
+    private sealed class TestTimeProvider(DateTimeOffset start) : TimeProvider
+    {
+        private readonly Lock _gate = new();
+        private readonly List<TestTimer> _timers = [];
+        private DateTimeOffset _now = start;
+
+        public override DateTimeOffset GetUtcNow()
+        {
+            lock (_gate)
+            {
+                return _now;
+            }
+        }
+
+        public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
+        {
+            lock (_gate)
+            {
+                var timer = new TestTimer(this, callback, state, _now, dueTime, period);
+                _timers.Add(timer);
+                return timer;
+            }
+        }
+
+        public void Advance(TimeSpan delta)
+        {
+            TestTimer[] snapshot;
+            DateTimeOffset now;
+            lock (_gate)
+            {
+                _now += delta;
+                now = _now;
+                snapshot = [.. _timers];
+            }
+
+            foreach (var timer in snapshot)
+            {
+                timer.Fire(now);
+            }
+        }
+
+        private void Remove(TestTimer timer)
+        {
+            lock (_gate)
+            {
+                _timers.Remove(timer);
+            }
+        }
+
+        private sealed class TestTimer : ITimer
+        {
+            private readonly TestTimeProvider _owner;
+            private readonly TimerCallback _callback;
+            private readonly object? _state;
+            private TimeSpan _period;
+            private DateTimeOffset _next;
+            private bool _disposed;
+
+            public TestTimer(TestTimeProvider owner, TimerCallback callback, object? state, DateTimeOffset now, TimeSpan dueTime, TimeSpan period)
+            {
+                _owner = owner;
+                _callback = callback;
+                _state = state;
+                _period = period;
+                _next = dueTime == Timeout.InfiniteTimeSpan ? DateTimeOffset.MaxValue : now + dueTime;
+            }
+
+            public void Fire(DateTimeOffset now)
+            {
+                while (!_disposed && now >= _next)
+                {
+                    _callback(_state);
+                    if (_period <= TimeSpan.Zero || _period == Timeout.InfiniteTimeSpan)
+                    {
+                        _next = DateTimeOffset.MaxValue;
+                        break;
+                    }
+
+                    _next += _period;
+                }
+            }
+
+            public bool Change(TimeSpan dueTime, TimeSpan period)
+            {
+                _period = period;
+                _next = dueTime == Timeout.InfiniteTimeSpan ? DateTimeOffset.MaxValue : _owner.GetUtcNow() + dueTime;
+                return true;
+            }
+
+            public void Dispose()
+            {
+                _disposed = true;
+                _owner.Remove(this);
+            }
+
+            public ValueTask DisposeAsync()
+            {
+                Dispose();
+                return ValueTask.CompletedTask;
+            }
+        }
     }
 
     private static async Task<List<FluxMetricReading<TValue>>> RunAsync<TValue>(

@@ -33,7 +33,7 @@ public sealed class WindowedMessageCountMetric : IFluxMetricSource<int>
         _topic = topic;
         _qos = qos;
         _window = new SlidingEventWindow(window);
-        _pump = new MetricEventPump<int>(metricId, events, Observe, boundedCapacity, timeProvider);
+        _pump = new MetricEventPump<int>(metricId, events, Observe, boundedCapacity, timeProvider, Recompute);
     }
 
     private MetricSample<int> Observe(FlowEvent flowEvent, DateTimeOffset now)
@@ -47,6 +47,13 @@ public sealed class WindowedMessageCountMetric : IFluxMetricSource<int>
         }
 
         _window.Add(flowEvent, now);
+        return MetricSample<int>.Of(_window.Count);
+    }
+
+    // Idle decay tick: prune aged-out events and re-report the message count (settling to 0 on idle).
+    private MetricSample<int> Recompute(DateTimeOffset now)
+    {
+        _window.Prune(now);
         return MetricSample<int>.Of(_window.Count);
     }
 
