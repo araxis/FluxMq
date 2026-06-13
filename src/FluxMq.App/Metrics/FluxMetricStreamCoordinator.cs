@@ -57,7 +57,7 @@ public sealed class FluxMetricStreamCoordinator
         IReadOnlyDictionary<string, string>? overrides)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(metricId);
-        if (!TryGetStream(metricId.Trim(), overrides, out var running))
+        if (!TryGetStream(metricId.Trim(), overrides, out var running) || running is null)
         {
             throw new InvalidOperationException($"Metric '{metricId}' is not available.");
         }
@@ -77,7 +77,7 @@ public sealed class FluxMetricStreamCoordinator
             return false;
         }
 
-        if (TryGetStream(metricId.Trim(), overrides, out var running) &&
+        if (TryGetStream(metricId.Trim(), overrides, out var running) && running is not null &&
             ReadLatest(running) is { } value)
         {
             reading = value;
@@ -97,11 +97,11 @@ public sealed class FluxMetricStreamCoordinator
         }
     }
 
-    private bool TryGetStream(string metricId, IReadOnlyDictionary<string, string>? overrides, out RunningMetric running)
+    private bool TryGetStream(string metricId, IReadOnlyDictionary<string, string>? overrides, out RunningMetric? running)
     {
         lock (_sync)
         {
-            running = default!;
+            running = null;
             if (_events is null ||
                 !_resources.TryGetValue(metricId, out var resource) ||
                 _catalog.Describe(resource.TypeId) is not { } descriptor)
@@ -120,7 +120,7 @@ public sealed class FluxMetricStreamCoordinator
                 running = new RunningMetric(
                     source,
                     descriptor.ValueKind,
-                    CreateNumberStream(source, descriptor.ValueKind));
+                    () => CreateNumberStream(source, descriptor.ValueKind));
                 _streams[key] = running;
             }
 
@@ -217,8 +217,19 @@ public sealed class FluxMetricStreamCoordinator
         return builder.ToString();
     }
 
-    private readonly record struct RunningMetric(
-        IFluxMetricSource Source,
-        MetricValueKind ValueKind,
-        ISourceBlock<FluxMetricReading<double>> NumberStream);
+    private sealed class RunningMetric(
+        IFluxMetricSource source,
+        MetricValueKind valueKind,
+        Func<ISourceBlock<FluxMetricReading<double>>> numberStreamFactory)
+    {
+        private readonly Lazy<ISourceBlock<FluxMetricReading<double>>> _numberStream = new(numberStreamFactory);
+
+        public IFluxMetricSource Source { get; } = source;
+
+        public MetricValueKind ValueKind { get; } = valueKind;
+
+        // Only built (and only then linked to the source) when a consumer actually wants the number stream;
+        // a metric used purely via TryGetLatestNumber never allocates the adapter.
+        public ISourceBlock<FluxMetricReading<double>> NumberStream => _numberStream.Value;
+    }
 }

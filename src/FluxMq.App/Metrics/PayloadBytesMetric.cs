@@ -38,7 +38,9 @@ public sealed class PayloadBytesMetric : IFluxMetricSource<double>
 
     private MetricSample<double> Observe(FlowEvent flowEvent, DateTimeOffset now)
     {
-        if (!_topic.Matches(flowEvent.Channel) || !MetricQos.Matches(flowEvent, _qos))
+        if (!MetricEvents.IsMqttMessage(flowEvent) ||
+            !_topic.Matches(flowEvent.Channel) ||
+            !MetricQos.Matches(flowEvent, _qos))
         {
             _window.Prune(now);
             return MetricSample<double>.None;

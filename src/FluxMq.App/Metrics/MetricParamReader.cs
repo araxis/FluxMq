@@ -1,4 +1,5 @@
 using FluxFlow.Engine.Components;
+using FluxMq.Scenarios;
 
 namespace FluxMq.App.Metrics;
 
@@ -43,4 +44,16 @@ public static class MetricRetain
 {
     public static bool IsRetained(FlowEvent flowEvent)
         => bool.TryParse(flowEvent.GetAttribute("retain"), out var retained) && retained;
+}
+
+/// <summary>
+/// Identifies the MQTT message events that traffic metrics count. Non-message runtime events (file writes,
+/// schema validations, assertions, connection state) are ignored so a topic/QoS metric only measures real traffic.
+/// </summary>
+public static class MetricEvents
+{
+    public static bool IsMqttMessage(FlowEvent flowEvent)
+        => string.Equals(flowEvent.Type, FlowEventTypes.MqttMessageReceived, StringComparison.Ordinal) ||
+           string.Equals(flowEvent.Type, FlowEventTypes.MqttMessagePublished, StringComparison.Ordinal) ||
+           string.Equals(flowEvent.Type, FlowEventTypes.MqttMessageRecorded, StringComparison.Ordinal);
 }

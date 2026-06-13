@@ -24,6 +24,7 @@ public sealed class MetricSourceComponent : IFlowNode
     private IDisposable? _link;
     private int _started;
     private bool _completed;
+    private bool _skipReplayedLatest;
 
     public MetricSourceComponent(
         FluxMetricStreamCoordinator coordinator,
@@ -50,7 +51,7 @@ public sealed class MetricSourceComponent : IFlowNode
             static reading => reading,
             new DataflowBlockOptions { BoundedCapacity = boundedCapacity });
         _relay = new ActionBlock<FluxMetricReading<double>>(
-            reading => _output.Post(reading),
+            RelayReading,
             new ExecutionDataflowBlockOptions
             {
                 BoundedCapacity = boundedCapacity,
@@ -82,13 +83,13 @@ public sealed class MetricSourceComponent : IFlowNode
 
         try
         {
+            // The coordinator stream is a BroadcastBlock: linking replays its current latest reading to the
+            // relay, so a started source already surfaces its latest value — no extra explicit post (which
+            // would duplicate it). The link is gated on _emitLatestOnStart only by discarding that first replay.
             var stream = _coordinator.GetNumberStream(_metricId, _parameters);
+            _skipReplayedLatest = !_emitLatestOnStart &&
+                _coordinator.TryGetLatestNumber(_metricId, _parameters, out _);
             _link = stream.LinkTo(_relay, new DataflowLinkOptions { PropagateCompletion = true });
-            if (_emitLatestOnStart &&
-                _coordinator.TryGetLatestNumber(_metricId, _parameters, out var latest))
-            {
-                _output.Post(latest);
-            }
         }
         catch (Exception exception)
         {
@@ -128,6 +129,18 @@ public sealed class MetricSourceComponent : IFlowNode
             _completed = true;
             _link = null;
         }
+    }
+
+    // Drops the single latest reading the broadcast replays on link when the node opted out of emit-on-start.
+    private void RelayReading(FluxMetricReading<double> reading)
+    {
+        if (_skipReplayedLatest)
+        {
+            _skipReplayedLatest = false;
+            return;
+        }
+
+        _output.Post(reading);
     }
 
     private void CompleteOutput(Task completion)

@@ -9,6 +9,11 @@ namespace FluxMq.App.Metrics;
 /// Events per second on traffic matching a topic filter and QoS, measured over a rolling window.
 /// A double-valued flat metric.
 /// </summary>
+/// <remarks>
+/// Known limitation (carried over from the previous framework): the value is recomputed only when a matching
+/// event arrives, so after traffic stops the last rate persists rather than decaying toward zero. Adding a
+/// periodic prune+recompute tick is a future improvement.
+/// </remarks>
 public sealed class EventRateMetric : IFluxMetricSource<double>
 {
     public const string TypeId = "event.rate";
@@ -41,7 +46,9 @@ public sealed class EventRateMetric : IFluxMetricSource<double>
 
     private MetricSample<double> Observe(FlowEvent flowEvent, DateTimeOffset now)
     {
-        if (!_topic.Matches(flowEvent.Channel) || !MetricQos.Matches(flowEvent, _qos))
+        if (!MetricEvents.IsMqttMessage(flowEvent) ||
+            !_topic.Matches(flowEvent.Channel) ||
+            !MetricQos.Matches(flowEvent, _qos))
         {
             _window.Prune(now);
             return MetricSample<double>.None;
