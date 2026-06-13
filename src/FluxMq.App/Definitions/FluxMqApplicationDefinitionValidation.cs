@@ -57,7 +57,7 @@ public sealed class FluxMqApplicationDefinitionValidator
 {
     private readonly EngineApplicationDefinitionValidator _engineValidator = new();
     private readonly ScenarioStepDefinitionCatalog _scenarioStepDefinitions;
-    private readonly IFluxMetricTypeRegistry _metricTypes;
+    private readonly IFluxMetricCatalog _metrics;
 
     public FluxMqApplicationDefinitionValidator()
         : this(ScenarioStepDefinitionCatalog.Shared)
@@ -65,19 +65,19 @@ public sealed class FluxMqApplicationDefinitionValidator
     }
 
     public FluxMqApplicationDefinitionValidator(ScenarioStepDefinitionCatalog scenarioStepDefinitions)
-        : this(scenarioStepDefinitions, FluxMetricTypeRegistry.CreateDefault())
+        : this(scenarioStepDefinitions, FluxMetricCatalog.CreateDefault())
     {
     }
 
     public FluxMqApplicationDefinitionValidator(
         ScenarioStepDefinitionCatalog scenarioStepDefinitions,
-        IFluxMetricTypeRegistry metricTypes)
+        IFluxMetricCatalog metrics)
     {
         ArgumentNullException.ThrowIfNull(scenarioStepDefinitions);
-        ArgumentNullException.ThrowIfNull(metricTypes);
+        ArgumentNullException.ThrowIfNull(metrics);
 
         _scenarioStepDefinitions = scenarioStepDefinitions;
-        _metricTypes = metricTypes;
+        _metrics = metrics;
     }
 
     public FluxMqApplicationDefinitionValidationResult Validate(FluxMqApplicationDefinition definition)
@@ -257,7 +257,7 @@ public sealed class FluxMqApplicationDefinitionValidator
                 $"Metric '{metricName}' must define a display name."));
         }
 
-        if (!_metricTypes.TryGetNumberType(resource.TypeId, out var type))
+        if (_metrics.Describe(resource.TypeId) is not { } descriptor)
         {
             errors.Add(new(
                 FluxMqApplicationDefinitionValidationErrorCode.InvalidMetricDefinition,
@@ -265,11 +265,15 @@ public sealed class FluxMqApplicationDefinitionValidator
             return;
         }
 
-        foreach (var error in type.Validate(resource).Errors)
+        foreach (var parameter in descriptor.Parameters)
         {
-            errors.Add(new(
-                FluxMqApplicationDefinitionValidationErrorCode.InvalidMetricParameter,
-                $"Metric '{metricName}' is invalid: {error}"));
+            if (parameter.Required &&
+                string.IsNullOrWhiteSpace(resource.GetParameter(parameter.Key, parameter.DefaultValue ?? string.Empty)))
+            {
+                errors.Add(new(
+                    FluxMqApplicationDefinitionValidationErrorCode.InvalidMetricParameter,
+                    $"Metric '{metricName}' is missing required parameter '{parameter.DisplayName}'."));
+            }
         }
     }
 

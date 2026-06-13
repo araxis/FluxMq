@@ -315,18 +315,6 @@ public static class FlowComponentMetadataRegistry
             makePreferredNodeNameUnique: true,
             createDefaultConfiguration: context => CreateDynamicMapperConfiguration("MqttPublishRequest", context.DefaultInputType)),
         Component(
-            "metric.source",
-            "Metric Source",
-            "Source",
-            "Streams readings from a reusable app metric into a pipeline.",
-            "metricSource",
-            [
-                new("Output", "NumberMetricReading", IsInput: false),
-                new("Errors", "FlowError", IsInput: false)
-            ],
-            makePreferredNodeNameUnique: true,
-            createDefaultConfiguration: _ => CreateMetricSourceConfiguration()),
-        Component(
             "state.reducer",
             "State Reducer",
             "State",
@@ -714,15 +702,6 @@ public static class FlowComponentMetadataRegistry
             ["rateWindowSeconds"] = MqttMetricsNodeModel.DefaultRateWindowSeconds,
             ["metricCardColumns"] = MqttMetricsNodeModel.DefaultMetricCardColumns,
             ["displayMetrics"] = MqttMetricsNodeModel.BuildDisplayMetrics(MqttMetricsNodeModel.DefaultDisplayMetrics)
-        };
-
-    private static JsonObject CreateMetricSourceConfiguration()
-        => new()
-        {
-            ["metricId"] = string.Empty,
-            ["parameters"] = new JsonObject(),
-            ["emitLatestOnStart"] = true,
-            ["boundedCapacity"] = 1000
         };
 
     private static JsonObject CreateHttpRequestConfiguration()

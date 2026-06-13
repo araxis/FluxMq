@@ -1,6 +1,6 @@
 @using FluxMq.App.Metrics
 @using FluxMq.UI.Models
-@inject IFluxMetricTypeRegistry TypeRegistry
+@inject IFluxMetricCatalog Catalog
 @inject IDialogService DialogService
 
 <div class="workspace-tab-content">
@@ -16,11 +16,11 @@
                                  AnchorOrigin="Origin.BottomRight"
                                  TransformOrigin="Origin.TopRight">
                             <ChildContent>
-                                @foreach (var type in TypeRegistry.NumberTypes)
+                                @foreach (var descriptor in Catalog.Descriptors)
                                 {
-                                    var currentType = type;
+                                    var current = descriptor;
                                     <MudMenuItem Icon="@Icons.Material.Filled.QueryStats"
-                                                 OnClick="@(() => AddMetricFromTypeAsync(currentType))">@type.DisplayName</MudMenuItem>
+                                                 OnClick="@(() => AddMetricFromDescriptorAsync(current))">@current.DisplayName</MudMenuItem>
                                 }
                             </ChildContent>
                         </MudMenu>
@@ -65,7 +65,7 @@
         </MudItem>
 
         <MudItem xs="12" md="8" Style="height:100%; overflow:auto;">
-            @if (SelectedResource is null || SelectedType is null)
+            @if (SelectedResource is null || SelectedDescriptor is null)
             {
                 <MudPaper Outlined="true" Class="pa-6">
                     <MudStack AlignItems="AlignItems.Center" Spacing="2">
@@ -121,13 +121,13 @@
                                           Margin="Margin.Dense" />
                         </MudItem>
                     </MudGrid>
-                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Text" Class="mt-2">@SelectedType.DisplayName</MudChip>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Text" Class="mt-2">@SelectedDescriptor.DisplayName</MudChip>
                 </MudPaper>
 
                 <MudPaper Outlined="true" Class="pa-3 mb-2">
                     <MudText Typo="Typo.subtitle2" Class="mb-2">Parameters</MudText>
                     <MudStack Spacing="2">
-                        @foreach (var parameter in SelectedType.Parameters)
+                        @foreach (var parameter in SelectedDescriptor.Parameters)
                         {
                             @RenderParameterField(parameter)
                         }
@@ -162,7 +162,7 @@
     private string? _selectedMetricName;
     private string _displayName = string.Empty;
     private string _description = string.Empty;
-    private string _typeId = EventCountMetricType.Id;
+    private string _typeId = TopicCountMetric.TypeId;
     private readonly Dictionary<string, string> _parameters = new(StringComparer.Ordinal);
 
     private const string TrueValue = "true";
@@ -175,8 +175,7 @@
             ? resource
             : null;
 
-    private IFluxMetricType<double>? SelectedType =>
-        TypeRegistry.TryGetNumberType(_typeId, out var type) ? type : null;
+    private MetricDescriptor? SelectedDescriptor => Catalog.Describe(_typeId);
 
     private IReadOnlyList<string> FilteredMetrics =>
         [
@@ -204,12 +203,28 @@
             ExportPolicy = SelectedResource?.ExportPolicy ?? FluxMetricExportPolicy.Disabled
         };
 
-    private string MetricSentence => SelectedType?.Summarize(CurrentResource) ?? "Select a metric to edit";
+    private string MetricSentence => SelectedDescriptor?.Description ?? "Select a metric to edit";
 
-    private IReadOnlyList<string> ValidationErrors => SelectedType?.Validate(CurrentResource).Errors ?? [];
+    private IReadOnlyList<string> ValidationErrors
+    {
+        get
+        {
+            if (SelectedDescriptor is not { } descriptor)
+            {
+                return [];
+            }
+
+            return
+            [
+                .. descriptor.Parameters
+                    .Where(parameter => parameter.Required && string.IsNullOrWhiteSpace(ParameterValue(parameter)))
+                    .Select(static parameter => $"{parameter.DisplayName} is required.")
+            ];
+        }
+    }
 
     private bool CanApply =>
-        SelectedType is not null &&
+        SelectedDescriptor is not null &&
         !string.IsNullOrWhiteSpace(_selectedMetricName) &&
         !string.IsNullOrWhiteSpace(_displayName) &&
         ValidationErrors.Count == 0;
@@ -242,7 +257,7 @@
         {
             _displayName = string.Empty;
             _description = string.Empty;
-            _typeId = EventCountMetricType.Id;
+            _typeId = TopicCountMetric.TypeId;
             _parameters.Clear();
             return;
         }
@@ -269,11 +284,11 @@
         return Task.CompletedTask;
     }
 
-    private async Task AddMetricFromTypeAsync(IFluxMetricType<double> type)
+    private async Task AddMetricFromDescriptorAsync(MetricDescriptor descriptor)
     {
-        var metricName = UniqueMetricName(type.DisplayName);
+        var metricName = UniqueMetricName(descriptor.DisplayName);
         var parameters = new Dictionary<string, string>(StringComparer.Ordinal);
-        foreach (var parameter in type.Parameters)
+        foreach (var parameter in descriptor.Parameters)
         {
             if (!string.IsNullOrWhiteSpace(parameter.DefaultValue))
             {
@@ -285,9 +300,9 @@
         Project.UpdateMetric(metricName, new FluxMetricResourceDefinition
         {
             Id = metricName,
-            TypeId = type.TypeId,
-            DisplayName = type.DisplayName,
-            Description = type.Description,
+            TypeId = descriptor.TypeId,
+            DisplayName = descriptor.DisplayName,
+            Description = descriptor.Description,
             Parameters = parameters
         });
         _selectedMetricName = metricName;
@@ -297,7 +312,7 @@
 
     private Task ApplyMetricAsync()
     {
-        if (string.IsNullOrWhiteSpace(_selectedMetricName) || SelectedType is null)
+        if (string.IsNullOrWhiteSpace(_selectedMetricName) || SelectedDescriptor is null)
         {
             return Task.CompletedTask;
         }
@@ -344,53 +359,57 @@
         }
     }
 
-    private string ParameterValue(FluxMetricParameterDescriptor parameter)
-        => _parameters.TryGetValue(parameter.Key, out var value) ? value : parameter.DefaultValue;
+    private string ParameterValue(MetricParamSpec parameter)
+        => _parameters.TryGetValue(parameter.Key, out var value) ? value : parameter.DefaultValue ?? string.Empty;
 
-    private RenderFragment RenderParameterField(FluxMetricParameterDescriptor parameter)
+    private RenderFragment RenderParameterField(MetricParamSpec parameter)
     {
         var value = ParameterValue(parameter);
-        if (parameter.Options.Count > 0)
+        if (parameter.Kind == MetricParamKind.Select && parameter.Options is { Count: > 0 } options)
         {
             return @<MudSelect T="string"
-                               Label="@parameter.Label"
+                               Label="@parameter.DisplayName"
                                Value="@value"
                                ValueChanged="@(next => SetParameterValue(parameter.Key, next))"
                                Variant="Variant.Outlined"
                                Margin="Margin.Dense"
                                Dense="true"
-                               HelperText="@parameter.HelperText">
-                @foreach (var option in parameter.Options)
+                               HelperText="@parameter.HelpText">
+                @foreach (var option in options)
                 {
                     <MudSelectItem Value="@option.Value">@option.Label</MudSelectItem>
                 }
             </MudSelect>;
         }
 
-        if (string.Equals(parameter.Kind, FluxMetricParameterKinds.Toggle, StringComparison.Ordinal))
+        if (parameter.Kind == MetricParamKind.Toggle)
         {
             return @<MudSelect T="string"
-                               Label="@parameter.Label"
+                               Label="@parameter.DisplayName"
                                Value="@value"
                                ValueChanged="@(next => SetParameterValue(parameter.Key, next))"
                                Variant="Variant.Outlined"
                                Margin="Margin.Dense"
                                Dense="true"
-                               HelperText="@parameter.HelperText">
+                               HelperText="@parameter.HelpText">
                 <MudSelectItem Value="@string.Empty">Default</MudSelectItem>
                 <MudSelectItem Value="@TrueValue">On</MudSelectItem>
                 <MudSelectItem Value="@FalseValue">Off</MudSelectItem>
             </MudSelect>;
         }
 
+        var inputType = parameter.Kind is MetricParamKind.Integer or MetricParamKind.Number
+            ? InputType.Number
+            : InputType.Text;
         return @<MudTextField T="string"
-                              Label="@parameter.Label"
+                              Label="@parameter.DisplayName"
                               Value="@value"
                               ValueChanged="@(next => SetParameterValue(parameter.Key, next))"
                               Placeholder="@parameter.Placeholder"
+                              InputType="@inputType"
                               Variant="Variant.Outlined"
                               Margin="Margin.Dense"
-                              HelperText="@parameter.HelperText" />;
+                              HelperText="@parameter.HelpText" />;
     }
 
     private void SetParameterValue(string parameterKey, string? value)

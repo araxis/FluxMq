@@ -3,8 +3,8 @@ using System.Globalization;
 namespace FluxMq.App.Metrics;
 
 /// <summary>
-/// Formatting helpers for numeric metric values. Each metric type declares its own <see cref="IFluxMetricType{TValue}.Format"/>;
-/// dashboards and previews use these helpers to render a reading.
+/// Formatting helpers for numeric metric values. Each metric declares its own format token (see
+/// <see cref="MetricDescriptor.Format"/>); dashboards and previews use these helpers to render a reading.
 /// </summary>
 public static class MetricFormats
 {

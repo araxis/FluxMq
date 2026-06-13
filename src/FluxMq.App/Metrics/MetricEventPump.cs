@@ -4,45 +4,50 @@ using System.Threading.Tasks.Dataflow;
 
 namespace FluxMq.App.Metrics;
 
+/// <summary>The outcome of observing one event: whether to emit a reading, and the value if so.</summary>
+public readonly record struct MetricSample<TValue>(bool Emit, TValue Value)
+{
+    public static MetricSample<TValue> None => new(false, default!);
+
+    public static MetricSample<TValue> Of(TValue value) => new(true, value);
+}
+
 /// <summary>
-/// Shared mechanics for event-driven numeric metric sources: it links the shared <see cref="FlowEvent"/> stream
-/// into a single-threaded <see cref="ActionBlock{T}"/>, keeps a sliding window of matching events, and emits one
-/// reading per match through a <see cref="BroadcastBlock{T}"/>. Concrete sources supply only the match predicate
-/// and the per-window calculation; this base owns no metric-specific behavior.
+/// The small, shared Dataflow plumbing every event metric composes (has-a, not is-a): it links the shared
+/// <see cref="FlowEvent"/> stream into a serial <see cref="ActionBlock{T}"/>, hands each event to the metric's
+/// observer, and broadcasts whatever readings the observer chooses to emit. It owns no metric-specific logic —
+/// the filter, state, and calculation all live in the metric that supplies <paramref name="observe"/>.
 /// </summary>
-public abstract class EventWindowMetricSource : IFluxMetricSource<double>
+public sealed class MetricEventPump<TValue> : IFluxMetricSource<TValue>
 {
     private readonly Lock _sync = new();
-    private readonly Func<FlowEvent, bool> _matches;
     private readonly ISourceBlock<FlowEvent> _events;
+    private readonly Func<FlowEvent, DateTimeOffset, MetricSample<TValue>> _observe;
     private readonly ActionBlock<FlowEvent> _input;
-    private readonly BroadcastBlock<FluxMetricReading<double>> _output;
-    private readonly List<FlowEvent> _window = [];
+    private readonly BroadcastBlock<FluxMetricReading<TValue>> _output;
     private readonly TimeProvider _timeProvider;
     private IDisposable? _link;
     private int _started;
     private bool _completed;
 
-    protected EventWindowMetricSource(
+    public MetricEventPump(
         string metricId,
-        Func<FlowEvent, bool> matches,
-        TimeSpan window,
         ISourceBlock<FlowEvent> events,
-        int boundedCapacity,
-        TimeProvider? timeProvider)
+        Func<FlowEvent, DateTimeOffset, MetricSample<TValue>> observe,
+        int boundedCapacity = 256,
+        TimeProvider? timeProvider = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(metricId);
-        ArgumentNullException.ThrowIfNull(matches);
         ArgumentNullException.ThrowIfNull(events);
+        ArgumentNullException.ThrowIfNull(observe);
         if (boundedCapacity <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(boundedCapacity), boundedCapacity, "Metric bounded capacity must be positive.");
         }
 
         MetricId = metricId.Trim();
-        _matches = matches;
-        Window = window <= TimeSpan.Zero ? TimeSpan.FromSeconds(60) : window;
         _events = events;
+        _observe = observe;
         _timeProvider = timeProvider ?? TimeProvider.System;
         _input = new ActionBlock<FlowEvent>(
             Observe,
@@ -52,7 +57,7 @@ public abstract class EventWindowMetricSource : IFluxMetricSource<double>
                 EnsureOrdered = true,
                 MaxDegreeOfParallelism = 1
             });
-        _output = new BroadcastBlock<FluxMetricReading<double>>(
+        _output = new BroadcastBlock<FluxMetricReading<TValue>>(
             static reading => reading,
             new DataflowBlockOptions { BoundedCapacity = boundedCapacity });
         _input.Completion.ContinueWith(
@@ -64,13 +69,11 @@ public abstract class EventWindowMetricSource : IFluxMetricSource<double>
 
     public string MetricId { get; }
 
-    public FluxMetricReading<double>? Latest { get; private set; }
+    public FluxMetricReading<TValue>? Latest { get; private set; }
 
-    public ISourceBlock<FluxMetricReading<double>> Output => _output;
+    public ISourceBlock<FluxMetricReading<TValue>> Output => _output;
 
     public Task Completion => Task.WhenAll(_input.Completion, _output.Completion);
-
-    protected TimeSpan Window { get; }
 
     public Task StartAsync(CancellationToken cancellationToken = default)
     {
@@ -82,12 +85,10 @@ public abstract class EventWindowMetricSource : IFluxMetricSource<double>
 
         lock (_sync)
         {
-            if (_completed)
+            if (!_completed)
             {
-                return Task.CompletedTask;
+                _link = _events.LinkTo(_input, new DataflowLinkOptions { PropagateCompletion = true });
             }
-
-            _link = _events.LinkTo(_input, new DataflowLinkOptions { PropagateCompletion = true });
         }
 
         return Task.CompletedTask;
@@ -109,43 +110,23 @@ public abstract class EventWindowMetricSource : IFluxMetricSource<double>
         }
     }
 
-    /// <summary>Computes the metric value from the current pruned window of matching events.</summary>
-    protected abstract double Calculate(IReadOnlyList<FlowEvent> window, DateTimeOffset now);
-
     private void Observe(FlowEvent flowEvent)
     {
         var now = _timeProvider.GetUtcNow();
-        lock (_sync)
+        var sample = _observe(flowEvent, now);
+        if (!sample.Emit)
         {
-            if (_completed)
-            {
-                return;
-            }
-
-            if (!_matches(flowEvent))
-            {
-                Prune(now);
-                return;
-            }
-
-            _window.Add(flowEvent);
-            Prune(now);
-
-            var reading = new FluxMetricReading<double>
-            {
-                MetricId = MetricId,
-                Timestamp = now,
-                Value = Calculate(_window, now)
-            };
-            Latest = reading;
-            _output.Post(reading);
+            return;
         }
-    }
 
-    private void Prune(DateTimeOffset now)
-    {
-        var threshold = now.Subtract(Window);
-        _window.RemoveAll(flowEvent => flowEvent.Timestamp < threshold);
+        var reading = new FluxMetricReading<TValue>
+        {
+            MetricId = MetricId,
+            Timestamp = now,
+            Value = sample.Value
+        };
+        Latest = reading;
+        _output.Post(reading);
     }
 
     private void CompleteOutput(Task completion)

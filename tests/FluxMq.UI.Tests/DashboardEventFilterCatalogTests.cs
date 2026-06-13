@@ -109,37 +109,13 @@ public sealed class DashboardEventFilterCatalogTests
             UniqueTopicCount: 0,
             RetainedCount: 0);
 
-        var value = registry.Evaluate(EventCountMetricType.Id, snapshot);
+        var value = registry.Evaluate("event.count", snapshot);
 
         value.Label.ShouldBe("Event count");
         value.Value.ShouldBe(18);
         value.Unit.ShouldBe("events");
         value.FormattedValue.ShouldBe("18");
         value.FormattedValue.ShouldNotContain("events");
-    }
-
-    [Fact]
-    public void DashboardMetricRegistry_AutoFormatUsesNaturalMeasureUnit()
-    {
-        var registry = new DashboardMetricRegistry();
-        var snapshot = new DashboardEventSnapshot(
-            60,
-            LatestEvent: null,
-            RecentCount: 18,
-            RateWindow: TimeSpan.FromSeconds(60),
-            EventsPerSecond: 0.3,
-            Events: [],
-            BucketCounts: [1, 2, 3],
-            TopicCounts: [],
-            TotalPayloadBytes: 2048,
-            UniqueTopicCount: 4,
-            RetainedCount: 2);
-
-        var count = registry.Evaluate(EventCountMetricType.Id, snapshot);
-        var payload = registry.Evaluate(PayloadBytesMetricType.Id, snapshot);
-
-        count.FormattedValue.ShouldBe("18");
-        payload.FormattedValue.ShouldBe("2 KB");
     }
 
     [Fact]
@@ -1224,19 +1200,19 @@ public sealed class DashboardEventFilterCatalogTests
             "publishedMetric",
             new FluxMetricResourceDefinition
             {
-                TypeId = EventCountMetricType.Id,
+                TypeId = "event.count",
                 DisplayName = "Published metric",
                 Parameters = new Dictionary<string, string>(StringComparer.Ordinal)
                 {
-                    [MetricParameterKeys.Window] = "60s",
-                    [MetricParameterKeys.EventType] = FluxMqEventTypes.MqttMessagePublished,
-                    [MetricParameterKeys.TopicStartsWith] = "default/",
-                    [MetricParameterKeys.Status] = "published"
+                    ["window"] = "60s",
+                    ["eventType"] = FluxMqEventTypes.MqttMessagePublished,
+                    ["topicStartsWith"] = "default/",
+                    ["status"] = "published"
                 }
             });
         var parameterValues = new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            [MetricParameterKeys.TopicStartsWith] = "factory/line-a/"
+            ["topicStartsWith"] = "factory/line-a/"
         };
 
         var resource = DashboardMetricReferenceResolver.ResolveAppMetric(
@@ -1249,7 +1225,7 @@ public sealed class DashboardEventFilterCatalogTests
             parameterValues);
 
         resource.ShouldNotBeNull();
-        resource.GetParameter(MetricParameterKeys.TopicStartsWith).ShouldBe("factory/line-a/");
+        resource.GetParameter("topicStartsWith").ShouldBe("factory/line-a/");
         snapshot.ShouldNotBeNull();
         snapshot.ReadFilter(DashboardEventFilterCatalog.TopicStartsWithKey).ShouldBe("factory/line-a/");
         snapshot.ReadFilter(DashboardEventFilterCatalog.EventTypeKey).ShouldBe(FluxMqEventTypes.MqttMessagePublished);
@@ -1339,8 +1315,6 @@ public sealed class DashboardEventFilterCatalogTests
         inspector.ShouldContain("DashboardWidgetCatalog.RateTileType");
         inspector.ShouldContain("DashboardWidgetCatalog.EventCounterType");
         inspector.ShouldContain("DashboardWidgetCatalog.EventRateType");
-        inspector.ShouldContain("EventCountMetricType.Id");
-        inspector.ShouldContain("EventRateMetricType.Id");
         inspector.ShouldNotContain("IsMetricQueryBuilderWidget");
         inspector.ShouldNotContain("OpenMetricBuilderAsync");
         inspector.ShouldNotContain("DashboardMetricQueryBuilderDialog");

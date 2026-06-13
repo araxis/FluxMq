@@ -3,7 +3,7 @@
 @using FluxMq.UI.Services
 @inject DashboardEventFilterCatalog EventFilters
 @inject DashboardWidgetRegistry WidgetRegistry
-@inject IFluxMetricTypeRegistry TypeRegistry
+@inject IFluxMetricCatalog MetricCatalog
 @inject IDialogService DialogService
 
 <aside class="dashboard-inspector">
@@ -479,9 +479,9 @@
             ? metric
             : null;
 
-    private IReadOnlyList<FluxMetricParameterDescriptor> SelectedAppMetricParameters =>
-        SelectedAppMetric is { } resource && TypeRegistry.TryGetNumberType(resource.TypeId, out var type)
-            ? type.Parameters
+    private IReadOnlyList<MetricParamSpec> SelectedAppMetricParameters =>
+        SelectedAppMetric is { } resource
+            ? MetricCatalog.Describe(resource.TypeId)?.Parameters ?? []
             : [];
 
     private IReadOnlyList<PropertyGridSelectOption> AppMetricNameOptions
@@ -559,8 +559,8 @@
         get
         {
             var resource = DashboardMetricReferenceResolver.ResolveAppMetric(Project, _primaryBindingMetric, _bindingOptions);
-            return resource is not null && TypeRegistry.TryGetNumberType(resource.TypeId, out var type)
-                ? type.Summarize(resource)
+            return resource is not null && MetricCatalog.Describe(resource.TypeId) is { } descriptor
+                ? descriptor.DisplayName
                 : "Select an app metric";
         }
     }
@@ -1124,22 +1124,9 @@
            string.Equals(type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal) ||
            string.Equals(type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal);
 
-    private bool IsCompatibleAppMetric(FluxMetricResourceDefinition metric)
-    {
-        if (string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal) ||
-            string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.StatusValueType, StringComparison.Ordinal))
-        {
-            return string.Equals(metric.TypeId, EventCountMetricType.Id, StringComparison.Ordinal);
-        }
-
-        if (string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal) ||
-            string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.RateTileType, StringComparison.Ordinal))
-        {
-            return string.Equals(metric.TypeId, EventRateMetricType.Id, StringComparison.Ordinal);
-        }
-
-        return true;
-    }
+    // App-metric tiles can bind to any registered metric kind now; the flat framework no longer
+    // distinguishes count vs rate types, so every app metric resource is selectable.
+    private static bool IsCompatibleAppMetric(FluxMetricResourceDefinition metric) => true;
 
     private static string AppMetricDisplayName(string metricName, FluxMetricResourceDefinition metric)
         => string.IsNullOrWhiteSpace(metric.DisplayName)

@@ -24,7 +24,6 @@ internal static class FluxMqRuntimeNodeModuleCatalog
             new StoredSessionSourceRuntimeNodeModule(),
             new ReplaySourceRuntimeNodeModule(),
             new GeneratedMqttSourceRuntimeNodeModule(),
-            new MetricSourceRuntimeNodeModule(),
             new PayloadInspectorRuntimeNodeModule(),
             new MqttMetricsRuntimeNodeModule(),
             new FlowLoggerRuntimeNodeModule(),
