@@ -310,6 +310,7 @@ public sealed class DashboardEventFilterCatalogTests
         var rateTile = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.RateTileType);
         var latest = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.LatestEventType);
         var chart = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.LineChartType);
+        var area = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.AreaChartType);
         var table = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.EventTableType);
         var topicActivity = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.TopicActivityType);
         var tree = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.TopicTreeType);
@@ -333,6 +334,11 @@ public sealed class DashboardEventFilterCatalogTests
         chart.UsesVisualMetrics.ShouldBeFalse();
         chart.UsesChartType.ShouldBeFalse();
         chart.UsesLineChartVisual.ShouldBeTrue();
+        area.SupportsMetricSlots.ShouldBeFalse();
+        area.UsesMetricWindow.ShouldBeTrue();
+        area.UsesVisualMetrics.ShouldBeFalse();
+        area.UsesChartType.ShouldBeFalse();
+        area.UsesAreaChartVisual.ShouldBeTrue();
         table.IsEventWidget.ShouldBeTrue();
         table.UsesVisualMetrics.ShouldBeFalse();
         table.SupportsMetricSlots.ShouldBeFalse();
@@ -685,6 +691,60 @@ public sealed class DashboardEventFilterCatalogTests
         configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardLineChartVisualOptions.LegacyShowGridKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardLineChartVisualOptions.LegacyLineColorKey).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DashboardWidgetSettingsDraft_BuildsAreaChartVisualConfiguration()
+    {
+        var draft = DashboardWidgetSettingsDraft.Create(
+            new DashboardWidgetSnapshot(
+                "area",
+                DashboardWidgetCatalog.AreaChartType,
+                new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["title"] = "Area",
+                    [DashboardChartWidgetOptions.TypeKey] = DashboardChartWidgetOptions.TypeLine,
+                    [DashboardAreaChartVisualOptions.LegacyShowGridKey] = bool.FalseString,
+                    [DashboardAreaChartVisualOptions.LegacyShowPointsKey] = bool.TrueString,
+                    [DashboardAreaChartVisualOptions.LegacyLineColorKey] = "#112233",
+                    [DashboardAreaChartVisualOptions.LegacyFillColorKey] = "#445566",
+                    [DashboardAreaChartVisualOptions.LegacyFillOpacityKey] = "0.5",
+                    [DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricMessages,
+                    [DashboardEventFilterCatalog.EventTypeKey] = FluxMqEventTypes.MqttMessagePublished
+                }),
+            new DashboardEventFilterCatalog());
+
+        draft.SetAreaChartVisualValue(DashboardAreaChartVisualOptions.HeaderKey, "Published area");
+        draft.SetAreaChartVisualValue(DashboardAreaChartVisualOptions.ShowGridKey, bool.TrueString);
+        draft.SetAreaChartVisualValue(DashboardAreaChartVisualOptions.ShowLabelsKey, bool.FalseString);
+        draft.SetAreaChartVisualValue(DashboardAreaChartVisualOptions.LineWidthKey, "4");
+        draft.SetAreaChartVisualValue(DashboardAreaChartVisualOptions.FillOpacityKey, "42");
+        draft.SetAreaChartVisualValue(DashboardAreaChartVisualOptions.EmptyTextKey, "No area data");
+        draft.SetAreaChartVisualValue(DashboardAreaChartVisualOptions.LineColorKey, "#33ccaa");
+        draft.SetAreaChartVisualValue(DashboardAreaChartVisualOptions.FillColorKey, "#225544");
+        draft.SetAreaChartVisualValue(DashboardAreaChartVisualOptions.GridColorKey, "#203040");
+        draft.SetAreaChartVisualValue(DashboardAreaChartVisualOptions.LabelColorKey, "#8899aa");
+
+        var configuration = draft.BuildConfiguration();
+
+        configuration["title"].ShouldBe("Published area");
+        configuration[DashboardChartWidgetOptions.TypeKey].ShouldBe(DashboardChartWidgetOptions.TypeArea);
+        configuration[DashboardAreaChartVisualOptions.HeaderKey].ShouldBe("Published area");
+        configuration[DashboardAreaChartVisualOptions.ShowHeaderKey].ShouldBe(bool.TrueString);
+        configuration[DashboardAreaChartVisualOptions.ShowGridKey].ShouldBe(bool.TrueString);
+        configuration[DashboardAreaChartVisualOptions.ShowLabelsKey].ShouldBe(bool.FalseString);
+        configuration[DashboardAreaChartVisualOptions.ShowPointsKey].ShouldBe(bool.TrueString);
+        configuration[DashboardAreaChartVisualOptions.LineWidthKey].ShouldBe("4");
+        configuration[DashboardAreaChartVisualOptions.FillOpacityKey].ShouldBe("42");
+        configuration[DashboardAreaChartVisualOptions.EmptyTextKey].ShouldBe("No area data");
+        configuration[DashboardAreaChartVisualOptions.LineColorKey].ShouldBe("#33ccaa");
+        configuration[DashboardAreaChartVisualOptions.FillColorKey].ShouldBe("#225544");
+        configuration[DashboardAreaChartVisualOptions.GridColorKey].ShouldBe("#203040");
+        configuration[DashboardAreaChartVisualOptions.LabelColorKey].ShouldBe("#8899aa");
+        configuration[DashboardEventFilterCatalog.EventTypeKey].ShouldBe(FluxMqEventTypes.MqttMessagePublished);
+        configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardAreaChartVisualOptions.LegacyFillColorKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardAreaChartVisualOptions.LegacyFillOpacityKey).ShouldBeFalse();
     }
 
     [Fact]
@@ -2505,6 +2565,26 @@ public sealed class DashboardEventFilterCatalogTests
             .DefaultConfiguration[DashboardChartWidgetOptions.TypeKey]
             .ShouldBe(DashboardChartWidgetOptions.TypeArea);
         modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.AreaChartType)
+            .DefaultConfiguration
+            .ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey)
+            .ShouldBeFalse();
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.AreaChartType)
+            .DefaultConfiguration[DashboardAreaChartVisualOptions.HeaderKey]
+            .ShouldBe("Area chart");
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.AreaChartType)
+            .PropertyGroups
+            .Select(static group => group.Id)
+            .ShouldBe(["area-chart"]);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.AreaChartType)
+            .PropertyGroups
+            .SelectMany(static group => group.Properties)
+            .Select(static property => property.Key)
+            .ShouldContain(DashboardAreaChartVisualOptions.FillColorKey);
+        modules
             .Single(static module => module.Type == DashboardWidgetCatalog.BarChartType)
             .DefaultConfiguration[DashboardChartWidgetOptions.TypeKey]
             .ShouldBe(DashboardChartWidgetOptions.TypeBars);
@@ -3295,9 +3375,11 @@ public sealed class DashboardEventFilterCatalogTests
         displayRows.ShouldContain("TopicActivityVisualPropertyChanged");
         displayRows.ShouldContain("TopicTreeVisualPropertyChanged");
         displayRows.ShouldContain("LineChartVisualPropertyChanged");
+        displayRows.ShouldContain("AreaChartVisualPropertyChanged");
         inspector.ShouldContain("TopicActivityVisualPropertyChanged=\"@SetTopicActivityVisualPropertyAsync\"");
         inspector.ShouldContain("TopicTreeVisualPropertyChanged=\"@SetTopicTreeVisualPropertyAsync\"");
         inspector.ShouldContain("LineChartVisualPropertyChanged=\"@SetLineChartVisualPropertyAsync\"");
+        inspector.ShouldContain("AreaChartVisualPropertyChanged=\"@SetAreaChartVisualPropertyAsync\"");
     }
 
     [Fact]
@@ -3363,6 +3445,8 @@ public sealed class DashboardEventFilterCatalogTests
         var eventGauge = File.ReadAllText(Path.Combine(widgetsPath, "DashboardMetricGaugeVisualizationView.razor"));
         var lineChartModule = File.ReadAllText(Path.Combine(widgetsPath, "DashboardLineChartModuleView.razor"));
         var lineChart = File.ReadAllText(Path.Combine(widgetsPath, "DashboardLineChartWidget.razor"));
+        var areaChartModule = File.ReadAllText(Path.Combine(widgetsPath, "DashboardAreaChartModuleView.razor"));
+        var areaChart = File.ReadAllText(Path.Combine(widgetsPath, "DashboardAreaChartWidget.razor"));
 
         kpi.ShouldContain("DashboardMetricVisualizationHost");
         counter.ShouldContain("DashboardMetricValueVisualizationView");
@@ -3384,11 +3468,17 @@ public sealed class DashboardEventFilterCatalogTests
         lineChart.ShouldContain("DashboardLineChartVisualOptions");
         lineChart.ShouldContain("Context.Snapshot");
         lineChart.ShouldNotContain("DashboardChartWidgetOptions.NormalizeType");
+        areaChartModule.ShouldContain("DashboardAreaChartWidget");
+        areaChartModule.ShouldNotContain("DashboardEventChartWidget");
+        areaChart.ShouldContain("DashboardAreaChartVisualOptions");
+        areaChart.ShouldContain("Context.Snapshot");
+        areaChart.ShouldNotContain("DashboardChartWidgetOptions.NormalizeType");
         widgetView.ShouldContain("DashboardWidgetCatalog.EventCounterType");
         widgetView.ShouldContain("DashboardWidgetCatalog.EventRateType");
         widgetView.ShouldContain("DashboardWidgetCatalog.RateTileType");
         widgetView.ShouldContain("DashboardWidgetCatalog.StatusValueType");
         widgetView.ShouldContain("DashboardWidgetCatalog.LineChartType");
+        widgetView.ShouldContain("DashboardWidgetCatalog.AreaChartType");
     }
 
     [Fact]

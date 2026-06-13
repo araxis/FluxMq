@@ -1,0 +1,139 @@
+@namespace FluxMq.UI.Components.Workspace
+@using FluxMq.UI.Services
+
+@{
+    var widget = Context.Widget;
+    var snapshot = Context.Snapshot;
+    var points = DashboardWidgetFormatting.ChartLinePointValues(snapshot);
+    var hasData = snapshot.BucketCounts.Any(static count => count > 0);
+}
+
+<div class="dashboard-area-chart-visual" style="@VisualStyle(widget)">
+    @if (ShowHeader(widget))
+    {
+        <div class="dashboard-area-chart-header">
+            <div class="dashboard-widget-icon">
+                <MudIcon Icon="@DashboardWidgetFormatting.WidgetIcon(widget)" Size="Size.Small" />
+            </div>
+            <div class="dashboard-widget-title-block">
+                <span class="dashboard-widget-title">@Header(widget)</span>
+                <span class="dashboard-widget-subtitle">@DashboardWidgetFormatting.EventFilterSummary(widget)</span>
+            </div>
+        </div>
+    }
+
+    <div class="dashboard-area-chart-body">
+        @if (hasData)
+        {
+            <svg class="dashboard-area-chart-svg"
+                 viewBox="0 0 100 44"
+                 preserveAspectRatio="none"
+                 role="img"
+                 aria-label="@Header(widget)">
+                @if (ShowGrid(widget))
+                {
+                    <line class="dashboard-area-chart-grid-line" x1="0" y1="12" x2="100" y2="12" />
+                    <line class="dashboard-area-chart-grid-line" x1="0" y1="24" x2="100" y2="24" />
+                    <line class="dashboard-area-chart-grid-line" x1="0" y1="36" x2="100" y2="36" />
+                }
+                <polygon class="dashboard-area-chart-fill"
+                         points="@DashboardWidgetFormatting.ChartAreaPoints(snapshot)" />
+                <polyline class="dashboard-area-chart-path"
+                          points="@DashboardWidgetFormatting.ChartLinePoints(snapshot)" />
+                @if (ShowPoints(widget))
+                {
+                    @foreach (var point in points)
+                    {
+                        <circle class="dashboard-area-chart-point"
+                                cx="@point.X"
+                                cy="@point.Y"
+                                r="1.7">
+                            <title>@point.Tooltip</title>
+                        </circle>
+                    }
+                }
+            </svg>
+            @if (ShowLabels(widget))
+            {
+                <div class="dashboard-area-chart-labels">
+                    <span>@WindowLabel(snapshot.RateWindow)</span>
+                    <strong>@DashboardWidgetFormatting.RateMeta(snapshot)</strong>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="dashboard-widget-empty">@EmptyText(widget)</div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardWidgetRenderContext Context { get; set; } = null!;
+
+    private static string Header(DashboardWidgetSnapshot widget)
+        => widget.ReadString(DashboardAreaChartVisualOptions.HeaderKey) ??
+           widget.ReadString("title") ??
+           DashboardAreaChartVisualOptions.DefaultHeader;
+
+    private static string EmptyText(DashboardWidgetSnapshot widget)
+        => widget.ReadString(DashboardAreaChartVisualOptions.EmptyTextKey) ??
+           DashboardAreaChartVisualOptions.DefaultEmptyText;
+
+    private static bool ShowHeader(DashboardWidgetSnapshot widget)
+        => ReadBoolean(widget, DashboardAreaChartVisualOptions.ShowHeaderKey, true);
+
+    private static bool ShowGrid(DashboardWidgetSnapshot widget)
+        => ReadBoolean(
+            widget,
+            DashboardAreaChartVisualOptions.ShowGridKey,
+            ReadBoolean(widget, DashboardAreaChartVisualOptions.LegacyShowGridKey, true));
+
+    private static bool ShowLabels(DashboardWidgetSnapshot widget)
+        => ReadBoolean(
+            widget,
+            DashboardAreaChartVisualOptions.ShowLabelsKey,
+            ReadBoolean(widget, DashboardAreaChartVisualOptions.LegacyShowLabelsKey, true));
+
+    private static bool ShowPoints(DashboardWidgetSnapshot widget)
+        => ReadBoolean(
+            widget,
+            DashboardAreaChartVisualOptions.ShowPointsKey,
+            ReadBoolean(widget, DashboardAreaChartVisualOptions.LegacyShowPointsKey, false));
+
+    private static string VisualStyle(DashboardWidgetSnapshot widget)
+    {
+        var line = widget.ReadString(DashboardAreaChartVisualOptions.LineColorKey) ??
+            widget.ReadString(DashboardAreaChartVisualOptions.LegacyLineColorKey) ??
+            DashboardAreaChartVisualOptions.DefaultLineColor;
+        var fill = widget.ReadString(DashboardAreaChartVisualOptions.FillColorKey) ??
+            widget.ReadString(DashboardAreaChartVisualOptions.LegacyFillColorKey) ??
+            DashboardAreaChartVisualOptions.DefaultFillColor;
+        var opacity = DashboardAreaChartVisualOptions.NormalizeFillOpacity(
+            widget.ReadString(DashboardAreaChartVisualOptions.FillOpacityKey) ??
+            widget.ReadString(DashboardAreaChartVisualOptions.LegacyFillOpacityKey));
+        var grid = widget.ReadString(DashboardAreaChartVisualOptions.GridColorKey) ??
+            DashboardAreaChartVisualOptions.DefaultGridColor;
+        var label = widget.ReadString(DashboardAreaChartVisualOptions.LabelColorKey) ??
+            DashboardAreaChartVisualOptions.DefaultLabelColor;
+        var width = DashboardAreaChartVisualOptions.NormalizeLineWidth(
+            widget.ReadString(DashboardAreaChartVisualOptions.LineWidthKey));
+        return $"--area-chart-line-color:{line};--area-chart-fill-color:{fill};--area-chart-fill-opacity:{opacity}%;--area-chart-grid-color:{grid};--area-chart-label-color:{label};--area-chart-width:{width};";
+    }
+
+    private static bool ReadBoolean(DashboardWidgetSnapshot widget, string key, bool fallback)
+        => bool.TryParse(widget.ReadString(key), out var parsed)
+            ? parsed
+            : fallback;
+
+    private static string WindowLabel(TimeSpan window)
+    {
+        if (window.TotalMinutes >= 1)
+        {
+            return $"{Math.Max(1, (int)Math.Round(window.TotalMinutes))}m window";
+        }
+
+        return $"{Math.Max(1, (int)Math.Round(window.TotalSeconds))}s window";
+    }
+}

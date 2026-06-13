@@ -48,6 +48,7 @@ public sealed class DashboardWidgetSettingsDraft
         ApplyEventTableVisualValues(widget.Configuration);
         ApplyTopicActivityVisualValues(widget.Configuration);
         ApplyLineChartVisualValues(widget.Configuration);
+        ApplyAreaChartVisualValues(widget.Configuration);
         ApplyTopicTreeVisualValues(widget.Configuration);
 
         foreach (var key in eventFilters.FilterKeys)
@@ -195,6 +196,32 @@ public sealed class DashboardWidgetSettingsDraft
 
     public string LineChartLabelColor { get; set; } = DashboardLineChartVisualOptions.DefaultLabelColor;
 
+    public string AreaChartHeader { get; set; } = DashboardAreaChartVisualOptions.DefaultHeader;
+
+    public bool AreaChartShowHeader { get; set; } = true;
+
+    public bool AreaChartShowGrid { get; set; } = true;
+
+    public bool AreaChartShowLabels { get; set; } = true;
+
+    public bool AreaChartShowPoints { get; set; }
+
+    public string AreaChartLineWidth { get; set; } =
+        DashboardAreaChartVisualOptions.DefaultLineWidth.ToString(CultureInfo.InvariantCulture);
+
+    public string AreaChartFillOpacity { get; set; } =
+        DashboardAreaChartVisualOptions.DefaultFillOpacity.ToString(CultureInfo.InvariantCulture);
+
+    public string AreaChartEmptyText { get; set; } = DashboardAreaChartVisualOptions.DefaultEmptyText;
+
+    public string AreaChartLineColor { get; set; } = DashboardAreaChartVisualOptions.DefaultLineColor;
+
+    public string AreaChartFillColor { get; set; } = DashboardAreaChartVisualOptions.DefaultFillColor;
+
+    public string AreaChartGridColor { get; set; } = DashboardAreaChartVisualOptions.DefaultGridColor;
+
+    public string AreaChartLabelColor { get; set; } = DashboardAreaChartVisualOptions.DefaultLabelColor;
+
     public string TopicTreeHeader { get; set; } = DashboardTopicTreeVisualOptions.DefaultHeader;
 
     public bool TopicTreeShowHeader { get; set; } = true;
@@ -269,6 +296,7 @@ public sealed class DashboardWidgetSettingsDraft
         ApplyEventTableVisualValues(configuration);
         ApplyTopicActivityVisualValues(configuration);
         ApplyLineChartVisualValues(configuration);
+        ApplyAreaChartVisualValues(configuration);
         ApplyTopicTreeVisualValues(configuration);
 
         foreach (var key in _eventFilters.FilterKeys)
@@ -609,6 +637,59 @@ public sealed class DashboardWidgetSettingsDraft
         }
     }
 
+    public void SetAreaChartVisualValue(string key, string? value)
+    {
+        if (!Profile.UsesAreaChartVisual)
+        {
+            return;
+        }
+
+        switch (key)
+        {
+            case DashboardAreaChartVisualOptions.HeaderKey:
+                AreaChartHeader = NormalizeText(value, DashboardAreaChartVisualOptions.DefaultHeader);
+                Title = AreaChartHeader;
+                break;
+            case DashboardAreaChartVisualOptions.ShowHeaderKey:
+                AreaChartShowHeader = NormalizeBoolean(value, AreaChartShowHeader);
+                break;
+            case DashboardAreaChartVisualOptions.ShowGridKey:
+                AreaChartShowGrid = NormalizeBoolean(value, AreaChartShowGrid);
+                break;
+            case DashboardAreaChartVisualOptions.ShowLabelsKey:
+                AreaChartShowLabels = NormalizeBoolean(value, AreaChartShowLabels);
+                break;
+            case DashboardAreaChartVisualOptions.ShowPointsKey:
+                AreaChartShowPoints = NormalizeBoolean(value, AreaChartShowPoints);
+                break;
+            case DashboardAreaChartVisualOptions.LineWidthKey:
+                AreaChartLineWidth = DashboardAreaChartVisualOptions
+                    .NormalizeLineWidth(value)
+                    .ToString(CultureInfo.InvariantCulture);
+                break;
+            case DashboardAreaChartVisualOptions.FillOpacityKey:
+                AreaChartFillOpacity = DashboardAreaChartVisualOptions
+                    .NormalizeFillOpacity(value)
+                    .ToString(CultureInfo.InvariantCulture);
+                break;
+            case DashboardAreaChartVisualOptions.EmptyTextKey:
+                AreaChartEmptyText = NormalizeText(value, DashboardAreaChartVisualOptions.DefaultEmptyText);
+                break;
+            case DashboardAreaChartVisualOptions.LineColorKey:
+                AreaChartLineColor = Normalize(value);
+                break;
+            case DashboardAreaChartVisualOptions.FillColorKey:
+                AreaChartFillColor = Normalize(value);
+                break;
+            case DashboardAreaChartVisualOptions.GridColorKey:
+                AreaChartGridColor = Normalize(value);
+                break;
+            case DashboardAreaChartVisualOptions.LabelColorKey:
+                AreaChartLabelColor = Normalize(value);
+                break;
+        }
+    }
+
     public IReadOnlyDictionary<string, string> BuildConfiguration()
     {
         var title = string.IsNullOrWhiteSpace(Title) ? Profile.Title : Title.Trim();
@@ -683,6 +764,7 @@ public sealed class DashboardWidgetSettingsDraft
         ApplyEventTableVisualConfiguration(configuration);
         ApplyTopicActivityVisualConfiguration(configuration);
         ApplyLineChartVisualConfiguration(configuration);
+        ApplyAreaChartVisualConfiguration(configuration);
         ApplyMetricVisualizationConfiguration(configuration);
         ApplyMetricVisualization(configuration);
         ApplyMetricName(configuration);
@@ -1116,6 +1198,90 @@ public sealed class DashboardWidgetSettingsDraft
         configuration[DashboardLineChartVisualOptions.LabelColorKey] = NormalizeColor(
             LineChartLabelColor,
             DashboardLineChartVisualOptions.DefaultLabelColor);
+    }
+
+    private void ApplyAreaChartVisualValues(IReadOnlyDictionary<string, string> configuration)
+    {
+        if (!Profile.UsesAreaChartVisual)
+        {
+            return;
+        }
+
+        AreaChartHeader = ReadString(configuration, DashboardAreaChartVisualOptions.HeaderKey) ??
+            ReadString(configuration, "title") ??
+            DashboardAreaChartVisualOptions.DefaultHeader;
+        Title = AreaChartHeader;
+        AreaChartShowHeader = ReadBoolean(configuration, DashboardAreaChartVisualOptions.ShowHeaderKey, true);
+        AreaChartShowGrid = ReadBoolean(
+            configuration,
+            DashboardAreaChartVisualOptions.ShowGridKey,
+            ReadBoolean(configuration, DashboardAreaChartVisualOptions.LegacyShowGridKey, true));
+        AreaChartShowLabels = ReadBoolean(
+            configuration,
+            DashboardAreaChartVisualOptions.ShowLabelsKey,
+            ReadBoolean(configuration, DashboardAreaChartVisualOptions.LegacyShowLabelsKey, true));
+        AreaChartShowPoints = ReadBoolean(
+            configuration,
+            DashboardAreaChartVisualOptions.ShowPointsKey,
+            ReadBoolean(configuration, DashboardAreaChartVisualOptions.LegacyShowPointsKey, false));
+        AreaChartLineWidth = DashboardAreaChartVisualOptions
+            .NormalizeLineWidth(ReadString(configuration, DashboardAreaChartVisualOptions.LineWidthKey))
+            .ToString(CultureInfo.InvariantCulture);
+        AreaChartFillOpacity = DashboardAreaChartVisualOptions
+            .NormalizeFillOpacity(
+                ReadString(configuration, DashboardAreaChartVisualOptions.FillOpacityKey) ??
+                ReadString(configuration, DashboardAreaChartVisualOptions.LegacyFillOpacityKey))
+            .ToString(CultureInfo.InvariantCulture);
+        AreaChartEmptyText = ReadString(configuration, DashboardAreaChartVisualOptions.EmptyTextKey) ??
+            DashboardAreaChartVisualOptions.DefaultEmptyText;
+        AreaChartLineColor = ReadString(configuration, DashboardAreaChartVisualOptions.LineColorKey) ??
+            ReadString(configuration, DashboardAreaChartVisualOptions.LegacyLineColorKey) ??
+            DashboardAreaChartVisualOptions.DefaultLineColor;
+        AreaChartFillColor = ReadString(configuration, DashboardAreaChartVisualOptions.FillColorKey) ??
+            ReadString(configuration, DashboardAreaChartVisualOptions.LegacyFillColorKey) ??
+            DashboardAreaChartVisualOptions.DefaultFillColor;
+        AreaChartGridColor = ReadString(configuration, DashboardAreaChartVisualOptions.GridColorKey) ??
+            DashboardAreaChartVisualOptions.DefaultGridColor;
+        AreaChartLabelColor = ReadString(configuration, DashboardAreaChartVisualOptions.LabelColorKey) ??
+            DashboardAreaChartVisualOptions.DefaultLabelColor;
+    }
+
+    private void ApplyAreaChartVisualConfiguration(Dictionary<string, string> configuration)
+    {
+        if (!Profile.UsesAreaChartVisual)
+        {
+            return;
+        }
+
+        var header = string.IsNullOrWhiteSpace(AreaChartHeader)
+            ? DashboardAreaChartVisualOptions.DefaultHeader
+            : AreaChartHeader.Trim();
+        configuration["title"] = header;
+        configuration[DashboardChartWidgetOptions.TypeKey] = DashboardChartWidgetOptions.TypeArea;
+        configuration[DashboardAreaChartVisualOptions.HeaderKey] = header;
+        configuration[DashboardAreaChartVisualOptions.ShowHeaderKey] = AreaChartShowHeader ? bool.TrueString : bool.FalseString;
+        configuration[DashboardAreaChartVisualOptions.ShowGridKey] = AreaChartShowGrid ? bool.TrueString : bool.FalseString;
+        configuration[DashboardAreaChartVisualOptions.ShowLabelsKey] = AreaChartShowLabels ? bool.TrueString : bool.FalseString;
+        configuration[DashboardAreaChartVisualOptions.ShowPointsKey] = AreaChartShowPoints ? bool.TrueString : bool.FalseString;
+        configuration[DashboardAreaChartVisualOptions.LineWidthKey] =
+            DashboardAreaChartVisualOptions.NormalizeLineWidth(AreaChartLineWidth).ToString(CultureInfo.InvariantCulture);
+        configuration[DashboardAreaChartVisualOptions.FillOpacityKey] =
+            DashboardAreaChartVisualOptions.NormalizeFillOpacity(AreaChartFillOpacity).ToString(CultureInfo.InvariantCulture);
+        configuration[DashboardAreaChartVisualOptions.EmptyTextKey] = string.IsNullOrWhiteSpace(AreaChartEmptyText)
+            ? DashboardAreaChartVisualOptions.DefaultEmptyText
+            : AreaChartEmptyText.Trim();
+        configuration[DashboardAreaChartVisualOptions.LineColorKey] = NormalizeColor(
+            AreaChartLineColor,
+            DashboardAreaChartVisualOptions.DefaultLineColor);
+        configuration[DashboardAreaChartVisualOptions.FillColorKey] = NormalizeColor(
+            AreaChartFillColor,
+            DashboardAreaChartVisualOptions.DefaultFillColor);
+        configuration[DashboardAreaChartVisualOptions.GridColorKey] = NormalizeColor(
+            AreaChartGridColor,
+            DashboardAreaChartVisualOptions.DefaultGridColor);
+        configuration[DashboardAreaChartVisualOptions.LabelColorKey] = NormalizeColor(
+            AreaChartLabelColor,
+            DashboardAreaChartVisualOptions.DefaultLabelColor);
     }
 
     private void TrimFiltersToEventType()
