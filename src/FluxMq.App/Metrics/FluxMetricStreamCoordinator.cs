@@ -17,6 +17,11 @@ public sealed class FluxMetricStreamCoordinator
 
     private readonly IFluxMetricCatalog _catalog;
     private readonly object _sync = new();
+
+    // One running source per distinct (metric id + effective parameters) key. The key space is bounded by the
+    // configured resources times the parameter-override combinations consumers actually request (stable in practice
+    // — a tile/node binds a fixed set), and the whole map is completed and cleared on every Configure/Complete.
+    // It is intentionally lifetime-scoped to the current configuration, not an LRU cache.
     private readonly Dictionary<string, RunningMetric> _streams = new(StringComparer.Ordinal);
 
     private IReadOnlyDictionary<string, FluxMetricResourceDefinition> _resources =
@@ -57,12 +62,17 @@ public sealed class FluxMetricStreamCoordinator
         IReadOnlyDictionary<string, string>? overrides)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(metricId);
-        if (!TryGetStream(metricId.Trim(), overrides, out var running) || running is null)
+        lock (_sync)
         {
-            throw new InvalidOperationException($"Metric '{metricId}' is not available.");
-        }
+            if (!TryGetStream(metricId.Trim(), overrides, out var running) || running is null)
+            {
+                throw new InvalidOperationException($"Metric '{metricId}' is not available.");
+            }
 
-        return running.NumberStream;
+            // Build and link the adapter while still holding the lock so a concurrent Configure/Complete
+            // cannot complete the source between resolving it and linking the adapter to its output.
+            return running.NumberStream;
+        }
     }
 
     /// <summary>Reads the latest numeric reading for a metric, creating and starting its stream on first use.</summary>

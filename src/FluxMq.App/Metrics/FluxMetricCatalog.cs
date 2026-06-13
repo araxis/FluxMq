@@ -63,10 +63,18 @@ public sealed class FluxMetricCatalog : IFluxMetricCatalog
             : throw new InvalidOperationException($"Metric type '{typeId}' is not registered.");
     }
 
-    public static IFluxMetricCatalog CreateDefault()
+    // The default catalog is immutable after construction and its factories are static (they capture no provider),
+    // so a single shared instance is safe to reuse. Built once to avoid spinning up and discarding a ServiceProvider
+    // on every call (the default ctors of the dashboard registry and validator both ask for it).
+    private static readonly IFluxMetricCatalog SharedDefault = BuildDefault();
+
+    public static IFluxMetricCatalog CreateDefault() => SharedDefault;
+
+    private static IFluxMetricCatalog BuildDefault()
     {
         var services = new ServiceCollection();
         services.AddFluxMetrics();
-        return services.BuildServiceProvider().GetRequiredService<IFluxMetricCatalog>();
+        using var provider = services.BuildServiceProvider();
+        return provider.GetRequiredService<IFluxMetricCatalog>();
     }
 }

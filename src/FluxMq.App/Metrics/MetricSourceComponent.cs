@@ -20,11 +20,12 @@ public sealed class MetricSourceComponent : IFlowNode
     private readonly int _boundedCapacity;
     private readonly ActionBlock<FluxMetricReading<double>> _relay;
     private readonly BroadcastBlock<FluxMetricReading<double>> _output;
-    private readonly BufferBlock<FlowError> _errors = new();
+    private readonly BufferBlock<FlowError> _errors;
     private IDisposable? _link;
     private int _started;
-    private bool _completed;
-    private bool _skipReplayedLatest;
+    private int _completed;
+    // Written on StartAsync, read on the relay's ActionBlock thread — volatile for cross-thread visibility.
+    private volatile bool _skipReplayedLatest;
 
     public MetricSourceComponent(
         FluxMetricStreamCoordinator coordinator,
@@ -50,6 +51,7 @@ public sealed class MetricSourceComponent : IFlowNode
         _output = new BroadcastBlock<FluxMetricReading<double>>(
             static reading => reading,
             new DataflowBlockOptions { BoundedCapacity = boundedCapacity });
+        _errors = new BufferBlock<FlowError>(new DataflowBlockOptions { BoundedCapacity = boundedCapacity });
         _relay = new ActionBlock<FluxMetricReading<double>>(
             RelayReading,
             new ExecutionDataflowBlockOptions
@@ -102,12 +104,11 @@ public sealed class MetricSourceComponent : IFlowNode
 
     public void Complete()
     {
-        if (_completed)
+        if (Interlocked.Exchange(ref _completed, 1) != 0)
         {
             return;
         }
 
-        _completed = true;
         _link?.Dispose();
         _link = null;
         _relay.Complete();
@@ -126,7 +127,7 @@ public sealed class MetricSourceComponent : IFlowNode
         }
         finally
         {
-            _completed = true;
+            Interlocked.Exchange(ref _completed, 1);
             _link = null;
         }
     }
