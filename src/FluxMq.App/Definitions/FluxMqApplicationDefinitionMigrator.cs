@@ -200,6 +200,8 @@ public static class FluxMqApplicationDefinitionMigrator
         AddParameter(parameters, "topicStartsWith", ReadString(filters, "topicStartsWith"));
         AddParameter(parameters, "topicNotStartsWith", ReadString(filters, "topicNotStartsWith"));
         AddParameter(parameters, "status", ReadString(filters, "status"));
+        AddParameter(parameters, "groupBy", ReadString(metric, "groupBy"));
+        AddParameter(parameters, "format", ReadString(metric["format"] as JsonObject ?? new JsonObject(), "unit"));
         LiftAttributeParameters(parameters, filters);
 
         return new JsonObject

@@ -8,7 +8,6 @@ internal sealed class DashboardMetricValueBridge(FlowDefinitionComposer definiti
 {
     private static readonly TimeSpan DefaultRateWindow = TimeSpan.FromMinutes(1);
     private readonly DashboardMetricRegistry _dashboardMetricRegistry = new();
-    private readonly FluxMetricResolver _metricResolver = new();
 
     public delegate bool TryGetMetricReading(
         string? metricId,
@@ -22,15 +21,15 @@ internal sealed class DashboardMetricValueBridge(FlowDefinitionComposer definiti
         out TimeSpan rateWindow)
     {
         rateWindow = DefaultRateWindow;
-        var metric = ResolveMetric(widget, layout, definitionJson);
-        if (metric is null)
+        var resolved = ResolveMetric(widget, layout, definitionJson);
+        if (resolved is null)
         {
             return widget;
         }
 
-        rateWindow = ParseWindow(metric.Window);
+        rateWindow = MetricWindow.Parse(resolved.Snapshot.Window);
         var configuration = new Dictionary<string, string>(widget.Configuration, StringComparer.Ordinal);
-        foreach (var filter in metric.Filters)
+        foreach (var filter in resolved.Snapshot.Filters)
         {
             configuration[filter.Key] = filter.Value;
         }
@@ -45,14 +44,15 @@ internal sealed class DashboardMetricValueBridge(FlowDefinitionComposer definiti
         Func<DashboardWidgetSnapshot, DashboardEventSnapshot> snapshotFactory,
         TryGetMetricReading tryGetReading)
     {
-        if (TryGetStreamValue(widget, layout, definitionJson, tryGetReading, out var readingValue))
+        var resolved = ResolveMetric(widget, layout, definitionJson);
+        if (resolved is not null &&
+            tryGetReading(resolved.MetricName, resolved.Parameters, out var reading))
         {
-            return readingValue;
+            return _dashboardMetricRegistry.Format(resolved.TypeId, reading.Value);
         }
 
         var snapshot = snapshotFactory(widget);
-        var metric = ResolveMetric(widget, layout, definitionJson);
-        if (metric is null)
+        if (resolved is null)
         {
             return DashboardMetricRegistry.EvaluateLegacyMetric(
                 DashboardWidgetCatalog.NormalizePrimaryMetric(
@@ -60,10 +60,10 @@ internal sealed class DashboardMetricValueBridge(FlowDefinitionComposer definiti
                 snapshot);
         }
 
-        return _dashboardMetricRegistry.Evaluate(ToDashboardMetricQuery(metric), snapshot);
+        return _dashboardMetricRegistry.Evaluate(resolved.TypeId, snapshot);
     }
 
-    private DashboardMetricSnapshot? ResolveMetric(
+    private ResolvedMetric? ResolveMetric(
         DashboardWidgetSnapshot widget,
         DashboardLayoutSnapshot? layout,
         string definitionJson)
@@ -80,58 +80,51 @@ internal sealed class DashboardMetricValueBridge(FlowDefinitionComposer definiti
             return null;
         }
 
-        var appMetric = definitionComposer.GetMetricArtifact(definitionJson, metricName);
-        if (appMetric is not null)
+        var resource = definitionComposer.GetMetricResource(definitionJson, metricName);
+        if (resource is not null)
         {
-            var validation = _metricResolver.ValidateReference(appMetric, binding.Options);
-            if (!validation.IsValid)
-            {
-                return null;
-            }
-
-            return ToDashboardMetricSnapshot(metricName, _metricResolver.Resolve(appMetric, binding.Options));
+            var merged = Merge(resource.Parameters, binding.Options);
+            var snapshot = FlowDefinitionComposer.ResourceToDashboardMetricSnapshot(metricName, resource with { Parameters = merged });
+            return new ResolvedMetric(metricName, resource.TypeId, merged, snapshot);
         }
 
-        return layout.Metrics.TryGetValue(metricName, out var metric)
-            ? metric
-            : null;
+        if (layout.Metrics.TryGetValue(metricName, out var legacy))
+        {
+            return new ResolvedMetric(
+                metricName,
+                DashboardMetricRegistry.TypeForMeasure(legacy.Aggregation),
+                binding.Options,
+                legacy);
+        }
+
+        return null;
     }
 
-    private bool TryGetStreamValue(
-        DashboardWidgetSnapshot widget,
-        DashboardLayoutSnapshot? layout,
-        string definitionJson,
-        TryGetMetricReading tryGetReading,
-        out DashboardMetricValue value)
+    private static Dictionary<string, string> Merge(
+        IReadOnlyDictionary<string, string> parameters,
+        IReadOnlyDictionary<string, string>? overrides)
     {
-        value = default!;
-        if (layout is null ||
-            !layout.Bindings.TryGetValue(widget.Name, out var binding))
+        var merged = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var (key, value) in parameters)
         {
-            return false;
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                merged[key] = value;
+            }
         }
 
-        var metricName = PrimaryMetricName(binding);
-        if (string.IsNullOrWhiteSpace(metricName))
+        if (overrides is not null)
         {
-            return false;
+            foreach (var (key, value) in overrides)
+            {
+                if (!string.IsNullOrWhiteSpace(key) && !string.IsNullOrWhiteSpace(value))
+                {
+                    merged[key.Trim()] = value.Trim();
+                }
+            }
         }
 
-        var appMetric = definitionComposer.GetMetricArtifact(definitionJson, metricName);
-        if (appMetric is null ||
-            !tryGetReading(metricName, binding.Options, out var reading))
-        {
-            return false;
-        }
-
-        var definition = _metricResolver.Resolve(appMetric, binding.Options);
-        var measure = FluxMetricCatalog.Shared.FindMeasure(definition.Measure);
-        value = new DashboardMetricValue(
-            measure.Label,
-            reading.Value,
-            measure.Unit,
-            FluxMetricEvaluationEngine.FormatValue(reading.Value, measure.Unit, definition.Format));
-        return true;
+        return merged;
     }
 
     private static string? PrimaryMetricName(DashboardWidgetBindingSnapshot binding)
@@ -139,79 +132,9 @@ internal sealed class DashboardMetricValueBridge(FlowDefinitionComposer definiti
             ? binding.Metrics.FirstOrDefault()
             : binding.PrimaryMetric;
 
-    private static DashboardMetricSnapshot ToDashboardMetricSnapshot(string metricName, FluxMetricDefinition definition)
-    {
-        var filters = new Dictionary<string, string>(definition.AdditionalFilters, StringComparer.Ordinal);
-        AddIfPresent(filters, DashboardEventFilterCatalog.EventTypeKey, definition.EventType);
-        AddIfPresent(filters, DashboardEventFilterCatalog.TopicStartsWithKey, definition.TopicStartsWith);
-        AddIfPresent(filters, DashboardEventFilterCatalog.TopicNotStartsWithKey, definition.TopicNotStartsWith);
-        AddIfPresent(filters, DashboardEventFilterCatalog.StatusKey, definition.Status);
-
-        return new DashboardMetricSnapshot(
-            metricName,
-            definition.Source,
-            definition.Measure,
-            definition.Window,
-            definition.GroupBy,
-            filters,
-            new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["unit"] = definition.Format
-            });
-    }
-
-    private static void AddIfPresent(IDictionary<string, string> target, string key, string? value)
-    {
-        if (!string.IsNullOrWhiteSpace(value))
-        {
-            target[key] = value.Trim();
-        }
-    }
-
-    private static DashboardMetricQueryDefinition ToDashboardMetricQuery(DashboardMetricSnapshot metric)
-        => new(
-            metric.Source,
-            metric.Aggregation,
-            metric.Window,
-            EventType: metric.ReadFilter(DashboardEventFilterCatalog.EventTypeKey),
-            TopicStartsWith: metric.ReadFilter(DashboardEventFilterCatalog.TopicStartsWithKey),
-            TopicNotStartsWith: metric.ReadFilter(DashboardEventFilterCatalog.TopicNotStartsWithKey),
-            Status: metric.ReadFilter(DashboardEventFilterCatalog.StatusKey),
-            GroupBy: metric.GroupBy,
-            Format: metric.ReadFormat("unit") ?? "number",
-            AdditionalFilters: metric.Filters
-                .Where(static filter =>
-                    !string.Equals(filter.Key, DashboardEventFilterCatalog.EventTypeKey, StringComparison.Ordinal) &&
-                    !string.Equals(filter.Key, DashboardEventFilterCatalog.TopicStartsWithKey, StringComparison.Ordinal) &&
-                    !string.Equals(filter.Key, DashboardEventFilterCatalog.TopicNotStartsWithKey, StringComparison.Ordinal) &&
-                    !string.Equals(filter.Key, DashboardEventFilterCatalog.StatusKey, StringComparison.Ordinal))
-                .ToDictionary(static filter => filter.Key, static filter => filter.Value, StringComparer.Ordinal));
-
-    private static TimeSpan ParseWindow(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return DefaultRateWindow;
-        }
-
-        var normalized = value.Trim();
-        var suffix = normalized[^1];
-        var numberText = char.IsLetter(suffix)
-            ? normalized[..^1]
-            : normalized;
-        if (!double.TryParse(numberText, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var amount) ||
-            amount <= 0)
-        {
-            return DefaultRateWindow;
-        }
-
-        var window = char.ToLowerInvariant(suffix) switch
-        {
-            'h' => TimeSpan.FromHours(amount),
-            'm' => TimeSpan.FromMinutes(amount),
-            _ => TimeSpan.FromSeconds(amount)
-        };
-
-        return TimeSpan.FromSeconds(Math.Clamp(window.TotalSeconds, 1, 86_400));
-    }
+    private sealed record ResolvedMetric(
+        string MetricName,
+        string TypeId,
+        IReadOnlyDictionary<string, string> Parameters,
+        DashboardMetricSnapshot Snapshot);
 }

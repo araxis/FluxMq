@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace FluxMq.App.Metrics;
 
 /// <summary>
@@ -10,6 +12,7 @@ public sealed record FluxMetricResourceDefinition
     private Dictionary<string, string>? _parameters;
     private Dictionary<string, string>? _labels;
 
+    [JsonIgnore]
     public string Id { get; init; } = string.Empty;
 
     public string TypeId { get; init; } = string.Empty;
@@ -39,4 +42,19 @@ public sealed record FluxMetricResourceDefinition
         => Parameters.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value)
             ? value.Trim()
             : fallback;
+
+    /// <summary>
+    /// Creates a default event-count resource with a one-minute window.
+    /// </summary>
+    public static FluxMetricResourceDefinition CreateDefault(string id, string? displayName = null)
+        => new()
+        {
+            Id = id,
+            TypeId = EventCountMetricType.Id,
+            DisplayName = string.IsNullOrWhiteSpace(displayName) ? FluxMetricNaming.ToDisplayName(id) : displayName.Trim(),
+            Parameters = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [MetricParameterKeys.Window] = MetricWindow.Default
+            }
+        };
 }

@@ -3,96 +3,122 @@ using FluxMq.UI.Models;
 
 namespace FluxMq.UI.Services;
 
+/// <summary>
+/// UI-side bridge that maps a metric type id to the matching <see cref="DashboardEventSnapshot"/> aggregate and
+/// formats it for display using the registered <see cref="IFluxMetricType{TValue}"/> metadata.
+/// </summary>
 public sealed class DashboardMetricRegistry
 {
-    public IReadOnlyList<DashboardMetricSourceDescriptor> Sources { get; } =
-        [.. FluxMetricCatalog.Shared.Sources.Select(static source => new DashboardMetricSourceDescriptor(
-            source.Id,
-            source.Label,
-            source.Description))];
+    private readonly IFluxMetricTypeRegistry _types;
 
-    public IReadOnlyList<DashboardMetricAggregationDescriptor> Aggregations { get; } =
-        [.. FluxMetricCatalog.Shared.Measures.Select(static measure => new DashboardMetricAggregationDescriptor(
-            measure.Id,
-            measure.Label,
-            measure.Unit))];
-
-    private readonly FluxMetricEvaluationEngine _engine = new();
-
-    public DashboardMetricSourceDescriptor? FindSource(string? source)
-        => Sources.FirstOrDefault(item => string.Equals(item.Id, source, StringComparison.Ordinal));
-
-    public DashboardMetricAggregationDescriptor? FindAggregation(string? aggregation)
-        => Aggregations.FirstOrDefault(item => string.Equals(item.Id, aggregation, StringComparison.Ordinal));
-
-    public DashboardMetricValue Evaluate(
-        DashboardMetricQueryDefinition query,
-        DashboardEventSnapshot snapshot)
+    public DashboardMetricRegistry()
+        : this(FluxMetricTypeRegistry.CreateDefault())
     {
-        ArgumentNullException.ThrowIfNull(query);
-        ArgumentNullException.ThrowIfNull(snapshot);
-
-        var definition = DashboardMetricQueryMapper.ToFluxMetricDefinition("metric", query);
-        var value = _engine.Evaluate(definition, DashboardMetricQueryMapper.ToFluxMetricRuntimeSnapshot(snapshot));
-        return DashboardMetricQueryMapper.ToDashboardMetricValue(value);
     }
 
-    public static DashboardMetricValue EvaluateLegacyMetric(
-        string metric,
-        DashboardEventSnapshot snapshot)
+    public DashboardMetricRegistry(IFluxMetricTypeRegistry types)
+    {
+        ArgumentNullException.ThrowIfNull(types);
+        _types = types;
+    }
+
+    public IReadOnlyList<IFluxMetricType<double>> Types => _types.NumberTypes;
+
+    public IReadOnlyList<DashboardMetricAggregationDescriptor> Aggregations { get; } =
+    [
+        new("count", "Count", "events"),
+        new("rate", "Rate", "/s"),
+        new("topics", "Topics", "topics"),
+        new("payloadBytes", "Payload bytes", "bytes"),
+        new("averagePayload", "Average payload", "bytes"),
+        new("retained", "Retained", "messages")
+    ];
+
+    public DashboardMetricQueryDefinition CreateDefaultQuery(string widgetType)
+        => widgetType switch
+        {
+            DashboardWidgetCatalog.RateTileType or DashboardWidgetCatalog.EventRateType => new("runtimeEvents", "rate", "60s"),
+            DashboardWidgetCatalog.TopicActivityType or DashboardWidgetCatalog.TopicTreeType => new("topicProjection", "topics", "60s", GroupBy: "topic"),
+            DashboardWidgetCatalog.PayloadDistributionType => new("payloadInspection", "payloadBytes", "60s", GroupBy: "bucket"),
+            DashboardWidgetCatalog.QosRetainBreakdownType => new("mqttSnapshots", "count", "60s", GroupBy: "qosRetain"),
+            DashboardWidgetCatalog.QosBreakdownType => new("mqttSnapshots", "count", "60s", GroupBy: "qos"),
+            DashboardWidgetCatalog.RetainBreakdownType => new("mqttSnapshots", "count", "60s", GroupBy: "retain"),
+            _ => new("runtimeEvents", "count", "60s")
+        };
+
+    /// <summary>Maps a legacy aggregation token to the metric type id (inverse of <see cref="MeasureForType"/>).</summary>
+    public static string TypeForMeasure(string? measure)
+        => measure switch
+        {
+            "rate" => EventRateMetricType.Id,
+            "topics" => UniqueTopicCountMetricType.Id,
+            "payloadBytes" => PayloadBytesMetricType.Id,
+            "averagePayload" => AveragePayloadMetricType.Id,
+            "retained" => RetainedCountMetricType.Id,
+            _ => EventCountMetricType.Id
+        };
+
+    /// <summary>Maps a metric type id back to the legacy aggregation token used by the dashboard projection.</summary>
+    public static string MeasureForType(string? typeId)
+        => typeId switch
+        {
+            EventRateMetricType.Id => "rate",
+            UniqueTopicCountMetricType.Id => "topics",
+            PayloadBytesMetricType.Id => "payloadBytes",
+            AveragePayloadMetricType.Id => "averagePayload",
+            RetainedCountMetricType.Id => "retained",
+            _ => "count"
+        };
+
+    /// <summary>Reads the snapshot aggregate that the given metric type computes and formats it.</summary>
+    public DashboardMetricValue Evaluate(string? typeId, DashboardEventSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        return Format(typeId, SnapshotValue(typeId, snapshot));
+    }
+
+    /// <summary>Formats an already-known value (e.g. a live stream reading) using the metric type metadata.</summary>
+    public DashboardMetricValue Format(string? typeId, double value)
+    {
+        if (!string.IsNullOrWhiteSpace(typeId) && _types.TryGetNumberType(typeId, out var type))
+        {
+            return new DashboardMetricValue(type.DisplayName, value, type.Unit, MetricFormats.Format(value, type.Format));
+        }
+
+        return new DashboardMetricValue("Event count", value, "events", MetricFormats.Format(value, MetricFormats.Number));
+    }
+
+    public static DashboardMetricValue EvaluateLegacyMetric(string metric, DashboardEventSnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
 
         return metric switch
         {
             DashboardWidgetCatalog.MetricCurrentRate => new(
-                "Rate",
-                snapshot.EventsPerSecond,
-                "/s",
-                FluxMetricEvaluationEngine.FormatValue(snapshot.EventsPerSecond, "/s", FluxMetricCatalog.FormatNumber)),
+                "Event rate", snapshot.EventsPerSecond, "/s", MetricFormats.Format(snapshot.EventsPerSecond, MetricFormats.Number)),
             DashboardWidgetCatalog.MetricRecent => new(
-                "Recent",
-                snapshot.RecentCount,
-                "events",
-                FluxMetricEvaluationEngine.FormatValue(snapshot.RecentCount, "events", FluxMetricCatalog.FormatNumber)),
+                "Event count", snapshot.RecentCount, "events", MetricFormats.Format(snapshot.RecentCount, MetricFormats.Number)),
             DashboardWidgetCatalog.MetricPayloadBytes => new(
-                "Payload bytes",
-                snapshot.TotalPayloadBytes,
-                "bytes",
-                FluxMetricEvaluationEngine.FormatValue(snapshot.TotalPayloadBytes, "bytes", FluxMetricCatalog.FormatBytes)),
+                "Payload bytes", snapshot.TotalPayloadBytes, "bytes", MetricFormats.Format(snapshot.TotalPayloadBytes, MetricFormats.Bytes)),
             DashboardWidgetCatalog.MetricTopics => new(
-                "Topics",
-                snapshot.UniqueTopicCount,
-                "topics",
-                FluxMetricEvaluationEngine.FormatValue(snapshot.UniqueTopicCount, "topics", FluxMetricCatalog.FormatNumber)),
+                "Unique topics", snapshot.UniqueTopicCount, "topics", MetricFormats.Format(snapshot.UniqueTopicCount, MetricFormats.Number)),
             DashboardWidgetCatalog.MetricRetained => new(
-                "Retained",
-                snapshot.RetainedCount,
-                "messages",
-                FluxMetricEvaluationEngine.FormatValue(snapshot.RetainedCount, "messages", FluxMetricCatalog.FormatNumber)),
+                "Retained messages", snapshot.RetainedCount, "messages", MetricFormats.Format(snapshot.RetainedCount, MetricFormats.Number)),
             DashboardWidgetCatalog.MetricAveragePayload => new(
-                "Average payload",
-                snapshot.AveragePayloadBytes,
-                "bytes",
-                FluxMetricEvaluationEngine.FormatValue(snapshot.AveragePayloadBytes, "bytes", FluxMetricCatalog.FormatBytes)),
+                "Average payload", snapshot.AveragePayloadBytes, "bytes", MetricFormats.Format(snapshot.AveragePayloadBytes, MetricFormats.Bytes)),
             _ => new(
-                "Count",
-                snapshot.Count,
-                "events",
-                FluxMetricEvaluationEngine.FormatValue(snapshot.Count, "events", FluxMetricCatalog.FormatNumber))
+                "Event count", snapshot.Count, "events", MetricFormats.Format(snapshot.Count, MetricFormats.Number))
         };
     }
 
-    public DashboardMetricQueryDefinition CreateDefaultQuery(string widgetType)
-        => widgetType switch
+    private static double SnapshotValue(string? typeId, DashboardEventSnapshot snapshot)
+        => typeId switch
         {
-            DashboardWidgetCatalog.RateTileType or DashboardWidgetCatalog.EventRateType => new(FluxMetricCatalog.RuntimeEventsSource, FluxMetricCatalog.MeasureRate, "60s"),
-            DashboardWidgetCatalog.TopicActivityType or DashboardWidgetCatalog.TopicTreeType => new(FluxMetricCatalog.TopicProjectionSource, FluxMetricCatalog.MeasureTopics, "60s", GroupBy: "topic"),
-            DashboardWidgetCatalog.PayloadDistributionType => new(FluxMetricCatalog.PayloadInspectionSource, FluxMetricCatalog.MeasurePayloadBytes, "60s", GroupBy: "bucket"),
-            DashboardWidgetCatalog.QosRetainBreakdownType => new(FluxMetricCatalog.MqttSnapshotsSource, FluxMetricCatalog.MeasureCount, "60s", GroupBy: "qosRetain"),
-            DashboardWidgetCatalog.QosBreakdownType => new(FluxMetricCatalog.MqttSnapshotsSource, FluxMetricCatalog.MeasureCount, "60s", GroupBy: "qos"),
-            DashboardWidgetCatalog.RetainBreakdownType => new(FluxMetricCatalog.MqttSnapshotsSource, FluxMetricCatalog.MeasureCount, "60s", GroupBy: "retain"),
-            DashboardWidgetCatalog.StatusValueType => new(FluxMetricCatalog.RuntimeEventsSource, FluxMetricCatalog.MeasureCount, "60s"),
-            _ => DashboardMetricQueryMapper.ToDashboardQuery(FluxMetricCatalog.Shared.CreateDefaultDefinition("metric"))
+            EventRateMetricType.Id => snapshot.EventsPerSecond,
+            UniqueTopicCountMetricType.Id => snapshot.UniqueTopicCount,
+            PayloadBytesMetricType.Id => snapshot.TotalPayloadBytes,
+            AveragePayloadMetricType.Id => snapshot.AveragePayloadBytes,
+            RetainedCountMetricType.Id => snapshot.RetainedCount,
+            _ => snapshot.RecentCount
         };
 }

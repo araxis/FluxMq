@@ -5,7 +5,7 @@ namespace FluxMq.UI.Services;
 
 public static class DashboardMetricReferenceResolver
 {
-    public static FluxMetricDefinition? ResolveAppMetricDefinition(
+    public static FluxMetricResourceDefinition? ResolveAppMetric(
         FlowWorkspaceService project,
         string? metricName,
         IReadOnlyDictionary<string, string>? parameterValues = null)
@@ -17,11 +17,13 @@ public static class DashboardMetricReferenceResolver
             return null;
         }
 
-        var normalized = metricName.Trim();
-        var artifact = project.GetMetricArtifact(normalized);
-        return artifact is null
-            ? null
-            : new FluxMetricResolver().Resolve(artifact, parameterValues);
+        var resource = project.GetMetricResource(metricName.Trim());
+        if (resource is null)
+        {
+            return null;
+        }
+
+        return resource with { Parameters = Merge(resource.Parameters, parameterValues) };
     }
 
     public static DashboardMetricSnapshot? ResolveAppMetricSnapshot(
@@ -29,11 +31,36 @@ public static class DashboardMetricReferenceResolver
         string? metricName,
         IReadOnlyDictionary<string, string>? parameterValues = null)
     {
-        var definition = ResolveAppMetricDefinition(project, metricName, parameterValues);
-        return definition is null || string.IsNullOrWhiteSpace(metricName)
+        var resource = ResolveAppMetric(project, metricName, parameterValues);
+        return resource is null || string.IsNullOrWhiteSpace(metricName)
             ? null
-            : DashboardMetricQueryMapper.ToDashboardMetricSnapshot(
-                metricName.Trim(),
-                DashboardMetricQueryMapper.ToDashboardQuery(definition));
+            : FlowDefinitionComposer.ResourceToDashboardMetricSnapshot(metricName.Trim(), resource);
+    }
+
+    private static Dictionary<string, string> Merge(
+        IReadOnlyDictionary<string, string> parameters,
+        IReadOnlyDictionary<string, string>? overrides)
+    {
+        var merged = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var (key, value) in parameters)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                merged[key] = value;
+            }
+        }
+
+        if (overrides is not null)
+        {
+            foreach (var (key, value) in overrides)
+            {
+                if (!string.IsNullOrWhiteSpace(key) && !string.IsNullOrWhiteSpace(value))
+                {
+                    merged[key.Trim()] = value.Trim();
+                }
+            }
+        }
+
+        return merged;
     }
 }

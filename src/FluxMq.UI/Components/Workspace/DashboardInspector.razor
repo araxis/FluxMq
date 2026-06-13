@@ -4,6 +4,7 @@
 @inject DashboardEventFilterCatalog EventFilters
 @inject DashboardMetricRegistry MetricRegistry
 @inject DashboardWidgetRegistry WidgetRegistry
+@inject IFluxMetricTypeRegistry TypeRegistry
 @inject IDialogService DialogService
 
 <aside class="dashboard-inspector">
@@ -568,16 +569,18 @@
         }
     }
 
-    private IReadOnlyDictionary<string, FluxMetricArtifactDefinition> AppMetricArtifacts => Project.GetMetricArtifacts();
+    private IReadOnlyDictionary<string, FluxMetricResourceDefinition> AppMetricArtifacts => Project.GetMetricResources();
 
-    private FluxMetricArtifactDefinition? SelectedAppMetric =>
+    private FluxMetricResourceDefinition? SelectedAppMetric =>
         !string.IsNullOrWhiteSpace(_primaryBindingMetric) &&
         AppMetricArtifacts.TryGetValue(_primaryBindingMetric, out var metric)
             ? metric
             : null;
 
-    private IReadOnlyList<FluxMetricParameterDefinition> SelectedAppMetricParameters =>
-        SelectedAppMetric?.Parameters ?? [];
+    private IReadOnlyList<FluxMetricParameterDescriptor> SelectedAppMetricParameters =>
+        SelectedAppMetric is { } resource && TypeRegistry.TryGetNumberType(resource.TypeId, out var type)
+            ? type.Parameters
+            : [];
 
     private IReadOnlyList<PropertyGridSelectOption> AppMetricNameOptions
     {
@@ -673,10 +676,16 @@
         ? "No metric query"
         : DashboardMetricQuerySummary.DescribeSentence(_metricDraft.BuildQuery(), EventFilters, MetricRegistry);
 
-    private string SelectedAppMetricSummary =>
-        CreateSelectedAppMetricDefinition() is { } definition
-            ? FluxMetricQuerySummary.DescribeSentence(definition)
-            : "Select an app metric";
+    private string SelectedAppMetricSummary
+    {
+        get
+        {
+            var resource = DashboardMetricReferenceResolver.ResolveAppMetric(Project, _primaryBindingMetric, _bindingOptions);
+            return resource is not null && TypeRegistry.TryGetNumberType(resource.TypeId, out var type)
+                ? type.Summarize(resource)
+                : "Select an app metric";
+        }
+    }
 
     private string SelectedAppMetricPreview
     {
@@ -1432,11 +1441,6 @@
             Widget?.Type ?? DashboardWidgetCatalog.EventCounterType);
     }
 
-    private FluxMetricDefinition? CreateSelectedAppMetricDefinition()
-        => string.IsNullOrWhiteSpace(_primaryBindingMetric)
-            ? null
-            : DashboardMetricReferenceResolver.ResolveAppMetricDefinition(Project, _primaryBindingMetric, _bindingOptions);
-
     private static bool IsAppMetricConsumerType(string? type)
         => string.Equals(type, DashboardWidgetCatalog.KpiTileType, StringComparison.Ordinal) ||
            string.Equals(type, DashboardWidgetCatalog.StatusValueType, StringComparison.Ordinal) ||
@@ -1445,24 +1449,24 @@
            string.Equals(type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal) ||
            string.Equals(type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal);
 
-    private bool IsCompatibleAppMetric(FluxMetricArtifactDefinition metric)
+    private bool IsCompatibleAppMetric(FluxMetricResourceDefinition metric)
     {
         if (string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.EventCounterType, StringComparison.Ordinal) ||
             string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.StatusValueType, StringComparison.Ordinal))
         {
-            return string.Equals(metric.Definition.Measure, FluxMetricCatalog.MeasureCount, StringComparison.Ordinal);
+            return string.Equals(metric.TypeId, EventCountMetricType.Id, StringComparison.Ordinal);
         }
 
         if (string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.EventRateType, StringComparison.Ordinal) ||
             string.Equals(_widgetDraft?.Profile.Type, DashboardWidgetCatalog.RateTileType, StringComparison.Ordinal))
         {
-            return string.Equals(metric.Definition.Measure, FluxMetricCatalog.MeasureRate, StringComparison.Ordinal);
+            return string.Equals(metric.TypeId, EventRateMetricType.Id, StringComparison.Ordinal);
         }
 
         return true;
     }
 
-    private static string AppMetricDisplayName(string metricName, FluxMetricArtifactDefinition metric)
+    private static string AppMetricDisplayName(string metricName, FluxMetricResourceDefinition metric)
         => string.IsNullOrWhiteSpace(metric.DisplayName)
             ? DashboardWidgetFormatting.MetricDisplayName(metricName)
             : metric.DisplayName;

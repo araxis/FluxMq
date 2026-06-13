@@ -109,9 +109,9 @@ public sealed class DashboardEventFilterCatalogTests
             UniqueTopicCount: 0,
             RetainedCount: 0);
 
-        var value = registry.Evaluate(new DashboardMetricQueryDefinition("runtimeEvents", "count", "60s"), snapshot);
+        var value = registry.Evaluate(EventCountMetricType.Id, snapshot);
 
-        value.Label.ShouldBe("Count");
+        value.Label.ShouldBe("Event count");
         value.Value.ShouldBe(18);
         value.Unit.ShouldBe("events");
         value.FormattedValue.ShouldBe("18");
@@ -135,12 +135,8 @@ public sealed class DashboardEventFilterCatalogTests
             UniqueTopicCount: 4,
             RetainedCount: 2);
 
-        var count = registry.Evaluate(
-            new DashboardMetricQueryDefinition("runtimeEvents", "count", "60s", Format: "auto"),
-            snapshot);
-        var payload = registry.Evaluate(
-            new DashboardMetricQueryDefinition("payloadInspection", "payloadBytes", "60s", Format: "auto"),
-            snapshot);
+        var count = registry.Evaluate(EventCountMetricType.Id, snapshot);
+        var payload = registry.Evaluate(PayloadBytesMetricType.Id, snapshot);
 
         count.FormattedValue.ShouldBe("18");
         payload.FormattedValue.ShouldBe("2 KB");
@@ -1587,34 +1583,24 @@ public sealed class DashboardEventFilterCatalogTests
         project.AddMetric("publishedMetric");
         project.UpdateMetric(
             "publishedMetric",
-            new FluxMetricArtifactDefinition
+            new FluxMetricResourceDefinition
             {
+                TypeId = EventCountMetricType.Id,
                 DisplayName = "Published metric",
-                Definition = new FluxMetricDefinition(
-                    "Published metric",
-                    FluxMetricCatalog.RuntimeEventsSource,
-                    FluxMetricCatalog.MeasureCount,
-                    "60s",
-                    eventType: FluxMqEventTypes.MqttMessagePublished,
-                    topicStartsWith: "default/",
-                    status: "published"),
-                Parameters =
-                [
-                    new FluxMetricParameterDefinition
-                    {
-                        Id = "topic",
-                        Label = "Topic",
-                        Target = FluxMetricParameterTargets.TopicStartsWith,
-                        DefaultValue = "default/"
-                    }
-                ]
+                Parameters = new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    [MetricParameterKeys.Window] = "60s",
+                    [MetricParameterKeys.EventType] = FluxMqEventTypes.MqttMessagePublished,
+                    [MetricParameterKeys.TopicStartsWith] = "default/",
+                    [MetricParameterKeys.Status] = "published"
+                }
             });
         var parameterValues = new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            ["topic"] = "factory/line-a/"
+            [MetricParameterKeys.TopicStartsWith] = "factory/line-a/"
         };
 
-        var definition = DashboardMetricReferenceResolver.ResolveAppMetricDefinition(
+        var resource = DashboardMetricReferenceResolver.ResolveAppMetric(
             project,
             "publishedMetric",
             parameterValues);
@@ -1623,8 +1609,8 @@ public sealed class DashboardEventFilterCatalogTests
             "publishedMetric",
             parameterValues);
 
-        definition.ShouldNotBeNull();
-        definition.TopicStartsWith.ShouldBe("factory/line-a/");
+        resource.ShouldNotBeNull();
+        resource.GetParameter(MetricParameterKeys.TopicStartsWith).ShouldBe("factory/line-a/");
         snapshot.ShouldNotBeNull();
         snapshot.ReadFilter(DashboardEventFilterCatalog.TopicStartsWithKey).ShouldBe("factory/line-a/");
         snapshot.ReadFilter(DashboardEventFilterCatalog.EventTypeKey).ShouldBe(FluxMqEventTypes.MqttMessagePublished);
@@ -2093,8 +2079,8 @@ public sealed class DashboardEventFilterCatalogTests
         inspector.ShouldContain("DashboardWidgetCatalog.RateTileType");
         inspector.ShouldContain("DashboardWidgetCatalog.EventCounterType");
         inspector.ShouldContain("DashboardWidgetCatalog.EventRateType");
-        inspector.ShouldContain("FluxMetricCatalog.MeasureCount");
-        inspector.ShouldContain("FluxMetricCatalog.MeasureRate");
+        inspector.ShouldContain("EventCountMetricType.Id");
+        inspector.ShouldContain("EventRateMetricType.Id");
         inspector.ShouldContain("[nameof(DashboardMetricQueryBuilderDialog.AllowedMeasures)] = MetricQueryAllowedMeasures");
         inspector.ShouldNotContain("Event counter query");
         inspector.ShouldNotContain("Event rate query");

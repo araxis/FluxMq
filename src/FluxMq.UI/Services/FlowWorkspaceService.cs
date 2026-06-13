@@ -455,16 +455,16 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
         NotifyChanged();
     }
 
-    public IReadOnlyDictionary<string, FluxMetricArtifactDefinition> GetMetricArtifacts()
-        => _definitionComposer.GetMetricArtifacts(DefinitionJson);
+    public IReadOnlyDictionary<string, FluxMetricResourceDefinition> GetMetricResources()
+        => _definitionComposer.GetMetricResources(DefinitionJson);
 
-    public FluxMetricArtifactDefinition? GetMetricArtifact(string metricName)
-        => _definitionComposer.GetMetricArtifact(DefinitionJson, metricName);
+    public FluxMetricResourceDefinition? GetMetricResource(string metricName)
+        => _definitionComposer.GetMetricResource(DefinitionJson, metricName);
 
     public int CountMetricReferences(string metricName)
         => _definitionComposer.CountMetricReferences(DefinitionJson, metricName);
 
-    public void UpdateMetric(string metricName, FluxMetricArtifactDefinition metric)
+    public void UpdateMetric(string metricName, FluxMetricResourceDefinition metric)
     {
         if (string.IsNullOrWhiteSpace(metricName))
         {

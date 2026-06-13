@@ -9,7 +9,7 @@
 @foreach (var parameter in Parameters)
 {
     var currentParameter = parameter;
-    <PropertyGridRow Name="@currentParameter.LabelOrId()">
+    <PropertyGridRow Name="@currentParameter.Label">
         @RenderParameterField(currentParameter)
     </PropertyGridRow>
 }
@@ -34,7 +34,7 @@
     public IReadOnlyList<PropertyGridSelectOption> MetricOptions { get; set; } = [];
 
     [Parameter]
-    public IReadOnlyList<FluxMetricParameterDefinition> Parameters { get; set; } = [];
+    public IReadOnlyList<FluxMetricParameterDescriptor> Parameters { get; set; } = [];
 
     [Parameter]
     public IReadOnlyDictionary<string, string> ParameterValues { get; set; } =
@@ -55,15 +55,15 @@
     [Parameter]
     public EventCallback OpenMetric { get; set; }
 
-    private RenderFragment RenderParameterField(FluxMetricParameterDefinition parameter)
+    private RenderFragment RenderParameterField(FluxMetricParameterDescriptor parameter)
     {
         var value = ParameterValue(parameter);
-        if (parameter.AllowedValues.Count > 0)
+        if (parameter.Options.Count > 0)
         {
             return @<PropertyGridSelect Value="@value"
                                         Options="@ParameterSelectOptions(parameter)"
-                                        AriaLabel="@parameter.LabelOrId()"
-                                        ValueChanged="@((string? next) => SetParameterAsync(parameter.Id, next))" />;
+                                        AriaLabel="@parameter.Label"
+                                        ValueChanged="@((string? next) => SetParameterAsync(parameter.Key, next))" />;
         }
 
         if (string.Equals(parameter.Kind, FluxMetricParameterKinds.Toggle, StringComparison.Ordinal))
@@ -71,30 +71,30 @@
             return @<div class="property-grid-button-group">
                 <button type="button"
                         class="@ChoiceClass(value, TrueValue)"
-                        @onclick="@(() => SetParameterAsync(parameter.Id, TrueValue))">On</button>
+                        @onclick="@(() => SetParameterAsync(parameter.Key, TrueValue))">On</button>
                 <button type="button"
                         class="@ChoiceClass(value, FalseValue)"
-                        @onclick="@(() => SetParameterAsync(parameter.Id, FalseValue))">Off</button>
+                        @onclick="@(() => SetParameterAsync(parameter.Key, FalseValue))">Off</button>
             </div>;
         }
 
         return @<input class="property-grid-input"
                        value="@value"
-                       @oninput="@((ChangeEventArgs args) => SetParameterAsync(parameter.Id, args.Value?.ToString()))" />;
+                       @oninput="@((ChangeEventArgs args) => SetParameterAsync(parameter.Key, args.Value?.ToString()))" />;
     }
 
-    private string ParameterValue(FluxMetricParameterDefinition parameter)
-        => ParameterValues.TryGetValue(parameter.Id, out var value)
+    private string ParameterValue(FluxMetricParameterDescriptor parameter)
+        => ParameterValues.TryGetValue(parameter.Key, out var value)
             ? value
             : parameter.DefaultValue;
 
     private Task SetParameterAsync(string key, string? value)
         => ParameterChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
 
-    private static IReadOnlyList<PropertyGridSelectOption> ParameterSelectOptions(FluxMetricParameterDefinition parameter)
+    private static IReadOnlyList<PropertyGridSelectOption> ParameterSelectOptions(FluxMetricParameterDescriptor parameter)
         => [
             new("", parameter.Required ? "Select value" : "Default"),
-            .. parameter.AllowedValues.Select(static value => new PropertyGridSelectOption(value, value))
+            .. parameter.Options.Select(static option => new PropertyGridSelectOption(option.Value, option.Label))
         ];
 
     private static string ChoiceClass(string? currentValue, string value)
