@@ -33,4 +33,6 @@ public sealed class SlidingEventWindow
         .Select(static flowEvent => flowEvent.Channel!)
         .Distinct(StringComparer.Ordinal)
         .Count();
+
+    public long TotalPayloadBytes => _events.Sum(static flowEvent => (long)(flowEvent.PayloadBytes ?? 0));
 }

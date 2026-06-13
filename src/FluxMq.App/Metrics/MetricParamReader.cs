@@ -37,3 +37,10 @@ public static class MetricQos
         return actual == qos;
     }
 }
+
+/// <summary>Reads the MQTT retain flag from an event.</summary>
+public static class MetricRetain
+{
+    public static bool IsRetained(FlowEvent flowEvent)
+        => bool.TryParse(flowEvent.GetAttribute("retain"), out var retained) && retained;
+}
