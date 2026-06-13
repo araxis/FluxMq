@@ -29,14 +29,14 @@ public sealed class TopicFilter
 
     public bool Matches(string? topic)
     {
-        if (_matchAll)
-        {
-            return true;
-        }
-
         if (string.IsNullOrWhiteSpace(topic))
         {
             return false;
+        }
+
+        if (_matchAll)
+        {
+            return true;
         }
 
         var levels = topic.Split('/');

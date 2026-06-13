@@ -39,7 +39,7 @@ public sealed class WindowedTopicCountMetric : IFluxMetricSource<int>
 
     private MetricSample<int> Observe(FlowEvent flowEvent, DateTimeOffset now)
     {
-        if (string.IsNullOrWhiteSpace(flowEvent.Channel) ||
+        if (!MetricEvents.IsMqttMessage(flowEvent) ||
             !_topic.Matches(flowEvent.Channel) ||
             !MetricQos.Matches(flowEvent, _qos))
         {

@@ -221,6 +221,60 @@ public sealed class FlatMetricTests
     }
 
     [Fact]
+    public async Task Metrics_IgnoreNonMqttMessageEvents()
+    {
+        var events = new BufferBlock<FlowEvent>();
+        var metric = new MessageCountMetric("messages", TopicFilter.Parse("#"), qos: 0, events);
+
+        await RunAsync(metric, events,
+            Event("factory/a", qos: "0"),                                       // counted
+            Event("factory/b", qos: "0", type: FlowEventTypes.FileWritten),     // ignored: not an MQTT message
+            Event("factory/c", qos: "0", type: FlowEventTypes.AssertionEvaluated), // ignored
+            Event("factory/d", qos: "0"));                                      // counted
+
+        metric.Latest!.Value.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task MetricSourceComponent_EmitsExistingLatestExactlyOnceOnStart()
+    {
+        var coordinator = new FluxMetricStreamCoordinator(FluxMetricCatalog.CreateDefault());
+        var events = new BroadcastBlock<FlowEvent>(static flowEvent => flowEvent);
+        coordinator.Configure(
+            new Dictionary<string, FluxMetricResourceDefinition>(StringComparer.Ordinal)
+            {
+                ["topics"] = new()
+                {
+                    Id = "topics",
+                    TypeId = TopicCountMetric.TypeId,
+                    Parameters = new Dictionary<string, string>(StringComparer.Ordinal) { ["topic"] = "factory/#", ["qos"] = "0" }
+                }
+            },
+            events);
+
+        // Produce a reading so a latest exists when the component starts.
+        coordinator.TryGetLatestNumber("topics", null, out _);
+        events.Post(Event("factory/a", qos: "0"));
+        await PollAsync(
+            () => coordinator.TryGetLatestNumber("topics", null, out var value) ? value : null,
+            reading => reading.Value == 1);
+
+        var component = new MetricSourceComponent(coordinator, "topics");   // emitLatestOnStart defaults to true
+        var readings = new List<FluxMetricReading<double>>();
+        var sink = new ActionBlock<FluxMetricReading<double>>(readings.Add);
+        component.Output.LinkTo(sink, new DataflowLinkOptions { PropagateCompletion = true });
+
+        await component.StartAsync();
+        events.Complete();
+        using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+        await Task.WhenAll(component.Completion, sink.Completion).WaitAsync(cancellation.Token);
+
+        // The broadcast replays the latest exactly once on link; the explicit duplicate post is gone.
+        readings.Count.ShouldBe(1);
+        readings[0].Value.ShouldBe(1);
+    }
+
+    [Fact]
     public async Task MetricSourceComponent_RelaysCoordinatorReadingsAsDoubles()
     {
         var coordinator = new FluxMetricStreamCoordinator(FluxMetricCatalog.CreateDefault());
@@ -300,14 +354,14 @@ public sealed class FlatMetricTests
         return readings;
     }
 
-    private static FlowEvent Event(string topic, string qos, int? payloadBytes = null, bool retain = false)
-        => EventAt(topic, DateTimeOffset.UtcNow, qos, payloadBytes, retain);
+    private static FlowEvent Event(string topic, string qos, int? payloadBytes = null, bool retain = false, string? type = null)
+        => EventAt(topic, DateTimeOffset.UtcNow, qos, payloadBytes, retain, type);
 
-    private static FlowEvent EventAt(string topic, DateTimeOffset timestamp, string qos = "0", int? payloadBytes = null, bool retain = false)
+    private static FlowEvent EventAt(string topic, DateTimeOffset timestamp, string qos = "0", int? payloadBytes = null, bool retain = false, string? type = null)
         => new()
         {
             Timestamp = timestamp,
-            Type = FlowEventTypes.MqttMessageReceived,
+            Type = type ?? FlowEventTypes.MqttMessageReceived,
             Source = "test",
             Channel = topic,
             PayloadBytes = payloadBytes,
