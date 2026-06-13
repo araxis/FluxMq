@@ -699,33 +699,6 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
         NotifyChanged();
     }
 
-    public void UpdateDashboardMetric(string metricName, DashboardMetricQueryDefinition query)
-    {
-        if (string.IsNullOrWhiteSpace(_activeDashboardName) ||
-            string.IsNullOrWhiteSpace(metricName))
-        {
-            return;
-        }
-
-        try
-        {
-            ReplaceDefinition(_definitionComposer.UpdateDashboardMetric(
-                DefinitionJson,
-                _activeDashboardName,
-                metricName,
-                query));
-            _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
-            State = RuntimeWorkspaceState.Idle;
-            Diagnostics = [];
-        }
-        catch (Exception exception)
-        {
-            State = RuntimeWorkspaceState.Faulted;
-            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "DashboardMetricUpdateFailed", exception.Message)];
-        }
-
-        NotifyChanged();
-    }
 
     public void UpdateDashboardWidgetBinding(string widgetName, string? primaryMetric, IEnumerable<string> metrics)
         => UpdateDashboardWidgetBinding(widgetName, primaryMetric, metrics, null);

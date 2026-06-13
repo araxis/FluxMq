@@ -72,48 +72,4 @@ public static class FlowDashboardDefinitionFactory
         return result;
     }
 
-    public static JsonObject CreateMetric(DashboardMetricQueryDefinition query)
-    {
-        ArgumentNullException.ThrowIfNull(query);
-
-        var filters = new JsonObject();
-        AddIfPresent(filters, DashboardEventFilterCatalog.EventTypeKey, query.EventType);
-        AddIfPresent(filters, DashboardEventFilterCatalog.TopicStartsWithKey, query.TopicStartsWith);
-        AddIfPresent(filters, DashboardEventFilterCatalog.TopicNotStartsWithKey, query.TopicNotStartsWith);
-        AddIfPresent(filters, DashboardEventFilterCatalog.StatusKey, query.Status);
-        foreach (var (key, value) in query.AdditionalFilters.OrderBy(static pair => pair.Key, StringComparer.Ordinal))
-        {
-            AddIfPresent(filters, key, value);
-        }
-
-        var result = new JsonObject
-        {
-            ["source"] = Normalize(query.Source, "runtimeEvents"),
-            ["aggregation"] = Normalize(query.Aggregation, "count"),
-            ["window"] = Normalize(query.Window, "60s"),
-            ["filters"] = filters,
-            ["format"] = new JsonObject
-            {
-                ["unit"] = Normalize(query.Format, "number")
-            }
-        };
-
-        if (!string.IsNullOrWhiteSpace(query.GroupBy))
-        {
-            result["groupBy"] = query.GroupBy.Trim();
-        }
-
-        return result;
-    }
-
-    private static void AddIfPresent(JsonObject target, string key, string? value)
-    {
-        if (!string.IsNullOrWhiteSpace(value))
-        {
-            target[key] = value.Trim();
-        }
-    }
-
-    private static string Normalize(string? value, string fallback)
-        => string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
 }

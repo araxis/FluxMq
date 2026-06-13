@@ -24,28 +24,6 @@ public sealed class DashboardMetricRegistry
 
     public IReadOnlyList<IFluxMetricType<double>> Types => _types.NumberTypes;
 
-    public IReadOnlyList<DashboardMetricAggregationDescriptor> Aggregations { get; } =
-    [
-        new("count", "Count", "events"),
-        new("rate", "Rate", "/s"),
-        new("topics", "Topics", "topics"),
-        new("payloadBytes", "Payload bytes", "bytes"),
-        new("averagePayload", "Average payload", "bytes"),
-        new("retained", "Retained", "messages")
-    ];
-
-    public DashboardMetricQueryDefinition CreateDefaultQuery(string widgetType)
-        => widgetType switch
-        {
-            DashboardWidgetCatalog.RateTileType or DashboardWidgetCatalog.EventRateType => new("runtimeEvents", "rate", "60s"),
-            DashboardWidgetCatalog.TopicActivityType or DashboardWidgetCatalog.TopicTreeType => new("topicProjection", "topics", "60s", GroupBy: "topic"),
-            DashboardWidgetCatalog.PayloadDistributionType => new("payloadInspection", "payloadBytes", "60s", GroupBy: "bucket"),
-            DashboardWidgetCatalog.QosRetainBreakdownType => new("mqttSnapshots", "count", "60s", GroupBy: "qosRetain"),
-            DashboardWidgetCatalog.QosBreakdownType => new("mqttSnapshots", "count", "60s", GroupBy: "qos"),
-            DashboardWidgetCatalog.RetainBreakdownType => new("mqttSnapshots", "count", "60s", GroupBy: "retain"),
-            _ => new("runtimeEvents", "count", "60s")
-        };
-
     /// <summary>Maps a legacy aggregation token to the metric type id (inverse of <see cref="MeasureForType"/>).</summary>
     public static string TypeForMeasure(string? measure)
         => measure switch

@@ -2608,7 +2608,7 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
-    public void DashboardInspector_UsesFocusedMetricQueryOptionRowComponent()
+    public void DashboardInspector_EditsInlineWindowOnWidgetDraft()
     {
         var root = FindRepositoryRoot();
         var inspector = File.ReadAllText(Path.Combine(
@@ -2618,21 +2618,14 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "DashboardInspector.razor"));
-        var optionRows = File.ReadAllText(Path.Combine(
-            root,
-            "src",
-            "FluxMq.UI",
-            "Components",
-            "Workspace",
-            "DashboardInspectorMetricQueryOptionRows.razor"));
 
-        inspector.ShouldContain("DashboardInspectorMetricQueryOptionRows");
-        inspector.ShouldNotContain("PropertyGridRow Name=\"Aggregate\"");
-        inspector.ShouldNotContain("PropertyGridRow Name=\"@InspectorLabels.WindowRow\"");
-        optionRows.ShouldContain("PropertyGridRow Name=\"Aggregate\"");
-        optionRows.ShouldContain("PropertyGridRow Name=\"@Labels.WindowRow\"");
-        optionRows.ShouldContain("AggregationChanged");
-        optionRows.ShouldContain("WindowChanged");
+        // The dashboard-local metric-query authoring path is retired: charts/topic/payload widgets
+        // edit their window inline on the widget draft instead of a separate option-rows component.
+        inspector.ShouldNotContain("DashboardInspectorMetricQueryOptionRows");
+        inspector.ShouldNotContain("AggregationChanged");
+        inspector.ShouldContain("PropertyGridRow Name=\"@InspectorLabels.WindowRow\"");
+        inspector.ShouldContain("draft.Window");
+        inspector.ShouldContain("SetMetricWindowAsync");
     }
 
     [Fact]
@@ -2791,8 +2784,9 @@ public sealed class DashboardEventFilterCatalogTests
         inspector.ShouldContain("ClearWidgetDraftState();");
         inspector.ShouldContain("LoadWidgetDraftState(Widget);");
         inspector.ShouldContain("private void LoadMetricDraftState");
-        inspector.ShouldContain("private DashboardMetricSnapshot? ResolveMetricSnapshot");
-        inspector.ShouldContain("private DashboardMetricSnapshot? CreateLegacyMetricSnapshot");
+        // App-metric tiles load binding state; inline event widgets clear it and edit config directly.
+        inspector.ShouldContain("if (!IsAppMetricConsumerType(_widgetDraft.Profile.Type))");
+        inspector.ShouldContain("ClearMetricDraftState();");
         inspector.ShouldNotContain("protected override void OnParametersSet()\r\n    {\r\n        var selectedCell");
     }
 
