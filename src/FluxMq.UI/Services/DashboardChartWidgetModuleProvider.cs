@@ -37,7 +37,7 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
                 [
                     AreaChartGroup()
                 ]),
-            ChartModule(
+            BarChartModule(
                 DashboardWidgetCatalog.BarChartType,
                 "Bar Chart",
                 "Charts",
@@ -46,12 +46,8 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
                 typeof(DashboardBarChartModuleView),
                 "Bar chart",
                 "barChart",
-                DashboardChartWidgetOptions.TypeBars,
                 [
-                    MetricGroup("metric", "Metric"),
-                    WindowGroup(),
-                    AxisGroup(),
-                    BarGroup()
+                    BarChartGroup()
                 ]),
             DonutChartModule(
                 DashboardWidgetCatalog.DonutChartType,
@@ -200,6 +196,51 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
             InstanceNamePrefix: instanceNamePrefix);
     }
 
+    private static DashboardWidgetModule BarChartModule(
+        string type,
+        string displayName,
+        string category,
+        string description,
+        string icon,
+        Type component,
+        string title,
+        string instanceNamePrefix,
+        IReadOnlyList<DashboardWidgetPropertyGroupDefinition> groups)
+    {
+        var configuration = EventConfiguration(title);
+        configuration.Remove(DashboardWidgetCatalog.PrimaryMetricKey);
+        configuration[DashboardChartWidgetOptions.TypeKey] = DashboardChartWidgetOptions.TypeBars;
+        configuration[DashboardBarChartVisualOptions.HeaderKey] = title;
+        configuration[DashboardBarChartVisualOptions.ShowHeaderKey] = bool.TrueString;
+        configuration[DashboardBarChartVisualOptions.ShowGridKey] = bool.TrueString;
+        configuration[DashboardBarChartVisualOptions.ShowLabelsKey] = bool.TrueString;
+        configuration[DashboardBarChartVisualOptions.OrientationKey] = DashboardBarChartVisualOptions.OrientationVertical;
+        configuration[DashboardBarChartVisualOptions.EmptyTextKey] = DashboardBarChartVisualOptions.DefaultEmptyText;
+        configuration[DashboardBarChartVisualOptions.BarColorKey] = DashboardBarChartVisualOptions.DefaultBarColor;
+        configuration[DashboardBarChartVisualOptions.GridColorKey] = DashboardBarChartVisualOptions.DefaultGridColor;
+        configuration[DashboardBarChartVisualOptions.LabelColorKey] = DashboardBarChartVisualOptions.DefaultLabelColor;
+        configuration[DashboardBarChartVisualOptions.BarRadiusKey] =
+            DashboardBarChartVisualOptions.DefaultBarRadius.ToString(CultureInfo.InvariantCulture);
+        return new DashboardWidgetModule(
+            new DashboardWidgetDescriptor(
+                type,
+                displayName,
+                category,
+                description,
+                icon,
+                displayName,
+                DashboardWidgetRendererKind.Chart,
+                DashboardWidgetEditorKind.Chart,
+                ["runtimeEvents"]),
+            component,
+            component,
+            configuration,
+            groups,
+            new DashboardWidgetStyleDefinition(),
+            new DashboardWidgetLayoutContract(2, 1, 2, 1),
+            InstanceNamePrefix: instanceNamePrefix);
+    }
+
     private static DashboardWidgetModule DonutChartModule(
         string type,
         string displayName,
@@ -291,13 +332,21 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
             new(DashboardAreaChartVisualOptions.LabelColorKey, "Label color", DashboardWidgetPropertyEditorKind.Color)
         ]);
 
-    private static DashboardWidgetPropertyGroupDefinition BarGroup()
-        => new("bars", "Bars", [
-            new("barColor", "Bar", DashboardWidgetPropertyEditorKind.Color),
-            new("orientation", "Orientation", DashboardWidgetPropertyEditorKind.Select, Options: [
-                new("vertical", "Vertical"),
-                new("horizontal", "Horizontal")
-            ])
+    private static DashboardWidgetPropertyGroupDefinition BarChartGroup()
+        => new("bar-chart", "Bar chart", [
+            new(DashboardBarChartVisualOptions.HeaderKey, "Header", DashboardWidgetPropertyEditorKind.Text),
+            new(DashboardBarChartVisualOptions.ShowHeaderKey, "Show header", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardBarChartVisualOptions.ShowGridKey, "Grid", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardBarChartVisualOptions.ShowLabelsKey, "Labels", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardBarChartVisualOptions.OrientationKey, "Orientation", DashboardWidgetPropertyEditorKind.Select, Options: [
+                new(DashboardBarChartVisualOptions.OrientationVertical, "Vertical"),
+                new(DashboardBarChartVisualOptions.OrientationHorizontal, "Horizontal")
+            ]),
+            new(DashboardBarChartVisualOptions.BarRadiusKey, "Bar radius", DashboardWidgetPropertyEditorKind.Number, Unit: "px"),
+            new(DashboardBarChartVisualOptions.EmptyTextKey, "Empty text", DashboardWidgetPropertyEditorKind.Text),
+            new(DashboardBarChartVisualOptions.BarColorKey, "Bar color", DashboardWidgetPropertyEditorKind.Color),
+            new(DashboardBarChartVisualOptions.GridColorKey, "Grid color", DashboardWidgetPropertyEditorKind.Color),
+            new(DashboardBarChartVisualOptions.LabelColorKey, "Label color", DashboardWidgetPropertyEditorKind.Color)
         ]);
 
     private static DashboardWidgetPropertyGroupDefinition CategoryGroup()

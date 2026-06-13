@@ -1522,8 +1522,16 @@ public sealed class FlowDefinitionComposerTests
         var layout = composer.GetDashboardLayout(json, "ops").ShouldNotBeNull();
         layout.Widgets["barChart"].Type.ShouldBe(DashboardWidgetCatalog.BarChartType);
         layout.Widgets["barChart"].Configuration["title"].ShouldBe("Bar chart");
-        layout.Widgets["barChart"].Configuration[DashboardWidgetCatalog.PrimaryMetricKey].ShouldBe(DashboardWidgetCatalog.MetricMessages);
+        layout.Widgets["barChart"].Configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
         layout.Widgets["barChart"].Configuration[DashboardChartWidgetOptions.TypeKey].ShouldBe(DashboardChartWidgetOptions.TypeBars);
+        layout.Widgets["barChart"].Configuration[DashboardBarChartVisualOptions.HeaderKey].ShouldBe("Bar chart");
+        layout.Widgets["barChart"].Configuration[DashboardBarChartVisualOptions.ShowHeaderKey].ShouldBe(bool.TrueString);
+        layout.Widgets["barChart"].Configuration[DashboardBarChartVisualOptions.ShowGridKey].ShouldBe(bool.TrueString);
+        layout.Widgets["barChart"].Configuration[DashboardBarChartVisualOptions.ShowLabelsKey].ShouldBe(bool.TrueString);
+        layout.Widgets["barChart"].Configuration[DashboardBarChartVisualOptions.OrientationKey]
+            .ShouldBe(DashboardBarChartVisualOptions.OrientationVertical);
+        layout.Widgets["barChart"].Configuration[DashboardBarChartVisualOptions.BarColorKey]
+            .ShouldBe(DashboardBarChartVisualOptions.DefaultBarColor);
         layout.Widgets["barChart"].Configuration.ContainsKey(DashboardWidgetCatalog.DisplayMetricsKey).ShouldBeFalse();
         layout.Widgets["barChart"].Configuration.ContainsKey(DashboardWidgetCatalog.MetricCardColumnsKey).ShouldBeFalse();
         layout.Widgets["eventTable"].Configuration["title"].ShouldBe("Event table");

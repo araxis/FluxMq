@@ -738,6 +738,120 @@
     white-space: nowrap;
 }
 
+.dashboard-bar-chart-visual {
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--bar-chart-color, var(--widget-accent)) 7%, transparent), transparent),
+        color-mix(in srgb, var(--flux-canvas) 58%, transparent);
+    border: 1px solid color-mix(in srgb, var(--bar-chart-color, var(--widget-accent)) 22%, var(--flux-border));
+    border-radius: 7px;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+    overflow: hidden;
+    padding: clamp(10px, 4cqi, 14px);
+}
+
+.dashboard-bar-chart-header {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    min-width: 0;
+}
+
+.dashboard-bar-chart-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: center;
+    min-height: 0;
+}
+
+.dashboard-bar-chart-plot {
+    border-radius: 6px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    padding: 6px;
+}
+
+.dashboard-bar-chart-plot.with-grid {
+    background:
+        linear-gradient(to bottom, transparent 24%, color-mix(in srgb, var(--bar-chart-grid-color, var(--flux-border)) 54%, transparent) 25%, transparent 26%),
+        linear-gradient(to bottom, transparent 49%, color-mix(in srgb, var(--bar-chart-grid-color, var(--flux-border)) 54%, transparent) 50%, transparent 51%),
+        linear-gradient(to bottom, transparent 74%, color-mix(in srgb, var(--bar-chart-grid-color, var(--flux-border)) 54%, transparent) 75%, transparent 76%);
+}
+
+.dashboard-bar-chart-bars {
+    display: grid;
+    gap: clamp(4px, 2cqi, 8px);
+    height: 100%;
+    min-height: 0;
+}
+
+.dashboard-bar-chart-visual.vertical .dashboard-bar-chart-bars {
+    align-items: end;
+    grid-template-columns: repeat(12, minmax(4px, 1fr));
+}
+
+.dashboard-bar-chart-visual.horizontal .dashboard-bar-chart-bars {
+    grid-template-rows: repeat(12, minmax(4px, 1fr));
+}
+
+.dashboard-bar-chart-bar {
+    display: flex;
+    min-height: 0;
+    min-width: 0;
+}
+
+.dashboard-bar-chart-visual.vertical .dashboard-bar-chart-bar {
+    align-items: end;
+}
+
+.dashboard-bar-chart-bar span {
+    background: linear-gradient(180deg, var(--bar-chart-color, var(--widget-accent)), color-mix(in srgb, var(--bar-chart-color, var(--widget-accent)) 32%, transparent));
+    border-radius: var(--bar-chart-radius, 4px) var(--bar-chart-radius, 4px) 2px 2px;
+    box-shadow: 0 0 14px color-mix(in srgb, var(--bar-chart-color, var(--widget-accent)) 18%, transparent);
+    display: block;
+}
+
+.dashboard-bar-chart-visual.vertical .dashboard-bar-chart-bar span {
+    height: var(--bar-size);
+    min-height: 4px;
+    width: 100%;
+}
+
+.dashboard-bar-chart-visual.horizontal .dashboard-bar-chart-bar span {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--bar-chart-color, var(--widget-accent)) 32%, transparent), var(--bar-chart-color, var(--widget-accent)));
+    border-radius: 2px var(--bar-chart-radius, 4px) var(--bar-chart-radius, 4px) 2px;
+    height: 100%;
+    min-width: 4px;
+    width: var(--bar-size);
+}
+
+.dashboard-bar-chart-labels {
+    align-items: center;
+    color: var(--bar-chart-label-color, var(--mud-palette-text-secondary));
+    display: flex;
+    font-size: clamp(10px, 3cqi, 12px);
+    font-weight: 750;
+    gap: 8px;
+    justify-content: space-between;
+    line-height: 1.1;
+    min-width: 0;
+    text-transform: uppercase;
+}
+
+.dashboard-bar-chart-labels span,
+.dashboard-bar-chart-labels strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .dashboard-rate-track,
 .dashboard-gauge-meter {
     background: color-mix(in srgb, var(--mud-palette-text-primary) 9%, transparent);

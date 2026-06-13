@@ -360,6 +360,59 @@
         </PropertyGridRow>
     }
 
+    @if (Draft.Profile.UsesBarChartVisual)
+    {
+        <PropertyGridRow Name="Header">
+            <input class="property-grid-input"
+                   value="@Draft.BarChartHeader"
+                   @oninput="@((ChangeEventArgs args) => ChangeBarChartVisualPropertyAsync(DashboardBarChartVisualOptions.HeaderKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Show header">
+            @BarChartBooleanRow(DashboardBarChartVisualOptions.ShowHeaderKey, Draft.BarChartShowHeader)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Grid">
+            @BarChartBooleanRow(DashboardBarChartVisualOptions.ShowGridKey, Draft.BarChartShowGrid)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Labels">
+            @BarChartBooleanRow(DashboardBarChartVisualOptions.ShowLabelsKey, Draft.BarChartShowLabels)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Orientation">
+            <div class="property-grid-button-group">
+                <button type="button"
+                        class="@ChoiceClass(Draft.BarChartOrientation, DashboardBarChartVisualOptions.OrientationVertical)"
+                        @onclick="@(() => ChangeBarChartVisualPropertyAsync(DashboardBarChartVisualOptions.OrientationKey, DashboardBarChartVisualOptions.OrientationVertical))">Vertical</button>
+                <button type="button"
+                        class="@ChoiceClass(Draft.BarChartOrientation, DashboardBarChartVisualOptions.OrientationHorizontal)"
+                        @onclick="@(() => ChangeBarChartVisualPropertyAsync(DashboardBarChartVisualOptions.OrientationKey, DashboardBarChartVisualOptions.OrientationHorizontal))">Horizontal</button>
+            </div>
+        </PropertyGridRow>
+        <PropertyGridRow Name="Bar radius" Unit="px">
+            <input class="property-grid-input"
+                   type="number"
+                   min="@DashboardBarChartVisualOptions.MinBarRadius"
+                   max="@DashboardBarChartVisualOptions.MaxBarRadius"
+                   value="@Draft.BarChartBarRadius"
+                   @oninput="@((ChangeEventArgs args) => ChangeBarChartVisualPropertyAsync(DashboardBarChartVisualOptions.BarRadiusKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Empty text">
+            <input class="property-grid-input"
+                   value="@Draft.BarChartEmptyText"
+                   @oninput="@((ChangeEventArgs args) => ChangeBarChartVisualPropertyAsync(DashboardBarChartVisualOptions.EmptyTextKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Bar color">
+            <PropertyGridColorPicker Value="@Draft.BarChartBarColor"
+                                     ValueChanged="@((string? value) => ChangeBarChartVisualPropertyAsync(DashboardBarChartVisualOptions.BarColorKey, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Grid color">
+            <PropertyGridColorPicker Value="@Draft.BarChartGridColor"
+                                     ValueChanged="@((string? value) => ChangeBarChartVisualPropertyAsync(DashboardBarChartVisualOptions.GridColorKey, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Label color">
+            <PropertyGridColorPicker Value="@Draft.BarChartLabelColor"
+                                     ValueChanged="@((string? value) => ChangeBarChartVisualPropertyAsync(DashboardBarChartVisualOptions.LabelColorKey, value))" />
+        </PropertyGridRow>
+    }
+
     @if (Draft.Profile.UsesChartType)
     {
         <PropertyGridRow Name="@Labels.ChartRow">
@@ -414,6 +467,9 @@
     public EventCallback<DashboardInspectorPropertyValueChange> AreaChartVisualPropertyChanged { get; set; }
 
     [Parameter]
+    public EventCallback<DashboardInspectorPropertyValueChange> BarChartVisualPropertyChanged { get; set; }
+
+    [Parameter]
     public EventCallback<string?> ChartTypeChanged { get; set; }
 
     private static string ChoiceClass(string? currentValue, string value)
@@ -446,6 +502,9 @@
 
     private Task ChangeAreaChartVisualPropertyAsync(string key, string? value)
         => AreaChartVisualPropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
+
+    private Task ChangeBarChartVisualPropertyAsync(string key, string? value)
+        => BarChartVisualPropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
 
     private RenderFragment BooleanRow(string key, bool value) => @<div class="property-grid-button-group">
         <button type="button"
@@ -499,5 +558,14 @@
         <button type="button"
                 class="@BooleanChoiceClass(value, false)"
                 @onclick="@(() => ChangeAreaChartVisualPropertyAsync(key, bool.FalseString))">Off</button>
+    </div>;
+
+    private RenderFragment BarChartBooleanRow(string key, bool value) => @<div class="property-grid-button-group">
+        <button type="button"
+                class="@BooleanChoiceClass(value, true)"
+                @onclick="@(() => ChangeBarChartVisualPropertyAsync(key, bool.TrueString))">On</button>
+        <button type="button"
+                class="@BooleanChoiceClass(value, false)"
+                @onclick="@(() => ChangeBarChartVisualPropertyAsync(key, bool.FalseString))">Off</button>
     </div>;
 }

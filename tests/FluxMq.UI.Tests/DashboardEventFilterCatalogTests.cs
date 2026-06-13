@@ -311,6 +311,7 @@ public sealed class DashboardEventFilterCatalogTests
         var latest = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.LatestEventType);
         var chart = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.LineChartType);
         var area = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.AreaChartType);
+        var bar = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.BarChartType);
         var table = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.EventTableType);
         var topicActivity = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.TopicActivityType);
         var tree = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.TopicTreeType);
@@ -339,6 +340,11 @@ public sealed class DashboardEventFilterCatalogTests
         area.UsesVisualMetrics.ShouldBeFalse();
         area.UsesChartType.ShouldBeFalse();
         area.UsesAreaChartVisual.ShouldBeTrue();
+        bar.SupportsMetricSlots.ShouldBeFalse();
+        bar.UsesMetricWindow.ShouldBeTrue();
+        bar.UsesVisualMetrics.ShouldBeFalse();
+        bar.UsesChartType.ShouldBeFalse();
+        bar.UsesBarChartVisual.ShouldBeTrue();
         table.IsEventWidget.ShouldBeTrue();
         table.UsesVisualMetrics.ShouldBeFalse();
         table.SupportsMetricSlots.ShouldBeFalse();
@@ -745,6 +751,55 @@ public sealed class DashboardEventFilterCatalogTests
         configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardAreaChartVisualOptions.LegacyFillColorKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardAreaChartVisualOptions.LegacyFillOpacityKey).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DashboardWidgetSettingsDraft_BuildsBarChartVisualConfiguration()
+    {
+        var draft = DashboardWidgetSettingsDraft.Create(
+            new DashboardWidgetSnapshot(
+                "bars",
+                DashboardWidgetCatalog.BarChartType,
+                new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["title"] = "Bars",
+                    [DashboardChartWidgetOptions.TypeKey] = DashboardChartWidgetOptions.TypeArea,
+                    [DashboardBarChartVisualOptions.LegacyShowGridKey] = bool.FalseString,
+                    [DashboardBarChartVisualOptions.LegacyOrientationKey] = DashboardBarChartVisualOptions.OrientationHorizontal,
+                    [DashboardBarChartVisualOptions.LegacyBarColorKey] = "#112233",
+                    [DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricMessages,
+                    [DashboardEventFilterCatalog.EventTypeKey] = FluxMqEventTypes.MqttMessageReceived
+                }),
+            new DashboardEventFilterCatalog());
+
+        draft.SetBarChartVisualValue(DashboardBarChartVisualOptions.HeaderKey, "Received bars");
+        draft.SetBarChartVisualValue(DashboardBarChartVisualOptions.ShowGridKey, bool.TrueString);
+        draft.SetBarChartVisualValue(DashboardBarChartVisualOptions.ShowLabelsKey, bool.FalseString);
+        draft.SetBarChartVisualValue(DashboardBarChartVisualOptions.OrientationKey, DashboardBarChartVisualOptions.OrientationHorizontal);
+        draft.SetBarChartVisualValue(DashboardBarChartVisualOptions.BarRadiusKey, "6");
+        draft.SetBarChartVisualValue(DashboardBarChartVisualOptions.EmptyTextKey, "No bar data");
+        draft.SetBarChartVisualValue(DashboardBarChartVisualOptions.BarColorKey, "#33ccaa");
+        draft.SetBarChartVisualValue(DashboardBarChartVisualOptions.GridColorKey, "#203040");
+        draft.SetBarChartVisualValue(DashboardBarChartVisualOptions.LabelColorKey, "#8899aa");
+
+        var configuration = draft.BuildConfiguration();
+
+        configuration["title"].ShouldBe("Received bars");
+        configuration[DashboardChartWidgetOptions.TypeKey].ShouldBe(DashboardChartWidgetOptions.TypeBars);
+        configuration[DashboardBarChartVisualOptions.HeaderKey].ShouldBe("Received bars");
+        configuration[DashboardBarChartVisualOptions.ShowHeaderKey].ShouldBe(bool.TrueString);
+        configuration[DashboardBarChartVisualOptions.ShowGridKey].ShouldBe(bool.TrueString);
+        configuration[DashboardBarChartVisualOptions.ShowLabelsKey].ShouldBe(bool.FalseString);
+        configuration[DashboardBarChartVisualOptions.OrientationKey].ShouldBe(DashboardBarChartVisualOptions.OrientationHorizontal);
+        configuration[DashboardBarChartVisualOptions.BarRadiusKey].ShouldBe("6");
+        configuration[DashboardBarChartVisualOptions.EmptyTextKey].ShouldBe("No bar data");
+        configuration[DashboardBarChartVisualOptions.BarColorKey].ShouldBe("#33ccaa");
+        configuration[DashboardBarChartVisualOptions.GridColorKey].ShouldBe("#203040");
+        configuration[DashboardBarChartVisualOptions.LabelColorKey].ShouldBe("#8899aa");
+        configuration[DashboardEventFilterCatalog.EventTypeKey].ShouldBe(FluxMqEventTypes.MqttMessageReceived);
+        configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardBarChartVisualOptions.LegacyBarColorKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardBarChartVisualOptions.LegacyOrientationKey).ShouldBeFalse();
     }
 
     [Fact]
@@ -2589,6 +2644,26 @@ public sealed class DashboardEventFilterCatalogTests
             .DefaultConfiguration[DashboardChartWidgetOptions.TypeKey]
             .ShouldBe(DashboardChartWidgetOptions.TypeBars);
         modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.BarChartType)
+            .DefaultConfiguration
+            .ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey)
+            .ShouldBeFalse();
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.BarChartType)
+            .DefaultConfiguration[DashboardBarChartVisualOptions.HeaderKey]
+            .ShouldBe("Bar chart");
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.BarChartType)
+            .PropertyGroups
+            .Select(static group => group.Id)
+            .ShouldBe(["bar-chart"]);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.BarChartType)
+            .PropertyGroups
+            .SelectMany(static group => group.Properties)
+            .Select(static property => property.Key)
+            .ShouldContain(DashboardBarChartVisualOptions.BarColorKey);
+        modules
             .Single(static module => module.Type == DashboardWidgetCatalog.LineChartType)
             .CompatibilityTypeIds
             .ShouldContain(DashboardWidgetCatalog.EventChartType);
@@ -3376,10 +3451,12 @@ public sealed class DashboardEventFilterCatalogTests
         displayRows.ShouldContain("TopicTreeVisualPropertyChanged");
         displayRows.ShouldContain("LineChartVisualPropertyChanged");
         displayRows.ShouldContain("AreaChartVisualPropertyChanged");
+        displayRows.ShouldContain("BarChartVisualPropertyChanged");
         inspector.ShouldContain("TopicActivityVisualPropertyChanged=\"@SetTopicActivityVisualPropertyAsync\"");
         inspector.ShouldContain("TopicTreeVisualPropertyChanged=\"@SetTopicTreeVisualPropertyAsync\"");
         inspector.ShouldContain("LineChartVisualPropertyChanged=\"@SetLineChartVisualPropertyAsync\"");
         inspector.ShouldContain("AreaChartVisualPropertyChanged=\"@SetAreaChartVisualPropertyAsync\"");
+        inspector.ShouldContain("BarChartVisualPropertyChanged=\"@SetBarChartVisualPropertyAsync\"");
     }
 
     [Fact]
@@ -3447,6 +3524,8 @@ public sealed class DashboardEventFilterCatalogTests
         var lineChart = File.ReadAllText(Path.Combine(widgetsPath, "DashboardLineChartWidget.razor"));
         var areaChartModule = File.ReadAllText(Path.Combine(widgetsPath, "DashboardAreaChartModuleView.razor"));
         var areaChart = File.ReadAllText(Path.Combine(widgetsPath, "DashboardAreaChartWidget.razor"));
+        var barChartModule = File.ReadAllText(Path.Combine(widgetsPath, "DashboardBarChartModuleView.razor"));
+        var barChart = File.ReadAllText(Path.Combine(widgetsPath, "DashboardBarChartWidget.razor"));
 
         kpi.ShouldContain("DashboardMetricVisualizationHost");
         counter.ShouldContain("DashboardMetricValueVisualizationView");
@@ -3473,12 +3552,18 @@ public sealed class DashboardEventFilterCatalogTests
         areaChart.ShouldContain("DashboardAreaChartVisualOptions");
         areaChart.ShouldContain("Context.Snapshot");
         areaChart.ShouldNotContain("DashboardChartWidgetOptions.NormalizeType");
+        barChartModule.ShouldContain("DashboardBarChartWidget");
+        barChartModule.ShouldNotContain("DashboardEventChartWidget");
+        barChart.ShouldContain("DashboardBarChartVisualOptions");
+        barChart.ShouldContain("Context.Snapshot");
+        barChart.ShouldNotContain("DashboardChartWidgetOptions.NormalizeType");
         widgetView.ShouldContain("DashboardWidgetCatalog.EventCounterType");
         widgetView.ShouldContain("DashboardWidgetCatalog.EventRateType");
         widgetView.ShouldContain("DashboardWidgetCatalog.RateTileType");
         widgetView.ShouldContain("DashboardWidgetCatalog.StatusValueType");
         widgetView.ShouldContain("DashboardWidgetCatalog.LineChartType");
         widgetView.ShouldContain("DashboardWidgetCatalog.AreaChartType");
+        widgetView.ShouldContain("DashboardWidgetCatalog.BarChartType");
     }
 
     [Fact]

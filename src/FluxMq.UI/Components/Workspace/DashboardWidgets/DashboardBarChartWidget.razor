@@ -1,0 +1,134 @@
+@using System.Globalization
+@using FluxMq.UI.Services
+@namespace FluxMq.UI.Components.Workspace
+
+@{
+    var widget = Context.Widget;
+    var snapshot = Context.Snapshot;
+    var buckets = BarBuckets(snapshot);
+    var hasData = buckets.Any(static bucket => bucket.Count > 0);
+    var orientation = DashboardBarChartVisualOptions.NormalizeOrientation(
+        widget.ReadString(DashboardBarChartVisualOptions.OrientationKey) ??
+        widget.ReadString(DashboardBarChartVisualOptions.LegacyOrientationKey));
+    var orientationClass = string.Equals(orientation, DashboardBarChartVisualOptions.OrientationHorizontal, StringComparison.Ordinal)
+        ? "horizontal"
+        : "vertical";
+}
+
+<div class="dashboard-bar-chart-visual @orientationClass" style="@VisualStyle(widget)">
+    @if (ShowHeader(widget))
+    {
+        <div class="dashboard-bar-chart-header">
+            <div class="dashboard-widget-icon">
+                <MudIcon Icon="@DashboardWidgetFormatting.WidgetIcon(widget)" Size="Size.Small" />
+            </div>
+            <div class="dashboard-widget-title-block">
+                <span class="dashboard-widget-title">@Header(widget)</span>
+                <span class="dashboard-widget-subtitle">@DashboardWidgetFormatting.EventFilterSummary(widget)</span>
+            </div>
+        </div>
+    }
+
+    <div class="dashboard-bar-chart-body">
+        @if (hasData)
+        {
+            <div class="dashboard-bar-chart-plot @(ShowGrid(widget) ? "with-grid" : string.Empty)">
+                <div class="dashboard-bar-chart-bars">
+                    @foreach (var bucket in buckets)
+                    {
+                        <div class="dashboard-bar-chart-bar" title="@bucket.Tooltip" style="@bucket.Style">
+                            <span></span>
+                        </div>
+                    }
+                </div>
+            </div>
+            @if (ShowLabels(widget))
+            {
+                <div class="dashboard-bar-chart-labels">
+                    <span>@WindowLabel(snapshot.RateWindow)</span>
+                    <strong>@DashboardWidgetFormatting.RateMeta(snapshot)</strong>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="dashboard-widget-empty">@EmptyText(widget)</div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardWidgetRenderContext Context { get; set; } = null!;
+
+    private static string Header(DashboardWidgetSnapshot widget)
+        => widget.ReadString(DashboardBarChartVisualOptions.HeaderKey) ??
+           widget.ReadString("title") ??
+           DashboardBarChartVisualOptions.DefaultHeader;
+
+    private static string EmptyText(DashboardWidgetSnapshot widget)
+        => widget.ReadString(DashboardBarChartVisualOptions.EmptyTextKey) ??
+           DashboardBarChartVisualOptions.DefaultEmptyText;
+
+    private static bool ShowHeader(DashboardWidgetSnapshot widget)
+        => ReadBoolean(widget, DashboardBarChartVisualOptions.ShowHeaderKey, true);
+
+    private static bool ShowGrid(DashboardWidgetSnapshot widget)
+        => ReadBoolean(
+            widget,
+            DashboardBarChartVisualOptions.ShowGridKey,
+            ReadBoolean(widget, DashboardBarChartVisualOptions.LegacyShowGridKey, true));
+
+    private static bool ShowLabels(DashboardWidgetSnapshot widget)
+        => ReadBoolean(
+            widget,
+            DashboardBarChartVisualOptions.ShowLabelsKey,
+            ReadBoolean(widget, DashboardBarChartVisualOptions.LegacyShowLabelsKey, true));
+
+    private static IReadOnlyList<BarBucket> BarBuckets(DashboardEventSnapshot snapshot)
+    {
+        var counts = snapshot.BucketCounts.Count == 0 ? [0] : snapshot.BucketCounts;
+        var max = Math.Max(1, counts.Max());
+        return counts
+            .Select(count =>
+            {
+                var percent = count == 0 ? 4 : Math.Clamp(count / (double)max * 100d, 12d, 100d);
+                return new BarBucket(
+                    count,
+                    $"--bar-size:{percent.ToString("0.###", CultureInfo.InvariantCulture)}%;",
+                    $"{DashboardWidgetFormatting.FormatNumber(count)} events");
+            })
+            .ToArray();
+    }
+
+    private static string VisualStyle(DashboardWidgetSnapshot widget)
+    {
+        var bar = widget.ReadString(DashboardBarChartVisualOptions.BarColorKey) ??
+            widget.ReadString(DashboardBarChartVisualOptions.LegacyBarColorKey) ??
+            DashboardBarChartVisualOptions.DefaultBarColor;
+        var grid = widget.ReadString(DashboardBarChartVisualOptions.GridColorKey) ??
+            DashboardBarChartVisualOptions.DefaultGridColor;
+        var label = widget.ReadString(DashboardBarChartVisualOptions.LabelColorKey) ??
+            DashboardBarChartVisualOptions.DefaultLabelColor;
+        var radius = DashboardBarChartVisualOptions.NormalizeBarRadius(
+            widget.ReadString(DashboardBarChartVisualOptions.BarRadiusKey));
+        return string.Concat(
+            "--bar-chart-color:",
+            bar,
+            ";--bar-chart-grid-color:",
+            grid,
+            ";--bar-chart-label-color:",
+            label,
+            ";--bar-chart-radius:",
+            radius.ToString(CultureInfo.InvariantCulture),
+            "px;");
+    }
+
+    private static bool ReadBoolean(DashboardWidgetSnapshot widget, string key, bool fallback)
+        => bool.TryParse(widget.ReadString(key), out var parsed) ? parsed : fallback;
+
+    private static string WindowLabel(TimeSpan window)
+        => $"Last {DashboardWidgetFormatting.FormatDuration(window)}";
+
+    private sealed record BarBucket(int Count, string Style, string Tooltip);
+}
