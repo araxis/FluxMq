@@ -23,6 +23,7 @@ public sealed record DashboardWidgetSettingsProfile(
     bool UsesLineChartVisual = false,
     bool UsesAreaChartVisual = false,
     bool UsesBarChartVisual = false,
+    bool UsesDonutChartVisual = false,
     bool UsesTopicTreeVisual = false,
     DashboardWidgetInspectorLabels? Labels = null)
 {
@@ -263,7 +264,9 @@ public static class DashboardWidgetSettingsProfiles
                 normalized,
                 "Donut chart",
                 Icons.Material.Filled.DonutLarge,
-                usesVisualMetrics: true),
+                usesMetricWindow: true,
+                usesDonutChartVisual: true,
+                labels: DashboardWidgetInspectorLabels.Chart),
             DashboardWidgetCatalog.EventTableType => Event(
                 normalized,
                 "Event table",
@@ -330,6 +333,7 @@ public static class DashboardWidgetSettingsProfiles
         bool usesLineChartVisual = false,
         bool usesAreaChartVisual = false,
         bool usesBarChartVisual = false,
+        bool usesDonutChartVisual = false,
         DashboardWidgetInspectorLabels? labels = null)
         => new(
             type,
@@ -351,6 +355,7 @@ public static class DashboardWidgetSettingsProfiles
             usesLineChartVisual,
             usesAreaChartVisual,
             usesBarChartVisual,
+            usesDonutChartVisual,
             UsesTopicTreeVisual: false,
             labels);
 }

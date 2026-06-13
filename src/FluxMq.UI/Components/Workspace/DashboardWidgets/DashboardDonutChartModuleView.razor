@@ -1,7 +1,6 @@
 @namespace FluxMq.UI.Components.Workspace
-@inject IFluxChartAdapter Charts
 
-<DashboardSeriesBars Series="@Charts.CreateTopicSeries(Context.Snapshot, 6)" />
+<DashboardDonutChartWidget Context="@Context" />
 
 @code {
     [Parameter, EditorRequired]

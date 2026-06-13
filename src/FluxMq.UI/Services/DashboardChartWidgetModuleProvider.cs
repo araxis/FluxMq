@@ -59,8 +59,7 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
                 "Donut chart",
                 "donutChart",
                 [
-                    MetricGroup("metric", "Metric"),
-                    CategoryGroup()
+                    DonutChartGroup()
                 ])
         ];
 
@@ -251,7 +250,27 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
         string title,
         string instanceNamePrefix,
         IReadOnlyList<DashboardWidgetPropertyGroupDefinition> groups)
-        => new(
+    {
+        var configuration = EventConfiguration(title);
+        configuration.Remove(DashboardWidgetCatalog.PrimaryMetricKey);
+        configuration[DashboardChartWidgetOptions.TypeKey] = DashboardChartWidgetOptions.TypeTopics;
+        configuration[DashboardDonutChartVisualOptions.HeaderKey] = title;
+        configuration[DashboardDonutChartVisualOptions.ShowHeaderKey] = bool.TrueString;
+        configuration[DashboardDonutChartVisualOptions.ShowLegendKey] = bool.TrueString;
+        configuration[DashboardDonutChartVisualOptions.ShowTotalKey] = bool.TrueString;
+        configuration[DashboardDonutChartVisualOptions.LimitKey] =
+            DashboardDonutChartVisualOptions.DefaultLimit.ToString(CultureInfo.InvariantCulture);
+        configuration[DashboardDonutChartVisualOptions.InnerRadiusKey] =
+            DashboardDonutChartVisualOptions.DefaultInnerRadius.ToString(CultureInfo.InvariantCulture);
+        configuration[DashboardDonutChartVisualOptions.EmptyTextKey] = DashboardDonutChartVisualOptions.DefaultEmptyText;
+        configuration[DashboardDonutChartVisualOptions.SegmentColor1Key] = DashboardDonutChartVisualOptions.DefaultSegmentColor1;
+        configuration[DashboardDonutChartVisualOptions.SegmentColor2Key] = DashboardDonutChartVisualOptions.DefaultSegmentColor2;
+        configuration[DashboardDonutChartVisualOptions.SegmentColor3Key] = DashboardDonutChartVisualOptions.DefaultSegmentColor3;
+        configuration[DashboardDonutChartVisualOptions.SegmentColor4Key] = DashboardDonutChartVisualOptions.DefaultSegmentColor4;
+        configuration[DashboardDonutChartVisualOptions.SegmentColor5Key] = DashboardDonutChartVisualOptions.DefaultSegmentColor5;
+        configuration[DashboardDonutChartVisualOptions.LabelColorKey] = DashboardDonutChartVisualOptions.DefaultLabelColor;
+        configuration[DashboardDonutChartVisualOptions.MutedColorKey] = DashboardDonutChartVisualOptions.DefaultMutedColor;
+        return new DashboardWidgetModule(
             new DashboardWidgetDescriptor(
                 type,
                 displayName,
@@ -264,11 +283,12 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
                 ["runtimeEvents"]),
             component,
             component,
-            EventConfiguration(title),
+            configuration,
             groups,
             new DashboardWidgetStyleDefinition(),
-            new DashboardWidgetLayoutContract(1, 1, 2, 1),
+            new DashboardWidgetLayoutContract(2, 1, 2, 1),
             InstanceNamePrefix: instanceNamePrefix);
+    }
 
     private static Dictionary<string, string> EventConfiguration(string title)
     {
@@ -349,11 +369,22 @@ public sealed class DashboardChartWidgetModuleProvider : IDashboardWidgetModuleP
             new(DashboardBarChartVisualOptions.LabelColorKey, "Label color", DashboardWidgetPropertyEditorKind.Color)
         ]);
 
-    private static DashboardWidgetPropertyGroupDefinition CategoryGroup()
-        => new("categories", "Categories", [
-            new("groupBy", "Group by", DashboardWidgetPropertyEditorKind.Select),
-            new("limit", "Limit", DashboardWidgetPropertyEditorKind.Number),
-            new("palette", "Palette", DashboardWidgetPropertyEditorKind.Select)
+    private static DashboardWidgetPropertyGroupDefinition DonutChartGroup()
+        => new("donut-chart", "Donut chart", [
+            new(DashboardDonutChartVisualOptions.HeaderKey, "Header", DashboardWidgetPropertyEditorKind.Text),
+            new(DashboardDonutChartVisualOptions.ShowHeaderKey, "Show header", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardDonutChartVisualOptions.ShowLegendKey, "Legend", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardDonutChartVisualOptions.ShowTotalKey, "Center total", DashboardWidgetPropertyEditorKind.Toggle),
+            new(DashboardDonutChartVisualOptions.LimitKey, "Categories", DashboardWidgetPropertyEditorKind.Number),
+            new(DashboardDonutChartVisualOptions.InnerRadiusKey, "Hole", DashboardWidgetPropertyEditorKind.Number, Unit: "%"),
+            new(DashboardDonutChartVisualOptions.EmptyTextKey, "Empty text", DashboardWidgetPropertyEditorKind.Text),
+            new(DashboardDonutChartVisualOptions.SegmentColor1Key, "Segment 1", DashboardWidgetPropertyEditorKind.Color),
+            new(DashboardDonutChartVisualOptions.SegmentColor2Key, "Segment 2", DashboardWidgetPropertyEditorKind.Color),
+            new(DashboardDonutChartVisualOptions.SegmentColor3Key, "Segment 3", DashboardWidgetPropertyEditorKind.Color),
+            new(DashboardDonutChartVisualOptions.SegmentColor4Key, "Segment 4", DashboardWidgetPropertyEditorKind.Color),
+            new(DashboardDonutChartVisualOptions.SegmentColor5Key, "Segment 5", DashboardWidgetPropertyEditorKind.Color),
+            new(DashboardDonutChartVisualOptions.LabelColorKey, "Label color", DashboardWidgetPropertyEditorKind.Color),
+            new(DashboardDonutChartVisualOptions.MutedColorKey, "Muted color", DashboardWidgetPropertyEditorKind.Color)
         ]);
 
     private static IReadOnlyList<DashboardWidgetPropertyOption> MetricOptions()

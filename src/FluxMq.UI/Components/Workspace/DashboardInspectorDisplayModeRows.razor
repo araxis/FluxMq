@@ -413,6 +413,73 @@
         </PropertyGridRow>
     }
 
+    @if (Draft.Profile.UsesDonutChartVisual)
+    {
+        <PropertyGridRow Name="Header">
+            <input class="property-grid-input"
+                   value="@Draft.DonutChartHeader"
+                   @oninput="@((ChangeEventArgs args) => ChangeDonutChartVisualPropertyAsync(DashboardDonutChartVisualOptions.HeaderKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Show header">
+            @DonutChartBooleanRow(DashboardDonutChartVisualOptions.ShowHeaderKey, Draft.DonutChartShowHeader)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Legend">
+            @DonutChartBooleanRow(DashboardDonutChartVisualOptions.ShowLegendKey, Draft.DonutChartShowLegend)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Center total">
+            @DonutChartBooleanRow(DashboardDonutChartVisualOptions.ShowTotalKey, Draft.DonutChartShowTotal)
+        </PropertyGridRow>
+        <PropertyGridRow Name="Categories">
+            <input class="property-grid-input"
+                   type="number"
+                   min="@DashboardDonutChartVisualOptions.MinLimit"
+                   max="@DashboardDonutChartVisualOptions.MaxLimit"
+                   value="@Draft.DonutChartLimit"
+                   @oninput="@((ChangeEventArgs args) => ChangeDonutChartVisualPropertyAsync(DashboardDonutChartVisualOptions.LimitKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Hole" Unit="%">
+            <input class="property-grid-input"
+                   type="number"
+                   min="@DashboardDonutChartVisualOptions.MinInnerRadius"
+                   max="@DashboardDonutChartVisualOptions.MaxInnerRadius"
+                   value="@Draft.DonutChartInnerRadius"
+                   @oninput="@((ChangeEventArgs args) => ChangeDonutChartVisualPropertyAsync(DashboardDonutChartVisualOptions.InnerRadiusKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Empty text">
+            <input class="property-grid-input"
+                   value="@Draft.DonutChartEmptyText"
+                   @oninput="@((ChangeEventArgs args) => ChangeDonutChartVisualPropertyAsync(DashboardDonutChartVisualOptions.EmptyTextKey, args.Value?.ToString()))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Segment 1">
+            <PropertyGridColorPicker Value="@Draft.DonutChartSegmentColor1"
+                                     ValueChanged="@((string? value) => ChangeDonutChartVisualPropertyAsync(DashboardDonutChartVisualOptions.SegmentColor1Key, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Segment 2">
+            <PropertyGridColorPicker Value="@Draft.DonutChartSegmentColor2"
+                                     ValueChanged="@((string? value) => ChangeDonutChartVisualPropertyAsync(DashboardDonutChartVisualOptions.SegmentColor2Key, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Segment 3">
+            <PropertyGridColorPicker Value="@Draft.DonutChartSegmentColor3"
+                                     ValueChanged="@((string? value) => ChangeDonutChartVisualPropertyAsync(DashboardDonutChartVisualOptions.SegmentColor3Key, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Segment 4">
+            <PropertyGridColorPicker Value="@Draft.DonutChartSegmentColor4"
+                                     ValueChanged="@((string? value) => ChangeDonutChartVisualPropertyAsync(DashboardDonutChartVisualOptions.SegmentColor4Key, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Segment 5">
+            <PropertyGridColorPicker Value="@Draft.DonutChartSegmentColor5"
+                                     ValueChanged="@((string? value) => ChangeDonutChartVisualPropertyAsync(DashboardDonutChartVisualOptions.SegmentColor5Key, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Label color">
+            <PropertyGridColorPicker Value="@Draft.DonutChartLabelColor"
+                                     ValueChanged="@((string? value) => ChangeDonutChartVisualPropertyAsync(DashboardDonutChartVisualOptions.LabelColorKey, value))" />
+        </PropertyGridRow>
+        <PropertyGridRow Name="Muted color">
+            <PropertyGridColorPicker Value="@Draft.DonutChartMutedColor"
+                                     ValueChanged="@((string? value) => ChangeDonutChartVisualPropertyAsync(DashboardDonutChartVisualOptions.MutedColorKey, value))" />
+        </PropertyGridRow>
+    }
+
     @if (Draft.Profile.UsesChartType)
     {
         <PropertyGridRow Name="@Labels.ChartRow">
@@ -470,6 +537,9 @@
     public EventCallback<DashboardInspectorPropertyValueChange> BarChartVisualPropertyChanged { get; set; }
 
     [Parameter]
+    public EventCallback<DashboardInspectorPropertyValueChange> DonutChartVisualPropertyChanged { get; set; }
+
+    [Parameter]
     public EventCallback<string?> ChartTypeChanged { get; set; }
 
     private static string ChoiceClass(string? currentValue, string value)
@@ -505,6 +575,9 @@
 
     private Task ChangeBarChartVisualPropertyAsync(string key, string? value)
         => BarChartVisualPropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
+
+    private Task ChangeDonutChartVisualPropertyAsync(string key, string? value)
+        => DonutChartVisualPropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
 
     private RenderFragment BooleanRow(string key, bool value) => @<div class="property-grid-button-group">
         <button type="button"
@@ -567,5 +640,14 @@
         <button type="button"
                 class="@BooleanChoiceClass(value, false)"
                 @onclick="@(() => ChangeBarChartVisualPropertyAsync(key, bool.FalseString))">Off</button>
+    </div>;
+
+    private RenderFragment DonutChartBooleanRow(string key, bool value) => @<div class="property-grid-button-group">
+        <button type="button"
+                class="@BooleanChoiceClass(value, true)"
+                @onclick="@(() => ChangeDonutChartVisualPropertyAsync(key, bool.TrueString))">On</button>
+        <button type="button"
+                class="@BooleanChoiceClass(value, false)"
+                @onclick="@(() => ChangeDonutChartVisualPropertyAsync(key, bool.FalseString))">Off</button>
     </div>;
 }
