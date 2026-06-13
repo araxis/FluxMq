@@ -3568,3 +3568,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 770 tests.
     - `dotnet run --project src\FluxMq.Cli\FluxMq.Cli.csproj -- validate --config C:\Users\meisa\OneDrive\Documents\FluxMQ\app1.json --output json` returned `isValid: true`.
   - Next step: commit/PR/merge this focused compatibility fix, then return to one-dashboard-component-at-a-time review.
+- Dashboard donut chart visual UX:
+  - Merged PR #210 (`Fix metric attribute filter loading`) into `main`; post-merge Windows validation passed before this slice.
+  - Started `work/dashboard-donut-chart-visual-ux` from clean `main`.
+  - Refactored `chart.donut` so the donut chart visual owns focused display settings: header, legend visibility, center total visibility, category limit, hole size, empty text, five segment colors, label color, and muted color.
+  - Kept event matching, windowing, and topic breakdown behavior unchanged; this slice only separates donut presentation from the old generic series-bars/chart-adapter path.
+  - Updated edit-cell and live rendering to use a focused donut-chart component, with the widget owning its header instead of the outer dashboard chrome.
+  - New donut-chart defaults and saves write `chart.donut.*` visual keys while existing `title` and legacy `limit` still load as fallback; old generic `primaryMetric`, `groupBy`, and `palette` keys are not written back for donut.
+  - Verification so far:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore --verbosity minimal -p:UseAppHost=false` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardEventFilterCatalogTests" -p:UseAppHost=false --verbosity minimal` passed with 121 tests.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseAppHost=false --verbosity minimal` passed with 439 tests.
+    - `dotnet test FluxMq.sln --no-restore --verbosity minimal -p:UseAppHost=false -m:1` passed with 771 tests.
+    - `git diff --check` passed with line-ending normalization warnings for edited files.
+  - Next step: review `chart.donut` manually before selecting the next dashboard component.

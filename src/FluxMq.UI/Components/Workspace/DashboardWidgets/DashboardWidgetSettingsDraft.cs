@@ -50,6 +50,7 @@ public sealed class DashboardWidgetSettingsDraft
         ApplyLineChartVisualValues(widget.Configuration);
         ApplyAreaChartVisualValues(widget.Configuration);
         ApplyBarChartVisualValues(widget.Configuration);
+        ApplyDonutChartVisualValues(widget.Configuration);
         ApplyTopicTreeVisualValues(widget.Configuration);
 
         foreach (var key in eventFilters.FilterKeys)
@@ -244,6 +245,36 @@ public sealed class DashboardWidgetSettingsDraft
 
     public string BarChartLabelColor { get; set; } = DashboardBarChartVisualOptions.DefaultLabelColor;
 
+    public string DonutChartHeader { get; set; } = DashboardDonutChartVisualOptions.DefaultHeader;
+
+    public bool DonutChartShowHeader { get; set; } = true;
+
+    public bool DonutChartShowLegend { get; set; } = true;
+
+    public bool DonutChartShowTotal { get; set; } = true;
+
+    public string DonutChartLimit { get; set; } =
+        DashboardDonutChartVisualOptions.DefaultLimit.ToString(CultureInfo.InvariantCulture);
+
+    public string DonutChartInnerRadius { get; set; } =
+        DashboardDonutChartVisualOptions.DefaultInnerRadius.ToString(CultureInfo.InvariantCulture);
+
+    public string DonutChartEmptyText { get; set; } = DashboardDonutChartVisualOptions.DefaultEmptyText;
+
+    public string DonutChartSegmentColor1 { get; set; } = DashboardDonutChartVisualOptions.DefaultSegmentColor1;
+
+    public string DonutChartSegmentColor2 { get; set; } = DashboardDonutChartVisualOptions.DefaultSegmentColor2;
+
+    public string DonutChartSegmentColor3 { get; set; } = DashboardDonutChartVisualOptions.DefaultSegmentColor3;
+
+    public string DonutChartSegmentColor4 { get; set; } = DashboardDonutChartVisualOptions.DefaultSegmentColor4;
+
+    public string DonutChartSegmentColor5 { get; set; } = DashboardDonutChartVisualOptions.DefaultSegmentColor5;
+
+    public string DonutChartLabelColor { get; set; } = DashboardDonutChartVisualOptions.DefaultLabelColor;
+
+    public string DonutChartMutedColor { get; set; } = DashboardDonutChartVisualOptions.DefaultMutedColor;
+
     public string TopicTreeHeader { get; set; } = DashboardTopicTreeVisualOptions.DefaultHeader;
 
     public bool TopicTreeShowHeader { get; set; } = true;
@@ -320,6 +351,7 @@ public sealed class DashboardWidgetSettingsDraft
         ApplyLineChartVisualValues(configuration);
         ApplyAreaChartVisualValues(configuration);
         ApplyBarChartVisualValues(configuration);
+        ApplyDonutChartVisualValues(configuration);
         ApplyTopicTreeVisualValues(configuration);
 
         foreach (var key in _eventFilters.FilterKeys)
@@ -758,6 +790,65 @@ public sealed class DashboardWidgetSettingsDraft
         }
     }
 
+    public void SetDonutChartVisualValue(string key, string? value)
+    {
+        if (!Profile.UsesDonutChartVisual)
+        {
+            return;
+        }
+
+        switch (key)
+        {
+            case DashboardDonutChartVisualOptions.HeaderKey:
+                DonutChartHeader = NormalizeText(value, DashboardDonutChartVisualOptions.DefaultHeader);
+                Title = DonutChartHeader;
+                break;
+            case DashboardDonutChartVisualOptions.ShowHeaderKey:
+                DonutChartShowHeader = NormalizeBoolean(value, DonutChartShowHeader);
+                break;
+            case DashboardDonutChartVisualOptions.ShowLegendKey:
+                DonutChartShowLegend = NormalizeBoolean(value, DonutChartShowLegend);
+                break;
+            case DashboardDonutChartVisualOptions.ShowTotalKey:
+                DonutChartShowTotal = NormalizeBoolean(value, DonutChartShowTotal);
+                break;
+            case DashboardDonutChartVisualOptions.LimitKey:
+                DonutChartLimit = DashboardDonutChartVisualOptions
+                    .NormalizeLimit(value)
+                    .ToString(CultureInfo.InvariantCulture);
+                break;
+            case DashboardDonutChartVisualOptions.InnerRadiusKey:
+                DonutChartInnerRadius = DashboardDonutChartVisualOptions
+                    .NormalizeInnerRadius(value)
+                    .ToString(CultureInfo.InvariantCulture);
+                break;
+            case DashboardDonutChartVisualOptions.EmptyTextKey:
+                DonutChartEmptyText = NormalizeText(value, DashboardDonutChartVisualOptions.DefaultEmptyText);
+                break;
+            case DashboardDonutChartVisualOptions.SegmentColor1Key:
+                DonutChartSegmentColor1 = Normalize(value);
+                break;
+            case DashboardDonutChartVisualOptions.SegmentColor2Key:
+                DonutChartSegmentColor2 = Normalize(value);
+                break;
+            case DashboardDonutChartVisualOptions.SegmentColor3Key:
+                DonutChartSegmentColor3 = Normalize(value);
+                break;
+            case DashboardDonutChartVisualOptions.SegmentColor4Key:
+                DonutChartSegmentColor4 = Normalize(value);
+                break;
+            case DashboardDonutChartVisualOptions.SegmentColor5Key:
+                DonutChartSegmentColor5 = Normalize(value);
+                break;
+            case DashboardDonutChartVisualOptions.LabelColorKey:
+                DonutChartLabelColor = Normalize(value);
+                break;
+            case DashboardDonutChartVisualOptions.MutedColorKey:
+                DonutChartMutedColor = Normalize(value);
+                break;
+        }
+    }
+
     public IReadOnlyDictionary<string, string> BuildConfiguration()
     {
         var title = string.IsNullOrWhiteSpace(Title) ? Profile.Title : Title.Trim();
@@ -834,6 +925,7 @@ public sealed class DashboardWidgetSettingsDraft
         ApplyLineChartVisualConfiguration(configuration);
         ApplyAreaChartVisualConfiguration(configuration);
         ApplyBarChartVisualConfiguration(configuration);
+        ApplyDonutChartVisualConfiguration(configuration);
         ApplyMetricVisualizationConfiguration(configuration);
         ApplyMetricVisualization(configuration);
         ApplyMetricName(configuration);
@@ -1423,6 +1515,96 @@ public sealed class DashboardWidgetSettingsDraft
         configuration[DashboardBarChartVisualOptions.LabelColorKey] = NormalizeColor(
             BarChartLabelColor,
             DashboardBarChartVisualOptions.DefaultLabelColor);
+    }
+
+    private void ApplyDonutChartVisualValues(IReadOnlyDictionary<string, string> configuration)
+    {
+        if (!Profile.UsesDonutChartVisual)
+        {
+            return;
+        }
+
+        DonutChartHeader = ReadString(configuration, DashboardDonutChartVisualOptions.HeaderKey) ??
+            ReadString(configuration, "title") ??
+            DashboardDonutChartVisualOptions.DefaultHeader;
+        Title = DonutChartHeader;
+        DonutChartShowHeader = ReadBoolean(configuration, DashboardDonutChartVisualOptions.ShowHeaderKey, true);
+        DonutChartShowLegend = ReadBoolean(configuration, DashboardDonutChartVisualOptions.ShowLegendKey, true);
+        DonutChartShowTotal = ReadBoolean(configuration, DashboardDonutChartVisualOptions.ShowTotalKey, true);
+        DonutChartLimit = DashboardDonutChartVisualOptions
+            .NormalizeLimit(
+                ReadString(configuration, DashboardDonutChartVisualOptions.LimitKey) ??
+                ReadString(configuration, DashboardDonutChartVisualOptions.LegacyLimitKey))
+            .ToString(CultureInfo.InvariantCulture);
+        DonutChartInnerRadius = DashboardDonutChartVisualOptions
+            .NormalizeInnerRadius(ReadString(configuration, DashboardDonutChartVisualOptions.InnerRadiusKey))
+            .ToString(CultureInfo.InvariantCulture);
+        DonutChartEmptyText = ReadString(configuration, DashboardDonutChartVisualOptions.EmptyTextKey) ??
+            DashboardDonutChartVisualOptions.DefaultEmptyText;
+        DonutChartSegmentColor1 = ReadString(configuration, DashboardDonutChartVisualOptions.SegmentColor1Key) ??
+            DashboardDonutChartVisualOptions.DefaultSegmentColor1;
+        DonutChartSegmentColor2 = ReadString(configuration, DashboardDonutChartVisualOptions.SegmentColor2Key) ??
+            DashboardDonutChartVisualOptions.DefaultSegmentColor2;
+        DonutChartSegmentColor3 = ReadString(configuration, DashboardDonutChartVisualOptions.SegmentColor3Key) ??
+            DashboardDonutChartVisualOptions.DefaultSegmentColor3;
+        DonutChartSegmentColor4 = ReadString(configuration, DashboardDonutChartVisualOptions.SegmentColor4Key) ??
+            DashboardDonutChartVisualOptions.DefaultSegmentColor4;
+        DonutChartSegmentColor5 = ReadString(configuration, DashboardDonutChartVisualOptions.SegmentColor5Key) ??
+            DashboardDonutChartVisualOptions.DefaultSegmentColor5;
+        DonutChartLabelColor = ReadString(configuration, DashboardDonutChartVisualOptions.LabelColorKey) ??
+            DashboardDonutChartVisualOptions.DefaultLabelColor;
+        DonutChartMutedColor = ReadString(configuration, DashboardDonutChartVisualOptions.MutedColorKey) ??
+            DashboardDonutChartVisualOptions.DefaultMutedColor;
+    }
+
+    private void ApplyDonutChartVisualConfiguration(Dictionary<string, string> configuration)
+    {
+        if (!Profile.UsesDonutChartVisual)
+        {
+            return;
+        }
+
+        var header = string.IsNullOrWhiteSpace(DonutChartHeader)
+            ? DashboardDonutChartVisualOptions.DefaultHeader
+            : DonutChartHeader.Trim();
+        configuration["title"] = header;
+        configuration[DashboardChartWidgetOptions.TypeKey] = DashboardChartWidgetOptions.TypeTopics;
+        configuration.Remove(DashboardWidgetCatalog.PrimaryMetricKey);
+        configuration.Remove(DashboardDonutChartVisualOptions.LegacyGroupByKey);
+        configuration.Remove(DashboardDonutChartVisualOptions.LegacyLimitKey);
+        configuration.Remove(DashboardDonutChartVisualOptions.LegacyPaletteKey);
+        configuration[DashboardDonutChartVisualOptions.HeaderKey] = header;
+        configuration[DashboardDonutChartVisualOptions.ShowHeaderKey] = DonutChartShowHeader ? bool.TrueString : bool.FalseString;
+        configuration[DashboardDonutChartVisualOptions.ShowLegendKey] = DonutChartShowLegend ? bool.TrueString : bool.FalseString;
+        configuration[DashboardDonutChartVisualOptions.ShowTotalKey] = DonutChartShowTotal ? bool.TrueString : bool.FalseString;
+        configuration[DashboardDonutChartVisualOptions.LimitKey] =
+            DashboardDonutChartVisualOptions.NormalizeLimit(DonutChartLimit).ToString(CultureInfo.InvariantCulture);
+        configuration[DashboardDonutChartVisualOptions.InnerRadiusKey] =
+            DashboardDonutChartVisualOptions.NormalizeInnerRadius(DonutChartInnerRadius).ToString(CultureInfo.InvariantCulture);
+        configuration[DashboardDonutChartVisualOptions.EmptyTextKey] = string.IsNullOrWhiteSpace(DonutChartEmptyText)
+            ? DashboardDonutChartVisualOptions.DefaultEmptyText
+            : DonutChartEmptyText.Trim();
+        configuration[DashboardDonutChartVisualOptions.SegmentColor1Key] = NormalizeColor(
+            DonutChartSegmentColor1,
+            DashboardDonutChartVisualOptions.DefaultSegmentColor1);
+        configuration[DashboardDonutChartVisualOptions.SegmentColor2Key] = NormalizeColor(
+            DonutChartSegmentColor2,
+            DashboardDonutChartVisualOptions.DefaultSegmentColor2);
+        configuration[DashboardDonutChartVisualOptions.SegmentColor3Key] = NormalizeColor(
+            DonutChartSegmentColor3,
+            DashboardDonutChartVisualOptions.DefaultSegmentColor3);
+        configuration[DashboardDonutChartVisualOptions.SegmentColor4Key] = NormalizeColor(
+            DonutChartSegmentColor4,
+            DashboardDonutChartVisualOptions.DefaultSegmentColor4);
+        configuration[DashboardDonutChartVisualOptions.SegmentColor5Key] = NormalizeColor(
+            DonutChartSegmentColor5,
+            DashboardDonutChartVisualOptions.DefaultSegmentColor5);
+        configuration[DashboardDonutChartVisualOptions.LabelColorKey] = NormalizeColor(
+            DonutChartLabelColor,
+            DashboardDonutChartVisualOptions.DefaultLabelColor);
+        configuration[DashboardDonutChartVisualOptions.MutedColorKey] = NormalizeColor(
+            DonutChartMutedColor,
+            DashboardDonutChartVisualOptions.DefaultMutedColor);
     }
 
     private void TrimFiltersToEventType()

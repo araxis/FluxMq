@@ -312,6 +312,7 @@ public sealed class DashboardEventFilterCatalogTests
         var chart = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.LineChartType);
         var area = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.AreaChartType);
         var bar = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.BarChartType);
+        var donut = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.DonutChartType);
         var table = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.EventTableType);
         var topicActivity = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.TopicActivityType);
         var tree = DashboardWidgetSettingsProfiles.For(DashboardWidgetCatalog.TopicTreeType);
@@ -345,6 +346,11 @@ public sealed class DashboardEventFilterCatalogTests
         bar.UsesVisualMetrics.ShouldBeFalse();
         bar.UsesChartType.ShouldBeFalse();
         bar.UsesBarChartVisual.ShouldBeTrue();
+        donut.SupportsMetricSlots.ShouldBeFalse();
+        donut.UsesMetricWindow.ShouldBeTrue();
+        donut.UsesVisualMetrics.ShouldBeFalse();
+        donut.UsesChartType.ShouldBeFalse();
+        donut.UsesDonutChartVisual.ShouldBeTrue();
         table.IsEventWidget.ShouldBeTrue();
         table.UsesVisualMetrics.ShouldBeFalse();
         table.SupportsMetricSlots.ShouldBeFalse();
@@ -800,6 +806,58 @@ public sealed class DashboardEventFilterCatalogTests
         configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardBarChartVisualOptions.LegacyBarColorKey).ShouldBeFalse();
         configuration.ContainsKey(DashboardBarChartVisualOptions.LegacyOrientationKey).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DashboardWidgetSettingsDraft_BuildsDonutChartVisualConfiguration()
+    {
+        var draft = DashboardWidgetSettingsDraft.Create(
+            new DashboardWidgetSnapshot(
+                "topics",
+                DashboardWidgetCatalog.DonutChartType,
+                new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["title"] = "Topics",
+                    [DashboardChartWidgetOptions.TypeKey] = DashboardChartWidgetOptions.TypeBars,
+                    [DashboardDonutChartVisualOptions.LegacyLimitKey] = "9",
+                    [DashboardDonutChartVisualOptions.LegacyGroupByKey] = "topic",
+                    [DashboardDonutChartVisualOptions.LegacyPaletteKey] = "cool",
+                    [DashboardWidgetCatalog.PrimaryMetricKey] = DashboardWidgetCatalog.MetricMessages,
+                    [DashboardEventFilterCatalog.EventTypeKey] = FluxMqEventTypes.MqttMessageReceived
+                }),
+            new DashboardEventFilterCatalog());
+
+        draft.SetDonutChartVisualValue(DashboardDonutChartVisualOptions.HeaderKey, "Topic mix");
+        draft.SetDonutChartVisualValue(DashboardDonutChartVisualOptions.ShowLegendKey, bool.FalseString);
+        draft.SetDonutChartVisualValue(DashboardDonutChartVisualOptions.ShowTotalKey, bool.FalseString);
+        draft.SetDonutChartVisualValue(DashboardDonutChartVisualOptions.LimitKey, "4");
+        draft.SetDonutChartVisualValue(DashboardDonutChartVisualOptions.InnerRadiusKey, "62");
+        draft.SetDonutChartVisualValue(DashboardDonutChartVisualOptions.EmptyTextKey, "No categories");
+        draft.SetDonutChartVisualValue(DashboardDonutChartVisualOptions.SegmentColor1Key, "#33ccaa");
+        draft.SetDonutChartVisualValue(DashboardDonutChartVisualOptions.SegmentColor2Key, "#225544");
+        draft.SetDonutChartVisualValue(DashboardDonutChartVisualOptions.LabelColorKey, "#f2f6ff");
+        draft.SetDonutChartVisualValue(DashboardDonutChartVisualOptions.MutedColorKey, "#8899aa");
+
+        var configuration = draft.BuildConfiguration();
+
+        configuration["title"].ShouldBe("Topic mix");
+        configuration[DashboardChartWidgetOptions.TypeKey].ShouldBe(DashboardChartWidgetOptions.TypeTopics);
+        configuration[DashboardDonutChartVisualOptions.HeaderKey].ShouldBe("Topic mix");
+        configuration[DashboardDonutChartVisualOptions.ShowHeaderKey].ShouldBe(bool.TrueString);
+        configuration[DashboardDonutChartVisualOptions.ShowLegendKey].ShouldBe(bool.FalseString);
+        configuration[DashboardDonutChartVisualOptions.ShowTotalKey].ShouldBe(bool.FalseString);
+        configuration[DashboardDonutChartVisualOptions.LimitKey].ShouldBe("4");
+        configuration[DashboardDonutChartVisualOptions.InnerRadiusKey].ShouldBe("62");
+        configuration[DashboardDonutChartVisualOptions.EmptyTextKey].ShouldBe("No categories");
+        configuration[DashboardDonutChartVisualOptions.SegmentColor1Key].ShouldBe("#33ccaa");
+        configuration[DashboardDonutChartVisualOptions.SegmentColor2Key].ShouldBe("#225544");
+        configuration[DashboardDonutChartVisualOptions.LabelColorKey].ShouldBe("#f2f6ff");
+        configuration[DashboardDonutChartVisualOptions.MutedColorKey].ShouldBe("#8899aa");
+        configuration[DashboardEventFilterCatalog.EventTypeKey].ShouldBe(FluxMqEventTypes.MqttMessageReceived);
+        configuration.ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardDonutChartVisualOptions.LegacyLimitKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardDonutChartVisualOptions.LegacyPaletteKey).ShouldBeFalse();
+        configuration.ContainsKey(DashboardDonutChartVisualOptions.LegacyGroupByKey).ShouldBeFalse();
     }
 
     [Fact]
@@ -2664,6 +2722,30 @@ public sealed class DashboardEventFilterCatalogTests
             .Select(static property => property.Key)
             .ShouldContain(DashboardBarChartVisualOptions.BarColorKey);
         modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.DonutChartType)
+            .DefaultConfiguration[DashboardChartWidgetOptions.TypeKey]
+            .ShouldBe(DashboardChartWidgetOptions.TypeTopics);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.DonutChartType)
+            .DefaultConfiguration
+            .ContainsKey(DashboardWidgetCatalog.PrimaryMetricKey)
+            .ShouldBeFalse();
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.DonutChartType)
+            .DefaultConfiguration[DashboardDonutChartVisualOptions.HeaderKey]
+            .ShouldBe("Donut chart");
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.DonutChartType)
+            .PropertyGroups
+            .Select(static group => group.Id)
+            .ShouldBe(["donut-chart"]);
+        modules
+            .Single(static module => module.Type == DashboardWidgetCatalog.DonutChartType)
+            .PropertyGroups
+            .SelectMany(static group => group.Properties)
+            .Select(static property => property.Key)
+            .ShouldContain(DashboardDonutChartVisualOptions.InnerRadiusKey);
+        modules
             .Single(static module => module.Type == DashboardWidgetCatalog.LineChartType)
             .CompatibilityTypeIds
             .ShouldContain(DashboardWidgetCatalog.EventChartType);
@@ -3452,11 +3534,13 @@ public sealed class DashboardEventFilterCatalogTests
         displayRows.ShouldContain("LineChartVisualPropertyChanged");
         displayRows.ShouldContain("AreaChartVisualPropertyChanged");
         displayRows.ShouldContain("BarChartVisualPropertyChanged");
+        displayRows.ShouldContain("DonutChartVisualPropertyChanged");
         inspector.ShouldContain("TopicActivityVisualPropertyChanged=\"@SetTopicActivityVisualPropertyAsync\"");
         inspector.ShouldContain("TopicTreeVisualPropertyChanged=\"@SetTopicTreeVisualPropertyAsync\"");
         inspector.ShouldContain("LineChartVisualPropertyChanged=\"@SetLineChartVisualPropertyAsync\"");
         inspector.ShouldContain("AreaChartVisualPropertyChanged=\"@SetAreaChartVisualPropertyAsync\"");
         inspector.ShouldContain("BarChartVisualPropertyChanged=\"@SetBarChartVisualPropertyAsync\"");
+        inspector.ShouldContain("DonutChartVisualPropertyChanged=\"@SetDonutChartVisualPropertyAsync\"");
     }
 
     [Fact]
@@ -3526,6 +3610,8 @@ public sealed class DashboardEventFilterCatalogTests
         var areaChart = File.ReadAllText(Path.Combine(widgetsPath, "DashboardAreaChartWidget.razor"));
         var barChartModule = File.ReadAllText(Path.Combine(widgetsPath, "DashboardBarChartModuleView.razor"));
         var barChart = File.ReadAllText(Path.Combine(widgetsPath, "DashboardBarChartWidget.razor"));
+        var donutChartModule = File.ReadAllText(Path.Combine(widgetsPath, "DashboardDonutChartModuleView.razor"));
+        var donutChart = File.ReadAllText(Path.Combine(widgetsPath, "DashboardDonutChartWidget.razor"));
 
         kpi.ShouldContain("DashboardMetricVisualizationHost");
         counter.ShouldContain("DashboardMetricValueVisualizationView");
@@ -3557,6 +3643,13 @@ public sealed class DashboardEventFilterCatalogTests
         barChart.ShouldContain("DashboardBarChartVisualOptions");
         barChart.ShouldContain("Context.Snapshot");
         barChart.ShouldNotContain("DashboardChartWidgetOptions.NormalizeType");
+        donutChartModule.ShouldContain("DashboardDonutChartWidget");
+        donutChartModule.ShouldNotContain("IFluxChartAdapter");
+        donutChartModule.ShouldNotContain("DashboardSeriesBars");
+        donutChart.ShouldContain("DashboardDonutChartVisualOptions");
+        donutChart.ShouldContain("Context.Snapshot");
+        donutChart.ShouldNotContain("IFluxChartAdapter");
+        donutChart.ShouldNotContain("DashboardSeriesBars");
         widgetView.ShouldContain("DashboardWidgetCatalog.EventCounterType");
         widgetView.ShouldContain("DashboardWidgetCatalog.EventRateType");
         widgetView.ShouldContain("DashboardWidgetCatalog.RateTileType");
@@ -3564,6 +3657,7 @@ public sealed class DashboardEventFilterCatalogTests
         widgetView.ShouldContain("DashboardWidgetCatalog.LineChartType");
         widgetView.ShouldContain("DashboardWidgetCatalog.AreaChartType");
         widgetView.ShouldContain("DashboardWidgetCatalog.BarChartType");
+        widgetView.ShouldContain("DashboardWidgetCatalog.DonutChartType");
     }
 
     [Fact]

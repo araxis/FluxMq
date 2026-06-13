@@ -1,0 +1,203 @@
+@using System.Globalization
+@using FluxMq.UI.Models
+@using FluxMq.UI.Services
+@namespace FluxMq.UI.Components.Workspace
+
+@{
+    var widget = Context.Widget;
+    var segments = DonutSegments(widget, Context.Snapshot);
+    var hasData = segments.Count > 0;
+    var total = segments.Sum(static segment => segment.Count);
+    var geometry = Geometry(widget);
+}
+
+<div class="dashboard-donut-chart-visual" style="@VisualStyle(widget)">
+    @if (ShowHeader(widget))
+    {
+        <div class="dashboard-donut-chart-header">
+            <div class="dashboard-widget-icon">
+                <MudIcon Icon="@DashboardWidgetFormatting.WidgetIcon(widget)" Size="Size.Small" />
+            </div>
+            <div class="dashboard-widget-title-block">
+                <span class="dashboard-widget-title">@Header(widget)</span>
+                <span class="dashboard-widget-subtitle">@DashboardWidgetFormatting.EventFilterSummary(widget)</span>
+            </div>
+        </div>
+    }
+
+    <div class="dashboard-donut-chart-body">
+        @if (hasData)
+        {
+            <div class="dashboard-donut-chart-plot">
+                <svg class="dashboard-donut-chart-svg"
+                     viewBox="0 0 48 48"
+                     role="img"
+                     aria-label="@Header(widget)">
+                    <circle class="dashboard-donut-chart-track"
+                            cx="24"
+                            cy="24"
+                            r="@geometry.Radius"
+                            stroke-width="@geometry.StrokeWidth" />
+                    @foreach (var segment in segments)
+                    {
+                        <circle class="dashboard-donut-chart-segment"
+                                cx="24"
+                                cy="24"
+                                r="@geometry.Radius"
+                                pathLength="100"
+                                stroke="@segment.Color"
+                                stroke-dasharray="@segment.Dash"
+                                stroke-dashoffset="@segment.Offset"
+                                stroke-width="@geometry.StrokeWidth"
+                                transform="rotate(-90 24 24)">
+                            <title>@segment.Tooltip</title>
+                        </circle>
+                    }
+                </svg>
+                @if (ShowTotal(widget))
+                {
+                    <div class="dashboard-donut-chart-total">
+                        <strong>@DashboardWidgetFormatting.FormatNumber(total)</strong>
+                        <span>events</span>
+                    </div>
+                }
+            </div>
+            @if (ShowLegend(widget))
+            {
+                <div class="dashboard-donut-chart-legend">
+                    @foreach (var segment in segments)
+                    {
+                        <div class="dashboard-donut-chart-legend-row" title="@segment.Tooltip">
+                            <span class="dashboard-donut-chart-swatch" style="background:@segment.Color"></span>
+                            <span>@DashboardWidgetFormatting.TrimTopic(segment.Label)</span>
+                            <strong>@segment.PercentLabel</strong>
+                        </div>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="dashboard-widget-empty">@EmptyText(widget)</div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public DashboardWidgetRenderContext Context { get; set; } = null!;
+
+    private static string Header(DashboardWidgetSnapshot widget)
+        => widget.ReadString(DashboardDonutChartVisualOptions.HeaderKey) ??
+           widget.ReadString("title") ??
+           DashboardDonutChartVisualOptions.DefaultHeader;
+
+    private static string EmptyText(DashboardWidgetSnapshot widget)
+        => widget.ReadString(DashboardDonutChartVisualOptions.EmptyTextKey) ??
+           DashboardDonutChartVisualOptions.DefaultEmptyText;
+
+    private static bool ShowHeader(DashboardWidgetSnapshot widget)
+        => ReadBoolean(widget, DashboardDonutChartVisualOptions.ShowHeaderKey, true);
+
+    private static bool ShowLegend(DashboardWidgetSnapshot widget)
+        => ReadBoolean(widget, DashboardDonutChartVisualOptions.ShowLegendKey, true);
+
+    private static bool ShowTotal(DashboardWidgetSnapshot widget)
+        => ReadBoolean(widget, DashboardDonutChartVisualOptions.ShowTotalKey, true);
+
+    private static IReadOnlyList<DonutSegment> DonutSegments(
+        DashboardWidgetSnapshot widget,
+        DashboardEventSnapshot snapshot)
+    {
+        var limit = DashboardDonutChartVisualOptions.NormalizeLimit(
+            widget.ReadString(DashboardDonutChartVisualOptions.LimitKey) ??
+            widget.ReadString(DashboardDonutChartVisualOptions.LegacyLimitKey));
+        var topics = snapshot.TopicCounts
+            .Where(static topic => topic.Count > 0)
+            .Take(limit)
+            .ToArray();
+        if (topics.Length == 0)
+        {
+            return [];
+        }
+
+        var total = topics.Sum(static topic => topic.Count);
+        if (total <= 0)
+        {
+            return [];
+        }
+
+        var colors = SegmentColors(widget);
+        var offset = 0d;
+        return topics.Select((topic, index) =>
+        {
+            var percent = topic.Count / (double)total * 100d;
+            var dash = string.Concat(
+                percent.ToString("0.###", CultureInfo.InvariantCulture),
+                " ",
+                (100d - percent).ToString("0.###", CultureInfo.InvariantCulture));
+            var segmentOffset = -offset;
+            offset += percent;
+            return new DonutSegment(
+                topic.Topic,
+                topic.Count,
+                colors[index % colors.Length],
+                dash,
+                segmentOffset.ToString("0.###", CultureInfo.InvariantCulture),
+                $"{percent:0.#}%",
+                $"{topic.Topic} / {DashboardWidgetFormatting.FormatNumber(topic.Count)} events / {percent:0.#}%");
+        }).ToArray();
+    }
+
+    private static string VisualStyle(DashboardWidgetSnapshot widget)
+    {
+        var colors = SegmentColors(widget);
+        var label = widget.ReadString(DashboardDonutChartVisualOptions.LabelColorKey) ??
+            DashboardDonutChartVisualOptions.DefaultLabelColor;
+        var muted = widget.ReadString(DashboardDonutChartVisualOptions.MutedColorKey) ??
+            DashboardDonutChartVisualOptions.DefaultMutedColor;
+        return string.Concat(
+            "--donut-chart-accent:",
+            colors[0],
+            ";--donut-chart-label-color:",
+            label,
+            ";--donut-chart-muted-color:",
+            muted,
+            ";");
+    }
+
+    private static string[] SegmentColors(DashboardWidgetSnapshot widget)
+        =>
+        [
+            widget.ReadString(DashboardDonutChartVisualOptions.SegmentColor1Key) ?? DashboardDonutChartVisualOptions.DefaultSegmentColor1,
+            widget.ReadString(DashboardDonutChartVisualOptions.SegmentColor2Key) ?? DashboardDonutChartVisualOptions.DefaultSegmentColor2,
+            widget.ReadString(DashboardDonutChartVisualOptions.SegmentColor3Key) ?? DashboardDonutChartVisualOptions.DefaultSegmentColor3,
+            widget.ReadString(DashboardDonutChartVisualOptions.SegmentColor4Key) ?? DashboardDonutChartVisualOptions.DefaultSegmentColor4,
+            widget.ReadString(DashboardDonutChartVisualOptions.SegmentColor5Key) ?? DashboardDonutChartVisualOptions.DefaultSegmentColor5
+        ];
+
+    private static DonutGeometry Geometry(DashboardWidgetSnapshot widget)
+    {
+        const double outerRadius = 18d;
+        var innerRadius = DashboardDonutChartVisualOptions.NormalizeInnerRadius(
+            widget.ReadString(DashboardDonutChartVisualOptions.InnerRadiusKey)) / 100d * outerRadius;
+        var strokeWidth = Math.Max(4d, outerRadius - innerRadius);
+        return new DonutGeometry(outerRadius - strokeWidth / 2d, strokeWidth);
+    }
+
+    private static bool ReadBoolean(DashboardWidgetSnapshot widget, string key, bool fallback)
+        => bool.TryParse(widget.ReadString(key), out var parsed)
+            ? parsed
+            : fallback;
+
+    private sealed record DonutSegment(
+        string Label,
+        int Count,
+        string Color,
+        string Dash,
+        string Offset,
+        string PercentLabel,
+        string Tooltip);
+
+    private sealed record DonutGeometry(double Radius, double StrokeWidth);
+}
