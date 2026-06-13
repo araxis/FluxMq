@@ -1,8 +1,10 @@
 using Shouldly;
 using FluxFlow.Engine.Definitions;
 using FluxMq.App.Definitions;
+using FluxMq.App.Metrics;
 using FluxMq.Scenarios;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace FluxMq.App.Tests.Definitions;
 
@@ -210,6 +212,92 @@ public sealed class FluxMqApplicationDefinitionJsonTests
         definition.Dashboards["ops"].Layout.Cells.ShouldBeEmpty();
         definition.Dashboards["ops"].Widgets.ShouldBeEmpty();
         definition.Tests["roundTrip"].Steps.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Deserialize_NormalizesLegacyNestedMetricAttributeFilters()
+    {
+        const string json = """
+            {
+              "metrics": {
+                "d1.eventCounterMetric": {
+                  "version": 1,
+                  "displayName": "Event counter",
+                  "definition": {
+                    "name": "Event counter",
+                    "source": "runtimeEvents",
+                    "measure": "count",
+                    "window": "60s",
+                    "format": "number",
+                    "additionalFilters": {
+                      "attributes": {
+                        "qos": "1",
+                        "retain": false
+                      }
+                    },
+                    "labels": {},
+                    "exportPolicy": {
+                      "enabled": false
+                    },
+                    "mode": "builder"
+                  }
+                }
+              }
+            }
+            """;
+
+        var definition = JsonSerializer.Deserialize<FluxMqApplicationDefinition>(
+            json,
+            FluxMqApplicationDefinitionJson.CreateSerializerOptions());
+
+        definition.ShouldNotBeNull();
+        var filters = definition!.Metrics["d1.eventCounterMetric"].Definition.AdditionalFilters;
+        filters[FluxMetricCatalog.AttributeFilterKey("qos")].ShouldBe("1");
+        filters[FluxMetricCatalog.AttributeFilterKey("retain")].ShouldBe("false");
+        filters.ContainsKey("attributes").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void MigrateRoot_PromotesDashboardMetricAttributesAsFlatAdditionalFilters()
+    {
+        var root = JsonNode.Parse(
+            """
+            {
+              "FluxMq": {
+                "FlowApplication": {
+                  "dashboards": {
+                    "d1": {
+                      "metrics": {
+                        "eventCounterMetric": {
+                          "source": "runtimeEvents",
+                          "aggregation": "count",
+                          "window": "60s",
+                          "filters": {
+                            "eventType": "mqtt.message.published",
+                            "attributes": {
+                              "qos": "1",
+                              "retain": false
+                            }
+                          },
+                          "format": {
+                            "unit": "number"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """)!.AsObject();
+
+        FluxMqApplicationDefinitionMigrator.MigrateRoot(root);
+
+        var flowApplication = root["FluxMq"]!["FlowApplication"]!.AsObject();
+        var additionalFilters = flowApplication["metrics"]!["d1.eventCounterMetric"]!["definition"]!["additionalFilters"]!.AsObject();
+        additionalFilters.ContainsKey("attributes").ShouldBeFalse();
+        additionalFilters[FluxMetricCatalog.AttributeFilterKey("qos")]!.GetValue<string>().ShouldBe("1");
+        additionalFilters[FluxMetricCatalog.AttributeFilterKey("retain")]!.GetValue<string>().ShouldBe("false");
     }
 
     [Fact]

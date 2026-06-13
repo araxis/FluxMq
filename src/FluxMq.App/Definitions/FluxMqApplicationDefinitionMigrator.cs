@@ -1,4 +1,5 @@
 using FluxMq.App.Metrics;
+using System.Globalization;
 using System.Text.Json.Nodes;
 
 namespace FluxMq.App.Definitions;
@@ -47,6 +48,7 @@ public static class FluxMqApplicationDefinitionMigrator
 
         var flowApplication = GetFlowApplication(root);
         MigrateDashboards(flowApplication);
+        NormalizeAppMetricAdditionalFilters(flowApplication);
         MigrateTests(flowApplication);
         return root;
     }
@@ -197,10 +199,7 @@ public static class FluxMqApplicationDefinitionMigrator
                 continue;
             }
 
-            if (filter.Value?.DeepClone() is { } value)
-            {
-                additionalFilters[filter.Key] = value;
-            }
+            AddAdditionalFilter(additionalFilters, filter.Key, filter.Value);
         }
 
         return new JsonObject
@@ -245,6 +244,67 @@ public static class FluxMqApplicationDefinitionMigrator
            string.Equals(key, "topicStartsWith", StringComparison.Ordinal) ||
            string.Equals(key, "topicNotStartsWith", StringComparison.Ordinal) ||
            string.Equals(key, "status", StringComparison.Ordinal);
+
+    private static void NormalizeAppMetricAdditionalFilters(JsonObject flowApplication)
+    {
+        if (flowApplication["metrics"] is not JsonObject metrics)
+        {
+            return;
+        }
+
+        foreach (var metric in metrics)
+        {
+            if (metric.Value is not JsonObject metricArtifact ||
+                metricArtifact["definition"] is not JsonObject definition ||
+                definition["additionalFilters"] is not JsonObject additionalFilters)
+            {
+                continue;
+            }
+
+            NormalizeAdditionalFilters(additionalFilters);
+        }
+    }
+
+    private static void NormalizeAdditionalFilters(JsonObject additionalFilters)
+    {
+        var normalized = new JsonObject();
+        foreach (var filter in additionalFilters)
+        {
+            AddAdditionalFilter(normalized, filter.Key, filter.Value);
+        }
+
+        foreach (var key in additionalFilters.Select(static filter => filter.Key).ToArray())
+        {
+            additionalFilters.Remove(key);
+        }
+
+        foreach (var filter in normalized)
+        {
+            additionalFilters[filter.Key] = filter.Value?.DeepClone();
+        }
+    }
+
+    private static void AddAdditionalFilter(JsonObject additionalFilters, string key, JsonNode? value)
+    {
+        if (string.Equals(key, "attributes", StringComparison.Ordinal) &&
+            value is JsonObject attributes)
+        {
+            foreach (var attribute in attributes)
+            {
+                if (TryReadScalarString(attribute.Value, out var attributeValue))
+                {
+                    additionalFilters[FluxMetricCatalog.AttributeFilterKey(attribute.Key)] = attributeValue;
+                }
+            }
+
+            return;
+        }
+
+        if (TryReadScalarString(value, out var filterValue))
+        {
+            additionalFilters[key] = filterValue;
+        }
+    }
 
     private static string MakeMetricArtifactName(string dashboardName, string metricName)
         => FluxMetricNaming.ToDashboardScopedId(dashboardName, metricName);
@@ -800,6 +860,35 @@ public static class FluxMqApplicationDefinitionMigrator
            !string.IsNullOrWhiteSpace(text)
             ? text
             : null;
+
+    private static bool TryReadScalarString(JsonNode? node, out string value)
+    {
+        value = string.Empty;
+        if (node is not JsonValue jsonValue)
+        {
+            return false;
+        }
+
+        if (jsonValue.TryGetValue<string>(out var text))
+        {
+            value = text;
+        }
+        else if (jsonValue.TryGetValue<bool>(out var boolean))
+        {
+            value = boolean ? "true" : "false";
+        }
+        else if (jsonValue.TryGetValue<long>(out var integer))
+        {
+            value = integer.ToString(CultureInfo.InvariantCulture);
+        }
+        else if (jsonValue.TryGetValue<double>(out var number))
+        {
+            value = number.ToString(CultureInfo.InvariantCulture);
+        }
+
+        value = value.Trim();
+        return !string.IsNullOrWhiteSpace(value);
+    }
 
     private static int ReadInt(JsonObject obj, string propertyName, int fallback)
         => obj[propertyName] is JsonValue value &&
