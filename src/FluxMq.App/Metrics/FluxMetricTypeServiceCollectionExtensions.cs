@@ -14,6 +14,11 @@ public static class FluxMetricTypeServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         services.AddFluxMqMetricType<EventCountMetricType>();
+        services.AddFluxMqMetricType<EventRateMetricType>();
+        services.AddFluxMqMetricType<UniqueTopicCountMetricType>();
+        services.AddFluxMqMetricType<PayloadBytesMetricType>();
+        services.AddFluxMqMetricType<AveragePayloadMetricType>();
+        services.AddFluxMqMetricType<RetainedCountMetricType>();
 
         services.TryAddSingleton<IFluxMetricTypeRegistry, FluxMetricTypeRegistry>();
         return services;

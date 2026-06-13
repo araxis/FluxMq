@@ -103,4 +103,25 @@ internal static class EventFilterParameters
         HelperText = "Match the MQTT retain flag.",
         Placeholder = "false"
     };
+
+    /// <summary>Window plus the full MQTT event filter set (event type, topic, status, qos, retain).</summary>
+    public static IReadOnlyList<FluxMetricParameterDescriptor> EventFilters(string windowDefault = MetricWindow.Default) =>
+    [
+        Window(windowDefault),
+        EventType,
+        TopicStartsWith,
+        TopicNotStartsWith,
+        Status,
+        Qos,
+        Retain
+    ];
+
+    /// <summary>Window plus the topic-scope filters (event type and topic prefixes) used by topic/payload metrics.</summary>
+    public static IReadOnlyList<FluxMetricParameterDescriptor> TopicFilters(string windowDefault = MetricWindow.Default) =>
+    [
+        Window(windowDefault),
+        EventType,
+        TopicStartsWith,
+        TopicNotStartsWith
+    ];
 }

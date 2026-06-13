@@ -3,23 +3,23 @@ using FluxFlow.Engine.Components;
 namespace FluxMq.App.Metrics;
 
 /// <summary>
-/// Counts matching runtime events within a rolling window.
+/// Number of matching messages with the MQTT retain flag set within a rolling window.
 /// </summary>
-public sealed class EventCountMetricType : IFluxMetricType<double>
+public sealed class RetainedCountMetricType : IFluxMetricType<double>
 {
-    public const string Id = "event.count";
+    public const string Id = "message.retained";
 
     public string TypeId => Id;
 
-    public string DisplayName => "Event count";
+    public string DisplayName => "Retained messages";
 
-    public string Description => "Counts matching runtime events within a rolling window.";
+    public string Description => "Counts matching messages with the retain flag set.";
 
-    public string Unit => "events";
+    public string Unit => "messages";
 
     public string Format => MetricFormats.Number;
 
-    public IReadOnlyList<FluxMetricParameterDescriptor> Parameters { get; } = EventFilterParameters.EventFilters();
+    public IReadOnlyList<FluxMetricParameterDescriptor> Parameters { get; } = EventFilterParameters.TopicFilters();
 
     public FluxMetricValidationResult Validate(FluxMetricResourceDefinition resource)
         => MetricResourceValidation.Validate(Parameters, resource);
@@ -28,10 +28,10 @@ public sealed class EventCountMetricType : IFluxMetricType<double>
         => MetricResourceSummary.Describe(this, resource);
 
     public IFluxMetricSource<double> CreateSource(FluxMetricSourceContext context)
-        => new EventCountMetricSource(context);
+        => new RetainedCountMetricSource(context);
 }
 
-internal sealed class EventCountMetricSource(FluxMetricSourceContext context)
+internal sealed class RetainedCountMetricSource(FluxMetricSourceContext context)
     : EventWindowMetricSource(
         context.MetricId,
         EventFilter.FromParameters(context.Parameters).Matches,
@@ -41,5 +41,6 @@ internal sealed class EventCountMetricSource(FluxMetricSourceContext context)
         context.TimeProvider)
 {
     protected override double Calculate(IReadOnlyList<FlowEvent> window, DateTimeOffset now)
-        => window.Count;
+        => window.Count(static flowEvent =>
+            bool.TryParse(flowEvent.GetAttribute("retain"), out var retained) && retained);
 }

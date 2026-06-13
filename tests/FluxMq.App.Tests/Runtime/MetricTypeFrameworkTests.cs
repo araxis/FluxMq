@@ -99,17 +99,21 @@ public sealed class MetricTypeFrameworkTests
             BoundedCapacity: 1000,
             TimeProvider.System));
 
+        var readings = new List<FluxMetricReading<double>>();
+        var sink = new ActionBlock<FluxMetricReading<double>>(readings.Add);
+        source.Output.LinkTo(sink, new DataflowLinkOptions { PropagateCompletion = true });
+
         await source.StartAsync();
         events.Post(Event(FlowEventTypes.MqttMessageReceived, DateTimeOffset.UtcNow, "factory/a", attributes: Qos("1")));
         events.Post(Event(FlowEventTypes.MqttMessageReceived, DateTimeOffset.UtcNow, "other/b", attributes: Qos("1")));
         events.Post(Event(FlowEventTypes.MqttMessageReceived, DateTimeOffset.UtcNow, "factory/c", attributes: Qos("1")));
+        events.Complete();
 
-        var first = await ReceiveAsync(source.Output);
-        var second = await ReceiveAsync(source.Output);
+        using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+        await Task.WhenAll(source.Completion, sink.Completion).WaitAsync(cancellation.Token);
 
-        first.MetricId.ShouldBe("messageCount");
-        first.Value.ShouldBe(1);
-        second.Value.ShouldBe(2);
+        readings.Select(static reading => reading.Value).ShouldBe([1, 2]);
+        readings[^1].MetricId.ShouldBe("messageCount");
         source.Latest!.Value.ShouldBe(2);
     }
 

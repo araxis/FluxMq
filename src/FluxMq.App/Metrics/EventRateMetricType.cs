@@ -3,19 +3,19 @@ using FluxFlow.Engine.Components;
 namespace FluxMq.App.Metrics;
 
 /// <summary>
-/// Counts matching runtime events within a rolling window.
+/// Matching runtime events per second over a rolling window.
 /// </summary>
-public sealed class EventCountMetricType : IFluxMetricType<double>
+public sealed class EventRateMetricType : IFluxMetricType<double>
 {
-    public const string Id = "event.count";
+    public const string Id = "event.rate";
 
     public string TypeId => Id;
 
-    public string DisplayName => "Event count";
+    public string DisplayName => "Event rate";
 
-    public string Description => "Counts matching runtime events within a rolling window.";
+    public string Description => "Matching runtime events per second over a rolling window.";
 
-    public string Unit => "events";
+    public string Unit => "/s";
 
     public string Format => MetricFormats.Number;
 
@@ -28,10 +28,10 @@ public sealed class EventCountMetricType : IFluxMetricType<double>
         => MetricResourceSummary.Describe(this, resource);
 
     public IFluxMetricSource<double> CreateSource(FluxMetricSourceContext context)
-        => new EventCountMetricSource(context);
+        => new EventRateMetricSource(context);
 }
 
-internal sealed class EventCountMetricSource(FluxMetricSourceContext context)
+internal sealed class EventRateMetricSource(FluxMetricSourceContext context)
     : EventWindowMetricSource(
         context.MetricId,
         EventFilter.FromParameters(context.Parameters).Matches,
@@ -41,5 +41,5 @@ internal sealed class EventCountMetricSource(FluxMetricSourceContext context)
         context.TimeProvider)
 {
     protected override double Calculate(IReadOnlyList<FlowEvent> window, DateTimeOffset now)
-        => window.Count;
+        => window.Count / Window.TotalSeconds;
 }

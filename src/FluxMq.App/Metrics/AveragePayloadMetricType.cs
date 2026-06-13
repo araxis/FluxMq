@@ -3,23 +3,23 @@ using FluxFlow.Engine.Components;
 namespace FluxMq.App.Metrics;
 
 /// <summary>
-/// Counts matching runtime events within a rolling window.
+/// Average payload size for the matching messages within a rolling window.
 /// </summary>
-public sealed class EventCountMetricType : IFluxMetricType<double>
+public sealed class AveragePayloadMetricType : IFluxMetricType<double>
 {
-    public const string Id = "event.count";
+    public const string Id = "payload.average";
 
     public string TypeId => Id;
 
-    public string DisplayName => "Event count";
+    public string DisplayName => "Average payload";
 
-    public string Description => "Counts matching runtime events within a rolling window.";
+    public string Description => "Averages payload size for the matching messages.";
 
-    public string Unit => "events";
+    public string Unit => "bytes";
 
-    public string Format => MetricFormats.Number;
+    public string Format => MetricFormats.Bytes;
 
-    public IReadOnlyList<FluxMetricParameterDescriptor> Parameters { get; } = EventFilterParameters.EventFilters();
+    public IReadOnlyList<FluxMetricParameterDescriptor> Parameters { get; } = EventFilterParameters.TopicFilters();
 
     public FluxMetricValidationResult Validate(FluxMetricResourceDefinition resource)
         => MetricResourceValidation.Validate(Parameters, resource);
@@ -28,10 +28,10 @@ public sealed class EventCountMetricType : IFluxMetricType<double>
         => MetricResourceSummary.Describe(this, resource);
 
     public IFluxMetricSource<double> CreateSource(FluxMetricSourceContext context)
-        => new EventCountMetricSource(context);
+        => new AveragePayloadMetricSource(context);
 }
 
-internal sealed class EventCountMetricSource(FluxMetricSourceContext context)
+internal sealed class AveragePayloadMetricSource(FluxMetricSourceContext context)
     : EventWindowMetricSource(
         context.MetricId,
         EventFilter.FromParameters(context.Parameters).Matches,
@@ -41,5 +41,7 @@ internal sealed class EventCountMetricSource(FluxMetricSourceContext context)
         context.TimeProvider)
 {
     protected override double Calculate(IReadOnlyList<FlowEvent> window, DateTimeOffset now)
-        => window.Count;
+        => window.Count == 0
+            ? 0
+            : window.Sum(static flowEvent => (double)(flowEvent.PayloadBytes ?? 0)) / window.Count;
 }

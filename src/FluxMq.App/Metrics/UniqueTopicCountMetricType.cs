@@ -3,23 +3,23 @@ using FluxFlow.Engine.Components;
 namespace FluxMq.App.Metrics;
 
 /// <summary>
-/// Counts matching runtime events within a rolling window.
+/// Number of distinct topics represented by the matching traffic within a rolling window.
 /// </summary>
-public sealed class EventCountMetricType : IFluxMetricType<double>
+public sealed class UniqueTopicCountMetricType : IFluxMetricType<double>
 {
-    public const string Id = "event.count";
+    public const string Id = "topic.unique-count";
 
     public string TypeId => Id;
 
-    public string DisplayName => "Event count";
+    public string DisplayName => "Unique topics";
 
-    public string Description => "Counts matching runtime events within a rolling window.";
+    public string Description => "Counts distinct topics represented by the matching traffic.";
 
-    public string Unit => "events";
+    public string Unit => "topics";
 
     public string Format => MetricFormats.Number;
 
-    public IReadOnlyList<FluxMetricParameterDescriptor> Parameters { get; } = EventFilterParameters.EventFilters();
+    public IReadOnlyList<FluxMetricParameterDescriptor> Parameters { get; } = EventFilterParameters.TopicFilters();
 
     public FluxMetricValidationResult Validate(FluxMetricResourceDefinition resource)
         => MetricResourceValidation.Validate(Parameters, resource);
@@ -28,10 +28,10 @@ public sealed class EventCountMetricType : IFluxMetricType<double>
         => MetricResourceSummary.Describe(this, resource);
 
     public IFluxMetricSource<double> CreateSource(FluxMetricSourceContext context)
-        => new EventCountMetricSource(context);
+        => new UniqueTopicCountMetricSource(context);
 }
 
-internal sealed class EventCountMetricSource(FluxMetricSourceContext context)
+internal sealed class UniqueTopicCountMetricSource(FluxMetricSourceContext context)
     : EventWindowMetricSource(
         context.MetricId,
         EventFilter.FromParameters(context.Parameters).Matches,
@@ -41,5 +41,9 @@ internal sealed class EventCountMetricSource(FluxMetricSourceContext context)
         context.TimeProvider)
 {
     protected override double Calculate(IReadOnlyList<FlowEvent> window, DateTimeOffset now)
-        => window.Count;
+        => window
+            .Where(static flowEvent => !string.IsNullOrWhiteSpace(flowEvent.Channel))
+            .Select(static flowEvent => flowEvent.Channel!)
+            .Distinct(StringComparer.Ordinal)
+            .Count();
 }
