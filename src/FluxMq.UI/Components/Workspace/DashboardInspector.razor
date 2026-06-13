@@ -260,16 +260,36 @@
             return null;
         }
 
-        var legacyDefinition = FluxMetricQueryDraft
-            .Create(
-                metric: null,
-                widget.Configuration,
-                metricName)
-            .BuildDefinition(metricName);
-        return DashboardMetricQueryMapper.ToDashboardMetricSnapshot(
+        var filters = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var key in LegacyFilterKeys)
+        {
+            if (widget.ReadString(key) is { } value)
+            {
+                filters[key] = value;
+            }
+        }
+
+        return new DashboardMetricSnapshot(
             metricName,
-            DashboardMetricQueryMapper.ToDashboardQuery(legacyDefinition));
+            "runtimeEvents",
+            "count",
+            widget.ReadString("window") ?? "60s",
+            GroupBy: null,
+            filters,
+            new Dictionary<string, string>(StringComparer.Ordinal) { ["unit"] = "number" });
     }
+
+    private static readonly IReadOnlyList<string> LegacyFilterKeys =
+    [
+        DashboardEventFilterCatalog.EventTypeKey,
+        DashboardEventFilterCatalog.TopicStartsWithKey,
+        DashboardEventFilterCatalog.TopicNotStartsWithKey,
+        DashboardEventFilterCatalog.SubjectStartsWithKey,
+        DashboardEventFilterCatalog.StatusKey,
+        DashboardEventFilterCatalog.AttributeFilterKey("qos"),
+        DashboardEventFilterCatalog.AttributeFilterKey("retain"),
+        DashboardEventFilterCatalog.AttributeFilterKey("schemaId")
+    ];
 
     private IReadOnlyList<PropertyGridGroup> PropertyGroups => BuildPropertyGroups();
 
@@ -333,12 +353,6 @@
                                          MetricChanged="@SetAppMetricAsync"
                                          ParameterChanged="@SetMetricParameterAsync"
                                          OpenMetric="@OpenSelectedMetricAsync" />
-        }
-        else if (IsMetricQueryBuilderWidget)
-        {
-        <DashboardInspectorMetricQueryRows Summary="@MetricQuerySummary"
-                                           EditTitle="@MetricQueryEditTitle"
-                                           Edit="@OpenMetricBuilderAsync" />
         }
         else
         {
@@ -484,21 +498,17 @@
     private bool IsAppMetricConsumerWidget =>
         IsAppMetricConsumerType(_widgetDraft?.Profile.Type);
 
-    private bool IsMetricQueryBuilderWidget => _widgetDraft?.UsesMetricQueryBuilder == true && !IsAppMetricConsumerWidget;
-
     private bool ShowsMetricQueryProperties =>
         _widgetDraft?.Profile.UsesMetricQuery == true &&
-        !IsMetricQueryBuilderWidget &&
         (_widgetDraft.Profile.UsesMetricAggregation || _widgetDraft.Profile.UsesMetricWindow) &&
         _metricDraft is not null;
 
     private bool ShowsFilterProperties =>
         _widgetDraft?.Profile.UsesEventFilters == true &&
-        !IsMetricQueryBuilderWidget &&
         _metricDraft is not null;
 
     private int DataPropertyCount => ShowsDataProperties
-        ? (IsAppMetricConsumerWidget ? 3 + SelectedAppMetricParameters.Count : IsMetricQueryBuilderWidget ? 1 : SupportsMetricSlots ? 2 + _bindingMetrics.Count : 1)
+        ? (IsAppMetricConsumerWidget ? 3 + SelectedAppMetricParameters.Count : SupportsMetricSlots ? 2 + _bindingMetrics.Count : 1)
         : 0;
 
     private int MetricQueryPropertyCount => _widgetDraft is null || !ShowsMetricQueryProperties
@@ -672,10 +682,6 @@
             ? []
             : [.. _widgetDraft.CurrentEventType.StatusOptions.Select(static option => new PropertyGridSelectOption(option.Value, option.Label))];
 
-    private string MetricQuerySummary => _metricDraft is null
-        ? "No metric query"
-        : DashboardMetricQuerySummary.DescribeSentence(_metricDraft.BuildQuery(), EventFilters, MetricRegistry);
-
     private string SelectedAppMetricSummary
     {
         get
@@ -701,13 +707,6 @@
         }
     }
 
-    private string MetricQueryEditTitle => "Edit metric query";
-
-    private string MetricQueryDialogTitle => "Metric query";
-
-    private string MetricQueryApplyNote => "Draft query. Apply updates this metric only.";
-
-    private IReadOnlyList<string> MetricQueryAllowedMeasures => [];
 
     private async Task SetTitleAsync(string? value)
     {
@@ -1034,61 +1033,6 @@
                 EventFilters,
                 MetricRegistry,
                 Widget.Type);
-
-        await AutoApplyAsync();
-    }
-
-    private async Task OpenMetricBuilderAsync()
-    {
-        if (Widget is null || _widgetDraft is null || !IsMetricQueryBuilderWidget)
-        {
-            return;
-        }
-
-        var metricName = string.IsNullOrWhiteSpace(_draftMetricName)
-            ? Widget.ReadString("metric") ?? $"{Widget.Name}Metric"
-            : _draftMetricName;
-        var metric = Layout?.Metrics.TryGetValue(metricName, out var foundMetric) == true
-            ? foundMetric
-            : null;
-        var dialog = await DialogService.ShowAsync<DashboardMetricQueryBuilderDialog>(
-            MetricQueryDialogTitle,
-            new DialogParameters
-            {
-                [nameof(DashboardMetricQueryBuilderDialog.Project)] = Project,
-                [nameof(DashboardMetricQueryBuilderDialog.Widget)] = Widget,
-                [nameof(DashboardMetricQueryBuilderDialog.Metric)] = metric,
-                [nameof(DashboardMetricQueryBuilderDialog.DialogTitle)] = MetricQueryDialogTitle,
-                [nameof(DashboardMetricQueryBuilderDialog.ApplyNote)] = MetricQueryApplyNote,
-                [nameof(DashboardMetricQueryBuilderDialog.AllowedMeasures)] = MetricQueryAllowedMeasures
-            },
-            new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true });
-        var result = await dialog.Result;
-        if (result is { Canceled: false, Data: DashboardMetricQueryBuilderDialog.DashboardMetricQueryUpdate update })
-        {
-            await ApplyMetricQueryAsync(metricName, update.Query);
-        }
-    }
-
-    private async Task ApplyMetricQueryAsync(
-        string metricName,
-        DashboardMetricQueryDefinition query)
-    {
-        if (Widget is null || _widgetDraft is null)
-        {
-            return;
-        }
-
-        _draftMetricName = metricName;
-        _widgetDraft.MetricName = metricName;
-        _primaryBindingMetric = metricName;
-        _bindingMetrics = [metricName];
-        _metricDraft = DashboardMetricEditorDraft.Create(
-            metricName,
-            DashboardMetricQueryMapper.ToDashboardMetricSnapshot(metricName, query),
-            EventFilters,
-            MetricRegistry,
-            Widget.Type);
 
         await AutoApplyAsync();
     }
