@@ -12,22 +12,22 @@ public sealed partial class FlowDefinitionComposer
     public IReadOnlyList<string> GetMetricNames(string json)
         => GetNamedObjectKeys(json, "metrics");
 
-    public IReadOnlyDictionary<string, FluxMetricArtifactDefinition> GetMetricArtifacts(string json)
+    public IReadOnlyDictionary<string, FluxMetricResourceDefinition> GetMetricResources(string json)
     {
         var root = ParseOrCreate(json);
         var flowApplication = GetFlowApplication(root);
         var metrics = flowApplication["metrics"] as JsonObject ?? new JsonObject();
-        return ReadMetricArtifacts(metrics);
+        return ReadMetricResources(metrics);
     }
 
-    public FluxMetricArtifactDefinition? GetMetricArtifact(string json, string metricName)
+    public FluxMetricResourceDefinition? GetMetricResource(string json, string metricName)
     {
         if (string.IsNullOrWhiteSpace(metricName))
         {
             return null;
         }
 
-        return GetMetricArtifacts(json).TryGetValue(metricName.Trim(), out var metric)
+        return GetMetricResources(json).TryGetValue(metricName.Trim(), out var metric)
             ? metric
             : null;
     }
@@ -38,11 +38,11 @@ public sealed partial class FlowDefinitionComposer
         var flowApplication = GetFlowApplication(root);
         var metrics = GetOrCreateObject(flowApplication, "metrics");
         var metricName = MakeUniqueMetricName(metrics, FluxMetricNaming.ToArtifactId(preferredName));
-        metrics[metricName] = CreateMetricArtifactNode(FluxMetricArtifactDefinition.CreateDefault(metricName, preferredName));
+        metrics[metricName] = CreateMetricResourceNode(FluxMetricResourceDefinition.CreateDefault(metricName, preferredName));
         return root.ToJsonString(Options);
     }
 
-    public string UpdateMetric(string json, string metricName, FluxMetricArtifactDefinition metric)
+    public string UpdateMetric(string json, string metricName, FluxMetricResourceDefinition metric)
     {
         if (string.IsNullOrWhiteSpace(metricName))
         {
@@ -54,7 +54,7 @@ public sealed partial class FlowDefinitionComposer
         var root = ParseOrCreate(json);
         var flowApplication = GetFlowApplication(root);
         var metrics = GetOrCreateObject(flowApplication, "metrics");
-        metrics[metricName.Trim()] = CreateMetricArtifactNode(metric);
+        metrics[metricName.Trim()] = CreateMetricResourceNode(metric);
         return root.ToJsonString(Options);
     }
 
@@ -75,12 +75,11 @@ public sealed partial class FlowDefinitionComposer
         }
 
         var copyName = MakeUniqueMetricName(metrics, $"{sourceName}Copy");
-        var artifact = source.Deserialize<FluxMetricArtifactDefinition>(MetricJsonOptions)
-            ?? FluxMetricArtifactDefinition.CreateDefault(copyName);
-        metrics[copyName] = CreateMetricArtifactNode(artifact with
+        var resource = source.Deserialize<FluxMetricResourceDefinition>(MetricJsonOptions)
+            ?? FluxMetricResourceDefinition.CreateDefault(copyName);
+        metrics[copyName] = CreateMetricResourceNode(resource with
         {
-            DisplayName = $"{artifact.DisplayName} Copy",
-            Definition = artifact.Definition with { Name = $"{artifact.Definition.Name} Copy" }
+            DisplayName = $"{resource.DisplayName} Copy"
         });
         return root.ToJsonString(Options);
     }
@@ -165,9 +164,9 @@ public sealed partial class FlowDefinitionComposer
         return count;
     }
 
-    private static IReadOnlyDictionary<string, FluxMetricArtifactDefinition> ReadMetricArtifacts(JsonObject metrics)
+    internal static IReadOnlyDictionary<string, FluxMetricResourceDefinition> ReadMetricResources(JsonObject metrics)
     {
-        var result = new Dictionary<string, FluxMetricArtifactDefinition>(StringComparer.Ordinal);
+        var result = new Dictionary<string, FluxMetricResourceDefinition>(StringComparer.Ordinal);
         foreach (var metric in metrics)
         {
             if (metric.Value is not JsonObject metricObject)
@@ -177,22 +176,22 @@ public sealed partial class FlowDefinitionComposer
 
             try
             {
-                var artifact = metricObject.Deserialize<FluxMetricArtifactDefinition>(MetricJsonOptions);
-                if (artifact is not null)
+                var resource = metricObject.Deserialize<FluxMetricResourceDefinition>(MetricJsonOptions);
+                if (resource is not null)
                 {
-                    result[metric.Key] = artifact;
+                    result[metric.Key] = resource with { Id = metric.Key };
                 }
             }
             catch (JsonException)
             {
-                // Validation reports invalid app metrics; layout reads skip malformed artifacts.
+                // Validation reports invalid app metrics; layout reads skip malformed resources.
             }
         }
 
         return result;
     }
 
-    private static JsonObject CreateMetricArtifactNode(FluxMetricArtifactDefinition metric)
+    private static JsonObject CreateMetricResourceNode(FluxMetricResourceDefinition metric)
         => JsonSerializer.SerializeToNode(metric, MetricJsonOptions) as JsonObject ?? new JsonObject();
 
     private static string MakeUniqueMetricName(JsonObject metrics, string preferred)

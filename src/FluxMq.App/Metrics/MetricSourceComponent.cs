@@ -8,7 +8,7 @@ namespace FluxMq.App.Metrics;
 public sealed class MetricSourceComponent : IFlowNode
 {
     private readonly FlowNodeId _id;
-    private readonly FluxMetricRuntimeHost _runtimeHost;
+    private readonly FluxMetricStreamHost _runtimeHost;
     private readonly string _metricId;
     private readonly IReadOnlyDictionary<string, string> _parameters;
     private readonly bool _emitLatestOnStart;
@@ -21,7 +21,7 @@ public sealed class MetricSourceComponent : IFlowNode
     private bool _completed;
 
     public MetricSourceComponent(
-        FluxMetricRuntimeHost runtimeHost,
+        FluxMetricStreamHost runtimeHost,
         string metricId,
         IReadOnlyDictionary<string, string>? parameters = null,
         bool emitLatestOnStart = true,

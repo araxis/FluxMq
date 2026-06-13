@@ -1018,16 +1018,45 @@ public sealed partial class FlowDefinitionComposer
         return result;
     }
 
+    private static readonly IFluxMetricTypeRegistry DashboardMetricTypes = FluxMetricTypeRegistry.CreateDefault();
+
     private static IReadOnlyDictionary<string, DashboardMetricSnapshot> ReadAppDashboardMetrics(JsonObject metrics)
     {
         var result = new Dictionary<string, DashboardMetricSnapshot>(StringComparer.Ordinal);
-        foreach (var (metricName, artifact) in ReadMetricArtifacts(metrics))
+        foreach (var (metricName, resource) in ReadMetricResources(metrics))
         {
-            var definition = artifact.Definition;
-            result[metricName] = ToDashboardMetricSnapshot(metricName, definition);
+            result[metricName] = ResourceToDashboardMetricSnapshot(metricName, resource);
         }
 
         return result;
+    }
+
+    internal static DashboardMetricSnapshot ResourceToDashboardMetricSnapshot(
+        string metricName,
+        FluxMetricResourceDefinition resource)
+    {
+        var filters = new Dictionary<string, string>(StringComparer.Ordinal);
+        AddIfPresent(filters, DashboardEventFilterCatalog.EventTypeKey, resource.GetParameter(MetricParameterKeys.EventType));
+        AddIfPresent(filters, DashboardEventFilterCatalog.TopicStartsWithKey, resource.GetParameter(MetricParameterKeys.TopicStartsWith));
+        AddIfPresent(filters, DashboardEventFilterCatalog.TopicNotStartsWithKey, resource.GetParameter(MetricParameterKeys.TopicNotStartsWith));
+        AddIfPresent(filters, DashboardEventFilterCatalog.StatusKey, resource.GetParameter(MetricParameterKeys.Status));
+        AddIfPresent(filters, DashboardEventFilterCatalog.AttributeFilterKey("qos"), resource.GetParameter(MetricParameterKeys.Qos));
+        AddIfPresent(filters, DashboardEventFilterCatalog.AttributeFilterKey("retain"), resource.GetParameter(MetricParameterKeys.Retain));
+
+        var typeFormat = DashboardMetricTypes.TryGetNumberType(resource.TypeId, out var type)
+            ? type.Format
+            : MetricFormats.Number;
+        var unit = resource.GetParameter("format", typeFormat);
+        var groupBy = resource.GetParameter("groupBy");
+
+        return new DashboardMetricSnapshot(
+            metricName,
+            "runtimeEvents",
+            DashboardMetricRegistry.MeasureForType(resource.TypeId),
+            resource.GetParameter(MetricParameterKeys.Window, "60s"),
+            string.IsNullOrWhiteSpace(groupBy) ? null : groupBy,
+            filters,
+            new Dictionary<string, string>(StringComparer.Ordinal) { ["unit"] = unit });
     }
 
     private static IReadOnlyDictionary<string, DashboardMetricSnapshot> ReadLegacyDashboardMetrics(JsonObject metrics)
@@ -1053,27 +1082,6 @@ public sealed partial class FlowDefinitionComposer
         }
 
         return result;
-    }
-
-    private static DashboardMetricSnapshot ToDashboardMetricSnapshot(string metricName, FluxMetricDefinition definition)
-    {
-        var filters = new Dictionary<string, string>(definition.AdditionalFilters, StringComparer.Ordinal);
-        AddIfPresent(filters, DashboardEventFilterCatalog.EventTypeKey, definition.EventType);
-        AddIfPresent(filters, DashboardEventFilterCatalog.TopicStartsWithKey, definition.TopicStartsWith);
-        AddIfPresent(filters, DashboardEventFilterCatalog.TopicNotStartsWithKey, definition.TopicNotStartsWith);
-        AddIfPresent(filters, DashboardEventFilterCatalog.StatusKey, definition.Status);
-
-        return new DashboardMetricSnapshot(
-            metricName,
-            definition.Source,
-            definition.Measure,
-            definition.Window,
-            definition.GroupBy,
-            filters,
-            new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["unit"] = definition.Format
-            });
     }
 
     private static void AddIfPresent(IDictionary<string, string> target, string key, string? value)

@@ -35,6 +35,23 @@
           }
         }
       },
+      "metrics": {
+        "messageVolume": {
+          "typeId": "event.count",
+          "displayName": "Messages",
+          "parameters": { "window": "60s", "topicStartsWith": "factory/" }
+        },
+        "messageRate": {
+          "typeId": "event.rate",
+          "displayName": "Message rate",
+          "parameters": { "window": "60s", "topicStartsWith": "factory/" }
+        },
+        "topicVolume": {
+          "typeId": "topic.unique-count",
+          "displayName": "Topics",
+          "parameters": { "window": "60s", "topicStartsWith": "factory/" }
+        }
+      },
       "dashboards": {
         "operations": {
           "version": 2,
@@ -109,42 +126,6 @@
               "mobile": {
                 "columns": 1,
                 "minWidth": 0
-              }
-            }
-          },
-          "metrics": {
-            "messageVolume": {
-              "source": "runtimeEvents",
-              "aggregation": "count",
-              "window": "60s",
-              "filters": {
-                "topicStartsWith": "factory/"
-              },
-              "format": {
-                "unit": "events"
-              }
-            },
-            "messageRate": {
-              "source": "runtimeEvents",
-              "aggregation": "rate",
-              "window": "60s",
-              "filters": {
-                "topicStartsWith": "factory/"
-              },
-              "format": {
-                "unit": "/s"
-              }
-            },
-            "topicVolume": {
-              "source": "topicProjection",
-              "aggregation": "count",
-              "window": "60s",
-              "groupBy": "topic",
-              "filters": {
-                "topicStartsWith": "factory/"
-              },
-              "format": {
-                "unit": "events"
               }
             }
           },

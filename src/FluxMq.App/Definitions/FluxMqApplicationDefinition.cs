@@ -10,7 +10,7 @@ public sealed record FluxMqApplicationDefinition
 {
     private Dictionary<string, EngineNodeDefinition>? _resources = [];
     private Dictionary<string, EngineWorkflowDefinition>? _workflows = [];
-    private Dictionary<string, FluxMetricArtifactDefinition>? _metrics = [];
+    private Dictionary<string, FluxMetricResourceDefinition>? _metrics = [];
     private Dictionary<string, DashboardDefinition>? _dashboards = [];
     private Dictionary<string, ScenarioDefinition>? _tests = [];
 
@@ -26,7 +26,7 @@ public sealed record FluxMqApplicationDefinition
         init => _workflows = value ?? [];
     }
 
-    public Dictionary<string, FluxMetricArtifactDefinition> Metrics
+    public Dictionary<string, FluxMetricResourceDefinition> Metrics
     {
         get => _metrics ??= [];
         init => _metrics = value ?? [];

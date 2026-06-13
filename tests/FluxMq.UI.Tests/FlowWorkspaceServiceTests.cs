@@ -2393,17 +2393,17 @@ public sealed class FlowWorkspaceServiceTests
         service.AddMetric("publishedMessages");
         service.UpdateMetric(
             "publishedMessages",
-            FluxMetricArtifactDefinition.CreateDefault("publishedMessages", "Published messages") with
+            new FluxMetricResourceDefinition
             {
-                Definition = new FluxMetricDefinition(
-                    "Published messages",
-                    FluxMetricCatalog.RuntimeEventsSource,
-                    FluxMetricCatalog.MeasureCount,
-                    "60s",
-                    eventType: FlowEventTypes.MqttMessagePublished,
-                    topicStartsWith: "test/",
-                    status: "published",
-                    format: FluxMetricCatalog.FormatNumber)
+                TypeId = EventCountMetricType.Id,
+                DisplayName = "Published messages",
+                Parameters = new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    [MetricParameterKeys.Window] = "60s",
+                    [MetricParameterKeys.EventType] = FlowEventTypes.MqttMessagePublished,
+                    [MetricParameterKeys.TopicStartsWith] = "test/",
+                    [MetricParameterKeys.Status] = "published"
+                }
             });
         service.AddDashboard("ops");
         service.AddDashboardWidget(DashboardWidgetCatalog.EventCounterType, "slot:0:0");
@@ -2429,7 +2429,7 @@ public sealed class FlowWorkspaceServiceTests
             .Widgets["eventCounter"];
         var value = service.GetDashboardMetricValue(widget);
 
-        value.Label.ShouldBe("Count");
+        value.Label.ShouldBe("Event count");
         value.Value.ShouldBe(2);
         value.Unit.ShouldBe("events");
         value.FormattedValue.ShouldBe("2");
@@ -2442,17 +2442,17 @@ public sealed class FlowWorkspaceServiceTests
         service.AddMetric("publishedRate");
         service.UpdateMetric(
             "publishedRate",
-            FluxMetricArtifactDefinition.CreateDefault("publishedRate", "Published rate") with
+            new FluxMetricResourceDefinition
             {
-                Definition = new FluxMetricDefinition(
-                    "Published rate",
-                    FluxMetricCatalog.RuntimeEventsSource,
-                    FluxMetricCatalog.MeasureRate,
-                    "60s",
-                    eventType: FlowEventTypes.MqttMessagePublished,
-                    topicStartsWith: "test/",
-                    status: "published",
-                    format: FluxMetricCatalog.FormatNumber)
+                TypeId = EventRateMetricType.Id,
+                DisplayName = "Published rate",
+                Parameters = new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    [MetricParameterKeys.Window] = "60s",
+                    [MetricParameterKeys.EventType] = FlowEventTypes.MqttMessagePublished,
+                    [MetricParameterKeys.TopicStartsWith] = "test/",
+                    [MetricParameterKeys.Status] = "published"
+                }
             });
         service.AddDashboard("ops");
         service.AddDashboardWidget(DashboardWidgetCatalog.EventRateType, "slot:0:0");
@@ -2478,7 +2478,7 @@ public sealed class FlowWorkspaceServiceTests
             .Widgets["eventRate"];
         var value = service.GetDashboardMetricValue(widget);
 
-        value.Label.ShouldBe("Rate");
+        value.Label.ShouldBe("Event rate");
         value.Value.ShouldBe(2d / 60d, 0.0001);
         value.Unit.ShouldBe("/s");
         value.FormattedValue.ShouldBe("0.03");
@@ -2491,17 +2491,17 @@ public sealed class FlowWorkspaceServiceTests
         service.AddMetric("publishedRate");
         service.UpdateMetric(
             "publishedRate",
-            FluxMetricArtifactDefinition.CreateDefault("publishedRate", "Published rate") with
+            new FluxMetricResourceDefinition
             {
-                Definition = new FluxMetricDefinition(
-                    "Published rate",
-                    FluxMetricCatalog.RuntimeEventsSource,
-                    FluxMetricCatalog.MeasureRate,
-                    "60s",
-                    eventType: FlowEventTypes.MqttMessagePublished,
-                    topicStartsWith: "test/",
-                    status: "published",
-                    format: FluxMetricCatalog.FormatNumber)
+                TypeId = EventRateMetricType.Id,
+                DisplayName = "Published rate",
+                Parameters = new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    [MetricParameterKeys.Window] = "60s",
+                    [MetricParameterKeys.EventType] = FlowEventTypes.MqttMessagePublished,
+                    [MetricParameterKeys.TopicStartsWith] = "test/",
+                    [MetricParameterKeys.Status] = "published"
+                }
             });
         service.AddDashboard("ops");
         service.AddDashboardWidget(DashboardWidgetCatalog.RateTileType, "slot:0:0");
@@ -2527,7 +2527,7 @@ public sealed class FlowWorkspaceServiceTests
             .Widgets["rateTile"];
         var value = service.GetDashboardMetricValue(widget);
 
-        value.Label.ShouldBe("Rate");
+        value.Label.ShouldBe("Event rate");
         value.Value.ShouldBe(2d / 60d, 0.0001);
         value.Unit.ShouldBe("/s");
         value.FormattedValue.ShouldBe("0.03");
@@ -2540,17 +2540,17 @@ public sealed class FlowWorkspaceServiceTests
         service.AddMetric("publishedMessages");
         service.UpdateMetric(
             "publishedMessages",
-            FluxMetricArtifactDefinition.CreateDefault("publishedMessages", "Published messages") with
+            new FluxMetricResourceDefinition
             {
-                Definition = new FluxMetricDefinition(
-                    "Published messages",
-                    FluxMetricCatalog.RuntimeEventsSource,
-                    FluxMetricCatalog.MeasureCount,
-                    "60s",
-                    eventType: FlowEventTypes.MqttMessagePublished,
-                    topicStartsWith: "test/",
-                    status: "published",
-                    format: FluxMetricCatalog.FormatNumber)
+                TypeId = EventCountMetricType.Id,
+                DisplayName = "Published messages",
+                Parameters = new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    [MetricParameterKeys.Window] = "60s",
+                    [MetricParameterKeys.EventType] = FlowEventTypes.MqttMessagePublished,
+                    [MetricParameterKeys.TopicStartsWith] = "test/",
+                    [MetricParameterKeys.Status] = "published"
+                }
             });
         service.AddDashboard("ops");
         service.AddDashboardWidget(DashboardWidgetCatalog.StatusValueType, "slot:0:0");
@@ -2576,7 +2576,7 @@ public sealed class FlowWorkspaceServiceTests
             .Widgets["statusValue"];
         var value = service.GetDashboardMetricValue(widget);
 
-        value.Label.ShouldBe("Count");
+        value.Label.ShouldBe("Event count");
         value.Value.ShouldBe(2);
         value.Unit.ShouldBe("events");
         value.FormattedValue.ShouldBe("2");
@@ -2589,17 +2589,17 @@ public sealed class FlowWorkspaceServiceTests
         service.AddMetric("publishedMessages");
         service.UpdateMetric(
             "publishedMessages",
-            FluxMetricArtifactDefinition.CreateDefault("publishedMessages", "Published messages") with
+            new FluxMetricResourceDefinition
             {
-                Definition = new FluxMetricDefinition(
-                    "Published messages",
-                    FluxMetricCatalog.RuntimeEventsSource,
-                    FluxMetricCatalog.MeasureCount,
-                    "60s",
-                    eventType: FlowEventTypes.MqttMessagePublished,
-                    topicStartsWith: "test/",
-                    status: "published",
-                    format: FluxMetricCatalog.FormatNumber)
+                TypeId = EventCountMetricType.Id,
+                DisplayName = "Published messages",
+                Parameters = new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    [MetricParameterKeys.Window] = "60s",
+                    [MetricParameterKeys.EventType] = FlowEventTypes.MqttMessagePublished,
+                    [MetricParameterKeys.TopicStartsWith] = "test/",
+                    [MetricParameterKeys.Status] = "published"
+                }
             });
         service.AddDashboard("ops");
         service.AddDashboardWidget(DashboardWidgetCatalog.EventGaugeType, "slot:0:0");
@@ -2626,7 +2626,7 @@ public sealed class FlowWorkspaceServiceTests
             .Widgets["eventGauge"];
         var value = service.GetDashboardMetricValue(widget);
 
-        value.Label.ShouldBe("Count");
+        value.Label.ShouldBe("Event count");
         value.Value.ShouldBe(2);
         value.Unit.ShouldBe("events");
         value.FormattedValue.ShouldBe("2");

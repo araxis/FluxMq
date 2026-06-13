@@ -158,13 +158,13 @@ internal sealed class MetricSourceRuntimeNodeModule : IFluxMqRuntimeNodeModule
 
     public RuntimeNode Build(FluxMqRuntimeNodeBuildContext context)
     {
-        if (context.MetricRuntimeHost is null)
+        if (context.MetricStreamHost is null)
         {
-            throw new InvalidOperationException("Metric source requires a metric runtime host.");
+            throw new InvalidOperationException("Metric source requires a metric stream host.");
         }
 
         var component = new MetricSourceComponent(
-            context.MetricRuntimeHost,
+            context.MetricStreamHost,
             GetRequiredString(context.Definition, "metricId"),
             GetStringDictionary(context.Definition, "parameters"),
             emitLatestOnStart: GetBoolOrDefault(context.Definition, "emitLatestOnStart", true),
