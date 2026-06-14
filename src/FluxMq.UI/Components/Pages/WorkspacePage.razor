@@ -33,6 +33,7 @@
                     string.Equals(w, active.ActiveWorkflowName, StringComparison.Ordinal) &&
                     !_jsonView;
                 <div class="project-tab @(isActive ? "project-tab-active" : "")"
+                     title="@($"Pipeline {w}")"
                      @onclick="@(() => { active.SetActiveWorkflow(w); _jsonView = false; })">
                     <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" Class="project-tab-icon" />
                     <span class="project-tab-name">@w</span>
@@ -51,6 +52,7 @@
                 var metricsActive = active.ActiveArtifactKind == WorkspaceArtifactKind.Metrics && !_jsonView;
             }
             <div class="project-tab project-tab-metrics @(metricsActive ? "project-tab-active" : "")"
+                 title="Metrics"
                  @onclick="@(() => { active.SetActiveMetrics(); _jsonView = false; })">
                 <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" Class="project-tab-icon" />
                 <span class="project-tab-name">Metrics</span>
@@ -63,6 +65,7 @@
                     string.Equals(d, active.ActiveDashboardName, StringComparison.Ordinal) &&
                     !_jsonView;
                 <div class="project-tab project-tab-dashboard @(isActive ? "project-tab-active" : "")"
+                     title="@($"Dashboard {d}")"
                      @onclick="@(() => { active.SetActiveDashboard(d); _jsonView = false; })">
                     <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="project-tab-icon" />
                     <span class="project-tab-name">@d</span>
@@ -84,6 +87,7 @@
                     string.Equals(t, active.ActiveTestName, StringComparison.Ordinal) &&
                     !_jsonView;
                 <div class="project-tab project-tab-test @(isActive ? "project-tab-active" : "")"
+                     title="@($"Test {t}")"
                      @onclick="@(() => { active.SetActiveTest(t); _jsonView = false; })">
                     <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" Class="project-tab-icon" />
                     <span class="project-tab-name">@t</span>
@@ -102,6 +106,7 @@
                 var topicsActive = active.ActiveArtifactKind == WorkspaceArtifactKind.Topics && !_jsonView;
             }
             <div class="project-tab project-tab-topics @(topicsActive ? "project-tab-active" : "")"
+                 title="Topics"
                  @onclick="@(() => { active.SetActiveTopics(); _jsonView = false; })">
                 <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" Class="project-tab-icon" />
                 <span class="project-tab-name">Topics</span>
@@ -111,6 +116,7 @@
                 var logsActive = active.ActiveArtifactKind == WorkspaceArtifactKind.Logs && !_jsonView;
             }
             <div class="project-tab @(logsActive ? "project-tab-active" : "")"
+                 title="Logs"
                  @onclick="@(() => { active.SetActiveLogs(); _jsonView = false; })">
                 <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Small" Class="project-tab-icon" />
                 <span class="project-tab-name">Logs</span>

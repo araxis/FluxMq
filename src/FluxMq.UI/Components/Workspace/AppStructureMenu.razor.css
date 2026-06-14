@@ -1,8 +1,11 @@
 .app-structure {
     align-items: center;
     display: inline-flex;
+    flex: 1 1 auto;
     gap: 6px;
+    max-width: 100%;
     min-width: 0;
+    overflow: hidden;
 }
 
 .app-structure-app,
@@ -14,6 +17,7 @@
     font-weight: 650;
     gap: 7px;
     min-width: 0;
+    max-width: 180px;
     padding: 0 4px;
     white-space: nowrap;
 }
@@ -22,11 +26,20 @@
     color: var(--mud-palette-text-secondary);
 }
 
-.app-structure-menu {
+.app-structure-app span:last-child,
+.app-structure-empty span:last-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-structure ::deep .app-structure-menu {
+    flex: 0 1 auto;
     min-width: 0;
 }
 
-.app-structure-menu ::deep .mud-button-root {
+.app-structure ::deep .app-structure-menu .mud-button-root {
     border-radius: 6px;
     color: var(--mud-palette-text-secondary);
     font-size: 12px;
@@ -36,12 +49,12 @@
     padding: 0 8px;
 }
 
-.app-structure-menu ::deep .mud-button-root:hover {
+.app-structure ::deep .app-structure-menu .mud-button-root:hover {
     background: var(--flux-surface-2);
     color: var(--mud-palette-text-primary);
 }
 
-.app-structure-menu ::deep .mud-button-label {
+.app-structure ::deep .app-structure-menu .mud-button-label {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -53,11 +66,108 @@
 }
 
 .app-structure-meta {
+    flex: 1 1 auto;
     color: var(--mud-palette-text-secondary);
     font-size: 11.5px;
     margin-left: 4px;
+    max-width: 190px;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+@media (max-width: 1320px) {
+    .app-structure {
+        gap: 4px;
+    }
+
+    .app-structure-app,
+    .app-structure-empty {
+        max-width: 150px;
+    }
+
+    .app-structure ::deep .app-structure-menu .mud-button-root {
+        max-width: 124px;
+        padding: 0 6px;
+    }
+
+    .app-structure-meta {
+        max-width: 120px;
+    }
+}
+
+@media (max-width: 1180px) {
+    .app-structure-app,
+    .app-structure-empty {
+        max-width: 136px;
+    }
+
+    .app-structure ::deep .app-structure-menu .mud-button-root {
+        max-width: 104px;
+    }
+
+    .app-structure-meta {
+        display: none;
+    }
+}
+
+@media (max-width: 980px) {
+    .app-structure-app,
+    .app-structure-empty {
+        max-width: 148px;
+    }
+
+    .app-structure ::deep .app-structure-menu .mud-button-root {
+        justify-content: center;
+        max-width: 30px;
+        min-width: 30px !important;
+        overflow: hidden;
+        padding: 0;
+        width: 30px;
+    }
+
+    .app-structure ::deep .app-structure-menu .mud-button-label {
+        display: inline-flex;
+        justify-content: flex-start;
+        max-width: 18px;
+        overflow: hidden;
+        width: 18px;
+    }
+
+    .app-structure ::deep .app-structure-menu .mud-button-icon-start {
+        margin: 0;
+    }
+
+    .app-structure ::deep .app-structure-menu .mud-button-icon-end {
+        display: none;
+    }
+}
+
+@media (max-width: 760px) {
+    .app-structure {
+        width: 100%;
+    }
+
+    .app-structure-app,
+    .app-structure-empty {
+        max-width: min(150px, 38vw);
+    }
+}
+
+@media (max-width: 520px) {
+    .app-structure {
+        gap: 3px;
+    }
+
+    .app-structure-app,
+    .app-structure-empty {
+        max-width: min(120px, 34vw);
+    }
+
+    .app-structure ::deep .app-structure-menu .mud-button-root {
+        max-width: 28px;
+        min-width: 28px !important;
+        width: 28px;
+    }
 }
