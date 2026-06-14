@@ -420,33 +420,48 @@
 
 .metrics-list-empty,
 .metrics-editor-empty {
-    align-items: center;
+    align-items: start;
+    align-self: center;
+    background: color-mix(in srgb, var(--flux-surface) 72%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 78%, transparent);
+    border-radius: 6px;
     color: var(--mud-palette-text-secondary);
-    display: flex;
-    flex: 1 1 auto;
-    flex-direction: column;
-    gap: 6px;
-    justify-content: center;
-    min-height: 128px;
+    display: grid;
+    flex: 0 1 auto;
+    gap: 7px 8px;
+    grid-template-columns: 28px minmax(0, 1fr);
+    justify-self: center;
+    max-width: min(360px, calc(100% - 20px));
+    min-height: 0;
     min-width: 0;
-    padding: 16px;
-    text-align: center;
+    padding: 10px;
+    text-align: left;
+    width: 100%;
 }
 
 .metrics-editor-empty {
-    min-height: 220px;
+    margin: auto;
 }
 
-.metrics-list-empty strong,
-.metrics-editor-empty strong {
+.metrics-list-empty {
+    margin: 18px auto;
+}
+
+.metrics-empty-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.metrics-empty-copy strong {
     color: var(--mud-palette-text-primary);
     font-size: 12.5px;
     font-weight: 780;
     line-height: 1.25;
 }
 
-.metrics-list-empty > span:not(.metrics-empty-icon),
-.metrics-editor-empty > span:not(.metrics-empty-icon) {
+.metrics-empty-copy span {
     color: var(--mud-palette-text-secondary);
     font-size: 11px;
     line-height: 1.35;
@@ -461,7 +476,6 @@
     display: inline-flex;
     height: 28px;
     justify-content: center;
-    margin-bottom: 2px;
     width: 28px;
 }
 
@@ -486,8 +500,13 @@
     gap: 5px;
     height: 28px;
     justify-content: center;
-    margin-top: 3px;
     padding: 0 10px;
+}
+
+.metrics-list-empty .metrics-empty-action,
+.metrics-editor-empty .metrics-empty-action {
+    grid-column: 2;
+    justify-self: start;
 }
 
 .metrics-empty-action.secondary {
@@ -1257,7 +1276,7 @@
 
 .metrics-preview-card {
     background: var(--flux-surface-2);
-    border: 1px solid transparent;
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
     border-radius: 5px;
     display: flex;
     flex-direction: column;
@@ -1269,7 +1288,12 @@
 
 .metrics-preview-card.live {
     background: color-mix(in srgb, var(--mud-palette-success) 5%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--mud-palette-success) 24%, var(--flux-border));
     box-shadow: inset 2px 0 0 color-mix(in srgb, var(--mud-palette-success) 80%, var(--flux-accent));
+}
+
+.metrics-preview-card.muted {
+    background: color-mix(in srgb, var(--flux-surface-2) 72%, transparent);
 }
 
 .metrics-preview-status {
@@ -1309,15 +1333,36 @@
 
 .metrics-preview-empty {
     align-items: center;
-    display: flex;
+    display: grid;
     gap: 6px;
-    min-height: 22px;
+    grid-template-columns: 16px minmax(0, 1fr);
+    min-height: 26px;
     min-width: 0;
-    padding: 1px 0;
 }
 
 .metrics-preview-empty span {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
     min-width: 0;
+}
+
+.metrics-preview-empty strong,
+.metrics-reference-empty strong {
+    color: var(--mud-palette-text-primary);
+    font-size: 11px;
+    font-weight: 760;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.metrics-preview-empty small,
+.metrics-reference-empty small {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10px;
+    line-height: 1.2;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1333,7 +1378,7 @@
 .metrics-reference-list {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 3px;
     max-height: 148px;
     min-width: 0;
     overflow: auto;
@@ -1341,20 +1386,21 @@
 
 .metrics-reference-row {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 45%, transparent);
-    border: 1px solid transparent;
+    background: color-mix(in srgb, var(--flux-surface-2) 68%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 58%, transparent);
     border-radius: 5px;
     color: var(--mud-palette-text-secondary);
     display: grid;
     font-size: 11px;
     gap: 6px;
     grid-template-columns: 16px minmax(0, 1fr) minmax(0, auto) 24px;
-    min-height: 30px;
+    min-height: 31px;
     padding: 3px 2px 3px 5px;
 }
 
-.metrics-reference-row + .metrics-reference-row {
-    border-top-color: color-mix(in srgb, var(--flux-border) 48%, transparent);
+.metrics-reference-row:hover {
+    background: var(--flux-surface-2);
+    border-color: color-mix(in srgb, var(--flux-accent) 18%, var(--flux-border));
 }
 
 .metrics-reference-row ::deep .metrics-reference-icon {
@@ -1395,13 +1441,20 @@
 }
 
 .metrics-reference-tags small {
+    background: var(--flux-accent-soft);
+    border: 1px solid color-mix(in srgb, var(--flux-accent) 38%, var(--flux-border));
+    border-radius: 5px;
     color: var(--flux-accent);
     font-size: 10px;
     font-weight: 720;
     line-height: 1.1;
+    padding: 2px 4px;
 }
 
 .metrics-reference-tags em {
+    background: color-mix(in srgb, var(--flux-surface) 72%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 70%, transparent);
+    border-radius: 5px;
     color: var(--mud-palette-text-secondary);
     font-size: 10px;
     font-style: normal;
@@ -1410,6 +1463,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    padding: 2px 4px;
 }
 
 .metrics-reference-action {
@@ -1423,6 +1477,33 @@
     height: 22px;
     padding: 0;
     width: 22px;
+}
+
+.metrics-reference-empty {
+    align-items: center;
+    background: color-mix(in srgb, var(--flux-surface-2) 72%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-radius: 5px;
+    display: grid;
+    gap: 6px;
+    grid-template-columns: 16px minmax(0, 1fr);
+    min-height: 34px;
+    min-width: 0;
+    padding: 6px 7px;
+}
+
+.metrics-reference-empty > span {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.metrics-reference-empty ::deep .mud-icon-root {
+    color: var(--mud-palette-text-disabled);
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
 }
 
 .metrics-reference-row ::deep .metrics-reference-open:hover,
@@ -1598,6 +1679,7 @@ a.metrics-validation-line:focus-visible {
 
     .metrics-list-empty {
         grid-column: 1 / -1;
+        max-width: min(360px, calc(100% - 12px));
     }
 
     .metrics-row {
