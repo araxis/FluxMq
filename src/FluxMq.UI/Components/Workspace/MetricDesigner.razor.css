@@ -703,25 +703,24 @@
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
-    gap: 6px;
     min-height: 0;
     overflow: auto;
-    padding: 6px;
+    padding: 0;
 }
 
 .metrics-editor-compact-layout {
     align-items: start;
     display: grid;
-    gap: 6px;
-    grid-template-columns: minmax(0, 1fr) minmax(236px, 280px);
-    min-height: 0;
+    gap: 0;
+    grid-template-columns: minmax(0, 1fr) minmax(224px, 268px);
+    min-height: 100%;
 }
 
 .metrics-editor-main-panel,
 .metrics-editor-side-panel {
-    background: color-mix(in srgb, var(--flux-surface) 94%, var(--flux-surface-2));
-    border: 1px solid var(--flux-border);
-    border-radius: 6px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
     min-width: 0;
 }
 
@@ -731,6 +730,8 @@
 }
 
 .metrics-editor-side-panel {
+    background: color-mix(in srgb, var(--flux-surface) 52%, transparent);
+    border-left: 1px solid var(--flux-border);
     display: flex;
     flex-direction: column;
 }
@@ -739,9 +740,9 @@
 .metrics-side-card {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     min-width: 0;
-    padding: 7px 8px;
+    padding: 10px 12px;
 }
 
 .metrics-compact-section + .metrics-compact-section,
@@ -750,7 +751,8 @@
 }
 
 .metrics-side-card.danger {
-    background: color-mix(in srgb, var(--mud-palette-error) 5%, transparent);
+    background: transparent;
+    box-shadow: inset 2px 0 0 color-mix(in srgb, var(--mud-palette-error) 72%, transparent);
 }
 
 .metrics-section-heading {
@@ -806,7 +808,7 @@
 
 .metrics-form-grid {
     display: grid;
-    gap: 6px;
+    gap: 8px;
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -832,15 +834,15 @@
 
 .metrics-resource-id-field {
     align-items: center;
-    background: var(--flux-surface-2);
-    border: 1px solid var(--flux-border);
+    background: color-mix(in srgb, var(--flux-surface-2) 55%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 76%, transparent);
     border-radius: 6px;
     display: grid;
     gap: 5px 7px;
     grid-template-columns: minmax(0, 1fr) auto;
-    min-height: 50px;
+    min-height: 44px;
     min-width: 0;
-    padding: 6px 8px 7px;
+    padding: 6px 8px;
 }
 
 .metrics-resource-id-field > span {
@@ -866,7 +868,7 @@
     align-items: center;
     appearance: none;
     background: transparent;
-    border: 1px solid var(--flux-border);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 76%, transparent);
     border-radius: 5px;
     color: var(--mud-palette-text-secondary);
     cursor: pointer;
@@ -880,7 +882,7 @@
 }
 
 .metrics-resource-id-field button:hover:not(:disabled) {
-    background: var(--flux-surface);
+    background: var(--flux-surface-2);
     color: var(--mud-palette-text-primary);
 }
 
@@ -899,15 +901,15 @@
 }
 
 .metrics-identity-field {
-    background: var(--flux-surface-2);
-    border: 1px solid var(--flux-border);
+    background: color-mix(in srgb, var(--flux-surface-2) 55%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 76%, transparent);
     border-radius: 6px;
     display: flex;
     flex-direction: column;
     gap: 4px;
-    min-height: 50px;
+    min-height: 44px;
     min-width: 0;
-    padding: 6px 8px 7px;
+    padding: 6px 8px;
 }
 
 .metrics-identity-field > span {
@@ -956,13 +958,13 @@
 
 .metrics-type-picker-field {
     align-items: center;
-    background: var(--flux-surface-2);
-    border: 1px solid var(--flux-border);
+    background: color-mix(in srgb, var(--flux-surface-2) 55%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 76%, transparent);
     border-radius: 6px;
     display: grid;
     gap: 7px;
     grid-template-columns: 22px minmax(0, 1fr) auto;
-    min-height: 50px;
+    min-height: 44px;
     min-width: 0;
     padding: 5px 6px 5px 8px;
 }
@@ -1019,7 +1021,7 @@
     align-items: center;
     appearance: none;
     background: transparent;
-    border: 1px solid var(--flux-border);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 76%, transparent);
     border-radius: 5px;
     color: var(--mud-palette-text-secondary);
     cursor: pointer;
@@ -1033,7 +1035,7 @@
 }
 
 .metrics-type-picker-field button:hover {
-    background: var(--flux-surface);
+    background: var(--flux-surface-2);
     color: var(--mud-palette-text-primary);
 }
 
@@ -1502,6 +1504,8 @@ a.metrics-validation-line:focus-visible {
     }
 
     .metrics-editor-side-panel {
+        border-left: 0;
+        border-top: 1px solid var(--flux-border);
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -1534,7 +1538,8 @@ a.metrics-validation-line:focus-visible {
     }
 
     .metrics-new-button {
-        flex: 1 1 100%;
+        flex: 1 1 0;
+        min-width: 0;
     }
 
     .metrics-list-head {
