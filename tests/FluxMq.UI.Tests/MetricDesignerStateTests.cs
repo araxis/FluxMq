@@ -65,6 +65,36 @@ public sealed class MetricDesignerStateTests
             .ShouldBe(["rates"]);
     }
 
+    [Theory]
+    [InlineData(0, 0, false, "No metrics")]
+    [InlineData(1, 1, false, "1 metric")]
+    [InlineData(3, 3, false, "3 metrics")]
+    [InlineData(3, 1, true, "1 of 3 metrics")]
+    [InlineData(1, 0, true, "0 of 1 metric")]
+    public void MetricCountText_FormatsEmptyAndFilteredCounts(
+        int total,
+        int filtered,
+        bool hasActiveFilters,
+        string expected)
+    {
+        MetricDesignerState.MetricCountText(total, filtered, hasActiveFilters)
+            .ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("factory", null, "No metrics match \"factory\".")]
+    [InlineData(null, "Event rate", "No metrics use Event rate.")]
+    [InlineData("factory", "Event rate", "No metrics use Event rate and match \"factory\".")]
+    [InlineData("   ", "  ", "No metrics match the current filters.")]
+    public void FilterEmptyDescription_ExplainsActiveFilters(
+        string? search,
+        string? typeName,
+        string expected)
+    {
+        MetricDesignerState.FilterEmptyDescription(search, typeName)
+            .ShouldBe(expected);
+    }
+
     [Fact]
     public void ValidateDraft_ChecksIdentityNumbersRangesAndDuration()
     {
