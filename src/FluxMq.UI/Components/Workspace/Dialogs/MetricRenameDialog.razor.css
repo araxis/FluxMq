@@ -2,16 +2,16 @@
     align-items: center;
     color: var(--mud-palette-text-primary);
     display: flex;
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 780;
-    gap: 7px;
+    gap: 6px;
     min-width: 0;
 }
 
 .metric-rename-dialog {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
 }
 
@@ -27,10 +27,10 @@
     background: color-mix(in srgb, var(--flux-surface) 94%, var(--flux-surface-2));
     border: 1px solid var(--flux-border);
     display: grid;
-    gap: 8px;
+    gap: 7px;
     grid-template-columns: 78px minmax(0, 1fr);
-    min-height: 34px;
-    padding: 6px 8px;
+    min-height: 32px;
+    padding: 5px 8px;
 }
 
 .metric-rename-current span,
@@ -66,7 +66,7 @@
     font: inherit;
     font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
     font-size: 12px;
-    height: 34px;
+    height: 31px;
     min-width: 0;
     outline: 0;
     padding: 0 9px;
@@ -77,13 +77,18 @@
     border-color: color-mix(in srgb, var(--flux-accent) 45%, var(--flux-border-strong));
 }
 
+.metric-rename-field input.invalid {
+    border-color: color-mix(in srgb, var(--mud-palette-error) 48%, var(--flux-border));
+}
+
 .metric-rename-note,
 .metric-rename-validation {
     align-items: center;
     display: grid;
-    font-size: 11.5px;
-    gap: 7px;
+    font-size: 11px;
+    gap: 6px;
     grid-template-columns: 18px minmax(0, 1fr);
+    line-height: 1.25;
     min-height: 30px;
     padding: 6px 8px;
 }
@@ -113,13 +118,22 @@
     width: 100%;
 }
 
+.metric-rename-actions ::deep .mud-button-root {
+    min-height: 30px;
+}
+
 @media (max-width: 520px) {
     .metric-rename-current {
         grid-template-columns: minmax(0, 1fr);
+        gap: 3px;
     }
 
     .metric-rename-actions {
         align-items: stretch;
-        flex-direction: column;
+        flex-direction: column-reverse;
+    }
+
+    .metric-rename-actions ::deep .mud-button-root {
+        width: 100%;
     }
 }
