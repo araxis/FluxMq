@@ -60,7 +60,10 @@
 
                     @if (FilteredDescriptors.Count == 0)
                     {
-                        <EmptyView Message="No metric types match your search" />
+                        <div class="metric-type-change-empty">
+                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
+                            <span>No metric types match your search</span>
+                        </div>
                     }
                 </div>
 
