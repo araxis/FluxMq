@@ -11,23 +11,23 @@
 .metric-confirm-dialog {
     align-items: flex-start;
     border: 1px solid var(--flux-border);
-    border-radius: 6px;
+    border-radius: 5px;
     display: grid;
-    gap: 7px;
+    gap: 6px;
     grid-template-columns: 18px minmax(0, 1fr);
     min-width: 0;
-    padding: 7px;
+    padding: 6px 7px;
 }
 
 .metric-confirm-dialog.warning {
-    background: color-mix(in srgb, var(--mud-palette-warning) 7%, var(--flux-surface));
-    border-color: color-mix(in srgb, var(--mud-palette-warning) 30%, var(--flux-border));
+    background: color-mix(in srgb, var(--mud-palette-warning) 5%, var(--flux-surface));
+    border-color: color-mix(in srgb, var(--mud-palette-warning) 24%, var(--flux-border));
     color: var(--mud-palette-warning);
 }
 
 .metric-confirm-dialog.danger {
-    background: color-mix(in srgb, var(--mud-palette-error) 6%, var(--flux-surface));
-    border-color: color-mix(in srgb, var(--mud-palette-error) 30%, var(--flux-border));
+    background: color-mix(in srgb, var(--mud-palette-error) 5%, var(--flux-surface));
+    border-color: color-mix(in srgb, var(--mud-palette-error) 24%, var(--flux-border));
     color: var(--mud-palette-error);
 }
 
@@ -39,14 +39,14 @@
 
 .metric-confirm-dialog strong {
     color: var(--mud-palette-text-primary);
-    font-size: 11.5px;
+    font-size: 11.25px;
     font-weight: 780;
     line-height: 1.25;
 }
 
 .metric-confirm-dialog span {
     color: var(--mud-palette-text-secondary);
-    font-size: 11px;
+    font-size: 10.5px;
     line-height: 1.35;
     margin-top: 2px;
 }
@@ -66,7 +66,7 @@
 @media (max-width: 520px) {
     .metric-confirm-actions {
         align-items: stretch;
-        flex-direction: column-reverse;
+        flex-direction: column;
     }
 
     .metric-confirm-actions ::deep .mud-button-root {

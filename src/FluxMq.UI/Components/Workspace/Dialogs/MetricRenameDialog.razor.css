@@ -11,7 +11,7 @@
 .metric-rename-dialog {
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    gap: 6px;
     min-width: 0;
 }
 
@@ -24,13 +24,13 @@
 
 .metric-rename-current {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface) 94%, var(--flux-surface-2));
-    border: 1px solid var(--flux-border);
+    background: transparent;
+    border: 1px dashed color-mix(in srgb, var(--flux-border) 78%, transparent);
     display: grid;
-    gap: 7px;
+    gap: 6px;
     grid-template-columns: 78px minmax(0, 1fr);
-    min-height: 32px;
-    padding: 5px 8px;
+    min-height: 30px;
+    padding: 4px 7px;
 }
 
 .metric-rename-current span,
@@ -53,7 +53,7 @@
 .metric-rename-field {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
     min-width: 0;
 }
 
@@ -61,12 +61,12 @@
     appearance: none;
     background: var(--flux-surface-2);
     border: 1px solid var(--flux-border);
-    border-radius: 6px;
+    border-radius: 5px;
     color: var(--mud-palette-text-primary);
     font: inherit;
     font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
     font-size: 12px;
-    height: 31px;
+    height: 29px;
     min-width: 0;
     outline: 0;
     padding: 0 9px;
@@ -89,19 +89,19 @@
     gap: 6px;
     grid-template-columns: 18px minmax(0, 1fr);
     line-height: 1.25;
-    min-height: 30px;
-    padding: 6px 8px;
+    min-height: 27px;
+    padding: 4px 7px;
 }
 
 .metric-rename-note {
-    background: var(--flux-surface-2);
-    border: 1px solid var(--flux-border);
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
     color: var(--mud-palette-text-secondary);
 }
 
 .metric-rename-validation {
-    background: color-mix(in srgb, var(--mud-palette-error) 8%, var(--flux-surface));
-    border: 1px solid color-mix(in srgb, var(--mud-palette-error) 34%, var(--flux-border));
+    background: color-mix(in srgb, var(--mud-palette-error) 5%, var(--flux-surface));
+    border: 1px solid color-mix(in srgb, var(--mud-palette-error) 26%, var(--flux-border));
     color: var(--mud-palette-error);
 }
 
@@ -130,7 +130,7 @@
 
     .metric-rename-actions {
         align-items: stretch;
-        flex-direction: column-reverse;
+        flex-direction: column;
     }
 
     .metric-rename-actions ::deep .mud-button-root {
