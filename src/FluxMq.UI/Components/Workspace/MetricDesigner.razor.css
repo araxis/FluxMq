@@ -1529,6 +1529,44 @@ a.metrics-validation-line:focus-visible {
         padding: 6px;
     }
 
+    .metrics-editor-header {
+        align-items: center;
+        flex-direction: row;
+    }
+
+    .metrics-editor-title {
+        flex: 1 1 auto;
+    }
+
+    .metrics-editor-actions {
+        flex: 0 0 auto;
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+        width: auto;
+    }
+
+    .metrics-editor-state {
+        justify-content: center;
+        padding: 0;
+        width: 26px;
+    }
+
+    .metrics-editor-state span:last-child,
+    .metrics-save-button span {
+        display: none;
+    }
+
+    .metrics-action-strip {
+        border-color: transparent;
+        padding: 0;
+    }
+
+    .metrics-save-button {
+        min-width: 28px;
+        padding: 0;
+        width: 28px;
+    }
+
     .metrics-toolbar {
         gap: 5px;
     }
@@ -1546,15 +1584,39 @@ a.metrics-validation-line:focus-visible {
         display: none;
     }
 
+    .metrics-body {
+        grid-template-rows: minmax(118px, 0.26fr) minmax(0, 1fr);
+    }
+
+    .metrics-list {
+        align-content: start;
+        display: grid;
+        gap: 4px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding: 4px;
+    }
+
+    .metrics-list-empty {
+        grid-column: 1 / -1;
+    }
+
     .metrics-row {
         grid-template-columns: minmax(0, 1fr) auto;
-        min-height: 54px;
+        min-height: 48px;
         padding: 5px 6px;
     }
 
-    .metrics-cell-summary,
+    .metrics-row + .metrics-row {
+        margin-top: 0;
+    }
+
+    .metrics-cell-summary {
+        display: none;
+    }
+
     .metrics-row > .metrics-cell:nth-child(2) {
-        grid-column: 1 / -1;
+        grid-column: 1;
+        grid-row: 2;
     }
 
     .metrics-row > .metrics-cell:nth-child(4) {
@@ -1566,6 +1628,11 @@ a.metrics-validation-line:focus-visible {
         grid-column: 2;
         grid-row: 2;
         text-align: right;
+    }
+
+    .metrics-latest-pill.muted small,
+    .metrics-latest-pill.live small {
+        display: none;
     }
 
     .metrics-form-grid,

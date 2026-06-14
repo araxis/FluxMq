@@ -237,6 +237,7 @@
                                     class="metrics-save-button"
                                     disabled="@(!CanSave)"
                                     title="@SaveButtonTitle"
+                                    aria-label="@SaveButtonTitle"
                                     @onclick="@SaveMetricAsync">
                                 <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" />
                                 <span>Save</span>
