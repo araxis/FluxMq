@@ -124,18 +124,18 @@
                                 class="@RowClass(current)"
                                 @key="current.Id"
                                 @onclick="@(() => SelectMetricAsync(current.Id))">
-                            <span class="metrics-cell metrics-cell-name">
+                            <span class="metrics-cell metrics-cell-name" title="@current.Id">
                                 <strong>@current.DisplayName</strong>
                                 <small>@current.Id</small>
                             </span>
-                            <span class="metrics-cell">
-                                <span class="metrics-type-pill">
+                            <span class="metrics-cell metrics-cell-type">
+                                <span class="metrics-type-pill" title="@current.TypeName">
                                     <MudIcon Icon="@TypeIcon(current.TypeId)" Size="Size.Small" />
                                     <span>@current.TypeName</span>
                                 </span>
                             </span>
                             <span class="metrics-cell metrics-cell-summary" title="@current.Summary">@current.Summary</span>
-                            <span class="metrics-cell">
+                            <span class="metrics-cell metrics-cell-uses" title="@($"{current.ReferenceCount} references")">
                                 <span class="@ReferenceCountClass(current.ReferenceCount)">@current.ReferenceCount</span>
                             </span>
                             <span class="metrics-cell metrics-cell-latest">
@@ -274,9 +274,10 @@
                                         @if (CanOpenRename)
                                         {
                                             <button type="button"
+                                                    title="Rename metric"
+                                                    aria-label="Rename metric"
                                                     @onclick="@RenameMetricAsync">
                                                 <MudIcon Icon="@Icons.Material.Filled.DriveFileRenameOutline" Size="Size.Small" />
-                                                <span>Rename</span>
                                             </button>
                                         }
                                     </div>
