@@ -1,12 +1,18 @@
 # V1 Candidate Notes
 
-Last checked: 2026-06-05
+Last checked: 2026-06-13
 
 These notes summarize the current V1 candidate state. Use them with the [release readiness checklist](release-readiness.md).
 
 ## Candidate Status
 
-The current candidate is ready for PR review after focused packaged-desktop QA. The command gates, release-shaped tests, sample validation, docs-site build, and Windows package gate passed. The packaged desktop app opened `samples\flow-applications\operations-dashboard-test-studio.json` and completed the focused dashboard/test-studio workflow.
+The current candidate has passed the automated command gates, release-shaped tests, sample validation, docs-site build, and Windows package gate after updating to the latest FluxFlow package set. Manual packaged-desktop smoke still needs a fresh pass for this package because package references and the operations dashboard/test-studio sample changed.
+
+Concrete blockers found and fixed in this package-alignment slice:
+
+- FluxMQ MQTT publisher/trigger adapters now consume package `Errors` outputs through Dataflow links instead of casting the new FluxFlow fanout source to `IReceivableSourceBlock<FlowError>`
+- `operations-dashboard-test-studio.json` now uses current app-level metric resource type ids and focused dashboard widget ids, so CLI validation succeeds without migration-generated invalid cells
+- App tests now validate the repo-contained operations dashboard/test-studio sample through the configuration loader
 
 Concrete blockers found and fixed in this QA slice:
 
@@ -30,9 +36,11 @@ dotnet test .\FluxMq.sln --no-restore --nologo -m:1 -p:UseSharedCompilation=fals
 Observed result:
 
 - restore passed
-- solution tests passed with 615 tests
+- solution tests passed with 747 tests
 - broker-free sample verification passed
 - generated traffic sample validated and ran for a bounded duration
+- operations dashboard/test-studio sample returned `isValid: true`
+- docs-site build passed
 
 Windows package gate:
 
@@ -45,9 +53,10 @@ dotnet test .\FluxMq.sln --configuration Release --no-restore --verbosity minima
 Observed result:
 
 - release-shaped restore passed
-- release-shaped solution tests passed with 615 tests
+- release-shaped solution tests passed with 747 tests
 - portable Windows package was created
 - MSI installer was created from the same publish output
+- local WiX tooling was aligned to the documented `6.0.2` version before MSI creation because WiX v7 requires the OSMF EULA
 
 Additional validation:
 
@@ -59,7 +68,7 @@ npm run build
 
 Observed result:
 
-- focused UI tests passed with 303 tests
+- focused UI tests passed with 403 tests
 - operations dashboard/test-studio sample returned `isValid: true`
 - docs-site build passed
 
@@ -70,7 +79,7 @@ Expected local artifacts:
 - `artifacts\windows\dist\FluxMQ-0.1.0-portable-win-x64.zip`
 - `artifacts\windows\dist\FluxMQ-0.1.0-win-x64.msi`
 
-The packaged desktop QA used:
+The 2026-06-05 packaged desktop QA used:
 
 - `artifacts\windows\portable\FluxMQ\FluxMq.UI.exe --open samples\flow-applications\operations-dashboard-test-studio.json`
 

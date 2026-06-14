@@ -426,11 +426,28 @@
         if (dashboardChanged)
         {
             DashboardMode = DashboardModeEdit;
-            Project.SetActiveDashboardCell(null);
+            _selectedCellIds.Clear();
+            SyncSelectionFromProject();
+            if (_selectedCellIds.Count == 0)
+            {
+                Project.SetActiveDashboardCell(null);
+            }
         }
 
         TrimSelection();
         TrimPreviewSamples();
+    }
+
+    private void SyncSelectionFromProject()
+    {
+        if (string.IsNullOrWhiteSpace(Project.ActiveDashboardCellName) ||
+            !VisibleCells.Any(cell => string.Equals(cell.Name, Project.ActiveDashboardCellName, StringComparison.Ordinal)))
+        {
+            return;
+        }
+
+        _selectedCellIds.Clear();
+        _selectedCellIds.Add(Project.ActiveDashboardCellName);
     }
 
     private async Task OpenTrackEditorAsync(string axis, int index)

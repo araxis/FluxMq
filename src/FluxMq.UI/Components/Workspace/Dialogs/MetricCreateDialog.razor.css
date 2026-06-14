@@ -1,0 +1,366 @@
+.metric-create-title {
+    align-items: center;
+    color: var(--mud-palette-text-primary);
+    display: flex;
+    font-size: 13px;
+    font-weight: 780;
+    gap: 7px;
+    min-width: 0;
+}
+
+.metric-create-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+}
+
+.metric-create-topbar {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    min-width: 0;
+}
+
+.metric-create-search {
+    align-items: center;
+    background: var(--flux-surface-2);
+    border: 1px solid var(--flux-border);
+    border-radius: 6px;
+    color: var(--mud-palette-text-secondary);
+    display: grid;
+    flex: 1 1 auto;
+    gap: 7px;
+    grid-template-columns: 18px minmax(0, 1fr) auto;
+    height: 32px;
+    min-width: 0;
+    padding: 0 8px;
+}
+
+.metric-create-search:focus-within {
+    background: var(--flux-surface);
+    border-color: color-mix(in srgb, var(--flux-accent) 45%, var(--flux-border-strong));
+    color: var(--mud-palette-text-primary);
+}
+
+.metric-create-search input {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 650;
+    height: 100%;
+    min-width: 0;
+    outline: 0;
+    padding: 0;
+}
+
+.metric-create-search input::placeholder {
+    color: var(--mud-palette-text-secondary);
+    font-weight: 500;
+}
+
+.metric-create-search button {
+    align-items: center;
+    appearance: none;
+    background: transparent;
+    border: 0;
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    height: 24px;
+    justify-content: center;
+    padding: 0;
+    width: 24px;
+}
+
+.metric-create-search button:hover {
+    background: var(--flux-surface);
+    color: var(--mud-palette-text-primary);
+}
+
+.metric-create-count {
+    color: var(--mud-palette-text-secondary);
+    flex: 0 0 auto;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.metric-create-layout {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(260px, 1fr) minmax(260px, 0.78fr);
+    min-height: 300px;
+}
+
+.metric-create-type-list,
+.metric-create-details {
+    background: color-mix(in srgb, var(--flux-surface) 94%, var(--flux-surface-2));
+    border: 1px solid var(--flux-border);
+    border-radius: 6px;
+    min-height: 0;
+    min-width: 0;
+}
+
+.metric-create-type-list {
+    overflow: auto;
+    padding: 5px;
+}
+
+.metric-create-type {
+    align-items: center;
+    appearance: none;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    cursor: pointer;
+    display: grid;
+    font: inherit;
+    gap: 7px;
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    min-height: 42px;
+    padding: 5px 7px;
+    text-align: left;
+    width: 100%;
+}
+
+.metric-create-type + .metric-create-type {
+    margin-top: 1px;
+}
+
+.metric-create-type:hover,
+.metric-create-type.selected {
+    background: var(--flux-surface);
+    border-color: color-mix(in srgb, var(--flux-accent) 20%, var(--flux-border));
+    color: var(--mud-palette-text-primary);
+}
+
+.metric-create-type.selected {
+    background: color-mix(in srgb, var(--flux-accent) 7%, var(--flux-surface));
+    box-shadow: inset 2px 0 0 var(--flux-accent);
+}
+
+.metric-create-type-icon {
+    align-items: center;
+    color: var(--mud-palette-info);
+    display: inline-flex;
+    height: 20px;
+    justify-content: center;
+    width: 20px;
+}
+
+.metric-create-type strong,
+.metric-create-type small,
+.metric-create-type em {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.metric-create-type strong {
+    color: var(--mud-palette-text-primary);
+    font-size: 12px;
+    font-weight: 760;
+    line-height: 1.2;
+}
+
+.metric-create-type small,
+.metric-create-type em {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10px;
+    font-style: normal;
+}
+
+.metric-create-type em {
+    font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+    justify-self: end;
+}
+
+.metric-create-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+}
+
+.metric-create-selected {
+    align-items: flex-start;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 26px minmax(0, 1fr);
+    min-width: 0;
+}
+
+.metric-create-selected-icon {
+    align-items: center;
+    background: var(--flux-accent-soft);
+    border: 1px solid color-mix(in srgb, var(--flux-accent) 34%, var(--flux-border));
+    border-radius: 6px;
+    color: var(--flux-accent);
+    display: inline-flex;
+    height: 26px;
+    justify-content: center;
+    width: 26px;
+}
+
+.metric-create-selected strong,
+.metric-create-selected span {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.metric-create-selected strong {
+    color: var(--mud-palette-text-primary);
+    font-size: 12.5px;
+    font-weight: 780;
+    line-height: 1.25;
+}
+
+.metric-create-selected span {
+    color: var(--mud-palette-text-secondary);
+    font-size: 11px;
+    line-height: 1.35;
+    margin-top: 2px;
+}
+
+.metric-create-name-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.metric-create-name-field > span,
+.metric-create-section-label {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10.5px;
+    font-weight: 760;
+}
+
+.metric-create-name-field input {
+    appearance: none;
+    background: var(--flux-surface-2);
+    border: 1px solid var(--flux-border);
+    border-radius: 6px;
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 650;
+    height: 34px;
+    min-width: 0;
+    outline: 0;
+    padding: 0 9px;
+}
+
+.metric-create-name-field input:focus {
+    background: var(--flux-surface);
+    border-color: color-mix(in srgb, var(--flux-accent) 45%, var(--flux-border-strong));
+}
+
+.metric-create-resource-id {
+    align-items: center;
+    background: var(--flux-surface-2);
+    border: 1px solid var(--flux-border);
+    border-radius: 6px;
+    color: var(--mud-palette-text-secondary);
+    display: grid;
+    font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+    font-size: 11px;
+    gap: 6px;
+    grid-template-columns: 16px minmax(0, 1fr);
+    min-height: 30px;
+    padding: 5px 7px;
+}
+
+.metric-create-resource-id span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.metric-create-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.metric-create-meta span {
+    background: var(--flux-surface-2);
+    border: 1px solid var(--flux-border);
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1;
+    padding: 4px 6px;
+}
+
+.metric-create-defaults {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 2px;
+    min-width: 0;
+    padding-top: 7px;
+}
+
+.metric-create-default-row {
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    display: grid;
+    font-size: 11px;
+    gap: 8px;
+    grid-template-columns: minmax(80px, 0.8fr) minmax(0, 1fr);
+    min-height: 22px;
+}
+
+.metric-create-default-row span,
+.metric-create-default-row strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.metric-create-default-row strong {
+    color: var(--mud-palette-text-primary);
+    font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.metric-create-actions {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    width: 100%;
+}
+
+@media (max-width: 760px) {
+    .metric-create-topbar,
+    .metric-create-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .metric-create-count {
+        align-self: flex-start;
+    }
+
+    .metric-create-layout {
+        grid-template-columns: minmax(0, 1fr);
+        min-height: 0;
+    }
+}

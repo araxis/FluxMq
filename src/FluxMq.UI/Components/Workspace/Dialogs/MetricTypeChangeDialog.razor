@@ -1,0 +1,244 @@
+@using FluxMq.App.Metrics
+
+<MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true })">
+    <TitleContent>
+        <div class="metric-type-change-title">
+            <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" Color="Color.Primary" />
+            <span>Change metric type</span>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="metric-type-change-dialog">
+            <div class="metric-type-change-topbar">
+                <label class="metric-type-change-search">
+                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
+                    <input value="@_search"
+                           placeholder="Search metric types"
+                           aria-label="Search metric types"
+                           @oninput="@OnSearchInput" />
+                    @if (!string.IsNullOrWhiteSpace(_search))
+                    {
+                        <button type="button"
+                                title="Clear search"
+                                aria-label="Clear search"
+                                @onclick="@ClearSearch">
+                            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                        </button>
+                    }
+                </label>
+                <span class="metric-type-change-count">@FilteredDescriptors.Count of @SortedDescriptors.Count types</span>
+            </div>
+
+            <div class="metric-type-change-layout">
+                <div class="metric-type-change-list" role="listbox" aria-label="Metric type">
+                    @foreach (var descriptor in FilteredDescriptors)
+                    {
+                        var current = descriptor;
+                        <button type="button"
+                                class="@TypeButtonClass(current)"
+                                role="option"
+                                aria-selected="@IsSelected(current)"
+                                title="@current.Description"
+                                @onclick="@(() => SelectDescriptor(current))">
+                            <span class="metric-type-change-option-icon">
+                                <MudIcon Icon="@IconFor(current)" Size="Size.Small" />
+                            </span>
+                            <span>
+                                <strong>@current.DisplayName</strong>
+                                <small>@current.TypeId</small>
+                            </span>
+                            @if (IsCurrent(current))
+                            {
+                                <em>Current</em>
+                            }
+                            else
+                            {
+                                <em>@current.ValueKind</em>
+                            }
+                        </button>
+                    }
+
+                    @if (FilteredDescriptors.Count == 0)
+                    {
+                        <EmptyView Message="No metric types match your search" />
+                    }
+                </div>
+
+                <div class="metric-type-change-details">
+                    @if (SelectedDescriptor is { } selectedDescriptor)
+                    {
+                        <div class="metric-type-change-selected">
+                            <span class="metric-type-change-selected-icon">
+                                <MudIcon Icon="@IconFor(selectedDescriptor)" Size="Size.Small" />
+                            </span>
+                            <div>
+                                <strong>@selectedDescriptor.DisplayName</strong>
+                                <span>@selectedDescriptor.Description</span>
+                            </div>
+                        </div>
+
+                        <div class="metric-type-change-meta">
+                            <span>@selectedDescriptor.ValueKind</span>
+                            <span>@UnitText(selectedDescriptor)</span>
+                            <span>@ParameterCountText(selectedDescriptor)</span>
+                        </div>
+
+                        @if (DefaultParameterPreview.Count > 0)
+                        {
+                            <div class="metric-type-change-defaults">
+                                <div class="metric-type-change-section-label">Parameter defaults</div>
+                                @foreach (var parameter in DefaultParameterPreview)
+                                {
+                                    <div class="metric-type-change-default-row">
+                                        <span>@parameter.Key</span>
+                                        <strong>@parameter.Value</strong>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="metric-type-change-empty-defaults">
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" />
+                                <span>This type has no parameters.</span>
+                            </div>
+                        }
+
+                        <div class="@ResetNoteClass">
+                            <MudIcon Icon="@ResetNoteIcon" Size="Size.Small" />
+                            <span>@ResetNoteText</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <div class="metric-type-change-actions">
+            <MudButton OnClick="@Cancel" Size="Size.Small">Cancel</MudButton>
+            <MudButton Color="Color.Primary"
+                       Variant="Variant.Filled"
+                       Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.Tune"
+                       Disabled="@(!CanChange)"
+                       OnClick="@Submit">@SubmitText</MudButton>
+        </div>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public IReadOnlyList<MetricDescriptor> Descriptors { get; set; } = [];
+
+    [Parameter] public string CurrentTypeId { get; set; } = string.Empty;
+
+    [Parameter] public bool HasParameters { get; set; }
+
+    private string _search = string.Empty;
+    private string? _selectedTypeId;
+    private bool _initialized;
+
+    private IReadOnlyList<MetricDescriptor> SortedDescriptors =>
+        [.. Descriptors.OrderBy(static descriptor => descriptor.DisplayName, StringComparer.OrdinalIgnoreCase)];
+
+    private IReadOnlyList<MetricDescriptor> FilteredDescriptors =>
+        [
+            .. SortedDescriptors.Where(descriptor =>
+                string.IsNullOrWhiteSpace(_search) ||
+                descriptor.DisplayName.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+                descriptor.Description.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+                descriptor.TypeId.Contains(_search, StringComparison.OrdinalIgnoreCase))
+        ];
+
+    private MetricDescriptor? SelectedDescriptor =>
+        SortedDescriptors.FirstOrDefault(descriptor => string.Equals(descriptor.TypeId, _selectedTypeId, StringComparison.Ordinal));
+
+    private IReadOnlyList<KeyValuePair<string, string>> DefaultParameterPreview =>
+        SelectedDescriptor is { } descriptor
+            ? [.. MetricDesignerState.DefaultParameters(descriptor)]
+            : [];
+
+    private bool CanChange =>
+        SelectedDescriptor is { } selected &&
+        !string.Equals(selected.TypeId, CurrentTypeId, StringComparison.Ordinal);
+
+    private string SubmitText => CanChange ? "Change type" : "Current type";
+
+    private string ResetNoteClass => CanChange ? "metric-type-change-note warning" : "metric-type-change-note";
+
+    private string ResetNoteIcon => CanChange ? Icons.Material.Filled.RestartAlt : Icons.Material.Filled.Info;
+
+    private string ResetNoteText =>
+        CanChange
+            ? HasParameters
+                ? "Current parameter values will be replaced with defaults for the selected type."
+                : "The selected type will start with its default parameters."
+            : "This metric already uses the selected type.";
+
+    protected override void OnParametersSet()
+    {
+        if (_initialized)
+        {
+            return;
+        }
+
+        _initialized = true;
+        _selectedTypeId = SortedDescriptors.Any(descriptor => string.Equals(descriptor.TypeId, CurrentTypeId, StringComparison.Ordinal))
+            ? CurrentTypeId
+            : SortedDescriptors.FirstOrDefault()?.TypeId;
+    }
+
+    private void SelectDescriptor(MetricDescriptor descriptor)
+        => _selectedTypeId = descriptor.TypeId;
+
+    private bool IsSelected(MetricDescriptor descriptor)
+        => string.Equals(descriptor.TypeId, _selectedTypeId, StringComparison.Ordinal);
+
+    private bool IsCurrent(MetricDescriptor descriptor)
+        => string.Equals(descriptor.TypeId, CurrentTypeId, StringComparison.Ordinal);
+
+    private string TypeButtonClass(MetricDescriptor descriptor)
+    {
+        var selected = IsSelected(descriptor);
+        var current = IsCurrent(descriptor);
+        return (selected, current) switch
+        {
+            (true, true) => "metric-type-change-option selected current",
+            (true, false) => "metric-type-change-option selected",
+            (false, true) => "metric-type-change-option current",
+            _ => "metric-type-change-option"
+        };
+    }
+
+    private static string IconFor(MetricDescriptor descriptor)
+        => descriptor.ValueKind == MetricValueKind.Double
+            ? Icons.Material.Filled.Speed
+            : Icons.Material.Filled.QueryStats;
+
+    private static string UnitText(MetricDescriptor descriptor)
+        => string.IsNullOrWhiteSpace(descriptor.Unit) ? "unitless" : descriptor.Unit;
+
+    private static string ParameterCountText(MetricDescriptor descriptor)
+        => descriptor.Parameters.Count == 1 ? "1 parameter" : $"{descriptor.Parameters.Count} parameters";
+
+    private void OnSearchInput(ChangeEventArgs args)
+        => _search = args.Value?.ToString() ?? string.Empty;
+
+    private void ClearSearch()
+        => _search = string.Empty;
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Submit()
+    {
+        if (!CanChange || SelectedDescriptor is not { } descriptor)
+        {
+            return;
+        }
+
+        MudDialog.Close(DialogResult.Ok(new MetricTypeChangeResult(descriptor.TypeId)));
+    }
+
+    public sealed record MetricTypeChangeResult(string TypeId);
+}

@@ -136,6 +136,7 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
         foreach (var subscriber in _subscribers)
         {
             subscriber.OutputLink.Dispose();
+            subscriber.ErrorLink.Dispose();
             foreach (var output in subscriber.RuntimeNode.Outputs)
             {
                 await output.DisposeAsync().ConfigureAwait(false);
@@ -178,15 +179,22 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
         var outputSink = new ActionBlock<ComponentMqttReceivedMessage>(
             HandleReceivedMessageAsync,
             new ExecutionDataflowBlockOptions { BoundedCapacity = boundedCapacity });
+        var errorSink = new ActionBlock<FlowError>(
+            PublishMappedError,
+            new ExecutionDataflowBlockOptions { BoundedCapacity = boundedCapacity });
         var outputLink = LinkOutputSink(runtimeNode, outputSink);
         var subscriber = (MqttSubscribeNode)runtimeNode.Node;
+        var errorLink = subscriber.Errors.LinkTo(
+            errorSink,
+            new DataflowLinkOptions { PropagateCompletion = true });
 
         return new SubscriberRuntime(
             subscriber,
             runtimeNode,
             outputSink,
             outputLink,
-            PumpErrorsAsync(subscriber));
+            errorSink,
+            errorLink);
     }
 
     private static IDisposable LinkOutputSink(
@@ -208,19 +216,6 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
         var envelope = MqttClientAdapter.ToEnvelope(message);
         await _events.SendAsync(CreateReceivedEvent(envelope), _cts.Token).ConfigureAwait(false);
         await _output.SendAsync(envelope, _cts.Token).ConfigureAwait(false);
-    }
-
-    private async Task PumpErrorsAsync(MqttSubscribeNode subscriber)
-    {
-        var source = (IReceivableSourceBlock<FlowError>)subscriber.Errors;
-
-        while (await subscriber.Errors.OutputAvailableAsync().ConfigureAwait(false))
-        {
-            while (source.TryReceive(out var error))
-            {
-                PublishMappedError(error);
-            }
-        }
     }
 
     private async Task CompleteWhenSubscribersStopAsync()
@@ -247,7 +242,7 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
                 subscriber.Node.Complete();
             }
 
-            await Task.WhenAll(_subscribers.Select(subscriber => subscriber.ErrorPump)).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+            await Task.WhenAll(_subscribers.Select(subscriber => subscriber.ErrorSink.Completion)).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
             _errors.Complete();
             _events.Complete();
         }
@@ -310,5 +305,6 @@ public sealed class MqttTriggerComponent : IFlowNode, IFlowEventSource, IAsyncDi
         RuntimeNode RuntimeNode,
         ActionBlock<ComponentMqttReceivedMessage> OutputSink,
         IDisposable OutputLink,
-        Task ErrorPump);
+        ActionBlock<FlowError> ErrorSink,
+        IDisposable ErrorLink);
 }

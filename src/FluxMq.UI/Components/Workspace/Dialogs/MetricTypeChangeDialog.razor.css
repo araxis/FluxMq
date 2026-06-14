@@ -1,0 +1,363 @@
+.metric-type-change-title {
+    align-items: center;
+    color: var(--mud-palette-text-primary);
+    display: flex;
+    font-size: 13px;
+    font-weight: 780;
+    gap: 7px;
+    min-width: 0;
+}
+
+.metric-type-change-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+}
+
+.metric-type-change-topbar {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    min-width: 0;
+}
+
+.metric-type-change-search {
+    align-items: center;
+    background: var(--flux-surface-2);
+    border: 1px solid var(--flux-border);
+    border-radius: 6px;
+    color: var(--mud-palette-text-secondary);
+    display: grid;
+    flex: 1 1 auto;
+    gap: 7px;
+    grid-template-columns: 18px minmax(0, 1fr) auto;
+    height: 32px;
+    min-width: 0;
+    padding: 0 8px;
+}
+
+.metric-type-change-search:focus-within {
+    background: var(--flux-surface);
+    border-color: color-mix(in srgb, var(--flux-accent) 45%, var(--flux-border-strong));
+    color: var(--mud-palette-text-primary);
+}
+
+.metric-type-change-search input {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 650;
+    height: 100%;
+    min-width: 0;
+    outline: 0;
+    padding: 0;
+}
+
+.metric-type-change-search input::placeholder {
+    color: var(--mud-palette-text-secondary);
+    font-weight: 500;
+}
+
+.metric-type-change-search button {
+    align-items: center;
+    appearance: none;
+    background: transparent;
+    border: 0;
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    height: 24px;
+    justify-content: center;
+    padding: 0;
+    width: 24px;
+}
+
+.metric-type-change-search button:hover {
+    background: var(--flux-surface);
+    color: var(--mud-palette-text-primary);
+}
+
+.metric-type-change-count {
+    color: var(--mud-palette-text-secondary);
+    flex: 0 0 auto;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.metric-type-change-layout {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(260px, 1fr) minmax(260px, 0.82fr);
+    min-height: 300px;
+}
+
+.metric-type-change-list,
+.metric-type-change-details {
+    background: color-mix(in srgb, var(--flux-surface) 94%, var(--flux-surface-2));
+    border: 1px solid var(--flux-border);
+    border-radius: 6px;
+    min-height: 0;
+    min-width: 0;
+}
+
+.metric-type-change-list {
+    overflow: auto;
+    padding: 5px;
+}
+
+.metric-type-change-option {
+    align-items: center;
+    appearance: none;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    cursor: pointer;
+    display: grid;
+    font: inherit;
+    gap: 7px;
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    min-height: 42px;
+    padding: 5px 7px;
+    text-align: left;
+    width: 100%;
+}
+
+.metric-type-change-option + .metric-type-change-option {
+    margin-top: 1px;
+}
+
+.metric-type-change-option:hover,
+.metric-type-change-option.selected {
+    background: var(--flux-surface);
+    border-color: color-mix(in srgb, var(--flux-accent) 20%, var(--flux-border));
+    color: var(--mud-palette-text-primary);
+}
+
+.metric-type-change-option.selected {
+    background: color-mix(in srgb, var(--flux-accent) 7%, var(--flux-surface));
+    box-shadow: inset 2px 0 0 var(--flux-accent);
+}
+
+.metric-type-change-option.current:not(.selected) {
+    background: color-mix(in srgb, var(--mud-palette-primary) 4%, transparent);
+}
+
+.metric-type-change-option-icon {
+    align-items: center;
+    color: var(--mud-palette-info);
+    display: inline-flex;
+    height: 20px;
+    justify-content: center;
+    width: 20px;
+}
+
+.metric-type-change-option strong,
+.metric-type-change-option small,
+.metric-type-change-option em {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.metric-type-change-option strong {
+    color: var(--mud-palette-text-primary);
+    font-size: 12px;
+    font-weight: 760;
+    line-height: 1.2;
+}
+
+.metric-type-change-option small,
+.metric-type-change-option em {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10px;
+    font-style: normal;
+}
+
+.metric-type-change-option em {
+    border: 1px solid transparent;
+    border-radius: 5px;
+    font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+    justify-self: end;
+    padding: 2px 4px;
+}
+
+.metric-type-change-option.current em {
+    border-color: color-mix(in srgb, var(--flux-accent) 26%, var(--flux-border));
+    color: var(--flux-accent);
+    font-family: inherit;
+    font-weight: 760;
+}
+
+.metric-type-change-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+}
+
+.metric-type-change-selected {
+    align-items: flex-start;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 26px minmax(0, 1fr);
+    min-width: 0;
+}
+
+.metric-type-change-selected-icon {
+    align-items: center;
+    background: var(--flux-accent-soft);
+    border: 1px solid color-mix(in srgb, var(--flux-accent) 34%, var(--flux-border));
+    border-radius: 6px;
+    color: var(--flux-accent);
+    display: inline-flex;
+    height: 26px;
+    justify-content: center;
+    width: 26px;
+}
+
+.metric-type-change-selected strong,
+.metric-type-change-selected span {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.metric-type-change-selected strong {
+    color: var(--mud-palette-text-primary);
+    font-size: 12.5px;
+    font-weight: 780;
+    line-height: 1.25;
+}
+
+.metric-type-change-selected span {
+    color: var(--mud-palette-text-secondary);
+    font-size: 11px;
+    line-height: 1.35;
+    margin-top: 2px;
+}
+
+.metric-type-change-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.metric-type-change-meta span {
+    background: var(--flux-surface-2);
+    border: 1px solid var(--flux-border);
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1;
+    padding: 4px 6px;
+}
+
+.metric-type-change-defaults {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 2px;
+    min-width: 0;
+    padding-top: 7px;
+}
+
+.metric-type-change-section-label {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10.5px;
+    font-weight: 760;
+}
+
+.metric-type-change-default-row {
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    display: grid;
+    font-size: 11px;
+    gap: 8px;
+    grid-template-columns: minmax(80px, 0.8fr) minmax(0, 1fr);
+    min-height: 22px;
+}
+
+.metric-type-change-default-row span,
+.metric-type-change-default-row strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.metric-type-change-default-row strong {
+    color: var(--mud-palette-text-primary);
+    font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.metric-type-change-empty-defaults,
+.metric-type-change-note {
+    align-items: center;
+    background: var(--flux-surface-2);
+    border: 1px solid var(--flux-border);
+    border-radius: 6px;
+    color: var(--mud-palette-text-secondary);
+    display: grid;
+    font-size: 11px;
+    gap: 7px;
+    grid-template-columns: 18px minmax(0, 1fr);
+    min-height: 30px;
+    padding: 6px 7px;
+}
+
+.metric-type-change-empty-defaults ::deep .mud-icon-root {
+    color: var(--mud-palette-success);
+}
+
+.metric-type-change-note {
+    margin-top: auto;
+}
+
+.metric-type-change-note.warning {
+    background: color-mix(in srgb, var(--mud-palette-warning) 8%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--mud-palette-warning) 28%, var(--flux-border));
+    color: var(--mud-palette-text-primary);
+}
+
+.metric-type-change-note.warning ::deep .mud-icon-root {
+    color: var(--mud-palette-warning);
+}
+
+.metric-type-change-actions {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    width: 100%;
+}
+
+@media (max-width: 760px) {
+    .metric-type-change-topbar,
+    .metric-type-change-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .metric-type-change-count {
+        align-self: flex-start;
+    }
+
+    .metric-type-change-layout {
+        grid-template-columns: minmax(0, 1fr);
+        min-height: 0;
+    }
+}

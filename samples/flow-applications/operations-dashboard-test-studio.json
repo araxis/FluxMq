@@ -37,19 +37,19 @@
       },
       "metrics": {
         "messageVolume": {
-          "typeId": "event.count",
+          "typeId": "message.count.windowed",
           "displayName": "Messages",
-          "parameters": { "window": "60s", "topicStartsWith": "factory/" }
+          "parameters": { "window": "60s", "topic": "factory/#" }
         },
         "messageRate": {
           "typeId": "event.rate",
           "displayName": "Message rate",
-          "parameters": { "window": "60s", "topicStartsWith": "factory/" }
+          "parameters": { "window": "60s", "topic": "factory/#" }
         },
         "topicVolume": {
-          "typeId": "topic.unique-count",
+          "typeId": "topic.count.windowed",
           "displayName": "Topics",
-          "parameters": { "window": "60s", "topicStartsWith": "factory/" }
+          "parameters": { "window": "60s", "topic": "factory/#" }
         }
       },
       "dashboards": {
@@ -142,12 +142,10 @@
               }
             },
             "statusStrip": {
-              "type": "status.strip",
+              "type": "status.value",
               "configuration": {
                 "title": "Status",
                 "metric": "messageVolume",
-                "displayMetrics": "messages,recent,currentRate,payloadBytes",
-                "metricCardColumns": "4",
                 "topicStartsWith": "factory/"
               }
             },
@@ -188,9 +186,9 @@
               }
             },
             "qosRetain": {
-              "type": "qos.retain.breakdown",
+              "type": "qos.breakdown",
               "configuration": {
-                "title": "QoS / Retain",
+                "title": "QoS breakdown",
                 "metric": "messageVolume",
                 "topicStartsWith": "factory/"
               }

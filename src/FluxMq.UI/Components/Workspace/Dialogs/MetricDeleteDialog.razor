@@ -1,0 +1,109 @@
+<MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
+    <TitleContent>
+        <div class="metric-delete-title">
+            <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" Color="Color.Error" />
+            <span>Delete metric</span>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="metric-delete-dialog">
+            <div class="metric-delete-warning">
+                <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Size="Size.Small" />
+                <div>
+                    <strong>Delete @MetricId?</strong>
+                    <span>This removes the metric resource from the app. Dashboard bindings that use it will no longer resolve.</span>
+                </div>
+            </div>
+
+            <div class="metric-delete-id">
+                <span>Metric id</span>
+                <code>@MetricId</code>
+            </div>
+
+            <div class="metric-delete-references">
+                <div class="metric-delete-section-heading">
+                    <span>References</span>
+                    <small>@ReferenceCountText</small>
+                </div>
+
+                @if (References.Count == 0)
+                {
+                    <div class="metric-delete-empty">
+                        <MudIcon Icon="@Icons.Material.Filled.LinkOff" Size="Size.Small" />
+                        <span>Not used by any dashboard binding.</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="metric-delete-reference-list">
+                        @foreach (var reference in References)
+                        {
+                            <div class="metric-delete-reference-row" title="@ReferenceTitle(reference)">
+                                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" />
+                                <span class="metric-delete-reference-main">
+                                    <strong>@reference.WidgetName</strong>
+                                    <span>@ReferenceLocationLine(reference)</span>
+                                </span>
+                                @if (!string.IsNullOrWhiteSpace(reference.WidgetType))
+                                {
+                                    <em>@reference.WidgetType</em>
+                                }
+                                @if (reference.IsPrimary)
+                                {
+                                    <small>Primary</small>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <div class="metric-delete-actions">
+            <MudButton OnClick="@Cancel" Size="Size.Small">Cancel</MudButton>
+            <MudButton Color="Color.Error"
+                       Variant="Variant.Filled"
+                       Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.DeleteOutline"
+                       OnClick="@Confirm">Delete metric</MudButton>
+        </div>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public string MetricId { get; set; } = string.Empty;
+
+    [Parameter] public IReadOnlyList<MetricReferenceSummary> References { get; set; } = [];
+
+    private string ReferenceCountText =>
+        References.Count == 1 ? "1 binding" : $"{References.Count} bindings";
+
+    private static string ReferenceCellLabel(MetricReferenceSummary reference)
+        => !string.IsNullOrWhiteSpace(reference.CellLabel)
+            ? $"Cell {reference.CellLabel}"
+            : string.IsNullOrWhiteSpace(reference.CellName)
+                ? string.Empty
+                : $"Cell {reference.CellName}";
+
+    private static string ReferenceLocationLine(MetricReferenceSummary reference)
+    {
+        var cell = ReferenceCellLabel(reference);
+        return string.IsNullOrWhiteSpace(cell)
+            ? reference.DashboardName
+            : $"{reference.DashboardName} · {cell}";
+    }
+
+    private static string ReferenceTitle(MetricReferenceSummary reference)
+    {
+        var role = reference.IsPrimary ? "Primary binding" : "Binding";
+        var widgetType = string.IsNullOrWhiteSpace(reference.WidgetType) ? "widget" : reference.WidgetType;
+        return $"{role}: {reference.WidgetName} in {ReferenceLocationLine(reference)} ({widgetType})";
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Confirm() => MudDialog.Close(DialogResult.Ok(true));
+}

@@ -1,7 +1,9 @@
 using Shouldly;
 using FluxFlow.Engine.Definitions;
+using FluxMq.App;
 using FluxMq.App.Definitions;
 using FluxMq.Scenarios;
+using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 
 namespace FluxMq.App.Tests.Definitions;
@@ -9,6 +11,40 @@ namespace FluxMq.App.Tests.Definitions;
 public sealed class FluxMqApplicationDefinitionValidatorTests
 {
     private readonly FluxMqApplicationDefinitionValidator _validator = new();
+
+    [Fact]
+    public void Validate_AcceptsOperationsDashboardTestStudioSample()
+    {
+        var samplePath = Path.Combine(
+            FindRepositoryRoot(),
+            "samples",
+            "flow-applications",
+            "operations-dashboard-test-studio.json");
+        var configuration = new ConfigurationBuilder()
+            .AddJsonFile(samplePath, optional: false, reloadOnChange: false)
+            .Build();
+        var definition = new FlowApplicationConfigurationLoader().Load(configuration);
+
+        var result = _validator.Validate(definition);
+
+        result.IsValid.ShouldBeTrue(string.Join(Environment.NewLine, result.Errors.Select(error => error.Message)));
+    }
+
+    private static string FindRepositoryRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "FluxMq.sln")))
+            {
+                return directory.FullName;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Could not locate the FluxMq repository root.");
+    }
 
     [Fact]
     public void Validate_AcceptsApplicationWithSharedResourcesAndMultipleWorkflows()
