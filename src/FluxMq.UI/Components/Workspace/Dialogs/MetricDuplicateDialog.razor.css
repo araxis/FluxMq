@@ -11,7 +11,7 @@
 .metric-duplicate-dialog {
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    gap: 6px;
     min-width: 0;
 }
 
@@ -19,19 +19,19 @@
 .metric-duplicate-id,
 .metric-duplicate-note,
 .metric-duplicate-validation {
-    border-radius: 6px;
+    border-radius: 5px;
     min-width: 0;
 }
 
 .metric-duplicate-source {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface) 94%, var(--flux-surface-2));
-    border: 1px solid var(--flux-border);
+    background: transparent;
+    border: 1px dashed color-mix(in srgb, var(--flux-border) 78%, transparent);
     display: grid;
-    gap: 7px;
+    gap: 6px;
     grid-template-columns: 58px minmax(0, 1fr);
-    min-height: 32px;
-    padding: 5px 8px;
+    min-height: 30px;
+    padding: 4px 7px;
 }
 
 .metric-duplicate-source span,
@@ -54,7 +54,7 @@
 .metric-duplicate-field {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
     min-width: 0;
 }
 
@@ -62,12 +62,12 @@
     appearance: none;
     background: var(--flux-surface-2);
     border: 1px solid var(--flux-border);
-    border-radius: 6px;
+    border-radius: 5px;
     color: var(--mud-palette-text-primary);
     font: inherit;
     font-size: 12px;
     font-weight: 650;
-    height: 31px;
+    height: 29px;
     min-width: 0;
     outline: 0;
     padding: 0 9px;
@@ -92,8 +92,8 @@
     font-size: 11px;
     gap: 6px;
     grid-template-columns: 16px minmax(0, 1fr);
-    min-height: 29px;
-    padding: 4px 7px;
+    min-height: 27px;
+    padding: 3px 7px;
 }
 
 .metric-duplicate-id span {
@@ -111,19 +111,19 @@
     gap: 6px;
     grid-template-columns: 18px minmax(0, 1fr);
     line-height: 1.25;
-    min-height: 30px;
-    padding: 6px 8px;
+    min-height: 27px;
+    padding: 4px 7px;
 }
 
 .metric-duplicate-note {
-    background: var(--flux-surface-2);
-    border: 1px solid var(--flux-border);
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
     color: var(--mud-palette-text-secondary);
 }
 
 .metric-duplicate-validation {
-    background: color-mix(in srgb, var(--mud-palette-error) 8%, var(--flux-surface));
-    border: 1px solid color-mix(in srgb, var(--mud-palette-error) 34%, var(--flux-border));
+    background: color-mix(in srgb, var(--mud-palette-error) 5%, var(--flux-surface));
+    border: 1px solid color-mix(in srgb, var(--mud-palette-error) 26%, var(--flux-border));
     color: var(--mud-palette-error);
 }
 
@@ -152,7 +152,7 @@
 
     .metric-duplicate-actions {
         align-items: stretch;
-        flex-direction: column-reverse;
+        flex-direction: column;
     }
 
     .metric-duplicate-actions ::deep .mud-button-root {
