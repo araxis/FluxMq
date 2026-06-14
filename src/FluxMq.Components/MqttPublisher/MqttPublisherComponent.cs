@@ -24,13 +24,14 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource, IAsync
     private readonly RuntimeNode _publisherRuntime;
     private readonly ActionBlock<MqttPublishRequest> _input;
     private readonly ActionBlock<ComponentMqttPublishResult> _resultSink;
+    private readonly ActionBlock<FlowError> _packageErrors;
     private readonly IDisposable _resultLink;
+    private readonly IDisposable _errorLink;
     private readonly BroadcastBlock<FlowError> _errors;
     private readonly BufferBlock<FlowLogEntry> _entries;
     private readonly BufferBlock<FlowEvent> _events;
     private readonly SemaphoreSlim _startLock = new(1, 1);
     private readonly Task _completion;
-    private readonly Task _errorPump;
     private int _publishedCount;
     private int _started;
     private string? _lastPublishedTopic;
@@ -55,7 +56,13 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource, IAsync
         _resultSink = new ActionBlock<ComponentMqttPublishResult>(
             PublishSuccess,
             new ExecutionDataflowBlockOptions { BoundedCapacity = boundedCapacity });
+        _packageErrors = new ActionBlock<FlowError>(
+            PublishMappedError,
+            new ExecutionDataflowBlockOptions { BoundedCapacity = boundedCapacity });
         _resultLink = LinkResultSink(_publisherRuntime, _resultSink);
+        _errorLink = _publisher.Errors.LinkTo(
+            _packageErrors,
+            new DataflowLinkOptions { PropagateCompletion = true });
         _input = new ActionBlock<MqttPublishRequest>(
             PublishAsync,
             new ExecutionDataflowBlockOptions
@@ -65,7 +72,6 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource, IAsync
                 MaxDegreeOfParallelism = maxDegreeOfParallelism
             });
 
-        _errorPump = PumpErrorsAsync();
         _completion = CompleteWhenInnerNodeStopsAsync();
     }
 
@@ -97,6 +103,7 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource, IAsync
         Complete();
         await Completion.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         _resultLink.Dispose();
+        _errorLink.Dispose();
         foreach (var output in _publisherRuntime.Outputs)
         {
             await output.DisposeAsync().ConfigureAwait(false);
@@ -193,18 +200,6 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource, IAsync
         }
     }
 
-    private async Task PumpErrorsAsync()
-    {
-        var errorSource = (IReceivableSourceBlock<FlowError>)_publisher.Errors;
-        while (await _publisher.Errors.OutputAvailableAsync().ConfigureAwait(false))
-        {
-            while (errorSource.TryReceive(out var error))
-            {
-                PublishMappedError(error);
-            }
-        }
-    }
-
     private async Task CompleteWhenInnerNodeStopsAsync()
     {
         try
@@ -212,7 +207,7 @@ public sealed class MqttPublisherComponent : IFlowNode, IFlowEventSource, IAsync
             await _input.Completion.ConfigureAwait(false);
             _publisher.Complete();
             await _publisher.Completion.ConfigureAwait(false);
-            await Task.WhenAll(_resultSink.Completion, _errorPump).ConfigureAwait(false);
+            await Task.WhenAll(_resultSink.Completion, _packageErrors.Completion).ConfigureAwait(false);
 
             _entries.Complete();
             _events.Complete();

@@ -542,6 +542,23 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public void SetActiveDashboardCellReference_ActivatesDashboardAndCell()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddDashboard("ops");
+        service.AddDashboard("debug");
+        service.SetActiveDashboard("debug");
+        service.SetActiveDashboardLive(true);
+
+        service.SetActiveDashboardCellReference("ops", "cell");
+
+        service.ActiveArtifactKind.ShouldBe(WorkspaceArtifactKind.Dashboard);
+        service.ActiveDashboardName.ShouldBe("ops");
+        service.ActiveDashboardCellName.ShouldBe("cell");
+        service.IsActiveDashboardLive.ShouldBeFalse();
+    }
+
+    [Fact]
     public void GetActiveTestScenario_ReflectsLoadedSteps()
     {
         var service = new FlowWorkspaceService(new FlowDefinitionComposer());

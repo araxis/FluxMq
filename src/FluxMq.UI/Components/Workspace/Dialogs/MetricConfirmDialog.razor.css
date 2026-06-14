@@ -1,0 +1,67 @@
+.metric-confirm-title {
+    align-items: center;
+    color: var(--mud-palette-text-primary);
+    display: flex;
+    font-size: 13px;
+    font-weight: 780;
+    gap: 7px;
+    min-width: 0;
+}
+
+.metric-confirm-dialog {
+    align-items: flex-start;
+    border: 1px solid var(--flux-border);
+    border-radius: 6px;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 18px minmax(0, 1fr);
+    min-width: 0;
+    padding: 8px;
+}
+
+.metric-confirm-dialog.warning {
+    background: color-mix(in srgb, var(--mud-palette-warning) 9%, var(--flux-surface));
+    border-color: color-mix(in srgb, var(--mud-palette-warning) 36%, var(--flux-border));
+    color: var(--mud-palette-warning);
+}
+
+.metric-confirm-dialog.danger {
+    background: color-mix(in srgb, var(--mud-palette-error) 8%, var(--flux-surface));
+    border-color: color-mix(in srgb, var(--mud-palette-error) 34%, var(--flux-border));
+    color: var(--mud-palette-error);
+}
+
+.metric-confirm-dialog strong,
+.metric-confirm-dialog span {
+    display: block;
+    min-width: 0;
+}
+
+.metric-confirm-dialog strong {
+    color: var(--mud-palette-text-primary);
+    font-size: 12px;
+    font-weight: 780;
+    line-height: 1.25;
+}
+
+.metric-confirm-dialog span {
+    color: var(--mud-palette-text-secondary);
+    font-size: 11px;
+    line-height: 1.35;
+    margin-top: 2px;
+}
+
+.metric-confirm-actions {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    width: 100%;
+}
+
+@media (max-width: 520px) {
+    .metric-confirm-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}

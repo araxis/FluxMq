@@ -1,0 +1,129 @@
+@using FluxMq.App.Metrics
+
+<MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true })">
+    <TitleContent>
+        <div class="metric-rename-title">
+            <MudIcon Icon="@Icons.Material.Filled.DriveFileRenameOutline" Size="Size.Small" Color="Color.Primary" />
+            <span>Rename metric</span>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="metric-rename-dialog">
+            <div class="metric-rename-current">
+                <span>Current id</span>
+                <code>@CurrentMetricId</code>
+            </div>
+
+            <label class="metric-rename-field">
+                <span>New metric id</span>
+                <input value="@_metricId"
+                       aria-label="New metric id"
+                       @oninput="@OnMetricIdInput"
+                       @onkeydown="@OnKeyDown" />
+            </label>
+
+            @if (!string.IsNullOrWhiteSpace(ValidationMessage))
+            {
+                <div class="metric-rename-validation" role="alert">
+                    <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Size="Size.Small" />
+                    <span>@ValidationMessage</span>
+                </div>
+            }
+            else
+            {
+                <div class="metric-rename-note">
+                    <MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small" />
+                    <span>Dashboard bindings will be updated to the new id.</span>
+                </div>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <div class="metric-rename-actions">
+            <MudButton OnClick="@Cancel" Size="Size.Small">Cancel</MudButton>
+            <MudButton Color="Color.Primary"
+                       Variant="Variant.Filled"
+                       Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.DriveFileRenameOutline"
+                       Disabled="@(!CanRename)"
+                       OnClick="@Submit">Rename</MudButton>
+        </div>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public string CurrentMetricId { get; set; } = string.Empty;
+
+    [Parameter] public IReadOnlyList<string> ExistingMetricIds { get; set; } = [];
+
+    private string _metricId = string.Empty;
+    private bool _initialized;
+
+    private string NormalizedMetricId => _metricId.Trim();
+
+    private bool CanRename =>
+        string.IsNullOrWhiteSpace(ValidationMessage) &&
+        !string.Equals(NormalizedMetricId, CurrentMetricId, StringComparison.Ordinal);
+
+    private string? ValidationMessage
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(NormalizedMetricId))
+            {
+                return "Metric id is required.";
+            }
+
+            if (!string.Equals(NormalizedMetricId, FluxMetricNaming.ToArtifactId(NormalizedMetricId), StringComparison.Ordinal))
+            {
+                return "Use letters, numbers, dots, dashes, and underscores.";
+            }
+
+            if (!string.Equals(NormalizedMetricId, CurrentMetricId, StringComparison.Ordinal) &&
+                ExistingMetricIds.Contains(NormalizedMetricId, StringComparer.Ordinal))
+            {
+                return $"Metric id '{NormalizedMetricId}' already exists.";
+            }
+
+            return null;
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (_initialized)
+        {
+            return;
+        }
+
+        _initialized = true;
+        _metricId = CurrentMetricId;
+    }
+
+    private void OnMetricIdInput(ChangeEventArgs args)
+        => _metricId = args.Value?.ToString() ?? string.Empty;
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Submit()
+    {
+        if (!CanRename)
+        {
+            return;
+        }
+
+        MudDialog.Close(DialogResult.Ok(new MetricRenameResult(NormalizedMetricId)));
+    }
+
+    private void OnKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            Submit();
+        }
+    }
+
+    public sealed record MetricRenameResult(string MetricId);
+}

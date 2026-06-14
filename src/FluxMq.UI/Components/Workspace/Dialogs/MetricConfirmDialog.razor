@@ -1,0 +1,68 @@
+<MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true })">
+    <TitleContent>
+        <div class="metric-confirm-title">
+            <MudIcon Icon="@TitleIcon" Size="Size.Small" Color="@ActionColor" />
+            <span>@Title</span>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="@DialogClass">
+            <MudIcon Icon="@BodyIcon" Size="Size.Small" />
+            <div>
+                <strong>@Message</strong>
+                @if (!string.IsNullOrWhiteSpace(Detail))
+                {
+                    <span>@Detail</span>
+                }
+            </div>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <div class="metric-confirm-actions">
+            <MudButton OnClick="@Cancel" Size="Size.Small">Cancel</MudButton>
+            <MudButton Color="@ActionColor"
+                       Variant="Variant.Filled"
+                       Size="Size.Small"
+                       StartIcon="@ActionIcon"
+                       OnClick="@Confirm">@ConfirmText</MudButton>
+        </div>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public string Title { get; set; } = "Confirm";
+
+    [Parameter] public string Message { get; set; } = string.Empty;
+
+    [Parameter] public string? Detail { get; set; }
+
+    [Parameter] public string ConfirmText { get; set; } = "Continue";
+
+    [Parameter] public string Tone { get; set; } = "warning";
+
+    private bool IsDanger => string.Equals(Tone, "danger", StringComparison.OrdinalIgnoreCase);
+
+    private Color ActionColor => IsDanger ? Color.Error : Color.Warning;
+
+    private string ActionIcon => IsDanger
+        ? Icons.Material.Filled.DeleteOutline
+        : Icons.Material.Filled.Check;
+
+    private string TitleIcon => IsDanger
+        ? Icons.Material.Filled.ReportProblem
+        : Icons.Material.Filled.Tune;
+
+    private string BodyIcon => IsDanger
+        ? Icons.Material.Filled.ReportProblem
+        : Icons.Material.Filled.Info;
+
+    private string DialogClass => IsDanger
+        ? "metric-confirm-dialog danger"
+        : "metric-confirm-dialog warning";
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Confirm() => MudDialog.Close(DialogResult.Ok(true));
+}

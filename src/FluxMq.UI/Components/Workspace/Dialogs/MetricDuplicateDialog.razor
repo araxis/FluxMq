@@ -1,0 +1,113 @@
+<MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true })">
+    <TitleContent>
+        <div class="metric-duplicate-title">
+            <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" Color="Color.Primary" />
+            <span>Duplicate metric</span>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="metric-duplicate-dialog">
+            <div class="metric-duplicate-source">
+                <span>Source</span>
+                <code>@SourceMetricId</code>
+            </div>
+
+            <label class="metric-duplicate-field">
+                <span>Display name</span>
+                <input value="@_displayName"
+                       aria-label="Duplicate display name"
+                       @oninput="@OnDisplayNameInput"
+                       @onkeydown="@OnKeyDown" />
+            </label>
+
+            <div class="metric-duplicate-id">
+                <MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" />
+                <span>@MetricIdPreview</span>
+            </div>
+
+            @if (!CanDuplicate)
+            {
+                <div class="metric-duplicate-validation" role="alert">
+                    <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Size="Size.Small" />
+                    <span>Display name is required.</span>
+                </div>
+            }
+            else
+            {
+                <div class="metric-duplicate-note">
+                    <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" />
+                    <span>Parameters and metric type will be copied. Dashboard bindings will stay on the original metric.</span>
+                </div>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <div class="metric-duplicate-actions">
+            <MudButton OnClick="@Cancel" Size="Size.Small">Cancel</MudButton>
+            <MudButton Color="Color.Primary"
+                       Variant="Variant.Filled"
+                       Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.ContentCopy"
+                       Disabled="@(!CanDuplicate)"
+                       OnClick="@Submit">Duplicate</MudButton>
+        </div>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public string SourceMetricId { get; set; } = string.Empty;
+
+    [Parameter] public string SourceDisplayName { get; set; } = string.Empty;
+
+    [Parameter] public IReadOnlyList<string> ExistingMetricIds { get; set; } = [];
+
+    private string _displayName = string.Empty;
+    private bool _initialized;
+
+    private string DisplayName => _displayName.Trim();
+
+    private string MetricIdPreview => MetricDesignerState.UniqueMetricId(DisplayName, ExistingMetricIds);
+
+    private bool CanDuplicate => !string.IsNullOrWhiteSpace(DisplayName);
+
+    protected override void OnParametersSet()
+    {
+        if (_initialized)
+        {
+            return;
+        }
+
+        _initialized = true;
+        var sourceName = string.IsNullOrWhiteSpace(SourceDisplayName)
+            ? SourceMetricId
+            : SourceDisplayName;
+        _displayName = $"{sourceName} Copy";
+    }
+
+    private void OnDisplayNameInput(ChangeEventArgs args)
+        => _displayName = args.Value?.ToString() ?? string.Empty;
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Submit()
+    {
+        if (!CanDuplicate)
+        {
+            return;
+        }
+
+        MudDialog.Close(DialogResult.Ok(new MetricDuplicateResult(MetricIdPreview, DisplayName)));
+    }
+
+    private void OnKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            Submit();
+        }
+    }
+
+    public sealed record MetricDuplicateResult(string MetricId, string DisplayName);
+}

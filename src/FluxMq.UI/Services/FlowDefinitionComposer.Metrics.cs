@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using FluxMq.App.Definitions;
 using FluxMq.App.Metrics;
+using FluxMq.UI.Models;
 
 namespace FluxMq.UI.Services;
 
@@ -133,19 +134,25 @@ public sealed partial class FlowDefinitionComposer
 
     public int CountMetricReferences(string json, string metricName)
     {
-        if (string.IsNullOrWhiteSpace(metricName))
-        {
-            return 0;
-        }
+        return GetMetricReferenceSummaries(json, metricName).Count;
+    }
 
+    public IReadOnlyList<MetricReferenceSummary> GetMetricReferenceSummaries(string json, string metricName)
+    {
         var root = ParseOrCreate(json);
         var flowApplication = GetFlowApplication(root);
-        if (flowApplication["dashboards"] is not JsonObject dashboards)
+        if (string.IsNullOrWhiteSpace(metricName))
         {
-            return 0;
+            return [];
         }
 
-        var count = 0;
+        if (flowApplication["dashboards"] is not JsonObject dashboards)
+        {
+            return [];
+        }
+
+        var summaries = new List<MetricReferenceSummary>();
+        var normalizedMetricName = metricName.Trim();
         foreach (var dashboard in dashboards)
         {
             if (dashboard.Value is not JsonObject dashboardObject ||
@@ -154,14 +161,59 @@ public sealed partial class FlowDefinitionComposer
                 continue;
             }
 
-            count += bindings
-                .Select(static binding => binding.Value as JsonObject)
-                .Where(static binding => binding is not null)
-                .Cast<JsonObject>()
-                .Count(binding => BindingUsesMetric(binding, metricName.Trim()));
+            var widgets = dashboardObject["widgets"] as JsonObject ?? new JsonObject();
+            foreach (var binding in bindings)
+            {
+                if (binding.Value is not JsonObject bindingObject ||
+                    !BindingUsesMetric(bindingObject, normalizedMetricName))
+                {
+                    continue;
+                }
+
+                var widgetName = binding.Key;
+                var widgetType = widgets[widgetName] is JsonObject widget
+                    ? ReadString(widget, "type") ?? string.Empty
+                    : string.Empty;
+                var cell = FindDashboardCellForWidget(dashboardObject, widgetName);
+                summaries.Add(new MetricReferenceSummary(
+                    dashboard.Key,
+                    widgetName,
+                    widgetType,
+                    string.Equals(ReadString(bindingObject, "primaryMetric"), normalizedMetricName, StringComparison.Ordinal),
+                    cell.HasValue ? cell.Value.Name : null,
+                    cell.HasValue ? cell.Value.Label : null));
+            }
         }
 
-        return count;
+        return summaries;
+    }
+
+    private static (string Name, string Label)? FindDashboardCellForWidget(JsonObject dashboard, string widgetName)
+    {
+        if (string.IsNullOrWhiteSpace(widgetName) ||
+            dashboard["layout"] is not JsonObject layout ||
+            layout["cells"] is not JsonObject cells)
+        {
+            return null;
+        }
+
+        foreach (var cell in ReadDashboardCells(cells))
+        {
+            if (string.Equals(cell.Widget, widgetName, StringComparison.Ordinal))
+            {
+                return (cell.Name, DashboardCellLocationLabel(cell));
+            }
+        }
+
+        return null;
+    }
+
+    private static string DashboardCellLocationLabel(DashboardCellSnapshot cell)
+    {
+        var origin = $"R{cell.Row + 1} C{cell.Column + 1}";
+        return cell.IsMerged
+            ? $"{origin} / {cell.ColumnSpan} x {cell.RowSpan}"
+            : origin;
     }
 
     internal static IReadOnlyDictionary<string, FluxMetricResourceDefinition> ReadMetricResources(JsonObject metrics)

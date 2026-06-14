@@ -2,6 +2,110 @@
 
 Chronological progress record.
 
+## 2026-06-13 - Metrics tab redesign slice
+
+- Redesigned the app-level Metrics tab into a dense two-pane workspace:
+  - command bar with count, search, type filter, reset, and `New metric`
+  - compact metric resource list with type, parameter summary, reference count, and latest reading state
+  - inspector-style draft editor with identity fields, type selector, descriptor-driven parameters, validation, references, and live preview
+- Added a catalog-driven metric creation dialog that derives metric type options and default parameters from `IFluxMetricCatalog`.
+- Added draft-based save/cancel behavior, dirty-state prompting on selection/create, metric type reset confirmation, duplicate/delete actions, and rename through the existing metric rename path so dashboard bindings are preserved.
+- Added read-only metric reference summaries for dashboard/widget bindings.
+- Added UI helper test coverage for row formatting, filtering, default parameters, draft dirty/validation/save normalization, rename binding updates, reference summaries, and duplicate resources.
+- Verified:
+  - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false` passed
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false` passed with 410 tests
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -m:1` passed with 754 tests
+- Remaining check: manual desktop visual smoke for the redesigned Metrics tab in light/dark and narrow windows.
+- Follow-up visual polish pass tightened the same Metrics tab without changing saved definitions:
+  - metric rows now use type and latest-value pills for clearer scanning
+  - secondary editor commands moved into a compact icon action strip with tooltips
+  - metric type details now show a callout plus compact facts
+  - live preview now renders as a status/value card, and references show widget type when available
+  - verified again with UI build, UI tests, and full solution tests
+- Second alignment pass replaced the Metrics toolbar's form-like search/select controls with flat app controls so search, type filter, reset, and create align on one baseline; editor MudBlazor inputs were also toned down with scoped flat styling to reduce visual noise.
+- Because the desktop app was running and locking the default UI build output, verification used temporary artifact output folders:
+  - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 410 tests
+- Third compact editor pass reduced visual noise in the same Metrics tab:
+  - collapsed separate Identity, Metric type, Parameters, Live preview, References, and Validation cards into one compact edit panel plus a narrow details rail
+  - removed always-visible helper text and the success validation card so the editor shows labels, values, and real issues instead of persistent explanatory copy
+  - changed validation to a slim alert strip plus an error-only side detail panel
+  - tightened preview, type facts, references, gaps, borders, and responsive behavior for a flatter app-workspace feel
+  - verified again with temp-output UI build and UI tests; `git diff --check` passed with only the existing line-ending normalization warning
+- Fourth density pass focused on the Metrics list/workspace frame:
+  - shortened the command bar controls and editor header
+  - changed the desktop split to give the compact editor more useful width
+  - reduced metric row height and grid column minimums to avoid horizontal pressure
+  - softened type/latest/reference pills so the list reads more like a flat data grid
+  - tightened editor panel gaps, side rail width, input font sizing, and stacked responsive rows
+  - removed stale CSS from the superseded card layout
+  - verified with temp-output UI build and focused UI tests passing with 410 tests
+- Fifth polish pass redesigned the `New metric` dialog:
+  - replaced form-like MudBlazor search/name fields with flat compact app controls
+  - shortened metric type rows and moved descriptions to the selected details pane
+  - added resource id preview and default-parameter preview without changing the created metric schema
+  - rebuilt the dialog scoped CSS around the same flat Metrics workspace language
+  - verified with temp-output UI build and focused UI tests passing with 410 tests
+- Sixth safety polish pass replaced the Metrics delete message box with a compact confirmation dialog:
+  - shows the metric id in a copy-friendly monospace row
+  - shows dashboard/widget reference count and read-only reference rows before deletion
+  - keeps the destructive action visually distinct with a flat warning surface and red primary action
+  - verified with temp-output UI build and focused UI tests passing with 410 tests
+- Seventh confirmation polish pass replaced the remaining Metrics message boxes:
+  - dirty-selection/create/duplicate discard prompts now use a compact flat confirmation dialog
+  - metric type changes now use the same dialog before resetting draft parameters to descriptor defaults
+  - the helper is UI-only and leaves metric runtime/schema behavior unchanged
+  - verified with temp-output UI build and focused UI tests passing with 410 tests
+- Eighth rename polish pass made metric identity an explicit workflow:
+  - the main editor now shows metric id as a read-only metadata row instead of a normal text field
+  - added a compact `Rename metric` dialog with id validation and dashboard-binding update note
+  - rename is available only when the draft is clean, so Save remains focused on metric content edits
+  - existing project rename behavior is still used so dashboard metric bindings stay updated
+  - verified with temp-output UI build and focused UI tests passing with 410 tests
+- Ninth duplicate polish pass made metric copying explicit:
+  - added a compact `Duplicate metric` dialog with source id, display-name input, generated resource-id preview, and copy-behavior note
+  - the UI now creates the copy with the chosen id/display name while preserving type, parameters, labels, and export policy
+  - the copied metric is selected immediately after creation
+  - verified with temp-output UI build and focused UI tests passing with 410 tests
+
+## 2026-06-13 - Candidate validation after FluxFlow package update
+
+- Ran the next V1 candidate-hardening pass after the FluxFlow package update.
+- Fixed the operations dashboard/test-studio sample so it validates with the current metric resource and dashboard widget model:
+  - `messageVolume` now uses `message.count.windowed`
+  - `messageRate` keeps `event.rate` but uses the metric-owned `topic` parameter
+  - `topicVolume` now uses `topic.count.windowed`
+  - composite `status.strip` and `qos.retain.breakdown` sample widgets were replaced with focused `status.value` and `qos.breakdown` widgets to avoid migration-generated invalid cells
+  - docs-site sample copy was kept in sync
+- Added App test coverage that loads and validates `samples/flow-applications/operations-dashboard-test-studio.json` through the configuration loader.
+- Re-ran candidate gates:
+  - `.\eng\verify-samples.ps1` passed
+  - `dotnet run --project .\src\FluxMq.Cli\FluxMq.Cli.csproj -- validate --config .\samples\flow-applications\operations-dashboard-test-studio.json --output json` returned `isValid: true`
+  - docs-site `npm run build` passed
+  - `dotnet test .\FluxMq.sln --no-restore --nologo --verbosity minimal -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passed with 747 tests
+  - release-shaped restore and Release/win-x64 solution tests passed with 747 tests
+  - `.\eng\package-windows.ps1 -Configuration Release -Version 0.1.0` produced refreshed portable zip and MSI artifacts
+- Local packaging note: the installed global WiX tool was v7 and required the OSMF EULA, so it was replaced with the documented WiX `6.0.2` tool before rerunning the package script.
+- Remaining candidate gap: rerun focused manual packaged-desktop smoke against the refreshed package.
+
+## 2026-06-13 - FluxFlow package update slice
+
+- Updated FluxMQ package references to the newly published FluxFlow package versions:
+  - `FluxFlow.Engine` `1.1.0`
+  - `FluxFlow.Components.Designer` `1.0.1`
+  - `FluxFlow.Components.Secrets`, `FluxFlow.Components.Storage`, and `FluxFlow.Components.Storage.FileSystem` `1.1.0`
+  - remaining consumed `FluxFlow.Components.*` packages `1.2.0`
+- Adapted MQTT publisher and trigger FluxMQ wrappers to the new package output contract:
+  - package `Errors` outputs are now consumed by Dataflow links into local error sinks
+  - removed casts to `IReceivableSourceBlock<FlowError>` because the new package fanout source is linkable but not receivable
+- Verified:
+  - `dotnet restore .\FluxMq.sln --nologo` passed
+  - `dotnet build .\FluxMq.sln --no-restore --nologo --verbosity minimal -p:UseAppHost=false -m:1` passed with 0 warnings
+  - `dotnet test .\FluxMq.sln --no-restore --nologo --verbosity minimal -p:UseSharedCompilation=false -p:UseAppHost=false -m:1` passed with 746 tests
+  - FluxFlow package outdated scan returned no remaining FluxFlow updates
+  - `git diff --check` passed with existing line-ending normalization warnings for edited files
+
 ## 2026-06-05 - V1 candidate QA blocker slice
 
 - Started from `main` on `work/v1-candidate-qa` and kept FluxFlow read-only.
@@ -3590,3 +3694,298 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Migrated the `operations-dashboard-test-studio` sample (and docs-site copy) from dashboard-local metrics to app-level `flowApplication.metrics` resources.
   - Deleted the fully-replaced old runtime (`FluxMetricRuntime.cs`, `FluxMetricStreamModules.cs`). The legacy generic **query** classes (`FluxMetricCatalog`/`FluxMetricDefinition`/`FluxMetricQueryDraft`/`FluxMetricEvaluationEngine`/`FluxMetricValidator`/`FluxMetricPreviewService`/`FluxMetricQuerySummary`/`FluxMetricArtifactDefinition`/`FluxMetricResolver`) remain because the dashboard chart/topic/payload widget query-authoring UI (`DashboardMetricQueryBuilder`/`Dialog`/`Mapper`/`Preview`/`Summary` + the inspector inline editor) still depends on them — a separate dashboard-viz concern, like the out-of-scope `event.*` widgets. Fully deleting them needs a follow-up that re-points that chart-widget query authoring at metric resources.
   - Verification: `dotnet test FluxMq.sln` green (Core 44, Scenarios 36, Components 113, App 132, Cli 18, UI 439 = 782); `git diff --check` clean. Out of scope (unchanged): `mqtt.metrics` inline node, dashboard `event.*` widgets, scenario `assert.metric.threshold`.
+- Metrics tab type-picker polish:
+  - Replaced the inline metric type dropdown in the Metrics editor with a compact read-only type summary plus an explicit `Change` action.
+  - Added a focused type-change dialog with search, current-type marking, selected-type details, parameter default preview, and a single clear action that resets draft parameters to the chosen descriptor defaults.
+  - Kept app JSON, metric schema, runtime behavior, and descriptor defaults unchanged; this is UI workflow polish only.
+  - Verification:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 410 tests.
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings after rerunning without the parallel test build file lock.
+  - Next step: manually smoke the Metrics type-change dialog in the running desktop app and then continue with parameter field density/alignment polish.
+- Metrics tab parameter-field polish:
+  - Replaced full-height MudBlazor parameter form controls in the Metrics editor with compact inspector-style controls that still write to the same draft parameter dictionary.
+  - Topic/text parameters keep wider grid spans, short numeric/select/duration/toggle parameters use compact spans, and the narrow breakpoint stacks every parameter cleanly.
+  - Moved parameter help into small tooltip icons and kept min/max/required metadata in tiny label chips so the section stays aligned without always-visible helper text.
+  - Kept validation, descriptor-driven defaults, metric schema, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 410 tests.
+  - Next step: manually smoke parameter editing in the desktop app, then polish the editor header/action strip if the form still feels cramped.
+- Metrics tab editor-header polish:
+  - Replaced the editor header's warning chip, Mud icon button strip, and Mud save button with one flat title/status/action bar.
+  - The header now shows a compact type icon, display name, parameter summary, resource id metadata, saved/unsaved/error state pill, native icon actions, and a slim Save button.
+  - Added responsive wrapping so the state/actions align cleanly when the editor header stacks.
+  - Kept save/cancel/duplicate/rename/delete behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 410 tests.
+  - Next step: manually smoke the Metrics editor header/action strip, then polish the side rail/read-only cards if the screen still feels noisy.
+- Metrics tab side-rail polish:
+  - Flattened the Metrics editor read-only side rail so type details, live preview, references, and validation read as one quiet context panel instead of heavier mini-cards.
+  - Added compact heading badges for value kind, live/idle state, reference count, and validation count.
+  - Reduced live preview height/value scale, shortened idle copy, removed duplicate type-kind text, and made reference rows smaller with softer separators.
+  - Kept `TryGetLatestMetricReading`, dashboard reference summaries, validation messages, metric schema, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 410 tests.
+  - Next step: manually smoke the full Metrics editor in the desktop app, then tighten the metric list/empty states if anything still reads noisy.
+- Metrics tab list/empty-state polish:
+  - Replaced generic Metrics list/editor empty placeholders with compact local empty states and native flat actions for `New metric` and `Reset filters`.
+  - Tightened metric list rows, header height, latest-value pills, reference-count pills, and narrow-width row height.
+  - Added stable row keys for filtered/selected metric rows.
+  - Kept list filtering, selection, creation, latest reading, reference counts, metric schema, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 410 tests.
+  - Next step: manually smoke the full Metrics tab in the desktop app across empty, filtered, and populated states, then do a final visual sweep for any remaining alignment issues.
+- Metrics tab command-bar alignment polish:
+  - Replaced the last MudBlazor toolbar button in the Metrics command bar with a native flat `New metric` action so it matches search, type filter, reset, and the editor controls.
+  - Tightened command-bar padding/gaps and normalized button icon/text geometry.
+  - Kept creation behavior, dialogs, filtering, metric schema, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 410 tests.
+  - Next step: manually smoke the full Metrics tab in the desktop app, then stop UI polish unless a concrete visual issue remains.
+- Metrics tab identity-field alignment polish:
+  - Replaced the remaining heavier display-name and description inputs in the Metrics editor with the same compact native inspector field language used by the parameter editor.
+  - Removed the now-unused scoped editor input overrides, leaving the id, display name, type, and description blocks on one flat visual system.
+  - Kept draft editing, dirty detection, validation, metric schema, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - First focused UI test run timed out at 2 minutes before reporting results; rerunning with a longer timeout passed.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 410 tests.
+  - Next step: manually smoke the full Metrics tab in the desktop app, then stop UI polish unless a concrete visual issue remains.
+- Metrics tab edit-grid alignment polish:
+  - Normalized the compact identity grid so metric id, display name, type, and description cells stretch to the same row rhythm.
+  - Brought the metric id cell onto the same 50px minimum height and padding language as the editable identity fields, with tighter internal row spacing.
+  - Kept all draft editing, rename, validation, schema, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 410 tests.
+  - Next step: manually inspect the Metrics tab in the desktop app; with no concrete visual issue left, move to the next requested product slice.
+- Metrics tab validation de-duplication:
+  - Removed the full-width validation alert strip from the Metrics editor so validation is no longer represented three times for the same issue.
+  - Kept the compact header state as the save/action status and the side-rail validation block as the single detailed error list.
+  - Removed the now-unused validation-strip CSS.
+  - Kept validation rules, save disabling, draft behavior, schema, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 410 tests.
+  - Next step: visually confirm invalid metric editing now shows one detailed validation area, then move to field-level validation only if needed.
+- Metrics tab validation-state simplification:
+  - Hid the editor header state pill while validation errors exist, so invalid metrics no longer show `Needs attention` in the header and detailed validation in the side rail.
+  - Kept the header state pill for normal `Saved` and `Unsaved` states only.
+  - Added a quiet disabled-save title with the validation summary and removed unused header error-state CSS.
+  - Kept validation rules, side-rail validation details, save disabling, draft behavior, schema, and runtime behavior unchanged.
+  - Verification:
+    - First `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` attempt timed out before reporting; rerun passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 410 tests.
+  - Next step: visually confirm invalid metrics now show only the side-rail validation details, then consider field-level error highlighting if discoverability needs more help.
+- Metrics tab field-level validation hint:
+  - Added a shared `MetricDesignerState.ValidateParameter(...)` helper so parameter-field highlighting uses the same rules as the side-rail validation list.
+  - Invalid parameter controls now get subtle label/control tint and `aria-invalid`, but no inline error sentence, keeping the side rail as the only detailed validation text.
+  - Added focused UI-state test coverage for missing topic and QoS range parameter validation.
+  - Kept save disabling, side-rail validation details, draft behavior, metric schema, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 411 tests.
+  - Next step: visually confirm the invalid Topic filter field is highlighted without repeating the error sentence, then stop validation polish unless another concrete issue appears.
+- Metrics tab identity validation hint:
+  - Added shared `MetricDesignerState.ValidateMetricId(...)` and `ValidateDisplayName(...)` helpers so identity highlighting uses the same messages as draft validation.
+  - Metric id, display name, and unknown type blocks now get subtle invalid tint and `aria-invalid` without adding another visible error sentence.
+  - Added focused UI-state test coverage for empty display name, invalid metric id, duplicate metric id, and valid identity state.
+  - Kept side-rail validation as the single detailed validation text source; save disabling, rename flow, schema, and runtime behavior are unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 412 tests.
+  - Next step: visually confirm empty display name and invalid topic states both highlight locally while keeping only one detailed validation list.
+- Metrics tab validation navigation:
+  - Changed the side-rail validation list from plain strings to structured validation items with optional target field ids.
+  - Validation rows now link to the affected metric id, display name, metric type, or parameter field, while still keeping the side rail as the only detailed validation text.
+  - Added stable field ids and scroll margin to the compact editor fields; rows without a target still render as quiet non-link validation lines.
+  - Kept validation rules, field hints, save disabling, metric schema, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 412 tests.
+  - Next step: visually click validation rows in the Metrics side rail and confirm the editor scrolls to the highlighted field.
+- Metrics tab validation target highlight:
+  - Added a scoped `:target` outline for metric id, identity, type, and parameter fields so validation-row links visibly land on the affected compact field.
+  - Kept the effect flat and non-layout-shifting with outline/box-shadow only; no JavaScript or duplicate validation text was added.
+  - Kept validation rules, field ids, side-rail validation links, schema, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 412 tests.
+  - Next step: manually click a Metrics validation row and confirm the target field scrolls into view with the flat focus outline.
+- Metrics tab validation accessibility wiring:
+  - Added stable message ids to the side-rail validation rows and wired invalid metric id, display name, metric type, and parameter controls with `aria-errormessage`.
+  - Added `tabindex="-1"` to validation target wrappers so linked compact fields can act as focus targets without entering the normal tab order.
+  - Kept the side rail as the single detailed validation text surface; no duplicate inline error messages or JavaScript were added.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 412 tests.
+  - Next step: manually confirm screen-reader/keyboard behavior for invalid Metrics fields if doing a full accessibility pass.
+- Metrics tab reference row polish:
+  - Reworked side-rail reference rows into compact dashboard/widget rows with separate widget and dashboard text, quiet type/primary tags, title text, and a small open-dashboard icon action.
+  - The open action uses the existing workspace dashboard selection path and prompts through the Metrics dirty-discard dialog before leaving an unsaved draft.
+  - Kept metric reference data, dashboard bindings, schema, latest-reading behavior, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 412 tests.
+    - `git diff --check -- src\FluxMq.UI\Components\Workspace\MetricDesigner.razor src\FluxMq.UI\Components\Workspace\MetricDesigner.razor.css` passed with the existing LF-to-CRLF warning for the Razor file.
+  - Next step: manually click a Metrics reference open action with and without dirty editor changes to confirm the prompt and dashboard switch feel right.
+- Metrics tab reference landing polish:
+  - Extended the UI-only metric reference summary with the dashboard cell that hosts each referenced widget.
+  - Added a workspace service method that activates a dashboard and optional dashboard cell in one notification, then changed the Metrics reference open action to use it.
+  - Updated the dashboard designer to seed its selected cell from the workspace service when opening a dashboard from a Metrics reference, so the reference action lands on the widget cell when available.
+  - Added focused tests for reference summary cell names and combined dashboard/cell activation.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 413 tests.
+    - `git diff --check` over the touched Metrics/dashboard/service/test files passed with existing LF-to-CRLF warnings.
+  - Next step: manually click a Metrics reference open action and confirm the dashboard opens in edit mode with the referenced widget cell selected.
+- Metrics tab reference location display:
+  - Added muted dashboard-cell labels to Metrics side-rail reference rows when a referenced widget has a resolved cell.
+  - Added the same quiet cell label to the metric delete confirmation reference list so destructive review shows where each binding lives.
+  - Cleaned up reference action markup alignment in the Metrics side rail.
+  - Kept reference data, bindings, navigation behavior, metric schema, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - The first focused UI test run timed out before reporting results; rerunning with a longer timeout passed.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 413 tests.
+    - Whitespace checks over the touched markup/CSS files passed with the existing LF-to-CRLF warning for the tracked Razor file.
+  - Next step: manually inspect Metrics references and the delete dialog to confirm the cell labels are useful but not visually noisy.
+- Metrics tab reference location label polish:
+  - Kept the technical dashboard cell id on metric reference summaries for navigation, and added a separate display label derived from dashboard cell coordinates.
+  - Metrics reference rows and the delete confirmation now show readable labels such as `Cell R1 C1` instead of raw ids such as `Cell cell`.
+  - Merged cells include their span in the label, while existing dashboard bindings, widget selection, app JSON, metric schema, and runtime behavior remain unchanged.
+  - Added a focused assertion for the new reference summary display label.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 413 tests.
+    - `git diff --check` over the touched reference-summary/composer/markup/test files passed with existing LF-to-CRLF warnings.
+  - Next step: manually confirm the Metrics reference side rail and delete dialog show `Cell R1 C1` style labels clearly at desktop and narrow widths.
+- Metrics tab reference row de-clutter:
+  - Moved dashboard/cell location text into the secondary line under each referenced widget instead of rendering cell location as a separate tag.
+  - Reduced the delete-confirmation reference row from five columns to a calmer two-line main text plus type/primary metadata.
+  - Removed the now-unused muted tag styling from the Metrics side rail and delete dialog.
+  - Kept reference navigation, binding summaries, app JSON, metric schema, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 413 tests.
+    - Whitespace checks over the touched markup/CSS files passed with the existing LF-to-CRLF warning for the tracked Razor file.
+  - Next step: manually inspect the Metrics reference list and delete dialog at narrow width to confirm the two-line reference rows stay compact.
+- Metrics tab reference row responsive polish:
+  - Added narrow-width layout rules for Metrics side-rail reference rows so the icon, main text, metadata, and open action stack into stable tracks instead of squeezing type/primary against the location line.
+  - Added matching compact dialog rules so delete-confirmation reference metadata drops below the main reference text on small screens.
+  - Kept reference data, navigation behavior, app JSON, metric schema, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 413 tests.
+    - Whitespace checks over the touched CSS files passed.
+  - Next step: manually resize the Metrics tab/delete dialog to narrow width and confirm the reference rows stay readable without horizontal pressure.
+- Metrics tab reference title/action wording polish:
+  - Updated Metrics reference row titles and open-action labels to use the readable dashboard/cell location line, for example `ops · Cell R1 C1`.
+  - Added matching title text to delete-confirmation reference rows so truncated rows still expose widget, location, type, and primary-binding context on hover.
+  - Kept visible row layout, reference data, navigation behavior, app JSON, metric schema, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 413 tests.
+    - Whitespace checks over the touched Razor files passed with the existing LF-to-CRLF warning for the tracked Metrics file.
+  - Next step: manually hover/focus the Metrics reference open action and delete-dialog reference rows to confirm the wording is clear.
+- Metrics tab type context simplification:
+  - Removed the separate right-rail `Type details` card because the selected type is already part of the main editor workflow.
+  - Folded the type id, unit, and parameter count into the existing compact type picker line, with the descriptor description kept as hover text.
+  - Narrowed the read-only side rail so live preview, references, and validation stay focused while the main edit panel gets more usable width.
+  - Kept metric definitions, type switching, validation, live preview, references, app JSON, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 413 tests.
+    - `git diff --check -- src\FluxMq.UI\Components\Workspace\MetricDesigner.razor src\FluxMq.UI\Components\Workspace\MetricDesigner.razor.css` passed with the existing LF-to-CRLF warning for the tracked Metrics file.
+    - Whitespace checks over the touched Razor/CSS files passed.
+  - Next step: manually inspect the Metrics editor at desktop width and confirm the side rail feels calmer with preview/references/validation only.
+- Metrics tab idle preview flattening:
+  - Changed the Metrics side-rail idle live-preview state from a bordered mini-card with two visible text lines to a single quiet status row.
+  - Kept the richer live value card only for actual readings, and preserved the stopped/not-emitted detail as hover text.
+  - Removed stale muted-preview-card styling from the scoped Metrics CSS.
+  - Kept latest-reading lookup, formatting, app JSON, metric schema, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 413 tests.
+    - `git diff --check -- src\FluxMq.UI\Components\Workspace\MetricDesigner.razor src\FluxMq.UI\Components\Workspace\MetricDesigner.razor.css` passed with the existing LF-to-CRLF warning for the tracked Metrics file.
+    - Whitespace checks over the touched Razor/CSS files passed.
+  - Next step: manually inspect the Metrics side rail with the app stopped and confirm the idle preview reads as quiet status text, not another card.
+- Metrics tab live-preview badge de-duplication:
+  - Removed the idle badge from the `Live preview` heading so the stopped state is shown once through the quiet `No reading` row.
+  - Kept the `Live` badge when an actual latest metric reading exists.
+  - Deleted the now-unused muted side-badge styling from the scoped Metrics CSS.
+  - Kept latest-reading lookup, formatting, app JSON, metric schema, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 413 tests.
+    - `git diff --check -- src\FluxMq.UI\Components\Workspace\MetricDesigner.razor src\FluxMq.UI\Components\Workspace\MetricDesigner.razor.css` passed with the existing LF-to-CRLF warning for the tracked Metrics file.
+    - Whitespace checks over the touched Razor/CSS files passed.
+  - Next step: manually compare the side rail with and without a live reading to confirm only the active state gets the `Live` badge.
+- Metrics tab empty reference badge de-duplication:
+  - Hid the side-rail `References` count badge when the selected metric has zero dashboard bindings.
+  - Kept the count badge when references exist, so non-empty binding state remains visible at a glance.
+  - Kept the existing `No dashboard bindings.` empty row as the single empty-state message.
+  - Kept reference summaries, dashboard navigation, app JSON, metric schema, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 413 tests.
+    - `git diff --check -- src\FluxMq.UI\Components\Workspace\MetricDesigner.razor src\FluxMq.UI\Components\Workspace\MetricDesigner.razor.css` passed with the existing LF-to-CRLF warning for the tracked Metrics file.
+    - Whitespace checks over the touched Razor/CSS files passed.
+  - Next step: manually inspect a metric with no dashboard bindings and one with bindings to confirm the References badge appears only when useful.
+- Metrics tab saved-state header de-clutter:
+  - Removed the always-visible `Saved` pill from the Metrics editor header so clean drafts do not add a redundant status chip beside the action buttons.
+  - Kept the `Unsaved` pill for dirty drafts while validation is otherwise clear, preserving the visible prompt to save or cancel changes.
+  - Removed the now-unused saved-state dot styling from the scoped Metrics CSS.
+  - Kept draft save/cancel behavior, validation behavior, app JSON, metric schema, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 413 tests.
+    - `git diff --check -- src\FluxMq.UI\Components\Workspace\MetricDesigner.razor src\FluxMq.UI\Components\Workspace\MetricDesigner.razor.css` passed with the existing LF-to-CRLF warning for the tracked Metrics file.
+    - Whitespace checks over the touched Razor/CSS files passed.
+  - Next step: manually inspect the Metrics editor header before and after editing a field to confirm the status chip appears only for unsaved clean-validation drafts.
+- Metrics tab clean-header action de-clutter:
+  - Hid the header `Cancel changes` icon while the selected metric draft is clean, instead of rendering a disabled no-op action.
+  - Kept the cancel command visible as soon as the draft becomes dirty, including invalid dirty drafts where cancel remains useful.
+  - Kept save, duplicate, rename, delete, validation, app JSON, metric schema, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 413 tests.
+    - `git diff --check -- src\FluxMq.UI\Components\Workspace\MetricDesigner.razor src\FluxMq.UI\Components\Workspace\MetricDesigner.razor.css` passed with the existing LF-to-CRLF warning for the tracked Metrics file.
+    - Whitespace checks over the touched Razor/CSS files passed.
+  - Next step: manually inspect the Metrics editor header before and after editing a field to confirm the cancel icon appears only when there are draft changes to discard.
+- Metrics tab clean-save action de-clutter:
+  - Hid the header `Save` button while the selected metric draft is clean, instead of rendering a disabled no-op action.
+  - Kept the `Save` button visible for dirty drafts, with existing validation disabling and validation-summary title text intact.
+  - Simplified the save tooltip/title helper because the clean `No changes to save` branch no longer renders.
+  - Kept save/cancel behavior, duplicate, rename, delete, validation, app JSON, metric schema, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 413 tests.
+    - `git diff --check -- src\FluxMq.UI\Components\Workspace\MetricDesigner.razor src\FluxMq.UI\Components\Workspace\MetricDesigner.razor.css` passed with the existing LF-to-CRLF warning for the tracked Metrics file.
+    - Whitespace checks over the touched Razor/CSS files passed.
+  - Next step: manually inspect the Metrics editor header before and after editing a field to confirm the Save button appears only when there are draft changes to save.
+- Metrics tab dirty-rename action de-clutter:
+  - Hid the header rename icon while the selected metric draft is dirty, instead of rendering a disabled no-op action.
+  - Hid the inline metric-id row rename button while dirty as well, keeping rename visible only in the clean-draft workflow where it can run.
+  - Removed the now-unused dirty rename tooltip helper.
+  - Kept rename behavior, dashboard binding rename updates, save/cancel behavior, app JSON, metric schema, and runtime behavior unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 413 tests.
+    - `git diff --check -- src\FluxMq.UI\Components\Workspace\MetricDesigner.razor src\FluxMq.UI\Components\Workspace\MetricDesigner.razor.css` passed with the existing LF-to-CRLF warning for the tracked Metrics file.
+    - Whitespace checks over the touched Razor/CSS files passed.
+  - Next step: manually inspect the Metrics editor before and after editing a field to confirm rename controls appear only when the draft is clean.
+- Metrics tab duplicate rename affordance cleanup:
+  - Removed the header rename icon entirely because the metric id row already has a contextual `Rename` action beside the id being renamed.
+  - Kept the inline `Rename` button visible only for clean drafts, preserving the existing clean-draft rename workflow.
+  - Touched only markup structure and a local indentation fix; app JSON, metric schema, rename behavior, dashboard binding updates, and runtime behavior remain unchanged.
+  - Verification:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-verify\` passed with 0 warnings.
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false -p:UseAppHost=false -p:OutputPath=D:\Projects\FluxMq\artifacts\ui-tests-verify\` passed with 413 tests.
+    - `git diff --check -- src\FluxMq.UI\Components\Workspace\MetricDesigner.razor src\FluxMq.UI\Components\Workspace\MetricDesigner.razor.css` passed with the existing LF-to-CRLF warning for the tracked Metrics file.
+    - Whitespace checks over the touched Razor/CSS files passed.
+  - Next step: manually inspect the clean Metrics header and metric-id field to confirm rename is discoverable in the id row without duplicating header controls.

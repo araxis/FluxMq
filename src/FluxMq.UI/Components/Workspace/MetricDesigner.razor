@@ -1,233 +1,644 @@
+@using System.Globalization
 @using FluxMq.App.Metrics
-@using FluxMq.UI.Models
 @inject IFluxMetricCatalog Catalog
+@inject DashboardMetricRegistry MetricRegistry
 @inject IDialogService DialogService
 
-<div class="workspace-tab-content">
-    <MudGrid Class="pa-3" Spacing="2" Style="height:100%; overflow:hidden;">
-        <MudItem xs="12" md="4" Style="height:100%; overflow:hidden;">
-            <MudPaper Outlined="true" Class="pa-3" Style="height:100%; overflow:auto;">
-                <MudStack Spacing="2">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-                        <MudText Typo="Typo.subtitle1">Metrics</MudText>
-                        <MudMenu Dense="true"
-                                 Icon="@Icons.Material.Filled.Add"
-                                 Size="Size.Small"
-                                 AnchorOrigin="Origin.BottomRight"
-                                 TransformOrigin="Origin.TopRight">
-                            <ChildContent>
-                                @foreach (var descriptor in Catalog.Descriptors)
-                                {
-                                    var current = descriptor;
-                                    <MudMenuItem Icon="@Icons.Material.Filled.QueryStats"
-                                                 OnClick="@(() => AddMetricFromDescriptorAsync(current))">@current.DisplayName</MudMenuItem>
-                                }
-                            </ChildContent>
-                        </MudMenu>
-                    </MudStack>
-                    <MudTextField T="string"
-                                  Value="@_search"
-                                  ValueChanged="@((string? value) => { _search = value ?? string.Empty; return Task.CompletedTask; })"
-                                  Placeholder="Search metrics"
-                                  Immediate="true"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Adornment="Adornment.Start"
-                                  AdornmentIcon="@Icons.Material.Filled.Search" />
-                    @if (FilteredMetrics.Count == 0)
-                    {
-                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
-                            No metrics yet. Add one from a metric type.
-                        </MudAlert>
-                    }
-                    else
-                    {
-                        <MudList T="string" Dense="true">
-                            @foreach (var metric in FilteredMetrics)
-                            {
-                                var currentMetric = metric;
-                                var resource = Metrics[currentMetric];
-                                <MudListItem T="string"
-                                             Value="@currentMetric"
-                                             Icon="@Icons.Material.Filled.QueryStats"
-                                             Class="@(string.Equals(currentMetric, _selectedMetricName, StringComparison.Ordinal) ? "mud-primary-text" : null)"
-                                             OnClick="@(() => SelectMetric(currentMetric))">
-                                    <MudStack Spacing="0">
-                                        <MudText Typo="Typo.body2">@resource.DisplayName</MudText>
-                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@currentMetric</MudText>
-                                    </MudStack>
-                                </MudListItem>
-                            }
-                        </MudList>
-                    }
-                </MudStack>
-            </MudPaper>
-        </MudItem>
+<div class="metrics-workbench">
+    <div class="metrics-commandbar">
+        <div class="metrics-heading">
+            <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" Class="metrics-heading-icon" />
+            <div>
+                <div class="metrics-title">Metrics</div>
+                <div class="metrics-meta">@FilteredRows.Count of @Rows.Count resources</div>
+            </div>
+        </div>
 
-        <MudItem xs="12" md="8" Style="height:100%; overflow:auto;">
-            @if (SelectedResource is null || SelectedDescriptor is null)
+        <div class="metrics-toolbar">
+            <label class="metrics-filter-field metrics-search-field">
+                <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
+                <input value="@_search"
+                       placeholder="Search metrics"
+                       aria-label="Search metrics"
+                       @oninput="@OnSearchInput" />
+                @if (!string.IsNullOrWhiteSpace(_search))
+                {
+                    <button type="button"
+                            class="metrics-inline-clear"
+                            title="Clear search"
+                            aria-label="Clear search"
+                            @onclick="@ClearSearch">
+                        <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                    </button>
+                }
+            </label>
+
+            <label class="metrics-filter-field metrics-type-field">
+                <MudIcon Icon="@Icons.Material.Filled.FilterAlt" Size="Size.Small" />
+                <select value="@_typeFilter"
+                        aria-label="Metric type"
+                        @onchange="@OnTypeFilterChanged">
+                    <option value="@AllTypes">All types</option>
+                    @foreach (var descriptor in SortedDescriptors)
+                    {
+                        <option value="@descriptor.TypeId">@descriptor.DisplayName</option>
+                    }
+                </select>
+                <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small" />
+            </label>
+
+            <MudTooltip Text="Reset filters">
+                <button type="button"
+                        class="metrics-filter-reset"
+                        disabled="@(!HasActiveFilters)"
+                        aria-label="Reset filters"
+                        @onclick="@ResetFilters">
+                    <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
+                </button>
+            </MudTooltip>
+
+            <button type="button"
+                    class="metrics-new-button"
+                    @onclick="@OpenNewMetricDialogAsync">
+                <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                <span>New metric</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="metrics-body">
+        <section class="metrics-list-pane" aria-label="Metric resources">
+            <div class="metrics-list-head">
+                <span>Name</span>
+                <span>Type</span>
+                <span>Query</span>
+                <span>Uses</span>
+                <span>Latest</span>
+            </div>
+
+            <div class="metrics-list">
+                @if (Rows.Count == 0)
+                {
+                    <div class="metrics-list-empty">
+                        <span class="metrics-empty-icon">
+                            <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" />
+                        </span>
+                        <strong>No metrics</strong>
+                        <span>No metric resources in this app.</span>
+                        <button type="button"
+                                class="metrics-empty-action"
+                                @onclick="@OpenNewMetricDialogAsync">
+                            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                            <span>New metric</span>
+                        </button>
+                    </div>
+                }
+                else if (FilteredRows.Count == 0)
+                {
+                    <div class="metrics-list-empty">
+                        <span class="metrics-empty-icon muted">
+                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
+                        </span>
+                        <strong>No matches</strong>
+                        <span>No metric matches the current filters.</span>
+                        <button type="button"
+                                class="metrics-empty-action secondary"
+                                @onclick="@ResetFilters">
+                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
+                            <span>Reset filters</span>
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var row in FilteredRows)
+                    {
+                        var current = row;
+                        <button type="button"
+                                class="@RowClass(current)"
+                                @key="current.Id"
+                                @onclick="@(() => SelectMetricAsync(current.Id))">
+                            <span class="metrics-cell metrics-cell-name">
+                                <strong>@current.DisplayName</strong>
+                                <small>@current.Id</small>
+                            </span>
+                            <span class="metrics-cell">
+                                <span class="metrics-type-pill">
+                                    <MudIcon Icon="@TypeIcon(current.TypeId)" Size="Size.Small" />
+                                    <span>@current.TypeName</span>
+                                </span>
+                            </span>
+                            <span class="metrics-cell metrics-cell-summary" title="@current.Summary">@current.Summary</span>
+                            <span class="metrics-cell">
+                                <span class="@ReferenceCountClass(current.ReferenceCount)">@current.ReferenceCount</span>
+                            </span>
+                            <span class="metrics-cell metrics-cell-latest">
+                                @if (current.Latest is { } latest)
+                                {
+                                    <span class="metrics-latest-pill live">
+                                        <span class="metrics-live-dot"></span>
+                                        <strong>@latest.FormattedValue</strong>
+                                        @if (!string.IsNullOrWhiteSpace(latest.Unit))
+                                        {
+                                            <small>@latest.Unit</small>
+                                        }
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="metrics-latest-pill muted">
+                                        <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" />
+                                        <small>No reading</small>
+                                    </span>
+                                }
+                            </span>
+                        </button>
+                    }
+                }
+            </div>
+        </section>
+
+        <section class="metrics-editor-pane" aria-label="Metric editor">
+            @if (_draft is null || _selectedMetricName is null)
             {
-                <MudPaper Outlined="true" Class="pa-6">
-                    <MudStack AlignItems="AlignItems.Center" Spacing="2">
-                        <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Large" />
-                        <MudText Typo="Typo.h6">No metric selected</MudText>
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">Add a metric from a metric type to start.</MudText>
-                    </MudStack>
-                </MudPaper>
+                <div class="metrics-editor-empty">
+                    <span class="metrics-empty-icon">
+                        <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" />
+                    </span>
+                    <strong>No metric selected</strong>
+                    <span>Select a metric from the list.</span>
+                    @if (Rows.Count == 0)
+                    {
+                        <button type="button"
+                                class="metrics-empty-action"
+                                @onclick="@OpenNewMetricDialogAsync">
+                            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                            <span>New metric</span>
+                        </button>
+                    }
+                </div>
             }
             else
             {
-                <MudPaper Outlined="true" Class="pa-3 mb-2">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-                        <MudStack Spacing="0" Style="min-width:0;">
-                            <MudText Typo="Typo.subtitle1">@_displayName</MudText>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">@MetricSentence</MudText>
-                        </MudStack>
-                        <MudStack Row="true" Spacing="1">
-                            <MudButton Variant="Variant.Outlined"
-                                       Size="Size.Small"
-                                       StartIcon="@Icons.Material.Filled.ContentCopy"
-                                       OnClick="@DuplicateSelectedMetricAsync">Duplicate</MudButton>
-                            <MudButton Variant="Variant.Outlined"
-                                       Color="Color.Error"
-                                       Size="Size.Small"
-                                       StartIcon="@Icons.Material.Filled.DeleteOutline"
-                                       OnClick="@DeleteSelectedMetricAsync">Delete</MudButton>
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       Size="Size.Small"
-                                       StartIcon="@Icons.Material.Filled.Check"
-                                       Disabled="@(!CanApply)"
-                                       OnClick="@ApplyMetricAsync">Apply metric</MudButton>
-                        </MudStack>
-                    </MudStack>
-                    <MudGrid Spacing="2" Class="mt-2">
-                        <MudItem xs="12" md="6">
-                            <MudTextField T="string"
-                                          Label="Name"
-                                          Value="@_displayName"
-                                          ValueChanged="@SetDisplayNameAsync"
-                                          Immediate="true"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense" />
-                        </MudItem>
-                        <MudItem xs="12" md="6">
-                            <MudTextField T="string"
-                                          Label="Description"
-                                          Value="@_description"
-                                          ValueChanged="@SetDescriptionAsync"
-                                          Immediate="true"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense" />
-                        </MudItem>
-                    </MudGrid>
-                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Text" Class="mt-2">@SelectedDescriptor.DisplayName</MudChip>
-                </MudPaper>
+                <div class="metrics-editor-header">
+                    <div class="metrics-editor-title">
+                        <span class="metrics-editor-icon">
+                            <MudIcon Icon="@EditorIcon" Size="Size.Small" />
+                        </span>
+                        <div class="metrics-editor-copy">
+                            <div class="metrics-editor-name">@(_draft.DisplayName.Length == 0 ? _draft.Id : _draft.DisplayName)</div>
+                            <div class="metrics-editor-subtitle">
+                                <span>@EditorSubtitle</span>
+                                <code>@_draft.Id</code>
+                            </div>
+                        </div>
+                    </div>
 
-                <MudPaper Outlined="true" Class="pa-3 mb-2">
-                    <MudText Typo="Typo.subtitle2" Class="mb-2">Parameters</MudText>
-                    <MudStack Spacing="2">
-                        @foreach (var parameter in SelectedDescriptor.Parameters)
+                    <div class="metrics-editor-actions">
+                        @if (ShowEditorState)
                         {
-                            @RenderParameterField(parameter)
+                            <div class="metrics-editor-state dirty" title="This metric has unsaved changes">
+                                <span class="metrics-state-dot"></span>
+                                <span>Unsaved</span>
+                            </div>
                         }
-                    </MudStack>
-                </MudPaper>
+                        <div class="metrics-action-strip">
+                            @if (_draft.IsDirty)
+                            {
+                                <MudTooltip Text="Cancel changes">
+                                    <button type="button"
+                                            class="metrics-header-icon-button"
+                                            aria-label="Cancel changes"
+                                            @onclick="@CancelEdit">
+                                        <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                                    </button>
+                                </MudTooltip>
+                            }
+                            <MudTooltip Text="Duplicate metric">
+                                <button type="button"
+                                        class="metrics-header-icon-button"
+                                        aria-label="Duplicate metric"
+                                        @onclick="@DuplicateSelectedMetricAsync">
+                                    <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" />
+                                </button>
+                            </MudTooltip>
+                            <MudTooltip Text="Delete metric">
+                                <button type="button"
+                                        class="metrics-header-icon-button danger"
+                                        aria-label="Delete metric"
+                                        @onclick="@DeleteSelectedMetricAsync">
+                                    <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" />
+                                </button>
+                            </MudTooltip>
+                        </div>
+                        @if (_draft.IsDirty)
+                        {
+                            <button type="button"
+                                    class="metrics-save-button"
+                                    disabled="@(!CanSave)"
+                                    title="@SaveButtonTitle"
+                                    @onclick="@SaveMetricAsync">
+                                <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" />
+                                <span>Save</span>
+                            </button>
+                        }
+                    </div>
+                </div>
 
-                <MudPaper Outlined="true" Class="pa-3">
-                    <MudText Typo="Typo.subtitle2" Class="mb-2">Validation</MudText>
-                    @if (ValidationErrors.Count == 0)
-                    {
-                        <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true">Metric is valid.</MudAlert>
-                    }
-                    else
-                    {
-                        @foreach (var error in ValidationErrors)
-                        {
-                            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true">@error</MudAlert>
-                        }
-                    }
-                </MudPaper>
+                <div class="metrics-editor-scroll">
+                    <div class="metrics-editor-compact-layout">
+                        <div class="metrics-editor-main-panel">
+                            <div class="metrics-compact-section">
+                                <div class="metrics-section-heading">
+                                    <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
+                                    <span>Edit metric</span>
+                                </div>
+                                <div class="metrics-form-grid compact">
+                                    <div class="@ResourceIdFieldClass"
+                                         id="@MetricIdFieldId"
+                                         title="@MetricIdValidationMessage"
+                                         tabindex="-1"
+                                         aria-invalid="@AriaState(HasValidationMessage(MetricIdValidationMessage))"
+                                         aria-errormessage="@MetricIdErrorElementId">
+                                        <span>Metric id</span>
+                                        <code>@_draft.Id</code>
+                                        @if (CanOpenRename)
+                                        {
+                                            <button type="button"
+                                                    @onclick="@RenameMetricAsync">
+                                                <MudIcon Icon="@Icons.Material.Filled.DriveFileRenameOutline" Size="Size.Small" />
+                                                <span>Rename</span>
+                                            </button>
+                                        }
+                                    </div>
+                                    <label class="@DisplayNameFieldClass"
+                                           id="@DisplayNameFieldId"
+                                           tabindex="-1"
+                                           title="@DisplayNameValidationMessage">
+                                        <span>Display name</span>
+                                        <input value="@_draft.DisplayName"
+                                               aria-label="Display name"
+                                               aria-invalid="@AriaState(HasValidationMessage(DisplayNameValidationMessage))"
+                                               aria-errormessage="@DisplayNameErrorElementId"
+                                               @oninput="@OnDraftDisplayNameInput" />
+                                    </label>
+                                    <div class="@MetricTypeFieldClass"
+                                         id="@MetricTypeFieldId"
+                                         title="@MetricTypeFieldTitle"
+                                         tabindex="-1"
+                                         aria-invalid="@AriaState(HasValidationMessage(MetricTypeValidationMessage))"
+                                         aria-errormessage="@MetricTypeErrorElementId">
+                                        <span class="metrics-type-picker-icon">
+                                            <MudIcon Icon="@EditorIcon" Size="Size.Small" />
+                                        </span>
+                                        <div class="metrics-type-picker-copy">
+                                            <span>Metric type</span>
+                                            <strong>@(CurrentDescriptor?.DisplayName ?? _draft.TypeId)</strong>
+                                            <small>@MetricTypeDetailLine</small>
+                                        </div>
+                                        <button type="button"
+                                                aria-label="Change metric type"
+                                                @onclick="@OpenMetricTypeDialogAsync">
+                                            <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
+                                            <span>Change</span>
+                                        </button>
+                                    </div>
+                                    <label class="metrics-identity-field">
+                                        <span>Description</span>
+                                        <input value="@_draft.Description"
+                                               aria-label="Description"
+                                               placeholder="Optional"
+                                               @oninput="@OnDraftDescriptionInput" />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="metrics-compact-section">
+                                <div class="metrics-section-heading">
+                                    <MudIcon Icon="@Icons.Material.Filled.ManageSearch" Size="Size.Small" />
+                                    <span>Parameters</span>
+                                </div>
+                                @if (CurrentDescriptor is not { } descriptorForParameters)
+                                {
+                                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+                                        Select a registered metric type before editing parameters.
+                                    </MudAlert>
+                                }
+                                else if (descriptorForParameters.Parameters.Count == 0)
+                                {
+                                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+                                        This metric type has no editable parameters.
+                                    </MudAlert>
+                                }
+                                else
+                                {
+                                    <div class="metrics-parameter-grid">
+                                        @foreach (var parameter in descriptorForParameters.Parameters)
+                                        {
+                                            var currentParameter = parameter;
+                                            <div class="@ParameterRowClass(currentParameter)" @key="currentParameter.Key">
+                                                @RenderParameterField(currentParameter)
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <aside class="metrics-editor-side-panel" aria-label="Metric details">
+                            @{
+                                var hasDraftPreview = TryGetDraftPreview(out var preview);
+                            }
+                            <div class="metrics-side-card preview-context">
+                                <div class="metrics-section-heading">
+                                    <MudIcon Icon="@Icons.Material.Filled.Speed" Size="Size.Small" />
+                                    <span>Live preview</span>
+                                    @if (hasDraftPreview)
+                                    {
+                                        <span class="metrics-side-badge live">Live</span>
+                                    }
+                                </div>
+                                @if (hasDraftPreview)
+                                {
+                                    <div class="metrics-preview-card live">
+                                        <div class="metrics-preview-status">
+                                            <span class="metrics-live-dot"></span>
+                                            <span>Reading</span>
+                                        </div>
+                                        <div class="metrics-preview-value">
+                                            <strong>@preview.FormattedValue</strong>
+                                            @if (!string.IsNullOrWhiteSpace(preview.Unit))
+                                            {
+                                                <span>@preview.Unit</span>
+                                            }
+                                        </div>
+                                        <div class="metrics-preview-meta">Updated @FormatRelativeTime(preview.Timestamp)</div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="metrics-preview-empty" title="Stopped or not emitted.">
+                                        <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" />
+                                        <span>No reading</span>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="metrics-side-card references-context">
+                                <div class="metrics-section-heading">
+                                    <MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small" />
+                                    <span>References</span>
+                                    @if (ReferenceSummaries.Count > 0)
+                                    {
+                                        <span class="metrics-side-badge">@ReferenceSummaries.Count</span>
+                                    }
+                                </div>
+                                @if (ReferenceSummaries.Count == 0)
+                                {
+                                    <div class="metrics-reference-empty">No dashboard bindings.</div>
+                                }
+                                else
+                                {
+                                    <div class="metrics-reference-list" role="list" aria-label="Dashboard bindings for selected metric">
+                                        @foreach (var reference in ReferenceSummaries)
+                                        {
+                                            <div class="metrics-reference-row" role="listitem" title="@ReferenceTitle(reference)">
+                                                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="metrics-reference-icon" />
+                                                <span class="metrics-reference-main">
+                                                    <strong>@reference.WidgetName</strong>
+                                                    <span>@ReferenceLocationLine(reference)</span>
+                                                </span>
+                                                <span class="metrics-reference-tags">
+                                                    @if (!string.IsNullOrWhiteSpace(reference.WidgetType))
+                                                    {
+                                                        <em>@reference.WidgetType</em>
+                                                    }
+                                                    @if (reference.IsPrimary)
+                                                    {
+                                                        <small>Primary</small>
+                                                    }
+                                                </span>
+                                                <span class="metrics-reference-action">
+                                                    <MudTooltip Text="@ReferenceOpenTooltip(reference)">
+                                                        <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                                                                       Size="Size.Small"
+                                                                       Class="metrics-reference-open"
+                                                                       aria-label="@ReferenceOpenLabel(reference)"
+                                                                       OnClick="@(() => OpenReferenceDashboardAsync(reference))" />
+                                                    </MudTooltip>
+                                                </span>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+
+                            @if (ValidationItems is { Count: > 0 } validationItems)
+                            {
+                                <div class="metrics-side-card danger">
+                                    <div class="metrics-section-heading">
+                                        <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Size="Size.Small" />
+                                        <span>Validation</span>
+                                        <span class="metrics-side-badge danger">@validationItems.Count</span>
+                                    </div>
+                                    <div class="metrics-validation-list">
+                                        @foreach (var item in validationItems)
+                                        {
+                                            @if (string.IsNullOrWhiteSpace(item.TargetId))
+                                            {
+                                                <div class="metrics-validation-line" id="@item.MessageId">
+                                                    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" />
+                                                    <span>@item.Message</span>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <a class="metrics-validation-line"
+                                                   id="@item.MessageId"
+                                                   href="#@item.TargetId"
+                                                   title="Show field">
+                                                    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" />
+                                                    <span>@item.Message</span>
+                                                </a>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </aside>
+                    </div>
+                </div>
             }
-        </MudItem>
-    </MudGrid>
+        </section>
+    </div>
 </div>
 
 @code {
+    private const string AllTypes = "";
+    private const string TrueValue = "true";
+    private const string FalseValue = "false";
+    private const string DefaultToggleValue = "";
+    private const string MetricIdFieldId = "metric-field-id";
+    private const string DisplayNameFieldId = "metric-field-display-name";
+    private const string MetricTypeFieldId = "metric-field-type";
+    private const string MetricIdErrorId = "metric-error-id";
+    private const string DisplayNameErrorId = "metric-error-display-name";
+    private const string MetricTypeErrorId = "metric-error-type";
+
+    private sealed record MetricValidationItem(string Message, string? TargetId, string? MessageId);
+
     [Parameter, EditorRequired]
     public FlowWorkspaceService Project { get; set; } = null!;
 
     private long _revision = -1;
     private string _search = string.Empty;
+    private string _typeFilter = AllTypes;
     private string? _selectedMetricName;
-    private string _displayName = string.Empty;
-    private string _description = string.Empty;
-    private string _typeId = TopicCountMetric.TypeId;
-    private readonly Dictionary<string, string> _parameters = new(StringComparer.Ordinal);
-
-    private const string TrueValue = "true";
-    private const string FalseValue = "false";
+    private MetricDesignerDraft? _draft;
 
     private IReadOnlyDictionary<string, FluxMetricResourceDefinition> Metrics => Project.GetMetricResources();
 
-    private FluxMetricResourceDefinition? SelectedResource =>
-        !string.IsNullOrWhiteSpace(_selectedMetricName) && Metrics.TryGetValue(_selectedMetricName, out var resource)
-            ? resource
+    private IReadOnlyList<MetricDescriptor> SortedDescriptors =>
+        [.. Catalog.Descriptors.OrderBy(static descriptor => descriptor.DisplayName, StringComparer.OrdinalIgnoreCase)];
+
+    private IReadOnlyList<MetricDesignerRow> Rows =>
+        MetricDesignerState.BuildRows(Metrics, Catalog, Project.CountMetricReferences, TryGetLatestValue);
+
+    private IReadOnlyList<MetricDesignerRow> FilteredRows =>
+        MetricDesignerState.ApplyFilter(Rows, _search, _typeFilter);
+
+    private IReadOnlyList<MetricValidationItem> ValidationItems => BuildValidationItems();
+
+    private IReadOnlyList<string> ValidationErrors =>
+        [.. ValidationItems.Select(static item => item.Message)];
+
+    private IReadOnlyList<MetricReferenceSummary> ReferenceSummaries =>
+        string.IsNullOrWhiteSpace(_selectedMetricName)
+            ? []
+            : Project.GetMetricReferenceSummaries(_selectedMetricName);
+
+    private MetricDescriptor? CurrentDescriptor =>
+        _draft is null ? null : Catalog.Describe(_draft.TypeId);
+
+    private bool HasActiveFilters =>
+        !string.IsNullOrWhiteSpace(_search) ||
+        !string.IsNullOrWhiteSpace(_typeFilter);
+
+    private bool CanSave =>
+        _draft is { IsDirty: true } &&
+        ValidationErrors.Count == 0;
+
+    private bool CanOpenRename =>
+        _draft is { IsDirty: false };
+
+    private string EditorSubtitle =>
+        CurrentDescriptor is { } descriptor
+            ? MetricDesignerState.ParameterSummary(descriptor, _draft?.Parameters ?? new Dictionary<string, string>())
+            : "Unknown metric type";
+
+    private string EditorIcon =>
+        CurrentDescriptor?.ValueKind == MetricValueKind.Double
+            ? Icons.Material.Filled.Speed
+            : Icons.Material.Filled.QueryStats;
+
+    private string ValidationSummary =>
+        ValidationErrors.Count == 1
+            ? "1 issue needs attention"
+            : $"{ValidationErrors.Count} issues need attention";
+
+    private bool ShowEditorState =>
+        _draft is { IsDirty: true } &&
+        ValidationErrors.Count == 0;
+
+    private string SaveButtonTitle =>
+        ValidationErrors.Count > 0
+            ? ValidationSummary
+            : "Save metric";
+
+    private string? MetricIdValidationMessage =>
+        _draft is null ? null : MetricDesignerState.ValidateMetricId(_draft, Metrics.Keys);
+
+    private string? DisplayNameValidationMessage =>
+        _draft is null ? null : MetricDesignerState.ValidateDisplayName(_draft);
+
+    private string? MetricTypeValidationMessage =>
+        _draft is not null && CurrentDescriptor is null
+            ? "Metric type is not registered."
             : null;
 
-    private MetricDescriptor? SelectedDescriptor => Catalog.Describe(_typeId);
+    private string MetricTypeFieldTitle =>
+        MetricTypeValidationMessage ??
+        CurrentDescriptor?.Description ??
+        string.Empty;
 
-    private IReadOnlyList<string> FilteredMetrics =>
-        [
-            .. Metrics
-                .Where(metric =>
-                    string.IsNullOrWhiteSpace(_search) ||
-                    metric.Key.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
-                    metric.Value.DisplayName.Contains(_search, StringComparison.OrdinalIgnoreCase))
-                .Select(static metric => metric.Key)
-                .Order(StringComparer.OrdinalIgnoreCase)
-        ];
+    private string MetricTypeDetailLine =>
+        CurrentDescriptor is { } descriptor
+            ? $"{descriptor.TypeId} · {MetricTypeFactsText(descriptor)}"
+            : "Unknown type";
 
-    private string DisplayNameOrFallback =>
-        string.IsNullOrWhiteSpace(_displayName) ? _selectedMetricName ?? "Metric" : _displayName.Trim();
+    private string? MetricIdErrorElementId =>
+        HasValidationMessage(MetricIdValidationMessage) ? MetricIdErrorId : null;
 
-    private FluxMetricResourceDefinition CurrentResource =>
-        new()
-        {
-            Id = _selectedMetricName ?? string.Empty,
-            TypeId = _typeId,
-            DisplayName = DisplayNameOrFallback,
-            Description = _description ?? string.Empty,
-            Parameters = new Dictionary<string, string>(_parameters, StringComparer.Ordinal),
-            Labels = SelectedResource?.Labels ?? new Dictionary<string, string>(StringComparer.Ordinal),
-            ExportPolicy = SelectedResource?.ExportPolicy ?? FluxMetricExportPolicy.Disabled
-        };
+    private string? DisplayNameErrorElementId =>
+        HasValidationMessage(DisplayNameValidationMessage) ? DisplayNameErrorId : null;
 
-    private string MetricSentence => SelectedDescriptor?.Description ?? "Select a metric to edit";
+    private string? MetricTypeErrorElementId =>
+        HasValidationMessage(MetricTypeValidationMessage) ? MetricTypeErrorId : null;
 
-    private IReadOnlyList<string> ValidationErrors
+    private string ResourceIdFieldClass =>
+        HasValidationMessage(MetricIdValidationMessage)
+            ? "metrics-resource-id-field invalid"
+            : "metrics-resource-id-field";
+
+    private string DisplayNameFieldClass =>
+        HasValidationMessage(DisplayNameValidationMessage)
+            ? "metrics-identity-field invalid"
+            : "metrics-identity-field";
+
+    private string MetricTypeFieldClass =>
+        HasValidationMessage(MetricTypeValidationMessage)
+            ? "metrics-type-picker-field invalid"
+            : "metrics-type-picker-field";
+
+    private IReadOnlyList<MetricValidationItem> BuildValidationItems()
     {
-        get
+        if (_draft is null)
         {
-            if (SelectedDescriptor is not { } descriptor)
-            {
-                return [];
-            }
-
-            return
-            [
-                .. descriptor.Parameters
-                    .Where(parameter => parameter.Required && string.IsNullOrWhiteSpace(ParameterValue(parameter)))
-                    .Select(static parameter => $"{parameter.DisplayName} is required.")
-            ];
+            return [];
         }
+
+        var items = new List<MetricValidationItem>();
+        if (MetricDesignerState.ValidateMetricId(_draft, Metrics.Keys) is { } idError)
+        {
+            items.Add(new MetricValidationItem(idError, MetricIdFieldId, MetricIdErrorId));
+        }
+
+        if (MetricDesignerState.ValidateDisplayName(_draft) is { } displayNameError)
+        {
+            items.Add(new MetricValidationItem(displayNameError, DisplayNameFieldId, DisplayNameErrorId));
+        }
+
+        if (CurrentDescriptor is not { } descriptor)
+        {
+            items.Add(new MetricValidationItem("Metric type is not registered.", MetricTypeFieldId, MetricTypeErrorId));
+            return items;
+        }
+
+        foreach (var parameter in descriptor.Parameters)
+        {
+            if (MetricDesignerState.ValidateParameter(_draft, parameter) is { } parameterError)
+            {
+                items.Add(new MetricValidationItem(parameterError, ParameterFieldId(parameter), ParameterErrorId(parameter)));
+            }
+        }
+
+        return items;
     }
 
-    private bool CanApply =>
-        SelectedDescriptor is not null &&
-        !string.IsNullOrWhiteSpace(_selectedMetricName) &&
-        !string.IsNullOrWhiteSpace(_displayName) &&
-        ValidationErrors.Count == 0;
+    private string TypeIcon(string? typeId)
+        => Catalog.Describe(typeId ?? string.Empty)?.ValueKind == MetricValueKind.Double
+            ? Icons.Material.Filled.Speed
+            : Icons.Material.Filled.QueryStats;
 
     protected override void OnParametersSet()
     {
@@ -242,95 +653,163 @@
             _selectedMetricName = Metrics.Keys.Order(StringComparer.OrdinalIgnoreCase).FirstOrDefault();
         }
 
-        LoadSelectedMetric();
-    }
-
-    private void SelectMetric(string metricName)
-    {
-        _selectedMetricName = metricName;
-        LoadSelectedMetric();
+        if (_draft is null || !_draft.IsDirty)
+        {
+            LoadSelectedMetric();
+        }
     }
 
     private void LoadSelectedMetric()
     {
-        if (SelectedResource is not { } resource)
+        if (string.IsNullOrWhiteSpace(_selectedMetricName) ||
+            Metrics.TryGetValue(_selectedMetricName, out var resource) is false)
         {
-            _displayName = string.Empty;
-            _description = string.Empty;
-            _typeId = TopicCountMetric.TypeId;
-            _parameters.Clear();
+            _draft = null;
             return;
         }
 
-        _displayName = resource.DisplayName;
-        _description = resource.Description;
-        _typeId = resource.TypeId;
-        _parameters.Clear();
-        foreach (var (key, value) in resource.Parameters)
+        _draft = MetricDesignerDraft.FromResource(_selectedMetricName, resource);
+    }
+
+    private async Task SelectMetricAsync(string metricName)
+    {
+        if (string.Equals(metricName, _selectedMetricName, StringComparison.Ordinal))
         {
-            _parameters[key] = value;
-        }
-    }
-
-    private Task SetDisplayNameAsync(string? value)
-    {
-        _displayName = value ?? string.Empty;
-        return Task.CompletedTask;
-    }
-
-    private Task SetDescriptionAsync(string? value)
-    {
-        _description = value ?? string.Empty;
-        return Task.CompletedTask;
-    }
-
-    private async Task AddMetricFromDescriptorAsync(MetricDescriptor descriptor)
-    {
-        var metricName = UniqueMetricName(descriptor.DisplayName);
-        var parameters = new Dictionary<string, string>(StringComparer.Ordinal);
-        foreach (var parameter in descriptor.Parameters)
-        {
-            if (!string.IsNullOrWhiteSpace(parameter.DefaultValue))
-            {
-                parameters[parameter.Key] = parameter.DefaultValue;
-            }
+            return;
         }
 
-        Project.AddMetric(metricName);
-        Project.UpdateMetric(metricName, new FluxMetricResourceDefinition
+        if (!await ConfirmDiscardIfDirtyAsync())
         {
-            Id = metricName,
-            TypeId = descriptor.TypeId,
-            DisplayName = descriptor.DisplayName,
-            Description = descriptor.Description,
-            Parameters = parameters
-        });
+            return;
+        }
+
         _selectedMetricName = metricName;
+        LoadSelectedMetric();
+    }
+
+    private async Task OpenNewMetricDialogAsync()
+    {
+        if (!await ConfirmDiscardIfDirtyAsync())
+        {
+            return;
+        }
+
+        var parameters = new DialogParameters
+        {
+            ["Descriptors"] = SortedDescriptors,
+            ["ExistingMetricIds"] = Metrics.Keys.ToArray()
+        };
+        var dialog = await DialogService.ShowAsync<MetricCreateDialog>("New metric", parameters);
+        var result = await dialog.Result;
+        if (result is not { Canceled: false, Data: MetricCreateDialog.MetricCreateResult created })
+        {
+            return;
+        }
+
+        Project.AddMetric(created.MetricId);
+        Project.UpdateMetric(
+            created.MetricId,
+            new FluxMetricResourceDefinition
+            {
+                Id = created.MetricId,
+                TypeId = created.TypeId,
+                DisplayName = created.DisplayName,
+                Description = Catalog.Describe(created.TypeId)?.Description ?? string.Empty,
+                Parameters = created.Parameters
+            });
+
+        _selectedMetricName = created.MetricId;
         _revision = -1;
+        LoadSelectedMetric();
+    }
+
+    private async Task SaveMetricAsync()
+    {
+        if (_draft is null || ValidationErrors.Count > 0)
+        {
+            return;
+        }
+
+        var previousId = _draft.OriginalId;
+        var nextId = _draft.Id.Trim();
+        var resource = _draft.ToResource(Catalog);
+        if (!string.Equals(previousId, nextId, StringComparison.Ordinal))
+        {
+            Project.RenameMetric(previousId, nextId);
+            _selectedMetricName = nextId;
+        }
+
+        Project.UpdateMetric(nextId, resource);
+        _revision = -1;
+        LoadSelectedMetric();
         await InvokeAsync(StateHasChanged);
     }
 
-    private Task ApplyMetricAsync()
+    private async Task RenameMetricAsync()
     {
-        if (string.IsNullOrWhiteSpace(_selectedMetricName) || SelectedDescriptor is null)
+        if (_draft is null || !CanOpenRename)
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        Project.UpdateMetric(_selectedMetricName, CurrentResource);
+        var parameters = new DialogParameters
+        {
+            ["CurrentMetricId"] = _draft.OriginalId,
+            ["ExistingMetricIds"] = Metrics.Keys.ToArray()
+        };
+        var dialog = await DialogService.ShowAsync<MetricRenameDialog>("Rename metric", parameters);
+        var result = await dialog.Result;
+        if (result is not { Canceled: false, Data: MetricRenameDialog.MetricRenameResult rename } ||
+            string.Equals(rename.MetricId, _draft.OriginalId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        Project.RenameMetric(_draft.OriginalId, rename.MetricId);
+        _selectedMetricName = rename.MetricId;
         _revision = -1;
-        return Task.CompletedTask;
+        LoadSelectedMetric();
     }
 
-    private Task DuplicateSelectedMetricAsync()
+    private async Task DuplicateSelectedMetricAsync()
     {
-        if (!string.IsNullOrWhiteSpace(_selectedMetricName))
+        if (string.IsNullOrWhiteSpace(_selectedMetricName) ||
+            !await ConfirmDiscardIfDirtyAsync())
         {
-            Project.DuplicateMetric(_selectedMetricName);
-            _revision = -1;
+            return;
         }
 
-        return Task.CompletedTask;
+        if (!Metrics.TryGetValue(_selectedMetricName, out var source))
+        {
+            return;
+        }
+
+        var parameters = new DialogParameters
+        {
+            ["SourceMetricId"] = _selectedMetricName,
+            ["SourceDisplayName"] = source.DisplayName,
+            ["ExistingMetricIds"] = Metrics.Keys.ToArray()
+        };
+        var dialog = await DialogService.ShowAsync<MetricDuplicateDialog>("Duplicate metric", parameters);
+        var result = await dialog.Result;
+        if (result is not { Canceled: false, Data: MetricDuplicateDialog.MetricDuplicateResult duplicate })
+        {
+            return;
+        }
+
+        Project.UpdateMetric(
+            duplicate.MetricId,
+            source with
+            {
+                Id = duplicate.MetricId,
+                DisplayName = duplicate.DisplayName,
+                Parameters = new Dictionary<string, string>(source.Parameters, StringComparer.Ordinal),
+                Labels = new Dictionary<string, string>(source.Labels, StringComparer.Ordinal)
+            });
+
+        _selectedMetricName = duplicate.MetricId;
+        _revision = -1;
+        LoadSelectedMetric();
     }
 
     private async Task DeleteSelectedMetricAsync()
@@ -340,104 +819,504 @@
             return;
         }
 
-        var references = Project.CountMetricReferences(_selectedMetricName);
-        var message = references == 0
-            ? $"Delete metric '{_selectedMetricName}'?"
-            : $"Delete metric '{_selectedMetricName}'? {references} dashboard binding(s) will need another metric.";
-        var confirmed = await DialogService.ShowMessageBoxAsync(
-            "Delete metric",
-            message,
-            "Delete",
-            null,
-            "Cancel",
-            new DialogOptions { MaxWidth = MaxWidth.ExtraSmall });
-        if (confirmed == true)
+        var parameters = new DialogParameters
         {
-            Project.RemoveMetric(_selectedMetricName);
-            _selectedMetricName = null;
-            _revision = -1;
+            ["MetricId"] = _selectedMetricName,
+            ["References"] = ReferenceSummaries
+        };
+        var dialog = await DialogService.ShowAsync<MetricDeleteDialog>("Delete metric", parameters);
+        var result = await dialog.Result;
+        if (result is not { Canceled: false })
+        {
+            return;
+        }
+
+        var next = Metrics.Keys
+            .Where(metric => !string.Equals(metric, _selectedMetricName, StringComparison.Ordinal))
+            .Order(StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault();
+        Project.RemoveMetric(_selectedMetricName);
+        _selectedMetricName = next;
+        _revision = -1;
+        LoadSelectedMetric();
+    }
+
+    private async Task OpenMetricTypeDialogAsync()
+    {
+        if (_draft is null)
+        {
+            return;
+        }
+
+        var parameters = new DialogParameters
+        {
+            ["Descriptors"] = SortedDescriptors,
+            ["CurrentTypeId"] = _draft.TypeId,
+            ["HasParameters"] = _draft.Parameters.Count > 0
+        };
+        var dialog = await DialogService.ShowAsync<MetricTypeChangeDialog>("Change metric type", parameters);
+        var result = await dialog.Result;
+        if (result is not { Canceled: false, Data: MetricTypeChangeDialog.MetricTypeChangeResult change })
+        {
+            return;
+        }
+
+        ChangeMetricType(change.TypeId);
+    }
+
+    private void ChangeMetricType(string? typeId)
+    {
+        if (_draft is null ||
+            string.IsNullOrWhiteSpace(typeId) ||
+            string.Equals(_draft.TypeId, typeId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        if (Catalog.Describe(typeId) is not { } descriptor)
+        {
+            _draft.TypeId = typeId;
+            return;
+        }
+
+        _draft.SetType(descriptor);
+    }
+
+    private async Task<bool> ConfirmDiscardIfDirtyAsync()
+    {
+        if (_draft is not { IsDirty: true })
+        {
+            return true;
+        }
+
+        return await ShowMetricConfirmDialogAsync(
+            "Discard changes",
+            "Discard unsaved metric changes?",
+            "Discard",
+            "danger",
+            "The selected metric will stay saved as it was before editing.");
+    }
+
+    private async Task OpenReferenceDashboardAsync(MetricReferenceSummary reference)
+    {
+        if (string.IsNullOrWhiteSpace(reference.DashboardName) ||
+            !await ConfirmDiscardIfDirtyAsync())
+        {
+            return;
+        }
+
+        Project.SetActiveDashboardCellReference(reference.DashboardName, reference.CellName);
+    }
+
+    private async Task<bool> ShowMetricConfirmDialogAsync(
+        string title,
+        string message,
+        string confirmText,
+        string tone,
+        string? detail = null)
+    {
+        var parameters = new DialogParameters
+        {
+            ["Title"] = title,
+            ["Message"] = message,
+            ["ConfirmText"] = confirmText,
+            ["Tone"] = tone,
+            ["Detail"] = detail
+        };
+        var dialog = await DialogService.ShowAsync<MetricConfirmDialog>(title, parameters);
+        var result = await dialog.Result;
+        return result is { Canceled: false };
+    }
+
+    private void CancelEdit() => LoadSelectedMetric();
+
+    private Task SetSearch(string? value)
+    {
+        _search = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task SetTypeFilter(string? value)
+    {
+        _typeFilter = value ?? AllTypes;
+        return Task.CompletedTask;
+    }
+
+    private void OnSearchInput(ChangeEventArgs args)
+        => _search = args.Value?.ToString() ?? string.Empty;
+
+    private void OnTypeFilterChanged(ChangeEventArgs args)
+        => _typeFilter = args.Value?.ToString() ?? AllTypes;
+
+    private void ClearSearch()
+        => _search = string.Empty;
+
+    private void ResetFilters()
+    {
+        _search = string.Empty;
+        _typeFilter = AllTypes;
+    }
+
+    private void OnDraftDisplayNameInput(ChangeEventArgs args)
+    {
+        if (_draft is not null)
+        {
+            _draft.DisplayName = args.Value?.ToString() ?? string.Empty;
         }
     }
 
-    private string ParameterValue(MetricParamSpec parameter)
-        => _parameters.TryGetValue(parameter.Key, out var value) ? value : parameter.DefaultValue ?? string.Empty;
+    private void OnDraftDescriptionInput(ChangeEventArgs args)
+    {
+        if (_draft is not null)
+        {
+            _draft.Description = args.Value?.ToString() ?? string.Empty;
+        }
+    }
 
     private RenderFragment RenderParameterField(MetricParamSpec parameter)
     {
-        var value = ParameterValue(parameter);
+        if (_draft is null)
+        {
+            return @<span></span>;
+        }
+
+        var value = _draft.ParameterValue(parameter);
+        var validationMessage = ParameterValidationMessage(parameter);
+        var hasValidationError = !string.IsNullOrWhiteSpace(validationMessage);
+        var errorElementId = ParameterErrorElementId(parameter, hasValidationError);
         if (parameter.Kind == MetricParamKind.Select && parameter.Options is { Count: > 0 } options)
         {
-            return @<MudSelect T="string"
-                               Label="@parameter.DisplayName"
-                               Value="@value"
-                               ValueChanged="@(next => SetParameterValue(parameter.Key, next))"
-                               Variant="Variant.Outlined"
-                               Margin="Margin.Dense"
-                               Dense="true"
-                               HelperText="@parameter.HelpText">
-                @foreach (var option in options)
-                {
-                    <MudSelectItem Value="@option.Value">@option.Label</MudSelectItem>
-                }
-            </MudSelect>;
+            return @<label class="@ParameterFieldClass(parameter, hasValidationError)"
+                           id="@ParameterFieldId(parameter)"
+                           tabindex="-1"
+                           title="@validationMessage">
+                @RenderParameterLabel(parameter)
+                <span class="metrics-param-control select">
+                    <select value="@value"
+                            aria-label="@parameter.DisplayName"
+                            aria-invalid="@AriaState(hasValidationError)"
+                            aria-errormessage="@errorElementId"
+                            @onchange="@((ChangeEventArgs args) => SetParameterValue(parameter.Key, args.Value?.ToString()))">
+                        @if (!parameter.Required)
+                        {
+                            <option value="@string.Empty">Default</option>
+                        }
+                        @foreach (var option in options)
+                        {
+                            <option value="@option.Value">@option.Label</option>
+                        }
+                    </select>
+                    <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small" />
+                </span>
+            </label>;
         }
 
         if (parameter.Kind == MetricParamKind.Toggle)
         {
-            return @<MudSelect T="string"
-                               Label="@parameter.DisplayName"
-                               Value="@value"
-                               ValueChanged="@(next => SetParameterValue(parameter.Key, next))"
-                               Variant="Variant.Outlined"
-                               Margin="Margin.Dense"
-                               Dense="true"
-                               HelperText="@parameter.HelpText">
-                <MudSelectItem Value="@string.Empty">Default</MudSelectItem>
-                <MudSelectItem Value="@TrueValue">On</MudSelectItem>
-                <MudSelectItem Value="@FalseValue">Off</MudSelectItem>
-            </MudSelect>;
+            var toggleValue = ToggleValue(value);
+            return @<div class="@ParameterFieldClass(parameter, hasValidationError)"
+                         id="@ParameterFieldId(parameter)"
+                         tabindex="-1"
+                         title="@validationMessage">
+                @RenderParameterLabel(parameter)
+                <div class="metrics-param-toggle"
+                     role="radiogroup"
+                     aria-label="@parameter.DisplayName"
+                     aria-invalid="@AriaState(hasValidationError)"
+                     aria-errormessage="@errorElementId">
+                    <button type="button"
+                            class="@ToggleOptionClass(toggleValue, DefaultToggleValue)"
+                            aria-checked="@AriaState(IsToggleSelected(toggleValue, DefaultToggleValue))"
+                            role="radio"
+                            @onclick="@(() => SetParameterValue(parameter.Key, DefaultToggleValue))">Default</button>
+                    <button type="button"
+                            class="@ToggleOptionClass(toggleValue, TrueValue)"
+                            aria-checked="@AriaState(IsToggleSelected(toggleValue, TrueValue))"
+                            role="radio"
+                            @onclick="@(() => SetParameterValue(parameter.Key, TrueValue))">On</button>
+                    <button type="button"
+                            class="@ToggleOptionClass(toggleValue, FalseValue)"
+                            aria-checked="@AriaState(IsToggleSelected(toggleValue, FalseValue))"
+                            role="radio"
+                            @onclick="@(() => SetParameterValue(parameter.Key, FalseValue))">Off</button>
+                </div>
+            </div>;
         }
 
-        var inputType = parameter.Kind is MetricParamKind.Integer or MetricParamKind.Number
-            ? InputType.Number
-            : InputType.Text;
-        return @<MudTextField T="string"
-                              Label="@parameter.DisplayName"
-                              Value="@value"
-                              ValueChanged="@(next => SetParameterValue(parameter.Key, next))"
-                              Placeholder="@parameter.Placeholder"
-                              InputType="@inputType"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              HelperText="@parameter.HelpText" />;
+        return @<label class="@ParameterFieldClass(parameter, hasValidationError)"
+                       id="@ParameterFieldId(parameter)"
+                       tabindex="-1"
+                       title="@validationMessage">
+            @RenderParameterLabel(parameter)
+            <span class="metrics-param-control">
+                <input type="@ParameterInputType(parameter)"
+                       value="@value"
+                       min="@ParameterMinimum(parameter)"
+                       max="@ParameterMaximum(parameter)"
+                       step="@ParameterStep(parameter)"
+                       inputmode="@ParameterInputMode(parameter)"
+                       placeholder="@ParameterPlaceholder(parameter)"
+                       aria-label="@parameter.DisplayName"
+                       aria-invalid="@AriaState(hasValidationError)"
+                       aria-errormessage="@errorElementId"
+                       @oninput="@((ChangeEventArgs args) => SetParameterValue(parameter.Key, args.Value?.ToString()))" />
+            </span>
+        </label>;
+    }
+
+    private RenderFragment RenderParameterLabel(MetricParamSpec parameter)
+    {
+        var assistiveText = ParameterAssistiveText(parameter);
+        var meta = ParameterMetaText(parameter);
+        return @<span class="metrics-param-label">
+            <span>@parameter.DisplayName</span>
+            <span class="metrics-param-label-tools">
+                @if (!string.IsNullOrWhiteSpace(meta))
+                {
+                    <em>@meta</em>
+                }
+                @if (!string.IsNullOrWhiteSpace(assistiveText))
+                {
+                    <MudTooltip Text="@assistiveText">
+                        <span class="metrics-param-help" tabindex="0" aria-label="@assistiveText">
+                            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" />
+                        </span>
+                    </MudTooltip>
+                }
+            </span>
+        </span>;
     }
 
     private void SetParameterValue(string parameterKey, string? value)
     {
+        if (_draft is null)
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(value))
         {
-            _parameters.Remove(parameterKey);
+            _draft.Parameters.Remove(parameterKey);
         }
         else
         {
-            _parameters[parameterKey] = value.Trim();
+            _draft.Parameters[parameterKey] = value.Trim();
         }
     }
 
-    private string UniqueMetricName(string preferred)
+    private bool TryGetLatestValue(
+        string metricId,
+        FluxMetricResourceDefinition resource,
+        out MetricDesignerLatestValue latest)
     {
-        var id = FluxMetricNaming.ToArtifactId(preferred);
-        if (!Project.MetricNames.Contains(id, StringComparer.Ordinal))
+        latest = default!;
+        if (!Project.TryGetLatestMetricReading(metricId, resource.Parameters, out var reading))
         {
-            return id;
+            return false;
         }
 
-        var index = 2;
-        while (Project.MetricNames.Contains($"{id}{index}", StringComparer.Ordinal))
+        var formatted = MetricRegistry.Format(resource.TypeId, reading.Value);
+        latest = new MetricDesignerLatestValue(formatted.FormattedValue, formatted.Unit, reading.Timestamp);
+        return true;
+    }
+
+    private bool TryGetDraftPreview(out MetricDesignerLatestValue latest)
+    {
+        latest = default!;
+        if (_draft is null ||
+            string.IsNullOrWhiteSpace(_selectedMetricName) ||
+            !Project.TryGetLatestMetricReading(_selectedMetricName, _draft.Parameters, out var reading))
         {
-            index++;
+            return false;
         }
 
-        return $"{id}{index}";
+        var formatted = MetricRegistry.Format(_draft.TypeId, reading.Value);
+        latest = new MetricDesignerLatestValue(formatted.FormattedValue, formatted.Unit, reading.Timestamp);
+        return true;
+    }
+
+    private string RowClass(MetricDesignerRow row)
+        => string.Equals(row.Id, _selectedMetricName, StringComparison.Ordinal)
+            ? "metrics-row selected"
+            : "metrics-row";
+
+    private static string ReferenceCountClass(int count)
+        => count > 0 ? "metrics-ref-count active" : "metrics-ref-count";
+
+    private static string ToggleValue(string? value)
+        => value is TrueValue or FalseValue ? value : DefaultToggleValue;
+
+    private static bool IsToggleSelected(string currentValue, string optionValue)
+        => string.Equals(currentValue, optionValue, StringComparison.Ordinal);
+
+    private static string ToggleOptionClass(string currentValue, string optionValue)
+        => IsToggleSelected(currentValue, optionValue)
+            ? "active"
+            : string.Empty;
+
+    private static string AriaState(bool value)
+        => value ? "true" : "false";
+
+    private static bool HasValidationMessage(string? value)
+        => !string.IsNullOrWhiteSpace(value);
+
+    private static string ReferenceTitle(MetricReferenceSummary reference)
+    {
+        var role = reference.IsPrimary ? "Primary binding" : "Binding";
+        var widgetType = string.IsNullOrWhiteSpace(reference.WidgetType) ? "widget" : reference.WidgetType;
+        return $"{role}: {reference.WidgetName} in {ReferenceLocationLine(reference)} ({widgetType})";
+    }
+
+    private static string ReferenceOpenLabel(MetricReferenceSummary reference)
+        => string.IsNullOrWhiteSpace(reference.CellName)
+            ? $"Open dashboard {reference.DashboardName} for widget {reference.WidgetName}"
+            : $"Open {ReferenceLocationLine(reference)} and select widget {reference.WidgetName}";
+
+    private static string ReferenceOpenTooltip(MetricReferenceSummary reference)
+        => string.IsNullOrWhiteSpace(reference.CellName)
+            ? $"Open dashboard {reference.DashboardName}"
+            : $"Open {ReferenceLocationLine(reference)}";
+
+    private static string ReferenceCellLabel(MetricReferenceSummary reference)
+        => !string.IsNullOrWhiteSpace(reference.CellLabel)
+            ? $"Cell {reference.CellLabel}"
+            : string.IsNullOrWhiteSpace(reference.CellName)
+                ? string.Empty
+                : $"Cell {reference.CellName}";
+
+    private static string ReferenceLocationLine(MetricReferenceSummary reference)
+    {
+        var cell = ReferenceCellLabel(reference);
+        return string.IsNullOrWhiteSpace(cell)
+            ? reference.DashboardName
+            : $"{reference.DashboardName} · {cell}";
+    }
+
+    private static string ParameterRowClass(MetricParamSpec parameter)
+        => parameter.Kind switch
+        {
+            MetricParamKind.Topic => "metrics-parameter-row topic",
+            MetricParamKind.Text => "metrics-parameter-row wide",
+            MetricParamKind.Integer or MetricParamKind.Number or MetricParamKind.Duration or MetricParamKind.Toggle or MetricParamKind.Select => "metrics-parameter-row compact",
+            _ => "metrics-parameter-row"
+        };
+
+    private string? ParameterValidationMessage(MetricParamSpec parameter)
+        => _draft is null ? null : MetricDesignerState.ValidateParameter(_draft, parameter);
+
+    private static string ParameterFieldId(MetricParamSpec parameter)
+        => $"metric-field-param-{FieldIdPart(parameter.Key)}";
+
+    private static string ParameterErrorId(MetricParamSpec parameter)
+        => $"metric-error-param-{FieldIdPart(parameter.Key)}";
+
+    private static string? ParameterErrorElementId(MetricParamSpec parameter, bool hasValidationError)
+        => hasValidationError ? ParameterErrorId(parameter) : null;
+
+    private static string FieldIdPart(string value)
+    {
+        var cleaned = new string(
+            value
+                .Select(static character => char.IsAsciiLetterOrDigit(character) ? character : '-')
+                .ToArray())
+            .Trim('-');
+
+        return string.IsNullOrWhiteSpace(cleaned) ? "field" : cleaned;
+    }
+
+    private static string ParameterFieldClass(MetricParamSpec parameter, bool hasValidationError)
+    {
+        var className = parameter.Kind == MetricParamKind.Toggle
+            ? "metrics-param-field toggle"
+            : "metrics-param-field";
+
+        return hasValidationError ? $"{className} invalid" : className;
+    }
+
+    private static string ParameterInputType(MetricParamSpec parameter)
+        => parameter.Kind is MetricParamKind.Integer or MetricParamKind.Number
+            ? "number"
+            : "text";
+
+    private static string? ParameterInputMode(MetricParamSpec parameter)
+        => parameter.Kind switch
+        {
+            MetricParamKind.Integer => "numeric",
+            MetricParamKind.Number => "decimal",
+            _ => null
+        };
+
+    private static string? ParameterMinimum(MetricParamSpec parameter)
+        => parameter.Min?.ToString(CultureInfo.InvariantCulture);
+
+    private static string? ParameterMaximum(MetricParamSpec parameter)
+        => parameter.Max?.ToString(CultureInfo.InvariantCulture);
+
+    private static string? ParameterStep(MetricParamSpec parameter)
+        => parameter.Kind switch
+        {
+            MetricParamKind.Integer => "1",
+            MetricParamKind.Number => "any",
+            _ => null
+        };
+
+    private static string? ParameterPlaceholder(MetricParamSpec parameter)
+        => !string.IsNullOrWhiteSpace(parameter.Placeholder)
+            ? parameter.Placeholder
+            : parameter.Kind switch
+            {
+                MetricParamKind.Topic => "factory/#",
+                MetricParamKind.Duration => "60s",
+                _ => null
+            };
+
+    private static string? ParameterMetaText(MetricParamSpec parameter)
+    {
+        if (parameter.Min.HasValue && parameter.Max.HasValue)
+        {
+            return $"{parameter.Min.Value}-{parameter.Max.Value}";
+        }
+
+        if (parameter.Required)
+        {
+            return "Required";
+        }
+
+        return null;
+    }
+
+    private static string? ParameterAssistiveText(MetricParamSpec parameter)
+        => string.IsNullOrWhiteSpace(parameter.HelpText)
+            ? null
+            : parameter.HelpText;
+
+    private static string ParameterCountText(MetricDescriptor descriptor)
+        => descriptor.Parameters.Count == 1 ? "1 parameter" : $"{descriptor.Parameters.Count} parameters";
+
+    private static string MetricTypeFactsText(MetricDescriptor descriptor)
+    {
+        var unit = string.IsNullOrWhiteSpace(descriptor.Unit) ? "unitless" : descriptor.Unit;
+        return $"{unit} · {ParameterCountText(descriptor)}";
+    }
+
+    private static string FormatRelativeTime(DateTimeOffset timestamp)
+    {
+        var elapsed = DateTimeOffset.UtcNow - timestamp.ToUniversalTime();
+        if (elapsed.TotalSeconds < 5)
+        {
+            return "just now";
+        }
+
+        if (elapsed.TotalMinutes < 1)
+        {
+            return $"{Math.Max(1, (int)elapsed.TotalSeconds)}s ago";
+        }
+
+        if (elapsed.TotalHours < 1)
+        {
+            return $"{Math.Max(1, (int)elapsed.TotalMinutes)}m ago";
+        }
+
+        return timestamp.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture);
     }
 }

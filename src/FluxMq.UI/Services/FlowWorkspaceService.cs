@@ -344,6 +344,29 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
         NotifyChanged();
     }
 
+    public void SetActiveDashboardCellReference(string dashboardName, string? cellName)
+    {
+        if (string.IsNullOrWhiteSpace(dashboardName))
+        {
+            return;
+        }
+
+        var normalizedCellName = string.IsNullOrWhiteSpace(cellName) ? null : cellName;
+        if (string.Equals(_activeDashboardName, dashboardName, StringComparison.Ordinal) &&
+            string.Equals(ActiveDashboardCellName, normalizedCellName, StringComparison.Ordinal) &&
+            _activeArtifactKind == WorkspaceArtifactKind.Dashboard &&
+            !IsActiveDashboardLive)
+        {
+            return;
+        }
+
+        _activeDashboardName = dashboardName;
+        ActiveDashboardCellName = normalizedCellName;
+        IsActiveDashboardLive = false;
+        _activeArtifactKind = WorkspaceArtifactKind.Dashboard;
+        NotifyChanged();
+    }
+
     public void SetActiveTest(string name)
     {
         if (string.Equals(_activeTestName, name, StringComparison.Ordinal) &&
@@ -449,6 +472,9 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
 
     public int CountMetricReferences(string metricName)
         => _definitionComposer.CountMetricReferences(DefinitionJson, metricName);
+
+    public IReadOnlyList<MetricReferenceSummary> GetMetricReferenceSummaries(string metricName)
+        => _definitionComposer.GetMetricReferenceSummaries(DefinitionJson, metricName);
 
     public void UpdateMetric(string metricName, FluxMetricResourceDefinition metric)
     {
