@@ -723,6 +723,7 @@
     flex: 1 1 auto;
     flex-direction: column;
     min-height: 0;
+    overscroll-behavior: contain;
     overflow: auto;
     padding: 0;
 }
@@ -731,7 +732,7 @@
     align-items: start;
     display: grid;
     gap: 0;
-    grid-template-columns: minmax(0, 1fr) minmax(224px, 268px);
+    grid-template-columns: minmax(0, 1fr) minmax(224px, 264px);
     min-height: 100%;
 }
 
@@ -753,15 +754,19 @@
     border-left: 1px solid var(--flux-border);
     display: flex;
     flex-direction: column;
+    max-height: calc(100vh - 132px);
+    overflow: auto;
+    position: sticky;
+    top: 0;
 }
 
 .metrics-compact-section,
 .metrics-side-card {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
-    padding: 10px 12px;
+    padding: 9px 10px;
 }
 
 .metrics-compact-section + .metrics-compact-section,
@@ -827,7 +832,7 @@
 
 .metrics-form-grid {
     display: grid;
-    gap: 8px;
+    gap: 6px;
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -853,15 +858,15 @@
 
 .metrics-resource-id-field {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 55%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border) 76%, transparent);
+    background: color-mix(in srgb, var(--flux-surface-2) 38%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 62%, transparent);
     border-radius: 6px;
     display: grid;
-    gap: 5px 7px;
+    gap: 4px 7px;
     grid-template-columns: minmax(0, 1fr) auto;
-    min-height: 44px;
+    min-height: 40px;
     min-width: 0;
-    padding: 6px 8px;
+    padding: 5px 7px;
 }
 
 .metrics-resource-id-field > span {
@@ -920,15 +925,15 @@
 }
 
 .metrics-identity-field {
-    background: color-mix(in srgb, var(--flux-surface-2) 55%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border) 76%, transparent);
+    background: color-mix(in srgb, var(--flux-surface-2) 38%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 62%, transparent);
     border-radius: 6px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    min-height: 44px;
+    gap: 3px;
+    min-height: 40px;
     min-width: 0;
-    padding: 6px 8px;
+    padding: 5px 7px;
 }
 
 .metrics-identity-field > span {
@@ -977,15 +982,15 @@
 
 .metrics-type-picker-field {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 55%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border) 76%, transparent);
+    background: color-mix(in srgb, var(--flux-surface-2) 38%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 62%, transparent);
     border-radius: 6px;
     display: grid;
-    gap: 7px;
+    gap: 6px;
     grid-template-columns: 22px minmax(0, 1fr) auto;
-    min-height: 44px;
+    min-height: 40px;
     min-width: 0;
-    padding: 5px 6px 5px 8px;
+    padding: 5px 6px 5px 7px;
 }
 
 .metrics-type-picker-icon {
@@ -1075,7 +1080,7 @@
 
 .metrics-parameter-grid {
     display: grid;
-    gap: 6px;
+    gap: 5px 6px;
     grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
@@ -1096,7 +1101,7 @@
 .metrics-param-field {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
     min-width: 0;
 }
 
@@ -1128,8 +1133,8 @@
 }
 
 .metrics-param-label-tools em {
-    background: transparent;
-    border: 1px solid color-mix(in srgb, var(--flux-border) 76%, transparent);
+    background: color-mix(in srgb, var(--flux-surface-2) 38%, transparent);
+    border: 1px solid transparent;
     border-radius: 5px;
     color: var(--mud-palette-text-secondary);
     font-size: 9.5px;
@@ -1146,7 +1151,14 @@
     display: inline-flex;
     height: 16px;
     justify-content: center;
+    opacity: 0.46;
+    transition: opacity 0.12s ease, background 0.12s ease, color 0.12s ease;
     width: 16px;
+}
+
+.metrics-param-field:hover .metrics-param-help,
+.metrics-param-field:focus-within .metrics-param-help {
+    opacity: 1;
 }
 
 .metrics-param-help:hover,
@@ -1171,17 +1183,17 @@
 .metrics-param-control input,
 .metrics-param-control select {
     appearance: none;
-    background: var(--flux-surface-2);
-    border: 1px solid var(--flux-border);
+    background: color-mix(in srgb, var(--flux-surface-2) 82%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 74%, transparent);
     border-radius: 5px;
     color: var(--mud-palette-text-primary);
     font: inherit;
     font-size: 12px;
     font-weight: 650;
-    height: 30px;
+    height: 28px;
     min-width: 0;
     outline: 0;
-    padding: 0 8px;
+    padding: 0 7px;
     width: 100%;
 }
 
@@ -1238,13 +1250,13 @@
 
 .metrics-param-toggle {
     align-items: center;
-    background: var(--flux-surface-2);
-    border: 1px solid var(--flux-border);
+    background: color-mix(in srgb, var(--flux-surface-2) 82%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 74%, transparent);
     border-radius: 5px;
     display: grid;
     gap: 2px;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    height: 30px;
+    height: 28px;
     min-width: 0;
     padding: 2px;
 }
@@ -1259,7 +1271,7 @@
     font: inherit;
     font-size: 10.5px;
     font-weight: 760;
-    height: 24px;
+    height: 22px;
     min-width: 0;
     padding: 0 5px;
 }
@@ -1379,7 +1391,7 @@
     display: flex;
     flex-direction: column;
     gap: 3px;
-    max-height: 148px;
+    max-height: 132px;
     min-width: 0;
     overflow: auto;
 }
@@ -1589,6 +1601,9 @@ a.metrics-validation-line:focus-visible {
         border-top: 1px solid var(--flux-border);
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        max-height: none;
+        overflow: visible;
+        position: static;
     }
 
     .metrics-side-card + .metrics-side-card {
@@ -1613,6 +1628,7 @@ a.metrics-validation-line:focus-visible {
     .metrics-editor-header {
         align-items: center;
         flex-direction: row;
+        min-height: 39px;
     }
 
     .metrics-editor-title {
@@ -1649,16 +1665,35 @@ a.metrics-validation-line:focus-visible {
     }
 
     .metrics-toolbar {
+        display: grid;
         gap: 5px;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
     }
 
     .metrics-editor-subtitle code {
         display: none;
     }
 
-    .metrics-new-button {
-        flex: 1 1 0;
+    .metrics-search-field,
+    .metrics-type-field {
+        flex: none;
         min-width: 0;
+        width: 100%;
+    }
+
+    .metrics-search-field {
+        grid-column: 1;
+    }
+
+    .metrics-type-field {
+        grid-column: 2;
+    }
+
+    .metrics-new-button {
+        flex: none;
+        grid-column: 1 / -1;
+        min-width: 0;
+        width: 100%;
     }
 
     .metrics-list-head {
@@ -1719,6 +1754,7 @@ a.metrics-validation-line:focus-visible {
 
     .metrics-form-grid,
     .metrics-parameter-grid {
+        gap: 6px;
         grid-template-columns: minmax(0, 1fr);
     }
 
@@ -1731,6 +1767,18 @@ a.metrics-validation-line:focus-visible {
 
     .metrics-editor-side-panel {
         display: flex;
+    }
+
+    .metrics-compact-section,
+    .metrics-side-card {
+        gap: 6px;
+        padding: 8px;
+    }
+
+    .metrics-resource-id-field,
+    .metrics-identity-field,
+    .metrics-type-picker-field {
+        min-height: 42px;
     }
 
     .metrics-side-card:nth-child(2n) {
