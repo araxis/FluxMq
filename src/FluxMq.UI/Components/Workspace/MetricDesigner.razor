@@ -10,7 +10,7 @@
             <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" Class="metrics-heading-icon" />
             <div>
                 <div class="metrics-title">Metrics</div>
-                <div class="metrics-meta">@FilteredRows.Count of @Rows.Count resources</div>
+                <div class="@MetricsMetaClass">@MetricCountText</div>
             </div>
         </div>
 
@@ -81,13 +81,13 @@
             <div class="metrics-list">
                 @if (Rows.Count == 0)
                 {
-                    <div class="metrics-list-empty">
+                    <div class="metrics-list-empty create-state">
                         <span class="metrics-empty-icon">
                             <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" />
                         </span>
                         <span class="metrics-empty-copy">
-                            <strong>No metrics</strong>
-                            <span>No metric resources in this app.</span>
+                            <strong>No metrics yet</strong>
+                            <span>Create one to feed dashboard widgets and metric sources.</span>
                         </span>
                         <button type="button"
                                 class="metrics-empty-action"
@@ -99,13 +99,13 @@
                 }
                 else if (FilteredRows.Count == 0)
                 {
-                    <div class="metrics-list-empty">
+                    <div class="metrics-list-empty filter-state">
                         <span class="metrics-empty-icon muted">
                             <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
                         </span>
                         <span class="metrics-empty-copy">
-                            <strong>No matches</strong>
-                            <span>No metric matches the current filters.</span>
+                            <strong>No matching metrics</strong>
+                            <span>@FilterEmptyDescription</span>
                         </span>
                         <button type="button"
                                 class="metrics-empty-action secondary"
@@ -172,18 +172,9 @@
                         <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" />
                     </span>
                     <span class="metrics-empty-copy">
-                        <strong>No metric selected</strong>
-                        <span>Select a metric from the list.</span>
+                        <strong>@EditorEmptyTitle</strong>
+                        <span>@EditorEmptyDescription</span>
                     </span>
-                    @if (Rows.Count == 0)
-                    {
-                        <button type="button"
-                                class="metrics-empty-action"
-                                @onclick="@OpenNewMetricDialogAsync">
-                            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
-                            <span>New metric</span>
-                        </button>
-                    }
                 </div>
             }
             else
@@ -527,6 +518,26 @@
 
     private IReadOnlyList<MetricDesignerRow> FilteredRows =>
         MetricDesignerState.ApplyFilter(Rows, _search, _typeFilter);
+
+    private string MetricCountText =>
+        MetricDesignerState.MetricCountText(Rows.Count, FilteredRows.Count, HasActiveFilters);
+
+    private string MetricsMetaClass =>
+        HasActiveFilters ? "metrics-meta filtered" : "metrics-meta";
+
+    private MetricDescriptor? SelectedTypeFilter =>
+        string.IsNullOrWhiteSpace(_typeFilter) ? null : Catalog.Describe(_typeFilter);
+
+    private string FilterEmptyDescription =>
+        MetricDesignerState.FilterEmptyDescription(_search, SelectedTypeFilter?.DisplayName);
+
+    private string EditorEmptyTitle =>
+        Rows.Count == 0 ? "Ready to edit" : "No metric selected";
+
+    private string EditorEmptyDescription =>
+        Rows.Count == 0
+            ? "Create a metric on the left to configure parameters and preview values."
+            : "Select a metric from the list.";
 
     private IReadOnlyList<MetricValidationItem> ValidationItems => BuildValidationItems();
 

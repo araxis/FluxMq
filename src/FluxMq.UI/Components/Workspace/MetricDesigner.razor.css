@@ -53,6 +53,11 @@
     margin-top: 2px;
 }
 
+.metrics-meta.filtered {
+    color: var(--flux-accent);
+    font-weight: 720;
+}
+
 .metrics-toolbar {
     align-items: center;
     display: flex;
@@ -432,8 +437,8 @@
 .metrics-editor-empty {
     align-items: start;
     align-self: center;
-    background: transparent;
-    border: 1px dashed color-mix(in srgb, var(--flux-border) 82%, transparent);
+    background: color-mix(in srgb, var(--flux-surface) 50%, transparent);
+    border: 1px dashed color-mix(in srgb, var(--flux-border) 86%, transparent);
     border-radius: 6px;
     color: var(--mud-palette-text-secondary);
     display: grid;
@@ -447,6 +452,11 @@
     padding: 9px;
     text-align: left;
     width: 100%;
+}
+
+.metrics-list-empty.filter-state {
+    background: transparent;
+    border-color: color-mix(in srgb, var(--flux-border) 70%, transparent);
 }
 
 .metrics-editor-empty {
@@ -532,6 +542,27 @@
 .metrics-empty-action.secondary:hover {
     background: var(--flux-surface-2);
     color: var(--mud-palette-text-primary);
+}
+
+.metrics-empty-action:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--flux-accent) 38%, transparent);
+    outline-offset: 2px;
+}
+
+.flux-theme-light .metrics-list-empty,
+.flux-theme-light .metrics-editor-empty {
+    background: color-mix(in srgb, var(--flux-surface) 78%, transparent);
+    border-color: color-mix(in srgb, var(--flux-border-strong) 58%, transparent);
+}
+
+.flux-theme-light .metrics-list-empty.filter-state {
+    background: color-mix(in srgb, var(--flux-surface) 46%, transparent);
+    border-color: color-mix(in srgb, var(--flux-border-strong) 44%, transparent);
+}
+
+.flux-theme-light .metrics-empty-icon.muted {
+    background: color-mix(in srgb, var(--flux-surface-2) 74%, transparent);
+    border-color: color-mix(in srgb, var(--flux-border-strong) 48%, transparent);
 }
 
 .metrics-editor-pane {

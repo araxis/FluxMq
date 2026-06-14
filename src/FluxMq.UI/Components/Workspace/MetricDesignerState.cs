@@ -214,6 +214,38 @@ public static class MetricDesignerState
         ];
     }
 
+    public static string MetricCountText(int total, int filtered, bool hasActiveFilters)
+    {
+        if (total <= 0)
+        {
+            return "No metrics";
+        }
+
+        var totalText = Pluralize(total, "metric");
+        if (!hasActiveFilters || filtered == total)
+        {
+            return totalText;
+        }
+
+        return $"{Math.Max(0, filtered)} of {totalText}";
+    }
+
+    public static string FilterEmptyDescription(string? search, string? typeName)
+    {
+        var searchText = search?.Trim();
+        var typeText = typeName?.Trim();
+        var hasSearch = !string.IsNullOrWhiteSpace(searchText);
+        var hasType = !string.IsNullOrWhiteSpace(typeText);
+
+        return (hasSearch, hasType) switch
+        {
+            (true, true) => $"No metrics use {typeText} and match \"{searchText}\".",
+            (true, false) => $"No metrics match \"{searchText}\".",
+            (false, true) => $"No metrics use {typeText}.",
+            _ => "No metrics match the current filters."
+        };
+    }
+
     public static IReadOnlyDictionary<string, string> DefaultParameters(MetricDescriptor descriptor)
     {
         ArgumentNullException.ThrowIfNull(descriptor);
@@ -465,4 +497,7 @@ public static class MetricDesignerState
 
     private static bool Contains(string value, string search)
         => value.Contains(search, StringComparison.OrdinalIgnoreCase);
+
+    private static string Pluralize(int count, string singular)
+        => count == 1 ? $"1 {singular}" : $"{count} {singular}s";
 }
