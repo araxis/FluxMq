@@ -432,19 +432,19 @@
 .metrics-editor-empty {
     align-items: start;
     align-self: center;
-    background: color-mix(in srgb, var(--flux-surface) 72%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border) 78%, transparent);
+    background: transparent;
+    border: 1px dashed color-mix(in srgb, var(--flux-border) 82%, transparent);
     border-radius: 6px;
     color: var(--mud-palette-text-secondary);
     display: grid;
     flex: 0 1 auto;
-    gap: 7px 8px;
-    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 6px 8px;
+    grid-template-columns: 24px minmax(0, 1fr);
     justify-self: center;
-    max-width: min(360px, calc(100% - 20px));
+    max-width: min(336px, calc(100% - 20px));
     min-height: 0;
     min-width: 0;
-    padding: 10px;
+    padding: 9px;
     text-align: left;
     width: 100%;
 }
@@ -466,7 +466,7 @@
 
 .metrics-empty-copy strong {
     color: var(--mud-palette-text-primary);
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 780;
     line-height: 1.25;
 }
@@ -481,12 +481,12 @@
     align-items: center;
     background: var(--flux-accent-soft);
     border: 1px solid color-mix(in srgb, var(--flux-accent) 28%, var(--flux-border));
-    border-radius: 6px;
+    border-radius: 5px;
     color: var(--flux-accent);
     display: inline-flex;
-    height: 28px;
+    height: 24px;
     justify-content: center;
-    width: 28px;
+    width: 24px;
 }
 
 .metrics-empty-icon.muted {
@@ -508,7 +508,7 @@
     font-size: 11.5px;
     font-weight: 780;
     gap: 5px;
-    height: 28px;
+    height: 26px;
     justify-content: center;
     padding: 0 10px;
 }
@@ -774,9 +774,9 @@
 .metrics-side-card {
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    gap: 6px;
     min-width: 0;
-    padding: 9px 10px;
+    padding: 8px 10px;
 }
 
 .metrics-compact-section + .metrics-compact-section,
@@ -804,7 +804,7 @@
 }
 
 .metrics-side-card .metrics-section-heading {
-    min-height: 18px;
+    min-height: 17px;
 }
 
 .metrics-side-card .metrics-section-heading > span:nth-child(2) {
@@ -819,15 +819,15 @@
     align-items: center;
     background: transparent;
     border: 1px solid color-mix(in srgb, var(--flux-border) 78%, transparent);
-    border-radius: 5px;
+    border-radius: 4px;
     color: var(--mud-palette-text-secondary);
     display: inline-flex;
     flex: 0 0 auto;
     font-size: 9.5px;
     font-weight: 780;
-    height: 18px;
+    height: 16px;
     line-height: 1;
-    padding: 0 5px;
+    padding: 0 4px;
 }
 
 .metrics-side-badge.live {
@@ -1298,25 +1298,25 @@
 }
 
 .metrics-preview-card {
-    background: var(--flux-surface-2);
-    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
-    border-radius: 5px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 4px;
     min-height: 0;
     min-width: 0;
-    padding: 6px 7px;
+    padding: 0;
 }
 
 .metrics-preview-card.live {
-    background: color-mix(in srgb, var(--mud-palette-success) 5%, var(--flux-surface-2));
-    border-color: color-mix(in srgb, var(--mud-palette-success) 24%, var(--flux-border));
-    box-shadow: inset 2px 0 0 color-mix(in srgb, var(--mud-palette-success) 80%, var(--flux-accent));
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
 }
 
 .metrics-preview-card.muted {
-    background: color-mix(in srgb, var(--flux-surface-2) 72%, transparent);
+    background: transparent;
 }
 
 .metrics-preview-status {
@@ -1338,7 +1338,7 @@
 .metrics-preview-value strong {
     color: var(--mud-palette-text-primary);
     font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 780;
     line-height: 1;
     min-width: 0;
@@ -1357,9 +1357,9 @@
 .metrics-preview-empty {
     align-items: center;
     display: grid;
-    gap: 6px;
-    grid-template-columns: 16px minmax(0, 1fr);
-    min-height: 26px;
+    gap: 7px;
+    grid-template-columns: 15px minmax(0, 1fr);
+    min-height: 24px;
     min-width: 0;
 }
 
@@ -1401,29 +1401,32 @@
 .metrics-reference-list {
     display: flex;
     flex-direction: column;
-    gap: 3px;
-    max-height: 132px;
+    gap: 0;
+    max-height: 144px;
     min-width: 0;
     overflow: auto;
 }
 
 .metrics-reference-row {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 68%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border) 58%, transparent);
-    border-radius: 5px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
     color: var(--mud-palette-text-secondary);
     display: grid;
     font-size: 11px;
     gap: 6px;
-    grid-template-columns: 16px minmax(0, 1fr) minmax(0, auto) 24px;
-    min-height: 31px;
-    padding: 3px 2px 3px 5px;
+    grid-template-columns: 15px minmax(0, 1fr) minmax(0, auto) 22px;
+    min-height: 29px;
+    padding: 4px 0;
+}
+
+.metrics-reference-row + .metrics-reference-row {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border) 54%, transparent);
 }
 
 .metrics-reference-row:hover {
-    background: var(--flux-surface-2);
-    border-color: color-mix(in srgb, var(--flux-accent) 18%, var(--flux-border));
+    background: color-mix(in srgb, var(--flux-surface-2) 42%, transparent);
 }
 
 .metrics-reference-row ::deep .metrics-reference-icon {
@@ -1464,20 +1467,20 @@
 }
 
 .metrics-reference-tags small {
-    background: var(--flux-accent-soft);
-    border: 1px solid color-mix(in srgb, var(--flux-accent) 38%, var(--flux-border));
-    border-radius: 5px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
     color: var(--flux-accent);
     font-size: 10px;
     font-weight: 720;
     line-height: 1.1;
-    padding: 2px 4px;
+    padding: 0;
 }
 
 .metrics-reference-tags em {
-    background: color-mix(in srgb, var(--flux-surface) 72%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border) 70%, transparent);
-    border-radius: 5px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
     color: var(--mud-palette-text-secondary);
     font-size: 10px;
     font-style: normal;
@@ -1486,7 +1489,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    padding: 2px 4px;
+    padding: 0;
 }
 
 .metrics-reference-action {
@@ -1497,22 +1500,22 @@
 
 .metrics-reference-row ::deep .metrics-reference-open {
     color: var(--mud-palette-text-secondary);
-    height: 22px;
+    height: 20px;
     padding: 0;
-    width: 22px;
+    width: 20px;
 }
 
 .metrics-reference-empty {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 72%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
-    border-radius: 5px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
     display: grid;
-    gap: 6px;
-    grid-template-columns: 16px minmax(0, 1fr);
-    min-height: 34px;
+    gap: 7px;
+    grid-template-columns: 15px minmax(0, 1fr);
+    min-height: 24px;
     min-width: 0;
-    padding: 6px 7px;
+    padding: 0 0 2px;
 }
 
 .metrics-reference-empty > span {
