@@ -2,30 +2,30 @@
     align-items: center;
     color: var(--mud-palette-text-primary);
     display: flex;
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 780;
-    gap: 7px;
+    gap: 6px;
     min-width: 0;
 }
 
 .metric-delete-dialog {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
 }
 
 .metric-delete-warning {
     align-items: flex-start;
-    background: color-mix(in srgb, var(--mud-palette-error) 8%, var(--flux-surface));
-    border: 1px solid color-mix(in srgb, var(--mud-palette-error) 34%, var(--flux-border));
+    background: color-mix(in srgb, var(--mud-palette-error) 6%, var(--flux-surface));
+    border: 1px solid color-mix(in srgb, var(--mud-palette-error) 30%, var(--flux-border));
     border-radius: 6px;
     color: var(--mud-palette-error);
     display: grid;
-    gap: 8px;
+    gap: 7px;
     grid-template-columns: 18px minmax(0, 1fr);
     min-width: 0;
-    padding: 8px;
+    padding: 7px;
 }
 
 .metric-delete-warning strong,
@@ -36,14 +36,14 @@
 
 .metric-delete-warning strong {
     color: var(--mud-palette-error);
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 780;
     line-height: 1.25;
 }
 
 .metric-delete-warning span {
     color: color-mix(in srgb, var(--mud-palette-error) 72%, var(--mud-palette-text-secondary));
-    font-size: 11px;
+    font-size: 10.5px;
     line-height: 1.35;
     margin-top: 2px;
 }
@@ -59,10 +59,10 @@
 .metric-delete-id {
     align-items: center;
     display: grid;
-    gap: 8px;
+    gap: 7px;
     grid-template-columns: 74px minmax(0, 1fr);
-    min-height: 34px;
-    padding: 6px 8px;
+    min-height: 32px;
+    padding: 5px 8px;
 }
 
 .metric-delete-id span,
@@ -91,8 +91,8 @@
 .metric-delete-references {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding: 8px;
+    gap: 5px;
+    padding: 7px;
 }
 
 .metric-delete-section-heading {
@@ -104,9 +104,14 @@
 }
 
 .metric-delete-section-heading small {
+    background: var(--flux-surface-2);
+    border: 1px solid var(--flux-border);
+    border-radius: 5px;
     color: var(--mud-palette-text-secondary);
-    font-size: 10.5px;
+    font-size: 10px;
     font-weight: 700;
+    line-height: 1;
+    padding: 4px 6px;
 }
 
 .metric-delete-empty {
@@ -115,18 +120,18 @@
     border: 1px solid var(--flux-border);
     border-radius: 5px;
     display: grid;
-    font-size: 11.5px;
-    gap: 7px;
+    font-size: 10.5px;
+    gap: 6px;
     grid-template-columns: 18px minmax(0, 1fr);
-    min-height: 30px;
+    min-height: 29px;
     padding: 5px 7px;
 }
 
 .metric-delete-reference-list {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    max-height: 160px;
+    gap: 3px;
+    max-height: min(152px, 36vh);
     min-width: 0;
     overflow: auto;
 }
@@ -137,10 +142,10 @@
     border: 1px solid var(--flux-border);
     border-radius: 5px;
     display: grid;
-    font-size: 11px;
-    gap: 7px;
+    font-size: 10.5px;
+    gap: 6px;
     grid-template-columns: 18px minmax(0, 1fr) auto auto;
-    min-height: 32px;
+    min-height: 30px;
     padding: 4px 7px;
 }
 
@@ -161,7 +166,7 @@
 
 .metric-delete-reference-main strong {
     color: var(--mud-palette-text-primary);
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 720;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -178,14 +183,14 @@
 
 .metric-delete-reference-row em {
     color: var(--mud-palette-text-secondary);
-    font-size: 10.5px;
+    font-size: 10px;
     font-style: normal;
     max-width: 120px;
 }
 
 .metric-delete-reference-row small {
     color: var(--flux-accent);
-    font-size: 10.5px;
+    font-size: 10px;
     font-weight: 720;
 }
 
@@ -197,9 +202,14 @@
     width: 100%;
 }
 
+.metric-delete-actions ::deep .mud-button-root {
+    min-height: 30px;
+}
+
 @media (max-width: 520px) {
     .metric-delete-id {
         grid-template-columns: minmax(0, 1fr);
+        gap: 3px;
     }
 
     .metric-delete-reference-row {
@@ -220,6 +230,10 @@
 
     .metric-delete-actions {
         align-items: stretch;
-        flex-direction: column;
+        flex-direction: column-reverse;
+    }
+
+    .metric-delete-actions ::deep .mud-button-root {
+        width: 100%;
     }
 }

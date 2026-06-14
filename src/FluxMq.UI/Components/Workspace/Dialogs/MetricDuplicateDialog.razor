@@ -15,7 +15,9 @@
             <label class="metric-duplicate-field">
                 <span>Display name</span>
                 <input value="@_displayName"
+                       class="@DisplayNameInputClass"
                        aria-label="Duplicate display name"
+                       aria-invalid="@(!CanDuplicate)"
                        @oninput="@OnDisplayNameInput"
                        @onkeydown="@OnKeyDown" />
             </label>
@@ -71,6 +73,8 @@
     private string MetricIdPreview => MetricDesignerState.UniqueMetricId(DisplayName, ExistingMetricIds);
 
     private bool CanDuplicate => !string.IsNullOrWhiteSpace(DisplayName);
+
+    private string DisplayNameInputClass => CanDuplicate ? string.Empty : "invalid";
 
     protected override void OnParametersSet()
     {
