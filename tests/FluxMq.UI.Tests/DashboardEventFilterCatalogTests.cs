@@ -2471,7 +2471,7 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain("container-name: dashboard-layout;");
         css.ShouldContain("@container dashboard-layout (max-width: 980px)");
-        css.ShouldContain("@container dashboard-layout (max-width: 620px)");
+        css.ShouldContain("@container dashboard-layout (max-width: 540px)");
         css.ShouldContain("--dashboard-grid-column-min: 132px;");
         css.ShouldContain("--dashboard-grid-row-min: 128px;");
         css.ShouldContain("--dashboard-grid-column-min: 0px;");
