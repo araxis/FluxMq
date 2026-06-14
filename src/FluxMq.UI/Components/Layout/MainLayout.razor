@@ -65,8 +65,11 @@
                            Color="Color.Info"
                            StartIcon="@Icons.Material.Filled.FactCheck"
                            Class="flux-command-button"
+                           aria-label="Validate app"
                            Disabled="@(!CanValidateActiveProject)"
-                           OnClick="@ValidateActiveAsync">Validate</MudButton>
+                           OnClick="@ValidateActiveAsync">
+                    <span class="flux-command-text">Validate</span>
+                </MudButton>
             </MudTooltip>
             <MudTooltip Text="Run app">
                 <MudButton Size="Size.Small"
@@ -74,8 +77,11 @@
                            Color="Color.Success"
                            StartIcon="@Icons.Material.Filled.PlayArrow"
                            Class="flux-command-button"
+                           aria-label="Run app"
                            Disabled="@(!CanRunActiveProject)"
-                           OnClick="@RunActiveAsync">Run</MudButton>
+                           OnClick="@RunActiveAsync">
+                    <span class="flux-command-text">Run</span>
+                </MudButton>
             </MudTooltip>
             <MudTooltip Text="Stop app">
                 <MudButton Size="Size.Small"
@@ -83,6 +89,7 @@
                            Color="Color.Error"
                            StartIcon="@StopButtonIcon"
                            Class="flux-command-button"
+                           aria-label="Stop app"
                            Disabled="@(!CanStopActiveProject)"
                            OnClick="@StopActiveAsync">
                     @if (_stopping)
@@ -91,12 +98,12 @@
                             <MudIcon Icon="@Icons.Material.Filled.Sync"
                                      Size="Size.Small"
                                      Class="flux-command-spin-icon" />
-                            <span>Stop</span>
+                            <span class="flux-command-text">Stop</span>
                         </span>
                     }
                     else
                     {
-                        <span>Stop</span>
+                        <span class="flux-command-text">Stop</span>
                     }
                 </MudButton>
             </MudTooltip>

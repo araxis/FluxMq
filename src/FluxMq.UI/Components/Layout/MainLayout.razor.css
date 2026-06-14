@@ -48,10 +48,12 @@
     align-items: center;
     background: var(--flux-surface);
     border-bottom: 1px solid var(--flux-border);
-    display: flex;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     gap: 18px;
     grid-area: top;
     min-width: 0;
+    overflow: hidden;
     padding: 0 14px 0 16px;
 }
 
@@ -84,6 +86,7 @@
     font-size: 12.5px;
     gap: 8px;
     min-width: 0;
+    overflow: hidden;
 }
 
 .flux-breadcrumb-separator {
@@ -103,7 +106,9 @@
     display: flex;
     flex: 0 0 auto;
     gap: 6px;
+    justify-content: flex-end;
     min-width: 0;
+    overflow: hidden;
 }
 
 .flux-toolbar-divider {
@@ -112,11 +117,15 @@
     width: 1px;
 }
 
-.flux-command-button {
+.flux-toolbar ::deep .flux-command-button {
     font-size: 11.5px;
     height: 28px;
     min-width: 0;
     padding: 0 8px;
+}
+
+.flux-command-text {
+    min-width: 0;
 }
 
 .flux-command-loading {
@@ -359,7 +368,69 @@
     white-space: nowrap;
 }
 
+@media (max-width: 1180px) {
+    .flux-topbar {
+        gap: 10px;
+        padding: 0 10px;
+    }
+
+    .flux-toolbar {
+        gap: 4px;
+    }
+
+    .flux-toolbar ::deep .flux-command-button {
+        justify-content: center;
+        max-width: 30px;
+        min-width: 30px !important;
+        padding: 0 !important;
+        width: 30px;
+    }
+
+    .flux-command-text {
+        display: none;
+    }
+
+    .flux-command-loading {
+        gap: 0;
+    }
+
+    .flux-toolbar ::deep .flux-command-button .mud-button-icon-start {
+        margin: 0;
+    }
+
+    .flux-runstate {
+        display: none;
+    }
+}
+
+@media (max-width: 980px) {
+    .flux-brand-name,
+    .flux-breadcrumb > span:first-child,
+    .flux-breadcrumb-separator {
+        display: none;
+    }
+
+    .flux-topbar {
+        grid-template-columns: 28px minmax(0, 1fr) auto;
+        gap: 8px;
+    }
+
+    .flux-flowstate {
+        justify-content: center;
+        padding: 0;
+        width: 28px;
+    }
+
+    .flux-flowstate span:last-child {
+        display: none;
+    }
+}
+
 @media (max-width: 760px) {
+    .flux-shell {
+        --flux-top-height: 78px;
+    }
+
     .flux-shell,
     .flux-shell.left-collapsed,
     .flux-shell.right-collapsed,
@@ -376,14 +447,28 @@
     }
 
     .flux-topbar {
-        gap: 8px;
-        padding: 0 8px;
+        align-content: center;
+        grid-template-areas:
+            "brand toolbar"
+            "crumb crumb";
+        grid-template-columns: auto minmax(0, 1fr);
+        row-gap: 4px;
+        padding: 5px 8px;
+    }
+
+    .flux-brand {
+        grid-area: brand;
+    }
+
+    .flux-breadcrumb {
+        grid-area: crumb;
+        width: 100%;
     }
 
     .flux-toolbar {
         gap: 3px;
-        overflow-x: auto;
-        scrollbar-width: thin;
+        grid-area: toolbar;
+        overflow: hidden;
     }
 
     .flux-toolbar-divider,
@@ -392,8 +477,11 @@
         display: none;
     }
 
-    .flux-command-button {
-        padding: 0 6px;
+    .flux-toolbar ::deep .flux-command-button {
+        max-width: 28px;
+        min-width: 28px !important;
+        padding: 0 !important;
+        width: 28px;
     }
 
     .flux-statusbar {

@@ -90,6 +90,23 @@
     min-width: 0;
     overflow-x: auto;
     overflow-y: hidden;
+    scrollbar-color: color-mix(in srgb, var(--mud-palette-text-secondary) 28%, transparent) transparent;
+    scrollbar-width: thin;
+}
+
+.project-tabbar::-webkit-scrollbar {
+    height: 6px;
+}
+
+.project-tabbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.project-tabbar::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--mud-palette-text-secondary) 28%, transparent);
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
 }
 
 .project-tab {
@@ -291,6 +308,60 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+    .project-tabbar {
+        flex: 0 0 34px;
+        scrollbar-width: none;
+    }
+
+    .project-tabbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .project-tab {
+        flex: 0 0 42px;
+        gap: 0;
+        justify-content: center;
+        max-width: 42px;
+        min-width: 42px;
+        padding: 0;
+    }
+
+    .project-tab-active::after {
+        left: 8px;
+        right: 8px;
+    }
+
+    .project-tab-name,
+    .project-tab-count,
+    .project-tab-delete,
+    .project-tabbar-app-name {
+        display: none;
+    }
+
+    .project-tab-menu ::deep .mud-button-root {
+        height: 34px;
+    }
+
+    .project-tabbar-app {
+        flex: 0 0 auto;
+        gap: 5px;
+        padding: 0 8px;
+    }
+
+    .project-tab-close {
+        opacity: 0.72;
+    }
+}
+
+@media (max-width: 520px) {
+    .project-tab {
+        flex-basis: 38px;
+        max-width: 38px;
+        min-width: 38px;
+    }
 }
 
 .artifact-workspace-state {
