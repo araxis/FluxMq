@@ -47,15 +47,17 @@
                 <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small" />
             </label>
 
-            <MudTooltip Text="Reset filters">
-                <button type="button"
-                        class="metrics-filter-reset"
-                        disabled="@(!HasActiveFilters)"
-                        aria-label="Reset filters"
-                        @onclick="@ResetFilters">
-                    <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
-                </button>
-            </MudTooltip>
+            @if (HasActiveFilters)
+            {
+                <MudTooltip Text="Reset filters">
+                    <button type="button"
+                            class="metrics-filter-reset"
+                            aria-label="Reset filters"
+                            @onclick="@ResetFilters">
+                        <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
+                    </button>
+                </MudTooltip>
+            }
 
             <button type="button"
                     class="metrics-new-button"
@@ -83,8 +85,10 @@
                         <span class="metrics-empty-icon">
                             <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" />
                         </span>
-                        <strong>No metrics</strong>
-                        <span>No metric resources in this app.</span>
+                        <span class="metrics-empty-copy">
+                            <strong>No metrics</strong>
+                            <span>No metric resources in this app.</span>
+                        </span>
                         <button type="button"
                                 class="metrics-empty-action"
                                 @onclick="@OpenNewMetricDialogAsync">
@@ -99,8 +103,10 @@
                         <span class="metrics-empty-icon muted">
                             <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
                         </span>
-                        <strong>No matches</strong>
-                        <span>No metric matches the current filters.</span>
+                        <span class="metrics-empty-copy">
+                            <strong>No matches</strong>
+                            <span>No metric matches the current filters.</span>
+                        </span>
                         <button type="button"
                                 class="metrics-empty-action secondary"
                                 @onclick="@ResetFilters">
@@ -165,8 +171,10 @@
                     <span class="metrics-empty-icon">
                         <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" />
                     </span>
-                    <strong>No metric selected</strong>
-                    <span>Select a metric from the list.</span>
+                    <span class="metrics-empty-copy">
+                        <strong>No metric selected</strong>
+                        <span>Select a metric from the list.</span>
+                    </span>
                     @if (Rows.Count == 0)
                     {
                         <button type="button"
@@ -378,9 +386,14 @@
                                 }
                                 else
                                 {
-                                    <div class="metrics-preview-empty" title="Stopped or not emitted.">
-                                        <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" />
-                                        <span>No reading</span>
+                                    <div class="metrics-preview-card muted" title="Stopped or not emitted.">
+                                        <div class="metrics-preview-empty">
+                                            <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" />
+                                            <span>
+                                                <strong>No reading</strong>
+                                                <small>Stopped or not emitted</small>
+                                            </span>
+                                        </div>
                                     </div>
                                 }
                             </div>
@@ -396,7 +409,13 @@
                                 </div>
                                 @if (ReferenceSummaries.Count == 0)
                                 {
-                                    <div class="metrics-reference-empty">No dashboard bindings.</div>
+                                    <div class="metrics-reference-empty">
+                                        <MudIcon Icon="@Icons.Material.Filled.LinkOff" Size="Size.Small" />
+                                        <span>
+                                            <strong>No references</strong>
+                                            <small>No dashboard bindings</small>
+                                        </span>
+                                    </div>
                                 }
                                 else
                                 {
