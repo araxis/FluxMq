@@ -1,9 +1,6 @@
 .topic-tree-view {
-    background:
-        linear-gradient(color-mix(in srgb, var(--topic-tree-accent-color, var(--mud-palette-info)) 10%, transparent) 1px, transparent 1px),
-        linear-gradient(90deg, color-mix(in srgb, var(--topic-tree-accent-color, var(--mud-palette-info)) 8%, transparent) 1px, transparent 1px);
-    background-size: 30px 30px;
-    border-radius: 8px;
+    background: transparent;
+    border-radius: 6px;
     height: 100%;
     min-width: 0;
 }
@@ -12,33 +9,32 @@
     height: 100%;
     min-height: 0;
     overflow: auto;
-    padding: 4px;
+    padding: 2px;
 }
 
 .topic-node-flat {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 58%, transparent);
+    background: transparent;
     border: 1px solid transparent;
-    border-radius: 7px;
+    border-radius: 5px;
     cursor: pointer;
     display: flex;
-    gap: 5px;
-    margin: 3px 0;
-    min-height: 34px;
-    padding: 4px 8px;
-    transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
+    gap: 7px;
+    margin: 1px 0;
+    min-height: 30px;
+    padding: 3px 7px;
+    transition: background 0.12s ease, border-color 0.12s ease;
 }
 
 .topic-node-flat:hover {
-    background: color-mix(in srgb, var(--topic-tree-accent-color, var(--mud-palette-info)) 9%, var(--flux-surface-2));
-    border-color: color-mix(in srgb, var(--topic-tree-accent-color, var(--mud-palette-info)) 32%, transparent);
-    transform: translateX(1px);
+    background: var(--flux-surface-2);
+    border-color: var(--flux-border-soft);
 }
 
 .topic-node-selected {
-    background: color-mix(in srgb, var(--flux-accent) 16%, var(--flux-surface-2));
-    border-color: color-mix(in srgb, var(--flux-accent) 62%, transparent);
-    box-shadow: inset 3px 0 0 var(--flux-accent), 0 8px 20px rgba(0, 0, 0, 0.18);
+    background: color-mix(in srgb, var(--flux-accent) 12%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--flux-accent) 42%, var(--flux-border));
+    box-shadow: inset 2px 0 0 var(--flux-accent);
 }
 
 .topic-node-flat-icon {
@@ -51,11 +47,55 @@
 .topic-path {
     color: var(--topic-tree-text-color, var(--mud-palette-text-primary));
     flex: 1;
-    font-weight: 700;
+    font-weight: 650;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.topic-node-count,
+.topic-node-time {
+    color: var(--mud-palette-text-secondary);
+    flex: 0 0 auto;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 11px;
+    line-height: 1;
+}
+
+.topic-node-count {
+    background: var(--flux-surface-2);
+    border: 1px solid var(--flux-border);
+    border-radius: 4px;
+    min-width: 22px;
+    padding: 3px 5px;
+    text-align: center;
+}
+
+.topic-node-time {
+    color: var(--flux-text-subtle);
+}
+
+.topic-tree-empty {
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    justify-content: center;
+    min-height: 140px;
+    padding: 18px;
+    text-align: center;
+}
+
+.topic-tree-empty strong {
+    color: var(--mud-palette-text-primary);
+    font-size: 13px;
+}
+
+.topic-tree-empty span {
+    color: var(--flux-text-muted);
+    font-size: 12px;
 }
 
 .topic-tree-view.compact .topic-tree-nodes {
@@ -63,9 +103,9 @@
 }
 
 .topic-tree-view.compact .topic-node-flat {
-    min-height: 28px;
-    padding-bottom: 2px;
-    padding-top: 2px;
+    min-height: 26px;
+    padding-bottom: 1px;
+    padding-top: 1px;
 }
 
 .topic-tree-view.compact .topic-path {
