@@ -3,9 +3,14 @@
 <div class="topic-explorer">
     <section class="topic-explorer-tree">
         <div class="topic-explorer-header">
-            <div>
-                <div class="topic-explorer-kicker">Topics</div>
-                <h2>Topic tree</h2>
+            <div class="topic-explorer-title">
+                <span class="topic-explorer-title-icon">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+                </span>
+                <div>
+                    <h2>Topics</h2>
+                    <div class="topic-explorer-subtitle">@TopicSourceLabel</div>
+                </div>
             </div>
             <div class="topic-explorer-stats">
                 <span>@TopicCount topics</span>
@@ -35,13 +40,15 @@
                           AdornmentIcon="@Icons.Material.Filled.Search"
                           AdornmentColor="Color.Secondary"
                           Class="topic-search" />
-            <MudTooltip Text="Clear topic selection">
-                <MudIconButton Icon="@Icons.Material.Filled.Backspace"
-                               Size="Size.Small"
-                               Class="topic-clear-button"
-                               Disabled="@string.IsNullOrWhiteSpace(_selectedTopic)"
-                               OnClick="@ClearTopicSelection" />
-            </MudTooltip>
+            @if (!string.IsNullOrWhiteSpace(_selectedTopic))
+            {
+                <MudTooltip Text="Clear topic selection">
+                    <MudIconButton Icon="@Icons.Material.Filled.Backspace"
+                                   Size="Size.Small"
+                                   Class="topic-clear-button"
+                                   OnClick="@ClearTopicSelection" />
+                </MudTooltip>
+            }
         </div>
 
         <div class="topic-tree-frame">
@@ -49,15 +56,23 @@
                            SelectedTopic="@_selectedTopic"
                            TopicSelected="@OnTopicSelected"
                            Filter="@_filter"
-                           EmptyMessage="No topics yet" />
+                           EmptyMessage="@TreeEmptyMessage">
+                <EmptyContent>
+                    <div class="topic-empty-state">
+                        <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+                        <strong>@TreeEmptyTitle</strong>
+                        <span>@TreeEmptyText</span>
+                    </div>
+                </EmptyContent>
+            </TopicTreeView>
         </div>
     </section>
 
     <section class="topic-explorer-detail">
         <div class="topic-detail-strip">
-            <div>
-                <div class="topic-explorer-kicker">Selection</div>
+            <div class="topic-detail-heading">
                 <h3>@SelectedTopicLabel</h3>
+                <div class="topic-explorer-subtitle">@SelectedTopicMeta</div>
             </div>
             <div class="topic-explorer-stats">
                 <span>@FilteredMessages.Count messages</span>
@@ -92,7 +107,11 @@
                     <MudTd DataLabel="Bytes">@context.Payload.Length</MudTd>
                 </RowTemplate>
                 <NoRecordsContent>
-                    <EmptyView Message="No messages" />
+                    <div class="topic-empty-state topic-empty-state-table">
+                        <MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Small" />
+                        <strong>@MessageEmptyTitle</strong>
+                        <span>@MessageEmptyText</span>
+                    </div>
                 </NoRecordsContent>
                 <PagerContent>
                     <MudTablePager HideRowsPerPage="true" />
@@ -138,6 +157,34 @@
     private string SelectedPayloadLabel => SelectedMessage is { } message
         ? $"{message.Payload.Length} B"
         : "No payload";
+
+    private string TopicSourceLabel => Live.SelectedStoredSession is null
+        ? "Live message stream"
+        : "Stored session";
+
+    private string TreeEmptyMessage => string.IsNullOrWhiteSpace(_filter)
+        ? "No topics yet"
+        : "No topics match your search";
+
+    private string TreeEmptyTitle => string.IsNullOrWhiteSpace(_filter)
+        ? "No topics yet"
+        : "No matching topics";
+
+    private string TreeEmptyText => string.IsNullOrWhiteSpace(_filter)
+        ? "Run the app or open a stored session to populate the tree."
+        : "Clear or change the search text.";
+
+    private string MessageEmptyTitle => string.IsNullOrWhiteSpace(_selectedTopic)
+        ? "No messages yet"
+        : "No messages in this topic";
+
+    private string MessageEmptyText => Live.SelectedStoredSession is null
+        ? "Run the app or wait for traffic."
+        : "Choose another topic or switch back to live.";
+
+    private string SelectedTopicMeta => string.IsNullOrWhiteSpace(_selectedTopic)
+        ? "All captured topics"
+        : "Selected topic and children";
 
     private void OnFilterChanged(string value)
     {

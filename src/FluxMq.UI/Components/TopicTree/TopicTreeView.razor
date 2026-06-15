@@ -27,24 +27,29 @@
             var results = SearchResults.OrderBy(n => n.FullPath).ToList();
             @if (results.Count == 0)
             {
-                <EmptyView Message="No topics match your filter" />
+                <div class="topic-tree-empty">
+                    <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Small" />
+                    <strong>No matching topics</strong>
+                    <span>Clear or change the search text.</span>
+                </div>
             }
             else
             {
                 @foreach (var node in results)
                 {
                     <div class="topic-node-flat @(node.FullPath == SelectedTopic ? "topic-node-selected" : null)"
+                         title="@node.FullPath"
                          @onclick="@(() => TopicSelected.InvokeAsync(node.FullPath))">
                         <span class="topic-node-flat-icon">
                             <MudIcon Icon="@Icons.Material.Filled.Topic" Size="Size.Small" />
                         </span>
                         <MudText Typo="Typo.body2" Class="topic-path">@node.FullPath</MudText>
-                        <MudChip T="string" Size="Size.Small" Color="Color.Default" Class="ml-2">@node.MessageCount</MudChip>
+                        <span class="topic-node-count">@node.MessageCount</span>
                         @if (!Compact && node.LastActivity != default)
                         {
-                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="ml-2">
+                            <span class="topic-node-time">
                                 @node.LastActivity.ToLocalTime().ToString("HH:mm:ss.fff")
-                            </MudText>
+                            </span>
                         }
                     </div>
                 }

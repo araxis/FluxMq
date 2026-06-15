@@ -4,40 +4,39 @@
 
 .topic-node-row {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 54%, transparent);
+    background: transparent;
     border: 1px solid transparent;
-    border-radius: 7px;
+    border-radius: 5px;
     cursor: pointer;
     display: flex;
-    gap: 4px;
-    margin: 3px 0;
-    min-height: 34px;
-    padding: 4px 8px 4px calc(8px + (var(--topic-depth) * 15px));
+    gap: 6px;
+    margin: 1px 0;
+    min-height: 30px;
+    padding: 3px 7px 3px calc(7px + (var(--topic-depth) * 14px));
     position: relative;
-    transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
+    transition: background 0.12s ease, border-color 0.12s ease;
 }
 
 .topic-node-row:hover {
-    background: color-mix(in srgb, var(--topic-tree-accent-color, var(--mud-palette-info)) 9%, var(--flux-surface-2));
-    border-color: color-mix(in srgb, var(--topic-tree-accent-color, var(--mud-palette-info)) 32%, transparent);
-    transform: translateX(1px);
+    background: var(--flux-surface-2);
+    border-color: var(--flux-border-soft);
 }
 
 .topic-node-selected {
-    background: color-mix(in srgb, var(--flux-accent) 16%, var(--flux-surface-2));
-    border-color: color-mix(in srgb, var(--flux-accent) 62%, transparent);
-    box-shadow: inset 3px 0 0 var(--flux-accent), 0 8px 20px rgba(0, 0, 0, 0.18);
+    background: color-mix(in srgb, var(--flux-accent) 12%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--flux-accent) 42%, var(--flux-border));
+    box-shadow: inset 2px 0 0 var(--flux-accent);
 }
 
 .topic-node-branch {
-    background: color-mix(in srgb, var(--topic-tree-accent-color, var(--mud-palette-info)) 44%, transparent);
+    background: var(--flux-border-strong);
     border-radius: 999px;
-    bottom: 7px;
-    left: calc(8px + (var(--topic-depth) * 15px));
-    opacity: 0.55;
+    bottom: 8px;
+    left: calc(7px + (var(--topic-depth) * 14px));
+    opacity: 0.42;
     position: absolute;
-    top: 7px;
-    width: 2px;
+    top: 8px;
+    width: 1px;
 }
 
 .topic-node-chevron {
@@ -56,7 +55,7 @@
 .topic-node-name {
     color: var(--topic-tree-text-color, var(--mud-palette-text-primary));
     flex: 1;
-    font-weight: 700;
+    font-weight: 650;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -64,20 +63,31 @@
 }
 
 .topic-node-count {
-    background: color-mix(in srgb, var(--topic-tree-accent-color, var(--flux-accent)) 13%, var(--flux-surface)) !important;
-    border: 1px solid color-mix(in srgb, var(--topic-tree-accent-color, var(--flux-accent)) 34%, transparent);
-    color: var(--topic-tree-text-color, var(--mud-palette-text-primary)) !important;
+    background: var(--flux-surface-2);
+    border: 1px solid var(--flux-border);
+    border-radius: 4px;
+    color: var(--mud-palette-text-secondary);
     flex: 0 0 auto;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 11px;
+    line-height: 1;
+    min-width: 22px;
+    padding: 3px 5px;
+    text-align: center;
 }
 
 .topic-node-time {
+    color: var(--flux-text-subtle);
     flex: 0 0 auto;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 11px;
+    line-height: 1;
 }
 
 .topic-node.compact .topic-node-row {
-    min-height: 28px;
-    padding-bottom: 2px;
-    padding-top: 2px;
+    min-height: 26px;
+    padding-bottom: 1px;
+    padding-top: 1px;
 }
 
 .topic-node.compact .topic-node-name {

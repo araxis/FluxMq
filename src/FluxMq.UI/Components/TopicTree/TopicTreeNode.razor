@@ -2,7 +2,9 @@
 
 <div class="topic-node @(Compact ? "compact" : null)" style="@($"--topic-depth:{Node.Depth};")">
 
-    <div class="topic-node-row @(Node.FullPath == SelectedTopic ? "topic-node-selected" : null)" @onclick="Select">
+    <div class="topic-node-row @(Node.FullPath == SelectedTopic ? "topic-node-selected" : null)"
+         title="@Node.FullPath"
+         @onclick="Select">
         <span class="topic-node-branch"></span>
 
         <span class="topic-node-chevron" @onclick="Toggle" @onclick:stopPropagation>
@@ -19,15 +21,13 @@
 
         <MudText Typo="Typo.body2" Class="topic-node-name">@Node.Name</MudText>
 
-        <MudChip T="string" Size="Size.Small" Color="Color.Default" Class="ml-2 topic-node-count">
-            @Node.MessageCount
-        </MudChip>
+        <span class="topic-node-count">@Node.MessageCount</span>
 
         @if (!Compact && Node.LastActivity != default)
         {
-            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="ml-2 topic-node-time">
+            <span class="topic-node-time">
                 @Node.LastActivity.ToLocalTime().ToString("HH:mm:ss.fff")
-            </MudText>
+            </span>
         }
 
     </div>
