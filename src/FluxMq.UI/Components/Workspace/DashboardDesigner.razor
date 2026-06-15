@@ -233,12 +233,14 @@
                                             <button type="button"
                                                     class="dashboard-cell-widget-action simulate"
                                                     title="Simulate widget data"
+                                                    aria-label="Simulate widget data"
                                                     @onclick="@(() => SimulateWidgetPreview(currentCell.Widget))">
                                                 <MudIcon Icon="@Icons.Material.Filled.Refresh" Size="Size.Small" />
                                             </button>
                                             <button type="button"
                                                     class="dashboard-cell-widget-action danger"
                                                     title="Delete widget"
+                                                    aria-label="Delete widget"
                                                     @onclick="@(() => RemoveWidget(currentCell.Widget))">
                                                 <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" />
                                             </button>
@@ -916,7 +918,7 @@
         => !string.IsNullOrWhiteSpace(_movingWidgetName);
 
     private string CellClass(DashboardCellSnapshot cell)
-        => $"dashboard-cell {(cell.IsExplicit ? "explicit" : "virtual")} {(cell.IsMerged ? "merged" : null)} {(_selectedCellIds.Contains(cell.Name) ? "selected" : null)} {(IsDashboardComponentDrag && string.Equals(_hoveredDropCellName, cell.Name, StringComparison.Ordinal) ? "dropping" : null)} {(IsDashboardMoveDrag && string.Equals(_hoveredWidgetMoveCellName, cell.Name, StringComparison.Ordinal) ? "dropping" : null)} {(IsDashboardMoveDrag && string.Equals(_movingWidgetSourceCellName, cell.Name, StringComparison.Ordinal) ? "moving-source" : null)}";
+        => $"dashboard-cell {(cell.IsExplicit ? "explicit" : "virtual")} {(FindWidget(cell.Widget) is not null ? "has-widget" : null)} {(cell.IsMerged ? "merged" : null)} {(_selectedCellIds.Contains(cell.Name) ? "selected" : null)} {(IsDashboardComponentDrag && string.Equals(_hoveredDropCellName, cell.Name, StringComparison.Ordinal) ? "dropping" : null)} {(IsDashboardMoveDrag && string.Equals(_hoveredWidgetMoveCellName, cell.Name, StringComparison.Ordinal) ? "dropping" : null)} {(IsDashboardMoveDrag && string.Equals(_movingWidgetSourceCellName, cell.Name, StringComparison.Ordinal) ? "moving-source" : null)}";
 
     private static string LiveCellClass(DashboardCellSnapshot cell)
         => $"dashboard-live-cell {(cell.IsMerged ? "merged" : null)} {(!string.IsNullOrWhiteSpace(cell.Widget) ? "has-widget" : "empty")}";

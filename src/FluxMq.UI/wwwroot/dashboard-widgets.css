@@ -1,17 +1,15 @@
 .dashboard-widget {
     --widget-accent: var(--dashboard-widget-accent, var(--flux-accent));
-    --widget-accent-soft: color-mix(in srgb, var(--widget-accent) 14%, transparent);
+    --widget-accent-soft: color-mix(in srgb, var(--widget-accent) 10%, transparent);
     align-items: stretch;
-    background:
-        linear-gradient(145deg, color-mix(in srgb, var(--widget-accent) 8%, transparent), transparent 48%),
-        var(--dashboard-widget-bg, color-mix(in srgb, var(--flux-surface) 94%, transparent));
-    border: var(--dashboard-widget-border-width, 1px) solid var(--dashboard-widget-border, color-mix(in srgb, var(--widget-accent) 30%, var(--flux-border)));
-    border-radius: var(--dashboard-widget-radius, 8px);
-    box-shadow: inset 0 1px 0 color-mix(in srgb, white 4%, transparent), 0 16px 34px rgba(0, 0, 0, 0.22);
+    background: var(--dashboard-widget-bg, color-mix(in srgb, var(--flux-surface) 96%, transparent));
+    border: var(--dashboard-widget-border-width, 1px) solid var(--dashboard-widget-border, color-mix(in srgb, var(--widget-accent) 22%, var(--flux-border)));
+    border-radius: var(--dashboard-widget-radius, 7px);
+    box-shadow: none;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     height: 100%;
     min-height: 0;
     min-width: 0;
@@ -44,21 +42,21 @@
     align-items: center;
     display: flex;
     flex: 0 0 auto;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 
 .dashboard-widget-icon {
     align-items: center;
-    background: color-mix(in srgb, var(--widget-accent) 18%, var(--flux-surface-2));
-    border: 1px solid color-mix(in srgb, var(--widget-accent) 40%, transparent);
-    border-radius: 7px;
+    background: color-mix(in srgb, var(--widget-accent) 12%, var(--flux-surface-2));
+    border: 1px solid color-mix(in srgb, var(--widget-accent) 28%, transparent);
+    border-radius: 6px;
     color: var(--widget-accent);
     display: inline-flex;
     flex: 0 0 auto;
-    height: 30px;
+    height: 28px;
     justify-content: center;
-    width: 30px;
+    width: 28px;
 }
 
 .dashboard-widget-title-block {
@@ -78,7 +76,7 @@
 
 .dashboard-widget-title {
     color: var(--dashboard-widget-title, var(--dashboard-widget-text, var(--mud-palette-text-primary)));
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 800;
     line-height: 1.25;
 }
@@ -86,7 +84,7 @@
 .dashboard-widget-subtitle {
     color: var(--dashboard-widget-subtitle, var(--dashboard-widget-muted, var(--mud-palette-text-secondary)));
     font-size: 10.5px;
-    font-weight: 650;
+    font-weight: 700;
     line-height: 1.25;
 }
 
@@ -104,7 +102,7 @@
 
 .dashboard-widget-meta {
     color: var(--mud-palette-text-secondary);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 650;
     min-width: 0;
     overflow: hidden;
@@ -207,7 +205,7 @@
 }
 
 .dashboard-widget.kpi-tile {
-    gap: 10px;
+    gap: 8px;
 }
 
 .dashboard-widget.kpi-tile .dashboard-widget-header {
@@ -522,17 +520,15 @@
 
 .dashboard-widget-sparkline span,
 .dashboard-widget-chart-bars span {
-    background: linear-gradient(180deg, var(--widget-accent), color-mix(in srgb, var(--widget-accent) 28%, transparent));
-    border-radius: 999px 999px 3px 3px;
-    box-shadow: 0 0 14px color-mix(in srgb, var(--widget-accent) 18%, transparent);
+    background: color-mix(in srgb, var(--widget-accent) 76%, transparent);
+    border-radius: 3px 3px 2px 2px;
+    box-shadow: none;
     min-height: 5px;
 }
 
 .dashboard-widget-chart {
-    background:
-        linear-gradient(180deg, color-mix(in srgb, var(--widget-accent) 6%, transparent), transparent),
-        color-mix(in srgb, var(--flux-canvas) 58%, transparent);
-    border: 1px solid color-mix(in srgb, var(--widget-accent) 22%, var(--flux-border));
+    background: color-mix(in srgb, var(--flux-surface-2) 70%, transparent);
+    border: 1px solid color-mix(in srgb, var(--widget-accent) 16%, var(--flux-border));
     border-radius: 7px;
     display: flex;
     flex: 1 1 auto;
@@ -570,10 +566,8 @@
 }
 
 .dashboard-line-chart-visual {
-    background:
-        linear-gradient(180deg, color-mix(in srgb, var(--line-chart-line-color, var(--widget-accent)) 7%, transparent), transparent),
-        color-mix(in srgb, var(--flux-canvas) 58%, transparent);
-    border: 1px solid color-mix(in srgb, var(--line-chart-line-color, var(--widget-accent)) 22%, var(--flux-border));
+    background: color-mix(in srgb, var(--flux-surface-2) 70%, transparent);
+    border: 1px solid color-mix(in srgb, var(--line-chart-line-color, var(--widget-accent)) 16%, var(--flux-border));
     border-radius: 7px;
     display: flex;
     flex: 1 1 auto;
@@ -652,10 +646,8 @@
 }
 
 .dashboard-area-chart-visual {
-    background:
-        linear-gradient(180deg, color-mix(in srgb, var(--area-chart-fill-color, var(--widget-accent)) 7%, transparent), transparent),
-        color-mix(in srgb, var(--flux-canvas) 58%, transparent);
-    border: 1px solid color-mix(in srgb, var(--area-chart-line-color, var(--widget-accent)) 22%, var(--flux-border));
+    background: color-mix(in srgb, var(--flux-surface-2) 70%, transparent);
+    border: 1px solid color-mix(in srgb, var(--area-chart-line-color, var(--widget-accent)) 16%, var(--flux-border));
     border-radius: 7px;
     display: flex;
     flex: 1 1 auto;
@@ -739,10 +731,8 @@
 }
 
 .dashboard-bar-chart-visual {
-    background:
-        linear-gradient(180deg, color-mix(in srgb, var(--bar-chart-color, var(--widget-accent)) 7%, transparent), transparent),
-        color-mix(in srgb, var(--flux-canvas) 58%, transparent);
-    border: 1px solid color-mix(in srgb, var(--bar-chart-color, var(--widget-accent)) 22%, var(--flux-border));
+    background: color-mix(in srgb, var(--flux-surface-2) 70%, transparent);
+    border: 1px solid color-mix(in srgb, var(--bar-chart-color, var(--widget-accent)) 16%, var(--flux-border));
     border-radius: 7px;
     display: flex;
     flex: 1 1 auto;
@@ -811,9 +801,9 @@
 }
 
 .dashboard-bar-chart-bar span {
-    background: linear-gradient(180deg, var(--bar-chart-color, var(--widget-accent)), color-mix(in srgb, var(--bar-chart-color, var(--widget-accent)) 32%, transparent));
+    background: color-mix(in srgb, var(--bar-chart-color, var(--widget-accent)) 78%, transparent);
     border-radius: var(--bar-chart-radius, 4px) var(--bar-chart-radius, 4px) 2px 2px;
-    box-shadow: 0 0 14px color-mix(in srgb, var(--bar-chart-color, var(--widget-accent)) 18%, transparent);
+    box-shadow: none;
     display: block;
 }
 
@@ -824,7 +814,7 @@
 }
 
 .dashboard-bar-chart-visual.horizontal .dashboard-bar-chart-bar span {
-    background: linear-gradient(90deg, color-mix(in srgb, var(--bar-chart-color, var(--widget-accent)) 32%, transparent), var(--bar-chart-color, var(--widget-accent)));
+    background: color-mix(in srgb, var(--bar-chart-color, var(--widget-accent)) 78%, transparent);
     border-radius: 2px var(--bar-chart-radius, 4px) var(--bar-chart-radius, 4px) 2px;
     height: 100%;
     min-width: 4px;
@@ -853,10 +843,8 @@
 }
 
 .dashboard-donut-chart-visual {
-    background:
-        linear-gradient(180deg, color-mix(in srgb, var(--donut-chart-accent, var(--widget-accent)) 7%, transparent), transparent),
-        color-mix(in srgb, var(--flux-canvas) 58%, transparent);
-    border: 1px solid color-mix(in srgb, var(--donut-chart-accent, var(--widget-accent)) 22%, var(--flux-border));
+    background: color-mix(in srgb, var(--flux-surface-2) 70%, transparent);
+    border: 1px solid color-mix(in srgb, var(--donut-chart-accent, var(--widget-accent)) 16%, var(--flux-border));
     border-radius: 7px;
     display: flex;
     flex: 1 1 auto;
@@ -1017,7 +1005,7 @@
 
 .dashboard-rate-track span,
 .dashboard-gauge-meter-fill {
-    background: linear-gradient(90deg, color-mix(in srgb, var(--widget-accent) 42%, transparent), var(--widget-accent));
+    background: color-mix(in srgb, var(--widget-accent) 78%, transparent);
     border-radius: inherit;
     display: block;
     height: 100%;
@@ -1029,10 +1017,8 @@
 }
 
 .dashboard-gauge-meter-panel {
-    background:
-        linear-gradient(180deg, color-mix(in srgb, var(--widget-accent) 7%, transparent), transparent),
-        color-mix(in srgb, var(--flux-canvas) 58%, transparent);
-    border: 1px solid color-mix(in srgb, var(--widget-accent) 22%, var(--flux-border));
+    background: color-mix(in srgb, var(--flux-surface-2) 70%, transparent);
+    border: 1px solid color-mix(in srgb, var(--widget-accent) 16%, var(--flux-border));
     border-radius: 7px;
     display: flex;
     flex-direction: column;
@@ -1075,7 +1061,7 @@
 }
 
 .dashboard-gauge-meter-fill {
-    background: linear-gradient(90deg, color-mix(in srgb, var(--gauge-fill, var(--widget-accent)) 42%, transparent), var(--gauge-fill, var(--widget-accent)));
+    background: color-mix(in srgb, var(--gauge-fill, var(--widget-accent)) 78%, transparent);
     width: var(--gauge-progress);
 }
 
@@ -1095,10 +1081,8 @@
 
 .dashboard-widget-gauge-shell {
     align-items: center;
-    background:
-        linear-gradient(180deg, color-mix(in srgb, var(--widget-accent) 7%, transparent), transparent),
-        color-mix(in srgb, var(--flux-canvas) 58%, transparent);
-    border: 1px solid color-mix(in srgb, var(--widget-accent) 22%, var(--flux-border));
+    background: color-mix(in srgb, var(--flux-surface-2) 70%, transparent);
+    border: 1px solid color-mix(in srgb, var(--widget-accent) 16%, var(--flux-border));
     border-radius: 7px;
     display: grid;
     flex: 1 1 auto;
@@ -1192,10 +1176,8 @@
 }
 
 .dashboard-top-topic-panel {
-    background:
-        linear-gradient(180deg, color-mix(in srgb, var(--widget-accent) 7%, transparent), transparent),
-        color-mix(in srgb, var(--flux-canvas) 58%, transparent);
-    border: 1px solid color-mix(in srgb, var(--widget-accent) 22%, var(--flux-border));
+    background: color-mix(in srgb, var(--flux-surface-2) 70%, transparent);
+    border: 1px solid color-mix(in srgb, var(--widget-accent) 16%, var(--flux-border));
     border-radius: 7px;
     display: flex;
     flex: 1 1 auto;
@@ -1232,7 +1214,7 @@
 }
 
 .dashboard-topic-bar-fill {
-    background: linear-gradient(90deg, color-mix(in srgb, var(--widget-accent) 55%, transparent), var(--widget-accent));
+    background: color-mix(in srgb, var(--widget-accent) 78%, transparent);
     border-radius: inherit;
     height: 100%;
 }
@@ -1343,10 +1325,8 @@
 }
 
 .dashboard-widget-payload {
-    background:
-        linear-gradient(180deg, color-mix(in srgb, var(--widget-accent) 7%, transparent), transparent),
-        var(--flux-surface-2);
-    border: 1px solid color-mix(in srgb, var(--widget-accent) 24%, var(--flux-border));
+    background: var(--flux-surface-2);
+    border: 1px solid color-mix(in srgb, var(--widget-accent) 16%, var(--flux-border));
     border-radius: 7px;
     color: var(--mud-palette-text-primary);
     flex: 1 1 auto;
@@ -1448,8 +1428,8 @@
 }
 
 .dashboard-topic-tree {
-    background: color-mix(in srgb, var(--flux-canvas) 62%, transparent);
-    border: 1px solid color-mix(in srgb, var(--topic-tree-accent-color) 22%, var(--flux-border));
+    background: color-mix(in srgb, var(--flux-surface-2) 70%, transparent);
+    border: 1px solid color-mix(in srgb, var(--topic-tree-accent-color) 16%, var(--flux-border));
     border-radius: 7px;
     flex: 1 1 auto;
     min-height: 0;
@@ -1474,10 +1454,8 @@
     --event-table-text-color: var(--mud-palette-text-primary);
     --event-table-muted-color: var(--mud-palette-text-secondary);
     --event-table-columns: 58px minmax(100px, 1.15fr) minmax(110px, 1.2fr) minmax(58px, 0.55fr) minmax(0, 1fr);
-    background:
-        linear-gradient(180deg, color-mix(in srgb, var(--widget-accent) 7%, transparent), transparent),
-        color-mix(in srgb, var(--flux-canvas) 58%, transparent);
-    border: 1px solid color-mix(in srgb, var(--widget-accent) 22%, var(--flux-border));
+    background: color-mix(in srgb, var(--flux-surface-2) 70%, transparent);
+    border: 1px solid color-mix(in srgb, var(--widget-accent) 16%, var(--flux-border));
     border-radius: 7px;
     display: flex;
     flex: 1 1 auto;
@@ -1578,10 +1556,8 @@
 }
 
 .dashboard-topic-activity-cell {
-    background:
-        linear-gradient(145deg, color-mix(in srgb, var(--topic-activity-accent-color) var(--topic-heat), transparent), transparent),
-        color-mix(in srgb, var(--flux-canvas) 70%, transparent);
-    border: 1px solid color-mix(in srgb, var(--topic-activity-accent-color) 34%, var(--flux-border));
+    background: color-mix(in srgb, var(--topic-activity-accent-color) 10%, var(--flux-surface-2));
+    border: 1px solid color-mix(in srgb, var(--topic-activity-accent-color) 22%, var(--flux-border));
     border-radius: 7px;
     display: flex;
     flex-direction: column;
@@ -1666,7 +1642,7 @@
 
 .dashboard-distribution-fill,
 .dashboard-series-fill {
-    background: linear-gradient(90deg, var(--widget-accent), color-mix(in srgb, var(--widget-accent) 56%, white));
+    background: color-mix(in srgb, var(--widget-accent) 78%, transparent);
     border-radius: inherit;
     height: 100%;
     min-width: 0;

@@ -422,8 +422,8 @@
 }
 
 .dashboard-grid {
-    background: color-mix(in srgb, var(--flux-surface-2) 70%, transparent);
-    border: 1px solid color-mix(in srgb, var(--mud-palette-text-secondary) 30%, var(--flux-border));
+    background: color-mix(in srgb, var(--flux-surface-2) 58%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-secondary) 22%, var(--flux-border));
     border-radius: 6px;
     display: grid;
     gap: 6px;
@@ -441,8 +441,8 @@
 }
 
 .dashboard-cell {
-    background: color-mix(in srgb, var(--flux-surface-2) 88%, transparent);
-    border: 1px solid color-mix(in srgb, var(--mud-palette-text-secondary) 16%, var(--flux-border));
+    background: color-mix(in srgb, var(--flux-surface-2) 76%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-secondary) 14%, var(--flux-border));
     border-radius: 6px;
     color: var(--mud-palette-text-primary);
     cursor: pointer;
@@ -452,41 +452,55 @@
     min-width: 0;
     overflow: hidden;
     position: relative;
-    transition: background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+    transition: background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease, outline-color 0.12s ease;
     z-index: 1;
 }
 
 .dashboard-cell:hover {
-    background: color-mix(in srgb, var(--flux-accent) 10%, var(--flux-surface-2));
-    border-color: color-mix(in srgb, var(--flux-accent) 48%, var(--flux-border));
+    background: color-mix(in srgb, var(--flux-accent) 7%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--flux-accent) 44%, var(--flux-border));
 }
 
 .dashboard-cell.explicit {
-    background: var(--flux-surface-2);
+    background: color-mix(in srgb, var(--flux-surface-2) 92%, transparent);
     border-style: solid;
     box-shadow: none;
     z-index: 2;
 }
 
+.dashboard-cell.has-widget {
+    background: transparent;
+    border-color: color-mix(in srgb, var(--mud-palette-text-secondary) 20%, var(--flux-border));
+}
+
+.dashboard-cell.has-widget:hover {
+    background: transparent;
+    border-color: color-mix(in srgb, var(--flux-accent) 48%, var(--flux-border));
+}
+
 .dashboard-cell.selected {
     border-color: var(--flux-accent);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--flux-accent) 72%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--flux-accent) 66%, transparent);
     z-index: 3;
 }
 
+.dashboard-cell.has-widget.selected {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--flux-accent) 66%, transparent);
+}
+
 .dashboard-cell.dropping {
-    background: color-mix(in srgb, var(--flux-accent) 22%, var(--flux-surface-2));
+    background: color-mix(in srgb, var(--flux-accent) 15%, var(--flux-surface-2));
     border-color: var(--flux-accent);
-    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--flux-accent) 75%, transparent), 0 14px 30px rgba(0, 0, 0, 0.34);
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--flux-accent) 70%, transparent);
     z-index: 4;
 }
 
 .dashboard-cell.moving-source {
-    opacity: 0.68;
+    opacity: 0.58;
 }
 
 .dashboard-cell.merged {
-    background: color-mix(in srgb, var(--flux-accent) 13%, var(--flux-surface-2));
+    background: color-mix(in srgb, var(--flux-accent) 8%, var(--flux-surface-2));
 }
 
 .dashboard-cell-content {
@@ -578,6 +592,18 @@
     width: var(--dashboard-cell-widget-width, 100%);
 }
 
+.dashboard-cell-widget-preview ::deep .dashboard-widget-edit {
+    border-color: color-mix(in srgb, var(--widget-accent) 18%, var(--flux-border));
+}
+
+.dashboard-cell.has-widget:hover .dashboard-cell-widget-preview ::deep .dashboard-widget-edit {
+    border-color: color-mix(in srgb, var(--widget-accent) 30%, var(--flux-border));
+}
+
+.dashboard-cell.selected .dashboard-cell-widget-preview ::deep .dashboard-widget-edit {
+    border-color: color-mix(in srgb, var(--flux-accent) 68%, var(--flux-border));
+}
+
 .dashboard-cell-widget-preview ::deep .dashboard-widget-header {
     gap: 8px;
 }
@@ -633,6 +659,7 @@
 }
 
 .dashboard-live-cell ::deep .dashboard-widget {
+    border-color: var(--dashboard-widget-border, color-mix(in srgb, var(--widget-accent) 18%, var(--flux-border)));
     flex: var(--dashboard-cell-widget-flex, 1 1 auto);
     height: var(--dashboard-cell-widget-height, 100%);
     max-height: var(--dashboard-cell-widget-max-height, none);
@@ -816,10 +843,10 @@
 
 .dashboard-cell-widget-toolbar {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface) 58%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border) 44%, transparent);
+    background: color-mix(in srgb, var(--flux-surface) 92%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 82%, transparent);
     border-radius: 5px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    box-shadow: none;
     display: flex;
     gap: 1px;
     opacity: 0;
@@ -832,8 +859,10 @@
     z-index: 6;
 }
 
-.dashboard-cell:hover .dashboard-cell-widget-toolbar {
-    opacity: 0.92;
+.dashboard-cell:hover .dashboard-cell-widget-toolbar,
+.dashboard-cell.selected .dashboard-cell-widget-toolbar,
+.dashboard-cell-widget-toolbar:focus-within {
+    opacity: 0.96;
     transform: translateY(0);
 }
 
@@ -846,11 +875,11 @@
     cursor: pointer;
     display: inline-flex;
     flex: 0 0 auto;
-    height: 20px;
+    height: 22px;
     justify-content: center;
     padding: 0;
     transition: background 0.12s ease, color 0.12s ease;
-    width: 20px;
+    width: 22px;
 }
 
 .dashboard-cell-widget-action ::deep .mud-icon-root {
