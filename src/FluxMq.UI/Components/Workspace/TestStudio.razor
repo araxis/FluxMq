@@ -4,7 +4,10 @@
     <div class="test-studio-toolbar">
         <div class="test-studio-heading">
             <MudIcon Icon="@Icons.Material.Filled.Science" Size="Size.Small" />
-            <span>@Title</span>
+            <div>
+                <span>@Title</span>
+                <small>@Subtitle</small>
+            </div>
         </div>
         <MudToggleGroup T="TestStudioMode"
                         Value="@_mode"
@@ -12,8 +15,8 @@
                         Size="Size.Small"
                         SelectionMode="SelectionMode.SingleSelection"
                         Color="Color.Primary">
-            <MudToggleItem T="TestStudioMode" Value="@TestStudioMode.Designer" Text="Scenario Designer" />
-            <MudToggleItem T="TestStudioMode" Value="@TestStudioMode.Runner" Text="Runner Console" />
+            <MudToggleItem T="TestStudioMode" Value="@TestStudioMode.Designer" Text="Designer" />
+            <MudToggleItem T="TestStudioMode" Value="@TestStudioMode.Runner" Text="Runner" />
         </MudToggleGroup>
     </div>
 
@@ -46,6 +49,14 @@
         => Project.GetActiveTestScenario() is { } scenario
             ? scenario.Name
             : "Test Studio";
+
+    private string Subtitle
+        => Project.GetActiveTestScenario() is { } scenario
+            ? $"{FormatCount(scenario.StepCount, "step")} / {FormatCount(Project.ScenarioRunHistory.Count(result => string.Equals(result.Name, scenario.Name, StringComparison.Ordinal)), "run")}"
+            : FormatCount(Project.TestNames.Count, "test");
+
+    private static string FormatCount(int count, string singular)
+        => count == 1 ? $"1 {singular}" : $"{count} {singular}s";
 
     private void SetMode(TestStudioMode mode)
         => _mode = mode;

@@ -1,8 +1,5 @@
 .test-scenario-designer {
-    background:
-        radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--flux-grid-dot) 80%, transparent) 1px, transparent 1.3px),
-        var(--flux-canvas);
-    background-size: 18px 18px;
+    background: var(--flux-canvas);
     color: var(--mud-palette-text-primary);
     display: flex;
     flex: 1 1 auto;
@@ -26,14 +23,14 @@
 
 .test-scenario-header {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface) 84%, transparent);
+    background: var(--flux-surface);
     border-bottom: 1px solid var(--flux-border);
     display: flex;
     flex: 0 0 auto;
-    gap: 12px;
-    min-height: 52px;
+    gap: 8px;
+    min-height: 44px;
     min-width: 0;
-    padding: 8px 18px;
+    padding: 7px 10px;
 }
 
 .test-scenario-actions {
@@ -41,7 +38,7 @@
     display: flex;
     flex: 0 1 auto;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 5px;
     justify-content: flex-end;
     margin-left: auto;
     min-width: 0;
@@ -51,7 +48,7 @@
     align-items: center;
     display: flex;
     flex: 1 1 auto;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 
@@ -61,7 +58,7 @@
 
 .test-scenario-title {
     color: var(--mud-palette-text-primary);
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 750;
     line-height: 1.2;
     min-width: 0;
@@ -85,11 +82,56 @@
     gap: 8px;
     justify-content: center;
     min-height: 0;
+    padding: 18px;
+}
+
+.test-scenario-empty-panel {
+    align-items: center;
+    background: color-mix(in srgb, var(--flux-surface) 84%, transparent);
+    border: 1px solid var(--flux-border);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: min(100%, 360px);
+    padding: 22px;
+    text-align: center;
+}
+
+.test-scenario-empty-panel.compact {
+    max-width: min(100%, 420px);
+    padding: 18px;
+}
+
+.test-scenario-empty-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.test-scenario-empty-copy span {
+    color: var(--mud-palette-text-primary);
+    font-size: 14px;
+    font-weight: 750;
+    line-height: 1.2;
+}
+
+.test-scenario-empty-copy small {
+    color: var(--mud-palette-text-secondary);
+    font-size: 11.5px;
+    line-height: 1.35;
 }
 
 .test-scenario-empty-icon {
-    font-size: 42px;
-    opacity: 0.55;
+    color: var(--mud-palette-warning);
+    font-size: 34px;
+    opacity: 0.82;
+}
+
+.test-scenario-empty-panel ::deep .mud-button-root {
+    border-radius: 6px;
+    min-height: 32px;
 }
 
 .test-step-list {
@@ -108,33 +150,33 @@
     align-items: stretch;
     display: grid;
     flex: 1 1 auto;
-    gap: 12px;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     min-height: 0;
     min-width: 0;
     overflow: auto;
-    padding: 14px;
+    padding: 10px;
 }
 
 .test-phase-lane {
-    background: color-mix(in srgb, var(--flux-surface) 76%, transparent);
+    background: color-mix(in srgb, var(--flux-surface) 88%, transparent);
     border: 1px solid var(--flux-border);
-    border-radius: 8px;
+    border-radius: 6px;
     display: flex;
     flex-direction: column;
     min-height: 0;
-    min-width: 240px;
+    min-width: 0;
     overflow: hidden;
 }
 
 .test-phase-header {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-canvas) 62%, transparent);
+    background: color-mix(in srgb, var(--flux-surface-2) 70%, transparent);
     border-bottom: 1px solid var(--flux-border);
     display: flex;
     justify-content: space-between;
-    min-height: 48px;
-    padding: 10px 12px;
+    min-height: 40px;
+    padding: 8px 10px;
 }
 
 .test-phase-header div {
@@ -146,7 +188,7 @@
 
 .test-phase-header span {
     color: var(--mud-palette-text-primary);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 850;
 }
 
@@ -161,10 +203,10 @@
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     min-height: 0;
     overflow: auto;
-    padding: 10px;
+    padding: 8px;
 }
 
 .test-phase-empty {
@@ -177,14 +219,14 @@
 
 .test-step-card {
     align-items: flex-start;
-    background: color-mix(in srgb, var(--flux-surface) 90%, transparent);
+    background: color-mix(in srgb, var(--flux-surface-2) 82%, transparent);
     border: 1px solid var(--flux-border);
-    border-radius: 8px;
+    border-radius: 6px;
     display: flex;
-    gap: 12px;
-    min-height: 132px;
+    gap: 10px;
+    min-height: 108px;
     min-width: 0;
-    padding: 14px;
+    padding: 10px;
     width: 100%;
 }
 
@@ -220,15 +262,15 @@
     align-items: center;
     background: color-mix(in srgb, var(--mud-palette-warning) 16%, transparent);
     border: 1px solid color-mix(in srgb, var(--mud-palette-warning) 36%, transparent);
-    border-radius: 999px;
+    border-radius: 6px;
     color: var(--mud-palette-warning);
     display: flex;
     flex: 0 0 auto;
     font-size: 12px;
     font-weight: 800;
-    height: 28px;
+    height: 26px;
     justify-content: center;
-    width: 28px;
+    width: 26px;
 }
 
 .test-step-body {
@@ -288,7 +330,7 @@
 
 .test-step-name {
     color: var(--mud-palette-text-primary);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 750;
     flex: 1 1 120px;
     min-width: 0;
@@ -299,14 +341,14 @@
 
 .test-step-type {
     border: 1px solid var(--flux-border-strong);
-    border-radius: 999px;
+    border-radius: 5px;
     color: var(--mud-palette-text-secondary);
     flex: 0 0 auto;
     font-size: 10px;
     font-weight: 800;
     letter-spacing: 0;
     line-height: 1;
-    padding: 5px 8px;
+    padding: 4px 7px;
     text-transform: uppercase;
 }
 
@@ -337,13 +379,13 @@
 .test-step-status,
 .test-run-status {
     border: 1px solid var(--flux-border-strong);
-    border-radius: 999px;
+    border-radius: 5px;
     color: var(--mud-palette-text-secondary);
     flex: 0 0 auto;
     font-size: 10px;
     font-weight: 800;
     line-height: 1;
-    padding: 5px 8px;
+    padding: 4px 7px;
     text-transform: uppercase;
 }
 
