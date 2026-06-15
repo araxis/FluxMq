@@ -2390,7 +2390,7 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "PropertyGridColorPicker.razor.css"));
-        css.ShouldContain("grid-template-columns: 36px minmax(0, 1fr) 28px;");
+        css.ShouldContain("grid-template-columns: 34px minmax(0, 1fr) 28px;");
         css.ShouldContain("background-color: var(--property-grid-color-value);");
         css.ShouldContain("font-size: 17px;");
     }

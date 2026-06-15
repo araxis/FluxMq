@@ -1,12 +1,17 @@
 .property-grid-color-picker {
     align-items: stretch;
+    background: color-mix(in srgb, var(--flux-surface-2) 46%, var(--flux-surface));
+    border: 1px solid color-mix(in srgb, var(--flux-border) 58%, transparent);
+    border-radius: 5px;
     display: grid;
-    grid-template-columns: 36px minmax(0, 1fr) 28px;
-    height: 100%;
-    min-height: 27px;
+    grid-template-columns: 34px minmax(0, 1fr) 28px;
+    height: calc(100% - 6px);
+    margin: 3px 6px 3px 0;
+    min-height: 24px;
     min-width: 0;
+    overflow: hidden;
     position: relative;
-    width: 100%;
+    width: calc(100% - 6px);
 }
 
 .property-grid-color-button,
@@ -14,7 +19,7 @@
     align-items: center;
     background: transparent;
     border: 0;
-    border-right: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-right: 1px solid color-mix(in srgb, var(--flux-border) 50%, transparent);
     color: var(--mud-palette-text-secondary);
     cursor: pointer;
     display: flex;
@@ -25,7 +30,7 @@
 }
 
 .property-grid-color-picker-button {
-    border-left: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-left: 1px solid color-mix(in srgb, var(--flux-border) 50%, transparent);
     border-right: 0;
 }
 
@@ -70,7 +75,7 @@
     height: 100%;
     min-width: 0;
     outline: 0;
-    padding: 0 8px 0 10px;
+    padding: 0 8px;
     text-transform: uppercase;
     width: 100%;
 }
@@ -85,9 +90,9 @@
 
 .property-grid-color-popover-content {
     background: var(--flux-surface);
-    border: 1px solid color-mix(in srgb, var(--flux-accent) 34%, var(--flux-border));
+    border: 1px solid color-mix(in srgb, var(--flux-accent) 28%, var(--flux-border));
     border-radius: 7px;
-    box-shadow: 0 16px 36px color-mix(in srgb, black 34%, transparent);
+    box-shadow: 0 14px 30px color-mix(in srgb, black 26%, transparent);
     padding: 8px;
 }
 
