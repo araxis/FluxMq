@@ -1,17 +1,21 @@
 .property-grid-row {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface) 88%, black);
-    border-bottom: 1px solid color-mix(in srgb, var(--flux-border) 64%, transparent);
+    background: var(--flux-surface);
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
     display: grid;
     gap: 0;
-    grid-template-columns: var(--property-grid-name-width, 148px) minmax(0, 1fr);
-    min-height: 25px;
+    grid-template-columns: var(--property-grid-name-width, 136px) minmax(0, 1fr);
+    min-height: 28px;
     min-width: 0;
     padding: 0;
 }
 
+.property-grid-row:hover {
+    background: color-mix(in srgb, var(--flux-surface-2) 72%, var(--flux-surface));
+}
+
 .property-grid-row.has-unit {
-    grid-template-columns: var(--property-grid-name-width, 148px) minmax(0, 1fr) 38px;
+    grid-template-columns: var(--property-grid-name-width, 136px) minmax(0, 1fr) 34px;
 }
 
 .property-grid-row:last-child {
@@ -21,9 +25,8 @@
 .property-grid-row.stacked {
     align-items: stretch;
     grid-template-columns: minmax(0, 1fr);
-    gap: 5px;
-    padding-bottom: 7px;
-    padding-top: 7px;
+    gap: 6px;
+    padding: 7px 0;
 }
 
 .property-grid-row.stacked .property-grid-unit {
@@ -34,15 +37,15 @@
     align-items: center;
     align-self: stretch;
     border-right: 1px solid color-mix(in srgb, var(--flux-border) 78%, transparent);
-    color: color-mix(in srgb, var(--mud-palette-text-primary) 84%, var(--mud-palette-primary));
+    color: var(--mud-palette-text-secondary);
     display: flex;
-    font-size: 11.5px;
-    font-weight: 750;
+    font-size: 11px;
+    font-weight: 700;
     gap: 4px;
     line-height: 1.2;
     min-width: 0;
     overflow: hidden;
-    padding: 0 8px 0 12px;
+    padding: 0 7px 0 10px;
 }
 
 .property-grid-name span:first-child {
@@ -54,9 +57,10 @@
 
 .property-grid-help {
     align-items: center;
-    border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 65%, transparent);
+    background: color-mix(in srgb, var(--mud-palette-text-secondary) 9%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-secondary) 26%, transparent);
     border-radius: 999px;
-    color: var(--mud-palette-primary);
+    color: var(--mud-palette-text-secondary);
     display: inline-flex;
     flex: 0 0 auto;
     font-size: 9px;
@@ -77,14 +81,14 @@
     align-items: center;
     align-self: stretch;
     border-left: 1px solid color-mix(in srgb, var(--flux-border) 58%, transparent);
-    color: var(--mud-palette-primary);
+    color: var(--flux-accent);
     display: flex;
     font-size: 10.5px;
     font-weight: 800;
     justify-content: flex-end;
     min-width: 0;
     overflow: hidden;
-    padding: 0 8px 0 4px;
+    padding: 0 7px 0 4px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -98,10 +102,10 @@
     color: var(--mud-palette-text-primary);
     font: inherit;
     font-size: 11.5px;
-    font-weight: 760;
+    font-weight: 720;
     height: 100%;
+    min-height: 27px;
     min-width: 0;
-    min-height: 24px;
     outline: 0;
     padding: 0 8px 0 10px;
     width: 100%;
@@ -109,14 +113,14 @@
 
 .property-grid-value ::deep .property-grid-input:hover,
 .property-grid-value ::deep .property-grid-select-trigger:hover {
-    background: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent);
-    border-color: color-mix(in srgb, var(--mud-palette-primary) 42%, var(--flux-border));
+    background: color-mix(in srgb, var(--flux-accent) 8%, transparent);
+    border-color: color-mix(in srgb, var(--flux-accent) 28%, var(--flux-border));
 }
 
 .property-grid-value ::deep .property-grid-input:focus,
 .property-grid-value ::deep .property-grid-select-trigger:focus {
-    border-color: color-mix(in srgb, var(--mud-palette-primary) 85%, white);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--mud-palette-primary) 35%, transparent);
+    border-color: color-mix(in srgb, var(--flux-accent) 70%, var(--flux-border));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--flux-accent) 22%, transparent);
 }
 
 .property-grid-value ::deep .property-grid-inline {
@@ -148,13 +152,13 @@
 .property-grid-value ::deep .property-grid-action-button {
     background: transparent;
     border: 0;
-    border-left: 1px solid color-mix(in srgb, var(--flux-border) 70%, transparent);
+    border-left: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
     color: var(--mud-palette-text-primary);
     cursor: pointer;
     font: inherit;
     font-size: 11px;
-    font-weight: 760;
-    min-height: 24px;
+    font-weight: 720;
+    min-height: 27px;
     min-width: 0;
     overflow: hidden;
     padding: 0 8px;
@@ -162,30 +166,35 @@
     white-space: nowrap;
 }
 
+.property-grid-value ::deep .property-grid-choice:first-child,
+.property-grid-value ::deep .property-grid-small-button:first-child,
+.property-grid-value ::deep .property-grid-action-button:first-child {
+    border-left: 0;
+}
+
 .property-grid-value ::deep .property-grid-choice + .property-grid-choice,
 .property-grid-value ::deep .property-grid-action-button + .property-grid-action-button {
-    border-left: 1px solid color-mix(in srgb, var(--flux-border) 70%, transparent);
+    border-left: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
 }
 
 .property-grid-value ::deep .property-grid-choice:hover,
 .property-grid-value ::deep .property-grid-small-button:hover,
 .property-grid-value ::deep .property-grid-action-button:hover {
-    background: color-mix(in srgb, var(--mud-palette-primary) 14%, var(--flux-surface-2));
+    background: color-mix(in srgb, var(--flux-accent) 10%, var(--flux-surface-2));
 }
 
-.property-grid-value ::deep .property-grid-choice.selected,
-.property-grid-value ::deep .property-grid-action-button.danger {
-    background: color-mix(in srgb, var(--mud-palette-primary) 11%, transparent);
-    color: var(--mud-palette-primary);
+.property-grid-value ::deep .property-grid-choice.selected {
+    background: color-mix(in srgb, var(--flux-accent) 15%, transparent);
+    color: var(--flux-accent);
 }
 
 .property-grid-value ::deep .property-grid-action-button.danger {
-    background: color-mix(in srgb, var(--mud-palette-error) 10%, transparent);
+    background: color-mix(in srgb, var(--mud-palette-error) 9%, transparent);
     color: var(--mud-palette-error);
 }
 
 .property-grid-value ::deep .property-grid-small-button {
-    flex: 0 0 26px;
+    flex: 0 0 28px;
     padding: 0;
 }
 
@@ -194,7 +203,7 @@
     display: block;
     flex: 1 1 auto;
     font-size: 11.5px;
-    font-weight: 760;
+    font-weight: 720;
     min-width: 0;
     overflow: hidden;
     padding: 0 8px 0 10px;

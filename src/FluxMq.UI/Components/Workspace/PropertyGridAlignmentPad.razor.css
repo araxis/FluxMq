@@ -1,54 +1,53 @@
 .property-grid-alignment-pad {
     align-content: center;
     display: grid;
-    gap: 2px;
-    grid-template-columns: repeat(3, 24px);
+    gap: 3px;
+    grid-template-columns: repeat(3, 22px);
     justify-content: center;
-    min-height: 72px;
-    padding: 4px 0;
+    min-height: 66px;
+    padding: 5px 0;
     width: 100%;
 }
 
 .property-grid-alignment-pad-button {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 72%, transparent);
+    background: transparent;
     border: 1px solid color-mix(in srgb, var(--flux-border) 82%, transparent);
     border-radius: 5px;
     cursor: pointer;
     display: inline-flex;
-    height: 24px;
+    height: 22px;
     justify-content: center;
     padding: 0;
     transition: background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
-    width: 24px;
+    width: 22px;
 }
 
 .property-grid-alignment-pad-button span {
-    background: color-mix(in srgb, var(--flux-accent) 76%, var(--mud-palette-text-secondary));
+    background: var(--mud-palette-text-secondary);
     border-radius: 999px;
-    box-shadow: 0 0 10px color-mix(in srgb, var(--flux-accent) 28%, transparent);
     display: block;
-    height: 6px;
-    opacity: 0.7;
-    width: 6px;
+    height: 5px;
+    opacity: 0.72;
+    width: 5px;
 }
 
 .property-grid-alignment-pad-button:hover {
-    background: color-mix(in srgb, var(--mud-palette-primary) 12%, var(--flux-surface-2));
-    border-color: color-mix(in srgb, var(--mud-palette-primary) 48%, var(--flux-border));
+    background: color-mix(in srgb, var(--flux-accent) 10%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--flux-accent) 34%, var(--flux-border));
 }
 
 .property-grid-alignment-pad-button:focus-visible {
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mud-palette-primary) 80%, white);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--flux-accent) 66%, transparent);
     outline: 0;
 }
 
 .property-grid-alignment-pad-button.selected {
-    background: color-mix(in srgb, var(--mud-palette-primary) 18%, var(--flux-surface-2));
-    border-color: color-mix(in srgb, var(--mud-palette-primary) 76%, var(--flux-border));
+    background: color-mix(in srgb, var(--flux-accent) 15%, transparent);
+    border-color: color-mix(in srgb, var(--flux-accent) 56%, var(--flux-border));
 }
 
 .property-grid-alignment-pad-button.selected span {
-    background: var(--mud-palette-primary);
+    background: var(--flux-accent);
     opacity: 1;
 }

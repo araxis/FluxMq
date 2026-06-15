@@ -1,4 +1,5 @@
 @namespace FluxMq.UI.Components.Workspace
+@using MudBlazor
 
 <div class="@RootClass" @onfocusout="@CloseAfterFocusLossAsync">
     <button type="button"
@@ -10,7 +11,9 @@
             @onclick="@ToggleAsync"
             @onkeydown="@OnTriggerKeyDownAsync">
         <span class="property-grid-select-label">@SelectedLabel</span>
-        <span class="property-grid-select-arrow">v</span>
+        <span class="property-grid-select-arrow" aria-hidden="true">
+            <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small" />
+        </span>
     </button>
 
     @if (_isOpen && !Disabled)

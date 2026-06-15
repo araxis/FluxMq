@@ -1,5 +1,6 @@
 @namespace FluxMq.UI.Components.Workspace
 @using System.Globalization
+@using MudBlazor
 
 <div class="@GridClass"
      role="treegrid"
@@ -33,9 +34,13 @@
                     class="property-grid-group-header"
                     aria-expanded="@(!collapsed)"
                     @onclick="@(() => ToggleGroupAsync(group.Id))">
-                <span class="property-grid-group-toggle">@ToggleText(collapsed)</span>
+                <span class="property-grid-group-toggle">
+                    <MudIcon Icon="@ToggleIcon(collapsed)" Size="Size.Small" />
+                </span>
                 <span class="property-grid-group-title">@group.Title</span>
-                <span class="property-grid-group-count">@FormatSettingCount(group.SettingCount)</span>
+                <span class="property-grid-group-count" title="@FormatSettingCount(group.SettingCount)">
+                    @group.SettingCount.ToString(CultureInfo.InvariantCulture)
+                </span>
             </button>
             @if (!collapsed)
             {
@@ -48,9 +53,9 @@
 </div>
 
 @code {
-    private const double DefaultNameColumnWidth = 148;
-    private const double MinNameColumnWidth = 92;
-    private const double MaxNameColumnWidth = 230;
+    private const double DefaultNameColumnWidth = 136;
+    private const double MinNameColumnWidth = 96;
+    private const double MaxNameColumnWidth = 210;
 
     [Parameter]
     public IReadOnlyList<PropertyGridGroup> Groups { get; set; } = [];
@@ -131,8 +136,8 @@
         }
     }
 
-    private static string ToggleText(bool collapsed)
-        => collapsed ? "+" : "-";
+    private static string ToggleIcon(bool collapsed)
+        => collapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore;
 
     private static string FormatSettingCount(int count)
         => count == 1 ? "1 setting" : $"{count} settings";
