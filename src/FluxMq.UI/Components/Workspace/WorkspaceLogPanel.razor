@@ -1,30 +1,43 @@
 @using FluxMq.UI.Models
 
-<div class="@RootClass" style="display:flex;flex-direction:column;height:100%;min-height:0;gap:12px;">
-    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="2" Style="flex:0 0 auto;">
-        <MudStack Spacing="0">
-            <MudText Typo="@TitleTypo">@Title</MudText>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">@FilteredLogs.Count of @Logs.Count entries</MudText>
-        </MudStack>
-        <MudStack Row="true" Spacing="1">
+<div class="@RootClass">
+    <div class="workspace-log-header">
+        <div class="workspace-log-title">
+            <span class="workspace-log-title-icon">
+                <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Small" />
+            </span>
+            <div>
+                <h2>@Title</h2>
+                <div class="workspace-log-subtitle">@SummaryLabel</div>
+            </div>
+        </div>
+
+        <div class="workspace-log-actions">
+            @foreach (var summary in SeveritySummaries)
+            {
+                <span class="workspace-log-summary @SeverityClass(summary.Severity)">
+                    <span>@summary.Label</span>
+                    <strong>@summary.Count</strong>
+                </span>
+            }
             <MudTooltip Text="Reset filters">
                 <MudIconButton Icon="@Icons.Material.Filled.FilterAltOff"
                                Size="Size.Small"
-                               Color="Color.Secondary"
+                               Class="workspace-log-icon-button"
                                Disabled="@(!HasActiveFilters)"
                                OnClick="ResetFilters" />
             </MudTooltip>
             <MudTooltip Text="Clear logs">
                 <MudIconButton Icon="@Icons.Material.Filled.DeleteSweep"
                                Size="Size.Small"
-                               Color="Color.Secondary"
+                               Class="workspace-log-icon-button danger"
                                Disabled="@(Logs.Count == 0)"
                                OnClick="ClearAsync" />
             </MudTooltip>
-        </MudStack>
-    </MudStack>
+        </div>
+    </div>
 
-    <div style="@ToolbarStyle">
+    <div class="workspace-log-toolbar">
         @if (string.IsNullOrWhiteSpace(ForcedScope))
         {
             <MudSelect T="string"
@@ -33,7 +46,7 @@
                        Margin="Margin.Dense"
                        Dense="true"
                        @bind-Value="_scope"
-                       Style="width:100%;">
+                       Class="workspace-log-filter">
                 @foreach (var scope in ScopeOptions)
                 {
                     <MudSelectItem T="string" Value="@scope">@scope</MudSelectItem>
@@ -47,7 +60,7 @@
                    Margin="Margin.Dense"
                    Dense="true"
                    @bind-Value="_severity"
-                   Style="width:100%;">
+                   Class="workspace-log-filter">
             @foreach (var severity in SeverityOptions)
             {
                 <MudSelectItem T="string" Value="@severity">@severity</MudSelectItem>
@@ -63,73 +76,67 @@
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       @bind-Value="_search"
-                      Style="width:100%;" />
+                      Class="workspace-log-search" />
     </div>
 
-    <MudTable T="WorkspaceLogEntry"
-              Items="@FilteredLogs"
-              Dense="true"
-              Hover="true"
-              Elevation="0"
-              RowsPerPage="@RowsPerPage"
-              Breakpoint="Breakpoint.Xs"
-              Style="flex:1 1 auto;min-height:0;overflow:auto;">
-        <HeaderContent>
-            <MudTh>Time</MudTh>
-            <MudTh>Level</MudTh>
-            <MudTh>Details</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Time" Style="width:72px;vertical-align:top;">
-                <MudText Typo="Typo.caption">@FormatLogTime(context)</MudText>
-            </MudTd>
-            <MudTd DataLabel="Level" Style="width:92px;vertical-align:top;">
-                <MudChip T="string"
-                         Size="Size.Small"
-                         Variant="Variant.Outlined"
-                         Color="@LevelColor(context)">
-                    @WorkspaceLogFilter.NormalizeSeverity(context)
-                </MudChip>
-            </MudTd>
-            <MudTd DataLabel="Details" Style="vertical-align:top;">
-                <MudStack Spacing="1">
-                    <MudText Typo="Typo.body2" Style="white-space:normal;">@context.Message</MudText>
-                    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Style="flex-wrap:wrap;">
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">@SourceCode(context)</MudText>
-                        <MudChip T="string"
-                                 Size="Size.Small"
-                                 Variant="Variant.Text"
-                                 Color="Color.Default">
-                            @context.Scope
-                        </MudChip>
-                        @if (ArtifactLabel(context) is { Length: > 0 } artifact)
+    <div class="workspace-log-list" role="log" aria-label="Workspace logs">
+        @if (FilteredLogs.Count == 0)
+        {
+            <div class="workspace-log-empty">
+                <MudIcon Icon="@EmptyIcon" Size="Size.Medium" />
+                <strong>@EmptyTitle</strong>
+                <span>@EmptyText</span>
+                @if (HasActiveFilters)
+                {
+                    <MudButton Variant="Variant.Text"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.FilterAltOff"
+                               Class="workspace-log-empty-action"
+                               OnClick="ResetFilters">
+                        Reset filters
+                    </MudButton>
+                }
+            </div>
+        }
+        else
+        {
+            @foreach (var entry in FilteredLogs)
+            {
+                <article class="workspace-log-row @SeverityClass(entry)" @key="entry">
+                    <div class="workspace-log-row-time">
+                        <span>@FormatLogTime(entry)</span>
+                        <small>@FormatLogDate(entry)</small>
+                    </div>
+                    <div class="workspace-log-row-severity">
+                        <span>@SeverityLabel(entry)</span>
+                    </div>
+                    <div class="workspace-log-row-body">
+                        <div class="workspace-log-row-message">@entry.Message</div>
+                        <div class="workspace-log-row-meta">
+                            <span>@SourceCode(entry)</span>
+                            <span>@entry.Scope</span>
+                            @if (ArtifactLabel(entry) is { Length: > 0 } artifact)
+                            {
+                                <span>@artifact</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(entry.NodeName))
+                            {
+                                <span>@entry.NodeName</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(entry.PortName))
+                            {
+                                <span>@entry.PortName</span>
+                            }
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(entry.Context))
                         {
-                            <MudChip T="string"
-                                     Size="Size.Small"
-                                     Variant="Variant.Text"
-                                     Color="Color.Info">
-                                @artifact
-                            </MudChip>
+                            <div class="workspace-log-row-context">@entry.Context</div>
                         }
-                    </MudStack>
-                    @if (!string.IsNullOrWhiteSpace(context.Context))
-                    {
-                        <MudText Typo="Typo.caption"
-                                 Color="Color.Secondary"
-                                 Style="white-space:normal;word-break:break-word;">
-                            @context.Context
-                        </MudText>
-                    }
-                </MudStack>
-            </MudTd>
-        </RowTemplate>
-        <NoRecordsContent>
-            <EmptyView Message="@EmptyMessage" />
-        </NoRecordsContent>
-        <PagerContent>
-            <MudTablePager HideRowsPerPage="true" />
-        </PagerContent>
-    </MudTable>
+                    </div>
+                </article>
+            }
+        }
+    </div>
 </div>
 
 @code {
@@ -155,14 +162,8 @@
     [Parameter] public bool Compact { get; set; }
     [Parameter] public int MaxEntries { get; set; } = 500;
 
-    private string RootClass => Compact ? "pa-2" : "pa-4";
-    private Typo TitleTypo => Compact ? Typo.subtitle2 : Typo.h6;
-    private int RowsPerPage => Compact ? 8 : 20;
-    private string ToolbarStyle => Compact
-        ? "display:grid;grid-template-columns:1fr;gap:8px;flex:0 0 auto;"
-        : "display:grid;grid-template-columns:180px 160px minmax(240px,360px);gap:12px;align-items:start;flex:0 0 auto;max-width:760px;";
+    private string RootClass => Compact ? "workspace-log-shell compact" : "workspace-log-shell";
     private string EffectiveScope => string.IsNullOrWhiteSpace(ForcedScope) ? _scope : ForcedScope;
-    private string EmptyMessage => Logs.Count == 0 ? "No logs" : "No matching logs";
     private bool HasActiveFilters =>
         (string.IsNullOrWhiteSpace(ForcedScope) &&
          !string.Equals(_scope, WorkspaceLogFilter.All, StringComparison.Ordinal)) ||
@@ -171,6 +172,40 @@
 
     private IReadOnlyList<WorkspaceLogEntry> FilteredLogs =>
         WorkspaceLogFilter.Apply(Logs, new WorkspaceLogQuery(EffectiveScope, _severity, _search), MaxEntries);
+
+    private string SummaryLabel => Logs.Count == 0
+        ? "No entries recorded"
+        : $"{FilteredLogs.Count} shown / {Logs.Count} total";
+
+    private string EmptyIcon => HasActiveFilters
+        ? Icons.Material.Filled.SearchOff
+        : Icons.Material.Filled.ReceiptLong;
+
+    private string EmptyTitle => HasActiveFilters ? "No matching logs" : "No logs yet";
+
+    private string EmptyText => HasActiveFilters
+        ? "Reset filters or adjust the search text."
+        : "Validate, run, or test the app to record workspace events.";
+
+    private IReadOnlyList<SeveritySummary> SeveritySummaries
+    {
+        get
+        {
+            var counts = Logs
+                .GroupBy(WorkspaceLogFilter.NormalizeSeverity, StringComparer.Ordinal)
+                .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
+
+            return
+            [
+                new("Error", "Errors", counts.GetValueOrDefault("Error") + counts.GetValueOrDefault("Critical")),
+                new("Warning", "Warnings", counts.GetValueOrDefault("Warning")),
+                new("Info", "Other", Logs.Count -
+                    counts.GetValueOrDefault("Error") -
+                    counts.GetValueOrDefault("Critical") -
+                    counts.GetValueOrDefault("Warning"))
+            ];
+        }
+    }
 
     private IReadOnlyList<string> ScopeOptions
     {
@@ -221,6 +256,9 @@
     private static string FormatLogTime(WorkspaceLogEntry entry)
         => entry.Timestamp.ToLocalTime().ToString("HH:mm:ss");
 
+    private static string FormatLogDate(WorkspaceLogEntry entry)
+        => entry.Timestamp.ToLocalTime().ToString("MMM d");
+
     private static string SourceCode(WorkspaceLogEntry entry)
         => string.IsNullOrWhiteSpace(entry.Code)
             ? entry.Source
@@ -257,4 +295,23 @@
             "Trace" => Color.Secondary,
             _ => Color.Success
         };
+
+    private static string SeverityLabel(WorkspaceLogEntry entry)
+        => WorkspaceLogFilter.NormalizeSeverity(entry);
+
+    private static string SeverityClass(WorkspaceLogEntry entry)
+        => SeverityClass(WorkspaceLogFilter.NormalizeSeverity(entry));
+
+    private static string SeverityClass(string severity)
+        => WorkspaceLogFilter.NormalizeSeverity(severity).ToLowerInvariant() switch
+        {
+            "critical" => "critical",
+            "error" => "error",
+            "warning" => "warning",
+            "debug" => "debug",
+            "trace" => "trace",
+            _ => "info"
+        };
+
+    private sealed record SeveritySummary(string Severity, string Label, int Count);
 }
