@@ -1,9 +1,10 @@
 .property-grid {
-    --property-grid-name-width: 136px;
+    --property-grid-name-width: min(132px, 44%);
     background: var(--flux-surface);
     border-top: 1px solid var(--flux-border);
     flex: 1 1 auto;
     min-height: 0;
+    overscroll-behavior: contain;
     overflow: auto;
     position: relative;
     scrollbar-color: color-mix(in srgb, var(--mud-palette-text-secondary) 24%, transparent) transparent;
@@ -46,7 +47,7 @@
 }
 
 .property-grid-column-resizer::after {
-    background: color-mix(in srgb, var(--flux-border) 74%, transparent);
+    background: color-mix(in srgb, var(--flux-border) 54%, transparent);
     bottom: 0;
     content: "";
     left: 3px;
@@ -59,7 +60,7 @@
 .property-grid-column-resizer:focus-visible::after,
 .property-grid.resizing .property-grid-column-resizer::after {
     background: var(--flux-accent);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--flux-accent) 18%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--flux-accent) 14%, transparent);
 }
 
 .property-grid-column-resizer:focus-visible {
@@ -67,25 +68,25 @@
 }
 
 .property-grid-group {
-    border-bottom: 1px solid var(--flux-border);
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border) 66%, transparent);
     min-width: 0;
 }
 
 .property-grid-group-header {
     align-items: center;
     appearance: none;
-    background: var(--flux-surface-2);
+    background: color-mix(in srgb, var(--flux-surface-2) 42%, var(--flux-surface));
     border: 0;
-    border-bottom: 1px solid var(--flux-border);
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border) 58%, transparent);
     box-sizing: border-box;
     color: var(--mud-palette-text-primary);
     cursor: pointer;
     display: grid;
-    font-size: 11px;
-    font-weight: 760;
+    font-size: 11.25px;
+    font-weight: 720;
     gap: 0;
     grid-template-columns: 22px calc(var(--property-grid-name-width) - 22px) minmax(0, 1fr);
-    min-height: 28px;
+    min-height: 30px;
     min-width: 0;
     padding: 0;
     text-align: left;
@@ -93,7 +94,7 @@
 }
 
 .property-grid-group-header:hover {
-    background: color-mix(in srgb, var(--flux-surface-3) 82%, var(--flux-surface-2));
+    background: color-mix(in srgb, var(--flux-surface-2) 62%, var(--flux-surface));
 }
 
 .property-grid-group-header:focus-visible {
@@ -107,7 +108,7 @@
 
 .property-grid-group-toggle {
     align-items: center;
-    color: var(--mud-palette-text-secondary);
+    color: color-mix(in srgb, var(--mud-palette-text-secondary) 82%, transparent);
     display: inline-flex;
     justify-content: center;
     min-width: 0;
@@ -122,7 +123,7 @@
 .property-grid-group-title {
     color: var(--mud-palette-text-primary);
     font-size: 11.5px;
-    font-weight: 800;
+    font-weight: 760;
     min-width: 0;
     overflow: hidden;
     padding-left: 2px;
@@ -132,21 +133,21 @@
 
 .property-grid-group-count {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-accent) 10%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-accent) 24%, var(--flux-border));
-    border-radius: 5px;
-    color: var(--flux-accent);
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    color: var(--mud-palette-text-secondary);
     display: inline-flex;
-    font-size: 10px;
-    font-weight: 800;
+    font-size: 10.5px;
+    font-weight: 720;
     grid-column: 3 / 4;
-    height: 18px;
+    height: auto;
     justify-content: center;
     justify-self: end;
     line-height: 1;
     margin-right: 8px;
-    min-width: 20px;
-    padding: 0 5px;
+    min-width: 0;
+    padding: 0;
     white-space: nowrap;
 }
 

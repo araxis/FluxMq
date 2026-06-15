@@ -1,13 +1,14 @@
 .dashboard-widget-editor-title {
     align-items: center;
     display: flex;
-    gap: 10px;
+    gap: 9px;
     min-width: 0;
 }
 
 .dashboard-widget-editor-title > .mud-icon-root {
     color: var(--mud-palette-primary);
     flex: 0 0 auto;
+    font-size: 20px;
 }
 
 .dashboard-widget-editor-title > div {
@@ -18,39 +19,82 @@
     min-width: 0;
 }
 
+.dashboard-widget-editor-tabs ::deep .mud-tabs-toolbar {
+    border-bottom: 1px solid var(--flux-border);
+    min-height: 36px;
+}
+
+.dashboard-widget-editor-tabs ::deep .mud-tab {
+    min-height: 36px;
+    text-transform: none;
+}
+
+.dashboard-widget-editor-tabs ::deep .mud-tab .mud-tab-text {
+    font-size: 12px;
+    font-weight: 720;
+}
+
+.dashboard-widget-editor-tabs ::deep .mud-tabs-panels {
+    background: transparent;
+}
+
 .dashboard-widget-editor-tab {
     min-width: 0;
-    padding: 18px 2px 2px;
+    padding: 12px 0 2px;
+}
+
+.dashboard-widget-editor-tab ::deep .mud-input-control {
+    margin-top: 0;
+}
+
+.dashboard-widget-editor-tab ::deep .mud-input-outlined-border {
+    border-color: color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-radius: 6px;
+}
+
+.dashboard-widget-editor-tab ::deep .mud-input-control:hover .mud-input-outlined-border {
+    border-color: color-mix(in srgb, var(--mud-palette-primary) 32%, var(--flux-border));
 }
 
 .dashboard-widget-editor-section {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     min-width: 0;
 }
 
 .dashboard-widget-editor-section ::deep(.mud-toggle-group) {
+    border-color: color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-radius: 6px;
     flex-wrap: wrap;
 }
 
+.dashboard-widget-editor-section ::deep(.mud-toggle-item) {
+    min-height: 30px;
+    text-transform: none;
+}
+
 .dashboard-widget-editor-metric-options {
+    border: 1px solid color-mix(in srgb, var(--flux-border) 58%, transparent);
+    border-radius: 6px;
     display: grid;
-    gap: 2px 16px;
+    gap: 0 12px;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     min-width: 0;
+    padding: 6px 8px;
 }
 
 .dashboard-widget-editor-empty {
     align-items: center;
-    border: 1px dashed color-mix(in srgb, var(--mud-palette-text-primary) 18%, transparent);
-    border-radius: 7px;
+    background: color-mix(in srgb, var(--flux-surface-2) 42%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 62%, transparent);
+    border-radius: 6px;
     color: var(--mud-palette-text-secondary);
     display: flex;
     font-size: 12px;
     font-weight: 650;
     justify-content: center;
-    min-height: 92px;
+    min-height: 76px;
 }
 
 @media (max-width: 700px) {

@@ -53,7 +53,7 @@
 </div>
 
 @code {
-    private const double DefaultNameColumnWidth = 136;
+    private const double DefaultNameColumnWidth = 132;
     private const double MinNameColumnWidth = 96;
     private const double MaxNameColumnWidth = 210;
 
@@ -78,7 +78,7 @@
         : "property-grid";
 
     private string GridStyle
-        => $"--property-grid-name-width: {_nameColumnWidth.ToString("0", CultureInfo.InvariantCulture)}px;";
+        => $"--property-grid-name-width: min({_nameColumnWidth.ToString("0", CultureInfo.InvariantCulture)}px, 44%);";
 
     private string NameColumnWidthValue
         => _nameColumnWidth.ToString("0", CultureInfo.InvariantCulture);
