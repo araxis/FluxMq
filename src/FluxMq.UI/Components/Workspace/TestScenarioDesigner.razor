@@ -16,8 +16,18 @@
     @if (Scenario is null)
     {
         <div class="test-scenario-empty">
-            <MudIcon Icon="@Icons.Material.Filled.FactCheck" Class="test-scenario-empty-icon" />
-            <span>No test selected</span>
+            <div class="test-scenario-empty-panel">
+                <MudIcon Icon="@Icons.Material.Filled.FactCheck" Class="test-scenario-empty-icon" />
+                <div class="test-scenario-empty-copy">
+                    <span>No test selected</span>
+                    <small>@NoTestEmptyText</small>
+                </div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="@AddTestAsync">New test</MudButton>
+            </div>
         </div>
     }
     else
@@ -120,8 +130,13 @@
         @if (Scenario.Steps.Count == 0)
         {
             <div class="test-scenario-empty">
-                <MudIcon Icon="@Icons.Material.Filled.FactCheck" Class="test-scenario-empty-icon" />
-                <span>No steps</span>
+                <div class="test-scenario-empty-panel compact">
+                    <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Class="test-scenario-empty-icon" />
+                    <div class="test-scenario-empty-copy">
+                        <span>No steps yet</span>
+                        <small>Add a step from the toolbar or drag one from the catalog.</small>
+                    </div>
+                </div>
             </div>
         }
         else
@@ -240,6 +255,10 @@
 
     private string DesignerClass
         => $"test-scenario-designer {(IsTestStepDrag && DragState.ActiveComponentDrag?.IsOverDesigner == true ? "drop-active" : null)}";
+
+    private string NoTestEmptyText => Project.TestNames.Count == 0
+        ? "Create a test to build a scenario."
+        : "Select a test from the app tabs to edit its scenario.";
 
     private bool IsTestStepDrag
         => DragState.ActiveComponentDrag is { TargetKind: WorkspaceArtifactKind.Test };
@@ -667,6 +686,21 @@
 
     private void AddStep(string stepType)
         => Project.AddTestScenarioStep(stepType);
+
+    private async Task AddTestAsync()
+    {
+        var dialog = await DialogService.ShowAsync<NewPipelineDialog>(
+            "New Test",
+            new DialogParameters
+            {
+                [nameof(NewPipelineDialog.Title)] = "New Test"
+            });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string name } && !string.IsNullOrWhiteSpace(name))
+        {
+            Project.AddTest(name.Trim());
+        }
+    }
 
     private async Task OpenStepEditorAsync(ScenarioStepSnapshot step)
     {

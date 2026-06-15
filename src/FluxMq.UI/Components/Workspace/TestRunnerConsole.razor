@@ -12,8 +12,18 @@
     @if (Scenario is null)
     {
         <div class="test-runner-empty">
-            <MudIcon Icon="@Icons.Material.Filled.PlayCircle" Class="test-runner-empty-icon" />
-            <span>No test selected</span>
+            <div class="test-runner-empty-panel">
+                <MudIcon Icon="@Icons.Material.Filled.PlayCircle" Class="test-runner-empty-icon" />
+                <div class="test-runner-empty-copy">
+                    <span>No test selected</span>
+                    <small>@NoTestEmptyText</small>
+                </div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="@AddTestAsync">New test</MudButton>
+            </div>
         </div>
     }
     else
@@ -232,6 +242,10 @@
 
     private string RunButtonText => Project.IsScenarioRunning ? "Running" : "Run scenario";
 
+    private string NoTestEmptyText => Project.TestNames.Count == 0
+        ? "Create a test before running scenarios."
+        : "Select a test from the app tabs to run it.";
+
     private IReadOnlyList<ScenarioRunResult> RecentRuns
         => Scenario is null
             ? []
@@ -288,6 +302,21 @@
         }
 
         await Project.RunActiveTestScenarioAsync();
+    }
+
+    private async Task AddTestAsync()
+    {
+        var dialog = await DialogService.ShowAsync<NewPipelineDialog>(
+            "New Test",
+            new DialogParameters
+            {
+                [nameof(NewPipelineDialog.Title)] = "New Test"
+            });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string name } && !string.IsNullOrWhiteSpace(name))
+        {
+            Project.AddTest(name.Trim());
+        }
     }
 
     private ScenarioStepResult? FindStepResult(ScenarioStepSnapshot step)
