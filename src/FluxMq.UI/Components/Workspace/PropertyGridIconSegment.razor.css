@@ -2,13 +2,13 @@
     align-items: stretch;
     background: color-mix(in srgb, var(--flux-surface-2) 46%, var(--flux-surface));
     border: 1px solid color-mix(in srgb, var(--flux-border) 58%, transparent);
-    border-radius: 5px;
+    border-radius: 4px;
     display: grid;
     grid-auto-columns: minmax(0, 1fr);
     grid-auto-flow: column;
     height: calc(100% - 6px);
     margin: 3px 6px 3px 0;
-    min-height: 24px;
+    min-height: 22px;
     min-width: 0;
     overflow: hidden;
     width: calc(100% - 6px);
@@ -23,7 +23,7 @@
     cursor: pointer;
     display: inline-flex;
     justify-content: center;
-    min-height: 24px;
+    min-height: 22px;
     min-width: 0;
     padding: 0;
     transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
@@ -54,7 +54,7 @@
 }
 
 .property-grid-icon-segment-button ::deep .mud-icon-root {
-    font-size: 16px;
+    font-size: 15px;
 }
 
 .property-grid-icon-segment-label {

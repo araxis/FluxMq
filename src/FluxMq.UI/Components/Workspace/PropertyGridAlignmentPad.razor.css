@@ -1,11 +1,11 @@
 .property-grid-alignment-pad {
     align-content: center;
     display: grid;
-    gap: 3px;
-    grid-template-columns: repeat(3, 21px);
+    gap: 2px;
+    grid-template-columns: repeat(3, 20px);
     justify-content: center;
-    min-height: 60px;
-    padding: 4px 0;
+    min-height: 56px;
+    padding: 3px 0;
     width: 100%;
 }
 
@@ -13,14 +13,14 @@
     align-items: center;
     background: transparent;
     border: 1px solid color-mix(in srgb, var(--flux-border) 58%, transparent);
-    border-radius: 5px;
+    border-radius: 4px;
     cursor: pointer;
     display: inline-flex;
-    height: 21px;
+    height: 20px;
     justify-content: center;
     padding: 0;
     transition: background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
-    width: 21px;
+    width: 20px;
 }
 
 .property-grid-alignment-pad-button span {
