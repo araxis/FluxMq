@@ -10,6 +10,11 @@
 }
 
 .flow-canvas {
+    background:
+        linear-gradient(color-mix(in srgb, var(--flux-border) 22%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, var(--flux-border) 18%, transparent) 1px, transparent 1px),
+        var(--flux-canvas);
+    background-size: 48px 48px;
     flex: 1 1 auto;
     height: 100%;
     min-height: 0;
@@ -19,18 +24,190 @@
     width: 100%;
 }
 
-.flow-canvas-toolbar {
-    background: var(--flux-surface);
+.flow-canvas-header {
+    align-items: center;
+    background: color-mix(in srgb, var(--flux-surface) 96%, transparent);
     border: 1px solid var(--flux-border);
     border-radius: 6px;
-    box-shadow: var(--flux-shadow-1);
     display: flex;
-    gap: 2px;
-    padding: 2px;
+    gap: 12px;
+    justify-content: space-between;
+    left: 12px;
+    min-height: 48px;
+    min-width: 0;
+    padding: 6px 8px;
     position: absolute;
     right: 12px;
     top: 12px;
-    z-index: 20;
+    z-index: 24;
+}
+
+.flow-canvas-title {
+    align-items: center;
+    display: flex;
+    gap: 9px;
+    min-width: 0;
+}
+
+.flow-canvas-title h2 {
+    color: var(--mud-palette-text-primary);
+    font-size: 0.92rem;
+    font-weight: 750;
+    letter-spacing: 0;
+    line-height: 1.1;
+    margin: 0;
+    max-width: min(34vw, 360px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.flow-canvas-title-icon {
+    align-items: center;
+    background: var(--flux-accent-soft);
+    border: 1px solid color-mix(in srgb, var(--flux-accent) 34%, transparent);
+    border-radius: 6px;
+    color: var(--flux-accent);
+    display: inline-flex;
+    flex: 0 0 30px;
+    height: 30px;
+    justify-content: center;
+    width: 30px;
+}
+
+.flow-canvas-subtitle {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.72rem;
+    line-height: 1.1;
+    margin-top: 2px;
+}
+
+.flow-canvas-actions {
+    align-items: center;
+    display: flex;
+    flex: 0 0 auto;
+    gap: 6px;
+    justify-content: flex-end;
+    min-width: 0;
+}
+
+.flow-state,
+.flow-canvas-chip {
+    align-items: center;
+    background: color-mix(in srgb, var(--flux-surface-2) 82%, transparent);
+    border: 1px solid var(--flux-border);
+    border-radius: 6px;
+    color: var(--mud-palette-text-secondary);
+    display: inline-flex;
+    font-size: 0.7rem;
+    font-weight: 650;
+    gap: 6px;
+    height: 26px;
+    line-height: 1;
+    padding: 0 8px;
+    white-space: nowrap;
+}
+
+.flow-state-dot {
+    background: var(--mud-palette-text-disabled);
+    border-radius: 50%;
+    height: 7px;
+    width: 7px;
+}
+
+.flow-state.valid,
+.flow-state.running {
+    border-color: color-mix(in srgb, var(--mud-palette-success) 46%, transparent);
+    color: var(--mud-palette-success);
+}
+
+.flow-state.valid .flow-state-dot,
+.flow-state.running .flow-state-dot {
+    background: var(--mud-palette-success);
+}
+
+.flow-state.faulted {
+    border-color: color-mix(in srgb, var(--mud-palette-error) 50%, transparent);
+    color: var(--mud-palette-error);
+}
+
+.flow-state.faulted .flow-state-dot {
+    background: var(--mud-palette-error);
+}
+
+.flow-state.stopped {
+    border-color: color-mix(in srgb, var(--mud-palette-warning) 42%, transparent);
+    color: var(--mud-palette-warning);
+}
+
+.flow-state.stopped .flow-state-dot {
+    background: var(--mud-palette-warning);
+}
+
+.flow-canvas-chip strong {
+    color: var(--mud-palette-text-primary);
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.72rem;
+}
+
+.flow-canvas-chip.error {
+    border-color: color-mix(in srgb, var(--mud-palette-error) 52%, transparent);
+    color: var(--mud-palette-error);
+}
+
+.flow-canvas-chip.warning {
+    border-color: color-mix(in srgb, var(--mud-palette-warning) 48%, transparent);
+    color: var(--mud-palette-warning);
+}
+
+.flow-canvas-chip.info {
+    border-color: color-mix(in srgb, var(--mud-palette-info) 45%, transparent);
+    color: var(--mud-palette-info);
+}
+
+.flow-canvas-actions ::deep .flow-canvas-icon-button {
+    background: color-mix(in srgb, var(--flux-surface-2) 82%, transparent);
+    border: 1px solid var(--flux-border);
+    border-radius: 6px;
+    color: var(--mud-palette-text-secondary);
+    height: 28px;
+    padding: 0;
+    width: 28px;
+}
+
+.flow-canvas-actions ::deep .flow-canvas-icon-button:hover {
+    background: var(--flux-accent-soft);
+    border-color: color-mix(in srgb, var(--flux-accent) 38%, transparent);
+    color: var(--flux-accent);
+}
+
+.flow-canvas-empty {
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    inset: 94px 12px 12px;
+    justify-content: center;
+    pointer-events: none;
+    position: absolute;
+    text-align: center;
+    z-index: 16;
+}
+
+.flow-canvas-empty ::deep .mud-icon-root {
+    color: color-mix(in srgb, var(--flux-accent) 72%, var(--mud-palette-text-secondary));
+    opacity: 0.78;
+}
+
+.flow-canvas-empty strong {
+    color: var(--mud-palette-text-primary);
+    font-size: 0.92rem;
+    line-height: 1.1;
+}
+
+.flow-canvas-empty span {
+    font-size: 0.76rem;
 }
 
 .flow-link-condition-panel {
@@ -40,13 +217,49 @@
     border-radius: 6px;
     box-shadow: var(--flux-shadow-1);
     display: flex;
-    gap: 4px;
-    max-width: min(520px, calc(100% - 92px));
-    padding: 4px;
+    gap: 6px;
+    max-width: min(680px, calc(100% - 24px));
+    padding: 5px;
     position: absolute;
-    right: 58px;
-    top: 12px;
-    z-index: 20;
+    right: 12px;
+    top: 72px;
+    z-index: 24;
+}
+
+.flow-link-condition-meta {
+    align-items: center;
+    border-right: 1px solid var(--flux-border);
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    flex: 0 0 auto;
+    gap: 7px;
+    max-width: 230px;
+    min-width: 0;
+    padding: 0 9px 0 4px;
+}
+
+.flow-link-condition-meta div {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.flow-link-condition-meta span {
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.flow-link-condition-meta strong {
+    color: var(--mud-palette-text-primary);
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.68rem;
+    font-weight: 650;
+    line-height: 1.1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .flow-link-condition-panel ::deep .flow-link-condition-input {
@@ -59,16 +272,60 @@
 }
 
 @media (max-width: 720px) {
+    .flow-canvas-header {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 7px;
+        left: 8px;
+        padding: 7px;
+        right: 8px;
+        top: 8px;
+    }
+
+    .flow-canvas-title h2 {
+        max-width: none;
+    }
+
+    .flow-canvas-actions {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+
+    .flow-canvas-chip {
+        height: 25px;
+    }
+
     .flow-link-condition-panel {
+        align-items: stretch;
+        flex-direction: column;
         left: 12px;
         max-width: none;
         right: 12px;
-        top: 52px;
+        top: 130px;
+    }
+
+    .flow-link-condition-meta {
+        border-bottom: 1px solid var(--flux-border);
+        border-right: 0;
+        max-width: none;
+        padding: 2px 2px 7px;
     }
 
     .flow-link-condition-panel ::deep .flow-link-condition-input {
         flex: 1 1 auto;
         width: auto;
+    }
+
+    .flow-canvas-drop-highlight {
+        inset: 128px 8px 8px;
+    }
+
+    .flow-canvas-empty {
+        inset: 150px 12px 12px;
+    }
+
+    .flow-designer-root ::deep .flow-navigator {
+        display: none;
     }
 }
 
@@ -80,13 +337,13 @@
     display: flex;
     font-size: 12px;
     font-weight: 650;
-    inset: 8px;
+    inset: 70px 10px 10px;
     justify-content: center;
     letter-spacing: 0.04em;
     pointer-events: none;
     position: absolute;
     text-transform: uppercase;
-    z-index: 19;
+    z-index: 23;
 }
 
 .flow-canvas ::deep .diagram-canvas {
@@ -95,7 +352,15 @@
 }
 
 .flow-designer-root ::deep .flow-navigator {
+    background: var(--flux-surface);
+    border: 1px solid var(--flux-border);
+    border-radius: 6px;
+    bottom: 14px;
+    box-shadow: var(--flux-shadow-pop);
     pointer-events: none;
+    position: absolute;
+    right: 14px;
+    z-index: 20;
 }
 
 .flow-designer-root ::deep .flow-node {

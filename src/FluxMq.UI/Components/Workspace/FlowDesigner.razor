@@ -23,30 +23,83 @@
                                      NodeColor="#2DD4BF"
                                      GroupColor="#1C222D"
                                      ViewStrokeColor="#FBBF24"
-                                     Class="flow-navigator"
-                                     Style="position:absolute;right:12px;bottom:60px;z-index:20;background:var(--flux-surface);border:1px solid var(--flux-border);border-radius:6px;box-shadow:var(--flux-shadow-pop);" />
+                                     Class="flow-navigator" />
                 </Widgets>
             </DiagramCanvas>
         </CascadingValue>
     </div>
+    <div class="flow-canvas-header">
+        <div class="flow-canvas-title">
+            <span class="flow-canvas-title-icon" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" />
+            </span>
+            <div>
+                <h2>@WorkflowTitle</h2>
+                <div class="flow-canvas-subtitle">@WorkflowSubtitle</div>
+            </div>
+        </div>
+        <div class="flow-canvas-actions" aria-label="Pipeline canvas status and commands">
+            <span class="flow-state @RuntimeStateClass">
+                <span class="flow-state-dot" aria-hidden="true"></span>
+                @RuntimeStateLabel
+            </span>
+            <span class="flow-canvas-chip">
+                <span>Nodes</span>
+                <strong>@PipelineNodeCount</strong>
+            </span>
+            <span class="flow-canvas-chip">
+                <span>Links</span>
+                <strong>@LinkCount</strong>
+            </span>
+            @if (ResourceNodeCount > 0)
+            {
+                <span class="flow-canvas-chip">
+                    <span>Resources</span>
+                    <strong>@ResourceNodeCount</strong>
+                </span>
+            }
+            @if (DiagnosticCount > 0)
+            {
+                <span class="flow-canvas-chip @DiagnosticSeverityClass">
+                    <span>@DiagnosticSummaryLabel</span>
+                    <strong>@DiagnosticCount</strong>
+                </span>
+            }
+            <MudTooltip Text="Zoom to fit">
+                <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong"
+                               Size="Size.Small"
+                               Class="flow-canvas-icon-button"
+                               OnClick="@ZoomToFit"
+                               aria-label="Zoom to fit" />
+            </MudTooltip>
+        </div>
+    </div>
+    @if (IsCanvasEmpty)
+    {
+        <div class="flow-canvas-empty">
+            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Large" />
+            <strong>No pipeline nodes</strong>
+            <span>@EmptyCanvasText</span>
+        </div>
+    }
     @if (DragState.ActiveComponentDrag is { IsOverDesigner: true, TargetKind: WorkspaceArtifactKind.Pipeline })
     {
-        <div class="flow-canvas-drop-highlight">Drop to add node</div>
+        <div class="flow-canvas-drop-highlight">Drop component</div>
     }
-    <div class="flow-canvas-toolbar">
-        <MudTooltip Text="Zoom to fit">
-            <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong"
-                           Size="Size.Small"
-                           OnClick="@ZoomToFit" />
-        </MudTooltip>
-    </div>
     @if (_selectedWorkflowLink is not null)
     {
         <div class="flow-link-condition-panel">
+            <div class="flow-link-condition-meta">
+                <MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small" />
+                <div>
+                    <span>Selected link</span>
+                    <strong>@SelectedLinkLabel</strong>
+                </div>
+            </div>
             <MudTextField T="string"
                           Value="@_selectedLinkCondition"
                           ValueChanged="@OnSelectedLinkConditionChanged"
-                          Label="When"
+                          Label="Condition"
                           Placeholder="input.Topic.StartsWith(&quot;factory/&quot;)"
                           Variant="Variant.Outlined"
                           Margin="Margin.Dense"
@@ -111,6 +164,72 @@
     private SelectedWorkflowLink? _selectedWorkflowLink;
     private string _selectedLinkCondition = string.Empty;
 
+    private string WorkflowTitle => Flow.ActiveWorkflowName ?? "Pipeline";
+
+    private string WorkflowSubtitle => Flow.HasUnsavedChanges
+        ? "Unsaved changes"
+        : Flow.ActiveWorkflowName is null
+            ? "No active pipeline"
+            : "Ready";
+
+    private int PipelineNodeCount => _diagram.Nodes
+        .OfType<FlowDiagramNodeModel>()
+        .Count(static node => !node.IsResource);
+
+    private int ResourceNodeCount => _diagram.Nodes
+        .OfType<FlowDiagramNodeModel>()
+        .Count(static node => node.IsResource);
+
+    private int LinkCount => _diagram.Links.OfType<FlowDiagramLinkModel>().Count();
+
+    private bool IsCanvasEmpty => _diagram.Nodes.Count == 0;
+
+    private string EmptyCanvasText => Flow.ActiveWorkflowName is null
+        ? "Create a pipeline first."
+        : "Add components from the catalog.";
+
+    private int DiagnosticCount => Flow.Diagnostics.Count;
+
+    private int ErrorCount => Flow.Diagnostics.Count(static diagnostic =>
+        string.Equals(diagnostic.Severity, "Error", StringComparison.OrdinalIgnoreCase));
+
+    private int WarningCount => Flow.Diagnostics.Count(static diagnostic =>
+        string.Equals(diagnostic.Severity, "Warning", StringComparison.OrdinalIgnoreCase));
+
+    private string DiagnosticSummaryLabel => ErrorCount > 0
+        ? "Errors"
+        : WarningCount > 0
+            ? "Warnings"
+            : "Notes";
+
+    private string DiagnosticSeverityClass => ErrorCount > 0
+        ? "error"
+        : WarningCount > 0
+            ? "warning"
+            : "info";
+
+    private string RuntimeStateLabel => Flow.State switch
+    {
+        RuntimeWorkspaceState.Valid => "Valid",
+        RuntimeWorkspaceState.Running => "Running",
+        RuntimeWorkspaceState.Stopped => "Stopped",
+        RuntimeWorkspaceState.Faulted => "Faulted",
+        _ => "Idle"
+    };
+
+    private string RuntimeStateClass => Flow.State switch
+    {
+        RuntimeWorkspaceState.Valid => "valid",
+        RuntimeWorkspaceState.Running => "running",
+        RuntimeWorkspaceState.Stopped => "stopped",
+        RuntimeWorkspaceState.Faulted => "faulted",
+        _ => "idle"
+    };
+
+    private string SelectedLinkLabel => _selectedWorkflowLink is { } link
+        ? $"{link.SourceNodeName}.{link.SourcePortName} -> {link.TargetNodeName}.{link.TargetPortName}"
+        : string.Empty;
+
     protected override void OnInitialized()
     {
         _diagram.RegisterComponent<FlowDiagramNodeModel, FlowDiagramNodeWidget>();
@@ -140,7 +259,7 @@
         if (!firstRender) return Task.CompletedTask;
         RebuildDiagram();
         ScheduleAutoZoomToFit();
-        return Task.CompletedTask;
+        return InvokeAsync(StateHasChanged);
     }
 
     private void ZoomToFit() => _diagram.ZoomToFit(ZoomToFitMargin);
