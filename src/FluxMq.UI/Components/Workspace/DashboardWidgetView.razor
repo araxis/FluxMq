@@ -1,7 +1,7 @@
 @namespace FluxMq.UI.Components.Workspace
 @inject DashboardWidgetRegistry Widgets
 
-<div class="dashboard-widget @DashboardWidgetFormatting.WidgetClass(Widget)" style="@DashboardWidgetFormatting.WidgetStyle(Widget)">
+<div class="dashboard-widget @DashboardWidgetFormatting.WidgetClass(Widget) @RenderModeClass" style="@DashboardWidgetFormatting.WidgetStyle(Widget)">
     @if (!VisualOwnsHeader)
     {
         <div class="dashboard-widget-header">
@@ -64,6 +64,10 @@
         string.Equals(Widget.Type, DashboardWidgetCatalog.BarChartType, StringComparison.Ordinal) ||
         string.Equals(Widget.Type, DashboardWidgetCatalog.DonutChartType, StringComparison.Ordinal) ||
         string.Equals(Widget.Type, DashboardWidgetCatalog.TopicTreeType, StringComparison.Ordinal);
+
+    private string RenderModeClass => Mode == DashboardWidgetRenderMode.EditCell
+        ? "dashboard-widget-edit"
+        : "dashboard-widget-live";
 
     private IDictionary<string, object> ComponentParameters => new Dictionary<string, object>
     {
