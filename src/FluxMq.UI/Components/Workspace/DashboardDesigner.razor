@@ -8,8 +8,10 @@
 <div class="dashboard-designer">
     <div class="dashboard-toolbar">
         <div class="dashboard-heading">
-            <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="dashboard-heading-icon" />
-            <div>
+            <span class="dashboard-heading-icon-tile">
+                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="dashboard-heading-icon" />
+            </span>
+            <div class="dashboard-heading-copy">
                 <div class="dashboard-title">@DashboardTitle</div>
                 <div class="dashboard-meta">@DashboardMeta</div>
             </div>
@@ -17,95 +19,103 @@
 
         @if (_layout is not null)
         {
-            <MudToggleGroup T="string" @bind-Value="DashboardMode" Size="Size.Small" Outlined="true" Color="Color.Primary" Class="dashboard-mode-toggle">
-                <MudToggleItem Value="@DashboardModeEdit" UnselectedIcon="@Icons.Material.Filled.Edit" SelectedIcon="@Icons.Material.Filled.Edit">Edit</MudToggleItem>
-                <MudToggleItem Value="@DashboardModeLive" UnselectedIcon="@Icons.Material.Filled.Visibility" SelectedIcon="@Icons.Material.Filled.Visibility">Live</MudToggleItem>
-            </MudToggleGroup>
+            <div class="dashboard-toolbar-actions">
+                <MudToggleGroup T="string" @bind-Value="DashboardMode" Size="Size.Small" Outlined="true" Color="Color.Primary" Class="dashboard-mode-toggle">
+                    <MudToggleItem Value="@DashboardModeEdit" UnselectedIcon="@Icons.Material.Filled.Edit" SelectedIcon="@Icons.Material.Filled.Edit">Edit</MudToggleItem>
+                    <MudToggleItem Value="@DashboardModeLive" UnselectedIcon="@Icons.Material.Filled.Visibility" SelectedIcon="@Icons.Material.Filled.Visibility">Live</MudToggleItem>
+                </MudToggleGroup>
 
-            @if (IsEditMode)
-            {
-                <div class="dashboard-command-strip">
-                    <div class="dashboard-grid-picker">
-                        <MudTooltip Text="Set grid layout">
-                            <MudIconButton Icon="@Icons.Material.Filled.GridOn"
-                                           Variant="Variant.Outlined"
-                                           Color="Color.Primary"
-                                           Size="Size.Small"
-                                           OnClick="@ToggleGridPicker" />
-                        </MudTooltip>
-                        <span>@GridPickerSummary</span>
+                @if (IsEditMode)
+                {
+                    <div class="dashboard-command-strip">
+                        <div class="dashboard-grid-picker dashboard-grid-size-control">
+                            <MudTooltip Text="Set grid layout">
+                                <MudIconButton Icon="@Icons.Material.Filled.GridOn"
+                                               Variant="Variant.Outlined"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               Class="dashboard-tool-button"
+                                               OnClick="@ToggleGridPicker" />
+                            </MudTooltip>
+                            <span class="dashboard-command-label">@GridPickerSummary</span>
 
-                        @if (_isGridPickerOpen)
-                        {
-                            <button type="button" class="dashboard-picker-backdrop" @onclick="@CloseGridPicker"></button>
-                            <div class="dashboard-grid-picker-popover">
-                                <div class="dashboard-grid-picker-cells">
-                                    @foreach (var row in PickerRows)
-                                    {
-                                        @foreach (var column in PickerColumns)
+                            @if (_isGridPickerOpen)
+                            {
+                                <button type="button" class="dashboard-picker-backdrop" @onclick="@CloseGridPicker"></button>
+                                <div class="dashboard-grid-picker-popover">
+                                    <div class="dashboard-grid-picker-cells">
+                                        @foreach (var row in PickerRows)
                                         {
-                                            var r = row;
-                                            var c = column;
-                                            <button type="button"
-                                                    class="@GridPickerCellClass(r, c)"
-                                                    title="@($"Set grid to {c} columns x {r} rows")"
-                                                    @onmouseenter="@(() => PreviewGrid(r, c))"
-                                                    @onclick="@(() => PickGrid(r, c))">
-                                            </button>
+                                            @foreach (var column in PickerColumns)
+                                            {
+                                                var r = row;
+                                                var c = column;
+                                                <button type="button"
+                                                        class="@GridPickerCellClass(r, c)"
+                                                        title="@($"Set grid to {c} columns x {r} rows")"
+                                                        @onmouseenter="@(() => PreviewGrid(r, c))"
+                                                        @onclick="@(() => PickGrid(r, c))">
+                                                </button>
+                                            }
                                         }
-                                    }
+                                    </div>
+                                    <div class="dashboard-picker-label">@GridPickerLabel</div>
                                 </div>
-                                <div class="dashboard-picker-label">@GridPickerLabel</div>
-                            </div>
-                        }
-                    </div>
+                            }
+                        </div>
 
-                    <span class="dashboard-toolbar-separator"></span>
+                        <span class="dashboard-toolbar-separator"></span>
 
-                    <MudTooltip Text="Merge selected cells">
-                        <MudIconButton Icon="@Icons.Material.Filled.ViewColumn"
-                                       Size="Size.Small"
-                                       Disabled="@(!CanMerge)"
-                                       OnClick="@MergeSelected" />
-                    </MudTooltip>
-                    <div class="dashboard-grid-picker">
-                        <MudTooltip Text="Split selected cell">
-                            <MudIconButton Icon="@Icons.Material.Filled.Splitscreen"
+                        <MudTooltip Text="Merge selected cells">
+                            <MudIconButton Icon="@Icons.Material.Filled.ViewColumn"
                                            Size="Size.Small"
-                                           Disabled="@(!CanOpenSplitPicker)"
-                                           OnClick="@ToggleSplitPicker" />
+                                           Disabled="@(!CanMerge)"
+                                           Class="dashboard-tool-button"
+                                           OnClick="@MergeSelected" />
                         </MudTooltip>
-                        <span>@SplitPickerSummary</span>
+                        <div class="dashboard-grid-picker dashboard-split-control">
+                            <MudTooltip Text="Split selected cell">
+                                <MudIconButton Icon="@Icons.Material.Filled.Splitscreen"
+                                               Size="Size.Small"
+                                               Disabled="@(!CanOpenSplitPicker)"
+                                               Class="dashboard-tool-button"
+                                               OnClick="@ToggleSplitPicker" />
+                            </MudTooltip>
+                            <span class="dashboard-command-label">@SplitPickerSummary</span>
 
-                        @if (_isSplitPickerOpen)
-                        {
-                            <button type="button" class="dashboard-picker-backdrop" @onclick="@CloseSplitPicker"></button>
-                            <div class="dashboard-grid-picker-popover">
-                                <div class="dashboard-grid-picker-cells split-picker-cells">
-                                    @foreach (var row in SplitPickerRows)
-                                    {
-                                        @foreach (var column in SplitPickerColumns)
+                            @if (_isSplitPickerOpen)
+                            {
+                                <button type="button" class="dashboard-picker-backdrop" @onclick="@CloseSplitPicker"></button>
+                                <div class="dashboard-grid-picker-popover">
+                                    <div class="dashboard-grid-picker-cells split-picker-cells">
+                                        @foreach (var row in SplitPickerRows)
                                         {
-                                            var r = row;
-                                            var c = column;
-                                            <button type="button"
-                                                    class="@SplitPickerCellClass(r, c)"
-                                                    title="@($"Split selected cell to {c} columns x {r} rows")"
-                                                    @onmouseenter="@(() => PreviewSplit(r, c))"
-                                                    @onclick="@(() => PickSplit(r, c))">
-                                            </button>
+                                            @foreach (var column in SplitPickerColumns)
+                                            {
+                                                var r = row;
+                                                var c = column;
+                                                <button type="button"
+                                                        class="@SplitPickerCellClass(r, c)"
+                                                        title="@($"Split selected cell to {c} columns x {r} rows")"
+                                                        @onmouseenter="@(() => PreviewSplit(r, c))"
+                                                        @onclick="@(() => PickSplit(r, c))">
+                                                </button>
+                                            }
                                         }
-                                    }
+                                    </div>
+                                    <div class="dashboard-picker-label">@SplitPickerLabel</div>
                                 </div>
-                                <div class="dashboard-picker-label">@SplitPickerLabel</div>
-                            </div>
-                        }
-                    </div>
+                            }
+                        </div>
 
-                    <span class="dashboard-toolbar-separator"></span>
-                    <span class="dashboard-selection-summary">@SelectionSummary</span>
-                </div>
-            }
+                        <span class="dashboard-toolbar-separator"></span>
+                        <span class="dashboard-selection-summary">
+                            <MudIcon Icon="@Icons.Material.Filled.SelectAll" Size="Size.Small" />
+                            <span>@SelectionSummary</span>
+                        </span>
+                    </div>
+                }
+            </div>
         }
     </div>
 
@@ -408,7 +418,7 @@
 
     private string DashboardMeta => _layout is null
         ? Project.DashboardNames.Count == 0 ? "No dashboards yet" : DashboardCountLabel(Project.DashboardNames.Count)
-        : $"{_layout.Columns.Count} columns / {_layout.Rows.Count} rows / {_layout.Cells.Count} cells / {_layout.WidgetCount} widgets";
+        : $"{_layout.Columns.Count} x {_layout.Rows.Count} grid / {_layout.Cells.Count} cells / {_layout.WidgetCount} widgets";
 
     private string DashboardEmptyText => Project.DashboardNames.Count == 0
         ? "Create a dashboard to lay out live widgets."
@@ -419,20 +429,20 @@
 
     private string SelectionSummary => SelectedCells.Count switch
     {
-        0 => "No cell selected",
-        1 => SelectedCells[0].IsMerged ? $"Selected {SelectedCells[0].ColumnSpan} x {SelectedCells[0].RowSpan} cell" : $"Selected {SelectedCells[0].Label}",
-        _ => $"{SelectedCells.Count} cells selected"
+        0 => "No selection",
+        1 => SelectedCells[0].IsMerged ? $"{SelectedCells[0].ColumnSpan} x {SelectedCells[0].RowSpan} cell" : $"Cell {SelectedCells[0].Label}",
+        _ => $"{SelectedCells.Count} cells"
     };
 
     private string GridPickerSummary => _layout is null
         ? "Grid"
-        : $"{_layout.Columns.Count} columns x {_layout.Rows.Count} rows";
+        : $"{_layout.Columns.Count} x {_layout.Rows.Count}";
 
     private string GridPickerLabel => $"{_previewColumns} columns x {_previewRows} rows";
 
     private string SplitPickerSummary => SelectedCells.Count == 1
         ? "Split"
-        : "Select one cell";
+        : "Split";
 
     private string SplitPickerLabel => $"{_previewSplitColumns} columns x {_previewSplitRows} rows";
 
