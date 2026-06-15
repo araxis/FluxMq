@@ -77,6 +77,15 @@
                 {
                     <span class="catalog-item-description">@item.Description</span>
                 }
+                @if (ShouldShowRequirements(item))
+                {
+                    <span class="catalog-item-badges" aria-label="Widget data requirements">
+                        @foreach (var requirement in item.DataRequirements.Take(3))
+                        {
+                            <span class="catalog-item-badge">@RequirementLabel(requirement)</span>
+                        }
+                    </span>
+                }
             </span>
             <span class="catalog-add-button" aria-hidden="true">
                 <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
@@ -174,6 +183,9 @@
 
     private bool ShouldShowDescription(CatalogEntry item)
         => ArtifactKind == WorkspaceArtifactKind.Dashboard && !string.IsNullOrWhiteSpace(item.Description);
+
+    private bool ShouldShowRequirements(CatalogEntry item)
+        => ArtifactKind == WorkspaceArtifactKind.Dashboard && item.DataRequirements.Count > 0;
 
     private void OnSearchTextChanged(string? value)
         => _searchText = value ?? string.Empty;

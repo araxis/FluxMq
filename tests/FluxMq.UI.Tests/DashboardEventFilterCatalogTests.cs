@@ -3141,6 +3141,34 @@ public sealed class DashboardEventFilterCatalogTests
                 status: "passed")).ShouldBeFalse();
     }
 
+    [Fact]
+    public void ComponentCatalogPanel_ShowsDashboardWidgetRequirementsInDenseRows()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "ComponentCatalogPanel.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "ComponentCatalogPanel.razor.css"));
+
+        markup.ShouldContain("ShouldShowRequirements(item)");
+        markup.ShouldContain("catalog-item-badges");
+        markup.ShouldContain("RequirementLabel(requirement)");
+        css.ShouldContain("grid-template-areas:");
+        css.ShouldContain("\"description badges\"");
+        css.ShouldContain(".component-catalog.dashboard .catalog-item-badge:nth-child(n+2)");
+        css.ShouldContain("min-height: 49px;");
+    }
+
     private static FlowEvent Event(
         string type,
         string? topic = null,
