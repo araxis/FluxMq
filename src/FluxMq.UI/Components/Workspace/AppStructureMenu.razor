@@ -15,13 +15,15 @@
     {
         var conns = GetConnections(active);
 
-        <span class="app-structure-app">
+        <span class="app-structure-app" title="@BuildAppMeta(active)">
             <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
-            <span>@active.Name</span>
+            <span class="app-structure-name">@active.Name</span>
+            <span class="app-structure-current">@CurrentArtifactLabel(active)</span>
         </span>
 
+        <div class="app-structure-actions">
         <MudMenu Dense="true"
-                 Label="@($"Connections ({conns.Count})")"
+                 Label="@StructureMenuLabel("Connections", conns.Count)"
                  StartIcon="@Icons.Material.Filled.Hub"
                  EndIcon="@Icons.Material.Filled.ExpandMore"
                  Size="Size.Small"
@@ -60,12 +62,12 @@
         </MudMenu>
 
         <MudMenu Dense="true"
-                 Label="@($"Pipelines ({active.WorkflowNames.Count})")"
+                 Label="@StructureMenuLabel("Pipelines", active.WorkflowNames.Count)"
                  StartIcon="@Icons.Material.Filled.Timeline"
                  EndIcon="@Icons.Material.Filled.ExpandMore"
                  Size="Size.Small"
                  Variant="Variant.Text"
-                 Class="app-structure-menu"
+                 Class="@StructureMenuClass(active, WorkspaceArtifactKind.Pipeline)"
                  PopoverClass="app-structure-popover"
                  AnchorOrigin="Origin.BottomLeft"
                  TransformOrigin="Origin.TopLeft">
@@ -99,12 +101,12 @@
         </MudMenu>
 
         <MudMenu Dense="true"
-                 Label="@($"Dashboards ({active.DashboardNames.Count})")"
+                 Label="@StructureMenuLabel("Dashboards", active.DashboardNames.Count)"
                  StartIcon="@Icons.Material.Filled.Dashboard"
                  EndIcon="@Icons.Material.Filled.ExpandMore"
                  Size="Size.Small"
                  Variant="Variant.Text"
-                 Class="app-structure-menu"
+                 Class="@StructureMenuClass(active, WorkspaceArtifactKind.Dashboard)"
                  PopoverClass="app-structure-popover"
                  AnchorOrigin="Origin.BottomLeft"
                  TransformOrigin="Origin.TopLeft">
@@ -138,12 +140,12 @@
         </MudMenu>
 
         <MudMenu Dense="true"
-                 Label="@($"Metrics ({active.MetricNames.Count})")"
+                 Label="@StructureMenuLabel("Metrics", active.MetricNames.Count)"
                  StartIcon="@Icons.Material.Filled.QueryStats"
                  EndIcon="@Icons.Material.Filled.ExpandMore"
                  Size="Size.Small"
                  Variant="Variant.Text"
-                 Class="app-structure-menu"
+                 Class="@StructureMenuClass(active, WorkspaceArtifactKind.Metrics)"
                  PopoverClass="app-structure-popover"
                  AnchorOrigin="Origin.BottomLeft"
                  TransformOrigin="Origin.TopLeft">
@@ -157,7 +159,7 @@
                     <MudMenuItem Icon="@Icons.Material.Filled.QueryStats"
                                  OnClick="@(() => SelectMetrics(active))"
                                  Class="@ArtifactItemClass(active, WorkspaceArtifactKind.Metrics, "Metrics")">
-                        Open Metric Designer
+                        Metric designer
                     </MudMenuItem>
                 }
 
@@ -169,12 +171,12 @@
         </MudMenu>
 
         <MudMenu Dense="true"
-                 Label="@($"Tests ({active.TestNames.Count})")"
+                 Label="@StructureMenuLabel("Tests", active.TestNames.Count)"
                  StartIcon="@Icons.Material.Filled.FactCheck"
                  EndIcon="@Icons.Material.Filled.ExpandMore"
                  Size="Size.Small"
                  Variant="Variant.Text"
-                 Class="app-structure-menu"
+                 Class="@StructureMenuClass(active, WorkspaceArtifactKind.Test)"
                  PopoverClass="app-structure-popover"
                  AnchorOrigin="Origin.BottomLeft"
                  TransformOrigin="Origin.TopLeft">
@@ -206,6 +208,7 @@
                              Class="app-menu-child app-menu-add">Add test</MudMenuItem>
             </ChildContent>
         </MudMenu>
+        </div>
 
         <span class="app-structure-meta">@BuildActiveMeta(active)</span>
     }
@@ -258,6 +261,23 @@
             ? BuildAppMeta(app)
             : $"{prefix}: {artifact}";
     }
+
+    private static string CurrentArtifactLabel(FlowWorkspaceService app)
+        => app.ActiveArtifactKind switch
+        {
+            WorkspaceArtifactKind.Dashboard => "Dashboard",
+            WorkspaceArtifactKind.Metrics => "Metrics",
+            WorkspaceArtifactKind.Test => "Test",
+            WorkspaceArtifactKind.Topics => "Topics",
+            WorkspaceArtifactKind.Logs => "Logs",
+            _ => "Pipeline"
+        };
+
+    private static string StructureMenuLabel(string label, int count)
+        => $"{label} {count.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+
+    private static string StructureMenuClass(FlowWorkspaceService app, WorkspaceArtifactKind kind)
+        => app.ActiveArtifactKind == kind ? "app-structure-menu active" : "app-structure-menu";
 
     private static string BuildAppMeta(FlowWorkspaceService app)
     {

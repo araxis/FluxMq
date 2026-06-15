@@ -5,42 +5,52 @@
 @inject DragStateService DragState
 
 <div class="component-catalog @CatalogClass">
-    <div class="catalog-title">
-        <MudIcon Icon="@CatalogIcon" Size="Size.Small" Class="catalog-title-icon" />
-        <span>@CatalogTitle</span>
-        <span class="catalog-count" title="@CatalogCountTitle">@CatalogCountLabel</span>
+    <div class="catalog-head">
+        <div class="catalog-title">
+            <span class="catalog-title-icon" aria-hidden="true">
+                <MudIcon Icon="@CatalogIcon" Size="Size.Small" />
+            </span>
+            <span>@CatalogTitle</span>
+            <span class="catalog-count" title="@CatalogCountTitle">@CatalogCountLabel</span>
+        </div>
+        <MudTextField T="string"
+                      Value="@_searchText"
+                      ValueChanged="@OnSearchTextChanged"
+                      Placeholder="@SearchPlaceholder"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Immediate="true"
+                      Clearable="true"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      AdornmentColor="Color.Secondary"
+                      Class="catalog-search" />
     </div>
-    <MudTextField T="string"
-                  Value="@_searchText"
-                  ValueChanged="@OnSearchTextChanged"
-                  Placeholder="@SearchPlaceholder"
-                  Variant="Variant.Outlined"
-                  Margin="Margin.Dense"
-                  Immediate="true"
-                  Clearable="true"
-                  Adornment="Adornment.Start"
-                  AdornmentIcon="@Icons.Material.Filled.Search"
-                  AdornmentColor="Color.Secondary"
-                  Class="catalog-search" />
-    @if (SearchResult.VisibleCount == 0)
-    {
-        <div class="catalog-empty">@EmptyLabel</div>
-    }
-    else
-    {
-        @foreach (var group in SearchResult.Items.GroupBy(c => c.Category))
+
+    <div class="catalog-list">
+        @if (SearchResult.VisibleCount == 0)
         {
-            <div class="catalog-group">
-                @group.Key
-            </div>
-            <div class="catalog-drop-zone">
-                @foreach (var item in group)
-                {
-                    @RenderCatalogItem(item)
-                }
-            </div>
+            <div class="catalog-empty">@EmptyLabel</div>
         }
-    }
+        else
+        {
+            @foreach (var group in SearchGroups)
+            {
+                <section class="catalog-section" @key="group.Category">
+                    <div class="catalog-group">
+                        <span>@group.Category</span>
+                        <span>@group.Items.Count.ToString(System.Globalization.CultureInfo.InvariantCulture)</span>
+                    </div>
+                    <div class="catalog-drop-zone" role="list">
+                        @foreach (var item in group.Items)
+                        {
+                            @RenderCatalogItem(item)
+                        }
+                    </div>
+                </section>
+            }
+        }
+    </div>
 </div>
 
 @code {
@@ -51,7 +61,7 @@
 
     private RenderFragment<CatalogEntry> RenderCatalogItem => item =>
         @<div class="catalog-item @(!CanUseItem ? "disabled" : null)"
-              role="button"
+              role="listitem"
               tabindex="@(!CanUseItem ? "-1" : "0")"
               title="@CatalogItemTitle"
               @onpointerdown="@((PointerEventArgs args) => BeginItemDrag(args, item))"
@@ -63,18 +73,9 @@
             </span>
             <span class="catalog-item-main">
                 <span class="catalog-item-name">@item.DisplayName</span>
-                @if (ArtifactKind == WorkspaceArtifactKind.Dashboard)
+                @if (ShouldShowDescription(item))
                 {
                     <span class="catalog-item-description">@item.Description</span>
-                    @if (item.DataRequirements.Count > 0)
-                    {
-                        <span class="catalog-item-badges">
-                            @foreach (var requirement in item.DataRequirements.Take(2))
-                            {
-                                <span class="catalog-item-badge">@RequirementLabel(requirement)</span>
-                            }
-                        </span>
-                    }
                 }
             </span>
             <span class="catalog-add-button" aria-hidden="true">
@@ -84,6 +85,14 @@
 
     private CatalogSearchResult<CatalogEntry> SearchResult
         => CatalogSearch.Filter(AllItems, _searchText, static item => item.SearchFields);
+
+    private IReadOnlyList<CatalogGroup> SearchGroups =>
+        SearchResult.Items
+            .GroupBy(static item => item.Category)
+            .Select(static group => new CatalogGroup(
+                group.Key,
+                group.OrderBy(static item => item.DisplayName, StringComparer.OrdinalIgnoreCase).ToArray()))
+            .ToArray();
 
     private IReadOnlyList<CatalogEntry> AllItems => ArtifactKind switch
     {
@@ -162,6 +171,9 @@
     };
 
     private bool HasSearch => !string.IsNullOrWhiteSpace(_searchText);
+
+    private bool ShouldShowDescription(CatalogEntry item)
+        => ArtifactKind == WorkspaceArtifactKind.Dashboard && !string.IsNullOrWhiteSpace(item.Description);
 
     private void OnSearchTextChanged(string? value)
         => _searchText = value ?? string.Empty;
@@ -295,6 +307,8 @@
                 descriptor.Icon,
                 []);
     }
+
+    private sealed record CatalogGroup(string Category, IReadOnlyList<CatalogEntry> Items);
 
     private static string RequirementLabel(string requirement)
         => requirement switch
