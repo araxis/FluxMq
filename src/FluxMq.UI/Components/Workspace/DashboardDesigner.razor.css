@@ -295,8 +295,8 @@
 }
 
 .dashboard-grid-frame {
-    --dashboard-grid-column-min: 148px;
-    --dashboard-grid-row-min: 126px;
+    --dashboard-grid-column-min: 140px;
+    --dashboard-grid-row-min: 120px;
     background: color-mix(in srgb, var(--flux-surface) 46%, var(--flux-canvas));
     border: 0;
     border-radius: 0;
@@ -308,7 +308,9 @@
     min-height: 0;
     min-width: 0;
     overflow: auto;
+    overscroll-behavior: contain;
     padding: 12px;
+    scrollbar-gutter: stable;
 }
 
 .dashboard-grid-empty-note {
@@ -355,8 +357,8 @@
 .dashboard-grid-stage {
     display: grid;
     flex: 1 1 auto;
-    grid-template-columns: 62px minmax(0, 1fr);
-    grid-template-rows: 46px minmax(0, 1fr);
+    grid-template-columns: 54px minmax(0, 1fr);
+    grid-template-rows: 40px minmax(0, 1fr);
     height: 100%;
     min-height: 0;
     min-width: 0;
@@ -373,20 +375,20 @@
 .dashboard-column-handles {
     grid-column: 2;
     grid-row: 1;
-    padding: 0 9px;
+    padding: 0 5px 6px;
 }
 
 .dashboard-row-handles {
     grid-column: 1;
     grid-row: 2;
-    padding: 9px 0;
+    padding: 5px 6px 5px 0;
 }
 
 .dashboard-track-handle {
     align-items: center;
-    background: color-mix(in srgb, var(--mud-palette-text-primary) 5%, var(--flux-surface-2));
-    border: 1px solid var(--flux-border);
-    border-radius: 6px;
+    background: color-mix(in srgb, var(--flux-surface-2) 78%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-secondary) 12%, var(--flux-border));
+    border-radius: 5px;
     color: var(--mud-palette-text-secondary);
     cursor: pointer;
     display: flex;
@@ -394,16 +396,32 @@
     font-size: 10px;
     gap: 1px;
     justify-content: center;
-    min-height: 28px;
-    min-width: 48px;
-    padding: 3px 8px;
-    transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+    min-height: 26px;
+    min-width: 40px;
+    padding: 2px 7px;
+    transition: background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease, color 0.12s ease;
 }
 
-.dashboard-track-handle:hover {
-    background: color-mix(in srgb, var(--flux-accent) 26%, var(--flux-surface-2));
-    border-color: var(--flux-accent);
+.dashboard-column-handles .dashboard-track-handle {
+    align-self: stretch;
+    min-width: 0;
+    width: 100%;
+}
+
+.dashboard-row-handles .dashboard-track-handle {
+    align-self: stretch;
+    min-height: 0;
+    padding: 6px 4px;
+    width: 100%;
+}
+
+.dashboard-track-handle:hover,
+.dashboard-track-handle:focus-visible {
+    background: color-mix(in srgb, var(--flux-accent) 12%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--flux-accent) 74%, var(--flux-border));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--flux-accent) 18%, transparent);
     color: var(--mud-palette-text-primary);
+    outline: 0;
 }
 
 .dashboard-track-handle span {
@@ -422,11 +440,11 @@
 }
 
 .dashboard-grid {
-    background: color-mix(in srgb, var(--flux-surface-2) 58%, transparent);
-    border: 1px solid color-mix(in srgb, var(--mud-palette-text-secondary) 22%, var(--flux-border));
-    border-radius: 6px;
+    background: color-mix(in srgb, var(--flux-surface-2) 38%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-secondary) 14%, var(--flux-border));
+    border-radius: 5px;
     display: grid;
-    gap: 6px;
+    gap: 5px;
     grid-auto-flow: row dense;
     grid-auto-rows: minmax(var(--dashboard-grid-row-min, 136px), 1fr);
     grid-column: 2;
@@ -435,15 +453,15 @@
     min-height: 0;
     min-width: 0;
     overflow: visible;
-    padding: 6px;
+    padding: 5px;
     position: relative;
     width: 100%;
 }
 
 .dashboard-cell {
-    background: color-mix(in srgb, var(--flux-surface-2) 76%, transparent);
-    border: 1px solid color-mix(in srgb, var(--mud-palette-text-secondary) 14%, var(--flux-border));
-    border-radius: 6px;
+    background: color-mix(in srgb, var(--flux-surface-2) 62%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-secondary) 12%, var(--flux-border));
+    border-radius: 5px;
     color: var(--mud-palette-text-primary);
     cursor: pointer;
     display: flex;
@@ -456,13 +474,44 @@
     z-index: 1;
 }
 
+.dashboard-cell::before,
+.dashboard-cell::after {
+    content: "";
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    transition: opacity 0.12s ease, transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
+.dashboard-cell::before {
+    border-radius: inherit;
+    inset: 0;
+    z-index: 2;
+}
+
+.dashboard-cell::after {
+    background: var(--flux-accent);
+    border-radius: 2px;
+    height: 7px;
+    left: 6px;
+    top: 6px;
+    transform: scale(0.72);
+    width: 7px;
+    z-index: 3;
+}
+
 .dashboard-cell:hover {
-    background: color-mix(in srgb, var(--flux-accent) 7%, var(--flux-surface-2));
-    border-color: color-mix(in srgb, var(--flux-accent) 44%, var(--flux-border));
+    background: color-mix(in srgb, var(--flux-accent) 5%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--flux-accent) 38%, var(--flux-border));
+}
+
+.dashboard-cell:hover::before {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--flux-accent) 16%, transparent);
+    opacity: 1;
 }
 
 .dashboard-cell.explicit {
-    background: color-mix(in srgb, var(--flux-surface-2) 92%, transparent);
+    background: color-mix(in srgb, var(--flux-surface-2) 76%, transparent);
     border-style: solid;
     box-shadow: none;
     z-index: 2;
@@ -470,7 +519,7 @@
 
 .dashboard-cell.has-widget {
     background: transparent;
-    border-color: color-mix(in srgb, var(--mud-palette-text-secondary) 20%, var(--flux-border));
+    border-color: color-mix(in srgb, var(--mud-palette-text-secondary) 14%, var(--flux-border));
 }
 
 .dashboard-cell.has-widget:hover {
@@ -480,27 +529,57 @@
 
 .dashboard-cell.selected {
     border-color: var(--flux-accent);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--flux-accent) 66%, transparent);
+    box-shadow: none;
     z-index: 3;
 }
 
-.dashboard-cell.has-widget.selected {
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--flux-accent) 66%, transparent);
+.dashboard-cell.selected::before {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--flux-accent) 70%, transparent);
+    opacity: 1;
+}
+
+.dashboard-cell.selected::after {
+    opacity: 1;
+    transform: scale(1);
 }
 
 .dashboard-cell.dropping {
-    background: color-mix(in srgb, var(--flux-accent) 15%, var(--flux-surface-2));
+    background: color-mix(in srgb, var(--flux-accent) 11%, var(--flux-surface-2));
     border-color: var(--flux-accent);
-    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--flux-accent) 70%, transparent);
+    box-shadow: none;
     z-index: 4;
 }
 
+.dashboard-cell.dropping::before {
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--flux-accent) 72%, transparent);
+    opacity: 1;
+}
+
+.dashboard-cell.dropping::after {
+    background: transparent;
+    border: 1px dashed color-mix(in srgb, var(--flux-accent) 78%, transparent);
+    border-radius: 4px;
+    inset: 7px;
+    opacity: 1;
+    transform: none;
+    width: auto;
+    height: auto;
+}
+
 .dashboard-cell.moving-source {
-    opacity: 0.58;
+    border-color: color-mix(in srgb, var(--mud-palette-text-secondary) 34%, var(--flux-border));
+    border-style: dashed;
+    opacity: 0.68;
+}
+
+.dashboard-cell.moving-source::before {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mud-palette-text-secondary) 24%, transparent);
+    opacity: 1;
 }
 
 .dashboard-cell.merged {
-    background: color-mix(in srgb, var(--flux-accent) 8%, var(--flux-surface-2));
+    background: color-mix(in srgb, var(--flux-accent) 6%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--flux-accent) 24%, var(--flux-border));
 }
 
 .dashboard-cell-content {
@@ -523,7 +602,15 @@
     gap: 4px;
     max-width: 100%;
     min-width: 0;
+    opacity: 0.72;
     pointer-events: none;
+    transition: opacity 0.12s ease;
+}
+
+.dashboard-cell:hover .dashboard-cell-placeholder,
+.dashboard-cell.selected .dashboard-cell-placeholder,
+.dashboard-cell.dropping .dashboard-cell-placeholder {
+    opacity: 1;
 }
 
 .dashboard-cell-content.has-widget-preview {

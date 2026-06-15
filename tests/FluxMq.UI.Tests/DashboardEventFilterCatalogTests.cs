@@ -2484,6 +2484,29 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardDesigner_EditGridUsesFlatEditingStateAffordances()
+    {
+        var root = FindRepositoryRoot();
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor.css"));
+
+        css.ShouldContain("grid-template-columns: 54px minmax(0, 1fr);");
+        css.ShouldContain("grid-template-rows: 40px minmax(0, 1fr);");
+        css.ShouldContain("overscroll-behavior: contain;");
+        css.ShouldContain(".dashboard-track-handle:focus-visible");
+        css.ShouldContain(".dashboard-cell.selected::after");
+        css.ShouldContain(".dashboard-cell.dropping::after");
+        css.ShouldContain("border: 1px dashed color-mix(in srgb, var(--flux-accent) 78%, transparent);");
+        css.ShouldContain(".dashboard-cell.moving-source::before");
+        css.ShouldContain(".dashboard-cell:hover .dashboard-cell-placeholder");
+    }
+
+    [Fact]
     public void DashboardWidgets_UseContainerResponsiveValueAndDigitalSizing()
     {
         var root = FindRepositoryRoot();
