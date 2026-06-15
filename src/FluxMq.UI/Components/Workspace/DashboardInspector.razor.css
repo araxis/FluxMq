@@ -2,7 +2,7 @@
     background: var(--flux-surface);
     border-left: 1px solid var(--flux-border);
     display: flex;
-    flex: 0 0 352px;
+    flex: 0 0 344px;
     flex-direction: column;
     min-height: 0;
     min-width: 0;
@@ -14,28 +14,28 @@
     border-bottom: 1px solid var(--flux-border);
     display: flex;
     flex: 0 0 auto;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
-    padding: 7px 10px;
+    padding: 6px 9px;
 }
 
 .dashboard-inspector-icon {
     align-items: center;
     background: var(--flux-surface-2);
     border: 1px solid var(--flux-border);
-    border-radius: 6px;
+    border-radius: 5px;
     color: var(--mud-palette-info);
     display: flex;
     flex: 0 0 auto;
-    height: 26px;
+    height: 24px;
     justify-content: center;
-    width: 26px;
+    width: 24px;
 }
 
 .dashboard-inspector-icon ::deep .mud-icon-root {
-    font-size: 17px;
-    height: 17px;
-    width: 17px;
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
 }
 
 .dashboard-inspector-heading {
@@ -53,11 +53,11 @@
     color: var(--mud-palette-text-secondary);
     cursor: pointer;
     display: inline-flex;
-    flex: 0 0 26px;
-    height: 26px;
+    flex: 0 0 24px;
+    height: 24px;
     justify-content: center;
     padding: 0;
-    width: 26px;
+    width: 24px;
 }
 
 .dashboard-inspector-command:hover {
@@ -72,12 +72,12 @@
 }
 
 .dashboard-inspector-command ::deep .mud-icon-root {
-    font-size: 16px;
+    font-size: 15px;
 }
 
 .dashboard-inspector-title {
     color: var(--mud-palette-text-primary);
-    font-size: 12.5px;
+    font-size: 12.25px;
     font-weight: 760;
     line-height: 1.2;
     overflow: hidden;
@@ -87,7 +87,7 @@
 
 .dashboard-inspector-subtitle {
     color: var(--mud-palette-text-secondary);
-    font-size: 10.5px;
+    font-size: 10.25px;
     line-height: 1.2;
     margin-top: 1px;
     overflow: hidden;
@@ -98,11 +98,11 @@
 .dashboard-inspector-cell-summary {
     background: var(--flux-surface-2);
     border: 1px solid var(--flux-border);
-    border-radius: 6px;
+    border-radius: 5px;
     display: flex;
     flex-direction: column;
     gap: 3px;
-    padding: 8px;
+    padding: 7px;
 }
 
 .dashboard-inspector-query-row {
@@ -204,7 +204,7 @@
 
 @media (max-width: 1180px) {
     .dashboard-inspector {
-        flex-basis: 320px;
+        flex-basis: 312px;
     }
 }
 

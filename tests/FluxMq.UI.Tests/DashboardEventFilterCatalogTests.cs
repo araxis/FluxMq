@@ -2396,6 +2396,69 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardInspector_UsesDensePropertyGridAndIconMetricControls()
+    {
+        var root = FindRepositoryRoot();
+        var propertyGrid = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "PropertyGrid.razor"));
+        var propertyGridCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "PropertyGrid.razor.css"));
+        var rowCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "PropertyGridRow.razor.css"));
+        var selectCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "PropertyGridSelect.razor.css"));
+        var inspectorCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspector.razor.css"));
+        var visualMetricRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorVisualMetricRows.razor"));
+
+        propertyGrid.ShouldContain("DefaultNameColumnWidth = 124");
+        propertyGrid.ShouldContain("MinNameColumnWidth = 88");
+        propertyGrid.ShouldContain("MaxNameColumnWidth = 190");
+        propertyGrid.ShouldContain("--property-grid-name-width: min({_nameColumnWidth.ToString(\"0\", CultureInfo.InvariantCulture)}px, 42%);");
+        propertyGridCss.ShouldContain("min-height: 27px;");
+        rowCss.ShouldContain("min-height: 28px;");
+        rowCss.ShouldContain("min-height: 24px;");
+        selectCss.ShouldContain("max-height: 204px;");
+        inspectorCss.ShouldContain("flex: 0 0 344px;");
+        visualMetricRows.ShouldContain("KeyboardArrowUp");
+        visualMetricRows.ShouldContain("KeyboardArrowDown");
+        visualMetricRows.ShouldContain("Icons.Material.Filled.Close");
+        visualMetricRows.ShouldContain("aria-label=\"@($\"Move {VisualMetricLabel(currentMetric)} up\")\"");
+        visualMetricRows.ShouldContain("aria-label=\"Add metric card\"");
+    }
+
+    [Fact]
     public void DashboardDesigner_EditPreviewKeepsMetricValuePlacement()
     {
         var root = FindRepositoryRoot();

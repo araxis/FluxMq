@@ -1,5 +1,6 @@
 @using FluxMq.UI.Models
 @using FluxMq.UI.Services
+@using MudBlazor
 
 @if (Draft is not null)
 {
@@ -21,18 +22,27 @@
                     <button type="button"
                             class="property-grid-small-button"
                             title="Move up"
+                            aria-label="@($"Move {VisualMetricLabel(currentMetric)} up")"
                             disabled="@(item.Index == 0)"
-                            @onclick="@(() => MoveMetric.InvokeAsync(new DashboardInspectorMetricMove(currentMetric, -1)))">^</button>
+                            @onclick="@(() => MoveMetric.InvokeAsync(new DashboardInspectorMetricMove(currentMetric, -1)))">
+                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" />
+                    </button>
                     <button type="button"
                             class="property-grid-small-button"
                             title="Move down"
+                            aria-label="@($"Move {VisualMetricLabel(currentMetric)} down")"
                             disabled="@(item.Index == Draft.DisplayMetrics.Count - 1)"
-                            @onclick="@(() => MoveMetric.InvokeAsync(new DashboardInspectorMetricMove(currentMetric, 1)))">v</button>
+                            @onclick="@(() => MoveMetric.InvokeAsync(new DashboardInspectorMetricMove(currentMetric, 1)))">
+                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" />
+                    </button>
                     <button type="button"
                             class="property-grid-small-button"
                             title="Remove"
+                            aria-label="@($"Remove {VisualMetricLabel(currentMetric)}")"
                             disabled="@(!Draft.CanRemoveDisplayMetric)"
-                            @onclick="@(() => RemoveMetric.InvokeAsync(currentMetric))">x</button>
+                            @onclick="@(() => RemoveMetric.InvokeAsync(currentMetric))">
+                        <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                    </button>
                 </div>
             </PropertyGridRow>
         }
@@ -45,8 +55,12 @@
                                     ValueChanged="@MetricToAddChanged" />
                 <button type="button"
                         class="property-grid-small-button"
+                        title="Add metric card"
+                        aria-label="Add metric card"
                         disabled="@string.IsNullOrWhiteSpace(MetricToAdd)"
-                        @onclick="@(() => AddMetric.InvokeAsync())">+</button>
+                        @onclick="@(() => AddMetric.InvokeAsync())">
+                    <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                </button>
             </div>
         </PropertyGridRow>
 
