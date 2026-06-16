@@ -11,17 +11,24 @@
         <button type="button"
                 class="inspector-tab @(_activeTab == InspectorTab.Inspect ? "active" : null)"
                 @onclick="@(() => _activeTab = InspectorTab.Inspect)">
-            Inspect
+            <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
+            <span>Inspect</span>
         </button>
         <button type="button"
                 class="inspector-tab @(_activeTab == InspectorTab.Publish ? "active" : null)"
                 @onclick="@(() => _activeTab = InspectorTab.Publish)">
-            Publish
+            <MudIcon Icon="@Icons.Material.Filled.Send" Size="Size.Small" />
+            <span>Publish</span>
         </button>
         <button type="button"
                 class="inspector-tab @(_activeTab == InspectorTab.Topics ? "active" : null)"
                 @onclick="@(() => _activeTab = InspectorTab.Topics)">
-            Topics <span class="tab-count">@DisplayedMessages.Count</span>
+            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+            <span>Topics</span>
+            @if (DisplayedMessages.Count > 0)
+            {
+                <span class="tab-count">@DisplayedMessages.Count</span>
+            }
         </button>
     </div>
 
@@ -65,8 +72,11 @@
                             <option value="@MqttQualityOfServiceLevel.ExactlyOnce">QoS 2</option>
                         </select>
                     </label>
-                    <button type="button" class="pill-button" @onclick="@(() => _retain = !_retain)">
-                        Retain: @(_retain ? "on" : "off")
+                    <button type="button"
+                            class="pill-button publish-retain @(_retain ? "active" : null)"
+                            @onclick="@(() => _retain = !_retain)">
+                        <span>Retain</span>
+                        <strong>@(_retain ? "On" : "Off")</strong>
                     </button>
                     <button type="button"
                             class="publish-submit"
@@ -89,7 +99,10 @@
             <div class="inspector-panel live-topic-panel">
                 <div class="section-label">
                     <span>Live topics</span>
-                    <span class="recording-label"><span class="recording-dot"></span>Recording</span>
+                    @if (LiveTopicRows.Count > 0)
+                    {
+                        <span class="section-badge">@LiveTopicRows.Count</span>
+                    }
                 </div>
 
                 <div class="live-topic-list">
@@ -116,7 +129,10 @@
             <div class="inspector-panel last-payload-panel">
                 <div class="section-label">
                     <span>Last payload</span>
-                    <span>@LastPayloadMeta</span>
+                    @if (LastPayloadMessage is not null)
+                    {
+                        <span>@LastPayloadMeta</span>
+                    }
                 </div>
                 <pre class="last-payload-body">@LastPayloadPreview</pre>
             </div>
