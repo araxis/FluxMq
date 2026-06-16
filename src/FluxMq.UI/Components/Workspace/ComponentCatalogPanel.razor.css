@@ -1,7 +1,7 @@
 .component-catalog {
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    gap: 6px;
     height: 100%;
     min-height: 0;
     min-width: 0;
@@ -13,7 +13,7 @@
     display: flex;
     flex: 0 0 auto;
     flex-direction: column;
-    gap: 7px;
+    gap: 6px;
     min-width: 0;
 }
 
@@ -23,8 +23,8 @@
     display: flex;
     font-size: 12px;
     font-weight: 760;
-    gap: 7px;
-    min-height: 28px;
+    gap: 6px;
+    min-height: 26px;
     min-width: 0;
     padding: 0;
 }
@@ -40,13 +40,13 @@
     align-items: center;
     background: color-mix(in srgb, var(--flux-surface-2) 70%, var(--flux-surface));
     border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
-    border-radius: 6px;
+    border-radius: 5px;
     color: var(--flux-accent);
     display: inline-flex;
     flex: 0 0 auto;
-    height: 24px;
+    height: 23px;
     justify-content: center;
-    width: 24px;
+    width: 23px;
 }
 
 .component-catalog.dashboard .catalog-title-icon {
@@ -58,16 +58,16 @@
 }
 
 .catalog-title-icon ::deep .mud-icon-root {
-    font-size: 16px;
-    height: 16px;
-    width: 16px;
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
 }
 
 .catalog-count {
     align-items: center;
-    background: transparent;
-    border: 0;
-    border-radius: 0;
+    background: color-mix(in srgb, var(--flux-surface-2) 62%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 46%, transparent);
+    border-radius: 999px;
     color: var(--mud-palette-text-secondary);
     display: inline-flex;
     flex: 0 0 auto;
@@ -75,8 +75,9 @@
     font-weight: 720;
     line-height: 1;
     margin-left: auto;
-    min-height: 0;
-    padding: 0;
+    min-height: 18px;
+    min-width: 22px;
+    padding: 0 6px;
     white-space: nowrap;
 }
 
@@ -89,12 +90,12 @@
 }
 
 .component-catalog ::deep .catalog-search .mud-input-control-input-container {
-    min-height: 32px;
+    min-height: 30px;
 }
 
 .component-catalog ::deep .catalog-search .mud-input {
     background: color-mix(in srgb, var(--flux-surface-2) 72%, var(--flux-surface));
-    border-radius: 6px;
+    border-radius: 5px;
     font-size: 12px;
 }
 
@@ -110,7 +111,7 @@
     min-width: 0;
     overflow: auto;
     overscroll-behavior: contain;
-    padding-right: 2px;
+    padding-right: 1px;
     scrollbar-color: color-mix(in srgb, var(--mud-palette-text-secondary) 24%, transparent) transparent;
     scrollbar-width: thin;
 }
@@ -137,7 +138,7 @@
 }
 
 .catalog-section + .catalog-section {
-    margin-top: 6px;
+    margin-top: 5px;
 }
 
 .catalog-group {
@@ -149,23 +150,24 @@
     justify-content: space-between;
     letter-spacing: 0;
     line-height: 1;
-    min-height: 24px;
-    padding: 5px 2px 4px;
+    min-height: 22px;
+    padding: 4px 2px 3px;
     text-transform: none;
 }
 
 .catalog-group span:last-child {
     align-items: center;
-    background: transparent;
-    border-radius: 0;
+    background: color-mix(in srgb, var(--flux-surface-2) 54%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 42%, transparent);
+    border-radius: 999px;
     color: var(--flux-text-muted);
     display: inline-flex;
     font-size: 10px;
     font-weight: 700;
-    height: auto;
+    height: 16px;
     justify-content: center;
-    min-width: 0;
-    padding: 0;
+    min-width: 18px;
+    padding: 0 5px;
 }
 
 .catalog-empty {
@@ -185,7 +187,7 @@
 .catalog-drop-zone {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
     min-height: 0;
     min-width: 0;
     width: 100%;
@@ -194,21 +196,22 @@
 .catalog-item {
     align-items: center;
     background: transparent;
-    border: 1px solid color-mix(in srgb, var(--flux-border) 44%, transparent);
-    border-radius: 6px;
+    border: 1px solid color-mix(in srgb, var(--flux-border) 40%, transparent);
+    border-radius: 5px;
     box-sizing: border-box;
     color: inherit;
     cursor: grab;
     display: grid;
-    gap: 8px;
-    grid-template-columns: 24px minmax(0, 1fr) 24px;
-    min-height: 36px;
+    gap: 7px;
+    grid-template-columns: 23px minmax(0, 1fr) 23px;
+    min-height: 34px;
     min-width: 0;
     outline: none;
-    padding: 5px 6px;
+    padding: 4px 5px;
+    position: relative;
     text-align: left;
     touch-action: none;
-    transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+    transition: background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease, color 0.12s ease;
     user-select: none;
     width: 100%;
 }
@@ -219,18 +222,29 @@
     border-color: color-mix(in srgb, var(--flux-accent) 26%, var(--flux-border));
 }
 
+.catalog-item:focus-visible {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--flux-accent) 32%, transparent);
+}
+
 .catalog-item:active {
     cursor: grabbing;
 }
 
+.catalog-item.dragging {
+    background: color-mix(in srgb, var(--flux-accent) 10%, var(--flux-surface));
+    border-color: color-mix(in srgb, var(--flux-accent) 62%, var(--flux-border));
+    box-shadow: inset 2px 0 0 var(--flux-accent);
+}
+
 .catalog-icon-tile,
-.catalog-add-button {
+.catalog-add-button,
+.catalog-drag-grip {
     align-items: center;
-    border-radius: 5px;
+    border-radius: 4px;
     display: flex;
-    height: 24px;
+    height: 23px;
     justify-content: center;
-    width: 24px;
+    width: 23px;
 }
 
 .catalog-icon-tile {
@@ -274,13 +288,13 @@
 .catalog-item-main {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
     min-width: 0;
 }
 
 .catalog-item-name {
     color: var(--mud-palette-text-primary);
-    font-size: 11.5px;
+    font-size: 11.25px;
     font-weight: 720;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -290,7 +304,7 @@
 .catalog-item-description {
     color: var(--mud-palette-text-secondary);
     display: block;
-    font-size: 10.5px;
+    font-size: 10.25px;
     line-height: 1.25;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -300,7 +314,7 @@
 .catalog-item-badges {
     display: flex;
     flex-wrap: nowrap;
-    gap: 4px;
+    gap: 3px;
     min-width: 0;
     overflow: hidden;
 }
@@ -308,7 +322,7 @@
 .catalog-item-badge {
     background: color-mix(in srgb, var(--mud-palette-info) 8%, transparent);
     border: 1px solid color-mix(in srgb, var(--mud-palette-info) 18%, var(--flux-border));
-    border-radius: 4px;
+    border-radius: 999px;
     color: color-mix(in srgb, var(--mud-palette-info) 72%, var(--mud-palette-text-primary));
     flex: 0 0 auto;
     font-size: 9.5px;
@@ -327,18 +341,18 @@
 .component-catalog.dashboard .catalog-item {
     align-items: start;
     background: color-mix(in srgb, var(--flux-surface-2) 20%, transparent);
-    min-height: 49px;
-    padding: 5px 6px;
+    min-height: 46px;
+    padding: 4px 5px;
 }
 
 .component-catalog.dashboard .catalog-item-main {
-    column-gap: 6px;
+    column-gap: 5px;
     display: grid;
     grid-template-areas:
         "name name"
         "description badges";
     grid-template-columns: minmax(0, 1fr) auto;
-    row-gap: 2px;
+    row-gap: 1px;
 }
 
 .component-catalog.dashboard .catalog-item-name {
@@ -353,32 +367,61 @@
     align-self: center;
     grid-area: badges;
     justify-self: end;
-    max-width: 74px;
+    max-width: 68px;
 }
 
 .component-catalog.dashboard .catalog-item-badge:nth-child(n+2) {
     display: none;
 }
 
+.catalog-item-affordance {
+    display: grid;
+    height: 23px;
+    justify-self: end;
+    min-width: 0;
+    place-items: center;
+    position: relative;
+    width: 23px;
+}
+
+.catalog-drag-grip {
+    color: var(--mud-palette-text-secondary);
+    opacity: 0.62;
+    transition: color 0.12s ease, opacity 0.12s ease, transform 0.12s ease;
+}
+
 .catalog-add-button {
     color: var(--mud-palette-text-secondary);
-    justify-self: end;
-    opacity: 0.66;
-    transition: background 0.12s ease, color 0.12s ease, opacity 0.12s ease;
+    inset: 0;
+    opacity: 0;
+    position: absolute;
+    transform: scale(0.82);
+    transition: background 0.12s ease, color 0.12s ease, opacity 0.12s ease, transform 0.12s ease;
 }
 
 .catalog-item:hover .catalog-add-button,
-.catalog-item:focus-visible .catalog-add-button {
+.catalog-item:focus-visible .catalog-add-button,
+.catalog-item.dragging .catalog-add-button {
     background: var(--flux-accent-soft);
     color: var(--flux-accent);
     opacity: 1;
+    transform: scale(1);
+}
+
+.catalog-item:hover .catalog-drag-grip,
+.catalog-item:focus-visible .catalog-drag-grip,
+.catalog-item.dragging .catalog-drag-grip {
+    color: var(--flux-accent);
+    opacity: 1;
+    transform: translateX(-2px);
 }
 
 .catalog-add-button ::deep .mud-icon-root,
-.catalog-icon-tile ::deep .mud-icon-root {
-    font-size: 16px;
-    height: 16px;
-    width: 16px;
+.catalog-icon-tile ::deep .mud-icon-root,
+.catalog-drag-grip ::deep .mud-icon-root {
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
 }
 
 .catalog-item.disabled {

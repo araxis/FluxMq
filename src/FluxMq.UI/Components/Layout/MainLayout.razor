@@ -210,7 +210,7 @@
     @if (DragState.ActiveComponentDrag is { DidDrag: true } activeDrag)
     {
         <div class="@DragPreviewClass" style="@DragPreviewStyle">
-            <MudIcon Icon="@Icons.Material.Filled.Extension" Size="Size.Small" />
+            <MudIcon Icon="@DragPreviewIcon(activeDrag.TargetKind)" Size="Size.Small" />
             <span>@activeDrag.DisplayName</span>
         </div>
     }
@@ -294,11 +294,26 @@
         $"flux-theme-scope {(ThemeService.IsDarkMode ? "flux-theme-dark" : "flux-theme-light")}";
 
     private string DragPreviewClass =>
-        $"flux-drag-preview {(DragState.ActiveComponentDrag?.IsOverDesigner == true ? "over-designer" : null)}";
+        $"flux-drag-preview {DragPreviewTargetClass} {(DragState.ActiveComponentDrag?.IsOverDesigner == true ? "over-designer" : null)}";
+
+    private string DragPreviewTargetClass => DragState.ActiveComponentDrag?.TargetKind switch
+    {
+        WorkspaceArtifactKind.Dashboard => "dashboard",
+        WorkspaceArtifactKind.Test => "test",
+        _ => "pipeline"
+    };
 
     private string DragPreviewStyle => DragState.ActiveComponentDrag is { } activeDrag
         ? $"left:{activeDrag.ClientX.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}px;top:{activeDrag.ClientY.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}px;"
         : string.Empty;
+
+    private static string DragPreviewIcon(WorkspaceArtifactKind targetKind)
+        => targetKind switch
+        {
+            WorkspaceArtifactKind.Dashboard => Icons.Material.Filled.Widgets,
+            WorkspaceArtifactKind.Test => Icons.Material.Filled.FactCheck,
+            _ => Icons.Material.Filled.Extension
+        };
 
     private string RunStateClass => Live.State switch
     {
