@@ -30,12 +30,13 @@ body {
     background: var(--flux-surface);
     border: 1px solid var(--flux-border-strong);
     border-radius: 5px;
-    box-shadow: var(--flux-shadow-pop);
+    box-shadow: 0 10px 24px -16px rgba(0, 0, 0, 0.56), 0 0 0 1px var(--flux-border);
     color: var(--mud-palette-text-primary);
     display: inline-flex;
-    gap: 7px;
-    max-width: 240px;
-    padding: 7px 9px;
+    gap: 6px;
+    max-width: 220px;
+    min-height: 30px;
+    padding: 5px 8px;
     pointer-events: none;
     position: fixed;
     transform: translate(12px, 12px);
@@ -45,11 +46,11 @@ body {
 .flux-drag-preview .mud-icon-root {
     color: var(--mud-palette-text-secondary);
     flex: 0 0 auto;
-    font-size: 17px;
+    font-size: 16px;
 }
 
 .flux-drag-preview span {
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 760;
     min-width: 0;
     overflow: hidden;
@@ -58,7 +59,8 @@ body {
 }
 
 .flux-drag-preview.dashboard {
-    border-color: color-mix(in srgb, var(--mud-palette-info) 38%, var(--flux-border-strong));
+    background: color-mix(in srgb, var(--mud-palette-info) 6%, var(--flux-surface));
+    border-color: color-mix(in srgb, var(--mud-palette-info) 34%, var(--flux-border-strong));
 }
 
 .flux-drag-preview.dashboard .mud-icon-root {
@@ -75,7 +77,7 @@ body {
 
 .flux-drag-preview.over-designer {
     border-color: var(--flux-accent);
-    box-shadow: 0 0 0 2px var(--flux-accent-dim), var(--flux-shadow-pop);
+    box-shadow: 0 0 0 2px var(--flux-accent-dim), 0 10px 24px -16px rgba(0, 0, 0, 0.56);
 }
 
 .flux-drag-preview.over-designer .mud-icon-root {
