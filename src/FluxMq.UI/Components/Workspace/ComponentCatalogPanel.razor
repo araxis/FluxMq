@@ -60,10 +60,12 @@
     private string _searchText = string.Empty;
 
     private RenderFragment<CatalogEntry> RenderCatalogItem => item =>
-        @<div class="catalog-item @(!CanUseItem ? "disabled" : null)"
+        @<div class="@CatalogItemClass(item)"
               role="listitem"
               tabindex="@(!CanUseItem ? "-1" : "0")"
               title="@CatalogItemTitle"
+              aria-label="@CatalogItemAriaLabel(item)"
+              aria-grabbed="@CatalogItemGrabbed(item)"
               @onpointerdown="@((PointerEventArgs args) => BeginItemDrag(args, item))"
               @onclick="@(() => AddItem(item))"
               @onkeydown="@((KeyboardEventArgs args) => AddItemFromKeyboard(args, item))"
@@ -87,8 +89,13 @@
                     </span>
                 }
             </span>
-            <span class="catalog-add-button" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+            <span class="catalog-item-affordance" aria-hidden="true">
+                <span class="catalog-drag-grip">
+                    <MudIcon Icon="@Icons.Material.Filled.DragIndicator" Size="Size.Small" />
+                </span>
+                <span class="catalog-add-button">
+                    <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                </span>
             </span>
         </div>;
 
@@ -179,7 +186,41 @@
         _ => "Unavailable in this tab"
     };
 
+    private string CatalogItemClass(CatalogEntry item)
+    {
+        var classes = new List<string> { "catalog-item" };
+        if (!CanUseItem)
+        {
+            classes.Add("disabled");
+        }
+
+        if (IsDraggingItem(item))
+        {
+            classes.Add("dragging");
+        }
+
+        return string.Join(" ", classes);
+    }
+
+    private string CatalogItemAriaLabel(CatalogEntry item)
+        => CanUseItem
+            ? ArtifactKind switch
+            {
+                WorkspaceArtifactKind.Dashboard => $"{item.DisplayName}. Drag to a dashboard cell or press Enter to add.",
+                WorkspaceArtifactKind.Test => $"{item.DisplayName}. Press Enter to add test step.",
+                _ => $"{item.DisplayName}. Drag or press Enter to add."
+            }
+            : $"{item.DisplayName}. Unavailable in this tab.";
+
+    private string CatalogItemGrabbed(CatalogEntry item)
+        => IsDraggingItem(item) ? "true" : "false";
+
     private bool HasSearch => !string.IsNullOrWhiteSpace(_searchText);
+
+    private bool IsDraggingItem(CatalogEntry item)
+        => DragState.ActiveComponentDrag is { } activeDrag &&
+           string.Equals(activeDrag.ComponentType, item.Type, StringComparison.Ordinal) &&
+           activeDrag.TargetKind == ArtifactKind;
 
     private bool ShouldShowDescription(CatalogEntry item)
         => ArtifactKind == WorkspaceArtifactKind.Dashboard && !string.IsNullOrWhiteSpace(item.Description);

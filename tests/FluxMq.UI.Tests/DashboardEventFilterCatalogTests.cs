@@ -3245,14 +3245,43 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "ComponentCatalogPanel.razor.css"));
+        var layout = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Layout",
+            "MainLayout.razor"));
+        var appCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "wwwroot",
+            "app.css"));
 
         markup.ShouldContain("ShouldShowRequirements(item)");
         markup.ShouldContain("catalog-item-badges");
         markup.ShouldContain("RequirementLabel(requirement)");
+        markup.ShouldContain("CatalogItemClass(item)");
+        markup.ShouldContain("aria-grabbed=\"@CatalogItemGrabbed(item)\"");
+        markup.ShouldContain("CatalogItemAriaLabel(item)");
+        markup.ShouldContain("catalog-item-affordance");
+        markup.ShouldContain("catalog-drag-grip");
+        markup.ShouldContain("DragIndicator");
+        markup.ShouldContain("IsDraggingItem(CatalogEntry item)");
         css.ShouldContain("grid-template-areas:");
         css.ShouldContain("\"description badges\"");
         css.ShouldContain(".component-catalog.dashboard .catalog-item-badge:nth-child(n+2)");
-        css.ShouldContain("min-height: 49px;");
+        css.ShouldContain("min-height: 46px;");
+        css.ShouldContain(".catalog-item.dragging");
+        css.ShouldContain(".catalog-item-affordance");
+        css.ShouldContain(".catalog-drag-grip");
+        css.ShouldContain("box-shadow: inset 2px 0 0 var(--flux-accent);");
+        layout.ShouldContain("DragPreviewIcon(activeDrag.TargetKind)");
+        layout.ShouldContain("WorkspaceArtifactKind.Dashboard => Icons.Material.Filled.Widgets");
+        layout.ShouldContain("DragPreviewTargetClass");
+        appCss.ShouldContain(".flux-drag-preview.dashboard");
+        appCss.ShouldContain(".flux-drag-preview.over-designer .mud-icon-root");
     }
 
     private static FlowEvent Event(

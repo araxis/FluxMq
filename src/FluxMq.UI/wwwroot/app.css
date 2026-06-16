@@ -29,22 +29,57 @@ body {
     align-items: center;
     background: var(--flux-surface);
     border: 1px solid var(--flux-border-strong);
-    border-radius: 6px;
+    border-radius: 5px;
     box-shadow: var(--flux-shadow-pop);
     color: var(--mud-palette-text-primary);
     display: inline-flex;
-    gap: 8px;
+    gap: 7px;
     max-width: 240px;
-    padding: 8px 10px;
+    padding: 7px 9px;
     pointer-events: none;
     position: fixed;
     transform: translate(12px, 12px);
     z-index: 10000;
 }
 
+.flux-drag-preview .mud-icon-root {
+    color: var(--mud-palette-text-secondary);
+    flex: 0 0 auto;
+    font-size: 17px;
+}
+
+.flux-drag-preview span {
+    font-size: 12px;
+    font-weight: 760;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.flux-drag-preview.dashboard {
+    border-color: color-mix(in srgb, var(--mud-palette-info) 38%, var(--flux-border-strong));
+}
+
+.flux-drag-preview.dashboard .mud-icon-root {
+    color: var(--mud-palette-info);
+}
+
+.flux-drag-preview.test {
+    border-color: color-mix(in srgb, var(--mud-palette-warning) 38%, var(--flux-border-strong));
+}
+
+.flux-drag-preview.test .mud-icon-root {
+    color: var(--mud-palette-warning);
+}
+
 .flux-drag-preview.over-designer {
     border-color: var(--flux-accent);
     box-shadow: 0 0 0 2px var(--flux-accent-dim), var(--flux-shadow-pop);
+}
+
+.flux-drag-preview.over-designer .mud-icon-root {
+    color: var(--flux-accent);
 }
 
 * {
