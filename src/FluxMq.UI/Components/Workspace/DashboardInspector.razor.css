@@ -2,7 +2,7 @@
     background: var(--flux-surface);
     border-left: 1px solid var(--flux-border);
     display: flex;
-    flex: 0 0 344px;
+    flex: 0 0 336px;
     flex-direction: column;
     min-height: 0;
     min-width: 0;
@@ -14,9 +14,9 @@
     border-bottom: 1px solid var(--flux-border);
     display: flex;
     flex: 0 0 auto;
-    gap: 7px;
+    gap: 6px;
     min-width: 0;
-    padding: 6px 9px;
+    padding: 5px 8px;
 }
 
 .dashboard-inspector-icon {
@@ -27,15 +27,15 @@
     color: var(--mud-palette-info);
     display: flex;
     flex: 0 0 auto;
-    height: 24px;
+    height: 23px;
     justify-content: center;
-    width: 24px;
+    width: 23px;
 }
 
 .dashboard-inspector-icon ::deep .mud-icon-root {
-    font-size: 16px;
-    height: 16px;
-    width: 16px;
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
 }
 
 .dashboard-inspector-heading {
@@ -53,11 +53,11 @@
     color: var(--mud-palette-text-secondary);
     cursor: pointer;
     display: inline-flex;
-    flex: 0 0 24px;
-    height: 24px;
+    flex: 0 0 23px;
+    height: 23px;
     justify-content: center;
     padding: 0;
-    width: 24px;
+    width: 23px;
 }
 
 .dashboard-inspector-command:hover {
@@ -77,7 +77,7 @@
 
 .dashboard-inspector-title {
     color: var(--mud-palette-text-primary);
-    font-size: 12.25px;
+    font-size: 12px;
     font-weight: 760;
     line-height: 1.2;
     overflow: hidden;
@@ -87,7 +87,7 @@
 
 .dashboard-inspector-subtitle {
     color: var(--mud-palette-text-secondary);
-    font-size: 10.25px;
+    font-size: 10px;
     line-height: 1.2;
     margin-top: 1px;
     overflow: hidden;
