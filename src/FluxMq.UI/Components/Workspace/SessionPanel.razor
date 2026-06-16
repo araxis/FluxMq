@@ -2,94 +2,167 @@
 @inject LiveMqttWorkspaceService Live
 @inject IDialogService DialogService
 
-@if (Live.IsRecording)
-{
-    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="px-2 py-1">
-        <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Color="Color.Error" Size="Size.Small" />
-        <MudText Typo="Typo.caption" Class="flex-grow-1">
-            @Live.ActiveRecordingSession?.Name - @Live.RecordedMessageCount msgs
-        </MudText>
-        <MudIconButton Size="Size.Small"
-                       Icon="@Icons.Material.Filled.StopCircle"
-                       Color="Color.Error"
-                       OnClick="@Live.StopRecording" />
-    </MudStack>
-}
-
-<MudStack Row="true" AlignItems="AlignItems.Center" Class="px-2 pt-1">
-    <MudIcon Icon="@Icons.Material.Filled.Folder" Size="Size.Small" Color="Color.Secondary" />
-    <MudText Typo="Typo.subtitle2" Class="flex-grow-1">Projects</MudText>
-    <MudIconButton Size="Size.Small"
-                   Icon="@Icons.Material.Filled.FiberManualRecord"
-                   Color="Color.Error"
-                   Disabled="@Live.IsRecording"
-                   OnClick="@StartRecordingAsync" />
-</MudStack>
-
-@if (Live.SelectedStoredSession is not null)
-{
-    <MudStack Row="true" AlignItems="AlignItems.Center" Class="px-3 pb-1">
-        <MudButton Size="Size.Small" Variant="Variant.Text"
-                   StartIcon="@Icons.Material.Filled.Sensors"
-                   OnClick="@Live.ClearStoredSessionSelection">
-            Switch to Live
-        </MudButton>
-    </MudStack>
-}
-
-@{
-    var allSessions = Live.StoredSessions;
-    var projects = Live.ProjectNames.ToList();
-    if (projects.Count == 0 && allSessions.Count == 0)
+<div class="sessions-panel" aria-label="Recorded sessions panel">
+    @if (Live.IsRecording)
     {
-        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="px-4 pb-2">
-            No recorded sessions. Start a recording first.
-        </MudText>
+        <div class="session-recording-strip" aria-live="polite">
+            <span class="session-recording-pulse" aria-hidden="true"></span>
+            <div class="session-recording-copy">
+                <strong>@RecordingName</strong>
+                <span>@RecordedMessageLabel</span>
+            </div>
+            <MudTooltip Text="Stop recording">
+                <MudIconButton Size="Size.Small"
+                               Icon="@Icons.Material.Filled.StopCircle"
+                               Class="session-stop-button"
+                               aria-label="Stop recording"
+                               OnClick="@Live.StopRecording" />
+            </MudTooltip>
+        </div>
+    }
+
+    <div class="sessions-head">
+        <div class="sessions-title">
+            <span class="sessions-title-icon" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" />
+            </span>
+            <div class="sessions-title-copy">
+                <strong>Recordings</strong>
+                <span>@SessionCountLabel</span>
+            </div>
+        </div>
+
+        <MudTooltip Text="@RecordButtonLabel">
+            <MudIconButton Size="Size.Small"
+                           Icon="@Icons.Material.Filled.FiberManualRecord"
+                           Class="session-record-button"
+                           Disabled="@Live.IsRecording"
+                           aria-label="@RecordButtonLabel"
+                           OnClick="@StartRecordingAsync" />
+        </MudTooltip>
+    </div>
+
+    @if (Live.SelectedStoredSession is not null)
+    {
+        <div class="session-live-strip">
+            <MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Small" />
+            <span>@Live.SelectedStoredSession.Name</span>
+            <button type="button" @onclick="@Live.ClearStoredSessionSelection">Live</button>
+        </div>
+    }
+
+    <div class="sessions-toolbar" role="search" aria-label="Session filters">
+        <MudTextField T="string"
+                      Value="@_search"
+                      ValueChanged="@OnSearchChanged"
+                      Placeholder="Search sessions"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Immediate="true"
+                      Clearable="true"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      AdornmentColor="Color.Secondary"
+                      Class="session-search" />
+    </div>
+
+    @{
+        var projectGroups = ProjectGroups;
+    }
+
+    @if (projectGroups.Count == 0)
+    {
+        <div class="sessions-empty">
+            <MudIcon Icon="@EmptyIcon" Size="Size.Medium" />
+            <strong class="sessions-empty-title">@EmptyTitle</strong>
+            <span class="sessions-empty-copy">@EmptyText</span>
+            @if (HasSearch)
+            {
+                <MudButton Variant="Variant.Text"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.FilterAltOff"
+                           Class="sessions-empty-action"
+                           OnClick="@ClearSearch">
+                    Clear search
+                </MudButton>
+            }
+        </div>
     }
     else
     {
-        if (projects.Count == 0) projects.Add("Default");
-
-        <MudTreeView T="object" Dense="true" Hover="true">
-            @foreach (var project in projects)
+        <div class="sessions-list" role="list">
+            @foreach (var group in projectGroups)
             {
-                var sessions = allSessions
-                    .Where(s => string.Equals(
-                        string.IsNullOrWhiteSpace(s.ProjectName) ? "Default" : s.ProjectName,
-                        project, StringComparison.OrdinalIgnoreCase))
-                    .OrderByDescending(s => s.StartedAt)
-                    .ToList();
+                <section class="session-project-group" aria-label="@($"{group.Name} sessions")" @key="group.Name">
+                    <div class="session-project-head">
+                        <span>@group.Name</span>
+                        <strong>@ProjectSessionLabel(group.Sessions.Count)</strong>
+                    </div>
 
-                <MudTreeViewItem T="object" Value="@project" Text="@project"
-                                 Icon="@Icons.Material.Filled.FolderOpen"
-                                 Expanded="true">
-                    @foreach (var session in sessions)
+                    @foreach (var session in group.Sessions)
                     {
-                        var isSelected = Live.SelectedStoredSession?.Id == session.Id;
-                        <MudTreeViewItem T="object" Value="@session"
-                                         OnClick="@(() => SelectSessionAsync(session))">
-                            <Content>
-                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="flex-grow-1 py-1">
-                                    <MudIcon Icon="@(isSelected ? Icons.Material.Filled.CheckCircle : Icons.Material.Outlined.Circle)"
-                                             Size="Size.Small"
-                                             Color="@(isSelected ? Color.Success : Color.Default)" />
-                                    <MudStack Spacing="0" Class="flex-grow-1">
-                                        <MudText Typo="Typo.body2">@session.Name</MudText>
-                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                            @session.StartedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
-                                        </MudText>
-                                    </MudStack>
-                                </MudStack>
-                            </Content>
-                        </MudTreeViewItem>
+                        <div role="listitem" @key="session.Id">
+                            <button type="button"
+                                    class="@SessionRowClass(session)"
+                                    aria-label="@SessionRowLabel(session)"
+                                    @onclick="@(() => SelectSessionAsync(session))">
+                                <span class="@SessionDotClass(session)" aria-hidden="true"></span>
+                                <span class="session-row-main">
+                                    <span class="session-row-name">@session.Name</span>
+                                    <span class="session-row-meta">
+                                        <span>@ProfileLabel(session)</span>
+                                        <span>@DurationLabel(session)</span>
+                                    </span>
+                                </span>
+                                <span class="session-row-side">
+                                    <span class="@SessionStateClass(session)">@SessionStateLabel(session)</span>
+                                    <span class="session-row-time">@StartedLabel(session)</span>
+                                </span>
+                            </button>
+                        </div>
                     }
-                </MudTreeViewItem>
+                </section>
             }
-        </MudTreeView>
+        </div>
     }
-}
+</div>
 
 @code {
+    private string _search = string.Empty;
+
+    private IReadOnlyList<SessionProjectGroup> ProjectGroups => BuildProjectGroups();
+
+    private IReadOnlyList<StoredSession> AllSessions => Live.StoredSessions;
+
+    private bool HasSearch => !string.IsNullOrWhiteSpace(_search);
+
+    private string SessionCountLabel => AllSessions.Count switch
+    {
+        0 => "No recordings",
+        1 => HasSearch ? "1 recording total" : "1 recording",
+        _ => HasSearch ? $"{AllSessions.Count} recordings total" : $"{AllSessions.Count} recordings"
+    };
+
+    private string RecordingName => string.IsNullOrWhiteSpace(Live.ActiveRecordingSession?.Name)
+        ? "Recording"
+        : Live.ActiveRecordingSession.Name;
+
+    private string RecordedMessageLabel => Live.RecordedMessageCount == 1
+        ? "1 message captured"
+        : $"{Live.RecordedMessageCount} messages captured";
+
+    private string RecordButtonLabel => Live.IsRecording ? "Recording in progress" : "Start recording";
+
+    private string EmptyIcon => HasSearch
+        ? Icons.Material.Filled.SearchOff
+        : Icons.Material.Filled.History;
+
+    private string EmptyTitle => HasSearch ? "No matching sessions" : "No recorded sessions";
+
+    private string EmptyText => HasSearch
+        ? "Clear the search or try another project, profile, or session name."
+        : "Start a recording to capture broker traffic for replay and inspection.";
+
     protected override void OnInitialized() => Live.Changed += OnChanged;
 
     private async Task StartRecordingAsync()
@@ -101,12 +174,129 @@
         var dialog = await DialogService.ShowAsync<StartRecordingDialog>("Start Recording", parameters);
         var result = await dialog.Result;
         if (result is { Canceled: false, Data: StartRecordingDialog.StartRecordingResult r })
+        {
             Live.StartRecording(r.SessionName, r.ProjectName);
+        }
     }
 
     private Task SelectSessionAsync(StoredSession session) => Live.SelectStoredSessionAsync(session);
 
+    private void OnSearchChanged(string value)
+    {
+        _search = value;
+    }
+
+    private void ClearSearch()
+    {
+        _search = string.Empty;
+    }
+
+    private IReadOnlyList<SessionProjectGroup> BuildProjectGroups()
+    {
+        var sessions = AllSessions
+            .Where(SessionMatchesSearch)
+            .GroupBy(static session => ProjectName(session), StringComparer.OrdinalIgnoreCase)
+            .OrderBy(static group => group.Key, StringComparer.OrdinalIgnoreCase)
+            .Select(static group => new SessionProjectGroup(
+                group.Key,
+                group.OrderByDescending(static session => session.StartedAt).ToArray()))
+            .Where(static group => group.Sessions.Count > 0)
+            .ToArray();
+
+        return sessions;
+    }
+
+    private bool SessionMatchesSearch(StoredSession session)
+    {
+        if (!HasSearch)
+        {
+            return true;
+        }
+
+        var search = _search.Trim();
+        return session.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+               ProjectName(session).Contains(search, StringComparison.OrdinalIgnoreCase) ||
+               session.ProfileName.Contains(search, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string SessionRowClass(StoredSession session)
+    {
+        var state = SessionStateKey(session);
+        var selected = IsSelected(session) ? " selected" : string.Empty;
+        return $"session-row {state}{selected}";
+    }
+
+    private string SessionDotClass(StoredSession session) => $"session-dot {SessionStateKey(session)}";
+
+    private string SessionStateClass(StoredSession session) => $"session-state {SessionStateKey(session)}";
+
+    private string SessionStateKey(StoredSession session)
+    {
+        if (IsRecordingSession(session))
+        {
+            return "recording";
+        }
+
+        return IsSelected(session) ? "selected" : "stored";
+    }
+
+    private string SessionStateLabel(StoredSession session)
+    {
+        if (IsRecordingSession(session))
+        {
+            return "Recording";
+        }
+
+        return IsSelected(session) ? "Loaded" : "Stored";
+    }
+
+    private string SessionRowLabel(StoredSession session)
+        => $"Load session {session.Name} from {ProjectName(session)}";
+
+    private bool IsSelected(StoredSession session)
+        => Live.SelectedStoredSession?.Id == session.Id;
+
+    private bool IsRecordingSession(StoredSession session)
+        => Live.ActiveRecordingSession?.Id == session.Id;
+
+    private static string ProjectName(StoredSession session)
+        => string.IsNullOrWhiteSpace(session.ProjectName) ? "Default" : session.ProjectName.Trim();
+
+    private static string ProjectSessionLabel(int count)
+        => count == 1 ? "1 session" : $"{count} sessions";
+
+    private static string ProfileLabel(StoredSession session)
+        => string.IsNullOrWhiteSpace(session.ProfileName) ? "Workspace profile" : session.ProfileName;
+
+    private static string StartedLabel(StoredSession session)
+        => session.StartedAt.ToLocalTime().ToString("MMM d HH:mm");
+
+    private static string DurationLabel(StoredSession session)
+    {
+        if (session.EndedAt is null)
+        {
+            return "Open session";
+        }
+
+        var duration = session.EndedAt.Value - session.StartedAt;
+        if (duration.TotalMinutes < 1)
+        {
+            return "<1m";
+        }
+
+        if (duration.TotalHours < 1)
+        {
+            return $"{Math.Max(1, (int)Math.Round(duration.TotalMinutes))}m";
+        }
+
+        var hours = (int)duration.TotalHours;
+        var minutes = duration.Minutes;
+        return minutes == 0 ? $"{hours}h" : $"{hours}h {minutes}m";
+    }
+
     private void OnChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
 
     public void Dispose() => Live.Changed -= OnChanged;
+
+    private sealed record SessionProjectGroup(string Name, IReadOnlyList<StoredSession> Sessions);
 }

@@ -3771,6 +3771,65 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("@media (max-width: 760px)");
     }
 
+    [Fact]
+    public void SessionPanel_UsesFlatGroupedSessionRows()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "SessionPanel.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "SessionPanel.razor.css"));
+
+        markup.ShouldContain("aria-label=\"Recorded sessions panel\"");
+        markup.ShouldContain("session-recording-strip");
+        markup.ShouldContain("sessions-title-icon");
+        markup.ShouldContain("<strong>Recordings</strong>");
+        markup.ShouldContain("@SessionCountLabel");
+        markup.ShouldContain("role=\"search\"");
+        markup.ShouldContain("Search sessions");
+        markup.ShouldContain("session-live-strip");
+        markup.ShouldContain("sessions-empty-title");
+        markup.ShouldContain("sessions-list");
+        markup.ShouldContain("role=\"list\"");
+        markup.ShouldContain("session-project-group");
+        markup.ShouldContain("session-project-head");
+        markup.ShouldContain("SessionRowClass(session)");
+        markup.ShouldContain("SessionDotClass(session)");
+        markup.ShouldContain("SessionStateClass(session)");
+        markup.ShouldContain("SessionRowLabel(session)");
+        markup.ShouldContain("DurationLabel(session)");
+        markup.ShouldContain("StartedLabel(session)");
+        markup.ShouldContain("SelectSessionAsync(session)");
+        markup.ShouldNotContain("MudTreeView");
+        markup.ShouldNotContain("MudTreeViewItem");
+        markup.ShouldNotContain("px-2");
+        markup.ShouldNotContain("pt-1");
+
+        css.ShouldContain(".sessions-panel");
+        css.ShouldContain(".session-recording-strip");
+        css.ShouldContain(".sessions-list");
+        css.ShouldContain(".session-project-group");
+        css.ShouldContain(".session-row");
+        css.ShouldContain("grid-template-columns: 8px minmax(0, 1fr) auto;");
+        css.ShouldContain("min-height: 56px;");
+        css.ShouldContain(".session-row.selected");
+        css.ShouldContain(".session-row.recording");
+        css.ShouldContain(".session-state.selected");
+        css.ShouldContain(".session-state.recording");
+        css.ShouldContain(".session-search ::deep .mud-input-outlined-border");
+        css.ShouldContain("@media (max-width: 760px)");
+    }
+
     private static FlowEvent Event(
         string type,
         string? topic = null,
