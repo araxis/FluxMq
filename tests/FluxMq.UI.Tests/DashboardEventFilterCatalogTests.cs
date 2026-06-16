@@ -3617,6 +3617,52 @@ public sealed class DashboardEventFilterCatalogTests
         appCss.ShouldContain(".flux-drag-preview.over-designer .mud-icon-root");
     }
 
+    [Fact]
+    public void AppStructureMenu_UsesCompactInlineArtifactActions()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "AppStructureMenu.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "AppStructureMenu.razor.css"));
+
+        markup.ShouldContain("aria-label=\"App structure navigation\"");
+        markup.ShouldContain("StructureMenuLabel(\"Brokers\", conns.Count)");
+        markup.ShouldContain("app-menu-artifact-row");
+        markup.ShouldContain("app-menu-artifact-name");
+        markup.ShouldContain("app-menu-inline-action");
+        markup.ShouldContain("app-menu-delete-button");
+        markup.ShouldContain("aria-label=\"@DeleteLabel(");
+        markup.ShouldContain("@onclick:stopPropagation=\"true\"");
+        markup.ShouldContain("@onmousedown:stopPropagation=\"true\"");
+        markup.ShouldContain("private static string DeleteLabel");
+        markup.ShouldNotContain("app-menu-danger");
+        markup.ShouldNotContain("Delete @w");
+        markup.ShouldNotContain("Delete @d");
+        markup.ShouldNotContain("Delete @t");
+
+        css.ShouldContain("height: 28px;");
+        css.ShouldContain("max-width: 132px;");
+        css.ShouldContain(".app-menu-artifact-row");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 24px;");
+        css.ShouldContain(".app-menu-inline-action");
+        css.ShouldContain("opacity: 0;");
+        css.ShouldContain(".app-menu-child:hover .app-menu-inline-action");
+        css.ShouldContain(".app-menu-inline-action ::deep .app-menu-delete-button");
+        css.ShouldContain("height: 24px;");
+        css.ShouldNotContain(".app-structure-menu ::deep .app-menu-danger");
+    }
+
     private static FlowEvent Event(
         string type,
         string? topic = null,

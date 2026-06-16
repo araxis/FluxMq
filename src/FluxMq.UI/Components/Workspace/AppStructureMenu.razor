@@ -21,17 +21,17 @@
             <span class="app-structure-current">@CurrentArtifactLabel(active)</span>
         </span>
 
-        <div class="app-structure-actions">
-        <MudMenu Dense="true"
-                 Label="@StructureMenuLabel("Connections", conns.Count)"
-                 StartIcon="@Icons.Material.Filled.Hub"
-                 EndIcon="@Icons.Material.Filled.ExpandMore"
-                 Size="Size.Small"
-                 Variant="Variant.Text"
-                 Class="app-structure-menu"
-                 PopoverClass="app-structure-popover"
-                 AnchorOrigin="Origin.BottomLeft"
-                 TransformOrigin="Origin.TopLeft">
+        <div class="app-structure-actions" role="navigation" aria-label="App structure navigation">
+            <MudMenu Dense="true"
+                     Label="@StructureMenuLabel("Brokers", conns.Count)"
+                     StartIcon="@Icons.Material.Filled.Hub"
+                     EndIcon="@Icons.Material.Filled.ExpandMore"
+                     Size="Size.Small"
+                     Variant="Variant.Text"
+                     Class="app-structure-menu"
+                     PopoverClass="app-structure-popover"
+                     AnchorOrigin="Origin.BottomLeft"
+                     TransformOrigin="Origin.TopLeft">
             <ChildContent>
                 @if (conns.Count == 0)
                 {
@@ -83,13 +83,21 @@
                         var w = workflow;
                         <MudMenuItem Icon="@Icons.Material.Filled.Timeline"
                                      OnClick="@(() => SelectPipeline(active, w))"
-                                     Class="@ArtifactItemClass(active, WorkspaceArtifactKind.Pipeline, w)">
-                            @w
+                                     Class="@ArtifactItemClass(active, WorkspaceArtifactKind.Pipeline, w)"
+                                     title="@w">
+                            <div class="app-menu-artifact-row">
+                                <span class="app-menu-artifact-name">@w</span>
+                                <span class="app-menu-inline-action" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
+                                    <MudTooltip Text="Delete pipeline">
+                                        <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
+                                                       Size="Size.Small"
+                                                       Class="app-menu-delete-button"
+                                                       aria-label="@DeleteLabel("pipeline", w)"
+                                                       OnClick="@(() => RemovePipelineAsync(active, w))" />
+                                    </MudTooltip>
+                                </span>
+                            </div>
                         </MudMenuItem>
-                        <MudMenuItem Icon="@Icons.Material.Filled.DeleteOutline"
-                                     IconColor="Color.Error"
-                                     OnClick="@(() => RemovePipelineAsync(active, w))"
-                                     Class="app-menu-child app-menu-danger">Delete @w</MudMenuItem>
                     }
                 }
 
@@ -122,13 +130,21 @@
                         var d = dashboard;
                         <MudMenuItem Icon="@Icons.Material.Filled.Dashboard"
                                      OnClick="@(() => SelectDashboard(active, d))"
-                                     Class="@ArtifactItemClass(active, WorkspaceArtifactKind.Dashboard, d)">
-                            @d
+                                     Class="@ArtifactItemClass(active, WorkspaceArtifactKind.Dashboard, d)"
+                                     title="@d">
+                            <div class="app-menu-artifact-row">
+                                <span class="app-menu-artifact-name">@d</span>
+                                <span class="app-menu-inline-action" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
+                                    <MudTooltip Text="Delete dashboard">
+                                        <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
+                                                       Size="Size.Small"
+                                                       Class="app-menu-delete-button"
+                                                       aria-label="@DeleteLabel("dashboard", d)"
+                                                       OnClick="@(() => RemoveDashboardAsync(active, d))" />
+                                    </MudTooltip>
+                                </span>
+                            </div>
                         </MudMenuItem>
-                        <MudMenuItem Icon="@Icons.Material.Filled.DeleteOutline"
-                                     IconColor="Color.Error"
-                                     OnClick="@(() => RemoveDashboardAsync(active, d))"
-                                     Class="app-menu-child app-menu-danger">Delete @d</MudMenuItem>
                     }
                 }
 
@@ -192,13 +208,21 @@
                         var t = test;
                         <MudMenuItem Icon="@Icons.Material.Filled.FactCheck"
                                      OnClick="@(() => SelectTest(active, t))"
-                                     Class="@ArtifactItemClass(active, WorkspaceArtifactKind.Test, t)">
-                            @t
+                                     Class="@ArtifactItemClass(active, WorkspaceArtifactKind.Test, t)"
+                                     title="@t">
+                            <div class="app-menu-artifact-row">
+                                <span class="app-menu-artifact-name">@t</span>
+                                <span class="app-menu-inline-action" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
+                                    <MudTooltip Text="Delete test">
+                                        <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
+                                                       Size="Size.Small"
+                                                       Class="app-menu-delete-button"
+                                                       aria-label="@DeleteLabel("test", t)"
+                                                       OnClick="@(() => RemoveTestAsync(active, t))" />
+                                    </MudTooltip>
+                                </span>
+                            </div>
                         </MudMenuItem>
-                        <MudMenuItem Icon="@Icons.Material.Filled.DeleteOutline"
-                                     IconColor="Color.Error"
-                                     OnClick="@(() => RemoveTestAsync(active, t))"
-                                     Class="app-menu-child app-menu-danger">Delete @t</MudMenuItem>
                     }
                 }
 
@@ -294,6 +318,9 @@
 
     private static string CountLabel(int count, string singular)
         => count == 1 ? $"1 {singular}" : $"{count} {singular}s";
+
+    private static string DeleteLabel(string artifactKind, string name)
+        => $"Delete {artifactKind} {name}";
 
     private static string BrokerActionIcon(ManagedConnection connection) => connection.State switch
     {

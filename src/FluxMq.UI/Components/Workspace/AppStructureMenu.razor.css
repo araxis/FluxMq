@@ -2,7 +2,7 @@
     align-items: center;
     display: flex;
     flex: 1 1 auto;
-    gap: 8px;
+    gap: 6px;
     max-width: 100%;
     min-width: 0;
     overflow: hidden;
@@ -59,7 +59,7 @@
     align-items: center;
     display: flex;
     flex: 1 1 auto;
-    gap: 4px;
+    gap: 3px;
     min-width: 0;
     overflow: hidden;
 }
@@ -72,14 +72,14 @@
 .app-structure ::deep .app-structure-menu .mud-button-root {
     background: transparent;
     border: 1px solid transparent;
-    border-radius: 7px;
+    border-radius: 6px;
     color: var(--mud-palette-text-secondary);
     font-size: 11.5px;
     font-weight: 650;
-    height: 30px;
-    max-width: 150px;
+    height: 28px;
+    max-width: 132px;
     min-width: 0;
-    padding: 0 7px;
+    padding: 0 6px;
 }
 
 .app-structure ::deep .app-structure-menu .mud-button-root:hover,
@@ -115,10 +115,6 @@
     color: var(--flux-accent);
 }
 
-.app-structure-menu ::deep .app-menu-danger {
-    color: var(--mud-palette-error);
-}
-
 .app-structure-meta {
     color: var(--mud-palette-text-secondary);
     flex: 0 1 auto;
@@ -128,6 +124,88 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.app-menu-broker {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.app-menu-broker span:first-child {
+    color: var(--mud-palette-text-primary);
+    font-size: 12px;
+    font-weight: 720;
+    line-height: 1.2;
+}
+
+.app-menu-broker span:last-child {
+    color: var(--mud-palette-text-secondary);
+    font-size: 11px;
+    line-height: 1.2;
+}
+
+.app-menu-child {
+    min-width: 0;
+}
+
+.app-menu-child.active-artifact {
+    background: color-mix(in srgb, var(--flux-accent) 10%, transparent);
+    color: var(--mud-palette-text-primary);
+}
+
+.app-menu-add {
+    color: var(--flux-accent);
+}
+
+.app-menu-muted {
+    color: var(--mud-palette-text-secondary);
+    font-size: 12px;
+}
+
+.app-menu-artifact-row {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) 24px;
+    min-width: 0;
+    width: 100%;
+}
+
+.app-menu-artifact-name {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-menu-inline-action {
+    align-items: center;
+    display: inline-flex;
+    height: 24px;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+    width: 24px;
+}
+
+.app-menu-child:hover .app-menu-inline-action,
+.app-menu-child:focus-within .app-menu-inline-action,
+.app-menu-child.active-artifact .app-menu-inline-action {
+    opacity: 1;
+}
+
+.app-menu-inline-action ::deep .app-menu-delete-button {
+    border-radius: 5px;
+    color: var(--mud-palette-error);
+    height: 24px;
+    padding: 0;
+    width: 24px;
+}
+
+.app-menu-inline-action ::deep .app-menu-delete-button .mud-icon-root {
+    font-size: 16px;
 }
 
 @media (max-width: 1320px) {
@@ -141,7 +219,7 @@
     }
 
     .app-structure ::deep .app-structure-menu .mud-button-root {
-        max-width: 124px;
+        max-width: 112px;
         padding: 0 6px;
     }
 
