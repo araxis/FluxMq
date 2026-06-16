@@ -2,25 +2,25 @@
     align-content: center;
     display: grid;
     gap: 2px;
-    grid-template-columns: repeat(3, 20px);
+    grid-template-columns: repeat(3, 18px);
     justify-content: center;
-    min-height: 56px;
-    padding: 3px 0;
+    min-height: 52px;
+    padding: 2px 0;
     width: 100%;
 }
 
 .property-grid-alignment-pad-button {
     align-items: center;
     background: transparent;
-    border: 1px solid color-mix(in srgb, var(--flux-border) 58%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 48%, transparent);
     border-radius: 4px;
     cursor: pointer;
     display: inline-flex;
-    height: 20px;
+    height: 18px;
     justify-content: center;
     padding: 0;
     transition: background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
-    width: 20px;
+    width: 18px;
 }
 
 .property-grid-alignment-pad-button span {

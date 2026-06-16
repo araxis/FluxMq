@@ -2390,9 +2390,9 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "PropertyGridColorPicker.razor.css"));
-        css.ShouldContain("grid-template-columns: 34px minmax(0, 1fr) 28px;");
+        css.ShouldContain("grid-template-columns: 30px minmax(0, 1fr) 26px;");
         css.ShouldContain("background-color: var(--property-grid-color-value);");
-        css.ShouldContain("font-size: 17px;");
+        css.ShouldContain("font-size: 15px;");
     }
 
     [Fact]
@@ -2427,6 +2427,27 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "PropertyGridSelect.razor.css"));
+        var iconSegmentCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "PropertyGridIconSegment.razor.css"));
+        var colorPickerCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "PropertyGridColorPicker.razor.css"));
+        var alignmentPadCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "PropertyGridAlignmentPad.razor.css"));
         var inspectorCss = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -2446,10 +2467,17 @@ public sealed class DashboardEventFilterCatalogTests
         propertyGrid.ShouldContain("MinNameColumnWidth = 88");
         propertyGrid.ShouldContain("MaxNameColumnWidth = 190");
         propertyGrid.ShouldContain("--property-grid-name-width: min({_nameColumnWidth.ToString(\"0\", CultureInfo.InvariantCulture)}px, 42%);");
-        propertyGridCss.ShouldContain("min-height: 27px;");
-        rowCss.ShouldContain("min-height: 28px;");
-        rowCss.ShouldContain("min-height: 24px;");
-        selectCss.ShouldContain("max-height: 204px;");
+        propertyGridCss.ShouldContain("container-name: property-grid;");
+        propertyGridCss.ShouldContain("position: sticky;");
+        propertyGridCss.ShouldContain("min-height: 25px;");
+        propertyGridCss.ShouldContain("@container property-grid (max-width: 280px)");
+        rowCss.ShouldContain("min-height: 26px;");
+        rowCss.ShouldContain("min-height: 22px;");
+        rowCss.ShouldContain("grid-template-columns: minmax(0, 1fr);");
+        selectCss.ShouldContain("max-height: 180px;");
+        iconSegmentCss.ShouldContain("min-height: 20px;");
+        colorPickerCss.ShouldContain("grid-template-columns: 30px minmax(0, 1fr) 26px;");
+        alignmentPadCss.ShouldContain("grid-template-columns: repeat(3, 18px);");
         inspectorCss.ShouldContain("flex: 0 0 344px;");
         visualMetricRows.ShouldContain("KeyboardArrowUp");
         visualMetricRows.ShouldContain("KeyboardArrowDown");

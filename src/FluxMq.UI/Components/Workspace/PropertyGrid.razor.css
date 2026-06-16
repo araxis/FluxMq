@@ -2,6 +2,8 @@
     --property-grid-name-width: min(124px, 42%);
     background: var(--flux-surface);
     border-top: 1px solid var(--flux-border);
+    container-name: property-grid;
+    container-type: inline-size;
     flex: 1 1 auto;
     min-height: 0;
     overscroll-behavior: contain;
@@ -75,9 +77,9 @@
 .property-grid-group-header {
     align-items: center;
     appearance: none;
-    background: color-mix(in srgb, var(--flux-surface-2) 34%, var(--flux-surface));
+    background: color-mix(in srgb, var(--flux-surface-2) 22%, var(--flux-surface));
     border: 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--flux-border) 48%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border) 38%, transparent);
     box-sizing: border-box;
     color: var(--mud-palette-text-primary);
     cursor: pointer;
@@ -86,15 +88,18 @@
     font-weight: 720;
     gap: 0;
     grid-template-columns: 22px calc(var(--property-grid-name-width) - 22px) minmax(0, 1fr);
-    min-height: 27px;
+    min-height: 25px;
     min-width: 0;
     padding: 0;
+    position: sticky;
     text-align: left;
+    top: 0;
     width: 100%;
+    z-index: 6;
 }
 
 .property-grid-group-header:hover {
-    background: color-mix(in srgb, var(--flux-surface-2) 52%, var(--flux-surface));
+    background: color-mix(in srgb, var(--flux-surface-2) 42%, var(--flux-surface));
 }
 
 .property-grid-group-header:focus-visible {
@@ -122,7 +127,7 @@
 
 .property-grid-group-title {
     color: var(--mud-palette-text-primary);
-    font-size: 11.25px;
+    font-size: 11px;
     font-weight: 760;
     min-width: 0;
     overflow: hidden;
@@ -133,12 +138,12 @@
 
 .property-grid-group-count {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 62%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border) 46%, transparent);
-    border-radius: 999px;
+    background: transparent;
+    border: 0;
+    border-radius: 4px;
     color: var(--mud-palette-text-secondary);
     display: inline-flex;
-    font-size: 10.5px;
+    font-size: 10px;
     font-weight: 720;
     grid-column: 3 / 4;
     height: 17px;
@@ -146,11 +151,21 @@
     justify-self: end;
     line-height: 1;
     margin-right: 7px;
-    min-width: 20px;
-    padding: 0 6px;
+    min-width: 18px;
+    padding: 0 4px;
     white-space: nowrap;
 }
 
 .property-grid-group-body {
     min-width: 0;
+}
+
+@container property-grid (max-width: 280px) {
+    .property-grid-column-resizer {
+        display: none;
+    }
+
+    .property-grid-group-header {
+        grid-template-columns: 22px minmax(0, 1fr) auto;
+    }
 }
