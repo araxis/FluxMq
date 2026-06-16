@@ -2550,6 +2550,13 @@ public sealed class DashboardEventFilterCatalogTests
     public void DashboardDesigner_EditGridUsesFlatEditingStateAffordances()
     {
         var root = FindRepositoryRoot();
+        var razor = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor"));
         var css = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -2558,14 +2565,25 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "DashboardDesigner.razor.css"));
 
+        razor.ShouldContain("class=\"@DashboardGridFrameClass\"");
+        razor.ShouldContain("dashboard-drop-status");
+        razor.ShouldContain("DashboardDragStatusText");
+        razor.ShouldContain("drop-ready");
+        razor.ShouldContain("move-target");
+        razor.ShouldContain("dashboard-cell-drop-mark");
         css.ShouldContain("grid-template-columns: 54px minmax(0, 1fr);");
         css.ShouldContain("grid-template-rows: 40px minmax(0, 1fr);");
         css.ShouldContain("overscroll-behavior: contain;");
+        css.ShouldContain(".dashboard-grid-frame.adding-widget .dashboard-grid");
+        css.ShouldContain(".dashboard-drop-status");
         css.ShouldContain(".dashboard-track-handle:focus-visible");
+        css.ShouldContain(".dashboard-cell.drop-ready");
+        css.ShouldContain(".dashboard-cell.move-target");
         css.ShouldContain(".dashboard-cell.selected::after");
         css.ShouldContain(".dashboard-cell.dropping::after");
         css.ShouldContain("border: 1px dashed color-mix(in srgb, var(--flux-accent) 78%, transparent);");
         css.ShouldContain(".dashboard-cell.moving-source::before");
+        css.ShouldContain(".dashboard-cell-drop-mark");
         css.ShouldContain(".dashboard-cell:hover .dashboard-cell-placeholder");
     }
 

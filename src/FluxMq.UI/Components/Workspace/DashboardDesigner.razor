@@ -146,13 +146,20 @@
         @if (IsEditMode)
         {
             <div class="dashboard-editor-workbench">
-                <div class="dashboard-grid-frame"
+                <div class="@DashboardGridFrameClass"
                      @onpointerenter="HandleDesignerPointerEnter"
                      @onpointermove="HandleDesignerPointerMove"
                      @onpointerleave="HandleDesignerPointerLeave">
+                @if (HasActiveDashboardDrag)
+                {
+                    <div class="dashboard-drop-status" aria-live="polite">
+                        <MudIcon Icon="@DashboardDragStatusIcon" Size="Size.Small" />
+                        <span>@DashboardDragStatusText</span>
+                    </div>
+                }
                 @if (!HasDashboardWidgets)
                 {
-                    <div class="dashboard-grid-empty-note">
+                    <div class="dashboard-grid-empty-note @(HasActiveDashboardDrag ? "dragging" : null)">
                         <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" />
                         <div>
                             <span>No widgets yet</span>
@@ -917,8 +924,50 @@
     private bool IsDashboardMoveDrag
         => !string.IsNullOrWhiteSpace(_movingWidgetName);
 
+    private bool HasActiveDashboardDrag
+        => IsDashboardComponentDrag || IsDashboardMoveDrag;
+
+    private string DashboardGridFrameClass
+        => $"dashboard-grid-frame {(IsDashboardComponentDrag ? "adding-widget" : null)} {(IsDashboardMoveDrag ? "moving-widget" : null)}";
+
+    private string DashboardDragStatusIcon
+        => IsDashboardMoveDrag ? Icons.Material.Filled.OpenWith : Icons.Material.Filled.Add;
+
+    private string DashboardDragStatusText
+        => IsDashboardMoveDrag
+            ? DropTargetStatus(MoveTargetCellName, "Move widget")
+            : DropTargetStatus(_hoveredDropCellName, "Place widget");
+
+    private string? MoveTargetCellName
+        => string.Equals(_hoveredWidgetMoveCellName, _movingWidgetSourceCellName, StringComparison.Ordinal)
+            ? null
+            : _hoveredWidgetMoveCellName;
+
+    private string DropTargetStatus(string? cellName, string fallback)
+    {
+        var cell = VisibleCells.FirstOrDefault(cell => string.Equals(cell.Name, cellName, StringComparison.Ordinal));
+        return cell is null ? fallback : $"{fallback}: {CellTitle(cell)}";
+    }
+
     private string CellClass(DashboardCellSnapshot cell)
-        => $"dashboard-cell {(cell.IsExplicit ? "explicit" : "virtual")} {(FindWidget(cell.Widget) is not null ? "has-widget" : null)} {(cell.IsMerged ? "merged" : null)} {(_selectedCellIds.Contains(cell.Name) ? "selected" : null)} {(IsDashboardComponentDrag && string.Equals(_hoveredDropCellName, cell.Name, StringComparison.Ordinal) ? "dropping" : null)} {(IsDashboardMoveDrag && string.Equals(_hoveredWidgetMoveCellName, cell.Name, StringComparison.Ordinal) ? "dropping" : null)} {(IsDashboardMoveDrag && string.Equals(_movingWidgetSourceCellName, cell.Name, StringComparison.Ordinal) ? "moving-source" : null)}";
+    {
+        var hasWidget = FindWidget(cell.Widget) is not null;
+        var isMoveSource = IsDashboardMoveDrag &&
+            string.Equals(_movingWidgetSourceCellName, cell.Name, StringComparison.Ordinal);
+        return string.Join(" ", new[]
+        {
+            "dashboard-cell",
+            cell.IsExplicit ? "explicit" : "virtual",
+            hasWidget ? "has-widget" : null,
+            cell.IsMerged ? "merged" : null,
+            _selectedCellIds.Contains(cell.Name) ? "selected" : null,
+            IsDashboardComponentDrag ? "drop-ready" : null,
+            IsDashboardMoveDrag && !isMoveSource ? "move-target" : null,
+            IsDashboardComponentDrag && string.Equals(_hoveredDropCellName, cell.Name, StringComparison.Ordinal) ? "dropping" : null,
+            IsDashboardMoveDrag && string.Equals(_hoveredWidgetMoveCellName, cell.Name, StringComparison.Ordinal) ? "dropping" : null,
+            isMoveSource ? "moving-source" : null
+        }.Where(static value => !string.IsNullOrWhiteSpace(value)));
+    }
 
     private static string LiveCellClass(DashboardCellSnapshot cell)
         => $"dashboard-live-cell {(cell.IsMerged ? "merged" : null)} {(!string.IsNullOrWhiteSpace(cell.Widget) ? "has-widget" : "empty")}";
@@ -967,6 +1016,9 @@
             {
                 <span class="dashboard-cell-span">@CellSpan(cell)</span>
             }
+            <span class="dashboard-cell-drop-mark" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+            </span>
         </div>
     </text>;
 
