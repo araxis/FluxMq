@@ -1,71 +1,129 @@
 @using FluxMq.Core.Payloads
 
-<MudPaper Elevation="0" Outlined="true" Class="pa-2 payload-inspector">
+<section class="payload-inspector" aria-label="@Title">
+    <div class="payload-inspector-header">
+        <div class="payload-inspector-title">
+            <span class="payload-format-badge @FormatClass">
+                <MudIcon Icon="@FormatIcon" Size="Size.Small" />
+            </span>
+            <div class="payload-title-copy">
+                <strong>@Title</strong>
+                <span>@TopicLabel</span>
+            </div>
+        </div>
+        <div class="payload-meta-strip">
+            <span>@_inspection.DisplayTypeLabel</span>
+            <span>@_inspection.SizeBytes B</span>
+            @if (ReceivedAt is not null)
+            {
+                <span>@ReceivedAt.Value.ToLocalTime().ToString("HH:mm:ss")</span>
+            }
+        </div>
+    </div>
 
-    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
-        <MudChip T="string" Size="Size.Small" Color="@FormatColor">@_inspection.DisplayTypeLabel</MudChip>
-        @if (!string.IsNullOrWhiteSpace(Topic))
-        {
-            <MudText Typo="Typo.caption" Style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:0;flex:1 1 0">@Topic</MudText>
-        }
-        <MudText Typo="Typo.caption" Color="Color.Secondary">@_inspection.SizeBytes B</MudText>
-        @if (ReceivedAt is not null)
-        {
-            <MudText Typo="Typo.caption" Color="Color.Secondary">@ReceivedAt.Value.ToLocalTime().ToString("HH:mm:ss")</MudText>
-        }
-    </MudStack>
+    <div class="payload-view-switch" role="tablist" aria-label="Payload views">
+        <button type="button"
+                role="tab"
+                aria-selected="@IsActiveView(FormattedView)"
+                class="@ViewButtonClass(FormattedView)"
+                title="Formatted"
+                @onclick="@(() => _activeView = FormattedView)">
+            <MudIcon Icon="@Icons.Material.Filled.DataObject" Size="Size.Small" />
+            <span>Formatted</span>
+        </button>
+        <button type="button"
+                role="tab"
+                aria-selected="@IsActiveView(RawView)"
+                class="@ViewButtonClass(RawView)"
+                title="Raw"
+                @onclick="@(() => _activeView = RawView)">
+            <MudIcon Icon="@Icons.Material.Filled.Subject" Size="Size.Small" />
+            <span>Raw</span>
+        </button>
+        <button type="button"
+                role="tab"
+                aria-selected="@IsActiveView(HexView)"
+                class="@ViewButtonClass(HexView)"
+                title="Hex"
+                @onclick="@(() => _activeView = HexView)">
+            <MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" />
+            <span>Hex</span>
+        </button>
+        <button type="button"
+                role="tab"
+                aria-selected="@IsActiveView(MetaView)"
+                class="@ViewButtonClass(MetaView)"
+                title="Metadata"
+                @onclick="@(() => _activeView = MetaView)">
+            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" />
+            <span>Meta</span>
+        </button>
+    </div>
 
-    <MudToggleGroup T="string" @bind-Value="_activeView" Size="Size.Small" Outlined="true" Color="Color.Primary" Class="mb-1" Style="width:100%">
-        <MudToggleItem Value="@("formatted")" UnselectedIcon="@Icons.Material.Filled.DataObject" SelectedIcon="@Icons.Material.Filled.DataObject" />
-        <MudToggleItem Value="@("raw")" UnselectedIcon="@Icons.Material.Filled.Subject" SelectedIcon="@Icons.Material.Filled.Subject" />
-        <MudToggleItem Value="@("hex")" UnselectedIcon="@Icons.Material.Filled.Tag" SelectedIcon="@Icons.Material.Filled.Tag" />
-        <MudToggleItem Value="@("meta")" UnselectedIcon="@Icons.Material.Filled.Info" SelectedIcon="@Icons.Material.Filled.Info" />
-    </MudToggleGroup>
-
-    @if (_activeView == "formatted")
+    @if (_activeView == FormattedView)
     {
         <pre class="payload-inspector-body">@DisplayFormatted()</pre>
     }
-    else if (_activeView == "raw")
+    else if (_activeView == RawView)
     {
         <pre class="payload-inspector-body">@DisplayRaw()</pre>
     }
-    else if (_activeView == "hex")
+    else if (_activeView == HexView)
     {
         <pre class="payload-inspector-body">@_inspection.HexDump</pre>
     }
     else
     {
-        <MudStack Spacing="1" Class="mt-1">
-            <MudText Typo="Typo.body2">Type: @_inspection.DisplayTypeLabel</MudText>
-            <MudText Typo="Typo.body2">Size: @_inspection.SizeBytes bytes</MudText>
-            <MudText Typo="Typo.body2">Text payload: @(_inspection.IsText ? "Yes" : "No")</MudText>
-        </MudStack>
+        <div class="payload-inspector-meta-list">
+            <div>
+                <span>Type</span>
+                <strong>@_inspection.DisplayTypeLabel</strong>
+            </div>
+            <div>
+                <span>Size</span>
+                <strong>@_inspection.SizeBytes bytes</strong>
+            </div>
+            <div>
+                <span>Text</span>
+                <strong>@(_inspection.IsText ? "Yes" : "No")</strong>
+            </div>
+        </div>
     }
-
-</MudPaper>
+</section>
 
 @code {
+    private const string FormattedView = "formatted";
+    private const string RawView = "raw";
+    private const string HexView = "hex";
+    private const string MetaView = "meta";
+
     [Parameter] public string Title { get; set; } = "Payload Inspector";
     [Parameter] public string? Topic { get; set; }
     [Parameter] public DateTimeOffset? ReceivedAt { get; set; }
     [Parameter] public byte[]? Payload { get; set; }
 
-    private string _activeView = "formatted";
+    private string _activeView = FormattedView;
     private PayloadInspectionResult _inspection = PayloadInspector.Inspect([]);
 
-    private Color FormatColor => _inspection.Format switch
+    private string TopicLabel => string.IsNullOrWhiteSpace(Topic)
+        ? "No topic"
+        : Topic;
+
+    private string FormatClass => _inspection.Format switch
     {
-        PayloadFormat.Json => Color.Success,
-        PayloadFormat.Array => Color.Info,
-        PayloadFormat.String => Color.Default,
-        PayloadFormat.Number => Color.Primary,
-        PayloadFormat.Boolean => Color.Primary,
-        PayloadFormat.Null => Color.Secondary,
-        PayloadFormat.Xml => Color.Info,
-        PayloadFormat.Base64 => Color.Warning,
-        PayloadFormat.Binary => Color.Error,
-        _ => Color.Default
+        PayloadFormat.Json or PayloadFormat.Array => "json",
+        PayloadFormat.Number or PayloadFormat.Boolean => "scalar",
+        PayloadFormat.Xml or PayloadFormat.Base64 => "structured",
+        PayloadFormat.Binary => "binary",
+        _ => "text"
+    };
+
+    private string FormatIcon => _inspection.Format switch
+    {
+        PayloadFormat.Json or PayloadFormat.Array => Icons.Material.Filled.DataObject,
+        PayloadFormat.Xml => Icons.Material.Filled.Code,
+        PayloadFormat.Base64 or PayloadFormat.Binary => Icons.Material.Filled.Tag,
+        _ => Icons.Material.Filled.Subject
     };
 
     protected override void OnParametersSet()
@@ -80,4 +138,10 @@
     private string DisplayRaw() => _inspection.IsText
         ? _inspection.RawText
         : "Binary payload. Use the hex view.";
+
+    private bool IsActiveView(string view) => string.Equals(_activeView, view, StringComparison.Ordinal);
+
+    private string ViewButtonClass(string view) => IsActiveView(view)
+        ? "payload-view-button active"
+        : "payload-view-button";
 }

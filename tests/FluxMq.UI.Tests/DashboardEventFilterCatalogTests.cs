@@ -2587,6 +2587,53 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void PayloadInspectorPanel_UsesFlatCompactInspectorChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Payloads",
+            "PayloadInspectorPanel.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Payloads",
+            "PayloadInspectorPanel.razor.css"));
+
+        markup.ShouldContain("<section class=\"payload-inspector\" aria-label=\"@Title\">");
+        markup.ShouldContain("payload-inspector-header");
+        markup.ShouldContain("payload-format-badge @FormatClass");
+        markup.ShouldContain("payload-meta-strip");
+        markup.ShouldContain("payload-view-switch");
+        markup.ShouldContain("role=\"tab\"");
+        markup.ShouldContain("aria-selected=\"@IsActiveView(FormattedView)\"");
+        markup.ShouldContain("payload-inspector-meta-list");
+        markup.ShouldContain("private const string FormattedView = \"formatted\";");
+        markup.ShouldContain("private string FormatClass");
+        markup.ShouldContain("private string FormatIcon");
+        markup.ShouldNotContain("MudToggleGroup");
+        markup.ShouldNotContain("MudChip");
+        markup.ShouldNotContain("<MudPaper");
+
+        css.ShouldContain("border-radius: 5px;");
+        css.ShouldContain(".payload-inspector-header");
+        css.ShouldContain("min-height: 38px;");
+        css.ShouldContain(".payload-view-switch");
+        css.ShouldContain("grid-template-columns: repeat(4, minmax(0, 1fr));");
+        css.ShouldContain(".payload-view-button.active");
+        css.ShouldContain("white-space: pre-wrap;");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain(".payload-inspector-meta-list div");
+        css.ShouldContain("grid-template-columns: 76px minmax(0, 1fr);");
+        css.ShouldContain("@media (max-width: 520px)");
+    }
+
+    [Fact]
     public void DashboardDesigner_EditPreviewKeepsMetricValuePlacement()
     {
         var root = FindRepositoryRoot();
