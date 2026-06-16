@@ -1,10 +1,291 @@
-.flux-app-item,
-.flux-app-item-active {
-    border-radius: 6px;
-    cursor: pointer;
-    padding: 4px 8px;
+.apps-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    padding: 8px;
 }
 
-.flux-app-item-active {
-    background: var(--mud-palette-action-default-hover);
+.apps-panel-head {
+    align-items: center;
+    display: flex;
+    flex: 0 0 auto;
+    min-width: 0;
+}
+
+.apps-panel-title {
+    align-items: center;
+    color: var(--mud-palette-text-primary);
+    display: flex;
+    gap: 8px;
+    min-width: 0;
+}
+
+.apps-panel-title-icon {
+    align-items: center;
+    background: color-mix(in srgb, var(--flux-accent) 11%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-accent) 24%, var(--flux-border));
+    border-radius: 5px;
+    color: var(--flux-accent);
+    display: inline-flex;
+    flex: 0 0 auto;
+    height: 24px;
+    justify-content: center;
+    width: 24px;
+}
+
+.apps-panel-title-icon ::deep .mud-icon-root {
+    font-size: 16px;
+}
+
+.apps-panel-title-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.apps-panel-title-copy strong {
+    color: var(--mud-palette-text-primary);
+    font-size: 12.5px;
+    font-weight: 760;
+    line-height: 1.1;
+}
+
+.apps-panel-title-copy span {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10.5px;
+    line-height: 1.1;
+}
+
+.apps-empty {
+    align-items: flex-start;
+    background: color-mix(in srgb, var(--flux-surface-2) 56%, transparent);
+    border: 1px solid var(--flux-border);
+    border-radius: 6px;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+}
+
+.apps-empty ::deep .mud-icon-root {
+    color: var(--flux-text-muted);
+    margin-top: 1px;
+}
+
+.apps-empty-title {
+    color: var(--mud-palette-text-primary);
+    font-size: 12.5px;
+    font-weight: 720;
+    line-height: 1.2;
+}
+
+.apps-empty-copy {
+    color: var(--mud-palette-text-secondary);
+    font-size: 11.5px;
+    line-height: 1.35;
+    margin-top: 2px;
+}
+
+.apps-list {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 0;
+    min-width: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding-right: 1px;
+    scrollbar-color: color-mix(in srgb, var(--mud-palette-text-secondary) 24%, transparent) transparent;
+    scrollbar-width: thin;
+}
+
+.apps-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.apps-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.apps-list::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--mud-palette-text-secondary) 24%, transparent);
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+}
+
+.app-tile {
+    align-items: stretch;
+    background: color-mix(in srgb, var(--flux-surface-2) 42%, transparent);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 28px;
+    min-height: 58px;
+    min-width: 0;
+}
+
+.app-tile.active {
+    background: color-mix(in srgb, var(--flux-accent) 8%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--flux-accent) 24%, var(--flux-border));
+}
+
+.app-tile:hover,
+.app-tile:focus-within {
+    background: var(--flux-surface-3);
+    border-color: color-mix(in srgb, var(--flux-accent) 18%, var(--flux-border));
+}
+
+.app-tile-main {
+    align-items: center;
+    cursor: pointer;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+    min-width: 0;
+    outline: none;
+    padding: 7px 0 7px 8px;
+}
+
+.app-tile-main:focus-visible {
+    box-shadow: inset 2px 0 0 var(--flux-accent);
+}
+
+.app-tile-icon {
+    align-items: center;
+    background: color-mix(in srgb, var(--mud-palette-text-primary) 5%, transparent);
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    display: inline-flex;
+    height: 24px;
+    justify-content: center;
+    width: 24px;
+}
+
+.app-tile.active .app-tile-icon {
+    color: var(--flux-accent);
+}
+
+.app-tile-icon ::deep .mud-icon-root {
+    font-size: 16px;
+}
+
+.app-tile-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.app-tile-name,
+.app-tile-path,
+.app-tile-meta {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-tile-name {
+    color: var(--mud-palette-text-primary);
+    font-size: 12.5px;
+    font-weight: 720;
+    line-height: 1.15;
+}
+
+.app-tile-path {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10.5px;
+    line-height: 1.15;
+}
+
+.app-tile-meta {
+    color: var(--flux-text-muted);
+    font-size: 10px;
+    line-height: 1.15;
+}
+
+.app-tile-states {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    justify-self: end;
+    min-width: 0;
+}
+
+.app-state {
+    align-items: center;
+    border-radius: 4px;
+    display: inline-flex;
+    font-size: 9.5px;
+    font-weight: 750;
+    line-height: 1;
+    max-width: 68px;
+    min-height: 16px;
+    overflow: hidden;
+    padding: 0 5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-state.active {
+    background: color-mix(in srgb, var(--flux-accent) 12%, transparent);
+    color: var(--flux-accent);
+}
+
+.app-state.unsaved {
+    background: color-mix(in srgb, var(--mud-palette-warning) 12%, transparent);
+    color: var(--mud-palette-warning);
+}
+
+.app-tile-close {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+}
+
+.app-tile:hover .app-tile-close,
+.app-tile:focus-within .app-tile-close,
+.app-tile.active .app-tile-close {
+    opacity: 1;
+}
+
+.app-tile-close ::deep .app-close-button {
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    height: 26px;
+    padding: 0;
+    width: 26px;
+}
+
+.app-tile-close ::deep .app-close-button:hover,
+.app-tile-close ::deep .app-close-button:focus-visible {
+    background: color-mix(in srgb, var(--mud-palette-error) 10%, transparent);
+    color: var(--mud-palette-error);
+}
+
+@media (max-width: 760px) {
+    .apps-panel {
+        padding: 6px;
+    }
+
+    .app-tile {
+        min-height: 54px;
+    }
+
+    .app-tile-main {
+        grid-template-columns: 22px minmax(0, 1fr);
+    }
+
+    .app-tile-states {
+        display: none;
+    }
 }

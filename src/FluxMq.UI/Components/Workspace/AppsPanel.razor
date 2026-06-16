@@ -1,60 +1,131 @@
 @implements IDisposable
 @inject ProjectManagerService Projects
 
-<MudStack Row="true" AlignItems="AlignItems.Center" Class="px-2 pt-1">
-    <MudIcon Icon="@Icons.Material.Filled.Folder" Size="Size.Small" Color="Color.Primary" />
-    <MudText Typo="Typo.subtitle2" Class="flex-grow-1">Open Apps</MudText>
-</MudStack>
+<div class="apps-panel" aria-label="Open apps panel">
+    <div class="apps-panel-head">
+        <div class="apps-panel-title">
+            <span class="apps-panel-title-icon" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.Folder" Size="Size.Small" />
+            </span>
+            <div class="apps-panel-title-copy">
+                <strong>Open Apps</strong>
+                <span>@ProjectCountLabel</span>
+            </div>
+        </div>
+    </div>
 
-@if (Projects.Projects.Count == 0)
-{
-    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="px-4 pb-2">
-        No apps open. Use New or Open from the toolbar.
-    </MudText>
-}
-else
-{
-    <MudList T="FlowWorkspaceService" Dense="true" Class="py-0">
-        @foreach (var app in Projects.Projects)
-        {
-            var a = app;
-            var isActive = a == Projects.ActiveProject;
-            <MudListItem T="FlowWorkspaceService"
-                         Value="@a"
-                         OnClick="@(() => Projects.SetActive(a))"
-                         Class="@(isActive ? "flux-app-item-active" : "flux-app-item")">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="flex-grow-1">
-                    <MudIcon Icon="@Icons.Material.Filled.Article"
-                             Size="Size.Small"
-                             Color="@(isActive ? Color.Primary : Color.Default)" />
-                    <MudStack Spacing="0" Class="flex-grow-1" Style="min-width:0;">
-                        <MudText Typo="Typo.body2"
-                                 Style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                            @a.Name@(a.HasUnsavedChanges ? " ●" : "")
-                        </MudText>
-                        @if (!string.IsNullOrEmpty(a.CurrentFilePath))
-                        {
-                            <MudText Typo="Typo.caption" Color="Color.Secondary"
-                                     Style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                                @a.CurrentFilePath
-                            </MudText>
-                        }
-                    </MudStack>
-                    <span @onclick:stopPropagation="true">
-                        <MudIconButton Size="Size.Small"
-                                       Icon="@Icons.Material.Filled.Close"
-                                       OnClick="@(() => CloseAsync(a))" />
+    @if (Projects.Projects.Count == 0)
+    {
+        <div class="apps-empty">
+            <MudIcon Icon="@Icons.Material.Filled.FolderOff" Size="Size.Small" />
+            <div>
+                <div class="apps-empty-title">No apps open</div>
+                <div class="apps-empty-copy">Use New or Open from the toolbar.</div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="apps-list" role="list">
+            @foreach (var app in Projects.Projects)
+            {
+                var a = app;
+                var isActive = a == Projects.ActiveProject;
+
+                <div class="@AppTileClass(isActive)" role="listitem" @key="a">
+                    <div class="app-tile-main"
+                         role="button"
+                         tabindex="0"
+                         title="@FileLabel(a)"
+                         @onclick="@(() => Projects.SetActive(a))"
+                         @onkeydown="@((KeyboardEventArgs args) => SelectAppFromKeyboard(args, a))">
+                        <span class="app-tile-icon" aria-hidden="true">
+                            <MudIcon Icon="@(isActive ? Icons.Material.Filled.FolderOpen : Icons.Material.Filled.Article)"
+                                     Size="Size.Small" />
+                        </span>
+                        <span class="app-tile-copy">
+                            <span class="app-tile-name">@a.Name</span>
+                            <span class="app-tile-path">@FileLabel(a)</span>
+                            <span class="app-tile-meta">@BuildAppMeta(a)</span>
+                        </span>
+                        <span class="app-tile-states">
+                            @if (isActive)
+                            {
+                                <span class="app-state active">@CurrentArtifactLabel(a)</span>
+                            }
+                            @if (a.HasUnsavedChanges)
+                            {
+                                <span class="app-state unsaved">Unsaved</span>
+                            }
+                        </span>
+                    </div>
+                    <span class="app-tile-close" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
+                        <MudTooltip Text="Close app">
+                            <MudIconButton Size="Size.Small"
+                                           Icon="@Icons.Material.Filled.Close"
+                                           Class="app-close-button"
+                                           aria-label="@CloseLabel(a)"
+                                           OnClick="@(() => CloseAsync(a))" />
+                        </MudTooltip>
                     </span>
-                </MudStack>
-            </MudListItem>
-        }
-    </MudList>
-}
+                </div>
+            }
+        </div>
+    }
+</div>
 
 @code {
     protected override void OnInitialized() => Projects.Changed += OnChanged;
 
+    private string ProjectCountLabel => Projects.Projects.Count == 1
+        ? "1 app"
+        : $"{Projects.Projects.Count.ToString(System.Globalization.CultureInfo.InvariantCulture)} apps";
+
     private Task CloseAsync(FlowWorkspaceService app) => Projects.CloseProjectAsync(app).AsTask();
+
+    private void SelectAppFromKeyboard(KeyboardEventArgs args, FlowWorkspaceService app)
+    {
+        if (args.Key is "Enter" or " ")
+            Projects.SetActive(app);
+    }
+
+    private static string AppTileClass(bool isActive)
+        => isActive ? "app-tile active" : "app-tile";
+
+    private static string FileLabel(FlowWorkspaceService app)
+        => string.IsNullOrWhiteSpace(app.CurrentFilePath)
+            ? "In memory - not saved"
+            : app.CurrentFilePath;
+
+    private static string BuildAppMeta(FlowWorkspaceService app)
+    {
+        var parts = new[]
+        {
+            CountLabel(app.WorkflowNames.Count, "pipeline"),
+            CountLabel(app.MetricNames.Count, "metric"),
+            CountLabel(app.DashboardNames.Count, "dashboard"),
+            CountLabel(app.TestNames.Count, "test")
+        };
+
+        return string.Join(" / ", parts);
+    }
+
+    private static string CountLabel(int count, string singular)
+        => count == 1 ? $"1 {singular}" : $"{count} {singular}s";
+
+    private static string CurrentArtifactLabel(FlowWorkspaceService app)
+        => app.ActiveArtifactKind switch
+        {
+            WorkspaceArtifactKind.Dashboard => "Dashboard",
+            WorkspaceArtifactKind.Metrics => "Metrics",
+            WorkspaceArtifactKind.Test => "Test",
+            WorkspaceArtifactKind.Topics => "Topics",
+            WorkspaceArtifactKind.Logs => "Logs",
+            _ => "Pipeline"
+        };
+
+    private static string CloseLabel(FlowWorkspaceService app)
+        => $"Close {app.Name}";
 
     private void OnChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
 
