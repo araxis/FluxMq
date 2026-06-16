@@ -2588,6 +2588,55 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardDesigner_UsesFlatEmptyAndStackedDashboardStates()
+    {
+        var root = FindRepositoryRoot();
+        var razor = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor.css"));
+        var inspectorCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspector.razor.css"));
+        var inspectorRazor = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspector.razor"));
+
+        razor.ShouldContain("dashboard-empty-icon-tile");
+        razor.ShouldContain("dashboard-empty-actions");
+        razor.ShouldContain("\"empty-grid\"");
+        razor.ShouldContain("Ready for the first widget.");
+        css.ShouldContain(".dashboard-grid-frame.empty-grid");
+        css.ShouldContain(".dashboard-grid-empty-note");
+        css.ShouldContain("position: absolute;");
+        css.ShouldContain("min-height: clamp(360px, 58vh, 520px);");
+        css.ShouldContain("overflow-x: auto;");
+        css.ShouldContain(".dashboard-empty-actions");
+        css.ShouldContain("--dashboard-grid-row-min: 86px;");
+        inspectorCss.ShouldContain("max-height: 320px;");
+        inspectorCss.ShouldContain("min-height: 188px;");
+        inspectorRazor.ShouldNotContain("Use the grid to place widgets");
+    }
+
+    [Fact]
     public void DashboardWidgets_UseContainerResponsiveValueAndDigitalSizing()
     {
         var root = FindRepositoryRoot();

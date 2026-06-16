@@ -191,6 +191,12 @@
     text-align: center;
 }
 
+.dashboard-inspector-empty .dashboard-inspector-cell-summary {
+    align-self: stretch;
+    max-width: 100%;
+    text-align: left;
+}
+
 .dashboard-inspector-empty ::deep .mud-icon-root {
     color: var(--mud-palette-text-secondary);
     font-size: 24px;
@@ -212,7 +218,14 @@
     .dashboard-inspector {
         border-left: 0;
         border-top: 1px solid var(--flux-border);
-        flex: 0 0 360px;
+        flex: 0 0 auto;
+        max-height: 320px;
+        min-height: 188px;
         width: 100%;
+    }
+
+    .dashboard-inspector-empty {
+        justify-content: flex-start;
+        padding: 12px;
     }
 }
