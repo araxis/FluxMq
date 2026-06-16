@@ -2,35 +2,55 @@
 @inject ISnackbar Snackbar
 
 <div class="app-json-view">
-
-    <MudStack Row="true" AlignItems="AlignItems.Center" Class="app-json-toolbar">
-        <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" Color="Color.Default" />
-        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="flex-grow-1 text-truncate mx-1">
-            @if (!string.IsNullOrEmpty(Project.CurrentFilePath))
-            {
-                @Project.CurrentFilePath
-            }
-            else
-            {
-                <span>In memory — not saved</span>
-            }
-        </MudText>
+    <div class="app-json-toolbar" aria-label="Application JSON toolbar">
+        <div class="app-json-title">
+            <span class="app-json-title-icon">
+                <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" />
+            </span>
+            <div class="app-json-title-copy">
+                <strong>App JSON</strong>
+                <span>@FileLabel</span>
+            </div>
+        </div>
+        <div class="app-json-meta">
+            <span>@JsonLineCount lines</span>
+            <span>@JsonSizeLabel</span>
+        </div>
         @if (Project.HasUnsavedChanges)
         {
-            <MudChip T="string" Size="Size.Small" Color="Color.Warning">Unsaved</MudChip>
+            <span class="app-json-state unsaved">Unsaved</span>
         }
         <MudTooltip Text="Copy JSON">
             <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" OnClick="@CopyAsync" />
         </MudTooltip>
-    </MudStack>
+    </div>
 
-    <pre class="app-json-body">@_fullJson</pre>
+    <pre class="app-json-body" aria-label="Application definition JSON">@_fullJson</pre>
 
 </div>
 
 @code {
     [Parameter, EditorRequired] public FlowWorkspaceService Project { get; set; } = null!;
     private string _fullJson = string.Empty;
+
+    private string FileLabel => string.IsNullOrWhiteSpace(Project.CurrentFilePath)
+        ? "In memory - not saved"
+        : Project.CurrentFilePath;
+
+    private int JsonLineCount => string.IsNullOrEmpty(_fullJson)
+        ? 0
+        : _fullJson.Count(static character => character == '\n') + 1;
+
+    private string JsonSizeLabel
+    {
+        get
+        {
+            var bytes = System.Text.Encoding.UTF8.GetByteCount(_fullJson);
+            return bytes < 1024
+                ? $"{bytes} B"
+                : $"{bytes / 1024d:0.#} KB";
+        }
+    }
 
     protected override void OnInitialized()
     {

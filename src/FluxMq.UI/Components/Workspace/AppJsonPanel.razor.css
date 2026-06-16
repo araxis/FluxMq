@@ -1,28 +1,124 @@
 .app-json-view {
+    background: var(--flux-canvas);
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
     min-height: 0;
     overflow: hidden;
-    padding: 12px;
 }
 
 .app-json-toolbar {
-    flex-shrink: 0;
-    margin-bottom: 8px;
+    align-items: center;
+    background: var(--flux-surface);
+    border-bottom: 1px solid var(--flux-border);
+    display: grid;
+    flex: 0 0 auto;
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+    min-height: 42px;
+    min-width: 0;
+    padding: 6px 10px;
+}
+
+.app-json-title {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    min-width: 0;
+}
+
+.app-json-title-icon {
+    align-items: center;
+    background: color-mix(in srgb, var(--mud-palette-info) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-info) 28%, var(--flux-border));
+    border-radius: 5px;
+    color: var(--mud-palette-info);
+    display: inline-flex;
+    flex: 0 0 auto;
+    height: 26px;
+    justify-content: center;
+    width: 26px;
+}
+
+.app-json-title-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.app-json-title-copy strong {
+    color: var(--mud-palette-text-primary);
+    font-size: 13px;
+    font-weight: 750;
+    line-height: 1.2;
+}
+
+.app-json-title-copy span {
+    color: var(--flux-text-muted);
+    font-size: 11.5px;
+    line-height: 1.2;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-json-meta {
+    align-items: center;
+    display: inline-flex;
+    gap: 5px;
+}
+
+.app-json-meta span,
+.app-json-state {
+    background: var(--flux-surface-2);
+    border-radius: 4px;
+    color: var(--mud-palette-text-secondary);
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 10.5px;
+    line-height: 1;
+    padding: 4px 6px;
+    white-space: nowrap;
+}
+
+.app-json-state.unsaved {
+    background: color-mix(in srgb, var(--mud-palette-warning) 12%, transparent);
+    color: var(--mud-palette-warning);
+    font-family: inherit;
+    font-weight: 700;
+}
+
+.app-json-toolbar ::deep .mud-icon-button {
+    border-radius: 5px;
+    height: 28px;
+    padding: 0;
+    width: 28px;
 }
 
 .app-json-body {
-    background: var(--flux-surface);
+    background: var(--flux-canvas);
     border: 1px solid var(--flux-border);
-    border-radius: 6px;
+    border-radius: 5px;
     flex: 1 1 0;
     font-family: Consolas, "Courier New", monospace;
-    font-size: 12px;
-    line-height: 1.5;
-    margin: 0;
+    font-size: 11.5px;
+    line-height: 1.45;
+    margin: 8px;
     min-height: 0;
     overflow: auto;
-    padding: 14px;
+    padding: 10px;
     white-space: pre;
+}
+
+@media (max-width: 760px) {
+    .app-json-toolbar {
+        align-items: start;
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .app-json-meta {
+        grid-column: 1;
+        grid-row: 2;
+    }
 }

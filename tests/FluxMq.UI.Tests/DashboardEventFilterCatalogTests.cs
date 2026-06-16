@@ -2671,6 +2671,50 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void AppJsonPanel_UsesFlatCompactCodeViewerChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "AppJsonPanel.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "AppJsonPanel.razor.css"));
+
+        markup.ShouldContain("aria-label=\"Application JSON toolbar\"");
+        markup.ShouldContain("app-json-title-icon");
+        markup.ShouldContain("<strong>App JSON</strong>");
+        markup.ShouldContain("@FileLabel");
+        markup.ShouldContain("@JsonLineCount lines");
+        markup.ShouldContain("@JsonSizeLabel");
+        markup.ShouldContain("app-json-state unsaved");
+        markup.ShouldContain("aria-label=\"Application definition JSON\"");
+        markup.ShouldContain("private string FileLabel");
+        markup.ShouldContain("private int JsonLineCount");
+        markup.ShouldContain("private string JsonSizeLabel");
+        markup.ShouldNotContain("MudChip");
+        markup.ShouldNotContain("MudStack Row=\"true\"");
+
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto auto auto;");
+        css.ShouldContain("min-height: 42px;");
+        css.ShouldContain("height: 26px;");
+        css.ShouldContain(".app-json-meta span,");
+        css.ShouldContain(".app-json-state.unsaved");
+        css.ShouldContain(".app-json-toolbar ::deep .mud-icon-button");
+        css.ShouldContain("font-size: 11.5px;");
+        css.ShouldContain("margin: 8px;");
+        css.ShouldContain("@media (max-width: 760px)");
+    }
+
+    [Fact]
     public void DashboardDesigner_EditPreviewKeepsMetricValuePlacement()
     {
         var root = FindRepositoryRoot();
