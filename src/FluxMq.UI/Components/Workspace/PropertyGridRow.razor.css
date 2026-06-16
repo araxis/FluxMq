@@ -1,17 +1,17 @@
 .property-grid-row {
     align-items: center;
     background: var(--flux-surface);
-    border-bottom: 1px solid color-mix(in srgb, var(--flux-border) 48%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border) 38%, transparent);
     display: grid;
     gap: 0;
     grid-template-columns: var(--property-grid-name-width, 124px) minmax(0, 1fr);
-    min-height: 28px;
+    min-height: 26px;
     min-width: 0;
     padding: 0;
 }
 
 .property-grid-row:hover {
-    background: color-mix(in srgb, var(--flux-surface-2) 42%, var(--flux-surface));
+    background: color-mix(in srgb, var(--flux-surface-2) 30%, var(--flux-surface));
 }
 
 .property-grid-row.has-unit {
@@ -25,8 +25,8 @@
 .property-grid-row.stacked {
     align-items: stretch;
     grid-template-columns: minmax(0, 1fr);
-    gap: 5px;
-    padding: 6px 0;
+    gap: 3px;
+    padding: 5px 0;
 }
 
 .property-grid-row.stacked .property-grid-unit {
@@ -45,7 +45,7 @@
     line-height: 1.2;
     min-width: 0;
     overflow: hidden;
-    padding: 0 6px 0 9px;
+    padding: 0 6px 0 8px;
 }
 
 .property-grid-name span:first-child {
@@ -103,13 +103,13 @@
     font: inherit;
     font-size: 11.25px;
     font-weight: 720;
-    height: calc(100% - 4px);
-    margin: 2px 5px 2px 0;
-    min-height: 24px;
+    height: calc(100% - 3px);
+    margin: 1px 4px 2px 0;
+    min-height: 22px;
     min-width: 0;
     outline: 0;
-    padding: 0 7px 0 9px;
-    width: calc(100% - 5px);
+    padding: 0 6px 0 8px;
+    width: calc(100% - 4px);
 }
 
 .property-grid-value ::deep .property-grid-input:hover,
@@ -139,18 +139,18 @@
 
 .property-grid-value ::deep .property-grid-button-group {
     align-items: stretch;
-    background: color-mix(in srgb, var(--flux-surface-2) 46%, var(--flux-surface));
-    border: 1px solid color-mix(in srgb, var(--flux-border) 58%, transparent);
+    background: color-mix(in srgb, var(--flux-surface-2) 30%, var(--flux-surface));
+    border: 1px solid color-mix(in srgb, var(--flux-border) 48%, transparent);
     border-radius: 4px;
     display: grid;
     gap: 0;
     grid-auto-columns: minmax(0, 1fr);
     grid-auto-flow: column;
-    height: calc(100% - 6px);
-    margin: 3px 5px 3px 0;
+    height: calc(100% - 4px);
+    margin: 2px 4px 2px 0;
     overflow: hidden;
     min-width: 0;
-    width: calc(100% - 5px);
+    width: calc(100% - 4px);
 }
 
 .property-grid-value ::deep .property-grid-choice,
@@ -164,10 +164,10 @@
     font: inherit;
     font-size: 11px;
     font-weight: 720;
-    min-height: 22px;
+    min-height: 20px;
     min-width: 0;
     overflow: hidden;
-    padding: 0 7px;
+    padding: 0 6px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -200,7 +200,7 @@
 }
 
 .property-grid-value ::deep .property-grid-small-button {
-    flex: 0 0 26px;
+    flex: 0 0 24px;
     padding: 0;
 }
 
@@ -218,7 +218,7 @@
     font-weight: 720;
     min-width: 0;
     overflow: hidden;
-    padding: 0 7px 0 9px;
+    padding: 0 6px 0 8px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -226,4 +226,31 @@
 .property-grid-value ::deep button:disabled {
     cursor: default;
     opacity: 0.42;
+}
+
+@container property-grid (max-width: 280px) {
+    .property-grid-row,
+    .property-grid-row.has-unit {
+        align-items: stretch;
+        grid-template-columns: minmax(0, 1fr);
+        padding: 4px 0;
+    }
+
+    .property-grid-name {
+        min-height: 18px;
+        padding: 0 8px;
+    }
+
+    .property-grid-value {
+        min-height: 24px;
+    }
+
+    .property-grid-unit {
+        display: none;
+    }
+
+    .property-grid-value ::deep .property-grid-inline,
+    .property-grid-value ::deep .property-grid-button-group {
+        min-height: 24px;
+    }
 }

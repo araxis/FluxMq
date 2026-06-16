@@ -1,17 +1,17 @@
 .property-grid-color-picker {
     align-items: stretch;
-    background: color-mix(in srgb, var(--flux-surface-2) 46%, var(--flux-surface));
-    border: 1px solid color-mix(in srgb, var(--flux-border) 58%, transparent);
-    border-radius: 5px;
+    background: color-mix(in srgb, var(--flux-surface-2) 30%, var(--flux-surface));
+    border: 1px solid color-mix(in srgb, var(--flux-border) 48%, transparent);
+    border-radius: 4px;
     display: grid;
-    grid-template-columns: 34px minmax(0, 1fr) 28px;
-    height: calc(100% - 6px);
-    margin: 3px 6px 3px 0;
-    min-height: 24px;
+    grid-template-columns: 30px minmax(0, 1fr) 26px;
+    height: calc(100% - 4px);
+    margin: 2px 4px 2px 0;
+    min-height: 22px;
     min-width: 0;
     overflow: hidden;
     position: relative;
-    width: calc(100% - 6px);
+    width: calc(100% - 4px);
 }
 
 .property-grid-color-button,
@@ -35,7 +35,7 @@
 }
 
 .property-grid-color-picker-button ::deep .mud-icon-root {
-    font-size: 17px;
+    font-size: 15px;
 }
 
 .property-grid-color-button:hover,
@@ -60,9 +60,9 @@
     border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 28%, transparent);
     border-radius: 4px;
     display: block;
-    height: 15px;
+    height: 13px;
     pointer-events: none;
-    width: 20px;
+    width: 18px;
 }
 
 .property-grid-color-text {
@@ -75,7 +75,7 @@
     height: 100%;
     min-width: 0;
     outline: 0;
-    padding: 0 8px;
+    padding: 0 7px;
     text-transform: uppercase;
     width: 100%;
 }
@@ -91,9 +91,9 @@
 .property-grid-color-popover-content {
     background: var(--flux-surface);
     border: 1px solid color-mix(in srgb, var(--flux-accent) 28%, var(--flux-border));
-    border-radius: 7px;
-    box-shadow: 0 14px 30px color-mix(in srgb, black 26%, transparent);
-    padding: 8px;
+    border-radius: 6px;
+    box-shadow: 0 10px 24px color-mix(in srgb, black 22%, transparent);
+    padding: 6px;
 }
 
 .property-grid-color-popover-content ::deep .mud-picker {
