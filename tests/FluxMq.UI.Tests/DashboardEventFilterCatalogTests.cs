@@ -2513,6 +2513,16 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("DisplayedMessages.Count > 0");
         markup.ShouldContain("LiveTopicRows.Count > 0");
         markup.ShouldContain("LastPayloadMessage is not null");
+        markup.ShouldContain("LastPayloadMessage is null");
+        markup.ShouldContain("MessageSource.Count > 0");
+        markup.ShouldContain("Compact=\"true\"");
+        markup.ShouldContain("rail-empty-row");
+        markup.ShouldContain("rail-empty-state");
+        markup.ShouldContain("last-payload-empty");
+        markup.ShouldContain("inspect-empty-state");
+        markup.ShouldContain("topic-message-table");
+        markup.ShouldContain("Show message list");
+        markup.ShouldContain("No message selected");
         markup.ShouldContain("publish-retain");
         markup.ShouldNotContain("Recording");
 
@@ -2524,8 +2534,15 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("min-height: 68px;");
         css.ShouldContain(".publish-retain.active");
         css.ShouldContain("height: 30px;");
+        css.ShouldContain(".rail-empty-state,");
+        css.ShouldContain(".inspect-empty-state");
+        css.ShouldContain("min-height: 118px;");
+        css.ShouldContain(".topic-message-table ::deep .mud-table-container");
+        css.ShouldContain(".topic-message-table ::deep th,");
+        css.ShouldContain("min-height: 32px;");
         css.ShouldContain("max-height: 88px;");
         css.ShouldNotContain(".recording-label");
+        css.ShouldNotContain(".empty-topic-row");
     }
 
     [Fact]
