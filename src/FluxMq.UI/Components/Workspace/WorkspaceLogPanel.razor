@@ -13,12 +13,15 @@
         </div>
 
         <div class="workspace-log-actions">
-            @foreach (var summary in SeveritySummaries)
+            @if (Logs.Count > 0)
             {
-                <span class="workspace-log-summary @SeverityClass(summary.Severity)">
-                    <span>@summary.Label</span>
-                    <strong>@summary.Count</strong>
-                </span>
+                @foreach (var summary in SeveritySummaries)
+                {
+                    <span class="workspace-log-summary @SeverityClass(summary.Severity)">
+                        <span>@summary.Label</span>
+                        <strong>@summary.Count</strong>
+                    </span>
+                }
             }
             <MudTooltip Text="Reset filters">
                 <MudIconButton Icon="@Icons.Material.Filled.FilterAltOff"
@@ -37,7 +40,7 @@
         </div>
     </div>
 
-    <div class="workspace-log-toolbar">
+    <div class="workspace-log-toolbar" role="search" aria-label="Log filters">
         @if (string.IsNullOrWhiteSpace(ForcedScope))
         {
             <MudSelect T="string"
@@ -102,7 +105,9 @@
         {
             @foreach (var entry in FilteredLogs)
             {
-                <article class="workspace-log-row @SeverityClass(entry)" @key="entry">
+                <article class="workspace-log-row @SeverityClass(entry)"
+                         aria-label="@($"{SeverityLabel(entry)} log at {FormatLogTime(entry)}")"
+                         @key="entry">
                     <div class="workspace-log-row-time">
                         <span>@FormatLogTime(entry)</span>
                         <small>@FormatLogDate(entry)</small>

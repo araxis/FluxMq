@@ -2634,6 +2634,43 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void WorkspaceLogPanel_UsesFlatCompactWorkspaceChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "WorkspaceLogPanel.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "WorkspaceLogPanel.razor.css"));
+
+        markup.ShouldContain("Logs.Count > 0");
+        markup.ShouldContain("role=\"search\" aria-label=\"Log filters\"");
+        markup.ShouldContain("aria-label=\"@($\"{SeverityLabel(entry)} log at {FormatLogTime(entry)}\")\"");
+        markup.ShouldContain("workspace-log-summary @SeverityClass(summary.Severity)");
+
+        css.ShouldContain("padding: 8px 12px;");
+        css.ShouldContain("height: 26px;");
+        css.ShouldContain("font-size: 14.5px;");
+        css.ShouldContain(".workspace-log-filter ::deep .mud-input-control,");
+        css.ShouldContain(".workspace-log-search ::deep .mud-input-root");
+        css.ShouldContain("grid-template-columns: 68px 76px minmax(0, 1fr);");
+        css.ShouldContain("border-left: 2px solid var(--mud-palette-success);");
+        css.ShouldContain(".workspace-log-row-meta span");
+        css.ShouldContain("min-height: 220px;");
+        css.ShouldContain("grid-template-columns: 60px minmax(0, 1fr);");
+        css.ShouldNotContain("grid-template-columns: 72px 86px minmax(0, 1fr);");
+    }
+
+    [Fact]
     public void DashboardDesigner_EditPreviewKeepsMetricValuePlacement()
     {
         var root = FindRepositoryRoot();
