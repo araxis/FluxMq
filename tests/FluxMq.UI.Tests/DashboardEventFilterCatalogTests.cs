@@ -2606,9 +2606,12 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".dashboard-drop-status");
         css.ShouldContain(".dashboard-track-handle:focus-visible");
         css.ShouldContain(".dashboard-cell.drop-ready");
+        css.ShouldContain(".dashboard-grid-frame.adding-widget .dashboard-cell.drop-ready");
+        css.ShouldContain(".dashboard-grid-frame.adding-widget .dashboard-cell.drop-ready .dashboard-cell-drop-mark");
         css.ShouldContain(".dashboard-cell.move-target");
         css.ShouldContain(".dashboard-cell.selected::after");
         css.ShouldContain(".dashboard-cell.dropping::after");
+        css.ShouldContain("opacity: 0.58;");
         css.ShouldContain("border: 1px dashed color-mix(in srgb, var(--flux-accent) 78%, transparent);");
         css.ShouldContain(".dashboard-cell.moving-source::before");
         css.ShouldContain(".dashboard-cell-drop-mark");
@@ -3369,15 +3372,20 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-areas:");
         css.ShouldContain("\"description badges\"");
         css.ShouldContain(".component-catalog.dashboard .catalog-item-badge:nth-child(n+2)");
-        css.ShouldContain("min-height: 46px;");
+        css.ShouldContain("grid-template-columns: 22px minmax(0, 1fr) 42px;");
+        css.ShouldContain("position: sticky;");
+        css.ShouldContain("min-height: 42px;");
         css.ShouldContain(".catalog-item.dragging");
         css.ShouldContain(".catalog-item-affordance");
         css.ShouldContain(".catalog-drag-grip");
+        css.ShouldContain("opacity: 0.46;");
         css.ShouldContain("box-shadow: inset 2px 0 0 var(--flux-accent);");
         layout.ShouldContain("DragPreviewIcon(activeDrag.TargetKind)");
         layout.ShouldContain("WorkspaceArtifactKind.Dashboard => Icons.Material.Filled.Widgets");
         layout.ShouldContain("DragPreviewTargetClass");
         appCss.ShouldContain(".flux-drag-preview.dashboard");
+        appCss.ShouldContain("min-height: 30px;");
+        appCss.ShouldContain("max-width: 220px;");
         appCss.ShouldContain(".flux-drag-preview.over-designer .mud-icon-root");
     }
 

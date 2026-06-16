@@ -598,6 +598,10 @@
     background: color-mix(in srgb, var(--flux-accent) 3%, transparent);
 }
 
+.dashboard-grid-frame.adding-widget .dashboard-cell.drop-ready {
+    border-style: dashed;
+}
+
 .dashboard-cell.move-target {
     border-color: color-mix(in srgb, var(--mud-palette-info) 26%, var(--flux-border));
 }
@@ -709,6 +713,11 @@
 
 .dashboard-cell-drop-mark ::deep .mud-icon-root {
     font-size: 15px;
+}
+
+.dashboard-grid-frame.adding-widget .dashboard-cell.drop-ready .dashboard-cell-drop-mark {
+    opacity: 0.58;
+    transform: scale(0.94);
 }
 
 .dashboard-grid-frame.adding-widget .dashboard-cell.drop-ready:hover .dashboard-cell-drop-mark,
