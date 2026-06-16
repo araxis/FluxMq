@@ -108,7 +108,10 @@
                 <div class="live-topic-list">
                     @if (LiveTopicRows.Count == 0)
                     {
-                        <div class="empty-topic-row">No topics yet</div>
+                        <div class="rail-empty-row">
+                            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+                            <span>No live topics</span>
+                        </div>
                     }
                     else
                     {
@@ -134,7 +137,17 @@
                         <span>@LastPayloadMeta</span>
                     }
                 </div>
-                <pre class="last-payload-body">@LastPayloadPreview</pre>
+                @if (LastPayloadMessage is null)
+                {
+                    <div class="last-payload-empty">
+                        <MudIcon Icon="@Icons.Material.Filled.HourglassEmpty" Size="Size.Small" />
+                        <span>No payload captured</span>
+                    </div>
+                }
+                else
+                {
+                    <pre class="last-payload-body">@LastPayloadPreview</pre>
+                }
             </div>
         </div>
     }
@@ -143,11 +156,18 @@
         <div class="inspector-panel fill">
             <div class="section-label">
                 <span>Live topics</span>
-                <span class="section-badge">@MessageSource.Count msgs</span>
+                @if (MessageSource.Count > 0)
+                {
+                    <span class="section-badge">@MessageSource.Count msgs</span>
+                }
             </div>
 
             <div class="topic-toolbar">
-                <button type="button" class="icon-toggle" @onclick="@(() => _treeView = !_treeView)">
+                <button type="button"
+                        class="icon-toggle"
+                        aria-label="@(_treeView ? "Show message list" : "Show topic tree")"
+                        title="@(_treeView ? "Show message list" : "Show topic tree")"
+                        @onclick="@(() => _treeView = !_treeView)">
                     <MudIcon Icon="@(_treeView ? Icons.Material.Filled.AccountTree : Icons.Material.Filled.ListAlt)"
                              Size="Size.Small" />
                 </button>
@@ -162,11 +182,21 @@
                 <TopicTreeView Messages="@MessageSource"
                                SelectedTopic="@_selectedTopic"
                                TopicSelected="@OnTopicSelected"
-                               Filter="@_filter" />
+                               Filter="@_filter"
+                               Compact="true">
+                    <EmptyContent>
+                        <div class="rail-empty-state">
+                            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+                            <strong>No live topics</strong>
+                            <span>Run a flow or publish a message.</span>
+                        </div>
+                    </EmptyContent>
+                </TopicTreeView>
             }
             else
             {
                 <MudTable T="MqttEnvelope" Items="@FilteredTableMessages" Dense="true" Hover="true"
+                          Class="topic-message-table"
                           Elevation="0" RowsPerPage="10" SelectOnRowClick="true"
                           SelectedItem="@Live.SelectedMessage"
                           SelectedItemChanged="@OnSelectionChanged">
@@ -183,7 +213,11 @@
                         <MudTd DataLabel="Bytes">@context.Payload.Length</MudTd>
                     </RowTemplate>
                     <NoRecordsContent>
-                        <EmptyView Message="No messages" />
+                        <div class="rail-empty-state">
+                            <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Small" />
+                            <strong>No messages captured</strong>
+                            <span>Clear the filter or wait for traffic.</span>
+                        </div>
                     </NoRecordsContent>
                     <PagerContent>
                         <MudTablePager HideRowsPerPage="true" />
@@ -194,11 +228,22 @@
     }
     else
     {
-        <div class="inspector-panel fill">
-            <PayloadInspectorPanel Title="Payload"
-                                   Topic="@Live.SelectedMessage?.Topic"
-                                   ReceivedAt="@Live.SelectedMessage?.ReceivedAt"
-                                   Payload="@Live.SelectedMessage?.Payload" />
+        <div class="inspector-panel fill inspect-panel">
+            @if (Live.SelectedMessage is null)
+            {
+                <div class="inspect-empty-state">
+                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
+                    <strong>No message selected</strong>
+                    <span>Choose a topic or message to inspect its payload.</span>
+                </div>
+            }
+            else
+            {
+                <PayloadInspectorPanel Title="Payload"
+                                       Topic="@Live.SelectedMessage.Topic"
+                                       ReceivedAt="@Live.SelectedMessage.ReceivedAt"
+                                       Payload="@Live.SelectedMessage.Payload" />
+            }
         </div>
     }
 </div>

@@ -346,6 +346,57 @@
     min-height: 0;
 }
 
+.rail-empty-row {
+    align-items: center;
+    color: var(--flux-text-subtle);
+    display: inline-flex;
+    font-size: 11.5px;
+    gap: 6px;
+    min-height: 30px;
+    padding: 0 3px;
+}
+
+.rail-empty-row ::deep .mud-icon-root {
+    color: var(--flux-text-subtle);
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
+}
+
+.rail-empty-state,
+.inspect-empty-state {
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    justify-content: center;
+    min-height: 118px;
+    padding: 16px;
+    text-align: center;
+}
+
+.rail-empty-state ::deep .mud-icon-root,
+.inspect-empty-state ::deep .mud-icon-root {
+    color: var(--flux-text-subtle);
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+}
+
+.rail-empty-state strong,
+.inspect-empty-state strong {
+    color: var(--mud-palette-text-primary);
+    font-size: 12.5px;
+    font-weight: 700;
+}
+
+.rail-empty-state span,
+.inspect-empty-state span {
+    color: var(--flux-text-muted);
+    font-size: 11.5px;
+}
+
 .live-topic-row {
     align-items: center;
     background: transparent;
@@ -394,12 +445,6 @@
     font-weight: 500;
 }
 
-.empty-topic-row {
-    color: var(--flux-text-subtle);
-    font-size: 11.5px;
-    padding: 5px 1px;
-}
-
 .last-payload-body {
     color: var(--mud-palette-text-primary);
     font-family: Consolas, "Courier New", monospace;
@@ -409,6 +454,60 @@
     max-height: 88px;
     overflow: auto;
     white-space: pre-wrap;
+}
+
+.last-payload-empty {
+    align-items: center;
+    color: var(--flux-text-subtle);
+    display: inline-flex;
+    font-size: 11.5px;
+    gap: 6px;
+    min-height: 28px;
+}
+
+.last-payload-empty ::deep .mud-icon-root {
+    color: var(--flux-text-subtle);
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
+}
+
+.inspect-panel {
+    padding: 8px;
+}
+
+.topic-message-table {
+    background: transparent;
+}
+
+.topic-message-table ::deep .mud-table {
+    background: transparent;
+}
+
+.topic-message-table ::deep .mud-table-container {
+    background: transparent;
+    border: 1px solid var(--flux-border);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.topic-message-table ::deep th,
+.topic-message-table ::deep td {
+    border-bottom-color: color-mix(in srgb, var(--flux-border) 58%, transparent);
+    font-size: 11.5px;
+    height: 30px;
+    padding: 3px 8px;
+}
+
+.topic-message-table ::deep thead th {
+    background: var(--flux-surface-2);
+    color: var(--flux-text-muted);
+    font-size: 10.5px;
+    font-weight: 700;
+}
+
+.topic-message-table ::deep .mud-table-pagination {
+    min-height: 32px;
 }
 
 .log-list {
