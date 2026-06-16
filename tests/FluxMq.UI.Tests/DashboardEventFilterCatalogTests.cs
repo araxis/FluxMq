@@ -2627,12 +2627,14 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".dashboard-grid-frame.empty-grid");
         css.ShouldContain(".dashboard-grid-empty-note");
         css.ShouldContain("position: absolute;");
-        css.ShouldContain("min-height: clamp(360px, 58vh, 520px);");
+        css.ShouldContain("grid-template-columns: auto minmax(0, 1fr);");
+        css.ShouldContain(".dashboard-grid-picker > .dashboard-command-label");
+        css.ShouldContain("min-height: clamp(320px, 52vh, 480px);");
         css.ShouldContain("overflow-x: auto;");
         css.ShouldContain(".dashboard-empty-actions");
         css.ShouldContain("--dashboard-grid-row-min: 86px;");
-        inspectorCss.ShouldContain("max-height: 320px;");
-        inspectorCss.ShouldContain("min-height: 188px;");
+        inspectorCss.ShouldContain("max-height: clamp(188px, 34vh, 280px);");
+        inspectorCss.ShouldContain("min-height: 164px;");
         inspectorRazor.ShouldNotContain("Use the grid to place widgets");
     }
 

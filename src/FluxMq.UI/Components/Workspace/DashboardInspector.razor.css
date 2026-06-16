@@ -219,13 +219,23 @@
         border-left: 0;
         border-top: 1px solid var(--flux-border);
         flex: 0 0 auto;
-        max-height: 320px;
-        min-height: 188px;
+        max-height: clamp(188px, 34vh, 280px);
+        min-height: 164px;
         width: 100%;
+    }
+
+    .dashboard-inspector-header {
+        min-height: 36px;
+        padding: 5px 8px;
+    }
+
+    .dashboard-inspector-icon {
+        height: 22px;
+        width: 22px;
     }
 
     .dashboard-inspector-empty {
         justify-content: flex-start;
-        padding: 12px;
+        padding: 10px 12px;
     }
 }
