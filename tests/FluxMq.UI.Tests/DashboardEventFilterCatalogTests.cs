@@ -3715,6 +3715,62 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".flux-app-item");
     }
 
+    [Fact]
+    public void ConnectionPanel_UsesFlatCompactConnectionRows()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "ConnectionPanel.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "ConnectionPanel.razor.css"));
+
+        markup.ShouldContain("aria-label=\"Connections panel\"");
+        markup.ShouldContain("connections-title-icon");
+        markup.ShouldContain("<strong>Connections</strong>");
+        markup.ShouldContain("@ConnectionCountLabel");
+        markup.ShouldContain("connections-empty-title");
+        markup.ShouldContain("connections-list");
+        markup.ShouldContain("role=\"list\"");
+        markup.ShouldContain("connection-name-line");
+        markup.ShouldContain("connection-endpoint");
+        markup.ShouldContain("connection-meta");
+        markup.ShouldContain("connection-error");
+        markup.ShouldContain("ToggleConnectionAsync(conn)");
+        markup.ShouldContain("PrimaryActionIcon(conn)");
+        markup.ShouldContain("PrimaryActionClass(conn)");
+        markup.ShouldContain("StatePillClass");
+        markup.ShouldContain("StateDotClass");
+        markup.ShouldContain("aria-label=\"@PrimaryActionLabel(conn)\"");
+        markup.ShouldContain("aria-label=\"@RemoveLabel(conn)\"");
+        markup.ShouldNotContain("MudTreeView");
+        markup.ShouldNotContain("MudTreeViewItem");
+        markup.ShouldNotContain("StateColor");
+        markup.ShouldNotContain("SeverityFor");
+
+        css.ShouldContain(".connections-panel");
+        css.ShouldContain(".connections-list");
+        css.ShouldContain(".connection-row");
+        css.ShouldContain("grid-template-columns: 8px minmax(0, 1fr) 56px;");
+        css.ShouldContain("min-height: 60px;");
+        css.ShouldContain(".connection-state.live");
+        css.ShouldContain(".connection-state.pending");
+        css.ShouldContain(".connection-state.faulted");
+        css.ShouldContain(".connection-row:hover .connection-actions");
+        css.ShouldContain(".connection-actions ::deep .connection-action-button.connect");
+        css.ShouldContain(".connection-actions ::deep .connection-remove-button");
+        css.ShouldContain("@media (max-width: 760px)");
+    }
+
     private static FlowEvent Event(
         string type,
         string? topic = null,
