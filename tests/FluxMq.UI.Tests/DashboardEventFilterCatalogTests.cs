@@ -2489,6 +2489,46 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void LiveInspectorPanel_UsesFlatCompactPublishRail()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "LiveInspectorPanel.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "LiveInspectorPanel.razor.css"));
+
+        markup.ShouldContain("Icons.Material.Filled.Search");
+        markup.ShouldContain("Icons.Material.Filled.Send");
+        markup.ShouldContain("Icons.Material.Filled.AccountTree");
+        markup.ShouldContain("DisplayedMessages.Count > 0");
+        markup.ShouldContain("LiveTopicRows.Count > 0");
+        markup.ShouldContain("LastPayloadMessage is not null");
+        markup.ShouldContain("publish-retain");
+        markup.ShouldNotContain("Recording");
+
+        css.ShouldContain("flex: 0 0 36px;");
+        css.ShouldContain(".inspector-tab ::deep .mud-icon-root");
+        css.ShouldContain("padding: 10px;");
+        css.ShouldContain("text-transform: none;");
+        css.ShouldContain("height: 28px;");
+        css.ShouldContain("min-height: 68px;");
+        css.ShouldContain(".publish-retain.active");
+        css.ShouldContain("height: 30px;");
+        css.ShouldContain("max-height: 88px;");
+        css.ShouldNotContain(".recording-label");
+    }
+
+    [Fact]
     public void DashboardDesigner_EditPreviewKeepsMetricValuePlacement()
     {
         var root = FindRepositoryRoot();
