@@ -2,67 +2,91 @@
 @inject LiveMqttWorkspaceService Live
 @inject IDialogService DialogService
 
-<MudStack Row="true" AlignItems="AlignItems.Center" Class="px-2 pt-1">
-    <MudIcon Icon="@Icons.Material.Filled.Cable" Size="Size.Small" Color="Color.Primary" />
-    <MudText Typo="Typo.subtitle2" Class="flex-grow-1">Connections</MudText>
-    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Add" OnClick="@AddConnectionAsync" />
-</MudStack>
+<div class="connections-panel" aria-label="Connections panel">
+    <div class="connections-head">
+        <div class="connections-title">
+            <span class="connections-title-icon" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.Cable" Size="Size.Small" />
+            </span>
+            <div class="connections-title-copy">
+                <strong>Connections</strong>
+                <span>@ConnectionCountLabel</span>
+            </div>
+        </div>
+        <MudTooltip Text="Add connection">
+            <MudIconButton Size="Size.Small"
+                           Icon="@Icons.Material.Filled.Add"
+                           Class="connection-add-button"
+                           aria-label="Add connection"
+                           OnClick="@AddConnectionAsync" />
+        </MudTooltip>
+    </div>
 
-@if (Live.Connections.Count == 0)
-{
-    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="px-4 pb-2">
-        No connections. Click + to add one.
-    </MudText>
-}
-else
-{
-    <MudTreeView T="ManagedConnection" Dense="true" Hover="true">
-        @foreach (var conn in Live.Connections)
-        {
-            <MudTreeViewItem T="ManagedConnection" Value="@conn">
-                <Content>
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="flex-grow-1 py-1">
-                        <MudIcon Icon="@Icons.Material.Filled.Circle"
-                                 Size="Size.Small"
-                                 Color="@StateColor(conn.State)"
-                                 Style="font-size:10px;min-width:10px" />
-                        <MudStack Spacing="0" Class="flex-grow-1">
-                            <MudText Typo="Typo.body2">@conn.Profile.Name</MudText>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                @conn.Profile.Host:@conn.Profile.Port
-                            </MudText>
-                            @if (!string.IsNullOrEmpty(conn.LastError))
+    @if (Live.Connections.Count == 0)
+    {
+        <div class="connections-empty">
+            <MudIcon Icon="@Icons.Material.Filled.Cable" Size="Size.Small" />
+            <div>
+                <div class="connections-empty-title">No connections</div>
+                <div class="connections-empty-copy">Add a broker connection to start live traffic.</div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="connections-list" role="list">
+            @foreach (var conn in Live.Connections)
+            {
+                <div class="@ConnectionRowClass(conn)" role="listitem" @key="conn.Id">
+                    <span class="@StateDotClass(conn.State)" aria-hidden="true"></span>
+
+                    <div class="connection-main">
+                        <div class="connection-name-line">
+                            <span class="connection-name">@ConnectionDisplayName(conn)</span>
+                            <span class="@StatePillClass(conn.State)">@StateLabel(conn.State)</span>
+                        </div>
+                        <div class="connection-endpoint">@ConnectionEndpoint(conn)</div>
+                        <div class="connection-meta">
+                            <span>@SubscriptionLabel(conn)</span>
+                            @if (conn.Profile.UseTls)
                             {
-                                <MudText Typo="Typo.caption" Color="Color.Error">@conn.LastError</MudText>
+                                <span>TLS</span>
                             }
-                        </MudStack>
-                        @if (conn.State is MqttClientState.Disconnected or MqttClientState.Faulted)
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(conn.LastError))
                         {
-                            <MudIconButton Size="Size.Small"
-                                           Icon="@Icons.Material.Filled.PlayArrow"
-                                           Color="Color.Success"
-                                           OnClick="@(() => ConnectAsync(conn.Id))" />
+                            <div class="connection-error" title="@conn.LastError">@conn.LastError</div>
                         }
-                        else
-                        {
-                            <MudIconButton Size="Size.Small"
-                                           Icon="@Icons.Material.Filled.Stop"
-                                           Color="Color.Error"
-                                           OnClick="@(() => DisconnectAsync(conn.Id))" />
-                        }
-                        <MudIconButton Size="Size.Small"
-                                       Icon="@Icons.Material.Filled.DeleteOutline"
-                                       OnClick="@(() => RemoveAsync(conn.Id))" />
-                    </MudStack>
-                </Content>
-            </MudTreeViewItem>
-        }
-    </MudTreeView>
-}
+                    </div>
 
+                    <div class="connection-actions">
+                        <MudTooltip Text="@PrimaryActionLabel(conn)">
+                            <MudIconButton Size="Size.Small"
+                                           Icon="@PrimaryActionIcon(conn)"
+                                           Class="@PrimaryActionClass(conn)"
+                                           aria-label="@PrimaryActionLabel(conn)"
+                                           OnClick="@(() => ToggleConnectionAsync(conn))" />
+                        </MudTooltip>
+                        <MudTooltip Text="Remove connection">
+                            <MudIconButton Size="Size.Small"
+                                           Icon="@Icons.Material.Filled.DeleteOutline"
+                                           Class="connection-remove-button"
+                                           aria-label="@RemoveLabel(conn)"
+                                           OnClick="@(() => RemoveAsync(conn.Id))" />
+                        </MudTooltip>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
 
 @code {
     protected override void OnInitialized() => Live.Changed += OnChanged;
+
+    private string ConnectionCountLabel => Live.Connections.Count == 1
+        ? "1 connection"
+        : $"{Live.Connections.Count.ToString(System.Globalization.CultureInfo.InvariantCulture)} connections";
 
     private async Task AddConnectionAsync()
     {
@@ -76,25 +100,75 @@ else
             Live.AddConnection(r.Profile, r.Subscription);
     }
 
+    private Task ToggleConnectionAsync(ManagedConnection connection)
+        => connection.State is MqttClientState.Disconnected or MqttClientState.Faulted
+            ? ConnectAsync(connection.Id)
+            : DisconnectAsync(connection.Id);
+
     private Task ConnectAsync(Guid id) => Live.ConnectAsync(id);
     private Task DisconnectAsync(Guid id) => Live.DisconnectAsync(id);
     private Task RemoveAsync(Guid id) => Live.RemoveConnectionAsync(id);
 
-    private static Color StateColor(MqttClientState state) => state switch
+    private static string ConnectionRowClass(ManagedConnection connection)
+        => connection.State == MqttClientState.Faulted
+            ? "connection-row faulted"
+            : "connection-row";
+
+    private static string ConnectionDisplayName(ManagedConnection connection)
+        => string.IsNullOrWhiteSpace(connection.ResourceName)
+            ? connection.Profile.Name
+            : connection.ResourceName;
+
+    private static string ConnectionEndpoint(ManagedConnection connection)
+        => $"{connection.Profile.Host}:{connection.Profile.Port.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+
+    private static string SubscriptionLabel(ManagedConnection connection)
+        => string.IsNullOrWhiteSpace(connection.Subscription)
+            ? "Sub #"
+            : $"Sub {connection.Subscription}";
+
+    private static string StateLabel(MqttClientState state) => state switch
     {
-        MqttClientState.Connected => Color.Success,
-        MqttClientState.Connecting or MqttClientState.Reconnecting => Color.Warning,
-        MqttClientState.Faulted => Color.Error,
-        _ => Color.Default
+        MqttClientState.Connected => "Connected",
+        MqttClientState.Connecting => "Connecting",
+        MqttClientState.Reconnecting => "Reconnecting",
+        MqttClientState.Faulted => "Faulted",
+        _ => "Disconnected"
     };
 
-    private static Severity SeverityFor(WorkspaceDiagnostic d) => d.Severity switch
+    private static string StatePillClass(MqttClientState state) => state switch
     {
-        "Error" => Severity.Error,
-        "Warning" => Severity.Warning,
-        "Info" => Severity.Info,
-        _ => Severity.Normal
+        MqttClientState.Connected => "connection-state live",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "connection-state pending",
+        MqttClientState.Faulted => "connection-state faulted",
+        _ => "connection-state"
     };
+
+    private static string StateDotClass(MqttClientState state) => state switch
+    {
+        MqttClientState.Connected => "connection-dot live",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "connection-dot pending",
+        MqttClientState.Faulted => "connection-dot faulted",
+        _ => "connection-dot"
+    };
+
+    private static string PrimaryActionIcon(ManagedConnection connection)
+        => connection.State is MqttClientState.Disconnected or MqttClientState.Faulted
+            ? Icons.Material.Filled.PlayArrow
+            : Icons.Material.Filled.Stop;
+
+    private static string PrimaryActionClass(ManagedConnection connection)
+        => connection.State is MqttClientState.Disconnected or MqttClientState.Faulted
+            ? "connection-action-button connect"
+            : "connection-action-button disconnect";
+
+    private static string PrimaryActionLabel(ManagedConnection connection)
+        => connection.State is MqttClientState.Disconnected or MqttClientState.Faulted
+            ? $"Connect {ConnectionDisplayName(connection)}"
+            : $"Disconnect {ConnectionDisplayName(connection)}";
+
+    private static string RemoveLabel(ManagedConnection connection)
+        => $"Remove {ConnectionDisplayName(connection)}";
 
     private void OnChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
 
