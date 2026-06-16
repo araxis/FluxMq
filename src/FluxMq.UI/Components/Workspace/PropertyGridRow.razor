@@ -1,11 +1,14 @@
 @namespace FluxMq.UI.Components.Workspace
+@using MudBlazor
 
 <div class="@RowClass" role="row">
     <div class="property-grid-name" title="@HelpText">
         <span>@Name</span>
         @if (!string.IsNullOrWhiteSpace(HelpText))
         {
-            <span class="property-grid-help" aria-label="@HelpText">?</span>
+            <span class="property-grid-help" aria-label="@HelpText">
+                <MudIcon Icon="@Icons.Material.Outlined.Info" Size="Size.Small" />
+            </span>
         }
     </div>
     <div class="property-grid-value">

@@ -1,5 +1,5 @@
 .property-grid {
-    --property-grid-name-width: min(124px, 42%);
+    --property-grid-name-width: min(116px, 39%);
     background: var(--flux-surface);
     border-top: 1px solid var(--flux-border);
     container-name: property-grid;
@@ -55,14 +55,18 @@
     left: 3px;
     position: absolute;
     top: 0;
+    opacity: 0;
+    transition: opacity 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
     width: 1px;
 }
 
+.property-grid:hover .property-grid-column-resizer::after,
 .property-grid-column-resizer:hover::after,
 .property-grid-column-resizer:focus-visible::after,
 .property-grid.resizing .property-grid-column-resizer::after {
     background: var(--flux-accent);
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--flux-accent) 14%, transparent);
+    opacity: 1;
 }
 
 .property-grid-column-resizer:focus-visible {
@@ -70,14 +74,14 @@
 }
 
 .property-grid-group {
-    border-bottom: 1px solid color-mix(in srgb, var(--flux-border) 66%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border) 48%, transparent);
     min-width: 0;
 }
 
 .property-grid-group-header {
     align-items: center;
     appearance: none;
-    background: color-mix(in srgb, var(--flux-surface-2) 22%, var(--flux-surface));
+    background: color-mix(in srgb, var(--flux-surface) 96%, transparent);
     border: 0;
     border-bottom: 1px solid color-mix(in srgb, var(--flux-border) 38%, transparent);
     box-sizing: border-box;
@@ -87,8 +91,8 @@
     font-size: 11px;
     font-weight: 720;
     gap: 0;
-    grid-template-columns: 22px calc(var(--property-grid-name-width) - 22px) minmax(0, 1fr);
-    min-height: 25px;
+    grid-template-columns: 20px calc(var(--property-grid-name-width) - 20px) minmax(0, 1fr);
+    min-height: 23px;
     min-width: 0;
     padding: 0;
     position: sticky;
@@ -99,7 +103,7 @@
 }
 
 .property-grid-group-header:hover {
-    background: color-mix(in srgb, var(--flux-surface-2) 42%, var(--flux-surface));
+    background: color-mix(in srgb, var(--flux-surface-2) 30%, var(--flux-surface));
 }
 
 .property-grid-group-header:focus-visible {
@@ -120,14 +124,14 @@
 }
 
 .property-grid-group-toggle ::deep .mud-icon-root {
-    font-size: 16px;
-    height: 16px;
-    width: 16px;
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
 }
 
 .property-grid-group-title {
     color: var(--mud-palette-text-primary);
-    font-size: 11px;
+    font-size: 10.75px;
     font-weight: 760;
     min-width: 0;
     overflow: hidden;
@@ -146,13 +150,13 @@
     font-size: 10px;
     font-weight: 720;
     grid-column: 3 / 4;
-    height: 17px;
+    height: 15px;
     justify-content: center;
     justify-self: end;
     line-height: 1;
-    margin-right: 7px;
-    min-width: 18px;
-    padding: 0 4px;
+    margin-right: 6px;
+    min-width: 16px;
+    padding: 0 3px;
     white-space: nowrap;
 }
 

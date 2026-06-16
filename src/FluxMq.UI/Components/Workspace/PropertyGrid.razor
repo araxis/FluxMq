@@ -53,9 +53,9 @@
 </div>
 
 @code {
-    private const double DefaultNameColumnWidth = 124;
-    private const double MinNameColumnWidth = 88;
-    private const double MaxNameColumnWidth = 190;
+    private const double DefaultNameColumnWidth = 116;
+    private const double MinNameColumnWidth = 78;
+    private const double MaxNameColumnWidth = 176;
 
     [Parameter]
     public IReadOnlyList<PropertyGridGroup> Groups { get; set; } = [];
@@ -78,7 +78,7 @@
         : "property-grid";
 
     private string GridStyle
-        => $"--property-grid-name-width: min({_nameColumnWidth.ToString("0", CultureInfo.InvariantCulture)}px, 42%);";
+        => $"--property-grid-name-width: min({_nameColumnWidth.ToString("0", CultureInfo.InvariantCulture)}px, 39%);";
 
     private string NameColumnWidthValue
         => _nameColumnWidth.ToString("0", CultureInfo.InvariantCulture);
