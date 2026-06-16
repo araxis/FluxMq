@@ -128,16 +128,20 @@
     {
         <div class="dashboard-empty">
             <div class="dashboard-empty-panel">
-                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="dashboard-empty-icon" />
+                <span class="dashboard-empty-icon-tile" aria-hidden="true">
+                    <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="dashboard-empty-icon" />
+                </span>
                 <div class="dashboard-empty-copy">
                     <span>No dashboard selected</span>
                     <small>@DashboardEmptyText</small>
                 </div>
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           Size="Size.Small"
-                           StartIcon="@Icons.Material.Filled.Add"
-                           OnClick="@AddDashboardAsync">New dashboard</MudButton>
+                <div class="dashboard-empty-actions">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="@AddDashboardAsync">New dashboard</MudButton>
+                </div>
             </div>
         </div>
     }
@@ -155,16 +159,6 @@
                     <div class="dashboard-drop-status" aria-live="polite">
                         <MudIcon Icon="@DashboardDragStatusIcon" Size="Size.Small" />
                         <span>@DashboardDragStatusText</span>
-                    </div>
-                }
-                @if (!HasDashboardWidgets)
-                {
-                    <div class="dashboard-grid-empty-note @(HasActiveDashboardDrag ? "dragging" : null)">
-                        <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" />
-                        <div>
-                            <span>No widgets yet</span>
-                            <small>Drop a widget onto a cell to start.</small>
-                        </div>
                     </div>
                 }
                 <div class="dashboard-grid-stage">
@@ -203,6 +197,16 @@
                     }
                 </div>
                 <div class="dashboard-grid" style="@GridStyle">
+                    @if (!HasDashboardWidgets)
+                    {
+                        <div class="dashboard-grid-empty-note @(HasActiveDashboardDrag ? "dragging" : null)">
+                            <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" />
+                            <div>
+                                <span>No widgets yet</span>
+                                <small>Ready for the first widget.</small>
+                            </div>
+                        </div>
+                    }
                     @foreach (var cell in VisibleCells)
                     {
                         var currentCell = cell;
@@ -928,7 +932,13 @@
         => IsDashboardComponentDrag || IsDashboardMoveDrag;
 
     private string DashboardGridFrameClass
-        => $"dashboard-grid-frame {(IsDashboardComponentDrag ? "adding-widget" : null)} {(IsDashboardMoveDrag ? "moving-widget" : null)}";
+        => string.Join(" ", new[]
+        {
+            "dashboard-grid-frame",
+            HasDashboardWidgets ? null : "empty-grid",
+            IsDashboardComponentDrag ? "adding-widget" : null,
+            IsDashboardMoveDrag ? "moving-widget" : null
+        }.Where(static value => !string.IsNullOrWhiteSpace(value)));
 
     private string DashboardDragStatusIcon
         => IsDashboardMoveDrag ? Icons.Material.Filled.OpenWith : Icons.Material.Filled.Add;
