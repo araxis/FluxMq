@@ -3663,6 +3663,58 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".app-structure-menu ::deep .app-menu-danger");
     }
 
+    [Fact]
+    public void AppsPanel_UsesFlatCompactOpenAppRows()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "AppsPanel.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "AppsPanel.razor.css"));
+
+        markup.ShouldContain("aria-label=\"Open apps panel\"");
+        markup.ShouldContain("apps-panel-title-icon");
+        markup.ShouldContain("<strong>Open Apps</strong>");
+        markup.ShouldContain("@ProjectCountLabel");
+        markup.ShouldContain("apps-empty-title");
+        markup.ShouldContain("role=\"list\"");
+        markup.ShouldContain("role=\"button\"");
+        markup.ShouldContain("tabindex=\"0\"");
+        markup.ShouldContain("SelectAppFromKeyboard(args, a)");
+        markup.ShouldContain("app-tile-meta");
+        markup.ShouldContain("app-state active");
+        markup.ShouldContain("app-state unsaved");
+        markup.ShouldContain("aria-label=\"@CloseLabel(a)\"");
+        markup.ShouldContain("private static string BuildAppMeta");
+        markup.ShouldContain("private static string FileLabel");
+        markup.ShouldNotContain("MudList");
+        markup.ShouldNotContain("MudListItem");
+        markup.ShouldNotContain("flux-app-item");
+
+        css.ShouldContain(".apps-panel");
+        css.ShouldContain(".apps-list");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 28px;");
+        css.ShouldContain("min-height: 58px;");
+        css.ShouldContain(".app-tile-main");
+        css.ShouldContain("grid-template-columns: 24px minmax(0, 1fr) auto;");
+        css.ShouldContain(".app-tile-main:focus-visible");
+        css.ShouldContain(".app-tile-close");
+        css.ShouldContain(".app-tile:hover .app-tile-close");
+        css.ShouldContain(".app-state.unsaved");
+        css.ShouldContain("@media (max-width: 760px)");
+        css.ShouldNotContain(".flux-app-item");
+    }
+
     private static FlowEvent Event(
         string type,
         string? topic = null,
