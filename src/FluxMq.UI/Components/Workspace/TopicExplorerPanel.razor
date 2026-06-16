@@ -1,7 +1,7 @@
 @inject LiveMqttWorkspaceService Live
 
 <div class="topic-explorer">
-    <section class="topic-explorer-tree">
+    <section class="topic-explorer-tree" aria-label="Topic tree">
         <div class="topic-explorer-header">
             <div class="topic-explorer-title">
                 <span class="topic-explorer-title-icon">
@@ -56,7 +56,8 @@
                            SelectedTopic="@_selectedTopic"
                            TopicSelected="@OnTopicSelected"
                            Filter="@_filter"
-                           EmptyMessage="@TreeEmptyMessage">
+                           EmptyMessage="@TreeEmptyMessage"
+                           Compact="true">
                 <EmptyContent>
                     <div class="topic-empty-state">
                         <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
@@ -68,7 +69,7 @@
         </div>
     </section>
 
-    <section class="topic-explorer-detail">
+    <section class="topic-explorer-detail" aria-label="Topic messages and payload">
         <div class="topic-detail-strip">
             <div class="topic-detail-heading">
                 <h3>@SelectedTopicLabel</h3>
@@ -85,6 +86,7 @@
                       Items="@FilteredMessages"
                       Dense="true"
                       Hover="true"
+                      Class="topic-message-grid"
                       Elevation="0"
                       RowsPerPage="12"
                       SelectOnRowClick="true"
@@ -120,10 +122,21 @@
         </div>
 
         <div class="topic-payload-frame">
-            <PayloadInspectorPanel Title="Payload"
-                                   Topic="@SelectedMessage?.Topic"
-                                   ReceivedAt="@SelectedMessage?.ReceivedAt"
-                                   Payload="@SelectedMessage?.Payload" />
+            @if (SelectedMessage is null)
+            {
+                <div class="topic-payload-empty">
+                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
+                    <strong>No payload selected</strong>
+                    <span>Select a message to inspect formatted, raw, hex, and metadata views.</span>
+                </div>
+            }
+            else
+            {
+                <PayloadInspectorPanel Title="Payload"
+                                       Topic="@SelectedMessage.Topic"
+                                       ReceivedAt="@SelectedMessage.ReceivedAt"
+                                       Payload="@SelectedMessage.Payload" />
+            }
         </div>
     </section>
 </div>

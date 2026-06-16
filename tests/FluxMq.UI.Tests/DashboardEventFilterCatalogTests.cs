@@ -2546,6 +2546,47 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void TopicExplorerPanel_UsesFlatCompactWorkspaceChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "TopicExplorerPanel.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "TopicExplorerPanel.razor.css"));
+
+        markup.ShouldContain("aria-label=\"Topic tree\"");
+        markup.ShouldContain("aria-label=\"Topic messages and payload\"");
+        markup.ShouldContain("Compact=\"true\"");
+        markup.ShouldContain("Class=\"topic-message-grid\"");
+        markup.ShouldContain("SelectedMessage is null");
+        markup.ShouldContain("topic-payload-empty");
+        markup.ShouldContain("No payload selected");
+        markup.ShouldContain("SelectedMessage.Topic");
+        markup.ShouldNotContain("Topic=\"@SelectedMessage?.Topic\"");
+
+        css.ShouldContain("grid-template-columns: minmax(320px, 384px) minmax(0, 1fr);");
+        css.ShouldContain("padding: 8px 12px;");
+        css.ShouldContain("height: 26px;");
+        css.ShouldContain(".topic-search ::deep .mud-input-root");
+        css.ShouldContain(".topic-message-grid ::deep .mud-table-container");
+        css.ShouldContain(".topic-message-grid ::deep th,");
+        css.ShouldContain("min-height: 32px;");
+        css.ShouldContain(".topic-payload-empty");
+        css.ShouldContain("min-height: 180px;");
+        css.ShouldContain("flex-basis: min(34%, 280px);");
+    }
+
+    [Fact]
     public void DashboardDesigner_EditPreviewKeepsMetricValuePlacement()
     {
         var root = FindRepositoryRoot();
