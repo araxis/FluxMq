@@ -221,8 +221,18 @@
                                 <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" />
                             </span>
                             <div>
-                                <span>No widgets yet</span>
+                                <span>@EmptyGridTitle</span>
                                 <small>@EmptyGridHint</small>
+                                <span class="dashboard-grid-empty-steps" aria-label="First widget path">
+                                    <span>
+                                        <MudIcon Icon="@Icons.Material.Filled.ViewModule" Size="Size.Small" />
+                                        Catalog widget
+                                    </span>
+                                    <span>
+                                        <MudIcon Icon="@Icons.Material.Filled.AdsClick" Size="Size.Small" />
+                                        Empty cell
+                                    </span>
+                                </span>
                             </div>
                         </div>
                     }
@@ -541,9 +551,11 @@
         ? "Create a dashboard to lay out live widgets."
         : "Dashboard layouts and live widgets appear here.";
 
+    private string EmptyGridTitle => HasActiveDashboardDrag ? "Place the first widget" : "Start with a widget";
+
     private string EmptyGridHint => HasActiveDashboardDrag
-        ? "Release on a cell to place the widget."
-        : "Drag widgets from the catalog into any cell.";
+        ? "Release on a highlighted cell to place it."
+        : "Drag from the catalog, or select a cell and click a widget.";
 
     private static string DashboardCountLabel(int count)
         => count == 1 ? "1 dashboard available" : $"{count.ToString(CultureInfo.InvariantCulture)} dashboards available";
