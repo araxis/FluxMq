@@ -3111,6 +3111,41 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardDesigner_UsesFirstWidgetEmptyGridOnboarding()
+    {
+        var root = FindRepositoryRoot();
+        var razor = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor.css"));
+
+        razor.ShouldContain("@EmptyGridTitle");
+        razor.ShouldContain("dashboard-grid-empty-steps");
+        razor.ShouldContain("Catalog widget");
+        razor.ShouldContain("Empty cell");
+        razor.ShouldContain("Drag from the catalog, or select a cell and click a widget.");
+        razor.ShouldContain("Release on a highlighted cell to place it.");
+
+        css.ShouldContain(".dashboard-grid-empty-steps");
+        css.ShouldContain("grid-template-columns: 28px minmax(0, 1fr);");
+        css.ShouldContain(".dashboard-grid-frame.empty-grid:not(.adding-widget) .dashboard-cell-drop-mark");
+        css.ShouldContain(".dashboard-grid-frame.empty-grid:not(.adding-widget) .dashboard-cell:hover .dashboard-cell-drop-mark");
+        css.ShouldContain("opacity: 0.32;");
+        css.ShouldContain("opacity: 0.78;");
+        css.ShouldContain(".dashboard-grid-empty-steps span");
+    }
+
+    [Fact]
     public void DashboardCatalogHandoff_UsesDirectWidgetEditAndPlacementCues()
     {
         var root = FindRepositoryRoot();
