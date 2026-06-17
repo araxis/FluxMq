@@ -3154,6 +3154,49 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardTrackEditorDialog_UsesCompactFlatSizingWorkflow()
+    {
+        var root = FindRepositoryRoot();
+        var razor = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "DashboardTrackEditorDialog.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "DashboardTrackEditorDialog.razor.css"));
+
+        razor.ShouldContain("dashboard-track-editor-title");
+        razor.ShouldContain("dashboard-track-editor-preview");
+        razor.ShouldContain("dashboard-track-editor-toggle");
+        razor.ShouldContain("<MudToggleGroup T=\"string\"");
+        razor.ShouldContain("SelectionMode=\"SelectionMode.SingleSelection\"");
+        razor.ShouldContain("@TrackCode");
+        razor.ShouldContain("@CurrentSummary");
+        razor.ShouldContain("@ResultSize");
+        razor.ShouldContain("@ModeDescription");
+        razor.ShouldContain("StartIcon=\"@Icons.Material.Filled.RestartAlt\"");
+        razor.ShouldContain("Disabled=\"@(!CanSubmit)\"");
+
+        css.ShouldContain(".dashboard-track-editor-preview");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 18px minmax(0, 1fr);");
+        css.ShouldContain(".dashboard-track-editor-toggle ::deep .mud-button-group-root");
+        css.ShouldContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
+        css.ShouldContain(".dashboard-track-editor-fields");
+        css.ShouldContain(".dashboard-track-editor-note");
+        css.ShouldContain(".dashboard-track-editor-actions");
+        css.ShouldContain("@media (max-width: 520px)");
+    }
+
+    [Fact]
     public void DashboardDesigner_UsesFirstWidgetEmptyGridOnboarding()
     {
         var root = FindRepositoryRoot();
