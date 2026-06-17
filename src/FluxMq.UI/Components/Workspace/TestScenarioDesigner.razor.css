@@ -25,22 +25,28 @@
     align-items: center;
     background: var(--flux-surface);
     border-bottom: 1px solid var(--flux-border);
-    display: flex;
+    display: grid;
     flex: 0 0 auto;
-    gap: 8px;
-    min-height: 44px;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-height: 50px;
     min-width: 0;
     padding: 7px 10px;
 }
 
-.test-scenario-actions {
+.test-scenario-actions,
+.test-scenario-report-actions,
+.test-scenario-build-actions,
+.test-run-status {
     align-items: center;
     display: flex;
+}
+
+.test-scenario-actions {
     flex: 0 1 auto;
     flex-wrap: wrap;
     gap: 5px;
     justify-content: flex-end;
-    margin-left: auto;
     min-width: 0;
 }
 
@@ -48,12 +54,28 @@
     align-items: center;
     display: flex;
     flex: 1 1 auto;
-    gap: 8px;
+    gap: 10px;
     min-width: 0;
 }
 
 .test-scenario-heading-icon {
+    align-items: center;
+    background: color-mix(in srgb, var(--mud-palette-warning) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-warning) 28%, var(--flux-border));
+    border-radius: 6px;
     color: var(--mud-palette-warning);
+    display: flex;
+    flex: 0 0 30px;
+    height: 30px;
+    justify-content: center;
+    width: 30px;
+}
+
+.test-scenario-title-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
 }
 
 .test-scenario-title {
@@ -67,10 +89,97 @@
     white-space: nowrap;
 }
 
-.test-scenario-meta {
+.test-scenario-meta-strip {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-width: 0;
+}
+
+.test-scenario-meta-strip span,
+.test-run-status {
+    background: var(--flux-surface-2);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-radius: 5px;
     color: var(--mud-palette-text-secondary);
-    font-size: 11px;
-    margin-top: 2px;
+    font-size: 10.5px;
+    font-weight: 750;
+    height: 24px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.test-scenario-meta-strip span {
+    align-items: center;
+    display: inline-flex;
+    max-width: 132px;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0 8px;
+    text-overflow: ellipsis;
+}
+
+.test-run-status {
+    gap: 5px;
+    padding: 0 8px;
+}
+
+.test-run-status.passed {
+    background: color-mix(in srgb, var(--flux-accent) 12%, transparent);
+    border-color: color-mix(in srgb, var(--flux-accent) 38%, transparent);
+    color: var(--flux-accent);
+}
+
+.test-run-status.failed {
+    background: color-mix(in srgb, var(--mud-palette-error) 12%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-error) 42%, transparent);
+    color: var(--mud-palette-error);
+}
+
+.test-run-status.canceled {
+    background: color-mix(in srgb, var(--mud-palette-warning) 12%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-warning) 42%, transparent);
+    color: var(--mud-palette-warning);
+}
+
+.test-run-status.history,
+.test-run-status.latest {
+    background: color-mix(in srgb, var(--mud-palette-info) 9%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-info) 22%, var(--flux-border));
+    color: var(--mud-palette-text-primary);
+}
+
+.test-scenario-report-actions,
+.test-scenario-build-actions {
+    background: var(--flux-surface-2);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-radius: 6px;
+    gap: 1px;
+    height: 30px;
+    padding: 1px;
+}
+
+.test-scenario-build-actions {
+    gap: 4px;
+}
+
+.test-scenario-report-actions ::deep .mud-icon-button,
+.test-scenario-build-actions ::deep .mud-icon-button,
+.test-scenario-actions ::deep .test-scenario-run-action {
+    border-radius: 5px;
+}
+
+.test-scenario-report-actions ::deep .mud-icon-button,
+.test-scenario-build-actions ::deep .mud-icon-button {
+    height: 26px;
+    padding: 4px;
+    width: 26px;
+}
+
+.test-scenario-actions ::deep .test-scenario-run-action {
+    min-height: 28px;
+    text-transform: none;
 }
 
 .test-scenario-empty {
@@ -376,8 +485,7 @@
     color: var(--mud-palette-info);
 }
 
-.test-step-status,
-.test-run-status {
+.test-step-status {
     border: 1px solid var(--flux-border-strong);
     border-radius: 5px;
     color: var(--mud-palette-text-secondary);
@@ -389,12 +497,7 @@
     text-transform: uppercase;
 }
 
-.test-run-status {
-    font-size: 11px;
-}
-
-.test-step-status.passed,
-.test-run-status.passed {
+.test-step-status.passed {
     background: color-mix(in srgb, var(--flux-accent) 12%, transparent);
     border-color: color-mix(in srgb, var(--flux-accent) 38%, transparent);
     color: var(--flux-accent);
@@ -407,15 +510,13 @@
 }
 
 .test-step-status.failed,
-.test-step-status.timed-out,
-.test-run-status.failed {
+.test-step-status.timed-out {
     background: color-mix(in srgb, var(--mud-palette-error) 12%, transparent);
     border-color: color-mix(in srgb, var(--mud-palette-error) 42%, transparent);
     color: var(--mud-palette-error);
 }
 
-.test-step-status.canceled,
-.test-run-status.canceled {
+.test-step-status.canceled {
     background: color-mix(in srgb, var(--mud-palette-warning) 12%, transparent);
     border-color: color-mix(in srgb, var(--mud-palette-warning) 42%, transparent);
     color: var(--mud-palette-warning);
@@ -493,14 +594,22 @@
 @media (max-width: 760px) {
     .test-scenario-header {
         align-items: flex-start;
-        flex-direction: column;
+        grid-template-columns: minmax(0, 1fr);
         padding: 8px 12px;
     }
 
     .test-scenario-actions {
         justify-content: flex-start;
-        margin-left: 0;
         width: 100%;
+    }
+
+    .test-scenario-report-actions,
+    .test-scenario-build-actions {
+        width: 100%;
+    }
+
+    .test-scenario-report-actions {
+        justify-content: space-between;
     }
 
     .test-phase-lanes {
