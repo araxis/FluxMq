@@ -2949,6 +2949,52 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardDesigner_UsesFlatCompactDashboardToolbar()
+    {
+        var root = FindRepositoryRoot();
+        var razor = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor.css"));
+
+        razor.ShouldContain("role=\"region\" aria-label=\"Dashboard designer\"");
+        razor.ShouldContain("dashboard-meta-strip");
+        razor.ShouldContain("@DashboardStatusLabel");
+        razor.ShouldContain("@GridSizeLabel");
+        razor.ShouldContain("@CellCountLabel");
+        razor.ShouldContain("@WidgetCountLabel");
+        razor.ShouldContain("dashboard-mode-shell");
+        razor.ShouldContain("DashboardModeStateClass");
+        razor.ShouldContain("dashboard-tool-group dashboard-tool-group-grid");
+        razor.ShouldContain("dashboard-tool-group dashboard-tool-group-selection");
+        razor.ShouldContain("aria-label=\"Dashboard layout editor\"");
+        razor.ShouldContain("role=\"grid\" aria-label=\"Dashboard layout grid\"");
+        razor.ShouldContain("aria-label=\"Live dashboard grid\"");
+        razor.ShouldContain("aria-label=\"@CellAriaLabel(currentCell)\"");
+        razor.ShouldContain("private string CellAriaLabel");
+
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
+        css.ShouldContain(".dashboard-meta-strip span");
+        css.ShouldContain(".dashboard-mode-shell");
+        css.ShouldContain(".dashboard-mode-state.edit");
+        css.ShouldContain(".dashboard-mode-state.live");
+        css.ShouldContain(".dashboard-tool-group");
+        css.ShouldContain("min-height: 34px;");
+        css.ShouldContain("@media (max-width: 980px)");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
+    }
+
+    [Fact]
     public void DashboardDesigner_EditGridUsesFlatEditingStateAffordances()
     {
         var root = FindRepositoryRoot();
@@ -2973,11 +3019,17 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("drop-ready");
         razor.ShouldContain("move-target");
         razor.ShouldContain("dashboard-cell-drop-mark");
+        razor.ShouldContain("role=\"status\" aria-live=\"polite\"");
+        razor.ShouldContain("dashboard-grid-empty-icon");
+        razor.ShouldContain("@EmptyGridHint");
         css.ShouldContain("grid-template-columns: 54px minmax(0, 1fr);");
         css.ShouldContain("grid-template-rows: 40px minmax(0, 1fr);");
         css.ShouldContain("overscroll-behavior: contain;");
         css.ShouldContain(".dashboard-grid-frame.adding-widget .dashboard-grid");
         css.ShouldContain(".dashboard-drop-status");
+        css.ShouldContain(".dashboard-grid-empty-icon");
+        css.ShouldContain("left: 50%;");
+        css.ShouldContain("transform: translateX(-50%);");
         css.ShouldContain(".dashboard-track-handle:focus-visible");
         css.ShouldContain(".dashboard-cell.drop-ready");
         css.ShouldContain(".dashboard-grid-frame.adding-widget .dashboard-cell.drop-ready");
@@ -3027,16 +3079,19 @@ public sealed class DashboardEventFilterCatalogTests
 
         razor.ShouldContain("dashboard-empty-icon-tile");
         razor.ShouldContain("dashboard-empty-actions");
+        razor.ShouldContain("@EmptyDashboardTitle");
+        razor.ShouldContain("@EmptyDashboardActionLabel");
         razor.ShouldContain("\"empty-grid\"");
-        razor.ShouldContain("Ready for the first widget.");
+        razor.ShouldContain("@EmptyGridHint");
         css.ShouldContain(".dashboard-grid-frame.empty-grid");
         css.ShouldContain(".dashboard-grid-empty-note");
         css.ShouldContain("position: absolute;");
-        css.ShouldContain("grid-template-columns: auto minmax(0, 1fr);");
+        css.ShouldContain("grid-template-columns: 34px minmax(0, 1fr) auto;");
         css.ShouldContain(".dashboard-grid-picker > .dashboard-command-label");
         css.ShouldContain("min-height: clamp(320px, 52vh, 480px);");
         css.ShouldContain("overflow-x: auto;");
         css.ShouldContain(".dashboard-empty-actions");
+        css.ShouldContain("max-width: min(100%, 560px);");
         css.ShouldContain("--dashboard-grid-row-min: 86px;");
         inspectorCss.ShouldContain("max-height: clamp(188px, 34vh, 280px);");
         inspectorCss.ShouldContain("min-height: 164px;");

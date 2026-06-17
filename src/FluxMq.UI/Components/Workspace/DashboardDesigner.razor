@@ -5,114 +5,129 @@
 @inject DragStateService DragState
 @inject DashboardWidgetRegistry DashboardWidgets
 
-<div class="dashboard-designer">
+<div class="dashboard-designer" role="region" aria-label="Dashboard designer">
     <div class="dashboard-toolbar">
         <div class="dashboard-heading">
-            <span class="dashboard-heading-icon-tile">
+            <span class="dashboard-heading-icon-tile" aria-hidden="true">
                 <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="dashboard-heading-icon" />
             </span>
             <div class="dashboard-heading-copy">
                 <div class="dashboard-title">@DashboardTitle</div>
-                <div class="dashboard-meta">@DashboardMeta</div>
+                <div class="dashboard-meta-strip" aria-label="Dashboard summary">
+                    <span>@DashboardStatusLabel</span>
+                    @if (_layout is null)
+                    {
+                        <span>@DashboardMeta</span>
+                    }
+                    else
+                    {
+                        <span>@GridSizeLabel</span>
+                        <span>@CellCountLabel</span>
+                        <span>@WidgetCountLabel</span>
+                    }
+                </div>
             </div>
         </div>
 
         @if (_layout is not null)
         {
-            <div class="dashboard-toolbar-actions">
-                <MudToggleGroup T="string" @bind-Value="DashboardMode" Size="Size.Small" Outlined="true" Color="Color.Primary" Class="dashboard-mode-toggle">
-                    <MudToggleItem Value="@DashboardModeEdit" UnselectedIcon="@Icons.Material.Filled.Edit" SelectedIcon="@Icons.Material.Filled.Edit">Edit</MudToggleItem>
-                    <MudToggleItem Value="@DashboardModeLive" UnselectedIcon="@Icons.Material.Filled.Visibility" SelectedIcon="@Icons.Material.Filled.Visibility">Live</MudToggleItem>
-                </MudToggleGroup>
+            <div class="dashboard-toolbar-actions" aria-label="Dashboard mode and commands">
+                <div class="dashboard-mode-shell">
+                    <MudToggleGroup T="string" @bind-Value="DashboardMode" Size="Size.Small" Outlined="true" Color="Color.Primary" Class="dashboard-mode-toggle">
+                        <MudToggleItem Value="@DashboardModeEdit" UnselectedIcon="@Icons.Material.Filled.Edit" SelectedIcon="@Icons.Material.Filled.Edit">Edit</MudToggleItem>
+                        <MudToggleItem Value="@DashboardModeLive" UnselectedIcon="@Icons.Material.Filled.Visibility" SelectedIcon="@Icons.Material.Filled.Visibility">Live</MudToggleItem>
+                    </MudToggleGroup>
+                    <span class="@($"dashboard-mode-state {DashboardModeStateClass}")">@DashboardModeLabel</span>
+                </div>
 
                 @if (IsEditMode)
                 {
-                    <div class="dashboard-command-strip">
-                        <div class="dashboard-grid-picker dashboard-grid-size-control">
-                            <MudTooltip Text="Set grid layout">
-                                <MudIconButton Icon="@Icons.Material.Filled.GridOn"
-                                               Variant="Variant.Outlined"
-                                               Color="Color.Primary"
-                                               Size="Size.Small"
-                                               Class="dashboard-tool-button"
-                                               OnClick="@ToggleGridPicker" />
-                            </MudTooltip>
-                            <span class="dashboard-command-label">@GridPickerSummary</span>
+                    <div class="dashboard-command-strip" aria-label="Dashboard edit commands">
+                        <div class="dashboard-tool-group dashboard-tool-group-grid" aria-label="Grid layout commands">
+                            <div class="dashboard-grid-picker dashboard-grid-size-control">
+                                <MudTooltip Text="Set grid layout">
+                                    <MudIconButton Icon="@Icons.Material.Filled.GridOn"
+                                                   Variant="Variant.Outlined"
+                                                   Color="Color.Primary"
+                                                   Size="Size.Small"
+                                                   Class="dashboard-tool-button"
+                                                   OnClick="@ToggleGridPicker" />
+                                </MudTooltip>
+                                <span class="dashboard-command-label">@GridPickerSummary</span>
 
-                            @if (_isGridPickerOpen)
-                            {
-                                <button type="button" class="dashboard-picker-backdrop" @onclick="@CloseGridPicker"></button>
-                                <div class="dashboard-grid-picker-popover">
-                                    <div class="dashboard-grid-picker-cells">
-                                        @foreach (var row in PickerRows)
-                                        {
-                                            @foreach (var column in PickerColumns)
+                                @if (_isGridPickerOpen)
+                                {
+                                    <button type="button" class="dashboard-picker-backdrop" @onclick="@CloseGridPicker"></button>
+                                    <div class="dashboard-grid-picker-popover">
+                                        <div class="dashboard-grid-picker-cells">
+                                            @foreach (var row in PickerRows)
                                             {
-                                                var r = row;
-                                                var c = column;
-                                                <button type="button"
-                                                        class="@GridPickerCellClass(r, c)"
-                                                        title="@($"Set grid to {c} columns x {r} rows")"
-                                                        @onmouseenter="@(() => PreviewGrid(r, c))"
-                                                        @onclick="@(() => PickGrid(r, c))">
-                                                </button>
+                                                @foreach (var column in PickerColumns)
+                                                {
+                                                    var r = row;
+                                                    var c = column;
+                                                    <button type="button"
+                                                            class="@GridPickerCellClass(r, c)"
+                                                            title="@($"Set grid to {c} columns x {r} rows")"
+                                                            @onmouseenter="@(() => PreviewGrid(r, c))"
+                                                            @onclick="@(() => PickGrid(r, c))">
+                                                    </button>
+                                                }
                                             }
-                                        }
+                                        </div>
+                                        <div class="dashboard-picker-label">@GridPickerLabel</div>
                                     </div>
-                                    <div class="dashboard-picker-label">@GridPickerLabel</div>
-                                </div>
-                            }
+                                }
+                            </div>
                         </div>
 
-                        <span class="dashboard-toolbar-separator"></span>
-
-                        <MudTooltip Text="Merge selected cells">
-                            <MudIconButton Icon="@Icons.Material.Filled.ViewColumn"
-                                           Size="Size.Small"
-                                           Disabled="@(!CanMerge)"
-                                           Class="dashboard-tool-button"
-                                           OnClick="@MergeSelected" />
-                        </MudTooltip>
-                        <div class="dashboard-grid-picker dashboard-split-control">
-                            <MudTooltip Text="Split selected cell">
-                                <MudIconButton Icon="@Icons.Material.Filled.Splitscreen"
+                        <div class="dashboard-tool-group dashboard-tool-group-selection" aria-label="Selection commands">
+                            <MudTooltip Text="Merge selected cells">
+                                <MudIconButton Icon="@Icons.Material.Filled.ViewColumn"
                                                Size="Size.Small"
-                                               Disabled="@(!CanOpenSplitPicker)"
+                                               Disabled="@(!CanMerge)"
                                                Class="dashboard-tool-button"
-                                               OnClick="@ToggleSplitPicker" />
+                                               OnClick="@MergeSelected" />
                             </MudTooltip>
-                            <span class="dashboard-command-label">@SplitPickerSummary</span>
+                            <div class="dashboard-grid-picker dashboard-split-control">
+                                <MudTooltip Text="Split selected cell">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Splitscreen"
+                                                   Size="Size.Small"
+                                                   Disabled="@(!CanOpenSplitPicker)"
+                                                   Class="dashboard-tool-button"
+                                                   OnClick="@ToggleSplitPicker" />
+                                </MudTooltip>
+                                <span class="dashboard-command-label">@SplitPickerSummary</span>
 
-                            @if (_isSplitPickerOpen)
-                            {
-                                <button type="button" class="dashboard-picker-backdrop" @onclick="@CloseSplitPicker"></button>
-                                <div class="dashboard-grid-picker-popover">
-                                    <div class="dashboard-grid-picker-cells split-picker-cells">
-                                        @foreach (var row in SplitPickerRows)
-                                        {
-                                            @foreach (var column in SplitPickerColumns)
+                                @if (_isSplitPickerOpen)
+                                {
+                                    <button type="button" class="dashboard-picker-backdrop" @onclick="@CloseSplitPicker"></button>
+                                    <div class="dashboard-grid-picker-popover">
+                                        <div class="dashboard-grid-picker-cells split-picker-cells">
+                                            @foreach (var row in SplitPickerRows)
                                             {
-                                                var r = row;
-                                                var c = column;
-                                                <button type="button"
-                                                        class="@SplitPickerCellClass(r, c)"
-                                                        title="@($"Split selected cell to {c} columns x {r} rows")"
-                                                        @onmouseenter="@(() => PreviewSplit(r, c))"
-                                                        @onclick="@(() => PickSplit(r, c))">
-                                                </button>
+                                                @foreach (var column in SplitPickerColumns)
+                                                {
+                                                    var r = row;
+                                                    var c = column;
+                                                    <button type="button"
+                                                            class="@SplitPickerCellClass(r, c)"
+                                                            title="@($"Split selected cell to {c} columns x {r} rows")"
+                                                            @onmouseenter="@(() => PreviewSplit(r, c))"
+                                                            @onclick="@(() => PickSplit(r, c))">
+                                                    </button>
+                                                }
                                             }
-                                        }
+                                        </div>
+                                        <div class="dashboard-picker-label">@SplitPickerLabel</div>
                                     </div>
-                                    <div class="dashboard-picker-label">@SplitPickerLabel</div>
-                                </div>
-                            }
+                                }
+                            </div>
+                            <span class="dashboard-selection-summary">
+                                <MudIcon Icon="@Icons.Material.Filled.SelectAll" Size="Size.Small" />
+                                <span>@SelectionSummary</span>
+                            </span>
                         </div>
-
-                        <span class="dashboard-toolbar-separator"></span>
-                        <span class="dashboard-selection-summary">
-                            <MudIcon Icon="@Icons.Material.Filled.SelectAll" Size="Size.Small" />
-                            <span>@SelectionSummary</span>
-                        </span>
                     </div>
                 }
             </div>
@@ -127,12 +142,12 @@
     @if (_layout is null)
     {
         <div class="dashboard-empty">
-            <div class="dashboard-empty-panel">
+            <div class="dashboard-empty-panel" role="status" aria-live="polite">
                 <span class="dashboard-empty-icon-tile" aria-hidden="true">
                     <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="dashboard-empty-icon" />
                 </span>
                 <div class="dashboard-empty-copy">
-                    <span>No dashboard selected</span>
+                    <span>@EmptyDashboardTitle</span>
                     <small>@DashboardEmptyText</small>
                 </div>
                 <div class="dashboard-empty-actions">
@@ -140,7 +155,7 @@
                                Color="Color.Primary"
                                Size="Size.Small"
                                StartIcon="@Icons.Material.Filled.Add"
-                               OnClick="@AddDashboardAsync">New dashboard</MudButton>
+                               OnClick="@AddDashboardAsync">@EmptyDashboardActionLabel</MudButton>
                 </div>
             </div>
         </div>
@@ -151,12 +166,14 @@
         {
             <div class="dashboard-editor-workbench">
                 <div class="@DashboardGridFrameClass"
+                     role="group"
+                     aria-label="Dashboard layout editor"
                      @onpointerenter="HandleDesignerPointerEnter"
                      @onpointermove="HandleDesignerPointerMove"
                      @onpointerleave="HandleDesignerPointerLeave">
                 @if (HasActiveDashboardDrag)
                 {
-                    <div class="dashboard-drop-status" aria-live="polite">
+                    <div class="dashboard-drop-status" role="status" aria-live="polite">
                         <MudIcon Icon="@DashboardDragStatusIcon" Size="Size.Small" />
                         <span>@DashboardDragStatusText</span>
                     </div>
@@ -196,14 +213,16 @@
                         </button>
                     }
                 </div>
-                <div class="dashboard-grid" style="@GridStyle">
+                <div class="dashboard-grid" style="@GridStyle" role="grid" aria-label="Dashboard layout grid">
                     @if (!HasDashboardWidgets)
                     {
-                        <div class="dashboard-grid-empty-note @(HasActiveDashboardDrag ? "dragging" : null)">
-                            <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" />
+                        <div class="dashboard-grid-empty-note @(HasActiveDashboardDrag ? "dragging" : null)" role="status" aria-live="polite">
+                            <span class="dashboard-grid-empty-icon" aria-hidden="true">
+                                <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" />
+                            </span>
                             <div>
                                 <span>No widgets yet</span>
-                                <small>Ready for the first widget.</small>
+                                <small>@EmptyGridHint</small>
                             </div>
                         </div>
                     }
@@ -212,6 +231,9 @@
                         var currentCell = cell;
                         <section class="@CellClass(currentCell)"
                                  style="@CellStyle(currentCell)"
+                                 role="gridcell"
+                                 aria-selected="@_selectedCellIds.Contains(currentCell.Name)"
+                                 aria-label="@CellAriaLabel(currentCell)"
                                  @onpointerenter="@((PointerEventArgs args) => TrackDropCell(currentCell, args))"
                                  @onpointermove="@((PointerEventArgs args) => TrackDropCell(currentCell, args))"
                                  @onpointerleave="@((PointerEventArgs args) => ClearDropCell(currentCell, args))"
@@ -283,13 +305,15 @@
         }
         else
         {
-            <div class="dashboard-live-frame">
-                <div class="dashboard-live-grid" style="@GridStyle">
+            <div class="dashboard-live-frame" role="group" aria-label="Live dashboard preview">
+                <div class="dashboard-live-grid" style="@GridStyle" role="grid" aria-label="Live dashboard grid">
                     @foreach (var cell in VisibleCells)
                     {
                         var currentCell = cell;
                         <section class="@LiveCellClass(currentCell)"
                                  style="@CellStyle(currentCell)"
+                                 role="gridcell"
+                                 aria-label="@CellAriaLabel(currentCell)"
                                  @key="currentCell.Name">
                             @if (!string.IsNullOrWhiteSpace(currentCell.Widget))
                             {
@@ -433,12 +457,49 @@
         ? Project.DashboardNames.Count == 0 ? "No dashboards yet" : DashboardCountLabel(Project.DashboardNames.Count)
         : $"{_layout.Columns.Count} x {_layout.Rows.Count} grid / {_layout.Cells.Count} cells / {_layout.WidgetCount} widgets";
 
+    private string DashboardStatusLabel => _layout is null
+        ? Project.DashboardNames.Count == 0 ? "No dashboards" : "Select dashboard"
+        : DashboardModeLabel;
+
+    private string DashboardModeLabel => IsEditMode ? "Editing" : "Live preview";
+
+    private string DashboardModeStateClass => IsEditMode ? "edit" : "live";
+
+    private string GridSizeLabel => _layout is null
+        ? "No grid"
+        : $"{_layout.Columns.Count} x {_layout.Rows.Count} grid";
+
+    private string CellCountLabel => _layout is null
+        ? "0 cells"
+        : CountLabel(_layout.Columns.Count * _layout.Rows.Count, "cell");
+
+    private string WidgetCountLabel => _layout is null
+        ? "0 widgets"
+        : CountLabel(_layout.WidgetCount, "widget");
+
+    private string EmptyDashboardTitle => Project.DashboardNames.Count == 0
+        ? "No dashboards yet"
+        : "No dashboard selected";
+
+    private string EmptyDashboardActionLabel => Project.DashboardNames.Count == 0
+        ? "Create dashboard"
+        : "New dashboard";
+
     private string DashboardEmptyText => Project.DashboardNames.Count == 0
         ? "Create a dashboard to lay out live widgets."
         : "Dashboard layouts and live widgets appear here.";
 
+    private string EmptyGridHint => HasActiveDashboardDrag
+        ? "Release on a cell to place the widget."
+        : "Drag widgets from the catalog into any cell.";
+
     private static string DashboardCountLabel(int count)
         => count == 1 ? "1 dashboard available" : $"{count.ToString(CultureInfo.InvariantCulture)} dashboards available";
+
+    private static string CountLabel(int count, string noun)
+        => count == 1
+            ? $"1 {noun}"
+            : $"{count.ToString(CultureInfo.InvariantCulture)} {noun}s";
 
     private string SelectionSummary => SelectedCells.Count switch
     {
@@ -1013,6 +1074,17 @@
 
     private static string CellSpan(DashboardCellSnapshot cell)
         => $"{cell.ColumnSpan} x {cell.RowSpan}";
+
+    private string CellAriaLabel(DashboardCellSnapshot cell)
+    {
+        var selection = _selectedCellIds.Contains(cell.Name) ? ", selected" : string.Empty;
+        var content = FindWidget(cell.Widget) is not null
+            ? $", widget {WidgetLabel(cell.Widget)}"
+            : string.IsNullOrWhiteSpace(cell.Widget)
+                ? ", empty"
+                : $", missing widget {cell.Widget}";
+        return $"Cell {CellTitle(cell)}, span {CellSpan(cell)}{content}{selection}";
+    }
 
     private string CellContentClass(DashboardCellSnapshot cell)
         => !string.IsNullOrWhiteSpace(cell.Widget) && FindWidget(cell.Widget) is not null
