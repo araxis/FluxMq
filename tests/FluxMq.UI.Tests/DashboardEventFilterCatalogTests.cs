@@ -3845,6 +3845,47 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardWidgetEditorDialog_UsesFlatCompactEditorChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "DashboardWidgetEditorDialog.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "DashboardWidgetEditorDialog.razor.css"));
+
+        markup.ShouldContain("dashboard-widget-editor-title-icon");
+        markup.ShouldContain("dashboard-widget-editor-title-copy");
+        markup.ShouldContain("dashboard-widget-editor-meta-strip");
+        markup.ShouldContain("role=\"form\" aria-label=\"@EditorAriaLabel\"");
+        markup.ShouldContain("@EditorModeLabel");
+        markup.ShouldContain("@EditorDetailLabel");
+        markup.ShouldContain("Rounded=\"false\"");
+        markup.ShouldContain("dashboard-widget-editor-actions");
+        markup.ShouldContain("FilterAltOff");
+        markup.ShouldNotContain("<MudDivider />");
+
+        css.ShouldContain(".dashboard-widget-editor-title-icon");
+        css.ShouldContain(".dashboard-widget-editor-title-copy");
+        css.ShouldContain(".dashboard-widget-editor-meta-strip span");
+        css.ShouldContain(".dashboard-widget-editor-shell");
+        css.ShouldContain("grid-template-columns: 34px minmax(0, 1fr);");
+        css.ShouldContain(".dashboard-widget-editor-actions");
+        css.ShouldContain("@media (max-width: 700px)");
+    }
+
+    [Fact]
     public void ComponentCatalogPanel_UsesFlatCompactCatalogChrome()
     {
         var root = FindRepositoryRoot();

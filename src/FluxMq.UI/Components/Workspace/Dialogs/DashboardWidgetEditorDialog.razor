@@ -4,184 +4,210 @@
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true })">
     <TitleContent>
         <div class="dashboard-widget-editor-title">
-            <MudIcon Icon="@Profile.Icon" Size="Size.Small" />
-            <div>
+            <span class="dashboard-widget-editor-title-icon" aria-hidden="true">
+                <MudIcon Icon="@Profile.Icon" Size="Size.Small" />
+            </span>
+            <div class="dashboard-widget-editor-title-copy">
                 <MudText Typo="Typo.h6">@Profile.Title settings</MudText>
-                <MudText Typo="Typo.caption" Color="Color.Secondary">@Widget.Type</MudText>
+                <div class="dashboard-widget-editor-meta-strip" aria-label="Widget summary">
+                    <span>@Widget.Name</span>
+                    <span>@Widget.Type</span>
+                    <span>@EditorModeLabel</span>
+                    <span>@EditorDetailLabel</span>
+                </div>
             </div>
         </div>
     </TitleContent>
     <DialogContent>
-        @if (Profile.ShowsEventTabs)
-        {
-            <MudTabs Elevation="0"
-                     Rounded="true"
-                     ApplyEffectsToContainer="true"
-                     Class="dashboard-widget-editor-tabs">
-                <MudTabPanel Text="Display" Icon="@Icons.Material.Filled.DashboardCustomize">
-                    <MudStack Spacing="3" Class="dashboard-widget-editor-tab">
-                        @TitleField
+        <div class="dashboard-widget-editor-shell" role="form" aria-label="@EditorAriaLabel">
+            @if (Profile.ShowsEventTabs)
+            {
+                <MudTabs Elevation="0"
+                         Rounded="false"
+                         ApplyEffectsToContainer="true"
+                         Class="dashboard-widget-editor-tabs">
+                    <MudTabPanel Text="Display" Icon="@Icons.Material.Filled.DashboardCustomize">
+                        <div class="dashboard-widget-editor-tab">
+                            @TitleField
 
-                        @if (Profile.UsesGaugeStyle)
-                        {
-                            <div class="dashboard-widget-editor-section">
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">Gauge style</MudText>
-                                <MudToggleGroup T="string"
-                                                @bind-Value="_draft.GaugeStyle"
-                                                SelectionMode="SelectionMode.SingleSelection"
-                                                Size="Size.Small"
-                                                Color="Color.Primary"
-                                                Outlined="true"
-                                                Delimiters="true">
-                                    <MudToggleItem T="string" Value="@DashboardEventGaugeWidgetOptions.StyleRing" Text="Ring" />
-                                    <MudToggleItem T="string" Value="@DashboardEventGaugeWidgetOptions.StyleMeter" Text="Meter" />
-                                </MudToggleGroup>
-                            </div>
-                        }
+                            @if (Profile.UsesGaugeStyle)
+                            {
+                                <div class="dashboard-widget-editor-section">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Gauge style</MudText>
+                                    <MudToggleGroup T="string"
+                                                    @bind-Value="_draft.GaugeStyle"
+                                                    SelectionMode="SelectionMode.SingleSelection"
+                                                    Size="Size.Small"
+                                                    Color="Color.Primary"
+                                                    Outlined="true"
+                                                    Delimiters="true">
+                                        <MudToggleItem T="string" Value="@DashboardEventGaugeWidgetOptions.StyleRing" Text="Ring" />
+                                        <MudToggleItem T="string" Value="@DashboardEventGaugeWidgetOptions.StyleMeter" Text="Meter" />
+                                    </MudToggleGroup>
+                                </div>
+                            }
 
-                        @if (Profile.UsesChartType)
-                        {
-                            <div class="dashboard-widget-editor-section">
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">Chart type</MudText>
-                                <MudToggleGroup T="string"
-                                                @bind-Value="_draft.ChartType"
-                                                SelectionMode="SelectionMode.SingleSelection"
-                                                Size="Size.Small"
-                                                Color="Color.Primary"
-                                                Outlined="true"
-                                                Delimiters="true">
-                                    <MudToggleItem T="string" Value="@DashboardChartWidgetOptions.TypeBars" Text="Bars" />
-                                    <MudToggleItem T="string" Value="@DashboardChartWidgetOptions.TypeLine" Text="Line" />
-                                    <MudToggleItem T="string" Value="@DashboardChartWidgetOptions.TypeArea" Text="Area" />
-                                    <MudToggleItem T="string" Value="@DashboardChartWidgetOptions.TypeTopics" Text="Topics" />
-                                </MudToggleGroup>
-                            </div>
-                        }
+                            @if (Profile.UsesChartType)
+                            {
+                                <div class="dashboard-widget-editor-section">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Chart type</MudText>
+                                    <MudToggleGroup T="string"
+                                                    @bind-Value="_draft.ChartType"
+                                                    SelectionMode="SelectionMode.SingleSelection"
+                                                    Size="Size.Small"
+                                                    Color="Color.Primary"
+                                                    Outlined="true"
+                                                    Delimiters="true">
+                                        <MudToggleItem T="string" Value="@DashboardChartWidgetOptions.TypeBars" Text="Bars" />
+                                        <MudToggleItem T="string" Value="@DashboardChartWidgetOptions.TypeLine" Text="Line" />
+                                        <MudToggleItem T="string" Value="@DashboardChartWidgetOptions.TypeArea" Text="Area" />
+                                        <MudToggleItem T="string" Value="@DashboardChartWidgetOptions.TypeTopics" Text="Topics" />
+                                    </MudToggleGroup>
+                                </div>
+                            }
 
-                        @if (Profile.UsesVisualMetrics)
-                        {
-                            <MudGrid Spacing="2">
-                                <MudItem xs="12" md="6">
-                                    <MudSelect T="string"
-                                               Label="Primary metric"
-                                               @bind-Value="_draft.PrimaryMetric"
-                                               Variant="Variant.Outlined"
-                                               Margin="Margin.Dense"
-                                               Dense="true">
+                            @if (Profile.UsesVisualMetrics)
+                            {
+                                <MudGrid Spacing="2">
+                                    <MudItem xs="12" md="6">
+                                        <MudSelect T="string"
+                                                   Label="Primary metric"
+                                                   @bind-Value="_draft.PrimaryMetric"
+                                                   Variant="Variant.Outlined"
+                                                   Margin="Margin.Dense"
+                                                   Dense="true">
+                                            @foreach (var option in DashboardWidgetCatalog.MetricOptions)
+                                            {
+                                                <MudSelectItem T="string" Value="@option.Id">@option.Label</MudSelectItem>
+                                            }
+                                        </MudSelect>
+                                    </MudItem>
+                                    <MudItem xs="12" md="6">
+                                        <MudNumericField T="int"
+                                                         Label="Card columns"
+                                                         @bind-Value="_draft.MetricCardColumns"
+                                                         Min="@DashboardWidgetCatalog.MinMetricCardColumns"
+                                                         Max="@DashboardWidgetCatalog.MaxMetricCardColumns"
+                                                         Step="1"
+                                                         Variant="Variant.Outlined"
+                                                         Margin="Margin.Dense" />
+                                    </MudItem>
+                                </MudGrid>
+
+                                <div class="dashboard-widget-editor-section">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Metric cards</MudText>
+                                    <div class="dashboard-widget-editor-metric-options">
                                         @foreach (var option in DashboardWidgetCatalog.MetricOptions)
                                         {
-                                            <MudSelectItem T="string" Value="@option.Id">@option.Label</MudSelectItem>
+                                            var selected = _draft.IsDisplayMetricSelected(option.Id);
+                                            var disabled = selected && _draft.DisplayMetrics.Count == 1;
+
+                                            <MudCheckBox T="bool"
+                                                         Value="@selected"
+                                                         ValueChanged="@((bool value) => _draft.ToggleDisplayMetric(option.Id, value))"
+                                                         Disabled="@disabled"
+                                                         Dense="true"
+                                                         Label="@option.Label" />
                                         }
-                                    </MudSelect>
-                                </MudItem>
-                                <MudItem xs="12" md="6">
-                                    <MudNumericField T="int"
-                                                     Label="Card columns"
-                                                     @bind-Value="_draft.MetricCardColumns"
-                                                     Min="@DashboardWidgetCatalog.MinMetricCardColumns"
-                                                     Max="@DashboardWidgetCatalog.MaxMetricCardColumns"
-                                                     Step="1"
-                                                     Variant="Variant.Outlined"
-                                                     Margin="Margin.Dense" />
-                                </MudItem>
-                            </MudGrid>
-
-                            <MudDivider />
-                            <div class="dashboard-widget-editor-section">
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">Metric cards</MudText>
-                                <div class="dashboard-widget-editor-metric-options">
-                                    @foreach (var option in DashboardWidgetCatalog.MetricOptions)
-                                    {
-                                        var selected = _draft.IsDisplayMetricSelected(option.Id);
-                                        var disabled = selected && _draft.DisplayMetrics.Count == 1;
-
-                                        <MudCheckBox T="bool"
-                                                     Value="@selected"
-                                                     ValueChanged="@((bool value) => _draft.ToggleDisplayMetric(option.Id, value))"
-                                                     Disabled="@disabled"
-                                                     Dense="true"
-                                                     Label="@option.Label" />
-                                    }
+                                    </div>
                                 </div>
-                            </div>
-                        }
-                    </MudStack>
-                </MudTabPanel>
+                            }
+                        </div>
+                    </MudTabPanel>
 
-                <MudTabPanel Text="Data" Icon="@Icons.Material.Filled.Dataset">
-                    <MudGrid Spacing="2" Class="dashboard-widget-editor-tab">
-                        <MudItem xs="12" md="6">
-                            <MudSelect T="string"
-                                       Label="Event type"
-                                       Value="@_draft.EventType"
-                                       ValueChanged="@SetEventType"
-                                       Variant="Variant.Outlined"
-                                       Margin="Margin.Dense"
-                                       Dense="true">
-                                @foreach (var option in EventFilters.EventTypes)
-                                {
-                                    <MudSelectItem T="string" Value="@option.Value">@option.Label</MudSelectItem>
-                                }
-                            </MudSelect>
-                        </MudItem>
-                        <MudItem xs="12" md="6">
-                            <MudSelect T="string"
-                                       Label="Status"
-                                       @bind-Value="_draft.Status"
-                                       Variant="Variant.Outlined"
-                                       Margin="Margin.Dense"
-                                       Dense="true">
-                                @foreach (var option in _draft.CurrentEventType.StatusOptions)
-                                {
-                                    <MudSelectItem T="string" Value="@option.Value">@option.Label</MudSelectItem>
-                                }
-                            </MudSelect>
-                        </MudItem>
-                    </MudGrid>
-                </MudTabPanel>
-
-                <MudTabPanel Text="Filters" Icon="@Icons.Material.Filled.FilterAlt">
-                    <MudGrid Spacing="2" Class="dashboard-widget-editor-tab">
-                        @if (_draft.CurrentEventType.Fields.Count == 0)
-                        {
-                            <MudItem xs="12">
-                                <div class="dashboard-widget-editor-empty">No filters</div>
+                    <MudTabPanel Text="Data" Icon="@Icons.Material.Filled.Dataset">
+                        <MudGrid Spacing="2" Class="dashboard-widget-editor-tab">
+                            <MudItem xs="12" md="6">
+                                <MudSelect T="string"
+                                           Label="Event type"
+                                           Value="@_draft.EventType"
+                                           ValueChanged="@SetEventType"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Dense="true">
+                                    @foreach (var option in EventFilters.EventTypes)
+                                    {
+                                        <MudSelectItem T="string" Value="@option.Value">@option.Label</MudSelectItem>
+                                    }
+                                </MudSelect>
                             </MudItem>
-                        }
-                        else
-                        {
-                            @foreach (var field in _draft.CurrentEventType.Fields)
+                            <MudItem xs="12" md="6">
+                                <MudSelect T="string"
+                                           Label="Status"
+                                           @bind-Value="_draft.Status"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Dense="true">
+                                    @foreach (var option in _draft.CurrentEventType.StatusOptions)
+                                    {
+                                        <MudSelectItem T="string" Value="@option.Value">@option.Label</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
+
+                    <MudTabPanel Text="Filters" Icon="@Icons.Material.Filled.FilterAlt">
+                        <MudGrid Spacing="2" Class="dashboard-widget-editor-tab">
+                            @if (_draft.CurrentEventType.Fields.Count == 0)
                             {
-                                var currentField = field;
-                                <MudItem xs="12" md="@FilterFieldColumns(currentField)">
-                                    @RenderFilterField(currentField)
+                                <MudItem xs="12">
+                                    <div class="dashboard-widget-editor-empty">
+                                        <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
+                                        <span>No filters for this event type</span>
+                                    </div>
                                 </MudItem>
                             }
-                        }
-                    </MudGrid>
-                </MudTabPanel>
-            </MudTabs>
-        }
-        else if (Profile.IsTopicTreeWidget)
-        {
-            <MudStack Spacing="3" Class="dashboard-widget-editor-tab">
-                @TitleField
-                <MudSwitch T="bool"
-                           @bind-Value="_draft.ExcludeSystemTopics"
-                           Color="Color.Primary"
-                           Label="Hide system topics" />
-            </MudStack>
-        }
-        else
-        {
-            <MudStack Spacing="3" Class="dashboard-widget-editor-tab">
-                @TitleField
-            </MudStack>
-        }
+                            else
+                            {
+                                @foreach (var field in _draft.CurrentEventType.Fields)
+                                {
+                                    var currentField = field;
+                                    <MudItem xs="12" md="@FilterFieldColumns(currentField)">
+                                        @RenderFilterField(currentField)
+                                    </MudItem>
+                                }
+                            }
+                        </MudGrid>
+                    </MudTabPanel>
+                </MudTabs>
+            }
+            else if (Profile.IsTopicTreeWidget)
+            {
+                <MudStack Spacing="2" Class="dashboard-widget-editor-tab">
+                    @TitleField
+                    <div class="dashboard-widget-editor-section">
+                        <MudSwitch T="bool"
+                                   @bind-Value="_draft.ExcludeSystemTopics"
+                                   Color="Color.Primary"
+                                   Label="Hide system topics" />
+                    </div>
+                </MudStack>
+            }
+            else
+            {
+                <MudStack Spacing="2" Class="dashboard-widget-editor-tab">
+                    @TitleField
+                </MudStack>
+            }
+        </div>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@Submit">Apply</MudButton>
+        <div class="dashboard-widget-editor-actions">
+            <MudButton OnClick="@Cancel"
+                       Size="Size.Small"
+                       Class="dashboard-widget-editor-cancel">
+                Cancel
+            </MudButton>
+            <MudButton Color="Color.Primary"
+                       Variant="Variant.Filled"
+                       Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.Check"
+                       OnClick="@Submit"
+                       Class="dashboard-widget-editor-apply">
+                Apply
+            </MudButton>
+        </div>
     </DialogActions>
 </MudDialog>
 
@@ -215,7 +241,24 @@
                                                         Label="Title"
                                                         @bind-Value="_draft.Title"
                                                         Variant="Variant.Outlined"
-                                                        Margin="Margin.Dense" />;
+                                                        Margin="Margin.Dense"
+                                                        Class="dashboard-widget-editor-title-field" />;
+
+    private string EditorAriaLabel => $"Edit {Profile.Title} widget {Widget.Name}";
+
+    private string EditorModeLabel => Profile.IsTopicTreeWidget
+        ? "Topic data"
+        : Profile.IsEventWidget
+            ? "Event data"
+            : "Widget";
+
+    private string EditorDetailLabel => Profile.UsesVisualMetrics
+        ? $"{_draft.DisplayMetrics.Count} metrics"
+        : Profile.UsesMetricVisualization
+            ? "Metric visual"
+            : Profile.UsesEventFilters
+                ? $"{_draft.CurrentEventType.Fields.Count} filters"
+                : "Display";
 
     protected override void OnInitialized()
     {

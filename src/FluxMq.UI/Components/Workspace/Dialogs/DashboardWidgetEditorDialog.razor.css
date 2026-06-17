@@ -1,17 +1,66 @@
 .dashboard-widget-editor-title {
     align-items: center;
-    display: flex;
-    gap: 9px;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 34px minmax(0, 1fr);
     min-width: 0;
 }
 
-.dashboard-widget-editor-title > .mud-icon-root {
+.dashboard-widget-editor-title-icon {
+    align-items: center;
+    background: color-mix(in srgb, var(--mud-palette-primary) 11%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 30%, var(--flux-border));
+    border-radius: 7px;
     color: var(--mud-palette-primary);
-    flex: 0 0 auto;
-    font-size: 20px;
+    display: inline-flex;
+    height: 34px;
+    justify-content: center;
+    width: 34px;
 }
 
-.dashboard-widget-editor-title > div {
+.dashboard-widget-editor-title-icon ::deep .mud-icon-root {
+    color: var(--mud-palette-primary);
+    font-size: 19px;
+}
+
+.dashboard-widget-editor-title-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.dashboard-widget-editor-title-copy ::deep .mud-typography {
+    font-size: 16px;
+    font-weight: 740;
+    letter-spacing: 0;
+    line-height: 1.2;
+}
+
+.dashboard-widget-editor-meta-strip {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    min-width: 0;
+}
+
+.dashboard-widget-editor-meta-strip span {
+    background: color-mix(in srgb, var(--flux-surface-2) 44%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 62%, transparent);
+    border-radius: 6px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 11px;
+    font-weight: 680;
+    line-height: 1;
+    max-width: 180px;
+    overflow: hidden;
+    padding: 4px 6px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dashboard-widget-editor-shell {
     min-width: 0;
 }
 
@@ -21,11 +70,12 @@
 
 .dashboard-widget-editor-tabs ::deep .mud-tabs-toolbar {
     border-bottom: 1px solid var(--flux-border);
-    min-height: 36px;
+    min-height: 34px;
 }
 
 .dashboard-widget-editor-tabs ::deep .mud-tab {
-    min-height: 36px;
+    min-height: 34px;
+    padding: 0 12px;
     text-transform: none;
 }
 
@@ -39,8 +89,11 @@
 }
 
 .dashboard-widget-editor-tab {
+    align-content: start;
+    display: grid;
+    gap: 10px;
     min-width: 0;
-    padding: 12px 0 2px;
+    padding: 10px 0 0;
 }
 
 .dashboard-widget-editor-tab ::deep .mud-input-control {
@@ -57,10 +110,14 @@
 }
 
 .dashboard-widget-editor-section {
+    background: color-mix(in srgb, var(--flux-surface-2) 30%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 54%, transparent);
+    border-radius: 7px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 7px;
     min-width: 0;
+    padding: 8px 10px;
 }
 
 .dashboard-widget-editor-section ::deep(.mud-toggle-group) {
@@ -71,17 +128,15 @@
 
 .dashboard-widget-editor-section ::deep(.mud-toggle-item) {
     min-height: 30px;
+    padding: 0 10px;
     text-transform: none;
 }
 
 .dashboard-widget-editor-metric-options {
-    border: 1px solid color-mix(in srgb, var(--flux-border) 58%, transparent);
-    border-radius: 6px;
     display: grid;
     gap: 0 12px;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     min-width: 0;
-    padding: 6px 8px;
 }
 
 .dashboard-widget-editor-empty {
@@ -91,10 +146,31 @@
     border-radius: 6px;
     color: var(--mud-palette-text-secondary);
     display: flex;
+    gap: 8px;
     font-size: 12px;
     font-weight: 650;
     justify-content: center;
-    min-height: 76px;
+    min-height: 68px;
+}
+
+.dashboard-widget-editor-empty ::deep .mud-icon-root {
+    color: var(--mud-palette-text-secondary);
+    opacity: 0.78;
+}
+
+.dashboard-widget-editor-actions {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    min-width: 0;
+    width: 100%;
+}
+
+.dashboard-widget-editor-actions ::deep .mud-button-root {
+    border-radius: 6px;
+    min-height: 30px;
+    text-transform: none;
 }
 
 @media (max-width: 700px) {
@@ -106,7 +182,19 @@
         padding-top: 12px;
     }
 
+    .dashboard-widget-editor-meta-strip span {
+        max-width: 132px;
+    }
+
     .dashboard-widget-editor-metric-options {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .dashboard-widget-editor-actions {
+        justify-content: stretch;
+    }
+
+    .dashboard-widget-editor-actions ::deep .mud-button-root {
+        flex: 1 1 0;
     }
 }
