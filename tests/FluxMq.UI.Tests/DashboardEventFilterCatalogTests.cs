@@ -2683,6 +2683,56 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void TestScenarioDesigner_UsesFlatCompactScenarioChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "TestScenarioDesigner.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "TestScenarioDesigner.razor.css"));
+
+        markup.ShouldContain("aria-label=\"Test scenario designer\"");
+        markup.ShouldContain("test-scenario-heading-icon");
+        markup.ShouldContain("test-scenario-title-copy");
+        markup.ShouldContain("test-scenario-meta-strip");
+        markup.ShouldContain("@PhaseCountText");
+        markup.ShouldContain("@RunModeText");
+        markup.ShouldContain("@RecentRunCountText");
+        markup.ShouldContain("RunStatusClass(result.Status)");
+        markup.ShouldContain("ActiveRunPillClass");
+        markup.ShouldContain("test-scenario-report-actions");
+        markup.ShouldContain("test-scenario-build-actions");
+        markup.ShouldContain("Class=\"test-scenario-icon-action\"");
+        markup.ShouldContain("Class=\"test-scenario-run-action\"");
+        markup.ShouldContain("Class=\"test-scenario-add-menu\"");
+        markup.ShouldContain("Scenario.Phases");
+        markup.ShouldContain("test-phase-lanes");
+        markup.ShouldNotContain("MudChip");
+
+        css.ShouldContain(".test-scenario-heading-icon");
+        css.ShouldContain(".test-scenario-meta-strip span,");
+        css.ShouldContain(".test-run-status");
+        css.ShouldContain(".test-scenario-report-actions");
+        css.ShouldContain(".test-scenario-build-actions");
+        css.ShouldContain(".test-scenario-report-actions ::deep .mud-icon-button");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
+        css.ShouldContain("min-height: 50px;");
+        css.ShouldContain("height: 30px;");
+        css.ShouldContain("@media (max-width: 760px)");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
+    }
+
+    [Fact]
     public void PayloadInspectorPanel_UsesFlatCompactInspectorChrome()
     {
         var root = FindRepositoryRoot();
