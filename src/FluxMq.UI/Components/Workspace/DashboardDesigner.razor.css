@@ -1177,6 +1177,10 @@
     font-size: 16px;
 }
 
+.dashboard-cell-widget-action.edit {
+    color: var(--mud-palette-info);
+}
+
 .dashboard-cell-widget-action.simulate {
     color: var(--flux-accent);
 }

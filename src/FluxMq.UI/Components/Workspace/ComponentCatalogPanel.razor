@@ -223,7 +223,7 @@
     private string CatalogItemTitle => ArtifactKind switch
     {
         WorkspaceArtifactKind.Pipeline when CanUseItem => "Drag to add component",
-        WorkspaceArtifactKind.Dashboard when CanUseItem => "Drag to a cell or click to add widget",
+        WorkspaceArtifactKind.Dashboard when CanUseItem => "Click to place in the selected cell, or drag to choose a cell",
         WorkspaceArtifactKind.Test when CanUseItem => "Add test step",
         _ => "Unavailable in this tab"
     };
@@ -248,7 +248,7 @@
         => CanUseItem
             ? ArtifactKind switch
             {
-                WorkspaceArtifactKind.Dashboard => $"{item.DisplayName}. Drag to a dashboard cell or press Enter to add.",
+                WorkspaceArtifactKind.Dashboard => $"{item.DisplayName}. Drag to a dashboard cell or press Enter to place. Use the edit action on the placed widget to configure it.",
                 WorkspaceArtifactKind.Test => $"{item.DisplayName}. Press Enter to add test step.",
                 _ => $"{item.DisplayName}. Drag or press Enter to add."
             }

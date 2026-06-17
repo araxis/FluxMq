@@ -3071,6 +3071,52 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardCatalogHandoff_UsesDirectWidgetEditAndPlacementCues()
+    {
+        var root = FindRepositoryRoot();
+        var catalog = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "ComponentCatalogPanel.razor"));
+        var catalogCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "ComponentCatalogPanel.razor.css"));
+        var designer = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor"));
+        var designerCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor.css"));
+
+        catalog.ShouldContain("Click to place in the selected cell, or drag to choose a cell");
+        catalog.ShouldContain("Use the edit action on the placed widget to configure it.");
+        catalogCss.ShouldContain(".component-catalog.dashboard .catalog-add-button");
+        catalogCss.ShouldContain(".component-catalog.dashboard .catalog-drag-grip");
+
+        designer.ShouldContain("Drag to move widget; use toolbar to edit");
+        designer.ShouldContain("class=\"dashboard-cell-widget-action edit\"");
+        designer.ShouldContain("Edit {WidgetLabel(currentCell.Widget)} settings");
+        designer.ShouldContain("OpenWidgetEditorAsync(currentCell.Widget)");
+        designer.ShouldContain("SelectSingleCell(targetCellName)");
+        designerCss.ShouldContain(".dashboard-cell-widget-action.edit");
+    }
+
+    [Fact]
     public void DashboardDesigner_UsesFlatEmptyAndStackedDashboardStates()
     {
         var root = FindRepositoryRoot();
