@@ -2413,6 +2413,13 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "PropertyGrid.razor.css"));
+        var rowMarkup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "PropertyGridRow.razor"));
         var rowCss = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -2482,15 +2489,29 @@ public sealed class DashboardEventFilterCatalogTests
         propertyGridCss.ShouldContain("grid-template-columns: 22px minmax(0, 1fr) auto;");
         propertyGridCss.ShouldContain("min-height: 28px;");
         propertyGridCss.ShouldContain(".property-grid:hover .property-grid-column-resizer::after");
+        propertyGridCss.ShouldContain(".property-grid-group:not(.collapsed) .property-grid-group-body");
         propertyGridCss.ShouldContain("@container property-grid (max-width: 280px)");
+        rowMarkup.ShouldContain("class=\"@RowClass\"");
+        rowMarkup.ShouldContain("title=\"@NameTitle\"");
+        rowMarkup.ShouldContain("\"property-grid-row stacked\"");
+        rowMarkup.ShouldContain("has-help");
+        rowMarkup.ShouldContain("private string NameTitle");
         rowCss.ShouldContain("min-height: 26px;");
         rowCss.ShouldContain("min-height: 22px;");
         rowCss.ShouldContain("min-height: 21px;");
+        rowCss.ShouldContain(".property-grid-row:focus-within");
+        rowCss.ShouldContain(".property-grid-row.has-help .property-grid-name");
+        rowCss.ShouldContain("border-right: 1px solid color-mix(in srgb, var(--flux-border) 26%, transparent);");
+        rowCss.ShouldContain("padding-left: 3px;");
+        rowCss.ShouldContain("width: calc(100% - 4px);");
         rowCss.ShouldContain(".property-grid-help ::deep .mud-icon-root");
         rowCss.ShouldContain("grid-template-columns: minmax(0, 1fr);");
         selectCss.ShouldContain("max-height: 160px;");
+        selectCss.ShouldContain("right: 5px;");
         iconSegmentCss.ShouldContain("min-height: 19px;");
+        iconSegmentCss.ShouldContain("width: calc(100% - 4px);");
         colorPickerCss.ShouldContain("grid-template-columns: 26px minmax(0, 1fr) 24px;");
+        colorPickerCss.ShouldContain("width: calc(100% - 4px);");
         alignmentPadCss.ShouldContain("grid-template-columns: repeat(3, 16px);");
         inspector.ShouldContain("role=\"complementary\" aria-label=\"Dashboard inspector\"");
         inspector.ShouldContain("var propertyGroups = PropertyGroups;");
