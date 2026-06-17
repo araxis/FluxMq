@@ -2448,6 +2448,13 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "PropertyGridAlignmentPad.razor.css"));
+        var inspector = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspector.razor"));
         var inspectorCss = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -2467,20 +2474,39 @@ public sealed class DashboardEventFilterCatalogTests
         propertyGrid.ShouldContain("MinNameColumnWidth = 78");
         propertyGrid.ShouldContain("MaxNameColumnWidth = 176");
         propertyGrid.ShouldContain("--property-grid-name-width: min({_nameColumnWidth.ToString(\"0\", CultureInfo.InvariantCulture)}px, 39%);");
+        propertyGrid.ShouldContain("aria-label=\"Dashboard property editor\"");
+        propertyGrid.ShouldContain("title=\"@group.Title\"");
+        propertyGrid.ShouldContain("aria-label=\"@FormatSettingCount(group.SettingCount)\"");
         propertyGridCss.ShouldContain("container-name: property-grid;");
         propertyGridCss.ShouldContain("position: sticky;");
-        propertyGridCss.ShouldContain("min-height: 23px;");
+        propertyGridCss.ShouldContain("grid-template-columns: 22px minmax(0, 1fr) auto;");
+        propertyGridCss.ShouldContain("min-height: 28px;");
         propertyGridCss.ShouldContain(".property-grid:hover .property-grid-column-resizer::after");
         propertyGridCss.ShouldContain("@container property-grid (max-width: 280px)");
-        rowCss.ShouldContain("min-height: 24px;");
-        rowCss.ShouldContain("min-height: 20px;");
+        rowCss.ShouldContain("min-height: 26px;");
+        rowCss.ShouldContain("min-height: 22px;");
+        rowCss.ShouldContain("min-height: 21px;");
         rowCss.ShouldContain(".property-grid-help ::deep .mud-icon-root");
         rowCss.ShouldContain("grid-template-columns: minmax(0, 1fr);");
         selectCss.ShouldContain("max-height: 160px;");
         iconSegmentCss.ShouldContain("min-height: 19px;");
         colorPickerCss.ShouldContain("grid-template-columns: 26px minmax(0, 1fr) 24px;");
         alignmentPadCss.ShouldContain("grid-template-columns: repeat(3, 16px);");
+        inspector.ShouldContain("role=\"complementary\" aria-label=\"Dashboard inspector\"");
+        inspector.ShouldContain("var propertyGroups = PropertyGroups;");
+        inspector.ShouldContain("dashboard-inspector-meta-strip");
+        inspector.ShouldContain("@InspectorModeLabel");
+        inspector.ShouldContain("@InspectorGroupCountLabel(propertyGroups.Count)");
+        inspector.ShouldContain("@InspectorPropertyCountLabel(propertyGroups)");
+        inspector.ShouldContain("dashboard-inspector-property-shell");
+        inspector.ShouldContain("dashboard-inspector-empty-icon");
+        inspector.ShouldContain("dashboard-inspector-empty-card");
+        inspector.ShouldContain("private static string InspectorPropertyCountLabel");
         inspectorCss.ShouldContain("flex: 0 0 336px;");
+        inspectorCss.ShouldContain("grid-template-columns: 26px minmax(0, 1fr) auto;");
+        inspectorCss.ShouldContain(".dashboard-inspector-meta-strip span");
+        inspectorCss.ShouldContain(".dashboard-inspector-property-shell");
+        inspectorCss.ShouldContain(".dashboard-inspector-empty-icon");
         visualMetricRows.ShouldContain("KeyboardArrowUp");
         visualMetricRows.ShouldContain("KeyboardArrowDown");
         visualMetricRows.ShouldContain("Icons.Material.Filled.Close");

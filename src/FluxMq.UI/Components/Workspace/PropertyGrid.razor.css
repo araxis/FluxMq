@@ -1,7 +1,7 @@
 .property-grid {
     --property-grid-name-width: min(116px, 39%);
-    background: var(--flux-surface);
-    border-top: 1px solid var(--flux-border);
+    background: color-mix(in srgb, var(--flux-surface) 98%, var(--flux-canvas));
+    border-top: 0;
     container-name: property-grid;
     container-type: inline-size;
     flex: 1 1 auto;
@@ -74,16 +74,16 @@
 }
 
 .property-grid-group {
-    border-bottom: 1px solid color-mix(in srgb, var(--flux-border) 48%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border) 42%, transparent);
     min-width: 0;
 }
 
 .property-grid-group-header {
     align-items: center;
     appearance: none;
-    background: color-mix(in srgb, var(--flux-surface) 96%, transparent);
+    background: color-mix(in srgb, var(--flux-surface) 94%, var(--flux-canvas));
     border: 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--flux-border) 38%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border) 34%, transparent);
     box-sizing: border-box;
     color: var(--mud-palette-text-primary);
     cursor: pointer;
@@ -91,10 +91,10 @@
     font-size: 11px;
     font-weight: 720;
     gap: 0;
-    grid-template-columns: 20px calc(var(--property-grid-name-width) - 20px) minmax(0, 1fr);
-    min-height: 23px;
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    min-height: 28px;
     min-width: 0;
-    padding: 0;
+    padding: 0 7px 0 2px;
     position: sticky;
     text-align: left;
     top: 0;
@@ -103,7 +103,7 @@
 }
 
 .property-grid-group-header:hover {
-    background: color-mix(in srgb, var(--flux-surface-2) 30%, var(--flux-surface));
+    background: color-mix(in srgb, var(--flux-surface-2) 34%, var(--flux-surface));
 }
 
 .property-grid-group-header:focus-visible {
@@ -135,28 +135,28 @@
     font-weight: 760;
     min-width: 0;
     overflow: hidden;
-    padding-left: 2px;
+    padding-left: 0;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .property-grid-group-count {
     align-items: center;
-    background: transparent;
-    border: 0;
-    border-radius: 4px;
+    background: color-mix(in srgb, var(--flux-surface-2) 70%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 74%, transparent);
+    border-radius: 5px;
     color: var(--mud-palette-text-secondary);
     display: inline-flex;
     font-size: 10px;
     font-weight: 720;
     grid-column: 3 / 4;
-    height: 15px;
+    height: 18px;
     justify-content: center;
     justify-self: end;
     line-height: 1;
-    margin-right: 6px;
+    margin-right: 0;
     min-width: 16px;
-    padding: 0 3px;
+    padding: 0 5px;
     white-space: nowrap;
 }
 
