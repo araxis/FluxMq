@@ -17,9 +17,13 @@
     flex: 0 0 auto;
     gap: 7px;
     grid-template-columns: 26px minmax(0, 1fr) auto;
-    min-height: 48px;
+    min-height: 54px;
     min-width: 0;
-    padding: 7px 8px;
+    padding: 7px 8px 8px;
+}
+
+.dashboard-inspector-header.widget {
+    border-bottom-color: color-mix(in srgb, var(--flux-accent) 24%, var(--flux-border));
 }
 
 .dashboard-inspector-icon {
@@ -44,7 +48,7 @@
 .dashboard-inspector-heading {
     display: grid;
     flex: 1 1 auto;
-    gap: 4px;
+    gap: 3px;
     min-width: 0;
 }
 
@@ -52,6 +56,7 @@
     align-items: center;
     display: flex;
     flex: 0 0 auto;
+    gap: 5px;
 }
 
 .dashboard-inspector-command {
@@ -67,6 +72,19 @@
     justify-content: center;
     padding: 0;
     width: 26px;
+}
+
+.dashboard-inspector-reset-command {
+    flex-basis: auto;
+    gap: 4px;
+    padding: 0 7px;
+    width: auto;
+}
+
+.dashboard-inspector-reset-command span {
+    font-size: 10.5px;
+    font-weight: 760;
+    line-height: 1;
 }
 
 .dashboard-inspector-command:hover {
@@ -121,11 +139,37 @@
     white-space: nowrap;
 }
 
+.dashboard-inspector-live-strip {
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    font-size: 10.5px;
+    font-weight: 720;
+    gap: 4px;
+    line-height: 1;
+    min-width: 0;
+}
+
+.dashboard-inspector-live-strip ::deep .mud-icon-root {
+    color: var(--flux-accent);
+    font-size: 13px;
+    height: 13px;
+    width: 13px;
+}
+
+.dashboard-inspector-live-strip span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .dashboard-inspector-property-shell {
     display: flex;
     flex: 1 1 auto;
     min-height: 0;
     min-width: 0;
+    overflow: hidden;
 }
 
 .dashboard-inspector-cell-summary {
@@ -224,6 +268,16 @@
     text-align: center;
 }
 
+.dashboard-inspector-empty::before {
+    background: color-mix(in srgb, var(--flux-accent) 42%, transparent);
+    content: "";
+    display: block;
+    height: 1px;
+    max-width: 96px;
+    opacity: 0.65;
+    width: 36%;
+}
+
 .dashboard-inspector-empty-card {
     display: grid;
     gap: 8px;
@@ -279,7 +333,7 @@
 
     .dashboard-inspector-header {
         grid-template-columns: 24px minmax(0, 1fr) auto;
-        min-height: 40px;
+        min-height: 44px;
         padding: 5px 8px;
     }
 
@@ -291,5 +345,16 @@
     .dashboard-inspector-empty {
         justify-content: flex-start;
         padding: 10px 12px;
+    }
+
+    .dashboard-inspector-reset-command span,
+    .dashboard-inspector-live-strip {
+        display: none;
+    }
+
+    .dashboard-inspector-reset-command {
+        flex-basis: 26px;
+        padding: 0;
+        width: 26px;
     }
 }
