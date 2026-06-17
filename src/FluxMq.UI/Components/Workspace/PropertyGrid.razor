@@ -4,6 +4,7 @@
 
 <div class="@GridClass"
      role="treegrid"
+     aria-label="Dashboard property editor"
      style="@GridStyle"
      @onpointermove="@ResizeNameColumn"
      @onpointerup="@StopNameColumnResize"
@@ -33,12 +34,15 @@
             <button type="button"
                     class="property-grid-group-header"
                     aria-expanded="@(!collapsed)"
+                    title="@group.Title"
                     @onclick="@(() => ToggleGroupAsync(group.Id))">
                 <span class="property-grid-group-toggle">
                     <MudIcon Icon="@ToggleIcon(collapsed)" Size="Size.Small" />
                 </span>
                 <span class="property-grid-group-title">@group.Title</span>
-                <span class="property-grid-group-count" title="@FormatSettingCount(group.SettingCount)">
+                <span class="property-grid-group-count"
+                      title="@FormatSettingCount(group.SettingCount)"
+                      aria-label="@FormatSettingCount(group.SettingCount)">
                     @group.SettingCount.ToString(CultureInfo.InvariantCulture)
                 </span>
             </button>

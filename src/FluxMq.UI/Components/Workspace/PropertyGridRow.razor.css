@@ -1,11 +1,11 @@
 .property-grid-row {
     align-items: center;
-    background: var(--flux-surface);
-    border-bottom: 1px solid color-mix(in srgb, var(--flux-border) 30%, transparent);
+    background: color-mix(in srgb, var(--flux-surface) 98%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border) 28%, transparent);
     display: grid;
     gap: 0;
     grid-template-columns: var(--property-grid-name-width, 124px) minmax(0, 1fr);
-    min-height: 24px;
+    min-height: 26px;
     min-width: 0;
     padding: 0;
 }
@@ -45,7 +45,7 @@
     line-height: 1.2;
     min-width: 0;
     overflow: hidden;
-    padding: 0 5px 0 7px;
+    padding: 0 6px 0 8px;
 }
 
 .property-grid-name span:first-child {
@@ -115,10 +115,10 @@
     font-weight: 720;
     height: calc(100% - 2px);
     margin: 1px 3px 1px 0;
-    min-height: 20px;
+    min-height: 22px;
     min-width: 0;
     outline: 0;
-    padding: 0 5px 0 7px;
+    padding: 0 6px 0 8px;
     width: calc(100% - 3px);
 }
 
@@ -149,7 +149,7 @@
 
 .property-grid-value ::deep .property-grid-button-group {
     align-items: stretch;
-    background: color-mix(in srgb, var(--flux-surface-2) 30%, var(--flux-surface));
+    background: color-mix(in srgb, var(--flux-surface-2) 34%, var(--flux-surface));
     border: 1px solid color-mix(in srgb, var(--flux-border) 48%, transparent);
     border-radius: 4px;
     display: grid;
@@ -174,7 +174,7 @@
     font: inherit;
     font-size: 10.75px;
     font-weight: 720;
-    min-height: 19px;
+    min-height: 21px;
     min-width: 0;
     overflow: hidden;
     padding: 0 5px;
