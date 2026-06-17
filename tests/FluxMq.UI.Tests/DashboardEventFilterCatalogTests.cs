@@ -3764,6 +3764,52 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void ComponentCatalogPanel_UsesFlatCompactCatalogChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "ComponentCatalogPanel.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "ComponentCatalogPanel.razor.css"));
+
+        markup.ShouldContain("aria-label=\"@CatalogPanelLabel\"");
+        markup.ShouldContain("catalog-title-copy");
+        markup.ShouldContain("catalog-title-label");
+        markup.ShouldContain("catalog-meta-strip");
+        markup.ShouldContain("@CatalogModeLabel");
+        markup.ShouldContain("@CatalogUseStateLabel");
+        markup.ShouldContain("@CatalogSearchStateLabel");
+        markup.ShouldContain("CatalogUseStateClass");
+        markup.ShouldContain("role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("@EmptyIcon");
+        markup.ShouldContain("@EmptyHintLabel");
+        markup.ShouldContain("catalog-item-affordance");
+        markup.ShouldContain("CatalogItemAriaLabel(item)");
+        markup.ShouldContain("aria-grabbed=\"@CatalogItemGrabbed(item)\"");
+
+        css.ShouldContain(".catalog-title-copy");
+        css.ShouldContain(".catalog-title-label");
+        css.ShouldContain(".catalog-meta-strip span,");
+        css.ShouldContain(".catalog-use-state.ready");
+        css.ShouldContain(".catalog-use-state.inactive");
+        css.ShouldContain(".catalog-empty ::deep .mud-icon-root");
+        css.ShouldContain(".component-catalog.test .catalog-item");
+        css.ShouldContain("grid-template-columns: 24px minmax(0, 1fr) 40px;");
+        css.ShouldContain("min-height: 92px;");
+        css.ShouldContain("@media (max-width: 760px)");
+    }
+
+    [Fact]
     public void AppStructureMenu_UsesCompactInlineArtifactActions()
     {
         var root = FindRepositoryRoot();
