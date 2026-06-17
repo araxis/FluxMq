@@ -3588,6 +3588,13 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "DashboardInspectorVisualMetricRows.razor"));
+        var visualRowsCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorVisualMetricRows.razor.css"));
 
         inspector.ShouldContain("DashboardInspectorVisualMetricRows");
         inspector.ShouldNotContain("SetMetricCardColumnsFromEventAsync");
@@ -3596,9 +3603,21 @@ public sealed class DashboardEventFilterCatalogTests
         visualRows.ShouldContain("PropertyGridRow Name=\"@Labels.PrimaryCardRow\"");
         visualRows.ShouldContain("PropertyGridRow Name=\"@Labels.AddCardRow\"");
         visualRows.ShouldContain("PropertyGridRow Name=\"@Labels.ColumnsRow\"");
+        visualRows.ShouldContain("visual-metric-row");
+        visualRows.ShouldContain("visual-metric-position");
+        visualRows.ShouldContain("visual-metric-actions");
+        visualRows.ShouldContain("visual-metric-add-row");
+        visualRows.ShouldContain("visual-metric-add-button");
         visualRows.ShouldContain("DashboardInspectorMetricMove");
         visualRows.ShouldContain("VisualMetricLabel");
         visualRows.ShouldContain("CardColumnsChanged");
+        visualRowsCss.ShouldContain(".visual-metric-row");
+        visualRowsCss.ShouldContain("grid-template-columns: 20px minmax(0, 1fr) auto;");
+        visualRowsCss.ShouldContain(".visual-metric-actions");
+        visualRowsCss.ShouldContain("grid-template-columns: repeat(3, 20px);");
+        visualRowsCss.ShouldContain(".visual-metric-add-row");
+        visualRowsCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 52px;");
+        visualRowsCss.ShouldContain("@container property-grid (max-width: 280px)");
     }
 
     [Fact]
