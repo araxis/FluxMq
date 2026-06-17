@@ -4079,7 +4079,14 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@EditorModeLabel");
         markup.ShouldContain("@EditorDetailLabel");
         markup.ShouldContain("Rounded=\"false\"");
+        markup.ShouldContain("dashboard-widget-editor-section-head");
+        markup.ShouldContain("dashboard-widget-editor-action-status");
+        markup.ShouldContain("dashboard-widget-editor-action-spacer");
         markup.ShouldContain("dashboard-widget-editor-actions");
+        markup.ShouldContain("StartIcon=\"@Icons.Material.Filled.RestartAlt\"");
+        markup.ShouldContain("Disabled=\"@(!HasChanges)\"");
+        markup.ShouldContain("ActionStatusLabel");
+        markup.ShouldContain("ConfigurationEquals");
         markup.ShouldContain("FilterAltOff");
         markup.ShouldNotContain("<MudDivider />");
 
@@ -4087,8 +4094,15 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".dashboard-widget-editor-title-copy");
         css.ShouldContain(".dashboard-widget-editor-meta-strip span");
         css.ShouldContain(".dashboard-widget-editor-shell");
-        css.ShouldContain("grid-template-columns: 34px minmax(0, 1fr);");
+        css.ShouldContain("max-height: min(68vh, 620px);");
+        css.ShouldContain("overflow-y: auto;");
+        css.ShouldContain("grid-template-columns: 30px minmax(0, 1fr);");
+        css.ShouldContain("position: sticky;");
+        css.ShouldContain(".dashboard-widget-editor-section-head");
+        css.ShouldContain(".dashboard-widget-editor-action-status");
+        css.ShouldContain(".dashboard-widget-editor-action-spacer");
         css.ShouldContain(".dashboard-widget-editor-actions");
+        css.ShouldContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
         css.ShouldContain("@media (max-width: 700px)");
     }
 
