@@ -485,6 +485,15 @@
     transition: background 0.12s ease, color 0.12s ease, opacity 0.12s ease, transform 0.12s ease;
 }
 
+.component-catalog.dashboard .catalog-add-button {
+    color: var(--flux-accent);
+    opacity: 0.68;
+}
+
+.component-catalog.dashboard .catalog-drag-grip {
+    opacity: 0.58;
+}
+
 .catalog-item:hover .catalog-add-button,
 .catalog-item:focus-visible .catalog-add-button,
 .catalog-item.dragging .catalog-add-button {

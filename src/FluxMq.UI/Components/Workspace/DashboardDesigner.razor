@@ -252,7 +252,7 @@
                                         var previewSample = PreviewSample(widget.Name);
                                         <div class="dashboard-cell-widget-preview"
                                              draggable="true"
-                                             title="Drag to move widget"
+                                             title="Drag to move widget; use toolbar to edit"
                                              @ondragstart="@(() => BeginWidgetMove(currentCell.Widget, currentCell.Name))"
                                              @ondragend="@EndWidgetMove">
                                             <DashboardWidgetView Project="@Project"
@@ -263,6 +263,13 @@
                                         </div>
                                         <div class="dashboard-cell-widget-toolbar"
                                              @onclick:stopPropagation="true">
+                                            <button type="button"
+                                                    class="dashboard-cell-widget-action edit"
+                                                    title="Edit widget settings"
+                                                    aria-label="@($"Edit {WidgetLabel(currentCell.Widget)} settings")"
+                                                    @onclick="@(() => OpenWidgetEditorAsync(currentCell.Widget))">
+                                                <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
+                                            </button>
                                             <button type="button"
                                                     class="dashboard-cell-widget-action simulate"
                                                     title="Simulate widget data"
@@ -660,6 +667,18 @@
         Project.SetActiveDashboardCell(_selectedCellIds.Count == 1 ? _selectedCellIds.Single() : null);
     }
 
+    private void SelectSingleCell(string? cellName)
+    {
+        if (string.IsNullOrWhiteSpace(cellName))
+        {
+            return;
+        }
+
+        _selectedCellIds.Clear();
+        _selectedCellIds.Add(cellName);
+        Project.SetActiveDashboardCell(cellName);
+    }
+
     private void HandleDesignerPointerEnter(PointerEventArgs args)
     {
         if (IsDashboardComponentDrag)
@@ -775,7 +794,9 @@
                 return;
             }
 
-            Project.AddDashboardWidget(args.ComponentType, _hoveredDropCellName);
+            var targetCellName = _hoveredDropCellName;
+            Project.AddDashboardWidget(args.ComponentType, targetCellName);
+            SelectSingleCell(targetCellName);
             _hoveredDropCellName = null;
             CaptureDashboardError();
             RefreshLayoutAfterCommand();
