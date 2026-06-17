@@ -2587,6 +2587,53 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void TestStudio_UsesFlatCompactWorkspaceChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "TestStudio.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "TestStudio.razor.css"));
+
+        markup.ShouldContain("aria-label=\"Test studio workspace\"");
+        markup.ShouldContain("test-studio-title-icon");
+        markup.ShouldContain("@TestCountLabel");
+        markup.ShouldContain("@ActiveScenarioLabel");
+        markup.ShouldContain("@RunCountLabel");
+        markup.ShouldContain("test-studio-mode-switch");
+        markup.ShouldContain("role=\"tablist\"");
+        markup.ShouldContain("ModeButtonClass(TestStudioMode.Designer)");
+        markup.ShouldContain("ModeButtonClass(TestStudioMode.Runner)");
+        markup.ShouldContain("Icons.Material.Filled.EditNote");
+        markup.ShouldContain("Icons.Material.Filled.PlayCircle");
+        markup.ShouldContain("TestScenarioDesigner Project=\"@Project\"");
+        markup.ShouldContain("TestRunnerConsole Project=\"@Project\"");
+        markup.ShouldNotContain("MudToggleGroup");
+        markup.ShouldNotContain("MudToggleItem");
+
+        css.ShouldContain(".test-studio-title-icon");
+        css.ShouldContain(".test-studio-meta span");
+        css.ShouldContain(".test-studio-mode-switch");
+        css.ShouldContain(".test-studio-mode-button");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
+        css.ShouldContain("height: 30px;");
+        css.ShouldContain(".test-studio-mode-button.active");
+        css.ShouldContain("@media (max-width: 760px)");
+        css.ShouldContain("width: 100%;");
+        css.ShouldNotContain(".mud-toggle-group");
+    }
+
+    [Fact]
     public void PayloadInspectorPanel_UsesFlatCompactInspectorChrome()
     {
         var root = FindRepositoryRoot();
