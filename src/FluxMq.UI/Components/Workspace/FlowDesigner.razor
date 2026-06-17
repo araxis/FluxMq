@@ -9,10 +9,12 @@
 @inject DragStateService DragState
 
 <div class="flow-designer-root"
+     role="region"
+     aria-label="Flow designer canvas"
      @onpointerenter="HandleDesignerPointerEnter"
      @onpointermove="HandleDesignerPointerMove"
      @onpointerleave="HandleDesignerPointerLeave">
-    <div class="flow-canvas">
+    <div class="flow-canvas" role="group" aria-label="Pipeline diagram canvas">
         <CascadingValue Value="_diagram">
             <DiagramCanvas>
                 <Widgets>
@@ -33,9 +35,16 @@
             <span class="flow-canvas-title-icon" aria-hidden="true">
                 <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" />
             </span>
-            <div>
+            <div class="flow-canvas-title-copy">
                 <h2>@WorkflowTitle</h2>
-                <div class="flow-canvas-subtitle">@WorkflowSubtitle</div>
+                <div class="flow-canvas-meta-strip" aria-label="Pipeline canvas summary">
+                    <span>@WorkflowSubtitle</span>
+                    <span>@WorkflowModeLabel</span>
+                    @if (_selectedWorkflowLink is not null)
+                    {
+                        <span>@WorkflowSelectionLabel</span>
+                    }
+                </div>
             </div>
         </div>
         <div class="flow-canvas-actions" aria-label="Pipeline canvas status and commands">
@@ -43,48 +52,58 @@
                 <span class="flow-state-dot" aria-hidden="true"></span>
                 @RuntimeStateLabel
             </span>
-            <span class="flow-canvas-chip">
-                <span>Nodes</span>
-                <strong>@PipelineNodeCount</strong>
-            </span>
-            <span class="flow-canvas-chip">
-                <span>Links</span>
-                <strong>@LinkCount</strong>
-            </span>
-            @if (ResourceNodeCount > 0)
-            {
+            <div class="flow-canvas-metrics" aria-label="Pipeline canvas metrics">
                 <span class="flow-canvas-chip">
-                    <span>Resources</span>
-                    <strong>@ResourceNodeCount</strong>
+                    <span>Nodes</span>
+                    <strong>@PipelineNodeCount</strong>
                 </span>
-            }
-            @if (DiagnosticCount > 0)
-            {
-                <span class="flow-canvas-chip @DiagnosticSeverityClass">
-                    <span>@DiagnosticSummaryLabel</span>
-                    <strong>@DiagnosticCount</strong>
+                <span class="flow-canvas-chip">
+                    <span>Links</span>
+                    <strong>@LinkCount</strong>
                 </span>
-            }
-            <MudTooltip Text="Zoom to fit">
-                <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong"
-                               Size="Size.Small"
-                               Class="flow-canvas-icon-button"
-                               OnClick="@ZoomToFit"
-                               aria-label="Zoom to fit" />
-            </MudTooltip>
+                @if (ResourceNodeCount > 0)
+                {
+                    <span class="flow-canvas-chip">
+                        <span>Resources</span>
+                        <strong>@ResourceNodeCount</strong>
+                    </span>
+                }
+                @if (DiagnosticCount > 0)
+                {
+                    <span class="flow-canvas-chip @DiagnosticSeverityClass">
+                        <span>@DiagnosticSummaryLabel</span>
+                        <strong>@DiagnosticCount</strong>
+                    </span>
+                }
+            </div>
+            <div class="flow-canvas-command-group" aria-label="Pipeline canvas commands">
+                <MudTooltip Text="Zoom to fit">
+                    <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong"
+                                   Size="Size.Small"
+                                   Class="flow-canvas-icon-button"
+                                   OnClick="@ZoomToFit"
+                                   aria-label="Zoom to fit" />
+                </MudTooltip>
+            </div>
         </div>
     </div>
     @if (IsCanvasEmpty)
     {
-        <div class="flow-canvas-empty">
-            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Large" />
+        <div class="flow-canvas-empty" role="status" aria-live="polite">
+            <span class="flow-canvas-empty-icon" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Large" />
+            </span>
             <strong>No pipeline nodes</strong>
-            <span>@EmptyCanvasText</span>
+            <span class="flow-canvas-empty-message">@EmptyCanvasText</span>
+            <small>@EmptyCanvasHint</small>
         </div>
     }
     @if (DragState.ActiveComponentDrag is { IsOverDesigner: true, TargetKind: WorkspaceArtifactKind.Pipeline })
     {
-        <div class="flow-canvas-drop-highlight">Drop component</div>
+        <div class="flow-canvas-drop-highlight" aria-hidden="true">
+            <MudIcon Icon="@Icons.Material.Filled.AddCircle" Size="Size.Small" />
+            <span>Drop component</span>
+        </div>
     }
     @if (_selectedWorkflowLink is not null)
     {
@@ -172,6 +191,10 @@
             ? "No active pipeline"
             : "Ready";
 
+    private string WorkflowModeLabel => Flow.ActiveWorkflowName is null ? "No pipeline" : "Editable";
+
+    private string WorkflowSelectionLabel => _selectedWorkflowLink is null ? "No link selected" : "Link selected";
+
     private int PipelineNodeCount => _diagram.Nodes
         .OfType<FlowDiagramNodeModel>()
         .Count(static node => !node.IsResource);
@@ -187,6 +210,10 @@
     private string EmptyCanvasText => Flow.ActiveWorkflowName is null
         ? "Create a pipeline first."
         : "Add components from the catalog.";
+
+    private string EmptyCanvasHint => Flow.ActiveWorkflowName is null
+        ? "Use the structure panel to add a pipeline."
+        : "Drop a component here to begin.";
 
     private int DiagnosticCount => Flow.Diagnostics.Count;
 

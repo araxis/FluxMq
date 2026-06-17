@@ -3810,6 +3810,52 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void FlowDesigner_UsesFlatCompactCanvasChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "FlowDesigner.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "FlowDesigner.razor.css"));
+
+        markup.ShouldContain("aria-label=\"Flow designer canvas\"");
+        markup.ShouldContain("aria-label=\"Pipeline diagram canvas\"");
+        markup.ShouldContain("flow-canvas-title-copy");
+        markup.ShouldContain("flow-canvas-meta-strip");
+        markup.ShouldContain("@WorkflowModeLabel");
+        markup.ShouldContain("@WorkflowSelectionLabel");
+        markup.ShouldContain("flow-canvas-metrics");
+        markup.ShouldContain("flow-canvas-command-group");
+        markup.ShouldContain("role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("@EmptyCanvasHint");
+        markup.ShouldContain("flow-canvas-empty-icon");
+        markup.ShouldContain("AddCircle");
+        markup.ShouldContain("DiagramCanvas");
+        markup.ShouldContain("NavigatorWidget");
+
+        css.ShouldContain(".flow-canvas-header");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
+        css.ShouldContain(".flow-canvas-title-copy");
+        css.ShouldContain(".flow-canvas-meta-strip span,");
+        css.ShouldContain(".flow-canvas-metrics");
+        css.ShouldContain(".flow-canvas-command-group");
+        css.ShouldContain(".flow-canvas-empty-icon");
+        css.ShouldContain("max-width: min(100%, 360px);");
+        css.ShouldContain("@media (max-width: 720px)");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
+    }
+
+    [Fact]
     public void AppStructureMenu_UsesCompactInlineArtifactActions()
     {
         var root = FindRepositoryRoot();
