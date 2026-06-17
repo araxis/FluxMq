@@ -4,13 +4,20 @@
 @inject ProjectManagerService Projects
 @inject DragStateService DragState
 
-<div class="component-catalog @CatalogClass">
+<div class="component-catalog @CatalogClass" aria-label="@CatalogPanelLabel">
     <div class="catalog-head">
         <div class="catalog-title">
             <span class="catalog-title-icon" aria-hidden="true">
                 <MudIcon Icon="@CatalogIcon" Size="Size.Small" />
             </span>
-            <span>@CatalogTitle</span>
+            <span class="catalog-title-copy">
+                <span class="catalog-title-label">@CatalogTitle</span>
+                <span class="catalog-meta-strip" aria-label="Catalog state">
+                    <span>@CatalogModeLabel</span>
+                    <span class="@CatalogUseStateClass">@CatalogUseStateLabel</span>
+                    <span>@CatalogSearchStateLabel</span>
+                </span>
+            </span>
             <span class="catalog-count" title="@CatalogCountTitle">@CatalogCountLabel</span>
         </div>
         <MudTextField T="string"
@@ -30,7 +37,11 @@
     <div class="catalog-list">
         @if (SearchResult.VisibleCount == 0)
         {
-            <div class="catalog-empty">@EmptyLabel</div>
+            <div class="catalog-empty" role="status" aria-live="polite">
+                <MudIcon Icon="@EmptyIcon" Size="Size.Small" />
+                <span>@EmptyLabel</span>
+                <small>@EmptyHintLabel</small>
+            </div>
         }
         else
         {
@@ -140,6 +151,25 @@
         _ => "Pipeline components"
     };
 
+    private string CatalogPanelLabel
+        => $"{CatalogTitle} catalog";
+
+    private string CatalogModeLabel => ArtifactKind switch
+    {
+        WorkspaceArtifactKind.Dashboard => "Dashboard",
+        WorkspaceArtifactKind.Test => "Test",
+        _ => "Pipeline"
+    };
+
+    private string CatalogUseStateLabel
+        => CanUseItem ? "Ready" : "Inactive tab";
+
+    private string CatalogUseStateClass
+        => CanUseItem ? "catalog-use-state ready" : "catalog-use-state inactive";
+
+    private string CatalogSearchStateLabel
+        => SearchResult.HasSearch ? "Filtered" : "All";
+
     private string EmptyLabel => HasSearch
         ? $"No matches for \"{_searchText.Trim()}\""
         : ArtifactKind switch
@@ -177,6 +207,18 @@
     private string CatalogCountTitle => SearchResult.HasSearch
         ? $"{SearchResult.VisibleCount} matching items out of {SearchResult.TotalCount}"
         : $"{SearchResult.TotalCount} available items";
+
+    private string EmptyIcon
+        => HasSearch ? Icons.Material.Filled.SearchOff : CatalogIcon;
+
+    private string EmptyHintLabel => HasSearch
+        ? "Try a shorter search."
+        : ArtifactKind switch
+        {
+            WorkspaceArtifactKind.Dashboard => "No widget definitions are available.",
+            WorkspaceArtifactKind.Test => "No test step definitions are available.",
+            _ => "No component definitions are available."
+        };
 
     private string CatalogItemTitle => ArtifactKind switch
     {
