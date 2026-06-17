@@ -3021,6 +3021,46 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardDesigner_UsesFlatLivePreviewChrome()
+    {
+        var root = FindRepositoryRoot();
+        var razor = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor.css"));
+
+        razor.ShouldContain("dashboard-live-head");
+        razor.ShouldContain("dashboard-live-summary");
+        razor.ShouldContain("@LivePreviewSubtitle");
+        razor.ShouldContain("@LivePreviewStateLabel");
+        razor.ShouldContain("SwitchToEditMode");
+        razor.ShouldContain("dashboard-live-viewport");
+        razor.ShouldContain("dashboard-live-empty-note");
+        razor.ShouldContain("No widgets in live preview");
+        razor.ShouldContain("Read-only runtime view without layout controls.");
+
+        css.ShouldContain(".dashboard-live-head");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto auto;");
+        css.ShouldContain(".dashboard-live-summary .ready");
+        css.ShouldContain(".dashboard-live-summary .empty");
+        css.ShouldContain("::deep .dashboard-live-edit-button");
+        css.ShouldContain(".dashboard-live-viewport");
+        css.ShouldContain(".dashboard-live-empty-note");
+        css.ShouldContain("grid-template-columns: 28px minmax(0, 1fr);");
+        css.ShouldContain("max-width: calc(100% - 16px);");
+    }
+
+    [Fact]
     public void DashboardDesigner_EditGridUsesFlatEditingStateAffordances()
     {
         var root = FindRepositoryRoot();
