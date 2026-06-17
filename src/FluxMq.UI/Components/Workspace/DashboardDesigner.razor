@@ -183,15 +183,22 @@
                     @for (var column = 0; column < _layout.Columns.Count; column++)
                     {
                         var c = column;
+                        var padding = GetTrackPadding(ColumnAxis, c);
                         <button type="button"
-                                class="dashboard-track-handle"
-                                title="@($"Edit column {c + 1}")"
+                                class="@TrackHandleClass(ColumnAxis)"
+                                title="@TrackHandleLabel(ColumnAxis, c, _layout.Columns[c], padding)"
+                                aria-label="@TrackHandleLabel(ColumnAxis, c, _layout.Columns[c], padding)"
                                 @onclick="() => OpenTrackEditorAsync(ColumnAxis, c)">
-                            <span>C@(c + 1)</span>
-                            <small>@_layout.Columns[c]</small>
-                            @if (GetTrackPadding(ColumnAxis, c) > 0)
+                            <span class="dashboard-track-icon" aria-hidden="true">
+                                <MudIcon Icon="@TrackHandleIcon(ColumnAxis)" Size="Size.Small" />
+                            </span>
+                            <span class="dashboard-track-main">
+                                <span class="dashboard-track-name">@TrackShortLabel(ColumnAxis, c)</span>
+                                <small>@_layout.Columns[c]</small>
+                            </span>
+                            @if (padding > 0)
                             {
-                                <small class="dashboard-track-padding">pad @FormatNumber(GetTrackPadding(ColumnAxis, c))</small>
+                                <small class="dashboard-track-padding">pad @FormatNumber(padding)</small>
                             }
                         </button>
                     }
@@ -200,15 +207,22 @@
                     @for (var row = 0; row < _layout.Rows.Count; row++)
                     {
                         var r = row;
+                        var padding = GetTrackPadding(RowAxis, r);
                         <button type="button"
-                                class="dashboard-track-handle"
-                                title="@($"Edit row {r + 1}")"
+                                class="@TrackHandleClass(RowAxis)"
+                                title="@TrackHandleLabel(RowAxis, r, _layout.Rows[r], padding)"
+                                aria-label="@TrackHandleLabel(RowAxis, r, _layout.Rows[r], padding)"
                                 @onclick="() => OpenTrackEditorAsync(RowAxis, r)">
-                            <span>R@(r + 1)</span>
-                            <small>@_layout.Rows[r]</small>
-                            @if (GetTrackPadding(RowAxis, r) > 0)
+                            <span class="dashboard-track-icon" aria-hidden="true">
+                                <MudIcon Icon="@TrackHandleIcon(RowAxis)" Size="Size.Small" />
+                            </span>
+                            <span class="dashboard-track-main">
+                                <span class="dashboard-track-name">@TrackShortLabel(RowAxis, r)</span>
+                                <small>@_layout.Rows[r]</small>
+                            </span>
+                            @if (padding > 0)
                             {
-                                <small class="dashboard-track-padding">pad @FormatNumber(GetTrackPadding(RowAxis, r))</small>
+                                <small class="dashboard-track-padding">pad @FormatNumber(padding)</small>
                             }
                         </button>
                     }
@@ -595,6 +609,26 @@
     private string RowHandleStyle => _layout is null
         ? string.Empty
         : $"grid-template-rows:{CssTemplate(_layout.Rows, RowAxis)};";
+
+    private static string TrackHandleClass(string axis)
+        => $"dashboard-track-handle {axis}";
+
+    private static string TrackShortLabel(string axis, int index)
+        => string.Equals(axis, ColumnAxis, StringComparison.Ordinal)
+            ? $"C{index + 1}"
+            : $"R{index + 1}";
+
+    private static string TrackHandleIcon(string axis)
+        => string.Equals(axis, ColumnAxis, StringComparison.Ordinal)
+            ? Icons.Material.Filled.ViewColumn
+            : Icons.Material.Filled.TableRows;
+
+    private static string TrackHandleLabel(string axis, int index, string size, double padding)
+    {
+        var track = string.Equals(axis, ColumnAxis, StringComparison.Ordinal) ? "Column" : "Row";
+        var paddingLabel = padding > 0 ? $", padding {FormatNumber(padding)}" : string.Empty;
+        return $"Edit {track.ToLowerInvariant()} {index + 1}, size {size}{paddingLabel}";
+    }
 
     private void SwitchToEditMode()
         => DashboardMode = DashboardModeEdit;
