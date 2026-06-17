@@ -2,7 +2,7 @@
 @using MudBlazor
 
 <div class="@RowClass" role="row">
-    <div class="property-grid-name" title="@HelpText">
+    <div class="property-grid-name" title="@NameTitle">
         <span>@Name</span>
         @if (!string.IsNullOrWhiteSpace(HelpText))
         {
@@ -43,7 +43,14 @@
         get
         {
             var rowClass = Stacked ? "property-grid-row stacked" : "property-grid-row";
-            return HasUnit ? $"{rowClass} has-unit" : rowClass;
+            if (HasUnit)
+            {
+                rowClass = $"{rowClass} has-unit";
+            }
+
+            return string.IsNullOrWhiteSpace(HelpText) ? rowClass : $"{rowClass} has-help";
         }
     }
+
+    private string NameTitle => string.IsNullOrWhiteSpace(HelpText) ? Name : HelpText;
 }
