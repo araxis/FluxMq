@@ -1,0 +1,242 @@
+.dashboard-track-editor-title {
+    align-items: center;
+    color: var(--mud-palette-text-primary);
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 28px minmax(0, 1fr);
+    min-width: 0;
+}
+
+.dashboard-track-editor-title-icon {
+    align-items: center;
+    background: color-mix(in srgb, var(--flux-accent) 9%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-accent) 26%, var(--flux-border));
+    border-radius: 6px;
+    color: var(--flux-accent);
+    display: inline-flex;
+    height: 28px;
+    justify-content: center;
+    width: 28px;
+}
+
+.dashboard-track-editor-title-icon ::deep .mud-icon-root {
+    color: var(--flux-accent);
+    font-size: 16px;
+}
+
+.dashboard-track-editor-title-copy {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.dashboard-track-editor-title-copy ::deep .mud-typography-h6 {
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.15;
+}
+
+.dashboard-track-editor-meta {
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    flex-wrap: wrap;
+    font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+    font-size: 10.5px;
+    gap: 5px;
+    min-width: 0;
+}
+
+.dashboard-track-editor-meta span {
+    background: color-mix(in srgb, var(--flux-surface-2) 72%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 82%, transparent);
+    border-radius: 4px;
+    line-height: 1.1;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    padding: 2px 5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dashboard-track-editor-shell {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+}
+
+.dashboard-track-editor-preview {
+    align-items: stretch;
+    display: grid;
+    gap: 7px;
+    grid-template-columns: minmax(0, 1fr) 18px minmax(0, 1fr);
+    min-width: 0;
+}
+
+.dashboard-track-editor-preview > ::deep .mud-icon-root {
+    align-self: center;
+    justify-self: center;
+}
+
+.dashboard-track-editor-preview-item {
+    background: color-mix(in srgb, var(--flux-surface-2) 72%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 82%, transparent);
+    border-radius: 6px;
+    display: grid;
+    gap: 2px;
+    min-height: 52px;
+    min-width: 0;
+    padding: 7px 8px;
+}
+
+.dashboard-track-editor-preview-item.active {
+    background: color-mix(in srgb, var(--flux-accent) 7%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--flux-accent) 34%, var(--flux-border));
+}
+
+.dashboard-track-editor-preview-item span,
+.dashboard-track-editor-section-head,
+.dashboard-track-editor-note {
+    color: var(--mud-palette-text-secondary);
+}
+
+.dashboard-track-editor-preview-item span {
+    font-size: 10px;
+    font-weight: 760;
+    line-height: 1;
+}
+
+.dashboard-track-editor-preview-item strong {
+    color: var(--mud-palette-text-primary);
+    font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+    font-size: 14px;
+    font-weight: 820;
+    line-height: 1.2;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dashboard-track-editor-preview-item small {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10px;
+    line-height: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dashboard-track-editor-section {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+}
+
+.dashboard-track-editor-section-head {
+    align-items: center;
+    display: flex;
+    font-size: 11px;
+    font-weight: 780;
+    gap: 5px;
+    line-height: 1;
+}
+
+.dashboard-track-editor-section-head ::deep .mud-icon-root {
+    font-size: 15px;
+}
+
+.dashboard-track-editor-toggle ::deep .mud-button-group-root {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+}
+
+.dashboard-track-editor-toggle ::deep .mud-button-root {
+    min-height: 30px;
+    min-width: 0;
+}
+
+.dashboard-track-editor-fields {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    min-width: 0;
+}
+
+.dashboard-track-editor-fields ::deep .mud-input-control {
+    margin: 0;
+}
+
+.dashboard-track-editor-input ::deep input {
+    font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.dashboard-track-editor-note {
+    align-items: center;
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--flux-border) 76%, transparent);
+    border-radius: 6px;
+    display: grid;
+    font-size: 11px;
+    gap: 6px;
+    grid-template-columns: 18px minmax(0, 1fr);
+    line-height: 1.25;
+    min-height: 30px;
+    min-width: 0;
+    padding: 5px 7px;
+}
+
+.dashboard-track-editor-note ::deep .mud-icon-root {
+    color: var(--flux-accent);
+    font-size: 15px;
+}
+
+.dashboard-track-editor-note span {
+    min-width: 0;
+}
+
+.dashboard-track-editor-actions {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    width: 100%;
+}
+
+.dashboard-track-editor-action-spacer {
+    flex: 1 1 auto;
+}
+
+.dashboard-track-editor-actions ::deep .mud-button-root {
+    min-height: 30px;
+}
+
+@media (max-width: 520px) {
+    .dashboard-track-editor-preview,
+    .dashboard-track-editor-fields {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .dashboard-track-editor-preview > ::deep .mud-icon-root {
+        display: none;
+    }
+
+    .dashboard-track-editor-actions {
+        align-items: stretch;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .dashboard-track-editor-action-spacer {
+        display: none;
+    }
+
+    .dashboard-track-editor-actions ::deep .mud-button-root {
+        width: 100%;
+    }
+}

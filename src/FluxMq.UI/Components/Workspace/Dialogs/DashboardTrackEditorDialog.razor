@@ -3,36 +3,94 @@
 
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true })">
     <TitleContent>
-        <MudText Typo="Typo.h6">@Title</MudText>
+        <div class="dashboard-track-editor-title">
+            <span class="dashboard-track-editor-title-icon" aria-hidden="true">
+                <MudIcon Icon="@AxisIcon" Size="MudBlazor.Size.Small" />
+            </span>
+            <div class="dashboard-track-editor-title-copy">
+                <MudText Typo="Typo.h6">@Title</MudText>
+                <div class="dashboard-track-editor-meta" aria-label="Track summary">
+                    <span>@TrackCode</span>
+                    <span>@CurrentSummary</span>
+                </div>
+            </div>
+        </div>
     </TitleContent>
     <DialogContent>
-        <MudStack Spacing="2">
-            <MudSelect T="string"
-                       Label="Size mode"
-                       @bind-Value="_unit"
-                       Variant="Variant.Outlined"
-                       Margin="Margin.Dense">
-                <MudSelectItem T="string" Value="@StarUnit">Star</MudSelectItem>
-                <MudSelectItem T="string" Value="@PercentUnit">Percent</MudSelectItem>
-                <MudSelectItem T="string" Value="@FixedUnit">Fixed</MudSelectItem>
-            </MudSelect>
-            <MudNumericField T="double"
-                             Label="@ValueLabel"
-                             @bind-Value="_value"
-                             Min="0.001"
-                             Variant="Variant.Outlined"
-                             Margin="Margin.Dense" />
-            <MudNumericField T="double"
-                             Label="Padding"
-                             @bind-Value="_padding"
-                             Min="0"
-                             Variant="Variant.Outlined"
-                             Margin="Margin.Dense" />
-        </MudStack>
+        <div class="dashboard-track-editor-shell" role="form" aria-label="@EditorAriaLabel">
+            <div class="dashboard-track-editor-preview" aria-label="Track size preview">
+                <div class="dashboard-track-editor-preview-item">
+                    <span>Current</span>
+                    <strong>@Size</strong>
+                    <small>@FormatPadding(Padding)</small>
+                </div>
+                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="MudBlazor.Size.Small" Color="Color.Secondary" />
+                <div class="dashboard-track-editor-preview-item active">
+                    <span>New</span>
+                    <strong>@ResultSize</strong>
+                    <small>@FormatPadding(_padding)</small>
+                </div>
+            </div>
+
+            <section class="dashboard-track-editor-section" aria-label="Size mode">
+                <div class="dashboard-track-editor-section-head">
+                    <MudIcon Icon="@Icons.Material.Filled.Tune" Size="MudBlazor.Size.Small" />
+                    <span>Size mode</span>
+                </div>
+                <div class="dashboard-track-editor-toggle">
+                    <MudToggleGroup T="string"
+                                    @bind-Value="_unit"
+                                    SelectionMode="SelectionMode.SingleSelection"
+                                    Size="MudBlazor.Size.Small"
+                                    Color="Color.Primary"
+                                    Outlined="true"
+                                    Delimiters="true"
+                                    aria-label="Size mode">
+                        <MudToggleItem T="string" Value="@StarUnit" Text="Flexible" />
+                        <MudToggleItem T="string" Value="@PercentUnit" Text="Percent" />
+                        <MudToggleItem T="string" Value="@FixedUnit" Text="Fixed" />
+                    </MudToggleGroup>
+                </div>
+            </section>
+
+            <div class="dashboard-track-editor-fields">
+                <MudNumericField T="double"
+                                 Label="@ValueLabel"
+                                 @bind-Value="_value"
+                                 Min="0.001"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="dashboard-track-editor-input" />
+                <MudNumericField T="double"
+                                 Label="Padding"
+                                 @bind-Value="_padding"
+                                 Min="0"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="dashboard-track-editor-input" />
+            </div>
+
+            <div class="dashboard-track-editor-note">
+                <MudIcon Icon="@Icons.Material.Filled.Info" Size="MudBlazor.Size.Small" />
+                <span>@ModeDescription</span>
+            </div>
+        </div>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@Submit">Apply</MudButton>
+        <div class="dashboard-track-editor-actions">
+            <MudButton OnClick="@Reset"
+                       Size="MudBlazor.Size.Small"
+                       StartIcon="@Icons.Material.Filled.RestartAlt"
+                       Disabled="@(!CanReset)">Reset</MudButton>
+            <span class="dashboard-track-editor-action-spacer"></span>
+            <MudButton OnClick="@Cancel" Size="MudBlazor.Size.Small">Cancel</MudButton>
+            <MudButton Color="Color.Primary"
+                       Variant="Variant.Filled"
+                       Size="MudBlazor.Size.Small"
+                       StartIcon="@Icons.Material.Filled.Done"
+                       Disabled="@(!CanSubmit)"
+                       OnClick="@Submit">Apply</MudButton>
+        </div>
     </DialogActions>
 </MudDialog>
 
@@ -49,8 +107,11 @@
     [Parameter] public double Padding { get; set; }
 
     private string _unit = StarUnit;
+    private string _initialUnit = StarUnit;
     private double _value = 1;
+    private double _initialValue = 1;
     private double _padding;
+    private double _initialPadding;
 
     protected override void OnInitialized()
     {
@@ -71,9 +132,29 @@
             _unit = StarUnit;
             _value = 1;
         }
+
+        _initialUnit = _unit;
+        _initialValue = _value;
+        _initialPadding = _padding;
     }
 
-    private string Title => $"{CultureInfo.InvariantCulture.TextInfo.ToTitleCase(Axis)} {Index + 1}";
+    private string AxisLabel => string.Equals(Axis, "row", StringComparison.Ordinal) ? "row" : "column";
+
+    private string Title => $"{CultureInfo.InvariantCulture.TextInfo.ToTitleCase(AxisLabel)} {Index + 1}";
+
+    private string TrackCode => string.Equals(AxisLabel, "row", StringComparison.Ordinal)
+        ? $"R{Index + 1}"
+        : $"C{Index + 1}";
+
+    private string AxisIcon => string.Equals(AxisLabel, "row", StringComparison.Ordinal)
+        ? Icons.Material.Filled.TableRows
+        : Icons.Material.Filled.ViewColumn;
+
+    private string CurrentSummary => $"{Size} / {FormatPadding(Padding)}";
+
+    private string EditorAriaLabel => $"{Title} sizing";
+
+    private string ResultSize => BuildTrackSize(_unit, Math.Max(0.001, _value));
 
     private string ValueLabel => _unit switch
     {
@@ -82,20 +163,47 @@
         _ => "Weight"
     };
 
+    private string ModeDescription => _unit switch
+    {
+        PercentUnit => "Percent tracks reserve a proportional share of the dashboard grid.",
+        FixedUnit => "Fixed tracks use pixel sizing for precise dashboard layout control.",
+        _ => "Flexible tracks share the remaining grid space by weight."
+    };
+
+    private bool CanReset =>
+        !string.Equals(_unit, _initialUnit, StringComparison.Ordinal) ||
+        Math.Abs(_value - _initialValue) > 0.0005 ||
+        Math.Abs(_padding - _initialPadding) > 0.0005;
+
+    private bool CanSubmit => _value >= 0.001 && _padding >= 0;
+
     private void Cancel() => MudDialog.Cancel();
+
+    private void Reset()
+    {
+        _unit = _initialUnit;
+        _value = _initialValue;
+        _padding = _initialPadding;
+    }
 
     private void Submit()
     {
         var value = Math.Max(0.001, _value);
-        var size = _unit switch
+        var size = BuildTrackSize(_unit, value);
+
+        MudDialog.Close(DialogResult.Ok(new DashboardTrackUpdate(size, Math.Max(0, _padding))));
+    }
+
+    private static string BuildTrackSize(string unit, double value)
+        => unit switch
         {
             PercentUnit => $"{Format(value)}%",
             FixedUnit => Format(value),
             _ => value == 1 ? "*" : $"{Format(value)}*"
         };
 
-        MudDialog.Close(DialogResult.Ok(new DashboardTrackUpdate(size, Math.Max(0, _padding))));
-    }
+    private static string FormatPadding(double value)
+        => $"{Format(Math.Max(0, value))}px padding";
 
     private static string Format(double value)
         => value.ToString("0.###", CultureInfo.InvariantCulture);
