@@ -8,7 +8,7 @@
 @inject ScenarioStepCatalog ScenarioSteps
 @inject ISnackbar Snackbar
 
-<div class="test-runner-console">
+<div class="test-runner-console" aria-label="Test runner console">
     @if (Scenario is null)
     {
         <div class="test-runner-empty">
@@ -30,81 +30,90 @@
     {
         <div class="test-runner-header">
             <div class="test-runner-title-block">
-                <MudIcon Icon="@Icons.Material.Filled.PlayCircle" Size="Size.Small" />
-                <div>
+                <span class="test-runner-title-icon" aria-hidden="true">
+                    <MudIcon Icon="@Icons.Material.Filled.PlayCircle" Size="Size.Small" />
+                </span>
+                <div class="test-runner-title-copy">
                     <div class="test-runner-title">@Scenario.Name</div>
-                    <div class="test-runner-meta">@Scenario.StepCount steps / @Scenario.Phases.Count phases</div>
+                    <div class="test-runner-meta-strip" aria-label="Scenario runner summary">
+                        <span>@ScenarioStepLabel</span>
+                        <span>@ScenarioPhaseLabel</span>
+                        <span>@RunHistorySummaryLabel</span>
+                    </div>
                 </div>
             </div>
             <div class="test-runner-actions">
                 @if (Project.LastScenarioRunResult is { } result)
                 {
-                    <MudChip T="string"
-                             Text="@result.Status.ToString()"
-                             Icon="@RunStatusIcon(result.Status)"
-                             Color="@RunStatusColor(result.Status)"
-                             Variant="Variant.Outlined"
-                             Size="Size.Small" />
+                    <span class="@RunStatusPillClass(result.Status)" aria-label="@($"Run status {result.Status}")">
+                        <MudIcon Icon="@RunStatusIcon(result.Status)" Size="Size.Small" />
+                        <span>@result.Status</span>
+                    </span>
                     <MudTooltip Text="@ActiveRunTooltip">
-                        <MudChip T="string"
-                                 Text="@ActiveRunChipText"
-                                 Icon="@ActiveRunChipIcon"
-                                 Size="Size.Small"
-                                 Color="@ActiveRunChipColor"
-                                 Variant="Variant.Outlined" />
+                        <span class="@ActiveRunPillClass" aria-label="@ActiveRunTooltip">
+                            <MudIcon Icon="@ActiveRunChipIcon" Size="Size.Small" />
+                            <span>@ActiveRunChipText</span>
+                        </span>
                     </MudTooltip>
                 }
-                <MudTooltip Text="@ViewReportTooltip">
-                    <MudIconButton Icon="@Icons.Material.Filled.Article"
-                                   Size="Size.Small"
-                                   Disabled="@(Project.LastScenarioRunResult is null)"
-                                   OnClick="@OpenReportAsync" />
-                </MudTooltip>
-                <MudTooltip Text="@CopyReportTooltip">
-                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
-                                   Size="Size.Small"
-                                   Disabled="@(Project.LastScenarioRunResult is null)"
-                                   OnClick="@CopyLatestReportAsync" />
-                </MudTooltip>
-                <MudTooltip Text="@SaveReportTooltip">
-                    <MudIconButton Icon="@Icons.Material.Filled.FileDownload"
-                                   Size="Size.Small"
-                                   Disabled="@(Project.LastScenarioRunResult is null)"
-                                   OnClick="@SaveLatestReportAsync" />
-                </MudTooltip>
-                <MudMenu Dense="true"
-                         Icon="@Icons.Material.Filled.History"
-                         Size="Size.Small"
-                         AnchorOrigin="Origin.BottomLeft"
-                         TransformOrigin="Origin.TopLeft">
-                    <ChildContent>
-                        @if (RecentRuns.Count == 0)
-                        {
-                            <MudMenuItem Disabled="true" Label="No recent runs" />
-                        }
-                        else
-                        {
-                            @if (IsViewingHistoricalRun)
+                <div class="test-runner-report-actions" aria-label="Scenario report actions">
+                    <MudTooltip Text="@ViewReportTooltip">
+                        <MudIconButton Icon="@Icons.Material.Filled.Article"
+                                       Size="Size.Small"
+                                       Class="test-runner-icon-action"
+                                       Disabled="@(Project.LastScenarioRunResult is null)"
+                                       OnClick="@OpenReportAsync" />
+                    </MudTooltip>
+                    <MudTooltip Text="@CopyReportTooltip">
+                        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                       Size="Size.Small"
+                                       Class="test-runner-icon-action"
+                                       Disabled="@(Project.LastScenarioRunResult is null)"
+                                       OnClick="@CopyLatestReportAsync" />
+                    </MudTooltip>
+                    <MudTooltip Text="@SaveReportTooltip">
+                        <MudIconButton Icon="@Icons.Material.Filled.FileDownload"
+                                       Size="Size.Small"
+                                       Class="test-runner-icon-action"
+                                       Disabled="@(Project.LastScenarioRunResult is null)"
+                                       OnClick="@SaveLatestReportAsync" />
+                    </MudTooltip>
+                    <MudMenu Dense="true"
+                             Icon="@Icons.Material.Filled.History"
+                             Size="Size.Small"
+                             Class="test-runner-history-menu"
+                             AnchorOrigin="Origin.BottomLeft"
+                             TransformOrigin="Origin.TopLeft">
+                        <ChildContent>
+                            @if (RecentRuns.Count == 0)
                             {
-                                <MudMenuItem Icon="@Icons.Material.Filled.Schedule"
-                                             IconColor="Color.Primary"
-                                             Label="Show latest run"
-                                             OnClick="@ShowLatestRun" />
+                                <MudMenuItem Disabled="true" Label="No recent runs" />
                             }
-                            @foreach (var run in RecentRuns)
+                            else
                             {
-                                var historyRun = run;
-                                <MudMenuItem Icon="@RunHistoryIcon(historyRun)"
-                                             IconColor="@RunHistoryIconColor(historyRun)"
-                                             Label="@RunHistoryLabel(historyRun)"
-                                             OnClick="@(() => SelectRun(historyRun))" />
+                                @if (IsViewingHistoricalRun)
+                                {
+                                    <MudMenuItem Icon="@Icons.Material.Filled.Schedule"
+                                                 IconColor="Color.Primary"
+                                                 Label="Show latest run"
+                                                 OnClick="@ShowLatestRun" />
+                                }
+                                @foreach (var run in RecentRuns)
+                                {
+                                    var historyRun = run;
+                                    <MudMenuItem Icon="@RunHistoryIcon(historyRun)"
+                                                 IconColor="@RunHistoryIconColor(historyRun)"
+                                                 Label="@RunHistoryLabel(historyRun)"
+                                                 OnClick="@(() => SelectRun(historyRun))" />
+                                }
                             }
-                        }
-                    </ChildContent>
-                </MudMenu>
+                        </ChildContent>
+                    </MudMenu>
+                </div>
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
                            Size="Size.Small"
+                           Class="test-runner-run-action"
                            StartIcon="@Icons.Material.Filled.PlayArrow"
                            Disabled="@Project.IsScenarioRunning"
                            OnClick="@RunScenarioAsync">
@@ -118,6 +127,7 @@
                 <div class="test-runner-panel-title">
                     <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
                     <span>Preflight</span>
+                    <small>@PreflightStateLabel</small>
                 </div>
                 <div class="test-runner-checks">
                     <div class="@CheckClass(Scenario.StepCount > 0)">
@@ -139,6 +149,7 @@
                 <div class="test-runner-panel-title">
                     <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" />
                     <span>Timeline</span>
+                    <small>@ScenarioPhaseLabel</small>
                 </div>
                 <div class="test-runner-timeline">
                     @foreach (var phase in Scenario.Phases)
@@ -174,6 +185,7 @@
                 <div class="test-runner-panel-title">
                     <MudIcon Icon="@Icons.Material.Filled.Bolt" Size="Size.Small" />
                     <span>Live Events</span>
+                    <small>@RuntimeEventCountLabel</small>
                 </div>
                 <div class="test-runner-stream">
                     @foreach (var flowEvent in Project.RuntimeEvents.Reverse().Take(12))
@@ -195,6 +207,7 @@
                 <div class="test-runner-panel-title">
                     <MudIcon Icon="@Icons.Material.Filled.Troubleshoot" Size="Size.Small" />
                     <span>Diagnosis</span>
+                    <small>@DiagnosisStateLabel</small>
                 </div>
                 @if (Project.LastScenarioRunResult is { } latest)
                 {
@@ -214,6 +227,7 @@
                 <div class="test-runner-panel-title">
                     <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Small" />
                     <span>Logs</span>
+                    <small>@RunnerLogCountLabel</small>
                 </div>
                 <div class="test-runner-stream">
                     @foreach (var log in Project.Logs.Where(IsRunnerLog).Reverse().Take(10))
@@ -245,6 +259,31 @@
     private string NoTestEmptyText => Project.TestNames.Count == 0
         ? "Create a test before running scenarios."
         : "Select a test from the app tabs to run it.";
+
+    private string ScenarioStepLabel
+        => Scenario is { } scenario ? FormatCount(scenario.StepCount, "step") : "No steps";
+
+    private string ScenarioPhaseLabel
+        => Scenario is { } scenario ? FormatCount(scenario.Phases.Count, "phase") : "No phases";
+
+    private string RunHistorySummaryLabel
+        => FormatCount(RecentRuns.Count, "recent run");
+
+    private string RuntimeEventCountLabel
+        => Project.RuntimeEvents.Count == 0 ? "No events" : FormatCount(Project.RuntimeEvents.Count, "event");
+
+    private string RunnerLogCountLabel
+        => Project.Logs.Count(IsRunnerLog) == 0 ? "No logs" : FormatCount(Project.Logs.Count(IsRunnerLog), "log");
+
+    private string DiagnosisStateLabel
+        => Project.LastScenarioRunResult is { } result ? result.Status.ToString() : "No run";
+
+    private string PreflightStateLabel
+        => Project.IsScenarioRunning
+            ? "Running"
+            : Scenario is { StepCount: > 0 }
+                ? "Ready"
+                : "Needs steps";
 
     private IReadOnlyList<ScenarioRunResult> RecentRuns
         => Scenario is null
@@ -278,6 +317,9 @@
         => IsViewingHistoricalRun ? Icons.Material.Filled.History : Icons.Material.Filled.Schedule;
 
     private Color ActiveRunChipColor => IsViewingHistoricalRun ? Color.Info : Color.Default;
+
+    private string ActiveRunPillClass
+        => IsViewingHistoricalRun ? "test-runner-status-pill history" : "test-runner-status-pill latest";
 
     private string ActiveRunTooltip
         => Project.LastScenarioRunResult is { } result
@@ -363,6 +405,9 @@
             _ => Color.Default
         };
 
+    private static string RunStatusPillClass(ScenarioRunStatus status)
+        => $"test-runner-status-pill {status.ToString().ToLowerInvariant()}";
+
     private string RunHistoryIcon(ScenarioRunResult result)
         => IsSelectedRun(result) ? Icons.Material.Filled.Visibility : RunStatusIcon(result.Status);
 
@@ -432,6 +477,9 @@
         => duration.TotalSeconds < 1
             ? $"{duration.TotalMilliseconds:0} ms"
             : $"{duration.TotalSeconds:0.##} s";
+
+    private static string FormatCount(int count, string singular)
+        => count == 1 ? $"1 {singular}" : $"{count} {singular}s";
 
     private static string FormatReportStepCount(ScenarioStepStatusSummary summary)
         => summary.Planned != summary.Executed || summary.NotRun > 0

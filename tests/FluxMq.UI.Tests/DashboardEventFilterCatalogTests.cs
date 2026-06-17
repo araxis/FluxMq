@@ -2634,6 +2634,55 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void TestRunnerConsole_UsesFlatCompactRunnerChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "TestRunnerConsole.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "TestRunnerConsole.razor.css"));
+
+        markup.ShouldContain("aria-label=\"Test runner console\"");
+        markup.ShouldContain("test-runner-title-icon");
+        markup.ShouldContain("test-runner-meta-strip");
+        markup.ShouldContain("@ScenarioStepLabel");
+        markup.ShouldContain("@ScenarioPhaseLabel");
+        markup.ShouldContain("@RunHistorySummaryLabel");
+        markup.ShouldContain("RunStatusPillClass(result.Status)");
+        markup.ShouldContain("ActiveRunPillClass");
+        markup.ShouldContain("test-runner-report-actions");
+        markup.ShouldContain("Class=\"test-runner-icon-action\"");
+        markup.ShouldContain("Class=\"test-runner-run-action\"");
+        markup.ShouldContain("@PreflightStateLabel");
+        markup.ShouldContain("@RuntimeEventCountLabel");
+        markup.ShouldContain("@DiagnosisStateLabel");
+        markup.ShouldContain("@RunnerLogCountLabel");
+        markup.ShouldNotContain("MudChip");
+
+        css.ShouldContain(".test-runner-title-icon");
+        css.ShouldContain(".test-runner-meta-strip span,");
+        css.ShouldContain(".test-runner-status-pill");
+        css.ShouldContain(".test-runner-report-actions");
+        css.ShouldContain(".test-runner-report-actions ::deep .mud-icon-button");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
+        css.ShouldContain("min-height: 50px;");
+        css.ShouldContain("height: 30px;");
+        css.ShouldContain(".test-runner-panel-title small");
+        css.ShouldContain("@media (max-width: 920px)");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
+    }
+
+    [Fact]
     public void PayloadInspectorPanel_UsesFlatCompactInspectorChrome()
     {
         var root = FindRepositoryRoot();
