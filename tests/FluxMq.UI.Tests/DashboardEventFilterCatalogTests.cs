@@ -3111,6 +3111,49 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardDesigner_UsesAccessibleGridTrackControls()
+    {
+        var root = FindRepositoryRoot();
+        var razor = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardDesigner.razor.css"));
+
+        razor.ShouldContain("class=\"@TrackHandleClass(ColumnAxis)\"");
+        razor.ShouldContain("aria-label=\"@TrackHandleLabel(ColumnAxis");
+        razor.ShouldContain("class=\"@TrackHandleClass(RowAxis)\"");
+        razor.ShouldContain("aria-label=\"@TrackHandleLabel(RowAxis");
+        razor.ShouldContain("TrackShortLabel(ColumnAxis");
+        razor.ShouldContain("TrackShortLabel(RowAxis");
+        razor.ShouldContain("TrackHandleIcon(ColumnAxis)");
+        razor.ShouldContain("TrackHandleLabel(string axis, int index, string size, double padding)");
+        razor.ShouldContain("dashboard-track-icon");
+        razor.ShouldContain("dashboard-track-main");
+        razor.ShouldContain("dashboard-track-name");
+
+        css.ShouldContain("grid-template-columns: 16px minmax(0, 1fr) auto;");
+        css.ShouldContain(".dashboard-track-icon");
+        css.ShouldContain(".dashboard-track-main");
+        css.ShouldContain(".dashboard-track-name");
+        css.ShouldContain(".dashboard-track-padding");
+        css.ShouldContain(".dashboard-row-handles .dashboard-track-padding");
+        css.ShouldContain("grid-template-columns: 14px minmax(0, 1fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
+        css.ShouldContain(".dashboard-track-icon ::deep .mud-icon-root");
+        css.ShouldContain(".dashboard-column-handles .dashboard-track-main");
+    }
+
+    [Fact]
     public void DashboardDesigner_UsesFirstWidgetEmptyGridOnboarding()
     {
         var root = FindRepositoryRoot();
