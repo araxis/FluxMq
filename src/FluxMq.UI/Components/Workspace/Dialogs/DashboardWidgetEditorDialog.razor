@@ -33,7 +33,10 @@
                             @if (Profile.UsesGaugeStyle)
                             {
                                 <div class="dashboard-widget-editor-section">
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Gauge style</MudText>
+                                    <div class="dashboard-widget-editor-section-head">
+                                        <MudIcon Icon="@Icons.Material.Filled.Speed" Size="Size.Small" />
+                                        <span>Gauge style</span>
+                                    </div>
                                     <MudToggleGroup T="string"
                                                     @bind-Value="_draft.GaugeStyle"
                                                     SelectionMode="SelectionMode.SingleSelection"
@@ -50,7 +53,10 @@
                             @if (Profile.UsesChartType)
                             {
                                 <div class="dashboard-widget-editor-section">
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Chart type</MudText>
+                                    <div class="dashboard-widget-editor-section-head">
+                                        <MudIcon Icon="@Icons.Material.Filled.ShowChart" Size="Size.Small" />
+                                        <span>Chart type</span>
+                                    </div>
                                     <MudToggleGroup T="string"
                                                     @bind-Value="_draft.ChartType"
                                                     SelectionMode="SelectionMode.SingleSelection"
@@ -95,7 +101,10 @@
                                 </MudGrid>
 
                                 <div class="dashboard-widget-editor-section">
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Metric cards</MudText>
+                                    <div class="dashboard-widget-editor-section-head">
+                                        <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" />
+                                        <span>Metric cards</span>
+                                    </div>
                                     <div class="dashboard-widget-editor-metric-options">
                                         @foreach (var option in DashboardWidgetCatalog.MetricOptions)
                                         {
@@ -177,6 +186,10 @@
                 <MudStack Spacing="2" Class="dashboard-widget-editor-tab">
                     @TitleField
                     <div class="dashboard-widget-editor-section">
+                        <div class="dashboard-widget-editor-section-head">
+                            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+                            <span>Topic tree</span>
+                        </div>
                         <MudSwitch T="bool"
                                    @bind-Value="_draft.ExcludeSystemTopics"
                                    Color="Color.Primary"
@@ -194,6 +207,18 @@
     </DialogContent>
     <DialogActions>
         <div class="dashboard-widget-editor-actions">
+            <div class="dashboard-widget-editor-action-status" aria-live="polite">
+                <MudIcon Icon="@ActionStatusIcon" Size="Size.Small" />
+                <span>@ActionStatusLabel</span>
+            </div>
+            <MudButton OnClick="@Reset"
+                       Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.RestartAlt"
+                       Disabled="@(!HasChanges)"
+                       Class="dashboard-widget-editor-reset">
+                Reset
+            </MudButton>
+            <span class="dashboard-widget-editor-action-spacer"></span>
             <MudButton OnClick="@Cancel"
                        Size="Size.Small"
                        Class="dashboard-widget-editor-cancel">
@@ -203,6 +228,7 @@
                        Variant="Variant.Filled"
                        Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.Check"
+                       Disabled="@(!HasChanges)"
                        OnClick="@Submit"
                        Class="dashboard-widget-editor-apply">
                 Apply
@@ -234,6 +260,7 @@
     public DashboardWidgetSnapshot Widget { get; set; } = null!;
 
     private DashboardWidgetSettingsDraft _draft = null!;
+    private IReadOnlyDictionary<string, string> _initialConfiguration = new Dictionary<string, string>(StringComparer.Ordinal);
 
     private DashboardWidgetSettingsProfile Profile => _draft.Profile;
 
@@ -260,9 +287,18 @@
                 ? $"{_draft.CurrentEventType.Fields.Count} filters"
                 : "Display";
 
+    private bool HasChanges => !ConfigurationEquals(_draft.BuildConfiguration(), _initialConfiguration);
+
+    private string ActionStatusLabel => HasChanges ? "Unsaved changes" : "No changes";
+
+    private string ActionStatusIcon => HasChanges
+        ? Icons.Material.Filled.Edit
+        : Icons.Material.Filled.CheckCircle;
+
     protected override void OnInitialized()
     {
         _draft = DashboardWidgetSettingsDraft.Create(Widget, EventFilters);
+        _initialConfiguration = new Dictionary<string, string>(_draft.BuildConfiguration(), StringComparer.Ordinal);
     }
 
     private void SetEventType(string? value)
@@ -271,6 +307,11 @@
     }
 
     private void Cancel() => MudDialog.Cancel();
+
+    private void Reset()
+    {
+        _draft = DashboardWidgetSettingsDraft.Create(Widget, EventFilters);
+    }
 
     private void Submit()
     {
@@ -343,6 +384,27 @@
 
     private static bool IsRetainFilter(DashboardEventFilterFieldDescriptor field)
         => string.Equals(field.Key, ScenarioStepCatalog.RetainAttributeKey, StringComparison.Ordinal);
+
+    private static bool ConfigurationEquals(
+        IReadOnlyDictionary<string, string> left,
+        IReadOnlyDictionary<string, string> right)
+    {
+        if (left.Count != right.Count)
+        {
+            return false;
+        }
+
+        foreach (var (key, value) in left)
+        {
+            if (!right.TryGetValue(key, out var otherValue) ||
+                !string.Equals(value, otherValue, StringComparison.Ordinal))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     public sealed record DashboardWidgetUpdate(IReadOnlyDictionary<string, string> Configuration);
 
