@@ -3543,12 +3543,21 @@ public sealed class DashboardEventFilterCatalogTests
         inspector.ShouldNotContain("QosFilterOptions");
         inspector.ShouldNotContain("RetainFilterOptions");
         filterRows.ShouldContain("PropertyGridSelect Value=\"@Draft.EventType\"");
-        filterRows.ShouldContain("PropertyGridSelect Value=\"@Draft.Status\"");
+        filterRows.ShouldContain("PropertyGridIconSegment Value=\"@Draft.Status\"");
+        filterRows.ShouldContain("Options=\"@StatusSegmentOptions\"");
+        filterRows.ShouldContain("Options=\"@QosFilterOptions\"");
+        filterRows.ShouldContain("Options=\"@RetainFilterOptions\"");
+        filterRows.ShouldContain("ShowLabels=\"true\"");
+        filterRows.ShouldContain("StatusOptionIcon");
+        filterRows.ShouldContain("Icons.Material.Filled.Tune");
+        filterRows.ShouldContain("Icons.Material.Filled.RadioButtonChecked");
         filterRows.ShouldContain("FilterChanged");
         filterRows.ShouldContain("QosFilterOptions");
         filterRows.ShouldContain("RetainFilterOptions");
         filterRows.ShouldContain("DashboardEventFilterCatalog.AttributeFilterKey(\"qos\")");
         filterRows.ShouldContain("DashboardEventFilterCatalog.AttributeFilterKey(\"retain\")");
+        filterRows.ShouldNotContain("property-grid-button-group");
+        filterRows.ShouldNotContain("ChoiceClass");
     }
 
     [Fact]
