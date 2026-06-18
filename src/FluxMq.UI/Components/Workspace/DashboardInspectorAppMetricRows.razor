@@ -1,4 +1,5 @@
 @using FluxMq.App.Metrics
+@using MudBlazor
 
 <PropertyGridRow Name="Metric">
     <PropertyGridSelect Value="@(MetricId ?? string.Empty)"
@@ -26,6 +27,13 @@
 @code {
     private const string TrueValue = "true";
     private const string FalseValue = "false";
+    private const int MaxSegmentedSelectOptions = 4;
+
+    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> BooleanOptions =
+    [
+        new(TrueValue, Icons.Material.Filled.Check, "On"),
+        new(FalseValue, Icons.Material.Filled.Close, "Off")
+    ];
 
     [Parameter]
     public string? MetricId { get; set; }
@@ -60,6 +68,16 @@
         var value = ParameterValue(parameter);
         if (parameter.Kind == MetricParamKind.Select && parameter.Options is { Count: > 0 })
         {
+            var segmentOptions = ParameterSelectSegmentOptions(parameter);
+            if (segmentOptions.Count > 0)
+            {
+                return @<PropertyGridIconSegment Value="@value"
+                                                 Options="@segmentOptions"
+                                                 AriaLabel="@parameter.DisplayName"
+                                                 ShowLabels="true"
+                                                 ValueChanged="@((string? next) => SetParameterAsync(parameter.Key, next))" />;
+            }
+
             return @<PropertyGridSelect Value="@value"
                                         Options="@ParameterSelectOptions(parameter)"
                                         AriaLabel="@parameter.DisplayName"
@@ -68,14 +86,10 @@
 
         if (parameter.Kind == MetricParamKind.Toggle)
         {
-            return @<div class="property-grid-button-group">
-                <button type="button"
-                        class="@ChoiceClass(value, TrueValue)"
-                        @onclick="@(() => SetParameterAsync(parameter.Key, TrueValue))">On</button>
-                <button type="button"
-                        class="@ChoiceClass(value, FalseValue)"
-                        @onclick="@(() => SetParameterAsync(parameter.Key, FalseValue))">Off</button>
-            </div>;
+            return @<PropertyGridIconSegment Value="@BooleanValue(value)"
+                                             Options="@BooleanOptions"
+                                             AriaLabel="@parameter.DisplayName"
+                                             ValueChanged="@((string? next) => SetParameterAsync(parameter.Key, next))" />;
         }
 
         return @<input class="property-grid-input"
@@ -97,8 +111,28 @@
             .. (parameter.Options ?? []).Select(static option => new PropertyGridSelectOption(option.Value, option.Label))
         ];
 
-    private static string ChoiceClass(string? currentValue, string value)
-        => string.Equals(currentValue ?? string.Empty, value, StringComparison.Ordinal)
-            ? "property-grid-choice selected"
-            : "property-grid-choice";
+    private static IReadOnlyList<PropertyGridIconSegmentOption> ParameterSelectSegmentOptions(MetricParamSpec parameter)
+    {
+        var options = ParameterSelectOptions(parameter);
+        if (options.Count > MaxSegmentedSelectOptions)
+        {
+            return [];
+        }
+
+        return [.. options.Select((option, index) => new PropertyGridIconSegmentOption(
+            option.Value,
+            ParameterSelectIcon(index),
+            option.Label,
+            option.Disabled))];
+    }
+
+    private static string BooleanValue(string? value)
+        => string.Equals(value, FalseValue, StringComparison.OrdinalIgnoreCase)
+            ? FalseValue
+            : TrueValue;
+
+    private static string ParameterSelectIcon(int index)
+        => index == 0
+            ? Icons.Material.Filled.Tune
+            : Icons.Material.Filled.RadioButtonChecked;
 }

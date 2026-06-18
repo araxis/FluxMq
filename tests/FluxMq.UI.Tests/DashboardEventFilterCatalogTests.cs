@@ -3487,6 +3487,15 @@ public sealed class DashboardEventFilterCatalogTests
         inspector.ShouldNotContain("CurrentBindingMetrics(");
         appRows.ShouldContain("Open metric");
         appRows.ShouldContain("ParameterChanged");
+        appRows.ShouldContain("PropertyGridIconSegment");
+        appRows.ShouldContain("BooleanOptions");
+        appRows.ShouldContain("ParameterSelectSegmentOptions");
+        appRows.ShouldContain("ShowLabels=\"true\"");
+        appRows.ShouldContain("MaxSegmentedSelectOptions");
+        appRows.ShouldContain("Icons.Material.Filled.Tune");
+        appRows.ShouldContain("Icons.Material.Filled.RadioButtonChecked");
+        appRows.ShouldNotContain("property-grid-button-group");
+        appRows.ShouldNotContain("ChoiceClass");
     }
 
     [Fact]
