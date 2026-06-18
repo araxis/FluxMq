@@ -1,3 +1,4 @@
+@using FluxMq.Scenarios
 @implements IDisposable
 @inject ProjectManagerService Projects
 @inject LiveMqttWorkspaceService Live
@@ -206,12 +207,21 @@
                     @foreach (var test in active.TestNames)
                     {
                         var t = test;
+                        var latestTestRun = LatestTestRun(active, t);
                         <MudMenuItem Icon="@Icons.Material.Filled.FactCheck"
                                      OnClick="@(() => SelectTest(active, t))"
                                      Class="@ArtifactItemClass(active, WorkspaceArtifactKind.Test, t)"
                                      title="@t">
-                            <div class="app-menu-artifact-row">
-                                <span class="app-menu-artifact-name">@t</span>
+                            <div class="app-menu-artifact-row app-menu-test-row">
+                                <span class="app-menu-artifact-copy">
+                                    <span class="app-menu-artifact-name">@t</span>
+                                    <span class="app-menu-artifact-meta">@TestRunMenuMeta(latestTestRun)</span>
+                                </span>
+                                <span class="@TestRunMenuPillClass(latestTestRun)"
+                                      aria-label="@TestRunMenuStateLabel(latestTestRun)">
+                                    <MudIcon Icon="@TestRunMenuIcon(latestTestRun)" Size="Size.Small" />
+                                    <span>@TestRunMenuText(latestTestRun)</span>
+                                </span>
                                 <span class="app-menu-inline-action" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
                                     <MudTooltip Text="Delete test">
                                         <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
@@ -321,6 +331,39 @@
 
     private static string DeleteLabel(string artifactKind, string name)
         => $"Delete {artifactKind} {name}";
+
+    private static ScenarioRunResult? LatestTestRun(FlowWorkspaceService app, string testName)
+        => app.ScenarioRunHistory.FirstOrDefault(result =>
+            string.Equals(result.Name, testName, StringComparison.Ordinal));
+
+    private static string TestRunMenuMeta(ScenarioRunResult? latestRun)
+        => latestRun is null
+            ? "No runs yet"
+            : $"Latest {latestRun.FinishedAt.ToLocalTime():HH:mm:ss}";
+
+    private static string TestRunMenuStateLabel(ScenarioRunResult? latestRun)
+        => latestRun is null ? "No scenario run yet" : $"Latest run {latestRun.Status}";
+
+    private static string TestRunMenuText(ScenarioRunResult? latestRun)
+        => latestRun?.Status.ToString() ?? "New";
+
+    private static string TestRunMenuPillClass(ScenarioRunResult? latestRun)
+        => latestRun?.Status switch
+        {
+            ScenarioRunStatus.Passed => "app-menu-test-pill passed",
+            ScenarioRunStatus.Failed => "app-menu-test-pill failed",
+            ScenarioRunStatus.Canceled => "app-menu-test-pill canceled",
+            _ => "app-menu-test-pill idle"
+        };
+
+    private static string TestRunMenuIcon(ScenarioRunResult? latestRun)
+        => latestRun?.Status switch
+        {
+            ScenarioRunStatus.Passed => Icons.Material.Filled.CheckCircle,
+            ScenarioRunStatus.Failed => Icons.Material.Filled.ErrorOutline,
+            ScenarioRunStatus.Canceled => Icons.Material.Filled.Cancel,
+            _ => Icons.Material.Filled.RadioButtonUnchecked
+        };
 
     private static string BrokerActionIcon(ManagedConnection connection) => connection.State switch
     {

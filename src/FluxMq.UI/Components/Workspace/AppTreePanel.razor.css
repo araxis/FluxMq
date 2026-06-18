@@ -193,6 +193,61 @@
     padding: 5px 4px 5px 42px;
 }
 
+.tree-empty-artifact-row {
+    align-items: center;
+    background: color-mix(in srgb, var(--flux-surface-2) 72%, transparent);
+    border: 1px dashed color-mix(in srgb, var(--flux-border) 84%, transparent);
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    cursor: pointer;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 16px minmax(0, 1fr) 18px;
+    margin: 4px 0 0 36px;
+    min-height: 42px;
+    min-width: 0;
+    padding: 6px 7px;
+}
+
+.tree-empty-artifact-row:hover,
+.tree-empty-artifact-row:focus-visible {
+    background: var(--flux-surface-3);
+    border-color: color-mix(in srgb, var(--flux-accent) 32%, var(--flux-border));
+    color: var(--mud-palette-text-primary);
+    outline: none;
+}
+
+.tree-empty-artifact-icon {
+    color: var(--mud-palette-warning);
+}
+
+.tree-empty-artifact-add {
+    color: var(--flux-accent);
+}
+
+.tree-empty-artifact-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.tree-empty-artifact-copy span {
+    color: var(--mud-palette-text-primary);
+    font-size: 12px;
+    font-weight: 750;
+    line-height: 1.15;
+}
+
+.tree-empty-artifact-copy small {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10.5px;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .conn-item,
 .pipe-item,
 .artifact-item {
@@ -257,6 +312,58 @@
     padding: 4px 6px 4px 42px;
 }
 
+.artifact-item-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.artifact-item-copy span,
+.artifact-item-copy small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.artifact-item-copy span {
+    color: inherit;
+}
+
+.artifact-item-copy small {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10.5px;
+    line-height: 1.15;
+}
+
+.test-artifact-item {
+    grid-template-columns: 16px minmax(0, 1fr) auto 24px;
+    min-height: 40px;
+    padding-right: 4px;
+    position: relative;
+}
+
+.test-artifact-item::before {
+    background: color-mix(in srgb, var(--mud-palette-text-secondary) 34%, transparent);
+    border-radius: 999px;
+    content: "";
+    inset: 8px auto 8px 35px;
+    position: absolute;
+    width: 2px;
+}
+
+.test-artifact-item.passed::before {
+    background: var(--flux-accent);
+}
+
+.test-artifact-item.failed::before {
+    background: var(--mud-palette-error);
+}
+
+.test-artifact-item.canceled::before {
+    background: var(--mud-palette-warning);
+}
+
 .pipe-item.active,
 .artifact-item.active {
     background: var(--flux-accent-soft);
@@ -274,4 +381,76 @@
 
 .artifact-icon.test {
     color: var(--mud-palette-warning);
+}
+
+.test-run-pill {
+    align-items: center;
+    background: var(--flux-surface);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 10px;
+    font-weight: 800;
+    gap: 4px;
+    height: 22px;
+    line-height: 1;
+    max-width: 82px;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0 6px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.test-run-pill span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.test-run-pill.passed {
+    background: color-mix(in srgb, var(--flux-accent) 10%, transparent);
+    border-color: color-mix(in srgb, var(--flux-accent) 34%, var(--flux-border));
+    color: var(--flux-accent);
+}
+
+.test-run-pill.failed {
+    background: color-mix(in srgb, var(--mud-palette-error) 10%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-error) 40%, var(--flux-border));
+    color: var(--mud-palette-error);
+}
+
+.test-run-pill.canceled {
+    background: color-mix(in srgb, var(--mud-palette-warning) 10%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-warning) 40%, var(--flux-border));
+    color: var(--mud-palette-warning);
+}
+
+.tree-item-actions {
+    align-items: center;
+    display: inline-flex;
+    height: 24px;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+    width: 24px;
+}
+
+.test-artifact-item:hover .tree-item-actions,
+.test-artifact-item:focus-within .tree-item-actions,
+.test-artifact-item.active .tree-item-actions {
+    opacity: 1;
+}
+
+.tree-item-actions ::deep .tree-delete-button {
+    border-radius: 5px;
+    color: var(--mud-palette-error);
+    height: 24px;
+    padding: 0;
+    width: 24px;
+}
+
+.tree-item-actions ::deep .tree-delete-button .mud-icon-root {
+    font-size: 16px;
 }
