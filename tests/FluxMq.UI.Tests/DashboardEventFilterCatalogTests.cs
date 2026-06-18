@@ -2733,9 +2733,20 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("test-runner-report-actions");
         markup.ShouldContain("Class=\"test-runner-icon-action\"");
         markup.ShouldContain("Class=\"test-runner-run-action\"");
-        markup.ShouldContain("@PreflightStateLabel");
+        markup.ShouldContain("test-runner-workspace");
+        markup.ShouldContain("test-runner-status-strip");
+        markup.ShouldContain("PreflightItemClass");
+        markup.ShouldContain("test-runner-result-strip");
+        markup.ShouldContain("RunSummaryClass(latest.Status)");
+        markup.ShouldContain("test-runner-main");
+        markup.ShouldContain("test-runner-section timeline");
+        markup.ShouldContain("test-runner-section activity");
+        markup.ShouldContain("test-runner-activity-grid");
+        markup.ShouldContain("test-runner-stream-block");
+        markup.ShouldContain("StepStatusIcon(stepResult)");
+        markup.ShouldContain("RunnerLogRowClass(log)");
         markup.ShouldContain("@RuntimeEventCountLabel");
-        markup.ShouldContain("@DiagnosisStateLabel");
+        markup.ShouldContain("@ActivitySummaryLabel");
         markup.ShouldContain("@RunnerLogCountLabel");
         markup.ShouldNotContain("MudChip");
 
@@ -2745,15 +2756,24 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-runner-report-actions");
         css.ShouldContain(".test-runner-report-actions ::deep .mud-icon-button");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
-        css.ShouldContain("min-height: 46px;");
+        css.ShouldContain("min-height: 44px;");
         css.ShouldContain("flex-wrap: nowrap;");
-        css.ShouldContain("grid-template-columns: minmax(236px, 0.85fr) minmax(340px, 1.35fr) minmax(260px, 1fr);");
-        css.ShouldContain("min-height: 212px;");
+        css.ShouldContain(".test-runner-workspace");
+        css.ShouldContain("grid-template-rows: auto auto minmax(0, 1fr);");
+        css.ShouldContain(".test-runner-status-strip");
+        css.ShouldContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
+        css.ShouldContain(".test-runner-result-strip");
+        css.ShouldContain(".test-runner-main");
+        css.ShouldContain("grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.35fr);");
+        css.ShouldContain(".test-runner-activity-grid");
+        css.ShouldContain(".test-runner-stream-row::before");
+        css.ShouldContain("width: 3px;");
         css.ShouldContain("height: 28px;");
         css.ShouldContain("height: 24px;");
-        css.ShouldContain(".test-runner-panel-title small");
+        css.ShouldContain(".test-runner-section-title small");
         css.ShouldContain("@media (max-width: 920px)");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
+        css.ShouldNotContain(".test-runner-panel-title");
     }
 
     [Fact]
