@@ -146,31 +146,53 @@
             </div>
         </div>
 
-        @if (Scenario.Steps.Count == 0)
-        {
-            <div class="test-scenario-empty">
-                <div class="test-scenario-empty-panel compact">
-                    <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Class="test-scenario-empty-icon" />
-                    <div class="test-scenario-empty-copy">
-                        <span>No steps yet</span>
-                        <small>Add a step from the toolbar or drag one from the catalog.</small>
-                    </div>
+        <div class="test-scenario-workspace">
+            <div class="test-scenario-builder-strip" aria-label="Scenario build summary">
+                <div class="@BuilderMetricClass(Scenario.StepCount > 0)">
+                    <MudIcon Icon="@Icons.Material.Filled.FormatListNumbered" Size="Size.Small" />
+                    <span>Steps</span>
+                    <strong>@StepCountText</strong>
+                </div>
+                <div class="@BuilderMetricClass(Scenario.Phases.Any(phase => phase.Steps.Count > 0))">
+                    <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" />
+                    <span>Active phases</span>
+                    <strong>@ActivePhaseCountText</strong>
+                </div>
+                <div class="@BuilderMetricClass(!Project.IsScenarioRunning)">
+                    <MudIcon Icon="@Icons.Material.Filled.PlayCircle" Size="Size.Small" />
+                    <span>Runner</span>
+                    <strong>@RunnerStateText</strong>
                 </div>
             </div>
-        }
-        else
-        {
-            <div class="test-phase-lanes">
-                @foreach (var phase in Scenario.Phases)
-                {
-                    <section class="test-phase-lane" @key="phase.Name">
-                        <div class="test-phase-header">
-                            <div>
-                                <span>@phase.Title</span>
-                                <strong>@PhaseStepCountText(phase)</strong>
-                            </div>
-                            <MudIcon Icon="@PhaseIcon(phase.Kind)" Size="Size.Small" />
+
+            @if (Scenario.Steps.Count == 0)
+            {
+                <div class="test-scenario-empty">
+                    <div class="test-scenario-empty-panel compact">
+                        <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Class="test-scenario-empty-icon" />
+                        <div class="test-scenario-empty-copy">
+                            <span>No steps yet</span>
+                            <small>Add a step from the toolbar or drag one from the catalog.</small>
                         </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="test-phase-lanes">
+                    @foreach (var phase in Scenario.Phases)
+                    {
+                        <section class="test-phase-lane" @key="phase.Name">
+                            <div class="test-phase-header">
+                                <span class="test-phase-icon" aria-hidden="true">
+                                    <MudIcon Icon="@PhaseIcon(phase.Kind)" Size="Size.Small" />
+                                </span>
+                                <div class="test-phase-copy">
+                                    <span>@phase.Title</span>
+                                    <small>@phase.Kind</small>
+                                </div>
+                                <strong class="test-phase-count">@PhaseStepCountText(phase)</strong>
+                            </div>
 
                         @if (phase.Steps.Count == 0)
                         {
@@ -189,12 +211,27 @@
                                         <div class="test-step-index">@stepNumber</div>
                                         <div class="test-step-body">
                                             <div class="test-step-topline">
-                                                <span class="test-step-name">@step.Name</span>
-                                                <span class="@StepTypeClass(step)">@StepTypeLabel(step)</span>
-                                                @if (stepResult is not null)
-                                                {
-                                                    <span class="@StepStatusClass(stepResult.Status)">@stepResult.Status</span>
-                                                }
+                                                <div class="test-step-title-block">
+                                                    <span class="test-step-name">@step.Name</span>
+                                                    <span class="test-step-summary">@BuildStepSummary(step)</span>
+                                                </div>
+                                                <span class="test-step-badges">
+                                                    <span class="@StepTypeClass(step)">@StepTypeLabel(step)</span>
+                                                    @if (stepResult is not null)
+                                                    {
+                                                        <span class="@StepStatusClass(stepResult.Status)">
+                                                            <MudIcon Icon="@StepStatusIcon(stepResult)" Size="Size.Small" />
+                                                            <span>@stepResult.Status</span>
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="test-step-status idle">
+                                                            <MudIcon Icon="@StepStatusIcon(stepResult)" Size="Size.Small" />
+                                                            <span>Not run</span>
+                                                        </span>
+                                                    }
+                                                </span>
                                                 <span class="test-step-actions">
                                                     <button type="button"
                                                             class="test-step-action"
@@ -224,7 +261,6 @@
                                                     </button>
                                                 </span>
                                             </div>
-                                            <div class="test-step-summary">@BuildStepSummary(step)</div>
                                             @if (!string.IsNullOrWhiteSpace(stepResult?.Message))
                                             {
                                                 <div class="test-step-result-message">@stepResult.Message</div>
@@ -253,10 +289,11 @@
                                 }
                             </div>
                         }
-                    </section>
-                }
-            </div>
-        }
+                        </section>
+                    }
+                </div>
+            }
+        </div>
     }
 </div>
 
@@ -294,6 +331,14 @@
 
     private string RecentRunCountText
         => FormatRecentRunCount(RecentRuns.Count);
+
+    private string ActivePhaseCountText
+        => Scenario is { } scenario
+            ? FormatActivePhaseCount(scenario.Phases.Count(phase => phase.Steps.Count > 0))
+            : "0 active";
+
+    private string RunnerStateText
+        => Project.IsScenarioRunning ? "Running" : "Ready";
 
     private IReadOnlyList<ScenarioRunResult> RecentRuns
         => Scenario is null
@@ -399,6 +444,20 @@
     private static string StepStatusClass(ScenarioStepRunStatus status)
         => ScenarioStepDisplay.StepStatusClass(status);
 
+    private static string StepStatusIcon(ScenarioStepResult? result)
+        => result?.Status switch
+        {
+            ScenarioStepRunStatus.Passed => Icons.Material.Filled.CheckCircle,
+            ScenarioStepRunStatus.Skipped => Icons.Material.Filled.Info,
+            ScenarioStepRunStatus.Failed => Icons.Material.Filled.ErrorOutline,
+            ScenarioStepRunStatus.TimedOut => Icons.Material.Filled.Timer,
+            ScenarioStepRunStatus.Canceled => Icons.Material.Filled.Cancel,
+            _ => Icons.Material.Filled.RadioButtonUnchecked
+        };
+
+    private static string BuilderMetricClass(bool active)
+        => active ? "test-builder-metric active" : "test-builder-metric";
+
     private static string RunStatusClass(ScenarioRunStatus status)
         => status switch
         {
@@ -487,6 +546,9 @@
 
     private static string FormatPhaseCount(int count)
         => count == 1 ? "1 phase" : $"{count} phases";
+
+    private static string FormatActivePhaseCount(int count)
+        => count == 1 ? "1 active" : $"{count} active";
 
     private static string FormatRecentRunCount(int count)
         => count == 1 ? "1 recent run" : $"{count} recent runs";
