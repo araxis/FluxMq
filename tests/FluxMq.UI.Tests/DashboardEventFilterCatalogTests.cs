@@ -2537,12 +2537,16 @@ public sealed class DashboardEventFilterCatalogTests
         inspectorCss.ShouldContain("grid-template-columns: 26px minmax(0, 1fr) auto;");
         inspectorCss.ShouldContain(".dashboard-inspector-header.widget");
         inspectorCss.ShouldContain(".dashboard-inspector-reset-command");
+        inspectorCss.ShouldContain(".dashboard-inspector-heading");
+        inspectorCss.ShouldContain("flex-wrap: nowrap;");
         inspectorCss.ShouldContain(".dashboard-inspector-meta-strip span");
+        inspectorCss.ShouldContain("flex: 0 1 auto;");
         inspectorCss.ShouldContain(".dashboard-inspector-live-strip");
         inspectorCss.ShouldContain(".dashboard-inspector-property-shell");
         inspectorCss.ShouldContain("overflow: hidden;");
-        inspectorCss.ShouldContain(".dashboard-inspector-empty::before");
+        inspectorCss.ShouldNotContain(".dashboard-inspector-empty::before");
         inspectorCss.ShouldContain(".dashboard-inspector-empty-icon");
+        inspectorCss.ShouldContain(".dashboard-inspector-meta-strip span:nth-child(n + 3)");
         inspectorCss.ShouldContain(".dashboard-inspector-reset-command span,");
         visualMetricRows.ShouldContain("KeyboardArrowUp");
         visualMetricRows.ShouldContain("KeyboardArrowDown");

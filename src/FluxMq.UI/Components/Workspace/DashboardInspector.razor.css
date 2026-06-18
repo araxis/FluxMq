@@ -50,6 +50,7 @@
     flex: 1 1 auto;
     gap: 3px;
     min-width: 0;
+    overflow: hidden;
 }
 
 .dashboard-inspector-actions {
@@ -115,9 +116,10 @@
 .dashboard-inspector-meta-strip {
     align-items: center;
     display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
+    flex-wrap: nowrap;
+    gap: 3px;
     min-width: 0;
+    overflow: hidden;
 }
 
 .dashboard-inspector-meta-strip span {
@@ -127,6 +129,7 @@
     border-radius: 5px;
     color: var(--mud-palette-text-secondary);
     display: inline-flex;
+    flex: 0 1 auto;
     font-size: 9.75px;
     font-weight: 720;
     height: 20px;
@@ -148,6 +151,7 @@
     gap: 4px;
     line-height: 1;
     min-width: 0;
+    overflow: hidden;
 }
 
 .dashboard-inspector-live-strip ::deep .mud-icon-root {
@@ -206,16 +210,6 @@
     min-height: 0;
     padding: 16px;
     text-align: center;
-}
-
-.dashboard-inspector-empty::before {
-    background: color-mix(in srgb, var(--flux-accent) 42%, transparent);
-    content: "";
-    display: block;
-    height: 1px;
-    max-width: 96px;
-    opacity: 0.65;
-    width: 36%;
 }
 
 .dashboard-inspector-empty-card {
@@ -285,6 +279,10 @@
     .dashboard-inspector-empty {
         justify-content: flex-start;
         padding: 10px 12px;
+    }
+
+    .dashboard-inspector-meta-strip span:nth-child(n + 3) {
+        display: none;
     }
 
     .dashboard-inspector-reset-command span,
