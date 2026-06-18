@@ -4679,6 +4679,50 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void AppTreePanel_UsesCompactTestManagementRows()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "AppTreePanel.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "AppTreePanel.razor.css"));
+
+        markup.ShouldContain("tree-empty-artifact-row tests");
+        markup.ShouldContain("role=\"button\"");
+        markup.ShouldContain("AddTestFromKeyboardAsync(args, a)");
+        markup.ShouldContain("tree-empty-artifact-copy");
+        markup.ShouldContain("TestArtifactItemClass(isTestActive, latestTestRun)");
+        markup.ShouldContain("LatestTestRun(a, t)");
+        markup.ShouldContain("TestRunPillClass(latestTestRun)");
+        markup.ShouldContain("tree-item-actions");
+        markup.ShouldContain("tree-delete-button");
+        markup.ShouldContain("RemoveTestAsync(a, t)");
+        markup.ShouldContain("ShowMessageBoxAsync(");
+        markup.ShouldContain("private static string TestArtifactTitle");
+
+        css.ShouldContain(".tree-empty-artifact-row");
+        css.ShouldContain("grid-template-columns: 16px minmax(0, 1fr) 18px;");
+        css.ShouldContain(".tree-empty-artifact-copy");
+        css.ShouldContain(".test-artifact-item");
+        css.ShouldContain("grid-template-columns: 16px minmax(0, 1fr) auto 24px;");
+        css.ShouldContain(".test-artifact-item::before");
+        css.ShouldContain(".test-run-pill");
+        css.ShouldContain(".tree-item-actions");
+        css.ShouldContain("opacity: 0;");
+        css.ShouldContain(".tree-item-actions ::deep .tree-delete-button");
+    }
+
+    [Fact]
     public void AppStructureMenu_UsesCompactInlineArtifactActions()
     {
         var root = FindRepositoryRoot();
@@ -4701,12 +4745,17 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("StructureMenuLabel(\"Brokers\", conns.Count)");
         markup.ShouldContain("app-menu-artifact-row");
         markup.ShouldContain("app-menu-artifact-name");
+        markup.ShouldContain("app-menu-test-row");
+        markup.ShouldContain("app-menu-artifact-copy");
+        markup.ShouldContain("app-menu-artifact-meta");
+        markup.ShouldContain("TestRunMenuPillClass(latestTestRun)");
         markup.ShouldContain("app-menu-inline-action");
         markup.ShouldContain("app-menu-delete-button");
         markup.ShouldContain("aria-label=\"@DeleteLabel(");
         markup.ShouldContain("@onclick:stopPropagation=\"true\"");
         markup.ShouldContain("@onmousedown:stopPropagation=\"true\"");
         markup.ShouldContain("private static string DeleteLabel");
+        markup.ShouldContain("private static ScenarioRunResult? LatestTestRun");
         markup.ShouldNotContain("app-menu-danger");
         markup.ShouldNotContain("Delete @w");
         markup.ShouldNotContain("Delete @d");
@@ -4716,6 +4765,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("max-width: 132px;");
         css.ShouldContain(".app-menu-artifact-row");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 24px;");
+        css.ShouldContain(".app-menu-test-row");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto 24px;");
+        css.ShouldContain(".app-menu-artifact-meta");
+        css.ShouldContain(".app-menu-test-pill");
         css.ShouldContain(".app-menu-inline-action");
         css.ShouldContain("opacity: 0;");
         css.ShouldContain(".app-menu-child:hover .app-menu-inline-action");

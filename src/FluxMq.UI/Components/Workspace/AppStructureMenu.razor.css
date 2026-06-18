@@ -172,12 +172,78 @@
     width: 100%;
 }
 
+.app-menu-test-row {
+    grid-template-columns: minmax(0, 1fr) auto 24px;
+}
+
+.app-menu-artifact-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
 .app-menu-artifact-name {
     display: block;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.app-menu-artifact-meta {
+    color: var(--mud-palette-text-secondary);
+    display: block;
+    font-size: 10.5px;
+    line-height: 1.15;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-menu-test-pill {
+    align-items: center;
+    background: var(--flux-surface);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 10px;
+    font-weight: 800;
+    gap: 4px;
+    height: 22px;
+    line-height: 1;
+    max-width: 84px;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0 6px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.app-menu-test-pill span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.app-menu-test-pill.passed {
+    background: color-mix(in srgb, var(--flux-accent) 10%, transparent);
+    border-color: color-mix(in srgb, var(--flux-accent) 34%, var(--flux-border));
+    color: var(--flux-accent);
+}
+
+.app-menu-test-pill.failed {
+    background: color-mix(in srgb, var(--mud-palette-error) 10%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-error) 40%, var(--flux-border));
+    color: var(--mud-palette-error);
+}
+
+.app-menu-test-pill.canceled {
+    background: color-mix(in srgb, var(--mud-palette-warning) 10%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-warning) 40%, var(--flux-border));
+    color: var(--mud-palette-warning);
 }
 
 .app-menu-inline-action {

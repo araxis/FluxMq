@@ -1,3 +1,4 @@
+@using FluxMq.Scenarios
 @implements IDisposable
 @inject ProjectManagerService Projects
 @inject LiveMqttWorkspaceService Live
@@ -274,7 +275,22 @@ else
 
                     @if (!testsCollapsed && a.TestNames.Count == 0)
                     {
-                        <div class="tree-muted-row">No tests</div>
+                        <div class="tree-empty-artifact-row tests"
+                             role="button"
+                             tabindex="0"
+                             @onclick="@(() => AddTestAsync(a))"
+                             @onkeydown="@((KeyboardEventArgs args) => AddTestFromKeyboardAsync(args, a))">
+                            <MudIcon Icon="@Icons.Material.Filled.FactCheck"
+                                     Size="Size.Small"
+                                     Class="tree-empty-artifact-icon" />
+                            <div class="tree-empty-artifact-copy">
+                                <span>No tests</span>
+                                <small>Create a scenario to design and run checks.</small>
+                            </div>
+                            <MudIcon Icon="@Icons.Material.Filled.Add"
+                                     Size="Size.Small"
+                                     Class="tree-empty-artifact-add" />
+                        </div>
                     }
                     else if (!testsCollapsed)
                     {
@@ -284,12 +300,33 @@ else
                             var isTestActive = a == Projects.ActiveProject &&
                                 a.ActiveArtifactKind == WorkspaceArtifactKind.Test &&
                                 string.Equals(t, a.ActiveTestName, StringComparison.Ordinal);
-                            <div class="artifact-item @(isTestActive ? "active" : null)"
+                            var latestTestRun = LatestTestRun(a, t);
+                            <div class="@TestArtifactItemClass(isTestActive, latestTestRun)"
+                                 title="@TestArtifactTitle(t, latestTestRun)"
                                  @onclick="@(() => { Projects.SetActive(a); a.SetActiveTest(t); })">
                                 <MudIcon Icon="@Icons.Material.Filled.FactCheck"
                                          Size="Size.Small"
                                          Class="artifact-icon test" />
-                                <span>@t</span>
+                                <div class="artifact-item-copy">
+                                    <span>@t</span>
+                                    <small>@TestRunMeta(latestTestRun)</small>
+                                </div>
+                                <span class="@TestRunPillClass(latestTestRun)"
+                                      aria-label="@TestRunStateLabel(latestTestRun)">
+                                    <MudIcon Icon="@TestRunIcon(latestTestRun)" Size="Size.Small" />
+                                    <span>@TestRunText(latestTestRun)</span>
+                                </span>
+                                <span class="tree-item-actions"
+                                      @onclick:stopPropagation="true"
+                                      @onmousedown:stopPropagation="true">
+                                    <MudTooltip Text="Delete test">
+                                        <MudIconButton Size="Size.Small"
+                                                       Icon="@Icons.Material.Filled.DeleteOutline"
+                                                       Class="tree-icon-button tree-delete-button"
+                                                       aria-label="@($"Delete test {t}")"
+                                                       OnClick="@(() => RemoveTestAsync(a, t))" />
+                                    </MudTooltip>
+                                </span>
                             </div>
                         }
                     }
@@ -387,6 +424,60 @@ else
     private static string CollapseIcon(bool isCollapsed)
         => isCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore;
 
+    private static ScenarioRunResult? LatestTestRun(FlowWorkspaceService app, string testName)
+        => app.ScenarioRunHistory.FirstOrDefault(result =>
+            string.Equals(result.Name, testName, StringComparison.Ordinal));
+
+    private static string TestArtifactItemClass(bool isActive, ScenarioRunResult? latestRun)
+    {
+        var parts = new List<string> { "artifact-item", "test-artifact-item" };
+        if (isActive)
+        {
+            parts.Add("active");
+        }
+
+        if (latestRun is not null)
+        {
+            parts.Add(latestRun.Status.ToString().ToLowerInvariant());
+        }
+
+        return string.Join(" ", parts);
+    }
+
+    private static string TestRunMeta(ScenarioRunResult? latestRun)
+        => latestRun is null
+            ? "No runs yet"
+            : $"Latest {latestRun.FinishedAt.ToLocalTime():HH:mm:ss}";
+
+    private static string TestRunStateLabel(ScenarioRunResult? latestRun)
+        => latestRun is null ? "No scenario run yet" : $"Latest run {latestRun.Status}";
+
+    private static string TestRunText(ScenarioRunResult? latestRun)
+        => latestRun?.Status.ToString() ?? "New";
+
+    private static string TestRunPillClass(ScenarioRunResult? latestRun)
+        => latestRun?.Status switch
+        {
+            ScenarioRunStatus.Passed => "test-run-pill passed",
+            ScenarioRunStatus.Failed => "test-run-pill failed",
+            ScenarioRunStatus.Canceled => "test-run-pill canceled",
+            _ => "test-run-pill idle"
+        };
+
+    private static string TestRunIcon(ScenarioRunResult? latestRun)
+        => latestRun?.Status switch
+        {
+            ScenarioRunStatus.Passed => Icons.Material.Filled.CheckCircle,
+            ScenarioRunStatus.Failed => Icons.Material.Filled.ErrorOutline,
+            ScenarioRunStatus.Canceled => Icons.Material.Filled.Cancel,
+            _ => Icons.Material.Filled.RadioButtonUnchecked
+        };
+
+    private static string TestArtifactTitle(string testName, ScenarioRunResult? latestRun)
+        => latestRun is null
+            ? $"Test {testName}. No runs yet."
+            : $"Test {testName}. Latest run {latestRun.Status} at {latestRun.FinishedAt.ToLocalTime():HH:mm:ss}.";
+
     private Task CloseAsync(FlowWorkspaceService app) => Projects.CloseProjectAsync(app).AsTask();
 
     private async Task AddConnectionAsync(FlowWorkspaceService app)
@@ -467,6 +558,31 @@ else
         if (result is { Canceled: false, Data: string name } && !string.IsNullOrWhiteSpace(name))
         {
             app.AddTest(name.Trim());
+            ExpandSection(app, TestSection);
+        }
+    }
+
+    private async Task AddTestFromKeyboardAsync(KeyboardEventArgs args, FlowWorkspaceService app)
+    {
+        if (args.Key is "Enter" or " ")
+        {
+            await AddTestAsync(app);
+        }
+    }
+
+    private async Task RemoveTestAsync(FlowWorkspaceService app, string name)
+    {
+        Projects.SetActive(app);
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            "Delete test",
+            $"Delete test '{name}'? This cannot be undone.",
+            "Delete",
+            null,
+            "Cancel",
+            new DialogOptions { MaxWidth = MaxWidth.ExtraSmall });
+        if (confirmed == true)
+        {
+            app.RemoveTest(name);
             ExpandSection(app, TestSection);
         }
     }
