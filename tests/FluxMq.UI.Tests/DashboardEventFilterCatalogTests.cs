@@ -4317,6 +4317,12 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".catalog-use-state.ready");
         css.ShouldContain(".catalog-use-state.inactive");
         css.ShouldContain(".catalog-empty ::deep .mud-icon-root");
+        css.ShouldContain(".component-catalog.pipeline");
+        css.ShouldContain(".component-catalog.pipeline .catalog-meta-strip");
+        css.ShouldContain(".component-catalog.pipeline .catalog-item");
+        css.ShouldContain("grid-template-columns: 20px minmax(0, 1fr) 38px;");
+        css.ShouldContain("min-height: 31px;");
+        css.ShouldContain("height: 20px;");
         css.ShouldContain(".component-catalog.test .catalog-item");
         css.ShouldContain("grid-template-columns: 24px minmax(0, 1fr) 40px;");
         css.ShouldContain("min-height: 92px;");
