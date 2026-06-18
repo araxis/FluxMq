@@ -246,8 +246,17 @@
     </DialogContent>
     <DialogActions>
         <div class="scenario-step-editor-actions">
-            <MudButton OnClick="@Cancel">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@Submit">Apply</MudButton>
+            <div class="@ValidationStateClass" role="status" aria-live="polite">
+                <MudIcon Icon="@ValidationStateIcon" Size="Size.Small" />
+                <span>@ValidationStateText</span>
+            </div>
+            <div class="scenario-step-editor-action-buttons">
+                <MudButton OnClick="@Cancel" Variant="Variant.Text">Cancel</MudButton>
+                <MudButton Color="Color.Primary"
+                           Variant="Variant.Filled"
+                           Disabled="@HasValidationIssues"
+                           OnClick="@Submit">Apply</MudButton>
+            </div>
         </div>
     </DialogActions>
 </MudDialog>
@@ -316,6 +325,22 @@
 
     private IReadOnlyList<ScenarioStepFieldOption> ExpectRetainOptions => _expectRetainField.Options;
 
+    private IReadOnlyList<string> ValidationMessages => BuildValidationMessages();
+
+    private bool HasValidationIssues => ValidationMessages.Count > 0;
+
+    private string ValidationStateText => ValidationMessages is { Count: > 0 } messages
+        ? $"{messages.Count} {(messages.Count == 1 ? "issue" : "issues")} - {messages[0]}"
+        : "Ready to apply";
+
+    private string ValidationStateClass => HasValidationIssues
+        ? "scenario-step-editor-state invalid"
+        : "scenario-step-editor-state ready";
+
+    private string ValidationStateIcon => HasValidationIssues
+        ? Icons.Material.Filled.ErrorOutline
+        : Icons.Material.Filled.CheckCircle;
+
     protected override void OnInitialized()
     {
         CacheScenarioFields();
@@ -352,6 +377,11 @@
 
     private void Submit()
     {
+        if (HasValidationIssues)
+        {
+            return;
+        }
+
         var configuration = IsMqttPublish
             ? CreateMqttPublishConfiguration()
             : IsMqttTrigger
@@ -529,6 +559,40 @@
     {
         var value = Step.ReadString(ScenarioStepCatalog.TimeoutMsKey);
         return int.TryParse(value, out var timeout) && timeout > 0 ? timeout : 5000;
+    }
+
+    private IReadOnlyList<string> BuildValidationMessages()
+    {
+        var messages = new List<string>();
+
+        if (IsMqttPublish)
+        {
+            AddRequiredMessage(messages, _connectionField.Label, _connection);
+            AddRequiredMessage(messages, _topicField.Label, _topic);
+            return messages;
+        }
+
+        if (IsMqttTrigger)
+        {
+            AddRequiredMessage(messages, _connectionField.Label, _connection);
+            AddRequiredMessage(messages, _subscriptionsField.Label, _subscriptions);
+            return messages;
+        }
+
+        if (_timeoutMs < 1)
+        {
+            messages.Add("Timeout must be 1 ms or greater.");
+        }
+
+        return messages;
+    }
+
+    private static void AddRequiredMessage(ICollection<string> messages, string label, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            messages.Add($"{label} is required.");
+        }
     }
 
     private static string NormalizeSelect(string? value, IReadOnlyList<ScenarioStepFieldOption> options)
