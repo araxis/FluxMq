@@ -3669,6 +3669,11 @@ public sealed class DashboardEventFilterCatalogTests
         inspector.ShouldNotContain("private static string VisualMetricLabel");
         inspector.ShouldNotContain("PropertyGridRow Name=\"@InspectorLabels.PrimaryCardRow\"");
         visualRows.ShouldContain("PropertyGridRow Name=\"@Labels.PrimaryCardRow\"");
+        visualRows.ShouldContain("PropertyGridIconSegment Value=\"@Draft.PrimaryMetric\"");
+        visualRows.ShouldContain("Options=\"@PrimaryMetricSegmentOptions\"");
+        visualRows.ShouldContain("MaxPrimaryMetricSegmentOptions");
+        visualRows.ShouldContain("MetricSegmentOptions");
+        visualRows.ShouldContain("Icons.Material.Filled.RadioButtonChecked");
         visualRows.ShouldContain("PropertyGridRow Name=\"@Labels.AddCardRow\"");
         visualRows.ShouldContain("PropertyGridRow Name=\"@Labels.ColumnsRow\"");
         visualRows.ShouldContain("visual-metric-row");
@@ -3684,7 +3689,8 @@ public sealed class DashboardEventFilterCatalogTests
         visualRowsCss.ShouldContain(".visual-metric-actions");
         visualRowsCss.ShouldContain("grid-template-columns: repeat(3, 20px);");
         visualRowsCss.ShouldContain(".visual-metric-add-row");
-        visualRowsCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 52px;");
+        visualRowsCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 24px;");
+        visualRowsCss.ShouldContain("width: 22px;");
         visualRowsCss.ShouldContain("@container property-grid (max-width: 280px)");
     }
 
