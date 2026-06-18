@@ -75,14 +75,6 @@
 </aside>
 
 @code {
-    private static readonly IReadOnlyList<DashboardFilterChoice> WindowOptions =
-    [
-        new("30s", "30s"),
-        new("60s", "1m"),
-        new("300s", "5m"),
-        new("900s", "15m")
-    ];
-
     private const string DataGroupId = "data";
     private const string MetricQueryGroupId = "metric-query";
     private const string FilterGroupId = "filters";
@@ -354,17 +346,9 @@
                                          ParameterChanged="@SetMetricParameterAsync"
                                          OpenMetric="@OpenSelectedMetricAsync" />;
 
-    private RenderFragment RenderMetricQueryProperties() => @<text>
-        @if (_widgetDraft is { } draft && draft.Profile.UsesMetricWindow)
-        {
-        <PropertyGridRow Name="@InspectorLabels.WindowRow">
-            <PropertyGridSelect Value="@draft.Window"
-                                Options="@WindowSelectOptions"
-                                AriaLabel="@InspectorLabels.WindowRow"
-                                ValueChanged="@SetMetricWindowAsync" />
-        </PropertyGridRow>
-        }
-    </text>;
+    private RenderFragment RenderMetricQueryProperties() => @<DashboardInspectorMetricWindowRows Draft="@_widgetDraft"
+                                                                                                  Labels="@InspectorLabels"
+                                                                                                  WindowChanged="@SetMetricWindowAsync" />;
 
     private RenderFragment RenderFilterProperties() => @<DashboardInspectorEventFilterRows Draft="@_widgetDraft"
                                                                                            Labels="@InspectorLabels"
@@ -612,9 +596,6 @@
                 .. _widgetDraft.AvailableDisplayMetrics
                     .Select(static metric => new PropertyGridSelectOption(metric.Id, metric.Label))
             ];
-
-    private IReadOnlyList<PropertyGridSelectOption> WindowSelectOptions
-        => ToSelectOptions(WindowOptions);
 
     private IReadOnlyList<PropertyGridSelectOption> EventTypeSelectOptions
         => [.. EventFilters.EventTypes.Select(static option => new PropertyGridSelectOption(option.Value, option.Label))];
@@ -1205,9 +1186,4 @@
 
     private static string NormalizeValue(string? value)
         => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
-
-    private static IReadOnlyList<PropertyGridSelectOption> ToSelectOptions(IEnumerable<DashboardFilterChoice> options)
-        => [.. options.Select(static option => new PropertyGridSelectOption(option.Value, option.Label))];
-
-    private sealed record DashboardFilterChoice(string Value, string Label);
 }

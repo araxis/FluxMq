@@ -3545,14 +3545,29 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "DashboardInspector.razor"));
+        var windowRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorMetricWindowRows.razor"));
 
         // The dashboard-local metric-query authoring path is retired: charts/topic/payload widgets
         // edit their window inline on the widget draft instead of a separate option-rows component.
+        inspector.ShouldContain("DashboardInspectorMetricWindowRows");
         inspector.ShouldNotContain("DashboardInspectorMetricQueryOptionRows");
         inspector.ShouldNotContain("AggregationChanged");
-        inspector.ShouldContain("PropertyGridRow Name=\"@InspectorLabels.WindowRow\"");
-        inspector.ShouldContain("draft.Window");
+        inspector.ShouldNotContain("WindowSelectOptions");
+        inspector.ShouldNotContain("PropertyGridSelect Value=\"@draft.Window\"");
         inspector.ShouldContain("SetMetricWindowAsync");
+        windowRows.ShouldContain("PropertyGridRow Name=\"@Labels.WindowRow\"");
+        windowRows.ShouldContain("PropertyGridIconSegment Value=\"@Draft.Window\"");
+        windowRows.ShouldContain("Options=\"@WindowSegmentOptions\"");
+        windowRows.ShouldContain("ShowLabels=\"true\"");
+        windowRows.ShouldContain("Icons.Material.Filled.RadioButtonChecked");
+        windowRows.ShouldContain("new(\"30s\"");
+        windowRows.ShouldContain("new(\"900s\"");
     }
 
     [Fact]
