@@ -2888,6 +2888,51 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void ScenarioRunReportDialog_UsesFlatCompactReviewChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "ScenarioRunReportDialog.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "ScenarioRunReportDialog.razor.css"));
+
+        markup.ShouldContain("scenario-report-title");
+        markup.ShouldContain("scenario-report-meta-strip");
+        markup.ShouldContain("scenario-report-summary-grid");
+        markup.ShouldContain("IssueMetricClass");
+        markup.ShouldContain("scenario-report-viewer");
+        markup.ShouldContain("<pre>@TextReport</pre>");
+        markup.ShouldContain("<pre>@JsonReport</pre>");
+        markup.ShouldContain("scenario-report-action-group");
+        markup.ShouldContain("scenario-report-close");
+        markup.ShouldNotContain("MudChip");
+        markup.ShouldNotContain("MudTextField");
+
+        css.ShouldContain(".scenario-report-title");
+        css.ShouldContain(".scenario-report-meta-strip");
+        css.ShouldContain(".scenario-report-summary-grid");
+        css.ShouldContain("grid-template-columns: repeat(4, minmax(0, 1fr));");
+        css.ShouldContain(".scenario-report-tabs");
+        css.ShouldContain(".scenario-report-viewer pre");
+        css.ShouldContain("font-family: Consolas, \"Courier New\", monospace;");
+        css.ShouldContain(".scenario-report-actions");
+        css.ShouldContain("@media (max-width: 760px)");
+        css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
+    }
+
+    [Fact]
     public void PayloadInspectorPanel_UsesFlatCompactInspectorChrome()
     {
         var root = FindRepositoryRoot();

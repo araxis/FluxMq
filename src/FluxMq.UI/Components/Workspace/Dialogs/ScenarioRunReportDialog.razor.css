@@ -1,0 +1,254 @@
+.scenario-report-title {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    min-width: 0;
+}
+
+.scenario-report-title-icon {
+    align-items: center;
+    background: color-mix(in srgb, var(--mud-palette-info) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-info) 30%, var(--flux-border));
+    border-radius: 6px;
+    color: var(--mud-palette-info);
+    display: flex;
+    flex: 0 0 28px;
+    height: 28px;
+    justify-content: center;
+    width: 28px;
+}
+
+.scenario-report-title-copy {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.scenario-report-heading {
+    color: var(--mud-palette-text-primary);
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.2;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scenario-report-meta-strip {
+    align-items: center;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.scenario-report-meta-strip > span {
+    align-items: center;
+    background: var(--flux-surface-2);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    display: inline-flex;
+    flex: 0 1 auto;
+    font-size: 10.5px;
+    font-weight: 750;
+    gap: 5px;
+    height: 22px;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0 7px;
+    white-space: nowrap;
+}
+
+.scenario-report-meta-strip > span > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.scenario-report-meta-strip > span.success,
+.scenario-report-metric.success {
+    border-color: color-mix(in srgb, var(--flux-accent) 36%, var(--flux-border));
+    color: var(--flux-accent);
+}
+
+.scenario-report-meta-strip > span.danger,
+.scenario-report-metric.danger {
+    border-color: color-mix(in srgb, var(--mud-palette-error) 42%, var(--flux-border));
+    color: var(--mud-palette-error);
+}
+
+.scenario-report-meta-strip > span.warning,
+.scenario-report-metric.warning {
+    border-color: color-mix(in srgb, var(--mud-palette-warning) 42%, var(--flux-border));
+    color: var(--mud-palette-warning);
+}
+
+.scenario-report-meta-strip > span.info,
+.scenario-report-metric.info,
+.scenario-report-meta-strip > span.accent,
+.scenario-report-metric.accent {
+    border-color: color-mix(in srgb, var(--mud-palette-info) 36%, var(--flux-border));
+    color: var(--mud-palette-info);
+}
+
+.scenario-report-content {
+    display: grid;
+    gap: 8px;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: min(68vh, 600px);
+    min-width: 0;
+}
+
+.scenario-report-summary-grid {
+    display: grid;
+    gap: 6px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    min-width: 0;
+}
+
+.scenario-report-metric {
+    align-items: center;
+    background: var(--flux-surface);
+    border: 1px solid var(--flux-border);
+    border-radius: 6px;
+    color: var(--mud-palette-text-secondary);
+    display: grid;
+    gap: 6px;
+    grid-template-columns: auto minmax(0, 1fr);
+    min-height: 42px;
+    min-width: 0;
+    padding: 7px 8px;
+}
+
+.scenario-report-metric ::deep(.mud-icon-root) {
+    grid-row: 1 / span 2;
+}
+
+.scenario-report-metric > span,
+.scenario-report-metric > strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scenario-report-metric > span {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10px;
+    font-weight: 750;
+    line-height: 1;
+}
+
+.scenario-report-metric > strong {
+    color: var(--mud-palette-text-primary);
+    font-size: 11.5px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.scenario-report-tabs {
+    background: var(--flux-surface);
+    border: 1px solid var(--flux-border);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.scenario-report-tabs ::deep(.mud-tabs-toolbar) {
+    background: var(--flux-surface-2);
+    border-bottom: 1px solid var(--flux-border);
+    min-height: 34px;
+}
+
+.scenario-report-tabs ::deep(.mud-tab) {
+    min-height: 34px;
+    text-transform: none;
+}
+
+.scenario-report-tabs ::deep(.mud-tabs-panels),
+.scenario-report-tabs ::deep(.mud-tabs-panels > .mud-tab-panel) {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.scenario-report-viewer {
+    background: var(--flux-canvas);
+    min-height: 0;
+    overflow: auto;
+}
+
+.scenario-report-viewer pre {
+    color: var(--mud-palette-text-primary);
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 11.5px;
+    line-height: 1.45;
+    margin: 0;
+    min-height: 360px;
+    padding: 10px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.scenario-report-actions {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    min-width: 0;
+    width: 100%;
+}
+
+.scenario-report-action-group {
+    align-items: center;
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-width: 0;
+}
+
+.scenario-report-action,
+.scenario-report-close {
+    border-radius: 6px;
+    min-height: 30px;
+    text-transform: none;
+}
+
+@media (max-width: 760px) {
+    .scenario-report-content {
+        min-height: min(70vh, 560px);
+    }
+
+    .scenario-report-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .scenario-report-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .scenario-report-action-group,
+    .scenario-report-close {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .scenario-report-meta-strip {
+        flex-wrap: wrap;
+        overflow: visible;
+    }
+
+    .scenario-report-summary-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
