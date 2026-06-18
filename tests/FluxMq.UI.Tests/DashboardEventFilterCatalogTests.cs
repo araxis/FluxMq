@@ -2878,19 +2878,29 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("Logs.Count > 0");
         markup.ShouldContain("role=\"search\" aria-label=\"Log filters\"");
-        markup.ShouldContain("aria-label=\"@($\"{SeverityLabel(entry)} log at {FormatLogTime(entry)}\")\"");
-        markup.ShouldContain("workspace-log-summary @SeverityClass(summary.Severity)");
+        markup.ShouldContain("workspace-log-stats");
+        markup.ShouldContain("WorkspaceLogFilter.Problems");
+        markup.ShouldContain("workspace-log-segment");
+        markup.ShouldContain("workspace-log-status @ProblemStatusClass");
+        markup.ShouldContain("Show problems");
+        markup.ShouldContain("aria-label=\"@($\"{SeverityLabel(entry)} log at {FormatLogTime(entry)} from {SourceCode(entry)}\")\"");
+        markup.ShouldContain("workspace-log-row-icon");
+        markup.ShouldContain("DetailLabels(entry)");
+        markup.ShouldContain("SeverityIcon(entry)");
 
-        css.ShouldContain("padding: 8px 12px;");
+        css.ShouldContain("padding: 7px 10px;");
         css.ShouldContain("height: 26px;");
-        css.ShouldContain("font-size: 14.5px;");
-        css.ShouldContain(".workspace-log-filter ::deep .mud-input-control,");
+        css.ShouldContain("font-size: 14px;");
+        css.ShouldContain(".workspace-log-filter-button.active");
+        css.ShouldContain(".workspace-log-status");
+        css.ShouldContain("grid-template-columns: 22px minmax(0, 1fr) auto;");
         css.ShouldContain(".workspace-log-search ::deep .mud-input-root");
-        css.ShouldContain("grid-template-columns: 68px 76px minmax(0, 1fr);");
-        css.ShouldContain("border-left: 2px solid var(--mud-palette-success);");
+        css.ShouldContain("grid-template-columns: 24px 70px minmax(130px, 0.34fr) minmax(0, 1fr);");
+        css.ShouldContain(".workspace-log-row::before");
+        css.ShouldContain("width: 3px;");
         css.ShouldContain(".workspace-log-row-meta span");
         css.ShouldContain("min-height: 220px;");
-        css.ShouldContain("grid-template-columns: 60px minmax(0, 1fr);");
+        css.ShouldContain("grid-template-columns: 24px 60px minmax(0, 1fr);");
         css.ShouldNotContain("grid-template-columns: 72px 86px minmax(0, 1fr);");
     }
 
