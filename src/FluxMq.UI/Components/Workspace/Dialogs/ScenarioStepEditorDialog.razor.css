@@ -75,12 +75,53 @@
 .scenario-step-editor-actions {
     align-items: center;
     display: flex;
-    gap: 6px;
-    justify-content: flex-end;
+    gap: 10px;
+    justify-content: space-between;
     width: 100%;
 }
 
-.scenario-step-editor-actions ::deep(.mud-button-root) {
+.scenario-step-editor-state {
+    align-items: center;
+    border: 1px solid color-mix(in srgb, var(--flux-border) 76%, transparent);
+    border-radius: 6px;
+    display: inline-flex;
+    flex: 1 1 auto;
+    gap: 6px;
+    min-height: 30px;
+    min-width: 0;
+    padding: 4px 8px;
+}
+
+.scenario-step-editor-state span {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.25;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scenario-step-editor-state.ready {
+    background: color-mix(in srgb, var(--mud-palette-success) 9%, var(--flux-surface));
+    color: var(--mud-palette-success);
+}
+
+.scenario-step-editor-state.invalid {
+    background: color-mix(in srgb, var(--mud-palette-error) 10%, var(--flux-surface));
+    border-color: color-mix(in srgb, var(--mud-palette-error) 44%, var(--flux-border));
+    color: var(--mud-palette-error);
+}
+
+.scenario-step-editor-action-buttons {
+    align-items: center;
+    display: flex;
+    flex: 0 0 auto;
+    gap: 6px;
+}
+
+.scenario-step-editor-actions ::deep(.mud-button-root),
+.scenario-step-editor-action-buttons ::deep(.mud-button-root) {
     border-radius: 6px;
     min-height: 30px;
     text-transform: none;
@@ -101,10 +142,20 @@
     }
 
     .scenario-step-editor-actions {
+        align-items: stretch;
+        flex-direction: column;
         justify-content: stretch;
     }
 
-    .scenario-step-editor-actions ::deep(.mud-button-root) {
+    .scenario-step-editor-state span {
+        white-space: normal;
+    }
+
+    .scenario-step-editor-action-buttons {
+        width: 100%;
+    }
+
+    .scenario-step-editor-action-buttons ::deep(.mud-button-root) {
         flex: 1 1 auto;
     }
 }
