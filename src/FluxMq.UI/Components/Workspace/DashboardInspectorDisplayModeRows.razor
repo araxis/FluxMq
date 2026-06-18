@@ -1,5 +1,6 @@
 @using FluxMq.UI.Models
 @using FluxMq.UI.Services
+@using MudBlazor
 
 @if (Draft is not null)
 {
@@ -66,14 +67,10 @@
                    @oninput="@((ChangeEventArgs args) => ChangeEventTableVisualPropertyAsync(DashboardEventTableVisualOptions.RowCountKey, args.Value?.ToString()))" />
         </PropertyGridRow>
         <PropertyGridRow Name="Density">
-            <div class="property-grid-button-group">
-                <button type="button"
-                        class="@ChoiceClass(Draft.TableDensity, DashboardEventTableVisualOptions.DensityCompact)"
-                        @onclick="@(() => ChangeEventTableVisualPropertyAsync(DashboardEventTableVisualOptions.DensityKey, DashboardEventTableVisualOptions.DensityCompact))">Compact</button>
-                <button type="button"
-                        class="@ChoiceClass(Draft.TableDensity, DashboardEventTableVisualOptions.DensityComfortable)"
-                        @onclick="@(() => ChangeEventTableVisualPropertyAsync(DashboardEventTableVisualOptions.DensityKey, DashboardEventTableVisualOptions.DensityComfortable))">Comfort</button>
-            </div>
+            <PropertyGridIconSegment Value="@Draft.TableDensity"
+                                     Options="@TableDensityOptions"
+                                     AriaLabel="Density"
+                                     ValueChanged="@((string? value) => ChangeEventTableVisualPropertyAsync(DashboardEventTableVisualOptions.DensityKey, value))" />
         </PropertyGridRow>
         <PropertyGridRow Name="Time">
             @TableBooleanRow(DashboardEventTableVisualOptions.ShowTimeKey, Draft.TableShowTime)
@@ -173,14 +170,10 @@
             @TopicTreeBooleanRow(DashboardTopicTreeVisualOptions.ShowMessageCountKey, Draft.TopicTreeShowMessageCount)
         </PropertyGridRow>
         <PropertyGridRow Name="@Labels.TopicSystemRow">
-            <div class="property-grid-button-group">
-                <button type="button"
-                        class="@BooleanChoiceClass(!Draft.ExcludeSystemTopics, true)"
-                        @onclick="@(() => ChangeTopicTreeVisualPropertyAsync(DashboardTopicTreeVisualOptions.ExcludeSystemTopicsKey, bool.FalseString))">Show</button>
-                <button type="button"
-                        class="@BooleanChoiceClass(Draft.ExcludeSystemTopics, true)"
-                        @onclick="@(() => ChangeTopicTreeVisualPropertyAsync(DashboardTopicTreeVisualOptions.ExcludeSystemTopicsKey, bool.TrueString))">Hide</button>
-            </div>
+            <PropertyGridIconSegment Value="@BooleanValue(Draft.ExcludeSystemTopics)"
+                                     Options="@SystemTopicOptions"
+                                     AriaLabel="@Labels.TopicSystemRow"
+                                     ValueChanged="@((string? value) => ChangeTopicTreeVisualPropertyAsync(DashboardTopicTreeVisualOptions.ExcludeSystemTopicsKey, value))" />
         </PropertyGridRow>
         <PropertyGridRow Name="Empty text">
             <input class="property-grid-input"
@@ -208,14 +201,10 @@
     @if (Draft.Profile.UsesGaugeStyle)
     {
         <PropertyGridRow Name="@Labels.GaugeRow">
-            <div class="property-grid-button-group">
-                <button type="button"
-                        class="@ChoiceClass(Draft.GaugeStyle, DashboardEventGaugeWidgetOptions.StyleRing)"
-                        @onclick="@(() => GaugeStyleChanged.InvokeAsync(DashboardEventGaugeWidgetOptions.StyleRing))">Ring</button>
-                <button type="button"
-                        class="@ChoiceClass(Draft.GaugeStyle, DashboardEventGaugeWidgetOptions.StyleMeter)"
-                        @onclick="@(() => GaugeStyleChanged.InvokeAsync(DashboardEventGaugeWidgetOptions.StyleMeter))">Meter</button>
-            </div>
+            <PropertyGridIconSegment Value="@Draft.GaugeStyle"
+                                     Options="@GaugeStyleOptions"
+                                     AriaLabel="@Labels.GaugeRow"
+                                     ValueChanged="@GaugeStyleChanged" />
         </PropertyGridRow>
         <PropertyGridRow Name="Min">
             <input class="property-grid-input"
@@ -377,14 +366,10 @@
             @BarChartBooleanRow(DashboardBarChartVisualOptions.ShowLabelsKey, Draft.BarChartShowLabels)
         </PropertyGridRow>
         <PropertyGridRow Name="Orientation">
-            <div class="property-grid-button-group">
-                <button type="button"
-                        class="@ChoiceClass(Draft.BarChartOrientation, DashboardBarChartVisualOptions.OrientationVertical)"
-                        @onclick="@(() => ChangeBarChartVisualPropertyAsync(DashboardBarChartVisualOptions.OrientationKey, DashboardBarChartVisualOptions.OrientationVertical))">Vertical</button>
-                <button type="button"
-                        class="@ChoiceClass(Draft.BarChartOrientation, DashboardBarChartVisualOptions.OrientationHorizontal)"
-                        @onclick="@(() => ChangeBarChartVisualPropertyAsync(DashboardBarChartVisualOptions.OrientationKey, DashboardBarChartVisualOptions.OrientationHorizontal))">Horizontal</button>
-            </div>
+            <PropertyGridIconSegment Value="@Draft.BarChartOrientation"
+                                     Options="@BarOrientationOptions"
+                                     AriaLabel="Orientation"
+                                     ValueChanged="@((string? value) => ChangeBarChartVisualPropertyAsync(DashboardBarChartVisualOptions.OrientationKey, value))" />
         </PropertyGridRow>
         <PropertyGridRow Name="Bar radius" Unit="px">
             <input class="property-grid-input"
@@ -483,26 +468,54 @@
     @if (Draft.Profile.UsesChartType)
     {
         <PropertyGridRow Name="@Labels.ChartRow">
-            <div class="property-grid-button-group">
-                <button type="button"
-                        class="@ChoiceClass(Draft.ChartType, DashboardChartWidgetOptions.TypeBars)"
-                        @onclick="@(() => ChartTypeChanged.InvokeAsync(DashboardChartWidgetOptions.TypeBars))">Bars</button>
-                <button type="button"
-                        class="@ChoiceClass(Draft.ChartType, DashboardChartWidgetOptions.TypeLine)"
-                        @onclick="@(() => ChartTypeChanged.InvokeAsync(DashboardChartWidgetOptions.TypeLine))">Line</button>
-                <button type="button"
-                        class="@ChoiceClass(Draft.ChartType, DashboardChartWidgetOptions.TypeArea)"
-                        @onclick="@(() => ChartTypeChanged.InvokeAsync(DashboardChartWidgetOptions.TypeArea))">Area</button>
-                <button type="button"
-                        class="@ChoiceClass(Draft.ChartType, DashboardChartWidgetOptions.TypeTopics)"
-                        @onclick="@(() => ChartTypeChanged.InvokeAsync(DashboardChartWidgetOptions.TypeTopics))">Topics</button>
-            </div>
+            <PropertyGridIconSegment Value="@Draft.ChartType"
+                                     Options="@ChartTypeOptions"
+                                     AriaLabel="@Labels.ChartRow"
+                                     ValueChanged="@ChartTypeChanged" />
         </PropertyGridRow>
     }
 
 }
 
 @code {
+    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> BooleanOptions =
+    [
+        new(bool.TrueString, Icons.Material.Filled.Check, "On"),
+        new(bool.FalseString, Icons.Material.Filled.Close, "Off")
+    ];
+
+    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> SystemTopicOptions =
+    [
+        new(bool.FalseString, Icons.Material.Filled.Visibility, "Show"),
+        new(bool.TrueString, Icons.Material.Filled.VisibilityOff, "Hide")
+    ];
+
+    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> TableDensityOptions =
+    [
+        new(DashboardEventTableVisualOptions.DensityCompact, Icons.Material.Filled.DensitySmall, "Compact"),
+        new(DashboardEventTableVisualOptions.DensityComfortable, Icons.Material.Filled.DensityMedium, "Comfort")
+    ];
+
+    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> GaugeStyleOptions =
+    [
+        new(DashboardEventGaugeWidgetOptions.StyleRing, Icons.Material.Filled.DonutLarge, "Ring"),
+        new(DashboardEventGaugeWidgetOptions.StyleMeter, Icons.Material.Filled.Speed, "Meter")
+    ];
+
+    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> BarOrientationOptions =
+    [
+        new(DashboardBarChartVisualOptions.OrientationVertical, Icons.Material.Filled.ViewColumn, "Vertical"),
+        new(DashboardBarChartVisualOptions.OrientationHorizontal, Icons.Material.Filled.TableRows, "Horizontal")
+    ];
+
+    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> ChartTypeOptions =
+    [
+        new(DashboardChartWidgetOptions.TypeBars, Icons.Material.Filled.BarChart, "Bars"),
+        new(DashboardChartWidgetOptions.TypeLine, Icons.Material.Filled.ShowChart, "Line"),
+        new(DashboardChartWidgetOptions.TypeArea, Icons.Material.Filled.AreaChart, "Area"),
+        new(DashboardChartWidgetOptions.TypeTopics, Icons.Material.Filled.FormatListBulleted, "Topics")
+    ];
+
     [Parameter]
     public DashboardWidgetSettingsDraft? Draft { get; set; }
 
@@ -542,15 +555,8 @@
     [Parameter]
     public EventCallback<string?> ChartTypeChanged { get; set; }
 
-    private static string ChoiceClass(string? currentValue, string value)
-        => string.Equals(currentValue ?? string.Empty, value, StringComparison.Ordinal)
-            ? "property-grid-choice selected"
-            : "property-grid-choice";
-
-    private static string BooleanChoiceClass(bool currentValue, bool value)
-        => currentValue == value
-            ? "property-grid-choice selected"
-            : "property-grid-choice";
+    private static string BooleanValue(bool value)
+        => value ? bool.TrueString : bool.FalseString;
 
     private Task ChangeGaugePropertyAsync(string key, string? value)
         => GaugePropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
@@ -579,75 +585,43 @@
     private Task ChangeDonutChartVisualPropertyAsync(string key, string? value)
         => DonutChartVisualPropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
 
-    private RenderFragment BooleanRow(string key, bool value) => @<div class="property-grid-button-group">
-        <button type="button"
-                class="@BooleanChoiceClass(value, true)"
-                @onclick="@(() => ChangeLatestEventVisualPropertyAsync(key, bool.TrueString))">On</button>
-        <button type="button"
-                class="@BooleanChoiceClass(value, false)"
-                @onclick="@(() => ChangeLatestEventVisualPropertyAsync(key, bool.FalseString))">Off</button>
-    </div>;
+    private RenderFragment BooleanRow(string key, bool value) => @<PropertyGridIconSegment Value="@BooleanValue(value)"
+        Options="@BooleanOptions"
+        AriaLabel="@key"
+        ValueChanged="@((string? next) => ChangeLatestEventVisualPropertyAsync(key, next))" />;
 
-    private RenderFragment TableBooleanRow(string key, bool value) => @<div class="property-grid-button-group">
-        <button type="button"
-                class="@BooleanChoiceClass(value, true)"
-                @onclick="@(() => ChangeEventTableVisualPropertyAsync(key, bool.TrueString))">On</button>
-        <button type="button"
-                class="@BooleanChoiceClass(value, false)"
-                @onclick="@(() => ChangeEventTableVisualPropertyAsync(key, bool.FalseString))">Off</button>
-    </div>;
+    private RenderFragment TableBooleanRow(string key, bool value) => @<PropertyGridIconSegment Value="@BooleanValue(value)"
+        Options="@BooleanOptions"
+        AriaLabel="@key"
+        ValueChanged="@((string? next) => ChangeEventTableVisualPropertyAsync(key, next))" />;
 
-    private RenderFragment TopicActivityBooleanRow(string key, bool value) => @<div class="property-grid-button-group">
-        <button type="button"
-                class="@BooleanChoiceClass(value, true)"
-                @onclick="@(() => ChangeTopicActivityVisualPropertyAsync(key, bool.TrueString))">On</button>
-        <button type="button"
-                class="@BooleanChoiceClass(value, false)"
-                @onclick="@(() => ChangeTopicActivityVisualPropertyAsync(key, bool.FalseString))">Off</button>
-    </div>;
+    private RenderFragment TopicActivityBooleanRow(string key, bool value) => @<PropertyGridIconSegment Value="@BooleanValue(value)"
+        Options="@BooleanOptions"
+        AriaLabel="@key"
+        ValueChanged="@((string? next) => ChangeTopicActivityVisualPropertyAsync(key, next))" />;
 
-    private RenderFragment TopicTreeBooleanRow(string key, bool value) => @<div class="property-grid-button-group">
-        <button type="button"
-                class="@BooleanChoiceClass(value, true)"
-                @onclick="@(() => ChangeTopicTreeVisualPropertyAsync(key, bool.TrueString))">On</button>
-        <button type="button"
-                class="@BooleanChoiceClass(value, false)"
-                @onclick="@(() => ChangeTopicTreeVisualPropertyAsync(key, bool.FalseString))">Off</button>
-    </div>;
+    private RenderFragment TopicTreeBooleanRow(string key, bool value) => @<PropertyGridIconSegment Value="@BooleanValue(value)"
+        Options="@BooleanOptions"
+        AriaLabel="@key"
+        ValueChanged="@((string? next) => ChangeTopicTreeVisualPropertyAsync(key, next))" />;
 
-    private RenderFragment LineChartBooleanRow(string key, bool value) => @<div class="property-grid-button-group">
-        <button type="button"
-                class="@BooleanChoiceClass(value, true)"
-                @onclick="@(() => ChangeLineChartVisualPropertyAsync(key, bool.TrueString))">On</button>
-        <button type="button"
-                class="@BooleanChoiceClass(value, false)"
-                @onclick="@(() => ChangeLineChartVisualPropertyAsync(key, bool.FalseString))">Off</button>
-    </div>;
+    private RenderFragment LineChartBooleanRow(string key, bool value) => @<PropertyGridIconSegment Value="@BooleanValue(value)"
+        Options="@BooleanOptions"
+        AriaLabel="@key"
+        ValueChanged="@((string? next) => ChangeLineChartVisualPropertyAsync(key, next))" />;
 
-    private RenderFragment AreaChartBooleanRow(string key, bool value) => @<div class="property-grid-button-group">
-        <button type="button"
-                class="@BooleanChoiceClass(value, true)"
-                @onclick="@(() => ChangeAreaChartVisualPropertyAsync(key, bool.TrueString))">On</button>
-        <button type="button"
-                class="@BooleanChoiceClass(value, false)"
-                @onclick="@(() => ChangeAreaChartVisualPropertyAsync(key, bool.FalseString))">Off</button>
-    </div>;
+    private RenderFragment AreaChartBooleanRow(string key, bool value) => @<PropertyGridIconSegment Value="@BooleanValue(value)"
+        Options="@BooleanOptions"
+        AriaLabel="@key"
+        ValueChanged="@((string? next) => ChangeAreaChartVisualPropertyAsync(key, next))" />;
 
-    private RenderFragment BarChartBooleanRow(string key, bool value) => @<div class="property-grid-button-group">
-        <button type="button"
-                class="@BooleanChoiceClass(value, true)"
-                @onclick="@(() => ChangeBarChartVisualPropertyAsync(key, bool.TrueString))">On</button>
-        <button type="button"
-                class="@BooleanChoiceClass(value, false)"
-                @onclick="@(() => ChangeBarChartVisualPropertyAsync(key, bool.FalseString))">Off</button>
-    </div>;
+    private RenderFragment BarChartBooleanRow(string key, bool value) => @<PropertyGridIconSegment Value="@BooleanValue(value)"
+        Options="@BooleanOptions"
+        AriaLabel="@key"
+        ValueChanged="@((string? next) => ChangeBarChartVisualPropertyAsync(key, next))" />;
 
-    private RenderFragment DonutChartBooleanRow(string key, bool value) => @<div class="property-grid-button-group">
-        <button type="button"
-                class="@BooleanChoiceClass(value, true)"
-                @onclick="@(() => ChangeDonutChartVisualPropertyAsync(key, bool.TrueString))">On</button>
-        <button type="button"
-                class="@BooleanChoiceClass(value, false)"
-                @onclick="@(() => ChangeDonutChartVisualPropertyAsync(key, bool.FalseString))">Off</button>
-    </div>;
+    private RenderFragment DonutChartBooleanRow(string key, bool value) => @<PropertyGridIconSegment Value="@BooleanValue(value)"
+        Options="@BooleanOptions"
+        AriaLabel="@key"
+        ValueChanged="@((string? next) => ChangeDonutChartVisualPropertyAsync(key, next))" />;
 }
