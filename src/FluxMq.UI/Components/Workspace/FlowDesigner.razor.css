@@ -444,25 +444,26 @@
     border: 1px solid var(--flux-border-strong);
     border-radius: 6px;
     box-shadow: var(--flux-shadow-node);
-    min-width: 246px;
+    min-width: 238px;
     overflow: visible;
-    padding: 8px;
+    padding: 7px 8px 6px;
     position: relative;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
 }
 
 .flow-designer-root ::deep .flow-node-selected {
     border-color: var(--flux-accent);
-    box-shadow: 0 0 0 2px var(--flux-accent-dim), var(--flux-shadow-node);
+    box-shadow: 0 0 0 1px var(--flux-accent-dim), var(--flux-shadow-node);
 }
 
 .flow-designer-root ::deep .flow-node-diagnostic-error {
     border-color: var(--mud-palette-error);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--mud-palette-error) 42%, transparent), var(--flux-shadow-node);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--mud-palette-error) 32%, transparent), var(--flux-shadow-node);
 }
 
 .flow-designer-root ::deep .flow-node-diagnostic-warning {
     border-color: var(--mud-palette-warning);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--mud-palette-warning) 36%, transparent), var(--flux-shadow-node);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--mud-palette-warning) 28%, transparent), var(--flux-shadow-node);
 }
 
 .flow-designer-root ::deep .flow-node-diagnostic-info {
@@ -472,7 +473,30 @@
 .flow-designer-root ::deep .flow-node-header {
     align-items: center;
     display: flex;
-    gap: 6px;
+    gap: 5px;
+    min-height: 26px;
+    overflow: hidden;
+}
+
+.flow-designer-root ::deep .flow-node-action {
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    flex: 0 0 24px;
+    height: 24px;
+    min-height: 24px;
+    min-width: 24px;
+    padding: 0;
+    width: 24px;
+}
+
+.flow-designer-root ::deep .flow-node-action:hover {
+    background: var(--flux-surface-hover);
+    color: var(--mud-palette-text-primary);
+}
+
+.flow-designer-root ::deep .flow-node-type-icon {
+    flex: 0 0 auto;
+    margin: 0;
 }
 
 .flow-designer-root ::deep .flow-node-title {
@@ -480,8 +504,78 @@
     min-width: 0;
 }
 
+.flow-designer-root ::deep .flow-node-name,
+.flow-designer-root ::deep .flow-node-display-name {
+    display: block;
+    letter-spacing: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.flow-designer-root ::deep .flow-node-name {
+    font-size: 0.76rem;
+    font-weight: 750;
+    line-height: 1.15;
+}
+
+.flow-designer-root ::deep .flow-node-display-name {
+    font-size: 0.64rem;
+    line-height: 1.15;
+    opacity: 0.74;
+}
+
 .flow-designer-root ::deep .flow-node-diagnostic-icon {
     flex: 0 0 auto;
+}
+
+.flow-designer-root ::deep .flow-node-category-chip {
+    border-radius: 5px;
+    flex: 0 1 auto;
+    height: 20px;
+    margin: 0;
+    max-width: 72px;
+}
+
+.flow-designer-root ::deep .flow-node-category-chip .mud-chip-content {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    overflow: hidden;
+    padding: 0 2px;
+    text-overflow: ellipsis;
+}
+
+.flow-designer-root ::deep .flow-node-divider {
+    margin: 6px -8px;
+}
+
+.flow-designer-root ::deep .flow-node-activity {
+    margin: 0 0 6px;
+    padding: 4px 6px;
+}
+
+.flow-designer-root ::deep .flow-node-activity .mud-alert-icon {
+    font-size: 1rem;
+    margin-inline-end: 6px;
+    padding: 0;
+}
+
+.flow-designer-root ::deep .flow-node-activity .mud-alert-message {
+    font-size: 0.68rem;
+    line-height: 1.25;
+    padding: 0;
+}
+
+.flow-designer-root ::deep .flow-node-collapsed-activity {
+    display: block;
+    font-size: 0.64rem;
+    line-height: 1.15;
+    margin: 4px 0 0 29px;
+    max-width: 190px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* ── Port hit-target wrapper (rendered by PortRenderer) ─────────────────────
@@ -604,16 +698,16 @@
 .flow-designer-root ::deep .flow-node-port-list {
     border-top: 1px solid var(--flux-border);
     /* pull out to cancel node padding so dots sit on the node border */
-    margin: 7px -8px -8px;
-    padding: 3px 0 5px;
+    margin: 6px -8px -6px;
+    padding: 2px 0 4px;
 }
 
 .flow-designer-root ::deep .flow-port-row {
     align-items: center;
     display: grid;
     grid-template-columns: 0 minmax(0, 1fr) 0;
-    min-height: 24px;
-    padding: 1px 0;
+    min-height: 22px;
+    padding: 0;
 }
 
 /* ── Port side containers ───────────────────────────────────────────────────
@@ -642,11 +736,11 @@
 }
 
 .flow-designer-root ::deep .flow-port-name {
-    font-size: 0.68rem;
-    letter-spacing: 0.02em;
+    font-size: 0.66rem;
+    letter-spacing: 0;
     min-width: 0;
     overflow: hidden;
-    padding: 0 7px;
+    padding: 0 6px;
     text-align: center;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -668,20 +762,28 @@
 .flow-designer-root ::deep .node-stat {
     align-items: center;
     display: grid;
-    font-size: 0.72rem;
-    gap: 5px;
-    grid-template-columns: 18px auto 1fr;
-    line-height: 1.2;
+    font-size: 0.68rem;
+    gap: 4px;
+    grid-template-columns: 16px auto minmax(0, 1fr);
+    line-height: 1.18;
+    min-height: 18px;
+}
+
+.flow-designer-root ::deep .node-stat-icon {
+    font-size: 1rem;
+    opacity: 0.78;
 }
 
 .flow-designer-root ::deep .node-stat-label {
-    font-size: 0.62rem;
-    letter-spacing: 0.04em;
-    opacity: 0.6;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    opacity: 0.64;
     text-transform: uppercase;
 }
 
 .flow-designer-root ::deep .node-stat-value {
+    font-size: 0.68rem;
     font-variant-numeric: tabular-nums;
     overflow: hidden;
     text-align: right;
