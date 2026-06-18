@@ -27,11 +27,11 @@
     border-bottom: 1px solid var(--flux-border);
     display: grid;
     flex: 0 0 auto;
-    gap: 10px;
+    gap: 8px;
     grid-template-columns: minmax(0, 1fr) auto;
-    min-height: 50px;
+    min-height: 46px;
     min-width: 0;
-    padding: 7px 10px;
+    padding: 6px 10px;
 }
 
 .test-scenario-actions,
@@ -44,17 +44,18 @@
 
 .test-scenario-actions {
     flex: 0 1 auto;
-    flex-wrap: wrap;
-    gap: 5px;
+    flex-wrap: nowrap;
+    gap: 4px;
     justify-content: flex-end;
     min-width: 0;
+    overflow: hidden;
 }
 
 .test-scenario-heading {
     align-items: center;
     display: flex;
     flex: 1 1 auto;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 
@@ -65,16 +66,17 @@
     border-radius: 6px;
     color: var(--mud-palette-warning);
     display: flex;
-    flex: 0 0 30px;
-    height: 30px;
+    flex: 0 0 28px;
+    height: 28px;
     justify-content: center;
-    width: 30px;
+    width: 28px;
 }
 
 .test-scenario-title-copy {
     display: flex;
+    flex: 1 1 auto;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
     min-width: 0;
 }
 
@@ -92,9 +94,10 @@
 .test-scenario-meta-strip {
     align-items: center;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 4px;
     min-width: 0;
+    overflow: hidden;
 }
 
 .test-scenario-meta-strip span,
@@ -105,7 +108,7 @@
     color: var(--mud-palette-text-secondary);
     font-size: 10.5px;
     font-weight: 750;
-    height: 24px;
+    height: 22px;
     line-height: 1;
     white-space: nowrap;
 }
@@ -113,16 +116,26 @@
 .test-scenario-meta-strip span {
     align-items: center;
     display: inline-flex;
-    max-width: 132px;
+    max-width: 118px;
     min-width: 0;
     overflow: hidden;
-    padding: 0 8px;
+    padding: 0 7px;
     text-overflow: ellipsis;
 }
 
 .test-run-status {
+    flex: 0 1 auto;
     gap: 5px;
-    padding: 0 8px;
+    max-width: 170px;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0 7px;
+}
+
+.test-run-status span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .test-run-status.passed {
@@ -156,7 +169,7 @@
     border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
     border-radius: 6px;
     gap: 1px;
-    height: 30px;
+    height: 28px;
     padding: 1px;
 }
 
@@ -172,13 +185,13 @@
 
 .test-scenario-report-actions ::deep .mud-icon-button,
 .test-scenario-build-actions ::deep .mud-icon-button {
-    height: 26px;
+    height: 24px;
     padding: 4px;
-    width: 26px;
+    width: 24px;
 }
 
 .test-scenario-actions ::deep .test-scenario-run-action {
-    min-height: 28px;
+    min-height: 26px;
     text-transform: none;
 }
 
@@ -201,15 +214,15 @@
     border-radius: 8px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     max-width: min(100%, 360px);
-    padding: 22px;
+    padding: 18px;
     text-align: center;
 }
 
 .test-scenario-empty-panel.compact {
     max-width: min(100%, 420px);
-    padding: 18px;
+    padding: 16px;
 }
 
 .test-scenario-empty-copy {
@@ -259,12 +272,12 @@
     align-items: stretch;
     display: grid;
     flex: 1 1 auto;
-    gap: 8px;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 6px;
+    grid-template-columns: repeat(auto-fit, minmax(236px, 1fr));
     min-height: 0;
     min-width: 0;
     overflow: auto;
-    padding: 10px;
+    padding: 8px;
 }
 
 .test-phase-lane {
@@ -284,8 +297,8 @@
     border-bottom: 1px solid var(--flux-border);
     display: flex;
     justify-content: space-between;
-    min-height: 40px;
-    padding: 8px 10px;
+    min-height: 36px;
+    padding: 6px 8px;
 }
 
 .test-phase-header div {
@@ -312,10 +325,10 @@
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     min-height: 0;
     overflow: auto;
-    padding: 8px;
+    padding: 6px;
 }
 
 .test-phase-empty {
@@ -332,10 +345,10 @@
     border: 1px solid var(--flux-border);
     border-radius: 6px;
     display: flex;
-    gap: 10px;
-    min-height: 108px;
+    gap: 8px;
+    min-height: 86px;
     min-width: 0;
-    padding: 10px;
+    padding: 8px;
     width: 100%;
 }
 
@@ -377,9 +390,9 @@
     flex: 0 0 auto;
     font-size: 12px;
     font-weight: 800;
-    height: 26px;
+    height: 24px;
     justify-content: center;
-    width: 26px;
+    width: 24px;
 }
 
 .test-step-body {
@@ -390,14 +403,16 @@
 .test-step-topline {
     align-items: center;
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-wrap: nowrap;
+    gap: 6px;
     min-width: 0;
+    overflow: hidden;
 }
 
 .test-step-actions {
     align-items: center;
     display: inline-flex;
+    flex: 0 0 auto;
     gap: 2px;
     margin-left: auto;
 }
@@ -410,11 +425,11 @@
     color: var(--mud-palette-text-secondary);
     cursor: pointer;
     display: inline-flex;
-    height: 24px;
+    height: 22px;
     justify-content: center;
     padding: 0;
     transition: background 0.12s ease, color 0.12s ease;
-    width: 24px;
+    width: 22px;
 }
 
 .test-step-action:hover {
@@ -441,7 +456,7 @@
     color: var(--mud-palette-text-primary);
     font-size: 13px;
     font-weight: 750;
-    flex: 1 1 120px;
+    flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -457,7 +472,7 @@
     font-weight: 800;
     letter-spacing: 0;
     line-height: 1;
-    padding: 4px 7px;
+    padding: 3px 6px;
     text-transform: uppercase;
 }
 
@@ -493,7 +508,7 @@
     font-size: 10px;
     font-weight: 800;
     line-height: 1;
-    padding: 4px 7px;
+    padding: 3px 6px;
     text-transform: uppercase;
 }
 
@@ -524,9 +539,9 @@
 
 .test-step-summary {
     color: var(--mud-palette-text-secondary);
-    font-size: 12px;
+    font-size: 11.5px;
     line-height: 1.35;
-    margin-top: 6px;
+    margin-top: 5px;
 }
 
 .test-step-result-message {
@@ -559,14 +574,14 @@
 
 .test-step-config {
     display: grid;
-    gap: 6px;
-    margin: 12px 0 0;
+    gap: 4px;
+    margin: 8px 0 0;
 }
 
 .test-step-config-row {
     display: grid;
-    gap: 10px;
-    grid-template-columns: minmax(92px, 132px) minmax(0, 1fr);
+    gap: 8px;
+    grid-template-columns: minmax(84px, 120px) minmax(0, 1fr);
     min-width: 0;
 }
 
@@ -593,9 +608,9 @@
 
 @media (max-width: 760px) {
     .test-scenario-header {
-        align-items: flex-start;
+        align-items: center;
         grid-template-columns: minmax(0, 1fr);
-        padding: 8px 12px;
+        padding: 6px 10px;
     }
 
     .test-scenario-actions {
@@ -614,7 +629,7 @@
 
     .test-phase-lanes {
         grid-template-columns: minmax(0, 1fr);
-        padding: 10px;
+        padding: 8px;
     }
 
     .test-phase-lane {
@@ -622,8 +637,12 @@
     }
 
     .test-step-card {
-        gap: 10px;
-        padding: 12px;
+        gap: 8px;
+        padding: 8px;
+    }
+
+    .test-step-topline {
+        flex-wrap: wrap;
     }
 
     .test-step-actions {

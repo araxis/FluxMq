@@ -2796,8 +2796,12 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-scenario-build-actions");
         css.ShouldContain(".test-scenario-report-actions ::deep .mud-icon-button");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
-        css.ShouldContain("min-height: 50px;");
-        css.ShouldContain("height: 30px;");
+        css.ShouldContain("min-height: 46px;");
+        css.ShouldContain("flex-wrap: nowrap;");
+        css.ShouldContain("grid-template-columns: repeat(auto-fit, minmax(236px, 1fr));");
+        css.ShouldContain("min-height: 86px;");
+        css.ShouldContain("height: 28px;");
+        css.ShouldContain("height: 24px;");
         css.ShouldContain("@media (max-width: 760px)");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
     }
