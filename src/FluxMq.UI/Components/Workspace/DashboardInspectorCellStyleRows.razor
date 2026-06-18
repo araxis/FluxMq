@@ -1,5 +1,6 @@
 @using FluxMq.UI.Models
 @using FluxMq.UI.Services
+@using MudBlazor
 
 @if (Draft is { } draft)
 {
@@ -38,7 +39,15 @@
         </PropertyGridRow>
     }
     <PropertyGridRow Name="Defaults">
-        <button type="button" class="property-grid-action-button" @onclick="@(() => Reset.InvokeAsync())">Reset cell style</button>
+        <div class="property-grid-inline property-grid-action-strip">
+            <button type="button"
+                    class="property-grid-icon-action"
+                    title="Reset cell style"
+                    aria-label="Reset cell style"
+                    @onclick="@(() => Reset.InvokeAsync())">
+                <MudIcon Icon="@Icons.Material.Filled.RestartAlt" Size="Size.Small" />
+            </button>
+        </div>
     </PropertyGridRow>
 }
 

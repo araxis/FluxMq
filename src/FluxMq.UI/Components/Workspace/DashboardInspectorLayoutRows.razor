@@ -16,16 +16,16 @@
 @if (Widget is not null)
 {
     <PropertyGridRow Name="Actions">
-        <div class="property-grid-inline layout-action-strip">
+        <div class="property-grid-inline property-grid-action-strip">
             <button type="button"
-                    class="property-grid-small-button"
+                    class="property-grid-icon-action"
                     title="Duplicate widget"
                     aria-label="Duplicate widget"
                     @onclick="@(() => DuplicateWidget.InvokeAsync())">
                 <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" />
             </button>
             <button type="button"
-                    class="property-grid-small-button layout-danger-action"
+                    class="property-grid-icon-action danger"
                     title="Delete widget"
                     aria-label="Delete widget"
                     @onclick="@(() => DeleteWidget.InvokeAsync())">

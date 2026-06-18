@@ -3442,13 +3442,13 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "DashboardInspectorLayoutRows.razor"));
-        var layoutRowsCss = File.ReadAllText(Path.Combine(
+        var propertyGridRowCss = File.ReadAllText(Path.Combine(
             root,
             "src",
             "FluxMq.UI",
             "Components",
             "Workspace",
-            "DashboardInspectorLayoutRows.razor.css"));
+            "PropertyGridRow.razor.css"));
         var styleRows = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -3463,15 +3463,21 @@ public sealed class DashboardEventFilterCatalogTests
         inspector.ShouldNotContain("StyleInputType(DashboardStyleField");
         layoutRows.ShouldContain("DuplicateWidget");
         layoutRows.ShouldContain("DeleteWidget");
-        layoutRows.ShouldContain("layout-action-strip");
-        layoutRows.ShouldContain("property-grid-small-button");
+        layoutRows.ShouldContain("property-grid-action-strip");
+        layoutRows.ShouldContain("property-grid-icon-action");
         layoutRows.ShouldContain("Icons.Material.Filled.ContentCopy");
         layoutRows.ShouldContain("Icons.Material.Filled.DeleteOutline");
+        layoutRows.ShouldNotContain("layout-action-strip");
         layoutRows.ShouldNotContain("property-grid-button-group");
         layoutRows.ShouldNotContain("property-grid-action-button");
-        layoutRowsCss.ShouldContain(".layout-action-strip");
-        layoutRowsCss.ShouldContain(".layout-danger-action");
+        styleRows.ShouldContain("property-grid-action-strip");
+        styleRows.ShouldContain("property-grid-icon-action");
         styleRows.ShouldContain("Reset cell style");
+        styleRows.ShouldContain("Icons.Material.Filled.RestartAlt");
+        styleRows.ShouldNotContain("property-grid-action-button");
+        propertyGridRowCss.ShouldContain(".property-grid-action-strip");
+        propertyGridRowCss.ShouldContain(".property-grid-icon-action");
+        propertyGridRowCss.ShouldContain(".property-grid-icon-action.danger");
     }
 
     [Fact]
@@ -3501,6 +3507,9 @@ public sealed class DashboardEventFilterCatalogTests
         inspector.ShouldNotContain("private RenderFragment RenderMetricParameterField");
         inspector.ShouldNotContain("CurrentBindingMetrics(");
         appRows.ShouldContain("Open metric");
+        appRows.ShouldContain("property-grid-action-strip");
+        appRows.ShouldContain("property-grid-icon-action");
+        appRows.ShouldContain("Icons.Material.Filled.OpenInNew");
         appRows.ShouldContain("ParameterChanged");
         appRows.ShouldContain("PropertyGridIconSegment");
         appRows.ShouldContain("BooleanOptions");
@@ -3510,6 +3519,7 @@ public sealed class DashboardEventFilterCatalogTests
         appRows.ShouldContain("Icons.Material.Filled.Tune");
         appRows.ShouldContain("Icons.Material.Filled.RadioButtonChecked");
         appRows.ShouldNotContain("property-grid-button-group");
+        appRows.ShouldNotContain("property-grid-action-button");
         appRows.ShouldNotContain("ChoiceClass");
     }
 
