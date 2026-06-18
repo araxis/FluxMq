@@ -279,6 +279,175 @@
     color: var(--mud-palette-text-disabled);
 }
 
+.flow-diagnostic-panel {
+    background: color-mix(in srgb, var(--flux-surface) 96%, transparent);
+    border: 1px solid var(--flux-border);
+    border-radius: 6px;
+    box-shadow: var(--flux-shadow-1);
+    display: grid;
+    gap: 6px;
+    left: 10px;
+    max-height: 112px;
+    min-width: 0;
+    overflow: hidden;
+    padding: 6px;
+    position: absolute;
+    right: 10px;
+    top: 62px;
+    z-index: 23;
+}
+
+.flow-diagnostic-panel.error {
+    border-color: color-mix(in srgb, var(--mud-palette-error) 36%, var(--flux-border));
+}
+
+.flow-diagnostic-panel.warning {
+    border-color: color-mix(in srgb, var(--mud-palette-warning) 34%, var(--flux-border));
+}
+
+.flow-diagnostic-panel.info {
+    border-color: color-mix(in srgb, var(--mud-palette-info) 32%, var(--flux-border));
+}
+
+.flow-diagnostic-panel-head {
+    align-items: center;
+    display: grid;
+    gap: 7px;
+    grid-template-columns: 26px minmax(0, 1fr);
+    min-width: 0;
+}
+
+.flow-diagnostic-panel-icon {
+    align-items: center;
+    background: color-mix(in srgb, var(--flux-surface-2) 72%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-radius: 6px;
+    display: inline-flex;
+    height: 26px;
+    justify-content: center;
+    width: 26px;
+}
+
+.flow-diagnostic-panel.error .flow-diagnostic-panel-icon {
+    border-color: color-mix(in srgb, var(--mud-palette-error) 38%, transparent);
+    color: var(--mud-palette-error);
+}
+
+.flow-diagnostic-panel.warning .flow-diagnostic-panel-icon {
+    border-color: color-mix(in srgb, var(--mud-palette-warning) 38%, transparent);
+    color: var(--mud-palette-warning);
+}
+
+.flow-diagnostic-panel.info .flow-diagnostic-panel-icon {
+    border-color: color-mix(in srgb, var(--mud-palette-info) 38%, transparent);
+    color: var(--mud-palette-info);
+}
+
+.flow-diagnostic-panel-copy {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.flow-diagnostic-panel-copy strong {
+    color: var(--mud-palette-text-primary);
+    font-size: 0.78rem;
+    font-weight: 760;
+    letter-spacing: 0;
+    line-height: 1.1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.flow-diagnostic-panel-copy span {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.66rem;
+    font-weight: 650;
+    line-height: 1.1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.flow-diagnostic-list {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.flow-diagnostic-row {
+    align-items: center;
+    background: color-mix(in srgb, var(--flux-surface-2) 50%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 62%, transparent);
+    border-radius: 5px;
+    display: grid;
+    gap: 6px;
+    grid-template-columns: 16px minmax(48px, 0.28fr) minmax(64px, 0.36fr) minmax(0, 1fr);
+    min-height: 23px;
+    min-width: 0;
+    padding: 0 6px;
+}
+
+.flow-diagnostic-row-icon {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+}
+
+.flow-diagnostic-row-icon ::deep .mud-icon-root {
+    font-size: 15px;
+}
+
+.flow-diagnostic-row.severity-error .flow-diagnostic-row-icon {
+    color: var(--mud-palette-error);
+}
+
+.flow-diagnostic-row.severity-warning .flow-diagnostic-row-icon {
+    color: var(--mud-palette-warning);
+}
+
+.flow-diagnostic-row.severity-info .flow-diagnostic-row-icon {
+    color: var(--mud-palette-info);
+}
+
+.flow-diagnostic-code,
+.flow-diagnostic-target,
+.flow-diagnostic-message,
+.flow-diagnostic-more {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.flow-diagnostic-code {
+    color: var(--mud-palette-text-primary);
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.66rem;
+    font-weight: 700;
+}
+
+.flow-diagnostic-target {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.66rem;
+    font-weight: 700;
+}
+
+.flow-diagnostic-message {
+    color: var(--mud-palette-text-primary);
+    font-size: 0.68rem;
+    font-weight: 600;
+}
+
+.flow-diagnostic-more {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.66rem;
+    font-weight: 700;
+    line-height: 1.1;
+    padding: 1px 6px 0 28px;
+}
+
 .flow-link-condition-panel {
     align-items: center;
     background: var(--flux-surface);
@@ -293,6 +462,10 @@
     right: 10px;
     top: 62px;
     z-index: 24;
+}
+
+.flow-link-condition-panel.with-diagnostics {
+    top: 184px;
 }
 
 .flow-link-condition-meta {
@@ -368,6 +541,21 @@
         height: 24px;
     }
 
+    .flow-diagnostic-panel {
+        left: 8px;
+        max-height: 112px;
+        right: 8px;
+        top: 130px;
+    }
+
+    .flow-diagnostic-row {
+        grid-template-columns: 16px minmax(42px, 0.34fr) minmax(0, 0.55fr);
+    }
+
+    .flow-diagnostic-message {
+        display: none;
+    }
+
     .flow-link-condition-panel {
         align-items: stretch;
         flex-direction: column;
@@ -375,6 +563,10 @@
         max-width: none;
         right: 12px;
         top: 130px;
+    }
+
+    .flow-link-condition-panel.with-diagnostics {
+        top: 250px;
     }
 
     .flow-link-condition-meta {
@@ -461,13 +653,37 @@
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--mud-palette-error) 32%, transparent), var(--flux-shadow-node);
 }
 
+.flow-designer-root ::deep .flow-node-diagnostic-error::before,
+.flow-designer-root ::deep .flow-node-diagnostic-warning::before,
+.flow-designer-root ::deep .flow-node-diagnostic-info::before {
+    border-radius: 4px;
+    bottom: 7px;
+    content: "";
+    left: -1px;
+    position: absolute;
+    top: 7px;
+    width: 3px;
+}
+
+.flow-designer-root ::deep .flow-node-diagnostic-error::before {
+    background: var(--mud-palette-error);
+}
+
 .flow-designer-root ::deep .flow-node-diagnostic-warning {
     border-color: var(--mud-palette-warning);
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--mud-palette-warning) 28%, transparent), var(--flux-shadow-node);
 }
 
+.flow-designer-root ::deep .flow-node-diagnostic-warning::before {
+    background: var(--mud-palette-warning);
+}
+
 .flow-designer-root ::deep .flow-node-diagnostic-info {
     border-color: var(--mud-palette-info);
+}
+
+.flow-designer-root ::deep .flow-node-diagnostic-info::before {
+    background: var(--mud-palette-info);
 }
 
 .flow-designer-root ::deep .flow-node-header {

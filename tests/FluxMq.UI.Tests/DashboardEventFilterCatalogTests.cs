@@ -4431,6 +4431,52 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void FlowDesigner_UsesCompactDiagnosticSurface()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "FlowDesigner.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "FlowDesigner.razor.css"));
+
+        markup.ShouldContain("flow-diagnostic-panel @DiagnosticSeverityClass");
+        markup.ShouldContain("aria-label=\"Pipeline diagnostics\"");
+        markup.ShouldContain("@DiagnosticPanelIcon");
+        markup.ShouldContain("@DiagnosticPanelTitle");
+        markup.ShouldContain("@DiagnosticPanelSummary");
+        markup.ShouldContain("VisibleDiagnostics");
+        markup.ShouldContain("DiagnosticRowClass(diagnostic)");
+        markup.ShouldContain("DiagnosticTarget(diagnostic)");
+        markup.ShouldContain("AdditionalDiagnosticCount");
+        markup.ShouldContain("@if (ShowDiagnosticPanel)");
+        markup.ShouldContain("ActionableDiagnosticCount");
+        markup.ShouldContain("DiagnosticSeverityToken(diagnostic) is \"error\" or \"warning\"");
+        markup.ShouldContain("flow-link-condition-panel @(ShowDiagnosticPanel ? \"with-diagnostics\" : null)");
+        markup.ShouldContain("VisibleDiagnosticLimit = 3");
+
+        css.ShouldContain(".flow-diagnostic-panel");
+        css.ShouldContain("max-height: 112px;");
+        css.ShouldContain(".flow-diagnostic-row");
+        css.ShouldContain("grid-template-columns: 16px minmax(48px, 0.28fr) minmax(64px, 0.36fr) minmax(0, 1fr);");
+        css.ShouldContain(".flow-link-condition-panel.with-diagnostics");
+        css.ShouldContain("top: 184px;");
+        css.ShouldContain(".flow-designer-root ::deep .flow-node-diagnostic-error::before");
+        css.ShouldContain("width: 3px;");
+        css.ShouldContain(".flow-diagnostic-message");
+        css.ShouldContain("display: none;");
+    }
+
+    [Fact]
     public void NodeEditDialog_UsesCompactEditorShell()
     {
         var root = FindRepositoryRoot();
