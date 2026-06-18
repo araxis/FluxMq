@@ -1,0 +1,31 @@
+@using MudBlazor
+
+@if (Draft is { Profile.UsesMetricWindow: true })
+{
+    <PropertyGridRow Name="@Labels.WindowRow">
+        <PropertyGridIconSegment Value="@Draft.Window"
+                                 Options="@WindowSegmentOptions"
+                                 AriaLabel="@Labels.WindowRow"
+                                 ShowLabels="true"
+                                 ValueChanged="@WindowChanged" />
+    </PropertyGridRow>
+}
+
+@code {
+    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> WindowSegmentOptions =
+    [
+        new("30s", Icons.Material.Filled.RadioButtonChecked, "30s"),
+        new("60s", Icons.Material.Filled.RadioButtonChecked, "1m"),
+        new("300s", Icons.Material.Filled.RadioButtonChecked, "5m"),
+        new("900s", Icons.Material.Filled.RadioButtonChecked, "15m")
+    ];
+
+    [Parameter]
+    public DashboardWidgetSettingsDraft? Draft { get; set; }
+
+    [Parameter]
+    public DashboardWidgetInspectorLabels Labels { get; set; } = DashboardWidgetInspectorLabels.Default;
+
+    [Parameter]
+    public EventCallback<string?> WindowChanged { get; set; }
+}
