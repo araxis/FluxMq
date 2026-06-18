@@ -2875,6 +2875,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Class=\"scenario-step-editor\"");
         markup.ShouldContain("Class=\"scenario-step-editor-toggle\"");
         markup.ShouldContain("scenario-step-editor-checks");
+        markup.ShouldContain("IsDescriptorFieldEditor");
+        markup.ShouldContain("scenario-step-editor-field-grid");
+        markup.ShouldContain("StepDescriptor.Fields");
+        markup.ShouldContain("CreateGenericConfiguration");
+        markup.ShouldContain("InitializeGenericFields");
+        markup.ShouldContain("GenericFieldValue(currentField)");
+        markup.ShouldContain("FieldInputType(currentField)");
         markup.ShouldContain("scenario-step-editor-actions");
         markup.ShouldContain("scenario-step-editor-action-buttons");
         markup.ShouldContain("ValidationStateClass");
@@ -2882,12 +2889,17 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Disabled=\"@HasValidationIssues\"");
         markup.ShouldContain("BuildValidationMessages");
         markup.ShouldContain("AddRequiredMessage(messages, _connectionField.Label, _connection)");
+        markup.ShouldContain("IsIntegerField(field)");
+        markup.ShouldContain("IsNumberField(field)");
+        markup.ShouldContain("ScenarioStepCatalog.WindowMsKey");
 
         css.ShouldContain(".scenario-step-editor");
         css.ShouldContain("background: var(--flux-surface);");
         css.ShouldContain("border: 1px solid var(--flux-border);");
         css.ShouldContain(".scenario-step-editor-toggle");
         css.ShouldContain(".scenario-step-editor-checks");
+        css.ShouldContain(".scenario-step-editor-field-grid");
+        css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
         css.ShouldContain(".scenario-step-editor-actions");
         css.ShouldContain("justify-content: space-between;");
         css.ShouldContain(".scenario-step-editor-state");
@@ -2897,6 +2909,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("min-height: 30px;");
         css.ShouldContain("@media (max-width: 560px)");
         css.ShouldContain("flex-direction: column;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
     }
 
     [Fact]

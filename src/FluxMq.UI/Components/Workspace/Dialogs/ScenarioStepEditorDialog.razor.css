@@ -72,6 +72,23 @@
     padding: 3px 7px;
 }
 
+.scenario-step-editor-field-grid {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.scenario-step-editor-field-grid ::deep(.mud-input-control),
+.scenario-step-editor-field-grid ::deep(.mud-checkbox) {
+    margin: 0;
+    min-width: 0;
+}
+
+.scenario-step-editor-field-grid ::deep(.mud-input-control:has(textarea)),
+.scenario-step-editor-field-grid ::deep(.mud-checkbox) {
+    grid-column: 1 / -1;
+}
+
 .scenario-step-editor-actions {
     align-items: center;
     display: flex;
@@ -139,6 +156,10 @@
     .scenario-step-editor-checks {
         flex-direction: column;
         gap: 0;
+    }
+
+    .scenario-step-editor-field-grid {
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .scenario-step-editor-actions {
