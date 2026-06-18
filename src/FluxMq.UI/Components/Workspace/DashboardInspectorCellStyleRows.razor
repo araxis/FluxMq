@@ -17,10 +17,22 @@
             }
             else if (currentField.Editor == DashboardWidgetPropertyEditorKind.Select)
             {
-                <PropertyGridSelect Value="@draft.GetValue(currentField.Key)"
-                                    Options="@StyleSelectOptions(currentField)"
-                                    AriaLabel="@currentField.Label"
-                                    ValueChanged="@((string? value) => SetValueAsync(currentField.Key, value))" />
+                var segmentOptions = StyleSegmentOptions(currentField);
+                @if (segmentOptions.Count > 0)
+                {
+                    <PropertyGridIconSegment Value="@draft.GetValue(currentField.Key)"
+                                             Options="@segmentOptions"
+                                             AriaLabel="@currentField.Label"
+                                             ShowLabels="true"
+                                             ValueChanged="@((string? value) => SetValueAsync(currentField.Key, value))" />
+                }
+                else
+                {
+                    <PropertyGridSelect Value="@draft.GetValue(currentField.Key)"
+                                        Options="@StyleSelectOptions(currentField)"
+                                        AriaLabel="@currentField.Label"
+                                        ValueChanged="@((string? value) => SetValueAsync(currentField.Key, value))" />
+                }
             }
             else if (currentField.Editor == DashboardWidgetPropertyEditorKind.Segmented &&
                 string.Equals(currentField.Key, DashboardCellStyleDraft.WidgetAlignmentKey, StringComparison.Ordinal))
@@ -52,6 +64,8 @@
 }
 
 @code {
+    private const int MaxSegmentedSelectOptions = 4;
+
     [Parameter]
     public DashboardCellStyleDraft? Draft { get; set; }
 
@@ -72,4 +86,36 @@
 
     private static IReadOnlyList<PropertyGridSelectOption> StyleSelectOptions(DashboardStyleField field)
         => [.. field.Options.Select(static option => new PropertyGridSelectOption(option.Value, option.Label))];
+
+    private static IReadOnlyList<PropertyGridIconSegmentOption> StyleSegmentOptions(DashboardStyleField field)
+    {
+        if (field.Options.Count is 0 or > MaxSegmentedSelectOptions)
+        {
+            return [];
+        }
+
+        return [.. field.Options.Select(option => new PropertyGridIconSegmentOption(
+            option.Value,
+            StyleSelectIcon(field.Key, option.Value),
+            option.Label))];
+    }
+
+    private static string StyleSelectIcon(string key, string value)
+    {
+        if (string.Equals(key, "borderMode", StringComparison.Ordinal))
+        {
+            return string.Equals(value, "none", StringComparison.Ordinal)
+                ? Icons.Material.Filled.Close
+                : Icons.Material.Filled.Check;
+        }
+
+        if (string.Equals(key, DashboardCellStyleDraft.WidgetFitKey, StringComparison.Ordinal))
+        {
+            return string.Equals(value, DashboardCellStyleDraft.WidgetFitContent, StringComparison.Ordinal)
+                ? Icons.Material.Filled.CloseFullscreen
+                : Icons.Material.Filled.FitScreen;
+        }
+
+        return Icons.Material.Filled.RadioButtonChecked;
+    }
 }

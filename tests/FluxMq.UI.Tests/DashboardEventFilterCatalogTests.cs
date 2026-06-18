@@ -3472,6 +3472,17 @@ public sealed class DashboardEventFilterCatalogTests
         layoutRows.ShouldNotContain("property-grid-action-button");
         styleRows.ShouldContain("property-grid-action-strip");
         styleRows.ShouldContain("property-grid-icon-action");
+        styleRows.ShouldContain("PropertyGridIconSegment Value=\"@draft.GetValue(currentField.Key)\"");
+        styleRows.ShouldContain("Options=\"@segmentOptions\"");
+        styleRows.ShouldContain("ShowLabels=\"true\"");
+        styleRows.ShouldContain("StyleSegmentOptions");
+        styleRows.ShouldContain("StyleSelectIcon");
+        styleRows.ShouldContain("MaxSegmentedSelectOptions");
+        styleRows.ShouldContain("DashboardCellStyleDraft.WidgetFitKey");
+        styleRows.ShouldContain("Icons.Material.Filled.FitScreen");
+        styleRows.ShouldContain("Icons.Material.Filled.CloseFullscreen");
+        styleRows.ShouldContain("Icons.Material.Filled.Check");
+        styleRows.ShouldContain("Icons.Material.Filled.Close");
         styleRows.ShouldContain("Reset cell style");
         styleRows.ShouldContain("Icons.Material.Filled.RestartAlt");
         styleRows.ShouldNotContain("property-grid-action-button");
