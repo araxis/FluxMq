@@ -6,10 +6,21 @@
 @if (Draft is not null)
 {
     <PropertyGridRow Name="@Labels.PrimaryCardRow">
-        <PropertyGridSelect Value="@Draft.PrimaryMetric"
-                            Options="@MetricOptions"
-                            AriaLabel="@Labels.PrimaryCardRow"
-                            ValueChanged="@PrimaryMetricChanged" />
+        @if (PrimaryMetricSegmentOptions.Count > 0)
+        {
+            <PropertyGridIconSegment Value="@Draft.PrimaryMetric"
+                                     Options="@PrimaryMetricSegmentOptions"
+                                     AriaLabel="@Labels.PrimaryCardRow"
+                                     ShowLabels="true"
+                                     ValueChanged="@PrimaryMetricChanged" />
+        }
+        else
+        {
+            <PropertyGridSelect Value="@Draft.PrimaryMetric"
+                                Options="@MetricOptions"
+                                AriaLabel="@Labels.PrimaryCardRow"
+                                ValueChanged="@PrimaryMetricChanged" />
+        }
     </PropertyGridRow>
 
     @if (Draft.Profile.SupportsMetricSlots)
@@ -71,7 +82,6 @@
                         disabled="@string.IsNullOrWhiteSpace(MetricToAdd)"
                         @onclick="@(() => AddMetric.InvokeAsync())">
                     <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
-                    <span>Add</span>
                 </button>
             </div>
         </PropertyGridRow>
@@ -89,6 +99,8 @@
 }
 
 @code {
+    private const int MaxPrimaryMetricSegmentOptions = 4;
+
     [Parameter]
     public DashboardWidgetSettingsDraft? Draft { get; set; }
 
@@ -122,6 +134,9 @@
     [Parameter]
     public EventCallback<int> CardColumnsChanged { get; set; }
 
+    private IReadOnlyList<PropertyGridIconSegmentOption> PrimaryMetricSegmentOptions
+        => MetricSegmentOptions(MetricOptions);
+
     private async Task SetMetricCardColumnsAsync(ChangeEventArgs args)
     {
         if (int.TryParse(args.Value?.ToString(), out var value))
@@ -134,4 +149,22 @@
         => DashboardWidgetCatalog.MetricOptions
             .FirstOrDefault(metric => string.Equals(metric.Id, metricId, StringComparison.Ordinal))
             ?.Label ?? metricId;
+
+    private static IReadOnlyList<PropertyGridIconSegmentOption> MetricSegmentOptions(
+        IReadOnlyList<PropertyGridSelectOption> options)
+    {
+        var selectableOptions = options
+            .Where(static option => !option.Disabled && !string.IsNullOrWhiteSpace(option.Value))
+            .ToArray();
+
+        if (selectableOptions.Length is 0 or > MaxPrimaryMetricSegmentOptions)
+        {
+            return [];
+        }
+
+        return [.. selectableOptions.Select(static option => new PropertyGridIconSegmentOption(
+            option.Value,
+            Icons.Material.Filled.RadioButtonChecked,
+            option.Label))];
+    }
 }

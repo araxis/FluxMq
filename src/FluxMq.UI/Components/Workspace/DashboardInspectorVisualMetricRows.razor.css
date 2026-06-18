@@ -119,7 +119,7 @@
 .visual-metric-add-row {
     display: grid;
     gap: 4px;
-    grid-template-columns: minmax(0, 1fr) 52px;
+    grid-template-columns: minmax(0, 1fr) 24px;
     padding-right: 4px;
 }
 
@@ -128,10 +128,8 @@
     border: 1px solid color-mix(in srgb, var(--flux-accent) 30%, var(--flux-border));
     border-radius: 4px;
     color: var(--flux-accent);
-    font-size: 10.5px;
-    font-weight: 780;
-    gap: 3px;
     height: 22px;
+    width: 22px;
 }
 
 .visual-metric-add-button ::deep .mud-icon-root {
