@@ -99,6 +99,14 @@
                         }
                     </span>
                 }
+                @if (ShouldShowStepMetadata(item))
+                {
+                    <span class="catalog-item-badges catalog-step-badges" aria-label="Test step metadata">
+                        <span class="@StepPhaseBadgeClass(item)">@StepPhaseLabel(item)</span>
+                        <span class="catalog-item-badge">@StepKindLabel(item)</span>
+                        <span class="catalog-item-badge muted">@StepParameterLabel(item)</span>
+                    </span>
+                }
             </span>
             <span class="catalog-item-affordance" aria-hidden="true">
                 <span class="catalog-drag-grip">
@@ -265,10 +273,43 @@
            activeDrag.TargetKind == ArtifactKind;
 
     private bool ShouldShowDescription(CatalogEntry item)
-        => ArtifactKind == WorkspaceArtifactKind.Dashboard && !string.IsNullOrWhiteSpace(item.Description);
+        => ArtifactKind is WorkspaceArtifactKind.Dashboard or WorkspaceArtifactKind.Test &&
+           !string.IsNullOrWhiteSpace(item.Description);
 
     private bool ShouldShowRequirements(CatalogEntry item)
         => ArtifactKind == WorkspaceArtifactKind.Dashboard && item.DataRequirements.Count > 0;
+
+    private bool ShouldShowStepMetadata(CatalogEntry item)
+        => ArtifactKind == WorkspaceArtifactKind.Test;
+
+    private static string StepPhaseLabel(CatalogEntry item)
+        => string.IsNullOrWhiteSpace(item.StepPhase) ? "phase" : item.StepPhase;
+
+    private static string StepKindLabel(CatalogEntry item)
+        => item.StepKind switch
+        {
+            ScenarioStepEditorKind.MqttPublish => "publish",
+            ScenarioStepEditorKind.MqttTrigger => "trigger",
+            ScenarioStepEditorKind.ExpectEvent => "expect",
+            ScenarioStepEditorKind.Delay => "delay",
+            ScenarioStepEditorKind.MetricThreshold => "metric",
+            ScenarioStepEditorKind.Cleanup => "cleanup",
+            _ => "step"
+        };
+
+    private static string StepParameterLabel(CatalogEntry item)
+        => item.StepParameterCount == 1 ? "1 field" : $"{item.StepParameterCount} fields";
+
+    private static string StepPhaseBadgeClass(CatalogEntry item)
+        => StepPhaseLabel(item).ToLowerInvariant() switch
+        {
+            "setup" => "catalog-item-badge setup",
+            "stimulus" => "catalog-item-badge stimulus",
+            "observe" => "catalog-item-badge observe",
+            "assert" => "catalog-item-badge assert",
+            "cleanup" => "catalog-item-badge cleanup",
+            _ => "catalog-item-badge"
+        };
 
     private void OnSearchTextChanged(string? value)
         => _searchText = value ?? string.Empty;
@@ -369,7 +410,10 @@
         string Category,
         string Description,
         string Icon,
-        IReadOnlyList<string>? DataRequirements = null)
+        IReadOnlyList<string>? DataRequirements = null,
+        ScenarioStepEditorKind? StepKind = null,
+        string? StepPhase = null,
+        int StepParameterCount = 0)
     {
         public IReadOnlyList<string> DataRequirements { get; init; } = DataRequirements ?? [];
 
@@ -400,7 +444,10 @@
                 descriptor.Category,
                 descriptor.Description,
                 descriptor.Icon,
-                []);
+                [],
+                descriptor.EditorKind,
+                descriptor.DefaultPhase,
+                descriptor.Fields.Count);
     }
 
     private sealed record CatalogGroup(string Category, IReadOnlyList<CatalogEntry> Items);
