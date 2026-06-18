@@ -2693,10 +2693,13 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-studio-mode-switch");
         css.ShouldContain(".test-studio-mode-button");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
-        css.ShouldContain("height: 30px;");
+        css.ShouldContain("flex-wrap: nowrap;");
+        css.ShouldContain("overflow: hidden;");
+        css.ShouldContain("height: 28px;");
         css.ShouldContain(".test-studio-mode-button.active");
         css.ShouldContain("@media (max-width: 760px)");
         css.ShouldContain("width: 100%;");
+        css.ShouldNotContain("flex-basis: 100%;");
         css.ShouldNotContain(".mud-toggle-group");
     }
 
