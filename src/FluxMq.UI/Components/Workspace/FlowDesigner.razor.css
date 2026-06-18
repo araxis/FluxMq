@@ -30,28 +30,28 @@
     border: 1px solid var(--flux-border);
     border-radius: 6px;
     display: grid;
-    gap: 10px;
+    gap: 8px;
     grid-template-columns: minmax(0, 1fr) auto;
-    left: 12px;
-    min-height: 50px;
+    left: 10px;
+    min-height: 46px;
     min-width: 0;
-    padding: 7px 8px;
+    padding: 6px 8px;
     position: absolute;
-    right: 12px;
-    top: 12px;
+    right: 10px;
+    top: 10px;
     z-index: 24;
 }
 
 .flow-canvas-title {
     align-items: center;
     display: flex;
-    gap: 9px;
+    gap: 8px;
     min-width: 0;
 }
 
 .flow-canvas-title-copy {
     display: grid;
-    gap: 4px;
+    gap: 3px;
     min-width: 0;
 }
 
@@ -75,36 +75,41 @@
     border-radius: 6px;
     color: var(--flux-accent);
     display: inline-flex;
-    flex: 0 0 30px;
-    height: 30px;
+    flex: 0 0 28px;
+    height: 28px;
     justify-content: center;
-    width: 30px;
+    width: 28px;
 }
 
 .flow-canvas-meta-strip {
     align-items: center;
     display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
+    flex-wrap: nowrap;
+    gap: 4px;
     min-width: 0;
+    overflow: hidden;
 }
 
 .flow-canvas-actions {
     align-items: center;
     display: flex;
-    flex: 0 0 auto;
-    gap: 6px;
+    flex: 0 1 auto;
+    flex-wrap: nowrap;
+    gap: 4px;
     justify-content: flex-end;
     min-width: 0;
+    overflow: hidden;
 }
 
 .flow-canvas-metrics,
 .flow-canvas-command-group {
     align-items: center;
     display: flex;
-    flex: 0 0 auto;
-    gap: 5px;
+    flex: 0 1 auto;
+    flex-wrap: nowrap;
+    gap: 4px;
     min-width: 0;
+    overflow: hidden;
 }
 
 .flow-canvas-meta-strip span,
@@ -118,10 +123,10 @@
     display: inline-flex;
     font-size: 0.7rem;
     font-weight: 650;
-    gap: 6px;
-    height: 26px;
+    gap: 5px;
+    height: 24px;
     line-height: 1;
-    padding: 0 8px;
+    padding: 0 7px;
     white-space: nowrap;
 }
 
@@ -129,8 +134,21 @@
     background: color-mix(in srgb, var(--flux-surface-2) 54%, transparent);
     color: var(--mud-palette-text-secondary);
     font-size: 0.66rem;
-    height: 22px;
-    padding: 0 7px;
+    height: 21px;
+    max-width: 132px;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0 6px;
+    text-overflow: ellipsis;
+}
+
+.flow-state,
+.flow-canvas-chip {
+    flex: 0 1 auto;
+    max-width: 132px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .flow-state-dot {
@@ -195,9 +213,9 @@
     border: 1px solid var(--flux-border);
     border-radius: 6px;
     color: var(--mud-palette-text-secondary);
-    height: 28px;
+    height: 26px;
     padding: 0;
-    width: 28px;
+    width: 26px;
 }
 
 .flow-canvas-command-group ::deep .flow-canvas-icon-button:hover {
@@ -215,11 +233,11 @@
     color: var(--mud-palette-text-secondary);
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    gap: 6px;
     justify-content: center;
     left: 50%;
     max-width: min(100%, 360px);
-    padding: 18px 20px;
+    padding: 16px 18px;
     pointer-events: none;
     position: absolute;
     text-align: center;
@@ -236,9 +254,9 @@
     border-radius: 6px;
     color: var(--flux-accent);
     display: inline-flex;
-    height: 34px;
+    height: 32px;
     justify-content: center;
-    width: 34px;
+    width: 32px;
 }
 
 .flow-canvas-empty-icon ::deep .mud-icon-root {
@@ -268,12 +286,12 @@
     border-radius: 6px;
     box-shadow: var(--flux-shadow-1);
     display: flex;
-    gap: 6px;
+    gap: 5px;
     max-width: min(680px, calc(100% - 24px));
-    padding: 5px;
+    padding: 4px;
     position: absolute;
-    right: 12px;
-    top: 72px;
+    right: 10px;
+    top: 62px;
     z-index: 24;
 }
 
@@ -283,10 +301,10 @@
     color: var(--mud-palette-text-secondary);
     display: flex;
     flex: 0 0 auto;
-    gap: 7px;
-    max-width: 230px;
+    gap: 6px;
+    max-width: 210px;
     min-width: 0;
-    padding: 0 9px 0 4px;
+    padding: 0 8px 0 4px;
 }
 
 .flow-link-condition-meta div {
@@ -325,10 +343,10 @@
 @media (max-width: 720px) {
     .flow-canvas-header {
         align-items: stretch;
-        gap: 7px;
+        gap: 6px;
         grid-template-columns: minmax(0, 1fr);
         left: 8px;
-        padding: 7px;
+        padding: 6px;
         right: 8px;
         top: 8px;
     }
@@ -347,7 +365,7 @@
     }
 
     .flow-canvas-chip {
-        height: 25px;
+        height: 24px;
     }
 
     .flow-link-condition-panel {
@@ -372,7 +390,7 @@
     }
 
     .flow-canvas-drop-highlight {
-        inset: 128px 8px 8px;
+        inset: 116px 8px 8px;
     }
 
     .flow-designer-root ::deep .flow-navigator {
@@ -387,15 +405,21 @@
     border-radius: 8px;
     color: var(--flux-accent);
     display: flex;
-    gap: 8px;
+    gap: 6px;
     font-size: 0.76rem;
     font-weight: 650;
-    inset: 70px 10px 10px;
+    inset: 60px 10px 10px;
     justify-content: center;
     letter-spacing: 0;
     pointer-events: none;
     position: absolute;
     z-index: 23;
+}
+
+@media (max-width: 720px) {
+    .flow-canvas-drop-highlight {
+        inset: 116px 8px 8px;
+    }
 }
 
 .flow-canvas ::deep .diagram-canvas {
@@ -420,9 +444,9 @@
     border: 1px solid var(--flux-border-strong);
     border-radius: 6px;
     box-shadow: var(--flux-shadow-node);
-    min-width: 260px;
+    min-width: 246px;
     overflow: visible;
-    padding: 10px;
+    padding: 8px;
     position: relative;
 }
 
@@ -448,7 +472,7 @@
 .flow-designer-root ::deep .flow-node-header {
     align-items: center;
     display: flex;
-    gap: 8px;
+    gap: 6px;
 }
 
 .flow-designer-root ::deep .flow-node-title {
@@ -580,15 +604,15 @@
 .flow-designer-root ::deep .flow-node-port-list {
     border-top: 1px solid var(--flux-border);
     /* pull out to cancel node padding so dots sit on the node border */
-    margin: 8px -10px -10px;
-    padding: 4px 0 6px;
+    margin: 7px -8px -8px;
+    padding: 3px 0 5px;
 }
 
 .flow-designer-root ::deep .flow-port-row {
     align-items: center;
     display: grid;
     grid-template-columns: 0 minmax(0, 1fr) 0;
-    min-height: 26px;
+    min-height: 24px;
     padding: 1px 0;
 }
 
@@ -622,7 +646,7 @@
     letter-spacing: 0.02em;
     min-width: 0;
     overflow: hidden;
-    padding: 0 8px;
+    padding: 0 7px;
     text-align: center;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -645,7 +669,7 @@
     align-items: center;
     display: grid;
     font-size: 0.72rem;
-    gap: 6px;
+    gap: 5px;
     grid-template-columns: 18px auto 1fr;
     line-height: 1.2;
 }
