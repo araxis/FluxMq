@@ -323,6 +323,10 @@
     overflow: hidden;
 }
 
+.test-phase-lanes.drop-active {
+    gap: 10px;
+}
+
 .test-phase-lane {
     background: var(--flux-surface);
     border: 1px solid var(--flux-border);
@@ -332,6 +336,22 @@
     min-height: 0;
     min-width: 0;
     overflow: hidden;
+}
+
+.test-phase-lane.drop-target {
+    border-color: color-mix(in srgb, var(--flux-accent) 36%, var(--flux-border));
+}
+
+.test-phase-lane.drop-target .test-phase-header {
+    background: color-mix(in srgb, var(--flux-accent) 8%, var(--flux-surface-2));
+}
+
+.test-phase-lane.empty.drop-target .test-phase-empty {
+    background: color-mix(in srgb, var(--flux-accent) 7%, transparent);
+    border: 1px dashed color-mix(in srgb, var(--flux-accent) 44%, var(--flux-border));
+    border-radius: 6px;
+    margin: 5px;
+    min-height: 110px;
 }
 
 .test-phase-header {
@@ -423,6 +443,31 @@
     width: 100%;
 }
 
+.test-step-card:hover,
+.test-step-card:focus-within,
+.test-step-card:focus-visible {
+    background: color-mix(in srgb, var(--flux-surface-2) 86%, var(--flux-accent));
+    border-color: color-mix(in srgb, var(--flux-accent) 34%, var(--flux-border));
+    outline: none;
+}
+
+.test-step-card.selected {
+    background: color-mix(in srgb, var(--mud-palette-info) 5%, var(--flux-surface-2));
+}
+
+.test-step-card.configured .test-step-index {
+    color: var(--mud-palette-text-primary);
+}
+
+.test-step-card.issue {
+    background: color-mix(in srgb, var(--mud-palette-error) 6%, var(--flux-surface-2));
+}
+
+.test-step-card.issue .test-step-index {
+    border-color: color-mix(in srgb, var(--mud-palette-error) 38%, var(--flux-border));
+    color: var(--mud-palette-error);
+}
+
 .test-step-card::before {
     background: color-mix(in srgb, var(--mud-palette-text-secondary) 38%, transparent);
     border-radius: 999px;
@@ -451,6 +496,11 @@
 .test-step-card.failed,
 .test-step-card.timed-out {
     border-color: color-mix(in srgb, var(--mud-palette-error) 54%, var(--flux-border));
+}
+
+.test-step-card.failed .test-step-result-message,
+.test-step-card.timed-out .test-step-result-message {
+    border-color: color-mix(in srgb, var(--mud-palette-error) 34%, var(--flux-border));
 }
 
 .test-step-card.failed::before,
