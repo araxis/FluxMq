@@ -3442,6 +3442,13 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "DashboardInspectorLayoutRows.razor"));
+        var layoutRowsCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorLayoutRows.razor.css"));
         var styleRows = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -3456,6 +3463,14 @@ public sealed class DashboardEventFilterCatalogTests
         inspector.ShouldNotContain("StyleInputType(DashboardStyleField");
         layoutRows.ShouldContain("DuplicateWidget");
         layoutRows.ShouldContain("DeleteWidget");
+        layoutRows.ShouldContain("layout-action-strip");
+        layoutRows.ShouldContain("property-grid-small-button");
+        layoutRows.ShouldContain("Icons.Material.Filled.ContentCopy");
+        layoutRows.ShouldContain("Icons.Material.Filled.DeleteOutline");
+        layoutRows.ShouldNotContain("property-grid-button-group");
+        layoutRows.ShouldNotContain("property-grid-action-button");
+        layoutRowsCss.ShouldContain(".layout-action-strip");
+        layoutRowsCss.ShouldContain(".layout-danger-action");
         styleRows.ShouldContain("Reset cell style");
     }
 

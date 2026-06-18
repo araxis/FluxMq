@@ -1,0 +1,21 @@
+.layout-action-strip {
+    gap: 4px;
+    justify-content: flex-start;
+}
+
+.layout-action-strip .property-grid-small-button {
+    align-items: center;
+    border: 1px solid color-mix(in srgb, var(--flux-border) 46%, transparent);
+    border-radius: 4px;
+    display: inline-flex;
+    justify-content: center;
+}
+
+.layout-action-strip .layout-danger-action {
+    color: var(--mud-palette-error);
+}
+
+.layout-action-strip .layout-danger-action:hover {
+    background: color-mix(in srgb, var(--mud-palette-error) 10%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-error) 34%, var(--flux-border));
+}
