@@ -3,10 +3,11 @@
 @if (Draft is not null)
 {
     <PropertyGridRow Name="Visualization">
-        <PropertyGridSelect Value="@Draft.MetricVisualizationId"
-                            Options="@VisualizationOptions"
-                            AriaLabel="Visualization"
-                            ValueChanged="@VisualizationChanged" />
+        <PropertyGridIconSegment Value="@Draft.MetricVisualizationId"
+                                 Options="@VisualizationSegmentOptions"
+                                 AriaLabel="Visualization"
+                                 ShowLabels="true"
+                                 ValueChanged="@VisualizationChanged" />
     </PropertyGridRow>
 
     @foreach (var property in Properties)
@@ -33,6 +34,12 @@
         new(DashboardMetricValueVisualizationOptions.ValuePlacementBottom, Icons.Material.Filled.VerticalAlignBottom, "Bottom")
     ];
 
+    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> BooleanOptions =
+    [
+        new(TrueValue, Icons.Material.Filled.Check, "On"),
+        new(FalseValue, Icons.Material.Filled.Close, "Off")
+    ];
+
     private const string TrueValue = "true";
     private const string FalseValue = "false";
 
@@ -51,6 +58,13 @@
     [Parameter]
     public EventCallback<DashboardInspectorPropertyValueChange> PropertyChanged { get; set; }
 
+    private IReadOnlyList<PropertyGridIconSegmentOption> VisualizationSegmentOptions
+        => [.. VisualizationOptions.Select(static option => new PropertyGridIconSegmentOption(
+            option.Value,
+            MetricVisualizationIcon(option.Value),
+            option.Label,
+            option.Disabled))];
+
     private RenderFragment RenderProperty(DashboardWidgetPropertyDefinition property)
     {
         var value = PropertyValue(property);
@@ -64,6 +78,16 @@
 
         if (property.Editor == DashboardWidgetPropertyEditorKind.Select)
         {
+            var segmentOptions = SelectSegmentOptions(property.Key, property.Options);
+            if (segmentOptions.Count > 0)
+            {
+                return @<PropertyGridIconSegment Value="@value"
+                                                 Options="@segmentOptions"
+                                                 AriaLabel="@property.Label"
+                                                 ShowLabels="true"
+                                                 ValueChanged="@((string? next) => SetPropertyAsync(property.Key, next))" />;
+            }
+
             return @<PropertyGridSelect Value="@value"
                                         Options="@ToSelectOptions(property.Options)"
                                         AriaLabel="@property.Label"
@@ -72,20 +96,16 @@
 
         if (property.Editor == DashboardWidgetPropertyEditorKind.Toggle)
         {
-            return @<div class="property-grid-button-group">
-                <button type="button"
-                        class="@ChoiceClass(value, TrueValue)"
-                        @onclick="@(() => SetPropertyAsync(property.Key, TrueValue))">On</button>
-                <button type="button"
-                        class="@ChoiceClass(value, FalseValue)"
-                        @onclick="@(() => SetPropertyAsync(property.Key, FalseValue))">Off</button>
-            </div>;
+            return @<PropertyGridIconSegment Value="@BooleanValue(value)"
+                                             Options="@BooleanOptions"
+                                             AriaLabel="@property.Label"
+                                             ValueChanged="@((string? next) => SetPropertyAsync(property.Key, next))" />;
         }
 
         if (property.Editor == DashboardWidgetPropertyEditorKind.Segmented)
         {
             return @<PropertyGridIconSegment Value="@value"
-                                             Options="@SegmentOptions(property.Key)"
+                                             Options="@AlignmentSegmentOptions(property.Key)"
                                              AriaLabel="@property.Label"
                                              ValueChanged="@((string? next) => SetPropertyAsync(property.Key, next))" />;
         }
@@ -104,7 +124,7 @@
     private Task SetPropertyAsync(string key, string? value)
         => PropertyChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
 
-    private static IReadOnlyList<PropertyGridIconSegmentOption> SegmentOptions(string key)
+    private static IReadOnlyList<PropertyGridIconSegmentOption> AlignmentSegmentOptions(string key)
     {
         if (string.Equals(key, DashboardMetricValueVisualizationOptions.TitleAlignKey, StringComparison.Ordinal) ||
             string.Equals(key, DashboardMetricValueVisualizationOptions.ValueAlignKey, StringComparison.Ordinal) ||
@@ -122,10 +142,96 @@
         return [];
     }
 
-    private static string ChoiceClass(string? currentValue, string value)
-        => string.Equals(currentValue ?? string.Empty, value, StringComparison.Ordinal)
-            ? "property-grid-choice selected"
-            : "property-grid-choice";
+    private static IReadOnlyList<PropertyGridIconSegmentOption> SelectSegmentOptions(
+        string key,
+        IReadOnlyList<DashboardWidgetPropertyOption> options)
+    {
+        if (!UsesSegmentedSelect(key))
+        {
+            return [];
+        }
+
+        return [.. options.Select(option => new PropertyGridIconSegmentOption(
+            option.Value,
+            SelectOptionIcon(key, option.Value),
+            option.Label))];
+    }
+
+    private static bool UsesSegmentedSelect(string key)
+        => string.Equals(key, DashboardMetricValueVisualizationOptions.FitModeKey, StringComparison.Ordinal) ||
+           string.Equals(key, DashboardMetricDigitalVisualizationOptions.LabelPlacementKey, StringComparison.Ordinal) ||
+           string.Equals(key, DashboardMetricDigitalVisualizationOptions.StyleKey, StringComparison.Ordinal) ||
+           string.Equals(key, DashboardMetricDigitalVisualizationOptions.GlowKey, StringComparison.Ordinal) ||
+           string.Equals(key, DashboardMetricDigitalVisualizationOptions.FitModeKey, StringComparison.Ordinal) ||
+           string.Equals(key, DashboardMetricGaugeVisualizationOptions.ShapeKey, StringComparison.Ordinal);
+
+    private static string BooleanValue(string? value)
+        => string.Equals(value, FalseValue, StringComparison.OrdinalIgnoreCase)
+            ? FalseValue
+            : TrueValue;
+
+    private static string MetricVisualizationIcon(string value)
+        => value switch
+        {
+            DashboardMetricVisualizationIds.Value => Icons.Material.Filled.Pin,
+            DashboardMetricVisualizationIds.Digital => Icons.Material.Filled.Dialpad,
+            DashboardMetricVisualizationIds.RadialGauge => Icons.Material.Filled.Speed,
+            _ => Icons.Material.Filled.DisplaySettings
+        };
+
+    private static string SelectOptionIcon(string key, string value)
+    {
+        if (string.Equals(key, DashboardMetricValueVisualizationOptions.FitModeKey, StringComparison.Ordinal) ||
+            string.Equals(key, DashboardMetricDigitalVisualizationOptions.FitModeKey, StringComparison.Ordinal))
+        {
+            return value switch
+            {
+                DashboardMetricValueVisualizationOptions.FitFill => Icons.Material.Filled.FitScreen,
+                _ => Icons.Material.Filled.CloseFullscreen
+            };
+        }
+
+        if (string.Equals(key, DashboardMetricDigitalVisualizationOptions.LabelPlacementKey, StringComparison.Ordinal))
+        {
+            return value switch
+            {
+                DashboardMetricDigitalVisualizationOptions.LabelPlacementTop => Icons.Material.Filled.VerticalAlignTop,
+                DashboardMetricDigitalVisualizationOptions.LabelPlacementHidden => Icons.Material.Filled.VisibilityOff,
+                _ => Icons.Material.Filled.VerticalAlignBottom
+            };
+        }
+
+        if (string.Equals(key, DashboardMetricDigitalVisualizationOptions.StyleKey, StringComparison.Ordinal))
+        {
+            return value switch
+            {
+                DashboardMetricDigitalVisualizationOptions.StyleSegment => Icons.Material.Filled.Segment,
+                DashboardMetricDigitalVisualizationOptions.StyleTerminal => Icons.Material.Filled.Terminal,
+                _ => Icons.Material.Filled.Dashboard
+            };
+        }
+
+        if (string.Equals(key, DashboardMetricDigitalVisualizationOptions.GlowKey, StringComparison.Ordinal))
+        {
+            return value switch
+            {
+                DashboardMetricDigitalVisualizationOptions.GlowOff => Icons.Material.Filled.Close,
+                DashboardMetricDigitalVisualizationOptions.GlowStrong => Icons.Material.Filled.Highlight,
+                _ => Icons.Material.Filled.Flare
+            };
+        }
+
+        if (string.Equals(key, DashboardMetricGaugeVisualizationOptions.ShapeKey, StringComparison.Ordinal))
+        {
+            return value switch
+            {
+                DashboardMetricGaugeVisualizationOptions.ShapeMeter => Icons.Material.Filled.Speed,
+                _ => Icons.Material.Filled.DonutLarge
+            };
+        }
+
+        return Icons.Material.Filled.DisplaySettings;
+    }
 
     private static IReadOnlyList<PropertyGridSelectOption> ToSelectOptions(IEnumerable<DashboardWidgetPropertyOption> options)
         => [.. options.Select(static option => new PropertyGridSelectOption(option.Value, option.Label))];
