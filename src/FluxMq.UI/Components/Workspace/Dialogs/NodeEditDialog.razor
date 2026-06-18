@@ -4,39 +4,70 @@
 
 <MudDialog>
     <TitleContent>
-        <div class="d-flex align-items-center gap-2">
-            <MudIcon Icon="@Icons.Material.Filled.Edit" Color="@CategoryColor" Size="Size.Small" Class="me-1" />
-            <div>
-                <MudText Typo="Typo.h6">@NodeDisplayName</MudText>
-                <MudText Typo="Typo.caption" Color="Color.Secondary">Edit settings</MudText>
+        <div class="node-edit-dialog-title">
+            <div class="node-edit-dialog-title-icon">
+                <MudIcon Icon="@Icons.Material.Filled.Edit" Color="@CategoryColor" Size="Size.Small" />
+            </div>
+            <div class="node-edit-dialog-title-copy">
+                <MudText Typo="Typo.h6" Class="node-edit-dialog-title-name">@NodeDisplayName</MudText>
+                <div class="node-edit-dialog-meta-strip">
+                    <span>@NodeId</span>
+                    @if (!string.IsNullOrWhiteSpace(WorkflowName))
+                    {
+                        <span>@WorkflowName</span>
+                    }
+                    <span>Editor</span>
+                </div>
             </div>
         </div>
     </TitleContent>
     <DialogContent>
-        <MudStack Spacing="3">
-            <MudTextField T="string"
-                          @bind-Value="_nodeId"
-                          Label="Node ID"
-                          Variant="Variant.Outlined"
-                          Margin="Margin.Dense"
-                          Immediate="true"
-                          Error="@(!string.IsNullOrWhiteSpace(NodeIdError))"
-                          ErrorText="@NodeIdError"
-                          HelperText="Key used in the pipeline definition. Must be unique within the workflow." />
+        <div class="node-edit-dialog-shell">
+            <section class="node-edit-dialog-section node-edit-dialog-identity">
+                <div class="node-edit-dialog-section-head">
+                    <MudIcon Icon="@Icons.Material.Filled.Badge" Size="Size.Small" />
+                    <span>Identity</span>
+                </div>
+                <MudTextField T="string"
+                              @bind-Value="_nodeId"
+                              Label="Node ID"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Immediate="true"
+                              Error="@(!string.IsNullOrWhiteSpace(NodeIdError))"
+                              ErrorText="@NodeIdError"
+                              HelperText="Unique within workflow"
+                              Class="node-edit-dialog-node-id" />
+            </section>
             @if (EditorContent is not null)
             {
-                <MudDivider />
-                @EditorContent
+                <section class="node-edit-dialog-section node-edit-dialog-editor">
+                    <div class="node-edit-dialog-section-head">
+                        <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
+                        <span>Properties</span>
+                    </div>
+                    @EditorContent
+                </section>
             }
-        </MudStack>
+        </div>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@Cancel" Variant="Variant.Text">Cancel</MudButton>
-        <MudButton Color="@CategoryColor"
-                   Variant="Variant.Filled"
-                   StartIcon="@Icons.Material.Filled.Check"
-                   Disabled="@(!CanSubmit)"
-                   OnClick="@Submit">Save</MudButton>
+        <div class="node-edit-dialog-actions">
+            <div class="node-edit-dialog-action-status">
+                <MudIcon Icon="@SubmitStatusIcon" Color="@SubmitStatusColor" Size="Size.Small" />
+                <span>@SubmitStatusText</span>
+            </div>
+            <span class="node-edit-dialog-action-spacer"></span>
+            <MudButton OnClick="@Cancel"
+                       Variant="Variant.Text"
+                       Class="node-edit-dialog-button">Cancel</MudButton>
+            <MudButton Color="@CategoryColor"
+                       Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.Check"
+                       Disabled="@(!CanSubmit)"
+                       OnClick="@Submit"
+                       Class="node-edit-dialog-button node-edit-dialog-save">Save</MudButton>
+        </div>
     </DialogActions>
 </MudDialog>
 
@@ -60,6 +91,18 @@
     private bool CanSubmit => string.IsNullOrWhiteSpace(NodeIdError);
 
     private string NormalizedNodeId => _nodeId.Trim();
+
+    private string SubmitStatusText => CanSubmit
+        ? "Ready to save"
+        : NodeIdError ?? "Review required";
+
+    private string SubmitStatusIcon => CanSubmit
+        ? Icons.Material.Filled.CheckCircle
+        : Icons.Material.Filled.ErrorOutline;
+
+    private Color SubmitStatusColor => CanSubmit
+        ? CategoryColor
+        : Color.Error;
 
     protected override void OnParametersSet()
     {

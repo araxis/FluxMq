@@ -4431,6 +4431,47 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void NodeEditDialog_UsesCompactEditorShell()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "NodeEditDialog.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "NodeEditDialog.razor.css"));
+
+        markup.ShouldContain("node-edit-dialog-title");
+        markup.ShouldContain("node-edit-dialog-meta-strip");
+        markup.ShouldContain("node-edit-dialog-shell");
+        markup.ShouldContain("node-edit-dialog-section node-edit-dialog-identity");
+        markup.ShouldContain("node-edit-dialog-section node-edit-dialog-editor");
+        markup.ShouldContain("Unique within workflow");
+        markup.ShouldContain("SubmitStatusText");
+        markup.ShouldContain("node-edit-dialog-actions");
+        markup.ShouldNotContain("Must be unique within the workflow.");
+
+        css.ShouldContain(".node-edit-dialog-shell");
+        css.ShouldContain("max-height: min(70vh, 640px);");
+        css.ShouldContain(".node-edit-dialog-section");
+        css.ShouldContain(".node-edit-dialog-shell ::deep .mud-input-control");
+        css.ShouldContain(".node-edit-dialog-editor ::deep .mapper-workbench .mapper-panel");
+        css.ShouldContain("height: 360px;");
+        css.ShouldContain(".node-edit-dialog-action-status");
+        css.ShouldContain("@media (max-width: 700px)");
+    }
+
+    [Fact]
     public void WorkspacePage_UsesPipelineSpecificDesignerShell()
     {
         var root = FindRepositoryRoot();

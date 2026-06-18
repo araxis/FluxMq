@@ -1,0 +1,273 @@
+.node-edit-dialog-title {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 30px minmax(0, 1fr);
+    min-width: 0;
+}
+
+.node-edit-dialog-title-icon {
+    align-items: center;
+    background: color-mix(in srgb, var(--flux-surface-2) 58%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-radius: 6px;
+    display: inline-flex;
+    height: 30px;
+    justify-content: center;
+    width: 30px;
+}
+
+.node-edit-dialog-title-icon ::deep .mud-icon-root {
+    font-size: 17px;
+}
+
+.node-edit-dialog-title-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.node-edit-dialog-title-name {
+    display: block;
+    font-size: 15px;
+    font-weight: 760;
+    letter-spacing: 0;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.node-edit-dialog-meta-strip {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    min-width: 0;
+}
+
+.node-edit-dialog-meta-strip span {
+    background: color-mix(in srgb, var(--flux-surface-2) 44%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 62%, transparent);
+    border-radius: 6px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1;
+    max-width: 180px;
+    overflow: hidden;
+    padding: 3px 6px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.node-edit-dialog-shell {
+    display: grid;
+    gap: 8px;
+    max-height: min(70vh, 640px);
+    min-width: 0;
+    overflow-y: auto;
+    padding-right: 2px;
+    scrollbar-width: thin;
+}
+
+.node-edit-dialog-section {
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--flux-border) 68%, transparent);
+    border-radius: 6px;
+    display: grid;
+    gap: 7px;
+    min-width: 0;
+    padding: 7px 8px;
+}
+
+.node-edit-dialog-section-head {
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    font-size: 11px;
+    font-weight: 780;
+    gap: 5px;
+    line-height: 1;
+    min-width: 0;
+}
+
+.node-edit-dialog-section-head ::deep .mud-icon-root {
+    color: var(--mud-palette-text-secondary);
+    font-size: 15px;
+}
+
+.node-edit-dialog-section-head span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.node-edit-dialog-shell ::deep .mud-input-control {
+    margin-top: 0;
+}
+
+.node-edit-dialog-shell ::deep .mud-input-outlined-border {
+    border-color: color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-radius: 6px;
+}
+
+.node-edit-dialog-shell ::deep .mud-input-control:hover .mud-input-outlined-border {
+    border-color: color-mix(in srgb, var(--mud-palette-primary) 32%, var(--flux-border));
+}
+
+.node-edit-dialog-shell ::deep .mud-input-label,
+.node-edit-dialog-shell ::deep .mud-input-helper-text {
+    letter-spacing: 0;
+}
+
+.node-edit-dialog-shell ::deep .mud-input-helper-text {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10.5px;
+    line-height: 1.2;
+}
+
+.node-edit-dialog-editor {
+    align-content: start;
+}
+
+.node-edit-dialog-editor ::deep .mud-grid {
+    margin: 0;
+}
+
+.node-edit-dialog-editor ::deep .mud-button-root,
+.node-edit-dialog-editor ::deep .mud-icon-button {
+    border-radius: 6px;
+    text-transform: none;
+}
+
+.node-edit-dialog-editor ::deep .mud-button-root {
+    min-height: 30px;
+}
+
+.node-edit-dialog-editor ::deep .mud-icon-button {
+    height: 28px;
+    min-height: 28px;
+    min-width: 28px;
+    padding: 0;
+    width: 28px;
+}
+
+.node-edit-dialog-editor ::deep .mud-checkbox {
+    min-height: 28px;
+}
+
+.node-edit-dialog-editor ::deep .mud-chip {
+    border-radius: 5px;
+    height: 21px;
+}
+
+.node-edit-dialog-editor ::deep .mapper-workbench .mapper-panel {
+    background: transparent;
+    border-color: color-mix(in srgb, var(--flux-border) 68%, transparent);
+    border-radius: 6px;
+    min-height: 260px;
+    padding: 8px;
+}
+
+.node-edit-dialog-editor ::deep .mapper-workbench .mapper-editor-panel {
+    min-height: 440px;
+}
+
+.node-edit-dialog-editor ::deep .mapper-panel-heading {
+    margin-bottom: 7px;
+}
+
+.node-edit-dialog-editor ::deep .mapper-monaco-editor {
+    border-radius: 6px;
+    height: 360px;
+    min-height: 360px;
+}
+
+.node-edit-dialog-editor ::deep .mapper-input-editor {
+    height: 240px;
+    min-height: 240px;
+}
+
+.node-edit-dialog-editor ::deep .mapper-result-editor {
+    height: 286px;
+    min-height: 286px;
+}
+
+.node-edit-dialog-actions {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    min-width: 0;
+    width: 100%;
+}
+
+.node-edit-dialog-action-status {
+    align-items: center;
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-radius: 6px;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    font-size: 11px;
+    font-weight: 720;
+    gap: 5px;
+    min-height: 30px;
+    min-width: 0;
+    padding: 0 8px;
+}
+
+.node-edit-dialog-action-status ::deep .mud-icon-root {
+    font-size: 15px;
+}
+
+.node-edit-dialog-action-status span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.node-edit-dialog-action-spacer {
+    flex: 1 1 auto;
+}
+
+.node-edit-dialog-actions ::deep .mud-button-root {
+    border-radius: 6px;
+    min-height: 30px;
+    text-transform: none;
+}
+
+.node-edit-dialog-save {
+    min-width: 86px;
+}
+
+@media (max-width: 700px) {
+    .node-edit-dialog-title {
+        align-items: flex-start;
+    }
+
+    .node-edit-dialog-shell {
+        max-height: min(72vh, 560px);
+    }
+
+    .node-edit-dialog-meta-strip span {
+        max-width: 132px;
+    }
+
+    .node-edit-dialog-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .node-edit-dialog-action-status,
+    .node-edit-dialog-action-spacer {
+        display: none;
+    }
+
+    .node-edit-dialog-actions ::deep .mud-button-root {
+        width: 100%;
+    }
+}
