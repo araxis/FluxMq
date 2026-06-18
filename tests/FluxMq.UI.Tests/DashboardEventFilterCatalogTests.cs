@@ -4363,10 +4363,45 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".flow-canvas-meta-strip span,");
         css.ShouldContain(".flow-canvas-metrics");
         css.ShouldContain(".flow-canvas-command-group");
+        css.ShouldContain("min-height: 46px;");
+        css.ShouldContain("flex-wrap: nowrap;");
+        css.ShouldContain("height: 24px;");
+        css.ShouldContain("height: 26px;");
+        css.ShouldContain("min-width: 246px;");
+        css.ShouldContain("min-height: 24px;");
         css.ShouldContain(".flow-canvas-empty-icon");
         css.ShouldContain("max-width: min(100%, 360px);");
         css.ShouldContain("@media (max-width: 720px)");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
+    }
+
+    [Fact]
+    public void WorkspacePage_UsesPipelineSpecificDesignerShell()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Pages",
+            "WorkspacePage.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Pages",
+            "WorkspacePage.razor.css"));
+
+        markup.ShouldContain("workspace-artifact-shell workspace-artifact-shell-pipeline");
+        markup.ShouldContain("ComponentCatalogPanel ArtifactKind=\"@WorkspaceArtifactKind.Pipeline\"");
+        markup.ShouldContain("<FlowDesigner />");
+
+        css.ShouldContain(".workspace-artifact-shell-pipeline");
+        css.ShouldContain("grid-template-columns: minmax(212px, 236px) minmax(0, 1fr);");
+        css.ShouldContain(".workspace-artifact-shell-pipeline .workspace-artifact-tools");
+        css.ShouldContain("padding: 6px;");
     }
 
     [Fact]

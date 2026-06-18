@@ -46,6 +46,14 @@
     overflow: hidden;
 }
 
+.workspace-artifact-shell-pipeline {
+    grid-template-columns: minmax(212px, 236px) minmax(0, 1fr);
+}
+
+.workspace-artifact-shell-pipeline .workspace-artifact-tools {
+    padding: 6px;
+}
+
 .workspace-artifact-shell-live {
     grid-template-columns: minmax(0, 1fr);
 }
