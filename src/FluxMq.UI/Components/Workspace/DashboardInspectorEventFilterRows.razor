@@ -1,5 +1,6 @@
 @using FluxMq.UI.Models
 @using FluxMq.UI.Services
+@using MudBlazor
 
 @if (Draft is not null)
 {
@@ -10,10 +11,11 @@
                             ValueChanged="@EventChanged" />
     </PropertyGridRow>
     <PropertyGridRow Name="@Labels.StatusRow">
-        <PropertyGridSelect Value="@Draft.Status"
-                            Options="@StatusOptions"
-                            AriaLabel="@Labels.StatusRow"
-                            ValueChanged="@StatusChanged" />
+        <PropertyGridIconSegment Value="@Draft.Status"
+                                 Options="@StatusSegmentOptions"
+                                 AriaLabel="@Labels.StatusRow"
+                                 ShowLabels="true"
+                                 ValueChanged="@StatusChanged" />
     </PropertyGridRow>
     @foreach (var field in Draft.CurrentEventType.Fields)
     {
@@ -25,19 +27,19 @@
 }
 
 @code {
-    private static readonly IReadOnlyList<FilterChoice> QosFilterOptions =
+    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> QosFilterOptions =
     [
-        new("", "Any"),
-        new("0", "0"),
-        new("1", "1"),
-        new("2", "2")
+        new("", Icons.Material.Filled.Tune, "Any"),
+        new("0", Icons.Material.Filled.RadioButtonChecked, "0"),
+        new("1", Icons.Material.Filled.RadioButtonChecked, "1"),
+        new("2", Icons.Material.Filled.RadioButtonChecked, "2")
     ];
 
-    private static readonly IReadOnlyList<FilterChoice> RetainFilterOptions =
+    private static readonly IReadOnlyList<PropertyGridIconSegmentOption> RetainFilterOptions =
     [
-        new("", "Any"),
-        new("true", "True"),
-        new("false", "False")
+        new("", Icons.Material.Filled.Tune, "Any"),
+        new("true", Icons.Material.Filled.Check, "True"),
+        new("false", Icons.Material.Filled.Close, "False")
     ];
 
     [Parameter]
@@ -61,32 +63,31 @@
     [Parameter]
     public EventCallback<DashboardInspectorPropertyValueChange> FilterChanged { get; set; }
 
+    private IReadOnlyList<PropertyGridIconSegmentOption> StatusSegmentOptions
+        => [.. StatusOptions.Select(static option => new PropertyGridIconSegmentOption(
+            option.Value,
+            StatusOptionIcon(option.Value),
+            option.Label,
+            option.Disabled))];
+
     private RenderFragment RenderFilterField(DashboardEventFilterFieldDescriptor field)
     {
         if (IsQosFilter(field))
         {
-            return @<div class="property-grid-button-group">
-                    @foreach (var option in QosFilterOptions)
-                    {
-                        var currentOption = option;
-                        <button type="button"
-                                class="@ChoiceClass(Draft!.GetFilterValue(field.Key), currentOption.Value)"
-                                @onclick="@(() => SetFilterValueAsync(field.Key, currentOption.Value))">@currentOption.Label</button>
-                    }
-            </div>;
+            return @<PropertyGridIconSegment Value="@Draft!.GetFilterValue(field.Key)"
+                                             Options="@QosFilterOptions"
+                                             AriaLabel="@field.Label"
+                                             ShowLabels="true"
+                                             ValueChanged="@((string? next) => SetFilterValueAsync(field.Key, next))" />;
         }
 
         if (IsRetainFilter(field))
         {
-            return @<div class="property-grid-button-group">
-                    @foreach (var option in RetainFilterOptions)
-                    {
-                        var currentOption = option;
-                        <button type="button"
-                                class="@ChoiceClass(Draft!.GetFilterValue(field.Key), currentOption.Value)"
-                                @onclick="@(() => SetFilterValueAsync(field.Key, currentOption.Value))">@currentOption.Label</button>
-                    }
-            </div>;
+            return @<PropertyGridIconSegment Value="@Draft!.GetFilterValue(field.Key)"
+                                             Options="@RetainFilterOptions"
+                                             AriaLabel="@field.Label"
+                                             ShowLabels="true"
+                                             ValueChanged="@((string? next) => SetFilterValueAsync(field.Key, next))" />;
         }
 
         return @<input class="property-grid-input"
@@ -99,16 +100,18 @@
     private Task SetFilterValueAsync(string key, string? value)
         => FilterChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));
 
-    private static string ChoiceClass(string? currentValue, string value)
-        => string.Equals(currentValue ?? string.Empty, value, StringComparison.Ordinal)
-            ? "property-grid-choice selected"
-            : "property-grid-choice";
-
     private static bool IsQosFilter(DashboardEventFilterFieldDescriptor field)
         => string.Equals(field.Key, DashboardEventFilterCatalog.AttributeFilterKey("qos"), StringComparison.Ordinal);
 
     private static bool IsRetainFilter(DashboardEventFilterFieldDescriptor field)
         => string.Equals(field.Key, DashboardEventFilterCatalog.AttributeFilterKey("retain"), StringComparison.Ordinal);
 
-    private sealed record FilterChoice(string Value, string Label);
+    private static string StatusOptionIcon(string value)
+        => value switch
+        {
+            "" => Icons.Material.Filled.Tune,
+            "valid" or "passed" => Icons.Material.Filled.Check,
+            "invalid" or "failed" => Icons.Material.Filled.Close,
+            _ => Icons.Material.Filled.RadioButtonChecked
+        };
 }
