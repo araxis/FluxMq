@@ -98,6 +98,39 @@
             <small>@EmptyCanvasHint</small>
         </div>
     }
+    @if (ShowDiagnosticPanel)
+    {
+        <div class="flow-diagnostic-panel @DiagnosticSeverityClass" role="status" aria-live="polite" aria-label="Pipeline diagnostics">
+            <div class="flow-diagnostic-panel-head">
+                <span class="flow-diagnostic-panel-icon" aria-hidden="true">
+                    <MudIcon Icon="@DiagnosticPanelIcon" Size="Size.Small" />
+                </span>
+                <div class="flow-diagnostic-panel-copy">
+                    <strong>@DiagnosticPanelTitle</strong>
+                    <span>@DiagnosticPanelSummary</span>
+                </div>
+            </div>
+            <div class="flow-diagnostic-list">
+                @foreach (var diagnostic in VisibleDiagnostics)
+                {
+                    <div class="flow-diagnostic-row @DiagnosticRowClass(diagnostic)">
+                        <span class="flow-diagnostic-row-icon" aria-hidden="true">
+                            <MudIcon Icon="@DiagnosticIcon(diagnostic)" Size="Size.Small" />
+                        </span>
+                        <span class="flow-diagnostic-code">@diagnostic.Code</span>
+                        <span class="flow-diagnostic-target">@DiagnosticTarget(diagnostic)</span>
+                        <span class="flow-diagnostic-message" title="@diagnostic.Message">@diagnostic.Message</span>
+                    </div>
+                }
+                @if (AdditionalDiagnosticCount > 0)
+                {
+                    <div class="flow-diagnostic-more">
+                        +@AdditionalDiagnosticCount more in logs
+                    </div>
+                }
+            </div>
+        </div>
+    }
     @if (DragState.ActiveComponentDrag is { IsOverDesigner: true, TargetKind: WorkspaceArtifactKind.Pipeline })
     {
         <div class="flow-canvas-drop-highlight" aria-hidden="true">
@@ -107,7 +140,7 @@
     }
     @if (_selectedWorkflowLink is not null)
     {
-        <div class="flow-link-condition-panel">
+        <div class="flow-link-condition-panel @(ShowDiagnosticPanel ? "with-diagnostics" : null)">
             <div class="flow-link-condition-meta">
                 <MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small" />
                 <div>
@@ -174,6 +207,7 @@
     private const int ZoomToFitMargin = 80;
     private const int AutoZoomFirstPassDelayMs = 140;
     private const int AutoZoomSecondPassDelayMs = 160;
+    private const int VisibleDiagnosticLimit = 3;
     private System.Threading.Timer? _pulseTimer;
     private int _portMeasurementGeneration;
     private int _autoZoomGeneration;
@@ -235,6 +269,46 @@
             ? "warning"
             : "info";
 
+    private bool ShowDiagnosticPanel => ActionableDiagnosticCount > 0;
+
+    private int ActionableDiagnosticCount => ErrorCount + WarningCount;
+
+    private IEnumerable<WorkspaceDiagnostic> VisibleDiagnostics => Flow.Diagnostics
+        .Where(static diagnostic => DiagnosticSeverityToken(diagnostic) is "error" or "warning")
+        .OrderBy(DiagnosticSeverityRank)
+        .ThenBy(static diagnostic => diagnostic.Source, StringComparer.OrdinalIgnoreCase)
+        .ThenBy(static diagnostic => diagnostic.Code, StringComparer.OrdinalIgnoreCase)
+        .Take(VisibleDiagnosticLimit);
+
+    private int AdditionalDiagnosticCount => Math.Max(0, ActionableDiagnosticCount - VisibleDiagnosticLimit);
+
+    private string DiagnosticPanelTitle => ErrorCount > 0
+        ? "Pipeline needs attention"
+        : "Pipeline has warnings";
+
+    private string DiagnosticPanelSummary
+    {
+        get
+        {
+            var parts = new List<string>(capacity: 3);
+            if (ErrorCount > 0)
+            {
+                parts.Add($"{ErrorCount} {Pluralize(ErrorCount, "error")}");
+            }
+
+            if (WarningCount > 0)
+            {
+                parts.Add($"{WarningCount} {Pluralize(WarningCount, "warning", "warnings")}");
+            }
+
+            return string.Join(" / ", parts);
+        }
+    }
+
+    private string DiagnosticPanelIcon => ErrorCount > 0
+        ? Icons.Material.Filled.ErrorOutline
+        : Icons.Material.Filled.WarningAmber;
+
     private string RuntimeStateLabel => Flow.State switch
     {
         RuntimeWorkspaceState.Valid => "Valid",
@@ -256,6 +330,52 @@
     private string SelectedLinkLabel => _selectedWorkflowLink is { } link
         ? $"{link.SourceNodeName}.{link.SourcePortName} -> {link.TargetNodeName}.{link.TargetPortName}"
         : string.Empty;
+
+    private static string DiagnosticRowClass(WorkspaceDiagnostic diagnostic)
+        => $"severity-{DiagnosticSeverityToken(diagnostic)}";
+
+    private static string DiagnosticSeverityToken(WorkspaceDiagnostic diagnostic)
+        => string.Equals(diagnostic.Severity, "Error", StringComparison.OrdinalIgnoreCase)
+            ? "error"
+            : string.Equals(diagnostic.Severity, "Warning", StringComparison.OrdinalIgnoreCase)
+                ? "warning"
+                : "info";
+
+    private static string DiagnosticIcon(WorkspaceDiagnostic diagnostic)
+        => DiagnosticSeverityToken(diagnostic) switch
+        {
+            "error" => Icons.Material.Filled.ErrorOutline,
+            "warning" => Icons.Material.Filled.WarningAmber,
+            _ => Icons.Material.Filled.Info
+        };
+
+    private static string DiagnosticTarget(WorkspaceDiagnostic diagnostic)
+    {
+        if (!string.IsNullOrWhiteSpace(diagnostic.NodeName))
+        {
+            return string.IsNullOrWhiteSpace(diagnostic.PortName)
+                ? diagnostic.NodeName
+                : $"{diagnostic.NodeName}.{diagnostic.PortName}";
+        }
+
+        if (!string.IsNullOrWhiteSpace(diagnostic.WorkflowName))
+        {
+            return diagnostic.WorkflowName;
+        }
+
+        return diagnostic.Source;
+    }
+
+    private static int DiagnosticSeverityRank(WorkspaceDiagnostic diagnostic)
+        => DiagnosticSeverityToken(diagnostic) switch
+        {
+            "error" => 0,
+            "warning" => 1,
+            _ => 2
+        };
+
+    private static string Pluralize(int count, string singular, string? plural = null)
+        => count == 1 ? singular : plural ?? $"{singular}s";
 
     protected override void OnInitialized()
     {
