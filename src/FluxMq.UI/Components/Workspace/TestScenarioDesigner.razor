@@ -179,10 +179,10 @@
             }
             else
             {
-                <div class="test-phase-lanes">
+                <div class="@PhaseLanesClass">
                     @foreach (var phase in Scenario.Phases)
                     {
-                        <section class="test-phase-lane" @key="phase.Name">
+                        <section class="@PhaseLaneClass(phase)" @key="phase.Name">
                             <div class="test-phase-header">
                                 <span class="test-phase-icon" aria-hidden="true">
                                     <MudIcon Icon="@PhaseIcon(phase.Kind)" Size="Size.Small" />
@@ -207,7 +207,10 @@
                                     var stepNumber = StepNumber(step);
                                     var stepResult = FindStepResult(step);
                                     var visibleConfiguration = VisibleConfiguration(step).ToArray();
-                                    <section class="@StepCardClass(stepResult)" @key="step.Name">
+                                    <section class="@StepCardClass(step, stepResult)"
+                                             aria-label="@StepCardLabel(step, stepResult)"
+                                             tabindex="0"
+                                             @key="step.Name">
                                         <div class="test-step-index">@stepNumber</div>
                                         <div class="test-step-body">
                                             <div class="test-step-topline">
@@ -319,6 +322,11 @@
     private bool IsTestStepDrag
         => DragState.ActiveComponentDrag is { TargetKind: WorkspaceArtifactKind.Test };
 
+    private bool IsDropActive
+        => IsTestStepDrag && DragState.ActiveComponentDrag?.IsOverDesigner == true;
+
+    private string PhaseLanesClass => IsDropActive ? "test-phase-lanes drop-active" : "test-phase-lanes";
+
     private string RunButtonText => Project.IsScenarioRunning ? "Running" : "Run test";
 
     private string? RunButtonIcon => Project.IsScenarioRunning ? null : Icons.Material.Filled.PlayArrow;
@@ -396,6 +404,22 @@
             _ => $"{phase.Steps.Count} steps"
         };
 
+    private string PhaseLaneClass(ScenarioPhaseSnapshot phase)
+    {
+        var classes = new List<string> { "test-phase-lane" };
+        if (phase.Steps.Count == 0)
+        {
+            classes.Add("empty");
+        }
+
+        if (IsDropActive)
+        {
+            classes.Add("drop-target");
+        }
+
+        return string.Join(' ', classes);
+    }
+
     private static string PhaseIcon(string kind)
         => kind switch
         {
@@ -435,8 +459,32 @@
         => Project.LastScenarioRunResult?.Steps.FirstOrDefault(result =>
             string.Equals(result.Name, step.Name, StringComparison.Ordinal));
 
-    private static string StepCardClass(ScenarioStepResult? result)
-        => ScenarioStepDisplay.StepCardClass(result?.Status);
+    private string StepCardClass(ScenarioStepSnapshot step, ScenarioStepResult? result)
+    {
+        var classes = new List<string> { ScenarioStepDisplay.StepCardClass(result?.Status) };
+        if (result is not null)
+        {
+            classes.Add("selected");
+        }
+
+        if (result is not null && !IsSuccessfulStepStatus(result.Status))
+        {
+            classes.Add("issue");
+        }
+
+        if (VisibleConfiguration(step).Any())
+        {
+            classes.Add("configured");
+        }
+
+        return string.Join(' ', classes);
+    }
+
+    private string StepCardLabel(ScenarioStepSnapshot step, ScenarioStepResult? result)
+    {
+        var status = result?.Status.ToString() ?? "Not run";
+        return $"{step.Name}, {StepTypeLabel(step)}, {status}";
+    }
 
     private string StepTypeClass(ScenarioStepSnapshot step)
         => ScenarioStepDisplay.StepTypeClass(step, ScenarioSteps);
