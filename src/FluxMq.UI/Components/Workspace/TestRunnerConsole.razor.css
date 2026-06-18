@@ -14,11 +14,11 @@
     background: var(--flux-surface);
     border-bottom: 1px solid var(--flux-border);
     display: grid;
-    gap: 10px;
+    gap: 8px;
     grid-template-columns: minmax(0, 1fr) auto;
-    min-height: 50px;
+    min-height: 46px;
     min-width: 0;
-    padding: 7px 10px;
+    padding: 6px 10px;
 }
 
 .test-runner-title-block,
@@ -34,7 +34,7 @@
 
 .test-runner-title-block {
     flex: 1 1 auto;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 
@@ -45,25 +45,27 @@
     border-radius: 6px;
     color: var(--mud-palette-primary);
     display: flex;
-    flex: 0 0 30px;
-    height: 30px;
+    flex: 0 0 28px;
+    height: 28px;
     justify-content: center;
-    width: 30px;
+    width: 28px;
 }
 
 .test-runner-title-copy {
     display: flex;
+    flex: 1 1 auto;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
     min-width: 0;
 }
 
 .test-runner-actions {
     flex: 0 1 auto;
-    flex-wrap: wrap;
-    gap: 5px;
+    flex-wrap: nowrap;
+    gap: 4px;
     justify-content: flex-end;
     min-width: 0;
+    overflow: hidden;
 }
 
 .test-runner-title {
@@ -78,9 +80,10 @@
 .test-runner-meta-strip {
     align-items: center;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 4px;
     min-width: 0;
+    overflow: hidden;
 }
 
 .test-runner-meta-strip span,
@@ -92,7 +95,7 @@
     color: var(--mud-palette-text-secondary);
     font-size: 10.5px;
     font-weight: 750;
-    height: 24px;
+    height: 22px;
     line-height: 1;
     white-space: nowrap;
 }
@@ -100,16 +103,26 @@
 .test-runner-meta-strip span {
     align-items: center;
     display: inline-flex;
-    max-width: 132px;
+    max-width: 118px;
     min-width: 0;
     overflow: hidden;
-    padding: 0 8px;
+    padding: 0 7px;
     text-overflow: ellipsis;
 }
 
 .test-runner-status-pill {
+    flex: 0 1 auto;
     gap: 5px;
-    padding: 0 8px;
+    max-width: 170px;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0 7px;
+}
+
+.test-runner-status-pill span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .test-runner-status-pill.passed {
@@ -142,7 +155,7 @@
     border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
     border-radius: 6px;
     gap: 1px;
-    height: 30px;
+    height: 28px;
     padding: 1px;
 }
 
@@ -152,25 +165,25 @@
 }
 
 .test-runner-report-actions ::deep .mud-icon-button {
-    height: 26px;
+    height: 24px;
     padding: 4px;
-    width: 26px;
+    width: 24px;
 }
 
 .test-runner-actions ::deep .test-runner-run-action {
-    min-height: 30px;
+    min-height: 26px;
     text-transform: none;
 }
 
 .test-runner-grid {
     display: grid;
     flex: 1 1 auto;
-    gap: 8px;
-    grid-template-columns: minmax(250px, 0.85fr) minmax(360px, 1.35fr) minmax(280px, 1fr);
-    grid-template-rows: minmax(160px, auto) minmax(0, 1fr);
+    gap: 6px;
+    grid-template-columns: minmax(236px, 0.85fr) minmax(340px, 1.35fr) minmax(260px, 1fr);
+    grid-template-rows: minmax(140px, auto) minmax(0, 1fr);
     min-height: 0;
     overflow: auto;
-    padding: 10px;
+    padding: 8px;
 }
 
 .test-runner-panel {
@@ -190,15 +203,15 @@
 
 .test-runner-panel.events,
 .test-runner-panel.logs {
-    min-height: 240px;
+    min-height: 212px;
 }
 
 .test-runner-panel-title {
     background: color-mix(in srgb, var(--flux-surface-2) 70%, transparent);
     border-bottom: 1px solid var(--flux-border);
-    gap: 8px;
-    min-height: 34px;
-    padding: 5px 8px;
+    gap: 6px;
+    min-height: 32px;
+    padding: 4px 8px;
 }
 
 .test-runner-panel-title span {
@@ -210,7 +223,11 @@
     align-items: center;
     display: inline-flex;
     margin-left: auto;
+    max-width: 132px;
+    min-width: 0;
+    overflow: hidden;
     padding: 0 7px;
+    text-overflow: ellipsis;
 }
 
 .test-runner-checks,
@@ -219,19 +236,19 @@
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
-    gap: 5px;
+    gap: 4px;
     min-height: 0;
     overflow: auto;
-    padding: 8px;
+    padding: 6px;
 }
 
 .test-runner-check {
     background: color-mix(in srgb, var(--flux-surface-2) 80%, transparent);
     border: 1px solid var(--flux-border);
     border-radius: 6px;
-    gap: 8px;
-    min-height: 32px;
-    padding: 6px 8px;
+    gap: 6px;
+    min-height: 28px;
+    padding: 5px 7px;
 }
 
 .test-runner-check.passed {
@@ -257,8 +274,8 @@
 .test-runner-phase-title {
     background: color-mix(in srgb, var(--mud-palette-primary) 7%, transparent);
     border-bottom: 1px solid var(--flux-border);
-    gap: 8px;
-    padding: 7px 9px;
+    gap: 6px;
+    padding: 5px 8px;
 }
 
 .test-runner-phase-title span,
@@ -271,8 +288,8 @@
 .test-runner-phase-steps {
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    padding: 7px;
+    gap: 4px;
+    padding: 6px;
 }
 
 .test-runner-timeline-step,
@@ -287,9 +304,9 @@
 .test-runner-timeline-step {
     align-items: center;
     display: flex;
-    gap: 10px;
-    min-height: 32px;
-    padding: 6px 8px;
+    gap: 8px;
+    min-height: 28px;
+    padding: 5px 7px;
 }
 
 .test-runner-timeline-step span {
@@ -321,9 +338,9 @@
 
 .test-runner-stream-row {
     display: grid;
-    gap: 8px;
-    grid-template-columns: 58px minmax(110px, 0.72fr) minmax(0, 1fr);
-    padding: 6px 8px;
+    gap: 6px;
+    grid-template-columns: 54px minmax(96px, 0.68fr) minmax(0, 1fr);
+    padding: 5px 7px;
 }
 
 .test-runner-stream-row span,
@@ -345,14 +362,14 @@
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     justify-content: center;
-    margin: 10px;
-    padding: 10px;
+    margin: 8px;
+    padding: 8px;
 }
 
 .test-runner-diagnosis-card strong {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 850;
 }
 
@@ -388,9 +405,9 @@
     border-radius: 8px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     max-width: min(100%, 360px);
-    padding: 22px;
+    padding: 18px;
     text-align: center;
 }
 
@@ -427,7 +444,7 @@
 
 @media (max-width: 1320px) {
     .test-runner-grid {
-        grid-template-columns: minmax(260px, 0.8fr) minmax(360px, 1.2fr);
+        grid-template-columns: minmax(236px, 0.8fr) minmax(320px, 1.2fr);
     }
 
     .test-runner-panel.timeline {
@@ -437,9 +454,9 @@
 
 @media (max-width: 920px) {
     .test-runner-header {
-        align-items: flex-start;
+        align-items: center;
         grid-template-columns: minmax(0, 1fr);
-        padding: 8px 12px;
+        padding: 6px 10px;
     }
 
     .test-runner-actions {
@@ -450,7 +467,7 @@
     .test-runner-grid {
         grid-template-columns: minmax(0, 1fr);
         grid-template-rows: none;
-        padding: 10px;
+        padding: 8px;
     }
 }
 
