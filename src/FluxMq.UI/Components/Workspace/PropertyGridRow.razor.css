@@ -162,6 +162,11 @@
     flex: 1 1 auto;
 }
 
+.property-grid-value ::deep .property-grid-action-strip {
+    gap: 4px;
+    justify-content: flex-start;
+}
+
 .property-grid-value ::deep .property-grid-button-group {
     align-items: stretch;
     background: color-mix(in srgb, var(--flux-surface-2) 24%, var(--flux-surface));
@@ -179,8 +184,7 @@
 }
 
 .property-grid-value ::deep .property-grid-choice,
-.property-grid-value ::deep .property-grid-small-button,
-.property-grid-value ::deep .property-grid-action-button {
+.property-grid-value ::deep .property-grid-small-button {
     background: transparent;
     border: 0;
     border-left: 1px solid color-mix(in srgb, var(--flux-border) 50%, transparent);
@@ -198,19 +202,16 @@
 }
 
 .property-grid-value ::deep .property-grid-choice:first-child,
-.property-grid-value ::deep .property-grid-small-button:first-child,
-.property-grid-value ::deep .property-grid-action-button:first-child {
+.property-grid-value ::deep .property-grid-small-button:first-child {
     border-left: 0;
 }
 
-.property-grid-value ::deep .property-grid-choice + .property-grid-choice,
-.property-grid-value ::deep .property-grid-action-button + .property-grid-action-button {
+.property-grid-value ::deep .property-grid-choice + .property-grid-choice {
     border-left: 1px solid color-mix(in srgb, var(--flux-border) 50%, transparent);
 }
 
 .property-grid-value ::deep .property-grid-choice:hover,
-.property-grid-value ::deep .property-grid-small-button:hover,
-.property-grid-value ::deep .property-grid-action-button:hover {
+.property-grid-value ::deep .property-grid-small-button:hover {
     background: color-mix(in srgb, var(--flux-accent) 9%, transparent);
 }
 
@@ -219,17 +220,48 @@
     color: var(--flux-accent);
 }
 
-.property-grid-value ::deep .property-grid-action-button.danger {
-    background: color-mix(in srgb, var(--mud-palette-error) 9%, transparent);
-    color: var(--mud-palette-error);
-}
-
 .property-grid-value ::deep .property-grid-small-button {
     flex: 0 0 22px;
     padding: 0;
 }
 
 .property-grid-value ::deep .property-grid-small-button .mud-icon-root {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+}
+
+.property-grid-value ::deep .property-grid-icon-action {
+    align-items: center;
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--flux-border) 46%, transparent);
+    border-radius: 4px;
+    color: var(--mud-palette-text-primary);
+    cursor: pointer;
+    display: inline-flex;
+    flex: 0 0 22px;
+    font: inherit;
+    justify-content: center;
+    min-height: 21px;
+    min-width: 22px;
+    padding: 0;
+}
+
+.property-grid-value ::deep .property-grid-icon-action:hover {
+    background: color-mix(in srgb, var(--flux-accent) 9%, transparent);
+    border-color: color-mix(in srgb, var(--flux-accent) 28%, var(--flux-border));
+}
+
+.property-grid-value ::deep .property-grid-icon-action.danger {
+    color: var(--mud-palette-error);
+}
+
+.property-grid-value ::deep .property-grid-icon-action.danger:hover {
+    background: color-mix(in srgb, var(--mud-palette-error) 10%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-error) 34%, var(--flux-border));
+}
+
+.property-grid-value ::deep .property-grid-icon-action .mud-icon-root {
     font-size: 14px;
     height: 14px;
     width: 14px;

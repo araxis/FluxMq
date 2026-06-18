@@ -18,10 +18,16 @@
     <span class="property-grid-cell-text" title="@Summary">@Preview</span>
 </PropertyGridRow>
 <PropertyGridRow Name="Actions">
-    <button type="button"
-            class="property-grid-action-button"
-            disabled="@string.IsNullOrWhiteSpace(MetricId)"
-            @onclick="@(() => OpenMetric.InvokeAsync())">Open metric</button>
+    <div class="property-grid-inline property-grid-action-strip">
+        <button type="button"
+                class="property-grid-icon-action"
+                title="Open metric"
+                aria-label="Open metric"
+                disabled="@string.IsNullOrWhiteSpace(MetricId)"
+                @onclick="@(() => OpenMetric.InvokeAsync())">
+            <MudIcon Icon="@Icons.Material.Filled.OpenInNew" Size="Size.Small" />
+        </button>
+    </div>
 </PropertyGridRow>
 
 @code {
