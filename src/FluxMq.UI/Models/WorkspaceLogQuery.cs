@@ -8,6 +8,7 @@ public sealed record WorkspaceLogQuery(
 public static class WorkspaceLogFilter
 {
     public const string All = "All";
+    public const string Problems = "Problems";
 
     public static IReadOnlyList<WorkspaceLogEntry> Apply(
         IEnumerable<WorkspaceLogEntry> logs,
@@ -56,9 +57,18 @@ public static class WorkspaceLogFilter
            string.Equals(entry.Scope, scope, StringComparison.OrdinalIgnoreCase);
 
     private static bool MatchesSeverity(WorkspaceLogEntry entry, string? severity)
-        => string.IsNullOrWhiteSpace(severity) ||
-           string.Equals(severity, All, StringComparison.OrdinalIgnoreCase) ||
-           string.Equals(NormalizeSeverity(entry), NormalizeSeverity(severity), StringComparison.Ordinal);
+    {
+        if (string.IsNullOrWhiteSpace(severity) ||
+            string.Equals(severity, All, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var normalized = NormalizeSeverity(entry);
+        return string.Equals(severity, Problems, StringComparison.OrdinalIgnoreCase)
+            ? normalized is "Critical" or "Error" or "Warning"
+            : string.Equals(normalized, NormalizeSeverity(severity), StringComparison.Ordinal);
+    }
 
     private static bool MatchesSearch(WorkspaceLogEntry entry, string? search)
     {

@@ -38,6 +38,23 @@ public sealed class WorkspaceLogFilterTests
     }
 
     [Fact]
+    public void Apply_FiltersByProblems()
+    {
+        var logs = new[]
+        {
+            Log("info", severity: "Info"),
+            Log("warn", severity: "Warn"),
+            Log("critical", severity: "Critical"),
+            Log("error", severity: "Error"),
+            Log("trace", severity: "Trace")
+        };
+
+        var filtered = WorkspaceLogFilter.Apply(logs, new WorkspaceLogQuery(Severity: WorkspaceLogFilter.Problems));
+
+        filtered.Select(log => log.Message).ShouldBe(["error", "critical", "warn"]);
+    }
+
+    [Fact]
     public void Apply_SearchesMetadataAndKeepsNewestFirst()
     {
         var logs = new[]

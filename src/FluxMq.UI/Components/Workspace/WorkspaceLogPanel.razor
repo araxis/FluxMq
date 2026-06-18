@@ -3,7 +3,7 @@
 <div class="@RootClass">
     <div class="workspace-log-header">
         <div class="workspace-log-title">
-            <span class="workspace-log-title-icon">
+            <span class="workspace-log-title-icon" aria-hidden="true">
                 <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Small" />
             </span>
             <div>
@@ -12,16 +12,16 @@
             </div>
         </div>
 
-        <div class="workspace-log-actions">
+        <div class="workspace-log-actions" aria-label="Log commands">
             @if (Logs.Count > 0)
             {
-                @foreach (var summary in SeveritySummaries)
-                {
-                    <span class="workspace-log-summary @SeverityClass(summary.Severity)">
-                        <span>@summary.Label</span>
-                        <strong>@summary.Count</strong>
-                    </span>
-                }
+                <div class="workspace-log-stats" aria-label="Log summary">
+                    <span><strong>@Logs.Count</strong> total</span>
+                    @if (ProblemCount > 0)
+                    {
+                        <span class="problems"><strong>@ProblemCount</strong> @ProblemCountLabel</span>
+                    }
+                </div>
             }
             <MudTooltip Text="Reset filters">
                 <MudIconButton Icon="@Icons.Material.Filled.FilterAltOff"
@@ -43,35 +43,47 @@
     <div class="workspace-log-toolbar" role="search" aria-label="Log filters">
         @if (string.IsNullOrWhiteSpace(ForcedScope))
         {
-            <MudSelect T="string"
-                       Label="Scope"
-                       Variant="Variant.Outlined"
-                       Margin="Margin.Dense"
-                       Dense="true"
-                       @bind-Value="_scope"
-                       Class="workspace-log-filter">
-                @foreach (var scope in ScopeOptions)
-                {
-                    <MudSelectItem T="string" Value="@scope">@scope</MudSelectItem>
-                }
-            </MudSelect>
+            <div class="workspace-log-filter-block scope">
+                <span class="workspace-log-filter-label">Scope</span>
+                <div class="workspace-log-segment" role="group" aria-label="Scope filter">
+                    @foreach (var scope in ScopeOptions)
+                    {
+                        <button type="button"
+                                class="@FilterButtonClass(_scope, scope)"
+                                aria-pressed="@AriaPressed(IsScopeSelected(scope))"
+                                @onclick="@(() => SetScope(scope))">
+                            @ScopeLabel(scope)
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="workspace-log-forced-scope" aria-label="Fixed scope">
+                <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" />
+                <span>@ScopeLabel(ForcedScope)</span>
+            </div>
         }
 
-        <MudSelect T="string"
-                   Label="Level"
-                   Variant="Variant.Outlined"
-                   Margin="Margin.Dense"
-                   Dense="true"
-                   @bind-Value="_severity"
-                   Class="workspace-log-filter">
-            @foreach (var severity in SeverityOptions)
-            {
-                <MudSelectItem T="string" Value="@severity">@severity</MudSelectItem>
-            }
-        </MudSelect>
+        <div class="workspace-log-filter-block severity">
+            <span class="workspace-log-filter-label">Level</span>
+            <div class="workspace-log-segment" role="group" aria-label="Level filter">
+                @foreach (var severity in SeverityOptions)
+                {
+                    <button type="button"
+                            class="@FilterButtonClass(_severity, severity)"
+                            aria-pressed="@AriaPressed(IsSeveritySelected(severity))"
+                            @onclick="@(() => SetSeverity(severity))">
+                        @SeverityOptionLabel(severity)
+                    </button>
+                }
+            </div>
+        </div>
 
         <MudTextField T="string"
-                      Label="Search"
+                      Placeholder="Search logs"
+                      aria-label="Search logs"
                       Variant="Variant.Outlined"
                       Margin="Margin.Dense"
                       Immediate="true"
@@ -81,6 +93,25 @@
                       @bind-Value="_search"
                       Class="workspace-log-search" />
     </div>
+
+    @if (ProblemCount > 0)
+    {
+        <div class="workspace-log-status @ProblemStatusClass" role="status" aria-live="polite">
+            <span class="workspace-log-status-icon" aria-hidden="true">
+                <MudIcon Icon="@ProblemStatusIcon" Size="Size.Small" />
+            </span>
+            <div class="workspace-log-status-copy">
+                <strong>@ProblemStatusTitle</strong>
+                <span>@ProblemStatusText</span>
+            </div>
+            <button type="button"
+                    class="workspace-log-status-action"
+                    disabled="@IsSeveritySelected(WorkspaceLogFilter.Problems)"
+                    @onclick="@(() => SetSeverity(WorkspaceLogFilter.Problems))">
+                Show problems
+            </button>
+        </div>
+    }
 
     <div class="workspace-log-list" role="log" aria-label="Workspace logs">
         @if (FilteredLogs.Count == 0)
@@ -105,34 +136,32 @@
         {
             @foreach (var entry in FilteredLogs)
             {
+                var detailLabels = DetailLabels(entry);
                 <article class="workspace-log-row @SeverityClass(entry)"
-                         aria-label="@($"{SeverityLabel(entry)} log at {FormatLogTime(entry)}")"
+                         aria-label="@($"{SeverityLabel(entry)} log at {FormatLogTime(entry)} from {SourceCode(entry)}")"
                          @key="entry">
+                    <span class="workspace-log-row-icon" title="@SeverityLabel(entry)" aria-hidden="true">
+                        <MudIcon Icon="@SeverityIcon(entry)" Size="Size.Small" />
+                    </span>
                     <div class="workspace-log-row-time">
                         <span>@FormatLogTime(entry)</span>
                         <small>@FormatLogDate(entry)</small>
                     </div>
-                    <div class="workspace-log-row-severity">
-                        <span>@SeverityLabel(entry)</span>
+                    <div class="workspace-log-row-source">
+                        <strong>@SourceCode(entry)</strong>
+                        <span>@EntryScopeLabel(entry)</span>
                     </div>
                     <div class="workspace-log-row-body">
                         <div class="workspace-log-row-message">@entry.Message</div>
-                        <div class="workspace-log-row-meta">
-                            <span>@SourceCode(entry)</span>
-                            <span>@entry.Scope</span>
-                            @if (ArtifactLabel(entry) is { Length: > 0 } artifact)
-                            {
-                                <span>@artifact</span>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(entry.NodeName))
-                            {
-                                <span>@entry.NodeName</span>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(entry.PortName))
-                            {
-                                <span>@entry.PortName</span>
-                            }
-                        </div>
+                        @if (detailLabels.Count > 0)
+                        {
+                            <div class="workspace-log-row-meta">
+                                @foreach (var label in detailLabels)
+                                {
+                                    <span>@label</span>
+                                }
+                            </div>
+                        }
                         @if (!string.IsNullOrWhiteSpace(entry.Context))
                         {
                             <div class="workspace-log-row-context">@entry.Context</div>
@@ -148,7 +177,7 @@
     private static readonly string[] SeverityOptions =
     [
         WorkspaceLogFilter.All,
-        "Critical",
+        WorkspaceLogFilter.Problems,
         "Error",
         "Warning",
         "Info",
@@ -178,6 +207,15 @@
     private IReadOnlyList<WorkspaceLogEntry> FilteredLogs =>
         WorkspaceLogFilter.Apply(Logs, new WorkspaceLogQuery(EffectiveScope, _severity, _search), MaxEntries);
 
+    private IReadOnlyList<WorkspaceLogEntry> ProblemLogs =>
+        WorkspaceLogFilter.Apply(Logs, new WorkspaceLogQuery(EffectiveScope, WorkspaceLogFilter.Problems, _search), MaxEntries);
+
+    private int ErrorCount => ProblemLogs.Count(log => SeverityLabel(log) is "Critical" or "Error");
+    private int WarningCount => ProblemLogs.Count(log => SeverityLabel(log) is "Warning");
+    private int ProblemCount => ErrorCount + WarningCount;
+
+    private string ProblemCountLabel => ProblemCount == 1 ? "problem" : "problems";
+
     private string SummaryLabel => Logs.Count == 0
         ? "No entries recorded"
         : $"{FilteredLogs.Count} shown / {Logs.Count} total";
@@ -189,28 +227,19 @@
     private string EmptyTitle => HasActiveFilters ? "No matching logs" : "No logs yet";
 
     private string EmptyText => HasActiveFilters
-        ? "Reset filters or adjust the search text."
+        ? "Adjust filters or search text."
         : "Validate, run, or test the app to record workspace events.";
 
-    private IReadOnlyList<SeveritySummary> SeveritySummaries
-    {
-        get
-        {
-            var counts = Logs
-                .GroupBy(WorkspaceLogFilter.NormalizeSeverity, StringComparer.Ordinal)
-                .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
+    private string ProblemStatusClass => ErrorCount > 0 ? "error" : "warning";
+    private string ProblemStatusIcon => ErrorCount > 0 ? Icons.Material.Filled.ErrorOutline : Icons.Material.Filled.WarningAmber;
+    private string ProblemStatusTitle => ErrorCount > 0 ? "Action needed" : "Warnings recorded";
 
-            return
-            [
-                new("Error", "Errors", counts.GetValueOrDefault("Error") + counts.GetValueOrDefault("Critical")),
-                new("Warning", "Warnings", counts.GetValueOrDefault("Warning")),
-                new("Info", "Other", Logs.Count -
-                    counts.GetValueOrDefault("Error") -
-                    counts.GetValueOrDefault("Critical") -
-                    counts.GetValueOrDefault("Warning"))
-            ];
-        }
-    }
+    private string ProblemStatusText => (ErrorCount, WarningCount) switch
+    {
+        (> 0, > 0) => $"{FormatCount(ErrorCount, "error")} and {FormatCount(WarningCount, "warning")} in the current log stream.",
+        (> 0, _) => $"{FormatCount(ErrorCount, "error")} in the current log stream.",
+        _ => $"{FormatCount(WarningCount, "warning")} in the current log stream."
+    };
 
     private IReadOnlyList<string> ScopeOptions
     {
@@ -258,6 +287,45 @@
         _search = null;
     }
 
+    private void SetScope(string scope)
+        => _scope = scope;
+
+    private void SetSeverity(string severity)
+        => _severity = severity;
+
+    private bool IsScopeSelected(string scope)
+        => string.Equals(_scope, scope, StringComparison.Ordinal);
+
+    private bool IsSeveritySelected(string severity)
+        => string.Equals(_severity, severity, StringComparison.Ordinal);
+
+    private static string FilterButtonClass(string selected, string option)
+        => string.Equals(selected, option, StringComparison.Ordinal)
+            ? "workspace-log-filter-button active"
+            : "workspace-log-filter-button";
+
+    private static string AriaPressed(bool selected)
+        => selected ? "true" : "false";
+
+    private static string ScopeLabel(string? scope)
+        => scope switch
+        {
+            WorkspaceLogFilter.All => "All",
+            WorkspaceLogScopes.App => "Runtime",
+            WorkspaceLogScopes.TestRunner => "Tests",
+            WorkspaceLogScopes.System => "System",
+            { Length: > 0 } value => value,
+            _ => "All"
+        };
+
+    private static string SeverityOptionLabel(string severity)
+        => severity switch
+        {
+            WorkspaceLogFilter.All => "All",
+            WorkspaceLogFilter.Problems => "Problems",
+            _ => severity
+        };
+
     private static string FormatLogTime(WorkspaceLogEntry entry)
         => entry.Timestamp.ToLocalTime().ToString("HH:mm:ss");
 
@@ -268,6 +336,29 @@
         => string.IsNullOrWhiteSpace(entry.Code)
             ? entry.Source
             : $"{entry.Source} / {entry.Code}";
+
+    private static string EntryScopeLabel(WorkspaceLogEntry entry)
+    {
+        var scope = ScopeLabel(entry.Scope);
+        var artifact = ArtifactLabel(entry);
+        return string.IsNullOrWhiteSpace(artifact) ? scope : $"{scope} - {artifact}";
+    }
+
+    private static IReadOnlyList<string> DetailLabels(WorkspaceLogEntry entry)
+    {
+        var labels = new List<string>(2);
+        if (!string.IsNullOrWhiteSpace(entry.NodeName))
+        {
+            labels.Add(entry.NodeName);
+        }
+
+        if (!string.IsNullOrWhiteSpace(entry.PortName))
+        {
+            labels.Add(entry.PortName);
+        }
+
+        return labels;
+    }
 
     private static string? ArtifactLabel(WorkspaceLogEntry entry)
     {
@@ -290,25 +381,20 @@
         return null;
     }
 
-    private static Color LevelColor(WorkspaceLogEntry entry)
-        => WorkspaceLogFilter.NormalizeSeverity(entry) switch
-        {
-            "Critical" => Color.Error,
-            "Error" => Color.Error,
-            "Warning" => Color.Warning,
-            "Debug" => Color.Info,
-            "Trace" => Color.Secondary,
-            _ => Color.Success
-        };
-
     private static string SeverityLabel(WorkspaceLogEntry entry)
         => WorkspaceLogFilter.NormalizeSeverity(entry);
 
     private static string SeverityClass(WorkspaceLogEntry entry)
-        => SeverityClass(WorkspaceLogFilter.NormalizeSeverity(entry));
+        => SeverityClass(SeverityLabel(entry));
 
     private static string SeverityClass(string severity)
-        => WorkspaceLogFilter.NormalizeSeverity(severity).ToLowerInvariant() switch
+    {
+        if (string.Equals(severity, WorkspaceLogFilter.Problems, StringComparison.OrdinalIgnoreCase))
+        {
+            return "problems";
+        }
+
+        return WorkspaceLogFilter.NormalizeSeverity(severity).ToLowerInvariant() switch
         {
             "critical" => "critical",
             "error" => "error",
@@ -317,6 +403,19 @@
             "trace" => "trace",
             _ => "info"
         };
+    }
 
-    private sealed record SeveritySummary(string Severity, string Label, int Count);
+    private static string SeverityIcon(WorkspaceLogEntry entry)
+        => SeverityLabel(entry) switch
+        {
+            "Critical" => Icons.Material.Filled.Report,
+            "Error" => Icons.Material.Filled.ErrorOutline,
+            "Warning" => Icons.Material.Filled.WarningAmber,
+            "Debug" => Icons.Material.Filled.BugReport,
+            "Trace" => Icons.Material.Filled.Timeline,
+            _ => Icons.Material.Filled.Info
+        };
+
+    private static string FormatCount(int count, string singular)
+        => count == 1 ? $"1 {singular}" : $"{count} {singular}s";
 }
