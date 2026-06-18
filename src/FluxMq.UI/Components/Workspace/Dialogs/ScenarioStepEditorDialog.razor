@@ -148,6 +148,50 @@
                                  Dense="true" />
                 </MudStack>
             }
+            else if (IsDescriptorFieldEditor)
+            {
+                <div class="scenario-step-editor-field-grid">
+                    @foreach (var field in StepDescriptor.Fields)
+                    {
+                        var currentField = field;
+                        @if (currentField.Kind == ScenarioStepFieldKind.Select)
+                        {
+                            <MudSelect T="string"
+                                       Label="@currentField.Label"
+                                       Value="@GenericFieldValue(currentField)"
+                                       ValueChanged="@((string? value) => SetGenericSelectValue(currentField, value))"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense"
+                                       Dense="true">
+                                @foreach (var option in currentField.Options)
+                                {
+                                    <MudSelectItem T="string" Value="@option.Value">@option.Label</MudSelectItem>
+                                }
+                            </MudSelect>
+                        }
+                        else if (currentField.Kind == ScenarioStepFieldKind.CheckBox)
+                        {
+                            <MudCheckBox T="bool"
+                                         Label="@currentField.Label"
+                                         Value="@GenericBoolValue(currentField)"
+                                         ValueChanged="@((bool value) => SetGenericBoolValue(currentField, value))"
+                                         Dense="true" />
+                        }
+                        else
+                        {
+                            <MudTextField T="string"
+                                          Label="@currentField.Label"
+                                          Value="@GenericFieldValue(currentField)"
+                                          ValueChanged="@((string? value) => SetGenericFieldValue(currentField.Key, value))"
+                                          Lines="@FieldLines(currentField)"
+                                          InputType="@FieldInputType(currentField)"
+                                          HelperText="@GenericFieldHelp(currentField)"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense" />
+                        }
+                    }
+                </div>
+            }
             else
             {
                 <MudSelect T="string"
@@ -289,6 +333,7 @@
     private bool _receiveRetained;
     private bool _retainAsPublished;
     private readonly Dictionary<string, string> _filterValues = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, string> _genericValues = new(StringComparer.Ordinal);
     private string _eventType = AnyValue;
     private string _status = AnyValue;
     private string _payloadContains = string.Empty;
@@ -310,6 +355,10 @@
     private bool IsMqttPublish => StepDescriptor.EditorKind == ScenarioStepEditorKind.MqttPublish;
 
     private bool IsMqttTrigger => StepDescriptor.EditorKind == ScenarioStepEditorKind.MqttTrigger;
+
+    private bool IsEventEditor => StepDescriptor.EditorKind == ScenarioStepEditorKind.ExpectEvent;
+
+    private bool IsDescriptorFieldEditor => !IsMqttPublish && !IsMqttTrigger && !IsEventEditor;
 
     private string DialogTitle => $"{StepDescriptor.DisplayName} step";
 
@@ -357,6 +406,12 @@
             return;
         }
 
+        if (IsDescriptorFieldEditor)
+        {
+            InitializeGenericFields();
+            return;
+        }
+
         InitializeExpectEvent();
     }
 
@@ -386,7 +441,9 @@
             ? CreateMqttPublishConfiguration()
             : IsMqttTrigger
                 ? CreateMqttTriggerConfiguration()
-                : CreateExpectEventConfiguration();
+                : IsDescriptorFieldEditor
+                    ? CreateGenericConfiguration()
+                    : CreateExpectEventConfiguration();
 
         MudDialog.Close(DialogResult.Ok(new ScenarioStepUpdate(Step.Type, configuration)));
     }
@@ -448,6 +505,18 @@
                                   out var retainAsPublished) || retainAsPublished;
     }
 
+    private void InitializeGenericFields()
+    {
+        _genericValues.Clear();
+        foreach (var field in StepDescriptor.Fields)
+        {
+            var value = Step.ReadString(field.Key) ?? FieldDefault(field);
+            _genericValues[field.Key] = field.Kind == ScenarioStepFieldKind.Select
+                ? NormalizeSelect(value, field.Options)
+                : Normalize(value);
+        }
+    }
+
     private Dictionary<string, string> CreateExpectEventConfiguration()
     {
         var configuration = new Dictionary<string, string>(StringComparer.Ordinal)
@@ -496,11 +565,42 @@
         return configuration;
     }
 
+    private Dictionary<string, string> CreateGenericConfiguration()
+    {
+        var configuration = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var field in StepDescriptor.Fields)
+        {
+            var value = GenericFieldValue(field);
+            configuration[field.Key] = field.Kind == ScenarioStepFieldKind.Select
+                ? NormalizeSelect(value, field.Options)
+                : Normalize(value);
+        }
+
+        return configuration;
+    }
+
     private string GetFilterValue(string key)
         => _filterValues.TryGetValue(key, out var value) ? value : string.Empty;
 
     private void SetFilterValue(string key, string? value)
         => _filterValues[key] = Normalize(value);
+
+    private string GenericFieldValue(ScenarioStepFieldDescriptor field)
+        => _genericValues.TryGetValue(field.Key, out var value)
+            ? value
+            : FieldDefault(field);
+
+    private bool GenericBoolValue(ScenarioStepFieldDescriptor field)
+        => bool.TryParse(GenericFieldValue(field), out var value) && value;
+
+    private void SetGenericFieldValue(string key, string? value)
+        => _genericValues[key] = Normalize(value);
+
+    private void SetGenericSelectValue(ScenarioStepFieldDescriptor field, string? value)
+        => _genericValues[field.Key] = NormalizeSelect(value, field.Options);
+
+    private void SetGenericBoolValue(ScenarioStepFieldDescriptor field, bool value)
+        => _genericValues[field.Key] = value ? "true" : "false";
 
     private static bool IsQosFilter(DashboardEventFilterFieldDescriptor field)
         => string.Equals(field.Key, ScenarioStepCatalog.QosAttributeKey, StringComparison.Ordinal);
@@ -561,6 +661,22 @@
         return int.TryParse(value, out var timeout) && timeout > 0 ? timeout : 5000;
     }
 
+    private static int FieldLines(ScenarioStepFieldDescriptor field)
+        => field.Kind == ScenarioStepFieldKind.MultilineText ? Math.Max(2, field.Lines) : 1;
+
+    private static InputType FieldInputType(ScenarioStepFieldDescriptor field)
+        => IsIntegerField(field) || IsNumberField(field) ? InputType.Number : InputType.Text;
+
+    private static string? GenericFieldHelp(ScenarioStepFieldDescriptor field)
+    {
+        if (IsIntegerField(field))
+        {
+            return "Use whole milliseconds, 0 or greater.";
+        }
+
+        return IsNumberField(field) ? "Use a numeric threshold." : null;
+    }
+
     private IReadOnlyList<string> BuildValidationMessages()
     {
         var messages = new List<string>();
@@ -579,6 +695,30 @@
             return messages;
         }
 
+        if (IsDescriptorFieldEditor)
+        {
+            foreach (var field in StepDescriptor.Fields)
+            {
+                var value = GenericFieldValue(field);
+                if (IsIntegerField(field) &&
+                    (!int.TryParse(value, out var integer) || integer < GenericMinimumInteger(field)))
+                {
+                    messages.Add($"{field.Label} must be {GenericMinimumInteger(field)} or greater.");
+                }
+                else if (IsNumberField(field) &&
+                         !double.TryParse(
+                             value,
+                             System.Globalization.NumberStyles.Float,
+                             System.Globalization.CultureInfo.InvariantCulture,
+                             out _))
+                {
+                    messages.Add($"{field.Label} must be a number.");
+                }
+            }
+
+            return messages;
+        }
+
         if (_timeoutMs < 1)
         {
             messages.Add("Timeout must be 1 ms or greater.");
@@ -594,6 +734,16 @@
             messages.Add($"{label} is required.");
         }
     }
+
+    private static bool IsIntegerField(ScenarioStepFieldDescriptor field)
+        => string.Equals(field.Key, ScenarioStepCatalog.DelayMsKey, StringComparison.Ordinal) ||
+           string.Equals(field.Key, ScenarioStepCatalog.WindowMsKey, StringComparison.Ordinal);
+
+    private static int GenericMinimumInteger(ScenarioStepFieldDescriptor field)
+        => string.Equals(field.Key, ScenarioStepCatalog.WindowMsKey, StringComparison.Ordinal) ? 1 : 0;
+
+    private static bool IsNumberField(ScenarioStepFieldDescriptor field)
+        => string.Equals(field.Key, ScenarioStepCatalog.ThresholdKey, StringComparison.Ordinal);
 
     private static string NormalizeSelect(string? value, IReadOnlyList<ScenarioStepFieldOption> options)
     {
