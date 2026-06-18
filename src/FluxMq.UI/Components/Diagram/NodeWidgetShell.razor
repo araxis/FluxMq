@@ -16,16 +16,18 @@
     <div class="flow-node-header">
         <MudIconButton Size="Size.Small"
                        Icon="@(Node.IsCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore)"
-                       OnClick="@(() => Node.Toggle())" />
-        <MudIcon Icon="@HeaderIcon" Color="@CategoryColor" Size="Size.Small" Class="me-2" />
+                       OnClick="@(() => Node.Toggle())"
+                       Class="flow-node-action flow-node-toggle" />
+        <MudIcon Icon="@HeaderIcon" Color="@CategoryColor" Size="Size.Small" Class="flow-node-type-icon" />
         <div class="flow-node-title">
-            <MudText Typo="Typo.subtitle2">@Node.NodeName</MudText>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">@Node.DisplayName</MudText>
+            <MudText Typo="Typo.subtitle2" Class="flow-node-name">@Node.NodeName</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="flow-node-display-name">@Node.DisplayName</MudText>
         </div>
         <MudTooltip Text="Edit settings">
             <MudIconButton Size="Size.Small"
                            Icon="@Icons.Material.Filled.Edit"
-                           OnClick="@OpenEditDialogAsync" />
+                           OnClick="@OpenEditDialogAsync"
+                           Class="flow-node-action flow-node-edit" />
         </MudTooltip>
         @if (Node.PrimaryDiagnostic is { } diagnostic)
         {
@@ -36,15 +38,15 @@
                          Class="flow-node-diagnostic-icon" />
             </MudTooltip>
         }
-        <MudChip T="string" Size="Size.Small" Color="@CategoryColor">@Node.Category</MudChip>
+        <MudChip T="string" Size="Size.Small" Color="@CategoryColor" Class="flow-node-category-chip">@Node.Category</MudChip>
     </div>
 
     @if (!Node.IsCollapsed)
     {
-        <MudDivider Class="my-2" />
+        <MudDivider Class="flow-node-divider" />
         @if (!string.IsNullOrWhiteSpace(Node.ActivityText))
         {
-            <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined" Class="mb-2">
+            <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined" Class="flow-node-activity">
                 @Node.ActivityText
             </MudAlert>
         }
@@ -52,7 +54,7 @@
     }
     else if (!string.IsNullOrWhiteSpace(Node.ActivityText))
     {
-        <MudText Typo="Typo.caption" Color="Color.Secondary">@Node.ActivityText</MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="flow-node-collapsed-activity">@Node.ActivityText</MudText>
     }
 
     @if (Node.PortDescriptors.Count > 0)

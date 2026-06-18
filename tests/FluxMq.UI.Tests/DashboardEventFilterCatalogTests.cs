@@ -4373,12 +4373,61 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("flex-wrap: nowrap;");
         css.ShouldContain("height: 24px;");
         css.ShouldContain("height: 26px;");
-        css.ShouldContain("min-width: 246px;");
-        css.ShouldContain("min-height: 24px;");
+        css.ShouldContain("min-width: 238px;");
+        css.ShouldContain("min-height: 22px;");
         css.ShouldContain(".flow-canvas-empty-icon");
         css.ShouldContain("max-width: min(100%, 360px);");
         css.ShouldContain("@media (max-width: 720px)");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
+    }
+
+    [Fact]
+    public void NodeWidgetShell_UsesCompactNodeChrome()
+    {
+        var root = FindRepositoryRoot();
+        var shellMarkup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Diagram",
+            "NodeWidgetShell.razor"));
+        var statMarkup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Stat.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "FlowDesigner.razor.css"));
+
+        shellMarkup.ShouldContain("flow-node-action flow-node-toggle");
+        shellMarkup.ShouldContain("flow-node-type-icon");
+        shellMarkup.ShouldContain("flow-node-name");
+        shellMarkup.ShouldContain("flow-node-display-name");
+        shellMarkup.ShouldContain("flow-node-action flow-node-edit");
+        shellMarkup.ShouldContain("flow-node-category-chip");
+        shellMarkup.ShouldContain("flow-node-divider");
+        shellMarkup.ShouldContain("flow-node-activity");
+        shellMarkup.ShouldContain("flow-node-collapsed-activity");
+        statMarkup.ShouldContain("node-stat-icon");
+
+        css.ShouldContain(".flow-designer-root ::deep .flow-node-action");
+        css.ShouldContain("flex: 0 0 24px;");
+        css.ShouldContain(".flow-designer-root ::deep .flow-node-category-chip");
+        css.ShouldContain("max-width: 72px;");
+        css.ShouldContain(".flow-designer-root ::deep .flow-node-divider");
+        css.ShouldContain(".flow-designer-root ::deep .flow-node-activity");
+        css.ShouldContain("margin: 6px -8px -6px;");
+        css.ShouldContain("grid-template-columns: 16px auto minmax(0, 1fr);");
+        css.ShouldContain(".flow-designer-root ::deep .node-stat-icon");
     }
 
     [Fact]
