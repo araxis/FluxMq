@@ -2,115 +2,124 @@
 
 <MudDialog>
     <TitleContent>
-        <MudStack Spacing="1">
-            <MudText Typo="Typo.h6">@Title</MudText>
-            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
-                @if (!string.IsNullOrWhiteSpace(RunScopeText))
-                {
-                    <MudChip T="string"
-                             Text="@RunScopeText"
-                             Icon="@RunScopeIcon"
-                             Size="Size.Small"
-                             Color="@RunScopeColor"
-                             Variant="Variant.Outlined" />
-                }
+        <div class="scenario-report-title">
+            <span class="scenario-report-title-icon" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.Article" Size="Size.Small" />
+            </span>
+            <div class="scenario-report-title-copy">
+                <MudText Typo="Typo.h6" Class="scenario-report-heading">@Title</MudText>
+                <div class="scenario-report-meta-strip" aria-label="Scenario report summary">
+                    @if (!string.IsNullOrWhiteSpace(RunScopeText))
+                    {
+                        <span class="@ReportMetaClass(RunScopeColor)">
+                            <MudIcon Icon="@RunScopeIcon" Size="Size.Small" />
+                            <span>@RunScopeText</span>
+                        </span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(RunStatusText))
+                    {
+                        <span class="@ReportMetaClass(RunStatusColor)">
+                            <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
+                            <span>@RunStatusText</span>
+                        </span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(RunStepSummaryText))
+                    {
+                        <span>
+                            <MudIcon Icon="@Icons.Material.Filled.FormatListNumbered" Size="Size.Small" />
+                            <span>@RunStepSummaryText</span>
+                        </span>
+                    }
+                </div>
+            </div>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="scenario-report-content">
+            <div class="scenario-report-summary-grid" aria-label="Run details">
                 @if (!string.IsNullOrWhiteSpace(RunIdText))
                 {
-                    <MudChip T="string"
-                             Text="@RunIdText"
-                             Icon="@Icons.Material.Filled.FormatListNumbered"
-                             Size="Size.Small"
-                             Variant="Variant.Outlined" />
-                }
-                @if (!string.IsNullOrWhiteSpace(RunStatusText))
-                {
-                    <MudChip T="string"
-                             Text="@RunStatusText"
-                             Icon="@Icons.Material.Filled.FactCheck"
-                             Size="Size.Small"
-                             Color="@RunStatusColor"
-                             Variant="Variant.Outlined" />
-                }
-                @if (!string.IsNullOrWhiteSpace(RunStepSummaryText))
-                {
-                    <MudChip T="string"
-                             Text="@RunStepSummaryText"
-                             Icon="@Icons.Material.Filled.FormatListNumbered"
-                             Size="Size.Small"
-                             Variant="Variant.Outlined" />
-                }
-                @if (!string.IsNullOrWhiteSpace(RunIssueText))
-                {
-                    <MudChip T="string"
-                             Text="@RunIssueText"
-                             Icon="@Icons.Material.Filled.ReportProblem"
-                             Size="Size.Small"
-                             Color="@RunIssueColor"
-                             Variant="Variant.Outlined" />
+                    <div class="scenario-report-metric">
+                        <MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" />
+                        <span>Run</span>
+                        <strong>@RunIdText</strong>
+                    </div>
                 }
                 @if (!string.IsNullOrWhiteSpace(RunFinishedAtText))
                 {
-                    <MudChip T="string"
-                             Text="@RunFinishedAtText"
-                             Icon="@Icons.Material.Filled.Schedule"
-                             Size="Size.Small"
-                             Variant="Variant.Outlined" />
+                    <div class="scenario-report-metric">
+                        <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
+                        <span>Finished</span>
+                        <strong>@RunFinishedAtText</strong>
+                    </div>
                 }
                 @if (!string.IsNullOrWhiteSpace(RunDurationText))
                 {
-                    <MudChip T="string"
-                             Text="@RunDurationText"
-                             Icon="@Icons.Material.Filled.Timer"
-                             Size="Size.Small"
-                             Variant="Variant.Outlined" />
+                    <div class="scenario-report-metric">
+                        <MudIcon Icon="@Icons.Material.Filled.Timer" Size="Size.Small" />
+                        <span>Duration</span>
+                        <strong>@RunDurationText</strong>
+                    </div>
                 }
-            </MudStack>
-        </MudStack>
-    </TitleContent>
-    <DialogContent>
-        <MudTabs Elevation="0">
-            <MudTabPanel Text="Summary">
-                <MudTextField T="string"
-                              Label="Text report"
-                              Value="@TextReport"
-                              ReadOnly="true"
-                              Lines="18"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense" />
-            </MudTabPanel>
-            <MudTabPanel Text="JSON">
-                <MudTextField T="string"
-                              Label="JSON report"
-                              Value="@JsonReport"
-                              ReadOnly="true"
-                              Lines="18"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense" />
-            </MudTabPanel>
-        </MudTabs>
+                <div class="@IssueMetricClass">
+                    <MudIcon Icon="@IssueIcon" Size="Size.Small" />
+                    <span>Issue</span>
+                    <strong>@IssueText</strong>
+                </div>
+            </div>
+
+            <MudTabs Elevation="0" Class="scenario-report-tabs">
+                <MudTabPanel Text="Summary">
+                    <div class="scenario-report-viewer" aria-label="Text report">
+                        <pre>@TextReport</pre>
+                    </div>
+                </MudTabPanel>
+                <MudTabPanel Text="JSON">
+                    <div class="scenario-report-viewer" aria-label="JSON report">
+                        <pre>@JsonReport</pre>
+                    </div>
+                </MudTabPanel>
+            </MudTabs>
+        </div>
     </DialogContent>
     <DialogActions>
-        <MudButton StartIcon="@Icons.Material.Filled.FileDownload"
-                   Variant="Variant.Text"
-                   OnClick="@SaveSummary">
-            Save summary
-        </MudButton>
-        <MudButton StartIcon="@Icons.Material.Filled.FileDownload"
-                   Variant="Variant.Text"
-                   OnClick="@SaveJson">
-            Save JSON
-        </MudButton>
-        <MudButton StartIcon="@Icons.Material.Filled.ContentCopy"
-                   Variant="Variant.Text"
-                   OnClick="@CopySummaryAsync">
-            Copy summary
-        </MudButton>
-        <MudButton StartIcon="@Icons.Material.Filled.ContentCopy"
-                   Variant="Variant.Text"
-                   OnClick="@CopyJsonAsync">
-            Copy JSON
-        </MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@Close">Close</MudButton>
+        <div class="scenario-report-actions">
+            <div class="scenario-report-action-group" aria-label="Scenario report export actions">
+                <MudButton StartIcon="@Icons.Material.Filled.ContentCopy"
+                           Variant="Variant.Text"
+                           Size="Size.Small"
+                           Class="scenario-report-action"
+                           OnClick="@CopySummaryAsync">
+                    Copy summary
+                </MudButton>
+                <MudButton StartIcon="@Icons.Material.Filled.ContentCopy"
+                           Variant="Variant.Text"
+                           Size="Size.Small"
+                           Class="scenario-report-action"
+                           OnClick="@CopyJsonAsync">
+                    Copy JSON
+                </MudButton>
+                <MudButton StartIcon="@Icons.Material.Filled.FileDownload"
+                           Variant="Variant.Text"
+                           Size="Size.Small"
+                           Class="scenario-report-action"
+                           OnClick="@SaveSummary">
+                    Save summary
+                </MudButton>
+                <MudButton StartIcon="@Icons.Material.Filled.FileDownload"
+                           Variant="Variant.Text"
+                           Size="Size.Small"
+                           Class="scenario-report-action"
+                           OnClick="@SaveJson">
+                    Save JSON
+                </MudButton>
+            </div>
+            <MudButton Color="Color.Primary"
+                       Variant="Variant.Filled"
+                       Size="Size.Small"
+                       Class="scenario-report-close"
+                       OnClick="@Close">Close</MudButton>
+        </div>
     </DialogActions>
 </MudDialog>
 
@@ -132,6 +141,19 @@
     [Parameter] public string TextReport { get; set; } = string.Empty;
     [Parameter] public string JsonReport { get; set; } = string.Empty;
 
+    private string IssueText
+        => string.IsNullOrWhiteSpace(RunIssueText) ? "No issues" : RunIssueText;
+
+    private string IssueIcon
+        => string.IsNullOrWhiteSpace(RunIssueText)
+            ? Icons.Material.Filled.CheckCircle
+            : Icons.Material.Filled.ReportProblem;
+
+    private string IssueMetricClass
+        => string.IsNullOrWhiteSpace(RunIssueText)
+            ? "scenario-report-metric success"
+            : ReportMetricClass(RunIssueColor);
+
     public enum ReportDialogAction
     {
         SaveSummary,
@@ -149,6 +171,22 @@
         await Microsoft.Maui.ApplicationModel.DataTransfer.Clipboard.Default.SetTextAsync(JsonReport);
         Snackbar.Add("Scenario report JSON copied", Severity.Success);
     }
+
+    private static string ReportMetaClass(Color color)
+        => color switch
+        {
+            Color.Success => "success",
+            Color.Error => "danger",
+            Color.Warning => "warning",
+            Color.Info => "info",
+            Color.Primary => "accent",
+            _ => string.Empty
+        };
+
+    private static string ReportMetricClass(Color color)
+        => string.IsNullOrWhiteSpace(ReportMetaClass(color))
+            ? "scenario-report-metric"
+            : $"scenario-report-metric {ReportMetaClass(color)}";
 
     private void SaveJson() => MudDialog.Close(DialogResult.Ok(ReportDialogAction.SaveJson));
 
