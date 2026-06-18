@@ -2510,6 +2510,8 @@ public sealed class DashboardEventFilterCatalogTests
         selectCss.ShouldContain("right: 5px;");
         iconSegmentCss.ShouldContain("min-height: 19px;");
         iconSegmentCss.ShouldContain("width: calc(100% - 4px);");
+        iconSegmentCss.ShouldContain(".property-grid-icon-segment.show-labels .property-grid-icon-segment-button");
+        iconSegmentCss.ShouldContain(".property-grid-icon-segment.show-labels .property-grid-icon-segment-label");
         colorPickerCss.ShouldContain("grid-template-columns: 26px minmax(0, 1fr) 24px;");
         colorPickerCss.ShouldContain("width: calc(100% - 4px);");
         alignmentPadCss.ShouldContain("grid-template-columns: repeat(3, 16px);");
@@ -3563,11 +3565,23 @@ public sealed class DashboardEventFilterCatalogTests
         inspector.ShouldNotContain("private RenderFragment RenderMetricVisualizationProperty");
         inspector.ShouldNotContain("HorizontalAlignmentOptions");
         inspector.ShouldNotContain("MetricVisualizationSegmentOptions");
+        visualRows.ShouldContain("PropertyGridIconSegment Value=\"@Draft.MetricVisualizationId\"");
+        visualRows.ShouldContain("Options=\"@VisualizationSegmentOptions\"");
+        visualRows.ShouldContain("ShowLabels=\"true\"");
+        visualRows.ShouldContain("MetricVisualizationIcon");
+        visualRows.ShouldContain("BooleanOptions");
+        visualRows.ShouldContain("SelectSegmentOptions");
+        visualRows.ShouldContain("AlignmentSegmentOptions");
+        visualRows.ShouldContain("DashboardMetricDigitalVisualizationOptions.StyleKey");
+        visualRows.ShouldContain("DashboardMetricValueVisualizationOptions.FitModeKey");
         visualRows.ShouldContain("<PropertyGridColorPicker");
         visualRows.ShouldContain("<PropertyGridIconSegment");
         visualRows.ShouldContain("HorizontalAlignmentOptions");
         visualRows.ShouldContain("ValuePlacementOptions");
         visualRows.ShouldContain("PropertyChanged");
+        visualRows.ShouldNotContain("PropertyGridSelect Value=\"@Draft.MetricVisualizationId\"");
+        visualRows.ShouldNotContain("property-grid-button-group");
+        visualRows.ShouldNotContain("ChoiceClass");
     }
 
     [Fact]

@@ -29,6 +29,11 @@
     transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
 }
 
+.property-grid-icon-segment.show-labels .property-grid-icon-segment-button {
+    gap: 4px;
+    padding: 0 6px;
+}
+
 .property-grid-icon-segment-button:first-child {
     border-left: 0;
 }
@@ -64,4 +69,18 @@
     position: absolute;
     white-space: nowrap;
     width: 1px;
+}
+
+.property-grid-icon-segment.show-labels .property-grid-icon-segment-label {
+    clip: auto;
+    font-size: 10.5px;
+    font-weight: 720;
+    height: auto;
+    line-height: 1;
+    min-width: 0;
+    overflow: hidden;
+    position: static;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: auto;
 }
