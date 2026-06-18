@@ -122,128 +122,146 @@
             </div>
         </div>
 
-        <div class="test-runner-grid">
-            <section class="test-runner-panel preflight">
-                <div class="test-runner-panel-title">
-                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
-                    <span>Preflight</span>
-                    <small>@PreflightStateLabel</small>
+        <div class="test-runner-workspace">
+            <section class="test-runner-status-strip" aria-label="Scenario preflight">
+                <div class="@PreflightItemClass(Scenario.StepCount > 0)">
+                    <MudIcon Icon="@CheckIcon(Scenario.StepCount > 0)" Size="Size.Small" />
+                    <span>Steps</span>
+                    <strong>@(Scenario.StepCount > 0 ? ScenarioStepLabel : "Needs steps")</strong>
                 </div>
-                <div class="test-runner-checks">
-                    <div class="@CheckClass(Scenario.StepCount > 0)">
-                        <MudIcon Icon="@CheckIcon(Scenario.StepCount > 0)" Size="Size.Small" />
-                        <span>@(Scenario.StepCount > 0 ? "Scenario has executable steps" : "Scenario has no steps")</span>
-                    </div>
-                    <div class="@CheckClass(Project.State == RuntimeWorkspaceState.Running)">
-                        <MudIcon Icon="@CheckIcon(Project.State == RuntimeWorkspaceState.Running)" Size="Size.Small" />
-                        <span>@(Project.State == RuntimeWorkspaceState.Running ? "Runtime event stream attached" : "Will run with isolated scenario events")</span>
-                    </div>
-                    <div class="@CheckClass(!Project.IsScenarioRunning)">
-                        <MudIcon Icon="@CheckIcon(!Project.IsScenarioRunning)" Size="Size.Small" />
-                        <span>@(Project.IsScenarioRunning ? "Run in progress" : "Runner is idle")</span>
-                    </div>
+                <div class="@PreflightItemClass(Project.State == RuntimeWorkspaceState.Running)">
+                    <MudIcon Icon="@CheckIcon(Project.State == RuntimeWorkspaceState.Running)" Size="Size.Small" />
+                    <span>Events</span>
+                    <strong>@(Project.State == RuntimeWorkspaceState.Running ? "Runtime attached" : "Isolated run")</strong>
+                </div>
+                <div class="@PreflightItemClass(!Project.IsScenarioRunning)">
+                    <MudIcon Icon="@CheckIcon(!Project.IsScenarioRunning)" Size="Size.Small" />
+                    <span>Runner</span>
+                    <strong>@(Project.IsScenarioRunning ? "Running" : "Idle")</strong>
                 </div>
             </section>
 
-            <section class="test-runner-panel timeline">
-                <div class="test-runner-panel-title">
-                    <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" />
-                    <span>Timeline</span>
-                    <small>@ScenarioPhaseLabel</small>
-                </div>
-                <div class="test-runner-timeline">
-                    @foreach (var phase in Scenario.Phases)
-                    {
-                        <div class="test-runner-phase" @key="phase.Name">
-                            <div class="test-runner-phase-title">
-                                <MudIcon Icon="@PhaseIcon(phase.Kind)" Size="Size.Small" />
-                                <span>@phase.Title</span>
-                            </div>
-                            <div class="test-runner-phase-steps">
-                                @if (phase.Steps.Count == 0)
-                                {
-                                    <span class="test-runner-muted">No steps</span>
-                                }
-                                else
-                                {
-                                    @foreach (var step in phase.Steps)
-                                    {
-                                        var stepResult = FindStepResult(step);
-                                        <div class="@TimelineStepClass(stepResult)" @key="step.Name">
-                                            <span>@step.Name</span>
-                                            <strong>@(stepResult?.Status.ToString() ?? "Ready")</strong>
-                                        </div>
-                                    }
-                                }
-                            </div>
-                        </div>
-                    }
-                </div>
-            </section>
-
-            <section class="test-runner-panel events">
-                <div class="test-runner-panel-title">
-                    <MudIcon Icon="@Icons.Material.Filled.Bolt" Size="Size.Small" />
-                    <span>Live Events</span>
-                    <small>@RuntimeEventCountLabel</small>
-                </div>
-                <div class="test-runner-stream">
-                    @foreach (var flowEvent in Project.RuntimeEvents.Reverse().Take(12))
-                    {
-                        <div class="test-runner-stream-row">
-                            <span>@flowEvent.Timestamp.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture)</span>
-                            <strong>@Shorten(flowEvent.Type)</strong>
-                            <em>@EventTarget(flowEvent)</em>
-                        </div>
-                    }
-                    @if (Project.RuntimeEvents.Count == 0)
-                    {
-                        <div class="test-runner-muted centered">No live events</div>
-                    }
-                </div>
-            </section>
-
-            <section class="test-runner-panel diagnosis">
-                <div class="test-runner-panel-title">
-                    <MudIcon Icon="@Icons.Material.Filled.Troubleshoot" Size="Size.Small" />
-                    <span>Diagnosis</span>
-                    <small>@DiagnosisStateLabel</small>
-                </div>
-                @if (Project.LastScenarioRunResult is { } latest)
-                {
-                    <div class="test-runner-diagnosis-card">
+            @if (Project.LastScenarioRunResult is { } latest)
+            {
+                <section class="@RunSummaryClass(latest.Status)" aria-label="Scenario run summary">
+                    <span class="test-runner-result-icon" aria-hidden="true">
+                        <MudIcon Icon="@RunStatusIcon(latest.Status)" Size="Size.Small" />
+                    </span>
+                    <div class="test-runner-result-copy">
                         <strong>@latest.Status</strong>
                         <span>@FirstIssueText(latest)</span>
-                        <small>@FormatDuration(latest.FinishedAt - latest.StartedAt)</small>
                     </div>
-                }
-                else
-                {
-                    <div class="test-runner-muted centered">No run selected</div>
-                }
-            </section>
+                    <div class="test-runner-result-metrics">
+                        <span>@FormatRunTime(latest)</span>
+                        <span>@FormatDuration(latest.FinishedAt - latest.StartedAt)</span>
+                        <span>@FormatCount(latest.Steps.Count, "step")</span>
+                    </div>
+                </section>
+            }
+            else
+            {
+                <section class="test-runner-result-strip empty" aria-label="Scenario run summary">
+                    <span class="test-runner-result-icon" aria-hidden="true">
+                        <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" />
+                    </span>
+                    <div class="test-runner-result-copy">
+                        <strong>No run selected</strong>
+                        <span>Run the scenario to populate results, diagnostics, and report actions.</span>
+                    </div>
+                </section>
+            }
 
-            <section class="test-runner-panel logs">
-                <div class="test-runner-panel-title">
-                    <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Small" />
-                    <span>Logs</span>
-                    <small>@RunnerLogCountLabel</small>
-                </div>
-                <div class="test-runner-stream">
-                    @foreach (var log in Project.Logs.Where(IsRunnerLog).Reverse().Take(10))
-                    {
-                        <div class="test-runner-stream-row">
-                            <span>@log.Timestamp.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture)</span>
-                            <strong>@log.Code</strong>
-                            <em>@log.Message</em>
+            <div class="test-runner-main">
+                <section class="test-runner-section timeline" aria-label="Scenario timeline">
+                    <div class="test-runner-section-title">
+                        <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" />
+                        <span>Timeline</span>
+                        <small>@ScenarioPhaseLabel</small>
+                    </div>
+                    <div class="test-runner-timeline">
+                        @foreach (var phase in Scenario.Phases)
+                        {
+                            <div class="test-runner-phase" @key="phase.Name">
+                                <div class="test-runner-phase-title">
+                                    <MudIcon Icon="@PhaseIcon(phase.Kind)" Size="Size.Small" />
+                                    <span>@phase.Title</span>
+                                </div>
+                                <div class="test-runner-phase-steps">
+                                    @if (phase.Steps.Count == 0)
+                                    {
+                                        <span class="test-runner-muted">No steps</span>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var step in phase.Steps)
+                                        {
+                                            var stepResult = FindStepResult(step);
+                                            <div class="@TimelineStepClass(stepResult)" @key="step.Name">
+                                                <span class="test-runner-step-state" aria-hidden="true">
+                                                    <MudIcon Icon="@StepStatusIcon(stepResult)" Size="Size.Small" />
+                                                </span>
+                                                <span class="test-runner-step-name">@step.Name</span>
+                                                <strong>@(stepResult?.Status.ToString() ?? "Ready")</strong>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+
+                <section class="test-runner-section activity" aria-label="Scenario activity">
+                    <div class="test-runner-section-title">
+                        <MudIcon Icon="@Icons.Material.Filled.Bolt" Size="Size.Small" />
+                        <span>Activity</span>
+                        <small>@ActivitySummaryLabel</small>
+                    </div>
+                    <div class="test-runner-activity-grid">
+                        <div class="test-runner-stream-block">
+                            <div class="test-runner-stream-heading">
+                                <span>Runtime events</span>
+                                <small>@RuntimeEventCountLabel</small>
+                            </div>
+                            <div class="test-runner-stream">
+                                @foreach (var flowEvent in Project.RuntimeEvents.Reverse().Take(12))
+                                {
+                                    <div class="test-runner-stream-row event">
+                                        <span>@flowEvent.Timestamp.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture)</span>
+                                        <strong>@Shorten(flowEvent.Type)</strong>
+                                        <em>@EventTarget(flowEvent)</em>
+                                    </div>
+                                }
+                                @if (Project.RuntimeEvents.Count == 0)
+                                {
+                                    <div class="test-runner-muted centered">No live events</div>
+                                }
+                            </div>
                         </div>
-                    }
-                    @if (!Project.Logs.Any(IsRunnerLog))
-                    {
-                        <div class="test-runner-muted centered">No runner logs</div>
-                    }
-                </div>
-            </section>
+
+                        <div class="test-runner-stream-block">
+                            <div class="test-runner-stream-heading">
+                                <span>Runner logs</span>
+                                <small>@RunnerLogCountLabel</small>
+                            </div>
+                            <div class="test-runner-stream">
+                                @foreach (var log in Project.Logs.Where(IsRunnerLog).Reverse().Take(10))
+                                {
+                                    <div class="@RunnerLogRowClass(log)">
+                                        <span>@log.Timestamp.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture)</span>
+                                        <strong>@log.Code</strong>
+                                        <em>@log.Message</em>
+                                    </div>
+                                }
+                                @if (!Project.Logs.Any(IsRunnerLog))
+                                {
+                                    <div class="test-runner-muted centered">No runner logs</div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
         </div>
     }
 </div>
@@ -274,6 +292,9 @@
 
     private string RunnerLogCountLabel
         => Project.Logs.Count(IsRunnerLog) == 0 ? "No logs" : FormatCount(Project.Logs.Count(IsRunnerLog), "log");
+
+    private string ActivitySummaryLabel
+        => $"{RuntimeEventCountLabel} / {RunnerLogCountLabel}";
 
     private string DiagnosisStateLabel
         => Project.LastScenarioRunResult is { } result ? result.Status.ToString() : "No run";
@@ -373,6 +394,9 @@
     private static string CheckClass(bool passed)
         => passed ? "test-runner-check passed" : "test-runner-check warning";
 
+    private static string PreflightItemClass(bool passed)
+        => passed ? "test-runner-status-item passed" : "test-runner-status-item warning";
+
     private static string CheckIcon(bool passed)
         => passed ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Info;
 
@@ -408,6 +432,20 @@
     private static string RunStatusPillClass(ScenarioRunStatus status)
         => $"test-runner-status-pill {status.ToString().ToLowerInvariant()}";
 
+    private static string RunSummaryClass(ScenarioRunStatus status)
+        => $"test-runner-result-strip {status.ToString().ToLowerInvariant()}";
+
+    private static string StepStatusIcon(ScenarioStepResult? result)
+        => result?.Status switch
+        {
+            ScenarioStepRunStatus.Passed => Icons.Material.Filled.CheckCircle,
+            ScenarioStepRunStatus.Skipped => Icons.Material.Filled.Info,
+            ScenarioStepRunStatus.Failed => Icons.Material.Filled.ErrorOutline,
+            ScenarioStepRunStatus.TimedOut => Icons.Material.Filled.Timer,
+            ScenarioStepRunStatus.Canceled => Icons.Material.Filled.Cancel,
+            _ => Icons.Material.Filled.RadioButtonChecked
+        };
+
     private string RunHistoryIcon(ScenarioRunResult result)
         => IsSelectedRun(result) ? Icons.Material.Filled.Visibility : RunStatusIcon(result.Status);
 
@@ -440,6 +478,20 @@
 
     private static bool IsRunnerLog(WorkspaceLogEntry log)
         => string.Equals(log.Scope, WorkspaceLogScopes.TestRunner, StringComparison.Ordinal);
+
+    private static string RunnerLogRowClass(WorkspaceLogEntry log)
+        => $"test-runner-stream-row log {RunnerLogSeverityClass(log)}";
+
+    private static string RunnerLogSeverityClass(WorkspaceLogEntry log)
+        => WorkspaceLogFilter.NormalizeSeverity(log).ToLowerInvariant() switch
+        {
+            "critical" => "error",
+            "error" => "error",
+            "warning" => "warning",
+            "debug" => "debug",
+            "trace" => "trace",
+            _ => "info"
+        };
 
     private static string EventTarget(FluxFlow.Engine.Components.FlowEvent flowEvent)
         => !string.IsNullOrWhiteSpace(flowEvent.Channel)
