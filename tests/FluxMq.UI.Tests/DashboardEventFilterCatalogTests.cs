@@ -2802,6 +2802,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@PhaseCountText");
         markup.ShouldContain("@RunModeText");
         markup.ShouldContain("@RecentRunCountText");
+        markup.ShouldContain("test-scenario-workspace");
+        markup.ShouldContain("test-scenario-builder-strip");
+        markup.ShouldContain("BuilderMetricClass");
+        markup.ShouldContain("@ActivePhaseCountText");
+        markup.ShouldContain("@RunnerStateText");
         markup.ShouldContain("RunStatusClass(result.Status)");
         markup.ShouldContain("ActiveRunPillClass");
         markup.ShouldContain("test-scenario-report-actions");
@@ -2811,23 +2816,75 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Class=\"test-scenario-add-menu\"");
         markup.ShouldContain("Scenario.Phases");
         markup.ShouldContain("test-phase-lanes");
+        markup.ShouldContain("test-phase-icon");
+        markup.ShouldContain("test-phase-copy");
+        markup.ShouldContain("test-phase-count");
+        markup.ShouldContain("test-step-title-block");
+        markup.ShouldContain("test-step-badges");
+        markup.ShouldContain("StepStatusIcon(stepResult)");
+        markup.ShouldContain("test-step-status idle");
         markup.ShouldNotContain("MudChip");
 
         css.ShouldContain(".test-scenario-heading-icon");
         css.ShouldContain(".test-scenario-meta-strip span,");
         css.ShouldContain(".test-run-status");
+        css.ShouldContain(".test-scenario-workspace");
+        css.ShouldContain("grid-template-rows: auto minmax(0, 1fr);");
+        css.ShouldContain(".test-scenario-builder-strip");
+        css.ShouldContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
+        css.ShouldContain(".test-builder-metric");
         css.ShouldContain(".test-scenario-report-actions");
         css.ShouldContain(".test-scenario-build-actions");
         css.ShouldContain(".test-scenario-report-actions ::deep .mud-icon-button");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
         css.ShouldContain("min-height: 46px;");
         css.ShouldContain("flex-wrap: nowrap;");
-        css.ShouldContain("grid-template-columns: repeat(auto-fit, minmax(236px, 1fr));");
-        css.ShouldContain("min-height: 86px;");
+        css.ShouldContain("grid-template-columns: repeat(auto-fit, minmax(218px, 1fr));");
+        css.ShouldContain(".test-phase-icon");
+        css.ShouldContain(".test-step-card::before");
+        css.ShouldContain("min-height: 58px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto auto;");
         css.ShouldContain("height: 28px;");
         css.ShouldContain("height: 24px;");
         css.ShouldContain("@media (max-width: 760px)");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
+    }
+
+    [Fact]
+    public void ScenarioStepEditorDialog_UsesFlatCompactEditorChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "ScenarioStepEditorDialog.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "ScenarioStepEditorDialog.razor.css"));
+
+        markup.ShouldContain("scenario-step-editor-title");
+        markup.ShouldContain("Class=\"scenario-step-editor\"");
+        markup.ShouldContain("Class=\"scenario-step-editor-toggle\"");
+        markup.ShouldContain("scenario-step-editor-checks");
+        markup.ShouldContain("scenario-step-editor-actions");
+
+        css.ShouldContain(".scenario-step-editor");
+        css.ShouldContain("background: var(--flux-surface);");
+        css.ShouldContain("border: 1px solid var(--flux-border);");
+        css.ShouldContain(".scenario-step-editor-toggle");
+        css.ShouldContain(".scenario-step-editor-checks");
+        css.ShouldContain(".scenario-step-editor-actions");
+        css.ShouldContain("min-height: 30px;");
+        css.ShouldContain("@media (max-width: 560px)");
     }
 
     [Fact]

@@ -49,7 +49,7 @@
                               Lines="@PayloadLines"
                               Variant="Variant.Outlined"
                               Margin="Margin.Dense" />
-                <MudStack Spacing="1">
+                <MudStack Spacing="1" Class="scenario-step-editor-toggle">
                     <MudText Typo="Typo.caption" Color="Color.Secondary">@_payloadEncodingField.Label</MudText>
                     <MudToggleGroup T="string"
                                     Value="@_payloadEncoding"
@@ -67,7 +67,7 @@
                         }
                     </MudToggleGroup>
                 </MudStack>
-                <MudStack Spacing="1">
+                <MudStack Spacing="1" Class="scenario-step-editor-toggle">
                     <MudText Typo="Typo.caption" Color="Color.Secondary">@_qosField.Label</MudText>
                     <MudToggleGroup T="string"
                                     Value="@_qos"
@@ -119,7 +119,7 @@
                               @bind-Value="_subscriptions"
                               Variant="Variant.Outlined"
                               Margin="Margin.Dense" />
-                <MudStack Spacing="1">
+                <MudStack Spacing="1" Class="scenario-step-editor-toggle">
                     <MudText Typo="Typo.caption" Color="Color.Secondary">@_qosField.Label</MudText>
                     <MudToggleGroup T="string"
                                     Value="@_qos"
@@ -167,7 +167,7 @@
                     var currentField = field;
                     @if (IsQosFilter(currentField))
                     {
-                        <MudStack Spacing="1">
+                        <MudStack Spacing="1" Class="scenario-step-editor-toggle">
                             <MudText Typo="Typo.caption" Color="Color.Secondary">@currentField.Label</MudText>
                             <MudToggleGroup T="string"
                                             Value="@GetFilterValue(currentField.Key)"
@@ -188,7 +188,7 @@
                     }
                     else if (IsRetainFilter(currentField))
                     {
-                        <MudStack Spacing="1">
+                        <MudStack Spacing="1" Class="scenario-step-editor-toggle">
                             <MudText Typo="Typo.caption" Color="Color.Secondary">@currentField.Label</MudText>
                             <MudToggleGroup T="string"
                                             Value="@GetFilterValue(currentField.Key)"
@@ -245,8 +245,10 @@
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@Submit">Apply</MudButton>
+        <div class="scenario-step-editor-actions">
+            <MudButton OnClick="@Cancel">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@Submit">Apply</MudButton>
+        </div>
     </DialogActions>
 </MudDialog>
 

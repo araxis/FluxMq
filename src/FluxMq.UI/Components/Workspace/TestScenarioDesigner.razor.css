@@ -256,32 +256,75 @@
     min-height: 32px;
 }
 
-.test-step-list {
-    align-items: flex-start;
-    display: flex;
+.test-scenario-workspace {
+    display: grid;
     flex: 1 1 auto;
-    gap: 10px;
+    gap: 8px;
+    grid-template-rows: auto minmax(0, 1fr);
     min-height: 0;
     min-width: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 18px;
+    overflow: hidden;
+    padding: 8px;
+}
+
+.test-scenario-builder-strip {
+    background: var(--flux-surface);
+    border: 1px solid var(--flux-border);
+    border-radius: 6px;
+    display: grid;
+    gap: 1px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-height: 38px;
+    overflow: hidden;
+}
+
+.test-builder-metric {
+    align-items: center;
+    background: var(--flux-surface-2);
+    color: var(--mud-palette-text-secondary);
+    display: grid;
+    gap: 6px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    min-width: 0;
+    padding: 7px 10px;
+}
+
+.test-builder-metric.active {
+    color: var(--mud-palette-text-primary);
+}
+
+.test-builder-metric span {
+    font-size: 11px;
+    font-weight: 750;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.test-builder-metric strong {
+    color: var(--mud-palette-text-primary);
+    font-size: 11px;
+    font-weight: 850;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .test-phase-lanes {
     align-items: stretch;
     display: grid;
     flex: 1 1 auto;
-    gap: 6px;
-    grid-template-columns: repeat(auto-fit, minmax(236px, 1fr));
+    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(218px, 1fr));
     min-height: 0;
     min-width: 0;
-    overflow: auto;
-    padding: 8px;
+    overflow: hidden;
 }
 
 .test-phase-lane {
-    background: color-mix(in srgb, var(--flux-surface) 88%, transparent);
+    background: var(--flux-surface);
     border: 1px solid var(--flux-border);
     border-radius: 6px;
     display: flex;
@@ -293,42 +336,69 @@
 
 .test-phase-header {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 70%, transparent);
+    background: var(--flux-surface-2);
     border-bottom: 1px solid var(--flux-border);
-    display: flex;
-    justify-content: space-between;
-    min-height: 36px;
-    padding: 6px 8px;
+    display: grid;
+    gap: 7px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    min-height: 38px;
+    padding: 6px 7px;
 }
 
-.test-phase-header div {
+.test-phase-icon {
+    align-items: center;
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    height: 24px;
+    justify-content: center;
+    width: 24px;
+}
+
+.test-phase-copy {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
     min-width: 0;
 }
 
-.test-phase-header span {
+.test-phase-copy span {
     color: var(--mud-palette-text-primary);
     font-size: 12px;
     font-weight: 850;
+    line-height: 1.15;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.test-phase-header strong,
+.test-phase-copy small,
+.test-phase-count,
 .test-phase-empty {
     color: var(--mud-palette-text-secondary);
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 700;
+}
+
+.test-phase-count {
+    background: var(--flux-surface);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-radius: 999px;
+    line-height: 1;
+    padding: 4px 7px;
+    white-space: nowrap;
 }
 
 .test-phase-step-stack {
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     min-height: 0;
     overflow: auto;
-    padding: 6px;
+    padding: 5px;
 }
 
 .test-phase-empty {
@@ -341,23 +411,41 @@
 
 .test-step-card {
     align-items: flex-start;
-    background: color-mix(in srgb, var(--flux-surface-2) 82%, transparent);
-    border: 1px solid var(--flux-border);
-    border-radius: 6px;
+    background: var(--flux-surface-2);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 80%, transparent);
+    border-radius: 5px;
     display: flex;
-    gap: 8px;
-    min-height: 86px;
+    gap: 7px;
+    min-height: 58px;
     min-width: 0;
-    padding: 8px;
+    padding: 7px 7px 7px 9px;
+    position: relative;
     width: 100%;
+}
+
+.test-step-card::before {
+    background: color-mix(in srgb, var(--mud-palette-text-secondary) 38%, transparent);
+    border-radius: 999px;
+    content: "";
+    inset: 8px auto 8px 3px;
+    position: absolute;
+    width: 2px;
 }
 
 .test-step-card.passed {
     border-color: color-mix(in srgb, var(--flux-accent) 46%, var(--flux-border));
 }
 
+.test-step-card.passed::before {
+    background: var(--flux-accent);
+}
+
 .test-step-card.skipped {
     border-color: color-mix(in srgb, var(--mud-palette-info) 44%, var(--flux-border));
+}
+
+.test-step-card.skipped::before {
+    background: var(--mud-palette-info);
 }
 
 .test-step-card.failed,
@@ -365,32 +453,30 @@
     border-color: color-mix(in srgb, var(--mud-palette-error) 54%, var(--flux-border));
 }
 
+.test-step-card.failed::before,
+.test-step-card.timed-out::before {
+    background: var(--mud-palette-error);
+}
+
 .test-step-card.canceled {
     border-color: color-mix(in srgb, var(--mud-palette-warning) 50%, var(--flux-border));
 }
 
-.test-step-link {
-    align-items: center;
-    align-self: flex-start;
-    color: var(--mud-palette-text-secondary);
-    display: flex;
-    flex: 0 0 28px;
-    min-height: 156px;
-    justify-content: center;
-    opacity: 0.8;
+.test-step-card.canceled::before {
+    background: var(--mud-palette-warning);
 }
 
 .test-step-index {
     align-items: center;
-    background: color-mix(in srgb, var(--mud-palette-warning) 16%, transparent);
-    border: 1px solid color-mix(in srgb, var(--mud-palette-warning) 36%, transparent);
-    border-radius: 6px;
-    color: var(--mud-palette-warning);
+    background: var(--flux-surface);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
     display: flex;
     flex: 0 0 auto;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 800;
-    height: 24px;
+    height: 22px;
     justify-content: center;
     width: 24px;
 }
@@ -402,11 +488,25 @@
 
 .test-step-topline {
     align-items: center;
-    display: flex;
-    flex-wrap: nowrap;
+    display: grid;
     gap: 6px;
+    grid-template-columns: minmax(0, 1fr) auto auto;
     min-width: 0;
-    overflow: hidden;
+}
+
+.test-step-title-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.test-step-badges {
+    align-items: center;
+    display: inline-flex;
+    flex: 0 0 auto;
+    gap: 4px;
+    min-width: 0;
 }
 
 .test-step-actions {
@@ -425,11 +525,11 @@
     color: var(--mud-palette-text-secondary);
     cursor: pointer;
     display: inline-flex;
-    height: 22px;
+    height: 23px;
     justify-content: center;
     padding: 0;
     transition: background 0.12s ease, color 0.12s ease;
-    width: 22px;
+    width: 23px;
 }
 
 .test-step-action:hover {
@@ -454,7 +554,7 @@
 
 .test-step-name {
     color: var(--mud-palette-text-primary);
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 750;
     flex: 1 1 auto;
     min-width: 0;
@@ -464,16 +564,20 @@
 }
 
 .test-step-type {
+    align-items: center;
     border: 1px solid var(--flux-border-strong);
     border-radius: 5px;
     color: var(--mud-palette-text-secondary);
+    display: inline-flex;
     flex: 0 0 auto;
     font-size: 10px;
     font-weight: 800;
+    height: 22px;
     letter-spacing: 0;
     line-height: 1;
     padding: 3px 6px;
     text-transform: uppercase;
+    white-space: nowrap;
 }
 
 .test-step-type.publish {
@@ -501,15 +605,25 @@
 }
 
 .test-step-status {
+    align-items: center;
     border: 1px solid var(--flux-border-strong);
     border-radius: 5px;
     color: var(--mud-palette-text-secondary);
+    display: inline-flex;
     flex: 0 0 auto;
     font-size: 10px;
     font-weight: 800;
+    gap: 4px;
+    height: 22px;
     line-height: 1;
     padding: 3px 6px;
     text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.test-step-status.idle {
+    background: var(--flux-surface);
+    border-color: color-mix(in srgb, var(--flux-border) 72%, transparent);
 }
 
 .test-step-status.passed {
@@ -539,20 +653,23 @@
 
 .test-step-summary {
     color: var(--mud-palette-text-secondary);
-    font-size: 11.5px;
-    line-height: 1.35;
-    margin-top: 5px;
+    font-size: 11px;
+    line-height: 1.25;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .test-step-result-message {
-    background: color-mix(in srgb, var(--flux-canvas) 76%, transparent);
+    background: var(--flux-surface);
     border: 1px solid var(--flux-border-soft);
-    border-radius: 6px;
+    border-radius: 5px;
     color: var(--mud-palette-text-primary);
     font-size: 12px;
     line-height: 1.35;
-    margin-top: 10px;
-    padding: 8px;
+    margin-top: 7px;
+    padding: 7px;
 }
 
 .test-step-event {
@@ -561,7 +678,7 @@
     display: flex;
     font-size: 11px;
     gap: 6px;
-    margin-top: 8px;
+    margin-top: 6px;
     min-width: 0;
 }
 
@@ -574,14 +691,14 @@
 
 .test-step-config {
     display: grid;
-    gap: 4px;
-    margin: 8px 0 0;
+    gap: 3px;
+    margin: 6px 0 0;
 }
 
 .test-step-config-row {
     display: grid;
-    gap: 8px;
-    grid-template-columns: minmax(84px, 120px) minmax(0, 1fr);
+    gap: 6px;
+    grid-template-columns: minmax(68px, 96px) minmax(0, 1fr);
     min-width: 0;
 }
 
@@ -627,9 +744,16 @@
         justify-content: space-between;
     }
 
+    .test-scenario-workspace {
+        padding: 6px;
+    }
+
+    .test-scenario-builder-strip {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
     .test-phase-lanes {
         grid-template-columns: minmax(0, 1fr);
-        padding: 8px;
     }
 
     .test-phase-lane {
@@ -638,15 +762,17 @@
 
     .test-step-card {
         gap: 8px;
-        padding: 8px;
+        padding: 7px 7px 7px 9px;
     }
 
     .test-step-topline {
-        flex-wrap: wrap;
+        align-items: flex-start;
+        grid-template-columns: minmax(0, 1fr) auto;
     }
 
-    .test-step-actions {
-        margin-left: 0;
+    .test-step-badges {
+        grid-column: 1 / -1;
+        order: 3;
     }
 
     .test-step-config-row {
@@ -668,5 +794,13 @@
     .test-step-index {
         height: 26px;
         width: 26px;
+    }
+
+    .test-step-topline {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .test-step-actions {
+        justify-self: flex-start;
     }
 }

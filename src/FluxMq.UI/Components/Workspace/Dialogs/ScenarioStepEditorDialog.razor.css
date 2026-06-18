@@ -1,13 +1,21 @@
 .scenario-step-editor-title {
     align-items: center;
     display: flex;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 
 .scenario-step-editor-title > .mud-icon-root {
+    align-items: center;
+    background: color-mix(in srgb, var(--mud-palette-warning) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-warning) 30%, var(--flux-border));
+    border-radius: 6px;
     color: var(--mud-palette-warning);
+    display: flex;
     flex: 0 0 auto;
+    height: 28px;
+    justify-content: center;
+    width: 28px;
 }
 
 .scenario-step-editor-title > div,
@@ -15,13 +23,67 @@
     min-width: 0;
 }
 
-.scenario-step-editor ::deep(.mud-toggle-group),
-.scenario-step-editor-checks {
-    flex-wrap: wrap;
+.scenario-step-editor {
+    background: var(--flux-surface);
+    border: 1px solid var(--flux-border);
+    border-radius: 6px;
+    padding: 8px;
 }
 
 .scenario-step-editor ::deep(.mud-input-control) {
     min-width: 0;
+}
+
+.scenario-step-editor ::deep(.mud-input-control),
+.scenario-step-editor-toggle {
+    margin: 0;
+}
+
+.scenario-step-editor ::deep(.mud-input-outlined-border),
+.scenario-step-editor ::deep(.mud-toggle-group),
+.scenario-step-editor-checks {
+    border-radius: 5px;
+}
+
+.scenario-step-editor-toggle {
+    background: var(--flux-surface-2);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    padding: 7px;
+}
+
+.scenario-step-editor-toggle ::deep(.mud-typography-caption) {
+    font-size: 11px;
+    font-weight: 750;
+    line-height: 1.1;
+}
+
+.scenario-step-editor ::deep(.mud-toggle-group) {
+    flex-wrap: wrap;
+}
+
+.scenario-step-editor ::deep(.mud-toggle-item) {
+    min-height: 26px;
+}
+
+.scenario-step-editor-checks {
+    background: var(--flux-surface-2);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    flex-wrap: wrap;
+    padding: 3px 7px;
+}
+
+.scenario-step-editor-actions {
+    align-items: center;
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    width: 100%;
+}
+
+.scenario-step-editor-actions ::deep(.mud-button-root) {
+    border-radius: 6px;
+    min-height: 30px;
+    text-transform: none;
 }
 
 @media (max-width: 560px) {
@@ -29,8 +91,20 @@
         align-items: flex-start;
     }
 
+    .scenario-step-editor {
+        padding: 6px;
+    }
+
     .scenario-step-editor-checks {
         flex-direction: column;
         gap: 0;
+    }
+
+    .scenario-step-editor-actions {
+        justify-content: stretch;
+    }
+
+    .scenario-step-editor-actions ::deep(.mud-button-root) {
+        flex: 1 1 auto;
     }
 }
