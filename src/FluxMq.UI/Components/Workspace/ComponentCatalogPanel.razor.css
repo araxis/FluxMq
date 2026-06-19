@@ -551,6 +551,32 @@
     padding: 5px 4px;
 }
 
+.component-catalog.dashboard .catalog-item:not(.dragging):hover,
+.component-catalog.dashboard .catalog-item:not(.dragging):focus-visible {
+    border-color: transparent;
+    border-bottom-color: color-mix(in srgb, var(--flux-border) 34%, transparent);
+    box-shadow: inset 2px 0 0 color-mix(in srgb, var(--flux-accent) 54%, transparent);
+}
+
+.component-catalog.dashboard .catalog-item:not(.dragging):focus-visible {
+    box-shadow:
+        inset 2px 0 0 color-mix(in srgb, var(--flux-accent) 54%, transparent),
+        inset 0 0 0 1px color-mix(in srgb, var(--flux-accent) 28%, transparent);
+}
+
+.component-catalog.test .catalog-item:not(.dragging):hover,
+.component-catalog.test .catalog-item:not(.dragging):focus-visible {
+    border-color: transparent;
+    border-bottom-color: color-mix(in srgb, var(--flux-border) 30%, transparent);
+    box-shadow: inset 2px 0 0 color-mix(in srgb, var(--mud-palette-warning) 54%, transparent);
+}
+
+.component-catalog.test .catalog-item:not(.dragging):focus-visible {
+    box-shadow:
+        inset 2px 0 0 color-mix(in srgb, var(--mud-palette-warning) 54%, transparent),
+        inset 0 0 0 1px color-mix(in srgb, var(--mud-palette-warning) 26%, transparent);
+}
+
 .component-catalog.test .catalog-item-name {
     font-size: 11.5px;
 }
