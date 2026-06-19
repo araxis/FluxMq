@@ -2730,6 +2730,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@RunHistorySummaryLabel");
         markup.ShouldContain("RunStatusPillClass(result.Status)");
         markup.ShouldContain("ActiveRunPillClass");
+        markup.ShouldContain("test-run-history-panel");
+        markup.ShouldContain("test-run-history-row");
+        markup.ShouldContain("RunHistoryItemClass(historyRun)");
+        markup.ShouldContain("RunHistoryAriaLabel(historyRun)");
+        markup.ShouldContain("RunHistoryStatusClass(historyRun)");
+        markup.ShouldContain("RunHistoryIssueLabel(historyRun)");
         markup.ShouldContain("test-runner-report-actions");
         markup.ShouldContain("Class=\"test-runner-icon-action\"");
         markup.ShouldContain("Class=\"test-runner-run-action\"");
@@ -2753,6 +2759,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-runner-title-icon");
         css.ShouldContain(".test-runner-meta-strip span,");
         css.ShouldContain(".test-runner-status-pill");
+        css.ShouldContain(".test-run-history-panel");
+        css.ShouldContain(".test-run-history-row");
+        css.ShouldContain(".test-run-history-status");
+        css.ShouldContain("::deep .test-run-history-item.selected .test-run-history-row");
         css.ShouldContain(".test-runner-report-actions");
         css.ShouldContain(".test-runner-report-actions ::deep .mud-icon-button");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
@@ -2814,6 +2824,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("test-run-context-reset");
         markup.ShouldContain("ReportActionsClass");
         markup.ShouldContain("ReportActionsLabel");
+        markup.ShouldContain("test-run-history-panel");
+        markup.ShouldContain("test-run-history-row");
+        markup.ShouldContain("RunHistoryItemClass(historyRun)");
+        markup.ShouldContain("RunHistoryAriaLabel(historyRun)");
+        markup.ShouldContain("RunHistoryStatusClass(historyRun)");
+        markup.ShouldContain("RunHistoryIssueLabel(historyRun)");
         markup.ShouldContain("PhaseLanesClass");
         markup.ShouldContain("PhaseLaneClass(phase)");
         markup.ShouldContain("test-scenario-report-actions");
@@ -2843,6 +2859,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-run-context.history");
         css.ShouldContain(".test-run-context-status");
         css.ShouldContain(".test-run-context-reset");
+        css.ShouldContain(".test-run-history-panel");
+        css.ShouldContain(".test-run-history-row");
+        css.ShouldContain(".test-run-history-status");
+        css.ShouldContain("::deep .test-run-history-item.selected .test-run-history-row");
         css.ShouldContain(".test-scenario-workspace");
         css.ShouldContain("grid-template-rows: auto minmax(0, 1fr);");
         css.ShouldContain(".test-scenario-builder-strip");

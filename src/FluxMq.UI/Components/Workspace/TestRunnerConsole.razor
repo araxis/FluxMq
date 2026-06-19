@@ -85,28 +85,63 @@
                              AnchorOrigin="Origin.BottomLeft"
                              TransformOrigin="Origin.TopLeft">
                         <ChildContent>
-                            @if (RecentRuns.Count == 0)
-                            {
-                                <MudMenuItem Disabled="true" Label="No recent runs" />
-                            }
-                            else
-                            {
-                                @if (IsViewingHistoricalRun)
+                            <div class="test-run-history-panel" aria-label="Recent scenario runs">
+                                <div class="test-run-history-head">
+                                    <span>Recent runs</span>
+                                    <strong>@RunHistorySummaryLabel</strong>
+                                </div>
+                                @if (RecentRuns.Count == 0)
                                 {
-                                    <MudMenuItem Icon="@Icons.Material.Filled.Schedule"
-                                                 IconColor="Color.Primary"
-                                                 Label="Show latest run"
-                                                 OnClick="@ShowLatestRun" />
+                                    <div class="test-run-history-empty" role="status">
+                                        <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" />
+                                        <span>No runs yet</span>
+                                    </div>
                                 }
-                                @foreach (var run in RecentRuns)
+                                else
                                 {
-                                    var historyRun = run;
-                                    <MudMenuItem Icon="@RunHistoryIcon(historyRun)"
-                                                 IconColor="@RunHistoryIconColor(historyRun)"
-                                                 Label="@RunHistoryLabel(historyRun)"
-                                                 OnClick="@(() => SelectRun(historyRun))" />
+                                    @if (IsViewingHistoricalRun)
+                                    {
+                                        <MudMenuItem Class="test-run-history-reset"
+                                                     OnClick="@ShowLatestRun"
+                                                     aria-label="Show latest scenario run">
+                                            <div class="test-run-history-reset-row">
+                                                <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
+                                                <span>
+                                                    <strong>Show latest run</strong>
+                                                    <small>Return to the current result</small>
+                                                </span>
+                                            </div>
+                                        </MudMenuItem>
+                                    }
+                                    @foreach (var run in RecentRuns)
+                                    {
+                                        var historyRun = run;
+                                        <MudMenuItem Class="@RunHistoryItemClass(historyRun)"
+                                                     OnClick="@(() => SelectRun(historyRun))"
+                                                     aria-label="@RunHistoryAriaLabel(historyRun)"
+                                                     @key="historyRun">
+                                            <div class="test-run-history-row">
+                                                <MudIcon Icon="@RunHistoryIcon(historyRun)" Size="Size.Small" />
+                                                <div class="test-run-history-main">
+                                                    <span class="test-run-history-primary">
+                                                        <strong>@RunHistoryPrefix(historyRun)</strong>
+                                                        <span class="@RunHistoryStatusClass(historyRun)">@historyRun.Status</span>
+                                                    </span>
+                                                    <span class="test-run-history-secondary">
+                                                        <span>@RunHistoryTimeLabel(historyRun)</span>
+                                                        <span>@RunHistoryDurationLabel(historyRun)</span>
+                                                        <span>@RunHistoryStepLabel(historyRun)</span>
+                                                    </span>
+                                                </div>
+                                                <div class="test-run-history-side">
+                                                    <span>@RunHistoryDateLabel(historyRun)</span>
+                                                    <strong>@RunHistoryIssueLabel(historyRun)</strong>
+                                                </div>
+                                            </div>
+                                        </MudMenuItem>
+                                    }
                                 }
-                            }
+                            </div>
                         </ChildContent>
                     </MudMenu>
                 </div>
@@ -449,14 +484,52 @@
     private string RunHistoryIcon(ScenarioRunResult result)
         => IsSelectedRun(result) ? Icons.Material.Filled.Visibility : RunStatusIcon(result.Status);
 
-    private Color RunHistoryIconColor(ScenarioRunResult result)
-        => IsSelectedRun(result) ? Color.Primary : RunStatusColor(result.Status);
-
-    private string RunHistoryLabel(ScenarioRunResult result)
+    private string RunHistoryItemClass(ScenarioRunResult result)
     {
-        var duration = result.FinishedAt - result.StartedAt;
-        return $"{RunHistoryPrefix(result)} - {result.Status} - {FormatRunTime(result)} - {result.Steps.Count} steps - {FormatDuration(duration)}";
+        var classes = new List<string>
+        {
+            "test-run-history-item",
+            result.Status.ToString().ToLowerInvariant()
+        };
+
+        if (IsSelectedRun(result))
+        {
+            classes.Add("selected");
+        }
+
+        if (IsLatestRun(result))
+        {
+            classes.Add("latest");
+        }
+
+        return string.Join(' ', classes);
     }
+
+    private static string RunHistoryStatusClass(ScenarioRunResult result)
+        => $"test-run-history-status {result.Status.ToString().ToLowerInvariant()}";
+
+    private static string RunHistoryTimeLabel(ScenarioRunResult result)
+        => result.FinishedAt.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture);
+
+    private static string RunHistoryDateLabel(ScenarioRunResult result)
+        => result.FinishedAt.ToLocalTime().ToString("MMM d", CultureInfo.CurrentCulture);
+
+    private static string RunHistoryDurationLabel(ScenarioRunResult result)
+        => FormatDuration(result.FinishedAt - result.StartedAt);
+
+    private static string RunHistoryStepLabel(ScenarioRunResult result)
+        => FormatCount(result.Steps.Count, "step");
+
+    private static int RunHistoryIssueCount(ScenarioRunResult result)
+        => result.Steps.Count(step => !IsSuccessfulStepStatus(step.Status));
+
+    private static string RunHistoryIssueLabel(ScenarioRunResult result)
+        => RunHistoryIssueCount(result) == 0
+            ? "No issues"
+            : FormatCount(RunHistoryIssueCount(result), "issue");
+
+    private string RunHistoryAriaLabel(ScenarioRunResult result)
+        => $"{RunHistoryPrefix(result)} run {result.Status} at {RunHistoryTimeLabel(result)}, {RunHistoryStepLabel(result)}, {RunHistoryIssueLabel(result)}";
 
     private string RunHistoryPrefix(ScenarioRunResult result)
     {
