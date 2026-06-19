@@ -3196,6 +3196,54 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void AddConnectionDialog_UsesFlatCompactSetupChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "AddConnectionDialog.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "AddConnectionDialog.razor.css"));
+
+        markup.ShouldContain("add-connection-dialog-title");
+        markup.ShouldContain("add-connection-dialog-status");
+        markup.ShouldContain("role=\"status\"");
+        markup.ShouldContain("aria-live=\"polite\"");
+        markup.ShouldContain("add-connection-dialog-section");
+        markup.ShouldContain("add-connection-dialog-grid broker");
+        markup.ShouldContain("add-connection-dialog-security-row");
+        markup.ShouldContain("add-connection-dialog-actions");
+        markup.ShouldContain("aria-label=\"Add connection\"");
+        markup.ShouldContain("_port is >= 1 and <= 65535");
+        markup.ShouldContain("LiveMqttWorkspaceService.DefaultBrokerMonitorSubscription");
+        markup.ShouldNotContain("@inject IDialogService");
+        markup.ShouldNotContain("MudDivider");
+
+        css.ShouldContain(".add-connection-dialog-title");
+        css.ShouldContain(".add-connection-dialog-status");
+        css.ShouldContain(".add-connection-dialog-section");
+        css.ShouldContain("border: 1px solid var(--flux-border-soft);");
+        css.ShouldContain(".add-connection-dialog-grid.broker");
+        css.ShouldContain("grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.55fr) 92px;");
+        css.ShouldContain(".add-connection-dialog-security-row");
+        css.ShouldContain("::deep(.add-connection-dialog-add)");
+        css.ShouldContain("@media (max-width: 760px)");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
+        css.ShouldContain("@media (max-width: 480px)");
+    }
+
+    [Fact]
     public void PayloadInspectorPanel_UsesFlatCompactInspectorChrome()
     {
         var root = FindRepositoryRoot();

@@ -1,86 +1,108 @@
-@inject IDialogService DialogService
-
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true })">
     <TitleContent>
-        <MudText Typo="Typo.h6">New Connection</MudText>
+        <div class="add-connection-dialog-title">
+            <span class="add-connection-dialog-title-icon" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.Cable" Size="Size.Small" />
+            </span>
+            <MudText Typo="Typo.h6" Class="add-connection-dialog-heading">New connection</MudText>
+            <span class="@FormStatusClass" role="status" aria-live="polite">@FormStatusText</span>
+        </div>
     </TitleContent>
     <DialogContent>
-        <MudStack Spacing="3">
-            <MudStack Spacing="2">
-                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Broker</MudText>
-                <MudGrid Spacing="2">
-                    <MudItem xs="12" md="6">
-                        <MudTextField T="string"
-                                      Label="Name"
-                                      @bind-Value="_name"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      Immediate="true"
-                                      OnKeyDown="@OnKeyDown" />
-                    </MudItem>
-                    <MudItem xs="12" md="6">
-                        <MudTextField T="string"
-                                      Label="Client ID"
-                                      @bind-Value="_clientId"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      Immediate="true"
-                                      OnKeyDown="@OnKeyDown" />
-                    </MudItem>
-                    <MudItem xs="12" md="8">
-                        <MudTextField T="string"
-                                      Label="Host"
-                                      @bind-Value="_host"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      Required="true"
-                                      Immediate="true"
-                                      OnKeyDown="@OnKeyDown" />
-                    </MudItem>
-                    <MudItem xs="12" md="4">
-                        <MudNumericField T="int"
-                                         Label="Port"
-                                         @bind-Value="_port"
-                                         Min="1"
-                                         Max="65535"
-                                         Variant="Variant.Outlined"
-                                         Margin="Margin.Dense" />
-                    </MudItem>
-                </MudGrid>
-            </MudStack>
+        <div class="add-connection-dialog-content">
+            <section class="add-connection-dialog-section" aria-labelledby="add-connection-broker-heading">
+                <div class="add-connection-dialog-section-title" id="add-connection-broker-heading">
+                    <MudIcon Icon="@Icons.Material.Filled.Dns" Size="Size.Small" />
+                    <span>Broker</span>
+                </div>
 
-            <MudDivider />
+                <div class="add-connection-dialog-grid broker">
+                    <MudTextField T="string"
+                                  Class="add-connection-dialog-field"
+                                  Label="Name"
+                                  @bind-Value="_name"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  Placeholder="local-broker"
+                                  OnKeyDown="@OnKeyDown" />
+                    <MudTextField T="string"
+                                  Class="add-connection-dialog-field wide"
+                                  Label="Host"
+                                  @bind-Value="_host"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Required="true"
+                                  Immediate="true"
+                                  Placeholder="localhost"
+                                  OnKeyDown="@OnKeyDown" />
+                    <MudNumericField T="int"
+                                     Class="add-connection-dialog-field"
+                                     Label="Port"
+                                     @bind-Value="_port"
+                                     Min="1"
+                                     Max="65535"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                    <MudTextField T="string"
+                                  Class="add-connection-dialog-field client"
+                                  Label="Client ID"
+                                  @bind-Value="_clientId"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  OnKeyDown="@OnKeyDown" />
+                </div>
+            </section>
 
-            <MudStack Spacing="2">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Security</MudText>
-                    <MudCheckBox T="bool" @bind-Value="_useTls" Label="TLS" Dense="true" />
-                </MudStack>
-                <MudGrid Spacing="2">
-                    <MudItem xs="12" md="6">
-                        <MudTextField T="string"
-                                      Label="Username"
-                                      @bind-Value="_username"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      OnKeyDown="@OnKeyDown" />
-                    </MudItem>
-                    <MudItem xs="12" md="6">
-                        <MudTextField T="string"
-                                      Label="Password"
-                                      @bind-Value="_password"
-                                      InputType="InputType.Password"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      OnKeyDown="@OnKeyDown" />
-                    </MudItem>
-                </MudGrid>
-            </MudStack>
-        </MudStack>
+            <section class="add-connection-dialog-section compact" aria-labelledby="add-connection-security-heading">
+                <div class="add-connection-dialog-security-row">
+                    <div class="add-connection-dialog-section-title" id="add-connection-security-heading">
+                        <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" />
+                        <span>Security</span>
+                    </div>
+                    <MudCheckBox T="bool"
+                                 Class="add-connection-dialog-tls"
+                                 @bind-Value="_useTls"
+                                 Label="TLS"
+                                 Dense="true" />
+                </div>
+
+                <div class="add-connection-dialog-grid two">
+                    <MudTextField T="string"
+                                  Class="add-connection-dialog-field"
+                                  Label="Username"
+                                  @bind-Value="_username"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  OnKeyDown="@OnKeyDown" />
+                    <MudTextField T="string"
+                                  Class="add-connection-dialog-field"
+                                  Label="Password"
+                                  @bind-Value="_password"
+                                  InputType="InputType.Password"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  OnKeyDown="@OnKeyDown" />
+                </div>
+            </section>
+        </div>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@(!IsValid)" OnClick="@Submit">Add</MudButton>
+        <div class="add-connection-dialog-actions">
+            <MudButton Variant="Variant.Text"
+                       Size="Size.Small"
+                       Class="add-connection-dialog-cancel"
+                       aria-label="Cancel new connection"
+                       OnClick="@Cancel">Cancel</MudButton>
+            <MudButton Color="Color.Primary"
+                       Variant="Variant.Filled"
+                       Size="Size.Small"
+                       Class="add-connection-dialog-add"
+                       Disabled="@(!IsValid)"
+                       aria-label="Add connection"
+                       OnClick="@Submit">Add</MudButton>
+        </div>
     </DialogActions>
 </MudDialog>
 
@@ -98,6 +120,16 @@
     private bool IsValid =>
         !string.IsNullOrWhiteSpace(_host) &&
         _port is >= 1 and <= 65535;
+
+    private string FormStatusClass
+        => IsValid ? "add-connection-dialog-status ready" : "add-connection-dialog-status";
+
+    private string FormStatusText
+        => string.IsNullOrWhiteSpace(_host)
+            ? "Host required"
+            : _port is < 1 or > 65535
+                ? "Port range"
+                : "Ready";
 
     private void Cancel() => MudDialog.Cancel();
 
