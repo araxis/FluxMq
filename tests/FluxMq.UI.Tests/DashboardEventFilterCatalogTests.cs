@@ -2727,7 +2727,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
         css.ShouldContain("flex-wrap: nowrap;");
         css.ShouldContain("overflow: hidden;");
-        css.ShouldContain("height: 28px;");
+        css.ShouldContain("min-height: 42px;");
+        css.ShouldContain("height: 24px;");
+        css.ShouldContain("flex: 0 0 252px;");
         css.ShouldContain(".test-studio-mode-button.active");
         css.ShouldContain("@media (max-width: 760px)");
         css.ShouldContain("width: 100%;");
@@ -2774,6 +2776,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("RunHistoryIssueLabel(historyRun)");
         markup.ShouldContain("test-runner-report-actions");
         markup.ShouldContain("Class=\"test-runner-icon-action\"");
+        markup.ShouldContain("aria-label=\"@ViewReportTooltip\"");
+        markup.ShouldContain("aria-label=\"@CopyReportTooltip\"");
+        markup.ShouldContain("aria-label=\"@SaveReportTooltip\"");
         markup.ShouldContain("Class=\"test-runner-run-action\"");
         markup.ShouldContain("test-runner-workspace");
         markup.ShouldContain("test-runner-status-strip");
@@ -2834,7 +2839,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-runner-report-actions");
         css.ShouldContain(".test-runner-report-actions ::deep .mud-icon-button");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
-        css.ShouldContain("min-height: 44px;");
+        css.ShouldContain("min-height: 42px;");
         css.ShouldContain("flex-wrap: nowrap;");
         css.ShouldContain(".test-runner-workspace");
         css.ShouldContain("grid-template-rows: auto auto minmax(0, 1fr);");
@@ -2862,10 +2867,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-runner-stream-main");
         css.ShouldContain(".test-runner-stream-tag");
         css.ShouldContain(".test-runner-stream-empty");
-        css.ShouldContain("grid-template-columns: 56px 24px minmax(0, 1fr) auto;");
-        css.ShouldContain("width: 3px;");
-        css.ShouldContain("height: 28px;");
-        css.ShouldContain("height: 24px;");
+        css.ShouldContain("grid-template-columns: 52px 22px minmax(0, 1fr) auto;");
+        css.ShouldContain("width: 2px;");
+        css.ShouldContain("height: 26px;");
+        css.ShouldContain("height: 22px;");
         css.ShouldContain(".test-runner-section-title small");
         css.ShouldContain("@media (max-width: 920px)");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
@@ -2928,6 +2933,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("test-scenario-report-actions");
         markup.ShouldContain("test-scenario-build-actions");
         markup.ShouldContain("Class=\"test-scenario-icon-action\"");
+        markup.ShouldContain("aria-label=\"@ViewReportTooltip\"");
+        markup.ShouldContain("aria-label=\"@CopyReportTooltip\"");
+        markup.ShouldContain("aria-label=\"@SaveReportTooltip\"");
         markup.ShouldContain("Class=\"test-scenario-run-action\"");
         markup.ShouldContain("Class=\"test-scenario-add-menu\"");
         markup.ShouldContain("Scenario.Phases");
@@ -2977,9 +2985,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-scenario-build-actions");
         css.ShouldContain(".test-scenario-report-actions ::deep .mud-icon-button");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
-        css.ShouldContain("min-height: 46px;");
+        css.ShouldContain("min-height: 42px;");
         css.ShouldContain("flex-wrap: nowrap;");
-        css.ShouldContain("grid-template-columns: repeat(auto-fit, minmax(218px, 1fr));");
+        css.ShouldContain("grid-template-columns: repeat(auto-fit, minmax(206px, 1fr));");
         css.ShouldContain(".test-phase-lanes.drop-active");
         css.ShouldContain(".test-phase-lane.drop-target");
         css.ShouldContain(".test-phase-lane.empty.drop-target .test-phase-empty");
@@ -2994,10 +3002,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-step-card.issue .test-step-index");
         css.ShouldContain(".test-step-result-strip");
         css.ShouldContain(".test-step-result-run.history");
-        css.ShouldContain("min-height: 58px;");
+        css.ShouldContain("min-height: 48px;");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto auto;");
-        css.ShouldContain("height: 28px;");
-        css.ShouldContain("height: 24px;");
+        css.ShouldContain("height: 26px;");
+        css.ShouldContain("height: 22px;");
         css.ShouldContain("@media (max-width: 760px)");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
     }

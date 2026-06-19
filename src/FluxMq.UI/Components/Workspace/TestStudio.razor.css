@@ -14,11 +14,11 @@
     border-bottom: 1px solid var(--flux-border);
     display: grid;
     flex: 0 0 auto;
-    gap: 10px;
+    gap: 8px;
     grid-template-columns: minmax(0, 1fr) auto;
-    min-height: 46px;
+    min-height: 42px;
     min-width: 0;
-    padding: 6px 10px;
+    padding: 5px 8px;
 }
 
 .test-studio-heading {
@@ -39,18 +39,22 @@
     border-radius: 6px;
     color: var(--mud-palette-primary);
     display: flex;
-    flex: 0 0 28px;
-    height: 28px;
+    flex: 0 0 24px;
+    height: 24px;
     justify-content: center;
-    width: 28px;
+    width: 24px;
+}
+
+.test-studio-title-icon ::deep .mud-icon-root {
+    font-size: 16px;
 }
 
 .test-studio-title-copy {
     display: flex;
-    flex: 0 1 320px;
+    flex: 0 1 300px;
     flex-direction: column;
     gap: 1px;
-    max-width: min(32vw, 360px);
+    max-width: min(31vw, 340px);
     min-width: 0;
 }
 
@@ -94,12 +98,12 @@
     font-size: 10.5px;
     font-weight: 750;
     flex: 0 1 auto;
-    height: 22px;
+    height: 20px;
     line-height: 1;
-    max-width: 128px;
+    max-width: 118px;
     min-width: 0;
     overflow: hidden;
-    padding: 0 8px;
+    padding: 0 6px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -111,7 +115,7 @@
     border-radius: 6px;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    min-width: 174px;
+    min-width: 156px;
     padding: 2px;
 }
 
@@ -124,13 +128,13 @@
     cursor: pointer;
     display: inline-flex;
     font: inherit;
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 800;
-    gap: 6px;
-    height: 28px;
+    gap: 5px;
+    height: 24px;
     justify-content: center;
     min-width: 0;
-    padding: 0 10px;
+    padding: 0 8px;
     transition: background-color 120ms ease, color 120ms ease;
     white-space: nowrap;
 }
@@ -160,7 +164,7 @@
 
 .test-studio-tools {
     border-right: 1px solid var(--flux-border);
-    flex: 0 0 272px;
+    flex: 0 0 252px;
     min-height: 0;
     min-width: 0;
 }
