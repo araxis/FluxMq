@@ -11,12 +11,24 @@
 <div class="test-runner-console" aria-label="Test runner console">
     @if (Scenario is null)
     {
-        <div class="test-runner-empty">
+        <div class="test-runner-empty" aria-label="Test runner setup state">
             <div class="test-runner-empty-panel">
-                <MudIcon Icon="@Icons.Material.Filled.PlayCircle" Class="test-runner-empty-icon" />
+                <span class="test-runner-empty-icon" aria-hidden="true">
+                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
+                </span>
                 <div class="test-runner-empty-copy">
-                    <span>No test selected</span>
+                    <span>@NoTestEmptyTitle</span>
                     <small>@NoTestEmptyText</small>
+                </div>
+                <div class="test-runner-empty-cues" aria-label="Test runner setup">
+                    <span>
+                        <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
+                        @NoTestSelectionHint
+                    </span>
+                    <span>
+                        <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" />
+                        Runner ready
+                    </span>
                 </div>
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
@@ -94,7 +106,10 @@
                                 {
                                     <div class="test-run-history-empty" role="status">
                                         <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" />
-                                        <span>No runs yet</span>
+                                        <span>
+                                            <strong>No run history</strong>
+                                            <small>Run this scenario once to keep the first result here.</small>
+                                        </span>
                                     </div>
                                 }
                                 else
@@ -199,13 +214,31 @@
             }
             else
             {
-                <section class="test-runner-result-strip empty" aria-label="Scenario run summary">
+                <section class="@FirstRunStripClass" aria-label="@FirstRunAriaLabel">
                     <span class="test-runner-result-icon" aria-hidden="true">
-                        <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" />
+                        <MudIcon Icon="@FirstRunIcon" Size="Size.Small" />
                     </span>
                     <div class="test-runner-result-copy">
-                        <strong>No run selected</strong>
-                        <span>Run the scenario to populate results, diagnostics, and report actions.</span>
+                        <span class="test-runner-result-scope first-run">
+                            <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
+                            <span>@FirstRunStateLabel</span>
+                        </span>
+                        <strong>@FirstRunTitle</strong>
+                        <span>@FirstRunDescription</span>
+                    </div>
+                    <div class="test-runner-first-run-cues" aria-label="First run readiness">
+                        <span>
+                            <MudIcon Icon="@Icons.Material.Filled.FormatListBulleted" Size="Size.Small" />
+                            @ScenarioStepLabel
+                        </span>
+                        <span>
+                            <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" />
+                            @ScenarioPhaseLabel
+                        </span>
+                        <span>
+                            <MudIcon Icon="@Icons.Material.Filled.Sensors" Size="Size.Small" />
+                            @FirstRunEventModeLabel
+                        </span>
                     </div>
                 </section>
             }
@@ -336,9 +369,14 @@
 
     private string RunButtonText => Project.IsScenarioRunning ? "Running" : "Run scenario";
 
+    private string NoTestEmptyTitle => Project.TestNames.Count == 0 ? "No tests yet" : "No test selected";
+
     private string NoTestEmptyText => Project.TestNames.Count == 0
-        ? "Create a test before running scenarios."
-        : "Select a test from the app tabs to run it.";
+        ? "Create a test to run scenario checks."
+        : "Select a test from the tabs to inspect and run it.";
+
+    private string NoTestSelectionHint
+        => Project.TestNames.Count == 0 ? "No tests" : FormatCount(Project.TestNames.Count, "test");
 
     private string ScenarioStepLabel
         => Scenario is { } scenario ? FormatCount(scenario.StepCount, "step") : "No steps";
@@ -367,6 +405,31 @@
             : Scenario is { StepCount: > 0 }
                 ? "Ready"
                 : "Needs steps";
+
+    private string FirstRunStripClass
+        => Scenario is { StepCount: > 0 }
+            ? "test-runner-result-strip empty ready"
+            : "test-runner-result-strip empty warning";
+
+    private string FirstRunIcon
+        => Scenario is { StepCount: > 0 } ? Icons.Material.Filled.PlayCircle : Icons.Material.Filled.Info;
+
+    private string FirstRunStateLabel
+        => Scenario is { StepCount: > 0 } ? "Not run yet" : "Needs steps";
+
+    private string FirstRunTitle
+        => Scenario is { StepCount: > 0 } ? "Ready for first run" : "Add steps before running";
+
+    private string FirstRunDescription
+        => Scenario is { StepCount: > 0 }
+            ? "Run the scenario to capture results, diagnostics, and report actions."
+            : "Add at least one step before the runner has work to execute.";
+
+    private string FirstRunEventModeLabel
+        => Project.State == RuntimeWorkspaceState.Running ? "Runtime attached" : "Isolated run";
+
+    private string FirstRunAriaLabel
+        => $"{FirstRunTitle}. {FirstRunDescription}";
 
     private IReadOnlyList<ScenarioRunResult> RecentRuns
         => Scenario is null
