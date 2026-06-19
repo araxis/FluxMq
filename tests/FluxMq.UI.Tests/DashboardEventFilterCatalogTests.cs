@@ -2608,8 +2608,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("publish-field broker");
         markup.ShouldContain("publish-field topic");
         markup.ShouldContain("publish-field payload");
-        markup.ShouldContain("publish-retain");
+        markup.ShouldContain("publish-qos-select");
+        markup.ShouldContain("publish-retain-toggle");
+        markup.ShouldContain("section-count");
         markup.ShouldNotContain("Recording");
+        markup.ShouldNotContain("select-pill");
+        markup.ShouldNotContain("pill-button");
+        markup.ShouldNotContain("section-badge");
 
         css.ShouldContain("flex: 0 0 36px;");
         css.ShouldContain(".inspector-tab ::deep .mud-icon-root");
@@ -2622,7 +2627,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("height: 28px;");
         css.ShouldContain("min-height: 56px;");
         css.ShouldContain("max-height: 96px;");
-        css.ShouldContain(".publish-retain.active");
+        css.ShouldContain(".publish-qos-select");
+        css.ShouldContain(".publish-retain-toggle.active");
+        css.ShouldContain(".section-count");
         css.ShouldContain("height: 30px;");
         css.ShouldContain(".rail-empty-state,");
         css.ShouldContain(".inspect-empty-state");
@@ -2635,6 +2642,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("max-height: 72px;");
         css.ShouldNotContain(".recording-label");
         css.ShouldNotContain(".empty-topic-row");
+        css.ShouldNotContain(".select-pill");
+        css.ShouldNotContain(".pill-button");
+        css.ShouldNotContain(".section-badge");
+        css.ShouldNotContain("border-radius: 999px;");
     }
 
     [Fact]
