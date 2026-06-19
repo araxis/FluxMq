@@ -3,14 +3,20 @@
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true })">
     <TitleContent>
         <div class="metric-create-title">
-            <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" Color="Color.Primary" />
-            <span>New metric</span>
+            <span class="metric-create-title-icon">
+                <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" />
+            </span>
+            <span class="metric-create-title-copy">
+                <strong>New metric</strong>
+                <small>Choose type and defaults</small>
+            </span>
+            <span class="@CreateStatusClass" role="status" aria-live="polite">@CreateStatusText</span>
         </div>
     </TitleContent>
     <DialogContent>
-        <div class="metric-create-dialog">
+        <div class="metric-create-dialog" role="form" aria-label="Create metric">
             <div class="metric-create-topbar">
-                <label class="metric-create-search">
+                <label class="metric-create-search" role="search">
                     <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
                     <input value="@_search"
                            placeholder="Search metric types"
@@ -26,7 +32,7 @@
                         </button>
                     }
                 </label>
-                <span class="metric-create-count">@FilteredDescriptors.Count of @SortedDescriptors.Count types</span>
+                <span class="metric-create-count" role="status" aria-live="polite">@FilteredDescriptors.Count of @SortedDescriptors.Count types</span>
             </div>
 
             <div class="metric-create-layout">
@@ -77,6 +83,9 @@
                             <span>Metric name</span>
                             <input value="@_name"
                                    aria-label="Metric name"
+                                   aria-invalid="@(!CanCreate)"
+                                   autocomplete="off"
+                                   spellcheck="false"
                                    @oninput="@OnNameInput"
                                    @onkeydown="@OnKeyDown" />
                         </label>
@@ -105,6 +114,13 @@
                                 }
                             </div>
                         }
+                        else
+                        {
+                            <div class="metric-create-empty-defaults">
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" />
+                                <span>This type has no parameters.</span>
+                            </div>
+                        }
                     }
                 </div>
             </div>
@@ -112,12 +128,15 @@
     </DialogContent>
     <DialogActions>
         <div class="metric-create-actions">
-            <MudButton OnClick="@Cancel" Size="Size.Small">Cancel</MudButton>
+            <MudButton OnClick="@Cancel"
+                       Size="Size.Small"
+                       aria-label="Cancel metric creation">Cancel</MudButton>
             <MudButton Color="Color.Primary"
                        Variant="Variant.Filled"
                        Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.Add"
                        Disabled="@(!CanCreate)"
+                       aria-label="Create metric"
                        OnClick="@Submit">Create metric</MudButton>
         </div>
     </DialogActions>
@@ -151,6 +170,12 @@
         SortedDescriptors.FirstOrDefault(descriptor => string.Equals(descriptor.TypeId, _selectedTypeId, StringComparison.Ordinal));
 
     private bool CanCreate => SelectedDescriptor is not null && !string.IsNullOrWhiteSpace(_name);
+
+    private string CreateStatusClass => CanCreate
+        ? "metric-create-status ready"
+        : "metric-create-status invalid";
+
+    private string CreateStatusText => CanCreate ? "Ready" : "Needs name";
 
     private string MetricIdPreview => MetricDesignerState.UniqueMetricId(_name, ExistingMetricIds);
 

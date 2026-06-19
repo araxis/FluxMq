@@ -3244,6 +3244,59 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void MetricCreateDialog_UsesFlatCompactCreationChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "MetricCreateDialog.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "MetricCreateDialog.razor.css"));
+
+        markup.ShouldContain("metric-create-title-icon");
+        markup.ShouldContain("metric-create-title-copy");
+        markup.ShouldContain("metric-create-status");
+        markup.ShouldContain("role=\"status\"");
+        markup.ShouldContain("aria-live=\"polite\"");
+        markup.ShouldContain("role=\"form\" aria-label=\"Create metric\"");
+        markup.ShouldContain("role=\"search\"");
+        markup.ShouldContain("aria-label=\"Create metric\"");
+        markup.ShouldContain("aria-invalid=\"@(!CanCreate)\"");
+        markup.ShouldContain("metric-create-empty-defaults");
+        markup.ShouldContain("CreateStatusClass");
+        markup.ShouldContain("CreateStatusText");
+        markup.ShouldNotContain("MudStack");
+        markup.ShouldNotContain("MudGrid");
+        markup.ShouldNotContain("MudDivider");
+        markup.ShouldNotContain("HelperText=");
+
+        css.ShouldContain(".metric-create-title-icon");
+        css.ShouldContain(".metric-create-title-copy");
+        css.ShouldContain(".metric-create-status");
+        css.ShouldContain("grid-template-columns: 26px minmax(0, 1fr) auto;");
+        css.ShouldContain("border: 1px solid var(--flux-border-soft);");
+        css.ShouldContain("border-radius: 6px;");
+        css.ShouldContain("height: min(304px, calc(100vh - 220px));");
+        css.ShouldContain("min-height: 28px;");
+        css.ShouldContain(".metric-create-empty-defaults");
+        css.ShouldContain("@media (max-width: 760px)");
+        css.ShouldContain("@media (max-width: 520px)");
+        css.ShouldNotContain("border-radius: 999px;");
+        css.ShouldNotContain("box-shadow: 0 ");
+    }
+
+    [Fact]
     public void MetricActionDialogs_UseFlatCompactModalChrome()
     {
         var root = FindRepositoryRoot();
