@@ -3032,7 +3032,9 @@ public sealed class DashboardEventFilterCatalogTests
             "ScenarioStepEditorDialog.razor.css"));
 
         markup.ShouldContain("scenario-step-editor-title");
+        markup.ShouldContain("scenario-step-editor-title-copy");
         markup.ShouldContain("Class=\"scenario-step-editor\"");
+        markup.ShouldContain("aria-label=\"@DialogTitle\"");
         markup.ShouldContain("Class=\"scenario-step-editor-toggle\"");
         markup.ShouldContain("scenario-step-editor-checks");
         markup.ShouldContain("IsDescriptorFieldEditor");
@@ -3044,6 +3046,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("FieldInputType(currentField)");
         markup.ShouldContain("scenario-step-editor-actions");
         markup.ShouldContain("scenario-step-editor-action-buttons");
+        markup.ShouldContain("aria-label=\"Cancel step edit\"");
+        markup.ShouldContain("aria-label=\"Apply step edit\"");
         markup.ShouldContain("ValidationStateClass");
         markup.ShouldContain("ValidationStateText");
         markup.ShouldContain("Disabled=\"@HasValidationIssues\"");
@@ -3054,9 +3058,14 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ScenarioStepCatalog.WindowMsKey");
 
         css.ShouldContain(".scenario-step-editor");
-        css.ShouldContain("background: var(--flux-surface);");
-        css.ShouldContain("border: 1px solid var(--flux-border);");
+        css.ShouldContain(".scenario-step-editor-title-copy");
+        css.ShouldContain("font-size: 14px;");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-canvas) 24%, var(--flux-surface));");
+        css.ShouldContain("border: 1px solid var(--flux-border-soft);");
+        css.ShouldContain(".scenario-step-editor ::deep(.mud-input-root)");
+        css.ShouldContain("min-height: 34px;");
         css.ShouldContain(".scenario-step-editor-toggle");
+        css.ShouldContain("grid-template-columns: minmax(82px, 0.34fr) minmax(0, 1fr);");
         css.ShouldContain(".scenario-step-editor-checks");
         css.ShouldContain(".scenario-step-editor-field-grid");
         css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
@@ -3066,7 +3075,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".scenario-step-editor-state.ready");
         css.ShouldContain(".scenario-step-editor-state.invalid");
         css.ShouldContain(".scenario-step-editor-action-buttons");
-        css.ShouldContain("min-height: 30px;");
+        css.ShouldContain("min-height: 28px;");
         css.ShouldContain("@media (max-width: 560px)");
         css.ShouldContain("flex-direction: column;");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
