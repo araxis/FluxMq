@@ -30,10 +30,14 @@
     @foreach (var group in Groups)
     {
         var collapsed = IsCollapsed(group);
-        <section class="property-grid-group @(collapsed ? "collapsed" : null)" @key="group.Id">
+        <section class="property-grid-group @(collapsed ? "collapsed" : null)"
+                 role="rowgroup"
+                 aria-label="@GroupAriaLabel(group, collapsed)"
+                 @key="group.Id">
             <button type="button"
                     class="property-grid-group-header"
                     aria-expanded="@(!collapsed)"
+                    aria-label="@GroupHeaderAriaLabel(group, collapsed)"
                     title="@group.Title"
                     @onclick="@(() => ToggleGroupAsync(group.Id))">
                 <span class="property-grid-group-toggle">
@@ -145,6 +149,12 @@
 
     private static string FormatSettingCount(int count)
         => count == 1 ? "1 setting" : $"{count} settings";
+
+    private static string GroupAriaLabel(PropertyGridGroup group, bool collapsed)
+        => $"{group.Title}, {FormatSettingCount(group.SettingCount)}, {(collapsed ? "collapsed" : "expanded")}";
+
+    private static string GroupHeaderAriaLabel(PropertyGridGroup group, bool collapsed)
+        => $"{(collapsed ? "Expand" : "Collapse")} {GroupAriaLabel(group, collapsed)}";
 
     private void StartNameColumnResize(PointerEventArgs args)
     {
