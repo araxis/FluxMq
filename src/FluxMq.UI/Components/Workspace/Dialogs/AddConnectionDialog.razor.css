@@ -1,0 +1,192 @@
+.add-connection-dialog-title {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    min-width: 0;
+    width: 100%;
+}
+
+.add-connection-dialog-title-icon {
+    align-items: center;
+    background: color-mix(in srgb, var(--flux-accent) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-accent) 30%, var(--flux-border));
+    border-radius: 5px;
+    color: var(--flux-accent);
+    display: inline-flex;
+    height: 24px;
+    justify-content: center;
+    width: 24px;
+}
+
+.add-connection-dialog-title-icon ::deep(.mud-icon-root) {
+    font-size: 16px;
+}
+
+.add-connection-dialog-heading {
+    color: var(--mud-palette-text-primary);
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.2;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.add-connection-dialog-status {
+    align-items: center;
+    background: var(--flux-surface-2);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-warning) 42%, var(--flux-border));
+    border-radius: 5px;
+    color: var(--mud-palette-warning);
+    display: inline-flex;
+    font-size: 10.5px;
+    font-weight: 800;
+    height: 24px;
+    padding: 0 7px;
+    white-space: nowrap;
+}
+
+.add-connection-dialog-status.ready {
+    border-color: color-mix(in srgb, var(--flux-accent) 36%, var(--flux-border));
+    color: var(--flux-accent);
+}
+
+.add-connection-dialog-content {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+}
+
+.add-connection-dialog-section {
+    background: var(--flux-surface);
+    border: 1px solid var(--flux-border-soft);
+    border-radius: 6px;
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+    padding: 10px;
+}
+
+.add-connection-dialog-section.compact {
+    gap: 7px;
+}
+
+.add-connection-dialog-section-title {
+    align-items: center;
+    color: var(--mud-palette-text-primary);
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 800;
+    gap: 6px;
+    line-height: 1.2;
+    min-width: 0;
+}
+
+.add-connection-dialog-section-title ::deep(.mud-icon-root) {
+    color: var(--mud-palette-text-secondary);
+    font-size: 17px;
+}
+
+.add-connection-dialog-grid {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+}
+
+.add-connection-dialog-grid.two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.add-connection-dialog-grid.broker {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.55fr) 92px;
+}
+
+.add-connection-dialog-grid.broker .add-connection-dialog-field.client {
+    grid-column: 1 / -1;
+}
+
+.add-connection-dialog-field {
+    min-width: 0;
+}
+
+.add-connection-dialog-field ::deep(.mud-input-control) {
+    margin-top: 0;
+}
+
+.add-connection-dialog-field ::deep(.mud-input-slot) {
+    font-size: 13px;
+}
+
+.add-connection-dialog-field ::deep(.mud-input-control-helper-container) {
+    margin-top: 2px;
+}
+
+.add-connection-dialog-security-row {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    min-width: 0;
+}
+
+.add-connection-dialog-tls {
+    flex: 0 0 auto;
+}
+
+.add-connection-dialog-actions {
+    align-items: center;
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    min-width: 0;
+    width: 100%;
+}
+
+::deep(.add-connection-dialog-cancel),
+::deep(.add-connection-dialog-add) {
+    border-radius: 5px;
+    min-height: 28px;
+    min-width: 76px;
+    text-transform: none;
+}
+
+@media (max-width: 760px) {
+    .add-connection-dialog-grid.two,
+    .add-connection-dialog-grid.broker {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .add-connection-dialog-grid.broker .add-connection-dialog-field.client {
+        grid-column: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .add-connection-dialog-title {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .add-connection-dialog-status {
+        grid-column: 1 / -1;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .add-connection-dialog-security-row {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .add-connection-dialog-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    ::deep(.add-connection-dialog-cancel),
+    ::deep(.add-connection-dialog-add) {
+        width: 100%;
+    }
+}
