@@ -3244,6 +3244,64 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void MetricActionDialogs_UseFlatCompactModalChrome()
+    {
+        var root = FindRepositoryRoot();
+        var dialogPath = Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs");
+        var dialogs = new (string FileName, string Prefix)[]
+        {
+            ("MetricConfirmDialog", "metric-confirm"),
+            ("MetricRenameDialog", "metric-rename"),
+            ("MetricDuplicateDialog", "metric-duplicate"),
+            ("MetricDeleteDialog", "metric-delete"),
+            ("MetricTypeChangeDialog", "metric-type-change")
+        };
+
+        foreach (var (fileName, prefix) in dialogs)
+        {
+            var markup = File.ReadAllText(Path.Combine(dialogPath, $"{fileName}.razor"));
+            var css = File.ReadAllText(Path.Combine(dialogPath, $"{fileName}.razor.css"));
+
+            markup.ShouldContain($"{prefix}-title");
+            markup.ShouldContain($"{prefix}-title-icon");
+            markup.ShouldContain($"{prefix}-title-copy");
+            markup.ShouldContain($"{prefix}-status");
+            markup.ShouldContain("role=\"status\"");
+            markup.ShouldContain("aria-live=\"polite\"");
+            markup.ShouldContain("aria-label=");
+            markup.ShouldNotContain("MudStack");
+            markup.ShouldNotContain("MudGrid");
+            markup.ShouldNotContain("MudDivider");
+            markup.ShouldNotContain("HelperText=");
+
+            css.ShouldContain($".{prefix}-title");
+            css.ShouldContain($".{prefix}-title-icon");
+            css.ShouldContain($".{prefix}-title-copy");
+            css.ShouldContain($".{prefix}-status");
+            css.ShouldContain("grid-template-columns: 26px minmax(0, 1fr) auto;");
+            css.ShouldContain("border: 1px solid var(--flux-border-soft);");
+            css.ShouldContain("border-radius: 6px;");
+            css.ShouldContain("min-height: 28px;");
+            css.ShouldContain("@media (max-width:");
+            css.ShouldNotContain("border-radius: 999px;");
+            css.ShouldNotContain("box-shadow: 0 ");
+        }
+
+        File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
+            .ShouldContain("role=\"alert\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
+            .ShouldContain("role=\"alert\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor.css"))
+            .ShouldContain("height: min(304px, calc(100vh - 220px));");
+    }
+
+    [Fact]
     public void NewPipelineDialog_UsesFlatCompactCreateChrome()
     {
         var root = FindRepositoryRoot();

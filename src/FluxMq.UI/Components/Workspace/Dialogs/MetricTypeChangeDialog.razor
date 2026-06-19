@@ -3,14 +3,20 @@
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true })">
     <TitleContent>
         <div class="metric-type-change-title">
-            <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" Color="Color.Primary" />
-            <span>Change metric type</span>
+            <span class="metric-type-change-title-icon">
+                <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
+            </span>
+            <span class="metric-type-change-title-copy">
+                <strong>Change metric type</strong>
+                <small>Defaults reset after selection</small>
+            </span>
+            <span class="@TypeChangeStatusClass" role="status" aria-live="polite">@TypeChangeStatusText</span>
         </div>
     </TitleContent>
     <DialogContent>
-        <div class="metric-type-change-dialog">
+        <div class="metric-type-change-dialog" role="form" aria-label="Change metric type">
             <div class="metric-type-change-topbar">
-                <label class="metric-type-change-search">
+                <label class="metric-type-change-search" role="search">
                     <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
                     <input value="@_search"
                            placeholder="Search metric types"
@@ -26,7 +32,7 @@
                         </button>
                     }
                 </label>
-                <span class="metric-type-change-count">@FilteredDescriptors.Count of @SortedDescriptors.Count types</span>
+                <span class="metric-type-change-count" role="status" aria-live="polite">@FilteredDescriptors.Count of @SortedDescriptors.Count types</span>
             </div>
 
             <div class="metric-type-change-layout">
@@ -118,12 +124,15 @@
     </DialogContent>
     <DialogActions>
         <div class="metric-type-change-actions">
-            <MudButton OnClick="@Cancel" Size="Size.Small">Cancel</MudButton>
+            <MudButton OnClick="@Cancel"
+                       Size="Size.Small"
+                       aria-label="Cancel metric type change">Cancel</MudButton>
             <MudButton Color="Color.Primary"
                        Variant="Variant.Filled"
                        Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.Tune"
                        Disabled="@(!CanChange)"
+                       aria-label="@SubmitText"
                        OnClick="@Submit">@SubmitText</MudButton>
         </div>
     </DialogActions>
@@ -167,6 +176,12 @@
         !string.Equals(selected.TypeId, CurrentTypeId, StringComparison.Ordinal);
 
     private string SubmitText => CanChange ? "Change type" : "Current type";
+
+    private string TypeChangeStatusClass => CanChange
+        ? "metric-type-change-status ready"
+        : "metric-type-change-status";
+
+    private string TypeChangeStatusText => CanChange ? "Ready" : "Current type";
 
     private string ResetNoteClass => CanChange ? "metric-type-change-note warning" : "metric-type-change-note";
 
