@@ -2863,6 +2863,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("test-scenario-heading-icon");
         markup.ShouldContain("test-scenario-title-copy");
         markup.ShouldContain("test-scenario-meta-strip");
+        markup.ShouldContain("@NoTestEmptyTitle");
+        markup.ShouldContain("@NoTestSelectionHint");
+        markup.ShouldContain("test-scenario-empty-cues");
+        markup.ShouldContain("@NoStepsEmptyTitle");
+        markup.ShouldContain("@NoStepsEmptyText");
+        markup.ShouldContain("@ScenarioStepTypeCountText");
         markup.ShouldContain("@PhaseCountText");
         markup.ShouldContain("@RunModeText");
         markup.ShouldContain("@RecentRunCountText");
@@ -2879,6 +2885,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ReportActionsClass");
         markup.ShouldContain("ReportActionsLabel");
         markup.ShouldContain("test-run-history-panel");
+        markup.ShouldContain("No run history");
         markup.ShouldContain("test-run-history-row");
         markup.ShouldContain("RunHistoryItemClass(historyRun)");
         markup.ShouldContain("RunHistoryAriaLabel(historyRun)");
@@ -2918,9 +2925,14 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-run-context-status");
         css.ShouldContain(".test-run-context-reset");
         css.ShouldContain(".test-run-history-panel");
+        css.ShouldContain(".test-run-history-empty strong");
+        css.ShouldContain(".test-run-history-empty small");
         css.ShouldContain(".test-run-history-row");
         css.ShouldContain(".test-run-history-status");
         css.ShouldContain("::deep .test-run-history-item.selected .test-run-history-row");
+        css.ShouldContain(".test-scenario-empty-cues");
+        css.ShouldContain(".test-scenario-empty-cues span");
+        css.ShouldContain(".test-scenario-empty-icon.timeline");
         css.ShouldContain(".test-scenario-workspace");
         css.ShouldContain("grid-template-rows: auto minmax(0, 1fr);");
         css.ShouldContain(".test-scenario-builder-strip");
