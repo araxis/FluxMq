@@ -116,12 +116,17 @@
                     @foreach (var workflow in active.WorkflowNames)
                     {
                         var w = workflow;
-                        <MudMenuItem Icon="@Icons.Material.Filled.Timeline"
-                                     OnClick="@(() => SelectPipeline(active, w))"
-                                     Class="@ArtifactItemClass(active, WorkspaceArtifactKind.Pipeline, w)"
+                        <MudMenuItem OnClick="@(() => SelectPipeline(active, w))"
+                                     Class="@ArtifactMenuItemClass(active, WorkspaceArtifactKind.Pipeline, w)"
                                      title="@w">
-                            <div class="app-menu-artifact-row">
-                                <span class="app-menu-artifact-name">@w</span>
+                            <div class="app-menu-artifact-row app-menu-compact-artifact-row">
+                                <span class="app-menu-artifact-icon-frame pipeline" aria-hidden="true">
+                                    <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" />
+                                </span>
+                                <span class="app-menu-artifact-copy">
+                                    <span class="app-menu-artifact-name">@w</span>
+                                    <span class="app-menu-artifact-meta">Pipeline</span>
+                                </span>
                                 <span class="app-menu-inline-action" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
                                     <MudTooltip Text="Delete pipeline">
                                         <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
@@ -186,12 +191,17 @@
                     @foreach (var dashboard in active.DashboardNames)
                     {
                         var d = dashboard;
-                        <MudMenuItem Icon="@Icons.Material.Filled.Dashboard"
-                                     OnClick="@(() => SelectDashboard(active, d))"
-                                     Class="@ArtifactItemClass(active, WorkspaceArtifactKind.Dashboard, d)"
+                        <MudMenuItem OnClick="@(() => SelectDashboard(active, d))"
+                                     Class="@ArtifactMenuItemClass(active, WorkspaceArtifactKind.Dashboard, d)"
                                      title="@d">
-                            <div class="app-menu-artifact-row">
-                                <span class="app-menu-artifact-name">@d</span>
+                            <div class="app-menu-artifact-row app-menu-compact-artifact-row">
+                                <span class="app-menu-artifact-icon-frame dashboard" aria-hidden="true">
+                                    <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" />
+                                </span>
+                                <span class="app-menu-artifact-copy">
+                                    <span class="app-menu-artifact-name">@d</span>
+                                    <span class="app-menu-artifact-meta">Dashboard</span>
+                                </span>
                                 <span class="app-menu-inline-action" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
                                     <MudTooltip Text="Delete dashboard">
                                         <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
@@ -253,10 +263,19 @@
                 }
                 else
                 {
-                    <MudMenuItem Icon="@Icons.Material.Filled.QueryStats"
-                                 OnClick="@(() => SelectMetrics(active))"
-                                 Class="@ArtifactItemClass(active, WorkspaceArtifactKind.Metrics, "Metrics")">
-                        Metric designer
+                    <MudMenuItem OnClick="@(() => SelectMetrics(active))"
+                                 Class="@ArtifactMenuItemClass(active, WorkspaceArtifactKind.Metrics, "Metrics")"
+                                 title="Open metric designer">
+                        <div class="app-menu-artifact-row app-menu-compact-artifact-row app-menu-metrics-row">
+                            <span class="app-menu-artifact-icon-frame metrics" aria-hidden="true">
+                                <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" />
+                            </span>
+                            <span class="app-menu-artifact-copy">
+                                <span class="app-menu-artifact-name">Metric designer</span>
+                                <span class="app-menu-artifact-meta">@CountLabel(active.MetricNames.Count, "metric")</span>
+                            </span>
+                            <span class="app-menu-artifact-token">Open</span>
+                        </div>
                     </MudMenuItem>
                 }
 
@@ -574,6 +593,9 @@
 
         return active ? "app-menu-child active-artifact" : "app-menu-child";
     }
+
+    private string ArtifactMenuItemClass(FlowWorkspaceService app, WorkspaceArtifactKind kind, string name)
+        => $"{ArtifactItemClass(app, kind, name)} app-menu-artifact-item";
 
     private async Task ToggleBrokerAsync(ManagedConnection connection)
     {

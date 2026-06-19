@@ -260,6 +260,17 @@
     width: 100%;
 }
 
+.app-menu-compact-artifact-row {
+    gap: 7px;
+    grid-template-columns: 22px minmax(0, 1fr) 24px;
+    min-height: 40px;
+    padding-right: 2px;
+}
+
+.app-menu-metrics-row {
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+}
+
 .app-menu-test-row {
     gap: 7px;
     grid-template-columns: 22px minmax(0, 1fr) minmax(94px, auto) 24px;
@@ -280,6 +291,36 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.app-menu-artifact-icon-frame {
+    align-items: center;
+    background: var(--flux-surface);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    display: inline-flex;
+    height: 22px;
+    justify-content: center;
+    width: 22px;
+}
+
+.app-menu-artifact-icon-frame.pipeline {
+    background: color-mix(in srgb, var(--flux-accent) 9%, transparent);
+    border-color: color-mix(in srgb, var(--flux-accent) 26%, var(--flux-border));
+    color: var(--flux-accent);
+}
+
+.app-menu-artifact-icon-frame.dashboard {
+    background: color-mix(in srgb, var(--mud-palette-info) 9%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-info) 30%, var(--flux-border));
+    color: var(--mud-palette-info);
+}
+
+.app-menu-artifact-icon-frame.metrics {
+    background: color-mix(in srgb, var(--mud-palette-secondary) 9%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-secondary) 30%, var(--flux-border));
+    color: var(--mud-palette-secondary);
 }
 
 .app-menu-test-icon-frame {
@@ -325,6 +366,21 @@
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-menu-artifact-token {
+    align-items: center;
+    border: 1px solid color-mix(in srgb, var(--flux-accent) 28%, var(--flux-border));
+    border-radius: 999px;
+    color: var(--flux-accent);
+    display: inline-flex;
+    font-size: 9.5px;
+    font-weight: 800;
+    height: 19px;
+    line-height: 1;
+    padding: 0 6px;
+    text-transform: uppercase;
     white-space: nowrap;
 }
 
