@@ -2595,24 +2595,35 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("topic-message-table");
         markup.ShouldContain("Show message list");
         markup.ShouldContain("No message selected");
+        markup.ShouldContain("publish-form-grid");
+        markup.ShouldContain("publish-field broker");
+        markup.ShouldContain("publish-field topic");
+        markup.ShouldContain("publish-field payload");
         markup.ShouldContain("publish-retain");
         markup.ShouldNotContain("Recording");
 
         css.ShouldContain("flex: 0 0 36px;");
         css.ShouldContain(".inspector-tab ::deep .mud-icon-root");
         css.ShouldContain("padding: 10px;");
+        css.ShouldContain(".publish-form-grid");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);");
+        css.ShouldContain(".publish-field.payload,");
+        css.ShouldContain("grid-column: 1 / -1;");
         css.ShouldContain("text-transform: none;");
         css.ShouldContain("height: 28px;");
-        css.ShouldContain("min-height: 68px;");
+        css.ShouldContain("min-height: 56px;");
+        css.ShouldContain("max-height: 96px;");
         css.ShouldContain(".publish-retain.active");
         css.ShouldContain("height: 30px;");
         css.ShouldContain(".rail-empty-state,");
         css.ShouldContain(".inspect-empty-state");
-        css.ShouldContain("min-height: 118px;");
+        css.ShouldContain("grid-template-columns: 26px minmax(0, 1fr);");
+        css.ShouldContain("min-height: 92px;");
+        css.ShouldContain("grid-row: 1 / span 2;");
         css.ShouldContain(".topic-message-table ::deep .mud-table-container");
         css.ShouldContain(".topic-message-table ::deep th,");
         css.ShouldContain("min-height: 32px;");
-        css.ShouldContain("max-height: 88px;");
+        css.ShouldContain("max-height: 72px;");
         css.ShouldNotContain(".recording-label");
         css.ShouldNotContain(".empty-topic-row");
     }
