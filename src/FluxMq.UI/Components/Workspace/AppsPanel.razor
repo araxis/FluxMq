@@ -85,9 +85,14 @@
 
     private void SelectAppFromKeyboard(KeyboardEventArgs args, FlowWorkspaceService app)
     {
-        if (args.Key is "Enter" or " ")
+        if (IsActivationKey(args))
+        {
             Projects.SetActive(app);
+        }
     }
+
+    private static bool IsActivationKey(KeyboardEventArgs args)
+        => args.Key is "Enter" or " " or "Spacebar";
 
     private static string AppTileClass(bool isActive)
         => isActive ? "app-tile active" : "app-tile";

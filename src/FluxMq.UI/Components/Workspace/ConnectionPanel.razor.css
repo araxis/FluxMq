@@ -152,6 +152,12 @@
     border-color: color-mix(in srgb, var(--mud-palette-info) 20%, var(--flux-border));
 }
 
+.connection-row:focus-within {
+    box-shadow:
+        inset 0 0 0 1px color-mix(in srgb, var(--mud-palette-info) 38%, var(--flux-border)),
+        inset 2px 0 0 var(--mud-palette-info);
+}
+
 .connection-dot {
     background: var(--flux-idle);
     border-radius: 50%;

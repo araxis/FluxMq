@@ -5107,6 +5107,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("role=\"button\"");
         markup.ShouldContain("tabindex=\"0\"");
         markup.ShouldContain("SelectAppFromKeyboard(args, a)");
+        markup.ShouldContain("private static bool IsActivationKey");
+        markup.ShouldContain("\"Spacebar\"");
         markup.ShouldContain("app-tile-meta");
         markup.ShouldContain("app-state active");
         markup.ShouldContain("app-state unsaved");
@@ -5124,6 +5126,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".app-tile-main");
         css.ShouldContain("grid-template-columns: 24px minmax(0, 1fr) auto;");
         css.ShouldContain(".app-tile-main:focus-visible");
+        css.ShouldContain("inset 0 0 0 1px color-mix(in srgb, var(--flux-accent) 40%, var(--flux-border))");
         css.ShouldContain(".app-tile-close");
         css.ShouldContain(".app-tile:hover .app-tile-close");
         css.ShouldContain(".app-state.unsaved");
@@ -5182,6 +5185,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".connection-state.pending");
         css.ShouldContain(".connection-state.faulted");
         css.ShouldContain(".connection-row:hover .connection-actions");
+        css.ShouldContain(".connection-row:focus-within");
+        css.ShouldContain("inset 2px 0 0 var(--mud-palette-info)");
         css.ShouldContain(".connection-actions ::deep .connection-action-button.connect");
         css.ShouldContain(".connection-actions ::deep .connection-remove-button");
         css.ShouldContain("@media (max-width: 760px)");
@@ -5240,6 +5245,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("min-height: 56px;");
         css.ShouldContain(".session-row.selected");
         css.ShouldContain(".session-row.recording");
+        css.ShouldContain(".session-row:focus-visible");
+        css.ShouldContain(".session-row.selected:focus-visible");
+        css.ShouldContain("inset 2px 0 0 var(--flux-accent)");
         css.ShouldContain(".session-state.selected");
         css.ShouldContain(".session-state.recording");
         css.ShouldContain(".session-search ::deep .mud-input-outlined-border");
