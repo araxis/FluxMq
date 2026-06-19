@@ -346,6 +346,7 @@ select {
 }
 
 .app-structure-popover .app-menu-command-item,
+.app-structure-popover .app-menu-artifact-item,
 .app-structure-popover .app-menu-empty,
 .app-structure-popover .app-menu-test-item {
     padding-left: 6px;
