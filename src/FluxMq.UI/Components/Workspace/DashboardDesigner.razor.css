@@ -1879,7 +1879,9 @@
 
     .dashboard-empty-panel {
         align-items: flex-start;
-        flex-direction: column;
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: stretch;
+        width: 100%;
     }
 
     .dashboard-empty-actions,
