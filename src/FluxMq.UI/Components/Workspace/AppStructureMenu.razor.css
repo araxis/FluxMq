@@ -163,6 +163,94 @@
     font-size: 12px;
 }
 
+.app-menu-state-row,
+.app-menu-command-row {
+    align-items: center;
+    display: grid;
+    gap: 7px;
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    min-height: 38px;
+    min-width: 0;
+    width: 100%;
+}
+
+.app-menu-state-row {
+    color: var(--mud-palette-text-secondary);
+}
+
+.app-menu-state-icon,
+.app-menu-command-icon {
+    align-items: center;
+    border-radius: 5px;
+    display: inline-flex;
+    height: 22px;
+    justify-content: center;
+    width: 22px;
+}
+
+.app-menu-state-icon {
+    background: var(--flux-surface);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 70%, transparent);
+    color: var(--mud-palette-text-secondary);
+}
+
+.app-menu-command-icon {
+    background: color-mix(in srgb, var(--flux-accent) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-accent) 30%, var(--flux-border));
+    color: var(--flux-accent);
+}
+
+.app-menu-state-copy,
+.app-menu-command-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    line-height: 1.15;
+    min-width: 0;
+}
+
+.app-menu-state-copy span,
+.app-menu-command-copy span {
+    color: var(--mud-palette-text-primary);
+    font-size: 12px;
+    font-weight: 720;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-menu-state-copy small,
+.app-menu-command-copy small {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10.5px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-menu-state-token {
+    border: 1px solid color-mix(in srgb, var(--flux-border) 70%, transparent);
+    border-radius: 999px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 9.5px;
+    font-weight: 800;
+    line-height: 1;
+    padding: 3px 5px;
+    text-transform: uppercase;
+}
+
+.app-menu-command-cue {
+    color: var(--mud-palette-text-secondary);
+    opacity: 0.72;
+}
+
+.app-menu-command-item:hover .app-menu-command-cue,
+.app-menu-command-item:focus-visible .app-menu-command-cue {
+    color: var(--flux-accent);
+    opacity: 1;
+}
+
 .app-menu-artifact-row {
     align-items: center;
     display: grid;

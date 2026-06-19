@@ -4933,6 +4933,21 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("StructureMenuLabel(\"Brokers\", conns.Count)");
         markup.ShouldContain("app-menu-artifact-row");
         markup.ShouldContain("app-menu-artifact-name");
+        markup.ShouldContain("app-menu-empty");
+        markup.ShouldContain("app-menu-state-row");
+        markup.ShouldContain("app-menu-state-icon");
+        markup.ShouldContain("app-menu-state-copy");
+        markup.ShouldContain("app-menu-state-token");
+        markup.ShouldContain("app-menu-command-item");
+        markup.ShouldContain("app-menu-command-row");
+        markup.ShouldContain("app-menu-command-icon");
+        markup.ShouldContain("app-menu-command-copy");
+        markup.ShouldContain("app-menu-command-cue");
+        markup.ShouldContain("Broker profile");
+        markup.ShouldContain("Processing flow");
+        markup.ShouldContain("Metric view");
+        markup.ShouldContain("Dashboard signal");
+        markup.ShouldContain("Scenario check");
         markup.ShouldContain("app-menu-test-row");
         markup.ShouldContain("Class=\"@TestArtifactItemClass(active, t, latestTestRun)\"");
         markup.ShouldContain("title=\"@TestArtifactTitle(t, latestTestRun)\"");
@@ -4955,12 +4970,22 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("No run");
         markup.ShouldContain("No history");
         markup.ShouldNotContain("app-menu-danger");
+        markup.ShouldNotContain("Class=\"app-menu-muted\">No");
         markup.ShouldNotContain("Delete @w");
         markup.ShouldNotContain("Delete @d");
         markup.ShouldNotContain("Delete @t");
 
         css.ShouldContain("height: 28px;");
         css.ShouldContain("max-width: 132px;");
+        css.ShouldContain(".app-menu-state-row,");
+        css.ShouldContain(".app-menu-command-row");
+        css.ShouldContain("grid-template-columns: 22px minmax(0, 1fr) auto;");
+        css.ShouldContain(".app-menu-state-icon,");
+        css.ShouldContain(".app-menu-command-icon");
+        css.ShouldContain(".app-menu-state-copy,");
+        css.ShouldContain(".app-menu-command-copy");
+        css.ShouldContain(".app-menu-state-token");
+        css.ShouldContain(".app-menu-command-cue");
         css.ShouldContain(".app-menu-artifact-row");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 24px;");
         css.ShouldContain(".app-menu-test-row");
@@ -4980,6 +5005,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".app-structure-menu ::deep .app-menu-danger");
 
         appCss.ShouldContain(".app-structure-popover .app-menu-test-item");
+        appCss.ShouldContain(".app-structure-popover .app-menu-command-item");
+        appCss.ShouldContain(".app-structure-popover .app-menu-empty");
         appCss.ShouldContain("padding-left: 6px;");
     }
 

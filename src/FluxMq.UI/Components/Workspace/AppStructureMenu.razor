@@ -36,7 +36,18 @@
             <ChildContent>
                 @if (conns.Count == 0)
                 {
-                    <MudMenuItem Disabled="true" Class="app-menu-muted">No connections</MudMenuItem>
+                    <MudMenuItem Disabled="true" Class="app-menu-empty">
+                        <div class="app-menu-state-row">
+                            <span class="app-menu-state-icon" aria-hidden="true">
+                                <MudIcon Icon="@Icons.Material.Filled.Hub" Size="Size.Small" />
+                            </span>
+                            <span class="app-menu-state-copy">
+                                <span>No connections</span>
+                                <small>Add a broker profile to connect.</small>
+                            </span>
+                            <span class="app-menu-state-token">Empty</span>
+                        </div>
+                    </MudMenuItem>
                 }
                 else
                 {
@@ -56,9 +67,21 @@
                 }
 
                 <MudDivider Class="app-menu-divider" />
-                <MudMenuItem Icon="@Icons.Material.Filled.Add"
-                             OnClick="@(() => AddConnectionAsync(active))"
-                             Class="app-menu-child app-menu-add">Add connection</MudMenuItem>
+                <MudMenuItem OnClick="@(() => AddConnectionAsync(active))"
+                             Class="app-menu-child app-menu-command-item app-menu-add">
+                    <div class="app-menu-command-row">
+                        <span class="app-menu-command-icon" aria-hidden="true">
+                            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                        </span>
+                        <span class="app-menu-command-copy">
+                            <span>Add connection</span>
+                            <small>Broker profile</small>
+                        </span>
+                        <MudIcon Icon="@Icons.Material.Filled.ChevronRight"
+                                 Size="Size.Small"
+                                 Class="app-menu-command-cue" />
+                    </div>
+                </MudMenuItem>
             </ChildContent>
         </MudMenu>
 
@@ -75,7 +98,18 @@
             <ChildContent>
                 @if (active.WorkflowNames.Count == 0)
                 {
-                    <MudMenuItem Disabled="true" Class="app-menu-muted">No pipelines</MudMenuItem>
+                    <MudMenuItem Disabled="true" Class="app-menu-empty">
+                        <div class="app-menu-state-row">
+                            <span class="app-menu-state-icon" aria-hidden="true">
+                                <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" />
+                            </span>
+                            <span class="app-menu-state-copy">
+                                <span>No pipelines</span>
+                                <small>Create a flow to process traffic.</small>
+                            </span>
+                            <span class="app-menu-state-token">Empty</span>
+                        </div>
+                    </MudMenuItem>
                 }
                 else
                 {
@@ -103,9 +137,21 @@
                 }
 
                 <MudDivider Class="app-menu-divider" />
-                <MudMenuItem Icon="@Icons.Material.Filled.Add"
-                             OnClick="@(() => AddPipelineAsync(active))"
-                             Class="app-menu-child app-menu-add">Add pipeline</MudMenuItem>
+                <MudMenuItem OnClick="@(() => AddPipelineAsync(active))"
+                             Class="app-menu-child app-menu-command-item app-menu-add">
+                    <div class="app-menu-command-row">
+                        <span class="app-menu-command-icon" aria-hidden="true">
+                            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                        </span>
+                        <span class="app-menu-command-copy">
+                            <span>Add pipeline</span>
+                            <small>Processing flow</small>
+                        </span>
+                        <MudIcon Icon="@Icons.Material.Filled.ChevronRight"
+                                 Size="Size.Small"
+                                 Class="app-menu-command-cue" />
+                    </div>
+                </MudMenuItem>
             </ChildContent>
         </MudMenu>
 
@@ -122,7 +168,18 @@
             <ChildContent>
                 @if (active.DashboardNames.Count == 0)
                 {
-                    <MudMenuItem Disabled="true" Class="app-menu-muted">No dashboards</MudMenuItem>
+                    <MudMenuItem Disabled="true" Class="app-menu-empty">
+                        <div class="app-menu-state-row">
+                            <span class="app-menu-state-icon" aria-hidden="true">
+                                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" />
+                            </span>
+                            <span class="app-menu-state-copy">
+                                <span>No dashboards</span>
+                                <small>Create a view for live metrics.</small>
+                            </span>
+                            <span class="app-menu-state-token">Empty</span>
+                        </div>
+                    </MudMenuItem>
                 }
                 else
                 {
@@ -150,9 +207,21 @@
                 }
 
                 <MudDivider Class="app-menu-divider" />
-                <MudMenuItem Icon="@Icons.Material.Filled.Add"
-                             OnClick="@(() => AddDashboardAsync(active))"
-                             Class="app-menu-child app-menu-add">Add dashboard</MudMenuItem>
+                <MudMenuItem OnClick="@(() => AddDashboardAsync(active))"
+                             Class="app-menu-child app-menu-command-item app-menu-add">
+                    <div class="app-menu-command-row">
+                        <span class="app-menu-command-icon" aria-hidden="true">
+                            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                        </span>
+                        <span class="app-menu-command-copy">
+                            <span>Add dashboard</span>
+                            <small>Metric view</small>
+                        </span>
+                        <MudIcon Icon="@Icons.Material.Filled.ChevronRight"
+                                 Size="Size.Small"
+                                 Class="app-menu-command-cue" />
+                    </div>
+                </MudMenuItem>
             </ChildContent>
         </MudMenu>
 
@@ -169,7 +238,18 @@
             <ChildContent>
                 @if (active.MetricNames.Count == 0)
                 {
-                    <MudMenuItem Disabled="true" Class="app-menu-muted">No metrics</MudMenuItem>
+                    <MudMenuItem Disabled="true" Class="app-menu-empty">
+                        <div class="app-menu-state-row">
+                            <span class="app-menu-state-icon" aria-hidden="true">
+                                <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" />
+                            </span>
+                            <span class="app-menu-state-copy">
+                                <span>No metrics</span>
+                                <small>Add a metric to power dashboards.</small>
+                            </span>
+                            <span class="app-menu-state-token">Empty</span>
+                        </div>
+                    </MudMenuItem>
                 }
                 else
                 {
@@ -181,9 +261,21 @@
                 }
 
                 <MudDivider Class="app-menu-divider" />
-                <MudMenuItem Icon="@Icons.Material.Filled.Add"
-                             OnClick="@(() => AddMetricAsync(active))"
-                             Class="app-menu-child app-menu-add">Add metric</MudMenuItem>
+                <MudMenuItem OnClick="@(() => AddMetricAsync(active))"
+                             Class="app-menu-child app-menu-command-item app-menu-add">
+                    <div class="app-menu-command-row">
+                        <span class="app-menu-command-icon" aria-hidden="true">
+                            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                        </span>
+                        <span class="app-menu-command-copy">
+                            <span>Add metric</span>
+                            <small>Dashboard signal</small>
+                        </span>
+                        <MudIcon Icon="@Icons.Material.Filled.ChevronRight"
+                                 Size="Size.Small"
+                                 Class="app-menu-command-cue" />
+                    </div>
+                </MudMenuItem>
             </ChildContent>
         </MudMenu>
 
@@ -200,7 +292,18 @@
             <ChildContent>
                 @if (active.TestNames.Count == 0)
                 {
-                    <MudMenuItem Disabled="true" Class="app-menu-muted">No tests</MudMenuItem>
+                    <MudMenuItem Disabled="true" Class="app-menu-empty">
+                        <div class="app-menu-state-row">
+                            <span class="app-menu-state-icon" aria-hidden="true">
+                                <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
+                            </span>
+                            <span class="app-menu-state-copy">
+                                <span>No tests</span>
+                                <small>Create a scenario to validate flows.</small>
+                            </span>
+                            <span class="app-menu-state-token">Empty</span>
+                        </div>
+                    </MudMenuItem>
                 }
                 else
                 {
@@ -242,9 +345,21 @@
                 }
 
                 <MudDivider Class="app-menu-divider" />
-                <MudMenuItem Icon="@Icons.Material.Filled.Add"
-                             OnClick="@(() => AddTestAsync(active))"
-                             Class="app-menu-child app-menu-add">Add test</MudMenuItem>
+                <MudMenuItem OnClick="@(() => AddTestAsync(active))"
+                             Class="app-menu-child app-menu-command-item app-menu-add">
+                    <div class="app-menu-command-row">
+                        <span class="app-menu-command-icon" aria-hidden="true">
+                            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                        </span>
+                        <span class="app-menu-command-copy">
+                            <span>Add test</span>
+                            <small>Scenario check</small>
+                        </span>
+                        <MudIcon Icon="@Icons.Material.Filled.ChevronRight"
+                                 Size="Size.Small"
+                                 Class="app-menu-command-cue" />
+                    </div>
+                </MudMenuItem>
             </ChildContent>
         </MudMenu>
         </div>
