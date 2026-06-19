@@ -4846,6 +4846,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(212px, 236px) minmax(0, 1fr);");
         css.ShouldContain(".workspace-artifact-shell-pipeline .workspace-artifact-tools");
         css.ShouldContain("padding: 6px;");
+        css.ShouldContain(".workspace-artifact-tools:focus-within");
+        css.ShouldContain(".workspace-artifact-region:focus-within,");
+        css.ShouldContain(".workspace-designer-region:focus-within");
+        css.ShouldContain("box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mud-palette-primary) 34%, var(--flux-border));");
     }
 
     [Fact]
