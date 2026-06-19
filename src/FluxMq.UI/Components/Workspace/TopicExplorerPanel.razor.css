@@ -188,8 +188,8 @@ h3 {
 
 .topic-message-table {
     border-bottom: 1px solid var(--flux-border);
-    flex: 0 0 min(36%, 304px);
-    min-height: 148px;
+    flex: 0 0 clamp(132px, 30%, 252px);
+    min-height: 132px;
     overflow: auto;
     padding: 6px 8px 0;
 }
@@ -263,22 +263,25 @@ h3 {
 
 .topic-empty-state,
 .topic-payload-empty {
-    align-items: center;
+    align-content: center;
+    align-items: start;
     color: var(--mud-palette-text-secondary);
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    justify-content: center;
-    min-height: 150px;
-    padding: 18px;
-    text-align: center;
+    display: grid;
+    gap: 2px 9px;
+    grid-template-columns: 28px minmax(0, 1fr);
+    justify-content: stretch;
+    min-height: 112px;
+    padding: 12px;
+    text-align: left;
 }
 
 .topic-empty-state strong,
 .topic-payload-empty strong {
     color: var(--mud-palette-text-primary);
     font-size: 13px;
+    font-weight: 750;
     line-height: 1.2;
+    min-width: 0;
 }
 
 .topic-empty-state span,
@@ -286,12 +289,16 @@ h3 {
     color: var(--flux-text-muted);
     font-size: 12px;
     line-height: 1.35;
-    max-width: 260px;
+    max-width: none;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
-.topic-empty-state .mud-icon-root,
-.topic-payload-empty .mud-icon-root {
+.topic-empty-state ::deep .mud-icon-root,
+.topic-payload-empty ::deep .mud-icon-root {
+    align-self: center;
     color: var(--flux-text-subtle);
+    grid-row: 1 / span 2;
 }
 
 .topic-payload-empty {
@@ -299,11 +306,11 @@ h3 {
     border: 1px solid var(--flux-border);
     border-radius: 5px;
     height: 100%;
-    min-height: 180px;
+    min-height: 128px;
 }
 
 .topic-empty-state-table {
-    min-height: 118px;
+    min-height: 92px;
 }
 
 @media (max-width: 1000px) {
@@ -331,6 +338,6 @@ h3 {
     }
 
     .topic-message-table {
-        flex-basis: min(34%, 280px);
+        flex-basis: clamp(128px, 28%, 224px);
     }
 }

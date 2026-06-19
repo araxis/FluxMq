@@ -2653,6 +2653,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Class=\"topic-message-grid\"");
         markup.ShouldContain("SelectedMessage is null");
         markup.ShouldContain("topic-payload-empty");
+        markup.ShouldContain("role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("No payload selected");
         markup.ShouldContain("SelectedMessage.Topic");
         markup.ShouldNotContain("Topic=\"@SelectedMessage?.Topic\"");
@@ -2664,9 +2665,15 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".topic-message-grid ::deep .mud-table-container");
         css.ShouldContain(".topic-message-grid ::deep th,");
         css.ShouldContain("min-height: 32px;");
+        css.ShouldContain("flex: 0 0 clamp(132px, 30%, 252px);");
+        css.ShouldContain("grid-template-columns: 28px minmax(0, 1fr);");
+        css.ShouldContain(".topic-empty-state ::deep .mud-icon-root");
+        css.ShouldContain("grid-row: 1 / span 2;");
+        css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".topic-payload-empty");
-        css.ShouldContain("min-height: 180px;");
-        css.ShouldContain("flex-basis: min(34%, 280px);");
+        css.ShouldContain("min-height: 128px;");
+        css.ShouldContain("min-height: 92px;");
+        css.ShouldContain("flex-basis: clamp(128px, 28%, 224px);");
     }
 
     [Fact]
