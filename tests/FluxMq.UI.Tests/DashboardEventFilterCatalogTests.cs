@@ -4878,6 +4878,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("PipelineSection");
         markup.ShouldContain("DashboardSection");
         markup.ShouldContain("TestSection");
+        markup.ShouldContain("SelectAppFromKeyboardAsync(args, a)");
+        markup.ShouldContain("ToggleSectionFromKeyboardAsync(args, app, section)");
+        markup.ShouldContain("SelectPipelineFromKeyboardAsync(args, a, w)");
+        markup.ShouldContain("SelectMetricsFromKeyboardAsync(args, a)");
+        markup.ShouldContain("SelectDashboardFromKeyboardAsync(args, a, d)");
+        markup.ShouldContain("SelectTestFromKeyboardAsync(args, a, t)");
+        markup.ShouldContain("aria-expanded=\"@AriaExpanded(isCollapsed)\"");
+        markup.ShouldContain("private static bool IsActivationKey");
+        markup.ShouldContain("private static Task RunFromKeyboardAsync");
         markup.ShouldContain("TestArtifactItemClass(isTestActive, latestTestRun)");
         markup.ShouldContain("LatestTestRun(a, t)");
         markup.ShouldContain("test-artifact-icon-frame");
@@ -4893,6 +4902,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("private static string TestRunIssueText");
 
         css.ShouldContain(".tree-empty-artifact-row");
+        css.ShouldContain(".app-row:focus-visible");
+        css.ShouldContain(".tree-section-header:focus-visible");
+        css.ShouldContain(".pipe-item:focus-visible");
+        css.ShouldContain(".artifact-item:focus-visible");
         css.ShouldContain("grid-template-columns: 16px minmax(0, 1fr) auto 18px;");
         css.ShouldContain(".tree-empty-artifact-copy");
         css.ShouldContain(".tree-empty-artifact-cues");

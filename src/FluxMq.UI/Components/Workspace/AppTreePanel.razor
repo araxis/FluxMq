@@ -29,7 +29,12 @@ else
             var testsCollapsed = IsSectionCollapsed(a, TestSection);
 
             <section class="app-card @(isActive ? "active" : null)" @key="a">
-                <div class="app-row" @onclick="@(() => Projects.SetActive(a))">
+                <div class="app-row"
+                     role="button"
+                     tabindex="0"
+                     aria-label="@($"Select app {a.Name}")"
+                     @onclick="@(() => SelectApp(a))"
+                     @onkeydown="@((KeyboardEventArgs args) => SelectAppFromKeyboardAsync(args, a))">
                     <MudIcon Icon="@(isActive ? Icons.Material.Filled.FolderOpen : Icons.Material.Filled.Folder)"
                              Size="Size.Small"
                              Class="app-row-icon" />
@@ -138,7 +143,11 @@ else
                                 a.ActiveArtifactKind == WorkspaceArtifactKind.Pipeline &&
                                 string.Equals(w, a.ActiveWorkflowName, StringComparison.Ordinal);
                             <div class="pipe-item @(isPipeActive ? "active" : null)"
-                                 @onclick="@(() => { Projects.SetActive(a); a.SetActiveWorkflow(w); })">
+                                 role="button"
+                                 tabindex="0"
+                                 aria-label="@($"Open pipeline {w}")"
+                                 @onclick="@(() => SelectPipeline(a, w))"
+                                 @onkeydown="@((KeyboardEventArgs args) => SelectPipelineFromKeyboardAsync(args, a, w))">
                                 <MudIcon Icon="@Icons.Material.Filled.Timeline"
                                          Size="Size.Small"
                                          Class="pipe-icon" />
@@ -167,7 +176,11 @@ else
                     else if (!metricsCollapsed)
                     {
                         <div class="artifact-item @(a == Projects.ActiveProject && a.ActiveArtifactKind == WorkspaceArtifactKind.Metrics ? "active" : null)"
-                             @onclick="@(() => { Projects.SetActive(a); a.SetActiveMetrics(); })">
+                             role="button"
+                             tabindex="0"
+                             aria-label="Open metric designer"
+                             @onclick="@(() => SelectMetrics(a))"
+                             @onkeydown="@((KeyboardEventArgs args) => SelectMetricsFromKeyboardAsync(args, a))">
                             <MudIcon Icon="@Icons.Material.Filled.QueryStats"
                                      Size="Size.Small"
                                      Class="artifact-icon dashboard" />
@@ -201,7 +214,11 @@ else
                                 a.ActiveArtifactKind == WorkspaceArtifactKind.Dashboard &&
                                 string.Equals(d, a.ActiveDashboardName, StringComparison.Ordinal);
                             <div class="artifact-item @(isDashboardActive ? "active" : null)"
-                                 @onclick="@(() => { Projects.SetActive(a); a.SetActiveDashboard(d); })">
+                                 role="button"
+                                 tabindex="0"
+                                 aria-label="@($"Open dashboard {d}")"
+                                 @onclick="@(() => SelectDashboard(a, d))"
+                                 @onkeydown="@((KeyboardEventArgs args) => SelectDashboardFromKeyboardAsync(args, a, d))">
                                 <MudIcon Icon="@Icons.Material.Filled.Dashboard"
                                          Size="Size.Small"
                                          Class="artifact-icon dashboard" />
@@ -256,9 +273,12 @@ else
                                 string.Equals(t, a.ActiveTestName, StringComparison.Ordinal);
                             var latestTestRun = LatestTestRun(a, t);
                             <div class="@TestArtifactItemClass(isTestActive, latestTestRun)"
+                                 role="button"
+                                 tabindex="0"
                                  title="@TestArtifactTitle(t, latestTestRun)"
                                  aria-label="@TestArtifactTitle(t, latestTestRun)"
-                                 @onclick="@(() => { Projects.SetActive(a); a.SetActiveTest(t); })">
+                                 @onclick="@(() => SelectTest(a, t))"
+                                 @onkeydown="@((KeyboardEventArgs args) => SelectTestFromKeyboardAsync(args, a, t))">
                                 <span class="test-artifact-icon-frame" aria-hidden="true">
                                     <MudIcon Icon="@Icons.Material.Filled.FactCheck"
                                              Size="Size.Small"
@@ -315,7 +335,13 @@ else
         string title,
         int count,
         string addTooltip,
-        Func<FlowWorkspaceService, Task> addAction) => @<div class="tree-section-header" @onclick="@(() => ToggleSection(app, section))">
+        Func<FlowWorkspaceService, Task> addAction) => @<div class="tree-section-header"
+            role="button"
+            tabindex="0"
+            aria-expanded="@AriaExpanded(isCollapsed)"
+            aria-label="@SectionHeaderLabel(title, count, isCollapsed)"
+            @onclick="@(() => ToggleSection(app, section))"
+            @onkeydown="@((KeyboardEventArgs args) => ToggleSectionFromKeyboardAsync(args, app, section))">
             <div class="tree-section-title">
                 <MudIcon Icon="@CollapseIcon(isCollapsed)"
                          Size="Size.Small"
@@ -368,6 +394,70 @@ else
 
     private static string CountLabel(int count, string singular)
         => count == 1 ? $"1 {singular}" : $"{count} {singular}s";
+
+    private static string AriaExpanded(bool isCollapsed)
+        => isCollapsed ? "false" : "true";
+
+    private static string SectionHeaderLabel(string title, int count, bool isCollapsed)
+        => $"{title} {count}. {(isCollapsed ? "Collapsed" : "Expanded")}.";
+
+    private static bool IsActivationKey(KeyboardEventArgs args)
+        => args.Key is "Enter" or " " or "Spacebar";
+
+    private static Task RunFromKeyboardAsync(KeyboardEventArgs args, Action action)
+    {
+        if (IsActivationKey(args))
+        {
+            action();
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private void SelectApp(FlowWorkspaceService app)
+        => Projects.SetActive(app);
+
+    private void SelectPipeline(FlowWorkspaceService app, string name)
+    {
+        Projects.SetActive(app);
+        app.SetActiveWorkflow(name);
+    }
+
+    private void SelectMetrics(FlowWorkspaceService app)
+    {
+        Projects.SetActive(app);
+        app.SetActiveMetrics();
+    }
+
+    private void SelectDashboard(FlowWorkspaceService app, string name)
+    {
+        Projects.SetActive(app);
+        app.SetActiveDashboard(name);
+    }
+
+    private void SelectTest(FlowWorkspaceService app, string name)
+    {
+        Projects.SetActive(app);
+        app.SetActiveTest(name);
+    }
+
+    private Task SelectAppFromKeyboardAsync(KeyboardEventArgs args, FlowWorkspaceService app)
+        => RunFromKeyboardAsync(args, () => SelectApp(app));
+
+    private Task ToggleSectionFromKeyboardAsync(KeyboardEventArgs args, FlowWorkspaceService app, string section)
+        => RunFromKeyboardAsync(args, () => ToggleSection(app, section));
+
+    private Task SelectPipelineFromKeyboardAsync(KeyboardEventArgs args, FlowWorkspaceService app, string name)
+        => RunFromKeyboardAsync(args, () => SelectPipeline(app, name));
+
+    private Task SelectMetricsFromKeyboardAsync(KeyboardEventArgs args, FlowWorkspaceService app)
+        => RunFromKeyboardAsync(args, () => SelectMetrics(app));
+
+    private Task SelectDashboardFromKeyboardAsync(KeyboardEventArgs args, FlowWorkspaceService app, string name)
+        => RunFromKeyboardAsync(args, () => SelectDashboard(app, name));
+
+    private Task SelectTestFromKeyboardAsync(KeyboardEventArgs args, FlowWorkspaceService app, string name)
+        => RunFromKeyboardAsync(args, () => SelectTest(app, name));
 
     private void SyncSubscriptions()
     {
