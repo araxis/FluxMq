@@ -1,7 +1,7 @@
 .scenario-step-editor-title {
     align-items: center;
     display: flex;
-    gap: 8px;
+    gap: 6px;
     min-width: 0;
 }
 
@@ -13,21 +13,38 @@
     color: var(--mud-palette-warning);
     display: flex;
     flex: 0 0 auto;
-    height: 28px;
+    height: 24px;
     justify-content: center;
-    width: 28px;
+    width: 24px;
 }
 
-.scenario-step-editor-title > div,
+.scenario-step-editor-title-copy,
 .scenario-step-editor {
     min-width: 0;
 }
 
+.scenario-step-editor-title-copy {
+    display: grid;
+    gap: 1px;
+}
+
+.scenario-step-editor-title-copy ::deep(.mud-typography-h6) {
+    font-size: 14px;
+    font-weight: 850;
+    line-height: 1.15;
+}
+
+.scenario-step-editor-title-copy ::deep(.mud-typography-caption) {
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
 .scenario-step-editor {
-    background: var(--flux-surface);
-    border: 1px solid var(--flux-border);
-    border-radius: 6px;
-    padding: 8px;
+    background: color-mix(in srgb, var(--flux-canvas) 24%, var(--flux-surface));
+    border: 1px solid var(--flux-border-soft);
+    border-radius: 5px;
+    padding: 6px;
 }
 
 .scenario-step-editor ::deep(.mud-input-control) {
@@ -40,15 +57,30 @@
 }
 
 .scenario-step-editor ::deep(.mud-input-outlined-border),
+.scenario-step-editor ::deep(.mud-input-root),
 .scenario-step-editor ::deep(.mud-toggle-group),
 .scenario-step-editor-checks {
     border-radius: 5px;
 }
 
+.scenario-step-editor ::deep(.mud-input-root) {
+    background: var(--flux-surface);
+    min-height: 34px;
+}
+
+.scenario-step-editor ::deep(.mud-input-control-helper-container) {
+    margin-top: 2px;
+}
+
 .scenario-step-editor-toggle {
-    background: var(--flux-surface-2);
-    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
-    padding: 7px;
+    align-items: center;
+    background: var(--flux-surface);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 58%, transparent);
+    display: grid;
+    gap: 6px;
+    grid-template-columns: minmax(82px, 0.34fr) minmax(0, 1fr);
+    min-height: 34px;
+    padding: 4px 6px;
 }
 
 .scenario-step-editor-toggle ::deep(.mud-typography-caption) {
@@ -59,22 +91,24 @@
 
 .scenario-step-editor ::deep(.mud-toggle-group) {
     flex-wrap: wrap;
+    min-width: 0;
 }
 
 .scenario-step-editor ::deep(.mud-toggle-item) {
-    min-height: 26px;
+    min-height: 24px;
 }
 
 .scenario-step-editor-checks {
-    background: var(--flux-surface-2);
-    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    background: var(--flux-surface);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 58%, transparent);
     flex-wrap: wrap;
-    padding: 3px 7px;
+    min-height: 34px;
+    padding: 1px 6px;
 }
 
 .scenario-step-editor-field-grid {
     display: grid;
-    gap: 8px;
+    gap: 6px;
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -92,7 +126,7 @@
 .scenario-step-editor-actions {
     align-items: center;
     display: flex;
-    gap: 10px;
+    gap: 8px;
     justify-content: space-between;
     width: 100%;
 }
@@ -100,13 +134,13 @@
 .scenario-step-editor-state {
     align-items: center;
     border: 1px solid color-mix(in srgb, var(--flux-border) 76%, transparent);
-    border-radius: 6px;
+    border-radius: 5px;
     display: inline-flex;
     flex: 1 1 auto;
-    gap: 6px;
-    min-height: 30px;
+    gap: 5px;
+    min-height: 28px;
     min-width: 0;
-    padding: 4px 8px;
+    padding: 3px 7px;
 }
 
 .scenario-step-editor-state span {
@@ -134,13 +168,13 @@
     align-items: center;
     display: flex;
     flex: 0 0 auto;
-    gap: 6px;
+    gap: 5px;
 }
 
 .scenario-step-editor-actions ::deep(.mud-button-root),
 .scenario-step-editor-action-buttons ::deep(.mud-button-root) {
-    border-radius: 6px;
-    min-height: 30px;
+    border-radius: 5px;
+    min-height: 28px;
     text-transform: none;
 }
 
@@ -156,6 +190,10 @@
     .scenario-step-editor-checks {
         flex-direction: column;
         gap: 0;
+    }
+
+    .scenario-step-editor-toggle {
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .scenario-step-editor-field-grid {
