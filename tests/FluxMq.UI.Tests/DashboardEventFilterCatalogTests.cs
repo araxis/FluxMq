@@ -3637,6 +3637,7 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "DashboardDesigner.razor.css"));
+        var normalizedCss = css.Replace("\r\n", "\n", StringComparison.Ordinal);
         var inspectorCss = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -3669,8 +3670,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("max-width: min(100%, 560px);");
         css.ShouldContain("--dashboard-grid-row-min: 86px;");
         css.ShouldContain("@media (max-width: 420px)");
-        css.ShouldContain(".dashboard-empty-panel {\n        align-items: flex-start;\n        grid-template-columns: minmax(0, 1fr);\n        justify-items: stretch;\n        width: 100%;\n    }");
-        css.ShouldNotContain(".dashboard-empty-panel {\n        align-items: flex-start;\n        flex-direction: column;");
+        normalizedCss.ShouldContain(".dashboard-empty-panel {\n        align-items: flex-start;\n        grid-template-columns: minmax(0, 1fr);\n        justify-items: stretch;\n        width: 100%;\n    }");
+        normalizedCss.ShouldNotContain(".dashboard-empty-panel {\n        align-items: flex-start;\n        flex-direction: column;");
         inspectorCss.ShouldContain("max-height: clamp(188px, 34vh, 280px);");
         inspectorCss.ShouldContain("min-height: 164px;");
         inspectorRazor.ShouldNotContain("Use the grid to place widgets");
@@ -4681,7 +4682,11 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("min-width: 238px;");
         css.ShouldContain("min-height: 22px;");
         css.ShouldContain(".flow-canvas-empty-icon");
-        css.ShouldContain("max-width: min(100%, 360px);");
+        css.ShouldContain("max-width: min(100%, 420px);");
+        css.ShouldContain("grid-template-columns: 32px minmax(0, 1fr);");
+        css.ShouldContain("grid-row: 1 / span 3;");
+        css.ShouldContain("max-width: min(100%, 340px);");
+        css.ShouldContain("grid-row: auto;");
         css.ShouldContain("@media (max-width: 720px)");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
     }
