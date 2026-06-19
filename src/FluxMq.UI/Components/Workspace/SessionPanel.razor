@@ -6,7 +6,7 @@
     @if (Live.IsRecording)
     {
         <div class="session-recording-strip" role="status" aria-live="polite">
-            <span class="session-recording-pulse" aria-hidden="true"></span>
+            <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Size="Size.Small" />
             <div class="session-recording-copy">
                 <strong>@RecordingName</strong>
                 <span>@RecordedMessageLabel</span>
@@ -114,15 +114,15 @@
                                     @onclick="@(() => SelectSessionAsync(session))">
                                 <span class="@SessionDotClass(session)" aria-hidden="true"></span>
                                 <span class="session-row-main">
-                                    <span class="session-row-name">@session.Name</span>
+                                    <span class="session-row-name-line">
+                                        <span class="session-row-name">@session.Name</span>
+                                        <span class="@SessionStateClass(session)">@SessionStateLabel(session)</span>
+                                    </span>
                                     <span class="session-row-meta">
                                         <span>@ProfileLabel(session)</span>
                                         <span>@DurationLabel(session)</span>
+                                        <span>@StartedLabel(session)</span>
                                     </span>
-                                </span>
-                                <span class="session-row-side">
-                                    <span class="@SessionStateClass(session)">@SessionStateLabel(session)</span>
-                                    <span class="session-row-time">@StartedLabel(session)</span>
                                 </span>
                             </button>
                         </div>
@@ -145,8 +145,9 @@
     private string SessionCountLabel => AllSessions.Count switch
     {
         0 => "No recordings",
-        1 => HasSearch ? "1 recording total" : "1 recording",
-        _ => HasSearch ? $"{AllSessions.Count} recordings total" : $"{AllSessions.Count} recordings"
+        _ when HasSearch => $"{FilteredSessionCount} of {AllSessions.Count} shown",
+        1 => "1 recording",
+        _ => $"{AllSessions.Count} recordings"
     };
 
     private string RecordingName => string.IsNullOrWhiteSpace(Live.ActiveRecordingSession?.Name)
@@ -168,6 +169,8 @@
     private string EmptyText => HasSearch
         ? "Clear the search or try another project, profile, or session name."
         : "Start a recording to capture broker traffic for replay and inspection.";
+
+    private int FilteredSessionCount => AllSessions.Count(SessionMatchesSearch);
 
     protected override void OnInitialized() => Live.Changed += OnChanged;
 

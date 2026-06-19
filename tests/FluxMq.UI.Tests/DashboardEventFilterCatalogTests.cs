@@ -5753,6 +5753,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("sessions-title-icon");
         markup.ShouldContain("<strong>Recordings</strong>");
         markup.ShouldContain("@SessionCountLabel");
+        markup.ShouldContain("FilteredSessionCount");
         markup.ShouldContain("role=\"search\"");
         markup.ShouldContain("aria-label=\"Search recorded sessions\"");
         markup.ShouldContain("Search sessions");
@@ -5768,9 +5769,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("SessionDotClass(session)");
         markup.ShouldContain("SessionStateClass(session)");
         markup.ShouldContain("SessionRowLabel(session)");
+        markup.ShouldContain("session-row-name-line");
         markup.ShouldContain("DurationLabel(session)");
         markup.ShouldContain("StartedLabel(session)");
         markup.ShouldContain("SelectSessionAsync(session)");
+        markup.ShouldNotContain("session-recording-pulse");
+        markup.ShouldNotContain("session-row-side");
+        markup.ShouldNotContain("session-row-time");
         markup.ShouldNotContain("MudTreeView");
         markup.ShouldNotContain("MudTreeViewItem");
         markup.ShouldNotContain("px-2");
@@ -5781,16 +5786,17 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".sessions-list");
         css.ShouldContain(".session-project-group");
         css.ShouldContain(".session-row");
-        css.ShouldContain("grid-template-columns: 7px minmax(0, 1fr) 68px;");
-        css.ShouldContain("min-height: 48px;");
+        css.ShouldContain("grid-template-columns: 7px minmax(0, 1fr);");
+        css.ShouldContain("min-height: 44px;");
         css.ShouldContain(".session-row.selected");
         css.ShouldContain(".session-row.recording");
         css.ShouldContain(".session-row:focus-visible");
         css.ShouldContain(".session-row.selected:focus-visible");
         css.ShouldContain("inset 2px 0 0 var(--flux-accent)");
         css.ShouldContain("flex-wrap: nowrap;");
+        css.ShouldContain(".session-row-name-line");
         css.ShouldContain(".session-row-meta span:first-child");
-        css.ShouldContain(".session-row-meta span:last-child");
+        css.ShouldContain(".session-row-meta span:not(:last-child)::after");
         css.ShouldContain("max-width: 100%;");
         css.ShouldContain("text-overflow: ellipsis;");
         css.ShouldContain("grid-template-columns: 28px minmax(0, 1fr);");
@@ -5801,6 +5807,11 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".session-state.recording");
         css.ShouldContain(".session-search ::deep .mud-input-outlined-border");
         css.ShouldContain("@media (max-width: 760px)");
+        css.ShouldNotContain(".session-recording-pulse");
+        css.ShouldNotContain(".session-row-side");
+        css.ShouldNotContain(".session-row-time");
+        css.ShouldNotContain("border-radius: 999px;");
+        css.ShouldNotContain("box-shadow: 0 0 0");
     }
 
     private static FlowEvent Event(
