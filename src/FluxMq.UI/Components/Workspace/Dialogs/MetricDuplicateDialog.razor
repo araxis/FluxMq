@@ -1,12 +1,18 @@
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true })">
     <TitleContent>
         <div class="metric-duplicate-title">
-            <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" Color="Color.Primary" />
-            <span>Duplicate metric</span>
+            <span class="metric-duplicate-title-icon">
+                <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" />
+            </span>
+            <span class="metric-duplicate-title-copy">
+                <strong>Duplicate metric</strong>
+                <small>Copy type and parameters</small>
+            </span>
+            <span class="@DuplicateStatusClass" role="status" aria-live="polite">@DuplicateStatusText</span>
         </div>
     </TitleContent>
     <DialogContent>
-        <div class="metric-duplicate-dialog">
+        <div class="metric-duplicate-dialog" role="form" aria-label="Duplicate metric">
             <div class="metric-duplicate-source">
                 <span>Source</span>
                 <code>@SourceMetricId</code>
@@ -18,6 +24,8 @@
                        class="@DisplayNameInputClass"
                        aria-label="Duplicate display name"
                        aria-invalid="@(!CanDuplicate)"
+                       autocomplete="off"
+                       spellcheck="false"
                        @oninput="@OnDisplayNameInput"
                        @onkeydown="@OnKeyDown" />
             </label>
@@ -45,12 +53,15 @@
     </DialogContent>
     <DialogActions>
         <div class="metric-duplicate-actions">
-            <MudButton OnClick="@Cancel" Size="Size.Small">Cancel</MudButton>
+            <MudButton OnClick="@Cancel"
+                       Size="Size.Small"
+                       aria-label="Cancel metric duplicate">Cancel</MudButton>
             <MudButton Color="Color.Primary"
                        Variant="Variant.Filled"
                        Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.ContentCopy"
                        Disabled="@(!CanDuplicate)"
+                       aria-label="Duplicate metric"
                        OnClick="@Submit">Duplicate</MudButton>
         </div>
     </DialogActions>
@@ -75,6 +86,12 @@
     private bool CanDuplicate => !string.IsNullOrWhiteSpace(DisplayName);
 
     private string DisplayNameInputClass => CanDuplicate ? string.Empty : "invalid";
+
+    private string DuplicateStatusClass => CanDuplicate
+        ? "metric-duplicate-status ready"
+        : "metric-duplicate-status invalid";
+
+    private string DuplicateStatusText => CanDuplicate ? "Ready" : "Needs attention";
 
     protected override void OnParametersSet()
     {

@@ -1,13 +1,19 @@
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
     <TitleContent>
         <div class="metric-delete-title">
-            <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" Color="Color.Error" />
-            <span>Delete metric</span>
+            <span class="metric-delete-title-icon">
+                <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" />
+            </span>
+            <span class="metric-delete-title-copy">
+                <strong>Delete metric</strong>
+                <small>Remove the metric resource</small>
+            </span>
+            <span class="metric-delete-status" role="status" aria-live="polite">@DeleteStatusText</span>
         </div>
     </TitleContent>
     <DialogContent>
         <div class="metric-delete-dialog">
-            <div class="metric-delete-warning">
+            <div class="metric-delete-warning" role="alert">
                 <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Size="Size.Small" />
                 <div>
                     <strong>Delete @MetricId?</strong>
@@ -61,11 +67,14 @@
     </DialogContent>
     <DialogActions>
         <div class="metric-delete-actions">
-            <MudButton OnClick="@Cancel" Size="Size.Small">Cancel</MudButton>
+            <MudButton OnClick="@Cancel"
+                       Size="Size.Small"
+                       aria-label="Cancel metric delete">Cancel</MudButton>
             <MudButton Color="Color.Error"
                        Variant="Variant.Filled"
                        Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.DeleteOutline"
+                       aria-label="Delete metric"
                        OnClick="@Confirm">Delete metric</MudButton>
         </div>
     </DialogActions>
@@ -80,6 +89,9 @@
 
     private string ReferenceCountText =>
         References.Count == 1 ? "1 binding" : $"{References.Count} bindings";
+
+    private string DeleteStatusText =>
+        References.Count == 0 ? "No bindings" : ReferenceCountText;
 
     private static string ReferenceCellLabel(MetricReferenceSummary reference)
         => !string.IsNullOrWhiteSpace(reference.CellLabel)

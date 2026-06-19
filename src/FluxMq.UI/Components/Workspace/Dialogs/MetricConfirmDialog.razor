@@ -1,12 +1,18 @@
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true })">
     <TitleContent>
         <div class="metric-confirm-title">
-            <MudIcon Icon="@TitleIcon" Size="Size.Small" Color="@ActionColor" />
-            <span>@Title</span>
+            <span class="metric-confirm-title-icon @ToneClass">
+                <MudIcon Icon="@TitleIcon" Size="Size.Small" />
+            </span>
+            <span class="metric-confirm-title-copy">
+                <strong>@Title</strong>
+                <small>@ToneDescription</small>
+            </span>
+            <span class="metric-confirm-status @ToneClass" role="status" aria-live="polite">@ToneText</span>
         </div>
     </TitleContent>
     <DialogContent>
-        <div class="@DialogClass">
+        <div class="@DialogClass" role="alert">
             <MudIcon Icon="@BodyIcon" Size="Size.Small" />
             <div>
                 <strong>@Message</strong>
@@ -19,11 +25,14 @@
     </DialogContent>
     <DialogActions>
         <div class="metric-confirm-actions">
-            <MudButton OnClick="@Cancel" Size="Size.Small">Cancel</MudButton>
+            <MudButton OnClick="@Cancel"
+                       Size="Size.Small"
+                       aria-label="Cancel confirmation">Cancel</MudButton>
             <MudButton Color="@ActionColor"
                        Variant="Variant.Filled"
                        Size="Size.Small"
                        StartIcon="@ActionIcon"
+                       aria-label="@ConfirmText"
                        OnClick="@Confirm">@ConfirmText</MudButton>
         </div>
     </DialogActions>
@@ -57,6 +66,14 @@
     private string BodyIcon => IsDanger
         ? Icons.Material.Filled.ReportProblem
         : Icons.Material.Filled.Info;
+
+    private string ToneClass => IsDanger ? "danger" : "warning";
+
+    private string ToneText => IsDanger ? "Destructive" : "Confirm";
+
+    private string ToneDescription => IsDanger
+        ? "This action cannot be undone"
+        : "Review before continuing";
 
     private string DialogClass => IsDanger
         ? "metric-confirm-dialog danger"

@@ -1,17 +1,91 @@
 .metric-rename-title {
     align-items: center;
     color: var(--mud-palette-text-primary);
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 26px minmax(0, 1fr) auto;
+    min-height: 30px;
+    min-width: 0;
+}
+
+.metric-rename-title-icon {
+    align-items: center;
+    background: color-mix(in srgb, var(--flux-accent) 9%, var(--flux-surface-2));
+    border: 1px solid color-mix(in srgb, var(--flux-accent) 30%, var(--flux-border-soft));
+    border-radius: 6px;
+    color: var(--flux-accent);
+    display: inline-flex;
+    height: 24px;
+    justify-content: center;
+    width: 24px;
+}
+
+.metric-rename-title-icon ::deep .mud-icon-root {
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
+}
+
+.metric-rename-title-copy {
     display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.metric-rename-title-copy strong,
+.metric-rename-title-copy small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.metric-rename-title-copy strong {
+    color: var(--mud-palette-text-primary);
     font-size: 12.5px;
     font-weight: 780;
-    gap: 6px;
-    min-width: 0;
+    line-height: 1.1;
+}
+
+.metric-rename-title-copy small {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10.5px;
+    font-weight: 650;
+    line-height: 1.1;
+}
+
+.metric-rename-status {
+    align-items: center;
+    background: var(--flux-surface-2);
+    border: 1px solid var(--flux-border-soft);
+    border-radius: 6px;
+    color: var(--mud-palette-text-secondary);
+    display: inline-flex;
+    font-size: 10px;
+    font-weight: 760;
+    height: 22px;
+    justify-content: center;
+    line-height: 1;
+    padding: 0 8px;
+    white-space: nowrap;
+}
+
+.metric-rename-status.ready {
+    background: color-mix(in srgb, var(--mud-palette-success) 7%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--mud-palette-success) 24%, var(--flux-border-soft));
+    color: var(--mud-palette-success);
+}
+
+.metric-rename-status.invalid {
+    background: color-mix(in srgb, var(--mud-palette-error) 7%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--mud-palette-error) 24%, var(--flux-border-soft));
+    color: var(--mud-palette-error);
 }
 
 .metric-rename-dialog {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     min-width: 0;
 }
 
@@ -24,13 +98,13 @@
 
 .metric-rename-current {
     align-items: center;
-    background: transparent;
-    border: 1px dashed color-mix(in srgb, var(--flux-border) 78%, transparent);
+    background: color-mix(in srgb, var(--flux-surface-2) 48%, transparent);
+    border: 1px solid var(--flux-border-soft);
     display: grid;
-    gap: 6px;
+    gap: 8px;
     grid-template-columns: 78px minmax(0, 1fr);
     min-height: 30px;
-    padding: 4px 7px;
+    padding: 5px 8px;
 }
 
 .metric-rename-current span,
@@ -53,20 +127,20 @@
 .metric-rename-field {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
     min-width: 0;
 }
 
 .metric-rename-field input {
     appearance: none;
     background: var(--flux-surface-2);
-    border: 1px solid var(--flux-border);
-    border-radius: 5px;
+    border: 1px solid var(--flux-border-soft);
+    border-radius: 6px;
     color: var(--mud-palette-text-primary);
     font: inherit;
     font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
     font-size: 12px;
-    height: 29px;
+    height: 30px;
     min-width: 0;
     outline: 0;
     padding: 0 9px;
@@ -78,7 +152,7 @@
 }
 
 .metric-rename-field input.invalid {
-    border-color: color-mix(in srgb, var(--mud-palette-error) 48%, var(--flux-border));
+    border-color: color-mix(in srgb, var(--mud-palette-error) 48%, var(--flux-border-soft));
 }
 
 .metric-rename-note,
@@ -86,22 +160,22 @@
     align-items: center;
     display: grid;
     font-size: 11px;
-    gap: 6px;
+    gap: 7px;
     grid-template-columns: 18px minmax(0, 1fr);
     line-height: 1.25;
-    min-height: 27px;
-    padding: 4px 7px;
+    min-height: 28px;
+    padding: 5px 8px;
 }
 
 .metric-rename-note {
-    background: transparent;
-    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    background: color-mix(in srgb, var(--flux-surface-2) 42%, transparent);
+    border: 1px solid var(--flux-border-soft);
     color: var(--mud-palette-text-secondary);
 }
 
 .metric-rename-validation {
     background: color-mix(in srgb, var(--mud-palette-error) 5%, var(--flux-surface));
-    border: 1px solid color-mix(in srgb, var(--mud-palette-error) 26%, var(--flux-border));
+    border: 1px solid color-mix(in srgb, var(--mud-palette-error) 26%, var(--flux-border-soft));
     color: var(--mud-palette-error);
 }
 
@@ -113,19 +187,29 @@
 .metric-rename-actions {
     align-items: center;
     display: flex;
-    gap: 8px;
+    gap: 6px;
     justify-content: flex-end;
     width: 100%;
 }
 
 .metric-rename-actions ::deep .mud-button-root {
-    min-height: 30px;
+    border-radius: 6px;
+    min-height: 28px;
 }
 
 @media (max-width: 520px) {
+    .metric-rename-title {
+        grid-template-columns: 26px minmax(0, 1fr);
+    }
+
+    .metric-rename-status {
+        grid-column: 2;
+        justify-self: start;
+    }
+
     .metric-rename-current {
-        grid-template-columns: minmax(0, 1fr);
         gap: 3px;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .metric-rename-actions {

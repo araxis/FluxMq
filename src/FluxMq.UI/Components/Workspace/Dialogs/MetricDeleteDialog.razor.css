@@ -1,31 +1,93 @@
 .metric-delete-title {
     align-items: center;
     color: var(--mud-palette-text-primary);
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 26px minmax(0, 1fr) auto;
+    min-height: 30px;
+    min-width: 0;
+}
+
+.metric-delete-title-icon {
+    align-items: center;
+    background: color-mix(in srgb, var(--mud-palette-error) 8%, var(--flux-surface-2));
+    border: 1px solid color-mix(in srgb, var(--mud-palette-error) 30%, var(--flux-border-soft));
+    border-radius: 6px;
+    color: var(--mud-palette-error);
+    display: inline-flex;
+    height: 24px;
+    justify-content: center;
+    width: 24px;
+}
+
+.metric-delete-title-icon ::deep .mud-icon-root {
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
+}
+
+.metric-delete-title-copy {
     display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.metric-delete-title-copy strong,
+.metric-delete-title-copy small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.metric-delete-title-copy strong {
+    color: var(--mud-palette-text-primary);
     font-size: 12.5px;
     font-weight: 780;
-    gap: 6px;
-    min-width: 0;
+    line-height: 1.1;
+}
+
+.metric-delete-title-copy small {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10.5px;
+    font-weight: 650;
+    line-height: 1.1;
+}
+
+.metric-delete-status {
+    align-items: center;
+    background: color-mix(in srgb, var(--mud-palette-error) 7%, var(--flux-surface-2));
+    border: 1px solid color-mix(in srgb, var(--mud-palette-error) 24%, var(--flux-border-soft));
+    border-radius: 6px;
+    color: var(--mud-palette-error);
+    display: inline-flex;
+    font-size: 10px;
+    font-weight: 760;
+    height: 22px;
+    justify-content: center;
+    line-height: 1;
+    padding: 0 8px;
+    white-space: nowrap;
 }
 
 .metric-delete-dialog {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     min-width: 0;
 }
 
 .metric-delete-warning {
     align-items: flex-start;
     background: color-mix(in srgb, var(--mud-palette-error) 5%, var(--flux-surface));
-    border: 1px solid color-mix(in srgb, var(--mud-palette-error) 24%, var(--flux-border));
-    border-radius: 5px;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-error) 24%, var(--flux-border-soft));
+    border-radius: 6px;
     color: var(--mud-palette-error);
     display: grid;
-    gap: 6px;
+    gap: 7px;
     grid-template-columns: 18px minmax(0, 1fr);
     min-width: 0;
-    padding: 6px 7px;
+    padding: 8px 9px;
 }
 
 .metric-delete-warning strong,
@@ -55,14 +117,14 @@
 
 .metric-delete-id {
     align-items: center;
-    background: transparent;
-    border: 1px dashed color-mix(in srgb, var(--flux-border) 78%, transparent);
-    border-radius: 5px;
+    background: color-mix(in srgb, var(--flux-surface-2) 48%, transparent);
+    border: 1px solid var(--flux-border-soft);
+    border-radius: 6px;
     display: grid;
-    gap: 6px;
+    gap: 8px;
     grid-template-columns: 74px minmax(0, 1fr);
     min-height: 30px;
-    padding: 4px 7px;
+    padding: 5px 8px;
 }
 
 .metric-delete-id span,
@@ -89,17 +151,17 @@
 }
 
 .metric-delete-references {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border) 66%, transparent);
+    border-top: 1px solid var(--flux-border-soft);
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    padding-top: 6px;
+    gap: 6px;
+    padding-top: 8px;
 }
 
 .metric-delete-section-heading {
     align-items: center;
     display: flex;
-    gap: 6px;
+    gap: 8px;
     justify-content: space-between;
     min-width: 0;
 }
@@ -113,43 +175,43 @@
 
 .metric-delete-empty {
     align-items: center;
-    background: transparent;
-    border: 1px dashed color-mix(in srgb, var(--flux-border) 70%, transparent);
-    border-radius: 5px;
+    background: color-mix(in srgb, var(--flux-surface-2) 42%, transparent);
+    border: 1px dashed var(--flux-border-soft);
+    border-radius: 6px;
     display: grid;
     font-size: 10.5px;
-    gap: 6px;
+    gap: 7px;
     grid-template-columns: 18px minmax(0, 1fr);
-    min-height: 27px;
-    padding: 4px 7px;
+    min-height: 28px;
+    padding: 5px 8px;
 }
 
 .metric-delete-reference-list {
     display: flex;
     flex-direction: column;
     gap: 0;
-    max-height: min(152px, 36vh);
+    max-height: min(148px, 34vh);
     min-width: 0;
     overflow: auto;
 }
 
 .metric-delete-reference-row {
     align-items: center;
-    border-radius: 4px;
+    border-radius: 5px;
     display: grid;
     font-size: 10.5px;
     gap: 7px;
     grid-template-columns: 16px minmax(0, 1fr) auto auto;
-    min-height: 29px;
-    padding: 4px 3px;
+    min-height: 30px;
+    padding: 4px 5px;
 }
 
 .metric-delete-reference-row + .metric-delete-reference-row {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border) 54%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 76%, transparent);
 }
 
 .metric-delete-reference-row:hover {
-    background: color-mix(in srgb, var(--flux-surface-2) 42%, transparent);
+    background: color-mix(in srgb, var(--flux-surface-2) 46%, transparent);
 }
 
 .metric-delete-reference-row em {
@@ -200,19 +262,29 @@
 .metric-delete-actions {
     align-items: center;
     display: flex;
-    gap: 8px;
+    gap: 6px;
     justify-content: flex-end;
     width: 100%;
 }
 
 .metric-delete-actions ::deep .mud-button-root {
-    min-height: 30px;
+    border-radius: 6px;
+    min-height: 28px;
 }
 
 @media (max-width: 520px) {
+    .metric-delete-title {
+        grid-template-columns: 26px minmax(0, 1fr);
+    }
+
+    .metric-delete-status {
+        grid-column: 2;
+        justify-self: start;
+    }
+
     .metric-delete-id {
-        grid-template-columns: minmax(0, 1fr);
         gap: 3px;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .metric-delete-reference-row {
