@@ -126,25 +126,6 @@
     white-space: nowrap;
 }
 
-.app-menu-broker {
-    display: grid;
-    gap: 2px;
-    min-width: 0;
-}
-
-.app-menu-broker span:first-child {
-    color: var(--mud-palette-text-primary);
-    font-size: 12px;
-    font-weight: 720;
-    line-height: 1.2;
-}
-
-.app-menu-broker span:last-child {
-    color: var(--mud-palette-text-secondary);
-    font-size: 11px;
-    line-height: 1.2;
-}
-
 .app-menu-child {
     min-width: 0;
 }
@@ -249,6 +230,107 @@
 .app-menu-command-item:focus-visible .app-menu-command-cue {
     color: var(--flux-accent);
     opacity: 1;
+}
+
+.app-menu-broker-row {
+    align-items: center;
+    display: grid;
+    gap: 7px;
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    min-height: 40px;
+    min-width: 0;
+    padding-right: 2px;
+    width: 100%;
+}
+
+.app-menu-broker-icon-frame {
+    align-items: center;
+    background: var(--flux-surface);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    display: inline-flex;
+    height: 22px;
+    justify-content: center;
+    width: 22px;
+}
+
+.app-menu-broker-row.live .app-menu-broker-icon-frame {
+    background: color-mix(in srgb, var(--flux-accent) 9%, transparent);
+    border-color: color-mix(in srgb, var(--flux-accent) 30%, var(--flux-border));
+    color: var(--flux-accent);
+}
+
+.app-menu-broker-row.faulted .app-menu-broker-icon-frame {
+    background: color-mix(in srgb, var(--mud-palette-warning) 9%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-warning) 32%, var(--flux-border));
+    color: var(--mud-palette-warning);
+}
+
+.app-menu-broker-row.pending .app-menu-broker-icon-frame {
+    background: color-mix(in srgb, var(--mud-palette-info) 9%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-info) 30%, var(--flux-border));
+    color: var(--mud-palette-info);
+}
+
+.app-menu-broker-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    line-height: 1.15;
+    min-width: 0;
+}
+
+.app-menu-broker-copy span {
+    color: var(--mud-palette-text-primary);
+    font-size: 12px;
+    font-weight: 720;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-menu-broker-copy small {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10.5px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-menu-broker-pill {
+    align-items: center;
+    background: var(--flux-surface);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-radius: 999px;
+    color: var(--mud-palette-text-secondary);
+    display: inline-flex;
+    font-size: 9.5px;
+    font-weight: 800;
+    height: 20px;
+    line-height: 1;
+    padding: 0 6px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.app-menu-broker-pill.live {
+    background: color-mix(in srgb, var(--flux-accent) 10%, transparent);
+    border-color: color-mix(in srgb, var(--flux-accent) 34%, var(--flux-border));
+    color: var(--flux-accent);
+}
+
+.app-menu-broker-pill.faulted {
+    background: color-mix(in srgb, var(--mud-palette-warning) 10%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-warning) 40%, var(--flux-border));
+    color: var(--mud-palette-warning);
+}
+
+.app-menu-broker-pill.pending {
+    background: color-mix(in srgb, var(--mud-palette-info) 10%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-info) 34%, var(--flux-border));
+    color: var(--mud-palette-info);
 }
 
 .app-menu-artifact-row {

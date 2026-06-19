@@ -347,6 +347,7 @@ select {
 
 .app-structure-popover .app-menu-command-item,
 .app-structure-popover .app-menu-artifact-item,
+.app-structure-popover .app-menu-broker-item,
 .app-structure-popover .app-menu-empty,
 .app-structure-popover .app-menu-test-item {
     padding-left: 6px;
@@ -361,28 +362,14 @@ select {
     opacity: 0.55;
 }
 
-.app-structure-popover .broker-live .mud-list-item-icon {
-    color: var(--mud-palette-error);
-}
-
-.app-structure-popover .broker-faulted .mud-list-item-icon {
-    color: var(--mud-palette-warning);
-}
-
-.app-structure-popover .broker-pending .mud-list-item-icon {
-    color: var(--mud-palette-info);
-}
-
-.app-structure-popover .app-menu-app,
-.app-structure-popover .app-menu-broker {
+.app-structure-popover .app-menu-app {
     display: flex;
     flex-direction: column;
     line-height: 1.25;
     min-width: 0;
 }
 
-.app-structure-popover .app-menu-app span:first-child,
-.app-structure-popover .app-menu-broker span:first-child {
+.app-structure-popover .app-menu-app span:first-child {
     color: var(--mud-palette-text-primary);
     font-weight: 650;
     overflow: hidden;
@@ -390,8 +377,7 @@ select {
     white-space: nowrap;
 }
 
-.app-structure-popover .app-menu-app span:last-child,
-.app-structure-popover .app-menu-broker span:last-child {
+.app-structure-popover .app-menu-app span:last-child {
     color: var(--mud-palette-text-secondary);
     font-size: 11px;
     overflow: hidden;

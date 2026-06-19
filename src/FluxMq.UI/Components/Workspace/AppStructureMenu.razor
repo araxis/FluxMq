@@ -54,13 +54,22 @@
                     @foreach (var conn in conns)
                     {
                         var c = conn;
-                        <MudMenuItem Icon="@BrokerActionIcon(c)"
-                                     Disabled="@BrokerActionDisabled(c)"
+                        <MudMenuItem Disabled="@BrokerActionDisabled(c)"
                                      OnClick="@(() => ToggleBrokerAsync(c))"
-                                     Class="@BrokerItemClass(c)">
-                            <div class="app-menu-broker">
-                                <span>@BrokerActionLabel(c)</span>
-                                <span>@c.ResourceName - @c.Profile.Host:@c.Profile.Port</span>
+                                     Class="@BrokerItemClass(c)"
+                                     title="@BrokerItemTitle(c)">
+                            <div class="@BrokerRowClass(c)">
+                                <span class="app-menu-broker-icon-frame" aria-hidden="true">
+                                    <MudIcon Icon="@BrokerActionIcon(c)" Size="Size.Small" />
+                                </span>
+                                <span class="app-menu-broker-copy">
+                                    <span>@c.ResourceName</span>
+                                    <small>@BrokerEndpointLabel(c)</small>
+                                </span>
+                                <span class="@BrokerStatePillClass(c)"
+                                      aria-label="@BrokerActionLabel(c)">
+                                    <span>@BrokerStateText(c)</span>
+                                </span>
                             </div>
                         </MudMenuItem>
                     }
@@ -577,12 +586,42 @@
         _ => $"Connect {connection.ResourceName}"
     };
 
+    private static string BrokerEndpointLabel(ManagedConnection connection)
+        => $"{connection.Profile.Host}:{connection.Profile.Port}";
+
+    private static string BrokerItemTitle(ManagedConnection connection)
+        => $"{BrokerActionLabel(connection)} at {BrokerEndpointLabel(connection)}";
+
+    private static string BrokerStateText(ManagedConnection connection) => connection.State switch
+    {
+        MqttClientState.Connected => "Live",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "Pending",
+        MqttClientState.Faulted => "Fault",
+        _ => "Idle"
+    };
+
+    private static string BrokerRowClass(ManagedConnection connection) => connection.State switch
+    {
+        MqttClientState.Connected => "app-menu-broker-row live",
+        MqttClientState.Faulted => "app-menu-broker-row faulted",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "app-menu-broker-row pending",
+        _ => "app-menu-broker-row idle"
+    };
+
+    private static string BrokerStatePillClass(ManagedConnection connection) => connection.State switch
+    {
+        MqttClientState.Connected => "app-menu-broker-pill live",
+        MqttClientState.Faulted => "app-menu-broker-pill faulted",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "app-menu-broker-pill pending",
+        _ => "app-menu-broker-pill idle"
+    };
+
     private static string BrokerItemClass(ManagedConnection connection) => connection.State switch
     {
-        MqttClientState.Connected => "app-menu-child broker-live",
-        MqttClientState.Faulted => "app-menu-child broker-faulted",
-        MqttClientState.Connecting or MqttClientState.Reconnecting => "app-menu-child broker-pending",
-        _ => "app-menu-child"
+        MqttClientState.Connected => "app-menu-child app-menu-broker-item broker-live",
+        MqttClientState.Faulted => "app-menu-child app-menu-broker-item broker-faulted",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "app-menu-child app-menu-broker-item broker-pending",
+        _ => "app-menu-child app-menu-broker-item"
     };
 
     private string ArtifactItemClass(FlowWorkspaceService app, WorkspaceArtifactKind kind, string name)
