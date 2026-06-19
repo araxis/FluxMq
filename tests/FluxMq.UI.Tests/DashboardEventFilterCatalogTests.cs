@@ -4776,10 +4776,16 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".flow-diagnostic-panel");
         css.ShouldContain("max-height: 112px;");
+        css.ShouldContain("box-shadow: none;");
         css.ShouldContain(".flow-diagnostic-row");
         css.ShouldContain("grid-template-columns: 16px minmax(48px, 0.28fr) minmax(64px, 0.36fr) minmax(0, 1fr);");
         css.ShouldContain(".flow-link-condition-panel.with-diagnostics");
         css.ShouldContain("top: 184px;");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface) 96%, transparent);");
+        css.ShouldContain("min-width: 0;");
+        css.ShouldContain("left: 8px;");
+        css.ShouldContain("right: 8px;");
+        css.ShouldContain("top: 250px;");
         css.ShouldContain(".flow-designer-root ::deep .flow-node-diagnostic-error::before");
         css.ShouldContain("width: 3px;");
         css.ShouldContain(".flow-diagnostic-message");
