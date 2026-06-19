@@ -1,15 +1,47 @@
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
     <TitleContent>
-        <MudText Typo="Typo.h6">@DialogTitle</MudText>
+        <div class="save-as-dialog-title">
+            <span class="save-as-dialog-title-icon" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.SaveAs" Size="Size.Small" />
+            </span>
+            <MudText Typo="Typo.h6" Class="save-as-dialog-heading">@DialogTitle</MudText>
+            <span class="@FormStatusClass" role="status" aria-live="polite">@FormStatusText</span>
+        </div>
     </TitleContent>
     <DialogContent>
-        <MudTextField T="string" Label="File path" @bind-Value="_path"
-                      Variant="Variant.Outlined" Margin="Margin.Dense"
-                      HelperText="@HelperText" />
+        <div class="save-as-dialog-content">
+            <section class="save-as-dialog-section" aria-label="@DialogTitle">
+                <MudTextField T="string"
+                              Class="save-as-dialog-field"
+                              Label="File path"
+                              @bind-Value="_path"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Required="true"
+                              Immediate="true"
+                              OnKeyDown="@OnKeyDown" />
+                @if (!string.IsNullOrWhiteSpace(HelperText))
+                {
+                    <div class="save-as-dialog-helper">@HelperText</div>
+                }
+            </section>
+        </div>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@Submit">@SubmitText</MudButton>
+        <div class="save-as-dialog-actions">
+            <MudButton Variant="Variant.Text"
+                       Size="Size.Small"
+                       Class="save-as-dialog-cancel"
+                       aria-label="@CancelAriaLabel"
+                       OnClick="@Cancel">Cancel</MudButton>
+            <MudButton Color="Color.Primary"
+                       Variant="Variant.Filled"
+                       Size="Size.Small"
+                       Class="save-as-dialog-submit"
+                       Disabled="@(!IsValid)"
+                       aria-label="@SubmitAriaLabel"
+                       OnClick="@Submit">@SubmitText</MudButton>
+        </div>
     </DialogActions>
 </MudDialog>
 
@@ -22,8 +54,35 @@
 
     private string _path = string.Empty;
 
+    private bool IsValid => !string.IsNullOrWhiteSpace(_path);
+
+    private string FormStatusClass
+        => IsValid ? "save-as-dialog-status ready" : "save-as-dialog-status";
+
+    private string FormStatusText
+        => IsValid ? "Ready" : "Path required";
+
+    private string CancelAriaLabel => $"Cancel {DialogTitle}";
+
+    private string SubmitAriaLabel => $"{SubmitText} file";
+
     protected override void OnParametersSet() => _path = SuggestedPath;
 
     private void Cancel() => MudDialog.Cancel();
-    private void Submit() => MudDialog.Close(DialogResult.Ok(_path));
+
+    private void Submit()
+    {
+        if (IsValid)
+        {
+            MudDialog.Close(DialogResult.Ok(_path.Trim()));
+        }
+    }
+
+    private void OnKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            Submit();
+        }
+    }
 }
