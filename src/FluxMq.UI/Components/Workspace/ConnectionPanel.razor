@@ -24,7 +24,7 @@
 
     @if (Live.Connections.Count == 0)
     {
-        <div class="connections-empty">
+        <div class="connections-empty" role="status" aria-live="polite">
             <MudIcon Icon="@Icons.Material.Filled.Cable" Size="Size.Small" />
             <div>
                 <div class="connections-empty-title">No connections</div>
@@ -37,13 +37,18 @@
         <div class="connections-list" role="list">
             @foreach (var conn in Live.Connections)
             {
-                <div class="@ConnectionRowClass(conn)" role="listitem" @key="conn.Id">
+                <div class="@ConnectionRowClass(conn)"
+                     role="listitem"
+                     aria-label="@ConnectionRowLabel(conn)"
+                     @key="conn.Id">
                     <span class="@StateDotClass(conn.State)" aria-hidden="true"></span>
 
                     <div class="connection-main">
                         <div class="connection-name-line">
                             <span class="connection-name">@ConnectionDisplayName(conn)</span>
-                            <span class="@StatePillClass(conn.State)">@StateLabel(conn.State)</span>
+                            <span class="@StatePillClass(conn.State)" title="@StateLabel(conn.State)">
+                                @StateLabel(conn.State)
+                            </span>
                         </div>
                         <div class="connection-endpoint">@ConnectionEndpoint(conn)</div>
                         <div class="connection-meta">
@@ -121,6 +126,9 @@
 
     private static string ConnectionEndpoint(ManagedConnection connection)
         => $"{connection.Profile.Host}:{connection.Profile.Port.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+
+    private static string ConnectionRowLabel(ManagedConnection connection)
+        => $"{ConnectionDisplayName(connection)}, {ConnectionEndpoint(connection)}, {StateLabel(connection.State)}";
 
     private static string SubscriptionLabel(ManagedConnection connection)
         => string.IsNullOrWhiteSpace(connection.Subscription)
