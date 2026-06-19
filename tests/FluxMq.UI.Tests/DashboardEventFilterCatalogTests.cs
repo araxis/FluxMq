@@ -4618,6 +4618,12 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".catalog-use-state.ready");
         css.ShouldContain(".catalog-use-state.inactive");
         css.ShouldContain(".catalog-empty ::deep .mud-icon-root");
+        css.ShouldContain("grid-template-columns: 28px minmax(0, 1fr);");
+        css.ShouldContain("min-height: 64px;");
+        css.ShouldContain("grid-row: 1 / span 2;");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain(".component-catalog.pipeline .catalog-empty");
+        css.ShouldContain("min-height: 58px;");
         css.ShouldContain(".component-catalog.pipeline");
         css.ShouldContain(".component-catalog.pipeline .catalog-meta-strip");
         css.ShouldContain(".component-catalog.pipeline .catalog-item");
@@ -4637,7 +4643,6 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".component-catalog.test .catalog-item-badge.setup");
         css.ShouldContain(".component-catalog.test .catalog-drag-grip");
         css.ShouldContain("display: none;");
-        css.ShouldContain("min-height: 92px;");
         css.ShouldContain("@media (max-width: 760px)");
     }
 
