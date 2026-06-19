@@ -4551,7 +4551,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".component-catalog.dashboard .catalog-item-badge:nth-child(n+2)");
         css.ShouldContain("grid-template-columns: 22px minmax(0, 1fr) 42px;");
         css.ShouldContain("position: sticky;");
-        css.ShouldContain("min-height: 42px;");
+        css.ShouldContain("min-height: 38px;");
         css.ShouldContain(".catalog-item.dragging");
         css.ShouldContain(".catalog-item-affordance");
         css.ShouldContain(".catalog-drag-grip");
@@ -4648,6 +4648,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@CatalogUseStateLabel");
         markup.ShouldContain("@CatalogSearchStateLabel");
         markup.ShouldContain("CatalogUseStateClass");
+        markup.ShouldContain("aria-label=\"@SearchPlaceholder\"");
+        markup.ShouldContain("aria-label=\"@CatalogListLabel\"");
+        markup.ShouldContain("private string CatalogListLabel");
         markup.ShouldContain("role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("@EmptyIcon");
         markup.ShouldContain("@EmptyHintLabel");
@@ -4665,15 +4668,17 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".catalog-title-copy");
         css.ShouldContain(".catalog-title-label");
         css.ShouldContain(".catalog-meta-strip span,");
+        css.ShouldContain("background: var(--flux-canvas);");
+        css.ShouldContain("border-bottom: 1px solid var(--flux-border-soft);");
         css.ShouldContain(".catalog-use-state.ready");
         css.ShouldContain(".catalog-use-state.inactive");
         css.ShouldContain(".catalog-empty ::deep .mud-icon-root");
-        css.ShouldContain("grid-template-columns: 28px minmax(0, 1fr);");
-        css.ShouldContain("min-height: 64px;");
+        css.ShouldContain("grid-template-columns: 26px minmax(0, 1fr);");
+        css.ShouldContain("min-height: 58px;");
         css.ShouldContain("grid-row: 1 / span 2;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".component-catalog.pipeline .catalog-empty");
-        css.ShouldContain("min-height: 58px;");
+        css.ShouldContain("min-height: 54px;");
         css.ShouldContain(".component-catalog.pipeline");
         css.ShouldContain(".component-catalog.pipeline .catalog-meta-strip");
         css.ShouldContain(".component-catalog.pipeline .catalog-item");
@@ -4682,7 +4687,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("height: 20px;");
         css.ShouldContain(".component-catalog.test .catalog-item");
         css.ShouldContain("grid-template-columns: 24px minmax(0, 1fr) 34px;");
-        css.ShouldContain("min-height: 50px;");
+        css.ShouldContain("min-height: 46px;");
         css.ShouldContain(".component-catalog.dashboard .catalog-item:not(.dragging):hover,");
         css.ShouldContain(".component-catalog.dashboard .catalog-item:not(.dragging):focus-visible");
         css.ShouldContain("inset 2px 0 0 color-mix(in srgb, var(--flux-accent) 54%, transparent),");
@@ -4946,8 +4951,15 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "AppTreePanel.razor.css"));
 
+        markup.ShouldContain("tree-empty\" role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("app-tree\" aria-label=\"App structure tree\"");
+        markup.ShouldContain("aria-label=\"@AppRowLabel(a, isActive)\"");
+        markup.ShouldContain("title=\"@AppRowLabel(a, isActive)\"");
+        markup.ShouldContain("private static string AppRowLabel");
+        markup.ShouldContain("aria-label=\"@($\"Close app {a.Name}\")\"");
         markup.ShouldContain("tree-empty-artifact-row tests");
         markup.ShouldContain("role=\"button\"");
+        markup.ShouldContain("aria-label=\"Create test scenario\"");
         markup.ShouldContain("AddTestFromKeyboardAsync(args, a)");
         markup.ShouldContain("tree-empty-artifact-copy");
         markup.ShouldContain("tree-empty-artifact-cues");
@@ -4964,6 +4976,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("SelectDashboardFromKeyboardAsync(args, a, d)");
         markup.ShouldContain("SelectTestFromKeyboardAsync(args, a, t)");
         markup.ShouldContain("aria-expanded=\"@AriaExpanded(isCollapsed)\"");
+        markup.ShouldContain("aria-label=\"@addTooltip\"");
         markup.ShouldContain("private static bool IsActivationKey");
         markup.ShouldContain("private static Task RunFromKeyboardAsync");
         markup.ShouldContain("TestArtifactItemClass(isTestActive, latestTestRun)");
@@ -4981,16 +4994,25 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("private static string TestRunIssueText");
 
         css.ShouldContain(".tree-empty-artifact-row");
+        css.ShouldContain(".tree-empty ::deep .mud-icon-root");
+        css.ShouldContain("grid-template-columns: 26px minmax(0, 1fr);");
+        css.ShouldContain("min-height: 82px;");
+        css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".app-row:focus-visible");
+        css.ShouldContain("grid-template-columns: 18px minmax(0, 1fr) 34px;");
+        css.ShouldContain("min-height: 38px;");
         css.ShouldContain(".tree-section-header:focus-visible");
+        css.ShouldContain("min-height: 24px;");
         css.ShouldContain(".pipe-item:focus-visible");
         css.ShouldContain(".artifact-item:focus-visible");
         css.ShouldContain("grid-template-columns: 16px minmax(0, 1fr) auto 18px;");
+        css.ShouldContain("margin: 3px 0 0 30px;");
         css.ShouldContain(".tree-empty-artifact-copy");
         css.ShouldContain(".tree-empty-artifact-cues");
         css.ShouldContain(".tree-empty-artifact-cues span");
         css.ShouldContain(".test-artifact-item");
-        css.ShouldContain("grid-template-columns: 22px minmax(0, 1fr) minmax(90px, auto) 24px;");
+        css.ShouldContain("grid-template-columns: 22px minmax(0, 1fr) minmax(82px, auto) 24px;");
+        css.ShouldContain("min-height: 42px;");
         css.ShouldContain(".test-artifact-item::before");
         css.ShouldContain(".test-artifact-icon-frame");
         css.ShouldContain(".test-artifact-copy small");
@@ -4998,7 +5020,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-run-summary-meta");
         css.ShouldContain(".test-run-pill");
         css.ShouldContain(".tree-item-actions");
-        css.ShouldContain("opacity: 0;");
+        css.ShouldContain("opacity: 0.58;");
         css.ShouldContain(".tree-item-actions ::deep .tree-delete-button");
     }
 
