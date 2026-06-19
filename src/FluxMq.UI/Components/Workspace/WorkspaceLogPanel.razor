@@ -116,7 +116,7 @@
     <div class="workspace-log-list" role="log" aria-label="Workspace logs">
         @if (FilteredLogs.Count == 0)
         {
-            <div class="workspace-log-empty">
+            <div class="workspace-log-empty" role="status" aria-live="polite">
                 <MudIcon Icon="@EmptyIcon" Size="Size.Medium" />
                 <strong>@EmptyTitle</strong>
                 <span>@EmptyText</span>

@@ -3190,20 +3190,33 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("workspace-log-row-icon");
         markup.ShouldContain("DetailLabels(entry)");
         markup.ShouldContain("SeverityIcon(entry)");
+        markup.ShouldContain("workspace-log-empty\" role=\"status\" aria-live=\"polite\"");
 
         css.ShouldContain("padding: 7px 10px;");
         css.ShouldContain("height: 26px;");
         css.ShouldContain("font-size: 14px;");
+        css.ShouldContain("grid-template-columns: minmax(210px, 0.82fr) minmax(260px, 1fr) minmax(220px, 320px);");
+        css.ShouldContain("padding: 5px 8px;");
+        css.ShouldContain(".workspace-log-filter-block");
+        css.ShouldContain("grid-template-columns: auto minmax(0, 1fr);");
+        css.ShouldContain("flex-wrap: nowrap;");
+        css.ShouldContain("overflow-x: auto;");
         css.ShouldContain(".workspace-log-filter-button.active");
         css.ShouldContain(".workspace-log-status");
         css.ShouldContain("grid-template-columns: 22px minmax(0, 1fr) auto;");
         css.ShouldContain(".workspace-log-search ::deep .mud-input-root");
+        css.ShouldContain("min-height: 30px;");
         css.ShouldContain("grid-template-columns: 24px 70px minmax(130px, 0.34fr) minmax(0, 1fr);");
         css.ShouldContain(".workspace-log-row::before");
         css.ShouldContain("width: 3px;");
         css.ShouldContain(".workspace-log-row-meta span");
-        css.ShouldContain("min-height: 220px;");
+        css.ShouldContain("grid-template-columns: 30px minmax(0, 1fr);");
+        css.ShouldContain("min-height: 132px;");
+        css.ShouldContain(".workspace-log-empty ::deep .mud-icon-root");
+        css.ShouldContain("grid-row: 1 / span 3;");
+        css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("grid-template-columns: 24px 60px minmax(0, 1fr);");
+        css.ShouldContain("grid-template-columns: 42px minmax(0, 1fr);");
         css.ShouldNotContain("grid-template-columns: 72px 86px minmax(0, 1fr);");
     }
 
