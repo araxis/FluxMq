@@ -36,55 +36,57 @@
     {
         <div class="publish-view">
             <div class="inspector-panel publish-form-panel">
-                @if (PublishConnections.Count > 0)
-                {
-                    <label class="publish-field">
-                        <span class="field-label">Broker</span>
-                        <select class="publish-input" @bind="_publishConnectionId">
-                            @foreach (var connection in PublishConnections)
-                            {
-                                <option value="@connection.Id.ToString()">
-                                    @connection.ResourceName (@connection.Profile.Host:@connection.Profile.Port)
-                                </option>
-                            }
-                        </select>
+                <div class="publish-form-grid">
+                    @if (PublishConnections.Count > 0)
+                    {
+                        <label class="publish-field broker">
+                            <span class="field-label">Broker</span>
+                            <select class="publish-input" @bind="_publishConnectionId">
+                                @foreach (var connection in PublishConnections)
+                                {
+                                    <option value="@connection.Id.ToString()">
+                                        @connection.ResourceName (@connection.Profile.Host:@connection.Profile.Port)
+                                    </option>
+                                }
+                            </select>
+                        </label>
+                    }
+
+                    <label class="publish-field topic">
+                        <span class="field-label">Topic</span>
+                        <input class="publish-input" @bind="_publishTopic" />
                     </label>
-                }
 
-                <label class="publish-field">
-                    <span class="field-label">Topic</span>
-                    <input class="publish-input" @bind="_publishTopic" />
-                </label>
-
-                <label class="publish-field">
-                    <span class="field-label split">
-                        <span>Payload</span>
-                        <span>@PayloadMeta</span>
-                    </span>
-                    <textarea class="publish-textarea" spellcheck="false" @bind="_publishPayload"></textarea>
-                </label>
-
-                <div class="publish-row">
-                    <label class="select-pill" aria-label="Quality of service">
-                        <select @bind="_publishQos">
-                            <option value="@MqttQualityOfServiceLevel.AtMostOnce">QoS 0</option>
-                            <option value="@MqttQualityOfServiceLevel.AtLeastOnce">QoS 1</option>
-                            <option value="@MqttQualityOfServiceLevel.ExactlyOnce">QoS 2</option>
-                        </select>
+                    <label class="publish-field payload">
+                        <span class="field-label split">
+                            <span>Payload</span>
+                            <span>@PayloadMeta</span>
+                        </span>
+                        <textarea class="publish-textarea" spellcheck="false" @bind="_publishPayload"></textarea>
                     </label>
-                    <button type="button"
-                            class="pill-button publish-retain @(_retain ? "active" : null)"
-                            @onclick="@(() => _retain = !_retain)">
-                        <span>Retain</span>
-                        <strong>@(_retain ? "On" : "Off")</strong>
-                    </button>
-                    <button type="button"
-                            class="publish-submit"
-                            disabled="@_busy"
-                            @onclick="PublishAsync">
-                        <MudIcon Icon="@Icons.Material.Filled.Send" Size="Size.Small" />
-                        <span>Publish</span>
-                    </button>
+
+                    <div class="publish-row">
+                        <label class="select-pill" aria-label="Quality of service">
+                            <select @bind="_publishQos">
+                                <option value="@MqttQualityOfServiceLevel.AtMostOnce">QoS 0</option>
+                                <option value="@MqttQualityOfServiceLevel.AtLeastOnce">QoS 1</option>
+                                <option value="@MqttQualityOfServiceLevel.ExactlyOnce">QoS 2</option>
+                            </select>
+                        </label>
+                        <button type="button"
+                                class="pill-button publish-retain @(_retain ? "active" : null)"
+                                @onclick="@(() => _retain = !_retain)">
+                            <span>Retain</span>
+                            <strong>@(_retain ? "On" : "Off")</strong>
+                        </button>
+                        <button type="button"
+                                class="publish-submit"
+                                disabled="@_busy"
+                                @onclick="PublishAsync">
+                            <MudIcon Icon="@Icons.Material.Filled.Send" Size="Size.Small" />
+                            <span>Publish</span>
+                        </button>
+                    </div>
                 </div>
 
                 @if (Live.SelectedStoredSession is not null)
