@@ -4943,6 +4943,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("app-menu-command-icon");
         markup.ShouldContain("app-menu-command-copy");
         markup.ShouldContain("app-menu-command-cue");
+        markup.ShouldContain("MenuStateRow(");
+        markup.ShouldContain("MenuCommandRow(");
+        markup.ShouldContain("private static RenderFragment MenuStateRow");
+        markup.ShouldContain("private static RenderFragment MenuCommandRow");
         markup.ShouldContain("app-menu-broker-item");
         markup.ShouldContain("app-menu-broker-row");
         markup.ShouldContain("app-menu-broker-icon-frame");
