@@ -15,10 +15,11 @@
     border-bottom: 1px solid color-mix(in srgb, var(--mud-palette-error) 34%, var(--flux-border));
     display: grid;
     flex: 0 0 auto;
-    gap: 8px;
-    grid-template-columns: 9px minmax(0, 1fr) 28px;
+    gap: 7px;
+    grid-template-columns: 8px minmax(0, 1fr) 26px;
+    min-height: 36px;
     min-width: 0;
-    padding: 7px 8px;
+    padding: 5px 6px;
 }
 
 .session-recording-pulse {
@@ -46,14 +47,14 @@
 
 .session-recording-copy strong {
     color: var(--mud-palette-text-primary);
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 800;
     line-height: 1.2;
 }
 
 .session-recording-copy span {
     color: var(--mud-palette-error);
-    font-size: 11px;
+    font-size: 10.75px;
     line-height: 1.2;
 }
 
@@ -64,13 +65,14 @@
 .sessions-head {
     align-items: center;
     background: var(--flux-surface);
-    border-bottom: 1px solid var(--flux-border);
+    border-bottom: 1px solid var(--flux-border-soft);
     display: flex;
     flex: 0 0 auto;
-    gap: 8px;
+    gap: 6px;
     justify-content: space-between;
+    min-height: 36px;
     min-width: 0;
-    padding: 8px;
+    padding: 6px;
 }
 
 .sessions-title {
@@ -88,9 +90,9 @@
     color: var(--flux-accent);
     display: inline-flex;
     flex: 0 0 auto;
-    height: 26px;
+    height: 24px;
     justify-content: center;
-    width: 26px;
+    width: 24px;
 }
 
 .sessions-title-copy {
@@ -131,10 +133,11 @@
     color: var(--mud-palette-text-secondary);
     display: grid;
     flex: 0 0 auto;
-    gap: 7px;
-    grid-template-columns: 16px minmax(0, 1fr) auto;
+    gap: 6px;
+    grid-template-columns: 15px minmax(0, 1fr) auto;
+    min-height: 30px;
     min-width: 0;
-    padding: 6px 8px;
+    padding: 4px 6px;
 }
 
 .session-live-strip ::deep .mud-icon-root {
@@ -164,7 +167,7 @@
     border-bottom: 1px solid var(--flux-border-soft);
     flex: 0 0 auto;
     min-width: 0;
-    padding: 6px 8px;
+    padding: 5px 6px;
 }
 
 .session-search {
@@ -177,7 +180,7 @@
 }
 
 .session-search ::deep .mud-input-root {
-    min-height: 30px;
+    min-height: 28px;
 }
 
 .session-search ::deep .mud-input > input.mud-input-root {
@@ -195,11 +198,11 @@
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     min-height: 0;
     min-width: 0;
     overflow: auto;
-    padding: 8px;
+    padding: 6px;
 }
 
 .sessions-list::-webkit-scrollbar {
@@ -215,7 +218,7 @@
 .session-project-group {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
     min-width: 0;
 }
 
@@ -225,10 +228,10 @@
     display: flex;
     font-size: 10.75px;
     font-weight: 750;
-    gap: 8px;
+    gap: 6px;
     justify-content: space-between;
-    min-height: 22px;
-    padding: 0 2px;
+    min-height: 18px;
+    padding: 0 1px;
 }
 
 .session-project-head span {
@@ -258,10 +261,10 @@
     color: var(--mud-palette-text-primary);
     cursor: pointer;
     display: grid;
-    gap: 8px;
-    grid-template-columns: 8px minmax(0, 1fr) auto;
-    min-height: 56px;
-    padding: 8px;
+    gap: 7px;
+    grid-template-columns: 7px minmax(0, 1fr) 68px;
+    min-height: 48px;
+    padding: 6px;
     text-align: left;
     width: 100%;
 }
@@ -297,9 +300,9 @@
 .session-dot {
     background: var(--flux-text-subtle);
     border-radius: 999px;
-    height: 7px;
+    height: 6px;
     justify-self: center;
-    width: 7px;
+    width: 6px;
 }
 
 .session-dot.selected {
@@ -315,7 +318,7 @@
 .session-row-main {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
     min-width: 0;
 }
 
@@ -331,9 +334,10 @@
 
 .session-row-meta {
     display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
+    flex-wrap: nowrap;
+    gap: 3px;
     min-width: 0;
+    overflow: hidden;
 }
 
 .session-row-meta span {
@@ -350,11 +354,20 @@
     white-space: nowrap;
 }
 
+.session-row-meta span:first-child {
+    flex: 1 1 auto;
+}
+
+.session-row-meta span:last-child {
+    flex: 0 0 auto;
+}
+
 .session-row-side {
     align-items: flex-end;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 4px;
+    min-width: 0;
 }
 
 .session-state {
@@ -362,7 +375,10 @@
     font-size: 10px;
     font-weight: 850;
     line-height: 1;
+    max-width: 100%;
+    overflow: hidden;
     padding: 3px 5px;
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
@@ -386,24 +402,31 @@
     font-family: Consolas, "Courier New", monospace;
     font-size: 10.5px;
     line-height: 1;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .sessions-empty {
-    align-items: center;
+    align-content: center;
+    align-items: start;
     color: var(--mud-palette-text-secondary);
-    display: flex;
+    display: grid;
     flex: 1 1 auto;
-    flex-direction: column;
-    gap: 6px;
+    gap: 2px 9px;
+    grid-template-columns: 28px minmax(0, 1fr);
     justify-content: center;
-    min-height: 220px;
-    padding: 20px;
-    text-align: center;
+    min-height: 96px;
+    min-width: 0;
+    padding: 12px;
+    text-align: left;
 }
 
 .sessions-empty ::deep .mud-icon-root {
+    align-self: center;
     color: var(--flux-text-subtle);
+    grid-row: 1 / span 2;
 }
 
 .sessions-empty-title {
@@ -418,15 +441,19 @@
     font-size: 12px;
     line-height: 1.35;
     max-width: 260px;
+    overflow-wrap: anywhere;
 }
 
 .sessions-empty-action {
+    grid-column: 2;
+    justify-self: start;
     margin-top: 3px;
 }
 
 @media (max-width: 760px) {
     .session-row {
         grid-template-columns: 8px minmax(0, 1fr);
+        min-height: 50px;
     }
 
     .session-row-side {
