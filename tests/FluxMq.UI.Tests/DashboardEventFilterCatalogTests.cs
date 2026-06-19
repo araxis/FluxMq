@@ -4627,6 +4627,12 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".component-catalog.test .catalog-item");
         css.ShouldContain("grid-template-columns: 24px minmax(0, 1fr) 34px;");
         css.ShouldContain("min-height: 50px;");
+        css.ShouldContain(".component-catalog.dashboard .catalog-item:not(.dragging):hover,");
+        css.ShouldContain(".component-catalog.dashboard .catalog-item:not(.dragging):focus-visible");
+        css.ShouldContain("inset 2px 0 0 color-mix(in srgb, var(--flux-accent) 54%, transparent),");
+        css.ShouldContain(".component-catalog.test .catalog-item:not(.dragging):hover,");
+        css.ShouldContain(".component-catalog.test .catalog-item:not(.dragging):focus-visible");
+        css.ShouldContain("inset 2px 0 0 color-mix(in srgb, var(--mud-palette-warning) 54%, transparent),");
         css.ShouldContain(".catalog-step-badges");
         css.ShouldContain(".component-catalog.test .catalog-item-badge.setup");
         css.ShouldContain(".component-catalog.test .catalog-drag-grip");
