@@ -73,6 +73,7 @@
                         <MudIconButton Icon="@Icons.Material.Filled.Article"
                                        Size="Size.Small"
                                        Class="test-runner-icon-action"
+                                       aria-label="@ViewReportTooltip"
                                        Disabled="@(Project.LastScenarioRunResult is null)"
                                        OnClick="@OpenReportAsync" />
                     </MudTooltip>
@@ -80,6 +81,7 @@
                         <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
                                        Size="Size.Small"
                                        Class="test-runner-icon-action"
+                                       aria-label="@CopyReportTooltip"
                                        Disabled="@(Project.LastScenarioRunResult is null)"
                                        OnClick="@CopyLatestReportAsync" />
                     </MudTooltip>
@@ -87,6 +89,7 @@
                         <MudIconButton Icon="@Icons.Material.Filled.FileDownload"
                                        Size="Size.Small"
                                        Class="test-runner-icon-action"
+                                       aria-label="@SaveReportTooltip"
                                        Disabled="@(Project.LastScenarioRunResult is null)"
                                        OnClick="@SaveLatestReportAsync" />
                     </MudTooltip>
