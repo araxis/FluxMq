@@ -57,12 +57,12 @@
             <div class="test-runner-actions">
                 @if (Project.LastScenarioRunResult is { } result)
                 {
-                    <span class="@RunStatusPillClass(result.Status)" aria-label="@($"Run status {result.Status}")">
+                    <span class="@RunStatusClass(result.Status)" aria-label="@($"Run status {result.Status}")">
                         <MudIcon Icon="@RunStatusIcon(result.Status)" Size="Size.Small" />
                         <span>@result.Status</span>
                     </span>
                     <MudTooltip Text="@ActiveRunTooltip">
-                        <span class="@ActiveRunPillClass" aria-label="@ActiveRunTooltip">
+                        <span class="@ActiveRunStateClass" aria-label="@ActiveRunTooltip">
                             <MudIcon Icon="@ActiveRunChipIcon" Size="Size.Small" />
                             <span>@ActiveRunChipText</span>
                         </span>
@@ -467,8 +467,8 @@
 
     private Color ActiveRunChipColor => IsViewingHistoricalRun ? Color.Info : Color.Default;
 
-    private string ActiveRunPillClass
-        => IsViewingHistoricalRun ? "test-runner-status-pill history" : "test-runner-status-pill latest";
+    private string ActiveRunStateClass
+        => IsViewingHistoricalRun ? "test-runner-status-state history" : "test-runner-status-state latest";
 
     private string RunResultScopeClass
         => IsViewingHistoricalRun ? "test-runner-result-scope history" : "test-runner-result-scope latest";
@@ -563,8 +563,8 @@
             _ => Color.Default
         };
 
-    private static string RunStatusPillClass(ScenarioRunStatus status)
-        => $"test-runner-status-pill {status.ToString().ToLowerInvariant()}";
+    private static string RunStatusClass(ScenarioRunStatus status)
+        => $"test-runner-status-state {status.ToString().ToLowerInvariant()}";
 
     private string RunSummaryClass(ScenarioRunResult result)
         => $"test-runner-result-strip {result.Status.ToString().ToLowerInvariant()} {(IsViewingHistoricalRun ? "history" : "latest")}";
