@@ -5181,10 +5181,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("apps-panel-title-icon");
         markup.ShouldContain("<strong>Open Apps</strong>");
         markup.ShouldContain("@ProjectCountLabel");
+        markup.ShouldContain("apps-empty\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("apps-empty-title");
         markup.ShouldContain("role=\"list\"");
         markup.ShouldContain("role=\"button\"");
         markup.ShouldContain("tabindex=\"0\"");
+        markup.ShouldContain("aria-label=\"@AppTileLabel(a, isActive)\"");
+        markup.ShouldContain("title=\"@AppTileLabel(a, isActive)\"");
         markup.ShouldContain("SelectAppFromKeyboard(args, a)");
         markup.ShouldContain("private static bool IsActivationKey");
         markup.ShouldContain("\"Spacebar\"");
@@ -5194,21 +5197,30 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"@CloseLabel(a)\"");
         markup.ShouldContain("private static string BuildAppMeta");
         markup.ShouldContain("private static string FileLabel");
+        markup.ShouldContain("private static string AppTileLabel");
         markup.ShouldNotContain("MudList");
         markup.ShouldNotContain("MudListItem");
         markup.ShouldNotContain("flux-app-item");
 
         css.ShouldContain(".apps-panel");
+        css.ShouldContain("background: var(--flux-canvas);");
+        css.ShouldContain("border-bottom: 1px solid var(--flux-border-soft);");
         css.ShouldContain(".apps-list");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 28px;");
-        css.ShouldContain("min-height: 58px;");
+        css.ShouldContain("grid-template-columns: 26px minmax(0, 1fr);");
+        css.ShouldContain("min-height: 82px;");
+        css.ShouldContain("grid-row: 1 / span 2;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 26px;");
+        css.ShouldContain("min-height: 50px;");
         css.ShouldContain(".app-tile-main");
-        css.ShouldContain("grid-template-columns: 24px minmax(0, 1fr) auto;");
+        css.ShouldContain("grid-template-columns: 22px minmax(0, 1fr) 64px;");
         css.ShouldContain(".app-tile-main:focus-visible");
         css.ShouldContain("inset 0 0 0 1px color-mix(in srgb, var(--flux-accent) 40%, var(--flux-border))");
         css.ShouldContain(".app-tile-close");
+        css.ShouldContain("opacity: 0.58;");
         css.ShouldContain(".app-tile:hover .app-tile-close");
         css.ShouldContain(".app-state.unsaved");
+        css.ShouldContain("max-width: 64px;");
+        css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("@media (max-width: 760px)");
         css.ShouldNotContain(".flux-app-item");
     }
