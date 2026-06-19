@@ -4922,14 +4922,26 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "AppStructureMenu.razor.css"));
+        var appCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "wwwroot",
+            "app.css"));
 
         markup.ShouldContain("aria-label=\"App structure navigation\"");
         markup.ShouldContain("StructureMenuLabel(\"Brokers\", conns.Count)");
         markup.ShouldContain("app-menu-artifact-row");
         markup.ShouldContain("app-menu-artifact-name");
         markup.ShouldContain("app-menu-test-row");
+        markup.ShouldContain("Class=\"@TestArtifactItemClass(active, t, latestTestRun)\"");
+        markup.ShouldContain("title=\"@TestArtifactTitle(t, latestTestRun)\"");
+        markup.ShouldContain("app-menu-test-icon-frame");
         markup.ShouldContain("app-menu-artifact-copy");
         markup.ShouldContain("app-menu-artifact-meta");
+        markup.ShouldContain("TestRunMenuRowClass(latestTestRun)");
+        markup.ShouldContain("TestRunMenuSummaryClass(latestTestRun)");
+        markup.ShouldContain("TestRunMenuDetailText(latestTestRun)");
         markup.ShouldContain("TestRunMenuPillClass(latestTestRun)");
         markup.ShouldContain("app-menu-inline-action");
         markup.ShouldContain("app-menu-delete-button");
@@ -4938,6 +4950,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@onmousedown:stopPropagation=\"true\"");
         markup.ShouldContain("private static string DeleteLabel");
         markup.ShouldContain("private static ScenarioRunResult? LatestTestRun");
+        markup.ShouldContain("private string TestArtifactItemClass");
+        markup.ShouldContain("private static string TestRunMenuIssueText");
+        markup.ShouldContain("No run");
+        markup.ShouldContain("No history");
         markup.ShouldNotContain("app-menu-danger");
         markup.ShouldNotContain("Delete @w");
         markup.ShouldNotContain("Delete @d");
@@ -4948,15 +4964,23 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".app-menu-artifact-row");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 24px;");
         css.ShouldContain(".app-menu-test-row");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto 24px;");
+        css.ShouldContain("grid-template-columns: 22px minmax(0, 1fr) minmax(94px, auto) 24px;");
+        css.ShouldContain(".app-menu-test-icon-frame");
+        css.ShouldContain(".app-menu-test-row.canceled .app-menu-test-icon-frame");
         css.ShouldContain(".app-menu-artifact-meta");
+        css.ShouldContain(".app-menu-test-summary");
+        css.ShouldContain(".app-menu-test-summary-meta");
         css.ShouldContain(".app-menu-test-pill");
+        css.ShouldContain("max-width: 92px;");
         css.ShouldContain(".app-menu-inline-action");
         css.ShouldContain("opacity: 0;");
         css.ShouldContain(".app-menu-child:hover .app-menu-inline-action");
         css.ShouldContain(".app-menu-inline-action ::deep .app-menu-delete-button");
         css.ShouldContain("height: 24px;");
         css.ShouldNotContain(".app-structure-menu ::deep .app-menu-danger");
+
+        appCss.ShouldContain(".app-structure-popover .app-menu-test-item");
+        appCss.ShouldContain("padding-left: 6px;");
     }
 
     [Fact]

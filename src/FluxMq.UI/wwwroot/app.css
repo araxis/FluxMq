@@ -345,6 +345,11 @@ select {
     padding-left: 28px;
 }
 
+.app-structure-popover .app-menu-test-item {
+    padding-left: 6px;
+    padding-right: 4px;
+}
+
 .app-structure-popover .app-menu-add {
     color: var(--flux-popover-accent);
 }
