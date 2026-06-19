@@ -4872,6 +4872,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("AddTestFromKeyboardAsync(args, a)");
         markup.ShouldContain("tree-empty-artifact-copy");
         markup.ShouldContain("tree-empty-artifact-cues");
+        markup.ShouldContain("TreeSectionHeader(");
+        markup.ShouldContain("private RenderFragment TreeSectionHeader");
+        markup.ShouldContain("BrokerSection");
+        markup.ShouldContain("PipelineSection");
+        markup.ShouldContain("DashboardSection");
+        markup.ShouldContain("TestSection");
         markup.ShouldContain("TestArtifactItemClass(isTestActive, latestTestRun)");
         markup.ShouldContain("LatestTestRun(a, t)");
         markup.ShouldContain("test-artifact-icon-frame");
