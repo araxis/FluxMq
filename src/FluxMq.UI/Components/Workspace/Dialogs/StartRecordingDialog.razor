@@ -1,23 +1,65 @@
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
     <TitleContent>
-        <MudText Typo="Typo.h6">Start Recording</MudText>
+        <div class="start-recording-title">
+            <span class="start-recording-title-icon" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Size="Size.Small" />
+            </span>
+            <span class="start-recording-title-copy">
+                <strong>Start recording</strong>
+                <small>Capture broker traffic into a session</small>
+            </span>
+            <span class="start-recording-status" role="status" aria-live="polite">Ready</span>
+        </div>
     </TitleContent>
     <DialogContent>
-        <MudStack Spacing="2">
-            <MudAutocomplete T="string" Label="Project" @bind-Value="_project"
-                             SearchFunc="@SearchProjects"
-                             Variant="Variant.Outlined" Margin="Margin.Dense"
-                             ResetValueOnEmptyText="false" />
-            <MudTextField T="string" Label="Session name" @bind-Value="_session"
-                          Variant="Variant.Outlined" Margin="Margin.Dense" />
-        </MudStack>
+        <div class="start-recording-dialog" role="form" aria-label="Start recording">
+            <section class="start-recording-section" aria-label="Recording target">
+                <div class="start-recording-fields">
+                    <MudAutocomplete T="string"
+                                     Class="start-recording-field"
+                                     Label="Project"
+                                     @bind-Value="_project"
+                                     SearchFunc="@SearchProjects"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Dense="true"
+                                     ResetValueOnEmptyText="false"
+                                     Placeholder="Default"
+                                     aria-label="Recording project" />
+                    <MudTextField T="string"
+                                  Class="start-recording-field"
+                                  Label="Session name"
+                                  @bind-Value="_session"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  Placeholder="@DefaultSessionName"
+                                  OnKeyDown="@OnKeyDown"
+                                  aria-label="Recording session name" />
+                </div>
+            </section>
+
+            <div class="start-recording-summary">
+                <MudIcon Icon="@Icons.Material.Filled.FolderOpen" Size="Size.Small" />
+                <span>@ProjectSummaryText</span>
+            </div>
+        </div>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Error" Variant="Variant.Filled"
-                   StartIcon="@Icons.Material.Filled.FiberManualRecord" OnClick="@Submit">
-            Start Recording
-        </MudButton>
+        <div class="start-recording-actions">
+            <MudButton Variant="Variant.Text"
+                       Size="Size.Small"
+                       Class="start-recording-cancel"
+                       aria-label="Cancel recording"
+                       OnClick="@Cancel">Cancel</MudButton>
+            <MudButton Color="Color.Error"
+                       Variant="Variant.Filled"
+                       Size="Size.Small"
+                       Class="start-recording-submit"
+                       StartIcon="@Icons.Material.Filled.FiberManualRecord"
+                       aria-label="Start recording"
+                       OnClick="@Submit">Start recording</MudButton>
+        </div>
     </DialogActions>
 </MudDialog>
 
@@ -29,20 +71,39 @@
     private string _project = "Default";
     private string _session = $"Session {DateTimeOffset.Now:yyyy-MM-dd HH-mm}";
 
+    private string DefaultSessionName => $"Session {DateTimeOffset.Now:yyyy-MM-dd HH-mm}";
+
+    private string ProjectSummaryText => ExistingProjects.Count == 0
+        ? "No saved projects yet. The recording will use Default unless you type a project name."
+        : ExistingProjects.Count == 1
+            ? "1 existing project is available. Type to search or create a new project name."
+            : $"{ExistingProjects.Count} existing projects are available. Type to search or create a new project name.";
+
     private void Cancel() => MudDialog.Cancel();
 
     private void Submit()
     {
         var project = string.IsNullOrWhiteSpace(_project) ? "Default" : _project.Trim();
-        var session = string.IsNullOrWhiteSpace(_session) ? $"Session {DateTimeOffset.Now:yyyy-MM-dd HH-mm}" : _session.Trim();
+        var session = string.IsNullOrWhiteSpace(_session) ? DefaultSessionName : _session.Trim();
         MudDialog.Close(DialogResult.Ok(new StartRecordingResult(project, session)));
     }
 
     private Task<IEnumerable<string>> SearchProjects(string? value, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(value))
+        {
             return Task.FromResult<IEnumerable<string>>(ExistingProjects);
+        }
+
         return Task.FromResult(ExistingProjects.Where(p => p.Contains(value, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private void OnKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            Submit();
+        }
     }
 
     public record StartRecordingResult(string ProjectName, string SessionName);

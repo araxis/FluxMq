@@ -3444,6 +3444,63 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void StartRecordingDialog_UsesFlatCompactRecordingChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "StartRecordingDialog.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "StartRecordingDialog.razor.css"));
+
+        markup.ShouldContain("start-recording-title");
+        markup.ShouldContain("start-recording-title-icon");
+        markup.ShouldContain("start-recording-title-copy");
+        markup.ShouldContain("start-recording-status");
+        markup.ShouldContain("role=\"status\"");
+        markup.ShouldContain("aria-live=\"polite\"");
+        markup.ShouldContain("role=\"form\" aria-label=\"Start recording\"");
+        markup.ShouldContain("start-recording-section");
+        markup.ShouldContain("start-recording-fields");
+        markup.ShouldContain("start-recording-summary");
+        markup.ShouldContain("aria-label=\"Recording project\"");
+        markup.ShouldContain("aria-label=\"Recording session name\"");
+        markup.ShouldContain("aria-label=\"Start recording\"");
+        markup.ShouldContain("DefaultSessionName");
+        markup.ShouldContain("ProjectSummaryText");
+        markup.ShouldContain("OnKeyDown");
+        markup.ShouldContain("StartRecordingResult(project, session)");
+        markup.ShouldNotContain("MudStack");
+        markup.ShouldNotContain("<MudText Typo=\"Typo.h6\">Start Recording</MudText>");
+
+        css.ShouldContain(".start-recording-title");
+        css.ShouldContain(".start-recording-title-icon");
+        css.ShouldContain(".start-recording-title-copy");
+        css.ShouldContain(".start-recording-status");
+        css.ShouldContain(".start-recording-section");
+        css.ShouldContain("border: 1px solid var(--flux-border-soft);");
+        css.ShouldContain("border-radius: 6px;");
+        css.ShouldContain(".start-recording-field ::deep(.mud-input-root)");
+        css.ShouldContain(".start-recording-summary");
+        css.ShouldContain(".start-recording-actions");
+        css.ShouldContain("min-height: 28px;");
+        css.ShouldContain("@media (max-width: 520px)");
+        css.ShouldNotContain("border-radius: 999px;");
+        css.ShouldNotContain("box-shadow: 0 ");
+    }
+
+    [Fact]
     public void PayloadInspectorPanel_UsesFlatCompactInspectorChrome()
     {
         var root = FindRepositoryRoot();
