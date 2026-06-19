@@ -287,6 +287,10 @@ else
                                 <span>No tests</span>
                                 <small>Create a scenario to design and run checks.</small>
                             </div>
+                            <div class="tree-empty-artifact-cues" aria-hidden="true">
+                                <span>Design</span>
+                                <span>Run</span>
+                            </div>
                             <MudIcon Icon="@Icons.Material.Filled.Add"
                                      Size="Size.Small"
                                      Class="tree-empty-artifact-add" />
@@ -303,19 +307,25 @@ else
                             var latestTestRun = LatestTestRun(a, t);
                             <div class="@TestArtifactItemClass(isTestActive, latestTestRun)"
                                  title="@TestArtifactTitle(t, latestTestRun)"
+                                 aria-label="@TestArtifactTitle(t, latestTestRun)"
                                  @onclick="@(() => { Projects.SetActive(a); a.SetActiveTest(t); })">
-                                <MudIcon Icon="@Icons.Material.Filled.FactCheck"
-                                         Size="Size.Small"
-                                         Class="artifact-icon test" />
-                                <div class="artifact-item-copy">
+                                <span class="test-artifact-icon-frame" aria-hidden="true">
+                                    <MudIcon Icon="@Icons.Material.Filled.FactCheck"
+                                             Size="Size.Small"
+                                             Class="artifact-icon test" />
+                                </span>
+                                <div class="artifact-item-copy test-artifact-copy">
                                     <span>@t</span>
                                     <small>@TestRunMeta(latestTestRun)</small>
                                 </div>
-                                <span class="@TestRunPillClass(latestTestRun)"
-                                      aria-label="@TestRunStateLabel(latestTestRun)">
-                                    <MudIcon Icon="@TestRunIcon(latestTestRun)" Size="Size.Small" />
-                                    <span>@TestRunText(latestTestRun)</span>
-                                </span>
+                                <div class="@TestRunSummaryClass(latestTestRun)"
+                                     aria-label="@TestRunStateLabel(latestTestRun)">
+                                    <span class="@TestRunPillClass(latestTestRun)">
+                                        <MudIcon Icon="@TestRunIcon(latestTestRun)" Size="Size.Small" />
+                                        <span>@TestRunText(latestTestRun)</span>
+                                    </span>
+                                    <span class="test-run-summary-meta">@TestRunDetailText(latestTestRun)</span>
+                                </div>
                                 <span class="tree-item-actions"
                                       @onclick:stopPropagation="true"
                                       @onmousedown:stopPropagation="true">
@@ -446,14 +456,38 @@ else
 
     private static string TestRunMeta(ScenarioRunResult? latestRun)
         => latestRun is null
-            ? "No runs yet"
+            ? "Ready for first run"
             : $"Latest {latestRun.FinishedAt.ToLocalTime():HH:mm:ss}";
 
     private static string TestRunStateLabel(ScenarioRunResult? latestRun)
-        => latestRun is null ? "No scenario run yet" : $"Latest run {latestRun.Status}";
+        => latestRun is null
+            ? "No scenario run history"
+            : $"Latest run {latestRun.Status}, {TestRunDetailText(latestRun)}";
 
     private static string TestRunText(ScenarioRunResult? latestRun)
-        => latestRun?.Status.ToString() ?? "New";
+        => latestRun?.Status.ToString() ?? "No run";
+
+    private static string TestRunDetailText(ScenarioRunResult? latestRun)
+        => latestRun is null
+            ? "No history"
+            : $"{CountLabel(latestRun.Steps.Count, "step")} / {TestRunIssueText(latestRun)}";
+
+    private static string TestRunIssueText(ScenarioRunResult latestRun)
+    {
+        var issueCount = latestRun.Steps.Count(step =>
+            step.Status is ScenarioStepRunStatus.Failed or ScenarioStepRunStatus.TimedOut or ScenarioStepRunStatus.Canceled);
+
+        return issueCount == 0 ? "No issues" : CountLabel(issueCount, "issue");
+    }
+
+    private static string TestRunSummaryClass(ScenarioRunResult? latestRun)
+        => latestRun?.Status switch
+        {
+            ScenarioRunStatus.Passed => "test-run-summary passed",
+            ScenarioRunStatus.Failed => "test-run-summary failed",
+            ScenarioRunStatus.Canceled => "test-run-summary canceled",
+            _ => "test-run-summary idle"
+        };
 
     private static string TestRunPillClass(ScenarioRunResult? latestRun)
         => latestRun?.Status switch
