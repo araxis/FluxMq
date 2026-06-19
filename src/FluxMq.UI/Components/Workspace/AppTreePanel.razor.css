@@ -202,7 +202,7 @@
     cursor: pointer;
     display: grid;
     gap: 8px;
-    grid-template-columns: 16px minmax(0, 1fr) 18px;
+    grid-template-columns: 16px minmax(0, 1fr) auto 18px;
     margin: 4px 0 0 36px;
     min-height: 42px;
     min-width: 0;
@@ -223,6 +223,24 @@
 
 .tree-empty-artifact-add {
     color: var(--flux-accent);
+}
+
+.tree-empty-artifact-cues {
+    align-items: center;
+    display: flex;
+    gap: 4px;
+    justify-content: flex-end;
+    min-width: 0;
+}
+
+.tree-empty-artifact-cues span {
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-radius: 999px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 9.5px;
+    font-weight: 800;
+    line-height: 1;
+    padding: 3px 5px;
 }
 
 .tree-empty-artifact-copy {
@@ -337,8 +355,9 @@
 }
 
 .test-artifact-item {
-    grid-template-columns: 16px minmax(0, 1fr) auto 24px;
-    min-height: 40px;
+    gap: 7px;
+    grid-template-columns: 22px minmax(0, 1fr) minmax(90px, auto) 24px;
+    min-height: 46px;
     padding-right: 4px;
     position: relative;
 }
@@ -350,6 +369,17 @@
     inset: 8px auto 8px 35px;
     position: absolute;
     width: 2px;
+}
+
+.test-artifact-icon-frame {
+    align-items: center;
+    background: color-mix(in srgb, var(--mud-palette-warning) 9%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-warning) 22%, var(--flux-border));
+    border-radius: 5px;
+    display: inline-flex;
+    height: 22px;
+    justify-content: center;
+    width: 22px;
 }
 
 .test-artifact-item.passed::before {
@@ -383,6 +413,32 @@
     color: var(--mud-palette-warning);
 }
 
+.test-artifact-copy small {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10.75px;
+    font-weight: 700;
+}
+
+.test-run-summary {
+    align-items: flex-end;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    justify-content: center;
+    min-width: 0;
+}
+
+.test-run-summary-meta {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10px;
+    font-weight: 750;
+    line-height: 1;
+    max-width: 118px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .test-run-pill {
     align-items: center;
     background: var(--flux-surface);
@@ -396,7 +452,7 @@
     gap: 4px;
     height: 22px;
     line-height: 1;
-    max-width: 82px;
+    max-width: 92px;
     min-width: 0;
     overflow: hidden;
     padding: 0 6px;
