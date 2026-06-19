@@ -57,7 +57,7 @@
                                     <span>@c.ResourceName</span>
                                     <small>@BrokerEndpointLabel(c)</small>
                                 </span>
-                                <span class="@BrokerStatePillClass(c)"
+                                <span class="@BrokerStateClass(c)"
                                       aria-label="@BrokerActionLabel(c)">
                                     <span>@BrokerStateText(c)</span>
                                 </span>
@@ -214,7 +214,7 @@
                                 <span class="app-menu-artifact-name">Metric designer</span>
                                 <span class="app-menu-artifact-meta">@CountLabel(active.MetricNames.Count, "metric")</span>
                             </span>
-                            <span class="app-menu-artifact-token">Open</span>
+                            <span class="app-menu-artifact-state">Open</span>
                         </div>
                     </MudMenuItem>
                 }
@@ -263,7 +263,7 @@
                                 </span>
                                 <span class="@TestRunMenuSummaryClass(latestTestRun)"
                                       aria-label="@TestRunMenuStateLabel(latestTestRun)">
-                                    <span class="@TestRunMenuPillClass(latestTestRun)">
+                                    <span class="@TestRunMenuStateClass(latestTestRun)">
                                         <MudIcon Icon="@TestRunMenuIcon(latestTestRun)" Size="Size.Small" />
                                         <span>@TestRunMenuText(latestTestRun)</span>
                                     </span>
@@ -307,7 +307,7 @@
             <span>@title</span>
             <small>@hint</small>
         </span>
-        <span class="app-menu-state-token">Empty</span>
+        <span class="app-menu-state-text">Empty</span>
     </div>;
 
     private static RenderFragment MenuCommandRow(string title, string hint) => @<div class="app-menu-command-row">
@@ -468,13 +468,13 @@
             _ => "app-menu-test-summary idle"
         };
 
-    private static string TestRunMenuPillClass(ScenarioRunResult? latestRun)
+    private static string TestRunMenuStateClass(ScenarioRunResult? latestRun)
         => latestRun?.Status switch
         {
-            ScenarioRunStatus.Passed => "app-menu-test-pill passed",
-            ScenarioRunStatus.Failed => "app-menu-test-pill failed",
-            ScenarioRunStatus.Canceled => "app-menu-test-pill canceled",
-            _ => "app-menu-test-pill idle"
+            ScenarioRunStatus.Passed => "app-menu-test-state passed",
+            ScenarioRunStatus.Failed => "app-menu-test-state failed",
+            ScenarioRunStatus.Canceled => "app-menu-test-state canceled",
+            _ => "app-menu-test-state idle"
         };
 
     private static string TestRunMenuIcon(ScenarioRunResult? latestRun)
@@ -532,12 +532,12 @@
         _ => "app-menu-broker-row idle"
     };
 
-    private static string BrokerStatePillClass(ManagedConnection connection) => connection.State switch
+    private static string BrokerStateClass(ManagedConnection connection) => connection.State switch
     {
-        MqttClientState.Connected => "app-menu-broker-pill live",
-        MqttClientState.Faulted => "app-menu-broker-pill faulted",
-        MqttClientState.Connecting or MqttClientState.Reconnecting => "app-menu-broker-pill pending",
-        _ => "app-menu-broker-pill idle"
+        MqttClientState.Connected => "app-menu-broker-state live",
+        MqttClientState.Faulted => "app-menu-broker-state faulted",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "app-menu-broker-state pending",
+        _ => "app-menu-broker-state idle"
     };
 
     private static string BrokerItemClass(ManagedConnection connection) => connection.State switch
