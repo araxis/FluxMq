@@ -5277,23 +5277,39 @@ public sealed class DashboardEventFilterCatalogTests
             "NodeEditDialog.razor.css"));
 
         markup.ShouldContain("node-edit-dialog-title");
-        markup.ShouldContain("node-edit-dialog-meta-strip");
+        markup.ShouldContain("node-edit-dialog-title-meta");
         markup.ShouldContain("node-edit-dialog-shell");
+        markup.ShouldContain("role=\"form\" aria-label=\"Edit node\"");
         markup.ShouldContain("node-edit-dialog-section node-edit-dialog-identity");
         markup.ShouldContain("node-edit-dialog-section node-edit-dialog-editor");
-        markup.ShouldContain("Unique within workflow");
+        markup.ShouldContain("aria-describedby=\"node-edit-dialog-status\"");
+        markup.ShouldContain("role=\"status\"");
+        markup.ShouldContain("aria-live=\"polite\"");
+        markup.ShouldContain("OnNodeIdKeyDown");
         markup.ShouldContain("SubmitStatusText");
+        markup.ShouldContain("SubmitStatusClass");
         markup.ShouldContain("node-edit-dialog-actions");
+        markup.ShouldContain("aria-label=\"Cancel node edit\"");
+        markup.ShouldContain("aria-label=\"Save node edit\"");
+        markup.ShouldNotContain("HelperText=");
+        markup.ShouldNotContain("ErrorText=");
+        markup.ShouldNotContain("node-edit-dialog-meta-strip");
+        markup.ShouldNotContain("<MudText Typo=\"Typo.h6\"");
         markup.ShouldNotContain("Must be unique within the workflow.");
 
         css.ShouldContain(".node-edit-dialog-shell");
         css.ShouldContain("max-height: min(70vh, 640px);");
         css.ShouldContain(".node-edit-dialog-section");
         css.ShouldContain(".node-edit-dialog-shell ::deep .mud-input-control");
+        css.ShouldContain(".node-edit-dialog-shell ::deep .mud-input-slot");
         css.ShouldContain(".node-edit-dialog-editor ::deep .mapper-workbench .mapper-panel");
         css.ShouldContain("height: 360px;");
         css.ShouldContain(".node-edit-dialog-action-status");
+        css.ShouldContain(".node-edit-dialog-action-status.is-error");
+        css.ShouldContain(".node-edit-dialog-title-meta span:not(:last-child)::after");
+        css.ShouldContain("min-height: 28px;");
         css.ShouldContain("@media (max-width: 700px)");
+        css.ShouldNotContain(".node-edit-dialog-meta-strip");
     }
 
     [Fact]

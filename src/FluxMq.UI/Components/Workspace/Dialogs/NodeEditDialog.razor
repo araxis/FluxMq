@@ -5,24 +5,24 @@
 <MudDialog>
     <TitleContent>
         <div class="node-edit-dialog-title">
-            <div class="node-edit-dialog-title-icon">
+            <div class="node-edit-dialog-title-icon" aria-hidden="true">
                 <MudIcon Icon="@Icons.Material.Filled.Edit" Color="@CategoryColor" Size="Size.Small" />
             </div>
             <div class="node-edit-dialog-title-copy">
-                <MudText Typo="Typo.h6" Class="node-edit-dialog-title-name">@NodeDisplayName</MudText>
-                <div class="node-edit-dialog-meta-strip">
+                <strong class="node-edit-dialog-title-name">@NodeDisplayName</strong>
+                <div class="node-edit-dialog-title-meta">
                     <span>@NodeId</span>
                     @if (!string.IsNullOrWhiteSpace(WorkflowName))
                     {
                         <span>@WorkflowName</span>
                     }
-                    <span>Editor</span>
+                    <span>Edit node</span>
                 </div>
             </div>
         </div>
     </TitleContent>
     <DialogContent>
-        <div class="node-edit-dialog-shell">
+        <div class="node-edit-dialog-shell" role="form" aria-label="Edit node">
             <section class="node-edit-dialog-section node-edit-dialog-identity">
                 <div class="node-edit-dialog-section-head">
                     <MudIcon Icon="@Icons.Material.Filled.Badge" Size="Size.Small" />
@@ -35,8 +35,9 @@
                               Margin="Margin.Dense"
                               Immediate="true"
                               Error="@(!string.IsNullOrWhiteSpace(NodeIdError))"
-                              ErrorText="@NodeIdError"
-                              HelperText="Unique within workflow"
+                              OnKeyDown="@OnNodeIdKeyDown"
+                              aria-label="Node ID"
+                              aria-describedby="node-edit-dialog-status"
                               Class="node-edit-dialog-node-id" />
             </section>
             @if (EditorContent is not null)
@@ -53,19 +54,26 @@
     </DialogContent>
     <DialogActions>
         <div class="node-edit-dialog-actions">
-            <div class="node-edit-dialog-action-status">
+            <div id="node-edit-dialog-status"
+                 class="node-edit-dialog-action-status @SubmitStatusClass"
+                 role="status"
+                 aria-live="polite">
                 <MudIcon Icon="@SubmitStatusIcon" Color="@SubmitStatusColor" Size="Size.Small" />
                 <span>@SubmitStatusText</span>
             </div>
             <span class="node-edit-dialog-action-spacer"></span>
             <MudButton OnClick="@Cancel"
                        Variant="Variant.Text"
+                       Size="Size.Small"
+                       aria-label="Cancel node edit"
                        Class="node-edit-dialog-button">Cancel</MudButton>
             <MudButton Color="@CategoryColor"
                        Variant="Variant.Filled"
+                       Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.Check"
                        Disabled="@(!CanSubmit)"
                        OnClick="@Submit"
+                       aria-label="Save node edit"
                        Class="node-edit-dialog-button node-edit-dialog-save">Save</MudButton>
         </div>
     </DialogActions>
@@ -103,6 +111,10 @@
     private Color SubmitStatusColor => CanSubmit
         ? CategoryColor
         : Color.Error;
+
+    private string SubmitStatusClass => CanSubmit
+        ? "is-ready"
+        : "is-error";
 
     protected override void OnParametersSet()
     {
@@ -151,6 +163,14 @@
         }
 
         MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private async Task OnNodeIdKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter" && CanSubmit)
+        {
+            await Submit();
+        }
     }
 
     private async Task Cancel()
