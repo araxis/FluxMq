@@ -47,8 +47,7 @@
     color: var(--flux-accent);
 }
 
-.tab-count,
-.section-badge {
+.tab-count {
     background: var(--flux-surface-2);
     border: 0;
     border-radius: 4px;
@@ -58,6 +57,14 @@
     font-weight: 500;
     line-height: 1;
     padding: 2px 4px;
+}
+
+.section-count {
+    color: var(--mud-palette-text-secondary);
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1;
 }
 
 .inspector-panel {
@@ -194,7 +201,7 @@
     min-width: 0;
 }
 
-.select-pill {
+.publish-qos-select {
     align-items: center;
     background: var(--flux-surface-2);
     border: 1px solid var(--flux-border);
@@ -206,7 +213,7 @@
     position: relative;
 }
 
-.select-pill select {
+.publish-qos-select select {
     appearance: auto;
     background: transparent;
     border: 0;
@@ -219,24 +226,24 @@
     padding: 0 7px;
 }
 
-.select-pill select option {
+.publish-qos-select select option {
     background: var(--flux-surface);
     color: var(--mud-palette-text-primary);
 }
 
-.select-pill .mud-icon-root {
+.publish-qos-select .mud-icon-root {
     color: var(--flux-text-subtle);
     pointer-events: none;
     position: absolute;
     right: 6px;
 }
 
-.select-pill:hover {
+.publish-qos-select:hover {
     background: var(--flux-surface-3);
     color: var(--mud-palette-text-primary);
 }
 
-.pill-button {
+.publish-retain-toggle {
     align-items: center;
     background: var(--flux-surface-2);
     border: 1px solid var(--flux-border);
@@ -252,19 +259,17 @@
     padding: 0 8px;
 }
 
-.publish-retain strong {
+.publish-retain-toggle strong {
     color: var(--mud-palette-text-primary);
     font-size: 10.5px;
     font-weight: 700;
 }
 
-.publish-retain.active {
-    background: color-mix(in srgb, var(--flux-accent) 12%, transparent);
-    border-color: color-mix(in srgb, var(--flux-accent) 36%, var(--flux-border));
+.publish-retain-toggle.active {
     color: var(--flux-accent);
 }
 
-.pill-button:hover {
+.publish-retain-toggle:hover {
     background: var(--flux-surface-3);
     color: var(--mud-palette-text-primary);
 }
@@ -350,7 +355,7 @@
 
 .live-topic-dot {
     background: var(--flux-text-subtle);
-    border-radius: 999px;
+    border-radius: 50%;
     display: inline-block;
     flex: 0 0 auto;
 }

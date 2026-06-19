@@ -66,7 +66,7 @@
                     </label>
 
                     <div class="publish-row">
-                        <label class="select-pill" aria-label="Quality of service">
+                        <label class="publish-qos-select" aria-label="Quality of service">
                             <select @bind="_publishQos">
                                 <option value="@MqttQualityOfServiceLevel.AtMostOnce">QoS 0</option>
                                 <option value="@MqttQualityOfServiceLevel.AtLeastOnce">QoS 1</option>
@@ -74,7 +74,7 @@
                             </select>
                         </label>
                         <button type="button"
-                                class="pill-button publish-retain @(_retain ? "active" : null)"
+                                class="publish-retain-toggle @(_retain ? "active" : null)"
                                 @onclick="@(() => _retain = !_retain)">
                             <span>Retain</span>
                             <strong>@(_retain ? "On" : "Off")</strong>
@@ -103,7 +103,7 @@
                     <span>Live topics</span>
                     @if (LiveTopicRows.Count > 0)
                     {
-                        <span class="section-badge">@LiveTopicRows.Count</span>
+                        <span class="section-count">@LiveTopicRows.Count</span>
                     }
                 </div>
 
@@ -160,7 +160,7 @@
                 <span>Live topics</span>
                 @if (MessageSource.Count > 0)
                 {
-                    <span class="section-badge">@MessageSource.Count msgs</span>
+                    <span class="section-count">@MessageSource.Count msgs</span>
                 }
             </div>
 
