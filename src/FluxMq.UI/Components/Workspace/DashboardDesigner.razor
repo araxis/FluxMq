@@ -6,7 +6,7 @@
 @inject DashboardWidgetRegistry DashboardWidgets
 
 <div class="dashboard-designer" role="region" aria-label="Dashboard designer">
-    <div class="dashboard-toolbar">
+    <div class="dashboard-toolbar" role="toolbar" aria-label="Dashboard toolbar">
         <div class="dashboard-heading">
             <span class="dashboard-heading-icon-tile" aria-hidden="true">
                 <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="dashboard-heading-icon" />
@@ -51,6 +51,7 @@
                                                    Color="Color.Primary"
                                                    Size="Size.Small"
                                                    Class="dashboard-tool-button"
+                                                   aria-label="@GridPickerButtonLabel"
                                                    OnClick="@ToggleGridPicker" />
                                 </MudTooltip>
                                 <span class="dashboard-command-label">@GridPickerSummary</span>
@@ -69,6 +70,8 @@
                                                     <button type="button"
                                                             class="@GridPickerCellClass(r, c)"
                                                             title="@($"Set grid to {c} columns x {r} rows")"
+                                                            aria-label="@GridPickerCellAriaLabel(r, c)"
+                                                            aria-pressed="@(r == _previewRows && c == _previewColumns)"
                                                             @onmouseenter="@(() => PreviewGrid(r, c))"
                                                             @onclick="@(() => PickGrid(r, c))">
                                                     </button>
@@ -87,6 +90,7 @@
                                                Size="Size.Small"
                                                Disabled="@(!CanMerge)"
                                                Class="dashboard-tool-button"
+                                               aria-label="Merge selected cells"
                                                OnClick="@MergeSelected" />
                             </MudTooltip>
                             <div class="dashboard-grid-picker dashboard-split-control">
@@ -95,6 +99,7 @@
                                                    Size="Size.Small"
                                                    Disabled="@(!CanOpenSplitPicker)"
                                                    Class="dashboard-tool-button"
+                                                   aria-label="@SplitPickerButtonLabel"
                                                    OnClick="@ToggleSplitPicker" />
                                 </MudTooltip>
                                 <span class="dashboard-command-label">@SplitPickerSummary</span>
@@ -113,6 +118,9 @@
                                                     <button type="button"
                                                             class="@SplitPickerCellClass(r, c)"
                                                             title="@($"Split selected cell to {c} columns x {r} rows")"
+                                                            aria-label="@SplitPickerCellAriaLabel(r, c)"
+                                                            aria-pressed="@(r == _previewSplitRows && c == _previewSplitColumns)"
+                                                            disabled="@IsSplitPickerCellDisabled(r, c)"
                                                             @onmouseenter="@(() => PreviewSplit(r, c))"
                                                             @onclick="@(() => PickSplit(r, c))">
                                                     </button>
@@ -237,16 +245,6 @@
                             <div>
                                 <span>@EmptyGridTitle</span>
                                 <small>@EmptyGridHint</small>
-                                <span class="dashboard-grid-empty-steps" aria-label="First widget path">
-                                    <span>
-                                        <MudIcon Icon="@Icons.Material.Filled.ViewModule" Size="Size.Small" />
-                                        Catalog widget
-                                    </span>
-                                    <span>
-                                        <MudIcon Icon="@Icons.Material.Filled.AdsClick" Size="Size.Small" />
-                                        Empty cell
-                                    </span>
-                                </span>
                             </div>
                         </div>
                     }
@@ -258,6 +256,8 @@
                                  role="gridcell"
                                  aria-selected="@_selectedCellIds.Contains(currentCell.Name)"
                                  aria-label="@CellAriaLabel(currentCell)"
+                                 title="@CellAriaLabel(currentCell)"
+                                 tabindex="0"
                                  @onpointerenter="@((PointerEventArgs args) => TrackDropCell(currentCell, args))"
                                  @onpointermove="@((PointerEventArgs args) => TrackDropCell(currentCell, args))"
                                  @onpointerleave="@((PointerEventArgs args) => ClearDropCell(currentCell, args))"
@@ -266,6 +266,7 @@
                                  @ondrop="@(() => DropWidgetOnCell(currentCell))"
                                  @ondragleave="@(() => ClearWidgetMoveCell(currentCell))"
                                  @onclick="@((MouseEventArgs args) => SelectCell(currentCell, args))"
+                                 @onkeydown="@((KeyboardEventArgs args) => SelectCellFromKeyboard(args, currentCell))"
                                  @key="currentCell.Name">
                             <div class="@CellContentClass(currentCell)">
                                 @if (!string.IsNullOrWhiteSpace(currentCell.Widget))
@@ -590,11 +591,19 @@
         ? "Grid"
         : $"{_layout.Columns.Count} x {_layout.Rows.Count}";
 
+    private string GridPickerButtonLabel => _layout is null
+        ? "Set dashboard grid layout"
+        : $"Set dashboard grid layout, currently {_layout.Columns.Count} columns by {_layout.Rows.Count} rows";
+
     private string GridPickerLabel => $"{_previewColumns} columns x {_previewRows} rows";
 
     private string SplitPickerSummary => SelectedCells.Count == 1
         ? "Split"
         : "Split";
+
+    private string SplitPickerButtonLabel => SelectedCells.Count == 1
+        ? $"Split {CellTitle(SelectedCells[0])}"
+        : "Split selected cell";
 
     private string SplitPickerLabel => $"{_previewSplitColumns} columns x {_previewSplitRows} rows";
 
@@ -760,6 +769,23 @@
 
         Project.SetActiveDashboardCell(_selectedCellIds.Count == 1 ? _selectedCellIds.Single() : null);
     }
+
+    private void SelectCellFromKeyboard(KeyboardEventArgs args, DashboardCellSnapshot cell)
+    {
+        if (!IsActivationKey(args.Key))
+        {
+            return;
+        }
+
+        _selectedCellIds.Clear();
+        _selectedCellIds.Add(cell.Name);
+        Project.SetActiveDashboardCell(cell.Name);
+    }
+
+    private static bool IsActivationKey(string? key)
+        => string.Equals(key, "Enter", StringComparison.Ordinal) ||
+           string.Equals(key, " ", StringComparison.Ordinal) ||
+           string.Equals(key, "Spacebar", StringComparison.Ordinal);
 
     private void SelectSingleCell(string? cellName)
     {
@@ -1096,7 +1122,18 @@
         => $"dashboard-grid-picker-cell {(rows <= _previewRows && columns <= _previewColumns ? "active" : null)} {(_layout is not null && rows == _layout.Rows.Count && columns == _layout.Columns.Count ? "current" : null)}";
 
     private string SplitPickerCellClass(int rows, int columns)
-        => $"dashboard-grid-picker-cell {(rows <= _previewSplitRows && columns <= _previewSplitColumns ? "active" : null)} {(rows == 1 && columns == 1 || !CanSubdivide(rows, columns) ? "disabled" : null)}";
+        => $"dashboard-grid-picker-cell {(rows <= _previewSplitRows && columns <= _previewSplitColumns ? "active" : null)} {(IsSplitPickerCellDisabled(rows, columns) ? "disabled" : null)}";
+
+    private static string GridPickerCellAriaLabel(int rows, int columns)
+        => $"Preview {columns} columns by {rows} rows";
+
+    private string SplitPickerCellAriaLabel(int rows, int columns)
+        => IsSplitPickerCellDisabled(rows, columns)
+            ? $"Cannot split selected cell to {columns} columns by {rows} rows"
+            : $"Preview split to {columns} columns by {rows} rows";
+
+    private bool IsSplitPickerCellDisabled(int rows, int columns)
+        => rows == 1 && columns == 1 || !CanSubdivide(rows, columns);
 
     private bool IsDashboardComponentDrag
         => DragState.ActiveComponentDrag is { TargetKind: WorkspaceArtifactKind.Dashboard };
