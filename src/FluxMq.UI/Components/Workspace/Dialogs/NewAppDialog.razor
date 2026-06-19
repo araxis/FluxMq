@@ -1,114 +1,147 @@
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true })">
     <TitleContent>
-        <MudText Typo="Typo.h6">New App</MudText>
+        <div class="new-app-dialog-title">
+            <span class="new-app-dialog-title-icon" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.Apps" Size="Size.Small" />
+            </span>
+            <MudText Typo="Typo.h6" Class="new-app-dialog-heading">New app</MudText>
+            <span class="@FormStatusClass" role="status" aria-live="polite">@FormStatusText</span>
+        </div>
     </TitleContent>
     <DialogContent>
-        <MudStack Spacing="3">
+        <div class="new-app-dialog-content">
+            <section class="new-app-dialog-section" aria-labelledby="new-app-workspace-heading">
+                <div class="new-app-dialog-section-title" id="new-app-workspace-heading">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+                    <span>Workspace</span>
+                </div>
 
-            <MudGrid Spacing="2">
-                <MudItem xs="12" md="6">
+                <div class="new-app-dialog-grid two">
                     <MudTextField T="string"
+                                  Class="new-app-dialog-field"
                                   Label="App name"
                                   @bind-Value="_appName"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
+                                  Required="true"
                                   Immediate="true"
-                                  HelperText="Used as the suggested filename when saving"
+                                  Placeholder="Telemetry app"
                                   OnKeyDown="@OnKeyDown" />
-                </MudItem>
-                <MudItem xs="12" md="6">
                     <MudTextField T="string"
-                                  Label="First pipeline name"
+                                  Class="new-app-dialog-field"
+                                  Label="First pipeline"
                                   @bind-Value="_pipelineName"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
+                                  Required="true"
                                   Immediate="true"
+                                  Placeholder="ingest"
                                   OnKeyDown="@OnKeyDown" />
-                </MudItem>
-            </MudGrid>
+                </div>
+            </section>
 
-            <MudDivider />
+            <section class="new-app-dialog-section" aria-labelledby="new-app-connection-heading">
+                <div class="new-app-dialog-section-title" id="new-app-connection-heading">
+                    <MudIcon Icon="@Icons.Material.Filled.Cable" Size="Size.Small" />
+                    <span>Connection</span>
+                </div>
 
-            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">MQTT Connection</MudText>
-
-            <MudGrid Spacing="2">
-                <MudItem xs="12" md="6">
+                <div class="new-app-dialog-grid connection">
                     <MudTextField T="string"
-                                  Label="Name"
+                                  Class="new-app-dialog-field"
+                                  Label="Connection name"
                                   @bind-Value="_connName"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
                                   Immediate="true"
+                                  Placeholder="local-broker"
                                   OnKeyDown="@OnKeyDown" />
-                </MudItem>
-                <MudItem xs="12" md="6">
                     <MudTextField T="string"
-                                  Label="Client ID"
-                                  @bind-Value="_clientId"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Immediate="true"
-                                  OnKeyDown="@OnKeyDown" />
-                </MudItem>
-                <MudItem xs="12" md="8">
-                    <MudTextField T="string"
+                                  Class="new-app-dialog-field wide"
                                   Label="Host"
                                   @bind-Value="_host"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
+                                  Required="true"
                                   Immediate="true"
+                                  Placeholder="localhost"
                                   OnKeyDown="@OnKeyDown" />
-                </MudItem>
-                <MudItem xs="12" md="4">
                     <MudNumericField T="int"
+                                     Class="new-app-dialog-field"
                                      Label="Port"
                                      @bind-Value="_port"
                                      Min="1"
                                      Max="65535"
                                      Variant="Variant.Outlined"
                                      Margin="Margin.Dense" />
-                </MudItem>
-                <MudItem xs="12">
                     <MudTextField T="string"
-                                  Label="Initial trigger topic(s)"
+                                  Class="new-app-dialog-field"
+                                  Label="Client ID"
+                                  @bind-Value="_clientId"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  OnKeyDown="@OnKeyDown" />
+                    <MudTextField T="string"
+                                  Class="new-app-dialog-field wide"
+                                  Label="Trigger topic"
                                   @bind-Value="_subscription"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
-                                  HelperText="Creates the first MQTT Trigger subscriber. Add QoS/retained options in the trigger editor."
+                                  Immediate="true"
+                                  Placeholder="factory/#"
                                   OnKeyDown="@OnKeyDown" />
-                </MudItem>
-                <MudItem xs="12">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-                        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Security</MudText>
-                        <MudCheckBox T="bool" @bind-Value="_useTls" Label="TLS" Dense="true" />
-                    </MudStack>
-                </MudItem>
-                <MudItem xs="12" md="6">
+                </div>
+            </section>
+
+            <section class="new-app-dialog-section compact" aria-labelledby="new-app-security-heading">
+                <div class="new-app-dialog-security-row">
+                    <div class="new-app-dialog-section-title" id="new-app-security-heading">
+                        <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" />
+                        <span>Security</span>
+                    </div>
+                    <MudCheckBox T="bool"
+                                 Class="new-app-dialog-tls"
+                                 @bind-Value="_useTls"
+                                 Label="TLS"
+                                 Dense="true" />
+                </div>
+
+                <div class="new-app-dialog-grid two">
                     <MudTextField T="string"
+                                  Class="new-app-dialog-field"
                                   Label="Username"
                                   @bind-Value="_username"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
                                   OnKeyDown="@OnKeyDown" />
-                </MudItem>
-                <MudItem xs="12" md="6">
                     <MudTextField T="string"
+                                  Class="new-app-dialog-field"
                                   Label="Password"
                                   @bind-Value="_password"
                                   InputType="InputType.Password"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
                                   OnKeyDown="@OnKeyDown" />
-                </MudItem>
-            </MudGrid>
-
-        </MudStack>
+                </div>
+            </section>
+        </div>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled"
-                   Disabled="@(!IsValid)"
-                   OnClick="@Submit">Create</MudButton>
+        <div class="new-app-dialog-actions">
+            <MudButton Variant="Variant.Text"
+                       Size="Size.Small"
+                       Class="new-app-dialog-cancel"
+                       aria-label="Cancel new app"
+                       OnClick="@Cancel">Cancel</MudButton>
+            <MudButton Color="Color.Primary"
+                       Variant="Variant.Filled"
+                       Size="Size.Small"
+                       Class="new-app-dialog-create"
+                       Disabled="@(!IsValid)"
+                       aria-label="Create app"
+                       OnClick="@Submit">Create</MudButton>
+        </div>
     </DialogActions>
 </MudDialog>
 
@@ -130,7 +163,14 @@
     private bool IsValid =>
         !string.IsNullOrWhiteSpace(_appName) &&
         !string.IsNullOrWhiteSpace(_pipelineName) &&
-        !string.IsNullOrWhiteSpace(_host);
+        !string.IsNullOrWhiteSpace(_host) &&
+        _port is >= 1 and <= 65535;
+
+    private string FormStatusClass
+        => IsValid ? "new-app-dialog-status ready" : "new-app-dialog-status";
+
+    private string FormStatusText
+        => IsValid ? "Ready" : "Required fields";
 
     private void Cancel() => MudDialog.Cancel();
 
