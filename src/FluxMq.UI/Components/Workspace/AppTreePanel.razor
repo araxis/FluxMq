@@ -54,26 +54,16 @@ else
                 </div>
 
                 <div class="tree-section">
-                    <div class="tree-section-header" @onclick="@(() => ToggleSection(a, BrokerSection))">
-                        <div class="tree-section-title">
-                            <MudIcon Icon="@CollapseIcon(brokersCollapsed)"
-                                     Size="Size.Small"
-                                     Class="tree-section-chevron" />
-                            <MudIcon Icon="@Icons.Material.Filled.Hub"
-                                     Size="Size.Small"
-                                     Class="tree-section-icon brokers" />
-                            <span>Brokers</span>
-                            <span class="tree-section-count">@conns.Count</span>
-                        </div>
-                        <div class="tree-section-actions" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
-                            <MudTooltip Text="Add connection">
-                                <MudIconButton Size="Size.Small"
-                                               Icon="@Icons.Material.Filled.Add"
-                                               Class="tree-icon-button"
-                                               OnClick="@(() => AddConnectionAsync(a))" />
-                            </MudTooltip>
-                        </div>
-                    </div>
+                    @TreeSectionHeader(
+                        a,
+                        BrokerSection,
+                        brokersCollapsed,
+                        Icons.Material.Filled.Hub,
+                        "brokers",
+                        "Brokers",
+                        conns.Count,
+                        "Add connection",
+                        AddConnectionAsync)
 
                     @if (!brokersCollapsed && conns.Count == 0)
                     {
@@ -124,26 +114,16 @@ else
                 </div>
 
                 <div class="tree-section">
-                    <div class="tree-section-header" @onclick="@(() => ToggleSection(a, PipelineSection))">
-                        <div class="tree-section-title">
-                            <MudIcon Icon="@CollapseIcon(pipelinesCollapsed)"
-                                     Size="Size.Small"
-                                     Class="tree-section-chevron" />
-                            <MudIcon Icon="@Icons.Material.Filled.Timeline"
-                                     Size="Size.Small"
-                                     Class="tree-section-icon pipelines" />
-                            <span>Pipelines</span>
-                            <span class="tree-section-count">@a.WorkflowNames.Count</span>
-                        </div>
-                        <div class="tree-section-actions" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
-                            <MudTooltip Text="Add pipeline">
-                                <MudIconButton Size="Size.Small"
-                                               Icon="@Icons.Material.Filled.Add"
-                                               Class="tree-icon-button"
-                                               OnClick="@(() => AddPipelineAsync(a))" />
-                            </MudTooltip>
-                        </div>
-                    </div>
+                    @TreeSectionHeader(
+                        a,
+                        PipelineSection,
+                        pipelinesCollapsed,
+                        Icons.Material.Filled.Timeline,
+                        "pipelines",
+                        "Pipelines",
+                        a.WorkflowNames.Count,
+                        "Add pipeline",
+                        AddPipelineAsync)
 
                     @if (!pipelinesCollapsed && a.WorkflowNames.Count == 0)
                     {
@@ -169,26 +149,16 @@ else
                 </div>
 
                 <div class="tree-section">
-                    <div class="tree-section-header" @onclick="@(() => ToggleSection(a, MetricSection))">
-                        <div class="tree-section-title">
-                            <MudIcon Icon="@CollapseIcon(metricsCollapsed)"
-                                     Size="Size.Small"
-                                     Class="tree-section-chevron" />
-                            <MudIcon Icon="@Icons.Material.Filled.QueryStats"
-                                     Size="Size.Small"
-                                     Class="tree-section-icon dashboards" />
-                            <span>Metrics</span>
-                            <span class="tree-section-count">@a.MetricNames.Count</span>
-                        </div>
-                        <div class="tree-section-actions" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
-                            <MudTooltip Text="Add metric">
-                                <MudIconButton Size="Size.Small"
-                                               Icon="@Icons.Material.Filled.Add"
-                                               Class="tree-icon-button"
-                                               OnClick="@(() => AddMetricAsync(a))" />
-                            </MudTooltip>
-                        </div>
-                    </div>
+                    @TreeSectionHeader(
+                        a,
+                        MetricSection,
+                        metricsCollapsed,
+                        Icons.Material.Filled.QueryStats,
+                        "dashboards",
+                        "Metrics",
+                        a.MetricNames.Count,
+                        "Add metric",
+                        AddMetricAsync)
 
                     @if (!metricsCollapsed && a.MetricNames.Count == 0)
                     {
@@ -207,26 +177,16 @@ else
                 </div>
 
                 <div class="tree-section">
-                    <div class="tree-section-header" @onclick="@(() => ToggleSection(a, DashboardSection))">
-                        <div class="tree-section-title">
-                            <MudIcon Icon="@CollapseIcon(dashboardsCollapsed)"
-                                     Size="Size.Small"
-                                     Class="tree-section-chevron" />
-                            <MudIcon Icon="@Icons.Material.Filled.Dashboard"
-                                     Size="Size.Small"
-                                     Class="tree-section-icon dashboards" />
-                            <span>Dashboards</span>
-                            <span class="tree-section-count">@a.DashboardNames.Count</span>
-                        </div>
-                        <div class="tree-section-actions" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
-                            <MudTooltip Text="Add dashboard">
-                                <MudIconButton Size="Size.Small"
-                                               Icon="@Icons.Material.Filled.Add"
-                                               Class="tree-icon-button"
-                                               OnClick="@(() => AddDashboardAsync(a))" />
-                            </MudTooltip>
-                        </div>
-                    </div>
+                    @TreeSectionHeader(
+                        a,
+                        DashboardSection,
+                        dashboardsCollapsed,
+                        Icons.Material.Filled.Dashboard,
+                        "dashboards",
+                        "Dashboards",
+                        a.DashboardNames.Count,
+                        "Add dashboard",
+                        AddDashboardAsync)
 
                     @if (!dashboardsCollapsed && a.DashboardNames.Count == 0)
                     {
@@ -252,26 +212,16 @@ else
                 </div>
 
                 <div class="tree-section">
-                    <div class="tree-section-header" @onclick="@(() => ToggleSection(a, TestSection))">
-                        <div class="tree-section-title">
-                            <MudIcon Icon="@CollapseIcon(testsCollapsed)"
-                                     Size="Size.Small"
-                                     Class="tree-section-chevron" />
-                            <MudIcon Icon="@Icons.Material.Filled.FactCheck"
-                                     Size="Size.Small"
-                                     Class="tree-section-icon tests" />
-                            <span>Test scenarios</span>
-                            <span class="tree-section-count">@a.TestNames.Count</span>
-                        </div>
-                        <div class="tree-section-actions" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
-                            <MudTooltip Text="Add test">
-                                <MudIconButton Size="Size.Small"
-                                               Icon="@Icons.Material.Filled.Add"
-                                               Class="tree-icon-button"
-                                               OnClick="@(() => AddTestAsync(a))" />
-                            </MudTooltip>
-                        </div>
-                    </div>
+                    @TreeSectionHeader(
+                        a,
+                        TestSection,
+                        testsCollapsed,
+                        Icons.Material.Filled.FactCheck,
+                        "tests",
+                        "Test scenarios",
+                        a.TestNames.Count,
+                        "Add test",
+                        AddTestAsync)
 
                     @if (!testsCollapsed && a.TestNames.Count == 0)
                     {
@@ -355,6 +305,36 @@ else
 
     private readonly HashSet<FlowWorkspaceService> _subscribed = [];
     private readonly Dictionary<FlowWorkspaceService, HashSet<string>> _collapsedSections = [];
+
+    private RenderFragment TreeSectionHeader(
+        FlowWorkspaceService app,
+        string section,
+        bool isCollapsed,
+        string icon,
+        string iconClass,
+        string title,
+        int count,
+        string addTooltip,
+        Func<FlowWorkspaceService, Task> addAction) => @<div class="tree-section-header" @onclick="@(() => ToggleSection(app, section))">
+            <div class="tree-section-title">
+                <MudIcon Icon="@CollapseIcon(isCollapsed)"
+                         Size="Size.Small"
+                         Class="tree-section-chevron" />
+                <MudIcon Icon="@icon"
+                         Size="Size.Small"
+                         Class="@($"tree-section-icon {iconClass}")" />
+                <span>@title</span>
+                <span class="tree-section-count">@count</span>
+            </div>
+            <div class="tree-section-actions" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
+                <MudTooltip Text="@addTooltip">
+                    <MudIconButton Size="Size.Small"
+                                   Icon="@Icons.Material.Filled.Add"
+                                   Class="tree-icon-button"
+                                   OnClick="@(() => addAction(app))" />
+                </MudTooltip>
+            </div>
+        </div>;
 
     protected override void OnInitialized()
     {
