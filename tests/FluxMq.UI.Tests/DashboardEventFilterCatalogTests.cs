@@ -5398,13 +5398,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("test-artifact-copy");
         markup.ShouldContain("TestRunSummaryClass(latestTestRun)");
         markup.ShouldContain("TestRunDetailText(latestTestRun)");
-        markup.ShouldContain("TestRunPillClass(latestTestRun)");
+        markup.ShouldContain("TestRunStateClass(latestTestRun)");
         markup.ShouldContain("tree-item-actions");
         markup.ShouldContain("tree-delete-button");
         markup.ShouldContain("RemoveTestAsync(a, t)");
         markup.ShouldContain("ShowMessageBoxAsync(");
         markup.ShouldContain("private static string TestArtifactTitle");
         markup.ShouldContain("private static string TestRunIssueText");
+        markup.ShouldNotContain("TestRunPillClass(latestTestRun)");
+        markup.ShouldNotContain("test-run-pill");
 
         css.ShouldContain(".tree-empty-artifact-row");
         css.ShouldContain(".tree-empty ::deep .mud-icon-root");
@@ -5431,10 +5433,12 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-artifact-copy small");
         css.ShouldContain(".test-run-summary");
         css.ShouldContain(".test-run-summary-meta");
-        css.ShouldContain(".test-run-pill");
+        css.ShouldContain(".test-run-state");
         css.ShouldContain(".tree-item-actions");
         css.ShouldContain("opacity: 0.58;");
         css.ShouldContain(".tree-item-actions ::deep .tree-delete-button");
+        css.ShouldNotContain(".test-run-pill");
+        css.ShouldNotContain("border-radius: 999px;");
     }
 
     [Fact]

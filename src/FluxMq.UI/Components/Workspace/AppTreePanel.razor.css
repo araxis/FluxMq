@@ -204,18 +204,13 @@
 
 .tree-section-count {
     align-items: center;
-    background: color-mix(in srgb, var(--mud-palette-text-secondary) 13%, transparent);
-    border: 1px solid color-mix(in srgb, var(--mud-palette-text-secondary) 18%, transparent);
-    border-radius: 999px;
     color: var(--mud-palette-text-secondary);
     display: inline-flex;
     font-size: 10px;
     font-weight: 750;
-    height: 17px;
     justify-content: center;
     line-height: 1;
-    min-width: 20px;
-    padding: 0 6px;
+    min-width: 12px;
 }
 
 .tree-muted-row {
@@ -263,13 +258,11 @@
 }
 
 .tree-empty-artifact-cues span {
-    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
-    border-radius: 999px;
     color: var(--mud-palette-text-secondary);
     font-size: 9.5px;
     font-weight: 800;
     line-height: 1;
-    padding: 3px 5px;
+    padding: 0 1px;
 }
 
 .tree-empty-artifact-copy {
@@ -396,7 +389,7 @@
 
 .test-artifact-item::before {
     background: color-mix(in srgb, var(--mud-palette-text-secondary) 34%, transparent);
-    border-radius: 999px;
+    border-radius: 0;
     content: "";
     inset: 8px auto 8px 35px;
     position: absolute;
@@ -471,47 +464,36 @@
     white-space: nowrap;
 }
 
-.test-run-pill {
+.test-run-state {
     align-items: center;
-    background: var(--flux-surface);
-    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
-    border-radius: 5px;
     color: var(--mud-palette-text-secondary);
     display: inline-flex;
     flex: 0 0 auto;
     font-size: 10px;
     font-weight: 800;
     gap: 4px;
-    height: 22px;
     line-height: 1;
     max-width: 92px;
     min-width: 0;
     overflow: hidden;
-    padding: 0 6px;
     text-transform: uppercase;
     white-space: nowrap;
 }
 
-.test-run-pill span {
+.test-run-state span {
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.test-run-pill.passed {
-    background: color-mix(in srgb, var(--flux-accent) 10%, transparent);
-    border-color: color-mix(in srgb, var(--flux-accent) 34%, var(--flux-border));
+.test-run-state.passed {
     color: var(--flux-accent);
 }
 
-.test-run-pill.failed {
-    background: color-mix(in srgb, var(--mud-palette-error) 10%, transparent);
-    border-color: color-mix(in srgb, var(--mud-palette-error) 40%, var(--flux-border));
+.test-run-state.failed {
     color: var(--mud-palette-error);
 }
 
-.test-run-pill.canceled {
-    background: color-mix(in srgb, var(--mud-palette-warning) 10%, transparent);
-    border-color: color-mix(in srgb, var(--mud-palette-warning) 40%, var(--flux-border));
+.test-run-state.canceled {
     color: var(--mud-palette-warning);
 }
 
