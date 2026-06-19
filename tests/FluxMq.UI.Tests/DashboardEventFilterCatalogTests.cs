@@ -4950,7 +4950,8 @@ public sealed class DashboardEventFilterCatalogTests
             "app.css"));
 
         markup.ShouldContain("ShouldShowRequirements(item)");
-        markup.ShouldContain("catalog-item-badges");
+        markup.ShouldContain("catalog-item-meta");
+        markup.ShouldContain("catalog-item-meta-value");
         markup.ShouldContain("RequirementLabel(requirement)");
         markup.ShouldContain("CatalogItemClass(item)");
         markup.ShouldContain("aria-grabbed=\"@CatalogItemGrabbed(item)\"");
@@ -4960,8 +4961,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("DragIndicator");
         markup.ShouldContain("IsDraggingItem(CatalogEntry item)");
         css.ShouldContain("grid-template-areas:");
-        css.ShouldContain("\"description badges\"");
-        css.ShouldContain(".component-catalog.dashboard .catalog-item-badge:nth-child(n+2)");
+        css.ShouldContain("\"description meta\"");
+        css.ShouldContain(".component-catalog.dashboard .catalog-item-meta-value:nth-child(n+2)");
         css.ShouldContain("grid-template-columns: 22px minmax(0, 1fr) 42px;");
         css.ShouldContain("position: sticky;");
         css.ShouldContain("min-height: 38px;");
@@ -4977,6 +4978,10 @@ public sealed class DashboardEventFilterCatalogTests
         appCss.ShouldContain("min-height: 30px;");
         appCss.ShouldContain("max-width: 220px;");
         appCss.ShouldContain(".flux-drag-preview.over-designer .mud-icon-root");
+        markup.ShouldNotContain("catalog-item-badges");
+        markup.ShouldNotContain("catalog-item-badge");
+        css.ShouldNotContain(".catalog-item-badges");
+        css.ShouldNotContain(".catalog-item-badge");
     }
 
     [Fact]
@@ -5071,12 +5076,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("CatalogItemAriaLabel(item)");
         markup.ShouldContain("aria-grabbed=\"@CatalogItemGrabbed(item)\"");
         markup.ShouldContain("ShouldShowStepMetadata(item)");
-        markup.ShouldContain("catalog-step-badges");
-        markup.ShouldContain("StepPhaseBadgeClass(item)");
+        markup.ShouldContain("catalog-step-meta");
+        markup.ShouldContain("StepPhaseMetaClass(item)");
         markup.ShouldContain("StepKindLabel(item)");
         markup.ShouldContain("StepParameterLabel(item)");
         markup.ShouldContain("descriptor.DefaultPhase");
         markup.ShouldContain("descriptor.Fields.Count");
+        markup.ShouldNotContain("catalog-step-badges");
+        markup.ShouldNotContain("StepPhaseBadgeClass(item)");
+        markup.ShouldNotContain("catalog-item-badge");
 
         css.ShouldContain(".catalog-title-copy");
         css.ShouldContain(".catalog-title-label");
@@ -5107,11 +5115,14 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".component-catalog.test .catalog-item:not(.dragging):hover,");
         css.ShouldContain(".component-catalog.test .catalog-item:not(.dragging):focus-visible");
         css.ShouldContain("inset 2px 0 0 color-mix(in srgb, var(--mud-palette-warning) 54%, transparent),");
-        css.ShouldContain(".catalog-step-badges");
-        css.ShouldContain(".component-catalog.test .catalog-item-badge.setup");
+        css.ShouldContain(".catalog-step-meta");
+        css.ShouldContain(".component-catalog.test .catalog-item-meta-value.setup");
         css.ShouldContain(".component-catalog.test .catalog-drag-grip");
         css.ShouldContain("display: none;");
         css.ShouldContain("@media (max-width: 760px)");
+        css.ShouldNotContain(".catalog-step-badges");
+        css.ShouldNotContain(".catalog-item-badge");
+        css.ShouldNotContain("border-radius: 999px;");
     }
 
     [Fact]

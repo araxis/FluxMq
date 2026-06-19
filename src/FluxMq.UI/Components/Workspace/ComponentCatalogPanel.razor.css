@@ -229,7 +229,7 @@
 .catalog-list::-webkit-scrollbar-thumb {
     background: color-mix(in srgb, var(--mud-palette-text-secondary) 24%, transparent);
     border: 2px solid transparent;
-    border-radius: 999px;
+    border-radius: 3px;
     background-clip: padding-box;
 }
 
@@ -486,7 +486,7 @@
     white-space: nowrap;
 }
 
-.catalog-item-badges {
+.catalog-item-meta {
     display: flex;
     flex-wrap: nowrap;
     gap: 3px;
@@ -494,60 +494,44 @@
     overflow: hidden;
 }
 
-.catalog-item-badge {
-    background: color-mix(in srgb, var(--mud-palette-info) 8%, transparent);
-    border: 1px solid color-mix(in srgb, var(--mud-palette-info) 18%, var(--flux-border));
-    border-radius: 4px;
+.catalog-item-meta-value {
     color: color-mix(in srgb, var(--mud-palette-info) 72%, var(--mud-palette-text-primary));
     flex: 0 0 auto;
     font-size: 9.5px;
     font-weight: 700;
     line-height: 1;
-    padding: 2px 4px;
     white-space: nowrap;
 }
 
-.catalog-item-badge.muted {
-    background: transparent;
-    border-color: var(--flux-border);
+.catalog-item-meta-value.muted {
     color: var(--flux-text-muted);
 }
 
-.catalog-step-badges {
+.catalog-step-meta {
     gap: 3px;
 }
 
-.component-catalog.test .catalog-item-badge {
-    background: color-mix(in srgb, var(--mud-palette-warning) 8%, transparent);
-    border-color: color-mix(in srgb, var(--mud-palette-warning) 18%, var(--flux-border));
+.component-catalog.test .catalog-item-meta-value {
     color: color-mix(in srgb, var(--mud-palette-warning) 72%, var(--mud-palette-text-primary));
     max-width: 76px;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.component-catalog.test .catalog-item-badge.setup {
-    background: color-mix(in srgb, var(--mud-palette-info) 8%, transparent);
-    border-color: color-mix(in srgb, var(--mud-palette-info) 20%, var(--flux-border));
+.component-catalog.test .catalog-item-meta-value.setup {
     color: var(--mud-palette-info);
 }
 
-.component-catalog.test .catalog-item-badge.observe,
-.component-catalog.test .catalog-item-badge.assert {
-    background: color-mix(in srgb, var(--flux-accent) 8%, transparent);
-    border-color: color-mix(in srgb, var(--flux-accent) 22%, var(--flux-border));
+.component-catalog.test .catalog-item-meta-value.observe,
+.component-catalog.test .catalog-item-meta-value.assert {
     color: var(--flux-accent);
 }
 
-.component-catalog.test .catalog-item-badge.cleanup {
-    background: color-mix(in srgb, var(--mud-palette-secondary) 8%, transparent);
-    border-color: color-mix(in srgb, var(--mud-palette-secondary) 20%, var(--flux-border));
+.component-catalog.test .catalog-item-meta-value.cleanup {
     color: var(--mud-palette-secondary);
 }
 
-.component-catalog.test .catalog-item-badge.muted {
-    background: transparent;
-    border-color: color-mix(in srgb, var(--flux-border) 78%, transparent);
+.component-catalog.test .catalog-item-meta-value.muted {
     color: var(--mud-palette-text-secondary);
 }
 
@@ -639,7 +623,7 @@
     display: grid;
     grid-template-areas:
         "name name"
-        "description badges";
+        "description meta";
     grid-template-columns: minmax(0, 1fr) auto;
     row-gap: 0;
 }
@@ -652,14 +636,14 @@
     grid-area: description;
 }
 
-.component-catalog.dashboard .catalog-item-badges {
+.component-catalog.dashboard .catalog-item-meta {
     align-self: center;
-    grid-area: badges;
+    grid-area: meta;
     justify-self: end;
     max-width: 62px;
 }
 
-.component-catalog.dashboard .catalog-item-badge:nth-child(n+2) {
+.component-catalog.dashboard .catalog-item-meta-value:nth-child(n+2) {
     display: none;
 }
 

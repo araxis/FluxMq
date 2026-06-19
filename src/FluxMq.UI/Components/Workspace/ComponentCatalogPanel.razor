@@ -93,19 +93,19 @@
                 }
                 @if (ShouldShowRequirements(item))
                 {
-                    <span class="catalog-item-badges" aria-label="Widget data requirements">
+                    <span class="catalog-item-meta" aria-label="Widget data requirements">
                         @foreach (var requirement in item.DataRequirements.Take(3))
                         {
-                            <span class="catalog-item-badge">@RequirementLabel(requirement)</span>
+                            <span class="catalog-item-meta-value">@RequirementLabel(requirement)</span>
                         }
                     </span>
                 }
                 @if (ShouldShowStepMetadata(item))
                 {
-                    <span class="catalog-item-badges catalog-step-badges" aria-label="Test step metadata">
-                        <span class="@StepPhaseBadgeClass(item)">@StepPhaseLabel(item)</span>
-                        <span class="catalog-item-badge">@StepKindLabel(item)</span>
-                        <span class="catalog-item-badge muted">@StepParameterLabel(item)</span>
+                    <span class="catalog-item-meta catalog-step-meta" aria-label="Test step metadata">
+                        <span class="@StepPhaseMetaClass(item)">@StepPhaseLabel(item)</span>
+                        <span class="catalog-item-meta-value">@StepKindLabel(item)</span>
+                        <span class="catalog-item-meta-value muted">@StepParameterLabel(item)</span>
                     </span>
                 }
             </span>
@@ -304,15 +304,15 @@
     private static string StepParameterLabel(CatalogEntry item)
         => item.StepParameterCount == 1 ? "1 field" : $"{item.StepParameterCount} fields";
 
-    private static string StepPhaseBadgeClass(CatalogEntry item)
+    private static string StepPhaseMetaClass(CatalogEntry item)
         => StepPhaseLabel(item).ToLowerInvariant() switch
         {
-            "setup" => "catalog-item-badge setup",
-            "stimulus" => "catalog-item-badge stimulus",
-            "observe" => "catalog-item-badge observe",
-            "assert" => "catalog-item-badge assert",
-            "cleanup" => "catalog-item-badge cleanup",
-            _ => "catalog-item-badge"
+            "setup" => "catalog-item-meta-value setup",
+            "stimulus" => "catalog-item-meta-value stimulus",
+            "observe" => "catalog-item-meta-value observe",
+            "assert" => "catalog-item-meta-value assert",
+            "cleanup" => "catalog-item-meta-value cleanup",
+            _ => "catalog-item-meta-value"
         };
 
     private void OnSearchTextChanged(string? value)
