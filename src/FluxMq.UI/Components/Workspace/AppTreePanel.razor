@@ -6,7 +6,7 @@
 
 @if (Projects.Projects.Count == 0)
 {
-    <div class="tree-empty">
+    <div class="tree-empty" role="status" aria-live="polite">
         <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Medium" />
         <div>
             <div class="tree-empty-title">No apps open</div>
@@ -16,7 +16,7 @@
 }
 else
 {
-    <div class="app-tree">
+    <div class="app-tree" aria-label="App structure tree">
         @foreach (var app in Projects.Projects)
         {
             var a = app;
@@ -32,7 +32,8 @@ else
                 <div class="app-row"
                      role="button"
                      tabindex="0"
-                     aria-label="@($"Select app {a.Name}")"
+                     aria-label="@AppRowLabel(a, isActive)"
+                     title="@AppRowLabel(a, isActive)"
                      @onclick="@(() => SelectApp(a))"
                      @onkeydown="@((KeyboardEventArgs args) => SelectAppFromKeyboardAsync(args, a))">
                     <MudIcon Icon="@(isActive ? Icons.Material.Filled.FolderOpen : Icons.Material.Filled.Folder)"
@@ -53,6 +54,7 @@ else
                             <MudIconButton Size="Size.Small"
                                            Icon="@Icons.Material.Outlined.Cancel"
                                            Class="tree-icon-button"
+                                           aria-label="@($"Close app {a.Name}")"
                                            OnClick="@(() => CloseAsync(a))" />
                         </MudTooltip>
                     </div>
@@ -245,6 +247,7 @@ else
                         <div class="tree-empty-artifact-row tests"
                              role="button"
                              tabindex="0"
+                             aria-label="Create test scenario"
                              @onclick="@(() => AddTestAsync(a))"
                              @onkeydown="@((KeyboardEventArgs args) => AddTestFromKeyboardAsync(args, a))">
                             <MudIcon Icon="@Icons.Material.Filled.FactCheck"
@@ -357,6 +360,7 @@ else
                     <MudIconButton Size="Size.Small"
                                    Icon="@Icons.Material.Filled.Add"
                                    Class="tree-icon-button"
+                                   aria-label="@addTooltip"
                                    OnClick="@(() => addAction(app))" />
                 </MudTooltip>
             </div>
@@ -400,6 +404,13 @@ else
 
     private static string SectionHeaderLabel(string title, int count, bool isCollapsed)
         => $"{title} {count}. {(isCollapsed ? "Collapsed" : "Expanded")}.";
+
+    private static string AppRowLabel(FlowWorkspaceService app, bool isActive)
+    {
+        var state = isActive ? "active" : "inactive";
+        var saved = app.HasUnsavedChanges ? "unsaved changes" : "saved";
+        return $"{app.Name}, {state}, {saved}, {BuildAppMeta(app)}";
+    }
 
     private static bool IsActivationKey(KeyboardEventArgs args)
         => args.Key is "Enter" or " " or "Spacebar";

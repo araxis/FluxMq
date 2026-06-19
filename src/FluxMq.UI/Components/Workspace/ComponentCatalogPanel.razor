@@ -31,10 +31,11 @@
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       AdornmentColor="Color.Secondary"
+                      aria-label="@SearchPlaceholder"
                       Class="catalog-search" />
     </div>
 
-    <div class="catalog-list">
+    <div class="catalog-list" aria-label="@CatalogListLabel">
         @if (SearchResult.VisibleCount == 0)
         {
             <div class="catalog-empty" role="status" aria-live="polite">
@@ -161,6 +162,9 @@
 
     private string CatalogPanelLabel
         => $"{CatalogTitle} catalog";
+
+    private string CatalogListLabel
+        => $"{CatalogTitle} results";
 
     private string CatalogModeLabel => ArtifactKind switch
     {
