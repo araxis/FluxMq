@@ -284,7 +284,7 @@
     background: color-mix(in srgb, var(--flux-surface) 96%, transparent);
     border: 1px solid var(--flux-border);
     border-radius: 6px;
-    box-shadow: var(--flux-shadow-1);
+    box-shadow: none;
     display: grid;
     gap: 6px;
     left: 10px;
@@ -451,13 +451,14 @@
 
 .flow-link-condition-panel {
     align-items: center;
-    background: var(--flux-surface);
+    background: color-mix(in srgb, var(--flux-surface) 96%, transparent);
     border: 1px solid var(--flux-border);
     border-radius: 6px;
-    box-shadow: var(--flux-shadow-1);
+    box-shadow: none;
     display: flex;
     gap: 5px;
     max-width: min(680px, calc(100% - 24px));
+    min-width: 0;
     padding: 4px;
     position: absolute;
     right: 10px;
@@ -572,9 +573,9 @@
     .flow-link-condition-panel {
         align-items: stretch;
         flex-direction: column;
-        left: 12px;
+        left: 8px;
         max-width: none;
-        right: 12px;
+        right: 8px;
         top: 130px;
     }
 
