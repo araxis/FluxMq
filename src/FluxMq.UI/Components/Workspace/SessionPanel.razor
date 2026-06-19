@@ -5,7 +5,7 @@
 <div class="sessions-panel" aria-label="Recorded sessions panel">
     @if (Live.IsRecording)
     {
-        <div class="session-recording-strip" aria-live="polite">
+        <div class="session-recording-strip" role="status" aria-live="polite">
             <span class="session-recording-pulse" aria-hidden="true"></span>
             <div class="session-recording-copy">
                 <strong>@RecordingName</strong>
@@ -47,7 +47,11 @@
         <div class="session-live-strip">
             <MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Small" />
             <span>@Live.SelectedStoredSession.Name</span>
-            <button type="button" @onclick="@Live.ClearStoredSessionSelection">Live</button>
+            <button type="button"
+                    aria-label="Switch to live traffic"
+                    @onclick="@Live.ClearStoredSessionSelection">
+                Live
+            </button>
         </div>
     }
 
@@ -63,6 +67,7 @@
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       AdornmentColor="Color.Secondary"
+                      aria-label="Search recorded sessions"
                       Class="session-search" />
     </div>
 
@@ -72,7 +77,7 @@
 
     @if (projectGroups.Count == 0)
     {
-        <div class="sessions-empty">
+        <div class="sessions-empty" role="status" aria-live="polite">
             <MudIcon Icon="@EmptyIcon" Size="Size.Medium" />
             <strong class="sessions-empty-title">@EmptyTitle</strong>
             <span class="sessions-empty-copy">@EmptyText</span>
@@ -105,6 +110,7 @@
                             <button type="button"
                                     class="@SessionRowClass(session)"
                                     aria-label="@SessionRowLabel(session)"
+                                    title="@SessionRowLabel(session)"
                                     @onclick="@(() => SelectSessionAsync(session))">
                                 <span class="@SessionDotClass(session)" aria-hidden="true"></span>
                                 <span class="session-row-main">
@@ -251,7 +257,7 @@
     }
 
     private string SessionRowLabel(StoredSession session)
-        => $"Load session {session.Name} from {ProjectName(session)}";
+        => $"Load {SessionStateLabel(session).ToLowerInvariant()} session {session.Name} from {ProjectName(session)}, {ProfileLabel(session)}, {DurationLabel(session)}, started {StartedLabel(session)}";
 
     private bool IsSelected(StoredSession session)
         => Live.SelectedStoredSession?.Id == session.Id;
