@@ -226,21 +226,19 @@
 
 .flow-canvas-empty {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface) 94%, transparent);
+    background: color-mix(in srgb, var(--flux-surface) 96%, transparent);
     border: 1px solid var(--flux-border);
     border-radius: 8px;
-    box-shadow: var(--flux-shadow-1);
     color: var(--mud-palette-text-secondary);
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    justify-content: center;
+    display: grid;
+    gap: 3px 10px;
+    grid-template-columns: 32px minmax(0, 1fr);
     left: 50%;
-    max-width: min(100%, 360px);
-    padding: 16px 18px;
+    max-width: min(100%, 420px);
+    padding: 10px 12px;
     pointer-events: none;
     position: absolute;
-    text-align: center;
+    text-align: left;
     top: 50%;
     transform: translate(-50%, -50%);
     width: calc(100% - 32px);
@@ -254,6 +252,7 @@
     border-radius: 6px;
     color: var(--flux-accent);
     display: inline-flex;
+    grid-row: 1 / span 3;
     height: 32px;
     justify-content: center;
     width: 32px;
@@ -267,12 +266,14 @@
     color: var(--mud-palette-text-primary);
     font-size: 0.92rem;
     line-height: 1.1;
+    min-width: 0;
 }
 
 .flow-canvas-empty-message,
 .flow-canvas-empty small {
     font-size: 0.76rem;
     line-height: 1.35;
+    min-width: 0;
 }
 
 .flow-canvas-empty small {
@@ -539,6 +540,18 @@
 
     .flow-canvas-chip {
         height: 24px;
+    }
+
+    .flow-canvas-empty {
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: center;
+        max-width: min(100%, 340px);
+        padding: 12px;
+        text-align: center;
+    }
+
+    .flow-canvas-empty-icon {
+        grid-row: auto;
     }
 
     .flow-diagnostic-panel {
