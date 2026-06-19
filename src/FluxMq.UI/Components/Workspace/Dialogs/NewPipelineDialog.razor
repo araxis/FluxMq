@@ -1,21 +1,44 @@
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true })">
     <TitleContent>
-        <MudText Typo="Typo.h6">@Title</MudText>
+        <div class="new-pipeline-dialog-title">
+            <span class="new-pipeline-dialog-title-icon" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.AddCircle" Size="Size.Small" />
+            </span>
+            <MudText Typo="Typo.h6" Class="new-pipeline-dialog-heading">@Title</MudText>
+            <span class="@FormStatusClass" role="status" aria-live="polite">@FormStatusText</span>
+        </div>
     </TitleContent>
     <DialogContent>
-        <MudTextField T="string"
-                      Label="@Label"
-                      @bind-Value="_name"
-                      Variant="Variant.Outlined"
-                      Margin="Margin.Dense"
-                      Immediate="true"
-                      OnKeyDown="@OnKeyDown" />
+        <div class="new-pipeline-dialog-content">
+            <section class="new-pipeline-dialog-section" aria-label="@Title">
+                <MudTextField T="string"
+                              Class="new-pipeline-dialog-field"
+                              Label="@Label"
+                              @bind-Value="_name"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Required="true"
+                              Immediate="true"
+                              Placeholder="@PlaceholderText"
+                              OnKeyDown="@OnKeyDown" />
+            </section>
+        </div>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled"
-                   Disabled="@string.IsNullOrWhiteSpace(_name)"
-                   OnClick="@Submit">@ActionText</MudButton>
+        <div class="new-pipeline-dialog-actions">
+            <MudButton Variant="Variant.Text"
+                       Size="Size.Small"
+                       Class="new-pipeline-dialog-cancel"
+                       aria-label="@CancelAriaLabel"
+                       OnClick="@Cancel">Cancel</MudButton>
+            <MudButton Color="Color.Primary"
+                       Variant="Variant.Filled"
+                       Size="Size.Small"
+                       Class="new-pipeline-dialog-submit"
+                       Disabled="@(!IsValid)"
+                       aria-label="@SubmitAriaLabel"
+                       OnClick="@Submit">@ActionText</MudButton>
+        </div>
     </DialogActions>
 </MudDialog>
 
@@ -27,16 +50,36 @@
 
     private string _name = string.Empty;
 
+    private bool IsValid => !string.IsNullOrWhiteSpace(_name);
+
+    private string FormStatusClass
+        => IsValid ? "new-pipeline-dialog-status ready" : "new-pipeline-dialog-status";
+
+    private string FormStatusText
+        => IsValid ? "Ready" : "Name required";
+
+    private string PlaceholderText
+        => Label.Equals("Name", StringComparison.OrdinalIgnoreCase) ? "Name" : Label;
+
+    private string CancelAriaLabel => $"Cancel {Title}";
+
+    private string SubmitAriaLabel => $"{ActionText} {Title}";
+
     private void Cancel() => MudDialog.Cancel();
 
     private void Submit()
     {
-        if (!string.IsNullOrWhiteSpace(_name))
+        if (IsValid)
+        {
             MudDialog.Close(DialogResult.Ok(_name.Trim()));
+        }
     }
 
     private void OnKeyDown(KeyboardEventArgs args)
     {
-        if (args.Key == "Enter") Submit();
+        if (args.Key == "Enter")
+        {
+            Submit();
+        }
     }
 }

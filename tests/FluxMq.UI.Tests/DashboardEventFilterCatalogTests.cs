@@ -3244,6 +3244,95 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void NewPipelineDialog_UsesFlatCompactCreateChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "NewPipelineDialog.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "NewPipelineDialog.razor.css"));
+
+        markup.ShouldContain("new-pipeline-dialog-title");
+        markup.ShouldContain("new-pipeline-dialog-status");
+        markup.ShouldContain("role=\"status\"");
+        markup.ShouldContain("aria-live=\"polite\"");
+        markup.ShouldContain("new-pipeline-dialog-section");
+        markup.ShouldContain("new-pipeline-dialog-actions");
+        markup.ShouldContain("Disabled=\"@(!IsValid)\"");
+        markup.ShouldContain("CancelAriaLabel");
+        markup.ShouldContain("SubmitAriaLabel");
+        markup.ShouldContain("DialogResult.Ok(_name.Trim())");
+        markup.ShouldNotContain("MudGrid");
+        markup.ShouldNotContain("MudStack");
+
+        css.ShouldContain(".new-pipeline-dialog-title");
+        css.ShouldContain(".new-pipeline-dialog-status");
+        css.ShouldContain(".new-pipeline-dialog-section");
+        css.ShouldContain("border: 1px solid var(--flux-border-soft);");
+        css.ShouldContain(".new-pipeline-dialog-field");
+        css.ShouldContain("::deep(.new-pipeline-dialog-submit)");
+        css.ShouldContain("@media (max-width: 480px)");
+        css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
+    }
+
+    [Fact]
+    public void SaveAsDialog_UsesFlatCompactSaveChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "SaveAsDialog.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "SaveAsDialog.razor.css"));
+
+        markup.ShouldContain("save-as-dialog-title");
+        markup.ShouldContain("save-as-dialog-status");
+        markup.ShouldContain("role=\"status\"");
+        markup.ShouldContain("aria-live=\"polite\"");
+        markup.ShouldContain("save-as-dialog-section");
+        markup.ShouldContain("save-as-dialog-helper");
+        markup.ShouldContain("save-as-dialog-actions");
+        markup.ShouldContain("Disabled=\"@(!IsValid)\"");
+        markup.ShouldContain("OnKeyDown");
+        markup.ShouldContain("DialogResult.Ok(_path.Trim())");
+        markup.ShouldNotContain("HelperText=");
+        markup.ShouldNotContain("MudStack");
+
+        css.ShouldContain(".save-as-dialog-title");
+        css.ShouldContain(".save-as-dialog-status");
+        css.ShouldContain(".save-as-dialog-section");
+        css.ShouldContain("border: 1px solid var(--flux-border-soft);");
+        css.ShouldContain(".save-as-dialog-helper");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("::deep(.save-as-dialog-submit)");
+        css.ShouldContain("@media (max-width: 480px)");
+        css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
+    }
+
+    [Fact]
     public void PayloadInspectorPanel_UsesFlatCompactInspectorChrome()
     {
         var root = FindRepositoryRoot();

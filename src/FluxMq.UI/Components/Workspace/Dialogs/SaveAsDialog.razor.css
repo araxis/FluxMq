@@ -1,0 +1,128 @@
+.save-as-dialog-title {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    min-width: 0;
+    width: 100%;
+}
+
+.save-as-dialog-title-icon {
+    align-items: center;
+    background: color-mix(in srgb, var(--flux-accent) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-accent) 30%, var(--flux-border));
+    border-radius: 5px;
+    color: var(--flux-accent);
+    display: inline-flex;
+    height: 24px;
+    justify-content: center;
+    width: 24px;
+}
+
+.save-as-dialog-title-icon ::deep(.mud-icon-root) {
+    font-size: 16px;
+}
+
+.save-as-dialog-heading {
+    color: var(--mud-palette-text-primary);
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.2;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.save-as-dialog-status {
+    align-items: center;
+    background: var(--flux-surface-2);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-warning) 42%, var(--flux-border));
+    border-radius: 5px;
+    color: var(--mud-palette-warning);
+    display: inline-flex;
+    font-size: 10.5px;
+    font-weight: 800;
+    height: 24px;
+    padding: 0 7px;
+    white-space: nowrap;
+}
+
+.save-as-dialog-status.ready {
+    border-color: color-mix(in srgb, var(--flux-accent) 36%, var(--flux-border));
+    color: var(--flux-accent);
+}
+
+.save-as-dialog-content {
+    min-width: 0;
+}
+
+.save-as-dialog-section {
+    background: var(--flux-surface);
+    border: 1px solid var(--flux-border-soft);
+    border-radius: 6px;
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    padding: 10px;
+}
+
+.save-as-dialog-field {
+    min-width: 0;
+}
+
+.save-as-dialog-field ::deep(.mud-input-control) {
+    margin-top: 0;
+}
+
+.save-as-dialog-field ::deep(.mud-input-slot) {
+    font-size: 13px;
+}
+
+.save-as-dialog-helper {
+    color: var(--mud-palette-text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.35;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.save-as-dialog-actions {
+    align-items: center;
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    min-width: 0;
+    width: 100%;
+}
+
+::deep(.save-as-dialog-cancel),
+::deep(.save-as-dialog-submit) {
+    border-radius: 5px;
+    min-height: 28px;
+    min-width: 76px;
+    text-transform: none;
+}
+
+@media (max-width: 480px) {
+    .save-as-dialog-title {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .save-as-dialog-status {
+        grid-column: 1 / -1;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .save-as-dialog-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    ::deep(.save-as-dialog-cancel),
+    ::deep(.save-as-dialog-submit) {
+        width: 100%;
+    }
+}
