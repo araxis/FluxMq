@@ -3386,6 +3386,7 @@ public sealed class DashboardEventFilterCatalogTests
             "DashboardDesigner.razor.css"));
 
         razor.ShouldContain("role=\"region\" aria-label=\"Dashboard designer\"");
+        razor.ShouldContain("class=\"dashboard-toolbar\" role=\"toolbar\" aria-label=\"Dashboard toolbar\"");
         razor.ShouldContain("dashboard-meta-strip");
         razor.ShouldContain("@DashboardStatusLabel");
         razor.ShouldContain("@GridSizeLabel");
@@ -3399,6 +3400,15 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("role=\"grid\" aria-label=\"Dashboard layout grid\"");
         razor.ShouldContain("aria-label=\"Live dashboard grid\"");
         razor.ShouldContain("aria-label=\"@CellAriaLabel(currentCell)\"");
+        razor.ShouldContain("title=\"@CellAriaLabel(currentCell)\"");
+        razor.ShouldContain("tabindex=\"0\"");
+        razor.ShouldContain("SelectCellFromKeyboard");
+        razor.ShouldContain("private static bool IsActivationKey");
+        razor.ShouldContain("aria-label=\"@GridPickerButtonLabel\"");
+        razor.ShouldContain("aria-label=\"@SplitPickerButtonLabel\"");
+        razor.ShouldContain("GridPickerCellAriaLabel");
+        razor.ShouldContain("SplitPickerCellAriaLabel");
+        razor.ShouldContain("disabled=\"@IsSplitPickerCellDisabled(r, c)\"");
         razor.ShouldContain("private string CellAriaLabel");
 
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
@@ -3407,7 +3417,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".dashboard-mode-state.edit");
         css.ShouldContain(".dashboard-mode-state.live");
         css.ShouldContain(".dashboard-tool-group");
-        css.ShouldContain("min-height: 34px;");
+        css.ShouldContain("min-height: 32px;");
         css.ShouldContain("@media (max-width: 980px)");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
     }
@@ -3480,22 +3490,24 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("role=\"status\" aria-live=\"polite\"");
         razor.ShouldContain("dashboard-grid-empty-icon");
         razor.ShouldContain("@EmptyGridHint");
-        css.ShouldContain("grid-template-columns: 54px minmax(0, 1fr);");
-        css.ShouldContain("grid-template-rows: 40px minmax(0, 1fr);");
+        css.ShouldContain("grid-template-columns: 42px minmax(0, 1fr);");
+        css.ShouldContain("grid-template-rows: 32px minmax(0, 1fr);");
         css.ShouldContain("overscroll-behavior: contain;");
+        css.ShouldContain("border-right: 1px solid var(--flux-border-soft);");
         css.ShouldContain(".dashboard-grid-frame.adding-widget .dashboard-grid");
         css.ShouldContain(".dashboard-drop-status");
         css.ShouldContain(".dashboard-grid-empty-icon");
-        css.ShouldContain("left: 50%;");
-        css.ShouldContain("transform: translateX(-50%);");
+        css.ShouldContain("left: 8px;");
+        css.ShouldContain("max-width: min(340px, calc(100% - 16px));");
         css.ShouldContain(".dashboard-track-handle:focus-visible");
+        css.ShouldContain(".dashboard-cell:focus-visible");
         css.ShouldContain(".dashboard-cell.drop-ready");
         css.ShouldContain(".dashboard-grid-frame.adding-widget .dashboard-cell.drop-ready");
         css.ShouldContain(".dashboard-grid-frame.adding-widget .dashboard-cell.drop-ready .dashboard-cell-drop-mark");
         css.ShouldContain(".dashboard-cell.move-target");
         css.ShouldContain(".dashboard-cell.selected::after");
         css.ShouldContain(".dashboard-cell.dropping::after");
-        css.ShouldContain("opacity: 0.58;");
+        css.ShouldContain("opacity: 0.5;");
         css.ShouldContain("border: 1px dashed color-mix(in srgb, var(--flux-accent) 78%, transparent);");
         css.ShouldContain(".dashboard-cell.moving-source::before");
         css.ShouldContain(".dashboard-cell-drop-mark");
@@ -3533,7 +3545,7 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("dashboard-track-main");
         razor.ShouldContain("dashboard-track-name");
 
-        css.ShouldContain("grid-template-columns: 16px minmax(0, 1fr) auto;");
+        css.ShouldContain("grid-template-columns: 14px minmax(0, 1fr) auto;");
         css.ShouldContain(".dashboard-track-icon");
         css.ShouldContain(".dashboard-track-main");
         css.ShouldContain(".dashboard-track-name");
@@ -3608,19 +3620,17 @@ public sealed class DashboardEventFilterCatalogTests
             "DashboardDesigner.razor.css"));
 
         razor.ShouldContain("@EmptyGridTitle");
-        razor.ShouldContain("dashboard-grid-empty-steps");
-        razor.ShouldContain("Catalog widget");
-        razor.ShouldContain("Empty cell");
         razor.ShouldContain("Drag from the catalog, or select a cell and click a widget.");
         razor.ShouldContain("Release on a highlighted cell to place it.");
+        razor.ShouldNotContain("dashboard-grid-empty-steps");
+        razor.ShouldNotContain("Catalog widget");
 
-        css.ShouldContain(".dashboard-grid-empty-steps");
-        css.ShouldContain("grid-template-columns: 28px minmax(0, 1fr);");
+        css.ShouldNotContain(".dashboard-grid-empty-steps");
+        css.ShouldContain("grid-template-columns: 24px minmax(0, 1fr);");
         css.ShouldContain(".dashboard-grid-frame.empty-grid:not(.adding-widget) .dashboard-cell-drop-mark");
         css.ShouldContain(".dashboard-grid-frame.empty-grid:not(.adding-widget) .dashboard-cell:hover .dashboard-cell-drop-mark");
         css.ShouldContain("opacity: 0.32;");
         css.ShouldContain("opacity: 0.78;");
-        css.ShouldContain(".dashboard-grid-empty-steps span");
     }
 
     [Fact]
