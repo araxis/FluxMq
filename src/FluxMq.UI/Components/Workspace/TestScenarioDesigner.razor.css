@@ -37,6 +37,9 @@
 .test-scenario-actions,
 .test-scenario-report-actions,
 .test-scenario-build-actions,
+.test-run-context,
+.test-run-context-status,
+.test-run-context-reset,
 .test-run-status {
     align-items: center;
     display: flex;
@@ -163,6 +166,78 @@
     color: var(--mud-palette-text-primary);
 }
 
+.test-run-context {
+    background: var(--flux-surface-2);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-radius: 6px;
+    flex: 0 1 260px;
+    gap: 6px;
+    height: 28px;
+    min-width: 0;
+    overflow: hidden;
+    padding: 2px 3px 2px 7px;
+}
+
+.test-run-context.latest {
+    border-color: color-mix(in srgb, var(--mud-palette-info) 26%, var(--flux-border));
+}
+
+.test-run-context.history {
+    background: color-mix(in srgb, var(--mud-palette-info) 8%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--mud-palette-info) 34%, var(--flux-border));
+}
+
+.test-run-context.failed {
+    border-color: color-mix(in srgb, var(--mud-palette-error) 42%, var(--flux-border));
+}
+
+.test-run-context.canceled {
+    border-color: color-mix(in srgb, var(--mud-palette-warning) 42%, var(--flux-border));
+}
+
+.test-run-context-status {
+    flex: 0 0 auto;
+    gap: 4px;
+    min-width: 0;
+}
+
+.test-run-context-status strong {
+    color: var(--mud-palette-text-primary);
+    font-size: 11px;
+    font-weight: 850;
+    line-height: 1;
+}
+
+.test-run-context-meta {
+    color: var(--mud-palette-text-secondary);
+    flex: 1 1 auto;
+    font-size: 10.5px;
+    font-weight: 750;
+    line-height: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.test-run-context-reset {
+    background: transparent;
+    border: 0;
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    cursor: pointer;
+    flex: 0 0 auto;
+    height: 22px;
+    justify-content: center;
+    padding: 0;
+    width: 22px;
+}
+
+.test-run-context-reset:hover {
+    background: color-mix(in srgb, var(--mud-palette-info) 18%, transparent);
+    color: var(--mud-palette-info);
+}
+
 .test-scenario-report-actions,
 .test-scenario-build-actions {
     background: var(--flux-surface-2);
@@ -171,6 +246,19 @@
     gap: 1px;
     height: 28px;
     padding: 1px;
+}
+
+.test-scenario-report-actions.latest {
+    border-color: color-mix(in srgb, var(--mud-palette-info) 22%, var(--flux-border));
+}
+
+.test-scenario-report-actions.history {
+    background: color-mix(in srgb, var(--mud-palette-info) 7%, var(--flux-surface-2));
+    border-color: color-mix(in srgb, var(--mud-palette-info) 30%, var(--flux-border));
+}
+
+.test-scenario-report-actions.disabled {
+    opacity: 0.72;
 }
 
 .test-scenario-build-actions {
@@ -781,7 +869,14 @@
     }
 
     .test-scenario-actions {
+        flex-wrap: wrap;
         justify-content: flex-start;
+        width: 100%;
+    }
+
+    .test-run-context {
+        flex: 1 1 100%;
+        max-width: none;
         width: 100%;
     }
 
