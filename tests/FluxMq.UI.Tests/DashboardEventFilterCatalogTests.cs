@@ -4943,6 +4943,18 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("app-menu-command-icon");
         markup.ShouldContain("app-menu-command-copy");
         markup.ShouldContain("app-menu-command-cue");
+        markup.ShouldContain("app-menu-broker-item");
+        markup.ShouldContain("app-menu-broker-row");
+        markup.ShouldContain("app-menu-broker-icon-frame");
+        markup.ShouldContain("app-menu-broker-copy");
+        markup.ShouldContain("app-menu-broker-pill");
+        markup.ShouldContain("BrokerEndpointLabel(c)");
+        markup.ShouldContain("BrokerItemTitle(c)");
+        markup.ShouldContain("BrokerRowClass(c)");
+        markup.ShouldContain("BrokerStatePillClass(c)");
+        markup.ShouldContain("BrokerStateText(c)");
+        markup.ShouldContain("private static string BrokerEndpointLabel");
+        markup.ShouldContain("private static string BrokerStateText");
         markup.ShouldContain("Class=\"@ArtifactMenuItemClass(active, WorkspaceArtifactKind.Pipeline, w)\"");
         markup.ShouldContain("Class=\"@ArtifactMenuItemClass(active, WorkspaceArtifactKind.Dashboard, d)\"");
         markup.ShouldContain("Class=\"@ArtifactMenuItemClass(active, WorkspaceArtifactKind.Metrics, \"Metrics\")\"");
@@ -4983,6 +4995,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("No history");
         markup.ShouldNotContain("app-menu-danger");
         markup.ShouldNotContain("Class=\"app-menu-muted\">No");
+        markup.ShouldNotContain("<MudMenuItem Icon=\"@BrokerActionIcon(c)\"");
         markup.ShouldNotContain("<MudMenuItem Icon=\"@Icons.Material.Filled.Timeline\"");
         markup.ShouldNotContain("<MudMenuItem Icon=\"@Icons.Material.Filled.Dashboard\"");
         markup.ShouldNotContain("<MudMenuItem Icon=\"@Icons.Material.Filled.QueryStats\"");
@@ -5001,6 +5014,13 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".app-menu-command-copy");
         css.ShouldContain(".app-menu-state-token");
         css.ShouldContain(".app-menu-command-cue");
+        css.ShouldContain(".app-menu-broker-row");
+        css.ShouldContain(".app-menu-broker-icon-frame");
+        css.ShouldContain(".app-menu-broker-copy");
+        css.ShouldContain(".app-menu-broker-pill");
+        css.ShouldContain(".app-menu-broker-pill.live");
+        css.ShouldContain(".app-menu-broker-pill.faulted");
+        css.ShouldContain(".app-menu-broker-pill.pending");
         css.ShouldContain(".app-menu-artifact-row");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 24px;");
         css.ShouldContain(".app-menu-compact-artifact-row");
@@ -5030,8 +5050,10 @@ public sealed class DashboardEventFilterCatalogTests
         appCss.ShouldContain(".app-structure-popover .app-menu-test-item");
         appCss.ShouldContain(".app-structure-popover .app-menu-command-item");
         appCss.ShouldContain(".app-structure-popover .app-menu-artifact-item");
+        appCss.ShouldContain(".app-structure-popover .app-menu-broker-item");
         appCss.ShouldContain(".app-structure-popover .app-menu-empty");
         appCss.ShouldContain("padding-left: 6px;");
+        appCss.ShouldNotContain(".broker-live .mud-list-item-icon");
     }
 
     [Fact]
