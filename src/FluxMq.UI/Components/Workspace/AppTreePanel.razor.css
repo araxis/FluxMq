@@ -48,8 +48,17 @@
     padding: 6px 6px 6px 10px;
 }
 
-.app-row:hover {
+.app-row:hover,
+.app-row:focus-visible {
     background: var(--flux-surface-3);
+    outline: none;
+}
+
+.app-row:focus-visible,
+.tree-section-header:focus-visible,
+.pipe-item:focus-visible,
+.artifact-item:focus-visible {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--flux-accent) 42%, var(--flux-border));
 }
 
 .app-row-icon {
@@ -119,8 +128,10 @@
     padding: 1px 2px 2px 4px;
 }
 
-.tree-section-header:hover {
+.tree-section-header:hover,
+.tree-section-header:focus-visible {
     background: color-mix(in srgb, var(--flux-surface-3) 70%, transparent);
+    outline: none;
 }
 
 .tree-section-title {
@@ -284,8 +295,11 @@
 
 .conn-item:hover,
 .pipe-item:hover,
-.artifact-item:hover {
+.pipe-item:focus-visible,
+.artifact-item:hover,
+.artifact-item:focus-visible {
     background: var(--flux-surface-3);
+    outline: none;
 }
 
 .conn-dot {
