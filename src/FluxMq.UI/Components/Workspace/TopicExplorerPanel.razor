@@ -109,7 +109,7 @@
                     <MudTd DataLabel="Bytes">@context.Payload.Length</MudTd>
                 </RowTemplate>
                 <NoRecordsContent>
-                    <div class="topic-empty-state topic-empty-state-table">
+                    <div class="topic-empty-state topic-empty-state-table" role="status" aria-live="polite">
                         <MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Small" />
                         <strong>@MessageEmptyTitle</strong>
                         <span>@MessageEmptyText</span>
@@ -124,7 +124,7 @@
         <div class="topic-payload-frame">
             @if (SelectedMessage is null)
             {
-                <div class="topic-payload-empty">
+                <div class="topic-payload-empty" role="status" aria-live="polite">
                     <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
                     <strong>No payload selected</strong>
                     <span>Select a message to inspect formatted, raw, hex, and metadata views.</span>
