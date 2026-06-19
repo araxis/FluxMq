@@ -2765,8 +2765,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@ScenarioStepLabel");
         markup.ShouldContain("@ScenarioPhaseLabel");
         markup.ShouldContain("@RunHistorySummaryLabel");
-        markup.ShouldContain("RunStatusPillClass(result.Status)");
-        markup.ShouldContain("ActiveRunPillClass");
+        markup.ShouldContain("RunStatusClass(result.Status)");
+        markup.ShouldContain("ActiveRunStateClass");
         markup.ShouldContain("test-run-history-panel");
         markup.ShouldContain("No run history");
         markup.ShouldContain("test-run-history-row");
@@ -2824,12 +2824,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@ActivitySummaryLabel");
         markup.ShouldContain("@RunnerLogCountLabel");
         markup.ShouldNotContain("MudChip");
+        markup.ShouldNotContain("RunStatusPillClass(result.Status)");
+        markup.ShouldNotContain("ActiveRunPillClass");
+        markup.ShouldNotContain("test-runner-status-pill");
 
         css.ShouldContain(".test-runner-title-icon");
         css.ShouldContain(".test-runner-empty-cues");
         css.ShouldContain(".test-runner-empty-cues span");
         css.ShouldContain(".test-runner-meta-strip span,");
-        css.ShouldContain(".test-runner-status-pill");
+        css.ShouldContain(".test-runner-status-state");
         css.ShouldContain(".test-run-history-panel");
         css.ShouldContain(".test-run-history-empty strong");
         css.ShouldContain(".test-run-history-empty small");
@@ -2875,6 +2878,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("@media (max-width: 920px)");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
         css.ShouldNotContain(".test-runner-panel-title");
+        css.ShouldNotContain(".test-runner-status-pill");
+        css.ShouldNotContain("border-radius: 999px;");
     }
 
     [Fact]
