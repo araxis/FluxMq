@@ -3106,6 +3106,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("scenario-report-toolbar");
         markup.ShouldContain("scenario-report-meta-strip");
         markup.ShouldContain("scenario-report-export-state");
+        markup.ShouldContain("role=\"status\"");
+        markup.ShouldContain("aria-live=\"polite\"");
         markup.ShouldContain("scenario-report-summary-grid");
         markup.ShouldContain("IssueMetricClass");
         markup.ShouldContain("scenario-report-viewer");
@@ -3118,6 +3120,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Disabled=\"@(!HasSummaryReport)\"");
         markup.ShouldContain("Disabled=\"@(!HasJsonReport)\"");
         markup.ShouldContain("scenario-report-close");
+        markup.ShouldContain("aria-label=\"Close scenario report\"");
         markup.ShouldNotContain("MudChip");
         markup.ShouldNotContain("MudTextField");
 
@@ -3125,15 +3128,21 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".scenario-report-toolbar");
         css.ShouldContain(".scenario-report-meta-strip");
         css.ShouldContain(".scenario-report-export-state");
+        css.ShouldContain("height: 24px;");
         css.ShouldContain(".scenario-report-summary-grid");
         css.ShouldContain("grid-template-columns: repeat(4, minmax(0, 1fr));");
+        css.ShouldContain("min-height: min(62vh, 540px);");
         css.ShouldContain(".scenario-report-tabs");
+        css.ShouldContain("min-height: 30px;");
         css.ShouldContain(".scenario-report-viewer pre");
+        css.ShouldContain("min-height: 300px;");
         css.ShouldContain(".scenario-report-empty");
         css.ShouldContain("font-family: Consolas, \"Courier New\", monospace;");
         css.ShouldContain(".scenario-report-actions");
         css.ShouldContain(".scenario-report-action-group.compact");
+        css.ShouldContain("border: 1px solid var(--flux-border-soft);");
         css.ShouldContain(".scenario-report-action-group ::deep(.scenario-report-action)");
+        css.ShouldContain("width: 24px;");
         css.ShouldContain("::deep(.scenario-report-close)");
         css.ShouldContain("@media (max-width: 760px)");
         css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");

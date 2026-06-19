@@ -36,7 +36,7 @@
             </div>
 
             <div class="scenario-report-toolbar" aria-label="Scenario report actions">
-                <span class="@ExportStateClass" title="@ExportStateTooltip">
+                <span class="@ExportStateClass" title="@ExportStateTooltip" role="status" aria-live="polite">
                     <MudIcon Icon="@ExportStateIcon" Size="Size.Small" />
                     <span>@ExportStateText</span>
                 </span>
@@ -159,6 +159,7 @@
                        Variant="Variant.Filled"
                        Size="Size.Small"
                        Class="scenario-report-close"
+                       aria-label="Close scenario report"
                        OnClick="@Close">Close</MudButton>
         </div>
     </DialogActions>
