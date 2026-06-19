@@ -16,7 +16,7 @@
 
     @if (Projects.Projects.Count == 0)
     {
-        <div class="apps-empty">
+        <div class="apps-empty" role="status" aria-live="polite">
             <MudIcon Icon="@Icons.Material.Filled.FolderOff" Size="Size.Small" />
             <div>
                 <div class="apps-empty-title">No apps open</div>
@@ -36,7 +36,8 @@
                     <div class="app-tile-main"
                          role="button"
                          tabindex="0"
-                         title="@FileLabel(a)"
+                         aria-label="@AppTileLabel(a, isActive)"
+                         title="@AppTileLabel(a, isActive)"
                          @onclick="@(() => Projects.SetActive(a))"
                          @onkeydown="@((KeyboardEventArgs args) => SelectAppFromKeyboard(args, a))">
                         <span class="app-tile-icon" aria-hidden="true">
@@ -131,6 +132,13 @@
 
     private static string CloseLabel(FlowWorkspaceService app)
         => $"Close {app.Name}";
+
+    private static string AppTileLabel(FlowWorkspaceService app, bool isActive)
+    {
+        var state = isActive ? "active" : "inactive";
+        var saved = app.HasUnsavedChanges ? "unsaved changes" : "saved";
+        return $"{app.Name}, {state}, {saved}, {CurrentArtifactLabel(app)}, {BuildAppMeta(app)}, {FileLabel(app)}";
+    }
 
     private void OnChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
 
