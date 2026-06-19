@@ -3246,6 +3246,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@JsonLineCount lines");
         markup.ShouldContain("@JsonSizeLabel");
         markup.ShouldContain("app-json-state unsaved");
+        markup.ShouldContain("role=\"status\" aria-live=\"polite\">Unsaved</span>");
+        markup.ShouldContain("aria-label=\"Copy JSON\"");
+        markup.ShouldContain("Disabled=\"@string.IsNullOrWhiteSpace(_fullJson)\"");
+        markup.ShouldContain("app-json-editor-shell");
+        markup.ShouldContain("app-json-empty");
+        markup.ShouldContain("No JSON available");
         markup.ShouldContain("aria-label=\"Application definition JSON\"");
         markup.ShouldContain("private string FileLabel");
         markup.ShouldContain("private int JsonLineCount");
@@ -3254,13 +3260,21 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("MudStack Row=\"true\"");
 
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto auto auto;");
-        css.ShouldContain("min-height: 42px;");
+        css.ShouldContain("min-height: 38px;");
+        css.ShouldContain("padding: 5px 8px;");
         css.ShouldContain("height: 26px;");
         css.ShouldContain(".app-json-meta span,");
         css.ShouldContain(".app-json-state.unsaved");
+        css.ShouldContain(".app-json-state.unsaved::before");
         css.ShouldContain(".app-json-toolbar ::deep .mud-icon-button");
+        css.ShouldContain(".app-json-editor-shell");
         css.ShouldContain("font-size: 11.5px;");
-        css.ShouldContain("margin: 8px;");
+        css.ShouldContain("margin: 6px;");
+        css.ShouldContain("tab-size: 2;");
+        css.ShouldContain(".app-json-empty");
+        css.ShouldContain("grid-template-columns: 28px minmax(0, 1fr);");
+        css.ShouldContain("grid-row: 1 / span 2;");
+        css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("@media (max-width: 760px)");
     }
 

@@ -12,20 +12,38 @@
                 <span>@FileLabel</span>
             </div>
         </div>
-        <div class="app-json-meta">
+        <div class="app-json-meta" aria-label="JSON summary">
             <span>@JsonLineCount lines</span>
             <span>@JsonSizeLabel</span>
         </div>
         @if (Project.HasUnsavedChanges)
         {
-            <span class="app-json-state unsaved">Unsaved</span>
+            <span class="app-json-state unsaved" role="status" aria-live="polite">Unsaved</span>
         }
         <MudTooltip Text="Copy JSON">
-            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" OnClick="@CopyAsync" />
+            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                           Size="Size.Small"
+                           aria-label="Copy JSON"
+                           Class="app-json-copy-button"
+                           Disabled="@string.IsNullOrWhiteSpace(_fullJson)"
+                           OnClick="@CopyAsync" />
         </MudTooltip>
     </div>
 
-    <pre class="app-json-body" aria-label="Application definition JSON">@_fullJson</pre>
+    <div class="app-json-editor-shell">
+        @if (string.IsNullOrWhiteSpace(_fullJson))
+        {
+            <div class="app-json-empty" role="status" aria-live="polite">
+                <MudIcon Icon="@Icons.Material.Filled.CodeOff" Size="Size.Small" />
+                <strong>No JSON available</strong>
+                <span>Update the app definition to generate the full JSON view.</span>
+            </div>
+        }
+        else
+        {
+            <pre class="app-json-body" aria-label="Application definition JSON">@_fullJson</pre>
+        }
+    </div>
 
 </div>
 
