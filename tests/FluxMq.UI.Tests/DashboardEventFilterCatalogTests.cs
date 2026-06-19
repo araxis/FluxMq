@@ -3149,6 +3149,53 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void NewAppDialog_UsesFlatCompactSetupChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "NewAppDialog.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "NewAppDialog.razor.css"));
+
+        markup.ShouldContain("new-app-dialog-title");
+        markup.ShouldContain("new-app-dialog-status");
+        markup.ShouldContain("role=\"status\"");
+        markup.ShouldContain("aria-live=\"polite\"");
+        markup.ShouldContain("new-app-dialog-section");
+        markup.ShouldContain("new-app-dialog-grid connection");
+        markup.ShouldContain("new-app-dialog-security-row");
+        markup.ShouldContain("new-app-dialog-actions");
+        markup.ShouldContain("aria-label=\"Create app\"");
+        markup.ShouldContain("_port is >= 1 and <= 65535");
+        markup.ShouldNotContain("MudDivider");
+        markup.ShouldNotContain("HelperText=");
+
+        css.ShouldContain(".new-app-dialog-title");
+        css.ShouldContain(".new-app-dialog-status");
+        css.ShouldContain(".new-app-dialog-section");
+        css.ShouldContain("border: 1px solid var(--flux-border-soft);");
+        css.ShouldContain(".new-app-dialog-grid.connection");
+        css.ShouldContain("grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.6fr) 92px;");
+        css.ShouldContain(".new-app-dialog-security-row");
+        css.ShouldContain("::deep(.new-app-dialog-create)");
+        css.ShouldContain("@media (max-width: 760px)");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
+        css.ShouldContain("@media (max-width: 480px)");
+    }
+
+    [Fact]
     public void PayloadInspectorPanel_UsesFlatCompactInspectorChrome()
     {
         var root = FindRepositoryRoot();
