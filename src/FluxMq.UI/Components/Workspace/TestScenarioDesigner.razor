@@ -52,18 +52,26 @@
             <div class="test-scenario-actions">
                 @if (Project.LastScenarioRunResult is { } result)
                 {
-                    <span class="@RunStatusClass(result.Status)" aria-label="@($"Run status {result.Status}")">
-                        <MudIcon Icon="@RunStatusIcon(result.Status)" Size="Size.Small" />
-                        <span>@result.Status</span>
-                    </span>
                     <MudTooltip Text="@ActiveRunTooltip">
-                        <span class="@ActiveRunPillClass" aria-label="@ActiveRunTooltip">
-                            <MudIcon Icon="@ActiveRunChipIcon" Size="Size.Small" />
-                            <span>@ActiveRunChipText</span>
-                        </span>
+                        <div class="@RunContextClass(result)" aria-label="@RunContextAriaLabel(result)">
+                            <span class="test-run-context-status">
+                                <MudIcon Icon="@RunStatusIcon(result.Status)" Size="Size.Small" />
+                                <strong>@result.Status</strong>
+                            </span>
+                            <span class="test-run-context-meta">@ActiveRunChipText</span>
+                            @if (IsViewingHistoricalRun)
+                            {
+                                <button type="button"
+                                        class="test-run-context-reset"
+                                        title="Show latest run"
+                                        @onclick="@ShowLatestRun">
+                                    <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
+                                </button>
+                            }
+                        </div>
                     </MudTooltip>
                 }
-                <div class="test-scenario-report-actions" aria-label="Scenario report actions">
+                <div class="@ReportActionsClass" aria-label="@ReportActionsLabel">
                     <MudTooltip Text="@ViewReportTooltip">
                         <MudIconButton Icon="@Icons.Material.Filled.Article"
                                        Size="Size.Small"
@@ -371,6 +379,15 @@
 
     private string SaveReportTooltip => $"Save {ActiveRunScopeText} scenario report";
 
+    private string ReportActionsLabel => $"Scenario report actions for {ActiveRunScopeText} run";
+
+    private string ReportActionsClass
+        => Project.LastScenarioRunResult is null
+            ? "test-scenario-report-actions disabled"
+            : IsViewingHistoricalRun
+                ? "test-scenario-report-actions history"
+                : "test-scenario-report-actions latest";
+
     private string ActiveRunChipText
         => Project.LastScenarioRunResult is { } result
             ? $"{(IsViewingHistoricalRun ? "History" : "Latest")} {FormatRunTime(result)}"
@@ -381,13 +398,32 @@
 
     private Color ActiveRunChipColor => IsViewingHistoricalRun ? Color.Info : Color.Default;
 
-    private string ActiveRunPillClass
-        => IsViewingHistoricalRun ? "test-run-status history" : "test-run-status latest";
-
     private string ActiveRunTooltip
         => Project.LastScenarioRunResult is { } result
             ? $"Viewing {(IsViewingHistoricalRun ? "a historical" : "the latest")} run from {FormatRunTimestamp(result)}."
             : "No scenario run selected.";
+
+    private string RunContextClass(ScenarioRunResult result)
+    {
+        var classes = new List<string>
+        {
+            "test-run-context",
+            IsViewingHistoricalRun ? "history" : "latest"
+        };
+
+        classes.Add(result.Status switch
+        {
+            ScenarioRunStatus.Passed => "passed",
+            ScenarioRunStatus.Failed => "failed",
+            ScenarioRunStatus.Canceled => "canceled",
+            _ => "idle"
+        });
+
+        return string.Join(' ', classes);
+    }
+
+    private string RunContextAriaLabel(ScenarioRunResult result)
+        => $"{(IsViewingHistoricalRun ? "Historical" : "Latest")} run {result.Status} at {FormatRunTime(result)}";
 
     private string StepCountText
         => Scenario?.StepCount switch
@@ -505,15 +541,6 @@
 
     private static string BuilderMetricClass(bool active)
         => active ? "test-builder-metric active" : "test-builder-metric";
-
-    private static string RunStatusClass(ScenarioRunStatus status)
-        => status switch
-        {
-            ScenarioRunStatus.Passed => "test-run-status passed",
-            ScenarioRunStatus.Failed => "test-run-status failed",
-            ScenarioRunStatus.Canceled => "test-run-status canceled",
-            _ => "test-run-status"
-        };
 
     private static string RunStatusIcon(ScenarioRunStatus status)
         => status switch
