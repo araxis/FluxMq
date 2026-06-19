@@ -2743,12 +2743,18 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("test-runner-status-strip");
         markup.ShouldContain("PreflightItemClass");
         markup.ShouldContain("test-runner-result-strip");
-        markup.ShouldContain("RunSummaryClass(latest.Status)");
+        markup.ShouldContain("RunSummaryClass(latest)");
+        markup.ShouldContain("RunSummaryAriaLabel(latest)");
+        markup.ShouldContain("test-runner-result-scope");
+        markup.ShouldContain("RunResultScopeLabel");
         markup.ShouldContain("test-runner-main");
         markup.ShouldContain("test-runner-section timeline");
         markup.ShouldContain("test-runner-section activity");
         markup.ShouldContain("test-runner-activity-grid");
         markup.ShouldContain("test-runner-stream-block");
+        markup.ShouldContain("TimelineStepLabel(step, stepResult)");
+        markup.ShouldContain("TimelineStepMeta(stepResult)");
+        markup.ShouldContain("test-runner-step-copy");
         markup.ShouldContain("StepStatusIcon(stepResult)");
         markup.ShouldContain("RunnerLogRowClass(log)");
         markup.ShouldContain("@RuntimeEventCountLabel");
@@ -2773,8 +2779,13 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-runner-status-strip");
         css.ShouldContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
         css.ShouldContain(".test-runner-result-strip");
+        css.ShouldContain(".test-runner-result-strip.history");
+        css.ShouldContain(".test-runner-result-scope");
         css.ShouldContain(".test-runner-main");
         css.ShouldContain("grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.35fr);");
+        css.ShouldContain(".test-runner-step-copy");
+        css.ShouldContain(".test-runner-step-copy small");
+        css.ShouldContain(".test-runner-timeline-step.passed strong");
         css.ShouldContain(".test-runner-activity-grid");
         css.ShouldContain(".test-runner-stream-row::before");
         css.ShouldContain("width: 3px;");
@@ -2848,6 +2859,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("StepCardLabel(step, stepResult)");
         markup.ShouldContain("tabindex=\"0\"");
         markup.ShouldContain("StepStatusIcon(stepResult)");
+        markup.ShouldContain("test-step-result-strip");
+        markup.ShouldContain("StepResultMetaLabel(stepResult)");
+        markup.ShouldContain("StepResultScopeLabel");
+        markup.ShouldContain("StepResultEventLabel(stepResult)");
         markup.ShouldContain("test-step-status idle");
         markup.ShouldNotContain("MudChip");
 
@@ -2886,9 +2901,12 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-step-card:hover,");
         css.ShouldContain(".test-step-card:focus-within,");
         css.ShouldContain(".test-step-card.selected");
+        css.ShouldContain(".test-step-card.history");
         css.ShouldContain(".test-step-card.configured .test-step-index");
         css.ShouldContain(".test-step-card.issue");
         css.ShouldContain(".test-step-card.issue .test-step-index");
+        css.ShouldContain(".test-step-result-strip");
+        css.ShouldContain(".test-step-result-run.history");
         css.ShouldContain("min-height: 58px;");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto auto;");
         css.ShouldContain("height: 28px;");

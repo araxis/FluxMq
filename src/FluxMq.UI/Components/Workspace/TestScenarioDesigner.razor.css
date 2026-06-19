@@ -791,6 +791,10 @@
     background: var(--mud-palette-warning);
 }
 
+.test-step-card.history {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mud-palette-info) 10%, transparent);
+}
+
 .test-step-index {
     align-items: center;
     background: var(--flux-surface);
@@ -995,6 +999,45 @@
     line-height: 1.35;
     margin-top: 7px;
     padding: 7px;
+}
+
+.test-step-result-strip {
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+    min-width: 0;
+}
+
+.test-step-result-strip > span {
+    align-items: center;
+    background: var(--flux-surface);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 76%, transparent);
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 10px;
+    font-weight: 750;
+    gap: 4px;
+    height: 21px;
+    max-width: 140px;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0 7px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.test-step-result-run.latest {
+    border-color: color-mix(in srgb, var(--mud-palette-info) 24%, var(--flux-border));
+    color: var(--mud-palette-info);
+}
+
+.test-step-result-run.history {
+    background: color-mix(in srgb, var(--mud-palette-info) 8%, var(--flux-surface));
+    border-color: color-mix(in srgb, var(--mud-palette-info) 34%, var(--flux-border));
+    color: var(--mud-palette-info);
 }
 
 .test-step-event {
