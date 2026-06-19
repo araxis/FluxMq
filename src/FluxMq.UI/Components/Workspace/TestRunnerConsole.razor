@@ -268,15 +268,25 @@
                             <div class="test-runner-stream">
                                 @foreach (var flowEvent in Project.RuntimeEvents.Reverse().Take(12))
                                 {
-                                    <div class="test-runner-stream-row event">
-                                        <span>@flowEvent.Timestamp.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture)</span>
-                                        <strong>@Shorten(flowEvent.Type)</strong>
-                                        <em>@EventTarget(flowEvent)</em>
+                                    <div class="@RuntimeEventRowClass(flowEvent)" aria-label="@RuntimeEventLabel(flowEvent)">
+                                        <span class="test-runner-stream-time">@flowEvent.Timestamp.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture)</span>
+                                        <span class="test-runner-stream-icon" aria-hidden="true">
+                                            <MudIcon Icon="@RuntimeEventIcon(flowEvent)" Size="Size.Small" />
+                                        </span>
+                                        <span class="test-runner-stream-main">
+                                            <strong>@RuntimeEventTitle(flowEvent)</strong>
+                                            <em>@EventTarget(flowEvent)</em>
+                                        </span>
+                                        <span class="test-runner-stream-tag">@RuntimeEventKind(flowEvent)</span>
                                     </div>
                                 }
                                 @if (Project.RuntimeEvents.Count == 0)
                                 {
-                                    <div class="test-runner-muted centered">No live events</div>
+                                    <div class="test-runner-stream-empty" role="status">
+                                        <MudIcon Icon="@Icons.Material.Filled.Sensors" Size="Size.Small" />
+                                        <strong>No live events</strong>
+                                        <span>Runtime events will appear while the app is running.</span>
+                                    </div>
                                 }
                             </div>
                         </div>
@@ -289,15 +299,25 @@
                             <div class="test-runner-stream">
                                 @foreach (var log in Project.Logs.Where(IsRunnerLog).Reverse().Take(10))
                                 {
-                                    <div class="@RunnerLogRowClass(log)">
-                                        <span>@log.Timestamp.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture)</span>
-                                        <strong>@log.Code</strong>
-                                        <em>@log.Message</em>
+                                    <div class="@RunnerLogRowClass(log)" aria-label="@RunnerLogLabel(log)">
+                                        <span class="test-runner-stream-time">@log.Timestamp.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture)</span>
+                                        <span class="test-runner-stream-icon" aria-hidden="true">
+                                            <MudIcon Icon="@RunnerLogIcon(log)" Size="Size.Small" />
+                                        </span>
+                                        <span class="test-runner-stream-main">
+                                            <strong>@RunnerLogTitle(log)</strong>
+                                            <em>@log.Message</em>
+                                        </span>
+                                        <span class="test-runner-stream-tag">@RunnerLogSeverityLabel(log)</span>
                                     </div>
                                 }
                                 @if (!Project.Logs.Any(IsRunnerLog))
                                 {
-                                    <div class="test-runner-muted centered">No runner logs</div>
+                                    <div class="test-runner-stream-empty" role="status">
+                                        <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Small" />
+                                        <strong>No runner logs</strong>
+                                        <span>Scenario runner messages will appear here.</span>
+                                    </div>
                                 }
                             </div>
                         </div>
@@ -593,8 +613,91 @@
     private static bool IsRunnerLog(WorkspaceLogEntry log)
         => string.Equals(log.Scope, WorkspaceLogScopes.TestRunner, StringComparison.Ordinal);
 
+    private static string RuntimeEventRowClass(FluxFlow.Engine.Components.FlowEvent flowEvent)
+        => $"test-runner-stream-row event {RuntimeEventTone(flowEvent)}";
+
+    private static string RuntimeEventLabel(FluxFlow.Engine.Components.FlowEvent flowEvent)
+        => $"{flowEvent.Timestamp.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture)} runtime event {RuntimeEventTitle(flowEvent)} {EventTarget(flowEvent)}";
+
+    private static string RuntimeEventTitle(FluxFlow.Engine.Components.FlowEvent flowEvent)
+        => Shorten(flowEvent.Type);
+
+    private static string RuntimeEventKind(FluxFlow.Engine.Components.FlowEvent flowEvent)
+    {
+        var type = flowEvent.Type;
+        if (string.IsNullOrWhiteSpace(type))
+        {
+            return "event";
+        }
+
+        var separatorIndex = type.LastIndexOfAny(new[] { '.', ':', '/' });
+        var kind = separatorIndex >= 0 && separatorIndex < type.Length - 1
+            ? type[(separatorIndex + 1)..]
+            : type;
+
+        return Shorten(kind.ToLowerInvariant());
+    }
+
+    private static string RuntimeEventIcon(FluxFlow.Engine.Components.FlowEvent flowEvent)
+        => RuntimeEventTone(flowEvent) switch
+        {
+            "error" => Icons.Material.Filled.ErrorOutline,
+            "warning" => Icons.Material.Filled.WarningAmber,
+            "success" => Icons.Material.Filled.CheckCircle,
+            _ => Icons.Material.Filled.Sensors
+        };
+
+    private static string RuntimeEventTone(FluxFlow.Engine.Components.FlowEvent flowEvent)
+    {
+        var text = $"{flowEvent.Type} {flowEvent.Status}".ToLowerInvariant();
+
+        if (text.Contains("error", StringComparison.Ordinal) ||
+            text.Contains("fail", StringComparison.Ordinal) ||
+            text.Contains("fault", StringComparison.Ordinal) ||
+            text.Contains("timeout", StringComparison.Ordinal))
+        {
+            return "error";
+        }
+
+        if (text.Contains("warn", StringComparison.Ordinal) ||
+            text.Contains("retry", StringComparison.Ordinal))
+        {
+            return "warning";
+        }
+
+        if (text.Contains("success", StringComparison.Ordinal) ||
+            text.Contains("complete", StringComparison.Ordinal) ||
+            text.Contains("pass", StringComparison.Ordinal) ||
+            text.Contains("sent", StringComparison.Ordinal) ||
+            text.Contains("published", StringComparison.Ordinal))
+        {
+            return "success";
+        }
+
+        return "info";
+    }
+
     private static string RunnerLogRowClass(WorkspaceLogEntry log)
         => $"test-runner-stream-row log {RunnerLogSeverityClass(log)}";
+
+    private static string RunnerLogLabel(WorkspaceLogEntry log)
+        => $"{log.Timestamp.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture)} runner log {RunnerLogSeverityLabel(log)} {RunnerLogTitle(log)} {log.Message}";
+
+    private static string RunnerLogTitle(WorkspaceLogEntry log)
+        => string.IsNullOrWhiteSpace(log.Code) ? RunnerLogSeverityLabel(log) : log.Code;
+
+    private static string RunnerLogSeverityLabel(WorkspaceLogEntry log)
+        => WorkspaceLogFilter.NormalizeSeverity(log);
+
+    private static string RunnerLogIcon(WorkspaceLogEntry log)
+        => RunnerLogSeverityClass(log) switch
+        {
+            "error" => Icons.Material.Filled.ErrorOutline,
+            "warning" => Icons.Material.Filled.WarningAmber,
+            "debug" => Icons.Material.Filled.BugReport,
+            "trace" => Icons.Material.Filled.Route,
+            _ => Icons.Material.Filled.Info
+        };
 
     private static string RunnerLogSeverityClass(WorkspaceLogEntry log)
         => WorkspaceLogFilter.NormalizeSeverity(log).ToLowerInvariant() switch
