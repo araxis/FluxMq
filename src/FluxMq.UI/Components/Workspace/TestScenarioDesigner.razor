@@ -311,6 +311,18 @@
                                             {
                                                 <div class="test-step-result-message">@stepResult.Message</div>
                                             }
+                                            @if (stepResult is not null)
+                                            {
+                                                <div class="test-step-result-strip" aria-label="@StepResultMetaLabel(stepResult)">
+                                                    <span class="@StepResultScopeClass">
+                                                        <MudIcon Icon="@ActiveRunChipIcon" Size="Size.Small" />
+                                                        <span>@StepResultScopeLabel</span>
+                                                    </span>
+                                                    <span>@StepResultClockLabel(stepResult)</span>
+                                                    <span>@StepResultDurationLabel(stepResult)</span>
+                                                    <span>@StepResultEventLabel(stepResult)</span>
+                                                </div>
+                                            }
                                             @if (stepResult?.MatchedEvent is { } matched)
                                             {
                                                 <div class="test-step-event">
@@ -433,6 +445,12 @@
 
     private Color ActiveRunChipColor => IsViewingHistoricalRun ? Color.Info : Color.Default;
 
+    private string StepResultScopeClass
+        => IsViewingHistoricalRun ? "test-step-result-run history" : "test-step-result-run latest";
+
+    private string StepResultScopeLabel
+        => IsViewingHistoricalRun ? "History result" : "Latest result";
+
     private string ActiveRunTooltip
         => Project.LastScenarioRunResult is { } result
             ? $"Viewing {(IsViewingHistoricalRun ? "a historical" : "the latest")} run from {FormatRunTimestamp(result)}."
@@ -536,6 +554,10 @@
         if (result is not null)
         {
             classes.Add("selected");
+            if (IsViewingHistoricalRun)
+            {
+                classes.Add("history");
+            }
         }
 
         if (result is not null && !IsSuccessfulStepStatus(result.Status))
@@ -557,6 +579,9 @@
         return $"{step.Name}, {StepTypeLabel(step)}, {status}";
     }
 
+    private string StepResultMetaLabel(ScenarioStepResult result)
+        => $"{StepResultScopeLabel}, finished {StepResultClockLabel(result)}, duration {StepResultDurationLabel(result)}, {StepResultEventLabel(result)}";
+
     private string StepTypeClass(ScenarioStepSnapshot step)
         => ScenarioStepDisplay.StepTypeClass(step, ScenarioSteps);
 
@@ -573,6 +598,24 @@
             ScenarioStepRunStatus.Canceled => Icons.Material.Filled.Cancel,
             _ => Icons.Material.Filled.RadioButtonUnchecked
         };
+
+    private static string StepResultClockLabel(ScenarioStepResult result)
+        => result.FinishedAt.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture);
+
+    private static string StepResultDurationLabel(ScenarioStepResult result)
+        => FormatDuration(result.FinishedAt - result.StartedAt);
+
+    private static string StepResultEventLabel(ScenarioStepResult result)
+    {
+        if (result.MatchedEventIndex is { } index)
+        {
+            return $"Event {index + 1}";
+        }
+
+        return result.NextEventOffset > 0
+            ? $"Offset {result.NextEventOffset}"
+            : "No event";
+    }
 
     private static string BuilderMetricClass(bool active)
         => active ? "test-builder-metric active" : "test-builder-metric";
