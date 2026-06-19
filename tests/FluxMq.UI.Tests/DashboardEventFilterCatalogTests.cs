@@ -5236,9 +5236,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("connections-title-icon");
         markup.ShouldContain("<strong>Connections</strong>");
         markup.ShouldContain("@ConnectionCountLabel");
+        markup.ShouldContain("connections-empty\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("connections-empty-title");
         markup.ShouldContain("connections-list");
         markup.ShouldContain("role=\"list\"");
+        markup.ShouldContain("aria-label=\"@ConnectionRowLabel(conn)\"");
         markup.ShouldContain("connection-name-line");
         markup.ShouldContain("connection-endpoint");
         markup.ShouldContain("connection-meta");
@@ -5248,6 +5250,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("PrimaryActionClass(conn)");
         markup.ShouldContain("StatePillClass");
         markup.ShouldContain("StateDotClass");
+        markup.ShouldContain("private static string ConnectionRowLabel");
         markup.ShouldContain("aria-label=\"@PrimaryActionLabel(conn)\"");
         markup.ShouldContain("aria-label=\"@RemoveLabel(conn)\"");
         markup.ShouldNotContain("MudTreeView");
@@ -5258,8 +5261,15 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".connections-panel");
         css.ShouldContain(".connections-list");
         css.ShouldContain(".connection-row");
-        css.ShouldContain("grid-template-columns: 8px minmax(0, 1fr) 56px;");
-        css.ShouldContain("min-height: 60px;");
+        css.ShouldContain("border-bottom: 1px solid var(--flux-border-soft);");
+        css.ShouldContain("grid-template-columns: 26px minmax(0, 1fr);");
+        css.ShouldContain("grid-row: 1 / span 2;");
+        css.ShouldContain("min-height: 82px;");
+        css.ShouldContain("grid-template-columns: 8px minmax(0, 1fr) 52px;");
+        css.ShouldContain("min-height: 54px;");
+        css.ShouldContain("opacity: 0.62;");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
         css.ShouldContain(".connection-state.live");
         css.ShouldContain(".connection-state.pending");
         css.ShouldContain(".connection-state.faulted");
