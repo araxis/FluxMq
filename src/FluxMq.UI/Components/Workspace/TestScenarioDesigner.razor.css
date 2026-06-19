@@ -314,8 +314,29 @@
     color: var(--mud-palette-text-secondary);
     display: flex;
     gap: 8px;
-    min-height: 42px;
-    padding: 8px;
+    min-height: 54px;
+    padding: 8px 7px;
+}
+
+.test-run-history-empty span {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.test-run-history-empty strong {
+    color: var(--mud-palette-text-primary);
+    font-size: 11.5px;
+    font-weight: 850;
+    line-height: 1.15;
+}
+
+.test-run-history-empty small {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1.25;
 }
 
 ::deep .test-run-history-item,
@@ -500,6 +521,34 @@
     padding: 16px;
 }
 
+.test-scenario-empty-cues {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    justify-content: center;
+    max-width: 100%;
+}
+
+.test-scenario-empty-cues span {
+    align-items: center;
+    background: var(--flux-surface-2);
+    border: 1px solid var(--flux-border-soft);
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    display: inline-flex;
+    font-size: 10.75px;
+    font-weight: 750;
+    gap: 4px;
+    height: 24px;
+    line-height: 1;
+    max-width: 150px;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0 7px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .test-scenario-empty-copy {
     display: flex;
     flex-direction: column;
@@ -521,9 +570,21 @@
 }
 
 .test-scenario-empty-icon {
+    align-items: center;
+    background: color-mix(in srgb, var(--mud-palette-warning) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-warning) 28%, var(--flux-border));
+    border-radius: 6px;
     color: var(--mud-palette-warning);
-    font-size: 34px;
-    opacity: 0.82;
+    display: inline-flex;
+    height: 34px;
+    justify-content: center;
+    width: 34px;
+}
+
+.test-scenario-empty-icon.timeline {
+    background: color-mix(in srgb, var(--mud-palette-info) 9%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-info) 28%, var(--flux-border));
+    color: var(--mud-palette-info);
 }
 
 .test-scenario-empty-panel ::deep .mud-button-root {

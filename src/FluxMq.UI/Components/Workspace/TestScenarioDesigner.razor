@@ -16,12 +16,24 @@
      @onpointerleave="HandleDesignerPointerLeave">
     @if (Scenario is null)
     {
-        <div class="test-scenario-empty">
+        <div class="test-scenario-empty" aria-label="Test scenario setup state">
             <div class="test-scenario-empty-panel">
-                <MudIcon Icon="@Icons.Material.Filled.FactCheck" Class="test-scenario-empty-icon" />
+                <span class="test-scenario-empty-icon" aria-hidden="true">
+                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
+                </span>
                 <div class="test-scenario-empty-copy">
-                    <span>No test selected</span>
+                    <span>@NoTestEmptyTitle</span>
                     <small>@NoTestEmptyText</small>
+                </div>
+                <div class="test-scenario-empty-cues" aria-label="Scenario designer setup">
+                    <span>
+                        <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
+                        @NoTestSelectionHint
+                    </span>
+                    <span>
+                        <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" />
+                        Designer ready
+                    </span>
                 </div>
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
@@ -109,7 +121,10 @@
                                 {
                                     <div class="test-run-history-empty" role="status">
                                         <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" />
-                                        <span>No runs yet</span>
+                                        <span>
+                                            <strong>No run history</strong>
+                                            <small>Run this scenario once to compare future edits.</small>
+                                        </span>
                                     </div>
                                 }
                                 else
@@ -210,12 +225,28 @@
 
             @if (Scenario.Steps.Count == 0)
             {
-                <div class="test-scenario-empty">
+                <div class="test-scenario-empty" aria-label="Empty scenario">
                     <div class="test-scenario-empty-panel compact">
-                        <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Class="test-scenario-empty-icon" />
+                        <span class="test-scenario-empty-icon timeline" aria-hidden="true">
+                            <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" />
+                        </span>
                         <div class="test-scenario-empty-copy">
-                            <span>No steps yet</span>
-                            <small>Add a step from the toolbar or drag one from the catalog.</small>
+                            <span>@NoStepsEmptyTitle</span>
+                            <small>@NoStepsEmptyText</small>
+                        </div>
+                        <div class="test-scenario-empty-cues" aria-label="Scenario starter cues">
+                            <span>
+                                <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                                @ScenarioStepTypeCountText
+                            </span>
+                            <span>
+                                <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" />
+                                @PhaseCountText
+                            </span>
+                            <span>
+                                <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" />
+                                Build first
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -370,9 +401,21 @@
     private string DesignerClass
         => $"test-scenario-designer {(IsTestStepDrag && DragState.ActiveComponentDrag?.IsOverDesigner == true ? "drop-active" : null)}";
 
+    private string NoTestEmptyTitle => Project.TestNames.Count == 0 ? "No tests yet" : "No test selected";
+
     private string NoTestEmptyText => Project.TestNames.Count == 0
-        ? "Create a test to build a scenario."
-        : "Select a test from the app tabs to edit its scenario.";
+        ? "Create a test to start building scenario steps."
+        : "Select a test from the tabs to edit its scenario.";
+
+    private string NoTestSelectionHint
+        => Project.TestNames.Count == 0 ? "No tests" : FormatTestCount(Project.TestNames.Count);
+
+    private string NoStepsEmptyTitle => "Build the first step";
+
+    private string NoStepsEmptyText => "Add a step from the toolbar or drag one from the catalog.";
+
+    private string ScenarioStepTypeCountText
+        => FormatStepTypeCount(ScenarioSteps.Steps.Count);
 
     private bool IsTestStepDrag
         => DragState.ActiveComponentDrag is { TargetKind: WorkspaceArtifactKind.Test };
@@ -734,6 +777,12 @@
 
     private static string FormatStepCount(int count)
         => count == 1 ? "1 step" : $"{count} steps";
+
+    private static string FormatStepTypeCount(int count)
+        => count == 1 ? "1 step type" : $"{count} step types";
+
+    private static string FormatTestCount(int count)
+        => count == 1 ? "1 test" : $"{count} tests";
 
     private static string FormatIssueCount(int count)
         => count == 1 ? "1 issue" : $"{count} issues";
