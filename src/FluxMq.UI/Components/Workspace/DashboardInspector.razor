@@ -23,7 +23,10 @@
                 <span>@InspectorGroupCountLabel(propertyGroups.Count)</span>
                 <span>@InspectorPropertyCountLabel(propertyGroups)</span>
             </div>
-            <div class="dashboard-inspector-live-strip" aria-live="polite">
+            <div class="dashboard-inspector-live-strip dashboard-inspector-status-chip"
+                 role="status"
+                 aria-live="polite"
+                 title="@InspectorStatusLabel">
                 <MudIcon Icon="@InspectorStatusIcon" Size="Size.Small" />
                 <span>@InspectorStatusLabel</span>
             </div>

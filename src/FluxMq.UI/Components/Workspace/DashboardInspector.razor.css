@@ -1,8 +1,8 @@
 .dashboard-inspector {
-    background: color-mix(in srgb, var(--flux-surface) 98%, var(--flux-canvas));
+    background: var(--flux-surface);
     border-left: 1px solid var(--flux-border);
     display: flex;
-    flex: 0 0 336px;
+    flex: 0 0 324px;
     flex-direction: column;
     min-height: 0;
     min-width: 0;
@@ -11,15 +11,15 @@
 
 .dashboard-inspector-header {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface) 96%, transparent);
+    background: var(--flux-surface);
     border-bottom: 1px solid var(--flux-border);
     display: grid;
     flex: 0 0 auto;
-    gap: 7px;
-    grid-template-columns: 26px minmax(0, 1fr) auto;
-    min-height: 54px;
+    gap: 6px;
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+    min-height: 48px;
     min-width: 0;
-    padding: 7px 8px 8px;
+    padding: 6px 7px;
 }
 
 .dashboard-inspector-header.widget {
@@ -34,21 +34,21 @@
     color: var(--flux-accent);
     display: flex;
     flex: 0 0 auto;
-    height: 26px;
+    height: 24px;
     justify-content: center;
-    width: 26px;
+    width: 24px;
 }
 
 .dashboard-inspector-icon ::deep .mud-icon-root {
-    font-size: 16px;
-    height: 16px;
-    width: 16px;
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
 }
 
 .dashboard-inspector-heading {
     display: grid;
     flex: 1 1 auto;
-    gap: 3px;
+    gap: 2px;
     min-width: 0;
     overflow: hidden;
 }
@@ -62,23 +62,23 @@
 
 .dashboard-inspector-command {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 70%, transparent);
-    border: 1px solid var(--flux-border);
-    border-radius: 6px;
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--flux-border) 76%, transparent);
+    border-radius: 5px;
     color: var(--mud-palette-text-secondary);
     cursor: pointer;
     display: inline-flex;
-    flex: 0 0 26px;
-    height: 26px;
+    flex: 0 0 24px;
+    height: 24px;
     justify-content: center;
     padding: 0;
-    width: 26px;
+    width: 24px;
 }
 
 .dashboard-inspector-reset-command {
     flex-basis: auto;
     gap: 4px;
-    padding: 0 7px;
+    padding: 0 6px;
     width: auto;
 }
 
@@ -105,7 +105,7 @@
 
 .dashboard-inspector-title {
     color: var(--mud-palette-text-primary);
-    font-size: 12px;
+    font-size: 11.75px;
     font-weight: 760;
     line-height: 1.2;
     overflow: hidden;
@@ -124,20 +124,20 @@
 
 .dashboard-inspector-meta-strip span {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 58%, transparent);
-    border: 1px solid var(--flux-border);
+    background: color-mix(in srgb, var(--flux-surface-2) 38%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 70%, transparent);
     border-radius: 5px;
     color: var(--mud-palette-text-secondary);
     display: inline-flex;
     flex: 0 1 auto;
     font-size: 9.75px;
     font-weight: 720;
-    height: 20px;
+    height: 18px;
     line-height: 1;
-    max-width: 118px;
+    max-width: 106px;
     min-width: 0;
     overflow: hidden;
-    padding: 0 6px;
+    padding: 0 5px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -154,11 +154,20 @@
     overflow: hidden;
 }
 
+.dashboard-inspector-status-chip {
+    background: color-mix(in srgb, var(--flux-accent) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-accent) 18%, var(--flux-border));
+    border-radius: 5px;
+    height: 20px;
+    max-width: 100%;
+    padding: 0 6px;
+}
+
 .dashboard-inspector-live-strip ::deep .mud-icon-root {
     color: var(--flux-accent);
-    font-size: 13px;
-    height: 13px;
-    width: 13px;
+    font-size: 12px;
+    height: 12px;
+    width: 12px;
 }
 
 .dashboard-inspector-live-strip span {
@@ -169,6 +178,7 @@
 }
 
 .dashboard-inspector-property-shell {
+    background: color-mix(in srgb, var(--flux-canvas) 42%, var(--flux-surface));
     display: flex;
     flex: 1 1 auto;
     min-height: 0;
@@ -177,13 +187,13 @@
 }
 
 .dashboard-inspector-cell-summary {
-    background: color-mix(in srgb, var(--flux-surface-2) 72%, transparent);
-    border: 1px solid var(--flux-border);
+    background: color-mix(in srgb, var(--flux-surface-2) 44%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
     border-radius: 6px;
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding: 8px;
+    padding: 7px;
 }
 
 .dashboard-inspector-cell-summary span {
@@ -209,7 +219,7 @@
     grid-template-columns: 34px minmax(0, 1fr);
     justify-content: stretch;
     min-height: 0;
-    padding: 16px;
+    padding: 12px;
     text-align: left;
 }
 
