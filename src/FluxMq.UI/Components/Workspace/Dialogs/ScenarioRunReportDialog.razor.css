@@ -1,6 +1,16 @@
 .scenario-report-title {
+    align-items: flex-start;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    min-width: 0;
+    width: 100%;
+}
+
+.scenario-report-title-main {
     align-items: center;
     display: flex;
+    flex: 1 1 auto;
     gap: 8px;
     min-width: 0;
 }
@@ -35,6 +45,41 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.scenario-report-toolbar {
+    align-items: center;
+    display: flex;
+    flex: 0 0 auto;
+    gap: 6px;
+    justify-content: flex-end;
+    min-width: 0;
+}
+
+.scenario-report-export-state {
+    align-items: center;
+    background: var(--flux-surface-2);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
+    border-radius: 6px;
+    color: var(--mud-palette-text-secondary);
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 10.5px;
+    font-weight: 750;
+    gap: 5px;
+    height: 28px;
+    padding: 0 8px;
+    white-space: nowrap;
+}
+
+.scenario-report-export-state.ready {
+    border-color: color-mix(in srgb, var(--flux-accent) 32%, var(--flux-border));
+    color: var(--flux-accent);
+}
+
+.scenario-report-export-state.empty {
+    border-color: color-mix(in srgb, var(--mud-palette-error) 36%, var(--flux-border));
+    color: var(--mud-palette-error);
 }
 
 .scenario-report-meta-strip {
@@ -197,11 +242,39 @@
     word-break: break-word;
 }
 
+.scenario-report-empty {
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    justify-content: center;
+    min-height: 360px;
+    padding: 24px;
+    text-align: center;
+}
+
+.scenario-report-empty ::deep(.mud-icon-root) {
+    color: var(--mud-palette-text-disabled);
+}
+
+.scenario-report-empty strong {
+    color: var(--mud-palette-text-primary);
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.scenario-report-empty span {
+    font-size: 12px;
+    line-height: 1.35;
+}
+
 .scenario-report-actions {
     align-items: center;
     display: flex;
     gap: 8px;
-    justify-content: space-between;
+    justify-content: flex-end;
     min-width: 0;
     width: 100%;
 }
@@ -215,14 +288,72 @@
     min-width: 0;
 }
 
-.scenario-report-action,
-.scenario-report-close {
+.scenario-report-action-group.compact {
+    background: var(--flux-surface);
+    border: 1px solid var(--flux-border);
+    border-radius: 6px;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    gap: 0;
+    padding: 2px;
+}
+
+.scenario-report-action-cluster {
+    align-items: center;
+    border-right: 1px solid color-mix(in srgb, var(--flux-border) 76%, transparent);
+    display: inline-flex;
+    gap: 2px;
+    min-width: 0;
+    padding: 0 4px;
+}
+
+.scenario-report-action-cluster:last-child {
+    border-right: 0;
+}
+
+.scenario-report-action-label {
+    color: var(--mud-palette-text-secondary);
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+    margin-right: 2px;
+    text-transform: uppercase;
+}
+
+.scenario-report-action-group ::deep(.scenario-report-action) {
+    border: 1px solid transparent;
+    border-radius: 6px;
+    height: 26px;
+    min-height: 26px;
+    min-width: 26px;
+    padding: 0;
+    width: 26px;
+}
+
+.scenario-report-action-group ::deep(.scenario-report-action:hover:not(.mud-disabled)) {
+    background: var(--flux-surface-2);
+    border-color: var(--flux-border);
+}
+
+::deep(.scenario-report-close) {
     border-radius: 6px;
     min-height: 30px;
+    min-width: 84px;
     text-transform: none;
 }
 
 @media (max-width: 760px) {
+    .scenario-report-title {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .scenario-report-toolbar {
+        justify-content: space-between;
+        width: 100%;
+    }
+
     .scenario-report-content {
         min-height: min(70vh, 560px);
     }
@@ -232,13 +363,7 @@
     }
 
     .scenario-report-actions {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    .scenario-report-action-group,
-    .scenario-report-close {
-        width: 100%;
+        justify-content: flex-end;
     }
 }
 
@@ -250,5 +375,24 @@
 
     .scenario-report-summary-grid {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .scenario-report-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .scenario-report-action-group.compact {
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .scenario-report-action-cluster {
+        flex: 1 1 0;
+        justify-content: center;
+    }
+
+    ::deep(.scenario-report-close) {
+        width: 100%;
     }
 }

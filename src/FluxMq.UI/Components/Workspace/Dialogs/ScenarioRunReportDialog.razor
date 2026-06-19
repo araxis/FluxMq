@@ -3,33 +3,82 @@
 <MudDialog>
     <TitleContent>
         <div class="scenario-report-title">
-            <span class="scenario-report-title-icon" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.Article" Size="Size.Small" />
-            </span>
-            <div class="scenario-report-title-copy">
-                <MudText Typo="Typo.h6" Class="scenario-report-heading">@Title</MudText>
-                <div class="scenario-report-meta-strip" aria-label="Scenario report summary">
-                    @if (!string.IsNullOrWhiteSpace(RunScopeText))
-                    {
-                        <span class="@ReportMetaClass(RunScopeColor)">
-                            <MudIcon Icon="@RunScopeIcon" Size="Size.Small" />
-                            <span>@RunScopeText</span>
-                        </span>
-                    }
-                    @if (!string.IsNullOrWhiteSpace(RunStatusText))
-                    {
-                        <span class="@ReportMetaClass(RunStatusColor)">
-                            <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
-                            <span>@RunStatusText</span>
-                        </span>
-                    }
-                    @if (!string.IsNullOrWhiteSpace(RunStepSummaryText))
-                    {
-                        <span>
-                            <MudIcon Icon="@Icons.Material.Filled.FormatListNumbered" Size="Size.Small" />
-                            <span>@RunStepSummaryText</span>
-                        </span>
-                    }
+            <div class="scenario-report-title-main">
+                <span class="scenario-report-title-icon" aria-hidden="true">
+                    <MudIcon Icon="@Icons.Material.Filled.Article" Size="Size.Small" />
+                </span>
+                <div class="scenario-report-title-copy">
+                    <MudText Typo="Typo.h6" Class="scenario-report-heading">@Title</MudText>
+                    <div class="scenario-report-meta-strip" aria-label="Scenario report summary">
+                        @if (!string.IsNullOrWhiteSpace(RunScopeText))
+                        {
+                            <span class="@ReportMetaClass(RunScopeColor)">
+                                <MudIcon Icon="@RunScopeIcon" Size="Size.Small" />
+                                <span>@RunScopeText</span>
+                            </span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(RunStatusText))
+                        {
+                            <span class="@ReportMetaClass(RunStatusColor)">
+                                <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
+                                <span>@RunStatusText</span>
+                            </span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(RunStepSummaryText))
+                        {
+                            <span>
+                                <MudIcon Icon="@Icons.Material.Filled.FormatListNumbered" Size="Size.Small" />
+                                <span>@RunStepSummaryText</span>
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="scenario-report-toolbar" aria-label="Scenario report actions">
+                <span class="@ExportStateClass" title="@ExportStateTooltip">
+                    <MudIcon Icon="@ExportStateIcon" Size="Size.Small" />
+                    <span>@ExportStateText</span>
+                </span>
+                <div class="scenario-report-action-group compact" aria-label="Scenario report export actions">
+                    <div class="scenario-report-action-cluster">
+                        <span class="scenario-report-action-label">Summary</span>
+                        <MudTooltip Text="@CopySummaryTooltip">
+                            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                           Size="Size.Small"
+                                           Class="scenario-report-action"
+                                           Disabled="@(!HasSummaryReport)"
+                                           OnClick="@CopySummaryAsync"
+                                           aria-label="Copy summary report" />
+                        </MudTooltip>
+                        <MudTooltip Text="@SaveSummaryTooltip">
+                            <MudIconButton Icon="@Icons.Material.Filled.FileDownload"
+                                           Size="Size.Small"
+                                           Class="scenario-report-action"
+                                           Disabled="@(!HasSummaryReport)"
+                                           OnClick="@SaveSummary"
+                                           aria-label="Save summary report" />
+                        </MudTooltip>
+                    </div>
+                    <div class="scenario-report-action-cluster">
+                        <span class="scenario-report-action-label">JSON</span>
+                        <MudTooltip Text="@CopyJsonTooltip">
+                            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                           Size="Size.Small"
+                                           Class="scenario-report-action"
+                                           Disabled="@(!HasJsonReport)"
+                                           OnClick="@CopyJsonAsync"
+                                           aria-label="Copy JSON report" />
+                        </MudTooltip>
+                        <MudTooltip Text="@SaveJsonTooltip">
+                            <MudIconButton Icon="@Icons.Material.Filled.FileDownload"
+                                           Size="Size.Small"
+                                           Class="scenario-report-action"
+                                           Disabled="@(!HasJsonReport)"
+                                           OnClick="@SaveJson"
+                                           aria-label="Save JSON report" />
+                        </MudTooltip>
+                    </div>
                 </div>
             </div>
         </div>
@@ -71,12 +120,34 @@
             <MudTabs Elevation="0" Class="scenario-report-tabs">
                 <MudTabPanel Text="Summary">
                     <div class="scenario-report-viewer" aria-label="Text report">
-                        <pre>@TextReport</pre>
+                        @if (HasSummaryReport)
+                        {
+                            <pre>@TextReport</pre>
+                        }
+                        else
+                        {
+                            <div class="scenario-report-empty" role="status">
+                                <MudIcon Icon="@Icons.Material.Filled.Article" Size="Size.Medium" />
+                                <strong>No summary report</strong>
+                                <span>This run did not include a text summary.</span>
+                            </div>
+                        }
                     </div>
                 </MudTabPanel>
                 <MudTabPanel Text="JSON">
                     <div class="scenario-report-viewer" aria-label="JSON report">
-                        <pre>@JsonReport</pre>
+                        @if (HasJsonReport)
+                        {
+                            <pre>@JsonReport</pre>
+                        }
+                        else
+                        {
+                            <div class="scenario-report-empty" role="status">
+                                <MudIcon Icon="@Icons.Material.Filled.DataObject" Size="Size.Medium" />
+                                <strong>No JSON report</strong>
+                                <span>This run did not include a JSON payload.</span>
+                            </div>
+                        }
                     </div>
                 </MudTabPanel>
             </MudTabs>
@@ -84,36 +155,6 @@
     </DialogContent>
     <DialogActions>
         <div class="scenario-report-actions">
-            <div class="scenario-report-action-group" aria-label="Scenario report export actions">
-                <MudButton StartIcon="@Icons.Material.Filled.ContentCopy"
-                           Variant="Variant.Text"
-                           Size="Size.Small"
-                           Class="scenario-report-action"
-                           OnClick="@CopySummaryAsync">
-                    Copy summary
-                </MudButton>
-                <MudButton StartIcon="@Icons.Material.Filled.ContentCopy"
-                           Variant="Variant.Text"
-                           Size="Size.Small"
-                           Class="scenario-report-action"
-                           OnClick="@CopyJsonAsync">
-                    Copy JSON
-                </MudButton>
-                <MudButton StartIcon="@Icons.Material.Filled.FileDownload"
-                           Variant="Variant.Text"
-                           Size="Size.Small"
-                           Class="scenario-report-action"
-                           OnClick="@SaveSummary">
-                    Save summary
-                </MudButton>
-                <MudButton StartIcon="@Icons.Material.Filled.FileDownload"
-                           Variant="Variant.Text"
-                           Size="Size.Small"
-                           Class="scenario-report-action"
-                           OnClick="@SaveJson">
-                    Save JSON
-                </MudButton>
-            </div>
             <MudButton Color="Color.Primary"
                        Variant="Variant.Filled"
                        Size="Size.Small"
@@ -154,6 +195,48 @@
             ? "scenario-report-metric success"
             : ReportMetricClass(RunIssueColor);
 
+    private bool HasSummaryReport => !string.IsNullOrWhiteSpace(TextReport);
+
+    private bool HasJsonReport => !string.IsNullOrWhiteSpace(JsonReport);
+
+    private int AvailableReportFormatCount
+        => (HasSummaryReport ? 1 : 0) + (HasJsonReport ? 1 : 0);
+
+    private string ExportStateClass
+        => AvailableReportFormatCount == 0
+            ? "scenario-report-export-state empty"
+            : "scenario-report-export-state ready";
+
+    private string ExportStateIcon
+        => AvailableReportFormatCount == 0
+            ? Icons.Material.Filled.ErrorOutline
+            : Icons.Material.Filled.IosShare;
+
+    private string ExportStateText
+        => AvailableReportFormatCount switch
+        {
+            2 => "2 formats ready",
+            1 => "1 format ready",
+            _ => "No export content"
+        };
+
+    private string ExportStateTooltip
+        => AvailableReportFormatCount == 0
+            ? "No report content is available to copy or save."
+            : "Copy or save the available report formats.";
+
+    private string CopySummaryTooltip
+        => HasSummaryReport ? "Copy summary report" : "Summary report unavailable";
+
+    private string SaveSummaryTooltip
+        => HasSummaryReport ? "Save summary report" : "Summary report unavailable";
+
+    private string CopyJsonTooltip
+        => HasJsonReport ? "Copy JSON report" : "JSON report unavailable";
+
+    private string SaveJsonTooltip
+        => HasJsonReport ? "Save JSON report" : "JSON report unavailable";
+
     public enum ReportDialogAction
     {
         SaveSummary,
@@ -162,12 +245,24 @@
 
     private async Task CopySummaryAsync()
     {
+        if (!HasSummaryReport)
+        {
+            Snackbar.Add("No scenario summary to copy", Severity.Warning);
+            return;
+        }
+
         await Microsoft.Maui.ApplicationModel.DataTransfer.Clipboard.Default.SetTextAsync(TextReport);
         Snackbar.Add("Scenario report summary copied", Severity.Success);
     }
 
     private async Task CopyJsonAsync()
     {
+        if (!HasJsonReport)
+        {
+            Snackbar.Add("No scenario report JSON to copy", Severity.Warning);
+            return;
+        }
+
         await Microsoft.Maui.ApplicationModel.DataTransfer.Clipboard.Default.SetTextAsync(JsonReport);
         Snackbar.Add("Scenario report JSON copied", Severity.Success);
     }
@@ -188,9 +283,27 @@
             ? "scenario-report-metric"
             : $"scenario-report-metric {ReportMetaClass(color)}";
 
-    private void SaveJson() => MudDialog.Close(DialogResult.Ok(ReportDialogAction.SaveJson));
+    private void SaveJson()
+    {
+        if (!HasJsonReport)
+        {
+            Snackbar.Add("No scenario report JSON to save", Severity.Warning);
+            return;
+        }
 
-    private void SaveSummary() => MudDialog.Close(DialogResult.Ok(ReportDialogAction.SaveSummary));
+        MudDialog.Close(DialogResult.Ok(ReportDialogAction.SaveJson));
+    }
+
+    private void SaveSummary()
+    {
+        if (!HasSummaryReport)
+        {
+            Snackbar.Add("No scenario summary to save", Severity.Warning);
+            return;
+        }
+
+        MudDialog.Close(DialogResult.Ok(ReportDialogAction.SaveSummary));
+    }
 
     private void Close() => MudDialog.Close(DialogResult.Ok(true));
 }

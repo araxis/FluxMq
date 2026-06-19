@@ -2961,25 +2961,38 @@ public sealed class DashboardEventFilterCatalogTests
             "ScenarioRunReportDialog.razor.css"));
 
         markup.ShouldContain("scenario-report-title");
+        markup.ShouldContain("scenario-report-toolbar");
         markup.ShouldContain("scenario-report-meta-strip");
+        markup.ShouldContain("scenario-report-export-state");
         markup.ShouldContain("scenario-report-summary-grid");
         markup.ShouldContain("IssueMetricClass");
         markup.ShouldContain("scenario-report-viewer");
+        markup.ShouldContain("HasSummaryReport");
+        markup.ShouldContain("HasJsonReport");
+        markup.ShouldContain("scenario-report-empty");
         markup.ShouldContain("<pre>@TextReport</pre>");
         markup.ShouldContain("<pre>@JsonReport</pre>");
         markup.ShouldContain("scenario-report-action-group");
+        markup.ShouldContain("Disabled=\"@(!HasSummaryReport)\"");
+        markup.ShouldContain("Disabled=\"@(!HasJsonReport)\"");
         markup.ShouldContain("scenario-report-close");
         markup.ShouldNotContain("MudChip");
         markup.ShouldNotContain("MudTextField");
 
         css.ShouldContain(".scenario-report-title");
+        css.ShouldContain(".scenario-report-toolbar");
         css.ShouldContain(".scenario-report-meta-strip");
+        css.ShouldContain(".scenario-report-export-state");
         css.ShouldContain(".scenario-report-summary-grid");
         css.ShouldContain("grid-template-columns: repeat(4, minmax(0, 1fr));");
         css.ShouldContain(".scenario-report-tabs");
         css.ShouldContain(".scenario-report-viewer pre");
+        css.ShouldContain(".scenario-report-empty");
         css.ShouldContain("font-family: Consolas, \"Courier New\", monospace;");
         css.ShouldContain(".scenario-report-actions");
+        css.ShouldContain(".scenario-report-action-group.compact");
+        css.ShouldContain(".scenario-report-action-group ::deep(.scenario-report-action)");
+        css.ShouldContain("::deep(.scenario-report-close)");
         css.ShouldContain("@media (max-width: 760px)");
         css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
     }
