@@ -3989,3 +3989,18 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `git diff --check -- src\FluxMq.UI\Components\Workspace\MetricDesigner.razor src\FluxMq.UI\Components\Workspace\MetricDesigner.razor.css` passed with the existing LF-to-CRLF warning for the tracked Metrics file.
     - Whitespace checks over the touched Razor/CSS files passed.
   - Next step: manually inspect the clean Metrics header and metric-id field to confirm rename is discoverable in the id row without duplicating header controls.
+
+## 2026-06-20 - Workspace UI chrome de-clutter continuation
+
+- Continued the flat app-workspace polish after the Metrics tab pass:
+  - The live inspector publish area now uses quieter publish controls and reduces always-visible action chrome while keeping the existing publish workflow intact.
+  - The component catalog metadata area now reads as compact metadata instead of stacked badges, preserving the same catalog data and selection behavior.
+  - Test scenario step rows now use `test-step-meta` naming instead of badge naming, and run-history status, phase counts, step type/status, and step result metadata were flattened from pill chips into compact text metadata.
+  - Test scenario card markers use square-ended flat strips, and old badge/radius styling is guarded against in UI tests.
+  - App JSON, runtime behavior, scenario execution, metric schema, and package-backed component boundaries were unchanged.
+- Verification for the latest test-scenario metadata slice:
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false --filter "FullyQualifiedName~TestScenarioDesigner_UsesFlatCompactScenarioChrome"` passed.
+  - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore -p:UseSharedCompilation=false` passed with 462 tests.
+  - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -m:1` passed.
+  - Remote Windows validation passed before merge.
+- Next step: continue scanning the remaining high-noise workspace surfaces and apply compact flat app polish only where it improves workflow clarity.
