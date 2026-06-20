@@ -435,28 +435,22 @@
 }
 
 .test-run-history-status {
-    border: 1px solid var(--flux-border);
-    border-radius: 999px;
     color: var(--mud-palette-text-secondary);
     flex: 0 0 auto;
     font-size: 9.5px;
     font-weight: 850;
     line-height: 1;
-    padding: 3px 5px;
 }
 
 .test-run-history-status.passed {
-    border-color: color-mix(in srgb, var(--flux-accent) 34%, var(--flux-border));
     color: var(--flux-accent);
 }
 
 .test-run-history-status.failed {
-    border-color: color-mix(in srgb, var(--mud-palette-error) 38%, var(--flux-border));
     color: var(--mud-palette-error);
 }
 
 .test-run-history-status.canceled {
-    border-color: color-mix(in srgb, var(--mud-palette-warning) 38%, var(--flux-border));
     color: var(--mud-palette-warning);
 }
 
@@ -747,11 +741,7 @@
 }
 
 .test-phase-count {
-    background: var(--flux-surface);
-    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
-    border-radius: 999px;
     line-height: 1;
-    padding: 4px 7px;
     white-space: nowrap;
 }
 
@@ -814,7 +804,7 @@
 
 .test-step-card::before {
     background: color-mix(in srgb, var(--mud-palette-text-secondary) 38%, transparent);
-    border-radius: 999px;
+    border-radius: 0;
     content: "";
     inset: 7px auto 7px 2px;
     position: absolute;
@@ -899,7 +889,7 @@
     min-width: 0;
 }
 
-.test-step-badges {
+.test-step-meta {
     align-items: center;
     display: inline-flex;
     flex: 0 0 auto;
@@ -963,89 +953,64 @@
 
 .test-step-type {
     align-items: center;
-    border: 1px solid var(--flux-border-strong);
-    border-radius: 5px;
     color: var(--mud-palette-text-secondary);
     display: inline-flex;
     flex: 0 0 auto;
     font-size: 10px;
     font-weight: 800;
-    height: 20px;
     letter-spacing: 0;
     line-height: 1;
-    padding: 2px 5px;
     text-transform: uppercase;
     white-space: nowrap;
 }
 
 .test-step-type.publish {
-    background: color-mix(in srgb, var(--flux-accent) 12%, transparent);
-    border-color: color-mix(in srgb, var(--flux-accent) 36%, transparent);
     color: var(--flux-accent);
 }
 
 .test-step-type.trigger {
-    background: color-mix(in srgb, var(--mud-palette-warning) 12%, transparent);
-    border-color: color-mix(in srgb, var(--mud-palette-warning) 36%, transparent);
     color: var(--mud-palette-warning);
 }
 
 .test-step-type.when {
-    background: color-mix(in srgb, var(--mud-palette-success) 12%, transparent);
-    border-color: color-mix(in srgb, var(--mud-palette-success) 36%, transparent);
     color: var(--mud-palette-success);
 }
 
 .test-step-type.expect {
-    background: color-mix(in srgb, var(--mud-palette-info) 12%, transparent);
-    border-color: color-mix(in srgb, var(--mud-palette-info) 34%, transparent);
     color: var(--mud-palette-info);
 }
 
 .test-step-status {
     align-items: center;
-    border: 1px solid var(--flux-border-strong);
-    border-radius: 5px;
     color: var(--mud-palette-text-secondary);
     display: inline-flex;
     flex: 0 0 auto;
     font-size: 10px;
     font-weight: 800;
     gap: 4px;
-    height: 20px;
     line-height: 1;
-    padding: 2px 5px;
     text-transform: uppercase;
     white-space: nowrap;
 }
 
 .test-step-status.idle {
-    background: var(--flux-surface);
-    border-color: color-mix(in srgb, var(--flux-border) 72%, transparent);
+    color: var(--mud-palette-text-secondary);
 }
 
 .test-step-status.passed {
-    background: color-mix(in srgb, var(--flux-accent) 12%, transparent);
-    border-color: color-mix(in srgb, var(--flux-accent) 38%, transparent);
     color: var(--flux-accent);
 }
 
 .test-step-status.skipped {
-    background: color-mix(in srgb, var(--mud-palette-info) 12%, transparent);
-    border-color: color-mix(in srgb, var(--mud-palette-info) 38%, transparent);
     color: var(--mud-palette-info);
 }
 
 .test-step-status.failed,
 .test-step-status.timed-out {
-    background: color-mix(in srgb, var(--mud-palette-error) 12%, transparent);
-    border-color: color-mix(in srgb, var(--mud-palette-error) 42%, transparent);
     color: var(--mud-palette-error);
 }
 
 .test-step-status.canceled {
-    background: color-mix(in srgb, var(--mud-palette-warning) 12%, transparent);
-    border-color: color-mix(in srgb, var(--mud-palette-warning) 42%, transparent);
     color: var(--mud-palette-warning);
 }
 
@@ -1082,30 +1047,22 @@
 
 .test-step-result-strip > span {
     align-items: center;
-    background: var(--flux-surface);
-    border: 1px solid color-mix(in srgb, var(--flux-border) 76%, transparent);
-    border-radius: 999px;
     display: inline-flex;
     font-size: 10px;
     font-weight: 750;
     gap: 4px;
-    height: 20px;
     max-width: 140px;
     min-width: 0;
     overflow: hidden;
-    padding: 0 6px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .test-step-result-run.latest {
-    border-color: color-mix(in srgb, var(--mud-palette-info) 24%, var(--flux-border));
     color: var(--mud-palette-info);
 }
 
 .test-step-result-run.history {
-    background: color-mix(in srgb, var(--mud-palette-info) 8%, var(--flux-surface));
-    border-color: color-mix(in srgb, var(--mud-palette-info) 34%, var(--flux-border));
     color: var(--mud-palette-info);
 }
 
@@ -1218,7 +1175,7 @@
         grid-template-columns: minmax(0, 1fr) auto;
     }
 
-    .test-step-badges {
+    .test-step-meta {
         grid-column: 1 / -1;
         order: 3;
     }

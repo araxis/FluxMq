@@ -2960,7 +2960,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("test-phase-copy");
         markup.ShouldContain("test-phase-count");
         markup.ShouldContain("test-step-title-block");
-        markup.ShouldContain("test-step-badges");
+        markup.ShouldContain("test-step-meta");
         markup.ShouldContain("StepCardClass(step, stepResult)");
         markup.ShouldContain("StepCardLabel(step, stepResult)");
         markup.ShouldContain("tabindex=\"0\"");
@@ -2971,6 +2971,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("StepResultEventLabel(stepResult)");
         markup.ShouldContain("test-step-status idle");
         markup.ShouldNotContain("MudChip");
+        markup.ShouldNotContain("test-step-badges");
 
         css.ShouldContain(".test-scenario-heading-icon");
         css.ShouldContain(".test-scenario-meta-strip span,");
@@ -3013,6 +3014,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-step-card:focus-within,");
         css.ShouldContain(".test-step-card.selected");
         css.ShouldContain(".test-step-card.history");
+        css.ShouldContain(".test-step-meta");
+        css.ShouldNotContain(".test-step-badges");
+        css.ShouldNotContain("border-radius: 999px;");
         css.ShouldContain(".test-step-card.configured .test-step-index");
         css.ShouldContain(".test-step-card.issue");
         css.ShouldContain(".test-step-card.issue .test-step-index");
