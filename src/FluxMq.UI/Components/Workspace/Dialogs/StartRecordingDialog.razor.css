@@ -60,7 +60,7 @@
     border: 1px solid color-mix(in srgb, var(--mud-palette-success) 24%, var(--flux-border-soft));
     border-radius: 6px;
     color: var(--mud-palette-success);
-    display: inline-flex;
+    display: none;
     font-size: 10px;
     font-weight: 760;
     height: 22px;

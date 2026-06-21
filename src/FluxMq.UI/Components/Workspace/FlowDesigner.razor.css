@@ -601,9 +601,11 @@
 }
 
 .flow-designer-root ::deep .flow-node-display-name {
+    color: color-mix(in srgb, var(--mud-palette-text-secondary) 72%, var(--mud-palette-text-disabled));
     font-size: 0.64rem;
+    font-weight: 620;
     line-height: 1.15;
-    opacity: 0.74;
+    opacity: 0.9;
 }
 
 .flow-designer-root ::deep .flow-node-diagnostic-icon {
@@ -632,17 +634,26 @@
 }
 
 .flow-designer-root ::deep .flow-node-activity {
+    align-items: center;
+    display: flex;
     margin: 0 0 6px;
-    padding: 4px 6px;
+    min-height: 32px;
+    padding: 0 6px;
 }
 
 .flow-designer-root ::deep .flow-node-activity .mud-alert-icon {
+    align-items: center;
+    align-self: center;
+    display: inline-flex;
     font-size: 1rem;
     margin-inline-end: 6px;
     padding: 0;
 }
 
 .flow-designer-root ::deep .flow-node-activity .mud-alert-message {
+    align-items: center;
+    align-self: center;
+    display: inline-flex;
     font-size: 0.68rem;
     line-height: 1.25;
     padding: 0;

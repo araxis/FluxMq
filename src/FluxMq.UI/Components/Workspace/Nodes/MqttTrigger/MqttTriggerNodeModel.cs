@@ -10,15 +10,16 @@ public sealed class MqttTriggerNodeModel(string id, DiagramPoint position, strin
     : FlowDiagramNodeModel(id, position, nodeName, "mqtt.trigger", descriptor, isResource)
 {
     public const int DefaultSubscriptionQos = 1;
+    public const int DefaultBoundedCapacity = 1000;
     public string Connection { get; set; } = string.Empty;
     public List<MqttTriggerSubscriptionDraft> Subscriptions { get; set; } = [new("#", DefaultSubscriptionQos)];
-    public int BoundedCapacity { get; set; } = 1000;
+    public int BoundedCapacity { get; set; } = DefaultBoundedCapacity;
 
     protected override void OnConfigurationLoaded(JsonObject? config)
     {
         Connection = config?["connection"]?.GetValue<string?>() ?? string.Empty;
         Subscriptions = ReadSubscriptions(config);
-        BoundedCapacity = ReadInt(config, "boundedCapacity", 1000);
+        BoundedCapacity = NormalizeBoundedCapacity(ReadInt(config, "boundedCapacity", DefaultBoundedCapacity));
     }
 
     public override JsonObject BuildConfiguration()
@@ -39,7 +40,7 @@ public sealed class MqttTriggerNodeModel(string id, DiagramPoint position, strin
         {
             ["connection"] = string.IsNullOrWhiteSpace(Connection) ? FlowDefinitionComposer.BrokerResourceName : Connection,
             ["subscriptions"] = subscriptions,
-            ["boundedCapacity"] = BoundedCapacity
+            ["boundedCapacity"] = NormalizeBoundedCapacity(BoundedCapacity)
         };
     }
 
@@ -105,6 +106,9 @@ public sealed class MqttTriggerNodeModel(string id, DiagramPoint position, strin
             >= 2 => 2,
             _ => 1
         };
+
+    public static int NormalizeBoundedCapacity(int value)
+        => value > 0 ? value : DefaultBoundedCapacity;
 
     private static bool ReadBool(JsonNode? node, bool defaultValue)
     {

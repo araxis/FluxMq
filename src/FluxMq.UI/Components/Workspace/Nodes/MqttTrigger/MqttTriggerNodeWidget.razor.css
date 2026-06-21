@@ -1,0 +1,302 @@
+.mqtt-trigger-summary {
+    display: grid;
+    gap: 4px;
+    margin-top: 3px;
+    min-width: 0;
+}
+
+.mqtt-trigger-meta {
+    display: grid;
+    gap: 2px;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.7fr) minmax(0, 0.85fr);
+    min-width: 0;
+}
+
+.mqtt-trigger-meta-item {
+    align-content: center;
+    background: color-mix(in srgb, var(--flux-surface-2) 30%, transparent);
+    border-radius: 4px;
+    display: grid;
+    gap: 2px;
+    min-height: 28px;
+    min-width: 0;
+    padding: 4px 5px;
+}
+
+.mqtt-trigger-meta-item span {
+    color: var(--flux-text-muted);
+    font-size: 0.52rem;
+    font-weight: 750;
+    letter-spacing: 0;
+    line-height: 1;
+    min-width: 0;
+    text-transform: uppercase;
+}
+
+.mqtt-trigger-meta-item strong {
+    color: var(--mud-palette-text-primary);
+    font-size: 0.66rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    line-height: 1.12;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mqtt-trigger-subscription-list {
+    display: grid;
+    gap: 0;
+    min-width: 0;
+}
+
+.mqtt-trigger-subscription-row {
+    align-items: center;
+    background: transparent;
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 68%, transparent);
+    display: grid;
+    gap: 3px;
+    grid-template-columns: minmax(0, 1fr) 26px 34px 38px;
+    min-height: 25px;
+    min-width: 0;
+    padding: 4px 2px 3px;
+}
+
+.mqtt-trigger-topic {
+    color: var(--mud-palette-text-primary);
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.65rem;
+    font-weight: 650;
+    line-height: 1.15;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mqtt-trigger-topic.system {
+    color: color-mix(in srgb, var(--mud-palette-primary) 72%, var(--mud-palette-text-primary));
+}
+
+.mqtt-trigger-token {
+    border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 30%, var(--flux-border-soft));
+    border-radius: 4px;
+    color: var(--mud-palette-primary);
+    font-size: 0.52rem;
+    font-weight: 760;
+    line-height: 1;
+    padding: 3px 4px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.mqtt-trigger-token.qos {
+    min-width: 26px;
+    padding-inline: 0;
+}
+
+.mqtt-trigger-token.retained,
+.mqtt-trigger-token.retain-flag {
+    border-color: color-mix(in srgb, var(--mud-palette-primary) 22%, var(--flux-border-soft));
+    color: color-mix(in srgb, var(--mud-palette-primary) 84%, var(--mud-palette-text-primary));
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mqtt-trigger-token.muted {
+    border-color: var(--flux-border-soft);
+    color: var(--flux-text-muted);
+}
+
+.mqtt-trigger-more {
+    color: var(--flux-text-muted);
+    font-size: 0.6rem;
+    font-weight: 650;
+    line-height: 1.1;
+    padding: 2px 5px 0;
+    text-align: right;
+}
+
+.mqtt-trigger-editor {
+    min-width: 0;
+}
+
+.mqtt-trigger-editor-section {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+    padding: 0;
+}
+
+.mqtt-trigger-editor-section.compact {
+    gap: 7px;
+}
+
+.mqtt-trigger-editor-grid {
+    align-items: start;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) 190px;
+    min-width: 0;
+}
+
+.mqtt-trigger-editor-grid ::deep .mud-input-control,
+.mqtt-trigger-subscription-editor ::deep(.mud-input-control) {
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+.mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-add-cell) {
+    padding-right: 0;
+    text-align: center;
+}
+
+.mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-add) {
+    color: var(--mud-palette-primary);
+    height: 28px;
+    min-height: 28px;
+    min-width: 28px;
+    padding: 0;
+    width: 28px;
+}
+
+.mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-add .mud-icon-root) {
+    font-size: 1rem;
+}
+
+.mqtt-trigger-subscription-editor {
+    min-width: 0;
+    overflow-x: auto;
+}
+
+.mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-subscription-table) {
+    background: transparent;
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 80%, var(--mud-palette-text-secondary));
+}
+
+.mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-subscription-table .mud-table-container) {
+    overflow: visible;
+}
+
+.mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-subscription-table .mud-table-root) {
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 640px;
+    table-layout: fixed;
+    width: 100%;
+}
+
+.mqtt-trigger-col-topic {
+    width: auto;
+}
+
+.mqtt-trigger-col-qos {
+    width: 128px;
+}
+
+.mqtt-trigger-col-flag {
+    width: 104px;
+}
+
+.mqtt-trigger-col-action {
+    width: 34px;
+}
+
+.mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-subscription-table .mud-table-head .mud-table-cell) {
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 82%, transparent);
+    color: color-mix(in srgb, var(--mud-palette-text-secondary) 88%, var(--mud-palette-text-primary));
+    font-size: 10px;
+    font-weight: 760;
+    line-height: 1;
+    padding: 0 10px 8px 0;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-subscription-table .mud-table-head .mud-table-cell:last-child) {
+    padding-right: 0;
+}
+
+.mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-subscription-table .mud-table-body .mud-table-row) {
+    background: transparent;
+}
+
+.mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-subscription-table .mud-table-body .mud-table-row:hover) {
+    background: color-mix(in srgb, var(--mud-palette-primary) 4%, transparent);
+}
+
+.mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-subscription-table .mud-table-body .mud-table-cell) {
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 56%, transparent);
+    padding: 8px 10px 8px 0;
+    vertical-align: middle;
+}
+
+.mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-subscription-table .mud-table-body .mud-table-row:last-child .mud-table-cell) {
+    border-bottom: 0;
+}
+
+.mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-subscription-table .mud-table-body .mud-table-cell:last-child) {
+    padding-right: 0;
+}
+
+.mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-subscription-table .mud-table-pagination) {
+    display: none;
+}
+
+.mqtt-trigger-qos-select {
+    min-width: 0;
+}
+
+.mqtt-trigger-table-check {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: 40px;
+    min-width: 0;
+}
+
+.mqtt-trigger-table-check ::deep .mud-checkbox {
+    align-items: center;
+    display: inline-flex;
+    margin: 0;
+    min-height: 40px;
+}
+
+.mqtt-trigger-table-check ::deep .mud-checkbox .mud-button-root {
+    padding: 4px;
+}
+
+.mqtt-trigger-remove {
+    align-self: center;
+    color: var(--flux-text-muted);
+    height: 26px;
+    min-height: 26px;
+    min-width: 26px;
+    padding: 0;
+    width: 26px;
+}
+
+.mqtt-trigger-remove ::deep .mud-icon-root {
+    font-size: 1rem;
+}
+
+.mqtt-trigger-empty {
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    font-size: 12px;
+    min-height: 40px;
+    padding: 8px 0;
+}
+
+@media (max-width: 720px) {
+    .mqtt-trigger-editor-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-subscription-table .mud-table-root) {
+        min-width: 560px;
+    }
+}

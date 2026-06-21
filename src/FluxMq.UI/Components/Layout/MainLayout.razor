@@ -8,7 +8,7 @@
 <MudThemeProvider Theme="@_theme" IsDarkMode="@ThemeService.IsDarkMode" />
 <div class="@ThemeScopeClass">
     <MudPopoverProvider />
-    <MudDialogProvider BackdropClick="false" />
+    <MudDialogProvider BackdropClick="false" CloseButton="true" CloseOnEscapeKey="true" />
     <MudSnackbarProvider />
 
     <div class="@ShellClass"

@@ -51,6 +51,7 @@
 .add-connection-dialog-status.ready {
     border-color: color-mix(in srgb, var(--flux-accent) 36%, var(--flux-border));
     color: var(--flux-accent);
+    display: none;
 }
 
 .add-connection-dialog-content {
