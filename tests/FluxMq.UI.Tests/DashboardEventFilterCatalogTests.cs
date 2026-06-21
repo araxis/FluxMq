@@ -5990,6 +5990,71 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void FileWriterNodeWidget_UsesCompactSummaryAndFlatEditor()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Actors",
+            "FileWriterNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Actors",
+            "FileWriterNodeWidget.razor.css"));
+
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldNotContain("EditDialogMaxWidth=");
+        markup.ShouldContain("file-writer-summary");
+        markup.ShouldContain("file-writer-meta");
+        markup.ShouldContain("file-writer-meta-item target");
+        markup.ShouldContain("Input path");
+        markup.ShouldContain("ActorNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity)");
+        markup.ShouldContain("file-writer-contract");
+        markup.ShouldContain("aria-label=\"File write request fields\"");
+        markup.ShouldContain("file-writer-token");
+        markup.ShouldContain("path");
+        markup.ShouldContain("content");
+        markup.ShouldContain("mode");
+        markup.ShouldContain("createDirectory");
+        markup.ShouldContain("file-writer-editor");
+        markup.ShouldContain("aria-label=\"File writer settings\"");
+        markup.ShouldContain("Label=\"Input buffer\"");
+        markup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        markup.ShouldContain("Class=\"file-writer-buffer-field\"");
+        markup.ShouldNotContain("<Stat ");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("d-flex flex-wrap gap-1");
+        markup.ShouldNotContain("FileWriteRequest");
+
+        css.ShouldContain(".file-writer-summary");
+        css.ShouldContain(".file-writer-meta");
+        css.ShouldContain(".file-writer-contract");
+        css.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        css.ShouldContain(".file-writer-contract-label");
+        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldContain("white-space: nowrap;");
+        css.ShouldContain(".file-writer-token");
+        css.ShouldContain(".file-writer-editor");
+        css.ShouldContain("grid-template-columns: minmax(0, 180px);");
+        css.ShouldContain(".file-writer-editor ::deep(.mud-input-control)");
+        css.ShouldContain("@media (max-width: 640px)");
+        css.ShouldNotContain(".flow-node-filters");
+        css.ShouldNotContain("border: 1px solid var(--flux-border-soft);");
+    }
+
+    [Fact]
     public void NodeWidgetShell_UsesCompactNodeChrome()
     {
         var root = FindRepositoryRoot();

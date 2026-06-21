@@ -4,28 +4,35 @@
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.Description"
                  CategoryColor="@Color.Tertiary"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
-        <MudStack Spacing="1" Class="mt-1">
-            <Stat Icon="@Icons.Material.Filled.Folder" Label="Target" Value="Input path" />
-            <Stat Icon="@Icons.Material.Filled.Input" Label="Input" Value="FileWriteRequest" />
-        </MudStack>
-        <div class="d-flex flex-wrap gap-1 mt-2">
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">path</MudChip>
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">content</MudChip>
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">mode</MudChip>
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">createDirectory</MudChip>
+        <div class="file-writer-summary">
+            <div class="file-writer-meta">
+                <div class="file-writer-meta-item target">
+                    <span>Target</span>
+                    <strong>Input path</strong>
+                </div>
+                <div class="file-writer-meta-item">
+                    <span>Input buffer</span>
+                    <strong>@ActorNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity)</strong>
+                </div>
+            </div>
+
+            <div class="file-writer-contract" aria-label="File write request fields">
+                <span class="file-writer-contract-label">Request fields</span>
+                <span class="file-writer-token">path</span>
+                <span class="file-writer-token">content</span>
+                <span class="file-writer-token">mode</span>
+                <span class="file-writer-token">createDirectory</span>
+            </div>
         </div>
     </Body>
     <Editor>
-        <MudStack Spacing="2">
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">path</MudChip>
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">content</MudChip>
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">mode</MudChip>
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">createDirectory</MudChip>
-            </MudStack>
+        <div class="file-writer-editor" aria-label="File writer settings">
             <MudNumericField T="int"
                              Label="Input buffer"
                              @bind-Value="_boundedCapacity"
@@ -33,8 +40,9 @@
                              Max="100000"
                              Step="100"
                              Variant="Variant.Outlined"
-                             Margin="Margin.Dense" />
-        </MudStack>
+                             Margin="Margin.Dense"
+                             Class="file-writer-buffer-field" />
+        </div>
     </Editor>
 </NodeWidgetShell>
 
