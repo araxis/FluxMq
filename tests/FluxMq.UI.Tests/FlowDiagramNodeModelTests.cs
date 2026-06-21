@@ -2,6 +2,7 @@ using Shouldly;
 using FluxMq.UI.Components.Diagram;
 using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
 using FluxMq.UI.Components.Workspace.Nodes.FlowAssertion;
+using FluxMq.UI.Components.Workspace.Nodes.Http;
 using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
 using FluxMq.UI.Components.Workspace.Nodes.Routing;
 using FluxMq.UI.Components.Workspace.Nodes.StateReducer;
@@ -597,6 +598,56 @@ public sealed class FlowDiagramNodeModelTests
 
         FlowAssertionNodeModel.NormalizeInputType("FluxFlow.Components.State.Contracts.StateReducerResult")
             .ShouldBe("StateReducerResult");
+    }
+
+    [Fact]
+    public void HttpRequestNodeModel_NormalizesAndPersistsExistingConfiguration()
+    {
+        var catalog = new FlowComponentCatalog();
+        var descriptor = catalog.Find("http.request").ShouldNotBeNull();
+        var model = new HttpRequestNodeModel(
+            "workflow1.http",
+            new DiagramPoint(10, 20),
+            "http",
+            descriptor,
+            isResource: false);
+
+        model.LoadConfiguration(new JsonObject
+        {
+            ["baseUrl"] = " https://api.example.test/ ",
+            ["defaultHeaders"] = new JsonObject
+            {
+                ["Authorization"] = "Bearer token",
+                ["X-Trace"] = "true"
+            },
+            ["defaultTimeoutMilliseconds"] = 0,
+            ["maxResponseBodyBytes"] = -1,
+            ["followRedirects"] = false,
+            ["treatNonSuccessStatusAsError"] = true,
+            ["boundedCapacity"] = "0"
+        });
+
+        var config = model.BuildConfiguration();
+
+        config.Select(static item => item.Key).ShouldBe([
+            "defaultTimeoutMilliseconds",
+            "maxResponseBodyBytes",
+            "followRedirects",
+            "treatNonSuccessStatusAsError",
+            "boundedCapacity",
+            "baseUrl",
+            "defaultHeaders"
+        ], ignoreOrder: true);
+        config["baseUrl"]!.GetValue<string>().ShouldBe("https://api.example.test/");
+        config["defaultTimeoutMilliseconds"]!.GetValue<int>().ShouldBe(HttpRequestNodeModel.DefaultTimeoutMilliseconds);
+        config["maxResponseBodyBytes"]!.GetValue<int>().ShouldBe(HttpRequestNodeModel.DefaultMaxResponseBodyBytes);
+        config["followRedirects"]!.GetValue<bool>().ShouldBeFalse();
+        config["treatNonSuccessStatusAsError"]!.GetValue<bool>().ShouldBeTrue();
+        config["boundedCapacity"]!.GetValue<int>().ShouldBe(HttpRequestNodeModel.DefaultBoundedCapacity);
+
+        var headers = config["defaultHeaders"]!.AsObject();
+        headers["Authorization"]!.GetValue<string>().ShouldBe("Bearer token");
+        headers["X-Trace"]!.GetValue<string>().ShouldBe("true");
     }
 
     [Fact]

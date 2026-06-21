@@ -367,7 +367,7 @@ public static class FlowComponentMetadataRegistry
             createDefaultConfiguration: _ => CreateLoggerConfiguration()),
         Component(
             "http.request",
-            "HTTP Request",
+            "HTTP Client",
             "Actor",
             "Sends typed HTTP requests and emits typed responses or request errors.",
             FlowDefinitionComposer.HttpRequestNodeName,

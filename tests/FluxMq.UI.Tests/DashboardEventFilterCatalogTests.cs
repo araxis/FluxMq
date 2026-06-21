@@ -6055,6 +6055,93 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void HttpRequestNodeWidget_UsesHttpClientSummaryAndFlatEditor()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Http",
+            "HttpRequestNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Http",
+            "HttpRequestNodeWidget.razor.css"));
+
+        markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("http-client-summary");
+        markup.ShouldContain("http-client-meta");
+        markup.ShouldContain("http-client-meta-item target");
+        markup.ShouldContain("TargetCaption");
+        markup.ShouldContain("Per request");
+        markup.ShouldContain("TimeoutCaption");
+        markup.ShouldContain("InputBufferCaption");
+        markup.ShouldContain("http-client-contracts");
+        markup.ShouldContain("aria-label=\"HTTP request fields\"");
+        markup.ShouldContain("aria-label=\"HTTP response fields\"");
+        markup.ShouldContain("http-client-token");
+        markup.ShouldContain("method");
+        markup.ShouldContain("url");
+        markup.ShouldContain("headers");
+        markup.ShouldContain("body");
+        markup.ShouldContain("status");
+        markup.ShouldContain("http-client-editor");
+        markup.ShouldContain("aria-label=\"HTTP client settings\"");
+        markup.ShouldContain("Label=\"Base URL\"");
+        markup.ShouldContain("@bind-Value=\"_baseUrl\"");
+        markup.ShouldContain("Label=\"Timeout ms\"");
+        markup.ShouldContain("@bind-Value=\"_defaultTimeoutMilliseconds\"");
+        markup.ShouldContain("Label=\"Max body bytes\"");
+        markup.ShouldContain("@bind-Value=\"_maxResponseBodyBytes\"");
+        markup.ShouldContain("Label=\"Input buffer\"");
+        markup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        markup.ShouldContain("Label=\"Follow redirects\"");
+        markup.ShouldContain("@bind-Value=\"_followRedirects\"");
+        markup.ShouldContain("Label=\"Non-success status emits error\"");
+        markup.ShouldContain("@bind-Value=\"_treatNonSuccessStatusAsError\"");
+        markup.ShouldContain("Label=\"Default headers\"");
+        markup.ShouldContain("@bind-Value=\"_defaultHeadersText\"");
+        markup.ShouldContain("Class=\"http-client-base-url-field\"");
+        markup.ShouldContain("Class=\"http-client-buffer-field\"");
+        markup.ShouldNotContain("<Stat ");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("d-flex flex-wrap gap-1");
+        markup.ShouldNotContain("HttpResponseOutput");
+        markup.ShouldNotContain("HttpRequestInput");
+
+        css.ShouldContain(".http-client-summary");
+        css.ShouldContain(".http-client-meta");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 70px 84px;");
+        css.ShouldContain(".http-client-contracts");
+        css.ShouldContain(".http-client-contract");
+        css.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        css.ShouldContain(".http-client-contract-label");
+        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldContain("white-space: nowrap;");
+        css.ShouldContain(".http-client-token");
+        css.ShouldContain(".http-client-editor");
+        css.ShouldContain(".http-client-number-grid");
+        css.ShouldContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
+        css.ShouldContain(".http-client-options");
+        css.ShouldContain(".http-client-editor ::deep(.mud-input-control)");
+        css.ShouldContain("@media (max-width: 640px)");
+        css.ShouldNotContain(".flow-node-filters");
+        css.ShouldNotContain("border: 1px solid var(--flux-border-soft);");
+    }
+
+    [Fact]
     public void NodeWidgetShell_UsesCompactNodeChrome()
     {
         var root = FindRepositoryRoot();
