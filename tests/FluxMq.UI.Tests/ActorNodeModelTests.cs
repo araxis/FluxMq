@@ -42,7 +42,7 @@ public sealed class ActorNodeModelTests
             descriptor,
             isResource: false)
         {
-            Connection = "broker2",
+            Connection = " broker2 ",
             BoundedCapacity = 250
         };
 
@@ -51,6 +51,7 @@ public sealed class ActorNodeModelTests
 
         var config = model.BuildConfiguration();
 
+        config.Count.ShouldBe(2);
         config["connection"]!.GetValue<string>().ShouldBe("broker2");
         config["boundedCapacity"]!.GetValue<int>().ShouldBe(250);
     }
@@ -59,6 +60,16 @@ public sealed class ActorNodeModelTests
     public void ActorNodeModels_NormalizeInvalidBufferSize()
     {
         var catalog = new FlowComponentCatalog();
+        var publisher = new MqttPublisherNodeModel(
+            "workflow1.publisher",
+            new DiagramPoint(10, 20),
+            "publisher",
+            catalog.Find("mqtt.publisher"),
+            isResource: false)
+        {
+            BoundedCapacity = 0
+        };
+
         var recorder = new MqttRecorderNodeModel(
             "workflow1.recorder",
             new DiagramPoint(10, 20),
@@ -79,6 +90,7 @@ public sealed class ActorNodeModelTests
             BoundedCapacity = -1
         };
 
+        publisher.BuildConfiguration()["boundedCapacity"]!.GetValue<int>().ShouldBe(1000);
         recorder.BuildConfiguration()["boundedCapacity"]!.GetValue<int>().ShouldBe(1000);
         writer.BuildConfiguration()["boundedCapacity"]!.GetValue<int>().ShouldBe(1000);
     }
