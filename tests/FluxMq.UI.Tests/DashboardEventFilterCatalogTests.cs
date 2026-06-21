@@ -6142,6 +6142,96 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void PayloadInspectNodeWidget_UsesCompactSummaryAndFlatEditor()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Payloads",
+            "PayloadInspectNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Payloads",
+            "PayloadInspectNodeWidget.razor.css"));
+
+        markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("payload-inspect-summary");
+        markup.ShouldContain("payload-inspect-meta");
+        markup.ShouldContain("payload-inspect-meta-item input");
+        markup.ShouldContain("Payload request");
+        markup.ShouldContain("PreviewCaption");
+        markup.ShouldContain("FormatCapCaption");
+        markup.ShouldContain("InputBufferCaption");
+        markup.ShouldContain("payload-inspect-contracts");
+        markup.ShouldContain("aria-label=\"Payload inspection request fields\"");
+        markup.ShouldContain("aria-label=\"Payload inspection result fields\"");
+        markup.ShouldContain("payload-inspect-token");
+        markup.ShouldContain("text");
+        markup.ShouldContain("bytes");
+        markup.ShouldContain("contentType");
+        markup.ShouldContain("encodingHint");
+        markup.ShouldContain("kind");
+        markup.ShouldContain("byteCount");
+        markup.ShouldContain("preview");
+        markup.ShouldContain("payload-inspect-editor");
+        markup.ShouldContain("aria-label=\"Payload inspection settings\"");
+        markup.ShouldContain("payload-inspect-number-grid");
+        markup.ShouldContain("Label=\"Preview bytes\"");
+        markup.ShouldContain("@bind-Value=\"_maxPreviewBytes\"");
+        markup.ShouldContain("Label=\"Formatted chars\"");
+        markup.ShouldContain("@bind-Value=\"_maxFormattedChars\"");
+        markup.ShouldContain("Label=\"Input buffer\"");
+        markup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        markup.ShouldContain("Label=\"Detect Base64\"");
+        markup.ShouldContain("@bind-Value=\"_detectBase64\"");
+        markup.ShouldContain("Label=\"Format JSON\"");
+        markup.ShouldContain("@bind-Value=\"_formatJson\"");
+        markup.ShouldContain("Label=\"Format XML\"");
+        markup.ShouldContain("@bind-Value=\"_formatXml\"");
+        markup.ShouldContain("Class=\"payload-inspect-preview-field\"");
+        markup.ShouldContain("Class=\"payload-inspect-buffer-field\"");
+        markup.ShouldNotContain("<Stat ");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("d-flex flex-wrap gap-1");
+        markup.ShouldNotContain("PayloadInspectionRequest");
+        markup.ShouldNotContain("PayloadInspectionResult");
+
+        css.ShouldContain(".payload-inspect-summary");
+        css.ShouldContain(".payload-inspect-meta");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 72px 78px 84px;");
+        css.ShouldContain(".payload-inspect-contracts");
+        css.ShouldContain(".payload-inspect-contract");
+        css.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        css.ShouldContain(".payload-inspect-contract-label");
+        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldContain("white-space: nowrap;");
+        css.ShouldContain(".payload-inspect-token");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
+        css.ShouldContain(".payload-inspect-editor");
+        css.ShouldContain(".payload-inspect-number-grid");
+        css.ShouldContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
+        css.ShouldContain(".payload-inspect-options");
+        css.ShouldContain(".payload-inspect-editor ::deep(.mud-input-control)");
+        css.ShouldContain("@media (max-width: 640px)");
+        css.ShouldNotContain(".flow-node-filters");
+        css.ShouldNotContain("border: 1px solid var(--flux-border-soft);");
+    }
+
+    [Fact]
     public void NodeWidgetShell_UsesCompactNodeChrome()
     {
         var root = FindRepositoryRoot();

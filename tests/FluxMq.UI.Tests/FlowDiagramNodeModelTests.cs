@@ -4,6 +4,7 @@ using FluxMq.UI.Components.Workspace.Nodes.DynamicMapper;
 using FluxMq.UI.Components.Workspace.Nodes.FlowAssertion;
 using FluxMq.UI.Components.Workspace.Nodes.Http;
 using FluxMq.UI.Components.Workspace.Nodes.MetricNode;
+using FluxMq.UI.Components.Workspace.Nodes.Payloads;
 using FluxMq.UI.Components.Workspace.Nodes.Routing;
 using FluxMq.UI.Components.Workspace.Nodes.StateReducer;
 using FluxMq.UI.Models;
@@ -648,6 +649,46 @@ public sealed class FlowDiagramNodeModelTests
         var headers = config["defaultHeaders"]!.AsObject();
         headers["Authorization"]!.GetValue<string>().ShouldBe("Bearer token");
         headers["X-Trace"]!.GetValue<string>().ShouldBe("true");
+    }
+
+    [Fact]
+    public void PayloadInspectNodeModel_NormalizesAndPersistsExistingConfiguration()
+    {
+        var catalog = new FlowComponentCatalog();
+        var descriptor = catalog.Find("payload.inspect").ShouldNotBeNull();
+        var model = new PayloadInspectNodeModel(
+            "workflow1.payloadInspect",
+            new DiagramPoint(10, 20),
+            "payloadInspect",
+            descriptor,
+            isResource: false);
+
+        model.LoadConfiguration(new JsonObject
+        {
+            ["maxPreviewBytes"] = 0,
+            ["maxFormattedChars"] = -1,
+            ["detectBase64"] = false,
+            ["formatJson"] = false,
+            ["formatXml"] = true,
+            ["boundedCapacity"] = "0"
+        });
+
+        var config = model.BuildConfiguration();
+
+        config.Select(static item => item.Key).ShouldBe([
+            "maxPreviewBytes",
+            "maxFormattedChars",
+            "detectBase64",
+            "formatJson",
+            "formatXml",
+            "boundedCapacity"
+        ], ignoreOrder: true);
+        config["maxPreviewBytes"]!.GetValue<int>().ShouldBe(PayloadInspectNodeModel.DefaultMaxPreviewBytes);
+        config["maxFormattedChars"]!.GetValue<int>().ShouldBe(PayloadInspectNodeModel.DefaultMaxFormattedChars);
+        config["detectBase64"]!.GetValue<bool>().ShouldBeFalse();
+        config["formatJson"]!.GetValue<bool>().ShouldBeFalse();
+        config["formatXml"]!.GetValue<bool>().ShouldBeTrue();
+        config["boundedCapacity"]!.GetValue<int>().ShouldBe(PayloadInspectNodeModel.DefaultBoundedCapacity);
     }
 
     [Fact]
