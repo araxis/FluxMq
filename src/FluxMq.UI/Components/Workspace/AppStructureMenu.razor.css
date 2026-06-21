@@ -8,22 +8,33 @@
     overflow: hidden;
 }
 
-.app-structure-app,
-.app-structure-empty {
+.app-structure-app {
     align-items: center;
-    background: var(--flux-surface-2);
-    border: 1px solid var(--flux-border);
-    border-radius: 7px;
-    color: var(--mud-palette-text-primary);
+    color: inherit;
     display: inline-flex;
     flex: 0 1 auto;
-    font-size: 12px;
-    font-weight: 650;
-    gap: 7px;
-    height: 30px;
+    font-size: inherit;
+    font-weight: inherit;
+    gap: 6px;
+    height: 28px;
     max-width: 260px;
     min-width: 0;
-    padding: 0 7px;
+    padding: 0 2px;
+    white-space: nowrap;
+}
+
+.app-structure-empty {
+    align-items: center;
+    color: inherit;
+    display: inline-flex;
+    flex: 0 1 auto;
+    font-size: inherit;
+    font-weight: inherit;
+    gap: 6px;
+    height: 28px;
+    max-width: 260px;
+    min-width: 0;
+    padding: 0 2px;
     white-space: nowrap;
 }
 
@@ -39,20 +50,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-.app-structure-current {
-    align-items: center;
-    background: color-mix(in srgb, var(--flux-accent) 12%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-accent) 24%, var(--flux-border));
-    border-radius: 5px;
-    color: var(--flux-accent);
-    display: inline-flex;
-    flex: 0 0 auto;
-    font-size: 10.5px;
-    font-weight: 750;
-    height: 20px;
-    padding: 0 6px;
 }
 
 .app-structure-actions {
@@ -73,9 +70,9 @@
     background: transparent;
     border: 1px solid transparent;
     border-radius: 6px;
-    color: var(--mud-palette-text-secondary);
-    font-size: 11.5px;
-    font-weight: 650;
+    color: inherit;
+    font-size: inherit;
+    font-weight: inherit;
     height: 28px;
     max-width: 132px;
     min-width: 0;
@@ -86,12 +83,6 @@
 .app-structure ::deep .app-structure-menu .mud-button-root:focus-visible {
     background: var(--flux-surface-2);
     border-color: var(--flux-border);
-    color: var(--mud-palette-text-primary);
-}
-
-.app-structure ::deep .app-structure-menu.active .mud-button-root {
-    background: var(--flux-accent-soft);
-    border-color: color-mix(in srgb, var(--flux-accent) 30%, var(--flux-border));
     color: var(--mud-palette-text-primary);
 }
 
@@ -109,21 +100,6 @@
 .app-structure ::deep .app-structure-menu .mud-button-icon-start .mud-icon-root,
 .app-structure ::deep .app-structure-menu .mud-button-icon-end .mud-icon-root {
     font-size: 16px;
-}
-
-.app-structure ::deep .app-structure-menu.active .mud-button-icon-start .mud-icon-root {
-    color: var(--flux-accent);
-}
-
-.app-structure-meta {
-    color: var(--mud-palette-text-secondary);
-    flex: 0 1 auto;
-    font-size: 11.5px;
-    max-width: 190px;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .app-menu-child {
@@ -545,20 +521,12 @@
         padding: 0 6px;
     }
 
-    .app-structure-meta {
-        max-width: 130px;
-    }
 }
 
 @media (max-width: 1180px) {
     .app-structure-app,
     .app-structure-empty {
         max-width: 178px;
-    }
-
-    .app-structure-current,
-    .app-structure-meta {
-        display: none;
     }
 
     .app-structure ::deep .app-structure-menu .mud-button-root {

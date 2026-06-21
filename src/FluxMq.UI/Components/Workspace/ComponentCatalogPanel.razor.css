@@ -287,18 +287,22 @@
 }
 
 .catalog-empty {
+    align-content: center;
     align-items: center;
     background: var(--flux-surface);
     border: 1px solid var(--flux-border-soft);
     border-radius: 5px;
     color: var(--mud-palette-text-secondary);
-    column-gap: 9px;
     display: grid;
+    flex: 1 1 auto;
     font-size: 11.5px;
-    grid-template-columns: 26px minmax(0, 1fr);
-    min-height: 58px;
+    gap: 6px;
+    grid-template-columns: minmax(0, min(280px, 100%));
+    justify-content: center;
+    justify-items: center;
+    min-height: 0;
     padding: 8px;
-    text-align: left;
+    text-align: center;
 }
 
 .catalog-empty ::deep .mud-icon-root {
@@ -309,7 +313,6 @@
     color: var(--flux-accent);
     display: inline-flex;
     font-size: 16px;
-    grid-row: 1 / span 2;
     height: 26px;
     justify-content: center;
     width: 26px;
@@ -328,12 +331,12 @@
     color: var(--mud-palette-text-secondary);
     font-size: 10.5px;
     line-height: 1.25;
+    max-width: 280px;
     min-width: 0;
     overflow-wrap: anywhere;
 }
 
 .component-catalog.pipeline .catalog-empty {
-    min-height: 54px;
     padding: 7px;
 }
 

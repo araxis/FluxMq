@@ -10,7 +10,7 @@ namespace FluxMq.UI.Services;
 public sealed partial class FlowWorkspaceService
 {
     private void AppendDiagnosticsToLogs(IEnumerable<WorkspaceDiagnostic> diagnostics, bool notify = true)
-        => AppendLogs(diagnostics.Select(diagnostic => WorkspaceLogEntry.FromDiagnostic(diagnostic)), notify);
+        => AppendLogs(diagnostics.Select(ToWorkspaceLogEntry), notify);
 
     private void AppendScenarioDiagnosticsToLogs(
         IEnumerable<WorkspaceDiagnostic> diagnostics,
@@ -24,6 +24,33 @@ public sealed partial class FlowWorkspaceService
 
     private void AppendLog(WorkspaceLogEntry entry)
         => AppendLogs([entry]);
+
+    private WorkspaceLogEntry ToWorkspaceLogEntry(WorkspaceDiagnostic diagnostic)
+        => WorkspaceLogEntry.FromDiagnostic(
+            diagnostic,
+            artifactKind: ActivePipelineArtifactKindFor(diagnostic),
+            artifactName: ActivePipelineArtifactNameFor(diagnostic));
+
+    private string? ActivePipelineArtifactKindFor(WorkspaceDiagnostic diagnostic)
+        => ShouldAttachActivePipelineArtifact(diagnostic) ? WorkspaceLogArtifactKinds.Pipeline : null;
+
+    private string? ActivePipelineArtifactNameFor(WorkspaceDiagnostic diagnostic)
+        => ShouldAttachActivePipelineArtifact(diagnostic) ? ActiveWorkflowName : null;
+
+    private bool ShouldAttachActivePipelineArtifact(WorkspaceDiagnostic diagnostic)
+        => string.IsNullOrWhiteSpace(diagnostic.WorkflowName) &&
+           ActiveArtifactKind == WorkspaceArtifactKind.Pipeline &&
+           !string.IsNullOrWhiteSpace(ActiveWorkflowName) &&
+           IsProblemDiagnostic(diagnostic) &&
+           IsValidationBuildDiagnostic(diagnostic);
+
+    private static bool IsProblemDiagnostic(WorkspaceDiagnostic diagnostic)
+        => string.Equals(diagnostic.Severity, "Error", StringComparison.OrdinalIgnoreCase) ||
+           string.Equals(diagnostic.Severity, "Warning", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsValidationBuildDiagnostic(WorkspaceDiagnostic diagnostic)
+        => diagnostic.Source.Trim().ToLowerInvariant() is
+            "host" or "definition" or "runtimebuild" or "validation" or "runtime";
 
     private void AppendLogs(IEnumerable<WorkspaceLogEntry> entries, bool notify = true)
     {

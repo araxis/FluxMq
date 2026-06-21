@@ -1,0 +1,364 @@
+@using FluxMq.App.Definitions
+
+<MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true })">
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+            <MudText Typo="Typo.subtitle1">@Title</MudText>
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="2">
+            @if (SelectedDraft is { } draft)
+            {
+                <MudSelect T="string"
+                           Label="Broker"
+                           @bind-Value="_selectedDraftId"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Dense="true">
+                    @foreach (var option in _drafts)
+                    {
+                        <MudSelectItem T="string" Value="@option.Id">@BrokerOptionLabel(option)</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudPaper Outlined="true" Elevation="0" Class="pa-3" @key="_selectedDraftId">
+                    <MudStack Spacing="2">
+                        <MudGrid Spacing="2">
+                            <MudItem xs="12" sm="6">
+                                <MudTextField T="string"
+                                              Label="Client ID"
+                                              @bind-Value="draft.ClientId"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Required="true"
+                                              Immediate="true" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudNumericField T="int"
+                                                 Label="Keep alive seconds"
+                                                 @bind-Value="draft.KeepAliveSeconds"
+                                                 Min="1"
+                                                 Variant="Variant.Outlined"
+                                                 Margin="Margin.Dense" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudTextField T="string"
+                                              Label="Username"
+                                              @bind-Value="draft.Username"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Immediate="true" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudTextField T="string"
+                                              Label="Password"
+                                              @bind-Value="draft.Password"
+                                              InputType="InputType.Password"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Immediate="true" />
+                            </MudItem>
+                            <MudItem xs="12" Class="d-flex align-center" Style="min-height: 44px;">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                                    <MudCheckBox T="bool"
+                                                 @bind-Value="draft.UseTls"
+                                                 Label="Use TLS"
+                                                 Dense="true" />
+                                    <MudCheckBox T="bool"
+                                                 @bind-Value="draft.CleanStart"
+                                                 Label="Clean start"
+                                                 Dense="true" />
+                                </MudStack>
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudTextField T="string"
+                                              Label="CA certificate path"
+                                              @bind-Value="draft.CaCertificatePath"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Immediate="true"
+                                              Disabled="@(!draft.UseTls)"
+                                              Adornment="Adornment.End"
+                                              AdornmentIcon="@Icons.Material.Filled.FolderOpen"
+                                              AdornmentColor="Color.Info"
+                                              AdornmentAriaLabel="Select CA certificate"
+                                              OnAdornmentClick="@(() => PickCertificateFileAsync(draft, CertificateFileTarget.Ca))" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudTextField T="string"
+                                              Label="Client certificate path"
+                                              @bind-Value="draft.ClientCertificatePath"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Immediate="true"
+                                              Disabled="@(!draft.UseTls)"
+                                              Adornment="Adornment.End"
+                                              AdornmentIcon="@Icons.Material.Filled.FolderOpen"
+                                              AdornmentColor="Color.Info"
+                                              AdornmentAriaLabel="Select client certificate"
+                                              OnAdornmentClick="@(() => PickCertificateFileAsync(draft, CertificateFileTarget.Client))" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudTextField T="string"
+                                              Label="Client certificate password"
+                                              @bind-Value="draft.ClientCertificatePassword"
+                                              InputType="InputType.Password"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Immediate="true"
+                                              Disabled="@(!draft.UseTls)" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" Class="d-flex align-center">
+                                <MudCheckBox T="bool"
+                                             @bind-Value="draft.AllowUntrustedCertificates"
+                                             Label="Allow untrusted certificate"
+                                             Dense="true"
+                                             Disabled="@(!draft.UseTls)" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudStack>
+                </MudPaper>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@Cancel" Size="Size.Small">Cancel</MudButton>
+        <MudButton OnClick="@Save"
+                   Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   Size="Size.Small"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   Disabled="@(!CanSave)">@SaveLabel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public IReadOnlyList<TopicExplorerMonitorConnection> Candidates { get; set; } = [];
+    [Parameter] public string Title { get; set; } = "Topic monitors";
+    [Parameter] public string SaveLabel { get; set; } = "Save monitors";
+    [Parameter] public bool PreserveCandidateExplorerNames { get; set; }
+
+    private readonly List<TopicExplorerSetupDraft> _drafts = [];
+    private bool _initialized;
+    private string _selectedDraftId = string.Empty;
+    private TopicExplorerSetupDraft? SelectedDraft =>
+        _drafts.FirstOrDefault(draft => string.Equals(draft.Id, _selectedDraftId, StringComparison.Ordinal)) ??
+        _drafts.FirstOrDefault();
+
+    private bool CanSave =>
+        _drafts.Count > 0 &&
+        _drafts.All(static draft =>
+            !string.IsNullOrWhiteSpace(draft.ExplorerName) &&
+            !string.IsNullOrWhiteSpace(draft.DisplayName) &&
+            !string.IsNullOrWhiteSpace(draft.Host) &&
+            !string.IsNullOrWhiteSpace(draft.ClientId) &&
+            draft.Port > 0 &&
+            draft.KeepAliveSeconds > 0 &&
+            SplitSubscriptions(draft.Subscriptions).Count > 0) &&
+        _drafts
+            .Select(static draft => draft.ExplorerName.Trim())
+            .Distinct(StringComparer.Ordinal)
+            .Count() == _drafts.Count;
+
+    protected override void OnParametersSet()
+    {
+        if (_initialized)
+        {
+            return;
+        }
+
+        _initialized = true;
+        var used = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var candidate in Candidates)
+        {
+            var explorerName = UniqueExplorerName(PreferredExplorerName(candidate), used);
+            _drafts.Add(new TopicExplorerSetupDraft
+            {
+                ExplorerName = explorerName,
+                DisplayName = candidate.DisplayName,
+                Endpoint = candidate.Endpoint,
+                Host = candidate.Profile.Host,
+                Port = candidate.Profile.Port,
+                UseTls = candidate.Profile.UseTls,
+                AllowUntrustedCertificates = candidate.Profile.AllowUntrustedCertificates,
+                CaCertificatePath = candidate.Profile.CaCertificatePath ?? string.Empty,
+                ClientCertificatePath = candidate.Profile.ClientCertificatePath ?? string.Empty,
+                ClientCertificatePassword = candidate.Profile.ClientCertificatePassword ?? string.Empty,
+                ClientId = candidate.Profile.ClientId,
+                CleanStart = candidate.Profile.CleanStart,
+                KeepAliveSeconds = Math.Max(1, (int)candidate.Profile.KeepAlive.TotalSeconds),
+                Username = candidate.Profile.Username ?? string.Empty,
+                Password = candidate.Profile.Password ?? string.Empty,
+                Subscriptions = candidate.Subscription
+            });
+        }
+
+        _selectedDraftId = _drafts.FirstOrDefault()?.Id ?? string.Empty;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private static async Task PickCertificateFileAsync(
+        TopicExplorerSetupDraft draft,
+        CertificateFileTarget target)
+    {
+        var result = await FilePicker.Default.PickAsync(CertificatePickOptions(target));
+        if (result is null)
+        {
+            return;
+        }
+
+        var path = string.IsNullOrWhiteSpace(result.FullPath)
+            ? result.FileName
+            : result.FullPath;
+
+        if (target == CertificateFileTarget.Ca)
+        {
+            draft.CaCertificatePath = path;
+        }
+        else
+        {
+            draft.ClientCertificatePath = path;
+        }
+    }
+
+    private static PickOptions CertificatePickOptions(CertificateFileTarget target)
+        => new()
+        {
+            PickerTitle = target == CertificateFileTarget.Ca
+                ? "Select CA Certificate"
+                : "Select Client Certificate",
+            FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+            {
+                { DevicePlatform.WinUI, [".pem", ".crt", ".cer", ".pfx", ".p12"] },
+                { DevicePlatform.macOS, ["public.data"] }
+            })
+        };
+
+    private void Save()
+    {
+        if (!CanSave)
+        {
+            return;
+        }
+
+        var result = new TopicExplorerSetupResult(
+            _drafts.Select(static draft => new TopicExplorerSetupItem(
+                draft.ExplorerName.Trim(),
+                new ExplorerDefinition
+                {
+                    Type = ExplorerDefinition.MqttTopicsType,
+                    DisplayName = draft.DisplayName.Trim(),
+                    AutoConnect = true,
+                    Connection = new ExplorerConnectionDefinition
+                    {
+                        Name = draft.DisplayName.Trim(),
+                        Host = draft.Host.Trim(),
+                        Port = draft.Port,
+                        UseTls = draft.UseTls,
+                        AllowUntrustedCertificates = draft.UseTls && draft.AllowUntrustedCertificates,
+                        CaCertificatePath = NullIfWhiteSpace(draft.CaCertificatePath),
+                        ClientCertificatePath = NullIfWhiteSpace(draft.ClientCertificatePath),
+                        ClientCertificatePassword = NullIfWhiteSpace(draft.ClientCertificatePassword),
+                        ClientId = draft.ClientId.Trim(),
+                        CleanStart = draft.CleanStart,
+                        KeepAliveSeconds = draft.KeepAliveSeconds,
+                        Username = NullIfWhiteSpace(draft.Username),
+                        Password = NullIfWhiteSpace(draft.Password)
+                    },
+                    Subscriptions = SplitSubscriptions(draft.Subscriptions)
+                }))
+                .ToArray());
+
+        MudDialog.Close(DialogResult.Ok(result));
+    }
+
+    private static string DefaultExplorerName(TopicExplorerMonitorConnection candidate)
+        => string.Equals(candidate.Profile.Host, "localhost", StringComparison.OrdinalIgnoreCase) ||
+           string.Equals(candidate.Profile.Host, "127.0.0.1", StringComparison.OrdinalIgnoreCase)
+            ? "local"
+            : NormalizeIdentifier(candidate.DisplayName);
+
+    private string PreferredExplorerName(TopicExplorerMonitorConnection candidate)
+        => PreserveCandidateExplorerNames && !string.IsNullOrWhiteSpace(candidate.ExplorerName)
+            ? candidate.ExplorerName.Trim()
+            : DefaultExplorerName(candidate);
+
+    private static string UniqueExplorerName(string preferred, HashSet<string> used)
+    {
+        var baseName = string.IsNullOrWhiteSpace(preferred) ? "broker" : preferred;
+        var name = baseName;
+        var index = 2;
+        while (!used.Add(name))
+        {
+            name = $"{baseName}{index}";
+            index++;
+        }
+
+        return name;
+    }
+
+    private static string NormalizeIdentifier(string value)
+    {
+        var chars = value
+            .Trim()
+            .ToLowerInvariant()
+            .Select(static c => char.IsLetterOrDigit(c) ? c : '-')
+            .ToArray();
+
+        var normalized = new string(chars);
+        while (normalized.Contains("--", StringComparison.Ordinal))
+        {
+            normalized = normalized.Replace("--", "-", StringComparison.Ordinal);
+        }
+
+        return normalized.Trim('-');
+    }
+
+    private static List<string> SplitSubscriptions(string value)
+        => value
+            .Split([',', ';', '\n', '\r'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+    private static string BrokerOptionLabel(TopicExplorerSetupDraft draft)
+        => $"{draft.DisplayName} ({draft.Endpoint})";
+
+    private static string? NullIfWhiteSpace(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private enum CertificateFileTarget
+    {
+        Ca,
+        Client
+    }
+
+    public sealed record TopicExplorerSetupResult(IReadOnlyList<TopicExplorerSetupItem> Explorers);
+
+    public sealed record TopicExplorerSetupItem(string Name, ExplorerDefinition Explorer);
+
+    private sealed class TopicExplorerSetupDraft
+    {
+        public string Id { get; } = Guid.NewGuid().ToString("N");
+        public string ExplorerName { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
+        public string Endpoint { get; set; } = string.Empty;
+        public string Host { get; set; } = string.Empty;
+        public int Port { get; set; } = 1883;
+        public bool UseTls { get; set; }
+        public bool AllowUntrustedCertificates { get; set; }
+        public string CaCertificatePath { get; set; } = string.Empty;
+        public string ClientCertificatePath { get; set; } = string.Empty;
+        public string ClientCertificatePassword { get; set; } = string.Empty;
+        public string ClientId { get; set; } = string.Empty;
+        public bool CleanStart { get; set; } = true;
+        public int KeepAliveSeconds { get; set; } = 60;
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string Subscriptions { get; set; } = string.Empty;
+    }
+}

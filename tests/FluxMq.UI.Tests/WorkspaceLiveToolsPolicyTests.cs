@@ -13,12 +13,12 @@ public sealed class WorkspaceLiveToolsPolicyTests
     }
 
     [Theory]
-    [InlineData(WorkspaceArtifactKind.Pipeline, true)]
-    [InlineData(WorkspaceArtifactKind.Dashboard, true)]
-    [InlineData(WorkspaceArtifactKind.Test, false)]
-    [InlineData(WorkspaceArtifactKind.Topics, false)]
-    [InlineData(WorkspaceArtifactKind.Logs, false)]
-    public void CanUseLiveTools_FollowsArtifactKind(WorkspaceArtifactKind artifactKind, bool expected)
+    [InlineData(WorkspaceArtifactKind.Pipeline)]
+    [InlineData(WorkspaceArtifactKind.Dashboard)]
+    [InlineData(WorkspaceArtifactKind.Test)]
+    [InlineData(WorkspaceArtifactKind.Topics)]
+    [InlineData(WorkspaceArtifactKind.Logs)]
+    public void CanUseLiveTools_ReturnsTrueForAnyActiveProjectArtifact(WorkspaceArtifactKind artifactKind)
     {
         var project = new FlowWorkspaceService(new FlowDefinitionComposer());
         project.AddWorkflow("pipe");
@@ -44,6 +44,6 @@ public sealed class WorkspaceLiveToolsPolicyTests
                 break;
         }
 
-        WorkspaceLiveToolsPolicy.CanUseLiveTools(project).ShouldBe(expected);
+        WorkspaceLiveToolsPolicy.CanUseLiveTools(project).ShouldBeTrue();
     }
 }

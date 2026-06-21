@@ -1,4 +1,5 @@
 using FluxMq.App;
+using FluxMq.App.Definitions;
 using FluxMq.Core.Models;
 using FluxFlow.Components.Secrets.Contracts;
 using FluxFlow.Engine.Runtime;
@@ -388,6 +389,11 @@ public sealed class FlowDefinitionComposerTests
             Name = "broker1",
             Host = "localhost",
             Port = 1883,
+            UseTls = true,
+            AllowUntrustedCertificates = true,
+            CaCertificatePath = "certs/root.pem",
+            ClientCertificatePath = "certs/client.pfx",
+            ClientCertificatePassword = "cert-pass",
             Username = "tester",
             Password = "plain-password",
             PasswordSecret = new SecretReference
@@ -413,6 +419,11 @@ public sealed class FlowDefinitionComposerTests
             .GetProperty("profile");
 
         profileJson.GetProperty("username").GetString().ShouldBe("tester");
+        profileJson.GetProperty("useTls").GetBoolean().ShouldBeTrue();
+        profileJson.GetProperty("allowUntrustedCertificates").GetBoolean().ShouldBeTrue();
+        profileJson.GetProperty("caCertificatePath").GetString().ShouldBe("certs/root.pem");
+        profileJson.GetProperty("clientCertificatePath").GetString().ShouldBe("certs/client.pfx");
+        profileJson.GetProperty("clientCertificatePassword").GetString().ShouldBe("cert-pass");
         profileJson.TryGetProperty("password", out _).ShouldBeFalse();
         var passwordSecret = profileJson.GetProperty("passwordSecret");
         passwordSecret.GetProperty("name").GetString().ShouldBe("broker-password");
@@ -421,10 +432,119 @@ public sealed class FlowDefinitionComposerTests
 
         var connection = composer.ReadConnectionResourcesFromDefinition(json).ShouldHaveSingleItem();
         connection.Profile.Password.ShouldBeNull();
+        connection.Profile.UseTls.ShouldBeTrue();
+        connection.Profile.AllowUntrustedCertificates.ShouldBeTrue();
+        connection.Profile.CaCertificatePath.ShouldBe("certs/root.pem");
+        connection.Profile.ClientCertificatePath.ShouldBe("certs/client.pfx");
+        connection.Profile.ClientCertificatePassword.ShouldBe("cert-pass");
         connection.Profile.PasswordSecret.ShouldNotBeNull();
         connection.Profile.PasswordSecret.Name.Value.ShouldBe("broker-password");
         connection.Profile.PasswordSecret.Version.ShouldBe("v1");
         connection.Profile.PasswordSecret.Kind.ShouldBe("mqtt-password");
+    }
+
+    [Fact]
+    public void ReadExplorersFromDefinition_ReadsTopicExplorerConnectionSettings()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = """
+        {
+          "FluxMq": {
+            "FlowApplication": {
+              "explorers": {
+                "local": {
+                  "type": "mqtt.topics",
+                  "displayName": "Local broker",
+                  "connectionResource": "broker",
+                  "connection": {
+                    "clientId": "topics-local",
+                    "useTls": true,
+                    "allowUntrustedCertificates": true,
+                    "caCertificatePath": "certs/root.pem",
+                    "clientCertificatePath": "certs/client.pfx",
+                    "clientCertificatePassword": "cert-pass",
+                    "cleanStart": false,
+                    "keepAliveSeconds": 30,
+                    "username": "viewer",
+                    "passwordSecret": {
+                      "name": "broker-password",
+                      "version": "v1"
+                    }
+                  },
+                  "subscriptions": [ "#", "$SYS/#" ],
+                  "autoConnect": true
+                }
+              }
+            }
+          }
+        }
+        """;
+
+        var explorer = composer.ReadExplorersFromDefinition(json)["local"];
+
+        explorer.Type.ShouldBe(ExplorerDefinition.MqttTopicsType);
+        explorer.DisplayName.ShouldBe("Local broker");
+        explorer.ConnectionResource.ShouldBe("broker");
+        explorer.Connection.ShouldNotBeNull();
+        explorer.Connection!.ClientId.ShouldBe("topics-local");
+        explorer.Connection.UseTls.ShouldBe(true);
+        explorer.Connection.AllowUntrustedCertificates.ShouldBe(true);
+        explorer.Connection.CaCertificatePath.ShouldBe("certs/root.pem");
+        explorer.Connection.ClientCertificatePath.ShouldBe("certs/client.pfx");
+        explorer.Connection.ClientCertificatePassword.ShouldBe("cert-pass");
+        explorer.Connection.CleanStart.ShouldBe(false);
+        explorer.Connection.KeepAliveSeconds.ShouldBe(30);
+        explorer.Connection.Username.ShouldBe("viewer");
+        explorer.Connection.PasswordSecret.ShouldNotBeNull();
+        explorer.Connection.PasswordSecret.Name.Value.ShouldBe("broker-password");
+        explorer.Connection.PasswordSecret.Version.ShouldBe("v1");
+        explorer.Subscriptions.ShouldBe(["#", "$SYS/#"]);
+    }
+
+    [Fact]
+    public void UpsertExplorer_WritesTopLevelExplorerSection()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.UpsertExplorer(
+            composer.CreateEmptyDefinition(),
+            "local",
+            new ExplorerDefinition
+            {
+                Type = ExplorerDefinition.MqttTopicsType,
+                DisplayName = "Local broker",
+                Connection = new ExplorerConnectionDefinition
+                {
+                    Host = "localhost",
+                    Port = 1883,
+                    UseTls = true,
+                    AllowUntrustedCertificates = true,
+                    CaCertificatePath = "certs/root.pem",
+                    ClientCertificatePath = "certs/client.pfx",
+                    ClientCertificatePassword = "cert-pass",
+                    ClientId = "topics-local",
+                    CleanStart = true,
+                    KeepAliveSeconds = 60
+                },
+                Subscriptions = ["#", "$SYS/#"]
+            });
+
+        using var document = JsonDocument.Parse(json);
+        var explorer = document.RootElement
+            .GetProperty("FluxMq")
+            .GetProperty("FlowApplication")
+            .GetProperty("explorers")
+            .GetProperty("local");
+
+        explorer.GetProperty("type").GetString().ShouldBe(ExplorerDefinition.MqttTopicsType);
+        explorer.GetProperty("displayName").GetString().ShouldBe("Local broker");
+        explorer.GetProperty("connection").GetProperty("useTls").GetBoolean().ShouldBeTrue();
+        explorer.GetProperty("connection").GetProperty("allowUntrustedCertificates").GetBoolean().ShouldBeTrue();
+        explorer.GetProperty("connection").GetProperty("caCertificatePath").GetString().ShouldBe("certs/root.pem");
+        explorer.GetProperty("connection").GetProperty("clientCertificatePath").GetString().ShouldBe("certs/client.pfx");
+        explorer.GetProperty("connection").GetProperty("clientCertificatePassword").GetString().ShouldBe("cert-pass");
+        explorer.GetProperty("connection").GetProperty("clientId").GetString().ShouldBe("topics-local");
+        explorer.GetProperty("subscriptions").EnumerateArray().Select(static item => item.GetString())
+            .ShouldBe(["#", "$SYS/#"]);
     }
 
     [Theory]
@@ -1877,10 +1997,39 @@ public sealed class FlowDefinitionComposerTests
         layout.Columns.ShouldBe(["40", "40", "*"]);
         layout.RowPadding.ShouldBe([4d, 4d, 0d]);
         layout.ColumnPadding.ShouldBe([6d, 6d, 0d]);
-        layout.Cells.Count.ShouldBe(6);
+        layout.Cells.Count.ShouldBe(5);
         layout.Cells.ShouldContain(cell => cell.Row == 0 && cell.Column == 2 && cell.RowSpan == 2);
         layout.Cells.ShouldContain(cell => cell.Row == 0 && cell.Column == 0 && cell.RowSpan == 1 && cell.ColumnSpan == 1);
         layout.Cells.ShouldContain(cell => cell.Row == 1 && cell.Column == 1 && cell.RowSpan == 1 && cell.ColumnSpan == 1);
+        AssertNoDashboardCellOverlap(layout);
+    }
+
+    [Fact]
+    public void SubdivideDashboardCell_ReplacesCoveringCellWhenSlotSelectionIsStale()
+    {
+        var composer = new FlowDefinitionComposer();
+        var json = composer.AddDashboard(composer.CreateEmptyDefinition(), "ops");
+        json = composer.UpdateDashboardGridTracks(json, "ops", ["*", "*"], ["*", "*"]);
+        json = composer.MergeDashboardCells(
+            json,
+            "ops",
+            [
+                DashboardCellSnapshot.Slot(0, 0),
+                DashboardCellSnapshot.Slot(0, 1),
+                DashboardCellSnapshot.Slot(1, 0),
+                DashboardCellSnapshot.Slot(1, 1)
+            ]);
+
+        var updated = composer.SubdivideDashboardCell(json, "ops", DashboardCellSnapshot.Slot(0, 0), rowParts: 2, columnParts: 2);
+
+        var layout = composer.GetDashboardLayout(updated, "ops").ShouldNotBeNull();
+        layout.Cells.Count.ShouldBe(4);
+        layout.Cells.ShouldAllBe(cell => cell.RowSpan == 1 && cell.ColumnSpan == 1);
+        layout.Cells.ShouldContain(cell => cell.Row == 0 && cell.Column == 0);
+        layout.Cells.ShouldContain(cell => cell.Row == 0 && cell.Column == 1);
+        layout.Cells.ShouldContain(cell => cell.Row == 1 && cell.Column == 0);
+        layout.Cells.ShouldContain(cell => cell.Row == 1 && cell.Column == 1);
+        AssertNoDashboardCellOverlap(layout);
     }
 
     [Fact]
@@ -2752,5 +2901,17 @@ public sealed class FlowDefinitionComposerTests
 
         workflows.GetProperty("pip1").TryGetProperty("filter", out _).ShouldBeTrue();
         workflows.GetProperty("pip2").TryGetProperty("filter", out _).ShouldBeFalse();
+    }
+
+    private static void AssertNoDashboardCellOverlap(DashboardLayoutSnapshot layout)
+    {
+        var occupied = new HashSet<(int Row, int Column)>();
+        foreach (var cell in layout.Cells)
+        {
+            foreach (var coordinate in cell.CoveredCoordinates())
+            {
+                occupied.Add(coordinate).ShouldBeTrue($"Cell '{cell.Name}' overlaps dashboard slot {coordinate.Column + 1},{coordinate.Row + 1}.");
+            }
+        }
     }
 }

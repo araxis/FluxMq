@@ -4004,3 +4004,357 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `dotnet test FluxMq.sln --no-restore -p:UseSharedCompilation=false -m:1` passed.
   - Remote Windows validation passed before merge.
 - Next step: continue scanning the remaining high-noise workspace surfaces and apply compact flat app polish only where it improves workflow clarity.
+
+## 2026-06-20 - Pipeline canvas metric chrome de-clutter
+
+- Continued the workspace UI chrome de-clutter pass on the pipeline designer:
+  - Replaced the bordered `flow-canvas-chip` metric tokens in the pipeline canvas header with flat `flow-canvas-stat` rows separated by quiet dividers.
+  - Kept node/link/resource/diagnostic counts, runtime state, diagram behavior, link editing, and workflow JSON behavior unchanged.
+  - Added a guard to the existing canvas-chrome UI test so the old chip class does not return to the pipeline header.
+- Verification:
+  - Initial focused test run without an isolated output path was blocked because the running desktop app had `src\FluxMq.UI\bin\Debug\net10.0-windows10.0.19041.0\win-x64\FluxMq.UI.exe` locked.
+  - The focused canvas-chrome guard passed through the isolated UI test output path.
+  - The full UI test project passed with 462 tests through the isolated UI test output path.
+  - The isolated UI build passed with 0 warnings.
+  - The whitespace check passed with the existing LF-to-CRLF warnings for the touched files.
+- Next step: manually inspect the pipeline canvas header at desktop and narrow widths, with and without diagnostics/resource nodes, to confirm the flat metric row reads clearly without crowding the runtime state.
+
+## 2026-06-20 - Recordings moved into live workspace tools
+
+- Updated the workspace plan and shell placement for recorded sessions:
+  - Moved recorded-session browsing and capture controls into the live tools panel as a dedicated `Recordings` tab beside publish, topics, and payload inspection.
+  - Removed the session-only left rail, left collapsible panel, and stale left-panel shell styling.
+  - Widened the live tools panel slightly now that the left rail is gone, and kept the new recordings tab in the existing flat tab/header language.
+  - Kept recording, stored-session loading, publish, topic inspection, payload inspection, app JSON, and runtime behavior unchanged.
+- Verification:
+  - Focused guards for live tools, shell placement, and session rows passed.
+  - The full UI test project passed with 463 tests.
+  - The isolated UI build passed with 0 warnings.
+  - The whitespace check passed with the existing LF-to-CRLF warnings for the touched files.
+- Next step: manually inspect the live tools panel at desktop and narrow widths, especially the new Recordings tab while idle, recording, and viewing a stored session.
+
+## 2026-06-20 - Pipeline canvas header no longer overlaps nodes
+
+- Fixed the pipeline diagram info bar placement:
+  - Moved the canvas header into normal layout flow above the diagram canvas instead of keeping it as an absolute overlay.
+  - Let the diagram canvas flex below the header, so auto-zoomed and manually positioned nodes are not hidden behind the info bar.
+  - Preserved the same header content, compact metrics, zoom command, diagram behavior, link editing, node positions, and workflow JSON behavior.
+  - Added a guard to the existing canvas-chrome UI test so the header must render before the canvas and keep non-overlay CSS.
+- Verification:
+  - The focused canvas-chrome guard passed.
+  - The full UI test project passed with 463 tests.
+  - The first isolated UI build attempt hit a transient intermediate-file lock from another compiler process; rerunning the build by itself passed with 0 warnings.
+- Next step: manually inspect the pipeline diagram at desktop and narrow widths to confirm the header stays above the canvas while diagnostics and selected-link controls remain usable.
+
+## 2026-06-20 - Pipeline diagnostics route through Logs
+
+- Simplified pipeline diagnostic review from the diagram header:
+  - Removed the expanded validation/error overlay from the pipeline canvas so it no longer covers nodes or links.
+  - Made the compact error/warning count in the canvas header an accessible action that opens the workspace `Logs` tab.
+  - Added one-shot initial log query support so that diagnostic navigation opens Logs with the matching error or warning level selected, and with the active pipeline name as search text when every current diagnostic belongs to that pipeline.
+  - Kept node diagnostic highlighting, runtime validation logging, diagram behavior, selected-link editing, app JSON, and workflow persistence unchanged.
+  - Added UI guards so the old canvas overlay does not return and the logs-routing path stays wired.
+- Verification:
+  - Focused guards for the canvas diagnostic action, logs initial query, and workspace routing passed.
+  - The full UI test project passed with 464 tests.
+  - The isolated UI build passed with 0 warnings.
+- Next step: manually inspect a pipeline with validation errors and confirm clicking the header error count opens Logs with the expected filter and no canvas overlap.
+
+## 2026-06-20 - Logs problem banner removed
+
+- Removed the redundant `Action needed` problem banner from the Logs tab:
+  - Kept the header problem count, level filters, search, reset, clear, and per-row severity indicators as the primary log inspection workflow.
+  - Deleted the banner-specific markup, helper properties, responsive CSS, and the `Show problems` action.
+  - Added a guard so the old banner wording and CSS do not return.
+- Verification:
+  - The focused Logs chrome guard passed.
+  - The full UI test project passed with 464 tests.
+  - The isolated UI build passed with 0 warnings.
+- Next step: manually inspect Logs after routing from the pipeline error count and confirm the page opens directly into the filtered rows without the extra banner.
+
+## 2026-06-20 - Pipeline header fault/error duplication removed
+
+- Reduced duplicate red status in the pipeline canvas header:
+  - Suppressed the separate `Faulted` runtime pill when current errors are already shown in the actionable `Errors` count.
+  - Kept normal runtime state display for idle, running, valid, stopped, and faulted-without-current-errors cases.
+  - Kept the `Errors` count as the single red header action that opens Logs with the error filter.
+  - Added a guard for the faulted/error de-duplication rule.
+- Verification:
+  - The focused canvas diagnostic guard passed after one timed-out compile attempt was rerun with a longer timeout.
+  - The full UI test project passed with 464 tests.
+  - The isolated UI build passed with 0 warnings.
+- Next step: manually inspect a faulted pipeline with validation errors and confirm the header shows only the `Errors` action, not both `Faulted` and `Errors`.
+
+## 2026-06-20 - Pipeline error navigation applies pipeline context
+
+- Tightened Logs filtering when opening errors from the pipeline header:
+  - The header error action now applies the active pipeline name as the Logs search when current problem diagnostics are either scoped to that pipeline or unscoped.
+  - Unscoped validation/build/runtime problem diagnostics recorded while a pipeline is active now carry that active pipeline as log artifact metadata, so the automatic search does not produce an empty list.
+  - Explicit workflow-scoped diagnostics, row severity, Logs level filtering, reset/clear behavior, and diagram diagnostics remain unchanged.
+  - Added a service regression test for unscoped validation problems and a UI guard for the active-pipeline search rule.
+- Verification:
+  - Focused service and designer guards passed.
+  - The full UI test project passed with 465 tests.
+  - The isolated UI build passed with 0 warnings.
+- Next step: revalidate the same app, click the pipeline `Errors` count, and confirm Logs opens with `Error` selected and the active pipeline name in search while still showing the matching rows.
+
+## 2026-06-20 - Right panel is now app-level MQTT Publisher
+
+- Redefined the right workspace dock around one responsibility:
+  - Removed the tabbed live inspector surface from the right panel, including inspect, topics, recordings, and last-payload sections.
+  - Rebuilt the panel as an app-level `MQTT Publisher` with active-app label, app-scoped MQTT client selector, topic, payload, QoS, retain, selected-client state, connect action, and MQTT status.
+  - Made the publisher available whenever an app is active instead of only while pipelines or dashboards are selected.
+  - Scoped publisher clients to the active app's `mqtt.connection` resources and auto-registers missing live clients from the active app definition.
+  - Let manual publish connect the selected client first when needed, then record successful publishes through the existing app event/log projection.
+  - Updated shell toggle text from live tools to MQTT publisher.
+- Verification:
+  - Focused right-panel, shell, and policy guards passed.
+  - The full UI test project passed with 465 tests.
+  - The isolated UI build passed with 0 warnings.
+- Next step: manually inspect the desktop shell across Pipeline, Dashboard, Tests, Topics, Logs, and no-app states to confirm the publisher dock feels global, collapses correctly, and does not crowd the active workspace.
+
+## 2026-06-20 - MQTT Publisher form fields stack vertically
+
+- Adjusted the right-dock MQTT Publisher form layout:
+  - Changed the publish form grid from two columns to one column so MQTT client and Topic no longer share a cramped horizontal row.
+  - Kept payload, QoS, retain, publish, selected-client state, and status behavior unchanged.
+  - Updated the UI guard to prevent the two-column publisher form from returning.
+- Verification:
+  - The first focused guard run timed out during build/test startup.
+  - Rerunning the focused publisher panel guard passed.
+- Next step: visually inspect the right dock at the current desktop width and a narrower window to confirm the stacked fields read correctly.
+
+## 2026-06-20 - MQTT Publisher selected-client duplicate removed
+
+- Removed the redundant selected-client summary card from the right-dock MQTT Publisher:
+  - Kept client selection in the `MQTT client` picker and connection state in the header badge.
+  - Kept publish auto-connect behavior for the selected client, so the separate Connect card/action is no longer needed.
+  - Deleted the unused selected-client card markup, connect method, and scoped CSS.
+  - Updated the publisher UI guard to prevent the duplicate section from returning.
+- Verification:
+  - Focused publisher panel guard passed.
+- Next step: visually inspect the right dock after selecting connected and disconnected clients to confirm the picker plus header badge provide enough state without the extra card.
+
+## 2026-06-20 - Logs toolbar control heights aligned
+
+- Normalized the Logs filter toolbar control heights:
+  - Added a shared `--workspace-log-control-height` for the Scope segment, Level segment, forced-scope chip, and search field.
+  - Applied the same height through the MudTextField wrapper, input container, input root, adornment, and outlined border so the search box no longer renders taller than the filter segments.
+  - Follow-up changed the shared toolbar control height from 28px to 40px and increased the segmented-control buttons to 30px, matching the actual MudTextField visual height instead of trying to compress the search field.
+  - Updated the Logs chrome UI guard to prevent the old 30px search-field height from returning.
+- Verification:
+  - Initial focused test command used a stale filter name and built successfully with no matching test.
+  - Rerunning `WorkspaceLogPanel_UsesFlatCompactWorkspaceChrome` passed after both the initial normalization and the follow-up height increase.
+- Next step: visually inspect Logs at desktop and narrow widths to confirm Scope, Level, and Search now share the search field height without the segment controls looking undersized.
+
+## 2026-06-20 - Topics tab prioritizes latest topic state
+
+- Reworked the first-level Topics tab layout around topic tree plus latest message state:
+  - Kept the topic tree as the left primary navigation surface.
+  - Replaced the large embedded `PayloadInspectorPanel` area with a lighter `Latest topic message` state panel at the top of the detail pane.
+  - The latest state panel shows selected topic context, payload preview, payload type/bytes, received time, QoS, retain flag, and full topic metadata.
+  - Moved the message grid into a lower `History` section and sorts it newest-first.
+  - Selecting a topic in the tree still selects the latest matching message, but the top state is now calculated from the latest filtered message rather than from arbitrary history-row selection.
+  - Updated the Topics chrome UI guard so the old payload-inspector-first layout does not return.
+- Verification:
+  - Focused `TopicExplorerPanel_UsesFlatCompactWorkspaceChrome` guard passed.
+  - Full UI test project passed with 465 tests.
+  - Isolated UI build passed with 0 warnings.
+- Next step: visually inspect the Topics tab with live traffic and stored sessions to confirm the top state panel is useful without making history too short.
+
+## 2026-06-20 - Topics history pager stays at bottom
+
+- Fixed the Topics history table footer placement:
+  - Made the history table wrapper a vertical flex container.
+  - Applied flex sizing through MudBlazor table internals from the parent `topic-message-table` wrapper.
+  - Let the table body/container take the available space and scroll, while the MudTable pagination footer stays pinned at the bottom with `margin-top: auto`.
+  - Updated the Topics chrome UI guard to preserve the pager-bottom layout.
+- Verification:
+  - Focused `TopicExplorerPanel_UsesFlatCompactWorkspaceChrome` guard passed.
+- Next step: visually inspect a topic with only a few history messages and confirm the pagination footer stays at the bottom of the history area.
+
+## 2026-06-20 - Topics tab monitors and groups brokers
+
+- Reworked the Topics tab broker handling:
+  - Widened the topic explorer column so broker groups and deeper topic paths have more room.
+  - The Topics tab now starts active-app MQTT connection monitors through the live workspace service without requiring the app runtime to be running.
+  - The workspace monitor subscription is now the app-wide `#` filter.
+  - Live messages are stamped with the managed broker/resource name before projection and recording, and stored messages preserve that optional broker label.
+  - The topic navigator groups messages by broker, shows each broker state/count, and the latest-state/history detail panes now include broker context.
+  - Updated UI, live-service, and storage guards for broker grouping, broker stamping, and broker-label persistence.
+- Verification:
+  - Focused Topics/live-service guards passed.
+  - Focused storage round-trip guard passed.
+  - Live MQTT workspace service tests passed with 11 tests.
+  - Storage-focused component tests passed with 27 tests.
+  - Full UI test project passed with 466 tests.
+- Next step: visually inspect the Topics tab with two app MQTT connections and confirm each broker appears as its own group, receives live `#` traffic without running the app, and selecting a broker/topic updates latest state plus history correctly.
+
+## 2026-06-20 - Topics uses separate app broker monitor clients
+
+- Corrected the Topics direction to keep the current app `Topics` tab as the MQTT Explorer-like surface:
+  - Removed the no-app `Topic explorer` entry that had been added during the first interpretation pass.
+  - Kept the panel heading as `Topics` and clarified the live copy around app broker monitoring.
+  - Changed monitor startup so each app MQTT broker gets an internal Topics monitor resource name and a separate MQTT client subscribed to `#`.
+  - Kept visible broker names clean by stripping the internal Topics monitor prefix before stamping captured messages or showing broker rows.
+  - Hid internal Topics monitor clients from the general Connections panel so they do not appear as user-managed app connections.
+  - Recorded the broader product direction in `memory/10-development-plan.md`: the existing app `Topics` tab should behave like MQTT Explorer, with richer topic detail, payload/history controls, publish support, filtering, and stats inside that tab.
+  - Updated UI and service guard tests for app-owned Topics behavior, internal monitor-client separation, visible broker names, and no standalone launcher.
+  - Added `FLUXMQ_REPOSITORY_ROOT` support to the UI test repository-root helper so tests can run from isolated artifact output while the desktop app locks the normal output folder.
+- Verification:
+  - The first normal focused test/build attempt was blocked by the running desktop app locking `FluxMq.UI.dll`.
+  - A relative isolated-output attempt produced generated `artifacts/verify/topic-explorer-*` folders under source/test project directories; those 22 generated folders were removed.
+  - Isolated UI build passed with 0 warnings using `UseArtifactsOutput=true` and an absolute temp `ArtifactsPath`.
+  - Focused guards passed: `TopicExplorerPanel_UsesFlatCompactWorkspaceChrome`, `WorkspacePage_UsesPipelineSpecificDesignerShell`, `ConnectionPanel_UsesFlatCompactConnectionRows`, and `TopicMonitorConnection_UsesSeparateClientAndVisibleBrokerName`.
+  - `git diff --check` passed with line-ending warnings only.
+- Next step: add richer MQTT Explorer topic-detail controls inside the current app `Topics` tab, starting with selected-topic payload/history controls and broker-scoped publish.
+
+## 2026-06-20 - Topics no-message state shows monitor status
+
+- Reworked the empty/no-message state in the app `Topics` tab:
+  - Replaced the large generic `No messages yet` latest-state block with a `Waiting for broker traffic` state.
+  - The top empty state now shows the active broker monitor rows, endpoint, `Sub #`, and connection state so a live-but-quiet broker still has useful context.
+  - Selecting a broker changes the empty title to broker-specific waiting text while keeping the monitor status visible.
+  - Replaced the repeated large no-message block in the history table with a compact `No history for the current selection` row.
+  - Removed the stale table-empty CSS and updated the Topics chrome guard so the duplicated empty state does not return.
+- Verification:
+  - Isolated UI build passed with 0 warnings.
+  - Focused `TopicExplorerPanel_UsesFlatCompactWorkspaceChrome` guard passed.
+- Next step: visually inspect the `Topics` tab with quiet brokers and confirm the empty state reads as active monitoring rather than a blank page.
+
+## 2026-06-20 - Topics monitor includes system topics
+
+- Fixed why the app `Topics` tab did not show Mosquitto `$SYS` traffic while MQTT Explorer did:
+  - Kept the normal app/default broker monitor subscription as `#`.
+  - Added a dedicated `TopicExplorerMonitorSubscription` of `#,$SYS/#` for the internal `Topics` tab monitor clients.
+  - Updated the `Topics` monitor startup to use the dedicated subscription, so it still creates separate clients per app broker but now also receives `$SYS/...` topics.
+  - Updated the quiet-monitor status label to show `Sub # + $SYS/#`.
+  - Updated UI/service guards so the Topics monitor subscribes to both filters and keeps visible broker names clean.
+- Verification:
+  - Isolated UI build passed with 0 warnings.
+  - Focused guards passed: `TopicExplorerPanel_UsesFlatCompactWorkspaceChrome` and `TopicMonitorConnection_UsesSeparateClientAndVisibleBrokerName`.
+- Next step: visually inspect the `Topics` tab against Mosquitto and confirm `$SYS` topics appear without publishing app traffic manually.
+
+## 2026-06-20 - Topics history uses virtual scrolling
+
+- Replaced the Topics history pager with a virtualized endless-scroll table:
+  - Enabled MudTable fixed-header virtualization with a full-height scroll container.
+  - Removed the pager and row-page sizing from the history table.
+  - Forced the history table/container/table stack to fill the full detail width with fixed column sizing.
+  - Updated the Topics chrome guard so pagination and narrow content-width table layout do not return.
+- Verification:
+  - Focused `TopicExplorerPanel_UsesFlatCompactWorkspaceChrome` guard passed using isolated output because the running desktop app locked the normal UI output files.
+  - `git diff --check` passed with line-ending warnings only.
+- Next step: visually inspect live Topics history with enough broker traffic to confirm row virtualization scrolls smoothly and the grid spans the full detail panel.
+
+## 2026-06-20 - Topics history row details and column alignment
+
+- Tightened the virtualized Topics history grid:
+  - Added a MudTable `ColGroup` so the virtualized header and rows share the same Time/Broker/Topic/QoS/Bytes column widths.
+  - Removed width control from header/body `nth-child` CSS and kept only numeric alignment there.
+  - Added history-row selection and a right-side `Message details` pane with broker, topic, received time, QoS, retain flag, payload type/bytes, and payload preview.
+  - Kept row selection synchronized with topic/broker selection and with the existing live selected-message projection.
+  - Follow-up fixed odd-count detail metadata separators by removing the `nth-last-child(-n + 2)` rule and spanning the final odd metadata field across both columns.
+  - Follow-up fixed the remaining header/row mismatch by scoping deep MudTable styles from the local wrapper, keeping `.mud-table-root` as a real table instead of flex, and applying matching fixed widths to header and row cells.
+  - Updated the Topics chrome guard for aligned columns, selected-row detail state, and no pager regression.
+- Verification:
+  - Focused `TopicExplorerPanel_UsesFlatCompactWorkspaceChrome` guard passed using isolated output.
+  - `git diff --check` passed with line-ending warnings only.
+- Next step: visually inspect a live `$SYS` topic and click several history rows to confirm header/row alignment and selected-message detail updates are correct.
+
+## 2026-06-20 - App header removes duplicate active artifact chip
+
+- Removed the redundant active artifact/page label from the app identity area:
+  - The app pill now shows only the active app name.
+  - Removed the trailing active artifact meta text from the app structure toolbar.
+  - Deleted the unused `CurrentArtifactLabel`/`BuildActiveMeta` helpers and stale chip/meta CSS.
+  - Updated the app structure chrome guard so the duplicated artifact label does not return.
+- Verification:
+  - Focused `AppStructureMenu_UsesCompactInlineArtifactActions` guard passed using isolated output.
+- Next step: visually inspect the top workspace bar and confirm `app1` no longer repeats `Topics` beside the active Topics tab.
+
+## 2026-06-20 - Designer shell removes broad focus border
+
+- Removed the workspace artifact/designer region `focus-within` inset border that showed a green outline around the full diagram canvas.
+- Kept the left tool panel focus cue and individual control focus states intact.
+- Updated the workspace shell guard so the full-content focus ring does not return.
+- Verification:
+  - Focused `WorkspacePage_UsesPipelineSpecificDesignerShell` guard passed using isolated output.
+- Next step: visually inspect the pipeline canvas after focusing a diagram control and confirm the full green frame is gone.
+
+## 2026-06-20 - App structure top bar flattens app identity and menus
+
+- Flattened the app structure top bar:
+  - Removed the border/background from the active app identity label while keeping the no-app empty state pill.
+  - Toned down app-structure MudMenu popovers into compact anchored dropdowns with lighter shadow, smaller width, lower z-index, and internal scroll.
+  - Kept existing menu actions and artifact selection behavior unchanged.
+  - Updated the app structure chrome guard to prevent the old bordered app pill and modal-like menu styling from returning.
+- Verification:
+  - Focused `AppStructureMenu_UsesCompactInlineArtifactActions` guard passed using isolated output.
+- Next step: visually inspect the top bar dropdowns and confirm they read as normal anchored menus instead of modal-like panels.
+
+## 2026-06-20 - App structure menus are non-modal dropdowns
+
+- Removed the remaining modal feel from the app structure menus:
+  - Set each Brokers/Pipelines/Dashboards/Metrics/Tests MudMenu to `Modal="false"` so opening a menu does not create a dark page backdrop.
+  - Removed the outer border from the app-structure dropdown panel and kept only a light shadow for separation.
+  - Follow-up fixed the actual remaining dark backdrop by scoping the global MudBlazor overlay color to dialog scrims only and forcing popover/menu overlays transparent.
+  - Follow-up removed the active/selected visual treatment from the closed app-structure toolbar buttons, so `Pipelines 2` and other structure menus stay visually neutral.
+  - Follow-up normalized the top breadcrumb typography so `Workspace`, the app name, and structure menu labels share the same font size, weight, and neutral text color.
+  - Follow-up flattened the `No app open` breadcrumb state by removing the old empty-state border/background and matching the app identity typography.
+  - Updated the app-structure chrome guard to prevent the modal menu default and bordered dropdown panel from returning.
+- Verification:
+  - Focused `AppStructureMenu_UsesCompactInlineArtifactActions` guard passed using isolated output.
+- Next step: visually inspect the top bar menus and confirm the workspace canvas no longer dims when a menu is open.
+
+## 2026-06-20 - Topics latest and selected details share metadata layout
+
+- Aligned the `Topics` tab latest-message and selected-history detail surfaces:
+  - The latest-message body now uses the same right-side detail column width as the lower history/details split.
+  - The latest metadata no longer renders as separate bordered cards; it uses the same two-column separator-grid style as the lower `Message details` pane.
+  - Payload label and payload preview spacing/typography were normalized between the top latest panel and lower selected-message details.
+  - Follow-up changed the latest-message metadata rail to stretch the full top-panel height and use vertical label/value rows, giving long topic paths more horizontal room than the old two-column cell grid.
+  - Follow-up applied the same full-width label/value row layout to the lower selected-message details metadata so selected history rows no longer truncate topic paths in half-width cells.
+  - Updated the Topics chrome guard so the old narrow one-column latest metadata panel does not return.
+- Verification:
+  - Focused `TopicExplorerPanel_UsesFlatCompactWorkspaceChrome` guard passed using isolated output.
+- Next step: visually inspect a selected `$SYS` message in `Topics` and confirm the latest-state metadata and lower message-details metadata have matching width and style.
+
+## 2026-06-20 - Topics history retention is per broker/topic
+
+- Fixed selected-topic history shrinking while live `$SYS/#` traffic is active:
+  - Changed the live MQTT workspace projection from a small global recent-message buffer to per broker/topic retention.
+  - `$SYS/broker/uptime` history is no longer evicted just because faster `$SYS` topics arrive between uptime publishes.
+  - Kept retention bounded per broker/topic so high-volume topics still trim their own oldest rows.
+  - Added projection guards for preserving a topic history while other topics exceed the limit and trimming only within the same broker/topic.
+- Verification:
+  - Focused `WorkspaceMessageProjectionTests` passed using isolated output.
+  - Focused `TopicExplorerPanel_UsesFlatCompactWorkspaceChrome` guard passed using isolated output.
+- Next step: visually inspect `$SYS/broker/uptime` in `Topics` for several publish intervals and confirm the selected history row count increases instead of shrinking from unrelated `$SYS` traffic.
+
+## 2026-06-20 - No-app workspace removes shell chrome
+
+- Cleaned the startup/closed-app workspace state:
+  - The main shell now hides the top workspace command bar and bottom status bar when there is no active app.
+  - The no-app canvas uses the full window height and keeps the centered `New app` / `Open file` actions as the only workflow controls.
+  - App-scoped validate/run/stop, app state, MQTT state, message count, file path, and publisher-toggle chrome return automatically once an app is active.
+  - Added a layout guard for the no-app shell class and full-height grid.
+- Verification:
+  - Focused `MainLayout_RemovesSessionOnlyLeftRail` guard passed using isolated output.
+- Next step: visually inspect initial launch and after closing the active app to confirm only the centered no-app action state remains.
+
+## 2026-06-20 - App JSON uses Monaco viewer
+
+- Replaced the flat raw-text App JSON body with the existing Monaco editor integration:
+  - The App JSON tab now renders a read-only Monaco JSON viewer with the FluxMQ Monaco theme and automatic layout.
+  - The existing toolbar metadata, unsaved status, copy action, empty state, and generated full-definition JSON source stay unchanged.
+  - Theme changes reconfigure Monaco and project definition changes sync the viewer content.
+  - Follow-up fixed the blank viewer by applying Monaco sizing through a `::deep` selector under the local editor shell, so CSS isolation reaches the child editor DOM.
+  - Follow-up moved App JSON into the normal workspace artifact tab strip as an `App JSON` tab, so clicking a regular artifact tab returns to visual/graphic workspace mode and clicking `App JSON` again closes the code view.
+  - Follow-up kept the app identity area as plain app identity, not a hidden JSON/visual toggle.
+  - Follow-up catches non-critical Monaco/JS interop failures during setup and sync so editor failures do not trap the rest of the workspace.
+  - Updated the App JSON and workspace guards so the old `<pre>` viewer and old right-side `</>` toggle do not return.
+- Verification:
+  - Isolated UI test build passed with 0 warnings.
+  - Focused `AppJsonPanel_UsesFlatCompactCodeViewerChrome` and `WorkspacePage_RoutesPipelineDiagnosticsToFilteredLogs` guards passed using isolated output.
+- Next step: visually inspect the App JSON tab, click `pip1` or another normal artifact tab, and confirm the visual workspace returns with tab switching still working.

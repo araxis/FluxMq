@@ -113,10 +113,6 @@
     margin-top: 0;
 }
 
-.node-edit-dialog-shell ::deep .mud-input-slot {
-    font-size: 12.5px;
-}
-
 .node-edit-dialog-shell ::deep .mud-input-outlined-border {
     border-color: color-mix(in srgb, var(--flux-border) 72%, transparent);
     border-radius: 6px;

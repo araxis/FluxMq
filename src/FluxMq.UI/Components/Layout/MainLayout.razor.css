@@ -1,7 +1,5 @@
 .flux-shell {
-    --flux-rail-width: 52px;
-    --flux-left-width: 248px;
-    --flux-right-width: 336px;
+    --flux-right-width: 360px;
     --flux-top-height: 48px;
     --flux-status-height: 28px;
 
@@ -9,10 +7,10 @@
     color: var(--mud-palette-text-primary);
     display: grid;
     grid-template-areas:
-        "top top top top"
-        "rail left main right"
-        "status status status status";
-    grid-template-columns: var(--flux-rail-width) var(--flux-left-width) minmax(0, 1fr) var(--flux-right-width);
+        "top top"
+        "main right"
+        "status status";
+    grid-template-columns: minmax(0, 1fr) var(--flux-right-width);
     grid-template-rows: var(--flux-top-height) minmax(0, 1fr) var(--flux-status-height);
     height: 100vh;
     min-height: 0;
@@ -20,28 +18,18 @@
     overflow: hidden;
 }
 
-.flux-shell.left-collapsed {
-    grid-template-areas:
-        "top top top"
-        "rail main right"
-        "status status status";
-    grid-template-columns: var(--flux-rail-width) minmax(0, 1fr) var(--flux-right-width);
-}
-
 .flux-shell.right-collapsed {
     grid-template-areas:
-        "top top top"
-        "rail left main"
-        "status status status";
-    grid-template-columns: var(--flux-rail-width) var(--flux-left-width) minmax(0, 1fr);
+        "top"
+        "main"
+        "status";
+    grid-template-columns: minmax(0, 1fr);
 }
 
-.flux-shell.left-collapsed.right-collapsed {
-    grid-template-areas:
-        "top top"
-        "rail main"
-        "status status";
-    grid-template-columns: var(--flux-rail-width) minmax(0, 1fr);
+.flux-shell.no-active-project {
+    grid-template-areas: "main";
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
 }
 
 .flux-topbar {
@@ -84,6 +72,7 @@
     display: flex;
     flex: 1 1 auto;
     font-size: 12.5px;
+    font-weight: 650;
     gap: 8px;
     min-width: 0;
     overflow: hidden;
@@ -215,55 +204,6 @@
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--mud-palette-error) 16%, transparent);
 }
 
-.flux-rail {
-    align-items: center;
-    background: var(--flux-surface);
-    border-right: 1px solid var(--flux-border);
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    grid-area: rail;
-    min-height: 0;
-    padding: 8px 0;
-}
-
-.flux-rail-button {
-    align-items: center;
-    background: transparent;
-    border: 0;
-    border-radius: 7px;
-    color: var(--flux-text-muted);
-    cursor: pointer;
-    display: flex;
-    height: 36px;
-    justify-content: center;
-    padding: 0;
-    position: relative;
-    transition: background 0.15s ease, color 0.15s ease;
-    width: 36px;
-}
-
-.flux-rail-button:hover,
-.flux-rail-button.active {
-    background: var(--flux-surface-2);
-    color: var(--mud-palette-text-primary);
-}
-
-.flux-rail-button.active::before {
-    background: var(--flux-accent);
-    border-radius: 0 2px 2px 0;
-    bottom: 7px;
-    content: "";
-    left: -8px;
-    position: absolute;
-    top: 7px;
-    width: 2px;
-}
-
-.flux-rail-spacer {
-    flex: 1 1 auto;
-}
-
 .flux-side-panel {
     background: var(--flux-surface);
     display: flex;
@@ -273,48 +213,9 @@
     overflow: hidden;
 }
 
-.flux-left-panel {
-    border-right: 1px solid var(--flux-border);
-    grid-area: left;
-}
-
 .flux-right-panel {
     border-left: 1px solid var(--flux-border);
     grid-area: right;
-}
-
-.flux-panel-header {
-    align-items: center;
-    border-bottom: 1px solid var(--flux-border);
-    display: flex;
-    flex: 0 0 44px;
-    justify-content: space-between;
-    min-width: 0;
-    padding: 0 12px;
-}
-
-.flux-panel-kicker {
-    color: var(--flux-text-muted);
-    font-size: 10px;
-    font-weight: 650;
-    letter-spacing: 0.08em;
-    line-height: 1.1;
-    text-transform: uppercase;
-}
-
-.flux-panel-title {
-    color: var(--mud-palette-text-primary);
-    font-size: 13px;
-    font-weight: 650;
-    line-height: 1.35;
-}
-
-.flux-panel-body {
-    flex: 1 1 auto;
-    min-height: 0;
-    min-width: 0;
-    overflow: auto;
-    padding: 8px;
 }
 
 .flux-main-canvas {
@@ -432,14 +333,12 @@
     }
 
     .flux-shell,
-    .flux-shell.left-collapsed,
-    .flux-shell.right-collapsed,
-    .flux-shell.left-collapsed.right-collapsed {
+    .flux-shell.right-collapsed {
         grid-template-areas:
-            "top top"
-            "rail main"
-            "status status";
-        grid-template-columns: var(--flux-rail-width) minmax(0, 1fr);
+            "top"
+            "main"
+            "status";
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .flux-side-panel {

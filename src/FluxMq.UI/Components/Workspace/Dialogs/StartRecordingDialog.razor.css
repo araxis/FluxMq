@@ -100,10 +100,6 @@
     margin-top: 0;
 }
 
-.start-recording-field ::deep(.mud-input-slot) {
-    font-size: 12.5px;
-}
-
 .start-recording-field ::deep(.mud-input-root) {
     min-height: 34px;
 }

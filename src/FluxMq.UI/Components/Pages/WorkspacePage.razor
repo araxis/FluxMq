@@ -117,9 +117,15 @@
             }
             <div class="project-tab @(logsActive ? "project-tab-active" : "")"
                  title="Logs"
-                 @onclick="@(() => { active.SetActiveLogs(); _jsonView = false; })">
+                 @onclick="@(() => SelectLogs())">
                 <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Small" Class="project-tab-icon" />
                 <span class="project-tab-name">Logs</span>
+            </div>
+            <div class="project-tab project-tab-json-view @(_jsonView ? "project-tab-active" : "")"
+                 title="App JSON"
+                 @onclick="@ToggleJsonView">
+                <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" Class="project-tab-icon" />
+                <span class="project-tab-name">App JSON</span>
             </div>
             <MudMenu Dense="true"
                      Icon="@Icons.Material.Filled.Add"
@@ -140,10 +146,14 @@
                 </ChildContent>
             </MudMenu>
             <div class="project-tabbar-app">
-                <span class="project-tab-json @(_jsonView ? "project-tab-json-active" : null)"
-                      title="View JSON" @onclick="@(() => _jsonView = !_jsonView)">&lt;/&gt;</span>
                 <span class="project-tabbar-app-name">@active.Name</span>
-                <span class="project-tab-close" title="Close app" @onclick="@CloseActiveAsync">x</span>
+                <button type="button"
+                        class="project-tab-close"
+                        title="Close app"
+                        aria-label="@($"Close app {active.Name}")"
+                        @onclick:stopPropagation="true"
+                        @onmousedown:stopPropagation="true"
+                        @onclick="@CloseActiveAsync">x</button>
             </div>
         </div>
 
@@ -159,6 +169,7 @@
                 <WorkspaceLogPanel Logs="@active.Logs"
                                    OnClear="@active.ClearLogs"
                                    Title="Logs"
+                                   InitialQuery="@_pendingLogQuery"
                                    MaxEntries="1000" />
             </div>
         }
@@ -223,7 +234,7 @@
                             <ComponentCatalogPanel ArtifactKind="@WorkspaceArtifactKind.Pipeline" />
                         </aside>
                         <div class="workspace-designer-region">
-                            <FlowDesigner />
+                            <FlowDesigner LogsRequested="@OpenLogs" />
                         </div>
                     </div>
                 </div>
@@ -239,6 +250,7 @@
     private WorkspaceArtifactKind? _lastActiveArtifactKind;
     private string? _lastActiveArtifactName;
     private bool _dashboardEditMode = true;
+    private WorkspaceLogQuery? _pendingLogQuery;
 
     protected override void OnInitialized()
     {
@@ -275,6 +287,10 @@
         {
             _jsonView = false;
             _dashboardEditMode = active is not { ActiveArtifactKind: WorkspaceArtifactKind.Dashboard, IsActiveDashboardLive: true };
+            if (kind != WorkspaceArtifactKind.Logs)
+            {
+                _pendingLogQuery = null;
+            }
         }
 
         _lastActiveProject = active;
@@ -470,6 +486,49 @@
             active.AddTest(name.Trim());
             _jsonView = false;
         }
+    }
+
+    private void SelectLogs()
+    {
+        var active = Projects.ActiveProject;
+        if (active is null) return;
+
+        _pendingLogQuery = null;
+        active.SetActiveLogs();
+        _jsonView = false;
+    }
+
+    private void OpenLogs(WorkspaceLogQuery query)
+    {
+        var active = Projects.ActiveProject;
+        if (active is null) return;
+
+        _pendingLogQuery = query;
+        active.SetActiveLogs();
+        _jsonView = false;
+    }
+
+    private void ToggleJsonView()
+    {
+        if (_jsonView)
+        {
+            CloseJsonView();
+            return;
+        }
+
+        OpenJsonView();
+    }
+
+    private void OpenJsonView()
+    {
+        SyncActiveArtifactState();
+        _jsonView = true;
+    }
+
+    private void CloseJsonView()
+    {
+        _jsonView = false;
+        SyncActiveArtifactState();
     }
 
     private async Task RemoveWorkflowAsync(string name)

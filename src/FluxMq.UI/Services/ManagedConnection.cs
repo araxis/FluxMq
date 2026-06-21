@@ -7,8 +7,8 @@ public sealed class ManagedConnection
 {
     public Guid Id { get; } = Guid.NewGuid();
     public string ResourceName { get; }
-    public MqttConnectionProfile Profile { get; }
-    public string Subscription { get; }
+    public MqttConnectionProfile Profile { get; internal set; }
+    public string Subscription { get; internal set; }
     public MqttClientState State { get; internal set; } = MqttClientState.Disconnected;
     public string? LastError { get; internal set; }
 
@@ -21,7 +21,7 @@ public sealed class ManagedConnection
             ? DeriveResourceName(profile)
             : resourceName.Trim();
         Profile = profile;
-        Subscription = subscription;
+        Subscription = LiveMqttWorkspaceService.NormalizeSubscription(subscription);
     }
 
     private static string DeriveResourceName(MqttConnectionProfile profile)

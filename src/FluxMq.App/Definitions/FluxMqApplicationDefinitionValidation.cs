@@ -50,7 +50,11 @@ public enum FluxMqApplicationDefinitionValidationErrorCode
     EmptyMetricName = 25,
     InvalidMetricDefinition = 26,
     InvalidMetricParameter = 27,
-    MissingDashboardMetric = 28
+    MissingDashboardMetric = 28,
+    EmptyExplorerName = 29,
+    EmptyExplorerType = 30,
+    InvalidExplorerConfiguration = 31,
+    MissingExplorerConnectionResource = 32
 }
 
 public sealed class FluxMqApplicationDefinitionValidator
@@ -104,6 +108,11 @@ public sealed class FluxMqApplicationDefinitionValidator
         foreach (var test in definition.Tests)
         {
             ValidateScenario(test.Key, test.Value, definition, errors);
+        }
+
+        foreach (var explorer in definition.Explorers)
+        {
+            ValidateExplorer(explorer.Key, explorer.Value, definition, errors);
         }
 
         return new FluxMqApplicationDefinitionValidationResult(errors);
@@ -365,6 +374,79 @@ public sealed class FluxMqApplicationDefinitionValidator
                     definition,
                     errors);
             }
+        }
+    }
+
+    private static void ValidateExplorer(
+        string explorerName,
+        ExplorerDefinition explorer,
+        FluxMqApplicationDefinition definition,
+        List<FluxMqApplicationDefinitionValidationError> errors)
+    {
+        if (string.IsNullOrWhiteSpace(explorerName))
+        {
+            errors.Add(new(
+                FluxMqApplicationDefinitionValidationErrorCode.EmptyExplorerName,
+                "Explorer name cannot be empty."));
+        }
+
+        if (string.IsNullOrWhiteSpace(explorer.Type))
+        {
+            errors.Add(new(
+                FluxMqApplicationDefinitionValidationErrorCode.EmptyExplorerType,
+                $"Explorer '{explorerName}' must define a type."));
+            return;
+        }
+
+        if (!string.Equals(explorer.Type, ExplorerDefinition.MqttTopicsType, StringComparison.Ordinal))
+        {
+            errors.Add(new(
+                FluxMqApplicationDefinitionValidationErrorCode.InvalidExplorerConfiguration,
+                $"Explorer '{explorerName}' has unknown type '{explorer.Type}'."));
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(explorer.ConnectionResource))
+        {
+            if (!definition.Resources.TryGetValue(explorer.ConnectionResource, out var resource))
+            {
+                errors.Add(new(
+                    FluxMqApplicationDefinitionValidationErrorCode.MissingExplorerConnectionResource,
+                    $"Explorer '{explorerName}' references missing app resource '{explorer.ConnectionResource}'."));
+            }
+            else if (resource.Type != FluxMqNodeTypes.Connection)
+            {
+                errors.Add(new(
+                    FluxMqApplicationDefinitionValidationErrorCode.InvalidExplorerConfiguration,
+                    $"Explorer '{explorerName}' connectionResource '{explorer.ConnectionResource}' must reference an app resource of type '{FluxMqNodeTypes.Connection.Value}'."));
+            }
+        }
+        else if (string.IsNullOrWhiteSpace(explorer.Connection?.Host))
+        {
+            errors.Add(new(
+                FluxMqApplicationDefinitionValidationErrorCode.InvalidExplorerConfiguration,
+                $"Explorer '{explorerName}' must define connectionResource or connection.host."));
+        }
+
+        if (explorer.Connection?.Port is { } port && port <= 0)
+        {
+            errors.Add(new(
+                FluxMqApplicationDefinitionValidationErrorCode.InvalidExplorerConfiguration,
+                $"Explorer '{explorerName}' connection.port must be greater than zero."));
+        }
+
+        if (explorer.Connection?.KeepAliveSeconds is { } keepAliveSeconds && keepAliveSeconds <= 0)
+        {
+            errors.Add(new(
+                FluxMqApplicationDefinitionValidationErrorCode.InvalidExplorerConfiguration,
+                $"Explorer '{explorerName}' connection.keepAliveSeconds must be greater than zero."));
+        }
+
+        if (explorer.Subscriptions.Any(static subscription => string.IsNullOrWhiteSpace(subscription)))
+        {
+            errors.Add(new(
+                FluxMqApplicationDefinitionValidationErrorCode.InvalidExplorerConfiguration,
+                $"Explorer '{explorerName}' subscriptions cannot contain empty topic filters."));
         }
     }
 }

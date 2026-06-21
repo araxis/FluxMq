@@ -145,6 +145,10 @@ public sealed partial class FlowDefinitionComposer
         Port = profileEl.TryGetProperty("port", out var p) ? p.GetInt32() : 1883,
         ClientId = profileEl.TryGetProperty("clientId", out var c) ? c.GetString() ?? "" : "",
         UseTls = profileEl.TryGetProperty("useTls", out var tls) && tls.GetBoolean(),
+        AllowUntrustedCertificates = profileEl.TryGetProperty("allowUntrustedCertificates", out var allowUntrusted) && allowUntrusted.GetBoolean(),
+        CaCertificatePath = profileEl.TryGetProperty("caCertificatePath", out var caCertificatePath) && caCertificatePath.ValueKind == JsonValueKind.String ? caCertificatePath.GetString() : null,
+        ClientCertificatePath = profileEl.TryGetProperty("clientCertificatePath", out var clientCertificatePath) && clientCertificatePath.ValueKind == JsonValueKind.String ? clientCertificatePath.GetString() : null,
+        ClientCertificatePassword = profileEl.TryGetProperty("clientCertificatePassword", out var clientCertificatePassword) && clientCertificatePassword.ValueKind == JsonValueKind.String ? clientCertificatePassword.GetString() : null,
         Username = profileEl.TryGetProperty("username", out var user) && user.ValueKind == JsonValueKind.String ? user.GetString() : null,
         Password = profileEl.TryGetProperty("password", out var password) && password.ValueKind == JsonValueKind.String ? password.GetString() : null,
         PasswordSecret = SecretReferenceJson.ReadOptional(profileEl, "passwordSecret"),
@@ -168,6 +172,26 @@ public sealed partial class FlowDefinitionComposer
         if (!string.IsNullOrWhiteSpace(profile.Username))
         {
             profileJson["username"] = profile.Username;
+        }
+
+        if (profile.AllowUntrustedCertificates)
+        {
+            profileJson["allowUntrustedCertificates"] = true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(profile.CaCertificatePath))
+        {
+            profileJson["caCertificatePath"] = profile.CaCertificatePath;
+        }
+
+        if (!string.IsNullOrWhiteSpace(profile.ClientCertificatePath))
+        {
+            profileJson["clientCertificatePath"] = profile.ClientCertificatePath;
+        }
+
+        if (!string.IsNullOrEmpty(profile.ClientCertificatePassword))
+        {
+            profileJson["clientCertificatePassword"] = profile.ClientCertificatePassword;
         }
 
         if (profile.PasswordSecret is not null)

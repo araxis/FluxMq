@@ -9,4 +9,5 @@ public sealed record MqttEnvelope
     public DateTimeOffset ReceivedAt { get; init; } = DateTimeOffset.UtcNow;
     public MqttQualityOfServiceLevel QualityOfService { get; init; }
     public bool Retain { get; init; }
+    public string? BrokerName { get; init; }
 }

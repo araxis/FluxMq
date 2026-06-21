@@ -19,7 +19,6 @@
         <span class="app-structure-app" title="@BuildAppMeta(active)">
             <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
             <span class="app-structure-name">@active.Name</span>
-            <span class="app-structure-current">@CurrentArtifactLabel(active)</span>
         </span>
 
         <div class="app-structure-actions" role="navigation" aria-label="App structure navigation">
@@ -31,6 +30,7 @@
                      Variant="Variant.Text"
                      Class="app-structure-menu"
                      PopoverClass="app-structure-popover"
+                     Modal="false"
                      AnchorOrigin="Origin.BottomLeft"
                      TransformOrigin="Origin.TopLeft">
             <ChildContent>
@@ -80,8 +80,9 @@
                  EndIcon="@Icons.Material.Filled.ExpandMore"
                  Size="Size.Small"
                  Variant="Variant.Text"
-                 Class="@StructureMenuClass(active, WorkspaceArtifactKind.Pipeline)"
+                 Class="app-structure-menu"
                  PopoverClass="app-structure-popover"
+                 Modal="false"
                  AnchorOrigin="Origin.BottomLeft"
                  TransformOrigin="Origin.TopLeft">
             <ChildContent>
@@ -135,8 +136,9 @@
                  EndIcon="@Icons.Material.Filled.ExpandMore"
                  Size="Size.Small"
                  Variant="Variant.Text"
-                 Class="@StructureMenuClass(active, WorkspaceArtifactKind.Dashboard)"
+                 Class="app-structure-menu"
                  PopoverClass="app-structure-popover"
+                 Modal="false"
                  AnchorOrigin="Origin.BottomLeft"
                  TransformOrigin="Origin.TopLeft">
             <ChildContent>
@@ -190,8 +192,9 @@
                  EndIcon="@Icons.Material.Filled.ExpandMore"
                  Size="Size.Small"
                  Variant="Variant.Text"
-                 Class="@StructureMenuClass(active, WorkspaceArtifactKind.Metrics)"
+                 Class="app-structure-menu"
                  PopoverClass="app-structure-popover"
+                 Modal="false"
                  AnchorOrigin="Origin.BottomLeft"
                  TransformOrigin="Origin.TopLeft">
             <ChildContent>
@@ -233,8 +236,9 @@
                  EndIcon="@Icons.Material.Filled.ExpandMore"
                  Size="Size.Small"
                  Variant="Variant.Text"
-                 Class="@StructureMenuClass(active, WorkspaceArtifactKind.Test)"
+                 Class="app-structure-menu"
                  PopoverClass="app-structure-popover"
+                 Modal="false"
                  AnchorOrigin="Origin.BottomLeft"
                  TransformOrigin="Origin.TopLeft">
             <ChildContent>
@@ -292,7 +296,6 @@
         </MudMenu>
         </div>
 
-        <span class="app-structure-meta">@BuildActiveMeta(active)</span>
     }
 </div>
 
@@ -341,49 +344,8 @@
             connectionNames.Any(name => string.Equals(name, c.ResourceName, StringComparison.Ordinal))).ToList();
     }
 
-    private static string BuildActiveMeta(FlowWorkspaceService app)
-    {
-        var artifact = app.ActiveArtifactKind switch
-        {
-            WorkspaceArtifactKind.Dashboard => app.ActiveDashboardName,
-            WorkspaceArtifactKind.Metrics => "Metrics",
-            WorkspaceArtifactKind.Test => app.ActiveTestName,
-            WorkspaceArtifactKind.Topics => "Topics",
-            WorkspaceArtifactKind.Logs => "Logs",
-            _ => app.ActiveWorkflowName
-        };
-
-        var prefix = app.ActiveArtifactKind switch
-        {
-            WorkspaceArtifactKind.Dashboard => "dashboard",
-            WorkspaceArtifactKind.Metrics => "metrics",
-            WorkspaceArtifactKind.Test => "test",
-            WorkspaceArtifactKind.Topics => "page",
-            WorkspaceArtifactKind.Logs => "page",
-            _ => "pipeline"
-        };
-
-        return string.IsNullOrWhiteSpace(artifact)
-            ? BuildAppMeta(app)
-            : $"{prefix}: {artifact}";
-    }
-
-    private static string CurrentArtifactLabel(FlowWorkspaceService app)
-        => app.ActiveArtifactKind switch
-        {
-            WorkspaceArtifactKind.Dashboard => "Dashboard",
-            WorkspaceArtifactKind.Metrics => "Metrics",
-            WorkspaceArtifactKind.Test => "Test",
-            WorkspaceArtifactKind.Topics => "Topics",
-            WorkspaceArtifactKind.Logs => "Logs",
-            _ => "Pipeline"
-        };
-
     private static string StructureMenuLabel(string label, int count)
         => $"{label} {count.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
-
-    private static string StructureMenuClass(FlowWorkspaceService app, WorkspaceArtifactKind kind)
-        => app.ActiveArtifactKind == kind ? "app-structure-menu active" : "app-structure-menu";
 
     private static string BuildAppMeta(FlowWorkspaceService app)
     {

@@ -56,6 +56,23 @@ public sealed class FlowApplicationConfigurationLoaderTests
                         }
                       }
                     }
+                  },
+                  "explorers": {
+                    "local": {
+                      "type": "mqtt.topics",
+                      "displayName": "Local broker",
+                      "connection": {
+                        "host": "localhost",
+                        "port": 1883,
+                        "useTls": true,
+                        "allowUntrustedCertificates": true,
+                        "caCertificatePath": "certs/root.pem",
+                        "clientCertificatePath": "certs/client.pfx",
+                        "clientCertificatePassword": "cert-pass",
+                        "clientId": "topics-local"
+                      },
+                      "subscriptions": ["#", "$SYS/#"]
+                    }
                   }
                 }
               }
@@ -78,6 +95,16 @@ public sealed class FlowApplicationConfigurationLoaderTests
         ]);
         definition.Dashboards["ops"].Widgets["latest"].Type.ShouldBe("payload.latest");
         definition.Tests["roundTrip"].Steps["expect"].Type.ShouldBe("expect.event");
+        var explorer = definition.Explorers["local"];
+        explorer.Type.ShouldBe(ExplorerDefinition.MqttTopicsType);
+        var connection = explorer.Connection.ShouldNotBeNull();
+        connection.Host.ShouldBe("localhost");
+        connection.UseTls.ShouldBe(true);
+        connection.AllowUntrustedCertificates.ShouldBe(true);
+        connection.CaCertificatePath.ShouldBe("certs/root.pem");
+        connection.ClientCertificatePath.ShouldBe("certs/client.pfx");
+        connection.ClientCertificatePassword.ShouldBe("cert-pass");
+        connection.ClientId.ShouldBe("topics-local");
     }
 
     [Fact]
