@@ -4,51 +4,98 @@
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.Plagiarism"
                  CategoryColor="@Color.Secondary"
-                 EditDialogMaxWidth="MaxWidth.Small"
+                 EditDialogMaxWidth="MaxWidth.Medium"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
-        <MudStack Spacing="1" Class="mt-1">
-            <Stat Icon="@Icons.Material.Filled.Input" Label="Input" Value="PayloadInspectionRequest" />
-            <Stat Icon="@Icons.Material.Filled.Output" Label="Output" Value="PayloadInspectionResult" />
-        </MudStack>
-        <div class="d-flex flex-wrap gap-1 mt-2">
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">JSON</MudChip>
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">XML</MudChip>
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">Base64</MudChip>
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">Binary</MudChip>
+        <div class="payload-inspect-summary">
+            <div class="payload-inspect-meta">
+                <div class="payload-inspect-meta-item input">
+                    <span>Input</span>
+                    <strong>Payload request</strong>
+                </div>
+                <div class="payload-inspect-meta-item">
+                    <span>Preview</span>
+                    <strong>@PreviewCaption</strong>
+                </div>
+                <div class="payload-inspect-meta-item">
+                    <span>Format cap</span>
+                    <strong>@FormatCapCaption</strong>
+                </div>
+                <div class="payload-inspect-meta-item">
+                    <span>Input buffer</span>
+                    <strong>@InputBufferCaption</strong>
+                </div>
+            </div>
+
+            <div class="payload-inspect-contracts">
+                <div class="payload-inspect-contract" aria-label="Payload inspection request fields">
+                    <span class="payload-inspect-contract-label">Request fields</span>
+                    <span class="payload-inspect-token">text</span>
+                    <span class="payload-inspect-token">bytes</span>
+                    <span class="payload-inspect-token">contentType</span>
+                    <span class="payload-inspect-token">encodingHint</span>
+                </div>
+                <div class="payload-inspect-contract" aria-label="Payload inspection result fields">
+                    <span class="payload-inspect-contract-label">Result fields</span>
+                    <span class="payload-inspect-token">kind</span>
+                    <span class="payload-inspect-token">contentType</span>
+                    <span class="payload-inspect-token">byteCount</span>
+                    <span class="payload-inspect-token">preview</span>
+                </div>
+            </div>
         </div>
     </Body>
     <Editor>
-        <MudStack Spacing="2">
-            <MudNumericField T="int"
-                             Label="Preview bytes"
-                             @bind-Value="_maxPreviewBytes"
-                             Min="1"
-                             Max="1048576"
-                             Step="128"
-                             Variant="Variant.Outlined"
-                             Margin="Margin.Dense" />
-            <MudNumericField T="int"
-                             Label="Formatted chars"
-                             @bind-Value="_maxFormattedChars"
-                             Min="1"
-                             Max="1048576"
-                             Step="512"
-                             Variant="Variant.Outlined"
-                             Margin="Margin.Dense" />
-            <MudNumericField T="int"
-                             Label="Input buffer"
-                             @bind-Value="_boundedCapacity"
-                             Min="1"
-                             Max="100000"
-                             Step="64"
-                             Variant="Variant.Outlined"
-                             Margin="Margin.Dense" />
-            <MudCheckBox T="bool" Label="Detect Base64" @bind-Value="_detectBase64" Color="Color.Primary" />
-            <MudCheckBox T="bool" Label="Format JSON" @bind-Value="_formatJson" Color="Color.Primary" />
-            <MudCheckBox T="bool" Label="Format XML" @bind-Value="_formatXml" Color="Color.Primary" />
-        </MudStack>
+        <div class="payload-inspect-editor" aria-label="Payload inspection settings">
+            <div class="payload-inspect-number-grid">
+                <MudNumericField T="int"
+                                 Label="Preview bytes"
+                                 @bind-Value="_maxPreviewBytes"
+                                 Min="1"
+                                 Max="1048576"
+                                 Step="128"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="payload-inspect-preview-field" />
+                <MudNumericField T="int"
+                                 Label="Formatted chars"
+                                 @bind-Value="_maxFormattedChars"
+                                 Min="1"
+                                 Max="1048576"
+                                 Step="512"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="payload-inspect-formatted-field" />
+                <MudNumericField T="int"
+                                 Label="Input buffer"
+                                 @bind-Value="_boundedCapacity"
+                                 Min="1"
+                                 Max="100000"
+                                 Step="64"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="payload-inspect-buffer-field" />
+            </div>
+
+            <div class="payload-inspect-options" aria-label="Payload inspection options">
+                <MudCheckBox T="bool"
+                             Label="Detect Base64"
+                             @bind-Value="_detectBase64"
+                             Color="Color.Primary" />
+                <MudCheckBox T="bool"
+                             Label="Format JSON"
+                             @bind-Value="_formatJson"
+                             Color="Color.Primary" />
+                <MudCheckBox T="bool"
+                             Label="Format XML"
+                             @bind-Value="_formatXml"
+                             Color="Color.Primary" />
+            </div>
+        </div>
     </Editor>
 </NodeWidgetShell>
 
@@ -63,6 +110,12 @@
     private bool _formatJson = true;
     private bool _formatXml = true;
     private int _boundedCapacity = PayloadInspectNodeModel.DefaultBoundedCapacity;
+
+    private string PreviewCaption => $"{PayloadInspectNodeModel.NormalizePositiveInt(Model.MaxPreviewBytes, PayloadInspectNodeModel.DefaultMaxPreviewBytes)} bytes";
+    private string FormatCapCaption => $"{PayloadInspectNodeModel.NormalizePositiveInt(Model.MaxFormattedChars, PayloadInspectNodeModel.DefaultMaxFormattedChars)} chars";
+    private string InputBufferCaption => PayloadInspectNodeModel
+        .NormalizePositiveInt(Model.BoundedCapacity, PayloadInspectNodeModel.DefaultBoundedCapacity)
+        .ToString();
 
     protected override void OnParametersSet() => LoadDraft();
 

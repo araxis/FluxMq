@@ -70,6 +70,8 @@ public sealed class FlowDefinitionComposerTests
         http.Ports.ShouldContain(port => port.Name == "Errors" && port.ValueType == "HttpErrorOutput" && !port.IsInput);
 
         var payload = catalog.Find("payload.inspect").ShouldNotBeNull();
+        payload.Type.ShouldBe("payload.inspect");
+        payload.DisplayName.ShouldBe("Payload Inspect");
         payload.Category.ShouldBe("Mapper");
         payload.Ports.ShouldContain(port => port.Name == "Input" && port.ValueType == "PayloadInspectionRequest" && port.IsInput);
         payload.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "PayloadInspectionResult" && !port.IsInput);
