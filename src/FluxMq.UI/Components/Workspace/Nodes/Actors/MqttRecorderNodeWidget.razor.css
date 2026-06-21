@@ -1,0 +1,102 @@
+.mqtt-recorder-summary {
+    display: grid;
+    gap: 5px;
+    margin-top: 3px;
+    min-width: 0;
+}
+
+.mqtt-recorder-meta {
+    display: grid;
+    gap: 3px;
+    grid-template-columns: minmax(0, 1fr) 84px;
+    min-width: 0;
+}
+
+.mqtt-recorder-meta-item {
+    align-content: center;
+    background: color-mix(in srgb, var(--flux-surface-2) 30%, transparent);
+    border-radius: 4px;
+    display: grid;
+    gap: 2px;
+    min-height: 30px;
+    min-width: 0;
+    padding: 4px 5px;
+}
+
+.mqtt-recorder-meta-item span,
+.mqtt-recorder-contract-label {
+    color: var(--flux-text-muted);
+    font-size: 0.52rem;
+    font-weight: 750;
+    letter-spacing: 0;
+    line-height: 1;
+    min-width: 0;
+    text-transform: uppercase;
+}
+
+.mqtt-recorder-meta-item strong {
+    color: var(--mud-palette-text-primary);
+    font-size: 0.66rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    line-height: 1.12;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mqtt-recorder-contract {
+    align-items: center;
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 68%, transparent);
+    display: grid;
+    gap: 3px;
+    grid-template-columns: minmax(0, 1fr) repeat(2, auto);
+    min-height: 27px;
+    min-width: 0;
+    padding: 5px 2px 0;
+}
+
+.mqtt-recorder-token {
+    border: 1px solid color-mix(in srgb, var(--mud-palette-tertiary) 28%, var(--flux-border-soft));
+    border-radius: 4px;
+    color: color-mix(in srgb, var(--mud-palette-tertiary) 82%, var(--mud-palette-text-primary));
+    font-size: 0.52rem;
+    font-weight: 760;
+    line-height: 1;
+    padding: 3px 4px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.mqtt-recorder-editor {
+    align-items: start;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(0, 180px);
+    min-width: 0;
+}
+
+.mqtt-recorder-editor ::deep(.mud-input-control) {
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+.mqtt-recorder-buffer-field {
+    min-width: 0;
+}
+
+@media (max-width: 640px) {
+    .mqtt-recorder-editor,
+    .mqtt-recorder-meta {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .mqtt-recorder-contract {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mqtt-recorder-contract-label {
+        grid-column: 1 / -1;
+    }
+}

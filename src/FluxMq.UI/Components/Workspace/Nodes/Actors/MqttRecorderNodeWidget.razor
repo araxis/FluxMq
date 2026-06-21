@@ -4,24 +4,33 @@
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.Save"
                  CategoryColor="@Color.Tertiary"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
-        <MudStack Spacing="1" Class="mt-1">
-            <Stat Icon="@Icons.Material.Filled.Storage" Label="Target" Value="Local sessions" />
-            <Stat Icon="@Icons.Material.Filled.Input" Label="Input" Value="MqttRecordingRequest" />
-        </MudStack>
-        <div class="d-flex flex-wrap gap-1 mt-2">
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">sessionId</MudChip>
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">envelope</MudChip>
+        <div class="mqtt-recorder-summary">
+            <div class="mqtt-recorder-meta">
+                <div class="mqtt-recorder-meta-item target">
+                    <span>Target</span>
+                    <strong>Local sessions</strong>
+                </div>
+                <div class="mqtt-recorder-meta-item">
+                    <span>Input buffer</span>
+                    <strong>@ActorNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity)</strong>
+                </div>
+            </div>
+
+            <div class="mqtt-recorder-contract" aria-label="Recording request fields">
+                <span class="mqtt-recorder-contract-label">Request fields</span>
+                <span class="mqtt-recorder-token">sessionId</span>
+                <span class="mqtt-recorder-token">envelope</span>
+            </div>
         </div>
     </Body>
     <Editor>
-        <MudStack Spacing="2">
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">sessionId</MudChip>
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">envelope</MudChip>
-            </MudStack>
+        <div class="mqtt-recorder-editor" aria-label="Recorder settings">
             <MudNumericField T="int"
                              Label="Input buffer"
                              @bind-Value="_boundedCapacity"
@@ -29,8 +38,9 @@
                              Max="100000"
                              Step="100"
                              Variant="Variant.Outlined"
-                             Margin="Margin.Dense" />
-        </MudStack>
+                             Margin="Margin.Dense"
+                             Class="mqtt-recorder-buffer-field" />
+        </div>
     </Editor>
 </NodeWidgetShell>
 
