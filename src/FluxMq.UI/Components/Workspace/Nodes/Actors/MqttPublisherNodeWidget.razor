@@ -6,51 +6,73 @@
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.Publish"
                  CategoryColor="@Color.Tertiary"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
-        <MudStack Spacing="1" Class="mt-1">
-            <Stat Icon="@Icons.Material.Filled.Cable" Label="Broker" Value="@DisplayConnection" />
-            <Stat Icon="@Icons.Material.Filled.Input" Label="Input" Value="MqttPublishRequest" />
-        </MudStack>
-        <div class="d-flex flex-wrap gap-1 mt-2">
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">topic</MudChip>
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">payload</MudChip>
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">qos</MudChip>
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">retain</MudChip>
+        <div class="mqtt-publisher-summary">
+            <div class="mqtt-publisher-meta">
+                <div class="mqtt-publisher-meta-item broker">
+                    <span>Broker</span>
+                    <strong title="@DisplayConnection">@DisplayConnection</strong>
+                </div>
+                <div class="mqtt-publisher-meta-item">
+                    <span>Input buffer</span>
+                    <strong>@ActorNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity)</strong>
+                </div>
+            </div>
+
+            <div class="mqtt-publisher-contract" aria-label="Publish request fields">
+                <span class="mqtt-publisher-contract-label">Request fields</span>
+                <span class="mqtt-publisher-token">topic</span>
+                <span class="mqtt-publisher-token">payload</span>
+                <span class="mqtt-publisher-token">qos</span>
+                <span class="mqtt-publisher-token">retain</span>
+            </div>
         </div>
     </Body>
     <Editor>
-        @if (BrokerOptions.Count > 0)
-        {
-            <MudSelect T="string"
-                       Label="Broker resource"
-                       @bind-Value="_connection"
-                       Variant="Variant.Outlined"
-                       Margin="Margin.Dense"
-                       Dense="true">
-                @foreach (var option in BrokerOptions)
-                {
-                    <MudSelectItem Value="@option.Name">@option.Label</MudSelectItem>
-                }
-            </MudSelect>
-        }
-        else
-        {
-            <MudTextField T="string"
-                          Label="Broker resource"
-                          @bind-Value="_connection"
-                          Variant="Variant.Outlined"
-                          Margin="Margin.Dense" />
-        }
-        <MudNumericField T="int"
-                         Label="Input buffer"
-                         @bind-Value="_boundedCapacity"
-                         Min="1"
-                         Max="100000"
-                         Step="100"
-                         Variant="Variant.Outlined"
-                         Margin="Margin.Dense" />
+        <div class="mqtt-publisher-editor" aria-label="Publisher settings">
+            @{
+                var brokerOptions = BrokerOptions;
+            }
+            @if (brokerOptions.Count > 0)
+            {
+                <MudSelect T="string"
+                           Label="Broker connection"
+                           @bind-Value="_connection"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Dense="true"
+                           Class="mqtt-publisher-broker-field">
+                    @foreach (var option in brokerOptions)
+                    {
+                        <MudSelectItem Value="@option.Name">@option.Label</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+            else
+            {
+                <MudTextField T="string"
+                              Label="Connection name"
+                              @bind-Value="_connection"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              HelperText="Add a broker connection in the left panel to enable the dropdown."
+                              Class="mqtt-publisher-broker-field" />
+            }
+            <MudNumericField T="int"
+                             Label="Input buffer"
+                             @bind-Value="_boundedCapacity"
+                             Min="1"
+                             Max="100000"
+                             Step="100"
+                             Variant="Variant.Outlined"
+                             Margin="Margin.Dense"
+                             Class="mqtt-publisher-buffer-field" />
+        </div>
     </Editor>
 </NodeWidgetShell>
 

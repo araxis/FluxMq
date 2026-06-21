@@ -5867,6 +5867,70 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void MqttPublisherNodeWidget_UsesCompactSummaryAndFlatEditor()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Actors",
+            "MqttPublisherNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Actors",
+            "MqttPublisherNodeWidget.razor.css"));
+
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldNotContain("EditDialogMaxWidth=");
+        markup.ShouldContain("mqtt-publisher-summary");
+        markup.ShouldContain("mqtt-publisher-meta");
+        markup.ShouldContain("mqtt-publisher-meta-item broker");
+        markup.ShouldContain("ActorNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity)");
+        markup.ShouldContain("mqtt-publisher-contract");
+        markup.ShouldContain("aria-label=\"Publish request fields\"");
+        markup.ShouldContain("mqtt-publisher-token");
+        markup.ShouldContain("topic");
+        markup.ShouldContain("payload");
+        markup.ShouldContain("qos");
+        markup.ShouldContain("retain");
+        markup.ShouldContain("mqtt-publisher-editor");
+        markup.ShouldContain("aria-label=\"Publisher settings\"");
+        markup.ShouldContain("Label=\"Broker connection\"");
+        markup.ShouldContain("Label=\"Connection name\"");
+        markup.ShouldContain("HelperText=\"Add a broker connection in the left panel to enable the dropdown.\"");
+        markup.ShouldContain("Label=\"Input buffer\"");
+        markup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        markup.ShouldContain("Class=\"mqtt-publisher-broker-field\"");
+        markup.ShouldContain("Class=\"mqtt-publisher-buffer-field\"");
+        markup.ShouldNotContain("<Stat ");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("d-flex flex-wrap gap-1");
+        markup.ShouldNotContain("Label=\"Broker resource\"");
+
+        css.ShouldContain(".mqtt-publisher-summary");
+        css.ShouldContain(".mqtt-publisher-meta");
+        css.ShouldContain(".mqtt-publisher-contract");
+        css.ShouldContain(".mqtt-publisher-token");
+        css.ShouldContain(".mqtt-publisher-editor");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 160px;");
+        css.ShouldContain(".mqtt-publisher-editor ::deep(.mud-input-control)");
+        css.ShouldContain("@media (max-width: 640px)");
+        css.ShouldNotContain(".flow-node-filters");
+        css.ShouldNotContain("border: 1px solid var(--flux-border-soft);");
+    }
+
+    [Fact]
     public void NodeWidgetShell_UsesCompactNodeChrome()
     {
         var root = FindRepositoryRoot();
@@ -6078,6 +6142,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("node-edit-dialog-actions");
         markup.ShouldContain("aria-label=\"Cancel node edit\"");
         markup.ShouldContain("aria-label=\"Save node edit\"");
+        markup.ShouldContain("Color=\"Color.Primary\"");
+        markup.ShouldNotContain("Color=\"@CategoryColor\"");
         markup.ShouldNotContain("HelperText=");
         markup.ShouldNotContain("ErrorText=");
         markup.ShouldNotContain("node-edit-dialog-meta-strip");
