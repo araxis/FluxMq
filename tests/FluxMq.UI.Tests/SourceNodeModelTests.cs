@@ -127,6 +127,34 @@ public sealed class SourceNodeModelTests
     }
 
     [Fact]
+    public void MqttTriggerNodeModel_NormalizesBoundedCapacity()
+    {
+        var catalog = new FlowComponentCatalog();
+        var descriptor = catalog.Find("mqtt.trigger").ShouldNotBeNull();
+        var model = new MqttTriggerNodeModel(
+            "workflow1.trigger",
+            new DiagramPoint(10, 20),
+            "trigger",
+            descriptor,
+            isResource: false)
+        {
+            BoundedCapacity = 0
+        };
+
+        model.BuildConfiguration()["boundedCapacity"]!.GetValue<int>()
+            .ShouldBe(MqttTriggerNodeModel.DefaultBoundedCapacity);
+
+        model.LoadConfiguration(new JsonObject
+        {
+            ["boundedCapacity"] = -10,
+            ["subscriptions"] = new JsonArray("factory/#")
+        });
+
+        model.BoundedCapacity.ShouldBe(MqttTriggerNodeModel.DefaultBoundedCapacity);
+        MqttTriggerNodeModel.NormalizeBoundedCapacity(42).ShouldBe(42);
+    }
+
+    [Fact]
     public void MqttTriggerNodeModel_ReadsShortSubscriptionsWithRouterFriendlyQualityOfService()
     {
         var catalog = new FlowComponentCatalog();

@@ -2705,6 +2705,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("TextDisabled = \"#6B7280\"");
         markup.ShouldContain("PrimaryDarken = \"#115E59\"");
         markup.ShouldContain("PrimaryLighten = \"#5EEAD4\"");
+        markup.ShouldContain("<MudDialogProvider BackdropClick=\"false\" CloseButton=\"true\" CloseOnEscapeKey=\"true\" />");
         markup.ShouldContain("<LiveInspectorPanel />");
         markup.ShouldContain("@if (HasActiveProject)");
         markup.ShouldContain("private bool HasActiveProject => Projects.ActiveProject is not null;");
@@ -2977,11 +2978,20 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "Dialogs",
             "TopicExplorerSetupDialog.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "TopicExplorerSetupDialog.razor.css"));
 
         markup.ShouldContain("MudTextField");
         markup.ShouldContain("MudNumericField");
         markup.ShouldContain("MudSelect");
         markup.ShouldContain("MudCheckBox");
+        markup.ShouldContain("topic-explorer-setup-actions");
         markup.ShouldContain("Label=\"Broker\"");
         markup.ShouldContain("[Parameter] public string Title { get; set; } = \"Topic monitors\";");
         markup.ShouldContain("[Parameter] public string SaveLabel { get; set; } = \"Save monitors\";");
@@ -3014,6 +3024,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("<MudIconButton Icon=\"@Icons.Material.Filled.FolderOpen\"");
         markup.ShouldNotContain("<input");
         markup.ShouldNotContain("mud-input-root");
+
+        css.ShouldContain(".topic-explorer-setup-actions");
+        css.ShouldContain("justify-content: flex-end;");
+        css.ShouldContain("width: 100%;");
+        css.ShouldContain("@media (max-width: 480px)");
 
         var usernameIndex = markup.IndexOf("Label=\"Username\"", StringComparison.Ordinal);
         var passwordIndex = markup.IndexOf("Label=\"Password\"", StringComparison.Ordinal);
@@ -3436,6 +3451,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("justify-content: space-between;");
         css.ShouldContain(".scenario-step-editor-state");
         css.ShouldContain(".scenario-step-editor-state.ready");
+        css.ShouldContain("display: none;");
         css.ShouldContain(".scenario-step-editor-state.invalid");
         css.ShouldContain(".scenario-step-editor-action-buttons");
         css.ShouldContain("min-height: 28px;");
@@ -3547,6 +3563,8 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".new-app-dialog-title");
         css.ShouldContain(".new-app-dialog-status");
+        css.ShouldContain(".new-app-dialog-status.ready");
+        css.ShouldContain("display: none;");
         css.ShouldContain(".new-app-dialog-section");
         css.ShouldContain("border: 1px solid var(--flux-border-soft);");
         css.ShouldContain(".new-app-dialog-grid.connection");
@@ -3617,6 +3635,8 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".add-connection-dialog-title");
         css.ShouldContain(".add-connection-dialog-status");
+        css.ShouldContain(".add-connection-dialog-status.ready");
+        css.ShouldContain("display: none;");
         css.ShouldContain(".add-connection-dialog-section");
         css.ShouldContain("border: 1px solid var(--flux-border-soft);");
         css.ShouldContain(".add-connection-dialog-grid.broker");
@@ -3751,6 +3771,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".metric-create-title-icon");
         css.ShouldContain(".metric-create-title-copy");
         css.ShouldContain(".metric-create-status");
+        css.ShouldContain(".metric-create-status.ready");
+        css.ShouldContain("display: none;");
         css.ShouldContain("grid-template-columns: 26px minmax(0, 1fr) auto;");
         css.ShouldContain("border: 1px solid var(--flux-border-soft);");
         css.ShouldContain("border-radius: 6px;");
@@ -3818,6 +3840,18 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldContain("role=\"alert\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
             .ShouldContain("role=\"alert\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor.css"))
+            .ShouldContain(".metric-rename-status.ready");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor.css"))
+            .ShouldContain("display: none;");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor.css"))
+            .ShouldContain(".metric-duplicate-status.ready");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor.css"))
+            .ShouldContain("display: none;");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor.css"))
+            .ShouldContain(".metric-type-change-status.ready");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor.css"))
+            .ShouldContain("display: none;");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor.css"))
             .ShouldContain("height: min(304px, calc(100vh - 220px));");
     }
@@ -3858,6 +3892,8 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".new-pipeline-dialog-title");
         css.ShouldContain(".new-pipeline-dialog-status");
+        css.ShouldContain(".new-pipeline-dialog-status.ready");
+        css.ShouldContain("display: none;");
         css.ShouldContain(".new-pipeline-dialog-section");
         css.ShouldContain("border: 1px solid var(--flux-border-soft);");
         css.ShouldContain(".new-pipeline-dialog-field");
@@ -3902,6 +3938,8 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".save-as-dialog-title");
         css.ShouldContain(".save-as-dialog-status");
+        css.ShouldContain(".save-as-dialog-status.ready");
+        css.ShouldContain("display: none;");
         css.ShouldContain(".save-as-dialog-section");
         css.ShouldContain("border: 1px solid var(--flux-border-soft);");
         css.ShouldContain(".save-as-dialog-helper");
@@ -3956,6 +3994,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".start-recording-title-icon");
         css.ShouldContain(".start-recording-title-copy");
         css.ShouldContain(".start-recording-status");
+        css.ShouldContain("display: none;");
         css.ShouldContain(".start-recording-section");
         css.ShouldContain("border: 1px solid var(--flux-border-soft);");
         css.ShouldContain("border-radius: 6px;");
@@ -5694,6 +5733,140 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void MqttTriggerNodeWidget_UsesCompactSummaryAndStructuredEditor()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "MqttTrigger",
+            "MqttTriggerNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "MqttTrigger",
+            "MqttTriggerNodeWidget.razor.css"));
+
+        markup.ShouldContain("EditDialogMaxWidth=\"@MaxWidth.Medium\"");
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldNotContain("<HeaderBadge>");
+        markup.ShouldNotContain("mqtt-trigger-component-badge");
+        markup.ShouldNotContain("mqtt-trigger-component-icon");
+        markup.ShouldNotContain("mqtt-trigger-icon-node");
+        markup.ShouldContain("mqtt-trigger-summary");
+        markup.ShouldContain("mqtt-trigger-meta");
+        markup.ShouldContain("mqtt-trigger-meta-item broker");
+        markup.ShouldContain("mqtt-trigger-subscription-list");
+        markup.ShouldContain("mqtt-trigger-subscription-row");
+        markup.ShouldContain("mqtt-trigger-token");
+        markup.ShouldContain("Q@(subscription.QualityOfService)");
+        markup.ShouldContain("TopicClass(subscription)");
+        markup.ShouldContain("AdditionalSubscriptionCount");
+        markup.ShouldContain("_boundedCapacity");
+        markup.ShouldContain("Label=\"Output buffer\"");
+        markup.ShouldContain("MqttTriggerNodeModel.NormalizeBoundedCapacity");
+        markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
+        markup.ShouldContain("mqtt-trigger-editor");
+        markup.ShouldContain("mqtt-trigger-editor-section");
+        markup.ShouldContain("aria-label=\"Broker settings\"");
+        markup.ShouldContain("aria-label=\"Subscriptions\"");
+        markup.ShouldNotContain("mqtt-trigger-section-title");
+        markup.ShouldNotContain("mqtt-trigger-subscription-head");
+        markup.ShouldNotContain("Icons.Material.Filled.Dns");
+        markup.ShouldNotContain("Icons.Material.Filled.Topic");
+        markup.ShouldContain("mqtt-trigger-editor-grid");
+        markup.ShouldContain("<MudTable T=\"MqttTriggerSubscriptionEditorRow\"");
+        markup.ShouldContain("Items=\"@SubscriptionEditorRows\"");
+        markup.ShouldContain("Elevation=\"0\"");
+        markup.ShouldContain("mqtt-trigger-subscription-table");
+        markup.ShouldContain("<MudTh>Topic filter</MudTh>");
+        markup.ShouldContain("<MudTh>QoS</MudTh>");
+        markup.ShouldContain("<MudTh>Retained</MudTh>");
+        markup.ShouldContain("<MudTh>Keep flag</MudTh>");
+        markup.ShouldContain("Class=\"mqtt-trigger-add-cell\"");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.Add\"");
+        markup.ShouldContain("Variant=\"Variant.Text\"");
+        markup.ShouldContain("Color=\"Color.Primary\"");
+        markup.ShouldContain("aria-label=\"Add subscription\"");
+        markup.ShouldContain("<MudTd DataLabel=\"Topic filter\">");
+        markup.ShouldContain("<MudTd DataLabel=\"QoS\">");
+        markup.ShouldContain("<MudTd DataLabel=\"Retained\">");
+        markup.ShouldContain("<MudTd DataLabel=\"Keep flag\">");
+        markup.ShouldContain("<NoRecordsContent>");
+        markup.ShouldContain("Add at least one subscription before saving.");
+        markup.ShouldContain("MqttTriggerSubscriptionEditorRow");
+        markup.ShouldContain("private IEnumerable<MqttTriggerSubscriptionEditorRow> SubscriptionEditorRows");
+        markup.ShouldContain("ValueChanged=\"@(v => UpdateTopicFilterAsync(index, v))\"");
+        markup.ShouldContain("private async Task UpdateTopicFilterAsync");
+        markup.ShouldContain("private string? ValidateEditor()");
+        markup.ShouldContain("Add at least one subscription.");
+        markup.ShouldContain("if (subscriptions.Count == 0)");
+        markup.ShouldNotContain("@if (_draftSubscriptions.Count > 1)");
+        markup.ShouldNotContain("mqtt-trigger-remove-placeholder");
+        markup.ShouldNotContain("_draftSubscriptions.Count <= 1");
+        markup.ShouldNotContain("Disabled=\"@(_draftSubscriptions.Count <= 1)\"");
+        markup.ShouldContain("Class=\"mqtt-trigger-qos-select\"");
+        markup.ShouldContain("mqtt-trigger-table-check");
+        markup.ShouldContain("Receive retained messages for subscription");
+        markup.ShouldContain("Keep retain flag for subscription");
+        markup.ShouldNotContain("AdornmentIcon=\"@Icons.Material.Filled.Tag\"");
+        markup.ShouldNotContain("mqtt-trigger-hero");
+        markup.ShouldNotContain("mqtt-trigger-status");
+        markup.ShouldNotContain("mqtt-trigger-preview-head");
+        markup.ShouldNotContain("mqtt-trigger-row-index");
+        markup.ShouldNotContain("mqtt-trigger-editor-columns");
+        markup.ShouldNotContain("mqtt-trigger-flag-group");
+        markup.ShouldNotContain("<table class=\"mqtt-trigger-subscription-table\"");
+        markup.ShouldNotContain("OnClick=\"@AddRow\">Add subscription</MudButton>");
+        markup.ShouldNotContain("StartIcon=\"@Icons.Material.Filled.Add\"");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.Add\"\r\n                                                   Variant=\"Variant.Outlined\"");
+        markup.ShouldNotContain("flow-node-filters");
+        markup.ShouldNotContain("Variant=\"Variant.Filled\"");
+        markup.ShouldNotContain("Class=\"trigger-qos-select\"");
+
+        css.ShouldContain(".mqtt-trigger-summary");
+        css.ShouldNotContain(".mqtt-trigger-component-badge");
+        css.ShouldNotContain(".mqtt-trigger-component-icon");
+        css.ShouldNotContain(".mqtt-trigger-icon-node");
+        css.ShouldContain(".mqtt-trigger-editor-section");
+        css.ShouldContain("padding: 0;");
+        css.ShouldNotContain("background: var(--flux-surface);");
+        css.ShouldNotContain("border: 1px solid var(--flux-border-soft);");
+        css.ShouldNotContain(".mqtt-trigger-section-title");
+        css.ShouldNotContain(".mqtt-trigger-subscription-head");
+        css.ShouldContain(".mqtt-trigger-subscription-table");
+        css.ShouldContain(".mqtt-trigger-col-qos");
+        css.ShouldContain(".mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-subscription-table .mud-table-root)");
+        css.ShouldContain(".mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-subscription-table .mud-table-head .mud-table-cell)");
+        css.ShouldContain(".mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-subscription-table .mud-table-body .mud-table-cell)");
+        css.ShouldContain("color: color-mix(in srgb, var(--mud-palette-text-primary) 80%, var(--mud-palette-text-secondary));");
+        css.ShouldContain("color: color-mix(in srgb, var(--mud-palette-text-secondary) 88%, var(--mud-palette-text-primary));");
+        css.ShouldContain(".mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-add-cell)");
+        css.ShouldContain(".mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-add)");
+        css.ShouldContain(".mqtt-trigger-table-check");
+        css.ShouldContain(".mqtt-trigger-empty");
+        css.ShouldContain("min-width: 640px;");
+        css.ShouldNotContain(".mqtt-trigger-hero");
+        css.ShouldNotContain(".mqtt-trigger-status");
+        css.ShouldNotContain(".mqtt-trigger-preview-head");
+        css.ShouldNotContain(".mqtt-trigger-row-index");
+        css.ShouldNotContain(".mqtt-trigger-editor-columns");
+        css.ShouldNotContain(".mqtt-trigger-editor-row");
+        css.ShouldNotContain(".mqtt-trigger-flag-group");
+        css.ShouldContain("@media (max-width: 720px)");
+    }
+
+    [Fact]
     public void NodeWidgetShell_UsesCompactNodeChrome()
     {
         var root = FindRepositoryRoot();
@@ -5721,9 +5894,15 @@ public sealed class DashboardEventFilterCatalogTests
             "FlowDesigner.razor.css"));
 
         shellMarkup.ShouldContain("flow-node-action flow-node-toggle");
+        shellMarkup.ShouldContain("ShowHeaderIcon");
+        shellMarkup.ShouldContain("ShowDisplayName");
+        shellMarkup.ShouldContain("ShowCategoryChip");
+        shellMarkup.ShouldContain("HeaderBadge");
+        shellMarkup.ShouldContain("EditorValidationError");
         shellMarkup.ShouldContain("flow-node-type-icon");
         shellMarkup.ShouldContain("flow-node-name");
         shellMarkup.ShouldContain("flow-node-display-name");
+        shellMarkup.ShouldNotContain("Color=\"Color.Secondary\" Class=\"flow-node-display-name\"");
         shellMarkup.ShouldContain("flow-node-action flow-node-edit");
         shellMarkup.ShouldContain("Icons.Material.Filled.Settings");
         shellMarkup.ShouldContain("flow-node-category-chip");
@@ -5736,8 +5915,14 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("flex: 0 0 24px;");
         css.ShouldContain(".flow-designer-root ::deep .flow-node-category-chip");
         css.ShouldContain("max-width: 72px;");
+        css.ShouldContain(".flow-designer-root ::deep .flow-node-display-name");
+        css.ShouldContain("color: color-mix(in srgb, var(--mud-palette-text-secondary) 72%, var(--mud-palette-text-disabled));");
+        css.ShouldContain("font-weight: 620;");
+        css.ShouldContain("opacity: 0.9;");
         css.ShouldContain(".flow-designer-root ::deep .flow-node-divider");
         css.ShouldContain(".flow-designer-root ::deep .flow-node-activity");
+        css.ShouldContain("align-items: center;");
+        css.ShouldContain("min-height: 32px;");
         css.ShouldContain("margin: 6px -8px -6px;");
         css.ShouldContain("grid-template-columns: 16px auto minmax(0, 1fr);");
         css.ShouldContain(".flow-designer-root ::deep .node-stat-icon");
@@ -5867,11 +6052,13 @@ public sealed class DashboardEventFilterCatalogTests
             "NodeEditDialog.razor.css"));
 
         markup.ShouldContain("node-edit-dialog-title");
-        markup.ShouldContain("node-edit-dialog-title-meta");
-        markup.ShouldContain("node-edit-dialog-shell");
+        markup.ShouldContain("node-edit-dialog-heading");
+        markup.ShouldContain("node-edit-dialog-status");
+        markup.ShouldContain("node-edit-dialog-content");
         markup.ShouldContain("role=\"form\" aria-label=\"Edit node\"");
         markup.ShouldContain("node-edit-dialog-section node-edit-dialog-identity");
-        markup.ShouldContain("node-edit-dialog-section node-edit-dialog-editor");
+        markup.ShouldContain("aria-label=\"Node identity\"");
+        markup.ShouldContain("node-edit-dialog-editor");
         markup.ShouldContain("Icons.Material.Filled.Settings");
         markup.ShouldContain("aria-describedby=\"node-edit-dialog-status\"");
         markup.ShouldContain("role=\"status\"");
@@ -5879,27 +6066,57 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("OnNodeIdKeyDown");
         markup.ShouldContain("SubmitStatusText");
         markup.ShouldContain("SubmitStatusClass");
+        markup.ShouldContain("<span id=\"node-edit-dialog-status\"");
+        markup.ShouldContain("class=\"@SubmitStatusClass\"");
+        markup.ShouldContain("[Parameter] public Func<string?>? EditorValidationError");
+        markup.ShouldContain("private string? _editorError;");
+        markup.ShouldContain("private string? EditorError => _editorError;");
+        markup.ShouldContain("private void RefreshValidationState()");
+        markup.ShouldContain("RefreshValidationState();");
+        markup.ShouldContain("string.IsNullOrWhiteSpace(EditorError)");
+        markup.ShouldContain("NodeIdError ?? EditorError ?? \"Review required\"");
         markup.ShouldContain("node-edit-dialog-actions");
         markup.ShouldContain("aria-label=\"Cancel node edit\"");
         markup.ShouldContain("aria-label=\"Save node edit\"");
         markup.ShouldNotContain("HelperText=");
         markup.ShouldNotContain("ErrorText=");
         markup.ShouldNotContain("node-edit-dialog-meta-strip");
-        markup.ShouldNotContain("<MudText Typo=\"Typo.h6\"");
+        markup.ShouldNotContain("node-edit-dialog-title-meta");
+        markup.ShouldNotContain("node-edit-dialog-section-title");
+        markup.ShouldNotContain("node-edit-dialog-section-head");
+        markup.ShouldNotContain("node-edit-dialog-section node-edit-dialog-editor");
+        markup.ShouldNotContain("Icons.Material.Filled.Badge");
         markup.ShouldNotContain("Must be unique within the workflow.");
+        markup.ShouldNotContain("@key=\"SubmitStatusKey\"");
 
-        css.ShouldContain(".node-edit-dialog-shell");
+        css.ShouldContain(".node-edit-dialog-content");
+        css.ShouldContain("background: var(--flux-surface);");
+        css.ShouldContain("border: 1px solid var(--flux-border-soft);");
+        css.ShouldContain("padding: 12px;");
         css.ShouldContain("max-height: min(70vh, 640px);");
         css.ShouldContain(".node-edit-dialog-section");
-        css.ShouldContain(".node-edit-dialog-shell ::deep .mud-input-control");
-        css.ShouldContain(".node-edit-dialog-editor ::deep .mapper-workbench .mapper-panel");
+        css.ShouldContain("padding: 0;");
+        css.ShouldContain("color: color-mix(in srgb, var(--mud-palette-text-primary) 78%, var(--mud-palette-text-secondary));");
+        css.ShouldContain(".node-edit-dialog-editor");
+        css.ShouldContain("display: contents;");
+        css.ShouldContain(".node-edit-dialog-content ::deep(.mud-input-control)");
+        css.ShouldContain(".node-edit-dialog-content ::deep(.mud-input-label)");
+        css.ShouldContain(".node-edit-dialog-content ::deep(.mud-input-root)");
+        css.ShouldContain("color: color-mix(in srgb, var(--mud-palette-text-primary) 80%, var(--mud-palette-text-secondary));");
+        css.ShouldContain(".node-edit-dialog-editor ::deep(.mapper-workbench .mapper-panel)");
         css.ShouldContain("height: 360px;");
         css.ShouldContain(".node-edit-dialog-action-status");
-        css.ShouldContain(".node-edit-dialog-action-status.is-error");
-        css.ShouldContain(".node-edit-dialog-title-meta span:not(:last-child)::after");
+        css.ShouldContain(".node-edit-dialog-action-status.ready");
         css.ShouldContain("min-height: 28px;");
+        css.ShouldContain(".node-edit-dialog-actions");
+        css.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 72%, var(--flux-surface));");
+        css.ShouldNotContain("padding: 8px 10px;");
         css.ShouldContain("@media (max-width: 700px)");
-        css.ShouldNotContain(".node-edit-dialog-shell ::deep .mud-input-slot");
+        css.ShouldNotContain(".node-edit-dialog-status");
+        css.ShouldNotContain(".node-edit-dialog-section-title");
+        css.ShouldNotContain(".node-edit-dialog-section-head");
+        css.ShouldNotContain(".node-edit-dialog-title-meta");
+        css.ShouldNotContain(".node-edit-dialog-content ::deep(.mud-input-slot)");
         css.ShouldNotContain(".node-edit-dialog-meta-strip");
     }
 
@@ -6232,6 +6449,17 @@ public sealed class DashboardEventFilterCatalogTests
         appCss.ShouldContain(".flux-theme-dark .mud-overlay.mud-overlay-popover,");
         appCss.ShouldContain(".flux-theme-light .mud-overlay.mud-overlay-popover .mud-overlay-scrim");
         appCss.ShouldContain("background-color: transparent !important;");
+        appCss.ShouldContain(".flux-theme-scope .mud-dialog .mud-dialog-actions");
+        appCss.ShouldContain("border: 1px solid var(--flux-border-soft);");
+        appCss.ShouldContain("margin: 0 20px 18px;");
+        appCss.ShouldContain("padding: 12px;");
+        appCss.ShouldContain("width: auto;");
+        appCss.ShouldContain(".flux-theme-scope .mud-dialog .mud-dialog-actions > *");
+        appCss.ShouldContain(".flux-theme-scope .mud-dialog .mud-dialog-title .mud-button-close");
+        appCss.ShouldContain(".flux-theme-scope .mud-dialog .mud-dialog-title .mud-button-close:hover");
+        appCss.ShouldContain(".mud-dialog.dashboard-query-dialog-modal .mud-dialog-actions");
+        appCss.ShouldNotContain("padding: 14px 20px 18px;");
+        appCss.ShouldNotContain("border-top: 1px solid var(--flux-border, #1d232e);");
         appCss.ShouldNotContain(".flux-theme-dark .mud-overlay {");
         appCss.ShouldNotContain(".flux-theme-light .mud-overlay {");
         appCss.ShouldContain("max-height: min(56vh, 380px);");

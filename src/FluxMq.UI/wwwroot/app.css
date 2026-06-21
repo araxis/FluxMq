@@ -526,6 +526,37 @@ select {
     background-color: transparent !important;
 }
 
+.flux-theme-scope .mud-dialog .mud-dialog-actions {
+    background: var(--flux-surface);
+    border: 1px solid var(--flux-border-soft);
+    border-radius: 6px;
+    box-sizing: border-box;
+    gap: 8px;
+    margin: 0 20px 18px;
+    padding: 12px;
+    width: auto;
+}
+
+.flux-theme-scope .mud-dialog .mud-dialog-actions > * {
+    min-width: 0;
+    width: 100%;
+}
+
+.flux-theme-scope .mud-dialog .mud-dialog-title .mud-button-close {
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    height: 28px;
+    padding: 0;
+    right: 12px;
+    top: 10px;
+    width: 28px;
+}
+
+.flux-theme-scope .mud-dialog .mud-dialog-title .mud-button-close:hover {
+    background: var(--flux-surface-2);
+    color: var(--mud-palette-text-primary);
+}
+
 .mud-dialog.dashboard-query-dialog-modal {
     background:
         linear-gradient(180deg, color-mix(in srgb, var(--flux-surface-2, #161b24) 96%, transparent), var(--flux-surface, #11151c)) !important;
@@ -551,10 +582,13 @@ select {
 }
 
 .mud-dialog.dashboard-query-dialog-modal .mud-dialog-actions {
-    background: color-mix(in srgb, var(--flux-surface-2, #161b24) 86%, var(--flux-surface, #11151c));
-    border-top: 1px solid var(--flux-border, #1d232e);
+    background: var(--flux-surface);
+    border: 1px solid var(--flux-border-soft);
+    border-radius: 6px;
     gap: 8px;
-    padding: 8px 12px;
+    margin: 0 20px 18px;
+    padding: 12px;
+    width: auto;
 }
 
 /* Expression preview in collapsed node body */

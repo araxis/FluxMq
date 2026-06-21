@@ -5,29 +5,15 @@
 <MudDialog>
     <TitleContent>
         <div class="node-edit-dialog-title">
-            <div class="node-edit-dialog-title-icon" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.Settings" Color="@CategoryColor" Size="Size.Small" />
-            </div>
-            <div class="node-edit-dialog-title-copy">
-                <strong class="node-edit-dialog-title-name">@NodeDisplayName</strong>
-                <div class="node-edit-dialog-title-meta">
-                    <span>@NodeId</span>
-                    @if (!string.IsNullOrWhiteSpace(WorkflowName))
-                    {
-                        <span>@WorkflowName</span>
-                    }
-                    <span>Edit node</span>
-                </div>
-            </div>
+            <span class="node-edit-dialog-title-icon" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" />
+            </span>
+            <MudText Typo="Typo.h6" Class="node-edit-dialog-heading">@NodeDisplayName</MudText>
         </div>
     </TitleContent>
     <DialogContent>
-        <div class="node-edit-dialog-shell" role="form" aria-label="Edit node">
-            <section class="node-edit-dialog-section node-edit-dialog-identity">
-                <div class="node-edit-dialog-section-head">
-                    <MudIcon Icon="@Icons.Material.Filled.Badge" Size="Size.Small" />
-                    <span>Identity</span>
-                </div>
+        <div class="node-edit-dialog-content" role="form" aria-label="Edit node">
+            <section class="node-edit-dialog-section node-edit-dialog-identity" aria-label="Node identity">
                 <MudTextField T="string"
                               @bind-Value="_nodeId"
                               Label="Node ID"
@@ -42,25 +28,18 @@
             </section>
             @if (EditorContent is not null)
             {
-                <section class="node-edit-dialog-section node-edit-dialog-editor">
-                    <div class="node-edit-dialog-section-head">
-                        <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" />
-                        <span>Properties</span>
-                    </div>
+                <div class="node-edit-dialog-editor">
                     @EditorContent
-                </section>
+                </div>
             }
         </div>
     </DialogContent>
     <DialogActions>
         <div class="node-edit-dialog-actions">
-            <div id="node-edit-dialog-status"
-                 class="node-edit-dialog-action-status @SubmitStatusClass"
-                 role="status"
-                 aria-live="polite">
-                <MudIcon Icon="@SubmitStatusIcon" Color="@SubmitStatusColor" Size="Size.Small" />
-                <span>@SubmitStatusText</span>
-            </div>
+            <span id="node-edit-dialog-status"
+                  class="@SubmitStatusClass"
+                  role="status"
+                  aria-live="polite">@SubmitStatusText</span>
             <span class="node-edit-dialog-action-spacer"></span>
             <MudButton OnClick="@Cancel"
                        Variant="Variant.Text"
@@ -87,34 +66,31 @@
     [Parameter] public string WorkflowName { get; set; } = "";
     [Parameter] public Color CategoryColor { get; set; } = Color.Primary;
     [Parameter] public RenderFragment? EditorContent { get; set; }
+    [Parameter] public Func<string?>? EditorValidationError { get; set; }
     [Parameter] public EventCallback OnSave { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public FlowWorkspaceService? Flow { get; set; }
 
     private string _nodeId = "";
     private string _registeredNodeId = "";
+    private string? _editorError;
 
     private string? NodeIdError => ValidateNodeId(NormalizedNodeId);
 
-    private bool CanSubmit => string.IsNullOrWhiteSpace(NodeIdError);
+    private string? EditorError => _editorError;
+
+    private bool CanSubmit => string.IsNullOrWhiteSpace(NodeIdError) &&
+        string.IsNullOrWhiteSpace(EditorError);
 
     private string NormalizedNodeId => _nodeId.Trim();
 
     private string SubmitStatusText => CanSubmit
         ? "Ready to save"
-        : NodeIdError ?? "Review required";
-
-    private string SubmitStatusIcon => CanSubmit
-        ? Icons.Material.Filled.CheckCircle
-        : Icons.Material.Filled.ErrorOutline;
-
-    private Color SubmitStatusColor => CanSubmit
-        ? CategoryColor
-        : Color.Error;
+        : NodeIdError ?? EditorError ?? "Review required";
 
     private string SubmitStatusClass => CanSubmit
-        ? "is-ready"
-        : "is-error";
+        ? "node-edit-dialog-action-status ready"
+        : "node-edit-dialog-action-status";
 
     protected override void OnParametersSet()
     {
@@ -131,6 +107,8 @@
             _registeredNodeId = NodeId;
             EditorRefresh.Register(NodeId, RequestRenderAsync);
         }
+
+        RefreshValidationState();
     }
 
     public void Dispose()
@@ -141,12 +119,18 @@
         }
     }
 
-    private Task RequestRenderAsync() => InvokeAsync(StateHasChanged);
+    private Task RequestRenderAsync()
+        => InvokeAsync(() =>
+        {
+            RefreshValidationState();
+            StateHasChanged();
+        });
 
     private async Task Submit()
     {
+        RefreshValidationState();
         var nextNodeId = NormalizedNodeId;
-        if (!string.IsNullOrWhiteSpace(ValidateNodeId(nextNodeId)))
+        if (!CanSubmit || !string.IsNullOrWhiteSpace(ValidateNodeId(nextNodeId)))
         {
             return;
         }
@@ -167,11 +151,15 @@
 
     private async Task OnNodeIdKeyDown(KeyboardEventArgs args)
     {
+        RefreshValidationState();
         if (args.Key == "Enter" && CanSubmit)
         {
             await Submit();
         }
     }
+
+    private void RefreshValidationState()
+        => _editorError = EditorValidationError?.Invoke();
 
     private async Task Cancel()
     {

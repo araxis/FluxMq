@@ -7,107 +7,226 @@
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.Bolt"
                  CategoryColor="@Color.Primary"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false"
+                 EditDialogMaxWidth="@MaxWidth.Medium"
                  OnSave="@SaveAsync"
+                 EditorValidationError="@ValidateEditor"
                  OnCancel="@LoadDraft">
     <Body>
-        <MudStack Spacing="1" Class="mt-1">
-            <Stat Icon="@Icons.Material.Filled.Cable" Label="Broker" Value="@(Model.Connection.Length > 0 ? Model.Connection : "—")" />
-        </MudStack>
-        <div class="flow-node-filters mt-1 d-flex flex-wrap gap-1">
-            @foreach (var subscription in Model.Subscriptions)
-            {
-                <MudChip T="string"
-                         Size="Size.Small"
-                         Variant="Variant.Filled"
-                         Color="@(subscription.TopicFilter.StartsWith('$') ? Color.Warning : Color.Primary)"
-                         Icon="@Icons.Material.Filled.Topic">
-                    @subscription.TopicFilter · QoS @subscription.QualityOfService
-                </MudChip>
-            }
+        <div class="mqtt-trigger-summary">
+            <div class="mqtt-trigger-meta">
+                <div class="mqtt-trigger-meta-item broker">
+                    <span>Broker</span>
+                    <strong title="@BrokerDisplay">@BrokerDisplay</strong>
+                </div>
+                <div class="mqtt-trigger-meta-item">
+                    <span>Filters</span>
+                    <strong>@SubscriptionCountLabel</strong>
+                </div>
+                <div class="mqtt-trigger-meta-item">
+                    <span>Output buffer</span>
+                    <strong>@MqttTriggerNodeModel.NormalizeBoundedCapacity(Model.BoundedCapacity)</strong>
+                </div>
+            </div>
+
+            <div class="mqtt-trigger-subscription-list" aria-label="Subscription preview">
+                @foreach (var subscription in PreviewSubscriptions)
+                {
+                    <div class="mqtt-trigger-subscription-row">
+                        <span class="@TopicClass(subscription)" title="@SubscriptionTopic(subscription)">@SubscriptionTopic(subscription)</span>
+                        <span class="mqtt-trigger-token qos">Q@(subscription.QualityOfService)</span>
+                        <span class="@FlagTokenClass(subscription.ReceiveRetainedMessages, "retained")"
+                              title="@ReceiveRetainedTitle(subscription)">@ReceiveRetainedLabel(subscription)</span>
+                        <span class="@FlagTokenClass(subscription.RetainAsPublished, "retain-flag")"
+                              title="@RetainFlagTitle(subscription)">@RetainFlagLabel(subscription)</span>
+                    </div>
+                }
+                @if (AdditionalSubscriptionCount > 0)
+                {
+                    <div class="mqtt-trigger-more">+@AdditionalSubscriptionCount more</div>
+                }
+            </div>
         </div>
     </Body>
     <Editor>
-        @{
-            var brokerOptions = BrokerOptions;
-        }
-        @if (brokerOptions.Count > 0)
-        {
-            <MudSelect T="string" Label="Broker connection" @bind-Value="_connection"
-                       Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true">
-                @foreach (var option in brokerOptions)
-                {
-                    <MudSelectItem Value="@option.Name">@option.Label</MudSelectItem>
-                }
-            </MudSelect>
-        }
-        else
-        {
-            <MudTextField T="string"
-                          Label="Connection name"
-                          @bind-Value="_connection"
-                          Variant="Variant.Outlined"
-                          Margin="Margin.Dense"
-                          HelperText="Add a broker connection in the left panel to enable the dropdown." />
-        }
-        <MudText Typo="Typo.caption" Color="Color.Secondary">Subscriptions</MudText>
-        @for (var i = 0; i < _draftSubscriptions.Count; i++)
-        {
-            var index = i;
-            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
-                <MudTextField T="string"
-                              Value="@_draftSubscriptions[index].TopicFilter"
-                              ValueChanged="@(v => _draftSubscriptions[index] = _draftSubscriptions[index] with { TopicFilter = v ?? string.Empty })"
-                              Placeholder="topic/#"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              Class="flex-grow-1" />
-                <MudSelect T="int"
-                           Value="@_draftSubscriptions[index].QualityOfService"
-                           ValueChanged="@(value => _draftSubscriptions[index] = _draftSubscriptions[index] with { QualityOfService = value })"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           Dense="true"
-                           Class="trigger-qos-select"
-                           Style="width: 112px; min-width: 112px;"
-                           Label="QoS">
-                    <MudSelectItem Value="0">QoS 0</MudSelectItem>
-                    <MudSelectItem Value="1">QoS 1</MudSelectItem>
-                    <MudSelectItem Value="2">QoS 2</MudSelectItem>
-                </MudSelect>
-                <MudTooltip Text="Ask the broker to send retained messages when this subscription starts.">
-                    <MudCheckBox T="bool"
-                                 Value="@_draftSubscriptions[index].ReceiveRetainedMessages"
-                                 ValueChanged="@(value => _draftSubscriptions[index] = _draftSubscriptions[index] with { ReceiveRetainedMessages = value })"
-                                 Dense="true"
-                                 Label="Receive retained" />
-                </MudTooltip>
-                <MudTooltip Text="Keep the original MQTT retain flag on messages delivered to the pipeline.">
-                    <MudCheckBox T="bool"
-                                 Value="@_draftSubscriptions[index].RetainAsPublished"
-                                 ValueChanged="@(value => _draftSubscriptions[index] = _draftSubscriptions[index] with { RetainAsPublished = value })"
-                                 Dense="true"
-                                 Label="Keep retain flag" />
-                </MudTooltip>
-                <MudIconButton Size="Size.Small"
-                               Icon="@Icons.Material.Filled.Close"
-                               OnClick="@(() => RemoveRowAsync(index))" />
-            </MudStack>
-        }
-        <MudButton Size="Size.Small"
-                   Variant="Variant.Outlined"
-                   StartIcon="@Icons.Material.Filled.Add"
-                   OnClick="@AddRow">Add subscription</MudButton>
+        <MudStack Spacing="2" Class="mqtt-trigger-editor">
+            <section class="mqtt-trigger-editor-section" aria-label="Broker settings">
+                <div class="mqtt-trigger-editor-grid">
+                    @{
+                        var brokerOptions = BrokerOptions;
+                    }
+                    @if (brokerOptions.Count > 0)
+                    {
+                        <MudSelect T="string"
+                                   Label="Broker connection"
+                                   @bind-Value="_connection"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Dense="true"
+                                   Class="mqtt-trigger-broker-field">
+                            @foreach (var option in brokerOptions)
+                            {
+                                <MudSelectItem Value="@option.Name">@option.Label</MudSelectItem>
+                            }
+                        </MudSelect>
+                    }
+                    else
+                    {
+                        <MudTextField T="string"
+                                      Label="Connection name"
+                                      @bind-Value="_connection"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      HelperText="Add a broker connection in the left panel to enable the dropdown."
+                                      Class="mqtt-trigger-broker-field" />
+                    }
+                    <MudNumericField T="int"
+                                     Label="Output buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="mqtt-trigger-buffer-field" />
+                </div>
+            </section>
+
+            <section class="mqtt-trigger-editor-section compact" aria-label="Subscriptions">
+                <div class="mqtt-trigger-subscription-editor">
+                    <MudTable T="MqttTriggerSubscriptionEditorRow"
+                              Items="@SubscriptionEditorRows"
+                              Dense="true"
+                              Elevation="0"
+                              Class="mqtt-trigger-subscription-table"
+                              aria-label="Subscription editor">
+                        <ColGroup>
+                            <col class="mqtt-trigger-col-topic" />
+                            <col class="mqtt-trigger-col-qos" />
+                            <col class="mqtt-trigger-col-flag" />
+                            <col class="mqtt-trigger-col-flag" />
+                            <col class="mqtt-trigger-col-action" />
+                        </ColGroup>
+                        <HeaderContent>
+                            <MudTh>Topic filter</MudTh>
+                            <MudTh>QoS</MudTh>
+                            <MudTh>Retained</MudTh>
+                            <MudTh>Keep flag</MudTh>
+                            <MudTh Class="mqtt-trigger-add-cell">
+                                <MudTooltip Text="Add subscription">
+                                    <MudIconButton Size="Size.Small"
+                                                   Icon="@Icons.Material.Filled.Add"
+                                                   Variant="Variant.Text"
+                                                   Color="Color.Primary"
+                                                   Class="mqtt-trigger-add"
+                                                   aria-label="Add subscription"
+                                                   OnClick="@AddRow" />
+                                </MudTooltip>
+                            </MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            @{
+                                var index = context.Index;
+                            }
+                            <MudTd DataLabel="Topic filter">
+                                <MudTextField T="string"
+                                              Value="@_draftSubscriptions[index].TopicFilter"
+                                              ValueChanged="@(v => UpdateTopicFilterAsync(index, v))"
+                                              Placeholder="topic/#"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Class="mqtt-trigger-topic-input"
+                                              aria-label="@($"Topic filter {index + 1}")" />
+                            </MudTd>
+                            <MudTd DataLabel="QoS">
+                                <MudSelect T="int"
+                                           Value="@_draftSubscriptions[index].QualityOfService"
+                                           ValueChanged="@(value => _draftSubscriptions[index] = _draftSubscriptions[index] with { QualityOfService = value })"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Dense="true"
+                                           Class="mqtt-trigger-qos-select"
+                                           aria-label="@($"QoS for subscription {index + 1}")">
+                                    <MudSelectItem Value="0">QoS 0</MudSelectItem>
+                                    <MudSelectItem Value="1">QoS 1</MudSelectItem>
+                                    <MudSelectItem Value="2">QoS 2</MudSelectItem>
+                                </MudSelect>
+                            </MudTd>
+                            <MudTd DataLabel="Retained">
+                                <div class="mqtt-trigger-table-check">
+                                    <MudTooltip Text="Ask the broker to send retained messages when this subscription starts.">
+                                        <MudCheckBox T="bool"
+                                                     Value="@_draftSubscriptions[index].ReceiveRetainedMessages"
+                                                     ValueChanged="@(value => _draftSubscriptions[index] = _draftSubscriptions[index] with { ReceiveRetainedMessages = value })"
+                                                     Dense="true"
+                                                     Class="mqtt-trigger-check"
+                                                     aria-label="@($"Receive retained messages for subscription {index + 1}")" />
+                                    </MudTooltip>
+                                </div>
+                            </MudTd>
+                            <MudTd DataLabel="Keep flag">
+                                <div class="mqtt-trigger-table-check">
+                                    <MudTooltip Text="Keep the original MQTT retain flag on messages delivered to the pipeline.">
+                                        <MudCheckBox T="bool"
+                                                     Value="@_draftSubscriptions[index].RetainAsPublished"
+                                                     ValueChanged="@(value => _draftSubscriptions[index] = _draftSubscriptions[index] with { RetainAsPublished = value })"
+                                                     Dense="true"
+                                                     Class="mqtt-trigger-check"
+                                                     aria-label="@($"Keep retain flag for subscription {index + 1}")" />
+                                    </MudTooltip>
+                                </div>
+                            </MudTd>
+                            <MudTd DataLabel="Action" Class="mqtt-trigger-action-cell">
+                                <MudTooltip Text="Remove subscription">
+                                    <MudIconButton Size="Size.Small"
+                                                   Icon="@Icons.Material.Filled.Close"
+                                                   Class="mqtt-trigger-remove"
+                                                   aria-label="@($"Remove subscription {index + 1}")"
+                                                   OnClick="@(() => RemoveRowAsync(index))" />
+                                </MudTooltip>
+                            </MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <div class="mqtt-trigger-empty" role="status" aria-live="polite">
+                                Add at least one subscription before saving.
+                            </div>
+                        </NoRecordsContent>
+                    </MudTable>
+                </div>
+            </section>
+        </MudStack>
     </Editor>
 </NodeWidgetShell>
 
 @code {
+    private const int MaxPreviewSubscriptions = 3;
+
     [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
 
     private MqttTriggerNodeModel Model => (MqttTriggerNodeModel)Node;
 
     private string _connection = string.Empty;
+    private int _boundedCapacity = MqttTriggerNodeModel.DefaultBoundedCapacity;
     private readonly List<MqttTriggerSubscriptionDraft> _draftSubscriptions = [];
     private MqttTriggerNodeModel? _loadedModel;
+
+    private string BrokerDisplay => string.IsNullOrWhiteSpace(Model.Connection) ? "—" : Model.Connection.Trim();
+
+    private string SubscriptionCountLabel => Model.Subscriptions.Count == 1
+        ? "1 filter"
+        : $"{Model.Subscriptions.Count} filters";
+
+    private IReadOnlyList<MqttTriggerSubscriptionDraft> PreviewSubscriptions
+        => Model.Subscriptions.Take(MaxPreviewSubscriptions).ToArray();
+
+    private int AdditionalSubscriptionCount
+        => Math.Max(0, Model.Subscriptions.Count - MaxPreviewSubscriptions);
+
+    private IEnumerable<MqttTriggerSubscriptionEditorRow> SubscriptionEditorRows
+        => Enumerable.Range(0, _draftSubscriptions.Count)
+            .Select(static index => new MqttTriggerSubscriptionEditorRow(index));
 
     private IReadOnlyList<BrokerOption> BrokerOptions
     {
@@ -161,6 +280,7 @@
     {
         _loadedModel = Model;
         _connection = Model.Connection;
+        _boundedCapacity = MqttTriggerNodeModel.NormalizeBoundedCapacity(Model.BoundedCapacity);
         _draftSubscriptions.Clear();
         _draftSubscriptions.AddRange(Model.Subscriptions);
         if (_draftSubscriptions.Count == 0) _draftSubscriptions.Add(new("#", MqttTriggerNodeModel.DefaultSubscriptionQos));
@@ -183,6 +303,17 @@
         await DialogRefresh.RefreshAsync(Node.NodeName);
     }
 
+    private async Task UpdateTopicFilterAsync(int index, string? value)
+    {
+        if (index < 0 || index >= _draftSubscriptions.Count)
+        {
+            return;
+        }
+
+        _draftSubscriptions[index] = _draftSubscriptions[index] with { TopicFilter = value ?? string.Empty };
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
     private Task SaveAsync()
     {
         var subscriptions = _draftSubscriptions
@@ -193,13 +324,18 @@
                 subscription.RetainAsPublished))
             .Where(subscription => subscription.TopicFilter.Length > 0)
             .ToList();
-        if (subscriptions.Count == 0) subscriptions.Add(new("#", MqttTriggerNodeModel.DefaultSubscriptionQos));
+        if (subscriptions.Count == 0)
+        {
+            return Task.CompletedTask;
+        }
 
-        Model.Connection = _connection;
+        var selectedConnection = _connection?.Trim() ?? string.Empty;
+        Model.Connection = selectedConnection;
         Model.Subscriptions = subscriptions;
+        Model.BoundedCapacity = MqttTriggerNodeModel.NormalizeBoundedCapacity(_boundedCapacity);
 
         var isExistingAppResource = Flow.GetConnectionNames()
-            .Any(name => string.Equals(name, _connection, StringComparison.Ordinal));
+            .Any(name => string.Equals(name, selectedConnection, StringComparison.Ordinal));
 
         if (isExistingAppResource)
         {
@@ -208,16 +344,46 @@
         }
 
         var selectedProfile = Live.Connections
-            .FirstOrDefault(c => string.Equals(c.ResourceName, _connection, StringComparison.Ordinal))
+            .FirstOrDefault(c => string.Equals(c.ResourceName, selectedConnection, StringComparison.Ordinal))
             ?.Profile;
 
         if (selectedProfile is not null)
-            Flow.SyncConnectionAndUpdateNode(_connection, selectedProfile, Node.NodeName, Model.BuildConfiguration());
+            Flow.SyncConnectionAndUpdateNode(selectedConnection, selectedProfile, Node.NodeName, Model.BuildConfiguration());
         else
             Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
 
         return Task.CompletedTask;
     }
 
+    private string? ValidateEditor()
+        => _draftSubscriptions.Any(subscription => !string.IsNullOrWhiteSpace(subscription.TopicFilter))
+            ? null
+            : "Add at least one subscription.";
+
+    private static string SubscriptionTopic(MqttTriggerSubscriptionDraft subscription)
+        => string.IsNullOrWhiteSpace(subscription.TopicFilter) ? "#" : subscription.TopicFilter.Trim();
+
+    private static string TopicClass(MqttTriggerSubscriptionDraft subscription)
+        => SubscriptionTopic(subscription).StartsWith('$')
+            ? "mqtt-trigger-topic system"
+            : "mqtt-trigger-topic";
+
+    private static string FlagTokenClass(bool enabled, string modifier)
+        => enabled ? $"mqtt-trigger-token {modifier}" : $"mqtt-trigger-token {modifier} muted";
+
+    private static string ReceiveRetainedLabel(MqttTriggerSubscriptionDraft subscription)
+        => subscription.ReceiveRetainedMessages ? "ret" : "skip";
+
+    private static string RetainFlagLabel(MqttTriggerSubscriptionDraft subscription)
+        => subscription.RetainAsPublished ? "keep" : "clear";
+
+    private static string ReceiveRetainedTitle(MqttTriggerSubscriptionDraft subscription)
+        => subscription.ReceiveRetainedMessages ? "Receive retained messages" : "Skip retained messages";
+
+    private static string RetainFlagTitle(MqttTriggerSubscriptionDraft subscription)
+        => subscription.RetainAsPublished ? "Keep retain flag" : "Clear retain flag";
+
     private sealed record BrokerOption(string Name, string Label, bool IsAppResource = false);
+
+    private sealed record MqttTriggerSubscriptionEditorRow(int Index);
 }

@@ -74,6 +74,7 @@
     background: color-mix(in srgb, var(--mud-palette-success) 7%, var(--flux-surface-2));
     border-color: color-mix(in srgb, var(--mud-palette-success) 24%, var(--flux-border-soft));
     color: var(--mud-palette-success);
+    display: none;
 }
 
 .metric-rename-status.invalid {

@@ -18,10 +18,16 @@
                        Icon="@(Node.IsCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore)"
                        OnClick="@(() => Node.Toggle())"
                        Class="flow-node-action flow-node-toggle" />
-        <MudIcon Icon="@HeaderIcon" Color="@CategoryColor" Size="Size.Small" Class="flow-node-type-icon" />
+        @if (ShowHeaderIcon)
+        {
+            <MudIcon Icon="@HeaderIcon" Color="@CategoryColor" Size="Size.Small" Class="flow-node-type-icon" />
+        }
         <div class="flow-node-title">
             <MudText Typo="Typo.subtitle2" Class="flow-node-name">@Node.NodeName</MudText>
-            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="flow-node-display-name">@Node.DisplayName</MudText>
+            @if (ShowDisplayName)
+            {
+                <MudText Typo="Typo.caption" Class="flow-node-display-name">@Node.DisplayName</MudText>
+            }
         </div>
         <MudTooltip Text="Settings">
             <MudIconButton Size="Size.Small"
@@ -38,7 +44,14 @@
                          Class="flow-node-diagnostic-icon" />
             </MudTooltip>
         }
-        <MudChip T="string" Size="Size.Small" Color="@CategoryColor" Class="flow-node-category-chip">@Node.Category</MudChip>
+        @if (HeaderBadge is not null)
+        {
+            @HeaderBadge
+        }
+        else if (ShowCategoryChip)
+        {
+            <MudChip T="string" Size="Size.Small" Color="@CategoryColor" Class="flow-node-category-chip">@Node.Category</MudChip>
+        }
     </div>
 
     @if (!Node.IsCollapsed)
@@ -120,9 +133,16 @@
 
     [Parameter] public string HeaderIcon { get; set; } = Icons.Material.Filled.Memory;
     [Parameter] public Color CategoryColor { get; set; } = Color.Default;
+    [Parameter] public bool ShowHeaderIcon { get; set; } = true;
+    [Parameter] public bool ShowDisplayName { get; set; } = true;
+    [Parameter] public bool ShowCategoryChip { get; set; } = true;
+    [Parameter] public RenderFragment? HeaderBadge { get; set; }
 
     /// <summary>Called before the dialog closes with Save, so the widget can flush its draft state.</summary>
     [Parameter] public EventCallback OnSave { get; set; }
+
+    /// <summary>Returns a widget-specific validation message while the edit dialog draft cannot be saved.</summary>
+    [Parameter] public Func<string?>? EditorValidationError { get; set; }
 
     /// <summary>Called when the dialog is cancelled so the widget can discard its draft state.</summary>
     [Parameter] public EventCallback OnCancel { get; set; }
@@ -237,6 +257,7 @@
             [nameof(NodeEditDialog.WorkflowName)] = Flow?.ActiveWorkflowName ?? string.Empty,
             [nameof(NodeEditDialog.CategoryColor)] = CategoryColor,
             [nameof(NodeEditDialog.EditorContent)] = Editor,
+            [nameof(NodeEditDialog.EditorValidationError)] = EditorValidationError,
             [nameof(NodeEditDialog.OnSave)] = OnSave,
             [nameof(NodeEditDialog.OnCancel)] = OnCancel,
             [nameof(NodeEditDialog.Flow)] = Flow

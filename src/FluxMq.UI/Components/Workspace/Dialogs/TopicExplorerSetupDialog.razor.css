@@ -1,0 +1,26 @@
+.topic-explorer-setup-actions {
+    align-items: center;
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    min-width: 0;
+    width: 100%;
+}
+
+.topic-explorer-setup-actions ::deep(.mud-button-root) {
+    border-radius: 5px;
+    min-height: 28px;
+    min-width: 76px;
+    text-transform: none;
+}
+
+@media (max-width: 480px) {
+    .topic-explorer-setup-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .topic-explorer-setup-actions ::deep(.mud-button-root) {
+        width: 100%;
+    }
+}
