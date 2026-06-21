@@ -5,77 +5,95 @@
                  HeaderIcon="@Icons.Material.Filled.Public"
                  CategoryColor="@Color.Tertiary"
                  EditDialogMaxWidth="MaxWidth.Medium"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
-        <MudStack Spacing="1" Class="mt-1">
-            <Stat Icon="@Icons.Material.Filled.Input" Label="Input" Value="HttpRequestInput" />
-            <Stat Icon="@Icons.Material.Filled.Output" Label="Output" Value="HttpResponseOutput" />
-            <Stat Icon="@Icons.Material.Filled.Schedule" Label="Timeout" Value="@TimeoutCaption" />
-        </MudStack>
-        <div class="d-flex flex-wrap gap-1 mt-2">
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">method</MudChip>
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">url</MudChip>
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">headers</MudChip>
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">body</MudChip>
+        <div class="http-client-summary">
+            <div class="http-client-meta">
+                <div class="http-client-meta-item target">
+                    <span>Target</span>
+                    <strong title="@TargetCaption">@TargetCaption</strong>
+                </div>
+                <div class="http-client-meta-item">
+                    <span>Timeout</span>
+                    <strong>@TimeoutCaption</strong>
+                </div>
+                <div class="http-client-meta-item">
+                    <span>Input buffer</span>
+                    <strong>@InputBufferCaption</strong>
+                </div>
+            </div>
+
+            <div class="http-client-contracts">
+                <div class="http-client-contract" aria-label="HTTP request fields">
+                    <span class="http-client-contract-label">Request fields</span>
+                    <span class="http-client-token">method</span>
+                    <span class="http-client-token">url</span>
+                    <span class="http-client-token">headers</span>
+                    <span class="http-client-token">body</span>
+                </div>
+                <div class="http-client-contract" aria-label="HTTP response fields">
+                    <span class="http-client-contract-label">Response fields</span>
+                    <span class="http-client-token">status</span>
+                    <span class="http-client-token">headers</span>
+                    <span class="http-client-token">body</span>
+                </div>
+            </div>
         </div>
     </Body>
     <Editor>
-        <MudStack Spacing="2">
+        <div class="http-client-editor" aria-label="HTTP client settings">
             <MudTextField T="string"
                           Label="Base URL"
                           @bind-Value="_baseUrl"
                           Placeholder="https://api.example.test/"
                           Variant="Variant.Outlined"
-                          Margin="Margin.Dense" />
+                          Margin="Margin.Dense"
+                          Class="http-client-base-url-field" />
 
-            <MudGrid Spacing="2">
-                <MudItem xs="12" md="4">
-                    <MudNumericField T="int"
-                                     Label="Timeout ms"
-                                     @bind-Value="_defaultTimeoutMilliseconds"
-                                     Min="1"
-                                     Max="600000"
-                                     Step="1000"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense" />
-                </MudItem>
-                <MudItem xs="12" md="4">
-                    <MudNumericField T="int"
-                                     Label="Max body bytes"
-                                     @bind-Value="_maxResponseBodyBytes"
-                                     Min="1"
-                                     Max="104857600"
-                                     Step="1024"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense" />
-                </MudItem>
-                <MudItem xs="12" md="4">
-                    <MudNumericField T="int"
-                                     Label="Input buffer"
-                                     @bind-Value="_boundedCapacity"
-                                     Min="1"
-                                     Max="100000"
-                                     Step="64"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense" />
-                </MudItem>
-            </MudGrid>
+            <div class="http-client-number-grid">
+                <MudNumericField T="int"
+                                 Label="Timeout ms"
+                                 @bind-Value="_defaultTimeoutMilliseconds"
+                                 Min="1"
+                                 Max="600000"
+                                 Step="1000"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="http-client-timeout-field" />
+                <MudNumericField T="int"
+                                 Label="Max body bytes"
+                                 @bind-Value="_maxResponseBodyBytes"
+                                 Min="1"
+                                 Max="104857600"
+                                 Step="1024"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="http-client-body-limit-field" />
+                <MudNumericField T="int"
+                                 Label="Input buffer"
+                                 @bind-Value="_boundedCapacity"
+                                 Min="1"
+                                 Max="100000"
+                                 Step="64"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="http-client-buffer-field" />
+            </div>
 
-            <MudGrid Spacing="2">
-                <MudItem xs="12" md="6">
-                    <MudCheckBox T="bool"
-                                 Label="Follow redirects"
-                                 @bind-Value="_followRedirects"
-                                 Color="Color.Primary" />
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudCheckBox T="bool"
-                                 Label="Non-success status emits error"
-                                 @bind-Value="_treatNonSuccessStatusAsError"
-                                 Color="Color.Primary" />
-                </MudItem>
-            </MudGrid>
+            <div class="http-client-options" aria-label="HTTP client options">
+                <MudCheckBox T="bool"
+                             Label="Follow redirects"
+                             @bind-Value="_followRedirects"
+                             Color="Color.Primary" />
+                <MudCheckBox T="bool"
+                             Label="Non-success status emits error"
+                             @bind-Value="_treatNonSuccessStatusAsError"
+                             Color="Color.Primary" />
+            </div>
 
             <MudTextField T="string"
                           Label="Default headers"
@@ -83,8 +101,9 @@
                           Lines="5"
                           Placeholder="Authorization: Bearer token"
                           Variant="Variant.Outlined"
-                          Margin="Margin.Dense" />
-        </MudStack>
+                          Margin="Margin.Dense"
+                          Class="http-client-headers-field" />
+        </div>
     </Editor>
 </NodeWidgetShell>
 
@@ -101,7 +120,11 @@
     private bool _treatNonSuccessStatusAsError;
     private int _boundedCapacity = HttpRequestNodeModel.DefaultBoundedCapacity;
 
+    private string TargetCaption => string.IsNullOrWhiteSpace(_baseUrl) ? "Per request" : _baseUrl.Trim();
     private string TimeoutCaption => $"{HttpRequestNodeModel.NormalizePositiveInt(_defaultTimeoutMilliseconds, HttpRequestNodeModel.DefaultTimeoutMilliseconds)} ms";
+    private string InputBufferCaption => HttpRequestNodeModel
+        .NormalizePositiveInt(_boundedCapacity, HttpRequestNodeModel.DefaultBoundedCapacity)
+        .ToString();
 
     protected override void OnParametersSet() => LoadDraft();
 

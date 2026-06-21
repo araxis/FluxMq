@@ -62,6 +62,8 @@ public sealed class FlowDefinitionComposerTests
         var catalog = new FlowComponentCatalog();
 
         var http = catalog.Find("http.request").ShouldNotBeNull();
+        http.Type.ShouldBe("http.request");
+        http.DisplayName.ShouldBe("HTTP Client");
         http.Category.ShouldBe("Actor");
         http.Ports.ShouldContain(port => port.Name == "Input" && port.ValueType == "HttpRequestInput" && port.IsInput);
         http.Ports.ShouldContain(port => port.Name == "Output" && port.ValueType == "HttpResponseOutput" && !port.IsInput);
