@@ -5931,6 +5931,65 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void MqttRecorderNodeWidget_UsesCompactSummaryAndFlatEditor()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Actors",
+            "MqttRecorderNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Actors",
+            "MqttRecorderNodeWidget.razor.css"));
+
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldNotContain("EditDialogMaxWidth=");
+        markup.ShouldContain("mqtt-recorder-summary");
+        markup.ShouldContain("mqtt-recorder-meta");
+        markup.ShouldContain("mqtt-recorder-meta-item target");
+        markup.ShouldContain("Local sessions");
+        markup.ShouldContain("ActorNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity)");
+        markup.ShouldContain("mqtt-recorder-contract");
+        markup.ShouldContain("aria-label=\"Recording request fields\"");
+        markup.ShouldContain("mqtt-recorder-token");
+        markup.ShouldContain("sessionId");
+        markup.ShouldContain("envelope");
+        markup.ShouldContain("mqtt-recorder-editor");
+        markup.ShouldContain("aria-label=\"Recorder settings\"");
+        markup.ShouldContain("Label=\"Input buffer\"");
+        markup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        markup.ShouldContain("Class=\"mqtt-recorder-buffer-field\"");
+        markup.ShouldNotContain("<Stat ");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("d-flex flex-wrap gap-1");
+        markup.ShouldNotContain("MqttRecordingRequest");
+
+        css.ShouldContain(".mqtt-recorder-summary");
+        css.ShouldContain(".mqtt-recorder-meta");
+        css.ShouldContain(".mqtt-recorder-contract");
+        css.ShouldContain(".mqtt-recorder-token");
+        css.ShouldContain(".mqtt-recorder-editor");
+        css.ShouldContain("grid-template-columns: minmax(0, 180px);");
+        css.ShouldContain(".mqtt-recorder-editor ::deep(.mud-input-control)");
+        css.ShouldContain("@media (max-width: 640px)");
+        css.ShouldNotContain(".flow-node-filters");
+        css.ShouldNotContain("border: 1px solid var(--flux-border-soft);");
+    }
+
+    [Fact]
     public void NodeWidgetShell_UsesCompactNodeChrome()
     {
         var root = FindRepositoryRoot();
