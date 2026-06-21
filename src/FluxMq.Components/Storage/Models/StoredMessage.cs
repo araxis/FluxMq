@@ -14,6 +14,7 @@ public sealed class StoredMessage
     public DateTimeOffset ReceivedAt { get; set; }
     public MqttQualityOfServiceLevel QualityOfService { get; set; }
     public bool Retain { get; set; }
+    public string? BrokerName { get; set; }
 
     public static StoredMessage From(SessionId sessionId, MqttEnvelope envelope, long sequence = 0) => new()
     {
@@ -23,7 +24,8 @@ public sealed class StoredMessage
         Payload = envelope.Payload,
         ReceivedAt = envelope.ReceivedAt,
         QualityOfService = envelope.QualityOfService,
-        Retain = envelope.Retain
+        Retain = envelope.Retain,
+        BrokerName = envelope.BrokerName
     };
 
     public MqttEnvelope ToEnvelope() => new()
@@ -32,6 +34,7 @@ public sealed class StoredMessage
         Payload = Payload,
         ReceivedAt = ReceivedAt,
         QualityOfService = QualityOfService,
-        Retain = Retain
+        Retain = Retain,
+        BrokerName = BrokerName
     };
 }

@@ -17,7 +17,7 @@ public sealed class WorkspaceMessageProjection : IAsyncDisposable
     private MqttEnvelope? _selectedMessage;
     private PayloadInspectionResult _selectedInspection = PayloadInspector.Inspect([]);
 
-    public WorkspaceMessageProjection(ITopicIndex topicIndex, int recentLimit = 200)
+    public WorkspaceMessageProjection(ITopicIndex topicIndex, int recentLimit = 500)
     {
         _topicIndex = topicIndex;
         RecentLimit = recentLimit;
@@ -117,10 +117,7 @@ public sealed class WorkspaceMessageProjection : IAsyncDisposable
         lock (_sync)
         {
             _messages.Insert(0, message);
-            if (_messages.Count > RecentLimit)
-            {
-                _messages.RemoveRange(RecentLimit, _messages.Count - RecentLimit);
-            }
+            TrimTopicHistory(message);
 
             _latestMessage = message;
             _latestInspection = PayloadInspector.Inspect(message.Payload);
@@ -141,4 +138,30 @@ public sealed class WorkspaceMessageProjection : IAsyncDisposable
             _latestInspection,
             _selectedMessage,
             _selectedInspection);
+
+    private void TrimTopicHistory(MqttEnvelope message)
+    {
+        var seenForTopic = 0;
+        var key = TopicHistoryKey(message);
+        for (var i = 0; i < _messages.Count; i++)
+        {
+            if (!string.Equals(TopicHistoryKey(_messages[i]), key, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            seenForTopic++;
+            if (seenForTopic > RecentLimit)
+            {
+                _messages.RemoveAt(i);
+                return;
+            }
+        }
+    }
+
+    private static string TopicHistoryKey(MqttEnvelope message)
+        => $"{NormalizeTopicHistoryPart(message.BrokerName)}\u001f{NormalizeTopicHistoryPart(message.Topic)}";
+
+    private static string NormalizeTopicHistoryPart(string? value)
+        => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
 }

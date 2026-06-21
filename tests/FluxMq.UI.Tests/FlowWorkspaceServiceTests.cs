@@ -1704,6 +1704,29 @@ public sealed class FlowWorkspaceServiceTests
     }
 
     [Fact]
+    public async Task ValidateAsync_AttachesActivePipelineToUnscopedProblemLogs()
+    {
+        var service = new FlowWorkspaceService(new FlowDefinitionComposer());
+        service.AddWorkflow("pipe");
+        service.SetDefinitionJson("{ invalid json");
+
+        await service.ValidateAsync();
+
+        service.ActiveWorkflowName.ShouldBe("pipe");
+        service.Diagnostics.ShouldContain(diagnostic =>
+            diagnostic.Severity == "Error" &&
+            diagnostic.Source == "Validation" &&
+            diagnostic.WorkflowName == null);
+        service.Logs.ShouldContain(log =>
+            log.Severity == "Error" &&
+            log.Source == "Validation" &&
+            log.Scope == WorkspaceLogScopes.System &&
+            log.ArtifactKind == WorkspaceLogArtifactKinds.Pipeline &&
+            log.ArtifactName == "pipe" &&
+            log.WorkflowName == null);
+    }
+
+    [Fact]
     public async Task ClearLogs_RemovesWorkspaceLogHistory()
     {
         var service = new FlowWorkspaceService(new FlowDefinitionComposer());

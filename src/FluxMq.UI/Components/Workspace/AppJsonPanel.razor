@@ -1,5 +1,7 @@
 @implements IDisposable
 @inject ISnackbar Snackbar
+@inject AppThemeService ThemeService
+@inject IJSRuntime JsRuntime
 
 <div class="app-json-view">
     <div class="app-json-toolbar" aria-label="Application JSON toolbar">
@@ -30,7 +32,7 @@
         </MudTooltip>
     </div>
 
-    <div class="app-json-editor-shell">
+    <div class="app-json-editor-shell" aria-label="Application definition JSON">
         @if (string.IsNullOrWhiteSpace(_fullJson))
         {
             <div class="app-json-empty" role="status" aria-live="polite">
@@ -41,7 +43,10 @@
         }
         else
         {
-            <pre class="app-json-body" aria-label="Application definition JSON">@_fullJson</pre>
+            <StandaloneCodeEditor @ref="_editor"
+                                  Id="@EditorId"
+                                  CssClass="app-json-monaco-editor"
+                                  ConstructionOptions="@EditorConstructionOptions" />
         }
     </div>
 
@@ -49,7 +54,11 @@
 
 @code {
     [Parameter, EditorRequired] public FlowWorkspaceService Project { get; set; } = null!;
+
     private string _fullJson = string.Empty;
+    private StandaloneCodeEditor? _editor;
+
+    private const string EditorId = "app-json-viewer";
 
     private string FileLabel => string.IsNullOrWhiteSpace(Project.CurrentFilePath)
         ? "In memory - not saved"
@@ -73,14 +82,73 @@
     protected override void OnInitialized()
     {
         Project.Changed += OnChanged;
+        ThemeService.Changed += OnThemeChanged;
         _fullJson = Project.GetFullDefinitionJson();
     }
 
     private void OnChanged(object? sender, EventArgs e)
     {
         _fullJson = Project.GetFullDefinitionJson();
-        InvokeAsync(StateHasChanged);
+        _ = InvokeAsync(async () =>
+        {
+            StateHasChanged();
+            await SyncEditorAsync();
+        });
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ConfigureMonacoAsync();
+            await SyncEditorAsync();
+        }
+    }
+
+    private void OnThemeChanged(object? sender, EventArgs e)
+        => _ = InvokeAsync(ConfigureMonacoAsync);
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
+        => new()
+        {
+            AutomaticLayout = true,
+            Language = "json",
+            ReadOnly = true,
+            RenderLineHighlight = "none",
+            ScrollBeyondLastLine = false,
+            Theme = ThemeService.IsDarkMode ? "fluxmq-dark" : "fluxmq-light",
+            Value = _fullJson
+        };
+
+    private async Task ConfigureMonacoAsync()
+    {
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("fluxmqMonaco.ensureConfigured", ThemeService.IsDarkMode);
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"App JSON Monaco configuration failed: {exception.Message}");
+        }
+    }
+
+    private async Task SyncEditorAsync()
+    {
+        if (_editor is not null)
+        {
+            try
+            {
+                await _editor.SetValue(_fullJson);
+            }
+            catch (Exception exception) when (IsNonCriticalEditorException(exception))
+            {
+                Console.Error.WriteLine($"App JSON Monaco sync failed: {exception.Message}");
+            }
+        }
+    }
+
+    private static bool IsNonCriticalEditorException(Exception exception)
+        => exception is JSException or JSDisconnectedException or InvalidOperationException or ObjectDisposedException;
 
     private async Task CopyAsync()
     {
@@ -88,5 +156,9 @@
         Snackbar.Add("JSON copied to clipboard", Severity.Success);
     }
 
-    public void Dispose() => Project.Changed -= OnChanged;
+    public void Dispose()
+    {
+        Project.Changed -= OnChanged;
+        ThemeService.Changed -= OnThemeChanged;
+    }
 }

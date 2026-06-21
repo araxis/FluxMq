@@ -130,7 +130,8 @@ public class MessageRepositoryTests : IDisposable
             Payload = [1, 2, 3],
             QualityOfService = MqttQualityOfServiceLevel.AtLeastOnce,
             Retain = true,
-            ReceivedAt = DateTimeOffset.UtcNow
+            ReceivedAt = DateTimeOffset.UtcNow,
+            BrokerName = "local-broker"
         };
 
         _repo.Add(_sessionId, original);
@@ -140,6 +141,7 @@ public class MessageRepositoryTests : IDisposable
         restored.Payload.ShouldBe(original.Payload);
         restored.QualityOfService.ShouldBe(original.QualityOfService);
         restored.Retain.ShouldBe(original.Retain);
+        restored.BrokerName.ShouldBe(original.BrokerName);
     }
 
     public void Dispose() => _ctx.Dispose();

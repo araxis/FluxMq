@@ -1,4 +1,8 @@
+@implements IDisposable
+@using FluxMq.App.Definitions
 @inject LiveMqttWorkspaceService Live
+@inject ProjectManagerService Projects
+@inject IDialogService DialogService
 
 <div class="topic-explorer">
     <section class="topic-explorer-tree" aria-label="Topic tree">
@@ -13,6 +17,7 @@
                 </div>
             </div>
             <div class="topic-explorer-stats">
+                <span>@BrokerGroups.Count brokers</span>
                 <span>@TopicCount topics</span>
                 <span>@MessageSource.Count messages</span>
             </div>
@@ -40,7 +45,7 @@
                           AdornmentIcon="@Icons.Material.Filled.Search"
                           AdornmentColor="Color.Secondary"
                           Class="topic-search" />
-            @if (!string.IsNullOrWhiteSpace(_selectedTopic))
+            @if (HasTopicSelection)
             {
                 <MudTooltip Text="Clear topic selection">
                     <MudIconButton Icon="@Icons.Material.Filled.Backspace"
@@ -52,127 +57,479 @@
         </div>
 
         <div class="topic-tree-frame">
-            <TopicTreeView Messages="@MessageSource"
-                           SelectedTopic="@_selectedTopic"
-                           TopicSelected="@OnTopicSelected"
-                           Filter="@_filter"
-                           EmptyMessage="@TreeEmptyMessage"
-                           Compact="true">
-                <EmptyContent>
-                    <div class="topic-empty-state">
-                        <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
-                        <strong>@TreeEmptyTitle</strong>
-                        <span>@TreeEmptyText</span>
-                    </div>
-                </EmptyContent>
-            </TopicTreeView>
-        </div>
-    </section>
-
-    <section class="topic-explorer-detail" aria-label="Topic messages and payload">
-        <div class="topic-detail-strip">
-            <div class="topic-detail-heading">
-                <h3>@SelectedTopicLabel</h3>
-                <div class="topic-explorer-subtitle">@SelectedTopicMeta</div>
-            </div>
-            <div class="topic-explorer-stats">
-                <span>@FilteredMessages.Count messages</span>
-                <span>@SelectedPayloadLabel</span>
-            </div>
-        </div>
-
-        <div class="topic-message-table">
-            <MudTable T="MqttEnvelope"
-                      Items="@FilteredMessages"
-                      Dense="true"
-                      Hover="true"
-                      Class="topic-message-grid"
-                      Elevation="0"
-                      RowsPerPage="12"
-                      SelectOnRowClick="true"
-                      SelectedItem="@SelectedMessage"
-                      SelectedItemChanged="@OnMessageSelected">
-                <HeaderContent>
-                    <MudTh>Time</MudTh>
-                    <MudTh>Topic</MudTh>
-                    <MudTh>QoS</MudTh>
-                    <MudTh>Bytes</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd DataLabel="Time">@context.ReceivedAt.ToLocalTime().ToString("HH:mm:ss")</MudTd>
-                    <MudTd DataLabel="Topic">
-                        <MudText Typo="Typo.caption" Class="topic-cell">
-                            @context.Topic
-                        </MudText>
-                    </MudTd>
-                    <MudTd DataLabel="QoS">@((int)context.QualityOfService)</MudTd>
-                    <MudTd DataLabel="Bytes">@context.Payload.Length</MudTd>
-                </RowTemplate>
-                <NoRecordsContent>
-                    <div class="topic-empty-state topic-empty-state-table" role="status" aria-live="polite">
-                        <MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Small" />
-                        <strong>@MessageEmptyTitle</strong>
-                        <span>@MessageEmptyText</span>
-                    </div>
-                </NoRecordsContent>
-                <PagerContent>
-                    <MudTablePager HideRowsPerPage="true" />
-                </PagerContent>
-            </MudTable>
-        </div>
-
-        <div class="topic-payload-frame">
-            @if (SelectedMessage is null)
+            @if (VisibleBrokerGroups.Count == 0)
             {
-                <div class="topic-payload-empty" role="status" aria-live="polite">
-                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
-                    <strong>No payload selected</strong>
-                    <span>Select a message to inspect formatted, raw, hex, and metadata views.</span>
+                <div class="topic-empty-state">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+                    <strong>@TreeEmptyTitle</strong>
+                    <span>@TreeEmptyText</span>
                 </div>
             }
             else
             {
-                <PayloadInspectorPanel Title="Payload"
-                                       Topic="@SelectedMessage.Topic"
-                                       ReceivedAt="@SelectedMessage.ReceivedAt"
-                                       Payload="@SelectedMessage.Payload" />
+                @foreach (var group in VisibleBrokerGroups)
+                {
+                    <section class="topic-broker-group" @key="@group.Name">
+                        <div class="@BrokerRowClass(group)" title="@group.Endpoint">
+                            <button type="button"
+                                    class="topic-broker-main"
+                                    aria-label="@($"Select broker {group.Name}")"
+                                    @onclick="@(() => OnBrokerSelected(group.Name))">
+                                <span class="topic-broker-icon">
+                                    <MudIcon Icon="@Icons.Material.Filled.Hub" Size="Size.Small" />
+                                </span>
+                                <span class="topic-broker-copy">
+                                    <strong>@group.Name</strong>
+                                    <span>@group.Endpoint</span>
+                                </span>
+                            </button>
+                            <span class="topic-broker-state">@BrokerStateLabel(group)</span>
+                            <span class="topic-broker-count">@group.TopicCount</span>
+                            @if (CanEditBrokerMonitor(group))
+                            {
+                                <MudTooltip Text="Broker monitor settings">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Settings"
+                                                   Size="Size.Small"
+                                                   Class="topic-broker-edit"
+                                                   aria-label="@($"Open broker monitor settings {group.Name}")"
+                                                   OnClick="@(() => OpenBrokerMonitorEditorAsync(group))" />
+                                </MudTooltip>
+                            }
+                        </div>
+
+                        @if (group.Messages.Count == 0)
+                        {
+                            <div class="topic-broker-empty" role="status" aria-live="polite">
+                                Waiting for messages
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="topic-broker-tree">
+                                <TopicTreeView Messages="@group.Messages"
+                                               SelectedTopic="@SelectedTopicForGroup(group.Name)"
+                                               TopicSelected="@((topic) => OnTopicSelected(group.Name, topic))"
+                                               Filter="@FilterForGroup(group)"
+                                               EmptyMessage="@TreeEmptyMessage"
+                                               Compact="true" />
+                            </div>
+                        }
+                    </section>
+                }
             }
         </div>
+    </section>
+
+    <section class="topic-explorer-detail" aria-label="Topic last state and history">
+        <section class="topic-last-state" aria-label="Latest topic message">
+            <div class="topic-last-header">
+                <div class="topic-detail-heading">
+                    <h3>@SelectedTopicLabel</h3>
+                    <div class="topic-explorer-subtitle">@LastStateSubtitle</div>
+                </div>
+                <div class="topic-explorer-stats">
+                    <span>@FilteredMessages.Count messages</span>
+                    <span>@LastPayloadLabel</span>
+                </div>
+            </div>
+
+            @if (LastMessage is null)
+            {
+                <div class="topic-no-traffic" role="status" aria-live="polite">
+                    <div class="topic-no-traffic-copy">
+                        <MudIcon Icon="@Icons.Material.Filled.Sensors" Size="Size.Small" />
+                        <strong>@MessageEmptyTitle</strong>
+                        <span>@MessageEmptyText</span>
+                    </div>
+
+                    @if (NoTrafficBrokerGroups.Count > 0)
+                    {
+                        <div class="topic-monitor-list" aria-label="Broker monitor status">
+                            @foreach (var broker in NoTrafficBrokerGroups)
+                            {
+                                <div class="@MonitorRowClass(broker)" @key="@broker.Name">
+                                    <span class="topic-monitor-dot" aria-hidden="true"></span>
+                                    <span class="topic-monitor-name" title="@broker.Name">@broker.Name</span>
+                                    <span class="topic-monitor-endpoint" title="@broker.Endpoint">@broker.Endpoint</span>
+                                    <span class="topic-monitor-subscription">Sub # + $SYS/#</span>
+                                    <span class="topic-monitor-state">@BrokerStateLabel(broker)</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="topic-last-body">
+                    <div class="topic-last-payload">
+                        <div class="topic-last-section-label">
+                            <span>Payload</span>
+                            <span>@LastPayloadMeta</span>
+                        </div>
+                        <pre>@LastPayloadPreview</pre>
+                    </div>
+
+                    <div class="topic-last-meta" aria-label="Latest message metadata">
+                        <div>
+                            <span>Broker</span>
+                            <strong title="@BrokerLabel(LastMessage)">@BrokerLabel(LastMessage)</strong>
+                        </div>
+                        <div>
+                            <span>Topic</span>
+                            <strong title="@LastMessage.Topic">@LastMessage.Topic</strong>
+                        </div>
+                        <div>
+                            <span>Received</span>
+                            <strong>@LastReceivedLabel</strong>
+                        </div>
+                        <div>
+                            <span>QoS</span>
+                            <strong>@((int)LastMessage.QualityOfService)</strong>
+                        </div>
+                        <div>
+                            <span>Retain</span>
+                            <strong>@(LastMessage.Retain ? "Yes" : "No")</strong>
+                        </div>
+                    </div>
+                </div>
+            }
+        </section>
+
+        <section class="topic-history-panel" aria-label="Topic message history">
+            <div class="topic-history-header">
+                <span>History</span>
+                <span>@HistorySummaryLabel</span>
+            </div>
+
+            <div class="topic-history-body">
+                <div class="topic-message-table">
+                    <MudTable T="MqttEnvelope"
+                              Items="@HistoryMessages"
+                              Dense="true"
+                              Hover="true"
+                              Class="topic-message-grid"
+                              Elevation="0"
+                              FixedHeader="true"
+                              Height="100%"
+                              ItemSize="30"
+                              OverscanCount="8"
+                              SelectedItem="@SelectedHistoryMessage"
+                              SelectedItemChanged="@OnHistoryMessageSelected"
+                              RowClassFunc="@HistoryRowClass"
+                              SelectOnRowClick="true"
+                              Virtualize="true">
+                        <ColGroup>
+                            <col class="topic-col-time" />
+                            <col class="topic-col-broker" />
+                            <col class="topic-col-topic" />
+                            <col class="topic-col-qos" />
+                            <col class="topic-col-bytes" />
+                        </ColGroup>
+                        <HeaderContent>
+                            <MudTh>Time</MudTh>
+                            <MudTh>Broker</MudTh>
+                            <MudTh>Topic</MudTh>
+                            <MudTh>QoS</MudTh>
+                            <MudTh>Bytes</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Time">@context.ReceivedAt.ToLocalTime().ToString("HH:mm:ss")</MudTd>
+                            <MudTd DataLabel="Broker">@BrokerLabel(context)</MudTd>
+                            <MudTd DataLabel="Topic">
+                                <MudText Typo="Typo.caption" Class="topic-cell">
+                                    @context.Topic
+                                </MudText>
+                            </MudTd>
+                            <MudTd DataLabel="QoS">@((int)context.QualityOfService)</MudTd>
+                            <MudTd DataLabel="Bytes">@context.Payload.Length</MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <div class="topic-history-empty" role="status" aria-live="polite">
+                                <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" />
+                                <span>No history for the current selection.</span>
+                            </div>
+                        </NoRecordsContent>
+                    </MudTable>
+                </div>
+
+                <aside class="topic-history-detail" aria-label="Selected MQTT message details">
+                    <div class="topic-history-detail-header">
+                        <span>Message details</span>
+                        <span>@SelectedHistoryMeta</span>
+                    </div>
+
+                    @if (SelectedHistoryMessage is null)
+                    {
+                        <div class="topic-history-detail-empty" role="status" aria-live="polite">
+                            <MudIcon Icon="@Icons.Material.Filled.Article" Size="Size.Small" />
+                            <strong>No message selected</strong>
+                            <span>Select a history row to inspect MQTT metadata and payload.</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="topic-history-detail-body">
+                            <div class="topic-history-detail-meta">
+                                <div>
+                                    <span>Broker</span>
+                                    <strong title="@BrokerLabel(SelectedHistoryMessage)">@BrokerLabel(SelectedHistoryMessage)</strong>
+                                </div>
+                                <div>
+                                    <span>Topic</span>
+                                    <strong title="@SelectedHistoryMessage.Topic">@SelectedHistoryMessage.Topic</strong>
+                                </div>
+                                <div>
+                                    <span>Received</span>
+                                    <strong>@SelectedHistoryReceivedLabel</strong>
+                                </div>
+                                <div>
+                                    <span>QoS</span>
+                                    <strong>@((int)SelectedHistoryMessage.QualityOfService)</strong>
+                                </div>
+                                <div>
+                                    <span>Retain</span>
+                                    <strong>@(SelectedHistoryMessage.Retain ? "Yes" : "No")</strong>
+                                </div>
+                            </div>
+
+                            <div class="topic-history-detail-payload">
+                                <div class="topic-history-detail-payload-label">
+                                    <span>Payload</span>
+                                    <span>@SelectedHistoryPayloadMeta</span>
+                                </div>
+                                <pre>@SelectedHistoryPayloadPreview</pre>
+                            </div>
+                        </div>
+                    }
+                </aside>
+            </div>
+        </section>
     </section>
 </div>
 
 @code {
+    private bool _disposed;
+    private bool _monitorStarting;
+    private FlowWorkspaceService? _subscribedProject;
+    private MqttEnvelope? _selectedHistoryMessage;
+    private string? _selectedBrokerName;
     private string? _selectedTopic;
     private string _filter = string.Empty;
+    private bool _setupDialogOpen;
+    private FlowWorkspaceService? _setupPromptedProject;
 
     private IReadOnlyList<MqttEnvelope> MessageSource => Live.SelectedStoredSession is null
         ? Live.RecentMessages
         : Live.SelectedSessionMessages;
 
-    private IReadOnlyList<MqttEnvelope> FilteredMessages => string.IsNullOrWhiteSpace(_selectedTopic)
-        ? MessageSource
-        : MessageSource.Where(message => IsInSelectedTopic(message.Topic)).ToArray();
+    private IReadOnlyList<TopicBrokerGroup> BrokerGroups
+    {
+        get
+        {
+            var messageGroups = MessageSource
+                .GroupBy(BrokerLabel, StringComparer.Ordinal)
+                .ToDictionary(group => group.Key, group => (IReadOnlyList<MqttEnvelope>)group.ToArray(), StringComparer.Ordinal);
 
-    private MqttEnvelope? SelectedMessage => Live.SelectedMessage is { } selected &&
-                                            FilteredMessages.Contains(selected)
-        ? selected
-        : FilteredMessages.OrderByDescending(message => message.ReceivedAt).FirstOrDefault();
+            var declaredBrokers = Live.SelectedStoredSession is null
+                ? ExplorerBrokerSnapshots
+                : Array.Empty<TopicBrokerSnapshot>();
+
+            var groups = new List<TopicBrokerGroup>();
+            foreach (var broker in declaredBrokers)
+            {
+                messageGroups.TryGetValue(broker.Name, out var messages);
+                groups.Add(new TopicBrokerGroup(
+                    broker.Name,
+                    broker.Endpoint,
+                    broker.State,
+                    messages ?? Array.Empty<MqttEnvelope>()));
+            }
+
+            foreach (var (name, messages) in messageGroups.OrderBy(static group => group.Key, StringComparer.Ordinal))
+            {
+                if (groups.Any(group => string.Equals(group.Name, name, StringComparison.Ordinal)))
+                {
+                    continue;
+                }
+
+                groups.Add(new TopicBrokerGroup(
+                    name,
+                    "Captured messages",
+                    MqttClientState.Disconnected,
+                    messages));
+            }
+
+            return groups
+                .OrderBy(static group => group.Name, StringComparer.Ordinal)
+                .ToArray();
+        }
+    }
+
+    private IReadOnlyList<TopicBrokerGroup> VisibleBrokerGroups
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(_filter))
+            {
+                return BrokerGroups;
+            }
+
+            return BrokerGroups
+                .Where(group =>
+                    BrokerMatchesFilter(group) ||
+                    group.Messages.Any(message => message.Topic.Contains(_filter, StringComparison.OrdinalIgnoreCase)))
+                .ToArray();
+        }
+    }
+
+    private IReadOnlyList<TopicBrokerSnapshot> ExplorerBrokerSnapshots
+    {
+        get
+        {
+            var projectBrokers = TopicExplorerMonitorConnections
+                .Select(connection => new TopicBrokerSnapshot(
+                    connection.DisplayName,
+                    connection.Endpoint,
+                    ConnectionStateFor(connection.ResourceName)));
+
+            return projectBrokers
+                .GroupBy(static broker => broker.Name, StringComparer.Ordinal)
+                .Select(static group => group.First())
+                .OrderBy(static broker => broker.Name, StringComparer.Ordinal)
+                .ToArray();
+        }
+    }
+
+    private IReadOnlyList<TopicExplorerMonitorConnection> TopicExplorerMonitorConnections
+        => Live.SelectedStoredSession is null
+            ? TopicExplorerMonitorResolver.Resolve(Projects.ActiveProject)
+            : [];
+
+    private IReadOnlyList<MqttEnvelope> FilteredMessages
+    {
+        get
+        {
+            IEnumerable<MqttEnvelope> query = MessageSource;
+
+            if (!string.IsNullOrWhiteSpace(_selectedBrokerName))
+            {
+                query = query.Where(message => string.Equals(BrokerLabel(message), _selectedBrokerName, StringComparison.Ordinal));
+            }
+
+            if (!string.IsNullOrWhiteSpace(_selectedTopic))
+            {
+                query = query.Where(message => IsInSelectedTopic(message.Topic));
+            }
+
+            return query.ToArray();
+        }
+    }
+
+    private IReadOnlyList<MqttEnvelope> HistoryMessages => FilteredMessages
+        .OrderByDescending(message => message.ReceivedAt)
+        .ToArray();
+
+    private IReadOnlyList<TopicBrokerGroup> NoTrafficBrokerGroups
+    {
+        get
+        {
+            var groups = string.IsNullOrWhiteSpace(_selectedBrokerName)
+                ? BrokerGroups
+                : BrokerGroups
+                    .Where(group => string.Equals(group.Name, _selectedBrokerName, StringComparison.Ordinal))
+                    .ToArray();
+
+            return groups
+                .OrderBy(static group => group.Name, StringComparer.Ordinal)
+                .Take(4)
+                .ToArray();
+        }
+    }
+
+    private MqttEnvelope? LastMessage => HistoryMessages.FirstOrDefault();
+
+    private PayloadInspectionResult? LastInspection => LastMessage is null
+        ? null
+        : PayloadInspector.Inspect(LastMessage.Payload);
+
+    private MqttEnvelope? SelectedHistoryMessage
+    {
+        get
+        {
+            var messages = HistoryMessages;
+            if (_selectedHistoryMessage is not null &&
+                messages.Contains(_selectedHistoryMessage))
+            {
+                return _selectedHistoryMessage;
+            }
+
+            return messages.FirstOrDefault();
+        }
+    }
+
+    private PayloadInspectionResult? SelectedHistoryInspection => SelectedHistoryMessage is null
+        ? null
+        : PayloadInspector.Inspect(SelectedHistoryMessage.Payload);
 
     private int TopicCount => MessageSource
-        .Select(message => message.Topic)
+        .Select(message => $"{BrokerLabel(message)}\u001f{message.Topic}")
         .Distinct(StringComparer.Ordinal)
         .Count();
 
-    private string SelectedTopicLabel => string.IsNullOrWhiteSpace(_selectedTopic)
-        ? "All topics"
-        : _selectedTopic;
+    private bool HasTopicSelection => !string.IsNullOrWhiteSpace(_selectedBrokerName) || !string.IsNullOrWhiteSpace(_selectedTopic);
 
-    private string SelectedPayloadLabel => SelectedMessage is { } message
+    private string SelectedTopicLabel => (_selectedBrokerName, _selectedTopic) switch
+    {
+        (null or "", null or "") => "All brokers",
+        ({ } broker, null or "") => broker,
+        ({ } broker, { } topic) => $"{broker} / {topic}",
+        _ => _selectedTopic ?? "All brokers"
+    };
+
+    private string LastPayloadLabel => LastMessage is { } message
         ? $"{message.Payload.Length} B"
         : "No payload";
 
+    private string LastPayloadMeta => LastInspection is { } inspection
+        ? $"{inspection.DisplayTypeLabel} / {inspection.SizeBytes} B"
+        : "No payload";
+
+    private string LastPayloadPreview
+    {
+        get
+        {
+            return FormatPayloadPreview(LastInspection);
+        }
+    }
+
+    private string LastReceivedLabel => LastMessage is { } message
+        ? message.ReceivedAt.ToLocalTime().ToString("HH:mm:ss")
+        : "No message";
+
+    private string SelectedHistoryMeta => SelectedHistoryInspection is { } inspection
+        ? $"{inspection.DisplayTypeLabel} / {inspection.SizeBytes} B"
+        : "No selection";
+
+    private string SelectedHistoryPayloadMeta => SelectedHistoryInspection is { } inspection
+        ? $"{inspection.DisplayTypeLabel} / {inspection.SizeBytes} B"
+        : "No payload";
+
+    private string SelectedHistoryPayloadPreview => FormatPayloadPreview(SelectedHistoryInspection);
+
+    private string SelectedHistoryReceivedLabel => SelectedHistoryMessage is { } message
+        ? message.ReceivedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
+        : "No message";
+
+    private string HistorySummaryLabel => HistoryMessages.Count switch
+    {
+        0 => "No messages",
+        1 => "1 message",
+        var count => $"{count} messages"
+    };
+
     private string TopicSourceLabel => Live.SelectedStoredSession is null
-        ? "Live message stream"
+        ? "App broker monitor"
         : "Stored session";
 
     private string TreeEmptyMessage => string.IsNullOrWhiteSpace(_filter)
@@ -184,51 +541,413 @@
         : "No matching topics";
 
     private string TreeEmptyText => string.IsNullOrWhiteSpace(_filter)
-        ? "Run the app or open a stored session to populate the tree."
+        ? "Add MQTT brokers to this app or wait for broker traffic."
         : "Clear or change the search text.";
 
-    private string MessageEmptyTitle => string.IsNullOrWhiteSpace(_selectedTopic)
-        ? "No messages yet"
-        : "No messages in this topic";
+    private string MessageEmptyTitle => (_selectedBrokerName, _selectedTopic) switch
+    {
+        ({ } _, { } _) => "Waiting for this topic",
+        ({ } _, _) => "Waiting for this broker",
+        _ => "Waiting for broker traffic"
+    };
 
     private string MessageEmptyText => Live.SelectedStoredSession is null
-        ? "Run the app or wait for traffic."
-        : "Choose another topic or switch back to live.";
+        ? MonitorEmptyText
+        : "Choose another broker or switch back to live.";
 
-    private string SelectedTopicMeta => string.IsNullOrWhiteSpace(_selectedTopic)
-        ? "All captured topics"
-        : "Selected topic and children";
+    private string MonitorEmptyText => BrokerGroups.Count switch
+    {
+        0 => "No app MQTT brokers are available for monitoring.",
+        1 => "One broker monitor is subscribed to #. Topics appear when retained or live messages arrive.",
+        var count => $"{count} broker monitors are subscribed to #. Topics appear when retained or live messages arrive."
+    };
+
+    private string LastStateSubtitle => LastMessage is null
+        ? SelectedTopicMeta
+        : $"{BrokerLabel(LastMessage)} / {LastMessage.Topic}";
+
+    private string SelectedTopicMeta => (_selectedBrokerName, _selectedTopic) switch
+    {
+        (null or "", null or "") => "Latest message across all broker topics",
+        ({ } _, null or "") => "Latest message for selected broker",
+        _ => "Latest message for selected broker topic and children"
+    };
+
+    protected override void OnInitialized()
+    {
+        Live.Changed += OnLiveChanged;
+        Projects.Changed += OnProjectsChanged;
+        SyncProjectSubscription();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await EnsureTopicMonitorAsync();
+        }
+    }
 
     private void OnFilterChanged(string value)
     {
         _filter = value;
     }
 
-    private void OnTopicSelected(string? topic)
+    private void OnBrokerSelected(string brokerName)
     {
+        _selectedBrokerName = string.IsNullOrWhiteSpace(brokerName) ? null : brokerName;
+        _selectedTopic = null;
+        SelectLatestFilteredMessage();
+    }
+
+    private void OnTopicSelected(string brokerName, string? topic)
+    {
+        _selectedBrokerName = string.IsNullOrWhiteSpace(brokerName) ? null : brokerName;
         _selectedTopic = string.IsNullOrWhiteSpace(topic) ? null : topic;
-        var latest = FilteredMessages.OrderByDescending(message => message.ReceivedAt).FirstOrDefault();
+        SelectLatestFilteredMessage();
+    }
+
+    private void ClearTopicSelection()
+    {
+        _selectedBrokerName = null;
+        _selectedTopic = null;
+        SelectLatestFilteredMessage();
+    }
+
+    private void SelectLatestFilteredMessage()
+    {
+        var latest = HistoryMessages.FirstOrDefault();
+        _selectedHistoryMessage = latest;
         if (latest is not null)
         {
             Live.SelectMessage(latest);
         }
     }
 
-    private void ClearTopicSelection()
+    private void OnHistoryMessageSelected(MqttEnvelope? message)
     {
-        _selectedTopic = null;
-    }
-
-    private void OnMessageSelected(MqttEnvelope? message)
-    {
+        _selectedHistoryMessage = message;
         if (message is not null)
         {
             Live.SelectMessage(message);
         }
     }
 
+    private bool CanEditBrokerMonitor(TopicBrokerGroup group)
+        => FindTopicMonitorConnection(group) is not null;
+
+    private TopicExplorerMonitorConnection? FindTopicMonitorConnection(TopicBrokerGroup group)
+        => TopicExplorerMonitorConnections.FirstOrDefault(connection =>
+            string.Equals(connection.DisplayName, group.Name, StringComparison.Ordinal) &&
+            string.Equals(connection.Endpoint, group.Endpoint, StringComparison.Ordinal));
+
+    private async Task OpenBrokerMonitorEditorAsync(TopicBrokerGroup group)
+    {
+        var active = Projects.ActiveProject;
+        var candidate = FindTopicMonitorConnection(group);
+        if (active is null ||
+            candidate is null ||
+            _setupDialogOpen)
+        {
+            return;
+        }
+
+        var saved = false;
+        _setupDialogOpen = true;
+        try
+        {
+            var preserveExplorerName = active.GetExplorers().ContainsKey(candidate.ExplorerName);
+            var parameters = new DialogParameters
+            {
+                ["Candidates"] = new[] { candidate },
+                ["Title"] = "Edit broker monitor",
+                ["SaveLabel"] = "Save changes",
+                ["PreserveCandidateExplorerNames"] = preserveExplorerName
+            };
+            var dialog = await DialogService.ShowAsync<TopicExplorerSetupDialog>("Edit broker monitor", parameters);
+            var result = await dialog.Result;
+            if (result is not { Canceled: false, Data: TopicExplorerSetupDialog.TopicExplorerSetupResult setup } ||
+                !ReferenceEquals(active, Projects.ActiveProject))
+            {
+                return;
+            }
+
+            foreach (var item in setup.Explorers)
+            {
+                active.UpsertExplorer(item.Name, item.Explorer);
+            }
+
+            saved = true;
+        }
+        finally
+        {
+            _setupDialogOpen = false;
+        }
+
+        if (saved)
+        {
+            await EnsureTopicMonitorAsync();
+        }
+    }
+
+    private string HistoryRowClass(MqttEnvelope message, int rowNumber)
+        => Equals(message, SelectedHistoryMessage)
+            ? "topic-history-row selected"
+            : "topic-history-row";
+
+    private static string FormatPayloadPreview(PayloadInspectionResult? inspection)
+    {
+        if (inspection is null)
+        {
+            return "No payload captured.";
+        }
+
+        if (inspection.SizeBytes == 0)
+        {
+            return "Empty payload.";
+        }
+
+        if (!string.IsNullOrWhiteSpace(inspection.FormattedText))
+        {
+            return inspection.FormattedText;
+        }
+
+        return inspection.IsText
+            ? inspection.RawText
+            : inspection.HexDump;
+    }
+
     private bool IsInSelectedTopic(string topic) =>
         string.IsNullOrWhiteSpace(_selectedTopic) ||
         string.Equals(topic, _selectedTopic, StringComparison.Ordinal) ||
         topic.StartsWith($"{_selectedTopic}/", StringComparison.Ordinal);
+
+    private string BrokerLabel(MqttEnvelope message)
+    {
+        if (!string.IsNullOrWhiteSpace(message.BrokerName))
+        {
+            return message.BrokerName.Trim();
+        }
+
+        var explorerBrokers = ExplorerBrokerSnapshots;
+        return explorerBrokers.Count == 1
+            ? explorerBrokers[0].Name
+            : "Unknown broker";
+    }
+
+    private string? SelectedTopicForGroup(string brokerName)
+        => string.Equals(_selectedBrokerName, brokerName, StringComparison.Ordinal)
+            ? _selectedTopic
+            : null;
+
+    private bool IsBrokerSelected(string brokerName)
+        => string.Equals(_selectedBrokerName, brokerName, StringComparison.Ordinal) &&
+           string.IsNullOrWhiteSpace(_selectedTopic);
+
+    private string BrokerRowClass(TopicBrokerGroup group)
+        => $"topic-broker-row {BrokerStateClass(group)}{(IsBrokerSelected(group.Name) ? " selected" : string.Empty)}";
+
+    private string MonitorRowClass(TopicBrokerGroup group)
+        => $"topic-monitor-row {BrokerStateClass(group)}";
+
+    private string BrokerStateClass(TopicBrokerGroup group)
+        => group.State switch
+        {
+            MqttClientState.Connected => "live",
+            MqttClientState.Connecting or MqttClientState.Reconnecting => "pending",
+            MqttClientState.Faulted => "faulted",
+            _ => "idle"
+        };
+
+    private static string BrokerStateLabel(TopicBrokerGroup group)
+        => group.State switch
+        {
+            MqttClientState.Connected => "Live",
+            MqttClientState.Connecting or MqttClientState.Reconnecting => "Connecting",
+            MqttClientState.Faulted => "Faulted",
+            _ => "Idle"
+        };
+
+    private string FilterForGroup(TopicBrokerGroup group)
+        => BrokerMatchesFilter(group) ? string.Empty : _filter;
+
+    private bool BrokerMatchesFilter(TopicBrokerGroup group)
+        => !string.IsNullOrWhiteSpace(_filter) &&
+           group.Name.Contains(_filter, StringComparison.OrdinalIgnoreCase);
+
+    private MqttClientState ConnectionStateFor(string monitorResourceName)
+    {
+        var connection = Live.Connections.FirstOrDefault(connection =>
+            string.Equals(connection.ResourceName, monitorResourceName, StringComparison.Ordinal));
+
+        return connection?.State ?? MqttClientState.Disconnected;
+    }
+
+    private async Task EnsureTopicMonitorAsync()
+    {
+        if (_disposed || _monitorStarting)
+        {
+            return;
+        }
+
+        if (!await EnsureTopicExplorerSetupAsync())
+        {
+            return;
+        }
+
+        var connections = BuildTopicMonitorConnections();
+
+        if (connections.Length == 0)
+        {
+            return;
+        }
+
+        _monitorStarting = true;
+        try
+        {
+            await Live.EnsureConnectionsAsync(connections).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            Console.Error.WriteLine($"Topics broker monitor failed: {exception.Message}");
+        }
+        finally
+        {
+            _monitorStarting = false;
+        }
+
+        if (!_disposed)
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private (string ResourceName, MqttConnectionProfile Profile, string Subscription)[] BuildTopicMonitorConnections()
+        => TopicExplorerMonitorResolver.Resolve(Projects.ActiveProject)
+            .Select(static connection => (
+                connection.ResourceName,
+                connection.Profile,
+                connection.Subscription))
+            .ToArray();
+
+    private async Task<bool> EnsureTopicExplorerSetupAsync()
+    {
+        var active = Projects.ActiveProject;
+        if (active is null ||
+            active.GetExplorers().Count > 0)
+        {
+            return true;
+        }
+
+        var connectionResources = active.GetConnectionResources();
+        if (connectionResources.Count == 0)
+        {
+            return true;
+        }
+
+        var candidates = TopicExplorerMonitorResolver.Resolve(
+            new Dictionary<string, ExplorerDefinition>(StringComparer.Ordinal),
+            connectionResources);
+        if (candidates.Count == 0)
+        {
+            return true;
+        }
+
+        if (_setupDialogOpen ||
+            ReferenceEquals(active, _setupPromptedProject))
+        {
+            return false;
+        }
+
+        _setupDialogOpen = true;
+        _setupPromptedProject = active;
+        try
+        {
+            var parameters = new DialogParameters
+            {
+                ["Candidates"] = candidates
+            };
+            var dialog = await DialogService.ShowAsync<TopicExplorerSetupDialog>("Topic monitors", parameters);
+            var result = await dialog.Result;
+            if (result is not { Canceled: false, Data: TopicExplorerSetupDialog.TopicExplorerSetupResult setup } ||
+                !ReferenceEquals(active, Projects.ActiveProject))
+            {
+                return false;
+            }
+
+            foreach (var item in setup.Explorers)
+            {
+                active.UpsertExplorer(item.Name, item.Explorer);
+            }
+
+            return true;
+        }
+        finally
+        {
+            _setupDialogOpen = false;
+        }
+    }
+
+    private void OnLiveChanged(object? sender, EventArgs e)
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void OnProjectsChanged(object? sender, EventArgs e)
+    {
+        SyncProjectSubscription();
+        _ = EnsureTopicMonitorAsync();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void OnProjectChanged(object? sender, EventArgs e)
+    {
+        _ = EnsureTopicMonitorAsync();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void SyncProjectSubscription()
+    {
+        var active = Projects.ActiveProject;
+        if (ReferenceEquals(active, _subscribedProject))
+        {
+            return;
+        }
+
+        if (_subscribedProject is not null)
+        {
+            _subscribedProject.Changed -= OnProjectChanged;
+        }
+
+        _subscribedProject = active;
+        if (_subscribedProject is not null)
+        {
+            _subscribedProject.Changed += OnProjectChanged;
+        }
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        Live.Changed -= OnLiveChanged;
+        Projects.Changed -= OnProjectsChanged;
+        if (_subscribedProject is not null)
+        {
+            _subscribedProject.Changed -= OnProjectChanged;
+        }
+    }
+
+    private sealed record TopicBrokerSnapshot(string Name, string Endpoint, MqttClientState State);
+
+    private sealed record TopicBrokerGroup(
+        string Name,
+        string Endpoint,
+        MqttClientState State,
+        IReadOnlyList<MqttEnvelope> Messages)
+    {
+        public int TopicCount => Messages
+            .Select(static message => message.Topic)
+            .Distinct(StringComparer.Ordinal)
+            .Count();
+    }
 }

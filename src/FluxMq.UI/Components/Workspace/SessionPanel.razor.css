@@ -390,23 +390,22 @@
 
 .sessions-empty {
     align-content: center;
-    align-items: start;
+    align-items: center;
     color: var(--mud-palette-text-secondary);
     display: grid;
     flex: 1 1 auto;
-    gap: 2px 9px;
-    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 6px;
+    grid-template-columns: minmax(0, min(300px, 100%));
     justify-content: center;
-    min-height: 96px;
+    justify-items: center;
+    min-height: 0;
     min-width: 0;
     padding: 12px;
-    text-align: left;
+    text-align: center;
 }
 
 .sessions-empty ::deep .mud-icon-root {
-    align-self: center;
     color: var(--flux-text-subtle);
-    grid-row: 1 / span 2;
 }
 
 .sessions-empty-title {
@@ -420,13 +419,12 @@
     color: var(--flux-text-muted);
     font-size: 12px;
     line-height: 1.35;
-    max-width: 260px;
+    max-width: 300px;
     overflow-wrap: anywhere;
 }
 
 .sessions-empty-action {
-    grid-column: 2;
-    justify-self: start;
+    justify-self: center;
     margin-top: 3px;
 }
 

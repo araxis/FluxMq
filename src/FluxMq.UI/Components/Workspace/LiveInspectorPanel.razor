@@ -1,4 +1,5 @@
 @implements IDisposable
+@using FluxMq.Core.Mqtt
 @using FluxMq.Core.Payloads
 @using FluxMq.UI.Models
 @using System.Text
@@ -6,316 +7,172 @@
 @inject LiveMqttWorkspaceService Live
 @inject ProjectManagerService Projects
 
-<div class="inspector-shell">
-    <div class="inspector-tabs" role="tablist" aria-label="Inspector views">
-        <button type="button"
-                class="inspector-tab @(_activeTab == InspectorTab.Inspect ? "active" : null)"
-                @onclick="@(() => _activeTab = InspectorTab.Inspect)">
-            <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
-            <span>Inspect</span>
-        </button>
-        <button type="button"
-                class="inspector-tab @(_activeTab == InspectorTab.Publish ? "active" : null)"
-                @onclick="@(() => _activeTab = InspectorTab.Publish)">
-            <MudIcon Icon="@Icons.Material.Filled.Send" Size="Size.Small" />
-            <span>Publish</span>
-        </button>
-        <button type="button"
-                class="inspector-tab @(_activeTab == InspectorTab.Topics ? "active" : null)"
-                @onclick="@(() => _activeTab = InspectorTab.Topics)">
-            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
-            <span>Topics</span>
-            @if (DisplayedMessages.Count > 0)
-            {
-                <span class="tab-count">@DisplayedMessages.Count</span>
-            }
-        </button>
-    </div>
+<div class="publisher-shell">
+    <header class="publisher-header">
+        <div class="publisher-title-lockup">
+            <span class="publisher-icon">
+                <MudIcon Icon="@Icons.Material.Filled.Send" Size="Size.Small" />
+            </span>
+            <span class="publisher-title-text">
+                <strong>MQTT Publisher</strong>
+                <span>@ActiveAppLabel</span>
+            </span>
+        </div>
+        <span class="@ConnectionBadgeClass">@ConnectionBadgeLabel</span>
+    </header>
 
-    @if (_activeTab == InspectorTab.Publish)
-    {
-        <div class="publish-view">
-            <div class="inspector-panel publish-form-panel">
-                <div class="publish-form-grid">
-                    @if (PublishConnections.Count > 0)
-                    {
-                        <label class="publish-field broker">
-                            <span class="field-label">Broker</span>
-                            <select class="publish-input" @bind="_publishConnectionId">
-                                @foreach (var connection in PublishConnections)
-                                {
-                                    <option value="@connection.Id.ToString()">
-                                        @connection.ResourceName (@connection.Profile.Host:@connection.Profile.Port)
-                                    </option>
-                                }
-                            </select>
-                        </label>
-                    }
-
-                    <label class="publish-field topic">
-                        <span class="field-label">Topic</span>
-                        <input class="publish-input" @bind="_publishTopic" />
-                    </label>
-
-                    <label class="publish-field payload">
-                        <span class="field-label split">
-                            <span>Payload</span>
-                            <span>@PayloadMeta</span>
-                        </span>
-                        <textarea class="publish-textarea" spellcheck="false" @bind="_publishPayload"></textarea>
-                    </label>
-
-                    <div class="publish-row">
-                        <label class="publish-qos-select" aria-label="Quality of service">
-                            <select @bind="_publishQos">
-                                <option value="@MqttQualityOfServiceLevel.AtMostOnce">QoS 0</option>
-                                <option value="@MqttQualityOfServiceLevel.AtLeastOnce">QoS 1</option>
-                                <option value="@MqttQualityOfServiceLevel.ExactlyOnce">QoS 2</option>
-                            </select>
-                        </label>
-                        <button type="button"
-                                class="publish-retain-toggle @(_retain ? "active" : null)"
-                                @onclick="@(() => _retain = !_retain)">
-                            <span>Retain</span>
-                            <strong>@(_retain ? "On" : "Off")</strong>
-                        </button>
-                        <button type="button"
-                                class="publish-submit"
-                                disabled="@_busy"
-                                @onclick="PublishAsync">
-                            <MudIcon Icon="@Icons.Material.Filled.Send" Size="Size.Small" />
-                            <span>Publish</span>
-                        </button>
-                    </div>
-                </div>
-
-                @if (Live.SelectedStoredSession is not null)
+    <section class="publisher-panel publish-form-panel">
+        <div class="publish-form-grid">
+            <label class="publish-field broker">
+                <span class="field-label split">
+                    <span>MQTT client</span>
+                    <span>@ClientCountLabel</span>
+                </span>
+                @if (PublishConnections.Count > 0)
                 {
-                    <div class="stored-session-note">
-                        <span>@Live.SelectedStoredSession.Name</span>
-                        <button type="button" @onclick="@Live.ClearStoredSessionSelection">Switch to live</button>
-                    </div>
-                }
-            </div>
-
-            <div class="inspector-panel live-topic-panel">
-                <div class="section-label">
-                    <span>Live topics</span>
-                    @if (LiveTopicRows.Count > 0)
-                    {
-                        <span class="section-count">@LiveTopicRows.Count</span>
-                    }
-                </div>
-
-                <div class="live-topic-list">
-                    @if (LiveTopicRows.Count == 0)
-                    {
-                        <div class="rail-empty-row">
-                            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
-                            <span>No live topics</span>
-                        </div>
-                    }
-                    else
-                    {
-                        @foreach (var topic in LiveTopicRows)
+                    <select class="publish-input" @bind="_publishConnectionId">
+                        @foreach (var connection in PublishConnections)
                         {
-                            <button type="button"
-                                    class="live-topic-row @(string.Equals(topic.Topic, _selectedTopic, StringComparison.Ordinal) ? "active" : null)"
-                                    @onclick="@(() => OnTopicSelected(topic.Topic))">
-                                <span class="live-topic-dot @(topic.IsHot ? "hot" : null)"></span>
-                                <span class="live-topic-name">@topic.Topic</span>
-                                <span class="live-topic-rate">@topic.RateLabel</span>
-                            </button>
+                            <option value="@connection.Id.ToString()">
+                                @connection.ResourceName (@connection.Profile.Host:@connection.Profile.Port)
+                            </option>
                         }
-                    }
-                </div>
-            </div>
-
-            <div class="inspector-panel last-payload-panel">
-                <div class="section-label">
-                    <span>Last payload</span>
-                    @if (LastPayloadMessage is not null)
-                    {
-                        <span>@LastPayloadMeta</span>
-                    }
-                </div>
-                @if (LastPayloadMessage is null)
-                {
-                    <div class="last-payload-empty">
-                        <MudIcon Icon="@Icons.Material.Filled.HourglassEmpty" Size="Size.Small" />
-                        <span>No payload captured</span>
-                    </div>
+                    </select>
                 }
                 else
                 {
-                    <pre class="last-payload-body">@LastPayloadPreview</pre>
+                    <div class="publish-static-state">No MQTT clients</div>
                 }
-            </div>
-        </div>
-    }
-    else if (_activeTab == InspectorTab.Topics)
-    {
-        <div class="inspector-panel fill">
-            <div class="section-label">
-                <span>Live topics</span>
-                @if (MessageSource.Count > 0)
-                {
-                    <span class="section-count">@MessageSource.Count msgs</span>
-                }
-            </div>
+            </label>
 
-            <div class="topic-toolbar">
+            <label class="publish-field topic">
+                <span class="field-label">Topic</span>
+                <input class="publish-input" @bind="_publishTopic" />
+            </label>
+
+            <label class="publish-field payload">
+                <span class="field-label split">
+                    <span>Payload</span>
+                    <span>@PayloadMeta</span>
+                </span>
+                <textarea class="publish-textarea" spellcheck="false" @bind="_publishPayload"></textarea>
+            </label>
+
+            <div class="publish-row">
+                <label class="publish-qos-select" aria-label="Quality of service">
+                    <select @bind="_publishQos">
+                        <option value="@MqttQualityOfServiceLevel.AtMostOnce">QoS 0</option>
+                        <option value="@MqttQualityOfServiceLevel.AtLeastOnce">QoS 1</option>
+                        <option value="@MqttQualityOfServiceLevel.ExactlyOnce">QoS 2</option>
+                    </select>
+                </label>
                 <button type="button"
-                        class="icon-toggle"
-                        aria-label="@(_treeView ? "Show message list" : "Show topic tree")"
-                        title="@(_treeView ? "Show message list" : "Show topic tree")"
-                        @onclick="@(() => _treeView = !_treeView)">
-                    <MudIcon Icon="@(_treeView ? Icons.Material.Filled.AccountTree : Icons.Material.Filled.ListAlt)"
-                             Size="Size.Small" />
+                        class="publish-retain-toggle @(_retain ? "active" : null)"
+                        @onclick="@(() => _retain = !_retain)">
+                    <span>Retain</span>
+                    <strong>@(_retain ? "On" : "Off")</strong>
                 </button>
-                <input class="topic-filter"
-                       placeholder="@(_treeView ? "Filter topics..." : "Filter messages...")"
-                       @bind="_filter"
-                       @bind:event="oninput" />
+                <button type="button"
+                        class="publish-submit"
+                        disabled="@(!CanPublish)"
+                        @onclick="PublishAsync">
+                    <MudIcon Icon="@Icons.Material.Filled.Send" Size="Size.Small" />
+                    <span>@PublishButtonLabel</span>
+                </button>
             </div>
+        </div>
+    </section>
 
-            @if (_treeView)
+    <section class="publisher-panel diagnostics-panel">
+        <div class="section-label">
+            <span>MQTT status</span>
+            @if (LatestDiagnostic is not null)
             {
-                <TopicTreeView Messages="@MessageSource"
-                               SelectedTopic="@_selectedTopic"
-                               TopicSelected="@OnTopicSelected"
-                               Filter="@_filter"
-                               Compact="true">
-                    <EmptyContent>
-                        <div class="rail-empty-state">
-                            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
-                            <strong>No live topics</strong>
-                            <span>Run a flow or publish a message.</span>
-                        </div>
-                    </EmptyContent>
-                </TopicTreeView>
-            }
-            else
-            {
-                <MudTable T="MqttEnvelope" Items="@FilteredTableMessages" Dense="true" Hover="true"
-                          Class="topic-message-table"
-                          Elevation="0" RowsPerPage="10" SelectOnRowClick="true"
-                          SelectedItem="@Live.SelectedMessage"
-                          SelectedItemChanged="@OnSelectionChanged">
-                    <HeaderContent>
-                        <MudTh>Topic</MudTh>
-                        <MudTh>Bytes</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Topic">
-                            <MudText Typo="Typo.caption" Class="text-truncate" Style="max-width:160px;display:block">
-                                @context.Topic
-                            </MudText>
-                        </MudTd>
-                        <MudTd DataLabel="Bytes">@context.Payload.Length</MudTd>
-                    </RowTemplate>
-                    <NoRecordsContent>
-                        <div class="rail-empty-state">
-                            <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Small" />
-                            <strong>No messages captured</strong>
-                            <span>Clear the filter or wait for traffic.</span>
-                        </div>
-                    </NoRecordsContent>
-                    <PagerContent>
-                        <MudTablePager HideRowsPerPage="true" />
-                    </PagerContent>
-                </MudTable>
+                <span>@LatestDiagnostic.Code</span>
             }
         </div>
-    }
-    else
-    {
-        <div class="inspector-panel fill inspect-panel">
-            @if (Live.SelectedMessage is null)
-            {
-                <div class="inspect-empty-state">
-                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
-                    <strong>No message selected</strong>
-                    <span>Choose a topic or message to inspect its payload.</span>
-                </div>
-            }
-            else
-            {
-                <PayloadInspectorPanel Title="Payload"
-                                       Topic="@Live.SelectedMessage.Topic"
-                                       ReceivedAt="@Live.SelectedMessage.ReceivedAt"
-                                       Payload="@Live.SelectedMessage.Payload" />
-            }
-        </div>
-    }
+
+        @if (LatestDiagnostic is null)
+        {
+            <div class="status-line muted">Idle</div>
+        }
+        else
+        {
+            <div class="@LatestDiagnosticClass">
+                <MudIcon Icon="@LatestDiagnosticIcon" Size="Size.Small" />
+                <span>@LatestDiagnostic.Message</span>
+            </div>
+        }
+    </section>
 </div>
 
 @code {
-    private InspectorTab _activeTab = InspectorTab.Publish;
     private bool _busy;
-    private bool _treeView = true;
     private string _publishConnectionId = string.Empty;
     private string _publishTopic = "fluxmq/test";
     private string _publishPayload = "{\"hello\":\"fluxmq\"}";
     private MqttQualityOfServiceLevel _publishQos = MqttQualityOfServiceLevel.AtMostOnce;
     private bool _retain;
-    private string? _selectedTopic;
-    private string _filter = string.Empty;
-    private System.Threading.Timer? _clock;
     private FlowWorkspaceService? _activeProject;
-
-    private IReadOnlyList<MqttEnvelope> MessageSource => Live.SelectedStoredSession is null
-        ? Live.RecentMessages
-        : Live.SelectedSessionMessages;
-
-    private IReadOnlyList<MqttEnvelope> DisplayedMessages => string.IsNullOrWhiteSpace(_selectedTopic)
-        ? MessageSource
-        : MessageSource.Where(m => IsInSelectedTopic(m.Topic)).ToArray();
-
-    private IReadOnlyList<MqttEnvelope> FilteredTableMessages =>
-        string.IsNullOrWhiteSpace(_filter)
-            ? DisplayedMessages
-            : DisplayedMessages.Where(m => m.Topic.Contains(_filter, StringComparison.OrdinalIgnoreCase)).ToArray();
-
-    private IReadOnlyList<LiveTopicRow> LiveTopicRows => BuildLiveTopicRows();
 
     private IReadOnlyList<ManagedConnection> PublishConnections => BuildPublishConnections();
 
-    private MqttEnvelope? LastPayloadMessage => MessageSource
-        .OrderByDescending(m => m.ReceivedAt)
-        .FirstOrDefault();
-
-    private string LastPayloadMeta
+    private ManagedConnection? SelectedConnection
     {
         get
         {
-            var message = LastPayloadMessage;
-            if (message is null)
-                return "idle";
-
-            var age = DateTimeOffset.UtcNow - message.ReceivedAt;
-            var ageText = age.TotalSeconds < 60
-                ? $"{Math.Max(0, age.TotalSeconds):0}s ago"
-                : $"{Math.Max(1, age.TotalMinutes):0}m ago";
-
-            return $"{ageText} / {message.Payload.Length} B";
+            EnsurePublishBrokerSelection();
+            return Guid.TryParse(_publishConnectionId, out var selectedId)
+                ? PublishConnections.FirstOrDefault(connection => connection.Id == selectedId)
+                : null;
         }
     }
 
-    private string LastPayloadPreview
+    private WorkspaceDiagnostic? LatestDiagnostic => Live.Diagnostics.LastOrDefault();
+
+    private bool CanPublish =>
+        !_busy &&
+        SelectedConnection is not null &&
+        !string.IsNullOrWhiteSpace(_publishTopic);
+
+    private string ActiveAppLabel => Projects.ActiveProject is null
+        ? "No active app"
+        : Projects.ActiveProject.Name;
+
+    private string ClientCountLabel => PublishConnections.Count switch
     {
-        get
-        {
-            var message = LastPayloadMessage;
-            if (message is null)
-                return "No payload captured.";
+        0 => "0 clients",
+        1 => "1 client",
+        var count => $"{count} clients"
+    };
 
-            var inspection = PayloadInspector.Inspect(message.Payload);
-            return string.IsNullOrWhiteSpace(inspection.FormattedText)
-                ? inspection.HexDump
-                : inspection.FormattedText;
-        }
-    }
+    private string ConnectionBadgeLabel => SelectedConnection?.State.ToString() ?? "No client";
+
+    private string ConnectionBadgeClass => SelectedConnection?.State switch
+    {
+        MqttClientState.Connected => "connection-badge connected",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "connection-badge pending",
+        MqttClientState.Faulted => "connection-badge faulted",
+        _ => "connection-badge"
+    };
+
+    private string LatestDiagnosticClass => LatestDiagnostic?.Severity switch
+    {
+        "Error" => "status-line error",
+        "Warning" => "status-line warning",
+        "Info" => "status-line info",
+        _ => "status-line muted"
+    };
+
+    private string LatestDiagnosticIcon => LatestDiagnostic?.Severity switch
+    {
+        "Error" => Icons.Material.Filled.ErrorOutline,
+        "Warning" => Icons.Material.Filled.WarningAmber,
+        "Info" => Icons.Material.Filled.CheckCircleOutline,
+        _ => Icons.Material.Filled.Info
+    };
+
+    private string PublishButtonLabel => _busy ? "Publishing" : "Publish";
 
     private string PayloadMeta
     {
@@ -332,24 +189,39 @@
         Live.Changed += OnChanged;
         Projects.Changed += OnProjectsChanged;
         SyncActiveProjectSubscription();
+        EnsureLiveConnectionsForActiveProject();
         EnsurePublishBrokerSelection();
-        _clock = new System.Threading.Timer(_ => _ = InvokeAsync(StateHasChanged), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
     }
 
     private async Task PublishAsync()
     {
-        EnsurePublishBrokerSelection();
+        var connection = SelectedConnection;
+        if (connection is null)
+        {
+            return;
+        }
+
         _busy = true;
         try
         {
-            var connectionId = Guid.TryParse(_publishConnectionId, out var parsedConnectionId)
-                ? parsedConnectionId
-                : (Guid?)null;
-            var selectedConnection = connectionId is { } id
-                ? PublishConnections.FirstOrDefault(connection => connection.Id == id)
-                : null;
+            if (connection.State != MqttClientState.Connected)
+            {
+                await Live.ConnectAsync(connection.Id);
+            }
 
-            var published = await Live.PublishAsync(connectionId, _publishTopic, _publishPayload, _publishQos, _retain);
+            var connectedConnection = PublishConnections.FirstOrDefault(item => item.Id == connection.Id);
+            if (connectedConnection?.State != MqttClientState.Connected)
+            {
+                return;
+            }
+
+            var published = await Live.PublishAsync(
+                connectedConnection.Id,
+                _publishTopic,
+                _publishPayload,
+                _publishQos,
+                _retain);
+
             if (published)
             {
                 Projects.ActiveProject?.RecordManualMqttPublish(
@@ -357,10 +229,14 @@
                     _publishPayload,
                     (int)_publishQos,
                     _retain,
-                    selectedConnection?.ResourceName);
+                    connectedConnection.ResourceName);
             }
         }
-        finally { _busy = false; StateHasChanged(); }
+        finally
+        {
+            _busy = false;
+            StateHasChanged();
+        }
     }
 
     private void OnChanged(object? sender, EventArgs e)
@@ -372,43 +248,34 @@
     private void OnProjectsChanged(object? sender, EventArgs e)
     {
         SyncActiveProjectSubscription();
+        EnsureLiveConnectionsForActiveProject();
         EnsurePublishBrokerSelection();
         _ = InvokeAsync(StateHasChanged);
     }
 
     private void OnProjectChanged(object? sender, EventArgs e)
     {
+        EnsureLiveConnectionsForActiveProject();
         EnsurePublishBrokerSelection();
         _ = InvokeAsync(StateHasChanged);
     }
 
-    private void OnSelectionChanged(MqttEnvelope? msg)
-    {
-        if (msg is not null)
-            Live.SelectMessage(msg);
-    }
-
-    private void OnTopicSelected(string? topic)
-    {
-        _selectedTopic = topic;
-        if (string.IsNullOrWhiteSpace(topic)) return;
-        var latest = DisplayedMessages.OrderByDescending(m => m.ReceivedAt).FirstOrDefault();
-        if (latest is not null)
-            Live.SelectMessage(latest);
-    }
-
-    private bool IsInSelectedTopic(string topic) =>
-        string.IsNullOrWhiteSpace(_selectedTopic) ||
-        string.Equals(topic, _selectedTopic, StringComparison.Ordinal) ||
-        topic.StartsWith($"{_selectedTopic}/", StringComparison.Ordinal);
-
     private IReadOnlyList<ManagedConnection> BuildPublishConnections()
     {
-        var appConnectionOrder = (Projects.ActiveProject?.GetConnectionNames() ?? [])
-            .Select((name, index) => (Name: name, Index: index))
+        var projectConnections = Projects.ActiveProject?.GetConnectionResources() ?? [];
+        var appConnectionOrder = projectConnections
+            .Select((connection, index) => (connection.Name, Index: index))
             .ToDictionary(item => item.Name, item => item.Index, StringComparer.Ordinal);
 
-        return Live.Connections
+        var liveConnections = Live.Connections;
+        if (Projects.ActiveProject is not null)
+        {
+            liveConnections = liveConnections
+                .Where(connection => appConnectionOrder.ContainsKey(connection.ResourceName))
+                .ToArray();
+        }
+
+        return liveConnections
             .OrderBy(connection => appConnectionOrder.TryGetValue(connection.ResourceName, out var index)
                 ? index
                 : int.MaxValue)
@@ -416,9 +283,22 @@
             .ToArray();
     }
 
+    private void EnsureLiveConnectionsForActiveProject()
+    {
+        if (Projects.ActiveProject is not { } project)
+        {
+            return;
+        }
+
+        foreach (var (name, profile, subscription) in project.GetConnectionResources())
+        {
+            Live.AddConnectionIfAbsent(profile, subscription, name);
+        }
+    }
+
     private void EnsurePublishBrokerSelection()
     {
-        var connections = PublishConnections;
+        var connections = BuildPublishConnections();
         if (connections.Count == 0)
         {
             _publishConnectionId = string.Empty;
@@ -455,30 +335,6 @@
         }
     }
 
-    private IReadOnlyList<LiveTopicRow> BuildLiveTopicRows()
-    {
-        var now = DateTimeOffset.UtcNow;
-        var windowStart = now.AddSeconds(-10);
-
-        return MessageSource
-            .GroupBy(m => m.Topic, StringComparer.Ordinal)
-            .Select(group =>
-            {
-                var latest = group.Max(m => m.ReceivedAt);
-                var recentCount = group.Count(m => m.ReceivedAt >= windowStart);
-                var rate = recentCount / 10d;
-
-                return new LiveTopicRow(
-                    group.Key,
-                    now - latest < TimeSpan.FromSeconds(15),
-                    rate >= 10 ? $"{rate:0}/s" : $"{rate:0.0}/s");
-            })
-            .OrderByDescending(row => row.IsHot)
-            .ThenBy(row => row.Topic, StringComparer.Ordinal)
-            .Take(8)
-            .ToArray();
-    }
-
     public void Dispose()
     {
         Live.Changed -= OnChanged;
@@ -487,16 +343,5 @@
         {
             _activeProject.Changed -= OnProjectChanged;
         }
-
-        _clock?.Dispose();
-    }
-
-    private sealed record LiveTopicRow(string Topic, bool IsHot, string RateLabel);
-
-    private enum InspectorTab
-    {
-        Inspect,
-        Publish,
-        Topics
     }
 }

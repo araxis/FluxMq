@@ -215,19 +215,19 @@
     color: var(--mud-palette-text-secondary);
     display: grid;
     flex: 1 1 auto;
-    gap: 3px 10px;
-    grid-template-columns: 34px minmax(0, 1fr);
-    justify-content: stretch;
+    gap: 6px;
+    grid-template-columns: minmax(0, min(320px, 100%));
+    justify-content: center;
+    justify-items: center;
     min-height: 0;
     padding: 12px;
-    text-align: left;
+    text-align: center;
 }
 
 .dashboard-inspector-empty-card {
     display: grid;
     gap: 6px;
-    grid-column: 1 / -1;
-    max-width: 100%;
+    max-width: 320px;
     min-width: 0;
     width: 100%;
 }
@@ -235,7 +235,7 @@
 .dashboard-inspector-empty .dashboard-inspector-cell-summary {
     align-self: stretch;
     max-width: 100%;
-    text-align: left;
+    text-align: center;
 }
 
 .dashboard-inspector-empty-icon {
@@ -245,7 +245,6 @@
     border-radius: 6px;
     color: var(--flux-accent);
     display: inline-flex;
-    grid-row: 1 / span 2;
     height: 34px;
     justify-content: center;
     width: 34px;
@@ -298,7 +297,7 @@
     }
 
     .dashboard-inspector-empty {
-        align-content: start;
+        align-content: center;
         padding: 10px 12px;
     }
 

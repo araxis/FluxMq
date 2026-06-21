@@ -15,8 +15,8 @@
         linear-gradient(90deg, color-mix(in srgb, var(--flux-border) 18%, transparent) 1px, transparent 1px),
         var(--flux-canvas);
     background-size: 48px 48px;
-    flex: 1 1 auto;
-    height: 100%;
+    flex: 1 1 0;
+    height: auto;
     min-height: 0;
     min-width: 0;
     overflow: hidden;
@@ -30,16 +30,15 @@
     border: 1px solid var(--flux-border);
     border-radius: 6px;
     display: grid;
+    flex: 0 0 auto;
     gap: 8px;
     grid-template-columns: minmax(0, 1fr) auto;
-    left: 10px;
+    margin: 10px 10px 0;
     min-height: 46px;
     min-width: 0;
     padding: 6px 8px;
-    position: absolute;
-    right: 10px;
-    top: 10px;
-    z-index: 24;
+    position: relative;
+    z-index: 2;
 }
 
 .flow-canvas-title {
@@ -113,8 +112,7 @@
 }
 
 .flow-canvas-meta-strip span,
-.flow-state,
-.flow-canvas-chip {
+.flow-state {
     align-items: center;
     background: color-mix(in srgb, var(--flux-surface-2) 82%, transparent);
     border: 1px solid var(--flux-border);
@@ -142,10 +140,39 @@
     text-overflow: ellipsis;
 }
 
-.flow-state,
-.flow-canvas-chip {
+.flow-state {
     flex: 0 1 auto;
     max-width: 132px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.flow-canvas-stat {
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    display: inline-flex;
+    flex: 0 1 auto;
+    font-size: 0.68rem;
+    font-weight: 650;
+    gap: 4px;
+    line-height: 1;
+    max-width: 116px;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.flow-canvas-stat:not(:last-child)::after {
+    background: var(--flux-border);
+    content: "";
+    flex: 0 0 auto;
+    height: 14px;
+    margin-left: 5px;
+    width: 1px;
+}
+
+.flow-canvas-stat span {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -187,25 +214,43 @@
     background: var(--mud-palette-warning);
 }
 
-.flow-canvas-chip strong {
+.flow-canvas-stat strong {
     color: var(--mud-palette-text-primary);
     font-family: Consolas, "Courier New", monospace;
     font-size: 0.72rem;
 }
 
-.flow-canvas-chip.error {
-    border-color: color-mix(in srgb, var(--mud-palette-error) 52%, transparent);
+.flow-canvas-stat.error {
     color: var(--mud-palette-error);
 }
 
-.flow-canvas-chip.warning {
-    border-color: color-mix(in srgb, var(--mud-palette-warning) 48%, transparent);
+.flow-canvas-stat.warning {
     color: var(--mud-palette-warning);
 }
 
-.flow-canvas-chip.info {
-    border-color: color-mix(in srgb, var(--mud-palette-info) 45%, transparent);
+.flow-canvas-stat.info {
     color: var(--mud-palette-info);
+}
+
+.flow-canvas-stat-button {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0;
+}
+
+.flow-canvas-stat-button:hover span,
+.flow-canvas-stat-button:focus-visible span {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.flow-canvas-stat-button:focus-visible {
+    border-radius: 4px;
+    outline: 2px solid color-mix(in srgb, var(--flux-accent) 70%, transparent);
+    outline-offset: 3px;
 }
 
 .flow-canvas-command-group ::deep .flow-canvas-icon-button {
@@ -231,14 +276,15 @@
     border-radius: 8px;
     color: var(--mud-palette-text-secondary);
     display: grid;
-    gap: 3px 10px;
-    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 6px;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
     left: 50%;
     max-width: min(100%, 420px);
     padding: 10px 12px;
     pointer-events: none;
     position: absolute;
-    text-align: left;
+    text-align: center;
     top: 50%;
     transform: translate(-50%, -50%);
     width: calc(100% - 32px);
@@ -252,7 +298,6 @@
     border-radius: 6px;
     color: var(--flux-accent);
     display: inline-flex;
-    grid-row: 1 / span 3;
     height: 32px;
     justify-content: center;
     width: 32px;
@@ -280,175 +325,6 @@
     color: var(--mud-palette-text-disabled);
 }
 
-.flow-diagnostic-panel {
-    background: color-mix(in srgb, var(--flux-surface) 96%, transparent);
-    border: 1px solid var(--flux-border);
-    border-radius: 6px;
-    box-shadow: none;
-    display: grid;
-    gap: 6px;
-    left: 10px;
-    max-height: 112px;
-    min-width: 0;
-    overflow: hidden;
-    padding: 6px;
-    position: absolute;
-    right: 10px;
-    top: 62px;
-    z-index: 23;
-}
-
-.flow-diagnostic-panel.error {
-    border-color: color-mix(in srgb, var(--mud-palette-error) 36%, var(--flux-border));
-}
-
-.flow-diagnostic-panel.warning {
-    border-color: color-mix(in srgb, var(--mud-palette-warning) 34%, var(--flux-border));
-}
-
-.flow-diagnostic-panel.info {
-    border-color: color-mix(in srgb, var(--mud-palette-info) 32%, var(--flux-border));
-}
-
-.flow-diagnostic-panel-head {
-    align-items: center;
-    display: grid;
-    gap: 7px;
-    grid-template-columns: 26px minmax(0, 1fr);
-    min-width: 0;
-}
-
-.flow-diagnostic-panel-icon {
-    align-items: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 72%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
-    border-radius: 6px;
-    display: inline-flex;
-    height: 26px;
-    justify-content: center;
-    width: 26px;
-}
-
-.flow-diagnostic-panel.error .flow-diagnostic-panel-icon {
-    border-color: color-mix(in srgb, var(--mud-palette-error) 38%, transparent);
-    color: var(--mud-palette-error);
-}
-
-.flow-diagnostic-panel.warning .flow-diagnostic-panel-icon {
-    border-color: color-mix(in srgb, var(--mud-palette-warning) 38%, transparent);
-    color: var(--mud-palette-warning);
-}
-
-.flow-diagnostic-panel.info .flow-diagnostic-panel-icon {
-    border-color: color-mix(in srgb, var(--mud-palette-info) 38%, transparent);
-    color: var(--mud-palette-info);
-}
-
-.flow-diagnostic-panel-copy {
-    display: grid;
-    gap: 2px;
-    min-width: 0;
-}
-
-.flow-diagnostic-panel-copy strong {
-    color: var(--mud-palette-text-primary);
-    font-size: 0.78rem;
-    font-weight: 760;
-    letter-spacing: 0;
-    line-height: 1.1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.flow-diagnostic-panel-copy span {
-    color: var(--mud-palette-text-secondary);
-    font-size: 0.66rem;
-    font-weight: 650;
-    line-height: 1.1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.flow-diagnostic-list {
-    display: grid;
-    gap: 4px;
-    min-width: 0;
-}
-
-.flow-diagnostic-row {
-    align-items: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 50%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border) 62%, transparent);
-    border-radius: 5px;
-    display: grid;
-    gap: 6px;
-    grid-template-columns: 16px minmax(48px, 0.28fr) minmax(64px, 0.36fr) minmax(0, 1fr);
-    min-height: 23px;
-    min-width: 0;
-    padding: 0 6px;
-}
-
-.flow-diagnostic-row-icon {
-    align-items: center;
-    display: inline-flex;
-    justify-content: center;
-}
-
-.flow-diagnostic-row-icon ::deep .mud-icon-root {
-    font-size: 15px;
-}
-
-.flow-diagnostic-row.severity-error .flow-diagnostic-row-icon {
-    color: var(--mud-palette-error);
-}
-
-.flow-diagnostic-row.severity-warning .flow-diagnostic-row-icon {
-    color: var(--mud-palette-warning);
-}
-
-.flow-diagnostic-row.severity-info .flow-diagnostic-row-icon {
-    color: var(--mud-palette-info);
-}
-
-.flow-diagnostic-code,
-.flow-diagnostic-target,
-.flow-diagnostic-message,
-.flow-diagnostic-more {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.flow-diagnostic-code {
-    color: var(--mud-palette-text-primary);
-    font-family: Consolas, "Courier New", monospace;
-    font-size: 0.66rem;
-    font-weight: 700;
-}
-
-.flow-diagnostic-target {
-    color: var(--mud-palette-text-secondary);
-    font-size: 0.66rem;
-    font-weight: 700;
-}
-
-.flow-diagnostic-message {
-    color: var(--mud-palette-text-primary);
-    font-size: 0.68rem;
-    font-weight: 600;
-}
-
-.flow-diagnostic-more {
-    color: var(--mud-palette-text-secondary);
-    font-size: 0.66rem;
-    font-weight: 700;
-    line-height: 1.1;
-    padding: 1px 6px 0 28px;
-}
-
 .flow-link-condition-panel {
     align-items: center;
     background: color-mix(in srgb, var(--flux-surface) 96%, transparent);
@@ -464,10 +340,6 @@
     right: 10px;
     top: 62px;
     z-index: 24;
-}
-
-.flow-link-condition-panel.with-diagnostics {
-    top: 184px;
 }
 
 .flow-link-condition-meta {
@@ -520,10 +392,8 @@
         align-items: stretch;
         gap: 6px;
         grid-template-columns: minmax(0, 1fr);
-        left: 8px;
+        margin: 8px 8px 0;
         padding: 6px;
-        right: 8px;
-        top: 8px;
     }
 
     .flow-canvas-title h2 {
@@ -539,8 +409,8 @@
         flex-wrap: wrap;
     }
 
-    .flow-canvas-chip {
-        height: 24px;
+    .flow-canvas-stat {
+        height: 22px;
     }
 
     .flow-canvas-empty {
@@ -555,21 +425,6 @@
         grid-row: auto;
     }
 
-    .flow-diagnostic-panel {
-        left: 8px;
-        max-height: 112px;
-        right: 8px;
-        top: 130px;
-    }
-
-    .flow-diagnostic-row {
-        grid-template-columns: 16px minmax(42px, 0.34fr) minmax(0, 0.55fr);
-    }
-
-    .flow-diagnostic-message {
-        display: none;
-    }
-
     .flow-link-condition-panel {
         align-items: stretch;
         flex-direction: column;
@@ -577,10 +432,6 @@
         max-width: none;
         right: 8px;
         top: 130px;
-    }
-
-    .flow-link-condition-panel.with-diagnostics {
-        top: 250px;
     }
 
     .flow-link-condition-meta {

@@ -73,10 +73,6 @@
     margin-top: 0;
 }
 
-.new-pipeline-dialog-field ::deep(.mud-input-slot) {
-    font-size: 13px;
-}
-
 .new-pipeline-dialog-actions {
     align-items: center;
     display: flex;

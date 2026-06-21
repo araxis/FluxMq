@@ -94,25 +94,6 @@
                       Class="workspace-log-search" />
     </div>
 
-    @if (ProblemCount > 0)
-    {
-        <div class="workspace-log-status @ProblemStatusClass" role="status" aria-live="polite">
-            <span class="workspace-log-status-icon" aria-hidden="true">
-                <MudIcon Icon="@ProblemStatusIcon" Size="Size.Small" />
-            </span>
-            <div class="workspace-log-status-copy">
-                <strong>@ProblemStatusTitle</strong>
-                <span>@ProblemStatusText</span>
-            </div>
-            <button type="button"
-                    class="workspace-log-status-action"
-                    disabled="@IsSeveritySelected(WorkspaceLogFilter.Problems)"
-                    @onclick="@(() => SetSeverity(WorkspaceLogFilter.Problems))">
-                Show problems
-            </button>
-        </div>
-    }
-
     <div class="workspace-log-list" role="log" aria-label="Workspace logs">
         @if (FilteredLogs.Count == 0)
         {
@@ -188,11 +169,13 @@
     private string _scope = WorkspaceLogFilter.All;
     private string _severity = WorkspaceLogFilter.All;
     private string? _search;
+    private WorkspaceLogQuery? _appliedInitialQuery;
 
     [Parameter] public IReadOnlyList<WorkspaceLogEntry> Logs { get; set; } = [];
     [Parameter] public EventCallback OnClear { get; set; }
     [Parameter] public string Title { get; set; } = "Logs";
     [Parameter] public string? ForcedScope { get; set; }
+    [Parameter] public WorkspaceLogQuery? InitialQuery { get; set; }
     [Parameter] public bool Compact { get; set; }
     [Parameter] public int MaxEntries { get; set; } = 500;
 
@@ -230,17 +213,6 @@
         ? "Adjust filters or search text."
         : "Validate, run, or test the app to record workspace events.";
 
-    private string ProblemStatusClass => ErrorCount > 0 ? "error" : "warning";
-    private string ProblemStatusIcon => ErrorCount > 0 ? Icons.Material.Filled.ErrorOutline : Icons.Material.Filled.WarningAmber;
-    private string ProblemStatusTitle => ErrorCount > 0 ? "Action needed" : "Warnings recorded";
-
-    private string ProblemStatusText => (ErrorCount, WarningCount) switch
-    {
-        (> 0, > 0) => $"{FormatCount(ErrorCount, "error")} and {FormatCount(WarningCount, "warning")} in the current log stream.",
-        (> 0, _) => $"{FormatCount(ErrorCount, "error")} in the current log stream.",
-        _ => $"{FormatCount(WarningCount, "warning")} in the current log stream."
-    };
-
     private IReadOnlyList<string> ScopeOptions
     {
         get
@@ -266,6 +238,27 @@
 
             return scopes;
         }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (InitialQuery is null || InitialQuery.Equals(_appliedInitialQuery))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(ForcedScope))
+        {
+            _scope = string.IsNullOrWhiteSpace(InitialQuery.Scope)
+                ? WorkspaceLogFilter.All
+                : InitialQuery.Scope;
+        }
+
+        _severity = string.IsNullOrWhiteSpace(InitialQuery.Severity)
+            ? WorkspaceLogFilter.All
+            : InitialQuery.Severity;
+        _search = InitialQuery.Search;
+        _appliedInitialQuery = InitialQuery;
     }
 
     private async Task ClearAsync()
@@ -416,6 +409,4 @@
             _ => Icons.Material.Filled.Info
         };
 
-    private static string FormatCount(int count, string singular)
-        => count == 1 ? $"1 {singular}" : $"{count} {singular}s";
 }

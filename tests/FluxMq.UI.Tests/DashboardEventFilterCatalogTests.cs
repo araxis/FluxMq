@@ -2555,11 +2555,11 @@ public sealed class DashboardEventFilterCatalogTests
         inspectorCss.ShouldContain("overflow: hidden;");
         inspectorCss.ShouldNotContain(".dashboard-inspector-empty::before");
         inspectorCss.ShouldContain(".dashboard-inspector-empty-icon");
-        inspectorCss.ShouldContain("grid-template-columns: 34px minmax(0, 1fr);");
-        inspectorCss.ShouldContain("grid-column: 1 / -1;");
-        inspectorCss.ShouldContain("grid-row: 1 / span 2;");
+        inspectorCss.ShouldContain("grid-template-columns: minmax(0, min(320px, 100%));");
+        inspectorCss.ShouldContain("justify-items: center;");
+        inspectorCss.ShouldContain("text-align: center;");
         inspectorCss.ShouldContain("overflow-wrap: anywhere;");
-        inspectorCss.ShouldContain("align-content: start;");
+        inspectorCss.ShouldContain("align-content: center;");
         inspectorCss.ShouldContain(".dashboard-inspector-meta-strip span:nth-child(n + 3)");
         inspectorCss.ShouldContain(".dashboard-inspector-reset-command span,");
         visualMetricRows.ShouldContain("KeyboardArrowUp");
@@ -2570,7 +2570,7 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
-    public void LiveInspectorPanel_UsesFlatCompactPublishRail()
+    public void LiveInspectorPanel_UsesAppLevelMqttPublisherPanel()
     {
         var root = FindRepositoryRoot();
         var markup = File.ReadAllText(Path.Combine(
@@ -2588,64 +2588,186 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "LiveInspectorPanel.razor.css"));
 
-        markup.ShouldContain("Icons.Material.Filled.Search");
         markup.ShouldContain("Icons.Material.Filled.Send");
-        markup.ShouldContain("Icons.Material.Filled.AccountTree");
-        markup.ShouldContain("DisplayedMessages.Count > 0");
-        markup.ShouldContain("LiveTopicRows.Count > 0");
-        markup.ShouldContain("LastPayloadMessage is not null");
-        markup.ShouldContain("LastPayloadMessage is null");
-        markup.ShouldContain("MessageSource.Count > 0");
-        markup.ShouldContain("Compact=\"true\"");
-        markup.ShouldContain("rail-empty-row");
-        markup.ShouldContain("rail-empty-state");
-        markup.ShouldContain("last-payload-empty");
-        markup.ShouldContain("inspect-empty-state");
-        markup.ShouldContain("topic-message-table");
-        markup.ShouldContain("Show message list");
-        markup.ShouldContain("No message selected");
+        markup.ShouldContain("MQTT Publisher");
+        markup.ShouldContain("MQTT client");
+        markup.ShouldContain("MQTT status");
+        markup.ShouldContain("ActiveAppLabel");
+        markup.ShouldContain("ClientCountLabel");
+        markup.ShouldContain("ConnectionBadgeClass");
+        markup.ShouldContain("EnsureLiveConnectionsForActiveProject");
+        markup.ShouldContain("Live.AddConnectionIfAbsent(profile, subscription, name)");
+        markup.ShouldContain("Live.ConnectAsync(connection.Id)");
+        markup.ShouldContain("Live.PublishAsync(");
+        markup.ShouldContain("RecordManualMqttPublish");
+        markup.ShouldContain("diagnostics-panel");
         markup.ShouldContain("publish-form-grid");
         markup.ShouldContain("publish-field broker");
         markup.ShouldContain("publish-field topic");
         markup.ShouldContain("publish-field payload");
         markup.ShouldContain("publish-qos-select");
         markup.ShouldContain("publish-retain-toggle");
-        markup.ShouldContain("section-count");
-        markup.ShouldNotContain("Recording");
+        markup.ShouldContain("publish-submit");
+        markup.ShouldContain("No MQTT clients");
+        markup.ShouldNotContain("Selected client");
+        markup.ShouldNotContain("ConnectSelectedAsync");
+        markup.ShouldNotContain("publisher-empty-state");
+        markup.ShouldNotContain("client-summary");
+        markup.ShouldNotContain("Add an app MQTT connection to publish messages.");
+        markup.ShouldNotContain("InspectorTab");
+        markup.ShouldNotContain("<SessionPanel />");
+        markup.ShouldNotContain("<TopicTreeView");
+        markup.ShouldNotContain("<PayloadInspectorPanel");
+        markup.ShouldNotContain("Live.StoredSessions");
+        markup.ShouldNotContain("LiveTopicRows");
+        markup.ShouldNotContain("LastPayloadMessage");
+        markup.ShouldNotContain("DisplayedMessages");
+        markup.ShouldNotContain("MessageSource");
+        markup.ShouldNotContain("Show message list");
+        markup.ShouldNotContain("Live topics");
+        markup.ShouldNotContain("<span>Recordings</span>");
+        markup.ShouldNotContain("<span>Inspect</span>");
         markup.ShouldNotContain("select-pill");
         markup.ShouldNotContain("pill-button");
         markup.ShouldNotContain("section-badge");
 
-        css.ShouldContain("flex: 0 0 36px;");
-        css.ShouldContain(".inspector-tab ::deep .mud-icon-root");
-        css.ShouldContain("padding: 10px;");
+        css.ShouldContain(".publisher-header");
+        css.ShouldContain(".publisher-title-lockup");
+        css.ShouldContain(".publisher-icon");
+        css.ShouldContain(".connection-badge.connected");
+        css.ShouldContain(".connection-badge.pending");
+        css.ShouldContain(".connection-badge.faulted");
+        css.ShouldContain(".publisher-panel");
         css.ShouldContain(".publish-form-grid");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);");
         css.ShouldContain(".publish-field.payload,");
         css.ShouldContain("grid-column: 1 / -1;");
         css.ShouldContain("text-transform: none;");
-        css.ShouldContain("height: 28px;");
-        css.ShouldContain("min-height: 56px;");
-        css.ShouldContain("max-height: 96px;");
+        css.ShouldContain("height: 30px;");
+        css.ShouldContain("min-height: 88px;");
+        css.ShouldContain("max-height: 150px;");
         css.ShouldContain(".publish-qos-select");
         css.ShouldContain(".publish-retain-toggle.active");
-        css.ShouldContain(".section-count");
-        css.ShouldContain("height: 30px;");
-        css.ShouldContain(".rail-empty-state,");
-        css.ShouldContain(".inspect-empty-state");
-        css.ShouldContain("grid-template-columns: 26px minmax(0, 1fr);");
-        css.ShouldContain("min-height: 92px;");
-        css.ShouldContain("grid-row: 1 / span 2;");
-        css.ShouldContain(".topic-message-table ::deep .mud-table-container");
-        css.ShouldContain(".topic-message-table ::deep th,");
-        css.ShouldContain("min-height: 32px;");
-        css.ShouldContain("max-height: 72px;");
+        css.ShouldContain(".diagnostics-panel");
+        css.ShouldContain(".status-line.info");
+        css.ShouldContain(".status-line.warning");
+        css.ShouldContain(".status-line.error");
+        css.ShouldNotContain(".client-panel");
+        css.ShouldNotContain(".client-summary");
+        css.ShouldNotContain(".client-state-dot");
+        css.ShouldNotContain(".client-action");
+        css.ShouldNotContain(".client-error");
+        css.ShouldNotContain(".publisher-empty-state");
+        css.ShouldNotContain(".inspector-tabs");
+        css.ShouldNotContain(".inspector-tab");
+        css.ShouldNotContain(".tab-live-dot");
+        css.ShouldNotContain(".recordings-panel");
+        css.ShouldNotContain(".topic-message-table");
+        css.ShouldNotContain(".last-payload");
         css.ShouldNotContain(".recording-label");
         css.ShouldNotContain(".empty-topic-row");
         css.ShouldNotContain(".select-pill");
         css.ShouldNotContain(".pill-button");
         css.ShouldNotContain(".section-badge");
         css.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
+    public void MainLayout_RemovesSessionOnlyLeftRail()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Layout",
+            "MainLayout.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Layout",
+            "MainLayout.razor.css"));
+        var appCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "wwwroot",
+            "app.css"));
+
+        markup.ShouldContain("PrimaryContrastText = \"#FFFFFF\"");
+        markup.ShouldContain("PrimaryContrastText = \"#062A26\"");
+        markup.ShouldContain("BackgroundGray = \"#F7F9FB\"");
+        markup.ShouldContain("BackgroundGray = \"#161B24\"");
+        markup.ShouldContain("TextDisabled = \"#6B7280\"");
+        markup.ShouldContain("PrimaryDarken = \"#115E59\"");
+        markup.ShouldContain("PrimaryLighten = \"#5EEAD4\"");
+        markup.ShouldContain("<LiveInspectorPanel />");
+        markup.ShouldContain("@if (HasActiveProject)");
+        markup.ShouldContain("private bool HasActiveProject => Projects.ActiveProject is not null;");
+        markup.ShouldContain("no-active-project");
+        markup.ShouldContain("Hide MQTT publisher");
+        markup.ShouldContain("Show MQTT publisher");
+        markup.ShouldNotContain("Workspace navigation");
+        markup.ShouldNotContain("No active project");
+        markup.ShouldNotContain("flux-rail");
+        markup.ShouldNotContain("flux-left-panel");
+        markup.ShouldNotContain("left-collapsed");
+        markup.ShouldNotContain("_leftOpen");
+        markup.ShouldNotContain("<SessionPanel />");
+
+        css.ShouldContain("--flux-right-width: 360px;");
+        css.ShouldContain("\"top top\"");
+        css.ShouldContain("\"main right\"");
+        css.ShouldContain("\"status status\"");
+        css.ShouldContain(".flux-breadcrumb");
+        css.ShouldContain("font-size: 12.5px;");
+        css.ShouldContain("font-weight: 650;");
+        css.ShouldContain(".flux-shell.right-collapsed");
+        css.ShouldContain(".flux-shell.no-active-project");
+        css.ShouldContain("grid-template-areas: \"main\";");
+        css.ShouldContain("grid-template-rows: minmax(0, 1fr);");
+        css.ShouldContain("\"main\"");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) var(--flux-right-width);");
+        css.ShouldNotContain("--flux-rail-width");
+        css.ShouldNotContain("--flux-left-width");
+        css.ShouldNotContain(".flux-rail");
+        css.ShouldNotContain(".flux-left-panel");
+        css.ShouldNotContain("left-collapsed");
+        css.ShouldNotContain(".flux-panel-header");
+        css.ShouldNotContain(".flux-panel-body");
+
+        appCss.ShouldContain("--flux-bg: var(--mud-palette-background);");
+        appCss.ShouldContain("--flux-surface: var(--mud-palette-surface);");
+        appCss.ShouldContain("--flux-surface-2: var(--mud-palette-background-gray);");
+        appCss.ShouldContain("--flux-border: var(--mud-palette-lines-default);");
+        appCss.ShouldContain("--flux-border-strong: var(--mud-palette-lines-inputs);");
+        appCss.ShouldContain("--flux-accent: var(--mud-palette-primary);");
+        appCss.ShouldContain("--flux-text-muted: var(--mud-palette-text-disabled);");
+        appCss.ShouldContain("--flux-accent-contrast: var(--mud-palette-primary-text);");
+        appCss.ShouldContain("--flux-accent-soft: color-mix(in srgb, var(--mud-palette-primary)");
+        appCss.ShouldContain(".flux-shell .mud-input > input.mud-input-root,");
+        appCss.ShouldContain(".flux-shell .mud-input > div.mud-input-slot,");
+        appCss.ShouldContain("font-size: 13px;");
+        appCss.ShouldContain("line-height: 1.25;");
+        appCss.ShouldContain(".flux-shell .mud-input > input.mud-input-root-outlined.mud-input-root-margin-dense,");
+        appCss.ShouldContain("padding-bottom: 13.5px;");
+        appCss.ShouldContain("padding-top: 7.5px;");
+        appCss.ShouldContain(".flux-shell .mud-input-control > .mud-input-control-input-container > .mud-input-label-outlined.mud-input-label-margin-dense");
+        appCss.ShouldContain("transform: translate(14px, 9px) scale(1);");
+        appCss.ShouldNotContain("--flux-bg: #0a0d12;");
+        appCss.ShouldNotContain("--flux-bg: #f4f6f8;");
+        appCss.ShouldNotContain("--flux-surface: #11151c;");
+        appCss.ShouldNotContain("--flux-surface: #ffffff;");
+        appCss.ShouldNotContain("--flux-border: #1d232e;");
+        appCss.ShouldNotContain("--flux-border: #dde3ea;");
+        appCss.ShouldNotContain("--flux-accent: #2dd4bf;");
+        appCss.ShouldNotContain("--flux-accent: #0f766e;");
+        appCss.ShouldNotContain("--flux-accent-contrast: #062a26;");
+        appCss.ShouldNotContain("--flux-accent-contrast: #ffffff;");
     }
 
     [Fact]
@@ -2666,34 +2788,255 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "TopicExplorerPanel.razor.css"));
+        var resolver = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Services",
+            "TopicExplorerMonitorResolver.cs"));
 
         markup.ShouldContain("aria-label=\"Topic tree\"");
-        markup.ShouldContain("aria-label=\"Topic messages and payload\"");
+        markup.ShouldContain("aria-label=\"Topic last state and history\"");
+        markup.ShouldContain("aria-label=\"Latest topic message\"");
+        markup.ShouldContain("aria-label=\"Topic message history\"");
+        markup.ShouldContain("<h2>Topics</h2>");
+        markup.ShouldContain("@implements IDisposable");
+        markup.ShouldContain("@inject ProjectManagerService Projects");
+        markup.ShouldContain("EnsureTopicMonitorAsync");
+        markup.ShouldContain("BuildTopicMonitorConnections");
+        markup.ShouldContain("Live.EnsureConnectionsAsync(connections)");
+        markup.ShouldContain("TopicExplorerMonitorResolver.Resolve");
+        resolver.ShouldContain("LiveMqttWorkspaceService.TopicExplorerMonitorSubscription");
+        resolver.ShouldContain("LiveMqttWorkspaceService.CreateTopicMonitorResourceName");
+        markup.ShouldContain("Sub # + $SYS/#");
+        markup.ShouldContain("ExplorerBrokerSnapshots");
+        markup.ShouldContain("App broker monitor");
+        markup.ShouldContain("topic-broker-group");
+        markup.ShouldContain("topic-broker-row");
+        markup.ShouldContain("topic-broker-main");
+        markup.ShouldContain("topic-broker-edit");
+        markup.ShouldContain("Icons.Material.Filled.Settings");
+        markup.ShouldContain("OpenBrokerMonitorEditorAsync");
+        markup.ShouldContain("Broker monitor settings");
+        markup.ShouldContain("Open broker monitor settings");
+        markup.ShouldContain("PreserveCandidateExplorerNames");
+        markup.ShouldContain("topic-broker-tree");
+        markup.ShouldContain("BrokerGroups.Count brokers");
+        markup.ShouldContain("VisibleBrokerGroups");
+        markup.ShouldContain("BrokerLabel(LastMessage)");
+        markup.ShouldContain("<MudTh>Broker</MudTh>");
+        markup.ShouldContain("<MudTd DataLabel=\"Broker\">@BrokerLabel(context)</MudTd>");
         markup.ShouldContain("Compact=\"true\"");
         markup.ShouldContain("Class=\"topic-message-grid\"");
-        markup.ShouldContain("SelectedMessage is null");
-        markup.ShouldContain("topic-payload-empty");
+        markup.ShouldContain("Items=\"@HistoryMessages\"");
+        markup.ShouldContain("SelectedItem=\"@SelectedHistoryMessage\"");
+        markup.ShouldContain("SelectedItemChanged=\"@OnHistoryMessageSelected\"");
+        markup.ShouldContain("RowClassFunc=\"@HistoryRowClass\"");
+        markup.ShouldContain("SelectOnRowClick=\"true\"");
+        markup.ShouldContain("FixedHeader=\"true\"");
+        markup.ShouldContain("Height=\"100%\"");
+        markup.ShouldContain("ItemSize=\"30\"");
+        markup.ShouldContain("OverscanCount=\"8\"");
+        markup.ShouldContain("Virtualize=\"true\"");
+        markup.ShouldContain("<ColGroup>");
+        markup.ShouldContain("class=\"topic-col-time\"");
+        markup.ShouldContain("class=\"topic-col-topic\"");
+        markup.ShouldContain("aria-label=\"Selected MQTT message details\"");
+        markup.ShouldContain("Message details");
+        markup.ShouldContain("SelectedHistoryPayloadPreview");
+        markup.ShouldContain("SelectedHistoryReceivedLabel");
+        markup.ShouldContain("Select a history row to inspect MQTT metadata and payload.");
+        markup.ShouldContain("LastMessage is null");
+        markup.ShouldContain("topic-last-state");
+        markup.ShouldContain("topic-last-payload");
+        markup.ShouldContain("topic-last-meta");
+        markup.ShouldContain("topic-no-traffic");
+        markup.ShouldContain("topic-monitor-list");
+        markup.ShouldContain("NoTrafficBrokerGroups");
+        markup.ShouldContain("MonitorRowClass");
+        markup.ShouldContain("One broker monitor is subscribed to #.");
+        markup.ShouldContain("No history for the current selection.");
+        markup.ShouldContain("topic-history-panel");
         markup.ShouldContain("role=\"status\" aria-live=\"polite\"");
-        markup.ShouldContain("No payload selected");
-        markup.ShouldContain("SelectedMessage.Topic");
+        markup.ShouldContain("PayloadInspector.Inspect(LastMessage.Payload)");
+        markup.ShouldContain("LastPayloadPreview");
+        markup.ShouldContain("PayloadInspector.Inspect(SelectedHistoryMessage.Payload)");
+        markup.ShouldContain("FormatPayloadPreview");
+        markup.ShouldContain("HistorySummaryLabel");
+        markup.ShouldContain("Latest message for selected broker topic and children");
+        markup.ShouldContain("Live.SelectMessage(latest)");
+        markup.ShouldContain("_selectedHistoryMessage = latest;");
+        markup.ShouldContain("Live.SelectMessage(message);");
+        markup.ShouldNotContain("<PayloadInspectorPanel");
+        markup.ShouldNotContain("SelectedMessage is null");
+        markup.ShouldNotContain("topic-payload-empty");
+        markup.ShouldNotContain("No payload selected");
+        markup.ShouldNotContain("SelectedMessage.Topic");
         markup.ShouldNotContain("Topic=\"@SelectedMessage?.Topic\"");
+        markup.ShouldNotContain("The Topics tab connects to app brokers");
+        markup.ShouldNotContain("The Topics tab starts separate broker monitor clients");
+        markup.ShouldNotContain("Standalone broker monitor");
+        markup.ShouldNotContain("RowsPerPage=");
+        markup.ShouldNotContain("<MudTablePager");
 
-        css.ShouldContain("grid-template-columns: minmax(320px, 384px) minmax(0, 1fr);");
+        css.ShouldContain("grid-template-columns: minmax(420px, 480px) minmax(0, 1fr);");
         css.ShouldContain("padding: 8px 12px;");
         css.ShouldContain("height: 26px;");
         css.ShouldContain(".topic-search ::deep .mud-input-root");
-        css.ShouldContain(".topic-message-grid ::deep .mud-table-container");
-        css.ShouldContain(".topic-message-grid ::deep th,");
+        css.ShouldContain(".topic-broker-group");
+        css.ShouldContain(".topic-broker-row");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto auto auto;");
+        css.ShouldContain(".topic-broker-row.selected");
+        css.ShouldContain(".topic-broker-main");
+        css.ShouldContain("grid-template-columns: 24px minmax(0, 1fr);");
+        css.ShouldContain(".topic-broker-edit");
+        css.ShouldContain(".topic-broker-edit ::deep .mud-icon-root");
+        css.ShouldContain("font-size: 16px;");
+        css.ShouldContain(".topic-broker-row.live .topic-broker-state");
+        css.ShouldContain(".topic-broker-tree");
+        css.ShouldContain(".topic-broker-empty");
+        css.ShouldContain(".topic-last-state");
+        css.ShouldContain("flex: 0 0 clamp(218px, 38%, 360px);");
+        css.ShouldContain(".topic-last-body");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(320px, 360px);");
+        css.ShouldContain(".topic-last-payload pre");
+        css.ShouldContain("white-space: pre-wrap;");
+        css.ShouldContain(".topic-last-meta");
+        css.ShouldContain("align-self: stretch;");
+        css.ShouldContain("flex-direction: column;");
+        css.ShouldContain("grid-template-columns: minmax(72px, 0.24fr) minmax(0, 1fr);");
+        css.ShouldContain(".topic-last-meta div:last-child");
+        css.ShouldContain(".topic-no-traffic");
+        css.ShouldContain(".topic-no-traffic-copy");
+        css.ShouldContain(".topic-monitor-list");
+        css.ShouldContain(".topic-monitor-row");
+        css.ShouldContain("grid-template-columns: 8px minmax(92px, 0.3fr) minmax(140px, 1fr) auto auto;");
+        css.ShouldContain(".topic-monitor-row.live .topic-monitor-state");
+        css.ShouldContain(".topic-history-panel");
+        css.ShouldContain(".topic-history-header");
+        css.ShouldContain(".topic-history-body");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(320px, 360px);");
+        css.ShouldContain(".topic-history-empty");
+        css.ShouldContain(".topic-message-table ::deep .mud-table {");
+        css.ShouldContain(".topic-message-table ::deep .mud-table-container");
+        css.ShouldContain(".topic-message-table ::deep table");
+        css.ShouldContain("display: table;");
+        css.ShouldContain(".topic-message-table ::deep col.topic-col-time");
+        css.ShouldContain(".topic-message-table ::deep col.topic-col-broker");
+        css.ShouldContain(".topic-message-table ::deep col.topic-col-qos");
+        css.ShouldContain(".topic-message-table ::deep col.topic-col-bytes");
+        css.ShouldContain(".topic-message-table ::deep th:nth-child(1),");
+        css.ShouldContain(".topic-message-table ::deep td:nth-child(1)");
+        css.ShouldContain(".topic-message-table ::deep th:nth-child(4),");
+        css.ShouldContain(".topic-message-table ::deep td:nth-child(5)");
+        css.ShouldContain("min-width: 100%;");
+        css.ShouldContain("table-layout: fixed;");
+        css.ShouldContain("width: 100%;");
+        css.ShouldContain(".topic-message-table ::deep th,");
+        css.ShouldContain(".topic-message-table ::deep .topic-history-row.selected td");
+        css.ShouldContain(".topic-history-detail");
+        css.ShouldContain(".topic-history-detail-header");
+        css.ShouldContain(".topic-history-detail-meta");
+        css.ShouldContain(".topic-history-detail-meta div:last-child");
+        css.ShouldContain(".topic-history-detail-payload pre");
+        css.ShouldContain(".topic-history-detail-empty");
+        css.ShouldContain("display: flex;");
+        css.ShouldContain("height: 100%;");
+        css.ShouldContain("flex: 1 1 auto;");
         css.ShouldContain("min-height: 32px;");
-        css.ShouldContain("flex: 0 0 clamp(132px, 30%, 252px);");
-        css.ShouldContain("grid-template-columns: 28px minmax(0, 1fr);");
+        css.ShouldContain("grid-template-rows: minmax(180px, 1fr) minmax(220px, 0.6fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, min(320px, 100%));");
+        css.ShouldContain("justify-items: center;");
+        css.ShouldContain("text-align: center;");
         css.ShouldContain(".topic-empty-state ::deep .mud-icon-root");
-        css.ShouldContain("grid-row: 1 / span 2;");
         css.ShouldContain("overflow-wrap: anywhere;");
-        css.ShouldContain(".topic-payload-empty");
-        css.ShouldContain("min-height: 128px;");
-        css.ShouldContain("min-height: 92px;");
-        css.ShouldContain("flex-basis: clamp(128px, 28%, 224px);");
+        css.ShouldContain("flex-basis: clamp(252px, 40vh, 360px);");
+        css.ShouldNotContain(".topic-payload-frame");
+        css.ShouldNotContain(".topic-payload-empty");
+        css.ShouldNotContain(".topic-last-empty");
+        css.ShouldNotContain(".topic-last-meta div:last-child:nth-child(odd)");
+        css.ShouldNotContain(".topic-history-detail-meta div:last-child:nth-child(odd)");
+        css.ShouldNotContain(".mud-table-pagination");
+        css.ShouldNotContain("nth-last-child(-n + 2)");
+        css.ShouldNotContain(".topic-message-table ::deep .mud-table-root");
+        css.ShouldNotContain("margin-top: auto;");
+        css.ShouldNotContain("flex: 0 0 clamp(132px, 30%, 252px);");
+        css.ShouldNotContain("flex-basis: clamp(128px, 28%, 224px);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(188px, 0.28fr);");
+    }
+
+    [Fact]
+    public void TopicExplorerSetupDialog_UsesMudBlazorFormControls()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Dialogs",
+            "TopicExplorerSetupDialog.razor"));
+
+        markup.ShouldContain("MudTextField");
+        markup.ShouldContain("MudNumericField");
+        markup.ShouldContain("MudSelect");
+        markup.ShouldContain("MudCheckBox");
+        markup.ShouldContain("Label=\"Broker\"");
+        markup.ShouldContain("[Parameter] public string Title { get; set; } = \"Topic monitors\";");
+        markup.ShouldContain("[Parameter] public string SaveLabel { get; set; } = \"Save monitors\";");
+        markup.ShouldContain("[Parameter] public bool PreserveCandidateExplorerNames { get; set; }");
+        markup.ShouldContain("@SaveLabel");
+        markup.ShouldContain("PreferredExplorerName(candidate)");
+        markup.ShouldContain("CA certificate path");
+        markup.ShouldContain("Client certificate path");
+        markup.ShouldContain("Client certificate password");
+        markup.ShouldContain("FilePicker.Default.PickAsync");
+        markup.ShouldContain("Icons.Material.Filled.FolderOpen");
+        markup.ShouldContain("Adornment=\"Adornment.End\"");
+        markup.ShouldContain("OnAdornmentClick");
+        markup.ShouldContain("AdornmentAriaLabel=\"Select CA certificate\"");
+        markup.ShouldContain("AdornmentAriaLabel=\"Select client certificate\"");
+        markup.ShouldContain("Class=\"d-flex align-center\" Style=\"min-height: 44px;\"");
+        markup.ShouldContain("Variant=\"Variant.Outlined\"");
+        markup.ShouldContain("Margin=\"Margin.Dense\"");
+        markup.ShouldContain("sm=\"6\"");
+        markup.ShouldNotContain("sm=\"8\"");
+        markup.ShouldNotContain("sm=\"4\"");
+        markup.ShouldNotContain("Label=\"Explorer key\"");
+        markup.ShouldNotContain("Label=\"Display name\"");
+        markup.ShouldNotContain("Label=\"Host\"");
+        markup.ShouldNotContain("Label=\"Port\"");
+        markup.ShouldNotContain("Label=\"Subscriptions\"");
+        markup.ShouldNotContain("Typo=\"Typo.subtitle2\">@draft.DisplayName");
+        markup.ShouldNotContain("Typo=\"Typo.caption\" Color=\"Color.Secondary\">@draft.Endpoint");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("<MudIconButton Icon=\"@Icons.Material.Filled.FolderOpen\"");
+        markup.ShouldNotContain("<input");
+        markup.ShouldNotContain("mud-input-root");
+
+        var usernameIndex = markup.IndexOf("Label=\"Username\"", StringComparison.Ordinal);
+        var passwordIndex = markup.IndexOf("Label=\"Password\"", StringComparison.Ordinal);
+        var useTlsIndex = markup.IndexOf("Label=\"Use TLS\"", StringComparison.Ordinal);
+        usernameIndex.ShouldBeLessThan(passwordIndex);
+        passwordIndex.ShouldBeLessThan(useTlsIndex);
+    }
+
+    [Fact]
+    public void TopicExplorerPanel_StopsWhenSetupIsCanceled()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "TopicExplorerPanel.razor"));
+
+        markup.ShouldContain("if (!await EnsureTopicExplorerSetupAsync())");
+        markup.ShouldContain("private async Task<bool> EnsureTopicExplorerSetupAsync()");
+        markup.ShouldContain("ReferenceEquals(active, _setupPromptedProject)");
     }
 
     [Fact]
@@ -3242,25 +3585,126 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-live=\"polite\"");
         markup.ShouldContain("add-connection-dialog-section");
         markup.ShouldContain("add-connection-dialog-grid broker");
-        markup.ShouldContain("add-connection-dialog-security-row");
+        markup.ShouldContain("add-connection-dialog-checkbox-cell");
         markup.ShouldContain("add-connection-dialog-actions");
         markup.ShouldContain("aria-label=\"Add connection\"");
         markup.ShouldContain("_port is >= 1 and <= 65535");
+        markup.ShouldContain("_keepAliveSeconds > 0");
+        markup.ShouldContain("Label=\"Broker name\"");
+        markup.ShouldContain("Label=\"Client ID\"");
+        markup.ShouldContain("Label=\"Keep alive seconds\"");
+        markup.ShouldContain("Label=\"Clean start\"");
+        markup.ShouldContain("Label=\"Use TLS\"");
+        markup.ShouldContain("Label=\"Allow untrusted certificate\"");
+        markup.ShouldContain("CA certificate path");
+        markup.ShouldContain("Client certificate path");
+        markup.ShouldContain("Client certificate password");
+        markup.ShouldContain("FilePicker.Default.PickAsync");
+        markup.ShouldContain("Icons.Material.Filled.FolderOpen");
+        markup.ShouldContain("Adornment=\"Adornment.End\"");
+        markup.ShouldContain("OnAdornmentClick");
+        markup.ShouldContain("AdornmentAriaLabel=\"Select CA certificate\"");
+        markup.ShouldContain("AdornmentAriaLabel=\"Select client certificate\"");
+        markup.ShouldContain("AllowUntrustedCertificates = _useTls && _allowUntrustedCertificates");
+        markup.ShouldContain("KeepAlive = TimeSpan.FromSeconds(_keepAliveSeconds)");
+        markup.ShouldContain("CleanStart = _cleanStart");
         markup.ShouldContain("LiveMqttWorkspaceService.DefaultBrokerMonitorSubscription");
         markup.ShouldNotContain("@inject IDialogService");
         markup.ShouldNotContain("MudDivider");
+        markup.ShouldNotContain("add-connection-dialog-security-row");
+        markup.ShouldNotContain("Label=\"TLS\"");
+        markup.ShouldNotContain("<input");
 
         css.ShouldContain(".add-connection-dialog-title");
         css.ShouldContain(".add-connection-dialog-status");
         css.ShouldContain(".add-connection-dialog-section");
         css.ShouldContain("border: 1px solid var(--flux-border-soft);");
         css.ShouldContain(".add-connection-dialog-grid.broker");
-        css.ShouldContain("grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.55fr) 92px;");
-        css.ShouldContain(".add-connection-dialog-security-row");
+        css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
+        css.ShouldContain(".add-connection-dialog-checkbox-cell");
+        css.ShouldContain("min-height: 42px;");
         css.ShouldContain("::deep(.add-connection-dialog-add)");
         css.ShouldContain("@media (max-width: 760px)");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
         css.ShouldContain("@media (max-width: 480px)");
+        css.ShouldNotContain(".add-connection-dialog-security-row");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.55fr) 92px;");
+    }
+
+    [Fact]
+    public void MetricDesigner_PrimaryCreateActionUsesAccentContrastText()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "MetricDesigner.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "MetricDesigner.razor.css"));
+        var appCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "wwwroot",
+            "app.css"));
+
+        markup.ShouldContain("<MudSelect T=\"string\"");
+        markup.ShouldContain("class=\"metrics-list-toolbar\"");
+        markup.ShouldContain("PopoverClass=\"metrics-type-select-popover\"");
+        markup.ShouldContain("ListClass=\"metrics-type-select-list\"");
+        markup.ShouldContain("Value=\"@_typeFilter\"");
+        markup.ShouldContain("ValueChanged=\"@SetTypeFilter\"");
+        markup.ShouldContain("Underline=\"false\"");
+        markup.ShouldContain("Modal=\"false\"");
+        markup.ShouldContain("RelativeWidth=\"DropdownWidth.Adaptive\"");
+        markup.ShouldContain("MaxHeight=\"320\"");
+        markup.ShouldContain("Class=\"metrics-type-filter-icon\" Icon=\"@Icons.Material.Filled.FilterAlt\"");
+        markup.ShouldContain("<MudSelectItem T=\"string\" Value=\"@AllTypes\">All types</MudSelectItem>");
+        markup.ShouldNotContain("Adornment=\"Adornment.Start\"");
+        markup.ShouldNotContain("AdornmentIcon=\"@Icons.Material.Filled.FilterAlt\"");
+        markup.ShouldNotContain("class=\"metrics-toolbar\"");
+        markup.ShouldNotContain("<select value=\"@_typeFilter\"");
+        markup.ShouldNotContain("OnTypeFilterChanged");
+        markup.IndexOf("class=\"metrics-list-pane\"", StringComparison.Ordinal)
+            .ShouldBeLessThan(markup.IndexOf("class=\"metrics-list-toolbar\"", StringComparison.Ordinal));
+        markup.IndexOf("class=\"metrics-list-toolbar\"", StringComparison.Ordinal)
+            .ShouldBeLessThan(markup.IndexOf("class=\"metrics-list-head\"", StringComparison.Ordinal));
+        css.ShouldContain(".metrics-new-button");
+        css.ShouldContain("background: var(--flux-accent);");
+        css.ShouldContain("color: var(--flux-accent-contrast);");
+        css.ShouldContain(".metrics-new-button ::deep .mud-icon-root");
+        var buttonBlock = css[
+            css.IndexOf(".metrics-new-button {", StringComparison.Ordinal)..
+            css.IndexOf(".metrics-new-button:hover", StringComparison.Ordinal)];
+        buttonBlock.ShouldNotContain("color: var(--mud-palette-primary-text);");
+        css.ShouldContain(".metrics-type-field ::deep .metrics-type-select");
+        css.ShouldContain(".metrics-type-field ::deep .metrics-type-select .mud-input");
+        css.ShouldContain(".metrics-list-toolbar");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface) 76%, transparent);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
+        css.ShouldContain(".metrics-type-field ::deep .metrics-type-filter-icon");
+        css.ShouldContain("position: absolute;");
+        css.ShouldContain("padding: 0 8px 0 34px;");
+        css.ShouldNotContain(".metrics-toolbar");
+        css.ShouldNotContain(".metrics-filter-field select option");
+        appCss.ShouldContain(".metrics-type-select-popover");
+        appCss.ShouldContain(".metrics-type-select-list");
+        appCss.ShouldContain("box-sizing: border-box;");
+        appCss.ShouldContain("width: min(300px, calc(100vw - 24px)) !important;");
+        appCss.ShouldContain("overflow-x: hidden !important;");
+        appCss.ShouldContain(".metrics-type-select-list .mud-list-item");
+        appCss.ShouldContain(".metrics-type-select-list .mud-list-item-text");
+        appCss.ShouldContain("text-overflow: ellipsis;");
+        appCss.ShouldContain("white-space: nowrap;");
+        appCss.ShouldContain(".metrics-type-select-list .mud-selected-item");
     }
 
     [Fact]
@@ -3292,8 +3736,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("role=\"form\" aria-label=\"Create metric\"");
         markup.ShouldContain("role=\"search\"");
         markup.ShouldContain("aria-label=\"Create metric\"");
+        markup.ShouldContain("Color=\"Color.Primary\"");
+        markup.ShouldContain("Variant=\"Variant.Filled\"");
         markup.ShouldContain("aria-invalid=\"@(!CanCreate)\"");
         markup.ShouldContain("metric-create-empty-defaults");
+        markup.ShouldNotContain("Class=\"metric-create-submit\"");
         markup.ShouldContain("CreateStatusClass");
         markup.ShouldContain("CreateStatusText");
         markup.ShouldNotContain("MudStack");
@@ -3312,6 +3759,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".metric-create-empty-defaults");
         css.ShouldContain("@media (max-width: 760px)");
         css.ShouldContain("@media (max-width: 520px)");
+        css.ShouldNotContain("metric-create-submit");
         css.ShouldNotContain("border-radius: 999px;");
         css.ShouldNotContain("box-shadow: 0 ");
     }
@@ -3591,8 +4039,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("workspace-log-stats");
         markup.ShouldContain("WorkspaceLogFilter.Problems");
         markup.ShouldContain("workspace-log-segment");
-        markup.ShouldContain("workspace-log-status @ProblemStatusClass");
-        markup.ShouldContain("Show problems");
+        markup.ShouldContain("[Parameter] public WorkspaceLogQuery? InitialQuery { get; set; }");
+        markup.ShouldContain("InitialQuery.Equals(_appliedInitialQuery)");
+        markup.ShouldContain("_severity = string.IsNullOrWhiteSpace(InitialQuery.Severity)");
+        markup.ShouldContain("_search = InitialQuery.Search");
         markup.ShouldContain("aria-label=\"@($\"{SeverityLabel(entry)} log at {FormatLogTime(entry)} from {SourceCode(entry)}\")\"");
         markup.ShouldContain("workspace-log-row-icon");
         markup.ShouldContain("DetailLabels(entry)");
@@ -3604,26 +4054,37 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("font-size: 14px;");
         css.ShouldContain("grid-template-columns: minmax(210px, 0.82fr) minmax(260px, 1fr) minmax(220px, 320px);");
         css.ShouldContain("padding: 5px 8px;");
+        css.ShouldContain("--workspace-log-control-height: 40px;");
+        css.ShouldContain("--workspace-log-segment-button-height: 30px;");
         css.ShouldContain(".workspace-log-filter-block");
         css.ShouldContain("grid-template-columns: auto minmax(0, 1fr);");
+        css.ShouldContain("min-height: var(--workspace-log-control-height);");
         css.ShouldContain("flex-wrap: nowrap;");
+        css.ShouldContain("height: var(--workspace-log-segment-button-height);");
         css.ShouldContain("overflow-x: auto;");
         css.ShouldContain(".workspace-log-filter-button.active");
-        css.ShouldContain(".workspace-log-status");
-        css.ShouldContain("grid-template-columns: 22px minmax(0, 1fr) auto;");
         css.ShouldContain(".workspace-log-search ::deep .mud-input-root");
-        css.ShouldContain("min-height: 30px;");
+        css.ShouldContain(".workspace-log-search ::deep .mud-input-control-input-container");
+        css.ShouldContain(".workspace-log-search ::deep .mud-input-adornment");
+        css.ShouldContain("height: var(--workspace-log-control-height);");
+        css.ShouldContain("min-height: var(--workspace-log-control-height);");
+        css.ShouldNotContain("min-height: 30px;");
         css.ShouldContain("grid-template-columns: 24px 70px minmax(130px, 0.34fr) minmax(0, 1fr);");
         css.ShouldContain(".workspace-log-row::before");
         css.ShouldContain("width: 3px;");
         css.ShouldContain(".workspace-log-row-meta span");
-        css.ShouldContain("grid-template-columns: 30px minmax(0, 1fr);");
-        css.ShouldContain("min-height: 132px;");
+        css.ShouldContain("grid-template-columns: minmax(0, min(360px, 100%));");
+        css.ShouldContain("justify-items: center;");
+        css.ShouldContain("text-align: center;");
+        css.ShouldContain("min-height: 0;");
         css.ShouldContain(".workspace-log-empty ::deep .mud-icon-root");
-        css.ShouldContain("grid-row: 1 / span 3;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("grid-template-columns: 24px 60px minmax(0, 1fr);");
         css.ShouldContain("grid-template-columns: 42px minmax(0, 1fr);");
+        markup.ShouldNotContain("Action needed");
+        markup.ShouldNotContain("Show problems");
+        markup.ShouldNotContain("ProblemStatus");
+        css.ShouldNotContain(".workspace-log-status");
         css.ShouldNotContain("grid-template-columns: 72px 86px minmax(0, 1fr);");
     }
 
@@ -3660,11 +4121,30 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("app-json-empty");
         markup.ShouldContain("No JSON available");
         markup.ShouldContain("aria-label=\"Application definition JSON\"");
+        markup.ShouldContain("<StandaloneCodeEditor @ref=\"_editor\"");
+        markup.ShouldContain("CssClass=\"app-json-monaco-editor\"");
+        markup.ShouldContain("ConstructionOptions=\"@EditorConstructionOptions\"");
+        markup.ShouldContain("private StandaloneCodeEditor? _editor;");
+        markup.ShouldContain("private StandaloneEditorConstructionOptions EditorConstructionOptions");
+        markup.ShouldContain("Language = \"json\"");
+        markup.ShouldContain("ReadOnly = true");
+        markup.ShouldContain("ScrollBeyondLastLine = false");
+        markup.ShouldContain("fluxmqMonaco.ensureConfigured");
+        markup.ShouldContain("private async Task ConfigureMonacoAsync()");
+        markup.ShouldContain("private async Task SyncEditorAsync()");
+        markup.ShouldContain("private static bool IsNonCriticalEditorException(Exception exception)");
+        markup.ShouldContain("App JSON Monaco configuration failed");
+        markup.ShouldContain("App JSON Monaco sync failed");
+        markup.ShouldContain("JSException or JSDisconnectedException");
         markup.ShouldContain("private string FileLabel");
         markup.ShouldContain("private int JsonLineCount");
         markup.ShouldContain("private string JsonSizeLabel");
+        markup.ShouldNotContain("<pre class=\"app-json-body\"");
         markup.ShouldNotContain("MudChip");
         markup.ShouldNotContain("MudStack Row=\"true\"");
+        markup.ShouldNotContain("Visual view");
+        markup.ShouldNotContain("app-json-view-button");
+        markup.ShouldNotContain("ReturnToVisualViewAsync");
 
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto auto auto;");
         css.ShouldContain("min-height: 38px;");
@@ -3674,13 +4154,17 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".app-json-state.unsaved");
         css.ShouldContain(".app-json-state.unsaved::before");
         css.ShouldContain(".app-json-toolbar ::deep .mud-icon-button");
+        css.ShouldContain(".app-json-editor-shell ::deep .app-json-monaco-editor");
+        css.ShouldContain(".app-json-editor-shell ::deep .app-json-monaco-editor .monaco-editor,");
+        css.ShouldContain("overflow: hidden;");
+        css.ShouldNotContain(".app-json-body");
+        css.ShouldNotContain("app-json-view-button");
         css.ShouldContain(".app-json-editor-shell");
-        css.ShouldContain("font-size: 11.5px;");
         css.ShouldContain("margin: 6px;");
-        css.ShouldContain("tab-size: 2;");
         css.ShouldContain(".app-json-empty");
-        css.ShouldContain("grid-template-columns: 28px minmax(0, 1fr);");
-        css.ShouldContain("grid-row: 1 / span 2;");
+        css.ShouldContain("grid-template-columns: minmax(0, min(360px, 100%));");
+        css.ShouldContain("justify-items: center;");
+        css.ShouldContain("text-align: center;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("@media (max-width: 760px)");
     }
@@ -3748,7 +4232,7 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
-    public void DashboardDesigner_UsesContainerResponsiveGridForEditAndLive()
+    public void DashboardDesigner_UsesContainerResponsiveLiveGridWithoutRepackingEditGrid()
     {
         var root = FindRepositoryRoot();
         var css = File.ReadAllText(Path.Combine(
@@ -3762,14 +4246,19 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("container-name: dashboard-layout;");
         css.ShouldContain("@container dashboard-layout (max-width: 980px)");
         css.ShouldContain("@container dashboard-layout (max-width: 540px)");
-        css.ShouldContain("--dashboard-grid-column-min: 132px;");
+        css.ShouldContain("--dashboard-grid-column-min: 96px;");
         css.ShouldContain("--dashboard-grid-row-min: 128px;");
         css.ShouldContain("--dashboard-grid-column-min: 0px;");
         css.ShouldContain("--dashboard-grid-row-min: 112px;");
-        css.ShouldContain("grid-template-columns: repeat(2, minmax(var(--dashboard-grid-column-min, 156px), 1fr)) !important;");
-        css.ShouldContain("grid-column: span var(--dashboard-cell-tablet-span, 1) !important;");
-        css.ShouldContain("grid-column: span var(--dashboard-cell-mobile-span, 1) !important;");
-        css.ShouldContain(".dashboard-live-grid");
+        var normalizedCss = css.ReplaceLineEndings("\n");
+        normalizedCss.ShouldContain(".dashboard-grid-stage {\n    display: grid;\n    flex: 1 1 auto;\n    grid-template-columns: 42px minmax(max-content, 1fr);");
+        normalizedCss.ShouldContain(".dashboard-grid {\n    background: color-mix(in srgb, var(--flux-surface-2) 20%, transparent);\n    border: 1px solid color-mix(in srgb, var(--mud-palette-text-secondary) 10%, var(--flux-border));\n    border-radius: 5px;\n    box-sizing: border-box;");
+        normalizedCss.ShouldContain("min-width: max-content;");
+        normalizedCss.ShouldContain(".dashboard-live-grid {\n        grid-column: 1;\n        grid-row: 1;\n        grid-template-columns: repeat(2, minmax(var(--dashboard-grid-column-min, 156px), 1fr)) !important;");
+        normalizedCss.ShouldContain(".dashboard-live-cell {\n        grid-column: span var(--dashboard-cell-tablet-span, 1) !important;");
+        normalizedCss.ShouldContain(".dashboard-live-cell {\n        grid-column: span var(--dashboard-cell-mobile-span, 1) !important;");
+        normalizedCss.ShouldNotContain(".dashboard-grid,\n    .dashboard-live-grid");
+        normalizedCss.ShouldNotContain(".dashboard-cell,\n    .dashboard-live-cell");
         css.ShouldContain("grid-auto-rows: minmax(var(--dashboard-grid-row-min, 136px), 1fr);");
     }
 
@@ -3865,7 +4354,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("::deep .dashboard-live-edit-button");
         css.ShouldContain(".dashboard-live-viewport");
         css.ShouldContain(".dashboard-live-empty-note");
-        css.ShouldContain("grid-template-columns: 28px minmax(0, 1fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, min(320px, 100%));");
+        css.ShouldContain("transform: translate(-50%, -50%);");
+        css.ShouldContain("text-align: center;");
         css.ShouldContain("max-width: calc(100% - 16px);");
     }
 
@@ -3897,7 +4388,7 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("role=\"status\" aria-live=\"polite\"");
         razor.ShouldContain("dashboard-grid-empty-icon");
         razor.ShouldContain("@EmptyGridHint");
-        css.ShouldContain("grid-template-columns: 42px minmax(0, 1fr);");
+        css.ShouldContain("grid-template-columns: 42px minmax(max-content, 1fr);");
         css.ShouldContain("grid-template-rows: 32px minmax(0, 1fr);");
         css.ShouldContain("overscroll-behavior: contain;");
         css.ShouldContain("border-right: 1px solid var(--flux-border-soft);");
@@ -4081,6 +4572,7 @@ public sealed class DashboardEventFilterCatalogTests
         designer.ShouldContain("Drag to move widget; use toolbar to edit");
         designer.ShouldContain("class=\"dashboard-cell-widget-action edit\"");
         designer.ShouldContain("Edit {WidgetLabel(currentCell.Widget)} settings");
+        designer.ShouldContain("Icons.Material.Filled.Settings");
         designer.ShouldContain("OpenWidgetEditorAsync(currentCell.Widget)");
         designer.ShouldContain("SelectSingleCell(targetCellName)");
         designerCss.ShouldContain(".dashboard-cell-widget-action.edit");
@@ -4129,7 +4621,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".dashboard-grid-frame.empty-grid");
         css.ShouldContain(".dashboard-grid-empty-note");
         css.ShouldContain("position: absolute;");
-        css.ShouldContain("grid-template-columns: 34px minmax(0, 1fr) auto;");
+        css.ShouldContain("grid-template-columns: minmax(0, min(420px, 100%));");
+        css.ShouldContain("justify-items: center;");
+        css.ShouldContain("text-align: center;");
         css.ShouldContain(".dashboard-grid-picker > .dashboard-command-label");
         css.ShouldContain("min-height: clamp(320px, 52vh, 480px);");
         css.ShouldContain("overflow-x: auto;");
@@ -4137,7 +4631,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("max-width: min(100%, 560px);");
         css.ShouldContain("--dashboard-grid-row-min: 86px;");
         css.ShouldContain("@media (max-width: 420px)");
-        normalizedCss.ShouldContain(".dashboard-empty-panel {\n        align-items: flex-start;\n        grid-template-columns: minmax(0, 1fr);\n        justify-items: stretch;\n        width: 100%;\n    }");
+        normalizedCss.ShouldContain(".dashboard-empty-panel {\n        grid-template-columns: minmax(0, 1fr);\n        justify-items: center;\n        width: 100%;\n    }");
         normalizedCss.ShouldNotContain(".dashboard-empty-panel {\n        align-items: flex-start;\n        flex-direction: column;");
         inspectorCss.ShouldContain("max-height: clamp(188px, 34vh, 280px);");
         inspectorCss.ShouldContain("min-height: 164px;");
@@ -5098,12 +5592,12 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".catalog-use-state.ready");
         css.ShouldContain(".catalog-use-state.inactive");
         css.ShouldContain(".catalog-empty ::deep .mud-icon-root");
-        css.ShouldContain("grid-template-columns: 26px minmax(0, 1fr);");
-        css.ShouldContain("min-height: 58px;");
-        css.ShouldContain("grid-row: 1 / span 2;");
+        css.ShouldContain("grid-template-columns: minmax(0, min(280px, 100%));");
+        css.ShouldContain("flex: 1 1 auto;");
+        css.ShouldContain("justify-items: center;");
+        css.ShouldContain("text-align: center;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".component-catalog.pipeline .catalog-empty");
-        css.ShouldContain("min-height: 54px;");
         css.ShouldContain(".component-catalog.pipeline");
         css.ShouldContain(".component-catalog.pipeline .catalog-meta-strip");
         css.ShouldContain(".component-catalog.pipeline .catalog-item");
@@ -5155,6 +5649,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@WorkflowModeLabel");
         markup.ShouldContain("@WorkflowSelectionLabel");
         markup.ShouldContain("flow-canvas-metrics");
+        markup.ShouldContain("flow-canvas-stat");
         markup.ShouldContain("flow-canvas-command-group");
         markup.ShouldContain("role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("@EmptyCanvasHint");
@@ -5162,12 +5657,21 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("AddCircle");
         markup.ShouldContain("DiagramCanvas");
         markup.ShouldContain("NavigatorWidget");
+        markup.IndexOf("class=\"flow-canvas-header\"", StringComparison.Ordinal)
+            .ShouldBeLessThan(markup.IndexOf("class=\"flow-canvas\" role=\"group\"", StringComparison.Ordinal));
 
         css.ShouldContain(".flow-canvas-header");
+        css.ShouldContain("flex: 0 0 auto;");
+        css.ShouldContain("margin: 10px 10px 0;");
+        css.ShouldContain("position: relative;");
+        css.ShouldContain("z-index: 2;");
+        css.ShouldContain("flex: 1 1 0;");
+        css.ShouldContain("height: auto;");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
         css.ShouldContain(".flow-canvas-title-copy");
-        css.ShouldContain(".flow-canvas-meta-strip span,");
         css.ShouldContain(".flow-canvas-metrics");
+        css.ShouldContain(".flow-canvas-stat");
+        css.ShouldContain(".flow-canvas-stat:not(:last-child)::after");
         css.ShouldContain(".flow-canvas-command-group");
         css.ShouldContain("min-height: 46px;");
         css.ShouldContain("flex-wrap: nowrap;");
@@ -5177,12 +5681,16 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("min-height: 22px;");
         css.ShouldContain(".flow-canvas-empty-icon");
         css.ShouldContain("max-width: min(100%, 420px);");
-        css.ShouldContain("grid-template-columns: 32px minmax(0, 1fr);");
-        css.ShouldContain("grid-row: 1 / span 3;");
+        css.ShouldContain("justify-items: center;");
+        css.ShouldContain("text-align: center;");
         css.ShouldContain("max-width: min(100%, 340px);");
         css.ShouldContain("grid-row: auto;");
         css.ShouldContain("@media (max-width: 720px)");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
+        css.ShouldContain("margin: 8px 8px 0;");
+        css.ShouldNotContain("top: 10px;");
+        markup.ShouldNotContain("flow-canvas-chip");
+        css.ShouldNotContain(".flow-canvas-chip");
     }
 
     [Fact]
@@ -5217,6 +5725,7 @@ public sealed class DashboardEventFilterCatalogTests
         shellMarkup.ShouldContain("flow-node-name");
         shellMarkup.ShouldContain("flow-node-display-name");
         shellMarkup.ShouldContain("flow-node-action flow-node-edit");
+        shellMarkup.ShouldContain("Icons.Material.Filled.Settings");
         shellMarkup.ShouldContain("flow-node-category-chip");
         shellMarkup.ShouldContain("flow-node-divider");
         shellMarkup.ShouldContain("flow-node-activity");
@@ -5253,37 +5762,87 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "FlowDesigner.razor.css"));
 
-        markup.ShouldContain("flow-diagnostic-panel @DiagnosticSeverityClass");
-        markup.ShouldContain("aria-label=\"Pipeline diagnostics\"");
-        markup.ShouldContain("@DiagnosticPanelIcon");
-        markup.ShouldContain("@DiagnosticPanelTitle");
-        markup.ShouldContain("@DiagnosticPanelSummary");
-        markup.ShouldContain("VisibleDiagnostics");
-        markup.ShouldContain("DiagnosticRowClass(diagnostic)");
-        markup.ShouldContain("DiagnosticTarget(diagnostic)");
-        markup.ShouldContain("AdditionalDiagnosticCount");
-        markup.ShouldContain("@if (ShowDiagnosticPanel)");
-        markup.ShouldContain("ActionableDiagnosticCount");
-        markup.ShouldContain("DiagnosticSeverityToken(diagnostic) is \"error\" or \"warning\"");
-        markup.ShouldContain("flow-link-condition-panel @(ShowDiagnosticPanel ? \"with-diagnostics\" : null)");
-        markup.ShouldContain("VisibleDiagnosticLimit = 3");
+        markup.ShouldContain("[Parameter] public EventCallback<WorkspaceLogQuery> LogsRequested { get; set; }");
+        markup.ShouldContain("class=\"flow-canvas-stat flow-canvas-stat-button @DiagnosticSeverityClass\"");
+        markup.ShouldContain("aria-label=\"@DiagnosticLogsAriaLabel\"");
+        markup.ShouldContain("@onclick=\"@OpenDiagnosticLogsAsync\"");
+        markup.ShouldContain("DiagnosticDisplayCount");
+        markup.ShouldContain("HasActionableDiagnostics");
+        markup.ShouldContain("@if (ShowRuntimeState)");
+        markup.ShouldContain("private bool ShowRuntimeState => Flow.State != RuntimeWorkspaceState.Faulted || ErrorCount == 0;");
+        markup.ShouldContain("LogsRequested.InvokeAsync(new WorkspaceLogQuery(");
+        markup.ShouldContain("Severity: severity");
+        markup.ShouldContain("Search: DiagnosticLogSearch");
+        markup.ShouldContain("private string? DiagnosticLogSearch");
+        markup.ShouldContain("string.IsNullOrWhiteSpace(diagnostic.WorkflowName) ||");
+        markup.ShouldContain("<div class=\"flow-link-condition-panel\">");
+        markup.ShouldNotContain("flow-diagnostic-panel");
+        markup.ShouldNotContain("ShowDiagnosticPanel");
+        markup.ShouldNotContain("VisibleDiagnostics");
+        markup.ShouldNotContain("AdditionalDiagnosticCount");
 
-        css.ShouldContain(".flow-diagnostic-panel");
-        css.ShouldContain("max-height: 112px;");
-        css.ShouldContain("box-shadow: none;");
-        css.ShouldContain(".flow-diagnostic-row");
-        css.ShouldContain("grid-template-columns: 16px minmax(48px, 0.28fr) minmax(64px, 0.36fr) minmax(0, 1fr);");
-        css.ShouldContain(".flow-link-condition-panel.with-diagnostics");
-        css.ShouldContain("top: 184px;");
-        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface) 96%, transparent);");
-        css.ShouldContain("min-width: 0;");
-        css.ShouldContain("left: 8px;");
-        css.ShouldContain("right: 8px;");
-        css.ShouldContain("top: 250px;");
+        css.ShouldContain(".flow-canvas-stat-button");
+        css.ShouldContain("text-underline-offset: 2px;");
         css.ShouldContain(".flow-designer-root ::deep .flow-node-diagnostic-error::before");
         css.ShouldContain("width: 3px;");
-        css.ShouldContain(".flow-diagnostic-message");
-        css.ShouldContain("display: none;");
+        css.ShouldNotContain(".flow-diagnostic-panel");
+        css.ShouldNotContain(".flow-diagnostic-row");
+        css.ShouldNotContain(".flow-link-condition-panel.with-diagnostics");
+    }
+
+    [Fact]
+    public void WorkspacePage_RoutesPipelineDiagnosticsToFilteredLogs()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Pages",
+            "WorkspacePage.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Pages",
+            "WorkspacePage.razor.css"));
+
+        markup.ShouldContain("@onclick=\"@(() => SelectLogs())\"");
+        markup.ShouldContain("<AppJsonPanel Project=\"@active\" />");
+        markup.ShouldContain("class=\"project-tab project-tab-json-view @(_jsonView ? \"project-tab-active\" : \"\")\"");
+        markup.ShouldContain("title=\"App JSON\"");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.Code\"");
+        markup.ShouldContain("<span class=\"project-tab-name\">App JSON</span>");
+        markup.ShouldContain("<span class=\"project-tabbar-app-name\">@active.Name</span>");
+        markup.ShouldContain("aria-label=\"@($\"Close app {active.Name}\")\"");
+        markup.ShouldContain("@onclick:stopPropagation=\"true\"");
+        markup.ShouldContain("@onmousedown:stopPropagation=\"true\"");
+        markup.ShouldContain("@onclick=\"@ToggleJsonView\"");
+        markup.ShouldContain("private void ToggleJsonView()");
+        markup.ShouldContain("private void OpenJsonView()");
+        markup.ShouldContain("private void CloseJsonView()");
+        markup.ShouldContain("SyncActiveArtifactState();");
+        markup.ShouldNotContain("private string JsonToggleTitle");
+        markup.ShouldNotContain("project-tabbar-app-toggle");
+        markup.ShouldNotContain("project-tab-json-active");
+        markup.ShouldContain("InitialQuery=\"@_pendingLogQuery\"");
+        markup.ShouldContain("<FlowDesigner LogsRequested=\"@OpenLogs\" />");
+        markup.ShouldContain("private WorkspaceLogQuery? _pendingLogQuery;");
+        markup.ShouldContain("private void SelectLogs()");
+        markup.ShouldContain("_pendingLogQuery = null;");
+        markup.ShouldContain("private void OpenLogs(WorkspaceLogQuery query)");
+        markup.ShouldContain("_pendingLogQuery = query;");
+        markup.ShouldContain("active.SetActiveLogs();");
+        css.ShouldContain(".project-tabbar {");
+        css.ShouldContain("position: relative;");
+        css.ShouldContain("z-index: 12;");
+        css.ShouldContain(".project-tab-json-view .project-tab-icon");
+        css.ShouldNotContain(".project-tabbar-app-toggle");
+        css.ShouldNotContain(".project-tab-json {");
+        css.ShouldNotContain(".project-tab-json:hover");
+        css.ShouldNotContain(".project-tab-json-active");
     }
 
     [Fact]
@@ -5313,6 +5872,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("role=\"form\" aria-label=\"Edit node\"");
         markup.ShouldContain("node-edit-dialog-section node-edit-dialog-identity");
         markup.ShouldContain("node-edit-dialog-section node-edit-dialog-editor");
+        markup.ShouldContain("Icons.Material.Filled.Settings");
         markup.ShouldContain("aria-describedby=\"node-edit-dialog-status\"");
         markup.ShouldContain("role=\"status\"");
         markup.ShouldContain("aria-live=\"polite\"");
@@ -5332,7 +5892,6 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("max-height: min(70vh, 640px);");
         css.ShouldContain(".node-edit-dialog-section");
         css.ShouldContain(".node-edit-dialog-shell ::deep .mud-input-control");
-        css.ShouldContain(".node-edit-dialog-shell ::deep .mud-input-slot");
         css.ShouldContain(".node-edit-dialog-editor ::deep .mapper-workbench .mapper-panel");
         css.ShouldContain("height: 360px;");
         css.ShouldContain(".node-edit-dialog-action-status");
@@ -5340,6 +5899,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".node-edit-dialog-title-meta span:not(:last-child)::after");
         css.ShouldContain("min-height: 28px;");
         css.ShouldContain("@media (max-width: 700px)");
+        css.ShouldNotContain(".node-edit-dialog-shell ::deep .mud-input-slot");
         css.ShouldNotContain(".node-edit-dialog-meta-strip");
     }
 
@@ -5364,16 +5924,20 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("workspace-artifact-shell workspace-artifact-shell-pipeline");
         markup.ShouldContain("ComponentCatalogPanel ArtifactKind=\"@WorkspaceArtifactKind.Pipeline\"");
-        markup.ShouldContain("<FlowDesigner />");
+        markup.ShouldContain("<FlowDesigner LogsRequested=\"@OpenLogs\" />");
+        markup.ShouldContain("<TopicExplorerPanel />");
+        markup.ShouldNotContain("_standaloneTopicExplorer");
+        markup.ShouldNotContain("OpenStandaloneTopicExplorer");
+        markup.ShouldNotContain("Topic explorer</MudButton>");
 
         css.ShouldContain(".workspace-artifact-shell-pipeline");
         css.ShouldContain("grid-template-columns: minmax(212px, 236px) minmax(0, 1fr);");
         css.ShouldContain(".workspace-artifact-shell-pipeline .workspace-artifact-tools");
         css.ShouldContain("padding: 6px;");
         css.ShouldContain(".workspace-artifact-tools:focus-within");
-        css.ShouldContain(".workspace-artifact-region:focus-within,");
-        css.ShouldContain(".workspace-designer-region:focus-within");
-        css.ShouldContain("box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mud-palette-primary) 34%, var(--flux-border));");
+        css.ShouldNotContain(".workspace-artifact-region:focus-within");
+        css.ShouldNotContain(".workspace-designer-region:focus-within");
+        css.ShouldNotContain("box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mud-palette-primary) 34%, var(--flux-border));");
     }
 
     [Fact]
@@ -5441,8 +6005,10 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".tree-empty-artifact-row");
         css.ShouldContain(".tree-empty ::deep .mud-icon-root");
-        css.ShouldContain("grid-template-columns: 26px minmax(0, 1fr);");
-        css.ShouldContain("min-height: 82px;");
+        css.ShouldContain("grid-template-columns: minmax(0, min(300px, 100%));");
+        css.ShouldContain("flex: 1 1 auto;");
+        css.ShouldContain("justify-items: center;");
+        css.ShouldContain("text-align: center;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".app-row:focus-visible");
         css.ShouldContain("grid-template-columns: 18px minmax(0, 1fr) 34px;");
@@ -5499,6 +6065,8 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("aria-label=\"App structure navigation\"");
         markup.ShouldContain("StructureMenuLabel(\"Brokers\", conns.Count)");
+        markup.ShouldContain("<span class=\"app-structure-name\">@active.Name</span>");
+        (markup.Split("Modal=\"false\"", StringSplitOptions.None).Length - 1).ShouldBe(5);
         markup.ShouldContain("app-menu-artifact-row");
         markup.ShouldContain("app-menu-artifact-name");
         markup.ShouldContain("app-menu-empty");
@@ -5565,8 +6133,17 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("private static string TestRunMenuIssueText");
         markup.ShouldContain("No run");
         markup.ShouldContain("No history");
+        markup.ShouldNotContain("app-structure-current");
+        markup.ShouldNotContain("CurrentArtifactLabel");
+        markup.ShouldNotContain("app-structure-meta");
+        markup.ShouldNotContain("BuildActiveMeta");
+        markup.ShouldNotContain("StructureMenuClass");
+        markup.ShouldNotContain("app-structure-menu active");
         markup.ShouldNotContain("app-menu-danger");
         markup.ShouldNotContain("Class=\"app-menu-muted\">No");
+        css.ShouldNotContain(".app-structure-current");
+        css.ShouldNotContain(".app-structure-meta");
+        css.ShouldNotContain(".app-structure-menu.active");
         markup.ShouldNotContain("<MudMenuItem Icon=\"@BrokerActionIcon(c)\"");
         markup.ShouldNotContain("<MudMenuItem Icon=\"@Icons.Material.Filled.Timeline\"");
         markup.ShouldNotContain("<MudMenuItem Icon=\"@Icons.Material.Filled.Dashboard\"");
@@ -5581,6 +6158,19 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain("height: 28px;");
         css.ShouldContain("max-width: 132px;");
+        css.ShouldContain(".app-structure-app {");
+        css.ShouldContain(".app-structure-empty {");
+        css.ShouldContain("color: inherit;");
+        css.ShouldContain("font-size: inherit;");
+        css.ShouldContain("font-weight: inherit;");
+        css.ShouldContain("padding: 0 2px;");
+        css.ShouldNotContain("border: 1px solid var(--flux-border);");
+        css.ShouldNotContain("border-radius: 7px;");
+        css.ShouldNotContain("height: 30px;");
+        css.ShouldNotContain("padding: 0 7px;");
+        css.ShouldNotContain("font-size: 11.5px;");
+        css.ShouldNotContain(".app-structure-app,\r\n.app-structure-empty");
+        css.ShouldNotContain(".app-structure-app,\n.app-structure-empty");
         css.ShouldContain(".app-menu-state-row,");
         css.ShouldContain(".app-menu-command-row");
         css.ShouldContain("grid-template-columns: 22px minmax(0, 1fr) auto;");
@@ -5634,6 +6224,24 @@ public sealed class DashboardEventFilterCatalogTests
         appCss.ShouldContain(".app-structure-popover .app-menu-broker-item");
         appCss.ShouldContain(".app-structure-popover .app-menu-empty");
         appCss.ShouldContain("padding-left: 6px;");
+        appCss.ShouldContain("z-index: 1250 !important;");
+        appCss.ShouldContain("border: 0;");
+        appCss.ShouldContain("box-shadow: 0 12px 28px -22px rgba(0, 0, 0, 0.78);");
+        appCss.ShouldContain(".flux-theme-dark .mud-overlay.mud-overlay-dialog .mud-overlay-scrim.mud-overlay-dark");
+        appCss.ShouldContain(".flux-theme-light .mud-overlay.mud-overlay-dialog .mud-overlay-scrim.mud-overlay-light");
+        appCss.ShouldContain(".flux-theme-dark .mud-overlay.mud-overlay-popover,");
+        appCss.ShouldContain(".flux-theme-light .mud-overlay.mud-overlay-popover .mud-overlay-scrim");
+        appCss.ShouldContain("background-color: transparent !important;");
+        appCss.ShouldNotContain(".flux-theme-dark .mud-overlay {");
+        appCss.ShouldNotContain(".flux-theme-light .mud-overlay {");
+        appCss.ShouldContain("max-height: min(56vh, 380px);");
+        appCss.ShouldContain("min-width: 224px;");
+        appCss.ShouldContain("overflow-y: auto;");
+        appCss.ShouldNotContain("z-index: 1600 !important;");
+        appCss.ShouldNotContain("border: 1px solid var(--flux-popover-border);");
+        appCss.ShouldNotContain("min-width: 280px;");
+        appCss.ShouldNotContain("box-shadow: 0 18px 44px");
+        appCss.ShouldNotContain("box-shadow: 0 10px 24px -18px");
         appCss.ShouldNotContain(".broker-live .mud-list-item-icon");
     }
 
@@ -5685,9 +6293,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("background: var(--flux-canvas);");
         css.ShouldContain("border-bottom: 1px solid var(--flux-border-soft);");
         css.ShouldContain(".apps-list");
-        css.ShouldContain("grid-template-columns: 26px minmax(0, 1fr);");
-        css.ShouldContain("min-height: 82px;");
-        css.ShouldContain("grid-row: 1 / span 2;");
+        css.ShouldContain("grid-template-columns: minmax(0, min(280px, 100%));");
+        css.ShouldContain("flex: 1 1 auto;");
+        css.ShouldContain("justify-items: center;");
+        css.ShouldContain("text-align: center;");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 26px;");
         css.ShouldContain("min-height: 50px;");
         css.ShouldContain(".app-tile-main");
@@ -5727,6 +6336,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("connections-title-icon");
         markup.ShouldContain("<strong>Connections</strong>");
         markup.ShouldContain("@ConnectionCountLabel");
+        markup.ShouldContain("VisibleConnections");
+        markup.ShouldContain("!LiveMqttWorkspaceService.IsTopicMonitorConnection(connection)");
         markup.ShouldContain("connections-empty\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("connections-empty-title");
         markup.ShouldContain("connections-list");
@@ -5753,9 +6364,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".connections-list");
         css.ShouldContain(".connection-row");
         css.ShouldContain("border-bottom: 1px solid var(--flux-border-soft);");
-        css.ShouldContain("grid-template-columns: 26px minmax(0, 1fr);");
-        css.ShouldContain("grid-row: 1 / span 2;");
-        css.ShouldContain("min-height: 82px;");
+        css.ShouldContain("grid-template-columns: minmax(0, min(280px, 100%));");
+        css.ShouldContain("flex: 1 1 auto;");
+        css.ShouldContain("justify-items: center;");
+        css.ShouldContain("text-align: center;");
         css.ShouldContain("grid-template-columns: 8px minmax(0, 1fr) 52px;");
         css.ShouldContain("min-height: 54px;");
         css.ShouldContain("opacity: 0.62;");
@@ -5843,9 +6455,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".session-row-meta span:not(:last-child)::after");
         css.ShouldContain("max-width: 100%;");
         css.ShouldContain("text-overflow: ellipsis;");
-        css.ShouldContain("grid-template-columns: 28px minmax(0, 1fr);");
-        css.ShouldContain("min-height: 96px;");
-        css.ShouldContain("grid-row: 1 / span 2;");
+        css.ShouldContain("grid-template-columns: minmax(0, min(300px, 100%));");
+        css.ShouldContain("flex: 1 1 auto;");
+        css.ShouldContain("justify-items: center;");
+        css.ShouldContain("text-align: center;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".session-state.selected");
         css.ShouldContain(".session-state.recording");
@@ -5896,6 +6509,13 @@ public sealed class DashboardEventFilterCatalogTests
 
     private static string FindRepositoryRoot()
     {
+        var configuredRoot = Environment.GetEnvironmentVariable("FLUXMQ_REPOSITORY_ROOT");
+        if (!string.IsNullOrWhiteSpace(configuredRoot) &&
+            File.Exists(Path.Combine(configuredRoot, "FluxMq.sln")))
+        {
+            return Path.GetFullPath(configuredRoot);
+        }
+
         var current = new DirectoryInfo(AppContext.BaseDirectory);
         while (current is not null && !File.Exists(Path.Combine(current.FullName, "FluxMq.sln")))
         {

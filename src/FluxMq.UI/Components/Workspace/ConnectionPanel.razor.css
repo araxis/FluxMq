@@ -75,23 +75,24 @@
 
 .connections-empty {
     align-content: center;
-    align-items: start;
+    align-items: center;
     background: color-mix(in srgb, var(--flux-surface-2) 56%, transparent);
     border: 1px solid var(--flux-border);
     border-radius: 5px;
     color: var(--mud-palette-text-secondary);
     display: grid;
-    gap: 2px 9px;
-    grid-template-columns: 26px minmax(0, 1fr);
-    min-height: 82px;
+    flex: 1 1 auto;
+    gap: 6px;
+    grid-template-columns: minmax(0, min(280px, 100%));
+    justify-content: center;
+    justify-items: center;
+    min-height: 0;
     padding: 10px;
-    text-align: left;
+    text-align: center;
 }
 
 .connections-empty ::deep .mud-icon-root {
-    align-self: center;
     color: var(--flux-text-muted);
-    grid-row: 1 / span 2;
 }
 
 .connections-empty-title {
@@ -106,6 +107,7 @@
     font-size: 11.5px;
     line-height: 1.35;
     margin-top: 2px;
+    max-width: 280px;
     overflow-wrap: anywhere;
 }
 

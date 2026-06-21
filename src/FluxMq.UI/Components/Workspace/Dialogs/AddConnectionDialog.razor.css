@@ -100,11 +100,7 @@
 }
 
 .add-connection-dialog-grid.broker {
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.55fr) 92px;
-}
-
-.add-connection-dialog-grid.broker .add-connection-dialog-field.client {
-    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .add-connection-dialog-field {
@@ -115,24 +111,25 @@
     margin-top: 0;
 }
 
-.add-connection-dialog-field ::deep(.mud-input-slot) {
-    font-size: 13px;
-}
-
 .add-connection-dialog-field ::deep(.mud-input-control-helper-container) {
     margin-top: 2px;
 }
 
-.add-connection-dialog-security-row {
+.add-connection-dialog-checkbox-cell {
     align-items: center;
     display: flex;
     gap: 8px;
-    justify-content: space-between;
+    min-height: 42px;
     min-width: 0;
 }
 
-.add-connection-dialog-tls {
-    flex: 0 0 auto;
+.add-connection-dialog-checkbox {
+    min-width: 0;
+}
+
+.add-connection-dialog-checkbox ::deep(.mud-checkbox),
+.add-connection-dialog-checkbox ::deep(.mud-button-root) {
+    align-items: center;
 }
 
 .add-connection-dialog-actions {
@@ -157,10 +154,6 @@
     .add-connection-dialog-grid.broker {
         grid-template-columns: minmax(0, 1fr);
     }
-
-    .add-connection-dialog-grid.broker .add-connection-dialog-field.client {
-        grid-column: auto;
-    }
 }
 
 @media (max-width: 480px) {
@@ -172,12 +165,6 @@
         grid-column: 1 / -1;
         justify-content: center;
         width: 100%;
-    }
-
-    .add-connection-dialog-security-row {
-        align-items: stretch;
-        flex-direction: column;
-        gap: 6px;
     }
 
     .add-connection-dialog-actions {

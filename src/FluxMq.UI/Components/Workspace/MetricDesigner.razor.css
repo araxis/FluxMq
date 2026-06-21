@@ -58,14 +58,16 @@
     font-weight: 720;
 }
 
-.metrics-toolbar {
+.metrics-list-toolbar {
     align-items: center;
+    background: color-mix(in srgb, var(--flux-surface) 76%, transparent);
+    border-bottom: 1px solid var(--flux-border);
     display: flex;
     flex: 0 0 auto;
     gap: 6px;
-    margin-left: auto;
-    max-width: calc(100% - 170px);
+    min-height: 44px;
     min-width: 0;
+    padding: 6px 8px;
 }
 
 .metrics-filter-field {
@@ -96,17 +98,21 @@
 }
 
 .metrics-search-field {
+    flex: 1 1 220px;
     grid-template-columns: 20px minmax(0, 1fr) auto;
-    width: clamp(210px, 26vw, 300px);
+    min-width: 170px;
+    width: auto;
 }
 
 .metrics-type-field {
-    grid-template-columns: 18px minmax(0, 1fr) 18px;
+    flex: 0 0 158px;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 0;
+    position: relative;
     width: 158px;
 }
 
-.metrics-filter-field input,
-.metrics-filter-field select {
+.metrics-filter-field input {
     appearance: none;
     background: transparent;
     border: 0;
@@ -125,10 +131,6 @@
 .metrics-filter-field input::placeholder {
     color: var(--mud-palette-text-secondary);
     font-weight: 500;
-}
-
-.metrics-filter-field select {
-    cursor: pointer;
 }
 
 .metrics-inline-clear,
@@ -172,7 +174,7 @@
     background: var(--flux-accent);
     border: 0;
     border-radius: 6px;
-    color: var(--mud-palette-primary-text);
+    color: var(--flux-accent-contrast);
     cursor: pointer;
     display: inline-flex;
     flex: 0 0 auto;
@@ -197,9 +199,54 @@
 }
 
 .metrics-new-button ::deep .mud-icon-root {
+    color: var(--flux-accent-contrast);
     font-size: 17px;
     height: 17px;
     width: 17px;
+}
+
+.metrics-type-field ::deep .metrics-type-select {
+    margin: 0;
+    min-width: 0;
+    width: 100%;
+}
+
+.metrics-type-field ::deep .metrics-type-filter-icon {
+    color: inherit;
+    left: 9px;
+    pointer-events: none;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
+}
+
+.metrics-type-field ::deep .metrics-type-select .mud-input-control-input-container {
+    height: 30px;
+    margin: 0;
+}
+
+.metrics-type-field ::deep .metrics-type-select .mud-input {
+    color: var(--mud-palette-text-primary);
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 650;
+    height: 30px;
+    min-height: 30px;
+}
+
+.metrics-type-field ::deep .metrics-type-select .mud-input-root {
+    min-width: 0;
+    overflow: hidden;
+    padding: 0 8px 0 34px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.metrics-type-field ::deep .metrics-type-select .mud-input-adornment-end {
+    color: var(--mud-palette-text-secondary);
+    margin-inline-start: 4px;
 }
 
 .metrics-body {
@@ -248,7 +295,9 @@
 }
 
 .metrics-list {
+    display: flex;
     flex: 1 1 auto;
+    flex-direction: column;
     min-height: 0;
     overflow: auto;
     padding: 4px;
@@ -435,22 +484,25 @@
 
 .metrics-list-empty,
 .metrics-editor-empty {
-    align-items: start;
+    align-content: center;
+    align-items: center;
     align-self: center;
     background: color-mix(in srgb, var(--flux-surface) 50%, transparent);
     border: 1px dashed color-mix(in srgb, var(--flux-border) 86%, transparent);
     border-radius: 6px;
     color: var(--mud-palette-text-secondary);
     display: grid;
-    flex: 0 1 auto;
-    gap: 6px 8px;
-    grid-template-columns: 24px minmax(0, 1fr);
+    flex: 1 1 auto;
+    gap: 6px;
+    grid-template-columns: minmax(0, min(336px, 100%));
+    justify-content: center;
+    justify-items: center;
     justify-self: center;
     max-width: min(336px, calc(100% - 20px));
     min-height: 0;
     min-width: 0;
     padding: 9px;
-    text-align: left;
+    text-align: center;
     width: 100%;
 }
 
@@ -464,7 +516,7 @@
 }
 
 .metrics-list-empty {
-    margin: 18px auto;
+    margin: auto;
 }
 
 .metrics-empty-copy {
@@ -525,8 +577,7 @@
 
 .metrics-list-empty .metrics-empty-action,
 .metrics-editor-empty .metrics-empty-action {
-    grid-column: 2;
-    justify-self: start;
+    justify-self: center;
 }
 
 .metrics-empty-action.secondary {
@@ -1602,16 +1653,13 @@ a.metrics-validation-line:focus-visible {
 }
 
 @media (max-width: 1180px) {
-    .metrics-commandbar,
     .metrics-editor-header {
         align-items: stretch;
         flex-direction: column;
     }
 
-    .metrics-toolbar {
+    .metrics-list-toolbar {
         flex-wrap: wrap;
-        margin-left: 0;
-        max-width: none;
         width: 100%;
     }
 
@@ -1709,10 +1757,12 @@ a.metrics-validation-line:focus-visible {
         width: 28px;
     }
 
-    .metrics-toolbar {
+    .metrics-list-toolbar {
         display: grid;
         gap: 5px;
         grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+        min-height: 0;
+        padding: 5px 6px;
     }
 
     .metrics-editor-subtitle code {

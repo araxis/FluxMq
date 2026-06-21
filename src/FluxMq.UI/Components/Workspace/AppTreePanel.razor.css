@@ -10,23 +10,25 @@
 
 .tree-empty {
     align-content: center;
-    align-items: start;
+    align-items: center;
     background: var(--flux-surface);
     border: 1px solid var(--flux-border-soft);
     border-radius: 5px;
     color: var(--mud-palette-text-secondary);
     display: grid;
-    gap: 2px 9px;
-    grid-template-columns: 26px minmax(0, 1fr);
-    min-height: 82px;
+    flex: 1 1 auto;
+    gap: 6px;
+    grid-template-columns: minmax(0, min(300px, 100%));
+    justify-content: center;
+    justify-items: center;
+    min-height: 0;
     min-width: 0;
     padding: 10px;
+    text-align: center;
 }
 
 .tree-empty ::deep .mud-icon-root {
-    align-self: center;
     color: var(--flux-text-muted);
-    grid-row: 1 / span 2;
 }
 
 .tree-empty-title {
@@ -40,6 +42,7 @@
     font-size: 12px;
     line-height: 1.35;
     margin-top: 2px;
+    max-width: 300px;
     overflow-wrap: anywhere;
 }
 

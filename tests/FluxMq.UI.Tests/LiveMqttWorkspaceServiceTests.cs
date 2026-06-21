@@ -68,8 +68,96 @@ public sealed class LiveMqttWorkspaceServiceTests
 
         createdClients.ShouldHaveSingleItem().Subscriptions
             .Select(subscription => subscription.TopicFilter)
-            .ShouldBe(["#", "$SYS/#"], ignoreOrder: true);
+            .ShouldBe(["#"], ignoreOrder: true);
 
+        await service.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task ReadConnectionAsync_StampsCapturedMessagesWithBrokerName()
+    {
+        var createdClients = new List<FakeMqttBrokerClient>();
+        var service = CreateService(profile =>
+        {
+            var client = new FakeMqttBrokerClient(profile);
+            createdClients.Add(client);
+            return client;
+        });
+        var connection = service.AddConnectionIfAbsent(
+            new MqttConnectionProfile
+            {
+                Name = "local-broker",
+                Host = "localhost",
+                Port = 1883,
+                ClientId = "workspace-client"
+            },
+            "#",
+            "local-broker");
+        await service.ConnectAsync(connection.Id);
+
+        await createdClients.ShouldHaveSingleItem().WriteAsync(new MqttEnvelope
+        {
+            Topic = "factory/temperature",
+            Payload = "21.7"u8.ToArray(),
+            QualityOfService = MqttQualityOfServiceLevel.AtMostOnce,
+            Retain = false
+        });
+        await WaitUntilAsync(() => service.RecentMessages.Count == 1);
+
+        service.RecentMessages.ShouldHaveSingleItem().BrokerName.ShouldBe("local-broker");
+        await service.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task TopicMonitorConnection_UsesSeparateClientAndVisibleBrokerName()
+    {
+        var createdClients = new List<FakeMqttBrokerClient>();
+        var service = CreateService(profile =>
+        {
+            var client = new FakeMqttBrokerClient(profile);
+            createdClients.Add(client);
+            return client;
+        });
+        var profile = new MqttConnectionProfile
+        {
+            Name = "local-broker",
+            Host = "localhost",
+            Port = 1883,
+            ClientId = "runtime-client"
+        };
+
+        var appConnection = service.AddConnectionIfAbsent(profile, "factory/app/#", "local-broker");
+        await service.ConnectAsync(appConnection.Id);
+
+        var monitorResourceName = LiveMqttWorkspaceService.CreateTopicMonitorResourceName("local-broker");
+        var monitorProfile = profile with { ClientId = "topics-local" };
+        var ready = await service.EnsureConnectionsAsync(
+        [
+            (monitorResourceName, monitorProfile, LiveMqttWorkspaceService.TopicExplorerMonitorSubscription)
+        ]);
+
+        ready.ShouldBeTrue();
+        service.Connections.Count.ShouldBe(2);
+        service.Connections.Select(connection => connection.ResourceName)
+            .ShouldBe(["local-broker", monitorResourceName], ignoreOrder: true);
+        createdClients.Count.ShouldBe(2);
+        createdClients[0].Profile.ClientId.ShouldStartWith("runtime-client-workspace-");
+        createdClients[1].Profile.ClientId.ShouldBe("topics-local");
+        createdClients.SelectMany(client => client.Subscriptions.Select(subscription => subscription.TopicFilter))
+            .ShouldBe(["factory/app/#", "#", "$SYS/#"], ignoreOrder: true);
+
+        await createdClients[1].WriteAsync(new MqttEnvelope
+        {
+            Topic = "factory/temperature",
+            Payload = "21.7"u8.ToArray(),
+            QualityOfService = MqttQualityOfServiceLevel.AtMostOnce,
+            Retain = false
+        });
+        await WaitUntilAsync(() => service.RecentMessages.Count == 1);
+
+        service.RecentMessages.ShouldHaveSingleItem().BrokerName.ShouldBe("local-broker");
+        LiveMqttWorkspaceService.IsTopicMonitorResourceName(monitorResourceName).ShouldBeTrue();
+        LiveMqttWorkspaceService.ToVisibleBrokerName(monitorResourceName).ShouldBe("local-broker");
         await service.DisposeAsync();
     }
 
@@ -97,6 +185,36 @@ public sealed class LiveMqttWorkspaceServiceTests
         ready.ShouldBeTrue();
         createdClients.ShouldHaveSingleItem().ConnectCalls.ShouldBe(1);
         service.Connections.ShouldHaveSingleItem().State.ShouldBe(MqttClientState.Connected);
+        await service.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task EnsureConnectionsAsync_ReconnectsWhenCertificateSettingsChange()
+    {
+        var createdClients = new List<FakeMqttBrokerClient>();
+        var service = CreateService(profile =>
+        {
+            var client = new FakeMqttBrokerClient(profile);
+            createdClients.Add(client);
+            return client;
+        });
+        var profile = new MqttConnectionProfile
+        {
+            Name = "local-broker",
+            Host = "localhost",
+            Port = 8883,
+            ClientId = "runtime-client",
+            UseTls = true,
+            CaCertificatePath = "certs/root-a.pem"
+        };
+
+        await service.EnsureConnectionsAsync([("local-broker", profile, "#")]);
+        await service.EnsureConnectionsAsync([("local-broker", profile with { CaCertificatePath = "certs/root-b.pem" }, "#")]);
+
+        createdClients.Count.ShouldBe(2);
+        createdClients[0].Profile.CaCertificatePath.ShouldBe("certs/root-a.pem");
+        createdClients[1].Profile.CaCertificatePath.ShouldBe("certs/root-b.pem");
+        service.Connections.ShouldHaveSingleItem().Profile.CaCertificatePath.ShouldBe("certs/root-b.pem");
         await service.DisposeAsync();
     }
 
@@ -379,6 +497,9 @@ public sealed class LiveMqttWorkspaceServiceTests
             return Task.CompletedTask;
         }
 
+        public async Task WriteAsync(MqttEnvelope envelope)
+            => await _messages.Writer.WriteAsync(envelope);
+
         public ValueTask DisposeAsync()
         {
             _messages.Writer.TryComplete();
@@ -391,6 +512,16 @@ public sealed class LiveMqttWorkspaceServiceTests
         byte[] Payload,
         MqttQualityOfServiceLevel QualityOfService,
         bool Retain);
+
+    private static async Task WaitUntilAsync(Func<bool> condition)
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+        while (!condition())
+        {
+            timeout.Token.ThrowIfCancellationRequested();
+            await Task.Delay(20, timeout.Token);
+        }
+    }
 
     private sealed class FakeSessionRepository : ISessionRepository
     {

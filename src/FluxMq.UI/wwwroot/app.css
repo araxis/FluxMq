@@ -96,21 +96,21 @@ select {
 }
 
 .flux-theme-dark {
-    --flux-bg: #0a0d12;
+    --flux-bg: var(--mud-palette-background);
     --flux-canvas: #0c1016;
-    --flux-surface: #11151c;
-    --flux-surface-2: #161b24;
+    --flux-surface: var(--mud-palette-surface);
+    --flux-surface-2: var(--mud-palette-background-gray);
     --flux-surface-3: #1c222d;
-    --flux-border: #1d232e;
-    --flux-border-soft: #161b24;
-    --flux-border-strong: #2a313d;
-    --flux-accent: #2dd4bf;
-    --flux-accent-hover: #5eead4;
-    --flux-accent-contrast: #062a26;
-    --flux-accent-soft: rgba(45, 212, 191, 0.12);
-    --flux-accent-dim: rgba(45, 212, 191, 0.35);
-    --flux-text-muted: #6b7280;
-    --flux-text-subtle: #434c5a;
+    --flux-border: var(--mud-palette-lines-default);
+    --flux-border-soft: var(--mud-palette-background-gray);
+    --flux-border-strong: var(--mud-palette-lines-inputs);
+    --flux-accent: var(--mud-palette-primary);
+    --flux-accent-hover: var(--mud-palette-primary-lighten);
+    --flux-accent-contrast: var(--mud-palette-primary-text);
+    --flux-accent-soft: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent);
+    --flux-accent-dim: color-mix(in srgb, var(--mud-palette-primary) 35%, transparent);
+    --flux-text-muted: var(--mud-palette-text-disabled);
+    --flux-text-subtle: color-mix(in srgb, var(--mud-palette-text-disabled) 58%, var(--mud-palette-background));
     --flux-idle: #64748b;
     --flux-shadow-1: 0 1px 0 rgba(255, 255, 255, 0.03), 0 1px 2px rgba(0, 0, 0, 0.4);
     --flux-shadow-node: 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 24px -8px rgba(0, 0, 0, 0.6);
@@ -118,21 +118,21 @@ select {
 }
 
 .flux-theme-light {
-    --flux-bg: #f4f6f8;
+    --flux-bg: var(--mud-palette-background);
     --flux-canvas: #eef2f6;
-    --flux-surface: #ffffff;
-    --flux-surface-2: #f7f9fb;
+    --flux-surface: var(--mud-palette-surface);
+    --flux-surface-2: var(--mud-palette-background-gray);
     --flux-surface-3: #edf3f7;
-    --flux-border: #dde3ea;
-    --flux-border-soft: #edf1f5;
-    --flux-border-strong: #c3ccd8;
-    --flux-accent: #0f766e;
-    --flux-accent-hover: #115e59;
-    --flux-accent-contrast: #ffffff;
-    --flux-accent-soft: rgba(15, 118, 110, 0.10);
-    --flux-accent-dim: rgba(15, 118, 110, 0.24);
-    --flux-text-muted: #6b7280;
-    --flux-text-subtle: #94a3b8;
+    --flux-border: var(--mud-palette-lines-default);
+    --flux-border-soft: color-mix(in srgb, var(--mud-palette-lines-default) 62%, var(--mud-palette-surface));
+    --flux-border-strong: var(--mud-palette-lines-inputs);
+    --flux-accent: var(--mud-palette-primary);
+    --flux-accent-hover: var(--mud-palette-primary-darken);
+    --flux-accent-contrast: var(--mud-palette-primary-text);
+    --flux-accent-soft: color-mix(in srgb, var(--mud-palette-primary) 10%, transparent);
+    --flux-accent-dim: color-mix(in srgb, var(--mud-palette-primary) 24%, transparent);
+    --flux-text-muted: var(--mud-palette-text-disabled);
+    --flux-text-subtle: color-mix(in srgb, var(--mud-palette-text-disabled) 65%, var(--mud-palette-surface));
     --flux-idle: #94a3b8;
     --flux-shadow-1: 0 1px 0 rgba(255, 255, 255, 0.85), 0 1px 2px rgba(15, 23, 42, 0.10);
     --flux-shadow-node: 0 1px 0 rgba(255, 255, 255, 0.9), 0 10px 24px -18px rgba(15, 23, 42, 0.32);
@@ -214,6 +214,24 @@ select {
     margin-top: 0;
 }
 
+.flux-shell .mud-input > input.mud-input-root,
+.flux-shell .mud-input > div.mud-input-slot,
+.flux-shell .mud-input-control > .mud-input-control-input-container > .mud-input-label-inputcontrol {
+    font-size: 13px;
+    letter-spacing: 0;
+    line-height: 1.25;
+}
+
+.flux-shell .mud-input > input.mud-input-root-outlined.mud-input-root-margin-dense,
+.flux-shell .mud-input > div.mud-input-slot.mud-input-root-outlined.mud-input-root-margin-dense {
+    padding-bottom: 13.5px;
+    padding-top: 7.5px;
+}
+
+.flux-shell .mud-input-control > .mud-input-control-input-container > .mud-input-label-outlined.mud-input-label-margin-dense {
+    transform: translate(14px, 9px) scale(1);
+}
+
 .flux-shell .mud-input.mud-input-outlined .mud-input-outlined-border {
     border-color: var(--flux-border-strong);
 }
@@ -292,7 +310,7 @@ select {
     --flux-popover-accent: var(--mud-palette-primary, #2dd4bf);
     --flux-popover-accent-soft: color-mix(in srgb, var(--mud-palette-primary, #2dd4bf) 14%, transparent);
     background: transparent !important;
-    z-index: 1600 !important;
+    z-index: 1250 !important;
 }
 
 .app-structure-popover .mud-paper,
@@ -304,13 +322,15 @@ select {
 
 .app-structure-popover .mud-menu-list,
 .app-structure-popover .mud-list {
-    border: 1px solid var(--flux-popover-border-strong);
-    border-radius: 7px;
-    box-shadow: 0 18px 44px -18px rgba(0, 0, 0, 0.72), 0 0 0 1px var(--flux-popover-border);
+    border: 0;
+    border-radius: 5px;
+    box-shadow: 0 12px 28px -22px rgba(0, 0, 0, 0.78);
+    max-height: min(56vh, 380px);
     max-width: calc(100vw - 24px);
-    min-width: 280px;
+    min-width: 224px;
     overflow-x: hidden;
-    padding: 5px;
+    overflow-y: auto;
+    padding: 3px;
 }
 
 .app-structure-popover .mud-list-item {
@@ -352,6 +372,66 @@ select {
 .app-structure-popover .app-menu-test-item {
     padding-left: 6px;
     padding-right: 4px;
+}
+
+.metrics-type-select-popover {
+    --flux-popover-surface: var(--mud-palette-surface, #11151c);
+    --flux-popover-surface-2: color-mix(in srgb, var(--mud-palette-surface, #11151c) 86%, var(--mud-palette-text-primary, #e8ecf2));
+    --flux-popover-accent: var(--mud-palette-primary, #2dd4bf);
+    background: transparent !important;
+    z-index: 1250 !important;
+}
+
+.metrics-type-select-popover .mud-paper,
+.metrics-type-select-popover .mud-popover-paper,
+.metrics-type-select-list {
+    background: var(--flux-popover-surface) !important;
+    box-sizing: border-box;
+}
+
+.metrics-type-select-popover .mud-popover-paper,
+.metrics-type-select-list {
+    border: 0;
+    border-radius: 7px;
+    box-shadow: 0 12px 28px -22px rgba(0, 0, 0, 0.78);
+    max-height: min(54vh, 320px);
+    max-width: min(340px, calc(100vw - 24px)) !important;
+    min-width: min(300px, calc(100vw - 24px)) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto;
+    width: min(300px, calc(100vw - 24px)) !important;
+}
+
+.metrics-type-select-list {
+    color: var(--mud-palette-text-primary);
+    padding: 4px;
+}
+
+.metrics-type-select-list .mud-list-item {
+    border-radius: 5px;
+    color: var(--mud-palette-text-primary);
+    min-height: 28px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.metrics-type-select-list .mud-list-item:hover {
+    background: var(--flux-popover-surface-2);
+    color: var(--mud-palette-text-primary);
+}
+
+.metrics-type-select-list .mud-list-item-text,
+.metrics-type-select-list .mud-list-item .mud-typography {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.metrics-type-select-list .mud-selected-item,
+.metrics-type-select-list .mud-list-item.mud-selected-item {
+    background: var(--flux-popover-accent);
+    color: var(--mud-palette-primary-text);
 }
 
 .app-structure-popover .app-menu-add {
@@ -430,13 +510,20 @@ select {
     overflow: visible;
 }
 
-/* Dashboard query editors are MudDialog-hosted, so the dialog paper must be styled globally. */
-.flux-theme-dark .mud-overlay {
+/* Dialogs need a modal backdrop; menu/popover overlays must stay transparent. */
+.flux-theme-dark .mud-overlay.mud-overlay-dialog .mud-overlay-scrim.mud-overlay-dark {
     background-color: rgba(3, 7, 13, 0.76) !important;
 }
 
-.flux-theme-light .mud-overlay {
+.flux-theme-light .mud-overlay.mud-overlay-dialog .mud-overlay-scrim.mud-overlay-light {
     background-color: rgba(15, 23, 42, 0.36) !important;
+}
+
+.flux-theme-dark .mud-overlay.mud-overlay-popover,
+.flux-theme-light .mud-overlay.mud-overlay-popover,
+.flux-theme-dark .mud-overlay.mud-overlay-popover .mud-overlay-scrim,
+.flux-theme-light .mud-overlay.mud-overlay-popover .mud-overlay-scrim {
+    background-color: transparent !important;
 }
 
 .mud-dialog.dashboard-query-dialog-modal {

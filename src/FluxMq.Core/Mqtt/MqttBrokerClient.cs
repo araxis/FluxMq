@@ -3,6 +3,7 @@ using FluxFlow.Components.Secrets;
 using FluxFlow.Components.Secrets.Contracts;
 using MQTTnet;
 using MQTTnet.Protocol;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Channels;
 
 namespace FluxMq.Core.Mqtt;
@@ -50,7 +51,7 @@ public sealed class MqttBrokerClient : IMqttBrokerClient
                 builder = builder.WithCredentials(Profile.Username, password);
 
             if (Profile.UseTls)
-                builder = builder.WithTlsOptions(o => o.UseTls());
+                builder = builder.WithTlsOptions(ConfigureTlsOptions);
 
             await _client.ConnectAsync(builder.Build(), ct);
             SetState(MqttClientState.Connected);
@@ -140,6 +141,62 @@ public sealed class MqttBrokerClient : IMqttBrokerClient
         => resolution.Diagnostic is { } diagnostic
             ? $"MQTT profile '{Profile.Name}' password secret could not be resolved: {diagnostic.Message}"
             : $"MQTT profile '{Profile.Name}' password secret could not be resolved.";
+
+    private void ConfigureTlsOptions(MqttClientTlsOptionsBuilder options)
+    {
+        options.UseTls();
+
+        if (Profile.AllowUntrustedCertificates)
+        {
+            options
+                .WithAllowUntrustedCertificates(true)
+                .WithIgnoreCertificateChainErrors(true)
+                .WithIgnoreCertificateRevocationErrors(true);
+        }
+
+        if (NullIfWhiteSpace(Profile.CaCertificatePath) is { } caCertificatePath)
+        {
+            var trustChain = new X509Certificate2Collection
+            {
+                X509CertificateLoader.LoadCertificateFromFile(caCertificatePath)
+            };
+            options.WithTrustChain(trustChain);
+        }
+
+        if (NullIfWhiteSpace(Profile.ClientCertificatePath) is { } clientCertificatePath)
+        {
+            options.WithClientCertificates(LoadClientCertificates(
+                clientCertificatePath,
+                NullIfWhiteSpace(Profile.ClientCertificatePassword)));
+        }
+    }
+
+    private static X509Certificate2Collection LoadClientCertificates(string path, string? password)
+    {
+        if (IsPkcs12Path(path))
+        {
+            return X509CertificateLoader.LoadPkcs12CollectionFromFile(
+                path,
+                password ?? string.Empty,
+                X509KeyStorageFlags.EphemeralKeySet,
+                Pkcs12LoaderLimits.Defaults);
+        }
+
+        return new X509Certificate2Collection
+        {
+            X509CertificateLoader.LoadCertificateFromFile(path)
+        };
+    }
+
+    private static bool IsPkcs12Path(string path)
+    {
+        var extension = Path.GetExtension(path);
+        return string.Equals(extension, ".pfx", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(extension, ".p12", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string? NullIfWhiteSpace(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     // Fired by MQTTnet on any disconnect — intentional or unexpected.
     // Reconnect policy (Polly) will hook here in a future step.

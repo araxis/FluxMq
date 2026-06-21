@@ -16,6 +16,7 @@ public sealed class FluxMqSessionStore(IMessageRepository messages) : ISessionSt
     public const string TopicAttribute = "topic";
     public const string QosAttribute = "qos";
     public const string RetainAttribute = "retain";
+    public const string BrokerAttribute = "broker";
 
     private readonly IMessageRepository _messages = messages ?? throw new ArgumentNullException(nameof(messages));
     private readonly object _sessionSync = new();
@@ -167,12 +168,7 @@ public sealed class FluxMqSessionStore(IMessageRepository messages) : ISessionSt
             Name = envelope.Topic,
             Payload = envelope.Payload,
             ContentType = "application/octet-stream",
-            Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                [TopicAttribute] = envelope.Topic,
-                [QosAttribute] = ((int)envelope.QualityOfService).ToString(CultureInfo.InvariantCulture),
-                [RetainAttribute] = envelope.Retain.ToString()
-            }
+            Attributes = CreateMqttAttributes(envelope)
         };
     }
 
@@ -187,7 +183,8 @@ public sealed class FluxMqSessionStore(IMessageRepository messages) : ISessionSt
             Payload = ReadPayload(record.Payload),
             ReceivedAt = record.Timestamp,
             QualityOfService = ReadQos(record.Attributes),
-            Retain = ReadRetain(record.Attributes)
+            Retain = ReadRetain(record.Attributes),
+            BrokerName = ReadBroker(record.Attributes)
         };
     }
 
@@ -205,7 +202,8 @@ public sealed class FluxMqSessionStore(IMessageRepository messages) : ISessionSt
             Payload = ReadPayload(input.Payload),
             ReceivedAt = timestamp,
             QualityOfService = ReadQos(input.Attributes),
-            Retain = ReadRetain(input.Attributes)
+            Retain = ReadRetain(input.Attributes),
+            BrokerName = ReadBroker(input.Attributes)
         };
     }
 
@@ -219,12 +217,7 @@ public sealed class FluxMqSessionStore(IMessageRepository messages) : ISessionSt
             Name = message.Topic,
             Payload = message.Payload,
             ContentType = "application/octet-stream",
-            Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                [TopicAttribute] = message.Topic,
-                [QosAttribute] = ((int)message.QualityOfService).ToString(CultureInfo.InvariantCulture),
-                [RetainAttribute] = message.Retain.ToString()
-            }
+            Attributes = CreateMqttAttributes(message)
         };
 
     private static SessionRecord ToRecord(SessionId sessionId, MqttEnvelope envelope, long sequence)
@@ -237,13 +230,42 @@ public sealed class FluxMqSessionStore(IMessageRepository messages) : ISessionSt
             Name = envelope.Topic,
             Payload = envelope.Payload,
             ContentType = "application/octet-stream",
-            Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                [TopicAttribute] = envelope.Topic,
-                [QosAttribute] = ((int)envelope.QualityOfService).ToString(CultureInfo.InvariantCulture),
-                [RetainAttribute] = envelope.Retain.ToString()
-            }
+            Attributes = CreateMqttAttributes(envelope)
         };
+
+    private static Dictionary<string, string> CreateMqttAttributes(MqttEnvelope envelope)
+    {
+        var attributes = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [TopicAttribute] = envelope.Topic,
+            [QosAttribute] = ((int)envelope.QualityOfService).ToString(CultureInfo.InvariantCulture),
+            [RetainAttribute] = envelope.Retain.ToString()
+        };
+
+        if (!string.IsNullOrWhiteSpace(envelope.BrokerName))
+        {
+            attributes[BrokerAttribute] = envelope.BrokerName.Trim();
+        }
+
+        return attributes;
+    }
+
+    private static Dictionary<string, string> CreateMqttAttributes(StoredMessage message)
+    {
+        var attributes = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [TopicAttribute] = message.Topic,
+            [QosAttribute] = ((int)message.QualityOfService).ToString(CultureInfo.InvariantCulture),
+            [RetainAttribute] = message.Retain.ToString()
+        };
+
+        if (!string.IsNullOrWhiteSpace(message.BrokerName))
+        {
+            attributes[BrokerAttribute] = message.BrokerName.Trim();
+        }
+
+        return attributes;
+    }
 
     private static SessionMetadata CreateMetadata(SessionId sessionId, long messageCount)
         => new()
@@ -364,6 +386,13 @@ public sealed class FluxMqSessionStore(IMessageRepository messages) : ISessionSt
            attributes.TryGetValue(RetainAttribute, out var value) &&
            bool.TryParse(value, out var retain) &&
            retain;
+
+    private static string? ReadBroker(IReadOnlyDictionary<string, string>? attributes)
+        => attributes is not null &&
+           attributes.TryGetValue(BrokerAttribute, out var value) &&
+           !string.IsNullOrWhiteSpace(value)
+            ? value.Trim()
+            : null;
 
     private static Dictionary<string, string> CopyDictionary(Dictionary<string, string>? source)
         => source is null

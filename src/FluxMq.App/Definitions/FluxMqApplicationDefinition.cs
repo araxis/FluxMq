@@ -13,6 +13,7 @@ public sealed record FluxMqApplicationDefinition
     private Dictionary<string, FluxMetricResourceDefinition>? _metrics = [];
     private Dictionary<string, DashboardDefinition>? _dashboards = [];
     private Dictionary<string, ScenarioDefinition>? _tests = [];
+    private Dictionary<string, ExplorerDefinition>? _explorers = [];
 
     public Dictionary<string, EngineNodeDefinition> Resources
     {
@@ -42,6 +43,12 @@ public sealed record FluxMqApplicationDefinition
     {
         get => _tests ??= [];
         init => _tests = value ?? [];
+    }
+
+    public Dictionary<string, ExplorerDefinition> Explorers
+    {
+        get => _explorers ??= [];
+        init => _explorers = value ?? [];
     }
 
     public EngineApplicationDefinition ToEngineDefinition()

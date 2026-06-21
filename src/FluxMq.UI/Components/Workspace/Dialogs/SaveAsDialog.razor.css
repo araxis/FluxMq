@@ -75,10 +75,6 @@
     margin-top: 0;
 }
 
-.save-as-dialog-field ::deep(.mud-input-slot) {
-    font-size: 13px;
-}
-
 .save-as-dialog-helper {
     color: var(--mud-palette-text-secondary);
     font-size: 11px;

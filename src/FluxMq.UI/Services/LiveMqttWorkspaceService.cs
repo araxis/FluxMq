@@ -12,7 +12,9 @@ namespace FluxMq.UI.Services;
 
 public sealed class LiveMqttWorkspaceService : IAsyncDisposable
 {
-    public const string DefaultBrokerMonitorSubscription = "#,$SYS/#";
+    public const string DefaultBrokerMonitorSubscription = "#";
+    public const string TopicExplorerMonitorSubscription = "#,$SYS/#";
+    public const string TopicMonitorResourcePrefix = "topics:";
     private static readonly TimeSpan MessageChangeNotificationInterval = TimeSpan.FromMilliseconds(250);
 
     private sealed class ConnectionEntry(ManagedConnection connection)
@@ -105,18 +107,45 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
 
     public ManagedConnection AddConnectionIfAbsent(MqttConnectionProfile profile, string subscription = DefaultBrokerMonitorSubscription, string? resourceName = null)
     {
+        var result = AddOrUpdateConnection(profile, subscription, resourceName);
+        return result.Connection;
+    }
+
+    private (ManagedConnection Connection, bool ConnectionChanged) AddOrUpdateConnection(
+        MqttConnectionProfile profile,
+        string subscription = DefaultBrokerMonitorSubscription,
+        string? resourceName = null)
+    {
         var normalizedResourceName = NormalizeResourceName(resourceName);
+        var normalizedSubscription = NormalizeSubscription(subscription);
         var existing = _entries.Values.FirstOrDefault(e => ConnectionMatches(e.Connection, profile, normalizedResourceName));
 
         if (existing is not null)
         {
-            return existing.Connection;
+            var subscriptionChanged = !string.Equals(existing.Connection.Subscription, normalizedSubscription, StringComparison.Ordinal);
+            var profileChanged = !ProfilesMatch(existing.Connection.Profile, profile);
+            if (subscriptionChanged)
+            {
+                existing.Connection.Subscription = normalizedSubscription;
+            }
+
+            if (profileChanged)
+            {
+                existing.Connection.Profile = profile;
+            }
+
+            if (subscriptionChanged || profileChanged)
+            {
+                NotifyChanged();
+            }
+
+            return (existing.Connection, subscriptionChanged || profileChanged);
         }
 
-        var conn = new ManagedConnection(profile, subscription, normalizedResourceName);
+        var conn = new ManagedConnection(profile, normalizedSubscription, normalizedResourceName);
         _entries[conn.Id] = new ConnectionEntry(conn);
         NotifyChanged();
-        return conn;
+        return (conn, false);
     }
 
     public Task<bool> EnsureConnectionsAsync(
@@ -134,13 +163,16 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         CancellationToken cancellationToken = default)
     {
         var managedConnections = connections
-            .Select(connection => AddConnectionIfAbsent(connection.Profile, connection.Subscription, connection.ResourceName))
-            .DistinctBy(static connection => connection.Id)
+            .Select(connection => AddOrUpdateConnection(connection.Profile, connection.Subscription, connection.ResourceName))
+            .GroupBy(static connection => connection.Connection.Id)
+            .Select(static group => (
+                Connection: group.First().Connection,
+                ConnectionChanged: group.Any(static connection => connection.ConnectionChanged)))
             .ToArray();
 
-        foreach (var connection in managedConnections)
+        foreach (var (connection, connectionChanged) in managedConnections)
         {
-            if (connection.State != MqttClientState.Connected)
+            if (connection.State != MqttClientState.Connected || connectionChanged)
             {
                 await ConnectAsync(connection.Id, cancellationToken).ConfigureAwait(false);
                 if (connection.State == MqttClientState.Connected)
@@ -150,7 +182,7 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
             }
         }
 
-        return managedConnections.All(static connection => connection.State == MqttClientState.Connected);
+        return managedConnections.All(static connection => connection.Connection.State == MqttClientState.Connected);
     }
 
     public async Task RemoveConnectionAsync(Guid id, CancellationToken cancellationToken = default)
@@ -198,7 +230,10 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         await DisconnectEntryAsync(entry, cancellationToken).ConfigureAwait(false);
 
         entry.Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        var client = _clientFactory(CreateWorkspaceClientProfile(conn.Profile, conn.Id));
+        var clientProfile = IsTopicMonitorConnection(conn)
+            ? conn.Profile
+            : CreateWorkspaceClientProfile(conn.Profile, conn.Id);
+        var client = _clientFactory(clientProfile);
         entry.Client = client;
         entry.StateChangedHandler = (_, state) => OnConnectionStateChanged(id, state);
         client.StateChanged += entry.StateChangedHandler;
@@ -462,8 +497,9 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
         {
             await foreach (var message in entry.Client!.Messages.ReadAllAsync(cancellationToken).ConfigureAwait(false))
             {
-                RecordMessage(message);
-                await _projection.ApplyAsync(message, cancellationToken).ConfigureAwait(false);
+                var brokerMessage = StampBroker(message, conn);
+                RecordMessage(brokerMessage);
+                await _projection.ApplyAsync(brokerMessage, cancellationToken).ConfigureAwait(false);
                 NotifyMessageChanged();
             }
         }
@@ -548,6 +584,91 @@ public sealed class LiveMqttWorkspaceService : IAsyncDisposable
 
     private static string? NormalizeResourceName(string? resourceName)
         => string.IsNullOrWhiteSpace(resourceName) ? null : resourceName.Trim();
+
+    public static string NormalizeSubscription(string? subscription)
+        => string.IsNullOrWhiteSpace(subscription) ? DefaultBrokerMonitorSubscription : subscription.Trim();
+
+    public static string CreateTopicMonitorResourceName(string resourceName)
+        => $"{TopicMonitorResourcePrefix}{(string.IsNullOrWhiteSpace(resourceName) ? "broker" : resourceName.Trim())}";
+
+    public static bool IsTopicMonitorConnection(ManagedConnection connection)
+        => IsTopicMonitorResourceName(connection.ResourceName);
+
+    public static bool IsTopicMonitorResourceName(string? resourceName)
+        => !string.IsNullOrWhiteSpace(resourceName) &&
+           resourceName.Trim().StartsWith(TopicMonitorResourcePrefix, StringComparison.Ordinal);
+
+    public static string ToVisibleBrokerName(string? resourceName)
+    {
+        if (string.IsNullOrWhiteSpace(resourceName))
+        {
+            return string.Empty;
+        }
+
+        var normalized = resourceName.Trim();
+        return IsTopicMonitorResourceName(normalized)
+            ? normalized[TopicMonitorResourcePrefix.Length..]
+            : normalized;
+    }
+
+    private static MqttEnvelope StampBroker(MqttEnvelope message, ManagedConnection connection)
+        => string.IsNullOrWhiteSpace(message.BrokerName)
+            ? message with { BrokerName = BrokerDisplayName(connection) }
+            : message;
+
+    private static string BrokerDisplayName(ManagedConnection connection)
+    {
+        if (IsTopicMonitorConnection(connection) &&
+            !string.IsNullOrWhiteSpace(connection.Profile.Name))
+        {
+            return connection.Profile.Name.Trim();
+        }
+
+        return !string.IsNullOrWhiteSpace(ToVisibleBrokerName(connection.ResourceName))
+            ? ToVisibleBrokerName(connection.ResourceName)
+            : !string.IsNullOrWhiteSpace(connection.Profile.Name)
+                ? connection.Profile.Name.Trim()
+                : $"{connection.Profile.Host}:{connection.Profile.Port}";
+    }
+
+    private static bool ProfilesMatch(MqttConnectionProfile left, MqttConnectionProfile right)
+        => string.Equals(left.Name, right.Name, StringComparison.Ordinal) &&
+           string.Equals(left.Host, right.Host, StringComparison.OrdinalIgnoreCase) &&
+           left.Port == right.Port &&
+           left.UseTls == right.UseTls &&
+           left.AllowUntrustedCertificates == right.AllowUntrustedCertificates &&
+           string.Equals(left.CaCertificatePath, right.CaCertificatePath, StringComparison.Ordinal) &&
+           string.Equals(left.ClientCertificatePath, right.ClientCertificatePath, StringComparison.Ordinal) &&
+           string.Equals(left.ClientCertificatePassword, right.ClientCertificatePassword, StringComparison.Ordinal) &&
+           string.Equals(left.ClientId, right.ClientId, StringComparison.Ordinal) &&
+           string.Equals(left.Username, right.Username, StringComparison.Ordinal) &&
+           string.Equals(left.Password, right.Password, StringComparison.Ordinal) &&
+           SecretReferencesMatch(left.PasswordSecret, right.PasswordSecret) &&
+           left.CleanStart == right.CleanStart &&
+           (int)left.KeepAlive.TotalSeconds == (int)right.KeepAlive.TotalSeconds;
+
+    private static bool SecretReferencesMatch(
+        FluxFlow.Components.Secrets.Contracts.SecretReference? left,
+        FluxFlow.Components.Secrets.Contracts.SecretReference? right)
+    {
+        if (ReferenceEquals(left, right))
+        {
+            return true;
+        }
+
+        if (left is null || right is null)
+        {
+            return false;
+        }
+
+        return string.Equals(left.Name.Value, right.Name.Value, StringComparison.Ordinal) &&
+               string.Equals(left.Version, right.Version, StringComparison.Ordinal) &&
+               string.Equals(left.Kind, right.Kind, StringComparison.Ordinal) &&
+               left.Attributes.Count == right.Attributes.Count &&
+               left.Attributes.All(attribute =>
+                   right.Attributes.TryGetValue(attribute.Key, out var value) &&
+                   string.Equals(attribute.Value, value, StringComparison.Ordinal));
+    }
 
     private static bool ConnectionMatches(
         ManagedConnection connection,

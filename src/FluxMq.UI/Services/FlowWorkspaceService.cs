@@ -1302,6 +1302,9 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
     public IReadOnlyList<(string Name, MqttConnectionProfile Profile, string Subscription)> GetConnectionResources()
         => _definitionComposer.ReadConnectionResourcesFromDefinition(DefinitionJson);
 
+    public IReadOnlyDictionary<string, ExplorerDefinition> GetExplorers()
+        => _definitionComposer.ReadExplorersFromDefinition(DefinitionJson);
+
     public IReadOnlyList<string> GetConnectionNames()
     {
         try
@@ -1599,6 +1602,23 @@ public sealed partial class FlowWorkspaceService : IAsyncDisposable
             State = RuntimeWorkspaceState.Faulted;
             Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "ConnectionAddFailed", exception.Message)];
         }
+        NotifyChanged();
+    }
+
+    public void UpsertExplorer(string explorerName, ExplorerDefinition explorer)
+    {
+        try
+        {
+            ReplaceDefinition(_definitionComposer.UpsertExplorer(DefinitionJson, explorerName, explorer));
+            State = RuntimeWorkspaceState.Idle;
+            Diagnostics = [];
+        }
+        catch (Exception exception)
+        {
+            State = RuntimeWorkspaceState.Faulted;
+            Diagnostics = [new WorkspaceDiagnostic("Error", "Designer", "ExplorerSaveFailed", exception.Message)];
+        }
+
         NotifyChanged();
     }
 

@@ -726,23 +726,25 @@ public sealed partial class FlowDefinitionComposer
         var rows = ReadTrackStrings(layout, "rows", ["*"]).ToArray();
         var columnPadding = NormalizePaddingValues(ReadPaddingValues(layout, "columnPadding"), columns.Length);
         var rowPadding = NormalizePaddingValues(ReadPaddingValues(layout, "rowPadding"), rows.Length);
-        var rowInsertCount = Math.Max(0, rowParts - selectedCell.RowSpan);
-        var columnInsertCount = Math.Max(0, columnParts - selectedCell.ColumnSpan);
+        var cells = GetOrCreateObject(layout, "cells");
+        var sourceCells = ReadDashboardCells(cells);
+        var effectiveSelectedCell = ResolveDashboardSelectedCell(selectedCell, sourceCells);
+        var rowInsertCount = Math.Max(0, rowParts - effectiveSelectedCell.RowSpan);
+        var columnInsertCount = Math.Max(0, columnParts - effectiveSelectedCell.ColumnSpan);
 
         if (rows.Length + rowInsertCount > 12 || columns.Length + columnInsertCount > 12)
         {
             return json;
         }
 
-        layout["rows"] = CreateTrackArray(SubdivideTrackStrings(rows, selectedCell.Row, selectedCell.RowSpan, rowParts));
-        layout["columns"] = CreateTrackArray(SubdivideTrackStrings(columns, selectedCell.Column, selectedCell.ColumnSpan, columnParts));
-        layout["rowPadding"] = CreateNumberArray(SubdividePaddingValues(rowPadding, selectedCell.Row, selectedCell.RowSpan, rowParts));
-        layout["columnPadding"] = CreateNumberArray(SubdividePaddingValues(columnPadding, selectedCell.Column, selectedCell.ColumnSpan, columnParts));
+        layout["rows"] = CreateTrackArray(SubdivideTrackStrings(rows, effectiveSelectedCell.Row, effectiveSelectedCell.RowSpan, rowParts));
+        layout["columns"] = CreateTrackArray(SubdivideTrackStrings(columns, effectiveSelectedCell.Column, effectiveSelectedCell.ColumnSpan, columnParts));
+        layout["rowPadding"] = CreateNumberArray(SubdividePaddingValues(rowPadding, effectiveSelectedCell.Row, effectiveSelectedCell.RowSpan, rowParts));
+        layout["columnPadding"] = CreateNumberArray(SubdividePaddingValues(columnPadding, effectiveSelectedCell.Column, effectiveSelectedCell.ColumnSpan, columnParts));
 
-        var cells = GetOrCreateObject(layout, "cells");
-        var existingCells = ReadDashboardCells(cells)
-            .Where(cell => !selectedCell.IsExplicit || !string.Equals(cell.Name, selectedCell.Name, StringComparison.Ordinal))
-            .Select(cell => TransformDashboardCell(cell, selectedCell, rowInsertCount, columnInsertCount))
+        var existingCells = sourceCells
+            .Where(cell => !string.Equals(cell.Name, effectiveSelectedCell.Name, StringComparison.Ordinal))
+            .Select(cell => TransformDashboardCell(cell, effectiveSelectedCell, rowInsertCount, columnInsertCount))
             .ToArray();
 
         var nextCells = new JsonObject();
@@ -751,7 +753,7 @@ public sealed partial class FlowDefinitionComposer
             nextCells[cell.Name] = FlowDashboardDefinitionFactory.CreateCell(cell);
         }
 
-        foreach (var child in CreateSubdivisionCells(selectedCell, rowParts, columnParts))
+        foreach (var child in CreateSubdivisionCells(effectiveSelectedCell, rowParts, columnParts))
         {
             var name = MakeUniqueDashboardCellName(nextCells, "cell");
             nextCells[name] = FlowDashboardDefinitionFactory.CreateCell(child with { Name = name, IsExplicit = true });
@@ -761,6 +763,22 @@ public sealed partial class FlowDefinitionComposer
         GetOrCreateObject(dashboard, "widgets");
 
         return root.ToJsonString(Options);
+    }
+
+    private static DashboardCellSnapshot ResolveDashboardSelectedCell(
+        DashboardCellSnapshot selectedCell,
+        IReadOnlyList<DashboardCellSnapshot> sourceCells)
+    {
+        if (selectedCell.IsExplicit)
+        {
+            var explicitCell = sourceCells.FirstOrDefault(cell => string.Equals(cell.Name, selectedCell.Name, StringComparison.Ordinal));
+            if (explicitCell is not null)
+            {
+                return explicitCell;
+            }
+        }
+
+        return sourceCells.FirstOrDefault(cell => CoversDashboardSlot(cell, selectedCell.Row, selectedCell.Column)) ?? selectedCell;
     }
 
     public string RemoveDashboardCell(string json, string dashboardName, string cellName)

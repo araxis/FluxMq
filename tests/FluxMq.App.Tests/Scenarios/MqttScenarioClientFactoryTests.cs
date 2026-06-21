@@ -33,6 +33,10 @@ public sealed class MqttScenarioClientFactoryTests
                       "port": 1884,
                       "clientId": "app-client",
                       "useTls": true,
+                      "allowUntrustedCertificates": true,
+                      "caCertificatePath": "certs/root.pem",
+                      "clientCertificatePath": "certs/client.pfx",
+                      "clientCertificatePassword": "cert-pass",
                       "username": "tester",
                       "password": "secret",
                       "keepAliveSeconds": 30,
@@ -57,6 +61,10 @@ public sealed class MqttScenarioClientFactoryTests
         scenarioProfile.Host.ShouldBe("broker.local");
         scenarioProfile.Port.ShouldBe(1884);
         scenarioProfile.UseTls.ShouldBeTrue();
+        scenarioProfile.AllowUntrustedCertificates.ShouldBeTrue();
+        scenarioProfile.CaCertificatePath.ShouldBe("certs/root.pem");
+        scenarioProfile.ClientCertificatePath.ShouldBe("certs/client.pfx");
+        scenarioProfile.ClientCertificatePassword.ShouldBe("cert-pass");
         scenarioProfile.Username.ShouldBe("tester");
         scenarioProfile.Password.ShouldBe("secret");
         scenarioProfile.KeepAlive.ShouldBe(TimeSpan.FromSeconds(30));

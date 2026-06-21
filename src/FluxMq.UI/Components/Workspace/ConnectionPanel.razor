@@ -22,7 +22,7 @@
         </MudTooltip>
     </div>
 
-    @if (Live.Connections.Count == 0)
+    @if (VisibleConnections.Count == 0)
     {
         <div class="connections-empty" role="status" aria-live="polite">
             <MudIcon Icon="@Icons.Material.Filled.Cable" Size="Size.Small" />
@@ -35,7 +35,7 @@
     else
     {
         <div class="connections-list" role="list">
-            @foreach (var conn in Live.Connections)
+            @foreach (var conn in VisibleConnections)
             {
                 <div class="@ConnectionRowClass(conn)"
                      role="listitem"
@@ -89,9 +89,13 @@
 @code {
     protected override void OnInitialized() => Live.Changed += OnChanged;
 
-    private string ConnectionCountLabel => Live.Connections.Count == 1
+    private IReadOnlyList<ManagedConnection> VisibleConnections => Live.Connections
+        .Where(static connection => !LiveMqttWorkspaceService.IsTopicMonitorConnection(connection))
+        .ToArray();
+
+    private string ConnectionCountLabel => VisibleConnections.Count == 1
         ? "1 connection"
-        : $"{Live.Connections.Count.ToString(System.Globalization.CultureInfo.InvariantCulture)} connections";
+        : $"{VisibleConnections.Count.ToString(System.Globalization.CultureInfo.InvariantCulture)} connections";
 
     private async Task AddConnectionAsync()
     {

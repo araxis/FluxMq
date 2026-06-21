@@ -14,22 +14,6 @@
      @onpointerenter="HandleDesignerPointerEnter"
      @onpointermove="HandleDesignerPointerMove"
      @onpointerleave="HandleDesignerPointerLeave">
-    <div class="flow-canvas" role="group" aria-label="Pipeline diagram canvas">
-        <CascadingValue Value="_diagram">
-            <DiagramCanvas>
-                <Widgets>
-                    <GridWidget Size="20" Mode="GridMode.Point" BackgroundColor="transparent" />
-                    <NavigatorWidget Width="180"
-                                     Height="120"
-                                     UseNodeShape="false"
-                                     NodeColor="#2DD4BF"
-                                     GroupColor="#1C222D"
-                                     ViewStrokeColor="#FBBF24"
-                                     Class="flow-navigator" />
-                </Widgets>
-            </DiagramCanvas>
-        </CascadingValue>
-    </div>
     <div class="flow-canvas-header">
         <div class="flow-canvas-title">
             <span class="flow-canvas-title-icon" aria-hidden="true">
@@ -48,32 +32,49 @@
             </div>
         </div>
         <div class="flow-canvas-actions" aria-label="Pipeline canvas status and commands">
-            <span class="flow-state @RuntimeStateClass">
-                <span class="flow-state-dot" aria-hidden="true"></span>
-                @RuntimeStateLabel
-            </span>
+            @if (ShowRuntimeState)
+            {
+                <span class="flow-state @RuntimeStateClass">
+                    <span class="flow-state-dot" aria-hidden="true"></span>
+                    @RuntimeStateLabel
+                </span>
+            }
             <div class="flow-canvas-metrics" aria-label="Pipeline canvas metrics">
-                <span class="flow-canvas-chip">
+                <span class="flow-canvas-stat">
                     <span>Nodes</span>
                     <strong>@PipelineNodeCount</strong>
                 </span>
-                <span class="flow-canvas-chip">
+                <span class="flow-canvas-stat">
                     <span>Links</span>
                     <strong>@LinkCount</strong>
                 </span>
                 @if (ResourceNodeCount > 0)
                 {
-                    <span class="flow-canvas-chip">
+                    <span class="flow-canvas-stat">
                         <span>Resources</span>
                         <strong>@ResourceNodeCount</strong>
                     </span>
                 }
                 @if (DiagnosticCount > 0)
                 {
-                    <span class="flow-canvas-chip @DiagnosticSeverityClass">
-                        <span>@DiagnosticSummaryLabel</span>
-                        <strong>@DiagnosticCount</strong>
-                    </span>
+                    @if (HasActionableDiagnostics)
+                    {
+                        <button type="button"
+                                class="flow-canvas-stat flow-canvas-stat-button @DiagnosticSeverityClass"
+                                title="@DiagnosticLogsTitle"
+                                aria-label="@DiagnosticLogsAriaLabel"
+                                @onclick="@OpenDiagnosticLogsAsync">
+                            <span>@DiagnosticSummaryLabel</span>
+                            <strong>@DiagnosticDisplayCount</strong>
+                        </button>
+                    }
+                    else
+                    {
+                        <span class="flow-canvas-stat @DiagnosticSeverityClass">
+                            <span>@DiagnosticSummaryLabel</span>
+                            <strong>@DiagnosticDisplayCount</strong>
+                        </span>
+                    }
                 }
             </div>
             <div class="flow-canvas-command-group" aria-label="Pipeline canvas commands">
@@ -87,6 +88,22 @@
             </div>
         </div>
     </div>
+    <div class="flow-canvas" role="group" aria-label="Pipeline diagram canvas">
+        <CascadingValue Value="_diagram">
+            <DiagramCanvas>
+                <Widgets>
+                    <GridWidget Size="20" Mode="GridMode.Point" BackgroundColor="transparent" />
+                    <NavigatorWidget Width="180"
+                                     Height="120"
+                                     UseNodeShape="false"
+                                     NodeColor="#2DD4BF"
+                                     GroupColor="#1C222D"
+                                     ViewStrokeColor="#FBBF24"
+                                     Class="flow-navigator" />
+                </Widgets>
+            </DiagramCanvas>
+        </CascadingValue>
+    </div>
     @if (IsCanvasEmpty)
     {
         <div class="flow-canvas-empty" role="status" aria-live="polite">
@@ -98,39 +115,6 @@
             <small>@EmptyCanvasHint</small>
         </div>
     }
-    @if (ShowDiagnosticPanel)
-    {
-        <div class="flow-diagnostic-panel @DiagnosticSeverityClass" role="status" aria-live="polite" aria-label="Pipeline diagnostics">
-            <div class="flow-diagnostic-panel-head">
-                <span class="flow-diagnostic-panel-icon" aria-hidden="true">
-                    <MudIcon Icon="@DiagnosticPanelIcon" Size="Size.Small" />
-                </span>
-                <div class="flow-diagnostic-panel-copy">
-                    <strong>@DiagnosticPanelTitle</strong>
-                    <span>@DiagnosticPanelSummary</span>
-                </div>
-            </div>
-            <div class="flow-diagnostic-list">
-                @foreach (var diagnostic in VisibleDiagnostics)
-                {
-                    <div class="flow-diagnostic-row @DiagnosticRowClass(diagnostic)">
-                        <span class="flow-diagnostic-row-icon" aria-hidden="true">
-                            <MudIcon Icon="@DiagnosticIcon(diagnostic)" Size="Size.Small" />
-                        </span>
-                        <span class="flow-diagnostic-code">@diagnostic.Code</span>
-                        <span class="flow-diagnostic-target">@DiagnosticTarget(diagnostic)</span>
-                        <span class="flow-diagnostic-message" title="@diagnostic.Message">@diagnostic.Message</span>
-                    </div>
-                }
-                @if (AdditionalDiagnosticCount > 0)
-                {
-                    <div class="flow-diagnostic-more">
-                        +@AdditionalDiagnosticCount more in logs
-                    </div>
-                }
-            </div>
-        </div>
-    }
     @if (DragState.ActiveComponentDrag is { IsOverDesigner: true, TargetKind: WorkspaceArtifactKind.Pipeline })
     {
         <div class="flow-canvas-drop-highlight" aria-hidden="true">
@@ -140,7 +124,7 @@
     }
     @if (_selectedWorkflowLink is not null)
     {
-        <div class="flow-link-condition-panel @(ShowDiagnosticPanel ? "with-diagnostics" : null)">
+        <div class="flow-link-condition-panel">
             <div class="flow-link-condition-meta">
                 <MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small" />
                 <div>
@@ -175,6 +159,8 @@
 @code {
     [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
 
+    [Parameter] public EventCallback<WorkspaceLogQuery> LogsRequested { get; set; }
+
     private readonly BlazorDiagram _diagram = new(new Blazor.Diagrams.Options.BlazorDiagramOptions
     {
         AllowMultiSelection = true,
@@ -207,7 +193,6 @@
     private const int ZoomToFitMargin = 80;
     private const int AutoZoomFirstPassDelayMs = 140;
     private const int AutoZoomSecondPassDelayMs = 160;
-    private const int VisibleDiagnosticLimit = 3;
     private System.Threading.Timer? _pulseTimer;
     private int _portMeasurementGeneration;
     private int _autoZoomGeneration;
@@ -257,6 +242,14 @@
     private int WarningCount => Flow.Diagnostics.Count(static diagnostic =>
         string.Equals(diagnostic.Severity, "Warning", StringComparison.OrdinalIgnoreCase));
 
+    private bool HasActionableDiagnostics => ErrorCount > 0 || WarningCount > 0;
+
+    private int DiagnosticDisplayCount => ErrorCount > 0
+        ? ErrorCount
+        : WarningCount > 0
+            ? WarningCount
+            : DiagnosticCount;
+
     private string DiagnosticSummaryLabel => ErrorCount > 0
         ? "Errors"
         : WarningCount > 0
@@ -269,45 +262,11 @@
             ? "warning"
             : "info";
 
-    private bool ShowDiagnosticPanel => ActionableDiagnosticCount > 0;
+    private string DiagnosticLogsTitle => ErrorCount > 0
+        ? "Open logs filtered to errors"
+        : "Open logs filtered to warnings";
 
-    private int ActionableDiagnosticCount => ErrorCount + WarningCount;
-
-    private IEnumerable<WorkspaceDiagnostic> VisibleDiagnostics => Flow.Diagnostics
-        .Where(static diagnostic => DiagnosticSeverityToken(diagnostic) is "error" or "warning")
-        .OrderBy(DiagnosticSeverityRank)
-        .ThenBy(static diagnostic => diagnostic.Source, StringComparer.OrdinalIgnoreCase)
-        .ThenBy(static diagnostic => diagnostic.Code, StringComparer.OrdinalIgnoreCase)
-        .Take(VisibleDiagnosticLimit);
-
-    private int AdditionalDiagnosticCount => Math.Max(0, ActionableDiagnosticCount - VisibleDiagnosticLimit);
-
-    private string DiagnosticPanelTitle => ErrorCount > 0
-        ? "Pipeline needs attention"
-        : "Pipeline has warnings";
-
-    private string DiagnosticPanelSummary
-    {
-        get
-        {
-            var parts = new List<string>(capacity: 3);
-            if (ErrorCount > 0)
-            {
-                parts.Add($"{ErrorCount} {Pluralize(ErrorCount, "error")}");
-            }
-
-            if (WarningCount > 0)
-            {
-                parts.Add($"{WarningCount} {Pluralize(WarningCount, "warning", "warnings")}");
-            }
-
-            return string.Join(" / ", parts);
-        }
-    }
-
-    private string DiagnosticPanelIcon => ErrorCount > 0
-        ? Icons.Material.Filled.ErrorOutline
-        : Icons.Material.Filled.WarningAmber;
+    private bool ShowRuntimeState => Flow.State != RuntimeWorkspaceState.Faulted || ErrorCount == 0;
 
     private string RuntimeStateLabel => Flow.State switch
     {
@@ -331,51 +290,45 @@
         ? $"{link.SourceNodeName}.{link.SourcePortName} -> {link.TargetNodeName}.{link.TargetPortName}"
         : string.Empty;
 
-    private static string DiagnosticRowClass(WorkspaceDiagnostic diagnostic)
-        => $"severity-{DiagnosticSeverityToken(diagnostic)}";
+    private string DiagnosticLogsAriaLabel => $"{DiagnosticLogsTitle} for {WorkflowTitle}";
 
-    private static string DiagnosticSeverityToken(WorkspaceDiagnostic diagnostic)
-        => string.Equals(diagnostic.Severity, "Error", StringComparison.OrdinalIgnoreCase)
-            ? "error"
-            : string.Equals(diagnostic.Severity, "Warning", StringComparison.OrdinalIgnoreCase)
-                ? "warning"
-                : "info";
-
-    private static string DiagnosticIcon(WorkspaceDiagnostic diagnostic)
-        => DiagnosticSeverityToken(diagnostic) switch
-        {
-            "error" => Icons.Material.Filled.ErrorOutline,
-            "warning" => Icons.Material.Filled.WarningAmber,
-            _ => Icons.Material.Filled.Info
-        };
-
-    private static string DiagnosticTarget(WorkspaceDiagnostic diagnostic)
+    private Task OpenDiagnosticLogsAsync()
     {
-        if (!string.IsNullOrWhiteSpace(diagnostic.NodeName))
+        if (!LogsRequested.HasDelegate)
         {
-            return string.IsNullOrWhiteSpace(diagnostic.PortName)
-                ? diagnostic.NodeName
-                : $"{diagnostic.NodeName}.{diagnostic.PortName}";
+            return Task.CompletedTask;
         }
 
-        if (!string.IsNullOrWhiteSpace(diagnostic.WorkflowName))
-        {
-            return diagnostic.WorkflowName;
-        }
-
-        return diagnostic.Source;
+        var severity = ErrorCount > 0 ? "Error" : "Warning";
+        return LogsRequested.InvokeAsync(new WorkspaceLogQuery(
+            Severity: severity,
+            Search: DiagnosticLogSearch));
     }
 
-    private static int DiagnosticSeverityRank(WorkspaceDiagnostic diagnostic)
-        => DiagnosticSeverityToken(diagnostic) switch
+    private string? DiagnosticLogSearch
+    {
+        get
         {
-            "error" => 0,
-            "warning" => 1,
-            _ => 2
-        };
+            var workflowName = Flow.ActiveWorkflowName;
+            if (string.IsNullOrWhiteSpace(workflowName))
+            {
+                return null;
+            }
 
-    private static string Pluralize(int count, string singular, string? plural = null)
-        => count == 1 ? singular : plural ?? $"{singular}s";
+            var actionableDiagnostics = Flow.Diagnostics
+                .Where(static diagnostic =>
+                    string.Equals(diagnostic.Severity, "Error", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(diagnostic.Severity, "Warning", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+
+            return actionableDiagnostics.Length > 0 &&
+                   actionableDiagnostics.All(diagnostic =>
+                       string.IsNullOrWhiteSpace(diagnostic.WorkflowName) ||
+                       string.Equals(diagnostic.WorkflowName, workflowName, StringComparison.Ordinal))
+                ? workflowName
+                : null;
+        }
+    }
 
     protected override void OnInitialized()
     {

@@ -293,7 +293,7 @@
                                                     title="Edit widget settings"
                                                     aria-label="@($"Edit {WidgetLabel(currentCell.Widget)} settings")"
                                                     @onclick="@(() => OpenWidgetEditorAsync(currentCell.Widget))">
-                                                <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
+                                                <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" />
                                             </button>
                                             <button type="button"
                                                     class="dashboard-cell-widget-action simulate"
@@ -1311,12 +1311,24 @@
 
     private static IReadOnlyList<DashboardCellSnapshot> BuildVisibleCells(DashboardLayoutSnapshot layout)
     {
-        var visible = new List<DashboardCellSnapshot>(layout.Cells);
+        var visible = new List<DashboardCellSnapshot>();
+        var occupiedCoordinates = new HashSet<(int Row, int Column)>();
+
+        foreach (var cell in OrderedExplicitDashboardCells(layout.Cells))
+        {
+            if (!TryReserveVisibleCell(cell, layout.Rows.Count, layout.Columns.Count, occupiedCoordinates))
+            {
+                continue;
+            }
+
+            visible.Add(cell);
+        }
+
         for (var row = 0; row < layout.Rows.Count; row++)
         {
             for (var column = 0; column < layout.Columns.Count; column++)
             {
-                if (!layout.Cells.Any(cell => Covers(cell, row, column)))
+                if (!occupiedCoordinates.Contains((row, column)))
                 {
                     visible.Add(DashboardCellSnapshot.Slot(row, column));
                 }
@@ -1330,11 +1342,44 @@
             .ToArray();
     }
 
-    private static bool Covers(DashboardCellSnapshot cell, int row, int column)
-        => row >= cell.Row &&
-           row < cell.Row + cell.RowSpan &&
-           column >= cell.Column &&
-           column < cell.Column + cell.ColumnSpan;
+    private static IEnumerable<DashboardCellSnapshot> OrderedExplicitDashboardCells(IEnumerable<DashboardCellSnapshot> cells)
+        => cells
+            .Where(static cell => cell.IsExplicit)
+            .OrderByDescending(static cell => !string.IsNullOrWhiteSpace(cell.Widget))
+            .ThenBy(static cell => cell.Row)
+            .ThenBy(static cell => cell.Column)
+            .ThenByDescending(static cell => cell.RowSpan * cell.ColumnSpan)
+            .ThenBy(static cell => cell.Name, StringComparer.Ordinal);
+
+    private static bool TryReserveVisibleCell(
+        DashboardCellSnapshot cell,
+        int rowCount,
+        int columnCount,
+        HashSet<(int Row, int Column)> occupiedCoordinates)
+    {
+        if (cell.Row < 0 ||
+            cell.Column < 0 ||
+            cell.RowSpan <= 0 ||
+            cell.ColumnSpan <= 0 ||
+            cell.Row + cell.RowSpan > rowCount ||
+            cell.Column + cell.ColumnSpan > columnCount)
+        {
+            return false;
+        }
+
+        var coordinates = cell.CoveredCoordinates().ToArray();
+        if (coordinates.Any(occupiedCoordinates.Contains))
+        {
+            return false;
+        }
+
+        foreach (var coordinate in coordinates)
+        {
+            occupiedCoordinates.Add(coordinate);
+        }
+
+        return true;
+    }
 
     private static bool IsRectangularSelection(IReadOnlyList<DashboardCellSnapshot> cells)
     {

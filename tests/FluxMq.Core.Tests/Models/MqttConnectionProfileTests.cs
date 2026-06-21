@@ -14,6 +14,10 @@ public class MqttConnectionProfileTests
         profile.Host.ShouldBe("localhost");
         profile.Port.ShouldBe(1883);
         profile.UseTls.ShouldBeFalse();
+        profile.AllowUntrustedCertificates.ShouldBeFalse();
+        profile.CaCertificatePath.ShouldBeNull();
+        profile.ClientCertificatePath.ShouldBeNull();
+        profile.ClientCertificatePassword.ShouldBeNull();
         profile.CleanStart.ShouldBeTrue();
         profile.KeepAlive.ShouldBe(TimeSpan.FromSeconds(60));
         profile.Username.ShouldBeNull();
@@ -40,6 +44,10 @@ public class MqttConnectionProfileTests
             Host = "broker.example.com",
             Port = 8883,
             UseTls = true,
+            AllowUntrustedCertificates = true,
+            CaCertificatePath = "certs/root.pem",
+            ClientCertificatePath = "certs/client.pfx",
+            ClientCertificatePassword = "cert-pass",
             Username = "user",
             Password = "pass",
             PasswordSecret = new SecretReference
@@ -54,6 +62,10 @@ public class MqttConnectionProfileTests
         profile.Host.ShouldBe("broker.example.com");
         profile.Port.ShouldBe(8883);
         profile.UseTls.ShouldBeTrue();
+        profile.AllowUntrustedCertificates.ShouldBeTrue();
+        profile.CaCertificatePath.ShouldBe("certs/root.pem");
+        profile.ClientCertificatePath.ShouldBe("certs/client.pfx");
+        profile.ClientCertificatePassword.ShouldBe("cert-pass");
         profile.Username.ShouldBe("user");
         profile.Password.ShouldBe("pass");
         profile.PasswordSecret!.Name.Value.ShouldBe("broker-password");

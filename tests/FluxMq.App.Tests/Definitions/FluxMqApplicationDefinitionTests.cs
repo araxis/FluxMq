@@ -43,6 +43,14 @@ public sealed class FluxMqApplicationDefinitionTests
             Tests =
             {
                 ["smoke"] = new ScenarioDefinition()
+            },
+            Explorers =
+            {
+                ["local"] = new ExplorerDefinition
+                {
+                    Type = ExplorerDefinition.MqttTopicsType,
+                    ConnectionResource = "broker"
+                }
             }
         };
 
@@ -96,6 +104,27 @@ public sealed class FluxMqApplicationDefinitionTests
                     }
                   }
                 }
+              },
+              "explorers": {
+                "local": {
+                  "type": "mqtt.topics",
+                  "displayName": "Local broker",
+                  "connectionResource": "broker",
+                  "connection": {
+                    "clientId": "topic-monitor",
+                    "useTls": true,
+                    "allowUntrustedCertificates": true,
+                    "caCertificatePath": "certs/root.pem",
+                    "clientCertificatePath": "certs/client.pfx",
+                    "clientCertificatePassword": "cert-pass",
+                    "cleanStart": false,
+                    "keepAliveSeconds": 45,
+                    "username": "viewer",
+                    "passwordSecret": "local-broker-password"
+                  },
+                  "subscriptions": [ "#", "$SYS/#" ],
+                  "autoConnect": true
+                }
               }
             }
             """,
@@ -113,6 +142,23 @@ public sealed class FluxMqApplicationDefinitionTests
             DashboardGridTrackDefinition.Star(2)
         ]);
         definition.Tests["smoke"].Steps["expect"].Type.ShouldBe("expect.event");
+        var explorer = definition.Explorers["local"];
+        explorer.Type.ShouldBe(ExplorerDefinition.MqttTopicsType);
+        explorer.DisplayName.ShouldBe("Local broker");
+        explorer.ConnectionResource.ShouldBe("broker");
+        var connection = explorer.Connection.ShouldNotBeNull();
+        connection.ClientId.ShouldBe("topic-monitor");
+        connection.UseTls.ShouldBe(true);
+        connection.AllowUntrustedCertificates.ShouldBe(true);
+        connection.CaCertificatePath.ShouldBe("certs/root.pem");
+        connection.ClientCertificatePath.ShouldBe("certs/client.pfx");
+        connection.ClientCertificatePassword.ShouldBe("cert-pass");
+        connection.CleanStart.ShouldBe(false);
+        connection.KeepAliveSeconds.ShouldBe(45);
+        connection.Username.ShouldBe("viewer");
+        var passwordSecret = connection.PasswordSecret.ShouldNotBeNull();
+        passwordSecret.Name.Value.ShouldBe("local-broker-password");
+        explorer.Subscriptions.ShouldBe(["#", "$SYS/#"]);
 
         var engineDefinition = definition.ToEngineDefinition();
 

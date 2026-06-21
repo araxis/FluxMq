@@ -13,63 +13,74 @@
                 <div class="@MetricsMetaClass">@MetricCountText</div>
             </div>
         </div>
-
-        <div class="metrics-toolbar">
-            <label class="metrics-filter-field metrics-search-field">
-                <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
-                <input value="@_search"
-                       placeholder="Search metrics"
-                       aria-label="Search metrics"
-                       @oninput="@OnSearchInput" />
-                @if (!string.IsNullOrWhiteSpace(_search))
-                {
-                    <button type="button"
-                            class="metrics-inline-clear"
-                            title="Clear search"
-                            aria-label="Clear search"
-                            @onclick="@ClearSearch">
-                        <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
-                    </button>
-                }
-            </label>
-
-            <label class="metrics-filter-field metrics-type-field">
-                <MudIcon Icon="@Icons.Material.Filled.FilterAlt" Size="Size.Small" />
-                <select value="@_typeFilter"
-                        aria-label="Metric type"
-                        @onchange="@OnTypeFilterChanged">
-                    <option value="@AllTypes">All types</option>
-                    @foreach (var descriptor in SortedDescriptors)
-                    {
-                        <option value="@descriptor.TypeId">@descriptor.DisplayName</option>
-                    }
-                </select>
-                <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small" />
-            </label>
-
-            @if (HasActiveFilters)
-            {
-                <MudTooltip Text="Reset filters">
-                    <button type="button"
-                            class="metrics-filter-reset"
-                            aria-label="Reset filters"
-                            @onclick="@ResetFilters">
-                        <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
-                    </button>
-                </MudTooltip>
-            }
-
-            <button type="button"
-                    class="metrics-new-button"
-                    @onclick="@OpenNewMetricDialogAsync">
-                <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
-                <span>New metric</span>
-            </button>
-        </div>
     </div>
 
     <div class="metrics-body">
         <section class="metrics-list-pane" aria-label="Metric resources">
+            <div class="metrics-list-toolbar">
+                <label class="metrics-filter-field metrics-search-field">
+                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
+                    <input value="@_search"
+                           placeholder="Search metrics"
+                           aria-label="Search metrics"
+                           @oninput="@OnSearchInput" />
+                    @if (!string.IsNullOrWhiteSpace(_search))
+                    {
+                        <button type="button"
+                                class="metrics-inline-clear"
+                                title="Clear search"
+                                aria-label="Clear search"
+                                @onclick="@ClearSearch">
+                            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                        </button>
+                    }
+                </label>
+
+                <div class="metrics-filter-field metrics-type-field">
+                    <MudIcon Class="metrics-type-filter-icon" Icon="@Icons.Material.Filled.FilterAlt" Size="Size.Small" />
+                    <MudSelect T="string"
+                               Class="metrics-type-select"
+                               PopoverClass="metrics-type-select-popover"
+                               ListClass="metrics-type-select-list"
+                               Value="@_typeFilter"
+                               ValueChanged="@SetTypeFilter"
+                               Variant="Variant.Text"
+                               Margin="Margin.Dense"
+                               Dense="true"
+                               Underline="false"
+                               Modal="false"
+                               RelativeWidth="DropdownWidth.Adaptive"
+                               MaxHeight="320"
+                               AnchorOrigin="Origin.BottomLeft"
+                               TransformOrigin="Origin.TopLeft"
+                               aria-label="Metric type">
+                        <MudSelectItem T="string" Value="@AllTypes">All types</MudSelectItem>
+                        @foreach (var descriptor in SortedDescriptors)
+                        {
+                            <MudSelectItem T="string" Value="@descriptor.TypeId">@descriptor.DisplayName</MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
+
+                @if (HasActiveFilters)
+                {
+                    <MudTooltip Text="Reset filters">
+                        <button type="button"
+                                class="metrics-filter-reset"
+                                aria-label="Reset filters"
+                                @onclick="@ResetFilters">
+                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
+                        </button>
+                    </MudTooltip>
+                }
+
+                <button type="button"
+                        class="metrics-new-button"
+                        @onclick="@OpenNewMetricDialogAsync">
+                    <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                    <span>New metric</span>
+                </button>
+            </div>
             <div class="metrics-list-head">
                 <span>Name</span>
                 <span>Type</span>
@@ -250,7 +261,7 @@
                         <div class="metrics-editor-main-panel">
                             <div class="metrics-compact-section">
                                 <div class="metrics-section-heading">
-                                    <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" />
                                     <span>Edit metric</span>
                                 </div>
                                 <div class="metrics-form-grid compact">
@@ -300,7 +311,7 @@
                                         <button type="button"
                                                 aria-label="Change metric type"
                                                 @onclick="@OpenMetricTypeDialogAsync">
-                                            <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
+                                            <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" />
                                             <span>Change</span>
                                         </button>
                                     </div>
@@ -976,9 +987,6 @@
 
     private void OnSearchInput(ChangeEventArgs args)
         => _search = args.Value?.ToString() ?? string.Empty;
-
-    private void OnTypeFilterChanged(ChangeEventArgs args)
-        => _typeFilter = args.Value?.ToString() ?? AllTypes;
 
     private void ClearSearch()
         => _search = string.Empty;

@@ -86,11 +86,6 @@
     overflow: hidden;
 }
 
-.workspace-artifact-region:focus-within,
-.workspace-designer-region:focus-within {
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mud-palette-primary) 34%, var(--flux-border));
-}
-
 .workspace-designer-region {
     display: flex;
     flex: 1 1 auto;
@@ -108,8 +103,10 @@
     min-width: 0;
     overflow-x: auto;
     overflow-y: hidden;
+    position: relative;
     scrollbar-color: color-mix(in srgb, var(--mud-palette-text-secondary) 28%, transparent) transparent;
     scrollbar-width: thin;
+    z-index: 12;
 }
 
 .project-tabbar::-webkit-scrollbar {
@@ -225,6 +222,10 @@
     color: var(--flux-accent);
 }
 
+.project-tab-json-view .project-tab-icon {
+    color: var(--mud-palette-info);
+}
+
 .project-tab-count {
     background: var(--flux-surface-2);
     border: 1px solid var(--flux-border);
@@ -265,8 +266,12 @@
 
 .project-tab-close {
     align-items: center;
+    appearance: none;
+    background: transparent;
+    border: 0;
     border-radius: 4px;
     color: var(--mud-palette-text-secondary);
+    cursor: pointer;
     display: flex;
     flex: 0 0 auto;
     font-size: 12px;
@@ -285,26 +290,6 @@
 .project-tab-close:hover {
     background: color-mix(in srgb, var(--mud-palette-error) 12%, transparent);
     color: var(--mud-palette-error);
-}
-
-.project-tab-json {
-    align-items: center;
-    border-radius: 4px;
-    color: var(--mud-palette-text-secondary);
-    cursor: pointer;
-    display: inline-flex;
-    font-family: Consolas, "Courier New", monospace;
-    font-size: 11px;
-    font-weight: 700;
-    height: 22px;
-    padding: 0 6px;
-    user-select: none;
-}
-
-.project-tab-json:hover,
-.project-tab-json-active {
-    background: var(--flux-accent-soft);
-    color: var(--flux-accent);
 }
 
 .project-tabbar-app {

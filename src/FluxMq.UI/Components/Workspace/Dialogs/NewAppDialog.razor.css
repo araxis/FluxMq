@@ -119,10 +119,6 @@
     margin-top: 0;
 }
 
-.new-app-dialog-field ::deep(.mud-input-slot) {
-    font-size: 13px;
-}
-
 .new-app-dialog-field ::deep(.mud-input-control-helper-container) {
     margin-top: 2px;
 }

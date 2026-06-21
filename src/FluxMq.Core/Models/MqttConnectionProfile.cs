@@ -11,6 +11,10 @@ public sealed record MqttConnectionProfile
     public int Port { get; init; } = 1883;
     public string ClientId { get; init; } = Guid.NewGuid().ToString("N")[..8];
     public bool UseTls { get; init; }
+    public bool AllowUntrustedCertificates { get; init; }
+    public string? CaCertificatePath { get; init; }
+    public string? ClientCertificatePath { get; init; }
+    public string? ClientCertificatePassword { get; init; }
     public string? Username { get; init; }
     public string? Password { get; init; }
     public SecretReference? PasswordSecret { get; init; }

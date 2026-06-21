@@ -19,7 +19,7 @@
                 <div class="add-connection-dialog-grid broker">
                     <MudTextField T="string"
                                   Class="add-connection-dialog-field"
-                                  Label="Name"
+                                  Label="Broker name"
                                   @bind-Value="_name"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
@@ -27,7 +27,15 @@
                                   Placeholder="local-broker"
                                   OnKeyDown="@OnKeyDown" />
                     <MudTextField T="string"
-                                  Class="add-connection-dialog-field wide"
+                                  Class="add-connection-dialog-field"
+                                  Label="Client ID"
+                                  @bind-Value="_clientId"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  OnKeyDown="@OnKeyDown" />
+                    <MudTextField T="string"
+                                  Class="add-connection-dialog-field"
                                   Label="Host"
                                   @bind-Value="_host"
                                   Variant="Variant.Outlined"
@@ -44,28 +52,27 @@
                                      Max="65535"
                                      Variant="Variant.Outlined"
                                      Margin="Margin.Dense" />
-                    <MudTextField T="string"
-                                  Class="add-connection-dialog-field client"
-                                  Label="Client ID"
-                                  @bind-Value="_clientId"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Immediate="true"
-                                  OnKeyDown="@OnKeyDown" />
+                    <MudNumericField T="int"
+                                     Class="add-connection-dialog-field"
+                                     Label="Keep alive seconds"
+                                     @bind-Value="_keepAliveSeconds"
+                                     Min="1"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                    <div class="add-connection-dialog-checkbox-cell">
+                        <MudCheckBox T="bool"
+                                     Class="add-connection-dialog-checkbox"
+                                     @bind-Value="_cleanStart"
+                                     Label="Clean start"
+                                     Dense="true" />
+                    </div>
                 </div>
             </section>
 
             <section class="add-connection-dialog-section compact" aria-labelledby="add-connection-security-heading">
-                <div class="add-connection-dialog-security-row">
-                    <div class="add-connection-dialog-section-title" id="add-connection-security-heading">
-                        <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" />
-                        <span>Security</span>
-                    </div>
-                    <MudCheckBox T="bool"
-                                 Class="add-connection-dialog-tls"
-                                 @bind-Value="_useTls"
-                                 Label="TLS"
-                                 Dense="true" />
+                <div class="add-connection-dialog-section-title" id="add-connection-security-heading">
+                    <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" />
+                    <span>Security</span>
                 </div>
 
                 <div class="add-connection-dialog-grid two">
@@ -83,6 +90,57 @@
                                   InputType="InputType.Password"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
+                                  OnKeyDown="@OnKeyDown" />
+                    <div class="add-connection-dialog-checkbox-cell">
+                        <MudCheckBox T="bool"
+                                     Class="add-connection-dialog-checkbox"
+                                     @bind-Value="_useTls"
+                                     Label="Use TLS"
+                                     Dense="true" />
+                    </div>
+                    <div class="add-connection-dialog-checkbox-cell">
+                        <MudCheckBox T="bool"
+                                     Class="add-connection-dialog-checkbox"
+                                     @bind-Value="_allowUntrustedCertificates"
+                                     Label="Allow untrusted certificate"
+                                     Dense="true"
+                                     Disabled="@(!_useTls)" />
+                    </div>
+                    <MudTextField T="string"
+                                  Class="add-connection-dialog-field"
+                                  Label="CA certificate path"
+                                  @bind-Value="_caCertificatePath"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  Disabled="@(!_useTls)"
+                                  Adornment="Adornment.End"
+                                  AdornmentIcon="@Icons.Material.Filled.FolderOpen"
+                                  AdornmentColor="Color.Info"
+                                  AdornmentAriaLabel="Select CA certificate"
+                                  OnAdornmentClick="@(() => PickCertificateFileAsync(CertificateFileTarget.Ca))" />
+                    <MudTextField T="string"
+                                  Class="add-connection-dialog-field"
+                                  Label="Client certificate path"
+                                  @bind-Value="_clientCertificatePath"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  Disabled="@(!_useTls)"
+                                  Adornment="Adornment.End"
+                                  AdornmentIcon="@Icons.Material.Filled.FolderOpen"
+                                  AdornmentColor="Color.Info"
+                                  AdornmentAriaLabel="Select client certificate"
+                                  OnAdornmentClick="@(() => PickCertificateFileAsync(CertificateFileTarget.Client))" />
+                    <MudTextField T="string"
+                                  Class="add-connection-dialog-field"
+                                  Label="Client certificate password"
+                                  @bind-Value="_clientCertificatePassword"
+                                  InputType="InputType.Password"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  Disabled="@(!_useTls)"
                                   OnKeyDown="@OnKeyDown" />
                 </div>
             </section>
@@ -113,13 +171,20 @@
     private string _host = "localhost";
     private int _port = 1883;
     private string _clientId = Guid.NewGuid().ToString("N")[..8];
+    private int _keepAliveSeconds = 60;
+    private bool _cleanStart = true;
     private bool _useTls;
+    private bool _allowUntrustedCertificates;
+    private string _caCertificatePath = string.Empty;
+    private string _clientCertificatePath = string.Empty;
+    private string _clientCertificatePassword = string.Empty;
     private string? _username;
     private string? _password;
 
     private bool IsValid =>
         !string.IsNullOrWhiteSpace(_host) &&
-        _port is >= 1 and <= 65535;
+        _port is >= 1 and <= 65535 &&
+        _keepAliveSeconds > 0;
 
     private string FormStatusClass
         => IsValid ? "add-connection-dialog-status ready" : "add-connection-dialog-status";
@@ -129,9 +194,46 @@
             ? "Host required"
             : _port is < 1 or > 65535
                 ? "Port range"
-                : "Ready";
+                : _keepAliveSeconds < 1
+                    ? "Keep alive range"
+                    : "Ready";
 
     private void Cancel() => MudDialog.Cancel();
+
+    private async Task PickCertificateFileAsync(CertificateFileTarget target)
+    {
+        var result = await FilePicker.Default.PickAsync(CertificatePickOptions(target));
+        if (result is null)
+        {
+            return;
+        }
+
+        var path = string.IsNullOrWhiteSpace(result.FullPath)
+            ? result.FileName
+            : result.FullPath;
+
+        if (target == CertificateFileTarget.Ca)
+        {
+            _caCertificatePath = path;
+        }
+        else
+        {
+            _clientCertificatePath = path;
+        }
+    }
+
+    private static PickOptions CertificatePickOptions(CertificateFileTarget target)
+        => new()
+        {
+            PickerTitle = target == CertificateFileTarget.Ca
+                ? "Select CA Certificate"
+                : "Select Client Certificate",
+            FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+            {
+                { DevicePlatform.WinUI, [".pem", ".crt", ".cer", ".pfx", ".p12"] },
+                { DevicePlatform.macOS, ["public.data"] }
+            })
+        };
 
     private void Submit()
     {
@@ -149,7 +251,12 @@
             Username = string.IsNullOrWhiteSpace(_username) ? null : _username,
             Password = string.IsNullOrWhiteSpace(_password) ? null : _password,
             UseTls = _useTls,
-            CleanStart = true
+            AllowUntrustedCertificates = _useTls && _allowUntrustedCertificates,
+            CaCertificatePath = _useTls ? NullIfWhiteSpace(_caCertificatePath) : null,
+            ClientCertificatePath = _useTls ? NullIfWhiteSpace(_clientCertificatePath) : null,
+            ClientCertificatePassword = _useTls ? NullIfWhiteSpace(_clientCertificatePassword) : null,
+            KeepAlive = TimeSpan.FromSeconds(_keepAliveSeconds),
+            CleanStart = _cleanStart
         };
         MudDialog.Close(DialogResult.Ok(new AddConnectionResult(
             profile,
@@ -162,6 +269,15 @@
         {
             Submit();
         }
+    }
+
+    private static string? NullIfWhiteSpace(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private enum CertificateFileTarget
+    {
+        Ca,
+        Client
     }
 
     public record AddConnectionResult(MqttConnectionProfile Profile, string Subscription);
