@@ -153,7 +153,7 @@
                 </div>
             </div>
 
-            <div class="@WorkspaceClass">
+            <div class="dynamic-mapper-workspace">
                 <section class="dynamic-mapper-expression-workspace" aria-label="Mapping expression">
                     <div class="dynamic-mapper-workspace-header">
                         <div>
@@ -183,38 +183,38 @@
                                           CssClass="dynamic-mapper-monaco-editor dynamic-mapper-expression-editor"
                                           ConstructionOptions="@EditorConstructionOptions"
                                           OnDidChangeModelContent="@OnEditorContentChanged" />
-                </section>
 
-                @if (ShouldRenderSampleDrawer)
-                {
-                <section class="dynamic-mapper-sample-drawer" aria-label="Sample JSON">
-                    <div class="dynamic-mapper-sample-header">
-                        <div>
-                            <span class="dynamic-mapper-kicker">Input</span>
-                            <strong>Sample JSON</strong>
-                        </div>
-                        <span class="dynamic-mapper-heading-token">@_sampleSource</span>
-                    </div>
-
-                    @if (_sampleEditorOpen)
+                    @if (ShouldRenderSamplePanel)
                     {
-                    <StandaloneCodeEditor @key="_inputEditorVersion"
-                                          @ref="_inputEditor"
-                                          Id="@InputEditorId"
-                                          CssClass="dynamic-mapper-monaco-editor dynamic-mapper-input-editor"
-                                          ConstructionOptions="@InputEditorConstructionOptions"
-                                          OnDidChangeModelContent="@OnInputEditorContentChanged" />
-                    }
+                        <section class="@SamplePanelClass" aria-label="Sample JSON">
+                            <div class="dynamic-mapper-sample-popover-header">
+                                <div>
+                                    <span class="dynamic-mapper-kicker">Input</span>
+                                    <strong>Sample JSON</strong>
+                                </div>
+                                <span class="dynamic-mapper-heading-token">@_sampleSource</span>
+                            </div>
 
-                    @if (!string.IsNullOrWhiteSpace(_inputJsonError))
-                    {
-                        <div class="dynamic-mapper-input-error" role="alert">
-                            <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" />
-                            <span>@_inputJsonError</span>
-                        </div>
+                            @if (_sampleEditorOpen)
+                            {
+                                <StandaloneCodeEditor @key="_inputEditorVersion"
+                                                      @ref="_inputEditor"
+                                                      Id="@InputEditorId"
+                                                      CssClass="dynamic-mapper-monaco-editor dynamic-mapper-input-editor"
+                                                      ConstructionOptions="@InputEditorConstructionOptions"
+                                                      OnDidChangeModelContent="@OnInputEditorContentChanged" />
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(_inputJsonError))
+                            {
+                                <div class="dynamic-mapper-input-error" role="alert">
+                                    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" />
+                                    <span>@_inputJsonError</span>
+                                </div>
+                            }
+                        </section>
                     }
                 </section>
-                }
             </div>
         </div>
     </Editor>
@@ -252,8 +252,10 @@
     private string EditorId => $"mapper-expression-{Node.NodeName.Replace('.', '-').Replace(' ', '-')}";
     private string InputEditorId => $"mapper-input-{Node.NodeName.Replace('.', '-').Replace(' ', '-')}";
     private string SchemaControlKey => $"{_outputContract}:{_schemaControlVersion}";
-    private bool ShouldRenderSampleDrawer => _sampleEditorOpen || !string.IsNullOrWhiteSpace(_inputJsonError);
-    private string WorkspaceClass => ShouldRenderSampleDrawer ? "dynamic-mapper-workspace has-sample" : "dynamic-mapper-workspace";
+    private bool ShouldRenderSamplePanel => _sampleEditorOpen || !string.IsNullOrWhiteSpace(_inputJsonError);
+    private string SamplePanelClass => _sampleEditorOpen
+        ? "dynamic-mapper-sample-popover has-editor"
+        : "dynamic-mapper-sample-popover";
     private string SampleToggleText => _sampleEditorOpen ? "Hide sample JSON" : "Show sample JSON";
     private string SampleToggleIcon => _sampleEditorOpen ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.DataObject;
     private bool IsTypedOutputContract => string.Equals(_outputContract, DynamicMapperNodeModel.OutputContractTyped, StringComparison.Ordinal);
