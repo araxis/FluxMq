@@ -87,7 +87,12 @@
                 </div>
 
                 <div class="state-reducer-rule-surface" aria-label="State reducer rule">
-                    <div class="state-reducer-rule-grid">
+                    <div class="state-reducer-rule-title">
+                        <span>Reducer rule</span>
+                        <small>Transform the current input and existing state into the next state</small>
+                    </div>
+
+                    <div class="state-reducer-rule-composer">
                         <MudTextField T="string"
                                       Label="Reducer"
                                       @bind-Value="_reducer"
@@ -97,7 +102,7 @@
                                       Class="state-reducer-reducer-field"
                                       Placeholder="input" />
 
-                        <aside class="state-reducer-rule-aside">
+                        <aside class="state-reducer-rule-sidecar">
                             <MudTextField T="string"
                                           Label="Key expression"
                                           @bind-Value="_keyExpression"

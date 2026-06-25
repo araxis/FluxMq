@@ -75,7 +75,12 @@
                 </div>
 
                 <div class="flow-assertion-rule-surface" aria-label="Flow assertion rule">
-                    <div class="flow-assertion-rule-grid">
+                    <div class="flow-assertion-rule-title">
+                        <span>Assertion rule</span>
+                        <small>Evaluate the expression and route failed messages with context</small>
+                    </div>
+
+                    <div class="flow-assertion-rule-composer">
                         <MudTextField T="string"
                                       Label="Expression"
                                       @bind-Value="_expression"
@@ -85,7 +90,7 @@
                                       Class="flow-assertion-expression-field"
                                       Placeholder='topic.StartsWith("factory/") && qos >= 1' />
 
-                        <aside class="flow-assertion-rule-aside">
+                        <aside class="flow-assertion-rule-sidecar">
                             <MudTextField T="string"
                                           Label="Failure message"
                                           @bind-Value="_failureMessage"

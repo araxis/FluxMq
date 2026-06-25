@@ -124,24 +124,50 @@
 
 .state-reducer-rule-surface {
     display: grid;
+    gap: 8px;
     min-width: 0;
 }
 
-.state-reducer-rule-grid {
+.state-reducer-rule-title {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.state-reducer-rule-title span {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 84%, var(--mud-palette-text-secondary));
+    font-size: 0.76rem;
+    font-weight: 760;
+    line-height: 1;
+    min-width: 0;
+}
+
+.state-reducer-rule-title small {
+    color: var(--flux-text-muted);
+    font-size: 0.62rem;
+    font-weight: 650;
+    line-height: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.state-reducer-rule-composer {
     align-items: stretch;
     display: grid;
-    gap: 12px;
+    gap: 8px;
     grid-template-columns: minmax(0, 1.48fr) minmax(260px, 0.52fr);
     min-width: 0;
 }
 
-.state-reducer-rule-aside {
-    border-left: 1px solid color-mix(in srgb, var(--flux-border-soft) 36%, transparent);
+.state-reducer-rule-sidecar {
+    background: color-mix(in srgb, var(--flux-surface-2) 7%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 24%, transparent);
+    border-radius: 5px;
     display: grid;
     gap: 10px;
     grid-template-rows: auto minmax(0, 1fr);
     min-width: 0;
-    padding-left: 12px;
+    padding: 7px;
 }
 
 .state-reducer-reference {
@@ -216,19 +242,12 @@
 @media (max-width: 760px) {
     .state-reducer-meta,
     .state-reducer-config-row,
-    .state-reducer-rule-grid {
+    .state-reducer-rule-composer {
         grid-template-columns: minmax(0, 1fr);
     }
 
     .state-reducer-contract {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .state-reducer-rule-aside {
-        border-left: 0;
-        border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 36%, transparent);
-        padding-left: 0;
-        padding-top: 12px;
     }
 
     .state-reducer-contract-label {
