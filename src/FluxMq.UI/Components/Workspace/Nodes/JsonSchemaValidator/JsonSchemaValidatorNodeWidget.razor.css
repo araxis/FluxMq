@@ -92,24 +92,23 @@
     border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     border-radius: 6px;
     display: grid;
+    gap: 8px;
     min-width: 0;
+    padding: 12px;
 }
 
 .json-schema-validator-config-row {
-    align-items: start;
-    border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 34%, transparent);
+    align-items: center;
     display: grid;
-    gap: 8px;
-    grid-template-columns: 172px minmax(0, 1fr);
+    gap: 7px 10px;
+    grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
     min-width: 0;
-    padding: 12px;
 }
 
 .json-schema-validator-schema-area {
     display: grid;
-    gap: 8px;
+    gap: 6px;
     min-width: 0;
-    padding: 12px;
 }
 
 .json-schema-validator-file-source,
@@ -120,7 +119,7 @@
 .json-schema-validator-file-source,
 .json-schema-validator-inline-source {
     display: grid;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
 }
 
@@ -128,11 +127,22 @@
     align-content: start;
 }
 
+.json-schema-validator-field-label {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 68%, var(--flux-text-muted));
+    font-size: 0.62rem;
+    font-weight: 780;
+    line-height: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .json-schema-validator-file-row {
-    align-items: start;
+    align-items: center;
     display: grid;
-    gap: 8px;
-    grid-template-columns: minmax(0, 1fr) 34px;
+    gap: 7px;
+    grid-template-columns: minmax(0, 1fr) 30px;
     min-width: 0;
 }
 
@@ -158,20 +168,19 @@
 }
 
 .json-schema-validator-file-row ::deep(.schema-file-picker-button.mud-icon-button) {
-    height: 32px;
-    margin-top: 2px;
-    min-height: 32px;
-    min-width: 32px;
+    height: 30px;
+    min-height: 30px;
+    min-width: 30px;
     padding: 0;
-    width: 32px;
+    width: 30px;
 }
 
 .json-schema-validator-inline-source ::deep(.schema-monaco-editor) {
     background: var(--flux-surface);
-    border: 1px solid color-mix(in srgb, var(--flux-border) 42%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 34%, transparent);
     border-radius: 6px;
-    height: clamp(520px, 68vh, 700px);
-    min-height: 520px;
+    height: clamp(560px, 72vh, 800px);
+    min-height: 560px;
     overflow: hidden;
 }
 
@@ -191,6 +200,10 @@
     .json-schema-validator-config-row,
     .json-schema-validator-file-row {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .json-schema-validator-field-label {
+        display: none;
     }
 
     .json-schema-validator-file-row ::deep(.schema-file-picker-button.mud-icon-button) {

@@ -44,6 +44,9 @@
         <div class="json-schema-validator-editor" aria-label="JSON schema validator settings">
             <section class="json-schema-validator-editor-surface" aria-label="JSON schema workspace">
                 <div class="json-schema-validator-config-row" aria-label="JSON schema configuration">
+                    <span class="json-schema-validator-field-label">Source</span>
+                    <span class="json-schema-validator-field-label">Schema ID</span>
+
                     <MudSelect T="string"
                                Label="Schema source"
                                Value="@_schemaSource"
@@ -69,6 +72,7 @@
                     @if (IsFileSchema)
                     {
                         <section class="json-schema-validator-file-source" aria-label="JSON schema file source">
+                            <span class="json-schema-validator-field-label">Schema file</span>
                             <div class="json-schema-validator-file-row">
                                 <MudTextField T="string"
                                               Label="JSON Schema file"
