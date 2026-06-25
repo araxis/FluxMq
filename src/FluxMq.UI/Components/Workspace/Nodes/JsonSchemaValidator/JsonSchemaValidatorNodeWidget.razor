@@ -42,62 +42,64 @@
     </Body>
     <Editor>
         <div class="json-schema-validator-editor" aria-label="JSON schema validator settings">
-            <section class="json-schema-validator-config-row" aria-label="JSON schema configuration">
-                <MudSelect T="string"
-                           Label="Schema source"
-                           Value="@_schemaSource"
-                           ValueChanged="@SetSchemaSource"
-                           aria-label="Schema source"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           Class="json-schema-validator-source-field">
-                    <MudSelectItem Value="@JsonSchemaValidatorNodeModel.SchemaSourceInline">Inline</MudSelectItem>
-                    <MudSelectItem Value="@JsonSchemaValidatorNodeModel.SchemaSourceFile">JSON Schema file</MudSelectItem>
-                </MudSelect>
+            <section class="json-schema-validator-editor-surface" aria-label="JSON schema workspace">
+                <div class="json-schema-validator-config-row" aria-label="JSON schema configuration">
+                    <MudSelect T="string"
+                               Label="Schema source"
+                               Value="@_schemaSource"
+                               ValueChanged="@SetSchemaSource"
+                               aria-label="Schema source"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Class="json-schema-validator-source-field">
+                        <MudSelectItem Value="@JsonSchemaValidatorNodeModel.SchemaSourceInline">Inline</MudSelectItem>
+                        <MudSelectItem Value="@JsonSchemaValidatorNodeModel.SchemaSourceFile">JSON Schema file</MudSelectItem>
+                    </MudSelect>
 
-                <MudTextField T="string"
-                              Label="Schema id"
-                              @bind-Value="_schemaId"
-                              aria-label="Schema id"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              Class="json-schema-validator-id-field" />
-            </section>
+                    <MudTextField T="string"
+                                  Label="Schema id"
+                                  @bind-Value="_schemaId"
+                                  aria-label="Schema id"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="json-schema-validator-id-field" />
+                </div>
 
-            <section class="json-schema-validator-schema-workspace" aria-label="JSON schema workspace">
-                @if (IsFileSchema)
-                {
-                    <section class="json-schema-validator-file-source" aria-label="JSON schema file source">
-                        <div class="json-schema-validator-file-row">
-                            <MudTextField T="string"
-                                          Label="JSON Schema file"
-                                          @bind-Value="_schemaPath"
-                                          aria-label="JSON Schema file"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense"
-                                          Class="json-schema-validator-file-field" />
-                            <MudTooltip Text="Select schema file">
-                                <MudIconButton Icon="@Icons.Material.Filled.FolderOpen"
-                                               Size="Size.Small"
-                                               Color="Color.Info"
-                                               aria-label="Select JSON Schema file"
-                                               Class="schema-file-picker-button"
-                                               OnClick="@PickSchemaFileAsync" />
-                            </MudTooltip>
-                        </div>
-                    </section>
-                }
-                else
-                {
-                    <section class="json-schema-validator-inline-source" aria-label="Inline JSON schema">
-                        <StandaloneCodeEditor @key="_editorVersion"
-                                              @ref="_editor"
-                                              Id="@EditorId"
-                                              CssClass="schema-monaco-editor"
-                                              ConstructionOptions="@EditorConstructionOptions"
-                                              OnDidChangeModelContent="@OnEditorContentChanged" />
-                    </section>
-                }
+                <div class="json-schema-validator-schema-area">
+                    @if (IsFileSchema)
+                    {
+                        <section class="json-schema-validator-file-source" aria-label="JSON schema file source">
+                            <div class="json-schema-validator-file-row">
+                                <MudTextField T="string"
+                                              Label="JSON Schema file"
+                                              @bind-Value="_schemaPath"
+                                              aria-label="JSON Schema file"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Class="json-schema-validator-file-field" />
+                                <MudTooltip Text="Select schema file">
+                                    <MudIconButton Icon="@Icons.Material.Filled.FolderOpen"
+                                                   Size="Size.Small"
+                                                   Color="Color.Info"
+                                                   aria-label="Select JSON Schema file"
+                                                   Class="schema-file-picker-button"
+                                                   OnClick="@PickSchemaFileAsync" />
+                                </MudTooltip>
+                            </div>
+                        </section>
+                    }
+                    else
+                    {
+                        <section class="json-schema-validator-inline-source" aria-label="Inline JSON schema">
+                            <StandaloneCodeEditor @key="_editorVersion"
+                                                  @ref="_editor"
+                                                  Id="@EditorId"
+                                                  CssClass="schema-monaco-editor"
+                                                  ConstructionOptions="@EditorConstructionOptions"
+                                                  OnDidChangeModelContent="@OnEditorContentChanged" />
+                        </section>
+                    }
+                </div>
             </section>
         </div>
     </Editor>
