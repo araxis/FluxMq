@@ -85,35 +85,39 @@
                                  Class="state-reducer-buffer-field" />
             </div>
 
-            <div class="state-reducer-expression-workspace" aria-label="State reducer rule">
-                <MudTextField T="string"
-                              Label="Key expression"
-                              @bind-Value="_keyExpression"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              Lines="2"
-                              Class="state-reducer-key-field"
-                              Placeholder="topic or blank" />
+            <section class="state-reducer-rule-surface" aria-label="State reducer rule">
+                <div class="state-reducer-rule-grid">
+                    <MudTextField T="string"
+                                  Label="Reducer"
+                                  @bind-Value="_reducer"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Lines="11"
+                                  Class="state-reducer-reducer-field"
+                                  Placeholder="input" />
 
-                <MudTextField T="string"
-                              Label="Reducer"
-                              @bind-Value="_reducer"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              Lines="10"
-                              Class="state-reducer-reducer-field"
-                              Placeholder="input" />
+                    <aside class="state-reducer-rule-aside">
+                        <MudTextField T="string"
+                                      Label="Key expression"
+                                      @bind-Value="_keyExpression"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Lines="3"
+                                      Class="state-reducer-key-field"
+                                      Placeholder="topic or blank" />
 
-                <div class="state-reducer-reference" aria-label="State reducer expression variables">
-                    <span class="state-reducer-reference-label">Variables</span>
-                    <span class="state-reducer-variable-list">
-                        @foreach (var variable in ExpressionVariables)
-                        {
-                            <span class="state-reducer-variable">@variable</span>
-                        }
-                    </span>
+                        <div class="state-reducer-reference" aria-label="State reducer expression variables">
+                            <span class="state-reducer-reference-label">Variables</span>
+                            <span class="state-reducer-variable-list">
+                                @foreach (var variable in ExpressionVariables)
+                                {
+                                    <span class="state-reducer-variable">@variable</span>
+                                }
+                            </span>
+                        </div>
+                    </aside>
                 </div>
-            </div>
+            </section>
         </div>
     </Editor>
 </NodeWidgetShell>
