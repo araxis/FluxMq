@@ -37,6 +37,8 @@
                 <span class="stored-session-source-token">MqttEnvelope</span>
                 <span class="stored-session-source-token">topic</span>
                 <span class="stored-session-source-token">payload</span>
+                <span class="stored-session-source-token">qos</span>
+                <span class="stored-session-source-token">receivedAt</span>
             </div>
         </div>
     </Body>
@@ -46,7 +48,7 @@
                 var sessions = Live.StoredSessions;
             }
             <section class="stored-session-source-editor-surface" aria-label="Stored session source configuration">
-                <div class="stored-session-source-config-row">
+                <div class="stored-session-source-session-row">
                     @if (sessions.Count > 0)
                     {
                         <MudSelect T="string"
@@ -78,17 +80,10 @@
                             No recorded sessions found. Record a session first.
                         </div>
                     }
-
-                    <MudNumericField T="int"
-                                     Label="Output buffer"
-                                     @bind-Value="_boundedCapacity"
-                                     aria-label="Stored session output buffer"
-                                     Min="1"
-                                     Max="100000"
-                                     Step="100"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Class="stored-session-source-buffer-field" />
+                    <div class="stored-session-source-session-state" aria-label="Stored sessions">
+                        <span>Stored sessions</span>
+                        <strong>@SessionOptionCountCaption</strong>
+                    </div>
                 </div>
 
                 <div class="stored-session-source-playback-row" aria-label="Stored session playback settings">
@@ -112,6 +107,17 @@
                                      Variant="Variant.Outlined"
                                      Margin="Margin.Dense"
                                      Class="stored-session-source-speed-field" />
+
+                    <MudNumericField T="int"
+                                     Label="Output buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     aria-label="Stored session output buffer"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="stored-session-source-buffer-field" />
                 </div>
             </section>
         </div>
@@ -141,6 +147,12 @@
     private string TimingCaption => Model.PreserveTiming ? "Original" : "Immediate";
     private string SpeedCaption => Model.PreserveTiming ? $"{SessionSourceNodeModel.NormalizeSpeed(Model.Speed):0.##}x" : "off";
     private string BufferCaption => SessionSourceNodeModel.NormalizeBoundedCapacity(Model.BoundedCapacity).ToString();
+    private string SessionOptionCountCaption => Live.StoredSessions.Count switch
+    {
+        0 => "None",
+        1 => "1 available",
+        var count => $"{count} available"
+    };
 
     protected override void OnParametersSet()
     {
