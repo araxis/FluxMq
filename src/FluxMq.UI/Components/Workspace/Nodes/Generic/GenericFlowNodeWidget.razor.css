@@ -94,7 +94,7 @@
     min-width: 0;
 }
 
-.generic-node-editor-panel {
+.generic-node-editor-surface {
     background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
     border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     border-radius: 6px;
@@ -120,7 +120,7 @@
 }
 
 .generic-node-editor-meta-cell span,
-.generic-node-editor-port-header span {
+.generic-node-editor-port-main span {
     color: var(--flux-text-muted);
     font-size: 0.62rem;
     font-weight: 760;
@@ -141,47 +141,47 @@
     white-space: nowrap;
 }
 
-.generic-node-editor-port-table {
+.generic-node-editor-port-list {
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 34%, transparent);
     display: grid;
+    gap: 0;
     min-width: 0;
-    padding-top: 2px;
+    padding-top: 4px;
 }
 
-.generic-node-editor-port-header,
 .generic-node-editor-port-row {
     align-items: center;
     display: grid;
     gap: 10px;
     grid-template-columns: minmax(130px, 0.9fr) 82px minmax(160px, 1.1fr);
     min-width: 0;
-    padding: 8px 10px;
-}
-
-.generic-node-editor-port-header {
-    border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 44%, transparent);
+    padding: 9px 2px;
 }
 
 .generic-node-editor-port-row + .generic-node-editor-port-row {
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 30%, transparent);
 }
 
-.generic-node-editor-port-row strong,
-.generic-node-editor-port-type {
+.generic-node-editor-port-main {
+    align-content: center;
+    display: grid;
+    gap: 3px;
+    min-height: 34px;
+    min-width: 0;
+}
+
+.generic-node-editor-port-main strong {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 80%, var(--mud-palette-text-secondary));
+    font-size: 0.82rem;
+    font-weight: 720;
+    line-height: 1.1;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.generic-node-editor-port-row strong {
-    color: color-mix(in srgb, var(--mud-palette-text-primary) 80%, var(--mud-palette-text-secondary));
-    font-size: 0.82rem;
-    font-weight: 720;
-    line-height: 1.1;
-}
-
-.generic-node-editor-port-type {
+.generic-node-editor-port-main.type strong {
     color: var(--flux-text-muted);
     font-size: 0.78rem;
     font-weight: 640;
@@ -202,13 +202,8 @@
     }
 
     .generic-node-editor-meta-row,
-    .generic-node-editor-port-header,
     .generic-node-editor-port-row {
         grid-template-columns: minmax(0, 1fr);
-    }
-
-    .generic-node-editor-port-header {
-        display: none;
     }
 
     .generic-node-editor-port-row {
