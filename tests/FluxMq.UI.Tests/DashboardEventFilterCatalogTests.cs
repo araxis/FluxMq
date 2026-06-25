@@ -8272,7 +8272,6 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("default-node-token");
         markup.ShouldContain("default-node-editor");
         markup.ShouldContain("aria-label=\"Fallback component details\"");
-        markup.ShouldContain("default-node-editor-surface");
         markup.ShouldContain("default-node-editor-summary");
         markup.ShouldContain("default-node-editor-cell");
         markup.ShouldContain("default-node-editor-description");
@@ -8287,6 +8286,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("<MudText");
         markup.ShouldNotContain("<MudChip");
         markup.ShouldNotContain("flow-node-filters");
+        markup.ShouldNotContain("default-node-editor-surface");
         markup.ShouldNotContain("category chip");
         markup.ShouldNotContain("Mirrors the pre-split behaviour");
 
@@ -8300,16 +8300,21 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".default-node-editor");
-        css.ShouldContain(".default-node-editor-surface");
-        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
-        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
-        css.ShouldContain("padding: 12px;");
+        css.ShouldNotContain("gap: 10px;");
+        css.ShouldContain("gap: 8px;");
+        css.ShouldContain("gap: 7px;");
+        css.ShouldNotContain(".default-node-editor-surface");
+        css.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        css.ShouldNotContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldNotContain("padding: 12px;");
         css.ShouldContain(".default-node-editor-summary");
         css.ShouldContain(".default-node-editor-cell");
         css.ShouldContain(".default-node-editor-description");
         css.ShouldContain(".default-node-port-list");
         css.ShouldContain("border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 34%, transparent);");
         css.ShouldContain(".default-node-port-row");
+        css.ShouldContain("padding: 7px 2px;");
+        css.ShouldNotContain("padding: 9px 2px;");
         css.ShouldContain(".default-node-port-main");
         css.ShouldContain(".default-node-empty");
         css.ShouldContain("@media (max-width: 640px)");

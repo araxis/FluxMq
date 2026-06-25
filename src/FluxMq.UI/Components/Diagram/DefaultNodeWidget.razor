@@ -38,47 +38,45 @@
     </Body>
     <Editor>
         <div class="default-node-editor" aria-label="Fallback component details">
-            <div class="default-node-editor-surface">
-                <div class="default-node-editor-summary" aria-label="Fallback component summary">
-                    <div class="default-node-editor-cell">
-                        <span>Type</span>
-                        <strong title="@Node.NodeType">@Node.NodeType</strong>
-                    </div>
-                    <div class="default-node-editor-cell">
-                        <span>Category</span>
-                        <strong>@Node.Category</strong>
-                    </div>
-                    <div class="default-node-editor-cell">
-                        <span>Ports</span>
-                        <strong>@PortCountCaption</strong>
-                    </div>
+            <div class="default-node-editor-summary" aria-label="Fallback component summary">
+                <div class="default-node-editor-cell">
+                    <span>Type</span>
+                    <strong title="@Node.NodeType">@Node.NodeType</strong>
                 </div>
+                <div class="default-node-editor-cell">
+                    <span>Category</span>
+                    <strong>@Node.Category</strong>
+                </div>
+                <div class="default-node-editor-cell">
+                    <span>Ports</span>
+                    <strong>@PortCountCaption</strong>
+                </div>
+            </div>
 
-                <div class="default-node-editor-description" title="@SummaryCaption">@SummaryCaption</div>
+            <div class="default-node-editor-description" title="@SummaryCaption">@SummaryCaption</div>
 
-                <div class="default-node-port-list" aria-label="Fallback component port contracts">
-                    @if (SortedPortDescriptors.Count > 0)
+            <div class="default-node-port-list" aria-label="Fallback component port contracts">
+                @if (SortedPortDescriptors.Count > 0)
+                {
+                    @foreach (var port in SortedPortDescriptors)
                     {
-                        @foreach (var port in SortedPortDescriptors)
-                        {
-                            <div class="default-node-port-row">
-                                <div class="default-node-port-main">
-                                    <span>Name</span>
-                                    <strong title="@port.Name">@port.Name</strong>
-                                </div>
-                                <span class="default-node-token @PortDirectionClass(port)">@PortDirection(port)</span>
-                                <div class="default-node-port-main type">
-                                    <span>Value type</span>
-                                    <strong title="@port.ValueType">@port.ValueType</strong>
-                                </div>
+                        <div class="default-node-port-row">
+                            <div class="default-node-port-main">
+                                <span>Name</span>
+                                <strong title="@port.Name">@port.Name</strong>
                             </div>
-                        }
+                            <span class="default-node-token @PortDirectionClass(port)">@PortDirection(port)</span>
+                            <div class="default-node-port-main type">
+                                <span>Value type</span>
+                                <strong title="@port.ValueType">@port.ValueType</strong>
+                            </div>
+                        </div>
                     }
-                    else
-                    {
-                        <div class="default-node-empty" role="status">No declared ports.</div>
-                    }
-                </div>
+                }
+                else
+                {
+                    <div class="default-node-empty" role="status">No declared ports.</div>
+                }
             </div>
         </div>
     </Editor>

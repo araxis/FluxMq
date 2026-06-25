@@ -96,23 +96,13 @@
 
 .default-node-editor {
     display: grid;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
-}
-
-.default-node-editor-surface {
-    background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
-    border-radius: 6px;
-    display: grid;
-    gap: 12px;
-    min-width: 0;
-    padding: 12px;
 }
 
 .default-node-editor-summary {
     display: grid;
-    gap: 8px;
+    gap: 7px;
     grid-template-columns: minmax(0, 1fr) minmax(120px, 0.35fr) minmax(120px, 0.35fr);
     min-width: 0;
 }
@@ -157,10 +147,10 @@
 .default-node-port-row {
     align-items: center;
     display: grid;
-    gap: 10px;
+    gap: 7px;
     grid-template-columns: minmax(130px, 0.9fr) 82px minmax(160px, 1.1fr);
     min-width: 0;
-    padding: 9px 2px;
+    padding: 7px 2px;
 }
 
 .default-node-port-row + .default-node-port-row {
@@ -186,7 +176,7 @@
     color: var(--flux-text-muted);
     font-size: 0.78rem;
     font-weight: 650;
-    padding: 12px 10px;
+    padding: 8px 2px;
 }
 
 @media (max-width: 640px) {
