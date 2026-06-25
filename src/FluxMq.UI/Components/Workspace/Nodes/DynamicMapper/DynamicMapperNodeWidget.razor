@@ -160,19 +160,21 @@
                             <span class="dynamic-mapper-kicker">Mapping</span>
                             <strong>@EngineCaption expression</strong>
                         </div>
-                        <span class="dynamic-mapper-heading-token">@OutputShapeLabel</span>
-                        <MudTooltip Text="@SampleToggleText">
-                            <MudIconButton Icon="@SampleToggleIcon"
-                                           Size="Size.Small"
-                                           Class="dynamic-mapper-toolbar-action"
-                                           OnClick="@ToggleSampleEditorAsync" />
-                        </MudTooltip>
-                        <MudTooltip Text="Reload sample input">
-                            <MudIconButton Icon="@Icons.Material.Filled.Refresh"
-                                           Size="Size.Small"
-                                           Class="dynamic-mapper-toolbar-action"
-                                           OnClick="@ReloadWorkspaceSample" />
-                        </MudTooltip>
+                        <div class="dynamic-mapper-workspace-actions">
+                            <span class="dynamic-mapper-heading-token">@OutputShapeLabel</span>
+                            <MudTooltip Text="@SampleToggleText">
+                                <MudIconButton Icon="@SampleToggleIcon"
+                                               Size="Size.Small"
+                                               Class="dynamic-mapper-toolbar-action"
+                                               OnClick="@ToggleSampleEditorAsync" />
+                            </MudTooltip>
+                            <MudTooltip Text="Reload sample input">
+                                <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                               Size="Size.Small"
+                                               Class="dynamic-mapper-toolbar-action"
+                                               OnClick="@ReloadWorkspaceSample" />
+                            </MudTooltip>
+                        </div>
                     </div>
 
                     <StandaloneCodeEditor @key="_editorVersion"

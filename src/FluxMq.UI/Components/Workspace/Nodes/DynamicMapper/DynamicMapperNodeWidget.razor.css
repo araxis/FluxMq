@@ -91,15 +91,15 @@
 .dynamic-mapper-editor,
 .dynamic-mapper-workspace {
     display: grid;
-    gap: 8px;
+    gap: 6px;
     min-width: 0;
 }
 
 .dynamic-mapper-control-row {
-    align-items: start;
+    align-items: center;
     display: grid;
-    gap: 6px;
-    grid-template-columns: minmax(150px, 0.95fr) minmax(140px, 0.82fr) minmax(150px, 0.9fr) minmax(180px, 1.05fr);
+    gap: 5px;
+    grid-template-columns: minmax(132px, 0.78fr) minmax(112px, 0.62fr) minmax(126px, 0.7fr) minmax(160px, 0.92fr);
     min-width: 0;
     width: 100%;
 }
@@ -110,27 +110,27 @@
 }
 
 .dynamic-mapper-schema-file {
-    align-items: start;
+    align-items: center;
     display: grid;
-    gap: 6px;
-    grid-template-columns: minmax(0, 1fr) 30px;
+    gap: 5px;
+    grid-template-columns: minmax(0, 1fr) 28px;
 }
 
 .dynamic-mapper-workspace {
     grid-template-rows: minmax(0, 1fr);
-    height: clamp(680px, 76vh, 880px);
+    height: clamp(760px, 82vh, 980px);
     overflow: hidden;
     width: 100%;
 }
 
 .dynamic-mapper-workspace.has-sample {
-    grid-template-rows: minmax(0, 1fr) minmax(156px, 0.28fr);
+    grid-template-rows: minmax(0, 1fr) minmax(128px, 0.2fr);
 }
 
 .dynamic-mapper-expression-workspace,
 .dynamic-mapper-sample-drawer {
-    background: color-mix(in srgb, var(--flux-surface-2) 8%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border) 36%, transparent);
+    background: color-mix(in srgb, var(--flux-surface-2) 5%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 24%, transparent);
     border-radius: 6px;
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
@@ -141,7 +141,7 @@
 }
 
 .dynamic-mapper-sample-drawer {
-    background: color-mix(in srgb, var(--flux-surface-2) 5%, transparent);
+    background: color-mix(in srgb, var(--flux-surface-2) 3%, transparent);
     min-height: 0;
     padding: 6px;
 }
@@ -151,8 +151,8 @@
     align-items: center;
     display: grid;
     gap: 6px;
-    grid-template-columns: minmax(0, 1fr) auto auto;
-    margin-bottom: 7px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    margin-bottom: 5px;
     min-width: 0;
 }
 
@@ -175,34 +175,42 @@
     white-space: nowrap;
 }
 
+.dynamic-mapper-workspace-actions {
+    align-items: center;
+    display: flex;
+    gap: 4px;
+    justify-content: end;
+    min-width: 0;
+}
+
 .dynamic-mapper-editor ::deep(.mud-input-control) {
     margin-bottom: 0;
     margin-top: 0;
 }
 
 .dynamic-mapper-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
-    min-height: 36px;
+    min-height: 32px;
 }
 
 .dynamic-mapper-editor ::deep(.mud-input > input.mud-input-root),
 .dynamic-mapper-editor ::deep(.mud-input > .mud-select-input) {
-    font-size: 0.8rem;
-    min-height: 32px;
-    padding-bottom: 5px;
-    padding-top: 9px;
+    font-size: 0.76rem;
+    min-height: 30px;
+    padding-bottom: 4px;
+    padding-top: 8px;
 }
 
 .dynamic-mapper-editor ::deep(.mud-input-label) {
-    font-size: 0.7rem;
+    font-size: 0.66rem;
 }
 
 .dynamic-mapper-schema-file ::deep(.dynamic-mapper-file-picker-button.mud-icon-button),
 .dynamic-mapper-workspace ::deep(.dynamic-mapper-toolbar-action.mud-icon-button) {
-    height: 28px;
-    min-height: 28px;
-    min-width: 28px;
+    height: 26px;
+    min-height: 26px;
+    min-width: 26px;
     padding: 0;
-    width: 28px;
+    width: 26px;
 }
 
 .dynamic-mapper-workspace ::deep(.dynamic-mapper-monaco-editor) {
