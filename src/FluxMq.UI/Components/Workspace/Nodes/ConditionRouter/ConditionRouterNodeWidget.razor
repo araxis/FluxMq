@@ -47,59 +47,46 @@
     </Body>
     <Editor>
         <div class="condition-router-editor" aria-label="Condition router settings">
-            <section class="condition-router-editor-surface" aria-label="Condition router configuration">
-                <div class="condition-router-editor-status" aria-label="Condition router draft status">
-                    <div>
-                        <span>Input</span>
-                        <strong>@DraftInputTypeCaption</strong>
-                    </div>
-                    <div>
-                        <span>Branches</span>
-                        <strong>WhenTrue / WhenFalse</strong>
-                    </div>
-                </div>
+            <div class="condition-router-config-row">
+                <MudSelect T="string"
+                           Value="@_inputType"
+                           ValueChanged="@SetInputType"
+                           Label="Input type"
+                           aria-label="Condition input type"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Dense="true"
+                           Class="condition-router-input-field">
+                    @foreach (var inputType in ConditionRouterNodeModel.InputTypes)
+                    {
+                        <MudSelectItem Value="@inputType">@InputTypeLabel(inputType)</MudSelectItem>
+                    }
+                </MudSelect>
+            </div>
 
-                <div class="condition-router-config-row">
-                    <MudSelect T="string"
-                               Value="@_inputType"
-                               ValueChanged="@SetInputType"
-                               Label="Input type"
-                               aria-label="Condition input type"
-                               Variant="Variant.Outlined"
-                               Margin="Margin.Dense"
-                               Dense="true"
-                               Class="condition-router-input-field">
-                        @foreach (var inputType in ConditionRouterNodeModel.InputTypes)
+            <div class="condition-router-rule-grid" aria-label="Condition router rule">
+                <MudTextField T="string"
+                              @bind-Value="_expression"
+                              Label="Condition"
+                              aria-label="Condition expression"
+                              Variant="Variant.Outlined"
+                              Lines="8"
+                              Class="condition-router-expression-field"
+                              Placeholder="@ExpressionPlaceholder" />
+
+                <div class="condition-router-variable-reference" aria-label="Available condition variables">
+                    <span class="condition-router-variable-label">Variables</span>
+                    <span class="condition-router-variable-list">
+                        @foreach (var variable in Variables)
                         {
-                            <MudSelectItem Value="@inputType">@InputTypeLabel(inputType)</MudSelectItem>
+                            <span class="condition-router-variable-token" title="@($"{variable.Type}: {variable.Example}")">
+                                <code>@variable.Name</code>
+                                <small>@variable.Type</small>
+                            </span>
                         }
-                    </MudSelect>
+                    </span>
                 </div>
-
-                <div class="condition-router-expression-row" aria-label="Condition router rule">
-                    <MudTextField T="string"
-                                  @bind-Value="_expression"
-                                  Label="Condition"
-                                  aria-label="Condition expression"
-                                  Variant="Variant.Outlined"
-                                  Lines="7"
-                                  Class="condition-router-expression-field"
-                                  Placeholder="@ExpressionPlaceholder" />
-
-                    <div class="condition-router-variable-reference" aria-label="Available condition variables">
-                        <span class="condition-router-variable-label">Variables</span>
-                        <span class="condition-router-variable-list">
-                            @foreach (var variable in Variables)
-                            {
-                                <span class="condition-router-variable-token" title="@($"{variable.Type}: {variable.Example}")">
-                                    <code>@variable.Name</code>
-                                    <small>@variable.Type</small>
-                                </span>
-                            }
-                        </span>
-                    </div>
-                </div>
-            </section>
+            </div>
         </div>
     </Editor>
 </NodeWidgetShell>
@@ -119,7 +106,6 @@
     private IReadOnlyList<ConditionVariable> Variables => IsMetricInput ? MetricVariables : MqttVariables;
     private IReadOnlyList<ConditionVariable> SummaryVariables => Variables.Take(MaxSummaryVariables).ToArray();
     private int VariableOverflow => Math.Max(0, Variables.Count - MaxSummaryVariables);
-    private string DraftInputTypeCaption => InputTypeLabel(_inputType);
     private string ExpressionPlaceholder => IsMetricInput ? "value > 10" : "topic.StartsWith(\"sensors/\") && qos >= 1";
     private const int MaxSummaryVariables = 4;
 
