@@ -261,7 +261,7 @@
     align-items: center;
     display: flex;
     justify-content: center;
-    min-height: 40px;
+    min-height: 36px;
     min-width: 0;
 }
 
@@ -269,7 +269,7 @@
     align-items: center;
     display: inline-flex;
     margin: 0;
-    min-height: 40px;
+    min-height: 36px;
 }
 
 .mqtt-trigger-table-check ::deep .mud-checkbox .mud-button-root {
@@ -295,7 +295,7 @@
     color: var(--mud-palette-text-secondary);
     display: flex;
     font-size: 12px;
-    min-height: 40px;
+    min-height: 36px;
     padding: 8px 0;
 }
 

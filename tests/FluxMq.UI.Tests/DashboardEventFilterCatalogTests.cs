@@ -5882,6 +5882,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-add)");
         css.ShouldContain(".mqtt-trigger-table-check");
         css.ShouldContain(".mqtt-trigger-empty");
+        css.ShouldContain("min-height: 36px;");
+        css.ShouldNotContain("min-height: 40px;");
         css.ShouldContain("min-width: 640px;");
         css.ShouldNotContain(".mqtt-trigger-hero");
         css.ShouldNotContain(".mqtt-trigger-status");
@@ -6488,7 +6490,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".message-filter-pattern-header");
         css.ShouldNotContain(".message-filter-expression-area");
         css.ShouldContain(".message-filter-pattern-row");
-        css.ShouldContain("min-height: 40px;");
+        css.ShouldContain("min-height: 36px;");
+        css.ShouldNotContain("min-height: 40px;");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 30px;");
         css.ShouldContain("align-items: center;");
         css.ShouldContain(".message-filter-reference");
@@ -7465,7 +7468,8 @@ public sealed class DashboardEventFilterCatalogTests
         forkCss.ShouldNotContain(".routing-fork-port-index");
         forkCss.ShouldContain("align-items: center;");
         forkCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 30px;");
-        forkCss.ShouldContain("min-height: 40px;");
+        forkCss.ShouldContain("min-height: 36px;");
+        forkCss.ShouldNotContain("min-height: 40px;");
         forkCss.ShouldContain(".routing-fork-port-header ::deep(.routing-fork-add-port.mud-icon-button)");
         forkCss.ShouldContain(".routing-fork-editor ::deep(.mud-input-control)");
         forkCss.ShouldNotContain(".routing-fork-panel-title");
@@ -7583,7 +7587,8 @@ public sealed class DashboardEventFilterCatalogTests
         mergeCss.ShouldNotContain(".routing-merge-port-index");
         mergeCss.ShouldContain("align-items: center;");
         mergeCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 30px;");
-        mergeCss.ShouldContain("min-height: 40px;");
+        mergeCss.ShouldContain("min-height: 36px;");
+        mergeCss.ShouldNotContain("min-height: 40px;");
         mergeCss.ShouldContain(".routing-merge-port-header ::deep(.routing-merge-add-port.mud-icon-button)");
         mergeCss.ShouldContain(".routing-merge-editor ::deep(.mud-input-control)");
         mergeCss.ShouldNotContain(".routing-merge-panel-title");

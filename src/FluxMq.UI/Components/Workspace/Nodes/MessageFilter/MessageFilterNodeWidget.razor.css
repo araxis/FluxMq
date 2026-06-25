@@ -157,7 +157,7 @@
     display: grid;
     gap: 6px;
     grid-template-columns: minmax(0, 1fr) 30px;
-    min-height: 40px;
+    min-height: 36px;
     min-width: 0;
     padding: 6px 0;
 }
