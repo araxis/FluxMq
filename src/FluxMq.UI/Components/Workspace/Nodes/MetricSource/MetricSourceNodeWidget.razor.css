@@ -90,42 +90,8 @@
 
 .metric-source-editor {
     display: grid;
-    gap: 8px;
-    min-width: 0;
-}
-
-.metric-source-settings-surface,
-.metric-source-parameter-surface {
-    background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
-    border-radius: 6px;
-    display: grid;
     gap: 10px;
     min-width: 0;
-    padding: 12px;
-}
-
-.metric-source-settings-title {
-    display: grid;
-    gap: 2px;
-    min-width: 0;
-}
-
-.metric-source-settings-title span {
-    color: color-mix(in srgb, var(--mud-palette-text-primary) 84%, var(--mud-palette-text-secondary));
-    font-size: 0.76rem;
-    font-weight: 760;
-    line-height: 1;
-    min-width: 0;
-}
-
-.metric-source-settings-title small {
-    color: var(--flux-text-muted);
-    font-size: 0.62rem;
-    font-weight: 650;
-    line-height: 1;
-    min-width: 0;
-    overflow-wrap: anywhere;
 }
 
 .metric-source-empty {
@@ -141,6 +107,7 @@
 }
 
 .metric-source-config-row,
+.metric-source-parameter-group,
 .metric-source-parameter-composer,
 .metric-source-start-row {
     align-items: end;
@@ -166,7 +133,7 @@
 }
 
 .metric-source-description-row span,
-.metric-source-parameter-summary span {
+.metric-source-parameter-heading span {
     color: var(--flux-text-muted);
     font-size: 0.62rem;
     font-weight: 780;
@@ -184,16 +151,23 @@
     overflow-wrap: anywhere;
 }
 
-.metric-source-parameter-summary {
+.metric-source-parameter-group {
+    align-items: stretch;
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 32%, transparent);
+    gap: 8px;
+    padding-top: 8px;
+}
+
+.metric-source-parameter-heading {
     align-items: center;
     display: grid;
     gap: 10px;
     grid-template-columns: minmax(0, 1fr) auto;
     min-width: 0;
-    padding: 0 2px 2px;
+    padding: 0 2px;
 }
 
-.metric-source-parameter-summary strong {
+.metric-source-parameter-heading strong {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 66%, var(--mud-palette-text-secondary));
     font-size: 0.7rem;
     font-weight: 700;
@@ -254,7 +228,7 @@
     .metric-source-parameter-composer,
     .metric-source-start-row,
     .metric-source-description-row,
-    .metric-source-parameter-summary {
+    .metric-source-parameter-heading {
         grid-template-columns: minmax(0, 1fr);
     }
 
