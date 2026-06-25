@@ -92,25 +92,25 @@
 
 .condition-router-editor {
     display: grid;
-    gap: 8px;
+    gap: 12px;
     min-width: 0;
 }
 
-.condition-router-condition-panel {
+.condition-router-config-row,
+.condition-router-expression-workspace {
     background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
     border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     border-radius: 6px;
     display: grid;
-    gap: 12px;
     min-width: 0;
     padding: 14px;
 }
 
-.condition-router-source-row {
+.condition-router-config-row {
     align-items: start;
     display: grid;
     gap: 8px;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 230px);
+    grid-template-columns: minmax(180px, 1fr) minmax(230px, 0.72fr);
     min-width: 0;
 }
 
@@ -153,29 +153,32 @@
     white-space: nowrap;
 }
 
-.condition-router-expression-cell {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 54%, transparent);
+.condition-router-expression-workspace {
     display: grid;
-    gap: 5px;
+    gap: 10px;
     min-width: 0;
-    padding-top: 10px;
 }
 
-.condition-router-variable-strip {
-    align-items: center;
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 64%, transparent);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
+.condition-router-variable-reference {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 44%, transparent);
+    display: grid;
+    gap: 6px;
+    grid-template-columns: 74px minmax(0, 1fr);
     min-width: 0;
-    padding-top: 8px;
+    padding: 8px 2px 0;
 }
 
 .condition-router-variable-label {
-    flex: 0 0 auto;
-    margin-right: 3px;
     min-width: 0;
+    padding-top: 5px;
     text-transform: uppercase;
+}
+
+.condition-router-variable-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-width: 0;
 }
 
 .condition-router-variable-token {
@@ -227,6 +230,10 @@
     font-size: 0.72rem;
 }
 
+.condition-router-editor ::deep(.condition-router-expression-field textarea.mud-input-root) {
+    min-height: 150px;
+}
+
 .condition-router-input-field,
 .condition-router-expression-field {
     min-width: 0;
@@ -234,7 +241,8 @@
 
 @media (max-width: 720px) {
     .condition-router-meta,
-    .condition-router-source-row,
+    .condition-router-config-row,
+    .condition-router-variable-reference,
     .condition-router-output-map {
         grid-template-columns: minmax(0, 1fr);
     }
