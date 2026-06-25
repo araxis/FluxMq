@@ -73,35 +73,39 @@
                                  Class="flow-assertion-buffer-field" />
             </div>
 
-            <div class="flow-assertion-expression-workspace" aria-label="Flow assertion rule">
-                <MudTextField T="string"
-                              Label="Expression"
-                              @bind-Value="_expression"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              Lines="9"
-                              Class="flow-assertion-expression-field"
-                              Placeholder='topic.StartsWith("factory/") && qos >= 1' />
+            <section class="flow-assertion-rule-surface" aria-label="Flow assertion rule">
+                <div class="flow-assertion-rule-grid">
+                    <MudTextField T="string"
+                                  Label="Expression"
+                                  @bind-Value="_expression"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Lines="10"
+                                  Class="flow-assertion-expression-field"
+                                  Placeholder='topic.StartsWith("factory/") && qos >= 1' />
 
-                <MudTextField T="string"
-                              Label="Failure message"
-                              @bind-Value="_failureMessage"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              Lines="3"
-                              Class="flow-assertion-message-field"
-                              Placeholder="Message on failure" />
+                    <aside class="flow-assertion-rule-aside">
+                        <MudTextField T="string"
+                                      Label="Failure message"
+                                      @bind-Value="_failureMessage"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Lines="4"
+                                      Class="flow-assertion-message-field"
+                                      Placeholder="Message on failure" />
 
-                <div class="flow-assertion-reference" aria-label="Assertion expression variables">
-                    <span class="flow-assertion-reference-label">Variables</span>
-                    <span class="flow-assertion-variable-list">
-                        @foreach (var variable in ExpressionVariables)
-                        {
-                            <span class="flow-assertion-variable">@variable</span>
-                        }
-                    </span>
+                        <div class="flow-assertion-reference" aria-label="Assertion expression variables">
+                            <span class="flow-assertion-reference-label">Variables</span>
+                            <span class="flow-assertion-variable-list">
+                                @foreach (var variable in ExpressionVariables)
+                                {
+                                    <span class="flow-assertion-variable">@variable</span>
+                                }
+                            </span>
+                        </div>
+                    </aside>
                 </div>
-            </div>
+            </section>
         </div>
     </Editor>
 </NodeWidgetShell>
