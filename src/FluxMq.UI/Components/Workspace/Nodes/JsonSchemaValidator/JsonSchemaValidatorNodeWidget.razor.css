@@ -84,26 +84,31 @@
 
 .json-schema-validator-editor {
     display: grid;
-    gap: 8px;
+    gap: 10px;
     min-width: 0;
 }
 
-.json-schema-validator-schema-panel {
+.json-schema-validator-config-row,
+.json-schema-validator-schema-workspace {
     background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
     border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     border-radius: 6px;
-    display: grid;
-    gap: 12px;
     min-width: 0;
-    padding: 14px;
 }
 
-.json-schema-validator-source-row {
+.json-schema-validator-config-row {
     align-items: start;
     display: grid;
     gap: 8px;
     grid-template-columns: 180px minmax(0, 1fr);
     min-width: 0;
+    padding: 10px 12px;
+}
+
+.json-schema-validator-schema-workspace {
+    display: grid;
+    gap: 8px;
+    padding: 10px 12px 12px;
 }
 
 .json-schema-validator-file-source,
@@ -120,8 +125,6 @@
 
 .json-schema-validator-file-source {
     align-content: start;
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 54%, transparent);
-    padding-top: 10px;
 }
 
 .json-schema-validator-file-row {
@@ -166,8 +169,8 @@
     background: var(--flux-surface);
     border: 1px solid color-mix(in srgb, var(--flux-border) 50%, transparent);
     border-radius: 6px;
-    height: clamp(440px, 60vh, 600px);
-    min-height: 440px;
+    height: clamp(500px, 66vh, 680px);
+    min-height: 500px;
     overflow: hidden;
 }
 
@@ -184,7 +187,7 @@
 
 @media (max-width: 640px) {
     .json-schema-validator-meta,
-    .json-schema-validator-source-row,
+    .json-schema-validator-config-row,
     .json-schema-validator-file-row {
         grid-template-columns: minmax(0, 1fr);
     }

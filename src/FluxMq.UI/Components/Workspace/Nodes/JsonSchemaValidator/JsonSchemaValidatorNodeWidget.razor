@@ -42,29 +42,29 @@
     </Body>
     <Editor>
         <div class="json-schema-validator-editor" aria-label="JSON schema validator settings">
-            <section class="json-schema-validator-schema-panel" aria-label="JSON schema configuration">
-                <div class="json-schema-validator-source-row">
-                    <MudSelect T="string"
-                               Label="Schema source"
-                               Value="@_schemaSource"
-                               ValueChanged="@SetSchemaSource"
-                               aria-label="Schema source"
-                               Variant="Variant.Outlined"
-                               Margin="Margin.Dense"
-                               Class="json-schema-validator-source-field">
-                        <MudSelectItem Value="@JsonSchemaValidatorNodeModel.SchemaSourceInline">Inline</MudSelectItem>
-                        <MudSelectItem Value="@JsonSchemaValidatorNodeModel.SchemaSourceFile">JSON Schema file</MudSelectItem>
-                    </MudSelect>
+            <section class="json-schema-validator-config-row" aria-label="JSON schema configuration">
+                <MudSelect T="string"
+                           Label="Schema source"
+                           Value="@_schemaSource"
+                           ValueChanged="@SetSchemaSource"
+                           aria-label="Schema source"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Class="json-schema-validator-source-field">
+                    <MudSelectItem Value="@JsonSchemaValidatorNodeModel.SchemaSourceInline">Inline</MudSelectItem>
+                    <MudSelectItem Value="@JsonSchemaValidatorNodeModel.SchemaSourceFile">JSON Schema file</MudSelectItem>
+                </MudSelect>
 
-                    <MudTextField T="string"
-                                  Label="Schema id"
-                                  @bind-Value="_schemaId"
-                                  aria-label="Schema id"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Class="json-schema-validator-id-field" />
-                </div>
+                <MudTextField T="string"
+                              Label="Schema id"
+                              @bind-Value="_schemaId"
+                              aria-label="Schema id"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Class="json-schema-validator-id-field" />
+            </section>
 
+            <section class="json-schema-validator-schema-workspace" aria-label="JSON schema workspace">
                 @if (IsFileSchema)
                 {
                     <section class="json-schema-validator-file-source" aria-label="JSON schema file source">
