@@ -43,90 +43,92 @@
     </Body>
     <Editor>
         <div class="routing-correlation-editor" aria-label="Routing correlation settings">
-            <section class="routing-correlation-config-row" aria-label="Routing correlation source settings">
-                <MudSelect T="string"
-                           Label="Input type"
-                           @bind-Value="_inputType"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           Dense="true"
-                           Class="routing-correlation-input-field">
-                    @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
-                    {
-                        <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
-                    }
-                </MudSelect>
+            <section class="routing-correlation-editor-surface" aria-label="Routing correlation source settings">
+                <div class="routing-correlation-config-row">
+                    <MudSelect T="string"
+                               Label="Input type"
+                               @bind-Value="_inputType"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true"
+                               Class="routing-correlation-input-field">
+                        @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                        {
+                            <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                        }
+                    </MudSelect>
 
-                <MudNumericField T="int"
-                                 Label="Input buffer"
-                                 @bind-Value="_boundedCapacity"
-                                 Min="1"
-                                 Max="100000"
-                                 Step="100"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Class="routing-correlation-buffer-field" />
+                    <MudNumericField T="int"
+                                     Label="Input buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="routing-correlation-buffer-field" />
 
-                <MudNumericField T="int"
-                                 Label="Timeout ms"
-                                 @bind-Value="_timeoutMilliseconds"
-                                 Min="1"
-                                 Max="86400000"
-                                 Step="1000"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Class="routing-correlation-timeout-field" />
+                    <MudNumericField T="int"
+                                     Label="Timeout ms"
+                                     @bind-Value="_timeoutMilliseconds"
+                                     Min="1"
+                                     Max="86400000"
+                                     Step="1000"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="routing-correlation-timeout-field" />
 
-                <MudNumericField T="int"
-                                 Label="Max pending"
-                                 @bind-Value="_maxPending"
-                                 Min="1"
-                                 Max="100000"
-                                 Step="100"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Class="routing-correlation-pending-field" />
-            </section>
-
-            <section class="routing-correlation-matching-workspace" aria-label="Routing correlation matching rule">
-                <div class="routing-correlation-expression-row" aria-label="Routing correlation expressions">
-                    <MudTextField T="string"
-                                  Label="Key expression"
-                                  @bind-Value="_keyExpression"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Class="routing-correlation-key-field"
-                                  Placeholder="topic" />
-
-                    <MudTextField T="string"
-                                  Label="Side expression"
-                                  @bind-Value="_sideExpression"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Class="routing-correlation-side-field"
-                                  Placeholder="payloadText" />
+                    <MudNumericField T="int"
+                                     Label="Max pending"
+                                     @bind-Value="_maxPending"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="routing-correlation-pending-field" />
                 </div>
 
-                <div class="routing-correlation-side-map-row" aria-label="Routing correlation side mapping">
-                    <MudTextField T="string"
-                                  Label="Request side"
-                                  @bind-Value="_requestSide"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Class="routing-correlation-request-field" />
+                <div class="routing-correlation-matching-section" aria-label="Routing correlation matching rule">
+                    <div class="routing-correlation-expression-row" aria-label="Routing correlation expressions">
+                        <MudTextField T="string"
+                                      Label="Key expression"
+                                      @bind-Value="_keyExpression"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Class="routing-correlation-key-field"
+                                      Placeholder="topic" />
 
-                    <MudTextField T="string"
-                                  Label="Response side"
-                                  @bind-Value="_responseSide"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Class="routing-correlation-response-field" />
+                        <MudTextField T="string"
+                                      Label="Side expression"
+                                      @bind-Value="_sideExpression"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Class="routing-correlation-side-field"
+                                      Placeholder="payloadText" />
+                    </div>
 
-                    <div class="routing-correlation-case-option">
-                        <MudCheckBox T="bool"
-                                     Label="Case sensitive"
-                                     @bind-Value="_caseSensitive"
-                                     Class="routing-correlation-case-check" />
+                    <div class="routing-correlation-side-map-row" aria-label="Routing correlation side mapping">
+                        <MudTextField T="string"
+                                      Label="Request side"
+                                      @bind-Value="_requestSide"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Class="routing-correlation-request-field" />
+
+                        <MudTextField T="string"
+                                      Label="Response side"
+                                      @bind-Value="_responseSide"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Class="routing-correlation-response-field" />
+
+                        <div class="routing-correlation-case-option">
+                            <MudCheckBox T="bool"
+                                         Label="Case sensitive"
+                                         @bind-Value="_caseSensitive"
+                                         Class="routing-correlation-case-check" />
+                        </div>
                     </div>
                 </div>
             </section>

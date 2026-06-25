@@ -7616,9 +7616,10 @@ public sealed class DashboardEventFilterCatalogTests
         correlationMarkup.ShouldContain("PendingCaption");
         correlationMarkup.ShouldContain("routing-correlation-editor");
         correlationMarkup.ShouldContain("aria-label=\"Routing correlation settings\"");
+        correlationMarkup.ShouldContain("routing-correlation-editor-surface");
         correlationMarkup.ShouldContain("routing-correlation-config-row");
         correlationMarkup.ShouldContain("aria-label=\"Routing correlation source settings\"");
-        correlationMarkup.ShouldContain("routing-correlation-matching-workspace");
+        correlationMarkup.ShouldContain("routing-correlation-matching-section");
         correlationMarkup.ShouldContain("aria-label=\"Routing correlation matching rule\"");
         correlationMarkup.ShouldContain("routing-correlation-expression-row");
         correlationMarkup.ShouldContain("aria-label=\"Routing correlation expressions\"");
@@ -7642,6 +7643,7 @@ public sealed class DashboardEventFilterCatalogTests
         correlationMarkup.ShouldNotContain("routing-correlation-side-panel");
         correlationMarkup.ShouldNotContain("routing-correlation-limit-panel");
         correlationMarkup.ShouldNotContain("routing-correlation-rule-panel");
+        correlationMarkup.ShouldNotContain("routing-correlation-matching-workspace");
         correlationMarkup.ShouldNotContain("routing-correlation-source-grid");
         correlationMarkup.ShouldNotContain("routing-correlation-expression-grid");
         correlationMarkup.ShouldNotContain("routing-correlation-side-row");
@@ -7662,12 +7664,13 @@ public sealed class DashboardEventFilterCatalogTests
         correlationCss.ShouldContain("overflow-wrap: anywhere;");
         correlationCss.ShouldContain("white-space: normal;");
         correlationCss.ShouldContain(".routing-correlation-editor");
+        correlationCss.ShouldContain(".routing-correlation-editor-surface");
         correlationCss.ShouldContain(".routing-correlation-config-row");
-        correlationCss.ShouldContain(".routing-correlation-matching-workspace");
+        correlationCss.ShouldContain(".routing-correlation-matching-section");
         correlationCss.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         correlationCss.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
-        correlationCss.ShouldContain("gap: 12px;");
-        correlationCss.ShouldContain("padding: 14px;");
+        correlationCss.ShouldContain("gap: 10px;");
+        correlationCss.ShouldContain("padding: 12px;");
         correlationCss.ShouldNotContain(".routing-correlation-panel-header");
         correlationCss.ShouldNotContain(".routing-correlation-panel-kicker");
         correlationCss.ShouldNotContain(".routing-correlation-panel-token");
@@ -7690,6 +7693,8 @@ public sealed class DashboardEventFilterCatalogTests
         correlationCss.ShouldNotContain(".routing-correlation-form-grid");
         correlationCss.ShouldNotContain(".routing-correlation-side-panel");
         correlationCss.ShouldNotContain(".routing-correlation-limit-panel");
+        correlationCss.ShouldNotContain(".routing-correlation-matching-workspace");
+        correlationCss.ShouldNotContain("padding: 14px;");
         correlationCss.ShouldNotContain(".flow-node-filters");
         correlationCss.ShouldNotContain("border-radius: 999px;");
 
@@ -7708,9 +7713,10 @@ public sealed class DashboardEventFilterCatalogTests
         joinMarkup.ShouldContain("aria-label=\"Routing join rules\"");
         joinMarkup.ShouldContain("routing-join-editor");
         joinMarkup.ShouldContain("aria-label=\"Routing join settings\"");
+        joinMarkup.ShouldContain("routing-join-editor-surface");
         joinMarkup.ShouldContain("routing-join-config-row");
         joinMarkup.ShouldContain("aria-label=\"Routing join input contracts\"");
-        joinMarkup.ShouldContain("routing-join-matching-workspace");
+        joinMarkup.ShouldContain("routing-join-matching-section");
         joinMarkup.ShouldContain("aria-label=\"Routing join matching rule\"");
         joinMarkup.ShouldContain("routing-join-key-row");
         joinMarkup.ShouldContain("aria-label=\"Routing join key expressions\"");
@@ -7733,6 +7739,7 @@ public sealed class DashboardEventFilterCatalogTests
         joinMarkup.ShouldNotContain("routing-join-form-grid");
         joinMarkup.ShouldNotContain("routing-join-limit-panel");
         joinMarkup.ShouldNotContain("routing-join-rule-panel");
+        joinMarkup.ShouldNotContain("routing-join-matching-workspace");
         joinMarkup.ShouldNotContain("routing-join-input-grid");
         joinMarkup.ShouldNotContain("routing-join-key-grid");
         joinMarkup.ShouldNotContain("<span>Matching</span>");
@@ -7751,12 +7758,13 @@ public sealed class DashboardEventFilterCatalogTests
         joinCss.ShouldContain("overflow-wrap: anywhere;");
         joinCss.ShouldContain("white-space: normal;");
         joinCss.ShouldContain(".routing-join-editor");
+        joinCss.ShouldContain(".routing-join-editor-surface");
         joinCss.ShouldContain(".routing-join-config-row");
-        joinCss.ShouldContain(".routing-join-matching-workspace");
+        joinCss.ShouldContain(".routing-join-matching-section");
         joinCss.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         joinCss.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
-        joinCss.ShouldContain("gap: 12px;");
-        joinCss.ShouldContain("padding: 14px;");
+        joinCss.ShouldContain("gap: 10px;");
+        joinCss.ShouldContain("padding: 12px;");
         joinCss.ShouldNotContain(".routing-join-panel-header");
         joinCss.ShouldNotContain(".routing-join-panel-kicker");
         joinCss.ShouldNotContain(".routing-join-panel-token");
@@ -7777,6 +7785,8 @@ public sealed class DashboardEventFilterCatalogTests
         joinCss.ShouldNotContain(".routing-join-limit-grid");
         joinCss.ShouldNotContain(".routing-join-form-grid");
         joinCss.ShouldNotContain(".routing-join-limit-panel");
+        joinCss.ShouldNotContain(".routing-join-matching-workspace");
+        joinCss.ShouldNotContain("padding: 14px;");
         joinCss.ShouldNotContain(".flow-node-filters");
         joinCss.ShouldNotContain("border-radius: 999px;");
     }
