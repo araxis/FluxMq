@@ -87,13 +87,13 @@
 
 .timer-node-editor {
     display: grid;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 
 .timer-node-mode {
     display: grid;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 
@@ -101,7 +101,7 @@
 .timer-node-settings-row {
     align-items: end;
     display: grid;
-    gap: 10px;
+    gap: 7px;
     min-width: 0;
 }
 
@@ -137,13 +137,13 @@
 
 .timer-node-settings-row.option {
     align-items: center;
-    min-height: 40px;
+    min-height: 38px;
 }
 
 .timer-node-option-cell {
     align-items: center;
     display: flex;
-    min-height: 36px;
+    min-height: 34px;
     min-width: 0;
     padding: 0 2px;
 }
@@ -154,7 +154,7 @@
 }
 
 .timer-node-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
-    min-height: 36px;
+    min-height: 34px;
 }
 
 .timer-node-editor ::deep(.mud-input > input.mud-input-root),

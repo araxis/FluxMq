@@ -84,21 +84,21 @@
 
 .json-schema-validator-editor {
     display: grid;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 
 .json-schema-validator-config-row {
     align-items: end;
     display: grid;
-    gap: 8px;
+    gap: 7px;
     grid-template-columns: minmax(160px, 210px) minmax(0, 1fr);
     min-width: 0;
 }
 
 .json-schema-validator-schema-area {
     display: grid;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
 }
 
@@ -120,7 +120,7 @@
 .json-schema-validator-file-row {
     align-items: center;
     display: grid;
-    gap: 8px;
+    gap: 7px;
     grid-template-columns: minmax(0, 1fr) 30px;
     min-width: 0;
 }
@@ -131,7 +131,7 @@
 }
 
 .json-schema-validator-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
-    min-height: 36px;
+    min-height: 34px;
 }
 
 .json-schema-validator-editor ::deep(.mud-input > input.mud-input-root),

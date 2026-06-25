@@ -215,14 +215,14 @@
 
 .metrics-editor {
     display: grid;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 
 .metrics-config-row {
     align-items: end;
     display: grid;
-    gap: 8px;
+    gap: 7px;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(112px, 150px);
     min-width: 0;
 }
@@ -230,7 +230,7 @@
 .metrics-readout-selector {
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     display: grid;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
     padding-top: 8px;
 }
@@ -238,7 +238,7 @@
 .metrics-readout-selector-header {
     align-items: center;
     display: grid;
-    gap: 8px;
+    gap: 7px;
     grid-template-columns: minmax(0, 1fr) auto;
     min-width: 0;
 }
@@ -268,7 +268,7 @@
 .metrics-readout-options {
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 34%, transparent);
     display: grid;
-    gap: 0 10px;
+    gap: 0 7px;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     min-width: 0;
 }
@@ -277,9 +277,9 @@
     align-items: center;
     border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 26%, transparent);
     display: grid;
-    gap: 7px;
+    gap: 6px;
     grid-template-columns: minmax(0, 1fr) 30px;
-    min-height: 36px;
+    min-height: 34px;
     min-width: 0;
     padding: 5px 2px;
 }
@@ -309,7 +309,7 @@
 }
 
 .metrics-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
-    min-height: 36px;
+    min-height: 34px;
 }
 
 .metrics-editor ::deep(.mud-input > input.mud-input-root) {

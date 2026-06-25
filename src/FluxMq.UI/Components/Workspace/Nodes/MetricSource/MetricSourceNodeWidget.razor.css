@@ -90,7 +90,7 @@
 
 .metric-source-editor {
     display: grid;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 
@@ -101,7 +101,7 @@
     font-size: 0.78rem;
     font-weight: 650;
     line-height: 1.35;
-    min-height: 36px;
+    min-height: 34px;
     min-width: 0;
     padding: 0 2px;
 }
@@ -112,7 +112,7 @@
 .metric-source-start-row {
     align-items: end;
     display: grid;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
 }
 
@@ -126,7 +126,7 @@
     color: color-mix(in srgb, var(--mud-palette-text-primary) 66%, var(--mud-palette-text-secondary));
     font-size: 0.78rem;
     font-weight: 650;
-    gap: 8px;
+    gap: 7px;
     grid-template-columns: 72px minmax(0, 1fr);
     line-height: 1.35;
     padding-top: 8px;
@@ -154,14 +154,14 @@
 .metric-source-parameter-group {
     align-items: stretch;
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 32%, transparent);
-    gap: 8px;
+    gap: 7px;
     padding-top: 8px;
 }
 
 .metric-source-parameter-heading {
     align-items: center;
     display: grid;
-    gap: 10px;
+    gap: 7px;
     grid-template-columns: minmax(0, 1fr) auto;
     min-width: 0;
     padding: 0 2px;
@@ -176,7 +176,7 @@
 }
 
 .metric-source-parameter-composer {
-    gap: 8px;
+    gap: 7px;
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -200,7 +200,7 @@
 }
 
 .metric-source-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
-    min-height: 36px;
+    min-height: 34px;
 }
 
 .metric-source-editor ::deep(.mud-input > input.mud-input-root),

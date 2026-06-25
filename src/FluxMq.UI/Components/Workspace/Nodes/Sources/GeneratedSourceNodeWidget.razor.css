@@ -112,14 +112,14 @@
 
 .generated-source-editor {
     display: grid;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 
 .generated-source-settings-row {
     align-items: center;
     display: grid;
-    gap: 8px;
+    gap: 7px;
     grid-template-columns: minmax(180px, 220px);
     justify-content: end;
     min-width: 0;
@@ -137,14 +137,14 @@
 .generated-source-message-row {
     align-items: center;
     display: grid;
-    gap: 8px;
+    gap: 7px;
     grid-template-columns: 30px minmax(150px, 0.9fr) minmax(240px, 1.4fr) 104px 84px minmax(132px, 0.72fr) 30px;
     min-width: 0;
 }
 
 .generated-source-table-header {
     border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 50%, transparent);
-    padding: 7px 0;
+    padding: 6px 0;
 }
 
 .generated-source-column-header {
@@ -180,7 +180,7 @@
 
 .generated-source-message-row {
     border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
-    padding: 8px 0;
+    padding: 6px 0;
 }
 
 .generated-source-message-row:last-child {
@@ -225,7 +225,7 @@
 }
 
 .generated-source-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
-    min-height: 36px;
+    min-height: 34px;
 }
 
 .generated-source-editor ::deep(.mud-input > input.mud-input-root),

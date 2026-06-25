@@ -90,13 +90,13 @@
 
 .generic-node-editor {
     display: grid;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 
 .generic-node-editor-meta-row {
     display: grid;
-    gap: 8px;
+    gap: 7px;
     grid-template-columns: minmax(0, 1fr) minmax(110px, 0.35fr) minmax(120px, 0.35fr);
     min-width: 0;
 }
@@ -142,10 +142,10 @@
 .generic-node-editor-port-row {
     align-items: center;
     display: grid;
-    gap: 10px;
+    gap: 7px;
     grid-template-columns: minmax(130px, 0.9fr) 82px minmax(160px, 1.1fr);
     min-width: 0;
-    padding: 9px 2px;
+    padding: 7px 2px;
 }
 
 .generic-node-editor-port-row + .generic-node-editor-port-row {
@@ -182,7 +182,7 @@
     color: var(--flux-text-muted);
     font-size: 0.78rem;
     font-weight: 650;
-    padding: 12px 10px;
+    padding: 10px 8px;
 }
 
 @media (max-width: 640px) {

@@ -6597,7 +6597,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".json-schema-validator-token");
         css.ShouldContain(".json-schema-validator-editor");
-        css.ShouldContain("gap: 10px;");
+        css.ShouldNotContain("gap: 10px;");
+        css.ShouldContain("gap: 8px;");
+        css.ShouldContain("gap: 7px;");
         css.ShouldNotContain(".json-schema-validator-editor-surface");
         css.ShouldContain(".json-schema-validator-config-row");
         css.ShouldNotContain(".json-schema-validator-field-label");
@@ -6614,6 +6616,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".json-schema-validator-inline-source");
         css.ShouldContain(".json-schema-validator-inline-source ::deep(.schema-monaco-editor)");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 30px;");
+        css.ShouldContain("min-height: 34px;");
         css.ShouldContain("height: clamp(520px, 68vh, 760px);");
         css.ShouldContain("min-height: 520px;");
         css.ShouldContain("@media (max-width: 640px)");
@@ -8348,6 +8351,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".generic-node-editor");
+        css.ShouldNotContain("gap: 10px;");
+        css.ShouldContain("gap: 8px;");
+        css.ShouldContain("gap: 7px;");
         css.ShouldNotContain(".generic-node-editor-surface");
         css.ShouldNotContain(".generic-node-editor-panel");
         css.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
@@ -8367,6 +8373,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".generic-node-editor-port-row");
         css.ShouldContain(".generic-node-editor-port-main");
         css.ShouldContain("grid-template-columns: minmax(130px, 0.9fr) 82px minmax(160px, 1.1fr);");
+        css.ShouldContain("padding: 7px 2px;");
+        css.ShouldNotContain("padding: 9px 2px;");
         css.ShouldNotContain(".generic-node-editor-port-type");
         css.ShouldContain(".generic-node-editor-empty");
         css.ShouldContain("@media (max-width: 640px)");
@@ -8505,6 +8513,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("linear-gradient");
         css.ShouldContain(".metrics-last-line");
         css.ShouldContain(".metrics-editor");
+        css.ShouldNotContain("gap: 10px;");
+        css.ShouldContain("gap: 8px;");
+        css.ShouldContain("gap: 7px;");
         css.ShouldNotContain(".metrics-editor-surface");
         css.ShouldContain(".metrics-config-row");
         css.ShouldNotContain(".metrics-field-label");
@@ -8513,6 +8524,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".metrics-readout-selector-header");
         css.ShouldContain(".metrics-readout-selector-header > div");
         css.ShouldContain(".metrics-readout-options");
+        css.ShouldContain("gap: 0 7px;");
+        css.ShouldNotContain("gap: 0 10px;");
         css.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         css.ShouldNotContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
         css.ShouldNotContain("padding: 12px;");
@@ -8524,6 +8537,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".metrics-readout-option-tile.selected");
         css.ShouldContain(".metrics-readout-option-tile.locked");
         css.ShouldContain(".metrics-readout-option-name");
+        css.ShouldContain("min-height: 34px;");
         css.ShouldContain("justify-self: end;");
         css.ShouldNotContain(".metrics-panel-header");
         css.ShouldNotContain(".metrics-panel-kicker");
@@ -8756,6 +8770,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".metric-source-editor");
+        css.ShouldNotContain("gap: 10px;");
+        css.ShouldContain("gap: 8px;");
+        css.ShouldContain("gap: 7px;");
         css.ShouldNotContain(".metric-source-settings-surface");
         css.ShouldNotContain(".metric-source-settings-title");
         css.ShouldContain(".metric-source-config-row");
@@ -8921,6 +8938,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".generated-source-editor");
+        css.ShouldNotContain("gap: 10px;");
+        css.ShouldContain("gap: 8px;");
+        css.ShouldContain("gap: 7px;");
         css.ShouldNotContain(".generated-source-editor-surface");
         css.ShouldNotContain(".generated-source-message-panel");
         css.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
@@ -8948,10 +8968,13 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".generated-source-message-fields");
         css.ShouldNotContain(".generated-source-message-detail");
         css.ShouldContain("grid-template-columns: 30px minmax(150px, 0.9fr) minmax(240px, 1.4fr) 104px 84px minmax(132px, 0.72fr) 30px;");
+        css.ShouldContain("padding: 6px 0;");
+        css.ShouldNotContain("padding: 8px 0;");
         css.ShouldContain(".generated-source-retain-toggle");
         css.ShouldNotContain(".generated-source-options-cell");
         css.ShouldNotContain(".generated-source-retain-cell");
-        css.ShouldContain("min-height: 36px;");
+        css.ShouldContain("min-height: 34px;");
+        css.ShouldNotContain("min-height: 36px;");
         css.ShouldContain(".generated-source-editor ::deep(.mud-input-control)");
         css.ShouldContain("@media (max-width: 720px)");
         css.ShouldNotContain(".generated-source-table-title");
@@ -9357,6 +9380,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".timer-node-editor");
         css.ShouldContain(".timer-node-mode");
+        css.ShouldNotContain("gap: 10px;");
+        css.ShouldContain("gap: 8px;");
+        css.ShouldContain("gap: 7px;");
         css.ShouldNotContain(".timer-node-editor-surface");
         css.ShouldContain(".timer-node-primary-row");
         css.ShouldContain(".timer-node-settings-row");
@@ -9376,7 +9402,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("padding: 14px;");
         css.ShouldContain(".timer-node-option-cell");
         css.ShouldContain("align-items: center;");
-        css.ShouldContain("min-height: 36px;");
+        css.ShouldContain("min-height: 34px;");
+        css.ShouldNotContain("min-height: 36px;");
+        css.ShouldNotContain("min-height: 40px;");
         css.ShouldContain(".timer-node-editor ::deep(.mud-input-control)");
         css.ShouldContain("@media (max-width: 760px)");
         css.ShouldNotContain(".timer-node-config-grid");
