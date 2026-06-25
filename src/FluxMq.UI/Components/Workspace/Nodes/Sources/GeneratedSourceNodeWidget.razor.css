@@ -126,18 +126,17 @@
     padding: 12px;
 }
 
-.generated-source-editor-toolbar {
+.generated-source-control-strip {
     align-items: center;
     display: grid;
     gap: 8px;
-    grid-template-columns: minmax(0, 1fr) 28px;
-    justify-self: end;
-    max-width: 224px;
+    grid-template-columns: minmax(180px, 220px) 28px;
+    justify-content: end;
     min-width: 0;
     width: 100%;
 }
 
-.generated-source-editor-toolbar ::deep(.generated-source-add-button.mud-icon-button) {
+.generated-source-control-strip ::deep(.generated-source-add-button.mud-icon-button) {
     color: var(--mud-palette-primary);
     height: 28px;
     justify-self: end;
@@ -147,60 +146,52 @@
     width: 28px;
 }
 
-.generated-source-message-header {
-    align-items: center;
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 34%, transparent);
-    color: var(--flux-text-muted);
+.generated-source-message-list {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 40%, transparent);
     display: grid;
-    font-size: 0.6rem;
-    font-weight: 780;
-    gap: 8px;
-    grid-template-columns: minmax(150px, 0.95fr) minmax(260px, 1.35fr) 132px minmax(132px, 0.72fr) 30px;
-    line-height: 1;
-    min-height: 26px;
+    gap: 0;
     min-width: 0;
-    padding: 10px 0 4px;
-    text-transform: uppercase;
-}
-
-.generated-source-message-header span {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.generated-source-message-header span:nth-child(3),
-.generated-source-message-header span:nth-child(5) {
-    text-align: center;
 }
 
 .generated-source-message-row {
     border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 56%, transparent);
-    display: grid;
-    gap: 8px;
-    min-width: 0;
-    padding: 8px 0 10px;
-}
-
-.generated-source-message-main {
     align-items: start;
     display: grid;
     gap: 8px;
-    grid-template-columns: minmax(150px, 0.95fr) minmax(260px, 1.35fr) 132px minmax(132px, 0.72fr) 30px;
+    grid-template-columns: 26px minmax(0, 1fr);
     min-width: 0;
+    padding: 12px 0;
 }
 
 .generated-source-message-row:last-child {
     border-bottom: 0;
 }
 
-.generated-source-options-cell {
+.generated-source-message-index {
+    align-items: center;
+    color: var(--flux-text-muted);
+    display: inline-flex;
+    font-size: 0.64rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 780;
+    height: 36px;
+    justify-content: center;
+    line-height: 1;
+    min-width: 0;
+}
+
+.generated-source-message-fields {
     align-items: center;
     display: grid;
-    gap: 7px;
-    grid-template-columns: minmax(0, 1fr) 28px;
-    min-height: 42px;
+    gap: 8px;
+    grid-template-columns: minmax(152px, 0.9fr) minmax(220px, 1.3fr) 112px 96px minmax(132px, 0.72fr) 30px;
+    min-width: 0;
+}
+
+.generated-source-retain-toggle {
+    align-items: center;
+    display: flex;
+    min-height: 36px;
     min-width: 0;
 }
 
@@ -239,16 +230,25 @@
     font-size: 0.72rem;
 }
 
-.generated-source-options-cell ::deep(.generated-source-retain-check) {
-    justify-self: center;
+.generated-source-retain-toggle ::deep(.generated-source-retain-check) {
     margin-inline-start: 0;
 }
 
-.generated-source-options-cell ::deep(.mud-checkbox) {
+.generated-source-retain-toggle ::deep(.mud-checkbox) {
     margin: 0;
 }
 
-.generated-source-message-main ::deep(.generated-source-remove-button.mud-icon-button) {
+.generated-source-retain-toggle ::deep(.mud-checkbox .mud-typography) {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 76%, var(--mud-palette-text-secondary));
+    font-size: 0.8rem;
+    font-weight: 650;
+    line-height: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.generated-source-message-fields ::deep(.generated-source-remove-button.mud-icon-button) {
     color: var(--flux-text-muted);
     height: 30px;
     justify-self: end;
@@ -268,15 +268,14 @@
 
 @media (max-width: 720px) {
     .generated-source-meta,
-    .generated-source-message-header,
-    .generated-source-message-main,
-    .generated-source-editor-toolbar,
-    .generated-source-options-cell {
+    .generated-source-message-row,
+    .generated-source-message-fields,
+    .generated-source-control-strip {
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .generated-source-options-cell ::deep(.generated-source-retain-check) {
-        justify-self: start;
+    .generated-source-message-index {
+        justify-content: start;
     }
 
     .generated-source-contract {
