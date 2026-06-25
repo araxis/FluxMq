@@ -1,24 +1,24 @@
 .stored-session-source-summary {
     display: grid;
-    gap: 5px;
+    gap: 4px;
     margin-top: 3px;
     min-width: 0;
 }
 
 .stored-session-source-meta {
     display: grid;
-    gap: 3px;
+    gap: 2px;
     grid-template-columns: minmax(0, 1fr) 76px 64px 64px;
     min-width: 0;
 }
 
 .stored-session-source-meta-item {
     align-content: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 24%, transparent);
+    background: color-mix(in srgb, var(--flux-surface-2) 30%, transparent);
     border-radius: 4px;
     display: grid;
     gap: 2px;
-    min-height: 30px;
+    min-height: 28px;
     min-width: 0;
     padding: 4px 5px;
 }
@@ -47,7 +47,7 @@
 }
 
 .stored-session-source-contract {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 62%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 68%, transparent);
     display: grid;
     gap: 4px 3px;
     grid-template-columns: repeat(5, minmax(0, auto));
@@ -82,39 +82,18 @@
     min-width: 0;
 }
 
-.stored-session-source-editor-surface {
-    background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
-    border-radius: 6px;
+.stored-session-source-editor-grid {
+    align-items: end;
     display: grid;
     gap: 8px;
+    grid-template-columns: minmax(0, 1fr) 128px 142px minmax(120px, 148px) minmax(120px, 148px);
     min-width: 0;
-    padding: 12px;
-}
-
-.stored-session-source-editor-grid {
-    align-items: center;
-    display: grid;
-    gap: 7px 10px;
-    grid-template-columns: minmax(0, 1fr) 128px 142px minmax(120px, 150px) minmax(120px, 150px);
-    min-width: 0;
-}
-
-.stored-session-source-field-label {
-    color: color-mix(in srgb, var(--mud-palette-text-primary) 68%, var(--flux-text-muted));
-    font-size: 0.62rem;
-    font-weight: 780;
-    line-height: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .stored-session-source-timing-option {
     align-items: center;
     display: flex;
-    min-height: 42px;
+    min-height: 36px;
     min-width: 0;
     padding: 0 2px;
 }
@@ -125,9 +104,9 @@
     border-radius: 5px;
     display: grid;
     gap: 3px;
-    min-height: 38px;
+    min-height: 36px;
     min-width: 0;
-    padding: 6px 8px;
+    padding: 5px 8px;
 }
 
 .stored-session-source-session-state span {
@@ -219,10 +198,6 @@
     .stored-session-source-meta,
     .stored-session-source-editor-grid {
         grid-template-columns: minmax(0, 1fr);
-    }
-
-    .stored-session-source-field-label {
-        display: none;
     }
 
     .stored-session-source-contract {

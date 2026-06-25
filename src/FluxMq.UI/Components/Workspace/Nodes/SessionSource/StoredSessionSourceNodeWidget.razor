@@ -47,82 +47,74 @@
             @{
                 var sessions = Live.StoredSessions;
             }
-            <section class="stored-session-source-editor-surface" aria-label="Stored session source configuration">
-                <div class="stored-session-source-editor-grid" aria-label="Stored session source configuration fields">
-                    <span class="stored-session-source-field-label">Session</span>
-                    <span class="stored-session-source-field-label">Stored</span>
-                    <span class="stored-session-source-field-label">Timing</span>
-                    <span class="stored-session-source-field-label">Speed</span>
-                    <span class="stored-session-source-field-label">Buffer</span>
-
-                    @if (sessions.Count > 0)
-                    {
-                        <MudSelect T="string"
-                                   Label="Session"
-                                   @bind-Value="_sessionId"
-                                   aria-label="Stored session"
-                                   Variant="Variant.Outlined"
-                                   Margin="Margin.Dense"
-                                   Dense="true"
-                                   Class="stored-session-source-session-field"
-                                   ToStringFunc="@(id => sessions.FirstOrDefault(s => s.Id.ToString() == id)?.Name ?? id)">
-                            @foreach (var session in sessions)
-                            {
-                                <MudSelectItem Value="@session.Id.ToString()">
-                                    <div class="stored-session-source-session-option">
-                                        <span>@session.Name</span>
-                                        @if (!string.IsNullOrWhiteSpace(session.ProjectName) && session.ProjectName != "Default")
-                                        {
-                                            <small>@session.ProjectName</small>
-                                        }
-                                    </div>
-                                </MudSelectItem>
-                            }
-                        </MudSelect>
-                    }
-                    else
-                    {
-                        <div class="stored-session-source-empty" role="status">
-                            No recorded sessions found. Record a session first.
-                        </div>
-                    }
-                    <div class="stored-session-source-session-state" aria-label="Stored sessions">
-                        <span>Stored sessions</span>
-                        <strong>@SessionOptionCountCaption</strong>
+            <div class="stored-session-source-editor-grid" aria-label="Stored session source configuration fields">
+                @if (sessions.Count > 0)
+                {
+                    <MudSelect T="string"
+                               Label="Session"
+                               @bind-Value="_sessionId"
+                               aria-label="Stored session"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true"
+                               Class="stored-session-source-session-field"
+                               ToStringFunc="@(id => sessions.FirstOrDefault(s => s.Id.ToString() == id)?.Name ?? id)">
+                        @foreach (var session in sessions)
+                        {
+                            <MudSelectItem Value="@session.Id.ToString()">
+                                <div class="stored-session-source-session-option">
+                                    <span>@session.Name</span>
+                                    @if (!string.IsNullOrWhiteSpace(session.ProjectName) && session.ProjectName != "Default")
+                                    {
+                                        <small>@session.ProjectName</small>
+                                    }
+                                </div>
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+                else
+                {
+                    <div class="stored-session-source-empty" role="status">
+                        No recorded sessions found. Record a session first.
                     </div>
-                    <div class="stored-session-source-timing-option">
-                        <MudCheckBox T="bool"
-                                     @bind-Value="_preserveTiming"
-                                     Label="Preserve timing"
-                                     aria-label="Preserve original session timing"
-                                     Dense="true"
-                                     Class="stored-session-source-check" />
-                    </div>
-
-                    <MudNumericField T="double"
-                                     Label="Playback speed"
-                                     @bind-Value="_speed"
-                                     aria-label="Stored session playback speed"
-                                     Min="0.1"
-                                     Max="100"
-                                     Step="0.1"
-                                     Disabled="@(!_preserveTiming)"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Class="stored-session-source-speed-field" />
-
-                    <MudNumericField T="int"
-                                     Label="Output buffer"
-                                     @bind-Value="_boundedCapacity"
-                                     aria-label="Stored session output buffer"
-                                     Min="1"
-                                     Max="100000"
-                                     Step="100"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Class="stored-session-source-buffer-field" />
+                }
+                <div class="stored-session-source-session-state" aria-label="Stored sessions">
+                    <span>Stored sessions</span>
+                    <strong>@SessionOptionCountCaption</strong>
                 </div>
-            </section>
+                <div class="stored-session-source-timing-option">
+                    <MudCheckBox T="bool"
+                                 @bind-Value="_preserveTiming"
+                                 Label="Preserve timing"
+                                 aria-label="Preserve original session timing"
+                                 Dense="true"
+                                 Class="stored-session-source-check" />
+                </div>
+
+                <MudNumericField T="double"
+                                 Label="Playback speed"
+                                 @bind-Value="_speed"
+                                 aria-label="Stored session playback speed"
+                                 Min="0.1"
+                                 Max="100"
+                                 Step="0.1"
+                                 Disabled="@(!_preserveTiming)"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="stored-session-source-speed-field" />
+
+                <MudNumericField T="int"
+                                 Label="Output buffer"
+                                 @bind-Value="_boundedCapacity"
+                                 aria-label="Stored session output buffer"
+                                 Min="1"
+                                 Max="100000"
+                                 Step="100"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="stored-session-source-buffer-field" />
+            </div>
         </div>
     </Editor>
 </NodeWidgetShell>
