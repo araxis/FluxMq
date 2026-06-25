@@ -8483,6 +8483,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("value");
         markup.ShouldContain("metric-source-editor");
         markup.ShouldContain("aria-label=\"Metric source settings\"");
+        markup.ShouldContain("metric-source-settings-surface");
+        markup.ShouldContain("metric-source-settings-title");
         markup.ShouldContain("metric-source-config-row");
         markup.ShouldContain("aria-label=\"Metric source configuration\"");
         markup.ShouldContain("Class=\"metric-source-metric-field\"");
@@ -8490,7 +8492,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("metric-source-parameter-surface");
         markup.ShouldContain("metric-source-parameter-summary");
         markup.ShouldContain("ParameterCountCaption");
-        markup.ShouldContain("metric-source-parameter-grid");
+        markup.ShouldContain("metric-source-parameter-composer");
+        markup.ShouldNotContain("metric-source-parameter-grid");
         markup.ShouldContain("aria-label=\"Metric parameters\"");
         markup.ShouldContain("metric-source-parameter-cell");
         markup.ShouldContain("ParameterHelpTitle(parameter)");
@@ -8543,6 +8546,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".metric-source-editor");
+        css.ShouldContain(".metric-source-settings-surface");
+        css.ShouldContain(".metric-source-settings-title");
         css.ShouldContain(".metric-source-config-row");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 150px;");
         css.ShouldContain(".metric-source-description-row");
@@ -8552,11 +8557,14 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
         css.ShouldContain("padding: 12px;");
         css.ShouldNotContain("padding: 14px;");
-        css.ShouldContain(".metric-source-parameter-grid");
+        css.ShouldContain(".metric-source-parameter-composer");
+        css.ShouldNotContain(".metric-source-parameter-grid");
         css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
         css.ShouldContain(".metric-source-parameter-cell");
         css.ShouldNotContain(".metric-source-parameter-note");
         css.ShouldContain(".metric-source-start-row");
+        css.ShouldContain("min-height: 34px;");
+        css.ShouldNotContain("min-height: 38px;");
         css.ShouldContain(".metric-source-editor ::deep(.mud-input-control)");
         css.ShouldContain("@media (max-width: 720px)");
         css.ShouldNotContain(".metric-source-main-grid");
