@@ -21,7 +21,7 @@
                 </div>
                 <div class="connection-state-trigger-meta-item">
                     <span>Output</span>
-                    <strong>MqttClientStateChanged</strong>
+                    <strong>Client state</strong>
                 </div>
                 <div class="connection-state-trigger-meta-item">
                     <span>Mode</span>
@@ -44,37 +44,30 @@
             var brokerOptions = BrokerOptions;
         }
         <div class="connection-state-trigger-editor" aria-label="Connection state trigger settings">
-            <section class="connection-state-trigger-editor-surface" aria-label="Broker state source">
-                <div class="connection-state-trigger-editor-title">
-                    <span>Broker state source</span>
-                    <small>Emit an event whenever the selected broker connection changes state</small>
-                </div>
-
-                @if (brokerOptions.Count > 0)
-                {
-                    <MudSelect T="string"
-                               Label="Broker connection"
-                               @bind-Value="_connection"
-                               Variant="Variant.Outlined"
-                               Margin="Margin.Dense"
-                               Dense="true"
-                               Class="connection-state-trigger-broker-field">
-                        @foreach (var option in brokerOptions)
-                        {
-                            <MudSelectItem Value="@option.Name">@option.Label</MudSelectItem>
-                        }
-                    </MudSelect>
-                }
-                else
-                {
-                    <MudTextField T="string"
-                                  Label="Connection name"
-                                  @bind-Value="_connection"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Class="connection-state-trigger-broker-field" />
-                }
-            </section>
+            @if (brokerOptions.Count > 0)
+            {
+                <MudSelect T="string"
+                           Label="Broker connection"
+                           @bind-Value="_connection"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Dense="true"
+                           Class="connection-state-trigger-broker-field">
+                    @foreach (var option in brokerOptions)
+                    {
+                        <MudSelectItem Value="@option.Name">@option.Label</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+            else
+            {
+                <MudTextField T="string"
+                              Label="Connection name"
+                              @bind-Value="_connection"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Class="connection-state-trigger-broker-field" />
+            }
         </div>
     </Editor>
 </NodeWidgetShell>
