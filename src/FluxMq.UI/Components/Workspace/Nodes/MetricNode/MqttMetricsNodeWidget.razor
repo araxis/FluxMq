@@ -20,102 +20,108 @@
             var metricReadouts = MetricReadouts;
             var readoutColumns = MqttMetricsNodeModel.NormalizeMetricCardColumns(Model.MetricCardColumns);
         }
-        <div class="metrics-readout-grid" style="--metric-readout-columns:@readoutColumns">
-            @foreach (var readout in metricReadouts)
-            {
-                <div class="metrics-readout @readout.CssClass" aria-label="@($"{readout.Label}: {readout.Value}")">
-                    <span class="metrics-readout-value">@readout.Value</span>
-                    <span class="metrics-readout-label">@readout.Label</span>
-                </div>
-            }
-        </div>
-
-        @if (_topTopics.Count > 0)
-        {
-            <div class="metrics-top-topics">
-                @foreach (var entry in _topTopics)
+        <div class="metrics-summary">
+            <div class="metrics-readout-strip"
+                 style="--metric-readout-columns:@readoutColumns"
+                 aria-label="MQTT metrics readouts">
+                @foreach (var readout in metricReadouts)
                 {
-                    var pct = _snapshot.MessageCount == 0 ? 0 : (double)entry.Count / _snapshot.MessageCount * 100.0;
-                    <div class="metrics-topic-row">
-                        <span class="metrics-topic-name" title="@entry.Topic">@TrimTopic(entry.Topic)</span>
-                        <div class="metrics-topic-bar">
-                            <div class="metrics-topic-bar-fill" style="width:@pct.ToString("F0", System.Globalization.CultureInfo.InvariantCulture)%"></div>
-                        </div>
-                        <span class="metrics-topic-count">@entry.Count</span>
+                    <div class="metrics-readout-token @readout.CssClass" aria-label="@($"{readout.Label}: {readout.Value}")">
+                        <span class="metrics-readout-label">@readout.Label</span>
+                        <strong class="metrics-readout-value">@readout.Value</strong>
                     </div>
                 }
             </div>
-        }
-        else
-        {
-            <div class="metrics-empty">
-                <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" />
-                <span>Waiting for traffic…</span>
-            </div>
-        }
 
-        @if (_snapshot.LastTopic is not null)
-        {
-            <div class="metrics-last">
-                <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Small" />
-                <span class="metrics-last-topic" title="@_snapshot.LastTopic">@TrimTopic(_snapshot.LastTopic)</span>
-                <span class="metrics-last-time">@RelativeTime(_snapshot.LastReceivedAt)</span>
-            </div>
-        }
+            @if (_topTopics.Count > 0)
+            {
+                <div class="metrics-topic-list" aria-label="Top MQTT topics">
+                    <span class="metrics-section-label">Top topics</span>
+                    @foreach (var entry in _topTopics)
+                    {
+                        var pct = _snapshot.MessageCount == 0 ? 0 : (double)entry.Count / _snapshot.MessageCount * 100.0;
+                        <div class="metrics-topic-row">
+                            <span class="metrics-topic-name" title="@entry.Topic">@TrimTopic(entry.Topic)</span>
+                            <div class="metrics-topic-bar">
+                                <div class="metrics-topic-bar-fill" style="width:@pct.ToString("F0", System.Globalization.CultureInfo.InvariantCulture)%"></div>
+                            </div>
+                            <span class="metrics-topic-count">@entry.Count</span>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="metrics-empty" role="status">
+                    <span>Waiting for traffic</span>
+                </div>
+            }
+
+            @if (_snapshot.LastTopic is not null)
+            {
+                <div class="metrics-last-line">
+                    <span class="metrics-section-label">Last</span>
+                    <span class="metrics-last-topic" title="@_snapshot.LastTopic">@TrimTopic(_snapshot.LastTopic)</span>
+                    <span class="metrics-last-time">@RelativeTime(_snapshot.LastReceivedAt)</span>
+                </div>
+            }
+        </div>
     </Body>
     <Editor>
         <div class="metrics-editor" aria-label="MQTT metrics settings">
-            <div class="metrics-config-row" aria-label="MQTT metrics configuration">
-                <MudNumericField T="int"
-                                 Label="Input buffer"
-                                 @bind-Value="_boundedCapacity"
-                                 Min="1"
-                                 Max="100000"
-                                 Step="100"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Class="metrics-buffer-field" />
-                <MudNumericField T="double"
-                                 Label="Rate window seconds"
-                                 @bind-Value="_rateWindowSeconds"
-                                 Min="1"
-                                 Step="1"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Class="metrics-rate-window-field" />
-                <MudNumericField T="int"
-                                 Label="Readout columns"
-                                 @bind-Value="_metricCardColumns"
-                                 Min="@MqttMetricsNodeModel.MinMetricCardColumns"
-                                 Max="@MqttMetricsNodeModel.MaxMetricCardColumns"
-                                 Step="1"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Class="metrics-readout-columns-field" />
-            </div>
-
-            <section class="metrics-readout-workspace" aria-label="Visible metric readouts">
-                <div class="metrics-readout-table-head" aria-hidden="true">
-                    <span>Readout</span>
-                    <span>Visible</span>
+            <section class="metrics-editor-surface" aria-label="MQTT metrics configuration">
+                <div class="metrics-config-row">
+                    <MudNumericField T="int"
+                                     Label="Input buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="metrics-buffer-field" />
+                    <MudNumericField T="double"
+                                     Label="Rate window seconds"
+                                     @bind-Value="_rateWindowSeconds"
+                                     Min="1"
+                                     Step="1"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="metrics-rate-window-field" />
+                    <MudNumericField T="int"
+                                     Label="Readout columns"
+                                     @bind-Value="_metricCardColumns"
+                                     Min="@MqttMetricsNodeModel.MinMetricCardColumns"
+                                     Max="@MqttMetricsNodeModel.MaxMetricCardColumns"
+                                     Step="1"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="metrics-readout-columns-field" />
                 </div>
-                <div class="metrics-readout-table-body">
-                    @foreach (var option in DisplayOptions)
-                    {
-                        var selected = IsDisplayMetricSelected(option.Id);
-                        var disabled = selected && _displayMetrics.Count == 1;
 
-                        <div class="metrics-readout-option-row">
-                            <span class="metrics-readout-option-name">@option.Label</span>
-                            <MudCheckBox T="bool"
-                                         Value="@selected"
-                                         ValueChanged="@(value => ToggleDisplayMetric(option.Id, value))"
-                                         Disabled="@disabled"
-                                         Dense="true"
-                                         aria-label="@($"Show {option.Label}")"
-                                         Class="metrics-readout-option" />
-                        </div>
-                    }
+                <div class="metrics-readout-workspace" aria-label="Visible metric readouts">
+                    <div class="metrics-readout-table-head" aria-hidden="true">
+                        <span>Readout</span>
+                        <span>Visible</span>
+                    </div>
+                    <div class="metrics-readout-table-body">
+                        @foreach (var option in DisplayOptions)
+                        {
+                            var selected = IsDisplayMetricSelected(option.Id);
+                            var disabled = selected && _displayMetrics.Count == 1;
+
+                            <div class="metrics-readout-option-row">
+                                <span class="metrics-readout-option-name">@option.Label</span>
+                                <MudCheckBox T="bool"
+                                             Value="@selected"
+                                             ValueChanged="@(value => ToggleDisplayMetric(option.Id, value))"
+                                             Disabled="@disabled"
+                                             Dense="true"
+                                             aria-label="@($"Show {option.Label}")"
+                                             Class="metrics-readout-option" />
+                            </div>
+                        }
+                    </div>
                 </div>
             </section>
         </div>
