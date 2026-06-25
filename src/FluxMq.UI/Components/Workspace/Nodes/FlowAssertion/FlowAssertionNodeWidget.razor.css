@@ -1,24 +1,24 @@
 .flow-assertion-summary {
     display: grid;
-    gap: 5px;
+    gap: 4px;
     margin-top: 3px;
     min-width: 0;
 }
 
 .flow-assertion-meta {
     display: grid;
-    gap: 3px;
-    grid-template-columns: minmax(0, 1fr) 88px 54px;
+    gap: 2px;
+    grid-template-columns: minmax(0, 1fr) 82px 54px;
     min-width: 0;
 }
 
 .flow-assertion-meta-item {
     align-content: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 24%, transparent);
+    background: color-mix(in srgb, var(--flux-surface-2) 30%, transparent);
     border-radius: 4px;
     display: grid;
     gap: 2px;
-    min-height: 30px;
+    min-height: 28px;
     min-width: 0;
     padding: 4px 5px;
 }
@@ -47,7 +47,7 @@
 }
 
 .flow-assertion-contracts {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 62%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 68%, transparent);
     display: grid;
     gap: 5px;
     min-width: 0;
@@ -94,7 +94,7 @@
 }
 
 .flow-assertion-expression-preview {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 62%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 68%, transparent);
     color: color-mix(in srgb, var(--mud-palette-text-primary) 74%, var(--mud-palette-text-secondary));
     font-size: 0.66rem;
     font-weight: 700;
@@ -112,87 +112,42 @@
 
 .flow-assertion-editor {
     display: grid;
-    gap: 12px;
+    gap: 10px;
     min-width: 0;
-}
-
-.flow-assertion-editor-surface {
-    background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
-    border-radius: 6px;
-    display: grid;
-    gap: 12px;
-    min-width: 0;
-    padding: 12px;
 }
 
 .flow-assertion-config-row {
-    align-items: start;
-    border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 34%, transparent);
+    align-items: end;
     display: grid;
     gap: 8px;
-    grid-template-columns: minmax(220px, 1.25fr) minmax(180px, 1fr) 150px;
-    min-width: 0;
-    padding-bottom: 12px;
-}
-
-.flow-assertion-rule-surface {
-    display: grid;
-    gap: 8px;
+    grid-template-columns: minmax(220px, 1.24fr) minmax(180px, 1fr) 138px;
     min-width: 0;
 }
 
-.flow-assertion-rule-title {
-    display: grid;
-    gap: 2px;
-    min-width: 0;
-}
-
-.flow-assertion-rule-title span {
-    color: color-mix(in srgb, var(--mud-palette-text-primary) 84%, var(--mud-palette-text-secondary));
-    font-size: 0.76rem;
-    font-weight: 760;
-    line-height: 1;
-    min-width: 0;
-}
-
-.flow-assertion-rule-title small {
-    color: var(--flux-text-muted);
-    font-size: 0.62rem;
-    font-weight: 650;
-    line-height: 1;
-    min-width: 0;
-    overflow-wrap: anywhere;
-}
-
-.flow-assertion-rule-composer {
+.flow-assertion-rule-row {
     align-items: stretch;
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     display: grid;
     gap: 8px;
-    grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.55fr);
+    grid-template-columns: minmax(0, 1.52fr) minmax(240px, 0.48fr);
     min-width: 0;
+    padding-top: 8px;
 }
 
 .flow-assertion-rule-sidecar {
-    background: color-mix(in srgb, var(--flux-surface-2) 7%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 24%, transparent);
-    border-radius: 5px;
     display: grid;
-    gap: 10px;
+    gap: 8px;
     grid-template-rows: auto minmax(0, 1fr);
     min-width: 0;
-    padding: 7px;
 }
 
 .flow-assertion-reference {
     align-content: start;
-    background: color-mix(in srgb, var(--flux-surface-2) 7%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 24%, transparent);
-    border-radius: 5px;
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     display: grid;
     gap: 6px;
     min-width: 0;
-    padding: 9px;
+    padding: 8px 1px 0;
 }
 
 .flow-assertion-reference-label {
@@ -237,11 +192,11 @@
 }
 
 .flow-assertion-editor ::deep(.flow-assertion-expression-field textarea.mud-input-root) {
-    min-height: 224px;
+    min-height: 268px;
 }
 
 .flow-assertion-editor ::deep(.flow-assertion-message-field textarea.mud-input-root) {
-    min-height: 88px;
+    min-height: 96px;
 }
 
 .flow-assertion-name-field,
@@ -252,10 +207,10 @@
     min-width: 0;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 760px) {
     .flow-assertion-meta,
     .flow-assertion-config-row,
-    .flow-assertion-rule-composer {
+    .flow-assertion-rule-row {
         grid-template-columns: minmax(0, 1fr);
     }
 
