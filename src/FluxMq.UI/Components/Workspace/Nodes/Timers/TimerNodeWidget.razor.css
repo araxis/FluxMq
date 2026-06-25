@@ -1,24 +1,24 @@
 .timer-node-summary {
     display: grid;
-    gap: 5px;
+    gap: 4px;
     margin-top: 3px;
     min-width: 0;
 }
 
 .timer-node-meta {
     display: grid;
-    gap: 3px;
+    gap: 2px;
     grid-template-columns: 72px minmax(0, 1fr) minmax(0, 0.82fr) 64px;
     min-width: 0;
 }
 
 .timer-node-meta-item {
     align-content: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 24%, transparent);
+    background: color-mix(in srgb, var(--flux-surface-2) 30%, transparent);
     border-radius: 4px;
     display: grid;
     gap: 2px;
-    min-height: 30px;
+    min-height: 28px;
     min-width: 0;
     padding: 4px 5px;
 }
@@ -47,7 +47,7 @@
 }
 
 .timer-node-contract {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 62%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 68%, transparent);
     display: grid;
     gap: 4px 3px;
     grid-template-columns: repeat(4, minmax(0, auto));
@@ -87,18 +87,14 @@
 
 .timer-node-editor {
     display: grid;
-    gap: 8px;
+    gap: 10px;
     min-width: 0;
 }
 
-.timer-node-editor-surface {
-    background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
-    border-radius: 6px;
+.timer-node-mode {
     display: grid;
-    gap: 12px;
+    gap: 10px;
     min-width: 0;
-    padding: 12px;
 }
 
 .timer-node-primary-row,
@@ -119,8 +115,8 @@
 }
 
 .timer-node-settings-row {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 36%, transparent);
-    padding-top: 12px;
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
+    padding-top: 8px;
 }
 
 .timer-node-settings-row.interval {

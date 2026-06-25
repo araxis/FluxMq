@@ -48,23 +48,23 @@
         <div class="timer-node-editor" aria-label="Timer settings">
             @if (Node is TimerIntervalNodeModel)
             {
-                <section class="timer-node-editor-surface" aria-label="Interval timer settings">
+                <div class="timer-node-mode interval" aria-label="Interval timer settings">
                     <div class="timer-node-primary-row interval">
                         <MudNumericField T="int"
                                           Label="Interval ms"
                                           @bind-Value="_intervalMilliseconds"
-                                         Min="1"
-                                         Max="86400000"
-                                         Step="100"
-                                         Variant="Variant.Outlined"
-                                         Margin="Margin.Dense"
-                                         Class="timer-node-field" />
+                                          Min="1"
+                                          Max="86400000"
+                                          Step="100"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          Class="timer-node-field" />
                         <MudNumericField T="int"
-                                         Label="Initial delay ms"
-                                         @bind-Value="_initialDelayMilliseconds"
-                                         Min="0"
-                                         Max="86400000"
-                                         Step="100"
+                                          Label="Initial delay ms"
+                                          @bind-Value="_initialDelayMilliseconds"
+                                          Min="0"
+                                          Max="86400000"
+                                          Step="100"
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="timer-node-field" />
@@ -89,11 +89,11 @@
                                          Class="timer-node-check" />
                         </div>
                     </div>
-                </section>
+                </div>
             }
             else if (Node is TimerScheduleNodeModel)
             {
-                <section class="timer-node-editor-surface" aria-label="Scheduled timer settings">
+                <div class="timer-node-mode schedule" aria-label="Scheduled timer settings">
                     <div class="timer-node-primary-row schedule">
                         <MudTextField T="string"
                                       Label="Cron"
@@ -121,11 +121,11 @@
                                          Class="timer-node-field" />
                         @OutputBufferField()
                     </div>
-                </section>
+                </div>
             }
             else if (Node is TimerDelayNodeModel)
             {
-                <section class="timer-node-editor-surface" aria-label="Delay timer settings">
+                <div class="timer-node-mode passthrough" aria-label="Delay timer settings">
                     <div class="timer-node-primary-row passthrough">
                         @InputTypeSelect()
                         <MudNumericField T="int"
@@ -142,11 +142,11 @@
                     <div class="timer-node-settings-row passthrough" aria-label="Delay timer buffer">
                         @InputBufferField()
                     </div>
-                </section>
+                </div>
             }
             else if (Node is TimerDebounceNodeModel)
             {
-                <section class="timer-node-editor-surface" aria-label="Debounce timer settings">
+                <div class="timer-node-mode passthrough" aria-label="Debounce timer settings">
                     <div class="timer-node-primary-row passthrough">
                         @InputTypeSelect()
                         <MudNumericField T="int"
@@ -163,11 +163,11 @@
                     <div class="timer-node-settings-row passthrough" aria-label="Debounce timer buffer">
                         @InputBufferField()
                     </div>
-                </section>
+                </div>
             }
             else if (Node is TimerThrottleNodeModel)
             {
-                <section class="timer-node-editor-surface" aria-label="Throttle timer settings">
+                <div class="timer-node-mode passthrough" aria-label="Throttle timer settings">
                     <div class="timer-node-primary-row passthrough throttle">
                         @InputTypeSelect()
                         <MudNumericField T="int"
@@ -191,7 +191,7 @@
                                          Class="timer-node-check" />
                         </div>
                     </div>
-                </section>
+                </div>
             }
         </div>
     </Editor>

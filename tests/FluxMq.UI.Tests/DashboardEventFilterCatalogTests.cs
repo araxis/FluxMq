@@ -9201,7 +9201,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ScheduleTick");
         markup.ShouldContain("timer-node-editor");
         markup.ShouldContain("aria-label=\"Timer settings\"");
-        markup.ShouldContain("timer-node-editor-surface");
+        markup.ShouldContain("timer-node-mode interval");
+        markup.ShouldContain("timer-node-mode schedule");
+        markup.ShouldContain("timer-node-mode passthrough");
+        markup.ShouldNotContain("timer-node-editor-surface");
         markup.ShouldContain("timer-node-primary-row interval");
         markup.ShouldContain("aria-label=\"Interval timer settings\"");
         markup.ShouldContain("timer-node-settings-row interval");
@@ -9285,7 +9288,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".timer-node-editor");
-        css.ShouldContain(".timer-node-editor-surface");
+        css.ShouldContain(".timer-node-mode");
+        css.ShouldNotContain(".timer-node-editor-surface");
         css.ShouldContain(".timer-node-primary-row");
         css.ShouldContain(".timer-node-settings-row");
         css.ShouldNotContain(".timer-node-config-row");
@@ -9296,10 +9300,11 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(118px, 150px) minmax(130px, 170px) minmax(170px, 1fr);");
         css.ShouldContain("grid-template-columns: minmax(118px, 150px) minmax(130px, 170px);");
         css.ShouldContain("grid-template-columns: minmax(130px, 170px) minmax(180px, 1fr);");
-        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
-        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
-        css.ShouldContain("border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 36%, transparent);");
-        css.ShouldContain("padding: 12px;");
+        css.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        css.ShouldNotContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldContain("border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);");
+        css.ShouldNotContain("padding: 12px;");
+        css.ShouldContain("padding-top: 8px;");
         css.ShouldNotContain("padding: 14px;");
         css.ShouldContain(".timer-node-option-cell");
         css.ShouldContain("align-items: center;");
