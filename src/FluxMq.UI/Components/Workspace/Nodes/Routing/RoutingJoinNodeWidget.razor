@@ -81,7 +81,12 @@
                                      Class="routing-join-buffer-field" />
                 </div>
 
-                <div class="routing-join-matching-section" aria-label="Routing join matching rule">
+                <div class="routing-join-match-composer" aria-label="Routing join matching rule">
+                    <div class="routing-join-match-title">
+                        <span>Match rule</span>
+                        <small>Pair left and right messages by normalized key</small>
+                    </div>
+
                     <div class="routing-join-key-row" aria-label="Routing join key expressions">
                         <MudTextField T="string"
                                       Label="Left key expression"
@@ -100,7 +105,7 @@
                                       Placeholder="topic" />
                     </div>
 
-                    <div class="routing-join-limit-row" aria-label="Routing join limit settings">
+                    <div class="routing-join-control-row" aria-label="Routing join limit settings">
                         <MudNumericField T="int"
                                          Label="Timeout ms"
                                          @bind-Value="_timeoutMilliseconds"
