@@ -43,33 +43,53 @@
     </Body>
     <Editor>
         <div class="routing-correlation-editor" aria-label="Routing correlation settings">
-            <div class="routing-correlation-rule-panel" aria-label="Routing correlation rule">
-                <div class="routing-correlation-source-grid" aria-label="Routing correlation source settings">
-                    <MudSelect T="string"
-                               Label="Input type"
-                               @bind-Value="_inputType"
-                               Variant="Variant.Outlined"
-                               Margin="Margin.Dense"
-                               Dense="true"
-                               Class="routing-correlation-input-field">
-                        @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
-                        {
-                            <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
-                        }
-                    </MudSelect>
+            <section class="routing-correlation-config-row" aria-label="Routing correlation source settings">
+                <MudSelect T="string"
+                           Label="Input type"
+                           @bind-Value="_inputType"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Dense="true"
+                           Class="routing-correlation-input-field">
+                    @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                    {
+                        <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                    }
+                </MudSelect>
 
-                    <MudNumericField T="int"
-                                     Label="Input buffer"
-                                     @bind-Value="_boundedCapacity"
-                                     Min="1"
-                                     Max="100000"
-                                     Step="100"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Class="routing-correlation-buffer-field" />
-                </div>
+                <MudNumericField T="int"
+                                 Label="Input buffer"
+                                 @bind-Value="_boundedCapacity"
+                                 Min="1"
+                                 Max="100000"
+                                 Step="100"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="routing-correlation-buffer-field" />
 
-                <div class="routing-correlation-expression-grid" aria-label="Routing correlation expressions">
+                <MudNumericField T="int"
+                                 Label="Timeout ms"
+                                 @bind-Value="_timeoutMilliseconds"
+                                 Min="1"
+                                 Max="86400000"
+                                 Step="1000"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="routing-correlation-timeout-field" />
+
+                <MudNumericField T="int"
+                                 Label="Max pending"
+                                 @bind-Value="_maxPending"
+                                 Min="1"
+                                 Max="100000"
+                                 Step="100"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="routing-correlation-pending-field" />
+            </section>
+
+            <section class="routing-correlation-matching-workspace" aria-label="Routing correlation matching rule">
+                <div class="routing-correlation-expression-row" aria-label="Routing correlation expressions">
                     <MudTextField T="string"
                                   Label="Key expression"
                                   @bind-Value="_keyExpression"
@@ -87,7 +107,7 @@
                                   Placeholder="payloadText" />
                 </div>
 
-                <div class="routing-correlation-side-row" aria-label="Routing correlation side mapping">
+                <div class="routing-correlation-side-map-row" aria-label="Routing correlation side mapping">
                     <MudTextField T="string"
                                   Label="Request side"
                                   @bind-Value="_requestSide"
@@ -109,29 +129,7 @@
                                      Class="routing-correlation-case-check" />
                     </div>
                 </div>
-
-                <div class="routing-correlation-limit-row" aria-label="Routing correlation limits">
-                    <MudNumericField T="int"
-                                     Label="Timeout ms"
-                                     @bind-Value="_timeoutMilliseconds"
-                                     Min="1"
-                                     Max="86400000"
-                                     Step="1000"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Class="routing-correlation-timeout-field" />
-
-                    <MudNumericField T="int"
-                                     Label="Max pending"
-                                     @bind-Value="_maxPending"
-                                     Min="1"
-                                     Max="100000"
-                                     Step="100"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Class="routing-correlation-pending-field" />
-                </div>
-            </div>
+            </section>
         </div>
     </Editor>
 </NodeWidgetShell>

@@ -78,22 +78,22 @@
 
 .routing-join-editor {
     display: grid;
-    gap: 10px;
+    gap: 12px;
     min-width: 0;
 }
 
-.routing-join-rule-panel {
+.routing-join-config-row,
+.routing-join-matching-workspace {
     background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
     border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     border-radius: 6px;
     display: grid;
-    gap: 12px;
     min-width: 0;
     padding: 14px;
 }
 
-.routing-join-input-grid,
-.routing-join-key-grid,
+.routing-join-config-row,
+.routing-join-key-row,
 .routing-join-limit-row {
     align-items: end;
     display: grid;
@@ -101,13 +101,22 @@
     min-width: 0;
 }
 
-.routing-join-input-grid,
-.routing-join-key-grid {
+.routing-join-config-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 150px;
+}
+
+.routing-join-matching-workspace {
+    gap: 10px;
+}
+
+.routing-join-key-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .routing-join-limit-row {
-    grid-template-columns: minmax(130px, 1fr) minmax(130px, 1fr) minmax(130px, 1fr) minmax(132px, 0.72fr);
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 44%, transparent);
+    grid-template-columns: minmax(130px, 1fr) minmax(130px, 1fr) minmax(132px, 0.72fr);
+    padding-top: 10px;
 }
 
 .routing-join-case-option {
@@ -161,8 +170,8 @@
 
 @media (max-width: 840px) {
     .routing-join-meta,
-    .routing-join-input-grid,
-    .routing-join-key-grid,
+    .routing-join-config-row,
+    .routing-join-key-row,
     .routing-join-limit-row {
         grid-template-columns: minmax(0, 1fr);
     }

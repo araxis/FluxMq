@@ -42,36 +42,46 @@
     </Body>
     <Editor>
         <div class="routing-join-editor" aria-label="Routing join settings">
-            <div class="routing-join-rule-panel" aria-label="Routing join rule">
-                <div class="routing-join-input-grid" aria-label="Routing join input contracts">
-                    <MudSelect T="string"
-                               Label="Left input type"
-                               @bind-Value="_leftInputType"
-                               Variant="Variant.Outlined"
-                               Margin="Margin.Dense"
-                               Dense="true"
-                               Class="routing-join-left-type-field">
-                        @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
-                        {
-                            <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
-                        }
-                    </MudSelect>
+            <section class="routing-join-config-row" aria-label="Routing join input contracts">
+                <MudSelect T="string"
+                           Label="Left input type"
+                           @bind-Value="_leftInputType"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Dense="true"
+                           Class="routing-join-left-type-field">
+                    @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                    {
+                        <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                    }
+                </MudSelect>
 
-                    <MudSelect T="string"
-                               Label="Right input type"
-                               @bind-Value="_rightInputType"
-                               Variant="Variant.Outlined"
-                               Margin="Margin.Dense"
-                               Dense="true"
-                               Class="routing-join-right-type-field">
-                        @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
-                        {
-                            <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
-                        }
-                    </MudSelect>
-                </div>
+                <MudSelect T="string"
+                           Label="Right input type"
+                           @bind-Value="_rightInputType"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Dense="true"
+                           Class="routing-join-right-type-field">
+                    @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                    {
+                        <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                    }
+                </MudSelect>
 
-                <div class="routing-join-key-grid" aria-label="Routing join key expressions">
+                <MudNumericField T="int"
+                                 Label="Input buffer"
+                                 @bind-Value="_boundedCapacity"
+                                 Min="1"
+                                 Max="100000"
+                                 Step="100"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="routing-join-buffer-field" />
+            </section>
+
+            <section class="routing-join-matching-workspace" aria-label="Routing join matching rule">
+                <div class="routing-join-key-row" aria-label="Routing join key expressions">
                     <MudTextField T="string"
                                   Label="Left key expression"
                                   @bind-Value="_leftKeyExpression"
@@ -110,16 +120,6 @@
                                      Margin="Margin.Dense"
                                      Class="routing-join-pending-field" />
 
-                    <MudNumericField T="int"
-                                     Label="Input buffer"
-                                     @bind-Value="_boundedCapacity"
-                                     Min="1"
-                                     Max="100000"
-                                     Step="100"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Class="routing-join-buffer-field" />
-
                     <div class="routing-join-case-option">
                         <MudCheckBox T="bool"
                                      Label="Case sensitive"
@@ -127,7 +127,7 @@
                                      Class="routing-join-case-check" />
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
     </Editor>
 </NodeWidgetShell>
