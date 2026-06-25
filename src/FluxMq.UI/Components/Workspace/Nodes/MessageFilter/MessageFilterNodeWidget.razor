@@ -48,8 +48,32 @@
     <Editor>
         <div class="message-filter-editor" aria-label="Flow filter settings">
             <section class="message-filter-rules-surface" aria-label="Filter rules">
-                <div class="message-filter-rule-grid">
-                    <div class="message-filter-pattern-column" aria-label="Topic pattern filters">
+                <div class="message-filter-rule-title">
+                    <span>Rule definition</span>
+                    <small>Topic patterns are used unless a filter expression is set</small>
+                </div>
+
+                <div class="message-filter-rule-composer">
+                    <div class="message-filter-expression-column" aria-label="Expression filter">
+                        <MudTextField T="string"
+                                      @bind-Value="_expression"
+                                      Label="Filter expression"
+                                      aria-label="Filter expression"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Lines="8"
+                                      Class="message-filter-expression-field"
+                                      Placeholder='topic.StartsWith("sensors/") && payload.Length < 1024' />
+                        <div class="message-filter-reference" aria-label="Filter expression variables">
+                            <span class="message-filter-reference-label">Variables</span>
+                            @foreach (var variable in ExpressionVariables)
+                            {
+                                <span class="message-filter-variable">@variable</span>
+                            }
+                        </div>
+                    </div>
+
+                    <aside class="message-filter-pattern-column" aria-label="Topic pattern filters">
                         <div class="message-filter-column-heading">
                             <span>Topic patterns</span>
                             <MudTooltip Text="Add pattern">
@@ -90,26 +114,7 @@
                                 <div class="message-filter-empty" role="status">No topic patterns</div>
                             }
                         </div>
-                    </div>
-
-                    <div class="message-filter-expression-column" aria-label="Expression filter">
-                        <MudTextField T="string"
-                                      @bind-Value="_expression"
-                                      Label="Filter expression"
-                                      aria-label="Filter expression"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      Lines="8"
-                                      Class="message-filter-expression-field"
-                                      Placeholder='topic.StartsWith("sensors/") && payload.Length < 1024' />
-                        <div class="message-filter-reference" aria-label="Filter expression variables">
-                            <span class="message-filter-reference-label">Variables</span>
-                            @foreach (var variable in ExpressionVariables)
-                            {
-                                <span class="message-filter-variable">@variable</span>
-                            }
-                        </div>
-                    </div>
+                    </aside>
                 </div>
             </section>
         </div>

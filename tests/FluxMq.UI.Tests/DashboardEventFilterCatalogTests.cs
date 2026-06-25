@@ -6363,7 +6363,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Flow filter settings\"");
         markup.ShouldContain("message-filter-rules-surface");
         markup.ShouldContain("aria-label=\"Filter rules\"");
-        markup.ShouldContain("message-filter-rule-grid");
+        markup.ShouldContain("message-filter-rule-title");
+        markup.ShouldContain("message-filter-rule-composer");
+        markup.ShouldNotContain("message-filter-rule-grid");
         markup.ShouldContain("message-filter-pattern-column");
         markup.ShouldContain("message-filter-expression-column");
         markup.ShouldContain("message-filter-pattern-list");
@@ -6426,11 +6428,13 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
         css.ShouldContain("padding: 12px;");
         css.ShouldNotContain("padding: 14px;");
-        css.ShouldContain(".message-filter-rule-grid");
-        css.ShouldContain("grid-template-columns: minmax(260px, 0.62fr) minmax(0, 1.38fr);");
+        css.ShouldContain(".message-filter-rule-title");
+        css.ShouldContain(".message-filter-rule-composer");
+        css.ShouldNotContain(".message-filter-rule-grid");
+        css.ShouldContain("grid-template-columns: minmax(0, 1.42fr) minmax(260px, 0.58fr);");
         css.ShouldContain(".message-filter-pattern-column");
         css.ShouldContain(".message-filter-expression-column");
-        css.ShouldContain("border-left: 1px solid color-mix(in srgb, var(--flux-border-soft) 36%, transparent);");
+        css.ShouldNotContain("border-left: 1px solid color-mix(in srgb, var(--flux-border-soft) 36%, transparent);");
         css.ShouldContain(".message-filter-pattern-list");
         css.ShouldContain(".message-filter-column-heading");
         css.ShouldContain(".message-filter-column-heading ::deep(.message-filter-add.mud-icon-button)");
@@ -6438,7 +6442,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".message-filter-pattern-header");
         css.ShouldNotContain(".message-filter-expression-area");
         css.ShouldContain(".message-filter-pattern-row");
-        css.ShouldContain("min-height: 48px;");
+        css.ShouldContain("min-height: 44px;");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 30px;");
         css.ShouldContain("align-items: center;");
         css.ShouldContain(".message-filter-reference");
