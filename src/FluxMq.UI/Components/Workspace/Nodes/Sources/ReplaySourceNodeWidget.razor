@@ -44,7 +44,12 @@
                 var sessions = Live.StoredSessions;
             }
             <section class="replay-source-editor-surface" aria-label="Replay source configuration">
-                <div class="replay-source-session-row">
+                <div class="replay-source-editor-grid" aria-label="Replay source configuration fields">
+                    <span class="replay-source-field-label">Session</span>
+                    <span class="replay-source-field-label">Stored</span>
+                    <span class="replay-source-field-label">Speed</span>
+                    <span class="replay-source-field-label">Buffer</span>
+
                     @if (sessions.Count > 0)
                     {
                         <MudSelect T="string"
@@ -84,9 +89,6 @@
                         <span>Stored sessions</span>
                         <strong>@SessionOptionCountCaption</strong>
                     </div>
-                </div>
-
-                <div class="replay-source-playback-row" aria-label="Replay playback controls">
                     <MudNumericField T="double"
                                      Label="Playback speed"
                                      @bind-Value="_speed"
