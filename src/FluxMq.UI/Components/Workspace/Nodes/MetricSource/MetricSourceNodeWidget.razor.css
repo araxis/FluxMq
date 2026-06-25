@@ -96,7 +96,7 @@
 
 .metric-source-config-row,
 .metric-source-description-row,
-.metric-source-parameter-workspace,
+.metric-source-parameter-surface,
 .metric-source-start-row {
     background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
     border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
@@ -142,7 +142,7 @@
 }
 
 .metric-source-description-row span,
-.metric-source-parameter-table-head span {
+.metric-source-parameter-summary span {
     color: var(--flux-text-muted);
     font-size: 0.62rem;
     font-weight: 780;
@@ -160,18 +160,26 @@
     overflow-wrap: anywhere;
 }
 
-.metric-source-parameter-workspace {
+.metric-source-parameter-surface {
     display: grid;
     gap: 10px;
 }
 
-.metric-source-parameter-table-head {
+.metric-source-parameter-summary {
     align-items: center;
     display: grid;
     gap: 10px;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
     min-width: 0;
-    padding: 0 2px;
+    padding: 0 2px 2px;
+}
+
+.metric-source-parameter-summary strong {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 66%, var(--mud-palette-text-secondary));
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
 }
 
 .metric-source-parameter-grid {
@@ -225,7 +233,7 @@
     .metric-source-parameter-grid,
     .metric-source-start-row,
     .metric-source-description-row,
-    .metric-source-parameter-table-head {
+    .metric-source-parameter-summary {
         grid-template-columns: minmax(0, 1fr);
     }
 

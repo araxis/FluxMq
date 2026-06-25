@@ -105,10 +105,10 @@
 
             @if (SelectedDescriptor is { } descriptor && descriptor.Parameters.Count > 0)
             {
-                <section class="metric-source-parameter-workspace" aria-label="Metric parameters">
-                    <div class="metric-source-parameter-table-head" aria-hidden="true">
-                        <span>Parameter</span>
-                        <span>Value</span>
+                <section class="metric-source-parameter-surface" aria-label="Metric parameters">
+                    <div class="metric-source-parameter-summary">
+                        <span>Parameters</span>
+                        <strong>@ParameterCountCaption</strong>
                     </div>
 
                     <div class="metric-source-parameter-grid">
@@ -150,6 +150,13 @@
     private IReadOnlyList<KeyValuePair<string, string>> ParameterPreview
         => Model.Parameters.Take(MaxParameterTokens).ToArray();
     private int ParameterPreviewOverflow => Math.Max(0, Model.Parameters.Count - MaxParameterTokens);
+    private string ParameterCountCaption
+        => SelectedDescriptor?.Parameters.Count switch
+        {
+            1 => "1 field",
+            int count when count > 1 => $"{count} fields",
+            _ => "No fields"
+        };
 
     private IReadOnlyList<MetricOption> MetricOptions
         => Flow.GetMetricResources()

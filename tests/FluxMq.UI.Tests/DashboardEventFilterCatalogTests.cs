@@ -8425,8 +8425,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Metric source configuration\"");
         markup.ShouldContain("Class=\"metric-source-metric-field\"");
         markup.ShouldContain("metric-source-description-row");
-        markup.ShouldContain("metric-source-parameter-workspace");
-        markup.ShouldContain("metric-source-parameter-table-head");
+        markup.ShouldContain("metric-source-parameter-surface");
+        markup.ShouldContain("metric-source-parameter-summary");
+        markup.ShouldContain("ParameterCountCaption");
         markup.ShouldContain("metric-source-parameter-grid");
         markup.ShouldContain("aria-label=\"Metric parameters\"");
         markup.ShouldContain("metric-source-parameter-cell");
@@ -8453,9 +8454,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("metric-source-panel-token");
         markup.ShouldNotContain("metric-source-parameter-section");
         markup.ShouldNotContain("metric-source-parameter-header");
+        markup.ShouldNotContain("metric-source-parameter-workspace");
+        markup.ShouldNotContain("metric-source-parameter-table-head");
         markup.ShouldNotContain("metric-source-config-panel");
         markup.ShouldNotContain("metric-source-source-grid");
         markup.ShouldNotContain("metric-source-parameter-table\" aria-label");
+        markup.ShouldNotContain("<span>Parameter</span>");
+        markup.ShouldNotContain("<span>Value</span>");
         markup.ShouldNotContain("<Stat ");
         markup.ShouldNotContain("<MudStack");
         markup.ShouldNotContain("<MudChip");
@@ -8479,8 +8484,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".metric-source-config-row");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 150px;");
         css.ShouldContain(".metric-source-description-row");
-        css.ShouldContain(".metric-source-parameter-workspace");
-        css.ShouldContain(".metric-source-parameter-table-head");
+        css.ShouldContain(".metric-source-parameter-surface");
+        css.ShouldContain(".metric-source-parameter-summary");
         css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
         css.ShouldContain("padding: 12px;");
@@ -8503,6 +8508,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".metric-source-panel-token");
         css.ShouldNotContain(".metric-source-parameter-section");
         css.ShouldNotContain(".metric-source-parameter-header");
+        css.ShouldNotContain(".metric-source-parameter-workspace");
+        css.ShouldNotContain(".metric-source-parameter-table-head");
         css.ShouldNotContain(".metric-source-config-panel");
         css.ShouldNotContain(".metric-source-source-grid");
         css.ShouldNotContain(".metric-source-parameter-table {");
