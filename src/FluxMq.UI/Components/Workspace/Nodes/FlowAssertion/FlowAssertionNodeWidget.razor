@@ -73,7 +73,7 @@
                                  Class="flow-assertion-buffer-field" />
             </div>
 
-            <div class="flow-assertion-rule-row" aria-label="Flow assertion rule">
+            <div class="flow-assertion-rule-stack" aria-label="Flow assertion rule">
                 <MudTextField T="string"
                               Label="Assertion"
                               @bind-Value="_expression"
@@ -83,25 +83,23 @@
                               Class="flow-assertion-expression-field"
                               Placeholder='topic.StartsWith("factory/") && qos >= 1' />
 
-                <div class="flow-assertion-rule-sidecar">
-                    <MudTextField T="string"
-                                  Label="Failure message"
-                                  @bind-Value="_failureMessage"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Lines="4"
-                                  Class="flow-assertion-message-field"
-                                  Placeholder="Message on failure" />
+                <MudTextField T="string"
+                              Label="Failure message"
+                              @bind-Value="_failureMessage"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Lines="3"
+                              Class="flow-assertion-message-field"
+                              Placeholder="Message on failure" />
 
-                    <div class="flow-assertion-reference" aria-label="Assertion expression variables">
-                        <span class="flow-assertion-reference-label">Variables</span>
-                        <span class="flow-assertion-variable-list">
-                            @foreach (var variable in ExpressionVariables)
-                            {
-                                <span class="flow-assertion-variable">@variable</span>
-                            }
-                        </span>
-                    </div>
+                <div class="flow-assertion-variable-strip" aria-label="Assertion expression variables">
+                    <span class="flow-assertion-variable-label">Variables</span>
+                    <span class="flow-assertion-variable-list">
+                        @foreach (var variable in ExpressionVariables)
+                        {
+                            <span class="flow-assertion-variable">@variable</span>
+                        }
+                    </span>
                 </div>
             </div>
         </div>

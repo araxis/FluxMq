@@ -124,33 +124,27 @@
     min-width: 0;
 }
 
-.flow-assertion-rule-row {
+.flow-assertion-rule-stack {
     align-items: stretch;
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     display: grid;
-    gap: 8px;
-    grid-template-columns: minmax(0, 1.52fr) minmax(240px, 0.48fr);
+    gap: 9px;
+    grid-template-columns: minmax(0, 1fr);
     min-width: 0;
-    padding-top: 8px;
+    padding-top: 9px;
 }
 
-.flow-assertion-rule-sidecar {
-    display: grid;
-    gap: 8px;
-    grid-template-rows: auto minmax(0, 1fr);
-    min-width: 0;
-}
-
-.flow-assertion-reference {
-    align-content: start;
+.flow-assertion-variable-strip {
+    align-items: start;
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     display: grid;
-    gap: 6px;
+    gap: 7px;
+    grid-template-columns: 72px minmax(0, 1fr);
     min-width: 0;
-    padding: 8px 1px 0;
+    padding: 8px 2px 0;
 }
 
-.flow-assertion-reference-label {
+.flow-assertion-variable-label {
     color: var(--flux-text-muted);
     font-size: 0.58rem;
     font-weight: 760;
@@ -192,11 +186,11 @@
 }
 
 .flow-assertion-editor ::deep(.flow-assertion-expression-field textarea.mud-input-root) {
-    min-height: 268px;
+    min-height: 292px;
 }
 
 .flow-assertion-editor ::deep(.flow-assertion-message-field textarea.mud-input-root) {
-    min-height: 96px;
+    min-height: 72px;
 }
 
 .flow-assertion-name-field,
@@ -210,7 +204,7 @@
 @media (max-width: 760px) {
     .flow-assertion-meta,
     .flow-assertion-config-row,
-    .flow-assertion-rule-row {
+    .flow-assertion-variable-strip {
         grid-template-columns: minmax(0, 1fr);
     }
 
