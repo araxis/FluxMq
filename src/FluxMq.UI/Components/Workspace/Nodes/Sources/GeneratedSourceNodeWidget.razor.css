@@ -1,24 +1,24 @@
 .generated-source-summary {
     display: grid;
-    gap: 5px;
+    gap: 4px;
     margin-top: 3px;
     min-width: 0;
 }
 
 .generated-source-meta {
     display: grid;
-    gap: 3px;
+    gap: 2px;
     grid-template-columns: 74px minmax(0, 1fr) 70px;
     min-width: 0;
 }
 
 .generated-source-meta-item {
     align-content: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 24%, transparent);
+    background: color-mix(in srgb, var(--flux-surface-2) 30%, transparent);
     border-radius: 4px;
     display: grid;
     gap: 2px;
-    min-height: 30px;
+    min-height: 28px;
     min-width: 0;
     padding: 4px 5px;
 }
@@ -47,7 +47,7 @@
 }
 
 .generated-source-previews {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 62%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 68%, transparent);
     display: grid;
     gap: 4px;
     min-width: 0;
@@ -81,7 +81,7 @@
 }
 
 .generated-source-contract {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 62%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 68%, transparent);
     display: grid;
     gap: 4px 3px;
     grid-template-columns: repeat(4, minmax(0, auto));
@@ -112,18 +112,8 @@
 
 .generated-source-editor {
     display: grid;
-    gap: 8px;
-    min-width: 0;
-}
-
-.generated-source-editor-surface {
-    background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
-    border-radius: 6px;
-    display: grid;
     gap: 10px;
     min-width: 0;
-    padding: 12px;
 }
 
 .generated-source-control-strip {
@@ -147,7 +137,7 @@
 }
 
 .generated-source-message-table {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 40%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     display: grid;
     gap: 0;
     min-width: 0;
@@ -163,8 +153,8 @@
 }
 
 .generated-source-table-header {
-    border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 52%, transparent);
-    padding: 8px 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 50%, transparent);
+    padding: 7px 0;
 }
 
 .generated-source-column-header {
@@ -184,8 +174,8 @@
 }
 
 .generated-source-message-row {
-    border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 44%, transparent);
-    padding: 10px 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
+    padding: 8px 0;
 }
 
 .generated-source-message-row:last-child {
@@ -215,13 +205,14 @@
 
 .generated-source-empty {
     align-items: center;
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     color: var(--flux-text-muted);
     display: flex;
     font-size: 0.78rem;
     font-weight: 650;
     min-height: 42px;
     min-width: 0;
-    padding: 10px 4px 0;
+    padding: 10px 2px 0;
 }
 
 .generated-source-editor ::deep(.mud-input-control) {

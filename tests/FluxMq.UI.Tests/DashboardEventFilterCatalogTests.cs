@@ -8788,9 +8788,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Generated source settings\"");
         markup.ShouldContain("Label=\"Output buffer\"");
         markup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
-        markup.ShouldContain("generated-source-editor-surface");
+        markup.ShouldNotContain("generated-source-editor-surface");
         markup.ShouldNotContain("generated-source-message-panel");
-        markup.ShouldContain("aria-label=\"Generated messages\"");
         markup.ShouldNotContain("generated-source-panel-header");
         markup.ShouldNotContain("generated-source-panel-kicker");
         markup.ShouldNotContain("generated-source-panel-token");
@@ -8860,11 +8859,11 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".generated-source-editor");
-        css.ShouldContain(".generated-source-editor-surface");
+        css.ShouldNotContain(".generated-source-editor-surface");
         css.ShouldNotContain(".generated-source-message-panel");
-        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
-        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
-        css.ShouldContain("padding: 12px;");
+        css.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        css.ShouldNotContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldNotContain("padding: 12px;");
         css.ShouldNotContain(".generated-source-panel-header");
         css.ShouldNotContain(".generated-source-panel-kicker");
         css.ShouldNotContain(".generated-source-panel-token");
@@ -8873,6 +8872,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".generated-source-action-row");
         css.ShouldContain("grid-template-columns: minmax(180px, 220px) 28px;");
         css.ShouldContain(".generated-source-message-table");
+        css.ShouldContain("border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);");
         css.ShouldContain(".generated-source-table-header");
         css.ShouldContain(".generated-source-column-header");
         css.ShouldNotContain(".generated-source-message-list");
