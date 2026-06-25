@@ -47,55 +47,57 @@
     </Body>
     <Editor>
         <div class="condition-router-editor" aria-label="Condition router settings">
-            <section class="condition-router-config-row" aria-label="Condition router configuration">
-                <MudSelect T="string"
-                           Value="@_inputType"
-                           ValueChanged="@SetInputType"
-                           Label="Input type"
-                           aria-label="Condition input type"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           Dense="true"
-                           Class="condition-router-input-field">
-                    @foreach (var inputType in ConditionRouterNodeModel.InputTypes)
-                    {
-                        <MudSelectItem Value="@inputType">@InputTypeLabel(inputType)</MudSelectItem>
-                    }
-                </MudSelect>
+            <section class="condition-router-editor-surface" aria-label="Condition router configuration">
+                <div class="condition-router-config-row">
+                    <MudSelect T="string"
+                               Value="@_inputType"
+                               ValueChanged="@SetInputType"
+                               Label="Input type"
+                               aria-label="Condition input type"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true"
+                               Class="condition-router-input-field">
+                        @foreach (var inputType in ConditionRouterNodeModel.InputTypes)
+                        {
+                            <MudSelectItem Value="@inputType">@InputTypeLabel(inputType)</MudSelectItem>
+                        }
+                    </MudSelect>
 
-                <div class="condition-router-output-map" aria-label="Condition router outputs">
-                    <div>
-                        <span>True</span>
-                        <strong>WhenTrue</strong>
-                    </div>
-                    <div>
-                        <span>False</span>
-                        <strong>WhenFalse</strong>
+                    <div class="condition-router-output-map" aria-label="Condition router outputs">
+                        <div>
+                            <span>True</span>
+                            <strong>WhenTrue</strong>
+                        </div>
+                        <div>
+                            <span>False</span>
+                            <strong>WhenFalse</strong>
+                        </div>
                     </div>
                 </div>
-            </section>
 
-            <section class="condition-router-expression-workspace" aria-label="Condition router rule">
-                <MudTextField T="string"
-                              @bind-Value="_expression"
-                              Label="Condition"
-                              aria-label="Condition expression"
-                              Variant="Variant.Outlined"
-                              Lines="8"
-                              Class="condition-router-expression-field"
-                              Placeholder="@ExpressionPlaceholder" />
+                <div class="condition-router-expression-row" aria-label="Condition router rule">
+                    <MudTextField T="string"
+                                  @bind-Value="_expression"
+                                  Label="Condition"
+                                  aria-label="Condition expression"
+                                  Variant="Variant.Outlined"
+                                  Lines="8"
+                                  Class="condition-router-expression-field"
+                                  Placeholder="@ExpressionPlaceholder" />
 
-                <div class="condition-router-variable-reference" aria-label="Available condition variables">
-                    <span class="condition-router-variable-label">Variables</span>
-                    <span class="condition-router-variable-list">
-                        @foreach (var variable in Variables)
-                        {
-                            <span class="condition-router-variable-token" title="@($"{variable.Type}: {variable.Example}")">
-                                <code>@variable.Name</code>
-                                <small>@variable.Type</small>
-                            </span>
-                        }
-                    </span>
+                    <div class="condition-router-variable-reference" aria-label="Available condition variables">
+                        <span class="condition-router-variable-label">Variables</span>
+                        <span class="condition-router-variable-list">
+                            @foreach (var variable in Variables)
+                            {
+                                <span class="condition-router-variable-token" title="@($"{variable.Type}: {variable.Example}")">
+                                    <code>@variable.Name</code>
+                                    <small>@variable.Type</small>
+                                </span>
+                            }
+                        </span>
+                    </div>
                 </div>
             </section>
         </div>

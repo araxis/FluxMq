@@ -92,18 +92,17 @@
 
 .condition-router-editor {
     display: grid;
-    gap: 12px;
     min-width: 0;
 }
 
-.condition-router-config-row,
-.condition-router-expression-workspace {
+.condition-router-editor-surface {
     background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
     border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     border-radius: 6px;
     display: grid;
+    gap: 10px;
     min-width: 0;
-    padding: 14px;
+    padding: 12px;
 }
 
 .condition-router-config-row {
@@ -112,6 +111,14 @@
     gap: 8px;
     grid-template-columns: minmax(180px, 1fr) minmax(230px, 0.72fr);
     min-width: 0;
+}
+
+.condition-router-expression-row {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
+    display: grid;
+    gap: 10px;
+    min-width: 0;
+    padding-top: 10px;
 }
 
 .condition-router-output-map {
@@ -151,12 +158,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-.condition-router-expression-workspace {
-    display: grid;
-    gap: 10px;
-    min-width: 0;
 }
 
 .condition-router-variable-reference {
