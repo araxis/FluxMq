@@ -106,17 +106,23 @@
 }
 
 .routing-switch-config-row {
-    align-items: start;
     display: grid;
     gap: 8px;
-    grid-template-columns: minmax(0, 1fr) 150px minmax(0, 190px);
+    grid-template-columns: minmax(0, 1fr) minmax(130px, 170px);
     min-width: 0;
+}
+
+.routing-switch-option-row {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 30%, transparent);
+    display: flex;
+    min-width: 0;
+    padding-top: 2px;
 }
 
 .routing-switch-envelope-option {
     align-items: center;
     display: flex;
-    min-height: 42px;
+    min-height: 34px;
     min-width: 0;
 }
 
@@ -193,67 +199,44 @@
     padding-top: 10px;
 }
 
-.routing-switch-route-actions {
+.routing-switch-route-header {
     align-items: center;
-    display: flex;
-    gap: 8px;
-    justify-content: space-between;
-    min-width: 0;
-}
-
-.routing-switch-route-title {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 70%, var(--mud-palette-text-secondary));
     display: grid;
-    gap: 2px;
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 30px;
+    min-height: 30px;
     min-width: 0;
+    padding: 0 0 5px;
 }
 
-.routing-switch-route-title span {
-    color: color-mix(in srgb, var(--mud-palette-text-primary) 84%, var(--mud-palette-text-secondary));
-    font-size: 0.76rem;
-    font-weight: 760;
+.routing-switch-route-header span {
+    font-size: 0.66rem;
+    font-weight: 780;
+    letter-spacing: 0;
     line-height: 1;
     min-width: 0;
-}
-
-.routing-switch-route-title small {
-    color: var(--flux-text-muted);
-    font-size: 0.62rem;
-    font-weight: 650;
-    line-height: 1;
-    min-width: 0;
-    overflow-wrap: anywhere;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
 }
 
 .routing-switch-route-list {
     display: grid;
-    gap: 5px;
+    gap: 0;
     min-width: 0;
 }
 
 .routing-switch-route-row {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 8%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 28%, transparent);
-    border-radius: 5px;
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 32%, transparent);
     display: grid;
     gap: 7px;
-    grid-template-columns: 24px minmax(0, 1fr) minmax(0, 1fr) 30px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 30px;
+    min-height: 42px;
     min-width: 0;
-    padding: 6px 7px;
-}
-
-.routing-switch-route-index {
-    align-items: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 34%, transparent);
-    border-radius: 4px;
-    color: var(--flux-text-muted);
-    display: inline-flex;
-    font-size: 0.64rem;
-    font-weight: 760;
-    height: 24px;
-    justify-content: center;
-    line-height: 1;
-    width: 24px;
+    padding: 6px 0;
 }
 
 .routing-switch-editor ::deep(.mud-input-control) {
@@ -283,7 +266,7 @@
     margin-inline-start: 0;
 }
 
-.routing-switch-route-actions ::deep(.routing-switch-route-add.mud-icon-button),
+.routing-switch-route-header ::deep(.routing-switch-route-add.mud-icon-button),
 .routing-switch-route-composer ::deep(.routing-switch-route-remove.mud-icon-button) {
     height: 28px;
     min-height: 28px;
@@ -308,11 +291,15 @@
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .routing-switch-route-index {
-        width: 100%;
+    .routing-switch-route-header {
+        grid-template-columns: minmax(0, 1fr) 30px;
     }
 
-    .routing-switch-route-actions ::deep(.routing-switch-route-add.mud-icon-button),
+    .routing-switch-route-header span:nth-child(2) {
+        display: none;
+    }
+
+    .routing-switch-route-header ::deep(.routing-switch-route-add.mud-icon-button),
     .routing-switch-route-row ::deep(.routing-switch-route-remove.mud-icon-button) {
         justify-self: start;
     }

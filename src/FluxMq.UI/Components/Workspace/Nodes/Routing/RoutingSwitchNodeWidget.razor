@@ -77,7 +77,9 @@
                                      Variant="Variant.Outlined"
                                      Margin="Margin.Dense"
                                      Class="routing-switch-buffer-field" />
+                </div>
 
+                <div class="routing-switch-option-row">
                     <div class="routing-switch-envelope-option">
                         <MudCheckBox T="bool"
                                      Label="Emit envelope"
@@ -112,11 +114,9 @@
                 </div>
 
                 <div class="routing-switch-route-composer" aria-label="Routing switch route outputs">
-                    <div class="routing-switch-route-actions">
-                        <div class="routing-switch-route-title">
-                            <span>Routes</span>
-                            <small>Match result to output port</small>
-                        </div>
+                    <div class="routing-switch-route-header">
+                        <span>Match key</span>
+                        <span>Output port</span>
                         <MudTooltip Text="Add route">
                             <MudIconButton Icon="@Icons.Material.Filled.Add"
                                            Size="Size.Small"
@@ -132,7 +132,6 @@
                         {
                             var route = _routeDrafts[index];
                             <div class="routing-switch-route-row" @key="route">
-                                <span class="routing-switch-route-index">@(index + 1)</span>
                                 <MudTextField T="string"
                                               aria-label="@($"Route match key {index + 1}")"
                                               @bind-Value="route.Key"
