@@ -1,16 +1,114 @@
-@*
-    Fallback widget — used when a node type has no registered specialised widget.
-    Mirrors the pre-split behaviour: name, category chip, summary, port chips.
-*@
 @inherits NodeWidgetBase
 
-<NodeWidgetShell Node="@Node" HeaderIcon="@Icons.Material.Filled.Memory" CategoryColor="@CategoryColor">
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.Memory"
+                 CategoryColor="@CategoryColor"
+                 EditDialogMaxWidth="MaxWidth.Medium"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false">
     <Body>
-        <MudText Typo="Typo.caption" Color="Color.Secondary">@Node.Summary</MudText>
+        <div class="default-node-summary">
+            <div class="default-node-description" title="@SummaryCaption">@SummaryCaption</div>
+            <div class="default-node-meta" aria-label="Fallback node summary">
+                <div class="default-node-meta-item">
+                    <span>Type</span>
+                    <strong title="@Node.NodeType">@Node.NodeType</strong>
+                </div>
+                <div class="default-node-meta-item">
+                    <span>Ports</span>
+                    <strong>@PortCountCaption</strong>
+                </div>
+            </div>
+
+            @if (Node.PortDescriptors.Count > 0)
+            {
+                <div class="default-node-ports" aria-label="Fallback node ports">
+                    @foreach (var port in PortPreview)
+                    {
+                        <span class="default-node-token @PortDirectionClass(port)" title="@port.ValueType">@port.Name</span>
+                    }
+                    @if (PortPreviewOverflow > 0)
+                    {
+                        <span class="default-node-token overflow">+@PortPreviewOverflow</span>
+                    }
+                </div>
+            }
+        </div>
     </Body>
+    <Editor>
+        <div class="default-node-editor" aria-label="Fallback component details">
+            <div class="default-node-editor-surface">
+                <div class="default-node-editor-summary" aria-label="Fallback component summary">
+                    <div class="default-node-editor-cell">
+                        <span>Type</span>
+                        <strong title="@Node.NodeType">@Node.NodeType</strong>
+                    </div>
+                    <div class="default-node-editor-cell">
+                        <span>Category</span>
+                        <strong>@Node.Category</strong>
+                    </div>
+                    <div class="default-node-editor-cell">
+                        <span>Ports</span>
+                        <strong>@PortCountCaption</strong>
+                    </div>
+                </div>
+
+                <div class="default-node-editor-description" title="@SummaryCaption">@SummaryCaption</div>
+
+                <div class="default-node-port-list" aria-label="Fallback component port contracts">
+                    @if (SortedPortDescriptors.Count > 0)
+                    {
+                        @foreach (var port in SortedPortDescriptors)
+                        {
+                            <div class="default-node-port-row">
+                                <div class="default-node-port-main">
+                                    <span>Name</span>
+                                    <strong title="@port.Name">@port.Name</strong>
+                                </div>
+                                <span class="default-node-token @PortDirectionClass(port)">@PortDirection(port)</span>
+                                <div class="default-node-port-main type">
+                                    <span>Value type</span>
+                                    <strong title="@port.ValueType">@port.ValueType</strong>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="default-node-empty" role="status">No declared ports.</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </Editor>
 </NodeWidgetShell>
 
 @code {
+    private const int MaxPortPreview = 5;
+
+    private string SummaryCaption => string.IsNullOrWhiteSpace(Node.Summary)
+        ? Node.DisplayName
+        : Node.Summary.Trim();
+    private int InputCount => Node.PortDescriptors.Count(static port => port.IsInput);
+    private int OutputCount => Node.PortDescriptors.Count(static port => !port.IsInput);
+    private string PortCountCaption => $"{InputCount} in / {OutputCount} out";
+    private IReadOnlyList<ComponentPortDescriptor> PortPreview
+        => Node.PortDescriptors
+            .OrderBy(static port => port.IsInput ? 0 : 1)
+            .ThenBy(static port => port.Name, StringComparer.OrdinalIgnoreCase)
+            .Take(MaxPortPreview)
+            .ToArray();
+    private int PortPreviewOverflow => Math.Max(0, Node.PortDescriptors.Count - PortPreview.Count);
+    private IReadOnlyList<ComponentPortDescriptor> SortedPortDescriptors
+        => Node.PortDescriptors
+            .OrderBy(static port => port.IsInput ? 0 : 1)
+            .ThenBy(static port => port.Name, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+    private static string PortDirection(ComponentPortDescriptor port) => port.IsInput ? "Input" : "Output";
+    private static string PortDirectionClass(ComponentPortDescriptor port) => port.IsInput ? "input" : "output";
+
     private Color CategoryColor => Node.Category switch
     {
         "Source" => Color.Primary,

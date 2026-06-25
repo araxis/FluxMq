@@ -8085,6 +8085,85 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DefaultNodeWidget_UsesCompactFallbackSummary()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Diagram",
+            "DefaultNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Diagram",
+            "DefaultNodeWidget.razor.css"));
+
+        markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("default-node-summary");
+        markup.ShouldContain("default-node-description");
+        markup.ShouldContain("SummaryCaption");
+        markup.ShouldContain("default-node-meta");
+        markup.ShouldContain("PortCountCaption");
+        markup.ShouldContain("default-node-ports");
+        markup.ShouldContain("aria-label=\"Fallback node ports\"");
+        markup.ShouldContain("PortPreview");
+        markup.ShouldContain("PortPreviewOverflow");
+        markup.ShouldContain("default-node-token");
+        markup.ShouldContain("default-node-editor");
+        markup.ShouldContain("aria-label=\"Fallback component details\"");
+        markup.ShouldContain("default-node-editor-surface");
+        markup.ShouldContain("default-node-editor-summary");
+        markup.ShouldContain("default-node-editor-cell");
+        markup.ShouldContain("default-node-editor-description");
+        markup.ShouldContain("default-node-port-list");
+        markup.ShouldContain("aria-label=\"Fallback component port contracts\"");
+        markup.ShouldContain("SortedPortDescriptors");
+        markup.ShouldContain("default-node-port-row");
+        markup.ShouldContain("default-node-port-main");
+        markup.ShouldContain("PortDirection(port)");
+        markup.ShouldContain("PortDirectionClass(port)");
+        markup.ShouldContain("default-node-empty");
+        markup.ShouldNotContain("<MudText");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("flow-node-filters");
+        markup.ShouldNotContain("category chip");
+        markup.ShouldNotContain("Mirrors the pre-split behaviour");
+
+        css.ShouldContain(".default-node-summary");
+        css.ShouldContain(".default-node-description");
+        css.ShouldContain("text-overflow: ellipsis;");
+        css.ShouldContain(".default-node-meta");
+        css.ShouldContain(".default-node-ports");
+        css.ShouldContain("grid-template-columns: repeat(3, minmax(0, auto));");
+        css.ShouldContain(".default-node-token");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
+        css.ShouldContain(".default-node-editor");
+        css.ShouldContain(".default-node-editor-surface");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldContain("padding: 12px;");
+        css.ShouldContain(".default-node-editor-summary");
+        css.ShouldContain(".default-node-editor-cell");
+        css.ShouldContain(".default-node-editor-description");
+        css.ShouldContain(".default-node-port-list");
+        css.ShouldContain("border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 34%, transparent);");
+        css.ShouldContain(".default-node-port-row");
+        css.ShouldContain(".default-node-port-main");
+        css.ShouldContain(".default-node-empty");
+        css.ShouldContain("@media (max-width: 640px)");
+        css.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
     public void GenericFlowNodeWidget_UsesFlatFallbackSummary()
     {
         var root = FindRepositoryRoot();
