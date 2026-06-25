@@ -47,82 +47,69 @@
     </Body>
     <Editor>
         <div class="message-filter-editor" aria-label="Flow filter settings">
-            <section class="message-filter-rules-surface" aria-label="Filter rules">
-                <div class="message-filter-editor-status" aria-label="Filter rule status">
-                    <div>
-                        <span>Mode</span>
-                        <strong>@DraftModeCaption</strong>
-                    </div>
-                    <div>
-                        <span>Patterns</span>
-                        <strong>@DraftPatternCountCaption</strong>
-                    </div>
-                </div>
-
-                <div class="message-filter-rule-composer">
-                    <div class="message-filter-expression-row" aria-label="Expression filter">
-                        <MudTextField T="string"
-                                      @bind-Value="_expression"
-                                      Label="Filter expression"
-                                      aria-label="Filter expression"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      Lines="7"
-                                      Class="message-filter-expression-field"
-                                      Placeholder='topic.StartsWith("sensors/") && payload.Length < 1024' />
-                        <div class="message-filter-reference" aria-label="Filter expression variables">
-                            <span class="message-filter-reference-label">Variables</span>
-                            @foreach (var variable in ExpressionVariables)
-                            {
-                                <span class="message-filter-variable">@variable</span>
-                            }
-                        </div>
-                    </div>
-
-                    <div class="message-filter-pattern-table" aria-label="Topic pattern filters">
-                        <div class="message-filter-pattern-table-header">
-                            <span>Topic patterns</span>
-                            <MudTooltip Text="Add pattern">
-                                <MudIconButton Size="Size.Small"
-                                               Icon="@Icons.Material.Filled.Add"
-                                               Color="Color.Secondary"
-                                               aria-label="Add topic pattern"
-                                               Class="message-filter-add"
-                                               OnClick="@AddPattern" />
-                            </MudTooltip>
-                        </div>
-
-                        <div class="message-filter-pattern-list">
-                            @for (var i = 0; i < _draftPatterns.Count; i++)
-                            {
-                                var index = i;
-                                <div class="message-filter-pattern-row">
-                                    <MudTextField T="string"
-                                                  aria-label="@($"Topic pattern {index + 1}")"
-                                                  Value="@_draftPatterns[index]"
-                                                  ValueChanged="@(v => _draftPatterns[index] = v ?? string.Empty)"
-                                                  Placeholder="sensors/#"
-                                                  Variant="Variant.Outlined"
-                                                  Margin="Margin.Dense"
-                                                  Class="message-filter-pattern-field" />
-                                    <MudTooltip Text="Remove pattern">
-                                        <MudIconButton Size="Size.Small"
-                                                       Icon="@Icons.Material.Filled.Close"
-                                                       aria-label="@($"Remove topic pattern {index + 1}")"
-                                                       Class="message-filter-remove"
-                                                       OnClick="@(() => RemovePattern(index))" />
-                                    </MudTooltip>
-                                </div>
-                            }
-
-                            @if (_draftPatterns.Count == 0)
-                            {
-                                <div class="message-filter-empty" role="status">No topic patterns</div>
-                            }
-                        </div>
+            <div class="message-filter-rule-layout" aria-label="Filter rules">
+                <div class="message-filter-expression-row" aria-label="Expression filter">
+                    <MudTextField T="string"
+                                  @bind-Value="_expression"
+                                  Label="Filter expression"
+                                  aria-label="Filter expression"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Lines="6"
+                                  Class="message-filter-expression-field"
+                                  Placeholder='topic.StartsWith("sensors/") && payload.Length < 1024' />
+                    <div class="message-filter-reference" aria-label="Filter expression variables">
+                        <span class="message-filter-reference-label">Variables</span>
+                        @foreach (var variable in ExpressionVariables)
+                        {
+                            <span class="message-filter-variable">@variable</span>
+                        }
                     </div>
                 </div>
-            </section>
+
+                <div class="message-filter-pattern-table" aria-label="Topic pattern filters">
+                    <div class="message-filter-pattern-table-header">
+                        <span>Topic patterns</span>
+                        <MudTooltip Text="Add pattern">
+                            <MudIconButton Size="Size.Small"
+                                           Icon="@Icons.Material.Filled.Add"
+                                           Color="Color.Secondary"
+                                           aria-label="Add topic pattern"
+                                           Class="message-filter-add"
+                                           OnClick="@AddPattern" />
+                        </MudTooltip>
+                    </div>
+
+                    <div class="message-filter-pattern-list">
+                        @for (var i = 0; i < _draftPatterns.Count; i++)
+                        {
+                            var index = i;
+                            <div class="message-filter-pattern-row">
+                                <MudTextField T="string"
+                                              aria-label="@($"Topic pattern {index + 1}")"
+                                              Value="@_draftPatterns[index]"
+                                              ValueChanged="@(v => _draftPatterns[index] = v ?? string.Empty)"
+                                              Placeholder="sensors/#"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Class="message-filter-pattern-field" />
+                                <MudTooltip Text="Remove pattern">
+                                    <MudIconButton Size="Size.Small"
+                                                   Icon="@Icons.Material.Filled.Close"
+                                                   aria-label="@($"Remove topic pattern {index + 1}")"
+                                                   Class="message-filter-remove"
+                                                   OnClick="@(() => RemovePattern(index))" />
+                                </MudTooltip>
+                            </div>
+                        }
+
+                        @if (_draftPatterns.Count == 0)
+                        {
+                            <div class="message-filter-empty" role="status">No topic patterns</div>
+                        }
+                    </div>
+                </div>
+            </div>
         </div>
     </Editor>
 </NodeWidgetShell>
@@ -147,16 +134,6 @@
         => Model.Patterns.Where(static pattern => !string.IsNullOrWhiteSpace(pattern)).Take(MaxSummaryPatterns).ToArray();
     private int PatternOverflow
         => Math.Max(0, Model.Patterns.Count(static pattern => !string.IsNullOrWhiteSpace(pattern)) - MaxSummaryPatterns);
-    private string DraftModeCaption => string.IsNullOrWhiteSpace(_expression) ? "Topic patterns" : "Expression";
-    private string DraftPatternCountCaption
-    {
-        get
-        {
-            var count = _draftPatterns.Count(static pattern => !string.IsNullOrWhiteSpace(pattern));
-            return $"{count} {(count == 1 ? "pattern" : "patterns")}";
-        }
-    }
-
     private const int MaxSummaryPatterns = 3;
 
     private static readonly string[] ExpressionVariables =
