@@ -86,7 +86,7 @@
     align-items: end;
     display: grid;
     gap: 8px;
-    grid-template-columns: minmax(0, 1fr) 128px 142px minmax(120px, 148px) minmax(120px, 148px);
+    grid-template-columns: minmax(0, 1fr) 142px minmax(120px, 148px) minmax(120px, 148px);
     min-width: 0;
 }
 
@@ -96,39 +96,6 @@
     min-height: 36px;
     min-width: 0;
     padding: 0 2px;
-}
-
-.stored-session-source-session-state {
-    align-content: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 18%, transparent);
-    border-radius: 5px;
-    display: grid;
-    gap: 3px;
-    min-height: 36px;
-    min-width: 0;
-    padding: 5px 8px;
-}
-
-.stored-session-source-session-state span {
-    color: var(--flux-text-muted);
-    font-size: 0.58rem;
-    font-weight: 760;
-    line-height: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-transform: uppercase;
-    white-space: nowrap;
-}
-
-.stored-session-source-session-state strong {
-    color: color-mix(in srgb, var(--mud-palette-text-primary) 78%, var(--mud-palette-text-secondary));
-    font-size: 0.72rem;
-    font-weight: 740;
-    line-height: 1.1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .stored-session-source-session-option {

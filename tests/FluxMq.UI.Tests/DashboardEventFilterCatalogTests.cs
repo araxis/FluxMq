@@ -9098,10 +9098,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("stored-session-source-editor-surface");
         markup.ShouldContain("stored-session-source-editor-grid");
         markup.ShouldNotContain("stored-session-source-field-label");
-        markup.ShouldContain("stored-session-source-session-state");
+        markup.ShouldNotContain("stored-session-source-session-state");
         markup.ShouldNotContain("aria-label=\"Stored session source configuration\"");
         markup.ShouldContain("aria-label=\"Stored session source configuration fields\"");
-        markup.ShouldContain("SessionOptionCountCaption");
+        markup.ShouldNotContain("aria-label=\"Stored sessions\"");
+        markup.ShouldNotContain("SessionOptionCountCaption");
         markup.ShouldNotContain("stored-session-source-playback-workspace");
         markup.ShouldNotContain("stored-session-source-panel-header");
         markup.ShouldNotContain("stored-session-source-panel-kicker");
@@ -9157,7 +9158,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".stored-session-source-editor-surface");
         css.ShouldContain(".stored-session-source-editor-grid");
         css.ShouldNotContain(".stored-session-source-field-label");
-        css.ShouldContain(".stored-session-source-session-state");
+        css.ShouldNotContain(".stored-session-source-session-state");
         css.ShouldNotContain(".stored-session-source-playback-workspace");
         css.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         css.ShouldNotContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
@@ -9168,7 +9169,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".stored-session-source-playback-panel");
         css.ShouldNotContain(".stored-session-source-source-row");
         css.ShouldNotContain(".stored-session-source-config-row");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 128px 142px minmax(120px, 148px) minmax(120px, 148px);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 142px minmax(120px, 148px) minmax(120px, 148px);");
         css.ShouldNotContain(".stored-session-source-session-row");
         css.ShouldNotContain(".stored-session-source-timing-row");
         css.ShouldNotContain(".stored-session-source-playback-row");

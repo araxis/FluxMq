@@ -79,10 +79,6 @@
                         No recorded sessions found. Record a session first.
                     </div>
                 }
-                <div class="stored-session-source-session-state" aria-label="Stored sessions">
-                    <span>Stored sessions</span>
-                    <strong>@SessionOptionCountCaption</strong>
-                </div>
                 <div class="stored-session-source-timing-option">
                     <MudCheckBox T="bool"
                                  @bind-Value="_preserveTiming"
@@ -142,13 +138,6 @@
     private string TimingCaption => Model.PreserveTiming ? "Original" : "Immediate";
     private string SpeedCaption => Model.PreserveTiming ? $"{SessionSourceNodeModel.NormalizeSpeed(Model.Speed):0.##}x" : "off";
     private string BufferCaption => SessionSourceNodeModel.NormalizeBoundedCapacity(Model.BoundedCapacity).ToString();
-    private string SessionOptionCountCaption => Live.StoredSessions.Count switch
-    {
-        0 => "None",
-        1 => "1 available",
-        var count => $"{count} available"
-    };
-
     protected override void OnParametersSet()
     {
         LoadDraft();
