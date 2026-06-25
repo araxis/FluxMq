@@ -71,11 +71,8 @@
                 </div>
 
                 <div class="routing-fork-port-composer" aria-label="Routing fork output ports">
-                    <div class="routing-fork-port-actions">
-                        <div class="routing-fork-port-title">
-                            <span>Output ports</span>
-                            <small>Duplicate the input to each named port</small>
-                        </div>
+                    <div class="routing-fork-port-header">
+                        <span>Output port</span>
                         <MudTooltip Text="Add output port">
                             <MudIconButton Icon="@Icons.Material.Filled.Add"
                                            Size="Size.Small"
@@ -90,7 +87,6 @@
                         {
                             var output = _outputDrafts[index];
                             <div class="routing-fork-port-row" @key="output">
-                                <span class="routing-fork-port-index">@(index + 1)</span>
                                 <MudTextField T="string"
                                               @bind-Value="output.Name"
                                               aria-label="@($"Output port {index + 1}")"
