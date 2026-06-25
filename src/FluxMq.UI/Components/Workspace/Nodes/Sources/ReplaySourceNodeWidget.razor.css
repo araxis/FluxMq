@@ -91,7 +91,7 @@
     gap: 8px;
     grid-template-columns: minmax(0, 1fr) 150px 150px;
     min-width: 0;
-    padding: 14px;
+    padding: 12px;
 }
 
 .replay-source-session-option {

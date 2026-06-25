@@ -45,77 +45,79 @@
         </div>
     </Body>
     <Editor>
-        <div class="state-reducer-editor" aria-label="State reducer settings">
-            <div class="state-reducer-config-row" aria-label="State reducer configuration">
-                <MudSelect T="string"
-                           Label="Engine"
-                           @bind-Value="_engine"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           Dense="true"
-                           Class="state-reducer-engine-field">
-                    @foreach (var engine in StateReducerNodeModel.Engines)
-                    {
-                        <MudSelectItem Value="@engine">@EngineOptionLabel(engine)</MudSelectItem>
-                    }
-                </MudSelect>
-                <MudTextField T="string"
-                              Label="Expression name"
-                              @bind-Value="_expressionName"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              Class="state-reducer-name-field" />
-                <MudNumericField T="int"
-                                 Label="Max keys"
-                                 @bind-Value="_maxKeys"
-                                 Min="0"
-                                 Max="1000000"
-                                 Step="128"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Class="state-reducer-max-keys-field" />
-                <MudNumericField T="int"
-                                 Label="Input buffer"
-                                 @bind-Value="_boundedCapacity"
-                                 Min="1"
-                                 Max="100000"
-                                 Step="64"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Class="state-reducer-buffer-field" />
-            </div>
-
-            <section class="state-reducer-rule-surface" aria-label="State reducer rule">
-                <div class="state-reducer-rule-grid">
+        <div class="state-reducer-editor">
+            <section class="state-reducer-editor-surface" aria-label="State reducer settings">
+                <div class="state-reducer-config-row" aria-label="State reducer configuration">
+                    <MudSelect T="string"
+                               Label="Engine"
+                               @bind-Value="_engine"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true"
+                               Class="state-reducer-engine-field">
+                        @foreach (var engine in StateReducerNodeModel.Engines)
+                        {
+                            <MudSelectItem Value="@engine">@EngineOptionLabel(engine)</MudSelectItem>
+                        }
+                    </MudSelect>
                     <MudTextField T="string"
-                                  Label="Reducer"
-                                  @bind-Value="_reducer"
+                                  Label="Expression name"
+                                  @bind-Value="_expressionName"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
-                                  Lines="11"
-                                  Class="state-reducer-reducer-field"
-                                  Placeholder="input" />
+                                  Class="state-reducer-name-field" />
+                    <MudNumericField T="int"
+                                     Label="Max keys"
+                                     @bind-Value="_maxKeys"
+                                     Min="0"
+                                     Max="1000000"
+                                     Step="128"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="state-reducer-max-keys-field" />
+                    <MudNumericField T="int"
+                                     Label="Input buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="64"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="state-reducer-buffer-field" />
+                </div>
 
-                    <aside class="state-reducer-rule-aside">
+                <div class="state-reducer-rule-surface" aria-label="State reducer rule">
+                    <div class="state-reducer-rule-grid">
                         <MudTextField T="string"
-                                      Label="Key expression"
-                                      @bind-Value="_keyExpression"
+                                      Label="Reducer"
+                                      @bind-Value="_reducer"
                                       Variant="Variant.Outlined"
                                       Margin="Margin.Dense"
-                                      Lines="3"
-                                      Class="state-reducer-key-field"
-                                      Placeholder="topic or blank" />
+                                      Lines="11"
+                                      Class="state-reducer-reducer-field"
+                                      Placeholder="input" />
 
-                        <div class="state-reducer-reference" aria-label="State reducer expression variables">
-                            <span class="state-reducer-reference-label">Variables</span>
-                            <span class="state-reducer-variable-list">
-                                @foreach (var variable in ExpressionVariables)
-                                {
-                                    <span class="state-reducer-variable">@variable</span>
-                                }
-                            </span>
-                        </div>
-                    </aside>
+                        <aside class="state-reducer-rule-aside">
+                            <MudTextField T="string"
+                                          Label="Key expression"
+                                          @bind-Value="_keyExpression"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          Lines="3"
+                                          Class="state-reducer-key-field"
+                                          Placeholder="topic or blank" />
+
+                            <div class="state-reducer-reference" aria-label="State reducer expression variables">
+                                <span class="state-reducer-reference-label">Variables</span>
+                                <span class="state-reducer-variable-list">
+                                    @foreach (var variable in ExpressionVariables)
+                                    {
+                                        <span class="state-reducer-variable">@variable</span>
+                                    }
+                                </span>
+                            </div>
+                        </aside>
+                    </div>
                 </div>
             </section>
         </div>

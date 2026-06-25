@@ -6040,6 +6040,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("state-reducer-expression-preview");
         markup.ShouldContain("state-reducer-editor");
         markup.ShouldContain("aria-label=\"State reducer settings\"");
+        markup.ShouldContain("state-reducer-editor-surface");
         markup.ShouldContain("state-reducer-config-row");
         markup.ShouldContain("aria-label=\"State reducer configuration\"");
         markup.ShouldContain("state-reducer-rule-surface");
@@ -6104,6 +6105,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".state-reducer-expression-preview");
         css.ShouldContain("text-overflow: ellipsis;");
         css.ShouldContain(".state-reducer-editor");
+        css.ShouldContain(".state-reducer-editor-surface");
         css.ShouldContain(".state-reducer-config-row");
         css.ShouldContain(".state-reducer-rule-surface");
         css.ShouldContain(".state-reducer-rule-grid");
@@ -6114,7 +6116,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".state-reducer-rule-panel");
         css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
-        css.ShouldContain("padding: 14px;");
+        css.ShouldContain("padding: 12px;");
+        css.ShouldNotContain("padding: 14px;");
+        css.ShouldContain("padding-bottom: 12px;");
         css.ShouldNotContain(".state-reducer-panel-header");
         css.ShouldNotContain(".state-reducer-panel-kicker");
         css.ShouldNotContain(".state-reducer-panel-token");
@@ -6134,8 +6138,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".state-reducer-reference");
         css.ShouldContain(".state-reducer-reference-label");
         css.ShouldContain(".state-reducer-variable-list");
-        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 10%, transparent);");
-        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 30%, transparent);");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 7%, transparent);");
+        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 24%, transparent);");
         css.ShouldContain("border-radius: 5px;");
         css.ShouldContain(".state-reducer-editor ::deep(.state-reducer-reducer-field textarea.mud-input-root)");
         css.ShouldContain("min-height: 246px;");
@@ -6188,6 +6192,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("flow-assertion-expression-preview");
         markup.ShouldContain("flow-assertion-editor");
         markup.ShouldContain("aria-label=\"Flow assertion settings\"");
+        markup.ShouldContain("flow-assertion-editor-surface");
         markup.ShouldContain("flow-assertion-config-row");
         markup.ShouldContain("aria-label=\"Flow assertion configuration\"");
         markup.ShouldContain("flow-assertion-rule-surface");
@@ -6256,6 +6261,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".flow-assertion-expression-preview");
         css.ShouldContain("text-overflow: ellipsis;");
         css.ShouldContain(".flow-assertion-editor");
+        css.ShouldContain(".flow-assertion-editor-surface");
         css.ShouldContain(".flow-assertion-config-row");
         css.ShouldContain(".flow-assertion-rule-surface");
         css.ShouldContain(".flow-assertion-rule-grid");
@@ -6266,7 +6272,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".flow-assertion-rule-panel");
         css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
-        css.ShouldContain("padding: 14px;");
+        css.ShouldContain("padding: 12px;");
+        css.ShouldNotContain("padding: 14px;");
+        css.ShouldContain("padding-bottom: 12px;");
         css.ShouldNotContain(".flow-assertion-source-row");
         css.ShouldContain("grid-template-columns: minmax(220px, 1.25fr) minmax(180px, 1fr) 150px;");
         css.ShouldNotContain(".flow-assertion-expression-row");
@@ -6279,8 +6287,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".flow-assertion-reference");
         css.ShouldContain(".flow-assertion-reference-label");
         css.ShouldContain(".flow-assertion-variable-list");
-        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 10%, transparent);");
-        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 30%, transparent);");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 7%, transparent);");
+        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 24%, transparent);");
         css.ShouldContain("border-radius: 5px;");
         css.ShouldContain(".flow-assertion-editor ::deep(.flow-assertion-expression-field textarea.mud-input-root)");
         css.ShouldContain("min-height: 224px;");
@@ -6402,7 +6410,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".message-filter-rules-surface");
         css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
-        css.ShouldContain("padding: 14px;");
+        css.ShouldContain("padding: 12px;");
+        css.ShouldNotContain("padding: 14px;");
         css.ShouldContain(".message-filter-rule-grid");
         css.ShouldContain("grid-template-columns: minmax(260px, 0.62fr) minmax(0, 1.38fr);");
         css.ShouldContain(".message-filter-pattern-column");
@@ -6419,8 +6428,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 30px;");
         css.ShouldContain("align-items: center;");
         css.ShouldContain(".message-filter-reference");
-        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 10%, transparent);");
-        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 30%, transparent);");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 7%, transparent);");
+        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 24%, transparent);");
         css.ShouldContain("border-radius: 5px;");
         css.ShouldContain(".message-filter-reference-label");
         css.ShouldContain(".message-filter-editor ::deep(.mud-input-control)");
@@ -8092,7 +8101,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".generic-node-editor-panel");
         css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
-        css.ShouldContain("padding: 14px;");
+        css.ShouldContain("padding: 12px;");
+        css.ShouldNotContain("padding: 14px;");
         css.ShouldNotContain(".generic-node-editor-panel-header");
         css.ShouldNotContain(".generic-node-editor-kicker");
         css.ShouldNotContain(".generic-node-editor-panel-token");
@@ -8461,6 +8471,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".metric-source-parameter-table-head");
         css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldContain("padding: 12px;");
+        css.ShouldNotContain("padding: 14px;");
         css.ShouldContain(".metric-source-parameter-grid");
         css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
         css.ShouldContain(".metric-source-parameter-cell");
@@ -8718,7 +8730,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".replay-source-config-row");
         css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
-        css.ShouldContain("padding: 14px;");
+        css.ShouldContain("padding: 12px;");
+        css.ShouldNotContain("padding: 14px;");
         css.ShouldNotContain(".replay-source-panel-header");
         css.ShouldNotContain(".replay-source-panel-kicker");
         css.ShouldNotContain(".replay-source-panel-token");

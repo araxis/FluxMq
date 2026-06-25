@@ -101,7 +101,7 @@
     display: grid;
     gap: 12px;
     min-width: 0;
-    padding: 14px;
+    padding: 12px;
 }
 
 .generic-node-editor-meta-row {
