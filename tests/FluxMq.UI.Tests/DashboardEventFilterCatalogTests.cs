@@ -7098,14 +7098,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("routing-switch-variable-reference");
         markup.ShouldContain("ExpressionVariables");
         markup.ShouldContain("routing-switch-variable-token");
-        markup.ShouldContain("routing-switch-route-section");
+        markup.ShouldContain("routing-switch-route-composer");
         markup.ShouldContain("aria-label=\"Routing switch route outputs\"");
+        markup.ShouldContain("routing-switch-route-actions");
+        markup.ShouldContain("routing-switch-route-title");
         markup.ShouldContain("routing-switch-route-list");
         markup.ShouldContain("AddRoute");
-        markup.ShouldContain("routing-switch-route-header");
-        markup.ShouldContain("routing-switch-route-column-header");
         markup.ShouldContain("Class=\"routing-switch-route-add\"");
         markup.ShouldContain("routing-switch-route-row");
+        markup.ShouldContain("routing-switch-route-index");
         markup.ShouldContain("aria-label=\"@($\"Route match key {index + 1}\")\"");
         markup.ShouldContain("aria-label=\"@($\"Route output port {index + 1}\")\"");
         markup.ShouldContain("@bind-Value=\"route.Key\"");
@@ -7140,6 +7141,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("routing-switch-config-grid");
         markup.ShouldNotContain("routing-switch-expression-workspace");
         markup.ShouldNotContain("routing-switch-route-workspace");
+        markup.ShouldNotContain("routing-switch-route-section");
+        markup.ShouldNotContain("routing-switch-route-header");
+        markup.ShouldNotContain("routing-switch-route-column-header");
 
         css.ShouldContain(".routing-switch-summary");
         css.ShouldContain(".routing-switch-meta");
@@ -7154,7 +7158,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".routing-switch-editor-surface");
         css.ShouldContain(".routing-switch-config-row");
         css.ShouldContain(".routing-switch-expression-row");
-        css.ShouldContain(".routing-switch-route-section");
+        css.ShouldContain(".routing-switch-route-composer");
+        css.ShouldContain(".routing-switch-route-actions");
+        css.ShouldContain(".routing-switch-route-title");
         css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
         css.ShouldContain("gap: 10px;");
@@ -7170,12 +7176,11 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".routing-switch-expression-cell");
         css.ShouldNotContain(".routing-switch-route-editor");
         css.ShouldContain(".routing-switch-route-list");
-        css.ShouldContain(".routing-switch-route-header");
-        css.ShouldContain(".routing-switch-route-column-header");
         css.ShouldContain(".routing-switch-route-row");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 30px;");
+        css.ShouldContain(".routing-switch-route-index");
+        css.ShouldContain("grid-template-columns: 24px minmax(0, 1fr) minmax(0, 1fr) 30px;");
         css.ShouldContain("align-items: center;");
-        css.ShouldContain(".routing-switch-route-header ::deep(.routing-switch-route-add.mud-icon-button)");
+        css.ShouldContain(".routing-switch-route-actions ::deep(.routing-switch-route-add.mud-icon-button)");
         css.ShouldContain(".routing-switch-editor ::deep(.mud-input-control)");
         css.ShouldContain("@media (max-width: 720px)");
         css.ShouldNotContain(".flow-node-filters");
@@ -7186,6 +7191,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".routing-switch-config-grid");
         css.ShouldNotContain(".routing-switch-expression-workspace");
         css.ShouldNotContain(".routing-switch-route-workspace");
+        css.ShouldNotContain(".routing-switch-route-section");
+        css.ShouldNotContain(".routing-switch-route-header");
+        css.ShouldNotContain(".routing-switch-route-column-header");
         css.ShouldNotContain("padding: 14px;");
         css.ShouldNotContain("border-radius: 999px;");
     }
