@@ -4,6 +4,7 @@
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.FindInPage"
                  CategoryColor="@Color.Secondary"
+                 EditDialogMaxWidth="MaxWidth.Medium"
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
                  ShowCategoryChip="false">
@@ -42,4 +43,46 @@
             </div>
         </div>
     </Body>
+    <Editor>
+        <div class="payload-inspector-node-editor" aria-label="Payload inspector details">
+            <div class="payload-inspector-node-editor-surface">
+                <div class="payload-inspector-node-editor-summary" aria-label="Payload inspector contract summary">
+                    <div class="payload-inspector-node-editor-cell">
+                        <span>Input</span>
+                        <strong>MqttEnvelope</strong>
+                    </div>
+                    <div class="payload-inspector-node-editor-cell">
+                        <span>Output</span>
+                        <strong>InspectedMqttMessage</strong>
+                    </div>
+                    <div class="payload-inspector-node-editor-cell">
+                        <span>Format</span>
+                        <strong>Auto detect</strong>
+                    </div>
+                </div>
+
+                <div class="payload-inspector-node-editor-contract-list" aria-label="Payload inspector contracts">
+                    <div class="payload-inspector-node-editor-contract-item">
+                        <span class="payload-inspector-node-editor-contract-label">Input</span>
+                        <div class="payload-inspector-node-editor-tokens" aria-label="Payload inspector input contract">
+                            <span class="payload-inspector-node-token">topic</span>
+                            <span class="payload-inspector-node-token">payload</span>
+                            <span class="payload-inspector-node-token">qos</span>
+                            <span class="payload-inspector-node-token">retain</span>
+                        </div>
+                    </div>
+
+                    <div class="payload-inspector-node-editor-contract-item">
+                        <span class="payload-inspector-node-editor-contract-label">Output</span>
+                        <div class="payload-inspector-node-editor-tokens" aria-label="Payload inspector output contract">
+                            <span class="payload-inspector-node-token">kind</span>
+                            <span class="payload-inspector-node-token">contentType</span>
+                            <span class="payload-inspector-node-token">formatted</span>
+                            <span class="payload-inspector-node-token">hexDump</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Editor>
 </NodeWidgetShell>
