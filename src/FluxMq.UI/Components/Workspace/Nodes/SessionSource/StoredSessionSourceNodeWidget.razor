@@ -48,7 +48,13 @@
                 var sessions = Live.StoredSessions;
             }
             <section class="stored-session-source-editor-surface" aria-label="Stored session source configuration">
-                <div class="stored-session-source-session-row">
+                <div class="stored-session-source-editor-grid" aria-label="Stored session source configuration fields">
+                    <span class="stored-session-source-field-label">Session</span>
+                    <span class="stored-session-source-field-label">Stored</span>
+                    <span class="stored-session-source-field-label">Timing</span>
+                    <span class="stored-session-source-field-label">Speed</span>
+                    <span class="stored-session-source-field-label">Buffer</span>
+
                     @if (sessions.Count > 0)
                     {
                         <MudSelect T="string"
@@ -84,9 +90,6 @@
                         <span>Stored sessions</span>
                         <strong>@SessionOptionCountCaption</strong>
                     </div>
-                </div>
-
-                <div class="stored-session-source-playback-row" aria-label="Stored session playback settings">
                     <div class="stored-session-source-timing-option">
                         <MudCheckBox T="bool"
                                      @bind-Value="_preserveTiming"

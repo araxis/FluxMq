@@ -87,27 +87,28 @@
     border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     border-radius: 6px;
     display: grid;
-    gap: 12px;
+    gap: 8px;
     min-width: 0;
     padding: 12px;
 }
 
-.stored-session-source-session-row {
+.stored-session-source-editor-grid {
     align-items: center;
     display: grid;
-    gap: 10px;
-    grid-template-columns: minmax(0, 1fr) 132px;
+    gap: 7px 10px;
+    grid-template-columns: minmax(0, 1fr) 128px 142px minmax(120px, 150px) minmax(120px, 150px);
     min-width: 0;
 }
 
-.stored-session-source-playback-row {
-    align-items: center;
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 36%, transparent);
-    display: grid;
-    gap: 10px;
-    grid-template-columns: minmax(160px, 1fr) minmax(130px, 170px) minmax(130px, 170px);
+.stored-session-source-field-label {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 68%, var(--flux-text-muted));
+    font-size: 0.62rem;
+    font-weight: 780;
+    line-height: 1;
     min-width: 0;
-    padding-top: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .stored-session-source-timing-option {
@@ -216,9 +217,12 @@
 
 @media (max-width: 720px) {
     .stored-session-source-meta,
-    .stored-session-source-session-row,
-    .stored-session-source-playback-row {
+    .stored-session-source-editor-grid {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .stored-session-source-field-label {
+        display: none;
     }
 
     .stored-session-source-contract {
