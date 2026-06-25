@@ -9,6 +9,7 @@
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
+                 EditorValidationError="@ValidateEditor"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
@@ -57,8 +58,8 @@
     </Body>
     <Editor>
         <div class="generated-source-editor" aria-label="Generated source settings">
-            <div class="generated-source-message-panel" aria-label="Generated messages">
-                <div class="generated-source-action-row" aria-label="Generated source actions">
+            <div class="generated-source-editor-surface" aria-label="Generated messages">
+                <div class="generated-source-editor-toolbar" aria-label="Generated source actions">
                     <MudNumericField T="int"
                                      Label="Output buffer"
                                      @bind-Value="_boundedCapacity"
@@ -88,8 +89,7 @@
                     <div class="generated-source-message-header" aria-hidden="true">
                         <span>Topic</span>
                         <span>Payload</span>
-                        <span>QoS</span>
-                        <span>Retained</span>
+                        <span>Options</span>
                         <span>Received at</span>
                         <span></span>
                     </div>
@@ -100,7 +100,7 @@
                             <div class="generated-source-message-main">
                                 <MudTextField T="string"
                                               Value="@_messages[index].Topic"
-                                              ValueChanged="@(value => _messages[index].Topic = value ?? string.Empty)"
+                                              ValueChanged="@(value => UpdateMessageTopicAsync(index, value))"
                                               Placeholder="@($"Topic {index + 1}")"
                                               aria-label="@($"Generated message {index + 1} topic")"
                                               Variant="Variant.Outlined"
@@ -115,19 +115,19 @@
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Class="generated-source-payload-field" />
-                                <MudSelect T="int"
-                                           Value="@_messages[index].QualityOfService"
-                                           ValueChanged="@(value => _messages[index].QualityOfService = value)"
-                                           aria-label="@($"Generated message {index + 1} QoS")"
-                                           Variant="Variant.Outlined"
-                                           Margin="Margin.Dense"
-                                           Dense="true"
-                                           Class="generated-source-qos-field">
-                                    <MudSelectItem Value="@(0)">QoS 0</MudSelectItem>
-                                    <MudSelectItem Value="@(1)">QoS 1</MudSelectItem>
-                                    <MudSelectItem Value="@(2)">QoS 2</MudSelectItem>
-                                </MudSelect>
-                                <div class="generated-source-retain-cell">
+                                <div class="generated-source-options-cell">
+                                    <MudSelect T="int"
+                                               Value="@_messages[index].QualityOfService"
+                                               ValueChanged="@(value => _messages[index].QualityOfService = value)"
+                                               aria-label="@($"Generated message {index + 1} QoS")"
+                                               Variant="Variant.Outlined"
+                                               Margin="Margin.Dense"
+                                               Dense="true"
+                                               Class="generated-source-qos-field">
+                                        <MudSelectItem Value="@(0)">QoS 0</MudSelectItem>
+                                        <MudSelectItem Value="@(1)">QoS 1</MudSelectItem>
+                                        <MudSelectItem Value="@(2)">QoS 2</MudSelectItem>
+                                    </MudSelect>
                                     <MudTooltip Text="Retain generated message">
                                         <MudCheckBox T="bool"
                                                      Value="@_messages[index].Retain"
@@ -199,6 +199,15 @@
         await RefreshDialogAsync();
     }
 
+    private async Task UpdateMessageTopicAsync(int index, string? value)
+    {
+        if (index >= 0 && index < _messages.Count)
+        {
+            _messages[index].Topic = value ?? string.Empty;
+            await RefreshDialogAsync();
+        }
+    }
+
     private void AddMessageDraft()
         => _messages.Add(new GeneratedMessageDraft
         {
@@ -220,6 +229,11 @@
         await InvokeAsync(StateHasChanged);
         await DialogRefresh.RefreshAsync(Node.NodeName);
     }
+
+    private string? ValidateEditor()
+        => _messages.Any(static message => !string.IsNullOrWhiteSpace(message.Topic))
+            ? null
+            : "Add at least one generated message before saving.";
 
     private Task SaveAsync()
     {
