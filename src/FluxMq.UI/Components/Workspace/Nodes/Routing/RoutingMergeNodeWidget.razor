@@ -46,66 +46,68 @@
     </Body>
     <Editor>
         <div class="routing-merge-editor" aria-label="Routing merge settings">
-            <div class="routing-merge-config-row" aria-label="Routing merge configuration">
-                <MudSelect T="string"
-                           Label="Input type"
-                           @bind-Value="_inputType"
-                           aria-label="Routing merge input type"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           Dense="true"
-                           Class="routing-merge-input-field">
-                    @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
-                    {
-                        <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
-                    }
-                </MudSelect>
+            <section class="routing-merge-editor-surface" aria-label="Routing merge configuration">
+                <div class="routing-merge-config-row">
+                    <MudSelect T="string"
+                               Label="Input type"
+                               @bind-Value="_inputType"
+                               aria-label="Routing merge input type"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true"
+                               Class="routing-merge-input-field">
+                        @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                        {
+                            <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                        }
+                    </MudSelect>
 
-                <MudNumericField T="int"
-                                 Label="Input buffer"
-                                 @bind-Value="_boundedCapacity"
-                                 aria-label="Routing merge input buffer"
-                                 Min="1"
-                                 Max="100000"
-                                 Step="100"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Class="routing-merge-buffer-field" />
-            </div>
+                    <MudNumericField T="int"
+                                     Label="Input buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     aria-label="Routing merge input buffer"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="routing-merge-buffer-field" />
+                </div>
 
-            <section class="routing-merge-port-workspace" aria-label="Routing merge input ports">
-                <div class="routing-merge-port-list">
-                    <div class="routing-merge-port-column-header">
-                        <span>Input port</span>
-                        <MudTooltip Text="Add input port">
-                            <MudIconButton Icon="@Icons.Material.Filled.Add"
-                                           Size="Size.Small"
-                                           Class="routing-merge-add-port"
-                                           aria-label="Add input port"
-                                           OnClick="@AddInput" />
-                        </MudTooltip>
-                    </div>
-                    @for (var index = 0; index < _inputDrafts.Count; index++)
-                    {
-                        var input = _inputDrafts[index];
-                        <div class="routing-merge-port-row" @key="input">
-                            <MudTextField T="string"
-                                          @bind-Value="input.Name"
-                                          aria-label="@($"Input port {index + 1}")"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense"
-                                          Class="routing-merge-input-name-field"
-                                          Placeholder="Primary" />
-                            <MudTooltip Text="@(_inputDrafts.Count > 1 ? "Remove input port" : "Keep at least one input")">
-                                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                <div class="routing-merge-port-section" aria-label="Routing merge input ports">
+                    <div class="routing-merge-port-list">
+                        <div class="routing-merge-port-column-header">
+                            <span>Input port</span>
+                            <MudTooltip Text="Add input port">
+                                <MudIconButton Icon="@Icons.Material.Filled.Add"
                                                Size="Size.Small"
-                                               Disabled="@(_inputDrafts.Count <= 1)"
-                                               Class="routing-merge-remove-port"
-                                               aria-label="@($"Remove input port {input.Name}")"
-                                               OnClick="@(() => RemoveInput(input))" />
+                                               Class="routing-merge-add-port"
+                                               aria-label="Add input port"
+                                               OnClick="@AddInput" />
                             </MudTooltip>
                         </div>
-                    }
+                        @for (var index = 0; index < _inputDrafts.Count; index++)
+                        {
+                            var input = _inputDrafts[index];
+                            <div class="routing-merge-port-row" @key="input">
+                                <MudTextField T="string"
+                                              @bind-Value="input.Name"
+                                              aria-label="@($"Input port {index + 1}")"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Class="routing-merge-input-name-field"
+                                              Placeholder="Primary" />
+                                <MudTooltip Text="@(_inputDrafts.Count > 1 ? "Remove input port" : "Keep at least one input")">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                   Size="Size.Small"
+                                                   Disabled="@(_inputDrafts.Count <= 1)"
+                                                   Class="routing-merge-remove-port"
+                                                   aria-label="@($"Remove input port {input.Name}")"
+                                                   OnClick="@(() => RemoveInput(input))" />
+                                </MudTooltip>
+                            </div>
+                        }
+                    </div>
                 </div>
             </section>
         </div>

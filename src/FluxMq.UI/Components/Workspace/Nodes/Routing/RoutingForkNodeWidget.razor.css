@@ -82,18 +82,17 @@
 
 .routing-fork-editor {
     display: grid;
-    gap: 12px;
     min-width: 0;
 }
 
-.routing-fork-config-row,
-.routing-fork-port-workspace {
+.routing-fork-editor-surface {
     background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
     border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     border-radius: 6px;
     display: grid;
+    gap: 10px;
     min-width: 0;
-    padding: 14px;
+    padding: 12px;
 }
 
 .routing-fork-config-row {
@@ -128,10 +127,12 @@
     min-width: 0;
 }
 
-.routing-fork-port-workspace {
+.routing-fork-port-section {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     display: grid;
     gap: 8px;
     min-width: 0;
+    padding-top: 4px;
 }
 
 .routing-fork-port-list {
@@ -168,7 +169,7 @@
     gap: 8px;
     grid-template-columns: minmax(0, 1fr) 30px;
     min-width: 0;
-    padding: 8px 0 0;
+    padding: 8px 2px 0;
 }
 
 .routing-fork-port-row {
