@@ -82,7 +82,7 @@
 
 .routing-fork-editor {
     display: grid;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 
@@ -121,20 +121,20 @@
 .routing-fork-port-composer {
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     display: grid;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
-    padding-top: 10px;
+    padding-top: 8px;
 }
 
 .routing-fork-port-header {
     align-items: center;
     color: color-mix(in srgb, var(--mud-palette-text-primary) 70%, var(--mud-palette-text-secondary));
     display: grid;
-    gap: 8px;
+    gap: 6px;
     grid-template-columns: minmax(0, 1fr) 30px;
-    min-height: 30px;
+    min-height: 28px;
     min-width: 0;
-    padding: 0 0 5px;
+    padding: 0 0 4px;
 }
 
 .routing-fork-port-header span {
@@ -158,11 +158,11 @@
     align-items: center;
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 32%, transparent);
     display: grid;
-    gap: 7px;
+    gap: 6px;
     grid-template-columns: minmax(0, 1fr) 30px;
-    min-height: 42px;
+    min-height: 40px;
     min-width: 0;
-    padding: 6px 0;
+    padding: 5px 0;
 }
 
 .routing-fork-port-header ::deep(.routing-fork-add-port.mud-icon-button),

@@ -7410,7 +7410,8 @@ public sealed class DashboardEventFilterCatalogTests
         forkCss.ShouldNotContain(".routing-fork-editor-surface");
         forkCss.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         forkCss.ShouldNotContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
-        forkCss.ShouldContain("gap: 10px;");
+        forkCss.ShouldNotContain("gap: 10px;");
+        forkCss.ShouldContain("gap: 8px;");
         forkCss.ShouldNotContain("padding: 12px;");
         forkCss.ShouldNotContain(".routing-fork-panel-header");
         forkCss.ShouldNotContain(".routing-fork-panel-kicker");
@@ -7419,7 +7420,8 @@ public sealed class DashboardEventFilterCatalogTests
         forkCss.ShouldNotContain(".routing-fork-source-row");
         forkCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 150px;");
         forkCss.ShouldNotContain(".routing-fork-port-editor");
-        forkCss.ShouldContain("padding-top: 10px;");
+        forkCss.ShouldNotContain("padding-top: 10px;");
+        forkCss.ShouldContain("padding-top: 8px;");
         forkCss.ShouldNotContain("padding-top: 4px;");
         forkCss.ShouldNotContain(".routing-fork-port-section");
         forkCss.ShouldNotContain(".routing-fork-port-column-header");
@@ -7430,6 +7432,7 @@ public sealed class DashboardEventFilterCatalogTests
         forkCss.ShouldNotContain(".routing-fork-port-index");
         forkCss.ShouldContain("align-items: center;");
         forkCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 30px;");
+        forkCss.ShouldContain("min-height: 40px;");
         forkCss.ShouldContain(".routing-fork-port-header ::deep(.routing-fork-add-port.mud-icon-button)");
         forkCss.ShouldContain(".routing-fork-editor ::deep(.mud-input-control)");
         forkCss.ShouldNotContain(".routing-fork-panel-title");
@@ -7525,7 +7528,8 @@ public sealed class DashboardEventFilterCatalogTests
         mergeCss.ShouldNotContain(".routing-merge-editor-surface");
         mergeCss.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         mergeCss.ShouldNotContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
-        mergeCss.ShouldContain("gap: 10px;");
+        mergeCss.ShouldNotContain("gap: 10px;");
+        mergeCss.ShouldContain("gap: 8px;");
         mergeCss.ShouldNotContain("padding: 12px;");
         mergeCss.ShouldNotContain(".routing-merge-panel-header");
         mergeCss.ShouldNotContain(".routing-merge-panel-kicker");
@@ -7534,7 +7538,8 @@ public sealed class DashboardEventFilterCatalogTests
         mergeCss.ShouldNotContain(".routing-merge-source-row");
         mergeCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 150px;");
         mergeCss.ShouldNotContain(".routing-merge-port-editor");
-        mergeCss.ShouldContain("padding-top: 10px;");
+        mergeCss.ShouldNotContain("padding-top: 10px;");
+        mergeCss.ShouldContain("padding-top: 8px;");
         mergeCss.ShouldNotContain("padding-top: 4px;");
         mergeCss.ShouldNotContain(".routing-merge-port-section");
         mergeCss.ShouldNotContain(".routing-merge-port-column-header");
@@ -7545,6 +7550,7 @@ public sealed class DashboardEventFilterCatalogTests
         mergeCss.ShouldNotContain(".routing-merge-port-index");
         mergeCss.ShouldContain("align-items: center;");
         mergeCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 30px;");
+        mergeCss.ShouldContain("min-height: 40px;");
         mergeCss.ShouldContain(".routing-merge-port-header ::deep(.routing-merge-add-port.mud-icon-button)");
         mergeCss.ShouldContain(".routing-merge-editor ::deep(.mud-input-control)");
         mergeCss.ShouldNotContain(".routing-merge-panel-title");
