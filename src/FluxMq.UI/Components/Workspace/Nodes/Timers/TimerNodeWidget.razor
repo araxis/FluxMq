@@ -48,158 +48,150 @@
         <div class="timer-node-editor" aria-label="Timer settings">
             @if (Node is TimerIntervalNodeModel)
             {
-                <div class="timer-node-config-section interval" aria-label="Interval timer settings">
-                    <div class="timer-node-timing-grid">
-                        <MudNumericField T="int"
-                                         Label="Interval ms"
-                                         @bind-Value="_intervalMilliseconds"
-                                         Min="1"
-                                         Max="86400000"
-                                         Step="100"
-                                         Variant="Variant.Outlined"
-                                         Margin="Margin.Dense"
-                                         Class="timer-node-field" />
-                        <MudNumericField T="int"
-                                         Label="Initial delay ms"
-                                         @bind-Value="_initialDelayMilliseconds"
-                                         Min="0"
-                                         Max="86400000"
-                                         Step="100"
-                                         Variant="Variant.Outlined"
-                                         Margin="Margin.Dense"
-                                         Class="timer-node-field" />
-                    </div>
-
-                    <div class="timer-node-limit-row interval">
-                        <MudNumericField T="int"
-                                         Label="Max ticks"
-                                         @bind-Value="_maxTicks"
-                                         Min="0"
-                                         Max="1000000"
-                                         Step="1"
-                                         Variant="Variant.Outlined"
-                                         Margin="Margin.Dense"
-                                         Class="timer-node-field" />
-                        <MudNumericField T="int"
-                                         Label="Output buffer"
-                                         @bind-Value="_boundedCapacity"
-                                         Min="1"
-                                         Max="100000"
-                                         Step="100"
-                                         Variant="Variant.Outlined"
-                                         Margin="Margin.Dense"
-                                         Class="timer-node-field" />
-                        <div class="timer-node-option-cell">
-                            <MudCheckBox T="bool"
-                                         @bind-Value="_emitImmediately"
-                                         Label="Emit immediately"
-                                         Dense="true"
-                                         Class="timer-node-check" />
-                        </div>
-                    </div>
+                <div class="timer-node-config-row interval" aria-label="Interval timer settings">
+                    <MudNumericField T="int"
+                                     Label="Interval ms"
+                                     @bind-Value="_intervalMilliseconds"
+                                     Min="1"
+                                     Max="86400000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="timer-node-field" />
+                    <MudNumericField T="int"
+                                     Label="Initial delay ms"
+                                     @bind-Value="_initialDelayMilliseconds"
+                                     Min="0"
+                                     Max="86400000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="timer-node-field" />
+                    <MudNumericField T="int"
+                                     Label="Output buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="timer-node-field" />
                 </div>
+
+                <section class="timer-node-limit-workspace interval" aria-label="Interval timer limits">
+                    <MudNumericField T="int"
+                                     Label="Max ticks"
+                                     @bind-Value="_maxTicks"
+                                     Min="0"
+                                     Max="1000000"
+                                     Step="1"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="timer-node-field" />
+                    <div class="timer-node-option-cell">
+                        <MudCheckBox T="bool"
+                                     @bind-Value="_emitImmediately"
+                                     Label="Emit immediately"
+                                     Dense="true"
+                                     Class="timer-node-check" />
+                    </div>
+                </section>
             }
             else if (Node is TimerScheduleNodeModel)
             {
-                <div class="timer-node-config-section schedule" aria-label="Scheduled timer settings">
-                    <div class="timer-node-timing-grid schedule">
-                        <MudTextField T="string"
-                                      Label="Cron"
-                                      @bind-Value="_cron"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      Class="timer-node-field" />
-                        <MudTextField T="string"
-                                      Label="Time zone"
-                                      @bind-Value="_timeZoneId"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      Class="timer-node-field" />
-                    </div>
-
-                    <div class="timer-node-limit-row schedule">
-                        <MudNumericField T="int"
-                                         Label="Max ticks"
-                                         @bind-Value="_maxTicks"
-                                         Min="0"
-                                         Max="1000000"
-                                         Step="1"
-                                         Variant="Variant.Outlined"
-                                         Margin="Margin.Dense"
-                                         Class="timer-node-field" />
-                        <MudNumericField T="int"
-                                         Label="Output buffer"
-                                         @bind-Value="_boundedCapacity"
-                                         Min="1"
-                                         Max="100000"
-                                         Step="100"
-                                         Variant="Variant.Outlined"
-                                         Margin="Margin.Dense"
-                                         Class="timer-node-field" />
-                    </div>
+                <div class="timer-node-config-row schedule" aria-label="Scheduled timer settings">
+                    <MudTextField T="string"
+                                  Label="Cron"
+                                  @bind-Value="_cron"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="timer-node-field" />
+                    <MudTextField T="string"
+                                  Label="Time zone"
+                                  @bind-Value="_timeZoneId"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="timer-node-field" />
+                    <MudNumericField T="int"
+                                     Label="Output buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="timer-node-field" />
                 </div>
+
+                <section class="timer-node-limit-workspace schedule" aria-label="Scheduled timer limits">
+                    <MudNumericField T="int"
+                                     Label="Max ticks"
+                                     @bind-Value="_maxTicks"
+                                     Min="0"
+                                     Max="1000000"
+                                     Step="1"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="timer-node-field" />
+                </section>
             }
             else if (Node is TimerDelayNodeModel)
             {
-                <div class="timer-node-config-section passthrough" aria-label="Delay timer settings">
-                    <div class="timer-node-passthrough-grid">
-                        @InputTypeSelect()
-                        <MudNumericField T="int"
-                                         Label="Delay ms"
-                                         @bind-Value="_delayMilliseconds"
-                                         Min="0"
-                                         Max="86400000"
-                                         Step="100"
-                                         Variant="Variant.Outlined"
-                                         Margin="Margin.Dense"
-                                         Class="timer-node-field" />
-                        @BufferField()
-                    </div>
+                <div class="timer-node-config-row passthrough" aria-label="Delay timer settings">
+                    @InputTypeSelect()
+                    <MudNumericField T="int"
+                                     Label="Delay ms"
+                                     @bind-Value="_delayMilliseconds"
+                                     Min="0"
+                                     Max="86400000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="timer-node-field" />
+                    @BufferField()
                 </div>
             }
             else if (Node is TimerDebounceNodeModel)
             {
-                <div class="timer-node-config-section passthrough" aria-label="Debounce timer settings">
-                    <div class="timer-node-passthrough-grid">
-                        @InputTypeSelect()
-                        <MudNumericField T="int"
-                                         Label="Quiet period ms"
-                                         @bind-Value="_quietPeriodMilliseconds"
-                                         Min="1"
-                                         Max="86400000"
-                                         Step="100"
-                                         Variant="Variant.Outlined"
-                                         Margin="Margin.Dense"
-                                         Class="timer-node-field" />
-                        @BufferField()
-                    </div>
+                <div class="timer-node-config-row passthrough" aria-label="Debounce timer settings">
+                    @InputTypeSelect()
+                    <MudNumericField T="int"
+                                     Label="Quiet period ms"
+                                     @bind-Value="_quietPeriodMilliseconds"
+                                     Min="1"
+                                     Max="86400000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="timer-node-field" />
+                    @BufferField()
                 </div>
             }
             else if (Node is TimerThrottleNodeModel)
             {
-                <div class="timer-node-config-section passthrough throttle" aria-label="Throttle timer settings">
-                    <div class="timer-node-passthrough-grid throttle">
-                        @InputTypeSelect()
-                        <MudNumericField T="int"
-                                         Label="Interval ms"
-                                         @bind-Value="_throttleIntervalMilliseconds"
-                                         Min="1"
-                                         Max="86400000"
-                                         Step="100"
-                                         Variant="Variant.Outlined"
-                                         Margin="Margin.Dense"
-                                         Class="timer-node-field" />
-                        @BufferField()
-                    </div>
+                <div class="timer-node-config-row passthrough throttle" aria-label="Throttle timer settings">
+                    @InputTypeSelect()
+                    <MudNumericField T="int"
+                                     Label="Interval ms"
+                                     @bind-Value="_throttleIntervalMilliseconds"
+                                     Min="1"
+                                     Max="86400000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="timer-node-field" />
+                    @BufferField()
+                </div>
 
-                    <div class="timer-node-option-row">
+                <section class="timer-node-option-workspace" aria-label="Throttle timer options">
+                    <div class="timer-node-option-cell">
                         <MudCheckBox T="bool"
                                      @bind-Value="_emitFirstImmediately"
                                      Label="Emit first immediately"
                                      Dense="true"
                                      Class="timer-node-check" />
                     </div>
-                </div>
+                </section>
             }
         </div>
     </Editor>
@@ -429,7 +421,7 @@
     </MudSelect>;
 
     private RenderFragment BufferField() => @<MudNumericField T="int"
-                                                              Label="Buffer"
+                                                              Label="Input buffer"
                                                               @bind-Value="_boundedCapacity"
                                                               Min="1"
                                                               Max="100000"

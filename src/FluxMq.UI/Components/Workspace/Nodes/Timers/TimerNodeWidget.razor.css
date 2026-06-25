@@ -87,55 +87,44 @@
 
 .timer-node-editor {
     display: grid;
-    gap: 10px;
+    gap: 12px;
     min-width: 0;
 }
 
-.timer-node-config-section,
-.timer-node-timing-grid,
-.timer-node-passthrough-grid,
-.timer-node-limit-row,
-.timer-node-option-row {
-    display: grid;
-    min-width: 0;
-}
-
-.timer-node-config-section {
+.timer-node-config-row,
+.timer-node-limit-workspace,
+.timer-node-option-workspace {
     background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
     border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     border-radius: 6px;
-    gap: 12px;
+    display: grid;
+    min-width: 0;
     padding: 14px;
 }
 
-.timer-node-timing-grid,
-.timer-node-passthrough-grid,
-.timer-node-limit-row {
+.timer-node-config-row,
+.timer-node-limit-workspace {
     align-items: end;
     gap: 8px;
 }
 
-.timer-node-timing-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+.timer-node-config-row.interval,
+.timer-node-config-row.schedule,
+.timer-node-config-row.passthrough {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 148px;
 }
 
-.timer-node-passthrough-grid {
-    grid-template-columns: minmax(0, 1fr) 160px 148px;
+.timer-node-limit-workspace.interval {
+    grid-template-columns: minmax(118px, 0.42fr) minmax(160px, 0.58fr);
 }
 
-.timer-node-limit-row.interval {
-    grid-template-columns: 118px 136px minmax(132px, 0.78fr);
+.timer-node-limit-workspace.schedule {
+    grid-template-columns: minmax(132px, 0.38fr);
 }
 
-.timer-node-limit-row.schedule {
-    grid-template-columns: 132px 148px;
-}
-
-.timer-node-option-row {
+.timer-node-option-workspace {
     align-items: center;
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 34%, transparent);
     min-height: 40px;
-    padding-top: 2px;
 }
 
 .timer-node-option-cell {
@@ -180,10 +169,11 @@
 
 @media (max-width: 760px) {
     .timer-node-meta,
-    .timer-node-timing-grid,
-    .timer-node-passthrough-grid,
-    .timer-node-limit-row.interval,
-    .timer-node-limit-row.schedule {
+    .timer-node-config-row.interval,
+    .timer-node-config-row.schedule,
+    .timer-node-config-row.passthrough,
+    .timer-node-limit-workspace.interval,
+    .timer-node-limit-workspace.schedule {
         grid-template-columns: minmax(0, 1fr);
     }
 
