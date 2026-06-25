@@ -27,8 +27,8 @@
                 </div>
             </div>
 
-            <div class="routing-window-limits" aria-label="Routing window limits">
-                <span class="routing-window-contract-label">Window limits</span>
+            <div class="routing-window-boundary" aria-label="Routing window boundary">
+                <span class="routing-window-boundary-label">Boundary</span>
                 <span class="routing-window-token">@MaxItemsCaption</span>
                 <span class="routing-window-token">@TimeCaption</span>
                 <span class="routing-window-token">@PartialCaption</span>
@@ -37,66 +37,64 @@
     </Body>
     <Editor>
         <div class="routing-window-editor" aria-label="Routing window settings">
-            <section class="routing-window-editor-surface" aria-label="Routing window configuration">
-                <div class="routing-window-config-row">
-                    <MudSelect T="string"
-                               Label="Input type"
-                               @bind-Value="_inputType"
-                               aria-label="Routing window input type"
-                               Variant="Variant.Outlined"
-                               Margin="Margin.Dense"
-                               Dense="true"
-                               Class="routing-window-input-field">
-                        @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
-                        {
-                            <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
-                        }
-                    </MudSelect>
+            <div class="routing-window-primary-row" aria-label="Routing window input settings">
+                <MudSelect T="string"
+                           Label="Input type"
+                           @bind-Value="_inputType"
+                           aria-label="Routing window input type"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Dense="true"
+                           Class="routing-window-input-field">
+                    @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                    {
+                        <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                    }
+                </MudSelect>
 
-                    <MudNumericField T="int"
-                                     Label="Input buffer"
-                                     @bind-Value="_boundedCapacity"
-                                     aria-label="Routing window input buffer"
-                                     Min="1"
-                                     Max="100000"
-                                     Step="100"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Class="routing-window-buffer-field" />
+                <MudNumericField T="int"
+                                 Label="Input buffer"
+                                 @bind-Value="_boundedCapacity"
+                                 aria-label="Routing window input buffer"
+                                 Min="1"
+                                 Max="100000"
+                                 Step="100"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="routing-window-buffer-field" />
+            </div>
+
+            <div class="routing-window-boundary-editor" aria-label="Routing window boundary settings">
+                <MudNumericField T="int"
+                                 Label="Max items"
+                                 @bind-Value="_maxItems"
+                                 aria-label="Routing window max items"
+                                 Min="0"
+                                 Max="100000"
+                                 Step="10"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="routing-window-max-items-field" />
+
+                <MudNumericField T="int"
+                                 Label="Time window ms"
+                                 @bind-Value="_timeMilliseconds"
+                                 aria-label="Routing window time in milliseconds"
+                                 Min="0"
+                                 Max="86400000"
+                                 Step="100"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="routing-window-time-field" />
+
+                <div class="routing-window-partial-option">
+                    <MudCheckBox T="bool"
+                                 Label="Emit partial"
+                                 aria-label="Emit partial window on completion"
+                                 @bind-Value="_emitPartialOnCompletion"
+                                 Class="routing-window-partial-check" />
                 </div>
-
-                <div class="routing-window-limit-row" aria-label="Routing window limit settings">
-                    <MudNumericField T="int"
-                                     Label="Max items"
-                                     @bind-Value="_maxItems"
-                                     aria-label="Routing window max items"
-                                     Min="0"
-                                     Max="100000"
-                                     Step="10"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Class="routing-window-max-items-field" />
-
-                    <MudNumericField T="int"
-                                     Label="Time window ms"
-                                     @bind-Value="_timeMilliseconds"
-                                     aria-label="Routing window time in milliseconds"
-                                     Min="0"
-                                     Max="86400000"
-                                     Step="100"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Class="routing-window-time-field" />
-
-                    <div class="routing-window-partial-option">
-                        <MudCheckBox T="bool"
-                                     Label="Emit partial"
-                                     aria-label="Emit partial window on completion"
-                                     @bind-Value="_emitPartialOnCompletion"
-                                     Class="routing-window-partial-check" />
-                    </div>
-                </div>
-            </section>
+            </div>
         </div>
     </Editor>
 </NodeWidgetShell>

@@ -1,30 +1,30 @@
 .routing-window-summary {
     display: grid;
-    gap: 5px;
+    gap: 4px;
     margin-top: 3px;
     min-width: 0;
 }
 
 .routing-window-meta {
     display: grid;
-    gap: 3px;
-    grid-template-columns: minmax(0, 1fr) 92px 64px;
+    gap: 2px;
+    grid-template-columns: minmax(0, 1fr) 86px 62px;
     min-width: 0;
 }
 
 .routing-window-meta-item {
     align-content: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 24%, transparent);
+    background: color-mix(in srgb, var(--flux-surface-2) 30%, transparent);
     border-radius: 4px;
     display: grid;
     gap: 2px;
-    min-height: 30px;
+    min-height: 28px;
     min-width: 0;
     padding: 4px 5px;
 }
 
 .routing-window-meta-item span,
-.routing-window-contract-label {
+.routing-window-boundary-label {
     color: var(--flux-text-muted);
     font-size: 0.52rem;
     font-weight: 750;
@@ -35,7 +35,7 @@
 }
 
 .routing-window-meta-item strong {
-    color: color-mix(in srgb, var(--mud-palette-text-primary) 84%, var(--mud-palette-text-secondary));
+    color: var(--mud-palette-text-primary);
     font-size: 0.66rem;
     font-variant-numeric: tabular-nums;
     font-weight: 700;
@@ -46,8 +46,8 @@
     white-space: nowrap;
 }
 
-.routing-window-limits {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 62%, transparent);
+.routing-window-boundary {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 68%, transparent);
     display: grid;
     gap: 4px 3px;
     grid-template-columns: repeat(3, minmax(0, auto));
@@ -56,7 +56,7 @@
     padding: 5px 2px 0;
 }
 
-.routing-window-contract-label {
+.routing-window-boundary-label {
     grid-column: 1 / -1;
     white-space: nowrap;
 }
@@ -78,35 +78,26 @@
 
 .routing-window-editor {
     display: grid;
-    min-width: 0;
-}
-
-.routing-window-editor-surface {
-    background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
-    border-radius: 6px;
-    display: grid;
     gap: 10px;
     min-width: 0;
-    padding: 12px;
 }
 
-.routing-window-config-row {
+.routing-window-primary-row {
     align-items: end;
     display: grid;
     gap: 8px;
-    grid-template-columns: minmax(0, 1fr) 150px;
+    grid-template-columns: minmax(0, 1fr) 160px;
     min-width: 0;
 }
 
-.routing-window-limit-row {
+.routing-window-boundary-editor {
     align-items: end;
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     display: grid;
     gap: 8px;
-    grid-template-columns: minmax(120px, 1fr) minmax(150px, 1fr) minmax(132px, 0.72fr);
+    grid-template-columns: minmax(120px, 1fr) minmax(150px, 1fr) minmax(124px, 0.6fr);
     min-width: 0;
-    padding-top: 10px;
+    padding-top: 8px;
 }
 
 .routing-window-partial-option {
@@ -157,16 +148,16 @@
 
 @media (max-width: 720px) {
     .routing-window-meta,
-    .routing-window-config-row,
-    .routing-window-limit-row {
+    .routing-window-primary-row,
+    .routing-window-boundary-editor {
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .routing-window-limits {
+    .routing-window-boundary {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .routing-window-contract-label {
+    .routing-window-boundary-label {
         grid-column: 1 / -1;
     }
 }
